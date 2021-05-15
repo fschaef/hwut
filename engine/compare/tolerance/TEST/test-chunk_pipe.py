@@ -24,9 +24,9 @@ from   io import StringIO
 
 sys.path.insert(0, "../../../../../")
 
-import hwut.engine.compare.engine.core               as     comperator
-from   hwut.engine.compare.tolerance.chunk_pipe     import ChunkPipe
-from   hwut.engine.compare.TEST.common              import prepare, \
+import ut.engine.compare.engine.core               as     comperator
+from   ut.engine.compare.tolerance.chunk_pipe     import ChunkPipe
+from   ut.engine.compare.TEST.common              import prepare, \
                                                            print_match_sequences, \
                                                            print_match_sequences_lists, \
                                                            print_friends_pairing_max_result, \

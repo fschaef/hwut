@@ -1,5 +1,5 @@
-from   hwut.engine.quex.typed              import typed 
-from   hwut.engine.compare.tolerance.match import E_ToleranceId, Token, LineElement, LineElementString
+from   ut.engine.quex.typed              import typed 
+from   ut.engine.compare.tolerance.match import E_ToleranceId, Token, LineElement, LineElementString
 
 from   collections import namedtuple
 import re

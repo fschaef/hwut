@@ -15,13 +15,13 @@ import re
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-import hwut.engine.compare.engine.core              as     comperator
-import hwut.engine.compare.friends_pairing.max      as     friends_pairing_max
-from   hwut.engine.compare.tolerance.pattern_finder import PatternFinder
-from   hwut.engine.compare.engine.line              import Line
-from   hwut.engine.compare.engine.analogy_db        import AnalogyDb
+import ut.engine.compare.engine.core              as     comperator
+import ut.engine.compare.friends_pairing.max      as     friends_pairing_max
+from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
+from   ut.engine.compare.engine.line              import Line
+from   ut.engine.compare.engine.analogy_db        import AnalogyDb
 
-from   hwut.engine.compare.TEST.common import get_Potpourri, \
+from   ut.engine.compare.TEST.common import get_Potpourri, \
                                               print_friends_pairing_max_result
 
 if "--hwut-info" in sys.argv:

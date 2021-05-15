@@ -43,7 +43,7 @@ The table above, is what is stored in the analogy database, along with line
 number information about the analogies first occurrence.
 _______________________________________________________________________________
 """
-from   hwut.engine.quex.typed import typed 
+from   ut.engine.quex.typed import typed 
 from   collections            import namedtuple, defaultdict
 
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))

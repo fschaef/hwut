@@ -59,8 +59,8 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 
-from  hwut.engine.compare.engine.analogy_db import AnalogyDb
-from  hwut.engine.compare.engine.core       import E_Verdict
+from  ut.engine.compare.engine.analogy_db import AnalogyDb
+from  ut.engine.compare.engine.core       import E_Verdict
 
 from  copy        import copy
 from  enum        import IntEnum

@@ -21,10 +21,10 @@ import re
 
 sys.path.insert(0, "../../../../../")
 
-from   hwut.engine.compare.tolerance.pattern_finder import PatternFinder
-import hwut.engine.compare.engine.core               as     comperator
-from   hwut.engine.compare.engine.analogy_db               import AnalogyDb
-from   hwut.engine.compare.TEST.common              import \
+from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
+import ut.engine.compare.engine.core               as     comperator
+from   ut.engine.compare.engine.analogy_db               import AnalogyDb
+from   ut.engine.compare.TEST.common              import \
                                                            print_match_sequences, \
                                                            frame_with_potpourri_borders, \
                                                            get_Potpourri, \

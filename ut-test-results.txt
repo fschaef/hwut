@@ -1,0 +1,137 @@
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+engine/compare/TEST                                                  <no date>
+-------------------------------------------------------------------------------
+ * Line Comparison
+        test-main.py compare .........................................[OK]
+                     line_associations ...............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+engine/compare/edit_operations/TEST                                  <no date>
+-------------------------------------------------------------------------------
+ * Edit Distance
+        test-edit_distance.py match_sequence .........................[OK]
+                              match_sequence-analogies ...............[OK]
+                              match_sequence2 ........................[OK]
+                              string .................................[OK]
+
+ * Edit Distance:
+
+    Line list alignment
+        test-edit_distance_line_sequence.py nominal ..................[OK]
+                                            special ..................[OK]
+                                            subject ..................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+engine/compare/engine/TEST                                           <no date>
+-------------------------------------------------------------------------------
+ * Line Comparison
+        test-compare_lines.py info ...................................[OK]
+                              judge ..................................[OK]
+ * Line Sequence
+        test-compare_line_sequence.py info ...........................[OK]
+                                      judge ..........................[OK]
+ * Potpourri
+        test-compare_potpourris.py info ..............................[OK]
+                                   judge .............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+engine/compare/friends_pairing/TEST                                  <no date>
+-------------------------------------------------------------------------------
+ * LineElementDb
+        test-friends_pairing_match_db.py analogy_interferences .......[OK]
+                                         extract_ultimates ...........[OK]
+                                         pairing .....................[OK]
+
+ * FriendsPairing:
+
+    Search anyway
+        test-friends_pairing.py analogy ..............................[OK]
+                                basic ................................[OK]
+                                border ...............................[OK]
+                                special ..............................[OK]
+                                wild .................................[OK]
+                                wild-2 ...............................[OK]
+    fail quickly
+        test-friends_pairing-fail-quickly.py analogy .................[OK]
+                                             basic ...................[OK]
+                                             border ..................[OK]
+                                             wild ....................[OK]
+
+ * FriendsPairingMax:
+
+    Search anyway
+        test-friends_pairing_max.py basic ............................[OK]
+                                    restricted_cmp ...................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+engine/compare/tolerance/TEST                                        <no date>
+-------------------------------------------------------------------------------
+ * ChunkPipe
+        test-chunk_pipe.py comment ...................................[OK]
+                           normal ....................................[OK]
+                           special ...................................[OK]
+ * Tolerance PatternFinder
+        test-tolerance.py do .........................................[OK]
+                          find_first_match ...........................[OK]
+                          setup ......................................[OK]
+                          tolerance_id ...............................[OK]
+
+ * Tolerance:
+
+    ComperatorLineElement
+        test-tolerance_match.py LineElementAnalogy ...................[OK]
+                                LineElementEquivalencePattern ........[OK]
+                                LineElementNumber ....................[OK]
+                                LineElementString ....................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+
+SUMMARY:
+
+    Fails: N: Verdict: Directory:                          
+
+           2      [OK] engine/compare/TEST                 
+           7      [OK] ............../edit_operations/TEST 
+           6      [OK] ............../engine/TEST          
+           15     [OK] ............../friends_pairing/TEST 
+           11     [OK] ............../tolerance/TEST       
+
+-------------------------------------------------------------------------------
+     ___  _ _   _  __                        _      _ 
+    / _ \| | | | |/ /___  _ __ _ __ ___  ___| |_   | |
+   | | | | | | | ' // _ \| '__| '__/ _ \/ __| __|  | |
+   | |_| | | | | . \ (_) | |  | | |  __/ (__| |_   |_|
+    \___/|_|_| |_|\_\___/|_|  |_|  \___|\___|\__|  (_)
+                                                                     (41 tests)
+
+===============================================================================

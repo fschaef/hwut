@@ -1,8 +1,8 @@
-from hwut.engine.compare.engine.line              import Line
-from hwut.engine.compare.engine.input_chunk       import E_Chunk, \
+from ut.engine.compare.engine.line              import Line
+from ut.engine.compare.engine.input_chunk       import E_Chunk, \
                                                          LineSequence, \
                                                          InputChunkTerminal
-from hwut.engine.compare.tolerance.pattern_finder import PatternFinder
+from ut.engine.compare.tolerance.pattern_finder import PatternFinder
 
 from itertools import count
 

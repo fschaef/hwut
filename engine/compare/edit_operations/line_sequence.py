@@ -18,9 +18,9 @@ operations on 'Line's (see edit_operations/line.py) and strings (see
 Levenshtein Distance). 
 _______________________________________________________________________________
 """
-from   hwut.engine.compare.edit_operations.line import Edit, E_EditLine, EditsLine
-from   hwut.engine.compare.engine.analogy_db    import AnalogyDb
-from   hwut.engine.quex.typed                   import typed 
+from   ut.engine.compare.edit_operations.line import Edit, E_EditLine, EditsLine
+from   ut.engine.compare.engine.analogy_db    import AnalogyDb
+from   ut.engine.quex.typed                   import typed 
 
 from   enum        import IntEnum
 import sys

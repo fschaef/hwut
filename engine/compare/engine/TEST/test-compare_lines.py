@@ -17,9 +17,9 @@ import re
 
 sys.path.insert(0, "../../../../../")
 
-from   hwut.engine.compare.engine.line          import Line
-from   hwut.engine.compare.engine.analogy_db    import AnalogyDb
-from   hwut.engine.compare.TEST.common   import prepare, print_match_sequences
+from   ut.engine.compare.engine.line          import Line
+from   ut.engine.compare.engine.analogy_db    import AnalogyDb
+from   ut.engine.compare.TEST.common   import prepare, print_match_sequences
 
 
 if "--hwut-info" in sys.argv:

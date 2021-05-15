@@ -6,9 +6,9 @@ A chunk of 'LineAssociation'-s either belongs to a block of 'LineSequences'
 or 'Potpourri'.
 ________________________________________________________________________________
 """
-from   hwut.engine.compare.engine.line_association import LineAssociation
-from   hwut.engine.compare.engine.input_chunk      import E_Chunk
-from   hwut.engine.quex.typed                      import typed
+from   ut.engine.compare.engine.line_association import LineAssociation
+from   ut.engine.compare.engine.input_chunk      import E_Chunk
+from   ut.engine.quex.typed                      import typed
 
 class LineAssociationChunk:
     """List of 'LineAssociation'-s where all line are from an input chunk

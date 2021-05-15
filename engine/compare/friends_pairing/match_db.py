@@ -1,4 +1,4 @@
-from   hwut.engine.compare.engine.analogy_db import AnalogyDb
+from   ut.engine.compare.engine.analogy_db import AnalogyDb
 
 from   collections import defaultdict
 

@@ -17,16 +17,16 @@ The two main functions of an 'InputChunk' are
                             for display.
 ________________________________________________________________________________
 """
-from   hwut.engine.compare.engine.core                   import E_Verdict
-from   hwut.engine.compare.engine.line                   import Line
-from   hwut.engine.compare.engine.analogy_db             import AnalogyDb
-from   hwut.engine.compare.engine.line_association       import LineAssociation
-import hwut.engine.compare.friends_pairing.max           as     friends_pairing_max
-import hwut.engine.compare.friends_pairing.core          as     friends_pairing
-import hwut.engine.compare.edit_operations.line          as     edit_operations_line
-import hwut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
-from   hwut.engine.compare.edit_operations.line_sequence import E_EditLineSequence, EditsLineSequence
-from   hwut.engine.quex.typed                            import typed 
+from   ut.engine.compare.engine.core                   import E_Verdict
+from   ut.engine.compare.engine.line                   import Line
+from   ut.engine.compare.engine.analogy_db             import AnalogyDb
+from   ut.engine.compare.engine.line_association       import LineAssociation
+import ut.engine.compare.friends_pairing.max           as     friends_pairing_max
+import ut.engine.compare.friends_pairing.core          as     friends_pairing
+import ut.engine.compare.edit_operations.line          as     edit_operations_line
+import ut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
+from   ut.engine.compare.edit_operations.line_sequence import E_EditLineSequence, EditsLineSequence
+from   ut.engine.quex.typed                            import typed 
 
 from   enum      import Enum
 from   abc       import ABC, abstractmethod

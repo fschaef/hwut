@@ -28,8 +28,8 @@ import re
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   hwut.engine.compare.friends_pairing.match_db import LineElementDb
-from   hwut.engine.compare.engine.analogy_db               import AnalogyDb
+from   ut.engine.compare.friends_pairing.match_db import LineElementDb
+from   ut.engine.compare.engine.analogy_db               import AnalogyDb
 
 from   copy import copy
 

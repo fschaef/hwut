@@ -1,7 +1,7 @@
-import hwut.engine.compare.friends_pairing.core    as     friends_pairing
-from   hwut.engine.compare.engine.analogy_db       import AnalogyDb
-from   hwut.engine.compare.engine.line_association import LineAssociation
-import hwut.engine.compare.edit_operations.line    as     edit_distance_line
+import ut.engine.compare.friends_pairing.core    as     friends_pairing
+from   ut.engine.compare.engine.analogy_db       import AnalogyDb
+from   ut.engine.compare.engine.line_association import LineAssociation
+import ut.engine.compare.edit_operations.line    as     edit_distance_line
 
 import sys
 

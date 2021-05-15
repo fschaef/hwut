@@ -15,10 +15,10 @@ import re
 
 sys.path.insert(0, "../../../../../")
 
-import hwut.engine.compare.edit_operations.line_sequence   as     edit_distance_line_sequence
-from   hwut.engine.compare.edit_operations.line_sequence   import E_EditLineSequence
-from   hwut.engine.compare.TEST.common               import prepare, print_match_sequences_lists, prepare_line_up
-from   hwut.engine.compare.engine.line                      import Line
+import ut.engine.compare.edit_operations.line_sequence   as     edit_distance_line_sequence
+from   ut.engine.compare.edit_operations.line_sequence   import E_EditLineSequence
+from   ut.engine.compare.TEST.common               import prepare, print_match_sequences_lists, prepare_line_up
+from   ut.engine.compare.engine.line                      import Line
 
 if "--hwut-info" in sys.argv:
     print("Edit Distance: Line list alignment;")

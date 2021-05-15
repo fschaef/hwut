@@ -25,9 +25,9 @@ import re
 
 sys.path.insert(0, "../../../../../")
 
-import hwut.engine.compare.engine.core               as     comperator
-from   hwut.engine.compare.tolerance.pattern_finder import PatternFinder, _find_first_match
-from   hwut.engine.compare.tolerance.match          import E_ToleranceId
+import ut.engine.compare.engine.core               as     comperator
+from   ut.engine.compare.tolerance.pattern_finder import PatternFinder, _find_first_match
+from   ut.engine.compare.tolerance.match          import E_ToleranceId
 
 
 if "--hwut-info" in sys.argv:

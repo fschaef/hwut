@@ -1,6 +1,6 @@
-import hwut.engine.compare.edit_operations.string as     edit_distance_string
-from   hwut.engine.compare.engine.core           import E_Verdict
-from   hwut.engine.quex.typed                   import typed 
+import ut.engine.compare.edit_operations.string as     edit_distance_string
+from   ut.engine.compare.engine.core           import E_Verdict
+from   ut.engine.quex.typed                   import typed 
 
 from   enum import IntEnum
 

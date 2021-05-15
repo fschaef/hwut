@@ -4,8 +4,8 @@ PURPOSE: 'Friends pairing' algorithm to associate lines of Potpourri.
 
 ________________________________________________________________________________
 """
-from   hwut.engine.compare.friends_pairing.match_db import LineElementDb
-from   hwut.engine.quex.typed                       import typed 
+from   ut.engine.compare.friends_pairing.match_db import LineElementDb
+from   ut.engine.quex.typed                       import typed 
 
 from   collections import defaultdict
 

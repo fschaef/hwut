@@ -31,10 +31,10 @@ is that they must provide the function:
   .readline() -> non-empty 'str', in case there is a line that can be read.
                  "",              if end of stream has been reached.
 """
-from   hwut.engine.compare.engine.analogy_db             import AnalogyDb
-from   hwut.engine.compare.engine.comparison_iterable    import generate 
-from   hwut.engine.compare.engine.line_association_chunk import LineAssociationChunk
-from   hwut.engine.compare.engine.input_chunk            import E_Verdict, \
+from   ut.engine.compare.engine.analogy_db             import AnalogyDb
+from   ut.engine.compare.engine.comparison_iterable    import generate 
+from   ut.engine.compare.engine.line_association_chunk import LineAssociationChunk
+from   ut.engine.compare.engine.input_chunk            import E_Verdict, \
                                                                 InputChunkEmpty
 
 

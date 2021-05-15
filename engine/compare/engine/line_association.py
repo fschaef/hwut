@@ -13,9 +13,9 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from   hwut.engine.compare.engine.line          import Line
-from   hwut.engine.compare.engine.analogy_db    import AnalogyDb
-from   hwut.engine.quex.typed                   import typed 
+from   ut.engine.compare.engine.line          import Line
+from   ut.engine.compare.engine.analogy_db    import AnalogyDb
+from   ut.engine.quex.typed                   import typed 
 import sys
 
 class LineAssociation:

@@ -16,7 +16,7 @@ compared.
 _______________________________________________________________________________
 """
 
-from hwut.engine.compare.tolerance.chunk_pipe import ChunkPipe
+from ut.engine.compare.tolerance.chunk_pipe import ChunkPipe
 
 from itertools import zip_longest
 

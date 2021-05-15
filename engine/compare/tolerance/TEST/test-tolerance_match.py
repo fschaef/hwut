@@ -19,7 +19,7 @@ import re
 
 sys.path.insert(0, "../../../../../")
 
-from   hwut.engine.compare.tolerance.match import LineElementString, \
+from   ut.engine.compare.tolerance.match import LineElementString, \
                                                   LineElementNumber, \
                                                   LineElementEquivalencePattern, \
                                                   LineElementAnalogy, \

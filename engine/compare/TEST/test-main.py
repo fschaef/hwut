@@ -18,9 +18,9 @@ import re
 
 sys.path.insert(0, "../../../../")
 
-import hwut.engine.compare.engine.core as     comperator 
-import hwut.engine.compare.main        as     main 
-from   hwut.engine.compare.TEST.common import print_match_sequences_lists, \
+import ut.engine.compare.engine.core as     comperator 
+import ut.engine.compare.main        as     main 
+from   ut.engine.compare.TEST.common import print_match_sequences_lists, \
                                               print_list_sequence_pairs, \
                                               print_friends_pairing_max_result
 from   io import StringIO
