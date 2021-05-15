@@ -1,0 +1,62 @@
+2021y05m01d: <fschaef> Starting detailed code review
+
+   -> goal: comments are clear, 
+            functions are all understandable
+            license specifiers are all in place
+
+ (OK) ./edit_operations/line.py
+ (OK) ./edit_operations/line_sequence.py
+ (OK) ./edit_operations/string.py
+ (OK) ./engine/analogy_db.py
+ (OK) ./engine/comparison_iterable.py
+ (OK) ./engine/core.py
+ (OK) ./engine/input_chunk.py
+ (OK) ./engine/line.py
+ (OK) ./engine/line_association.py
+ (OK) ./engine/line_association_chunk.py
+      ./friends_pairing/core.py
+      ./friends_pairing/match_db.py
+      ./friends_pairing/max.py
+      ./main.py
+      ./tolerance/chunk_pipe.py
+      ./tolerance/match.py
+      ./tolerance/pattern_finder.py
+      ./TEST/common.py
+      ./TEST/test-main.py
+      ./edit_distance/TEST/test-edit_distance.py
+      ./edit_distance/TEST/test-edit_distance_line_list.py
+      ./engine/TEST/test-compare_line_list.py
+      ./engine/TEST/test-compare_lines.py
+      ./engine/TEST/test-compare_potpourris.py
+      ./friends_pairing/TEST/test-friends_pairing-fail-quickly.py
+      ./friends_pairing/TEST/test-friends_pairing.py
+      ./friends_pairing/TEST/test-friends_pairing_match_db.py
+      ./friends_pairing/TEST/test-friends_pairing_max.py
+      ./tolerance/TEST/test-chunk_pipe.py
+      ./tolerance/TEST/test-tolerance.py
+      ./tolerance/TEST/test-tolerance_match.py
+
+2021y05m01d: <fschaef> Unit Test Coverage 100%
+
+   Name                                                   Stmts   Miss  Cover
+   --------------------------------------------------------------------------
+   edit_distance/line.py                                     84      0   100%
+   edit_distance/line_list.py                               101      0   100%
+   edit_distance/string.py                                   32      0   100%
+   engine/analogy_db.py                                      62      0   100%
+   engine/comparison_iterable.py                              7      0   100%
+   engine/core.py                                            16      0   100%
+   engine/input_chunk.py                                    110      0   100%
+   engine/line.py                                            43      0   100%
+   engine/line_association.py                                20      0   100%
+   friends_pairing/core.py                                   55      0   100%
+   friends_pairing/match_db.py                              119      0   100%
+   friends_pairing/max.py                                    68      0   100%
+   main.py                                                   17      0   100%
+   tolerance/chunk_pipe.py                                   25      0   100%
+   tolerance/match.py                                       109      0   100%
+   tolerance/pattern_finder.py                               92      0   100%
+   --------------------------------------------------------------------------
+
+2021y04m26d: <fschaef> Feature complete (so far); 
+                       Unit tests verdicts 100% Ok.

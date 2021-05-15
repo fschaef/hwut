@@ -1,0 +1,29 @@
+
+size: 1;
+None -> STRING
+
+size: 2;
+None -> STRING
+\(\(([^\)]|[\)][^\)])+\)\) -> ANALOGY
+
+size: 2;
+None -> STRING
+[ \t]+ -> EQUIVALENCE_PATTERN
+
+size: 2;
+None -> STRING
+[\\/]+ -> EQUIVALENCE_PATTERN
+
+size: 2;
+None -> STRING
+-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
+
+size: 3;
+None -> STRING
+hallo -> EQUIVALENCE_PATTERN
+welt -> EQUIVALENCE_PATTERN
+
+size: 3;
+None -> STRING
+nothing -> VISIBLE_NOTHING
+error -> VISIBLE_NOTHING

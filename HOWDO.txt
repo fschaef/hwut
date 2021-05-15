@@ -1,0 +1,44 @@
+HOWDO
+(C) Frank-Rene Schaefer, 2021.
+
+(PU) Purpose
+------------
+
+This document describes elementary rules how to do coding for the HWUT project.
+
+(PI) Project Information 
+------------------------
+
+This directory contains the root of all directories and files related to HWUT.
+The data of this project is maintained with git and hosted at sourceforge.net.
+
+(NC) Component
+--------------
+
+A component is located in some deeper sub directory of this directory. This
+directory contains:
+
+* All of the source files related to that component.
+* A subdirectory called 'TEST' which contains HWUT unit tests. 
+* A file 'CLEAR.txt' which explains what the component is doing.
+* A file 'main.py' which provides the API for use by other components.
+
+During testing a python3-coverage is used to measure coverage. A component is
+in a sound state, if:
+
+* All code is documented where necessary and clean.
+* Functions are short and of low complexity.
+* The scope of classes is small and comprehensible.
+* All unit tests succeed and execute with a 100% line coverage. 
+* All unit test files describe in its header what the test is doing.
+
+(TF) Text Files
+---------------
+
+* Content is concise, if content can be rewritten more briefly, do it.
+* The formatting shall follow the scheme of this file, or other earler files.
+* A title shall contain a file-unique key in brackets for reference.
+
+That is, to reference a section, the file name and the key in brackets is
+sufficient. E.g. this section may be referenced as "hwut/HOWDO.txt(TF)".
+

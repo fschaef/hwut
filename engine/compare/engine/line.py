@@ -1,0 +1,91 @@
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+________________________________________________________________________________
+PURPOSE: A 'Line' of an input stream represented by a sequence of line elements.
+
+For tolerant comparison, the text of a line is interpreted lexically and 
+split up into 'LineElements' objects. Such line elements may be numbers,
+strings, lexemes which match some pattern, whitespace etc.
+________________________________________________________________________________
+"""
+import hwut.engine.compare.edit_operations.line as     edit_operations_line
+from   hwut.engine.compare.engine.core          import E_Verdict
+from   hwut.engine.compare.engine.analogy_db    import AnalogyDb
+from   hwut.engine.compare.tolerance.match      import LineElementString
+
+class Line:
+    """An interpretation of a text line in terms of a sequence of 'LineElement'
+    objects. Additionally, the line number is stored along.
+    """
+    def __init__(self, line_n, iterable):
+        self.line_n   = line_n
+        self.sequence = tuple(iterable)
+
+    @staticmethod
+    def from_string(line_n, string):
+        return Line(line_n, [LineElementString(0, len(string), string)]) 
+
+    @staticmethod
+    def from_potpourri(line_n, begin_f):
+        if begin_f:
+            return Line.from_string(line_n, "|||| (potpourri: open)")
+        else:
+            return Line.from_string(line_n, "|||| (potpourri: close)")
+
+    @staticmethod
+    def from_nothing():
+        return Line.from_string(None, "")
+
+    def compare(self, nominal, analogy_db):
+        """RETURNS: [0] True, if both sequences are equivalent. False, else.
+                    [1] analogy_db required for equivalence to hold.
+
+        In case of failure, the old 'analogy_db' is returned. That is, two lines
+        which are not equivalent do not impose new analogies.
+        """
+        if len(self.sequence) != len(nominal.sequence):
+            return False, analogy_db
+
+        new_analogy_db = AnalogyDb()
+        for subject_match, nominal_match in zip(self.sequence, nominal.sequence):
+            verdict, analogy = subject_match.compare(nominal_match)
+            if verdict != E_Verdict.EQUIVALENT:
+                return False, analogy_db
+            elif not new_analogy_db.add_if_consistent(analogy):
+                return False, analogy_db
+        else:
+            if new_analogy_db:
+                new_analogy_db.mark_line_numbers(self.line_n, nominal.line_n)
+                new_analogy_db.update(analogy_db)
+                analogy_db = new_analogy_db
+            return True, analogy_db
+
+    def edit_operations(self, nominal, analogy_db):
+        """RETURNS: EditsLine
+            
+        Calls 'edit_operations_line.do()' and sets line numbers in analogy
+        database if necessary.
+
+        EditsLine.cost       = cost / max. cost; thus in range of [0...1].
+        EditsLine.edit_list  = list of 'Edit' objects
+        EditsLine.analogy_db = 'AnalogyDb' required for equivalences to hold.
+        """
+        result = edit_operations_line.do(self.sequence, nominal.sequence, analogy_db)
+
+        if result.cost == 0:
+            result.analogy_db.mark_line_numbers(self.line_n, nominal.line_n)
+            result.analogy_db.update(analogy_db)
+        else:
+            result.analogy_db.assign(analogy_db)
+
+        assert isinstance(result, edit_operations_line.EditsLine)
+        return result
+
+    def __lt__(self, other): # pragma no cover
+        return (self.line_n, len(self.sequence)) < (other.line_n, len(other.sequence))
+
+    def __iter__(self):
+        return iter(self.sequence)
+
+    def __repr__(self): # pragma no cover
+        return ", ".join("[%s]" % str(x) for x in self.sequence)
+

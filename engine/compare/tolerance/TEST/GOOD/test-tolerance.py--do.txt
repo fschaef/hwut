@@ -1,0 +1,29 @@
+
+size: 6;
+None -> STRING
+nothing -> VISIBLE_NOTHING
+\(\(([^\)]|[\)][^\)])+\)\) -> ANALOGY
+-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
+[ \t]+ -> EQUIVALENCE_PATTERN
+hallo -> EQUIVALENCE_PATTERN
+string: 'hallo welt 4711'
+   (0,5): EQUIVALENCE_PATTERN [1] 'hallo'
+   (5,6): EQUIVALENCE_PATTERN [0] ' '
+   (6,10): STRING 'welt'
+   (10,11): EQUIVALENCE_PATTERN [0] ' '
+   (11,15): NUMERIC '4711'
+string: '4711 hallo 4711 nothing'
+   (0,4): NUMERIC '4711'
+   (4,5): EQUIVALENCE_PATTERN [0] ' '
+   (5,10): EQUIVALENCE_PATTERN [1] 'hallo'
+   (10,11): EQUIVALENCE_PATTERN [0] ' '
+   (11,15): NUMERIC '4711'
+   (15,16): EQUIVALENCE_PATTERN [0] ' '
+string: 'bonjour ((4711)) le monde'
+   (0,7): STRING 'bonjour'
+   (7,8): EQUIVALENCE_PATTERN [0] ' '
+   (8,16): ANALOGY '((4711))'
+   (16,17): EQUIVALENCE_PATTERN [0] ' '
+   (17,19): STRING 'le'
+   (19,20): EQUIVALENCE_PATTERN [0] ' '
+   (20,25): STRING 'monde'

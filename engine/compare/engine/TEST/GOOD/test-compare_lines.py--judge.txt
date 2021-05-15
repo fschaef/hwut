@@ -1,0 +1,21 @@
+subject:  STRING:string, STRING:strong
+nominal:  STRING:string, STRING:strong
+=> True, 
+subject:  STRING:string, NUMERIC:4711
+nominal:  STRING:string, STRING:strong
+=> False, 
+subject:  STRING:string, STRING:string
+nominal:  STRING:string, STRING:strong
+=> False, 
+subject:  ANALOGY:((x)), ANALOGY:((x))
+nominal:  ANALOGY:((y)), ANALOGY:((z))
+=> False, 
+subject:  ANALOGY:((x)), ANALOGY:((y))
+nominal:  ANALOGY:((y)), ANALOGY:((z))
+=> True, [66]:[4711] "((x))":"((y))", "((y))":"((z))"
+subject:  ANALOGY:((x)), ANALOGY:((y))
+nominal:  ANALOGY:((y)), ANALOGY:((z)), ANALOGY:((y))
+=> False, 
+subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
+nominal:  ANALOGY:((y)), ANALOGY:((z))
+=> False, 

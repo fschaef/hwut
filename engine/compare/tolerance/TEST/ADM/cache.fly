@@ -1,0 +1,36 @@
+{
+title: ChunkPipe;
+file_name: test-chunk_pipe.py;
+hwut_info_time: 1620855593L;
+interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
+result_list: [
+  [ normal; OK; 0.203355; 0; ]
+  [ special; OK; 0.193918; 0; ]
+  [ comment; OK; 0.180852; 0; ]
+]
+}
+{
+title: Tolerance PatternFinder;
+file_name: test-tolerance.py;
+hwut_info_time: 1620855593L;
+interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
+result_list: [
+  [ setup; OK; 0.175086; 0; ]
+  [ find_first_match; OK; 0.187334; 0; ]
+  [ tolerance_id; OK; 0.187964; 0; ]
+  [ do; OK; 0.184394; 0; ]
+]
+}
+{
+title: ComperatorLineElement;
+title_group: Tolerance;
+file_name: test-tolerance_match.py;
+hwut_info_time: 1620855593L;
+interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
+result_list: [
+  [ LineElementString; OK; 0.180264; 0; ]
+  [ LineElementNumber; OK; 0.190707; 0; ]
+  [ LineElementEquivalencePattern; OK; 0.166325; 0; ]
+  [ LineElementAnalogy; OK; 0.176285; 0; ]
+]
+}

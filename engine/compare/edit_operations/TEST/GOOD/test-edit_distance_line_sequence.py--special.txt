@@ -1,0 +1,35 @@
+------------------------------------
+
+   STRING:string, STRING:string, STRING:quant    STRING:strong, STRING:string, STRING:quant
+   STRING:string, STRING:strong, STRING:quant    STRING:strong, STRING:string, STRING:quant
+   STRING:strong, STRING:string, STRING:quant    STRING:quant, STRING:string, STRING:strong
+   STRING:quant, STRING:string, STRING:strong    
+=>
+Cost: (-2, 1.027778)
+   STRING:string, STRING:string, STRING:quant    != STRING:strong, STRING:string, STRING:quant
+   STRING:string, STRING:strong, STRING:quant    >- 
+   STRING:strong, STRING:string, STRING:quant    == STRING:strong, STRING:string, STRING:quant
+   STRING:quant, STRING:string, STRING:strong    == STRING:quant, STRING:string, STRING:strong
+
+------------------------------------
+
+   STRING:strong, STRING:string, STRING:quant    STRING:strong, STRING:string, STRING:quant
+   STRING:quant, STRING:string, STRING:strong    STRING:quant, STRING:string, STRING:strong
+   STRING:string, STRING:strong, STRING:quant    STRING:strong, STRING:string, STRING:quant
+   STRING:string, STRING:string, STRING:quant    
+=>
+Cost: (-2, 1.027778)
+   STRING:strong, STRING:string, STRING:quant    == STRING:strong, STRING:string, STRING:quant
+   STRING:quant, STRING:string, STRING:strong    == STRING:quant, STRING:string, STRING:strong
+   STRING:string, STRING:strong, STRING:quant    >- 
+   STRING:string, STRING:string, STRING:quant    != STRING:strong, STRING:string, STRING:quant
+
+------------------------------------
+
+   STRING:a    STRING:b
+               STRING:a, EQUIVALENCE_PATTERN: , STRING:b
+=>
+Cost: (0, 1.500000)
+   STRING:a    != STRING:b
+               -< STRING:a, EQUIVALENCE_PATTERN: , STRING:b
+
