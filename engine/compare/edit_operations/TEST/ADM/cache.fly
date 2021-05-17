@@ -1,24 +1,24 @@
 {
 title: Edit Distance;
 file_name: test-edit_distance.py;
-hwut_info_time: 1621286511L;
+hwut_info_time: 1621290779L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ string; OK; 0.163474; 0; ]
-  [ match_sequence; OK; 0.162413; 0; ]
-  [ match_sequence2; OK; 0.159233; 0; ]
-  [ match_sequence-analogies; OK; 0.160465; 0; ]
+  [ string; OK; 0.158835; 0; ]
+  [ match_sequence; OK; 0.161986; 0; ]
+  [ match_sequence2; OK; 0.164171; 0; ]
+  [ match_sequence-analogies; OK; 0.159185; 0; ]
 ]
 }
 {
 title: Line list alignment;
 title_group: Edit Distance;
 file_name: test-edit_distance_line_sequence.py;
-hwut_info_time: 1621286511L;
+hwut_info_time: 1621290779L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ subject; OK; 0.163010; 0; ]
-  [ nominal; OK; 0.162807; 0; ]
-  [ special; OK; 0.238386; 0; ]
+  [ subject; OK; 0.166056; 0; ]
+  [ nominal; OK; 0.163709; 0; ]
+  [ special; OK; 0.237017; 0; ]
 ]
 }

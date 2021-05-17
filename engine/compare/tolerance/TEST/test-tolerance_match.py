@@ -17,7 +17,7 @@ import sys
 
 sys.path.insert(0, "../../../../../")
 
-from   ut.engine.compare.tolerance.match import LineElementString, \
+from   ut.engine.compare.tolerance.line_element import LineElementString, \
                                                   LineElementNumber, \
                                                   LineElementEquivalencePattern, \
                                                   LineElementAnalogy, \

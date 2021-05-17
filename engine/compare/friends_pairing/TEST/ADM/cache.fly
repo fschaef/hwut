@@ -1,50 +1,50 @@
 {
 title: MatchDb;
 file_name: test-friends_pairing_match_db.py;
-hwut_info_time: 1621286511L;
+hwut_info_time: 1621290779L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ analogy_interferences; OK; 0.155555; 0; ]
-  [ extract_ultimates; OK; 0.156929; -925530794; ]
-  [ pairing; OK; 0.153694; 0; ]
+  [ analogy_interferences; OK; 0.155073; 0; ]
+  [ extract_ultimates; OK; 0.157048; -925530794; ]
+  [ pairing; OK; 0.158351; 0; ]
 ]
 }
 {
 title: Search anyway;
 title_group: FriendsPairing;
 file_name: test-friends_pairing.py;
-hwut_info_time: 1621286511L;
+hwut_info_time: 1621290779L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.161450; 0; ]
-  [ analogy; OK; 0.162726; 0; ]
-  [ wild; OK; 0.480260; 0; ]
-  [ wild-2; OK; 0.421988; 0; ]
-  [ border; OK; 0.164714; 0; ]
-  [ special; OK; 0.161392; 0; ]
+  [ basic; OK; 0.164618; 0; ]
+  [ analogy; OK; 0.169681; 0; ]
+  [ wild; OK; 0.480646; 0; ]
+  [ wild-2; OK; 0.428640; 0; ]
+  [ border; OK; 0.166975; 0; ]
+  [ special; OK; 0.164883; 0; ]
 ]
 }
 {
 title: fail quickly;
 title_group: FriendsPairing;
 file_name: test-friends_pairing-fail-quickly.py;
-hwut_info_time: 1621286511L;
+hwut_info_time: 1621290779L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.164432; 1814654113; ]
-  [ analogy; OK; 0.167216; -1695507079; ]
-  [ wild; OK; 0.476983; -1776987453; ]
-  [ border; OK; 0.165813; -2100040024; ]
+  [ basic; OK; 0.163542; 1814654113; ]
+  [ analogy; OK; 0.170370; -1695507079; ]
+  [ wild; OK; 0.479122; -1776987453; ]
+  [ border; OK; 0.164800; -2100040024; ]
 ]
 }
 {
 title: Search anyway;
 title_group: FriendsPairingMax;
 file_name: test-friends_pairing_max.py;
-hwut_info_time: 1621286511L;
+hwut_info_time: 1621290779L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.174582; -680480498; ]
-  [ restricted_cmp; OK; 0.163453; 0; ]
+  [ basic; OK; 0.171277; -680480498; ]
+  [ restricted_cmp; OK; 0.162965; 0; ]
 ]
 }

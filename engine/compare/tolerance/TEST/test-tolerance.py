@@ -25,7 +25,7 @@ sys.path.insert(0, "../../../../../")
 
 import ut.engine.compare.engine.core               as     comperator
 from   ut.engine.compare.tolerance.pattern_finder import PatternFinder, _find_first_match
-from   ut.engine.compare.tolerance.match          import E_ToleranceId
+from   ut.engine.compare.tolerance.line_element          import E_ToleranceId
 
 
 if "--hwut-info" in sys.argv:

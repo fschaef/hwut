@@ -17,10 +17,10 @@
  (OK) ./friends_pairing/exact.py
  (OK) ./friends_pairing/similar.py
  (OK) ./friends_pairing/match_db.py
+ (OK) ./tolerance/chunk_pipe.py
+      ./tolerance/line_element.py
+ (OK) ./tolerance/pattern_finder.py
       ./main.py
-      ./tolerance/chunk_pipe.py
-      ./tolerance/match.py
-      ./tolerance/pattern_finder.py
       ./TEST/common.py
       ./TEST/test-main.py
       ./edit_distance/TEST/test-edit_distance.py

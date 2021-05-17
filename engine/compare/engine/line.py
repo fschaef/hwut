@@ -10,7 +10,7 @@ ________________________________________________________________________________
 import ut.engine.compare.edit_operations.line as     edit_operations_line
 from   ut.engine.compare.engine.core          import E_Verdict
 from   ut.engine.compare.engine.analogy_db    import AnalogyDb
-from   ut.engine.compare.tolerance.match      import LineElementString
+from   ut.engine.compare.tolerance.line_element      import LineElementString
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'

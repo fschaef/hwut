@@ -1,6 +1,23 @@
-from   ut.engine.quex.typed              import typed
-from   ut.engine.compare.tolerance.match import E_ToleranceId, Token, LineElement, LineElementString
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+________________________________________________________________________________
+PURPOSE: Transform a line of text --> LineElement objects.
 
+A 'PatternFinder' finds patterns in lines of texts and represents the text
+line by a list of 'LineElement'-s (classes derived from 'LineElement').
+
+The understanding of a line as a sequence of 'LineElement'-s is the key for
+tolerant comparison. For example, an *equivalence pattern* lets two strings
+be considered equivalent, even if they are literally not the same. A *number
+pattern* may only require a certain numeric precission. The *analogy* pattern
+allows for different strings to appear, as long as it is always the same
+strings and their counterpart.
+________________________________________________________________________________
+"""
+from   ut.engine.quex.typed              import typed
+from   ut.engine.compare.tolerance.line_element import E_ToleranceId, \
+                                                Token, \
+                                                LineElement, \
+                                                LineElementString
 from   collections import namedtuple
 import re
 
@@ -8,8 +25,8 @@ TolerancePattern = namedtuple("TolerancePattern", ("id", "pattern", "pattern_ind
 
 class PatternFinder:
     """Maintains a list of tolerance patterns to be found in a string.
-    The 'lexical_analysis()' function interprets a string as a sequence of
-    'LineElement' objects.
+    The '.do()' function interprets a string as a sequence of 'LineElement' 
+    objects.
     """
     def __init__(self, config):
         def _add(table, tolerance_id, regex):
@@ -89,6 +106,9 @@ class PatternFinder:
         return tuple(_analyze(string))
 
     def is_irrelevant(self, line):
+        """RETURN: True, if the line does not contain content subject to comparison.
+                   False, else.
+        """
         line = line.strip()
         if not line:
             return True
@@ -100,6 +120,9 @@ class PatternFinder:
             return False
 
     def is_region_delimiter(self, line):
+        """RETURNS: True, if current 'line' marks the begin/end of potpourri.
+                    False, else.
+        """
         line = line.strip()
         return line.startswith("||||") and len(set(line)) == 1
 

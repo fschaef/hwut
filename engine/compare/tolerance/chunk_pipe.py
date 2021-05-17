@@ -1,7 +1,31 @@
-from ut.engine.compare.engine.line              import Line
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+________________________________________________________________________________
+PURPOSE: Chunk pipe -- interpretation of input text as 'InputChunk' objects.
+
+A chunk pipe absorbs lines of text from a 'line provider', i.e. an object
+hat responds to a function:
+ 
+                 .readline()
+    
+lines are then passed through the 'PatternFinder' to transform text into
+'LineElement'-s such as numbers, whitespace or user-defined patterns.  A
+sequence of 'LineElement'-s make up for a semantic representation of a text
+line.
+
+There are two types of list of lines:
+
+ (i) LineSequence: where the sequence of lines matter for equivalence
+                   consideration.
+
+ (ii) Potpourri: where the exact sequence of lines does not matter in 
+                 equivalence considerations. It is only required that
+                 each line has its equivalent counterpart-somewhere.
+_______________________________________________________________________________
+""" 
+from ut.engine.compare.engine.line              import Line 
 from ut.engine.compare.engine.input_chunk       import E_Chunk, \
-                                                         LineSequence, \
-                                                         InputChunkTerminal
+                                                       LineSequence, \
+                                                       InputChunkTerminal
 from ut.engine.compare.tolerance.pattern_finder import PatternFinder
 
 from itertools import count

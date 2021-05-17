@@ -1,4 +1,4 @@
-from   ut.engine.compare.tolerance.match import LineElementString, LineElementNumber, LineElementAnalogy, LineElementEquivalencePattern
+from   ut.engine.compare.tolerance.line_element import LineElementString, LineElementNumber, LineElementAnalogy, LineElementEquivalencePattern
 from   ut.engine.compare.engine.line            import Line
 from   ut.engine.compare.engine.input_chunk     import Potpourri
 from   ut.engine.compare.engine.input_chunk     import LineSequence
