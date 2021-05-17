@@ -110,7 +110,7 @@ class MatchDb(dict):
         result.max_size = max(L_subject, L_nominal)
         return result
 
-    def pairing(self, couples, analogy_db):
+    def pairing(self, analogy_db):
         """The 'couples' dictionary maps: map 'ia' --> 'ib'. It contains
         information about lines, that have already been paired.
 
@@ -119,16 +119,12 @@ class MatchDb(dict):
                  [1] map: 'ia' --> 'ib'
                  [2] analogy_db
         """
-        assert set(self).isdisjoint(couples)
-        for mate_list in self.values():
-            assert all(bi not in couples.values() for bi, _ in mate_list)
-
-        L = len(self) + len(couples)
+        L = len(self)
 
         subject_singles_all = set(self)
 
         work_list = [
-            (ia, couples, analogy_db) for ia in subject_singles_all
+            (ia, {}, analogy_db) for ia in subject_singles_all
         ]
         best_size = 0; best_couples = {}; best_analogy_db = AnalogyDb()
         while work_list:

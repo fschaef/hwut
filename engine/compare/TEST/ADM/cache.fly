@@ -4,7 +4,7 @@ file_name: test-main.py;
 hwut_info_time: 1621160938L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.164876; 0; ]
-  [ line_associations; OK; 0.165359; 0; ]
+  [ compare; OK; 0.163621; 0; ]
+  [ line_associations; OK; 0.164746; 0; ]
 ]
 }

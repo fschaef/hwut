@@ -47,8 +47,7 @@ if "pairing" in sys.argv:
         if len(analogy_db):
             print("analogy_db:", analogy_db)
 
-        couples = {}
-        verdict, couples, analogy_db = match_db.pairing(couples, analogy_db)
+        verdict, couples, analogy_db = match_db.pairing(analogy_db)
 
         print("AFTER: --> {")
         if len(match_db): print(match_db)

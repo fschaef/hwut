@@ -49,7 +49,8 @@ def do(subject_line_list, nominal_line_list, analogy_db, abort_f=False):
         else:       pre_verdict = False
 
     # -- Find solution for possible pairings.
-    verdict, couples, analogy_db = match_db.pairing(couples, analogy_db)
+    verdict, new_couples, analogy_db = match_db.pairing(analogy_db)
+    if verdict: couples.update(new_couples)
     return pre_verdict and verdict, couples, analogy_db
 
 

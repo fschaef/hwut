@@ -59,7 +59,7 @@ association: False
 --------------------------------
 subject: ['happy ((A)) ((B))', 'happy ((A)) ((C))']
 nominal: ['funny ((1)) ((2))', 'funny ((2)) ((1))']
-db: size 1; analogy_db: size 1;
+db: size 0; analogy_db: size 0;
 association: False
 --------------------------------
 subject: ['funny ((A)) ((D))', 'happy ((A)) ((B))', 'glad ((C)) ((D))']
@@ -77,5 +77,3 @@ association: True
 subject: ['funny ((B)) ((A))', 'happy ((A)) ((B))', 'smart ((C)) ((D))', 'glad ((B)) ((A))', 'something ((B)) ((A))']
 nominal: ['something ((2)) ((1))', 'happy ((1)) ((2))', 'smart ((3)) ((4))', 'glad ((2)) ((1))', 'something ((2)) ((1))']
 association: False
-
-
