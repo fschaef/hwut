@@ -14,15 +14,15 @@ class E_Verdict(Enum):
     ERROR_IN_NOMINAL = auto()
 
 class Configuration:
-    __slots__ = ("strip_whitespace_f",           
-                 "analogy_f",                   
-                 "whitespace_f",                
-                 "backslash_f",                 
-                 "numeric_tolerance_ratio",     
-                 "equivalent_pattern_list",     
+    __slots__ = ("strip_whitespace_f",
+                 "analogy_f",
+                 "whitespace_f",
+                 "backslash_f",
+                 "numeric_tolerance_ratio",
+                 "equivalent_pattern_list",
                  "visible_nothing_pattern_list",
                  "potpourri_max_comparison_count")
-    
+
     def __init__(self):
         # ToleranceTable
         self.strip_whitespace_f           = True

@@ -6,7 +6,7 @@ PURPOSE: Yielding pairs of 'InputChunk'-s from subject and nominal to be
 
 The 'ChunkPipe' interprets the input streams of subject and nominal. An
 input chunk can be:
- 
+
    -- LineSequence: set of lines where the sequence is *relevant*.
 
    -- Potpourri:    set of lines where the sequence is *unimportant*.
@@ -39,4 +39,4 @@ def generate(config, subject_line_provider, nominal_line_provider, fillvalue=Non
 
     # chunk: 'LineSequence' or 'Potpourri' both derived from 'InputChunk'.
     yield from zip_longest(subject_iterable, nominal_iterable, fillvalue=fillvalue)
-        
+

@@ -5,15 +5,13 @@
 # Tests: (1) compare two lines on equality. Result 'True' or 'False'.
 #        (2) compares two lines with the result of a list of edit operations.
 #
-# The first is used to determine the correctness of unit tests, the later is 
+# The first is used to determine the correctness of unit tests, the later is
 # used to display the difference of a subject's output and the nominal output.
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
-import os
-import re
 
 sys.path.insert(0, "../../../../../")
 
@@ -44,7 +42,7 @@ if "judge" in sys.argv:
     test("xy", "yzy")
     test("xyx", "yz")
 
-    
+
 if "info" in sys.argv:
 
     def test(a, b):

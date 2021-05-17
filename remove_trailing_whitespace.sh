@@ -1,1 +1,1 @@
-sed -e 's/[[:space:]]*$//' $(find . -name "*.py")
+perl -pi.bak -e 's/[ \t]+$//g' $(find . -name "*.py")

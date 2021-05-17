@@ -2,32 +2,29 @@
 #
 # PURPOSE: Comparison of two streams given by 'line_providers'
 #
-# This test is concerned with the outer API for the comparison of two 
+# This test is concerned with the outer API for the comparison of two
 # character streams. It provides the two functionalities:
 #
 #   -- judgement: Test whether the two streams are equivalent.
-#   -- info:      Provide information how the subject stream can be 
+#   -- info:      Provide information how the subject stream can be
 #                 transformed into the nominal stream. This is important
 #                 for the 'difference display'.
 #
-# The 'chunk_pipe' adapts the line providers to generate chunks of type 
-# *list of lines* and *potpourri*. Each chunk type has its own comparison 
+# The 'chunk_pipe' adapts the line providers to generate chunks of type
+# *list of lines* and *potpourri*. Each chunk type has its own comparison
 # procedures defined.
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
-import os
-import re
 from   io import StringIO
 
 sys.path.insert(0, "../../../../../")
 
 import ut.engine.compare.engine.core               as     comperator
 from   ut.engine.compare.tolerance.chunk_pipe     import ChunkPipe
-from   ut.engine.compare.TEST.common              import prepare, \
-                                                           print_match_sequences, \
+from   ut.engine.compare.TEST.common              import print_match_sequences, \
                                                            print_match_sequences_lists, \
                                                            print_friends_pairing_max_result, \
                                                            get_LineSequence
@@ -59,9 +56,9 @@ if "normal" in sys.argv:
     test(["||||", "line2", "||||"])
     test(["||||", "line 2", "line 3", "||||",
           "line 5"])
-    test(["line 1", 
+    test(["line 1",
           "||||", "line 3", "line 4", "||||"])
-    test(["line 1", 
+    test(["line 1",
           "||||", "line 3", "||||",
           "line 5"])
 

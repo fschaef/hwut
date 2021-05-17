@@ -34,7 +34,6 @@ analogy_db: "max":"heinz"
 AFTER: --> {
 }
 couples: 
-<None>
 
 ---( one entry, when removed makes other alternativeless )-----------------------------
 BEFORE: {
@@ -56,9 +55,10 @@ BEFORE: {
 AFTER: --> {
 }
 couples: 
-<None>
+  00 <-> 100
 
 ---( iterative ultimate creation )-----------------------------
+
 BEFORE: {
 [00]-[100]: "otto":"heinz"
 [01]-[100]: "otto":"heinz"
@@ -78,8 +78,8 @@ couples:
   01 <-> 101
   02 <-> 102
   03 <-> 103
-
 ---( remove nominal with only one mating candidate )-----------------------------
+
 BEFORE: {
 [00]-[100]: "otto":"heinz"
 [00]-[102]: "mark":"otto"
@@ -96,8 +96,8 @@ AFTER: --> {
 }
 couples: 
   01 <-> 101
-
 ---( remove nominals with contradicting analogy_db )-----------------------------
+
 BEFORE: {
 [00]-[100]: "otto":"fritz"
 [00]-[102]: "mark":"otto"
@@ -111,8 +111,21 @@ couples:
   00 <-> 102
   01 <-> 100
   02 <-> 101
-
 ---( a removed nominal leaves entry hopeless )-----------------------------
+
+BEFORE: {
+[00]-[101]: "otto":"fritz"
+[01]-[100]: "mark":"heinz"
+[02]-[100]: "otto":"heinz"
+[02]-[101]: "mark":"heinz"
+}
+AFTER: --> {
+}
+couples: 
+  00 <-> 101
+  01 <-> 100
+---( a removed nominal leaves entry hopeless (abort) )-----------------------------
+
 BEFORE: {
 [00]-[101]: "otto":"fritz"
 [01]-[100]: "mark":"heinz"
@@ -125,21 +138,21 @@ couples:
   00 <-> 101
   01 <-> 100
 
----( a removed nominal leaves entry hopeless (abort) )-----------------------------
+---( nominal deletion produces ultimate with inconsistent analogy_db )-----------------------------
 BEFORE: {
 [00]-[101]: "otto":"fritz"
-[01]-[100]: "mark":"heinz"
-[02]-[100]: "otto":"heinz"
-[02]-[101]: "mark":"heinz"
+
+[01]-[100]: "otto":"heinz"
+[01]-[101]: "mark":"heinz"
 }
 AFTER: --> {
 }
 couples: 
-<None>
-
----( nominal deletion produces ultimate with inconsistent analogy_db )-----------------------------
+  00 <-> 101
+---( nominal deletion produces ultimate with inconsistent analogy_db (abort) )-----------------------------
 BEFORE: {
 [00]-[101]: "otto":"fritz"
+
 [01]-[100]: "otto":"heinz"
 [01]-[101]: "mark":"heinz"
 }
@@ -148,34 +161,24 @@ AFTER: --> {
 couples: 
   00 <-> 101
 
----( nominal deletion produces ultimate with inconsistent analogy_db (abort) )-----------------------------
-BEFORE: {
-[00]-[101]: "otto":"fritz"
-[01]-[100]: "otto":"heinz"
-[01]-[101]: "mark":"heinz"
-}
-AFTER: --> {
-}
-couples: 
-<None>
-
 ---( nominal already taken )-----------------------------
 BEFORE: {
 [00]-[100]: "otto":"heinz"
 [01]-[100]: "otto":"heinz"
+
 }
 AFTER: --> {
 }
 couples: 
   00 <-> 100
-
 ---( nominal already taken (abort) )-----------------------------
 BEFORE: {
 [00]-[100]: "otto":"heinz"
 [01]-[100]: "otto":"heinz"
+
 }
 AFTER: --> {
 }
 couples: 
-<None>
+  00 <-> 100
 

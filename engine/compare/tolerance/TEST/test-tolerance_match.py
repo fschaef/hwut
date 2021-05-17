@@ -3,7 +3,7 @@
 # PURPOSE: Tolerance LineElement objects;
 #
 # A line is processed by the tolerance pattern finder and transformed into a
-# list of 'LineElement' objects. This test checks on the functionality of all 
+# list of 'LineElement' objects. This test checks on the functionality of all
 # derivatives of 'LineElement' objects, as they are mainly:
 #
 #    .compare()            --> E_Verdict
@@ -12,10 +12,8 @@
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
-import os
-import re
 
 sys.path.insert(0, "../../../../../")
 
@@ -53,7 +51,7 @@ def test(good_subject, bad_subject, nominal):
     print("NOMINAL.string:          '%s'" % nominal.string)
     print("NOMINAL.difference_cost: %.6f" % nominal.edit_distance_relative(nominal))
     print("NOMINAL.representation:  %s"   % nominal)
-    
+
 if choice == "LineElementString":
     test(LineElementString(6, 10,  "A fox jumps high"),
          LineElementString(3, 11,  "An elephant does not jump"),
@@ -63,7 +61,7 @@ if choice == "LineElementString":
          LineElementString(11, 16, "Mice don't jump"))
     test(LineElementString(6, 10,  "A fox jumps high"),
          LineElementString(3, 11,  "An elephant does not jump"),
-         LineElementString(11, 11, "Mice don't jump"))  # Empty: 
+         LineElementString(11, 11, "Mice don't jump"))  # Empty:
 
 if choice == "LineElementNumber":
     test(LineElementNumber(6, 10,  "A fox 4712 high"),

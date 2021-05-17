@@ -14,7 +14,7 @@
  (OK) ./engine/line.py
  (OK) ./engine/line_association.py
  (OK) ./engine/line_association_chunk.py
-      ./friends_pairing/core.py
+ (OK) ./friends_pairing/exact.py
       ./friends_pairing/match_db.py
       ./friends_pairing/max.py
       ./main.py

@@ -1,7 +1,7 @@
 """SPDX License: MIT; (C) Frank-Rene Schäfer; Project: hwut
 _______________________________________________________________________________
 
-PURPOSE: Determining the edit operations to transform a subject 'Line' 
+PURPOSE: Determining the edit operations to transform a subject 'Line'
          into the nominal 'Line'.
 
 The transformation is expressed as a sequence of 'edit operations' on line
@@ -9,7 +9,7 @@ elements, namely:
 
     GOOD, SUBSTITUTE_TYPE, SUBSTITUTE, TRANSPOSE, DELETE, and INSERT.
 
-A line element, i.e. a 'LineElement' object is an identified pattern such as 
+A line element, i.e. a 'LineElement' object is an identified pattern such as
 a number or an analogy. It is the result of the lexical analysis process
 in './tolerance/pattern_finder.py'.
 
@@ -19,13 +19,13 @@ Subject and nominal lines are represented by a sequence of 'LineElement' objects
 The algorithm walks along the two sequences with two indices 'ai' and 'bi'
 pointing to the 'LineElement' objects under comparison.
 
-Example: Let the subject and nominal sequences of 'LineElement' objects be 
-represented by the sequences 'a h b e r' and 'a b e r'. 
+Example: Let the subject and nominal sequences of 'LineElement' objects be
+represented by the sequences 'a h b e r' and 'a b e r'.
 
                            ai
                            |
                subject:  a h b e r
-               
+
                nominal:  a b e r
                            |
                            bi
@@ -34,24 +34,24 @@ At a given positions (ai, bi), there are the following three possibilities to
 proceed.
 
  position      edit             effect in the example above
- change        operation 
+ change        operation
 ---------------------------------------------------------------------------
- (ai++, bi++)  SUBSTITUTE_TYPE  type of 'b' does not fit type of 'h'                       
-               SUBSTITUTE       'b != h'. step to next two chars                           
+ (ai++, bi++)  SUBSTITUTE_TYPE  type of 'b' does not fit type of 'h'
+               SUBSTITUTE       'b != h'. step to next two chars
                GOOD             step to next two chars
                                 (assume 'b' and 'h' are equivalent)
-               TRANSPOSE        switch 'h' and 'b' in nominal, then step 
-                                to next two chars 
- (ai++, bi)    DELETE           do as if 'h' was not there. 
-                                next compare 'b' with 'b'.               
+               TRANSPOSE        switch 'h' and 'b' in nominal, then step
+                                to next two chars
+ (ai++, bi)    DELETE           do as if 'h' was not there.
+                                next compare 'b' with 'b'.
  (ai,   bi++)  INSERT           do as if 'b' is inserted into subject.
                                 next compare 'h' with 'e'.
 
 Each *step* advances further to the end of the sequence. Let each step
-type be associated with a specific cost. Now, the task of finding a set 
+type be associated with a specific cost. Now, the task of finding a set
 of edit operations can be defined as:
 
-   Find the sequence of *steps* that reaches the end of both sequences 
+   Find the sequence of *steps* that reaches the end of both sequences
    with a minimum accumulated cost.
 
 The result is the optimal sequence of edit operations required to transform the
@@ -75,33 +75,33 @@ class E_EditLine(IntEnum):
     DELETE          = 3  # Heal: 'LineElement' from subject is deleted.
     SUBSTITUTE      = 4  # Bad:  Content of subject and nominal 'LineElement' differs.
     SUBSTITUTE_TYPE = 5  # Bad:  Type of subject and nominal 'LineElement' differs.
-    
+
 Edit      = namedtuple("Edit", ("id", "transpose_ai"))
 EditsLine = namedtuple("EditsLine", ("cost", "edit_list", "analogy_db"))
 
 
 def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     """RETURNS: EditsLine
-        
+
     Compares the line elements of 'subject_match_seq' and 'nominal_match_seq' and
     determines the editions required to transform the former into the latter.
 
     where EditsLine.cost       = cost / max. cost; thus in range of [0...1].
-          EditsLine.edit_list  = list of 'Edit' 
+          EditsLine.edit_list  = list of 'Edit'
           EditsLine.analogy_db = 'AnalogyDb' required for equivalences to hold.
     """
     subject_length = len(subject_match_seq)
     nominal_length = len(nominal_match_seq)
-    if analogy_db is None: 
+    if analogy_db is None:
         analogy_db = AnalogyDb()
 
-    work_list = [ 
-        WorkItem(list(subject_match_seq), 
+    work_list = [
+        WorkItem(list(subject_match_seq),
                  ai         = 0, # index into subject 'LineElement' sequence
                  bi         = 0, # index into nominal 'LineElement' sequence
                  cost       = 0,
-                 edit_list  = [], 
-                 analogy_db = analogy_db) 
+                 edit_list  = [],
+                 analogy_db = analogy_db)
     ]
 
     max_cost, min_cost = _cost_assumptions(subject_length, nominal_length)
@@ -138,9 +138,9 @@ position_increment_db = {
     E_EditLine.GOOD:             (1,           1),    # Step over subject[ai], nominal[bi]
     E_EditLine.TRANSPOSE:        (1,           1),    #          -- " --
     E_EditLine.INSERT:           (0,           1),    # Consider 'subject[ai]' as insertion.
-    #                                             # => compare subject[ai+1] with nominal[bi] 
+    #                                             # => compare subject[ai+1] with nominal[bi]
     E_EditLine.DELETE:           (1,           0),    # Consider 'nominal[bi]' as insertion.
-    #                                             # => compare subject[ai] with nominal[bi+1] 
+    #                                             # => compare subject[ai] with nominal[bi+1]
     E_EditLine.SUBSTITUTE:       (1,           1),    # Step over subject[ai], nominal[bi]
     E_EditLine.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
 }
@@ -156,11 +156,11 @@ cost_db = {
 
 class WorkItem:
    """A 'WorkItem' corresponds to a node for the tree search algorithm
-   that searches the least costly path to the end of the 'LineElement' 
+   that searches the least costly path to the end of the 'LineElement'
    sequence objects.
 
    It maintains:
-       
+
        * Position pair (ai, bi) which is investigated.
 
    Also, it maintains implications of previous steps:
@@ -172,7 +172,7 @@ class WorkItem:
        * analogy required to hold for all past edit operations.
 
    The function '.subsequent_steps()' determines possible steps from the
-   position denoted by 'self'. It does so by yielding 'WorkItem' objects 
+   position denoted by 'self'. It does so by yielding 'WorkItem' objects
    for subsequence positions.
    """
    def __init__(self, subject, ai, bi, cost, edit_list, analogy_db):
@@ -191,15 +191,15 @@ class WorkItem:
 
        verdict_id, analogy = subject_match.compare(nominal_match)
 
-       # IMPORTANT: Worklist is a LIFO (last in, first out). 
+       # IMPORTANT: Worklist is a LIFO (last in, first out).
        #
-       # For performance, it is essential that 'cheap' steps are treated first. 
+       # For performance, it is essential that 'cheap' steps are treated first.
        # => more expensive paths are cut early.
        good_f = False
-       if   verdict_id == E_Verdict.MISFIT: 
+       if   verdict_id == E_Verdict.MISFIT:
            yield self._step(E_EditLine.SUBSTITUTE_TYPE)
-       elif verdict_id == E_Verdict.DIFFERENT: 
-           yield self._step(E_EditLine.SUBSTITUTE, 
+       elif verdict_id == E_Verdict.DIFFERENT:
+           yield self._step(E_EditLine.SUBSTITUTE,
                             cost_factor = subject_match.edit_distance_relative(nominal_match))
        elif not self.analogy_db.is_consistent(analogy):
            yield self._step(E_EditLine.SUBSTITUTE)
@@ -223,32 +223,32 @@ class WorkItem:
        """RETURNS: WorkItem derived from self after applying an edit operation.
 
        Given an edit operation 'edit_id' this function generates a modified
-       version of 'self'. It adapts the indices 'ai' and 'bi' according to 
+       version of 'self'. It adapts the indices 'ai' and 'bi' according to
        the position progress related to the operation. The new 'WorkItem'
        will contain a new 'subject', and 'analogy_db' if they were changed.
        The 'edit_list' of the 'WorkItem' contains all current edit operations
        plus the edit operation 'edit_id' that produced the 'WorkItem'.
        """
 
-       if transpose_ai is not None:    
+       if transpose_ai is not None:
            new_subject = copy(self.subject) # shallow copy
            new_subject[self.ai], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.ai]
        else:
            new_subject = self.subject
 
-       if new_analogy is not None: 
+       if new_analogy is not None:
            new_analogy_db = self.analogy_db.clone()
            new_analogy_db.add(new_analogy)
        else:
            new_analogy_db = self.analogy_db
 
        increment_ai, increment_bi = position_increment_db[edit_id]
-       return WorkItem(subject    = new_subject, 
-                       ai         = self.ai + increment_ai, 
+       return WorkItem(subject    = new_subject,
+                       ai         = self.ai + increment_ai,
                        bi         = self.bi + increment_bi,
-                       cost       = self.cost + cost_db[edit_id] * cost_factor, 
-                       edit_list  = self.edit_list + [ Edit(edit_id, transpose_ai) ], 
-                       analogy_db = new_analogy_db) 
+                       cost       = self.cost + cost_db[edit_id] * cost_factor,
+                       edit_list  = self.edit_list + [ Edit(edit_id, transpose_ai) ],
+                       analogy_db = new_analogy_db)
 
 
 def _cost_assumptions(subject_length, nominal_length):

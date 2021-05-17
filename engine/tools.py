@@ -12,7 +12,7 @@ class Cache(dict):
 
     def get(self, key, func, *args):
         entry = dict.get(self, key)
-        if entry is None: 
+        if entry is None:
             entry     = func(*args)
             self[key] = entry
         return entry
@@ -44,7 +44,7 @@ class HwutIterator:
         result = []
         try:
             while 1 + 1 == 2:
-                result.append(next(self)) 
+                result.append(next(self))
         except StopIteration:
             return result
 
@@ -53,7 +53,7 @@ class HwutIterator:
         try:
             while 1 + 1 == 2:
                 count += 1
-                next(self) 
+                next(self)
         except StopIteration:
             return count
 
@@ -82,4 +82,4 @@ class LineProviderFromArray:
             self.__i += 1
             return self.__line_list[self.__i]
 
-        
+

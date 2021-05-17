@@ -1,4 +1,4 @@
-from   ut.engine.quex.typed              import typed 
+from   ut.engine.quex.typed              import typed
 from   ut.engine.compare.tolerance.match import E_ToleranceId, Token, LineElement, LineElementString
 
 from   collections import namedtuple
@@ -7,8 +7,8 @@ import re
 TolerancePattern = namedtuple("TolerancePattern", ("id", "pattern", "pattern_index"))
 
 class PatternFinder:
-    """Maintains a list of tolerance patterns to be found in a string. 
-    The 'lexical_analysis()' function interprets a string as a sequence of 
+    """Maintains a list of tolerance patterns to be found in a string.
+    The 'lexical_analysis()' function interprets a string as a sequence of
     'LineElement' objects.
     """
     def __init__(self, config):
@@ -17,7 +17,7 @@ class PatternFinder:
             else:                 pattern = None
             if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
                 pattern_index = sum(x.id == E_ToleranceId.EQUIVALENCE_PATTERN
-                                    for x in table) 
+                                    for x in table)
             else:
                 pattern_index = None
             table.append(TolerancePattern(tolerance_id, pattern, pattern_index))
@@ -33,13 +33,13 @@ class PatternFinder:
 
             for pattern in config.visible_nothing_pattern_list:
                 _add(table, E_ToleranceId.VISIBLE_NOTHING,     pattern)
-            if config.analogy_f:               
+            if config.analogy_f:
                 _add(table, E_ToleranceId.ANALOGY,             re_analogy)
-            if config.numeric_tolerance_ratio: 
+            if config.numeric_tolerance_ratio:
                 _add(table, E_ToleranceId.NUMERIC,             re_number)
-            if config.whitespace_f:            
+            if config.whitespace_f:
                 _add(table, E_ToleranceId.EQUIVALENCE_PATTERN, re_whitespace)
-            if config.backslash_f:             
+            if config.backslash_f:
                 _add(table, E_ToleranceId.EQUIVALENCE_PATTERN, re_backslash)
             for pattern_index, pattern in enumerate(config.equivalent_pattern_list):
                 # If subject and nominal match the same pattern, then
@@ -59,8 +59,8 @@ class PatternFinder:
         """RETURNS: sequence of 'LineElement' objects.
 
         Identifies tolerance patterns in 'string' and returns a sequence of
-        'LineElement' objects. A 'LineElement' object carries information about the 
-        tolerance type (white space, number, analogy, ...) as well as the 
+        'LineElement' objects. A 'LineElement' object carries information about the
+        tolerance type (white space, number, analogy, ...) as well as the
         position and the content of the string that matches.
         """
         def _analyze(string):
@@ -69,9 +69,9 @@ class PatternFinder:
             while 1 + 1 == 2:
                 token = _find_first_match(self.table, string, i, useless)
 
-                if token.start is None: 
+                if token.start is None:
                     break
-                elif i != token.start: 
+                elif i != token.start:
                     yield LineElementString(i, token.start, string)
 
                 match = LineElement.from_Token(token, string, self.numeric_tolerance_ratio)
@@ -90,7 +90,7 @@ class PatternFinder:
 
     def is_irrelevant(self, line):
         line = line.strip()
-        if not line: 
+        if not line:
             return True
         elif any(line.startswith(m) for m in self.ignored_line_begin_marker):
             return True
@@ -104,7 +104,7 @@ class PatternFinder:
         return line.startswith("||||") and len(set(line)) == 1
 
 def _find_first_match(table, string, i, useless):
-    """RETURNS: [0] Index of first tolerance patterns that matched after 
+    """RETURNS: [0] Index of first tolerance patterns that matched after
                           position in string 'i'.
                     Set of indices, if more than one user pattern matches
                           on the exact same span.
@@ -117,13 +117,13 @@ def _find_first_match(table, string, i, useless):
         if index in useless or tolerance.id == E_ToleranceId.STRING:
             continue
         m = tolerance.pattern.search(string, i)
-        if m is None: 
+        if m is None:
             useless.add(index)
         elif best.start is None:
             best.set(tolerance, m.span())     # innocense always wins
-        elif m.start() < best.start: 
+        elif m.start() < best.start:
             best.set(tolerance, m.span())     # earlier wins
-        elif m.start() != best.start: 
+        elif m.start() != best.start:
             pass                              # later looses
         elif m.end() > best.end:
             best.set(tolerance, m.span())     # longer wins

@@ -2,7 +2,7 @@
 class Basic:
     """
     Basic Build procedure for an application which does not require a build to
-    exist. This holds for test applications written in interpreted languages, 
+    exist. This holds for test applications written in interpreted languages,
     for example.
     """
 
@@ -35,7 +35,7 @@ class Null(Basic):
 
 class ToolBasic(Basic):
     """
-    Build procedure that uses a system tool, such as 'make'. 
+    Build procedure that uses a system tool, such as 'make'.
     """
 
     def __init__(self, file_name_list, command_line):
@@ -57,7 +57,7 @@ class ToolBasic(Basic):
             elif self.__timeout():          verdict = E_Verdict.BUILD_TIMEOUT; break
             elif self.__storage_at_limit(): verdict = E_Verdict.BUILD_STORAGE_LIMIT; break
 
-            wait asyncio.sleep(self.__next_time_delta_sec())
+#wait asyncio.sleep(self.__next_time_delta_sec())
 
         return verdict, self.build_process.time_elapsed()
 
@@ -79,12 +79,12 @@ class ToolBasic(Basic):
 
 
 class Tool_Make(ToolBasic):
-    """ 
+    """
     Build procedure to build applications using 'Make' build system tool.
     """
     def __init__(self, file_name_list):
         # Apply the system's 'make' application with as many jobs as file names (-jN).
-        command_line = [ hwut_system.BUILD_APP_MAKE, "-j%i"  % len(file_name_list) ] 
+        command_line = [ hwut_system.BUILD_APP_MAKE, "-j%i"  % len(file_name_list) ]
         command_line += file_name_list)
         ToolBasic.__init__(file_name_list, command_line)
 
@@ -92,7 +92,7 @@ class Tool_Make(ToolBasic):
 def get_instructions(app_list):
     """Receives a list of App-s. Each app tells about the '.build_type' which it requires
     in order to be built. This function determines a 'build.Basic' procedure that can
-    produce the given applications. Possibly, a procedure can produces multiple apps at 
+    produce the given applications. Possibly, a procedure can produces multiple apps at
     once.
     """
 
@@ -109,11 +109,11 @@ def get_instructions(app_list):
         return build
 
     # Categorize build that can be accomplished within one single call.
-    db = defaultdict(list) 
+    db = defaultdict(list)
     for app in app_list:
         db[app.build_type].append(app)
 
     return [ _get(build_type, app_list) for build_type, app_list in db.items() ]
-            
-        
+
+
 

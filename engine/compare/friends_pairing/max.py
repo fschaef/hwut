@@ -1,4 +1,4 @@
-import ut.engine.compare.friends_pairing.core    as     friends_pairing
+import ut.engine.compare.friends_pairing.exact    as     friends_pairing
 from   ut.engine.compare.engine.analogy_db       import AnalogyDb
 from   ut.engine.compare.engine.line_association import LineAssociation
 import ut.engine.compare.edit_operations.line    as     edit_distance_line
@@ -14,9 +14,9 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
     remaining lines are matched based on some cost function. The cost function
     measures the amount of diffrerence between two lines.
     """
-    verdict, couples, analogy_db = friends_pairing.do(subject_line_list, 
-                                                      nominal_line_list, 
-                                                      analogy_db, 
+    verdict, couples, analogy_db = friends_pairing.do(subject_line_list,
+                                                      nominal_line_list,
+                                                      analogy_db,
                                                       abort_f=abort_f)
 
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
@@ -33,7 +33,7 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
         # until either no subject or no nominal remains as mating candidate.
         forced_matches,     \
         subjects_remaining, \
-        nominals_remaining  = _pair_maximum(couples, subject_db, nominal_db, 
+        nominals_remaining  = _pair_maximum(couples, subject_db, nominal_db,
                                             analogy_db, max_comparison_count)
 
         result.extend(forced_matches)
@@ -63,17 +63,17 @@ def _pair_maximum(couples, subject_db, nominal_db, analogy_db, max_comparison_co
     subjects_taken, nominals_taken = set(couples.keys()), set(couples.values())
 
     nominals_available_db, nominals_on_call = _nominals(nominal_db,
-                                                        nominals_taken, 
+                                                        nominals_taken,
                                                         max_comparison_count)
-    subjects_available                      = _subjects(subject_db, 
+    subjects_available                      = _subjects(subject_db,
                                                         subjects_taken)
 
     line_associations,  \
     subjects_remaining, \
-    nominals_remaining  = _couple_remainders(subjects_available , 
+    nominals_remaining  = _couple_remainders(subjects_available ,
                                              nominal_db,
-                                             nominals_available_db, 
-                                             nominals_on_call, 
+                                             nominals_available_db,
+                                             nominals_on_call,
                                              analogy_db)
 
     # One remainder must be empty!
@@ -99,8 +99,8 @@ def _nominals(nominal_db, nominals_coupled, max_comparison_count):
         nominals_on_call = []
 
     nominal_db = dict(
-        (ib, match_seq) 
-        for ib, match_seq in nominal_db.items() 
+        (ib, match_seq)
+        for ib, match_seq in nominal_db.items()
         if ib in remaining
     )
     return nominal_db, nominals_on_call
@@ -116,23 +116,23 @@ def _subjects(subject_db, subjects_coupled):
         if ia not in subjects_coupled
     ]
 
-def _couple_remainders(subjects_available, 
+def _couple_remainders(subjects_available,
                        nominal_db,
-                       nominals_available_db, 
+                       nominals_available_db,
                        nominals_on_call,
                        analogy_db):
     """RETURNS: list of LineAssociation objects.
-        
-    Find couples in the set of remainders according to a least cost 
-    function. The cost is the amount of difference between the line 
+
+    Find couples in the set of remainders according to a least cost
+    function. The cost is the amount of difference between the line
     elements.
     """
-    if not nominals_available_db: 
+    if not nominals_available_db:
         return [], sorted(mseq.line_n for mseq in subjects_available), []
 
     result = []
     for i, subject_seq in enumerate(sorted(subjects_available)):
-        if not nominals_available_db: 
+        if not nominals_available_db:
             subjects_remaining = set(mseq.line_n for mseq in subjects_available[i:])
             break
         best = _find_best_match(subject_seq, nominals_available_db, analogy_db)
@@ -141,7 +141,7 @@ def _couple_remainders(subjects_available,
         analogy_db = best.analogy_db
 
         # 'best.nominal_seq' is no longer available as mate.
-        del nominals_available_db[best.nominal_seq.line_n] 
+        del nominals_available_db[best.nominal_seq.line_n]
 
         if nominals_on_call:
             ib = nominals_on_call.pop()
@@ -164,20 +164,20 @@ def _find_best_match(subject_seq, nominal_match_db, analogy_db):
     for ib, nominal_seq in sorted(nominal_match_db.items()):
         cost,      \
         edit_list, \
-        analogy_db = edit_distance_line.do(subject_seq.sequence, 
-                                           nominal_seq.sequence, 
+        analogy_db = edit_distance_line.do(subject_seq.sequence,
+                                           nominal_seq.sequence,
                                            analogy_db)
-        if cost >= best_cost: 
+        if cost >= best_cost:
             continue
 
-        best_cost        = cost 
+        best_cost        = cost
         best.nominal_seq = nominal_seq
         best.edit_list   = edit_list
         best.analogy_db  = analogy_db
         if best_cost == 0:
-            # IMPOSSIBLE: Because, if there was a perfect match, then it 
+            # IMPOSSIBLE: Because, if there was a perfect match, then it
             #             would have been found in 'FriendsPairing.do()'.
-            break #       pragma no cover 
+            break #       pragma no cover
 
     assert not best.is_empty() # since nominal_match_db was not empty
     return best

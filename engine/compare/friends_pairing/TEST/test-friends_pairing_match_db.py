@@ -1,11 +1,11 @@
-# PURPOSE: 'LineElementDb'
+# PURPOSE: 'MatchDb'
 #
-# The 'LineElementDb' maintains possible matches between subject and nominal lines.
-# 
+# The 'MatchDb' maintains possible matches between subject and nominal lines.
+#
 #  map: subject line number --> (nominal line number, analogy_db)
 #
 # That is, for each line number in the subject, there is a list of line numbers
-# indicating the nominal lines that match that line. Additionally, the 
+# indicating the nominal lines that match that line. Additionally, the
 # analogy_db tells what analogies are require for the equivalence to hold.
 #
 # -- 'pairing' finds distinct matches between subject lines and nominal lines.
@@ -20,7 +20,7 @@
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
 import os
 import re
@@ -28,13 +28,13 @@ import re
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   ut.engine.compare.friends_pairing.match_db import LineElementDb
+from   ut.engine.compare.friends_pairing.match_db import MatchDb
 from   ut.engine.compare.engine.analogy_db               import AnalogyDb
 
 from   copy import copy
 
 if "--hwut-info" in sys.argv:
-    print("LineElementDb;")
+    print("MatchDb;")
     print("CHOICES: analogy_interferences, extract_ultimates, pairing;")
     sys.exit()
 
@@ -44,7 +44,7 @@ if "pairing" in sys.argv:
         print("BEFORE: {")
         print(match_db)
         print("}")
-        if len(analogy_db): 
+        if len(analogy_db):
             print("analogy_db:", analogy_db)
 
         couples = {}
@@ -61,7 +61,7 @@ if "pairing" in sys.argv:
             print("<None>")
         print()
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
         (1,   [(100, AnalogyDb([("otto",  "heinz")])),    # removed upon '1' extracted
                (101, AnalogyDb([("mark",  "heinz")]))]),
@@ -70,14 +70,14 @@ if "pairing" in sys.argv:
     ])
     match_db_copy = copy(match_db)
     test("basic", match_db, AnalogyDb())
-    
+
 if "extract_ultimates" in sys.argv:
     def test(name, match_db, analogy_db, abort_f=False):
         print("---( %s )-----------------------------" % name)
         print("BEFORE: {")
         print(match_db)
         print("}")
-        if len(analogy_db): 
+        if len(analogy_db):
             print("analogy_db:", analogy_db)
 
         couples = match_db.extract_ultimates_and_hopeless(analogy_db, abort_f)
@@ -93,21 +93,21 @@ if "extract_ultimates" in sys.argv:
             print("<None>")
         print()
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
         (1,   [(101, AnalogyDb([("otto", "heinz")]))
         ]),
     ])
     test("one entry", match_db, AnalogyDb())
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
         (1,   [(101, AnalogyDb([("otto", "heinz")]))
         ]),
     ])
     test("one entry consistent with analogy_db", match_db, AnalogyDb({ "otto":  "heinz" }))
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
         (1,   [(101, AnalogyDb([("otto", "heinz")]))
         ]),
@@ -116,9 +116,9 @@ if "extract_ultimates" in sys.argv:
     test("one entry inconsistent with analogy_db", match_db, AnalogyDb({ "max":  "heinz" }))
     test("one entry inconsistent with analogy_db (abort)", match_db_copy, AnalogyDb({ "max":  "heinz" }), abort_f=True)
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
-        (0,   [(100, AnalogyDb([("otto", "heinz")]))]),  # ultimate 
+        (0,   [(100, AnalogyDb([("otto", "heinz")]))]),  # ultimate
         (1,   [(100, AnalogyDb([("otto", "heinz")])),    # removed upon '1' extracted
                (101, AnalogyDb([("mark", "heinz")]))]),
     ])
@@ -126,9 +126,9 @@ if "extract_ultimates" in sys.argv:
     test("one entry, when removed makes other alternativeless", match_db, AnalogyDb())
     test("one entry, when removed makes other alternativeless (abort)", match_db_copy, AnalogyDb(), abort_f=True)
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
-        (0,   [(100, AnalogyDb([("otto", "heinz")]))]),    # ultimate 
+        (0,   [(100, AnalogyDb([("otto", "heinz")]))]),    # ultimate
         (1,   [(100, AnalogyDb([("otto", "heinz")])),      # removed upon '1' extracted
                (101, AnalogyDb([("mark", "otto")]))]),
         (2,   [(100, AnalogyDb([("otto", "heinz")])),      # removed upon '1' extracted
@@ -141,30 +141,30 @@ if "extract_ultimates" in sys.argv:
     ])
     test("iterative ultimate creation", match_db, AnalogyDb())
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
-        (0,   [(100, AnalogyDb([("otto", "heinz")])),  
+        (0,   [(100, AnalogyDb([("otto", "heinz")])),
                (102, AnalogyDb([("mark", "otto")]))]),
-        (1,   [(100, AnalogyDb([("otto", "heinz")])),  
+        (1,   [(100, AnalogyDb([("otto", "heinz")])),
                (101, AnalogyDb([("mark", "otto")]))]),
-        (2,   [(100, AnalogyDb([("otto", "heinz")])),  
+        (2,   [(100, AnalogyDb([("otto", "heinz")])),
                (102, AnalogyDb([("mark", "otto")]))]),
     ])
     test("remove nominal with only one mating candidate", match_db, AnalogyDb())
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
-        (0,   [(100, AnalogyDb([("otto", "fritz")])),  
+        (0,   [(100, AnalogyDb([("otto", "fritz")])),
                (102, AnalogyDb([("mark", "otto")]))]),
-        (1,   [(100, AnalogyDb([("otto", "heinz")]))]),  
-        (2,   [(101, AnalogyDb([("otto", "heinz")])),  
+        (1,   [(100, AnalogyDb([("otto", "heinz")]))]),
+        (2,   [(101, AnalogyDb([("otto", "heinz")])),
                (102, AnalogyDb([("mark", "otto")]))]),
     ])
     test("remove nominals with contradicting analogy_db", match_db, AnalogyDb())
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
-        (0,   [(101, AnalogyDb([("otto",   "fritz")]))]), 
+        (0,   [(101, AnalogyDb([("otto",   "fritz")]))]),
         (1,   [(100, AnalogyDb([("mark",   "heinz")]))]),
         (2,   [(100, AnalogyDb([("otto",  "heinz")])),
                (101, AnalogyDb([("mark",  "heinz")]))])
@@ -173,9 +173,9 @@ if "extract_ultimates" in sys.argv:
     test("a removed nominal leaves entry hopeless", match_db, AnalogyDb())
     test("a removed nominal leaves entry hopeless (abort)", match_db_copy, AnalogyDb(), abort_f=True)
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
-        (0,   [(101, AnalogyDb([("otto", "fritz")]))]), 
+        (0,   [(101, AnalogyDb([("otto", "fritz")]))]),
         (1,   [(100, AnalogyDb([("otto", "heinz")])),
                (101, AnalogyDb([("mark", "heinz")]))])
     ])
@@ -183,10 +183,10 @@ if "extract_ultimates" in sys.argv:
     test("nominal deletion produces ultimate with inconsistent analogy_db", match_db, AnalogyDb())
     test("nominal deletion produces ultimate with inconsistent analogy_db (abort)", match_db_copy, AnalogyDb(), abort_f=True)
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
         (0,   [(100, AnalogyDb([("otto", "heinz")]))]),
-        (1,   [(100, AnalogyDb([("otto", "heinz")]))]), 
+        (1,   [(100, AnalogyDb([("otto", "heinz")]))]),
     ])
     match_db_copy = copy(match_db)
     test("nominal already taken", match_db, AnalogyDb(), abort_f=False)
@@ -199,20 +199,20 @@ if "analogy_interferences" in sys.argv:
         print(match_db)
         print("}")
 
-        match_db_2 = LineElementDb(match_db)
-        verdict = match_db.filter_analogy_interference(analogy_db, abort_f=False)
+        match_db_2 = match_db.clone()
+        verdict = match_db._filter_analogy_interference(analogy_db, abort_f=False)
 
         print("AFTER: --> %s {" % verdict)
         print(match_db)
         print("}")
 
-        verdict = match_db_2.filter_analogy_interference(analogy_db, abort_f=True)
+        verdict = match_db_2._filter_analogy_interference(analogy_db, abort_f=True)
         print("AFTER(abort=True): --> %s {" % verdict)
         if verdict:
             print(match_db_2)
         print("}")
 
-    match_db = LineElementDb([
+    match_db = MatchDb.from_iterable([
         # ia: ib:   analogy_list:
         (1,   [
             (100, AnalogyDb([("otto", "fritz"), ("lucia", "anabella")])),
@@ -223,6 +223,7 @@ if "analogy_interferences" in sys.argv:
             (100, AnalogyDb([("otto", "fritz")]))
         ])
     ])
-      
+
     test(match_db, AnalogyDb({ "otto":  "fritz" }))
     test(match_db, AnalogyDb({ "otto":  "egon", "lucia": "diana" }))
+

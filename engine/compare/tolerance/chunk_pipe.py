@@ -19,7 +19,7 @@ class ChunkPipe(PatternFinder):
         '' as soon as no more input is present. It is supposed to block!
 
         ASSUME: no line contains '\r'!
-            
+
         YIELDS: LineSequence       if text element was a line.
                 Potpourri          if text element is a potpourri.
                 TerminalInputChunk to mark end of stream.
@@ -35,7 +35,7 @@ class ChunkPipe(PatternFinder):
                 break
             elif self.is_irrelevant(line):
                 continue
-            elif self.is_region_delimiter(line):  
+            elif self.is_region_delimiter(line):
                 if line_list or chunk_class != LineSequence:
                     yield chunk_class(start_line_n, line_n, line_list, self.configuration)
                 line_list = []
@@ -45,7 +45,7 @@ class ChunkPipe(PatternFinder):
             else:
                 line_list.append(Line(line_n, PatternFinder.do(self, line)))
 
-        if line_list: 
+        if line_list:
             yield chunk_class(start_line_n, line_n, line_list, self.configuration)
 
         yield InputChunkTerminal(line_n)

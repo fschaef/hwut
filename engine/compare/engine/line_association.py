@@ -1,6 +1,6 @@
 """SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: Associating a line from the subject stream with a line of the nominal 
+PURPOSE: Associating a line from the subject stream with a line of the nominal
          stream
 
 These associations are used for display of similar lines. Such associations
@@ -15,12 +15,12 @@ ________________________________________________________________________________
 """
 from   ut.engine.compare.engine.line          import Line
 from   ut.engine.compare.engine.analogy_db    import AnalogyDb
-from   ut.engine.quex.typed                   import typed 
+from   ut.engine.quex.typed                   import typed
 import sys
 
 class LineAssociation:
     """An association of a line from the subject input stream and a line
-    from the nominal input stream. 
+    from the nominal input stream.
     """
     @typed(subject_seq=(None, Line), nominal_seq=(None, Line), analogy_db=(None, AnalogyDb))
     def __init__(self, subject_seq, nominal_seq, edit_list=tuple(), analogy_db=None):
@@ -31,7 +31,7 @@ class LineAssociation:
 
     @staticmethod
     def empty(subject_seq):
-        return LineAssociation(subject_seq = subject_seq, 
+        return LineAssociation(subject_seq = subject_seq,
                                nominal_seq = None)
 
     def is_empty(self):

@@ -6,9 +6,9 @@ The stream 'subject' is supposed to be the output of a test application.  The
 stream 'nominal' is the stored-away reference output of a good test run. The text
 provided by a stream is interpreted in two ways:
 
--- line sequences, where the lines in the subject must occur in the same 
+-- line sequences, where the lines in the subject must occur in the same
                    sequence as in the nominal.
--- potpourri,      where the same lines must occur, but not necessarily 
+-- potpourri,      where the same lines must occur, but not necessarily
                    in the same sequence.
 
 A stream can consist of multiple blocks of line sequences and potpourris.
@@ -32,7 +32,7 @@ is that they must provide the function:
                  "",              if end of stream has been reached.
 """
 from   ut.engine.compare.engine.analogy_db             import AnalogyDb
-from   ut.engine.compare.engine.comparison_iterable    import generate 
+from   ut.engine.compare.engine.comparison_iterable    import generate
 from   ut.engine.compare.engine.line_association_chunk import LineAssociationChunk
 from   ut.engine.compare.engine.input_chunk            import E_Verdict, \
                                                                 InputChunkEmpty
@@ -44,9 +44,9 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
 
     The function operates on coroutines reading lines from line providers.
     As soon as 'False' can be stated it aborts immediately-not consuming
-    any further input. Caller functions then, might then terminate the data 
+    any further input. Caller functions then, might then terminate the data
     producing process.
-   
+
     ONLY REQUIREMENT: line provider member function '.readline()'.
 
     The '.get()' function either returns a line of text or 'None' in case
@@ -54,7 +54,7 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
     """
     analogy_db = AnalogyDb()
 
-    for subject, nominal in generate(config, 
+    for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider):
         verdict,   \
         analogy_db = subject.compare(nominal, analogy_db)
@@ -68,20 +68,20 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
 def line_associations(config, subject_line_provider, nominal_line_provider):
     """YIELDS: LineAssociationChunk
 
-    where: 
+    where:
 
     LineAssociationChunk.type() in (E_Chunk.LINE_SEQUENCE, E_Chunk.POTPOURRI)
-         
+
     This function iterates over subject and nominal lines and compares them.
     When lines are too deviant from each other, 'plugs' in one sequence are
     inserted until it fits again the other sequences. Line associations are
-    reported (yielded) in blocks of their type, i.e. assocations of 
+    reported (yielded) in blocks of their type, i.e. assocations of
     'LineSequence'-s and 'Potpourri'-s are yielded in separate objects
     of type 'LineAssociationChunk'
     """
     analogy_db = AnalogyDb()
 
-    for subject, nominal in generate(config, 
+    for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider,
                                      fillvalue=InputChunkEmpty()):
 

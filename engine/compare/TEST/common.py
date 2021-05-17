@@ -28,32 +28,32 @@ def frame_with_potpourri_borders(line_list):
 
 def prepare(x, nominal_f=False):
     for letter in x:
-        if   letter == "e": 
+        if   letter == "e":
             yield LineElementString(0,6,"")
-        elif letter == "1": 
+        elif letter == "1":
             yield LineElementString(0,1,"a")
-        elif letter == "2": 
+        elif letter == "2":
             yield LineElementString(0,1,"b")
-        elif letter == "3": 
+        elif letter == "3":
             yield LineElementString(0,1,"a b")
             yield LineElementEquivalencePattern(1,2, "a b", [0])
             yield LineElementString(2,3,"a b")
-        elif letter == "s": 
+        elif letter == "s":
             yield LineElementString(0,6,"string")
-        elif   letter == "S": 
+        elif   letter == "S":
             yield LineElementString(0,6,"strong")
-        elif   letter == "Q": 
+        elif   letter == "Q":
             yield LineElementString(0,6,"quant")
-        elif   letter == "x": 
+        elif   letter == "x":
             yield LineElementAnalogy(0,5,"((x))")
-        elif   letter == "y": 
+        elif   letter == "y":
             yield LineElementAnalogy(0,5,"((y))")
-        elif   letter == "z": 
+        elif   letter == "z":
             yield LineElementAnalogy(0,5,"((z))")
-        elif letter == "n": 
-            if nominal_f: 
+        elif letter == "n":
+            if nominal_f:
                 yield LineElementNumber(0,4,"4711", 0.01)
-            else:         
+            else:
                 yield LineElementNumber(0,4,"4711")
         else:
             assert False
@@ -108,17 +108,17 @@ def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost,
     print("cost: %.5f; line_associations: %i;" % (cost, len(line_associations)))
 
     def _name(line_list, match_seq):
-        if match_seq is None: 
+        if match_seq is None:
             return "None", "--"
         elif match_seq.line_n is None:
             return match_seq.sequence[0].string, "--"
-        elif match_seq.line_n + line_offset < len(line_list):                     
+        elif match_seq.line_n + line_offset < len(line_list):
             return line_list[match_seq.line_n + line_offset], "%02i" % match_seq.line_n
         else:
             return "<end>", "%02i" % match_seq.line_n
 
     for lina in line_associations:
-        subject_txt, subject_line_n = _name(subject_line_list, lina.subject_seq) 
+        subject_txt, subject_line_n = _name(subject_line_list, lina.subject_seq)
         nominal_txt, nominal_line_n = _name(nominal_line_list, lina.nominal_seq)
 
         space  = " " * (23 - len(subject_txt))

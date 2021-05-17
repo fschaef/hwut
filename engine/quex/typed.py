@@ -1,5 +1,5 @@
 # Project Quex (http://quex.sourceforge.net); License: MIT;
-# (C) 2005-2020 Frank-Rene Schaefer; 
+# (C) 2005-2020 Frank-Rene Schaefer;
 #_______________________________________________________________________________
 
 class TypeTuple:
@@ -49,7 +49,7 @@ def typed(**_parameters_):
                            error(name, value, type_d)
 
                 elif type(type_d) == tuple:
-                    if None in type_d: 
+                    if None in type_d:
                         # 'None' is accepted as alternative. But, if value was 'None' it
                         # would have triggered the previous case. So, here filter it out.
                         type_d = tuple(set(x for x in type_d if x is not None))
@@ -74,7 +74,7 @@ def typed(**_parameters_):
                     assert isinstance(value, list), error(name, value, type_d)
                     value_type = type_d[0]
                     assert all(isinstance(x, value_type) for x in value), error(name, value, type_d)
-                    
+
                 else:
                     assert isinstance(value, type_d), \
                            error(name, value, type_d)

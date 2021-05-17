@@ -1,6 +1,6 @@
 """SPDX License: MIT; (C) Frank-Rene Schäfer; Project: hwut
 _______________________________________________________________________________
-PURPOSE: Determine edit operations to transform a subject 'LineSequence' into 
+PURPOSE: Determine edit operations to transform a subject 'LineSequence' into
          a nominal 'LineSequence'.
 
 The transformation is expressed as a sequence of 'edit operations' on line
@@ -8,19 +8,19 @@ sequences, namely:
 
                GOOD, SUBSTITUTE, DELETE, and INSERT.
 
-Notably, no 'TRANSPOSE' operation is provided since for 'LineSequence' the 
+Notably, no 'TRANSPOSE' operation is provided since for 'LineSequence' the
 sequences of lines is invariant.
 
 ALGORITHM:
 
-The underlying algorithm is analogous to the algorithm for finding edit 
-operations on 'Line's (see edit_operations/line.py) and strings (see 
-Levenshtein Distance). 
+The underlying algorithm is analogous to the algorithm for finding edit
+operations on 'Line's (see edit_operations/line.py) and strings (see
+Levenshtein Distance).
 _______________________________________________________________________________
 """
-from   ut.engine.compare.edit_operations.line import Edit, E_EditLine, EditsLine
+from   ut.engine.compare.edit_operations.line import Edit, EditsLine
 from   ut.engine.compare.engine.analogy_db    import AnalogyDb
-from   ut.engine.quex.typed                   import typed 
+from   ut.engine.quex.typed                   import typed
 
 from   enum        import IntEnum
 import sys
@@ -32,7 +32,7 @@ class E_EditLineSequence(IntEnum):
     INSERT      = 1  # Heal: 'LineElement' from nominal is inserted.
     DELETE      = 2  # Heal: 'LineElement' from subject is deleted.
     SUBSTITUTE  = 3  # Bad:  Content of subject and nominal 'LineElement' differs.
-    
+
 
 class EditsLineSequence:
     def __init__(self, cost, edit_list, analogy_db):
@@ -41,9 +41,9 @@ class EditsLineSequence:
                       where     'edit_id' is an 'E_EditLineSequence'
                             and 'edit_list' is a list of 'Edit' objects
         """
-        assert all(isinstance(first, E_EditLineSequence)  
+        assert all(isinstance(first, E_EditLineSequence)
                    for first, _ in edit_list)
-        assert all(isinstance(x, Edit) 
+        assert all(isinstance(x, Edit)
                    for _, second in edit_list
                    if second is not None
                    for x in second)
@@ -131,7 +131,7 @@ class WorkItemHistory:
     def note(self, edit_id, editions, relative_edit_distance):
         """RETURNS: Cost of edition in context of history.
 
-        Adapts history of adjacent substutios, insertions, and deletions. 
+        Adapts history of adjacent substutios, insertions, and deletions.
         Editions of the same kind appear in adjacent blocks, they are cheaper.
         They are not so 'bad', because in their context they are consistent.
         """
@@ -185,20 +185,20 @@ class WorkItem:
        line_editions = subject.edit_operations(nominal, self.editions.analogy_db)
        assert isinstance(line_editions, EditsLine)
 
-       # IMPORTANT: Worklist is a LIFO. That is, what comes last is popped 
-       # first from the worklist. It is essential that 'cheap' steps are 
-       # treated first, so that more expensive paths can be cut as early as 
+       # IMPORTANT: Worklist is a LIFO. That is, what comes last is popped
+       # first from the worklist. It is essential that 'cheap' steps are
+       # treated first, so that more expensive paths can be cut as early as
        # possible.
        yield self._step(E_EditLineSequence.INSERT)
        yield self._step(E_EditLineSequence.DELETE)
 
        if line_editions.cost == 0.0:
-           yield self._step(E_EditLineSequence.GOOD, 
-                            edit_list      = line_editions.edit_list, 
+           yield self._step(E_EditLineSequence.GOOD,
+                            edit_list      = line_editions.edit_list,
                             new_analogy_db = line_editions.analogy_db)
        else:
-           yield self._step(E_EditLineSequence.SUBSTITUTE, 
-                            relative_edit_distance = line_editions.cost, 
+           yield self._step(E_EditLineSequence.SUBSTITUTE,
+                            relative_edit_distance = line_editions.cost,
                             edit_list              = line_editions.edit_list)
 
    @typed(edit_id=E_EditLineSequence, edit_list=[Edit])
@@ -206,7 +206,7 @@ class WorkItem:
        """RETURNS: WorkItem derived from self after applying an edit operation.
 
        Given an edit operation 'edit_id' this function generates a modified
-       version of 'self'. It adapts the indices 'ai' and 'bi' according to 
+       version of 'self'. It adapts the indices 'ai' and 'bi' according to
        the position progress related to the operation. The new 'WorkItem'
        will contain a new updated 'edit_list'.
        """
@@ -214,16 +214,16 @@ class WorkItem:
 
        delta_cost = self.history.note(edit_id, edit_list, relative_edit_distance)
 
-       if new_analogy_db is not None: 
+       if new_analogy_db is not None:
            new_analogy_db = self.editions.analogy_db.clone().update(new_analogy_db)
        else:
            new_analogy_db = self.editions.analogy_db
 
-       new_editions = EditsLineSequence(_cost_add(self.editions.cost, delta_cost), 
-                                        self.editions.edit_list + [ (edit_id, edit_list) ], 
-                                        new_analogy_db) 
+       new_editions = EditsLineSequence(_cost_add(self.editions.cost, delta_cost),
+                                        self.editions.edit_list + [ (edit_id, edit_list) ],
+                                        new_analogy_db)
 
-       return WorkItem(self.ai + increment_ai, 
+       return WorkItem(self.ai + increment_ai,
                        self.bi + increment_bi,
                        new_editions,
                        self.history.clone())
@@ -232,7 +232,7 @@ class WorkItem:
        """RETURNS: The lowest possible total cost of the remaining comparisons.
 
        The lowest possible cost is associated with the case that the maximum
-       number of lines can be paired as 'GOOD' and the rest needs to be 
+       number of lines can be paired as 'GOOD' and the rest needs to be
        inserted/deleted.
        """
        remaining_subject_n = subject_length - self.ai
@@ -240,7 +240,7 @@ class WorkItem:
        # let: common_n = maximum number of pairs in the remaining lines.
        common_n    = min(remaining_subject_n, remaining_nominal_n)
        remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
-    
+
        # best case: -- all common lines are GOOD
        #            -- all remaining lines are INSERT/DELETE
        cost_common = (cost_GOOD_major * common_n, 0)
@@ -251,7 +251,7 @@ def _append_overhead(best, editions, remaining_list, overhead_edit_id):
     """RETURNS: True, if the edit_operations is better then 'best'.
                 False, else.
 
-    Determines the 'cost' and 'edit operations' for the remaing lines for which 
+    Determines the 'cost' and 'edit operations' for the remaing lines for which
     their is no counterpart (e.g. nominal lines when there are no more subject
     lines). It assigns them to the 'edit_operations' and compares it with the
     'best'.
@@ -262,7 +262,7 @@ def _append_overhead(best, editions, remaining_list, overhead_edit_id):
     return editions.cost < best.cost
 
 def _cost_add(cost_a, cost_b):
-    return (cost_a[0] + cost_b[0], cost_a[1] + cost_b[1]) 
+    return (cost_a[0] + cost_b[0], cost_a[1] + cost_b[1])
 
 def _cost_assumptions(initial_item, subject_length, nominal_length):
     """RETURNS: [0] minimum cost to transform 'subject' into 'nominal'.
@@ -270,7 +270,7 @@ def _cost_assumptions(initial_item, subject_length, nominal_length):
     """
     min_cost    = initial_item.min_cost_remaining(subject_length, nominal_length)
 
-    # worst case: -- all possibly paired lines require a SUBSTITION with a 
+    # worst case: -- all possibly paired lines require a SUBSTITION with a
     #                relative edit distance of 1.0 (== max).
     #             -- remaining lines require INSERT/DELETE
     common_n    = min(subject_length, nominal_length)
@@ -280,7 +280,7 @@ def _cost_assumptions(initial_item, subject_length, nominal_length):
     return min_cost, max_cost
 
 def _cost_overhead(remaining_n):
-    """RETURNS: cost of 'remaining_n' lines when either subject or nominal is 
+    """RETURNS: cost of 'remaining_n' lines when either subject or nominal is
                 exhausted.
     """
     major = cost_INSERT_DELETE_major * remaining_n

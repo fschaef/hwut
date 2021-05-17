@@ -7,10 +7,9 @@
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
 import os
-import re
 
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
@@ -22,7 +21,7 @@ from   ut.engine.compare.engine.line              import Line
 from   ut.engine.compare.engine.analogy_db        import AnalogyDb
 
 from   ut.engine.compare.TEST.common import get_Potpourri, \
-                                              print_friends_pairing_max_result
+                                            print_friends_pairing_max_result
 
 if "--hwut-info" in sys.argv:
     print("FriendsPairingMax: Search anyway;")
@@ -44,16 +43,16 @@ def test_pure(subject_line_list, nominal_line_list, max_comparison_count):
     line_associations, \
     analogy_db         = friends_pairing_max.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
                                                 get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
-                                                analogy_db, 
+                                                analogy_db,
                                                 max_comparison_count)
 
     return line_associations, analogy_db
 
 def test(subject_line_list, nominal_line_list, max_comparison_count=100):
-    line_associations, analogy_db = test_pure(subject_line_list, nominal_line_list, 
+    line_associations, analogy_db = test_pure(subject_line_list, nominal_line_list,
                                               max_comparison_count)
 
-    print_friends_pairing_max_result(subject_line_list, nominal_line_list, 
+    print_friends_pairing_max_result(subject_line_list, nominal_line_list,
                                      -1.0, sorted(line_associations), analogy_db)
 
 if "basic" in sys.argv:
@@ -75,7 +74,7 @@ if "basic" in sys.argv:
          ["fritz", "mummie", "I smart", "funny"])
     test(["fritz", "mummie", "I smart", "funny"],
          ["happy", "mummie", "fritz"])
-         
+
     test(["98", "99", ],
          ["102", "101", "100", "99"])
 
@@ -85,7 +84,7 @@ if "basic" in sys.argv:
     test(["((1))", "((2))", "((2))", "((3))"],
          ["((A))", "((B))", "((C))", "((D))"])
 
-    test(["a", "b", "c", "d", "e", "f"], 
+    test(["a", "b", "c", "d", "e", "f"],
          ["x", "y", "z"])
 
 if "restricted_cmp" in sys.argv:
@@ -106,8 +105,8 @@ if "analogy" in sys.argv:
          ["((C)) ((A))", "((A)) ((B))", "((B)) ((C))"])
 
 if "wild" in sys.argv:
-    # Subject and nominal are subject to numeric tolerances. Each element may 
-    # fit with at least two elements of the counterpart. In particular the 
+    # Subject and nominal are subject to numeric tolerances. Each element may
+    # fit with at least two elements of the counterpart. In particular the
     # boarders differ, namely for example
     #
     #    min(subject) = 1001 and min(nominal) = 1000
@@ -119,7 +118,7 @@ if "wild" in sys.argv:
     nominal = [ "%s" % (100 + i) for i in range(0,size-1) ]
     test_pure(subject, nominal)
 
-    # A large set of analogies that imposes constraints in terms of 
+    # A large set of analogies that imposes constraints in terms of
     # overlapping conditions. For example:
     #
     #    subject:                      nominal:
@@ -127,7 +126,7 @@ if "wild" in sys.argv:
     #    "((2)) ((3)) ((4))"           "((b)) ((c)) ((d))"
     #    ...                           ...
     #
-    # If lines were associated as seen above, then '1 = a', '2 = b', '3 = c', 
+    # If lines were associated as seen above, then '1 = a', '2 = b', '3 = c',
     # and '4 = d'. It now depends whether further pairs can be built
     # without any contradiction...
     size = 100
@@ -138,7 +137,7 @@ if "wild" in sys.argv:
     for subject_term, nominal_term in sorted(analogy_db.items()):
         print("  %s <-> %s" % (subject_term, nominal_term))
 
-    # A large set of analogies where a contradictions is inserted, so that 
+    # A large set of analogies where a contradictions is inserted, so that
     # the pairing must fail.
     size = 5
     bad_subject = ["((3)) ((2)) ((1))"] + [ "((%i)) ((%i)) ((%i))" % (i % 25, (i+1) % 25, (i+2) % 25) for i in range(1,size) ]
@@ -170,20 +169,20 @@ if "border" in sys.argv:
 
     test(["one ((A))", "two ((A))"], ["one ((1))", "two ((2))"])
 
-    test(["happy ((A)) ((B))", "happy ((A)) ((C))"], 
+    test(["happy ((A)) ((B))", "happy ((A)) ((C))"],
          ["funny ((1)) ((2))", "funny ((2)) ((1))"])
 
-    test(["funny ((A)) ((D))", "happy ((A)) ((B))", "glad ((C)) ((D))"], 
+    test(["funny ((A)) ((D))", "happy ((A)) ((B))", "glad ((C)) ((D))"],
          ["smart ((4)) ((1))", "happy ((1)) ((2))", "glad ((3)) ((4))"])
 
-    test(["funny ((B)) ((A))", "happy ((A)) ((B))", "glad ((C)) ((D))"], 
+    test(["funny ((B)) ((A))", "happy ((A)) ((B))", "glad ((C)) ((D))"],
          ["smart ((2)) ((1))", "happy ((1)) ((2))", "glad ((3)) ((4))"])
 
     # Introduces for special coverage case:
     # "funny ((B)) ((A))" matches against three, which are removed, since the others
     # match uniquely agains each one of its alternatives. As a result "funny ((B)) ((A))"
     # remains without alternative, and is deleted.
-    test(["funny ((B)) ((A))", "happy ((A)) ((B))", "smart ((C)) ((D))", "glad ((B)) ((A))", "something ((B)) ((A))"], 
+    test(["funny ((B)) ((A))", "happy ((A)) ((B))", "smart ((C)) ((D))", "glad ((B)) ((A))", "something ((B)) ((A))"],
          ["something ((2)) ((1))", "happy ((1)) ((2))", "smart ((3)) ((4))", "glad ((2)) ((1))", "something ((2)) ((1))"])
 
 if "wild-2" in sys.argv:
@@ -198,3 +197,6 @@ if "wild-2" in sys.argv:
     b_lines = [line for line in generate(b_elements)]
     test_pure(a_lines, b_lines)
 
+if "DEBUG" in sys.argv:
+    test(["I smart", "funny"],
+         ["happy"])

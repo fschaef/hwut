@@ -2,7 +2,7 @@
 ________________________________________________________________________________
 PURPOSE: A 'Line' of an input stream represented by a sequence of line elements.
 
-For tolerant comparison, the text of a line is interpreted lexically and 
+For tolerant comparison, the text of a line is interpreted lexically and
 split up into 'LineElements' objects. Such line elements may be numbers,
 strings, lexemes which match some pattern, whitespace etc.
 ________________________________________________________________________________
@@ -22,7 +22,7 @@ class Line:
 
     @staticmethod
     def from_string(line_n, string):
-        return Line(line_n, [LineElementString(0, len(string), string)]) 
+        return Line(line_n, [LineElementString(0, len(string), string)])
 
     @staticmethod
     def from_potpourri(line_n, begin_f):
@@ -61,7 +61,7 @@ class Line:
 
     def edit_operations(self, nominal, analogy_db):
         """RETURNS: EditsLine
-            
+
         Calls 'edit_operations_line.do()' and sets line numbers in analogy
         database if necessary.
 

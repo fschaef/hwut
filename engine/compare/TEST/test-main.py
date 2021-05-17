@@ -4,22 +4,20 @@ _______________________________________________________________________________
  PURPOSE: API of compare module
 
  Tests: compare() --> judges on equivalence of subject and nominal.
-        edit_operations() --> determines how to transform subject into 
+        edit_operations() --> determines how to transform subject into
                               nominal. This is important for diff-display.
- 
+
  This is the outer shell of the compare module. The tests are trivial as the
  complexity of the process is hidden in the submodules located in the sub
  directory of this module.
 ______________________________________________________________________________
 """
 import sys
-import os
-import re
 
 sys.path.insert(0, "../../../../")
 
-import ut.engine.compare.engine.core as     comperator 
-import ut.engine.compare.main        as     main 
+import ut.engine.compare.engine.core as     comperator
+import ut.engine.compare.main        as     main
 from   ut.engine.compare.TEST.common import print_match_sequences_lists, \
                                               print_list_sequence_pairs, \
                                               print_friends_pairing_max_result
@@ -37,7 +35,7 @@ config.whitespace_f            = True
 config.backslash_f             = False
 config.numeric_tolerance_ratio = 0
 config.equivalent_pattern_list = []
-        
+
 def test_core(subject_txt, nominal_txt):
     print("--------------------------------------------------\n")
     print()
@@ -47,7 +45,7 @@ def test_core(subject_txt, nominal_txt):
     max_length = max(len(txt) for txt in subject_line_list)
     def space(txt):
         return " " * (max_length - len(txt))
-    print_list_sequence_pairs(subject_txt.splitlines(), space, nominal_txt.splitlines(), 
+    print_list_sequence_pairs(subject_txt.splitlines(), space, nominal_txt.splitlines(),
                               line_numbers_f=True)
     return subject, nominal
 

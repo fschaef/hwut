@@ -1,6 +1,6 @@
 import ut.engine.compare.edit_operations.string as     edit_distance_string
 from   ut.engine.compare.engine.core           import E_Verdict
-from   ut.engine.quex.typed                   import typed 
+from   ut.engine.quex.typed                   import typed
 
 from   enum import IntEnum
 
@@ -58,10 +58,10 @@ class LineElement:
         if tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
             return None
         elif tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
-            return LineElementEquivalencePattern(start, end, global_string, 
+            return LineElementEquivalencePattern(start, end, global_string,
                                           token.pattern_i_set)
         elif tolerance_id == E_ToleranceId.NUMERIC:
-            return LineElementNumber(start, end, global_string, 
+            return LineElementNumber(start, end, global_string,
                                numeric_tolerance_ratio)
         elif tolerance_id == E_ToleranceId.ANALOGY:
             return LineElementAnalogy(start, end, global_string)
@@ -88,7 +88,7 @@ class LineElement:
             return float(edit_distance_string.do(self.string, nominal.string)) / max_length
 
     def is_equivalent(self, nominal, analogy_db):
-        """RETURNS: True, if self is equivalent to 'nominal' under the given 
+        """RETURNS: True, if self is equivalent to 'nominal' under the given
                           analogy_db; False, else.
         """
         verdict_id, analogy = self.compare(nominal)
@@ -127,7 +127,7 @@ class LineElementAnalogy(LineElement):
                     [1] Required analogy
 
         The judgement whether the subject and the nominal fit must be made
-        by the analogy_db. 
+        by the analogy_db.
         """
         return True, (self.string, nominal.string)
 
@@ -150,7 +150,7 @@ class LineElementNumber(LineElement):
     def edit_distance_relative(self, nominal):
         max_number = max(self.number, nominal.number)
         delta     = abs(self.number - nominal.number)
-        return delta / max_number 
+        return delta / max_number
 
     def _compare(self, nominal):
         """RETURNS: [0] True, if number 'subject' lies in the epsilon range
@@ -163,7 +163,7 @@ class LineElementNumber(LineElement):
         verdict = abs(self.number - nominal.number) <= nominal.epsilon
         return verdict, None
 
-    # NOTE: '__hash__' cannot be overwritten here; see '_compare()'. 
+    # NOTE: '__hash__' cannot be overwritten here; see '_compare()'.
     #       Equivalence is based on deviation. Equivalency can ONLY
     #       be investigated by relating to LineElement-objects.
 
@@ -172,7 +172,7 @@ class LineElementEquivalencePattern(LineElement):
     def __init__(self, start, end, string, pattern_index_set):
         LineElement.__init__(self, E_ToleranceId.EQUIVALENCE_PATTERN, start, end, string)
         # Indices of patterns which are matched.
-        self.pattern_index_set = set(pattern_index_set) 
+        self.pattern_index_set = set(pattern_index_set)
 
     def _compare(self, nominal):
         return not nominal.pattern_index_set.isdisjoint(self.pattern_index_set), None
@@ -183,11 +183,11 @@ class LineElementEquivalencePattern(LineElement):
         else:
             return LineElement.edit_distance_relative(self, nominal)
 
-    # NOTE: '__hash__' cannot be overwritten here; see '_compare()'. 
+    # NOTE: '__hash__' cannot be overwritten here; see '_compare()'.
     #       Equivalence is based on intersection. Equivalency can ONLY
     #       be investigated by relating two LineElement-objects.
 
     def __repr__(self):
-        return "(%i,%i): %s %s '%s'" % (self.start, self.end, self.tolerance_id.name, 
+        return "(%i,%i): %s %s '%s'" % (self.start, self.end, self.tolerance_id.name,
                                         list(sorted(self.pattern_index_set)), self.string)
 

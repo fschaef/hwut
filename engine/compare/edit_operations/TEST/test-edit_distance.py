@@ -2,7 +2,7 @@
 #
 # PURPOSE: Testing 'Edit Distance' computation.
 #
-# The concept of 'edit distance' measures the differece of two strings in 
+# The concept of 'edit distance' measures the differece of two strings in
 # terms of necessary operations in order to transform one string into the
 # other. Operations are: substitute, transpose, insert, and delete.
 #
@@ -15,7 +15,7 @@
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
 import os
 import re
@@ -62,7 +62,7 @@ if "string" in sys.argv:
     test("a",               "a")       # one vs. one
     test("a",               "b")       # one != one
     test("baa",             "aa")      # inserted front
-    test("aba",             "aa")      # inserted middle 
+    test("aba",             "aa")      # inserted middle
     test("aab",             "aa")      # inserted end
     test("aa",              "baa")     # deleted front
     test("aa",              "aba")     # deleted middle
@@ -82,28 +82,28 @@ if "match_sequence" in sys.argv:
     test_mseq("s",   "s")       # one vs. one
     test_mseq("s",   "n")       # one != one
     test_mseq("nss", "ss")      # inserted front
-    test_mseq("sns", "ss")      # inserted middle 
+    test_mseq("sns", "ss")      # inserted middle
     test_mseq("ssn", "ss")      # inserted end
     test_mseq("ss",  "nss")     # deleted front
     test_mseq("ss",  "sns")     # deleted middle
     test_mseq("ss",  "ssn")     # deleted end
     test_mseq("sn",  "ns")      # trsnsposed sdjscently
-    test_mseq("snx", "ysn")      
-    test_mseq("sex", "yse")      
+    test_mseq("snx", "ysn")
+    test_mseq("sex", "yse")
 
 if "match_sequence2" in sys.argv:
-    test_mseq("s",   "s")       
-    test_mseq("s",   "S")      
-    test_mseq("Sss", "ss")    
-    test_mseq("sSs", "ss")    
-    test_mseq("ssS", "ss")   
-    test_mseq("ss",  "Sss")  
-    test_mseq("ss",  "sSs")  
-    test_mseq("ss",  "ssS")  
-    test_mseq("sS",  "Ss")  
+    test_mseq("s",   "s")
+    test_mseq("s",   "S")
+    test_mseq("Sss", "ss")
+    test_mseq("sSs", "ss")
+    test_mseq("ssS", "ss")
+    test_mseq("ss",  "Sss")
+    test_mseq("ss",  "sSs")
+    test_mseq("ss",  "ssS")
+    test_mseq("sS",  "Ss")
 
 if "match_sequence-analogies" in sys.argv:
-    test_mseq("xy", "yx")      
-    test_mseq("xx", "zx")      
+    test_mseq("xy", "yx")
+    test_mseq("xx", "zx")
     test_mseq("xyx", "zzx")      # transpose analogies
 

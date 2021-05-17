@@ -34,5 +34,5 @@ association: True
 --------------------------------
 subject: ['((3)) ((2)) ((1))', '((1)) ((2)) ((3))', '((2)) ((3)) ((4))', '((3)) ((4)) ((5))', '((4)) ((5)) ((6))']
 nominal: ['((z)) ((y)) ((x))', '((a)) ((b)) ((c))', '((b)) ((c)) ((d))', '((c)) ((d)) ((e))', '((d)) ((e)) ((f))']
-db: Something; analogy_db: Something;
+db: size 4; analogy_db: size 4;
 association: False

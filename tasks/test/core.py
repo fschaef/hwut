@@ -9,14 +9,14 @@ class App:
         self.build_process = build
 
     async def wait_presence(self):
-        return wait self.build_process.wait_result(self.file_name)
+## return wait self.build_process.wait_result(self.file_name)
 
 async def do(directory, selector):
     """Performs the task of testing a set of test applications from a given
     'directory'. Related events are logged through the 'CTestChannel'.
     """
     with inform.CTestChannel(directory) as log:
-        try: 
+        try:
             os.chdir(directory)
         except:
             log.directory_does_not_exist()
@@ -34,7 +34,7 @@ async def run(log, test_list):
     # Derive a set of build instructions for a given set of executables.
     for instruction in build.get_instructions(j.app for j in test_list):
         instruction.initiate(log)
-    
+
     # Wait for test's executable to exist and perform test execution
     asyncio.gather(*(execute(test, log) for test in test_list))
 
@@ -52,4 +52,4 @@ async def execute(test, log):
         report = await test.perform_test(build_time)
 
     log.test_result(report)
-    
+

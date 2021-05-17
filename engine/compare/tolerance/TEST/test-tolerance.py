@@ -2,8 +2,8 @@
 #
 # PURPOSE: 'PatternFinder' -- Handling of a set of tolerance concepts.
 #
-# A tolerance pattern_finder holds information about tolerance concepts and 
-# their pattern. It finds patterns in an existing string. With 
+# A tolerance pattern_finder holds information about tolerance concepts and
+# their pattern. It finds patterns in an existing string. With
 #
 #              PatternFinder.do(string)
 #
@@ -12,16 +12,14 @@
 #
 # Tests: -- finding the first pattern that matches starting from a given
 #           position in the string.
-#        -- setup the tolerance table in the PatterFinder according to 
+#        -- setup the tolerance table in the PatterFinder according to
 #           configuration settings.
 #        -- sample runs of 'do', i.e. the complete pattern finding process.
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
-import os
-import re
 
 sys.path.insert(0, "../../../../../")
 
@@ -62,7 +60,7 @@ if "setup" in sys.argv:
     config = empty_config()
     config.analogy_f = True
     show(PatternFinder(config))
-    
+
     config = empty_config()
     config.whitespace_f = True
     show(PatternFinder(config))

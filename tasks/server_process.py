@@ -1,4 +1,4 @@
-mport sys
+import sys
 from subprocess import PIPE, Popen
 from threading  import Thread
 from queue      import Queue, Empty

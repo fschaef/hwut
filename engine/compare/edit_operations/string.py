@@ -13,14 +13,14 @@ The problem with the Levenshtein distance is its computational complexity
 O(n^2). In order to avoid a computational overload, a string is split up
 into words of a maximum size. This makes the result less precise for larger
 errors. In domains of large error, however, precision has few  importance.
-For larger strings of size 'M', the complexity becomes 'O(m1^2 + m2^2 ...)' 
+For larger strings of size 'M', the complexity becomes 'O(m1^2 + m2^2 ...)'
 instead of 'O((m1+m2 ...)^2)'.
 _______________________________________________________________________________
 """
 from   itertools import zip_longest
 
-max_sub_word_size = 16 # number of character for which the computational 
-#                      # complexity O(n^2) of the Levenshtein algorithm 
+max_sub_word_size = 16 # number of character for which the computational
+#                      # complexity O(n^2) of the Levenshtein algorithm
 #                      # is considered to be tolerable.
 
 def do(a, b):
@@ -28,9 +28,9 @@ def do(a, b):
 
     Determines a 'Levenshtein' based edit distance between two given strings.
     """
-    n = max_sub_word_size 
+    n = max_sub_word_size
 
-    if a == b: 
+    if a == b:
         return 0
     elif len(a) < n and len(b) < n:
         return _levenshtein(a, b)
@@ -41,12 +41,12 @@ def do(a, b):
     work_list   = list(zip_longest(a_word_list, b_word_list, fillvalue=""))
     while work_list:
         a_word, b_word = work_list.pop()
-        if   len(a_word) > n: a_remainder = a_word[n:]; a_word = a_word[:n]; 
+        if   len(a_word) > n: a_remainder = a_word[n:]; a_word = a_word[:n];
         else:                 a_remainder = ""
         if   len(b_word) > n: b_remainder = b_word[n:]; b_word = b_word[:n];
         else:                 a_remainder = ""
         result += _levenshtein(a_word, b_word)
-        if a_remainder or b_remainder: 
+        if a_remainder or b_remainder:
             work_list.append(a_remainder, b_remainder)
 
     return result
@@ -64,14 +64,14 @@ def _split_iterable(string, max_length):
 
 
 def _levenshtein(s, t):
-    """Implementation of the Levenshtein Algorithm to determine the edit distance 
+    """Implementation of the Levenshtein Algorithm to determine the edit distance
     between two character strings 's' and 't'.
 
-    Author:  Christopher P. Matthews; 
+    Author:  Christopher P. Matthews;
              christophermatthews1985@gmail.com;
              Sacramento, CA, USA
     Source:  https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
-    License: (CC-BY-SA-3.0) Creative Commons 
+    License: (CC-BY-SA-3.0) Creative Commons
     """
     if s == t: return 0
     elif len(s) == 0: return len(t)
@@ -87,6 +87,6 @@ def _levenshtein(s, t):
             v1[j + 1] = min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost)
         for j in range(len(v0)):
             v0[j] = v1[j]
-            
+
     return v1[len(t)]
 

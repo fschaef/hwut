@@ -3,7 +3,7 @@ ________________________________________________________________________________
 PURPOSE: Interpretations of input as 'LineSequence' and 'Potpourri' chunks.
 
 The 'chunk_pipe' (engine/chunk_pipe.py) interprets an input stream as sequences
-of 'InputChunk' objects. The 'InputChunk' defines the interface for the two 
+of 'InputChunk' objects. The 'InputChunk' defines the interface for the two
 derived classes representing the two types of input chunks:
 
 -- LineSequence: set of text lines where the sequence matters.
@@ -11,7 +11,7 @@ derived classes representing the two types of input chunks:
 
 The two main functions of an 'InputChunk' are
 
-   .compare()           --> determines whether the chunk is equivalent to 
+   .compare()           --> determines whether the chunk is equivalent to
                             another.
    .line_associations() --> determines which lines should be best associated
                             for display.
@@ -19,14 +19,11 @@ ________________________________________________________________________________
 """
 from   ut.engine.compare.engine.core                   import E_Verdict
 from   ut.engine.compare.engine.line                   import Line
-from   ut.engine.compare.engine.analogy_db             import AnalogyDb
 from   ut.engine.compare.engine.line_association       import LineAssociation
 import ut.engine.compare.friends_pairing.max           as     friends_pairing_max
-import ut.engine.compare.friends_pairing.core          as     friends_pairing
-import ut.engine.compare.edit_operations.line          as     edit_operations_line
+import ut.engine.compare.friends_pairing.exact          as     friends_pairing
 import ut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
 from   ut.engine.compare.edit_operations.line_sequence import E_EditLineSequence, EditsLineSequence
-from   ut.engine.quex.typed                            import typed 
 
 from   enum      import Enum
 from   abc       import ABC, abstractmethod
@@ -63,7 +60,7 @@ class InputChunk(ABC):
         irrelevant, since the global comparison needs to stop. For display
         (see .line_associations()), this different.
         """
-        if self.__class__ != nominal.__class__: 
+        if self.__class__ != nominal.__class__:
             return E_Verdict.DIFFERENT, analogy_db
         elif self.__class__ == InputChunkTerminal:
             return E_Verdict.EQUIVALENT, analogy_db  # here: both are 'InputChunkTerminal'
@@ -72,7 +69,7 @@ class InputChunk(ABC):
         else:
             return self._compare(nominal, analogy_db)
 
-    def line_associations(self, nominal, analogy_db): 
+    def line_associations(self, nominal, analogy_db):
         """RETURNS: list of 'LineAssociation'-s
 
         Each 'LineAssociation' informs about what two lines are to be displayed
@@ -97,7 +94,7 @@ class InputChunk(ABC):
         return result
 
     @classmethod
-    def contrary(cls): 
+    def contrary(cls):
         if cls == LineSequence: return Potpourri
         else:                   return LineSequence
 
@@ -108,7 +105,7 @@ class InputChunk(ABC):
     def _line_associations(self, nominal, analogy_db): pass
 
 
-    
+
 class LineSequence(InputChunk):
     """Set of lines where the sequence matters.
     """
@@ -129,11 +126,11 @@ class LineSequence(InputChunk):
 
     def _line_associations(self, nominal, analogy_db):
         """RETURNS: list 'LineAssociation'-s
-        
+
         See 'InputChunk.line_associations()' for further explanations.
         """
-        editions = edit_operations_line_sequence.do(self.line_list, 
-                                                    nominal.line_list, 
+        editions = edit_operations_line_sequence.do(self.line_list,
+                                                    nominal.line_list,
                                                     analogy_db)
         assert isinstance(editions, EditsLineSequence)
 
@@ -182,37 +179,37 @@ class Potpourri(InputChunk):
             yield Line.from_potpourri(end_line_n, begin_f=False)
         InputChunk.__init__(self, start_line_n, end_line_n, adapt(iterable, start_line_n, end_line_n), config)
 
-    def _compare(self, nominal, analogy_db): 
+    def _compare(self, nominal, analogy_db):
         """RETURNS: [0] True, if both potpourris are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
         """
-        subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]: 
+        subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:
         nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
 
-        verdict, _, new_analogy_db = friends_pairing.do(subject_potpourri, 
+        verdict, _, new_analogy_db = friends_pairing.do(subject_potpourri,
                                                         nominal_potpourri,
-                                                        analogy_db, 
-                                                        abort_f=True) 
+                                                        analogy_db,
+                                                        abort_f=True)
 
         if verdict: return E_Verdict.EQUIVALENT, new_analogy_db
         else:       return E_Verdict.DIFFERENT, analogy_db
 
-    def _line_associations(self, nominal, analogy_db): 
+    def _line_associations(self, nominal, analogy_db):
         """RETURNS: list 'LineAssociation'-s
-        
+
         See 'InputChunk.line_associations()' for further explanations.
         """
         assert len(self.line_list) >= 2 and len(nominal.line_list) >= 2
-        subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]: 
+        subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:
         nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
 
         core_result,   \
-        new_analogy_db = friends_pairing_max.do(subject_potpourri, 
+        new_analogy_db = friends_pairing_max.do(subject_potpourri,
                                                 nominal_potpourri,
-                                                analogy_db, 
+                                                analogy_db,
                                                 self.configuration.potpourri_max_comparison_count)
 
-        result = [ 
+        result = [
             LineAssociation(self.line_list[0], nominal.line_list[0], edit_list=[])
         ]
         result.extend(core_result)
@@ -224,13 +221,13 @@ class Potpourri(InputChunk):
 
     def __repr__(self): # pragma no cover
         return "\n".join("%03i| %s" % (line.line_n, line) for line in self.line_list)
-    
+
 class InputChunkTerminal(InputChunk):
     """Input chunk that marks the end of an input stream.
     """
     def __init__(self, line_n):
-        InputChunk.__init__(self, line_n, line_n+1, 
-                            [Line.from_string(line_n, "<end>")], 
+        InputChunk.__init__(self, line_n, line_n+1,
+                            [Line.from_string(line_n, "<end>")],
                             config=None)
     def type(self):                                    return E_Chunk.TERMINAL
     def _compare(self, other, analogy_db):             assert False

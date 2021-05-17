@@ -11,7 +11,7 @@ equivalent. The 'AnalogyDb' maintains the analogies at their first occurrence.
 Notably, HWUT only considers analogies in strings which are bracketted by '(('
 and '))'.
 
-EXAMPLE: 
+EXAMPLE:
 
 An application prints output containing hash values, which may differ but
 consistence must be maintained. Let a nominal text output be given as:
@@ -19,7 +19,7 @@ consistence must be maintained. Let a nominal text output be given as:
       ((0x249d3efa)) --> 12 to ((0x5ea931ef));  551 to ((0x249d3efa));
       ((0x249d3efa)) -->  7 to ((0x6729aef3));  554 to ((0x249d3efa));
       ((0x249d3efa)) --> 28 to ((0x4513e8a9));  526 to ((0x249d3efa));
-      ((0x6729aef3)) -->  3 to ((0x5ea931ef));    4 to ((0x6729aef3));   
+      ((0x6729aef3)) -->  3 to ((0x5ea931ef));    4 to ((0x6729aef3));
 
 If in another test, other hash values are computed (based on real randomness,
 for example), the subject's output may look like
@@ -27,7 +27,7 @@ for example), the subject's output may look like
       ((0x89c0ffeb)) --> 12 to ((0x1a2b3e81));  551 to ((0x249d3efa));
       ((0x89c0ffeb)) -->  7 to ((0xaf43ff12));  554 to ((0x249d3efa));
       ((0x89c0ffeb)) --> 28 to ((0xfe3187a1));  526 to ((0x249d3efa));
-      ((0xaf43ff12)) -->  3 to ((0x1a2b3e81));    4 to ((0xaf43ff12));   
+      ((0xaf43ff12)) -->  3 to ((0x1a2b3e81));    4 to ((0xaf43ff12));
 
 Both texts are still equivalent, since the following terms are used
 consistently one for the other:
@@ -43,23 +43,23 @@ The table above, is what is stored in the analogy database, along with line
 number information about the analogies first occurrence.
 _______________________________________________________________________________
 """
-from   ut.engine.quex.typed import typed 
+from   ut.engine.quex.typed import typed
 from   collections            import namedtuple, defaultdict
 
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
 class AnalogyDb(dict):
-    """Maintains pairs of terms which are considered analogies. 
+    """Maintains pairs of terms which are considered analogies.
 
     A term in 'subject' is mapped to its counterpart in 'nominal'. Notably,
-    the directionality is not automatically inverted. 
+    the directionality is not automatically inverted.
 
     self:           map: subject term --> nominal term
     line_number_db: map: subject term --> LineNumberPair
     """
     def __init__(self, other=None):
         self.line_number_db = {}
-        if other is not None: 
+        if other is not None:
             self.update(other)
 
     def clone(self):
@@ -76,12 +76,12 @@ class AnalogyDb(dict):
         dict.clear(self)
         self.line_number_db.clear()
         self.update(other)
-        
+
     def is_consistent(self, analogy):
         """RETURNS: True, if analogy = tuple(subject, nominal) is consistent
                           with all entries in database; False, else.
         """
-        if analogy is None: 
+        if analogy is None:
             return True
 
         subject, nominal = analogy
@@ -130,10 +130,10 @@ class AnalogyDb(dict):
 
     def mark_line_numbers(self, subject_line_n, nominal_line_n, subject_iterable=None):
         """Marks 'subject_line_n' and 'nominal_line_n' as the pair of lines
-        where the analogies in this databse occurred the first time. If 
+        where the analogies in this databse occurred the first time. If
         'subject_iterable' is specified, only those subjects are considered.
         """
-        if subject_iterable is None: 
+        if subject_iterable is None:
             subject_iterable = self.keys()
 
         line_number_pair = LineNumberPair(subject_line_n, nominal_line_n)

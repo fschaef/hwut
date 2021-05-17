@@ -3,10 +3,10 @@
 # PURPOSE: Comparison of two potpourris.
 #
 # Tests: (1) compare two potpourris on equality. Result 'True' or 'False'.
-#        (2) compares two potpourris and provide according appropriate 
+#        (2) compares two potpourris and provide according appropriate
 #            line associations for display.
 #
-# The first is used to determine the correctness of unit tests, the later is 
+# The first is used to determine the correctness of unit tests, the later is
 # used to display the difference of a subject's output and the nominal output.
 #
 # NOTE: The line pairing is done by 'friends_pairing/max.py'. Detailed
@@ -14,21 +14,17 @@
 #
 # SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
 #______________________________________________________________________________
- 
+
 import sys
-import os
-import re
 
 sys.path.insert(0, "../../../../../")
 
 from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
-import ut.engine.compare.engine.core               as     comperator
-from   ut.engine.compare.engine.analogy_db               import AnalogyDb
-from   ut.engine.compare.TEST.common              import \
-                                                           print_match_sequences, \
-                                                           frame_with_potpourri_borders, \
-                                                           get_Potpourri, \
-                                                           print_friends_pairing_max_result
+import ut.engine.compare.engine.core              as     comperator
+from   ut.engine.compare.engine.analogy_db        import AnalogyDb
+from   ut.engine.compare.TEST.common              import frame_with_potpourri_borders, \
+                                                         get_Potpourri, \
+                                                         print_friends_pairing_max_result
 
 if "--hwut-info" in sys.argv:
     print("Potpourri;")
@@ -53,7 +49,7 @@ if "judge" in sys.argv:
 
     test(["a", "b"], ["b", "a"])
     test(["a"],      ["b", "a"])
-    
+
 if "info" in sys.argv:
 
     def test(subject_line_list, nominal_line_list):
@@ -68,7 +64,7 @@ if "info" in sys.argv:
         subject_line_list = frame_with_potpourri_borders(subject_line_list)
         nominal_line_list = frame_with_potpourri_borders(nominal_line_list)
 
-        print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0.0, 
+        print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0.0,
                                          line_associations, AnalogyDb(), line_offset=1)
 
     test(["a", "b"], ["b", "a"])

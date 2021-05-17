@@ -1,6 +1,6 @@
 # Project Quex (http://quex.sourceforge.net); License: MIT;
 # Copied original code from Quex (2021y01m23d)
-# (C) 2005-2020 Frank-Rene Schaefer; 
+# (C) 2005-2020 Frank-Rene Schaefer;
 #_______________________________________________________________________________
 # (C) Frank-Rene Schaefer
 # License MIT
@@ -13,7 +13,7 @@ class QuexMetaEnum(EnumMeta):
 class QuexEnum(Enum, metaclass=QuexMetaEnum):
     def _generate_next_value_(name, start, count, last_values):
         return count
-        
+
     def __repr__(self):
         return self.name
 
@@ -30,7 +30,7 @@ class QuexEnum(Enum, metaclass=QuexMetaEnum):
         x_enum_f = isinstance(X, Enum)
         y_enum_f = isinstance(Y, Enum)
         if x_enum_f:
-            if y_enum_f: return cmp(X.value, Y.value) # cmp(Enum, Enum) 
+            if y_enum_f: return cmp(X.value, Y.value) # cmp(Enum, Enum)
             else:        return 1                     # cmp(Enum, other)  -> Enum is bigger (other sorts first)
         else:
             if y_enum_f: return -1                    # cmp(other, Enum)  -> other is lesser (other sorts first)
