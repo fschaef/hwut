@@ -4,9 +4,9 @@ file_name: test-friends_pairing_match_db.py;
 hwut_info_time: 1621255970L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ analogy_interferences; OK; 0.176668; 0; ]
-  [ extract_ultimates; OK; 0.181442; -925530794; ]
-  [ pairing; OK; 0.177483; 0; ]
+  [ analogy_interferences; OK; 0.157119; 0; ]
+  [ extract_ultimates; OK; 0.157271; -925530794; ]
+  [ pairing; OK; 0.164805; 0; ]
 ]
 }
 {
@@ -16,12 +16,12 @@ file_name: test-friends_pairing.py;
 hwut_info_time: 1621189301L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.185956; 0; ]
-  [ analogy; OK; 0.195151; 0; ]
-  [ wild; OK; 0.563187; 0; ]
-  [ wild-2; OK; 0.478498; 0; ]
-  [ border; OK; 0.193102; 0; ]
-  [ special; OK; 0.185891; 0; ]
+  [ basic; OK; 0.172859; 0; ]
+  [ analogy; OK; 0.167209; 0; ]
+  [ wild; OK; 0.484966; 0; ]
+  [ wild-2; OK; 0.422849; 0; ]
+  [ border; OK; 0.168442; 0; ]
+  [ special; OK; 0.169187; 0; ]
 ]
 }
 {
@@ -31,10 +31,10 @@ file_name: test-friends_pairing-fail-quickly.py;
 hwut_info_time: 1621257667L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.187045; 1814654113; ]
-  [ analogy; OK; 0.199089; 790894338; ]
-  [ wild; OK; 0.555515; 599906488; ]
-  [ border; OK; 0.192956; 1439170224; ]
+  [ basic; OK; 0.168021; 1814654113; ]
+  [ analogy; OK; 0.175659; 790894338; ]
+  [ wild; OK; 0.488178; 599906488; ]
+  [ border; OK; 0.172900; 1439170224; ]
 ]
 }
 {
@@ -44,7 +44,7 @@ file_name: test-friends_pairing_max.py;
 hwut_info_time: 1621255907L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.197262; 0; ]
-  [ restricted_cmp; OK; 0.187296; 0; ]
+  [ basic; OK; 0.171412; 0; ]
+  [ restricted_cmp; OK; 0.164890; 0; ]
 ]
 }

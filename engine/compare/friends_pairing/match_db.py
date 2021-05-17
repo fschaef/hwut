@@ -1,20 +1,43 @@
 """SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE:  Database of possible matches between subject and nominal lines.
+
+PURPOSE: Core functionality of friends-pairing algorithm.
+
+A 'MatchDb' maintains equivalence relationships between lines from the subject
+output and the nominal lines. The main function is '.pairing()' which performs
+the pairing process. This pairing, however, can be very expensive computational-
+wise. For that, several steps can be applied to avoid an exhaustive pairing 
+process:
+
+  .complete_pairing_possible():
+     
+     tells whether with the current setup it is possible to achieve a 100% 
+     pairing.
+
+  .extract_ultimates_and_hopeless():
+
+     extracts those entries from the database, which only have one possible 
+     match and those, for which there is no possible match.
+
+The 'MatchDb' is used by the 'exact.py' module.
 ________________________________________________________________________________
 """
 from ut.engine.compare.engine.analogy_db import AnalogyDb
 from collections import defaultdict
 
 class MatchDb(dict):
-    """RETURNS: A 'MatchDb' where
+    """Maintains a map:
 
-        subject line number --> list of (nominal line number, analogy_db)
-
-                None, if a subject line has no counterpart.
+    subject line number --> list of (nominal line number, required analogy_db)
 
     That is, it lists for each subject line number the possible 'mates' from
-    the nominal line number list together with the required analogies.
+    the nominal line number list together with the required analogies. 
+
+    Required analogies: A set of paired terms that must always appear side-by-
+    side in subject and nominal. If for example '((frieda))' in subject
+    appears once instead of '((olga))' in nominal, but later '((frieda))'
+    appears instead of '((vera))', then this breaks the analogy and the
+    equivalence cannot hold.
     """
 
     def __init__(self, subject_line_list, nominal_line_list, abort_f):
@@ -33,6 +56,10 @@ class MatchDb(dict):
                     yield nominal_le_seq.line_n, analogy_db
 
         def _iterable(subject_line_list, nominal_hash_db, abort_f):
+            """YIELDS: 
+                
+            subject line number --> list of (nominal line number, required analogeis)
+            """
             for subject_le_seq in subject_line_list:
                 mate_list = list(_match_candidates(subject_le_seq, nominal_hash_db))
                 # 'mate_list' = list of (nominal line number, analogy_db)
@@ -83,20 +110,9 @@ class MatchDb(dict):
         result.max_size = max(L_subject, L_nominal)
         return result
 
-    def complete_pairing_possible(self, couple_n=0):
-        # every subject has a counterpart?
-        if   couple_n + len(self)             != self.max_size: return False 
-        # every nominal has a counterpart?
-        elif couple_n + self.count_nominals() != self.max_size: return False 
-        # else: there may be a solution where all lines are matched
-        else:                                                  return True
-
     def pairing(self, couples, analogy_db):
-        """self:    map: 'ia' --> ('ib', required analogy_db)
-           couples: map: 'ia' --> 'ib'
-
-        That is, 'couples' captured already the individuals for which there is
-        no alternative than each other.
+        """The 'couples' dictionary maps: map 'ia' --> 'ib'. It contains
+        information about lines, that have already been paired.
 
         RETURNS: [0] True, if solution covers all subject and nominal lines.
                      False, else.
@@ -145,6 +161,18 @@ class MatchDb(dict):
                 )
 
         return False, best_couples, best_analogy_db
+
+    def complete_pairing_possible(self, couple_n=0):
+        """RETURNS: True, if a complete pairing is possible under the given 
+                          cicumstances.
+                    False, else.
+        """
+        # every subject has a counterpart?
+        if   couple_n + len(self)             != self.max_size: return False 
+        # every nominal has a counterpart?
+        elif couple_n + self.count_nominals() != self.max_size: return False 
+        # else: there may be a solution where all lines are matched
+        else:                                                  return True
 
     def count_nominals(self):
         """RETURN: number of different nominals in mate lists.
