@@ -22,9 +22,9 @@ import re
 
 sys.path.insert(0, "../../../../../")
 
-import ut.engine.compare.edit_operations.string  as     edit_distance_string
-import ut.engine.compare.edit_operations.line  as     edit_distance_line
-from   ut.engine.compare.TEST.common           import prepare, print_match_sequences
+import ut.engine.compare.edit_operations.string as     edit_distance_string
+import ut.engine.compare.edit_operations.line   as     edit_distance_line
+from   ut.engine.compare.TEST.common            import prepare, print_match_sequences
 
 if "--hwut-info" in sys.argv:
     print("Edit Distance;")

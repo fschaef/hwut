@@ -15,8 +15,8 @@
  (OK) ./engine/line_association.py
  (OK) ./engine/line_association_chunk.py
  (OK) ./friends_pairing/exact.py
-      ./friends_pairing/match_db.py
-      ./friends_pairing/max.py
+ (OK) ./friends_pairing/similar.py
+ (OK) ./friends_pairing/match_db.py
       ./main.py
       ./tolerance/chunk_pipe.py
       ./tolerance/match.py

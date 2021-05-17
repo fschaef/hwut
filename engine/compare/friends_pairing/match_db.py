@@ -106,7 +106,7 @@ class MatchDb(dict):
         result = MatchDb(None, None, None)
         dict.__init__(result, iterable)
         L_subject = len(result)
-        L_nominal = result.count_nominals()
+        L_nominal = result._count_nominals()
         result.max_size = max(L_subject, L_nominal)
         return result
 
@@ -132,7 +132,7 @@ class MatchDb(dict):
 
             remaining_subject_singles = subject_singles_all.difference(couples.keys())
             remaining_subject_singles.remove(ia)
-            remaining_nominal_singles = self.remaining_nominal_singles(ia, couples, analogy_db)
+            remaining_nominal_singles = self._remaining_nominal_singles(ia, couples, analogy_db)
 
             for ib, required_analogy_db in remaining_nominal_singles:
                 if required_analogy_db:
@@ -157,38 +157,6 @@ class MatchDb(dict):
                 )
 
         return False, best_couples, best_analogy_db
-
-    def complete_pairing_possible(self, couple_n=0):
-        """RETURNS: True, if a complete pairing is possible under the given 
-                          cicumstances.
-                    False, else.
-        """
-        # every subject has a counterpart?
-        if   couple_n + len(self)             != self.max_size: return False 
-        # every nominal has a counterpart?
-        elif couple_n + self.count_nominals() != self.max_size: return False 
-        # else: there may be a solution where all lines are matched
-        else:                                                  return True
-
-    def count_nominals(self):
-        """RETURN: number of different nominals in mate lists.
-        """
-        found = set()
-        for ia, mate_list in self.items():
-            found.update(ib for ib, _ in mate_list)
-        return len(found)
-
-    def remaining_nominal_singles(self, ia, couples, analogy_db):
-        """YIELDS: mate from remaining mate_list for 'ia'.
-
-        Consider that all nominals 'ib' from the iterable 'nominals_taken are no
-        longer available for 'ia' to mate. Yield each of the remaining 'ib'-s.
-        """
-        taken_set = set(couples.values()) # A set allows for a quick search
-        for ib, required_analogy_db in sorted(self[ia]):
-            if ib in taken_set: continue
-            elif not analogy_db.is_all_consistent(required_analogy_db): continue
-            yield ib, required_analogy_db
 
     def extract_ultimates_and_hopeless(self, analogy_db, abort_f):
         """Search for entries in 'match_db' where there is only one possible
@@ -218,6 +186,38 @@ class MatchDb(dict):
                 break
 
         return couples
+
+    def complete_pairing_possible(self, couple_n=0):
+        """RETURNS: True, if a complete pairing is possible under the given 
+                          cicumstances.
+                    False, else.
+        """
+        # every subject has a counterpart?
+        if   couple_n + len(self)             != self.max_size: return False 
+        # every nominal has a counterpart?
+        elif couple_n + self._count_nominals() != self.max_size: return False 
+        # else: there may be a solution where all lines are matched
+        else:                                                  return True
+
+    def _count_nominals(self):
+        """RETURN: number of different nominals in mate lists.
+        """
+        found = set()
+        for ia, mate_list in self.items():
+            found.update(ib for ib, _ in mate_list)
+        return len(found)
+
+    def _remaining_nominal_singles(self, ia, couples, analogy_db):
+        """YIELDS: mate from remaining mate_list for 'ia'.
+
+        Consider that all nominals 'ib' from the iterable 'nominals_taken are no
+        longer available for 'ia' to mate. Yield each of the remaining 'ib'-s.
+        """
+        taken_set = set(couples.values()) # A set allows for a quick search
+        for ib, required_analogy_db in sorted(self[ia]):
+            if ib in taken_set: continue
+            elif not analogy_db.is_all_consistent(required_analogy_db): continue
+            yield ib, required_analogy_db
 
     def _find_couples(self, couples, analogy_db, abort_f):
         """Find 'ia'-s which have only one possible matching 'ib'. Extract

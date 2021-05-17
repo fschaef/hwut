@@ -20,8 +20,8 @@ ________________________________________________________________________________
 from   ut.engine.compare.engine.core                   import E_Verdict
 from   ut.engine.compare.engine.line                   import Line
 from   ut.engine.compare.engine.line_association       import LineAssociation
-import ut.engine.compare.friends_pairing.max           as     friends_pairing_max
-import ut.engine.compare.friends_pairing.exact          as     friends_pairing
+import ut.engine.compare.friends_pairing.similar           as     friends_pairing_max
+import ut.engine.compare.friends_pairing.exact         as     friends_pairing
 import ut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
 from   ut.engine.compare.edit_operations.line_sequence import E_EditLineSequence, EditsLineSequence
 

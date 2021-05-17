@@ -15,7 +15,7 @@ this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
 import ut.engine.compare.engine.core              as     comperator
-import ut.engine.compare.friends_pairing.max      as     friends_pairing_max
+import ut.engine.compare.friends_pairing.similar      as     friends_pairing_max
 from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
 from   ut.engine.compare.engine.line              import Line
 from   ut.engine.compare.engine.analogy_db        import AnalogyDb

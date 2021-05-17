@@ -1,18 +1,35 @@
-import ut.engine.compare.friends_pairing.exact    as     friends_pairing
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+________________________________________________________________________________
+
+PURPOSE: Pairing lines according to similarity (not only equivalent lines).
+
+Where 'exact.py' only tried to find exactly equivalent lines, this module
+tries to associate similar lines. The goal, here, is to provide a line-up
+that can be displayed to expose the 'diff function' via a user interface.
+________________________________________________________________________________
+"""
 from   ut.engine.compare.engine.analogy_db       import AnalogyDb
 from   ut.engine.compare.engine.line_association import LineAssociation
-import ut.engine.compare.edit_operations.line    as     edit_distance_line
+import ut.engine.compare.edit_operations.line    as     edit_operations_line
+import ut.engine.compare.friends_pairing.exact   as     friends_pairing
 
 import sys
 
 
 def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):
-    """RETURNS: sorted list of LineAssociation (sorted by line number of subject, then nominal)
+    """RETURNS: sorted list of LineAssociation objects.
+        
+    Sort order: sorted by line number of subject. 
+
+    'max_comparison_count' may restrict the number of comparisons. With 
+    large number of lines, this may restrict the complexity, therefore,
+    feasibility.
 
     This functions tries to find the best combination of subject and nominal
-    lines. Lines which are equivalent are already mentioned in 'couples'. The
-    remaining lines are matched based on some cost function. The cost function
-    measures the amount of diffrerence between two lines.
+    lines according to their similarities. Equivalent matches are first found
+    using the 'exact.py' module. Then, the remaining lines are matched based on
+    some cost function that takes their similiarity into account. The cost
+    function measures the amount of diffrerence between two lines.
     """
     verdict, couples, analogy_db = friends_pairing.do(subject_line_list,
                                                       nominal_line_list,
@@ -44,23 +61,23 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
     return result, analogy_db
 
 def _pair_maximum(couples, subject_db, nominal_db, analogy_db, max_comparison_count):
-    """RETURNS: [0] sorted remaining subject line indices.
-                [1] sorted remaining nominal line indices.
+    """RETURNS: [0] list of 'LineAssociation' objects.
+                [1] line numbers of unpaired subject lines
+                [2] line numbers of unpaired nominal lines
 
-    DOES NOT EFFECT: 'couples'
+    DOES NOT AFFECT: 'couples'
+                     'analogy_db'
 
-    The dictionary 'couple' maps: 'ia' --> 'ib' of EQUIVALENT lines in
-    subject and nominal. The database might, then contain lines which are
-    not equivalent. For side-by-side comparison view, remaining mistfits
-    must also be paired. For this, a each subject line is paired with the
-    nominal line of minimum 'cost', where cost is a measure of difference
-    between the two.
+    Pairs lines from subject and nominal which are not mentioned in 'couples',
+    For this, a each subject line is paired with the nominal line of minimum
+    'cost', where cost is a measure of difference between the two.
 
-    The couples produces by this functions are 'bad couples', i.e. lines
-    are associated which are not equivalent. Thus, they do not impose
-    any analogy constraints.
+    The couples produced by this functions are 'not ideal couples', i.e. lines
+    are associated which are similar but not equivalent. Thus, they do not
+    impose any analogy constraints.
     """
     subjects_taken, nominals_taken = set(couples.keys()), set(couples.values())
+    analogy_db                     = analogy_db.clone() # isolate
 
     nominals_available_db, nominals_on_call = _nominals(nominal_db,
                                                         nominals_taken,
@@ -83,10 +100,16 @@ def _pair_maximum(couples, subject_db, nominal_db, analogy_db, max_comparison_co
 
 
 def _nominals(nominal_db, nominals_coupled, max_comparison_count):
-    """RETURNS: [0] nominals available for comparison:
-                    ib -> Line of line ib
-                [1] nominals on call, when a nominal from [0]
-                    is coupled and therefore no longer available.
+    """RETURNS: [0] 'nominal_db': nominals available for comparison
+                    ib -> Line object for line 'ib'
+                [1] line number of nominals Line-s on 'call'.
+
+    'max_comparison_count' restricts the number of comparisons for
+    each subject line. This is achieved by restricting the number of
+    entries in the returned 'nominal_db'. On the other hand, if an
+    entry is used from 'nominal_db', another entry from 'nominals on
+    call' can take its place-the number of available nominals remains
+    smaller or equal to 'max_comparison_count'.
 
     The original list of available nominals is the set of nominals not
     yet coupled in 'couples'.
@@ -106,13 +129,13 @@ def _nominals(nominal_db, nominals_coupled, max_comparison_count):
     return nominal_db, nominals_on_call
 
 def _subjects(subject_db, subjects_coupled):
-    """RETURN: list of (ia, match_seq)
+    """RETURN: list of (ia, subject Line object for 'ia')
 
     for all subject lines that are not already coupled in 'couples'.
     """
     return [
-        match_seq
-        for ia, match_seq in subject_db.items()
+        line
+        for ia, line in subject_db.items()
         if ia not in subjects_coupled
     ]
 
@@ -164,9 +187,9 @@ def _find_best_match(subject_seq, nominal_match_db, analogy_db):
     for ib, nominal_seq in sorted(nominal_match_db.items()):
         cost,      \
         edit_list, \
-        analogy_db = edit_distance_line.do(subject_seq.sequence,
-                                           nominal_seq.sequence,
-                                           analogy_db)
+        analogy_db = edit_operations_line.do(subject_seq.sequence,
+                                             nominal_seq.sequence,
+                                             analogy_db)
         if cost >= best_cost:
             continue
 
