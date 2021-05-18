@@ -30,11 +30,11 @@ if "--hwut-info" in sys.argv:
     sys.exit()
 
 config = comperator.Configuration()
-config.analogy_f               = False
-config.whitespace_f            = True
-config.backslash_f             = False
-config.numeric_tolerance_ratio = 0
-config.equivalent_pattern_list = []
+config.pattern_finder.analogy_f               = False
+config.pattern_finder.whitespace_f            = True
+config.pattern_finder.backslash_f             = False
+config.pattern_finder.numeric_tolerance_ratio = 0
+config.pattern_finder.equivalent_pattern_list = []
 
 def test_core(subject_txt, nominal_txt):
     print("--------------------------------------------------\n")

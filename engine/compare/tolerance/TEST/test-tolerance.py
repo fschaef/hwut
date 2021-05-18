@@ -35,7 +35,7 @@ if "--hwut-info" in sys.argv:
 
 
 def empty_config():
-    config = comperator.Configuration()
+    config = comperator.ConfigurationPatternFinder()
     config.analogy_f               = False
     config.whitespace_f            = False
     config.backslash_f             = False

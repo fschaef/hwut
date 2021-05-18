@@ -32,10 +32,10 @@ if "--hwut-info" in sys.argv:
     sys.exit()
 
 config = comperator.Configuration()
-config.analogy_f               = True
-config.numeric_tolerance_ratio = 0.011
-config.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]
-pf                             = PatternFinder(config)
+config.pattern_finder.analogy_f               = True
+config.pattern_finder.numeric_tolerance_ratio = 0.011
+config.pattern_finder.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]
+pf = PatternFinder(config.pattern_finder)
 
 if "judge" in sys.argv:
 

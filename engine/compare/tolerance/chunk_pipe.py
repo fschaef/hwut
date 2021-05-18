@@ -32,7 +32,7 @@ from itertools import count
 
 class ChunkPipe(PatternFinder):
     def __init__(self, configuration):
-        PatternFinder.__init__(self, configuration)
+        PatternFinder.__init__(self, configuration.pattern_finder)
         self.configuration = configuration
 
     def generate(self, line_provider):

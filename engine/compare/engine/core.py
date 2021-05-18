@@ -13,7 +13,7 @@ class E_Verdict(Enum):
     ERROR_IN_SUBJECT = auto()
     ERROR_IN_NOMINAL = auto()
 
-class Configuration:
+class ConfigurationPatternFinder(object):
     __slots__ = ("strip_whitespace_f",
                  "analogy_f",
                  "whitespace_f",
@@ -21,10 +21,9 @@ class Configuration:
                  "numeric_tolerance_ratio",
                  "equivalent_pattern_list",
                  "visible_nothing_pattern_list",
-                 "potpourri_max_comparison_count")
-
+                 "ignored_line_begin_marker",
+                 "ignored_line_end_marker")
     def __init__(self):
-        # ToleranceTable
         self.strip_whitespace_f           = True
         self.analogy_f                    = True
         self.whitespace_f                 = True
@@ -32,7 +31,14 @@ class Configuration:
         self.numeric_tolerance_ratio      = 0    # [0:1] 0=perfect fit; 1=any number works
         self.equivalent_pattern_list      = []
         self.visible_nothing_pattern_list = []
+        self.ignored_line_begin_marker    = "##"
+        self.ignored_line_end_marker      = "##"
 
-        # ComperatorPotpourri
+class Configuration(object):
+    __slots__ = ("pattern_finder",
+                 "potpourri_max_comparison_count")
+
+    def __init__(self):
+        self.pattern_finder = ConfigurationPatternFinder()
         self.potpourri_max_comparison_count = 128
 

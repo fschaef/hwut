@@ -1,3 +1,7 @@
+
+FUTURE: 2 presentations: intern.odt -- explaining the internal processes
+                         extern.odt -- explaining the API.
+
 2021y05m01d: <fschaef> Starting detailed code review
 
    -> goal: comments are clear, 

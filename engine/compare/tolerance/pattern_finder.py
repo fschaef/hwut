@@ -2,22 +2,49 @@
 ________________________________________________________________________________
 PURPOSE: Transform a line of text --> LineElement objects.
 
-A 'PatternFinder' finds patterns in lines of texts and represents the text
-line by a list of 'LineElement'-s (classes derived from 'LineElement').
+A 'PatternFinder' finds patterns in lines of texts and represents the text line
+by a list of 'LineElement'-s (classes derived from 'LineElement').  The
+understanding of a line as a sequence of 'LineElement'-s is the key for
+tolerant comparison. 
 
-The understanding of a line as a sequence of 'LineElement'-s is the key for
-tolerant comparison. For example, an *equivalence pattern* lets two strings
-be considered equivalent, even if they are literally not the same. A *number
-pattern* may only require a certain numeric precission. The *analogy* pattern
-allows for different strings to appear, as long as it is always the same
-strings and their counterpart.
+ * EQUIVALENCE PATTERN: lets two strings be considered equivalent, even if 
+                        they are literally not the same. 
+
+                        Those may also defined by the user.
+                        
+ * NUMERIC PATTERN: may only require a certain numeric precission for 
+                    equivalence. 
+                   
+ * ANALOGY: pattern allows for different strings to appear, as long as it is 
+            always the same strings and their counterpart.
+
+ * WHITESPACE/SLASH: the exact number of characters of that type is unimportant
+                     for equivalence. The 'slash' pattern helps with output of
+                     file names under different operating systems.
+
+ * VISIBLE_NOTHING: is completely ignored during equivalence considerations.
+
+ Additionally, there are further configuration options:
+
+ * .strip_whitespace_f:        
+    cuts the whitespace at the begin/end of each line.
+
+ * .numeric_tolerance_ratio:   
+    defines the precision for NUMERIC.
+
+ * .ignored_line_begin_marker, .ignored_line_end_marker:   
+    define a marker at the for the begin/end of a line. If such a marker appears 
+    the line is ignored.
+
+The 'PatternFinder' serves as lexical analyzer for 'chunk_pipe.py'.
 ________________________________________________________________________________
 """
-from   ut.engine.quex.typed              import typed
+from   ut.engine.quex.typed                     import typed
+from   ut.engine.compare.engine.core            import ConfigurationPatternFinder
 from   ut.engine.compare.tolerance.line_element import E_ToleranceId, \
-                                                Token, \
-                                                LineElement, \
-                                                LineElementString
+                                                       Token, \
+                                                       LineElement, \
+                                                       LineElementString
 from   collections import namedtuple
 import re
 
@@ -25,10 +52,14 @@ TolerancePattern = namedtuple("TolerancePattern", ("id", "pattern", "pattern_ind
 
 class PatternFinder:
     """Maintains a list of tolerance patterns to be found in a string.
+
     The '.do()' function interprets a string as a sequence of 'LineElement' 
     objects.
     """
+    @typed(config=ConfigurationPatternFinder)
     def __init__(self, config):
+        """Setup the tolerance pattern table according to a given configuration.
+        """
         def _add(table, tolerance_id, regex):
             if regex is not None: pattern = re.compile(regex)
             else:                 pattern = None
@@ -65,12 +96,11 @@ class PatternFinder:
 
             return table
 
-        self.table                   = tuple(_build(config))
-        self.strip_whitespace_f      = config.strip_whitespace_f
-        self.numeric_tolerance_ratio = config.numeric_tolerance_ratio
-
-        self.ignored_line_begin_marker = ["##"]
-        self.ignored_line_end_marker   = ["##"]
+        self.table                     = tuple(_build(config))
+        self.strip_whitespace_f        = config.strip_whitespace_f
+        self.numeric_tolerance_ratio   = config.numeric_tolerance_ratio
+        self.ignored_line_begin_marker = config.ignored_line_begin_marker
+        self.ignored_line_end_marker   = config.ignored_line_end_marker
 
     def do(self, string):
         """RETURNS: sequence of 'LineElement' objects.

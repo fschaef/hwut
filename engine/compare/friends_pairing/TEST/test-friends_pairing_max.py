@@ -28,7 +28,7 @@ if "--hwut-info" in sys.argv:
     print("CHOICES: basic, restricted_cmp;")
     sys.exit()
 
-config = comperator.Configuration()
+config = comperator.ConfigurationPatternFinder()
 config.analogy_f               = True
 config.numeric_tolerance_ratio = 0.011
 config.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]
