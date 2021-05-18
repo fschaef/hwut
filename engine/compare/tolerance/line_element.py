@@ -1,3 +1,23 @@
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+________________________________________________________________________________
+PURPOSE: LineElements -- carrying information of patterns found in text lines.
+
+The 'PatternFinder' identifies patterns in text and writes their meaning or
+content into dedicated objects, namely 'LineElements'.
+
+A 'LineElement' stands for a specific kind of tolerance to be applied. For
+example 'LineElementNumber' applies numeric precision constraints. Other
+line elements only require that the string matches some regular expressions.
+
+LineElement provide:
+
+   .compare(other)  --> if line element is equivalent to 'other'.
+   
+   .edit_distance_relative(other) --> a value between 0 to 1 indicating 
+                                     the amount of edit operations to 
+                                     transform 'self' to 'other'.
+________________________________________________________________________________
+"""
 import ut.engine.compare.edit_operations.string as     edit_distance_string
 from   ut.engine.compare.engine.core           import E_Verdict
 from   ut.engine.quex.typed                   import typed
@@ -13,6 +33,11 @@ class E_ToleranceId(IntEnum):
 
 
 class Token:
+    """Pre-version of a 'LineElement' produced by the 'PatternFinder'.
+
+           LineElement.from_Token(...)  --> real 'LineElement'
+
+    """
     def __init__(self):
         self.tolerance_id  = None
         self.start         = None
@@ -35,6 +60,16 @@ class Token:
 
 
 class LineElement:
+    """Base class for all 'LineElement' classes. It contains:
+
+     .tolerance_id:  identifies the line element type, i.e. the 
+                     type of tolerance which is to be applied.
+     .reference      text fragment where the pattern occured.
+     .start          index pointing into '.reference' where the 
+                     according pattern gettings.
+     .end            index pointing into '.reference' after the 
+                     last character.
+    """
     @typed(tolerance_id=E_ToleranceId)
     def __init__(self, tolerance_id, start, end, string):
         self.tolerance_id = tolerance_id
@@ -69,6 +104,12 @@ class LineElement:
             assert False # pragma: no cover
 
     def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' is of same kind, but content differs.
+                        EQUIVALENT, if 'other' is equivalent to 'self'.
+                    [1] analogy required for the EQUIVALENT to hold,
+                        if it is equivalent.
+        """
         if self.tolerance_id != nominal.tolerance_id:
             return E_Verdict.MISFIT, None
 
@@ -100,6 +141,12 @@ class LineElement:
     def string(self):
         return self.reference[self.start:self.end]
 
+    def _compare(self, nominal):
+        """RETURNS: [0] True, any way.
+                    [1] None
+        """
+        assert False
+
     def __hash__(self):
         # NOTE: This function is only overwritten if it is safe to assume
         #       that two equivalent 'LineElement' objects have the same hash value!
@@ -113,6 +160,9 @@ class LineElementString(LineElement):
         LineElement.__init__(self, E_ToleranceId.STRING, start, end, string)
 
     def _compare(self, nominal):
+        """RETURNS: [0] True, any way.
+                    [1] None
+        """
         return self.string == nominal.string, None
 
     def __hash__(self):
@@ -175,6 +225,9 @@ class LineElementEquivalencePattern(LineElement):
         self.pattern_index_set = set(pattern_index_set)
 
     def _compare(self, nominal):
+        """RETURNS: [0] True, any way.
+                    [1] None
+        """
         return not nominal.pattern_index_set.isdisjoint(self.pattern_index_set), None
 
     def edit_distance_relative(self, nominal):

@@ -15,6 +15,7 @@ ________________________________________________________________________________
 """
 from   ut.engine.compare.engine.line          import Line
 from   ut.engine.compare.engine.analogy_db    import AnalogyDb
+import ut.engine.compare.edit_operations.line as     edit_operations_line
 from   ut.engine.quex.typed                   import typed
 import sys
 
@@ -24,6 +25,7 @@ class LineAssociation:
     """
     @typed(subject_seq=(None, Line), nominal_seq=(None, Line), analogy_db=(None, AnalogyDb))
     def __init__(self, subject_seq, nominal_seq, edit_list=tuple(), analogy_db=None):
+        assert edit_list is None or all(isinstance(x, edit_operations_line.Edit) for x in edit_list)
         self.edit_list   = edit_list
         self.subject_seq = subject_seq
         self.nominal_seq = nominal_seq

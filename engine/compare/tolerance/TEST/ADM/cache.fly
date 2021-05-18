@@ -4,9 +4,9 @@ file_name: test-chunk_pipe.py;
 hwut_info_time: 1621320663L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ normal; OK; 0.168871; 0; ]
-  [ special; OK; 0.191913; 0; ]
-  [ comment; OK; 0.187195; 0; ]
+  [ normal; OK; 0.193168; 0; ]
+  [ special; OK; 0.195065; 0; ]
+  [ comment; OK; 0.181075; 0; ]
 ]
 }
 {
@@ -15,10 +15,10 @@ file_name: test-tolerance.py;
 hwut_info_time: 1621320157L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ setup; OK; 0.176680; 0; ]
-  [ find_first_match; OK; 0.179340; 0; ]
-  [ tolerance_id; OK; 0.166636; 0; ]
-  [ do; OK; 0.181307; 0; ]
+  [ setup; OK; 0.180015; 0; ]
+  [ find_first_match; OK; 0.180628; 0; ]
+  [ tolerance_id; OK; 0.175010; 0; ]
+  [ do; OK; 0.175343; 0; ]
 ]
 }
 {
@@ -28,9 +28,9 @@ file_name: test-tolerance_match.py;
 hwut_info_time: 1621290779L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ LineElementString; OK; 0.181720; 0; ]
-  [ LineElementNumber; OK; 0.174226; 0; ]
-  [ LineElementEquivalencePattern; OK; 0.172055; 0; ]
-  [ LineElementAnalogy; OK; 0.159468; 0; ]
+  [ LineElementString; OK; 0.176376; 0; ]
+  [ LineElementNumber; OK; 0.175410; 0; ]
+  [ LineElementEquivalencePattern; OK; 0.173794; 0; ]
+  [ LineElementAnalogy; OK; 0.170597; 0; ]
 ]
 }

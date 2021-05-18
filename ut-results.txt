@@ -58,7 +58,7 @@ engine/compare/engine/TEST                                           <no date>
                                                                                
 engine/compare/friends_pairing/TEST                                  <no date>
 -------------------------------------------------------------------------------
- * LineElementDb
+ * MatchDb
         test-friends_pairing_match_db.py analogy_interferences .......[OK]
                                          extract_ultimates ...........[OK]
                                          pairing .....................[OK]

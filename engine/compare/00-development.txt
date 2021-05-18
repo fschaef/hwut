@@ -22,9 +22,9 @@ FUTURE: 2 presentations: intern.odt -- explaining the internal processes
  (OK) ./friends_pairing/similar.py
  (OK) ./friends_pairing/match_db.py
  (OK) ./tolerance/chunk_pipe.py
-      ./tolerance/line_element.py
+ (OK) ./tolerance/line_element.py
  (OK) ./tolerance/pattern_finder.py
-      ./main.py
+ (OK) ./main.py
       ./TEST/common.py
       ./TEST/test-main.py
       ./edit_distance/TEST/test-edit_distance.py

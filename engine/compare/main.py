@@ -70,14 +70,38 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
 
     where:
 
-    LineAssociationChunk.type() in (E_Chunk.LINE_SEQUENCE, E_Chunk.POTPOURRI)
+         LineAssociationChunk.type() in (LINE_SEQUENCE, POTPOURRI)
 
     This function iterates over subject and nominal lines and compares them.
     When lines are too deviant from each other, 'plugs' in one sequence are
     inserted until it fits again the other sequences. Line associations are
     reported (yielded) in blocks of their type, i.e. assocations of
     'LineSequence'-s and 'Potpourri'-s are yielded in separate objects
-    of type 'LineAssociationChunk'
+    of type 'LineAssociationChunk'.
+
+    LineAssociationChunk:_______________________________ 
+    |   .type ('E_ChunkType')                           |
+    |   .line_association_list: [                       |
+    |       LineAssociation:________________________    |
+    |       | .subject_line ('Line')                |   |
+    |       | .nominal_line ('Line')                |   |
+    |       | .edit_list    ('')                    |   |
+    |       | .analogy_db   ('AnalogyDb')           |   |
+    |       '---------------------------------------'   |
+    |       ...                                         |  
+    |   ]                                               |
+    '.__________________________________________________'
+
+    Line:____________________________________
+    |    .line_n                             |
+    |    .sequence = [                       |
+    |        LineElement:_________________   |
+    |        |  .tolerance_id             |  |
+    |        |  .string                   |  |
+    |        '----------------------------'  |
+    |        ...                             |  
+    |    ]                                   |
+    '----------------------------------------'
     """
     analogy_db = AnalogyDb()
 
