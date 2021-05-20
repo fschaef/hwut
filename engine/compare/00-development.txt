@@ -32,18 +32,18 @@ PROGRESS: <fschaef> in depth code review
    (OK) ./tolerance/chunk_pipe.py
    (OK) ./tolerance/line_element.py
    (OK) ./tolerance/pattern_finder.py
-   (OK) ./main.py
+        ./main.py   ---> see comment of '.compare()' return value is not 'boolean'
         ./TEST/common.py
         ./TEST/test-main.py
         ./edit_distance/TEST/test-edit_distance.py
         ./edit_distance/TEST/test-edit_distance_line_list.py
-        ./engine/TEST/test-compare_line_list.py
-        ./engine/TEST/test-compare_lines.py
-        ./engine/TEST/test-compare_potpourris.py
-        ./friends_pairing/TEST/test-friends_pairing-fail-quickly.py
+   (OK) ./engine/TEST/test-compare_sequence.py
+   (OK) ./engine/TEST/test-compare_lines.py
+   (OK) ./engine/TEST/test-compare_potpourris.py
+   (OK) ./friends_pairing/TEST/test-friends_pairing-fail-quickly.py
    (OK) ./friends_pairing/TEST/test-exact.py
-        ./friends_pairing/TEST/test-friends_pairing_match_db.py
-        ./friends_pairing/TEST/test-similar.py
+   (OK) ./friends_pairing/TEST/test-match_db.py
+   (OK) ./friends_pairing/TEST/test-similar.py
    (OK) ./tolerance/TEST/test-chunk_pipe.py
    (OK) ./tolerance/TEST/test-pattern_finder.py
    (OK) ./tolerance/TEST/test-line_element.py

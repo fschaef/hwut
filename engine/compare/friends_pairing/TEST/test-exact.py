@@ -1,7 +1,7 @@
 """SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: Algorithm to associate equivalent lines from subject and nominal.
+PURPOSE: Algorithm to associate EQUIVALENT lines from subject and nominal.
 
 CHOICES: basic, analogy, wild, wild-2, border, special;
 

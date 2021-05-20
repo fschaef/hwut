@@ -1,10 +1,10 @@
 {
 title: Line Comparison;
 file_name: test-main.py;
-hwut_info_time: 1621320303L;
+hwut_info_time: 1621493419L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.170446; 0; ]
-  [ line_associations; OK; 0.176055; 0; ]
+  [ compare; OK; 0.178533; 0; ]
+  [ line_associations; OK; 0.187765; 0; ]
 ]
 }

@@ -1,20 +1,25 @@
 #! /usr/bin/env python3
-#
-# PURPOSE: Comparison of two potpourris.
-#
-# Tests: (1) compare two potpourris on equality. Result 'True' or 'False'.
-#        (2) compares two potpourris and provide according appropriate
-#            line associations for display.
-#
-# The first is used to determine the correctness of unit tests, the later is
-# used to display the difference of a subject's output and the nominal output.
-#
-# NOTE: The line pairing is done by 'friends_pairing/max.py'. Detailed
-#       unit tests on the functionality are found there.
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
 
+
+PURPOSE: Comparison of two potpourris.
+
+CHOICES: judge, info;
+
+'judge': compare two potpourris on equivalence. 
+         Result: 'True' or 'False'.
+
+'info':  provide information about similarity.
+         Result: line associations.
+
+The first is used to determine the correctness of unit tests, the later is
+used to display the difference of a subject's output and the nominal output.
+
+These tests only examine the outer layer of the API. The detailed functioning
+test are done in 'friends_pairing/TEST'.
+______________________________________________________________________________
+"""
 import sys
 
 sys.path.insert(0, "../../../../../")

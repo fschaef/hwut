@@ -1,25 +1,31 @@
-# PURPOSE: 'MatchDb'
-#
-# The 'MatchDb' maintains possible matches between subject and nominal lines.
-#
-#  map: subject line number --> (nominal line number, analogy_db)
-#
-# That is, for each line number in the subject, there is a list of line numbers
-# indicating the nominal lines that match that line. Additionally, the
-# analogy_db tells what analogies are require for the equivalence to hold.
-#
-# -- 'pairing' finds distinct matches between subject lines and nominal lines.
-#              That is, it transforms a configuration of possible matches into
-#              a setup of fixed relationships.
-#
-# -- 'extract_ultimates' find those entries in the database for which there is
-#              no ulternative and extracts them into a 'couples' dictionary.
-#
-# -- 'analogy_interferences' removes entries from the database which are
-#              inconsistent with a given analogy database.
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: 'MatchDb'
+
+CHOICES: analogy_interferences, extract_ultimates, pairing;
+
+DESCRIPTION:
+
+The 'MatchDb' maintains possible matches between subject and nominal lines.
+
+ map: subject line number --> (nominal line number, analogy_db)
+
+That is, for each line number in the subject, there is a list of line numbers
+indicating the nominal lines that match that line. Additionally, the
+analogy_db tells what analogies are require for the equivalence to hold.
+
+-- 'pairing' finds distinct matches between subject lines and nominal lines.
+             That is, it transforms a configuration of possible matches into
+             a setup of fixed relationships.
+
+-- 'extract_ultimates' find those entries in the database for which there is
+             no ulternative and extracts them into a 'couples' dictionary.
+
+-- 'analogy_interferences' removes entries from the database which are
+             inconsistent with a given analogy database.
+______________________________________________________________________________
+"""
 
 import sys
 import os

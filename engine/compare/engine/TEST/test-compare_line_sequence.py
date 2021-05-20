@@ -1,20 +1,24 @@
 #! /usr/bin/env python3
-#
-# PURPOSE: Comparison of two lists of lines.
-#
-# Tests: (1) compare two line lists on equality. Result 'True' or 'False'.
-#        (2) compares two line lists and provide according appropriate
-#            line associations for display.
-#
-# The first is used to determine the correctness of unit tests, the later is
-# used to display the difference of a subject's output and the nominal output.
-#
-# NOTE: The line association is done by 'edit_distance/line_list.py'. Detailed
-#       unit tests on the functionality are found there.
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
 
+PURPOSE: Comparison of two potpourris.
+
+CHOICES: judge, info;
+
+'judge': compare two line sequences on equivalence. 
+         Result: 'True' or 'False'.
+
+'info':  provide information about similarity.
+         Result: line associations.
+
+The first is used to determine the correctness of unit tests, the later is
+used to display the difference of a subject's output and the nominal output.
+
+These tests only examine the outer layer of the API. The detailed functioning
+test are done in 'friends_pairing/TEST'.
+______________________________________________________________________________
+"""
 import sys
 import os
 import re
@@ -29,7 +33,6 @@ from   ut.engine.compare.TEST.common              import \
                                                            print_match_sequences_lists, \
                                                            print_friends_pairing_max_result, \
                                                            get_LineSequence
-
 
 if "--hwut-info" in sys.argv:
     print("Line Sequence;")
@@ -56,7 +59,7 @@ if "judge" in sys.argv:
     test(["a", "b"],     ["b", "a"])
     test(["a"],          ["b", "a"])
     test(["a", "((b))"], ["a", "((2))"])
-    test(["b", "a"],          ["a"])
+    test(["b", "a"],     ["a"])
 
 if "info" in sys.argv:
 

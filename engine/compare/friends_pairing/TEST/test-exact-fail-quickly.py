@@ -1,16 +1,16 @@
-#
-# PURPOSE: 'FriendsPairing' -- Check the 'Fail Quickly' Version.
-#
-# For explanation of 'Friends Pairing' tests in general see the file
-# 'test-friends_pairing.py'. These tests check on the class
-#
-#         FriendsPairing.do(abort_f=True)
-#
-# which pushes algorithms to fail quickly, as soon as it becomes obvious
-# that there is no solution.
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: Failling early on EXACT matching algorithm.
+
+CHOICES: basic, analogy, wild, border;
+
+DESCRIPTION:
+
+This test checks for the circumstances under which the exact matching algorithm
+can fail without a detailed similarity analysis.
+______________________________________________________________________________
+"""
 
 import sys
 import os
@@ -22,8 +22,8 @@ sys.path.insert(0, this_directory)
 import ut.engine.compare.engine.core              as     comperator
 import ut.engine.compare.friends_pairing.exact    as     friends_pairing
 from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
-from   ut.engine.compare.engine.line                     import Line
-from   ut.engine.compare.engine.analogy_db               import AnalogyDb
+from   ut.engine.compare.engine.line              import Line
+from   ut.engine.compare.engine.analogy_db        import AnalogyDb
 from   ut.engine.compare.TEST.common              import get_Potpourri
 
 if "--hwut-info" in sys.argv:

@@ -8,11 +8,12 @@ provided by a stream is interpreted in two ways:
 
 -- line sequences, where the lines in the subject must occur in the same
                    sequence as in the nominal.
+
 -- potpourri,      where the same lines must occur, but not necessarily
                    in the same sequence.
 
 A stream can consist of multiple blocks of line sequences and potpourris.
-Potpourris distinguish by '||||' markers aroud the concerned lines.
+Potpourris are marked by '||||' delimiters around the concerned lines.
 
 API:
 
