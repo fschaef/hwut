@@ -1,12 +1,14 @@
-#
-# PURPOSE: 'friends_pairing_max' -- Find as many as possible pairs of lines.
-#
-# Same as 'friends_pairing' only that this algorithm. However, it tries to find
-# as many couples as possible, even if they are equivalent. For that it tries
-# to combine the least 'misfitting' couples.
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: Algorithm to associate similar lines from subject and nominal.
+
+Same as 'friends_pairing' only that this algorithm. However, it tries to find
+as many couples as possible, even if they are equivalent. For that it tries
+to combine the least 'misfitting' couples.
+
+______________________________________________________________________________
+"""
 
 import sys
 import os

@@ -1,30 +1,44 @@
-#
-# PURPOSE: 'FriendsPairing' -- Algorithm to find pairs of lines.
-#
-# The 'friends-pairing' algorithm takes two sets of lines and tries to
-# find the configuration of maximum number of associations between elements
-# of the two. The problem arises, that due to tolerance principles a line
-# might match multiple other lines. Depending on the choice of the partner,
-# another partner might not find a match.
-#
-# EXAMPLE:
-#           subject lines     nominal lines
-#           [1]  100          [1]  100          # delta < 1%
-#           [2]  99           [2]  101          # mismatch
-#
-# If the numeric tolerance is 1%, then line [1] from the subject lines could
-# match [1] from the nominal lines. However, since 101-99 > 1% deviation, lines
-# [2] and [2] cannot match. A solution here, would be
-#
-#           subject lines     nominal lines
-#           [1]  100          [2]  101          # delta < 1%
-#           [2]  99           [1]  100          # delta < 1%
-#
-# This test validates the 'friends-pairing' of lines in the context of
-# comparison tolerance principles,
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: Algorithm to associate equivalent lines from subject and nominal.
+
+CHOICES: basic, analogy, wild, wild-2, border, special;
+
+DESCRIPTION:
+
+This algorithm only associates lines which are *EQUIVALENT* according to
+defined tolerance principles. The lines can be considered as the lines of 
+Potpourri. The comparison of two Potpourri-s succeeds or fails depending
+on this algorithm being able to construct a valid association.
+
+The 'friends-pairing' algorithm takes two sets of lines and tries to find the
+configuration of maximum number of associations.  Due to tolerance principles a
+line might match multiple other lines. Depending on the choice of the partner,
+another partner might not find a match.
+
+Example:
+
+          subject lines     nominal lines
+          [1]  100          [1]  100          # delta < 1%
+          [2]  99           [2]  101          # mismatch
+
+If the numeric tolerance is 1%, then line [1] from the subject lines could
+match [1] from the nominal lines. However, since 101-99 > 1% deviation, lines
+[2] and [2] cannot match. A solution here, would be
+
+          subject lines     nominal lines
+          [1]  100          [2]  101          # delta < 1%
+          [2]  99           [1]  100          # delta < 1%
+
+This test validates the 'friends-pairing' of lines in the context of comparison
+tolerance principles,
+
+Some of the tests are chosen, purposely, to be exhaustive with respect to 
+computation effort. If these tests are performed in a reasonable amount of 
+time, their efficiency, is somehow guaranteed.
+______________________________________________________________________________
+"""
 
 import sys
 import os
@@ -34,7 +48,7 @@ this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
 import ut.engine.compare.engine.core              as     comperator
-import ut.engine.compare.friends_pairing.exact     as     friends_pairing
+import ut.engine.compare.friends_pairing.exact    as     friends_pairing
 from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
 from   ut.engine.compare.engine.line              import Line
 from   ut.engine.compare.engine.analogy_db        import AnalogyDb

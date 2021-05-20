@@ -66,12 +66,12 @@ engine/compare/friends_pairing/TEST                                  <no date>
  * FriendsPairing:
 
     Search anyway
-        test-friends_pairing.py analogy ..............................[OK]
-                                basic ................................[OK]
-                                border ...............................[OK]
-                                special ..............................[OK]
-                                wild .................................[OK]
-                                wild-2 ...............................[OK]
+        test-exact.py analogy ........................................[OK]
+                      basic ..........................................[OK]
+                      border .........................................[OK]
+                      special ........................................[OK]
+                      wild ...........................................[OK]
+                      wild-2 .........................................[OK]
     fail quickly
         test-friends_pairing-fail-quickly.py analogy .................[OK]
                                              basic ...................[OK]
@@ -81,8 +81,8 @@ engine/compare/friends_pairing/TEST                                  <no date>
  * FriendsPairingMax:
 
     Search anyway
-        test-friends_pairing_max.py basic ............................[OK]
-                                    restricted_cmp ...................[OK]
+        test-similar.py basic ........................................[OK]
+                        restricted_cmp ...............................[OK]
                                                                     ___  _  _  
                                                                    / _ \| |/ ) 
                                                                   ( (_) | _ <  
@@ -98,18 +98,18 @@ engine/compare/tolerance/TEST                                        <no date>
                            normal ....................................[OK]
                            special ...................................[OK]
  * Tolerance PatternFinder
-        test-tolerance.py do .........................................[OK]
-                          find_first_match ...........................[OK]
-                          setup ......................................[OK]
-                          tolerance_id ...............................[OK]
+        test-pattern_finder.py do ....................................[OK]
+                               find_first_match ......................[OK]
+                               setup .................................[OK]
+                               tolerance_id ..........................[OK]
 
  * Tolerance:
 
-    ComperatorLineElement
-        test-tolerance_match.py LineElementAnalogy ...................[OK]
-                                LineElementEquivalencePattern ........[OK]
-                                LineElementNumber ....................[OK]
-                                LineElementString ....................[OK]
+    LineElement-s
+        test-line_element.py LineElementAnalogy ......................[OK]
+                             LineElementEquivalencePattern ...........[OK]
+                             LineElementNumber .......................[OK]
+                             LineElementString .......................[OK]
                                                                     ___  _  _  
                                                                    / _ \| |/ ) 
                                                                   ( (_) | _ <  

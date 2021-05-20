@@ -1,33 +1,34 @@
 #! /usr/bin/env python3
-#
-# PURPOSE: Comparison of two streams given by 'line_providers'
-#
-# This test is concerned with the outer API for the comparison of two
-# character streams. It provides the two functionalities:
-#
-#   -- judgement: Test whether the two streams are equivalent.
-#   -- info:      Provide information how the subject stream can be
-#                 transformed into the nominal stream. This is important
-#                 for the 'difference display'.
-#
-# The 'chunk_pipe' adapts the line providers to generate chunks of type
-# *list of lines* and *potpourri*. Each chunk type has its own comparison
-# procedures defined.
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+____________________________________________________________________________
 
+PURPOSE: ChunkPipe: Text lines to LineSequence and Potpourri,
+
+A chunk pipe reads lines from a 'line provider', i.e. an object with a member
+function '.readline()'. The chunk pipe uses the 'PatternFinder' to produce a
+'Line' object from a line of text. It groups lines of text into 'LineSequence'
+and 'Potpourri' objects.
+
+By default, a chunk pipe is in the 'LineSequence' generation mode, that is
+any incoming line is pushed into a 'LineSequence' object where the sequence
+of appearance matters. A line starting with a Porpourri marker (i.e. '||||')
+sets the chunk pipe into 'Potpourri' mode. In that mode all incoming lines
+are pushed into a 'Potpourri' object, where the actual sequence of appearance
+does not matter. When in Potpourri mode, the occurrence of a marker, again,
+sets the chunk pipe back into the 'LineSequence' mode.
+______________________________________________________________________________
+"""
 import sys
 from   io import StringIO
 
 sys.path.insert(0, "../../../../../")
 
-import ut.engine.compare.engine.core               as     comperator
-from   ut.engine.compare.tolerance.chunk_pipe     import ChunkPipe
-from   ut.engine.compare.TEST.common              import print_match_sequences, \
-                                                           print_match_sequences_lists, \
-                                                           print_friends_pairing_max_result, \
-                                                           get_LineSequence
+import ut.engine.compare.engine.core          as     comperator
+from   ut.engine.compare.tolerance.chunk_pipe import ChunkPipe
+from   ut.engine.compare.TEST.common          import print_match_sequences, \
+                                                     print_match_sequences_lists, \
+                                                     print_friends_pairing_max_result, \
+                                                     get_LineSequence
 
 
 if "--hwut-info" in sys.argv:

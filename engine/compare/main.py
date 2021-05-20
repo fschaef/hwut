@@ -79,29 +79,31 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
     'LineSequence'-s and 'Potpourri'-s are yielded in separate objects
     of type 'LineAssociationChunk'.
 
-    LineAssociationChunk:_______________________________ 
-    |   .type ('E_ChunkType')                           |
-    |   .line_association_list: [                       |
-    |       LineAssociation:________________________    |
-    |       | .subject_line ('Line')                |   |
-    |       | .nominal_line ('Line')                |   |
-    |       | .edit_list    ('')                    |   |
-    |       | .analogy_db   ('AnalogyDb')           |   |
-    |       '---------------------------------------'   |
-    |       ...                                         |  
-    |   ]                                               |
-    '.__________________________________________________'
+    Data structure:
 
-    Line:____________________________________
-    |    .line_n                             |
-    |    .sequence = [                       |
-    |        LineElement:_________________   |
-    |        |  .tolerance_id             |  |
-    |        |  .string                   |  |
-    |        '----------------------------'  |
-    |        ...                             |  
-    |    ]                                   |
-    '----------------------------------------'
+          LineAssociationChunk:_______________________________ 
+          |   .type ('E_ChunkType')                           |
+          |   .line_association_list: [                       |
+          |       LineAssociation:________________________    |
+          |       | .subject_line ('Line')                |   |
+          |       | .nominal_line ('Line')                |   |
+          |       | .edit_list    (list of 'Edit')        |   |
+          |       | .analogy_db   ('AnalogyDb')           |   |
+          |       '---------------------------------------'   |
+          |       ...                                         |  
+          |   ]                                               |
+          '.__________________________________________________'
+
+          Line:____________________________________
+          |    .line_n                             |
+          |    .sequence = [                       |
+          |        LineElement:_________________   |
+          |        |  .tolerance_id             |  |
+          |        |  .string                   |  |
+          |        '----------------------------'  |
+          |        ...                             |  
+          |    ]                                   |
+          '----------------------------------------'
     """
     analogy_db = AnalogyDb()
 
