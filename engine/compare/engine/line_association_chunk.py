@@ -1,4 +1,4 @@
-"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: A chunk of 'LineAssociation' objects grouped by type.
 

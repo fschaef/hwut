@@ -1,4 +1,4 @@
-"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: Transform a line of text --> LineElement objects.
 

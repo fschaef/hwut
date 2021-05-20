@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ____________________________________________________________________________
 
 PURPOSE:  PatternFinder -- identfiying tolerance pattern in text lines.

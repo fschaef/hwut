@@ -1,4 +1,4 @@
-"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: Chunk pipe -- interpretation of input text as 'InputChunk' objects.
 

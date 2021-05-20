@@ -1,4 +1,4 @@
-"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 PURPOSE: 'Friends pairing' -- finding as many EXACT matches of subject lines
                               matching equivalent nominal lines.

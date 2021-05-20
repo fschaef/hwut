@@ -1,4 +1,4 @@
-"""SPDX-Linces: MIT; Project HWUT; (C) Frank-Rene Schaefer
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
 PURPOSE: Algorithm to associate equivalent lines from subject and nominal.
