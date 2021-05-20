@@ -1,0 +1,12 @@
+GOOD.compare:            (EQUIVALENT, ('((fox))', '((mouse))'))
+GOOD.string:             '((fox))'
+GOOD.difference_cost:    0.000000
+GOOD.representation:     (2,9): ANALOGY '((fox))'
+FAILURE.compare:         (EQUIVALENT, ('((there is no false analogy))', '((mouse))'))
+FAILURE.string:          '((there is no false analogy))'
+FAILURE.difference_cost: 0.000000
+FAILURE.representation:  (0,29): ANALOGY '((there is no false analogy))'
+MISFIT.compare:          (MISFIT, None)
+NOMINAL.string:          '((mouse))'
+NOMINAL.difference_cost: 0.000000
+NOMINAL.representation:  (0,9): ANALOGY '((mouse))'
