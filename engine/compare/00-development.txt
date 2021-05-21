@@ -14,7 +14,7 @@ FUTURE: '.get_string()' --> make LineAssociationChunks transparent.
         > echo "my line of text" | ut.show --app-config my-test.cpp
 
 
-PROGRESS: <fschaef> in depth code review
+2021y05m21d: <fschaef> completed code review
 
    (OK) ./edit_operations/line.py
    (OK) ./edit_operations/line_sequence.py
@@ -32,9 +32,9 @@ PROGRESS: <fschaef> in depth code review
    (OK) ./tolerance/chunk_pipe.py
    (OK) ./tolerance/line_element.py
    (OK) ./tolerance/pattern_finder.py
-        ./main.py   ---> see comment of '.compare()' return value is not 'boolean'
-        ./TEST/common.py
-        ./TEST/test-main.py
+   (OK) ./main.py   
+   (OK) ./TEST/common.py
+   (OK) ./TEST/test-main.py
    (OK) ./edit_operations/TEST/test-string.py
    (OK) ./edit_operations/TEST/test-line.py
    (OK) ./edit_operations/TEST/test-line_sequence.py

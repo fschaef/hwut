@@ -4,9 +4,9 @@ file_name: test-line.py;
 hwut_info_time: 1621578719L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.178938; 0; ]
-  [ special; OK; 0.182945; 0; ]
-  [ analogies; OK; 0.190603; 0; ]
+  [ basic; OK; 0.163890; 0; ]
+  [ special; OK; 0.162880; 0; ]
+  [ analogies; OK; 0.161455; 0; ]
 ]
 }
 {
@@ -15,7 +15,7 @@ file_name: test-string.py;
 hwut_info_time: 1621578540L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 0.176794; 0; ]
+  [ ; OK; 0.165328; 0; ]
 ]
 }
 {
@@ -25,8 +25,8 @@ file_name: test-line_sequence.py;
 hwut_info_time: 1621579156L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ subject; OK; 0.169635; 0; ]
-  [ nominal; OK; 0.173160; 0; ]
-  [ special; OK; 0.282977; 0; ]
+  [ subject; OK; 0.164295; 0; ]
+  [ nominal; OK; 0.163988; 0; ]
+  [ special; OK; 0.236404; 0; ]
 ]
 }

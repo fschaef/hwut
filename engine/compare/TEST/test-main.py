@@ -1,15 +1,25 @@
 """SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 _______________________________________________________________________________
 
- PURPOSE: API of compare module
+PURPOSE: API of compare module
 
- Tests: compare() --> judges on equivalence of subject and nominal.
-        edit_operations() --> determines how to transform subject into
-                              nominal. This is important for diff-display.
+CHOICES: compare, line_associations;
 
- This is the outer shell of the compare module. The tests are trivial as the
- complexity of the process is hidden in the submodules located in the sub
- directory of this module.
+DESCRIPTION:
+
+The main API provides two functions:
+
+    compare(): judges on equivalence of subject and nominal.
+
+    edit_operations(): determines how to transform subject into nominal. This 
+                       is to be used for diff-display.
+
+The first function provides a verdict, the second provides line associations.
+In this test each function is tested by a specific 'CHOICE'.
+
+This is the outer shell of the compare module. The tests are trivial as the
+complexity of the process is hidden in the submodules located in the sub
+directory of this module.
 ______________________________________________________________________________
 """
 import sys

@@ -31,12 +31,13 @@ is that they must provide the function:
 
   .readline() -> non-empty 'str', in case there is a line that can be read.
                  "",              if end of stream has been reached.
+________________________________________________________________________________
 """
 from   ut.engine.compare.engine.analogy_db             import AnalogyDb
 from   ut.engine.compare.engine.comparison_iterable    import generate
 from   ut.engine.compare.engine.line_association_chunk import LineAssociationChunk
 from   ut.engine.compare.engine.input_chunk            import E_Verdict, \
-                                                                InputChunkEmpty
+                                                              InputChunkEmpty
 
 
 def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
@@ -55,15 +56,16 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
     """
     analogy_db = AnalogyDb()
 
+    # subject, nominal = 'LineSequence' or 'Potpourri'
     for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider):
         verdict,   \
         analogy_db = subject.compare(nominal, analogy_db)
 
         if verdict != E_Verdict.EQUIVALENT:
-            return verdict
+            return False
     else:
-        return E_Verdict.EQUIVALENT
+        return True
 
 
 def line_associations(config, subject_line_provider, nominal_line_provider):
@@ -108,6 +110,7 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
     """
     analogy_db = AnalogyDb()
 
+    # subject, nominal = 'LineSequence' or 'Potpourri'
     for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider,
                                      fillvalue=InputChunkEmpty()):

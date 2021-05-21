@@ -1,4 +1,18 @@
-from   ut.engine.compare.tolerance.line_element import LineElementString, LineElementNumber, LineElementAnalogy, LineElementEquivalencePattern
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
+_______________________________________________________________________________
+
+PURPOSE: Helper functions for Unit Test prints.
+
+DESCRIPTION:
+
+This module collects some functions which are used accross multiple tests
+applications.
+______________________________________________________________________________
+"""
+from   ut.engine.compare.tolerance.line_element import LineElementString, \
+                                                       LineElementNumber, \
+                                                       LineElementAnalogy, \
+                                                       LineElementEquivalencePattern
 from   ut.engine.compare.engine.line            import Line
 from   ut.engine.compare.engine.input_chunk     import Potpourri
 from   ut.engine.compare.engine.input_chunk     import LineSequence

@@ -4,14 +4,14 @@
    [01] Hallo Hallo
    [02] Welt  Welt
 
-=> verdict: E_Verdict.EQUIVALENT
+=> verdict: True
 
 --------------------------------------------------
 
 
    [01] Welt X Welt Y
 
-=> verdict: E_Verdict.DIFFERENT
+=> verdict: False
 
 --------------------------------------------------
 
@@ -19,7 +19,7 @@
    [01] Hallo Hallo
    [02] World Welt
 
-=> verdict: E_Verdict.DIFFERENT
+=> verdict: False
 
 --------------------------------------------------
 
@@ -30,7 +30,7 @@
    [04]           
    [05]        Welt  2
 
-=> verdict: E_Verdict.EQUIVALENT
+=> verdict: True
 
 --------------------------------------------------
 
@@ -40,7 +40,7 @@
    [03] Welt  Welt
    [04]       ||||
 
-=> verdict: E_Verdict.EQUIVALENT
+=> verdict: True
 
 --------------------------------------------------
 
@@ -50,7 +50,7 @@
    [03] Welt  Welt
    [04] ||||  
 
-=> verdict: E_Verdict.EQUIVALENT
+=> verdict: True
 
 --------------------------------------------------
 
@@ -61,7 +61,7 @@
    [04] Le Monde Welt
    [05] ||||     ||||
 
-=> verdict: E_Verdict.EQUIVALENT
+=> verdict: True
 
 --------------------------------------------------
 
@@ -70,7 +70,7 @@
    [02] ##Welt  World##
    [03] Good    Good
 
-=> verdict: E_Verdict.EQUIVALENT
+=> verdict: True
 
 --------------------------------------------------
 
@@ -81,7 +81,7 @@
    [04] Good    Good
    [05] ||||    ||||
 
-=> verdict: E_Verdict.EQUIVALENT
+=> verdict: True
 
 --------------------------------------------------
 
@@ -91,7 +91,7 @@
    [03]       World
    [04]       ||||
 
-=> verdict: E_Verdict.DIFFERENT
+=> verdict: False
 
 --------------------------------------------------
 
@@ -101,5 +101,5 @@
    [03] Le Monde World
    [04] ||||     ||||
 
-=> verdict: E_Verdict.DIFFERENT
+=> verdict: False
 
