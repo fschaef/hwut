@@ -1,24 +1,33 @@
 #! /usr/bin/env python3
-#
-# PURPOSE: Testing 'Edit Distance' computations for line lists.
-#
-#
-# The edit operations may be used for the line up display side-to-side display
-# of two text files (unit test outputs).
-#
-# SPDX-Linces: MIT; (C) Frank-Rene Schaefer.
-#______________________________________________________________________________
+"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
 
+PURPOSE: Edit distance and edit operations between LineSequence-s.
+
+CHOICES: subject, nominal, special;
+
+DESCRIPTION:
+
+This test checks on the line association. Similar to the edit operation
+investigation of strings and 'Line'-s, line associations are accomplished
+by means of minimum edit distance between two 'LineSequences'. The operations
+involved, though, are only 'substitute', 'insert', and 'delete'. A 'transpose'
+operation does not make sense, since the sequence of lines is imperativ.
+
+The tests take a sequence of subject and nominal lines and display their
+line up. 
+______________________________________________________________________________
+"""
 import sys
 import os
 import re
 
 sys.path.insert(0, "../../../../../")
 
-import ut.engine.compare.edit_operations.line_sequence   as     edit_distance_line_sequence
-from   ut.engine.compare.edit_operations.line_sequence   import E_EditLineSequence
-from   ut.engine.compare.TEST.common               import prepare, print_match_sequences_lists, prepare_line_up
-from   ut.engine.compare.engine.line                      import Line
+import ut.engine.compare.edit_operations.line_sequence  as     edit_distance_line_sequence
+from   ut.engine.compare.edit_operations.line_sequence  import E_EditLineSequence
+from   ut.engine.compare.TEST.common                    import prepare, print_match_sequences_lists, prepare_line_up
+from   ut.engine.compare.engine.line                    import Line
 
 if "--hwut-info" in sys.argv:
     print("Edit Distance: Line list alignment;")
