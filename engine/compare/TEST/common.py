@@ -40,37 +40,26 @@ def frame_with_potpourri_borders(line_list):
     return ["||||"] + line_list + ["||||"]
 
 
+line_element_db = {
+    "e":  [ LineElementString(0,6,"") ],
+    "1":  [ LineElementString(0,1,"a") ],
+    "2":  [ LineElementString(0,1,"b") ],
+    "3":  [ LineElementString(0,1,"a b"), 
+            LineElementEquivalencePattern(1,2, "a b", [0 ]),
+            LineElementString(2,3,"a b")  ],
+    "s":  [ LineElementString(0,6,"string") ],
+    "S":  [ LineElementString(0,6,"strong") ],
+    "Q":  [ LineElementString(0,6,"quant") ],
+    "x":  [ LineElementAnalogy(0,5,"((x))") ],
+    "y":  [ LineElementAnalogy(0,5,"((y))") ],
+    "z":  [ LineElementAnalogy(0,5,"((z))") ],
+    "n":  [ LineElementNumber(0,4,"4711", 0.01) ], 
+    "nr": [ LineElementNumber(0,4,"4711") ]
+}
 def prepare(x, nominal_f=False):
     for letter in x:
-        if   letter == "e":
-            yield LineElementString(0,6,"")
-        elif letter == "1":
-            yield LineElementString(0,1,"a")
-        elif letter == "2":
-            yield LineElementString(0,1,"b")
-        elif letter == "3":
-            yield LineElementString(0,1,"a b")
-            yield LineElementEquivalencePattern(1,2, "a b", [0])
-            yield LineElementString(2,3,"a b")
-        elif letter == "s":
-            yield LineElementString(0,6,"string")
-        elif   letter == "S":
-            yield LineElementString(0,6,"strong")
-        elif   letter == "Q":
-            yield LineElementString(0,6,"quant")
-        elif   letter == "x":
-            yield LineElementAnalogy(0,5,"((x))")
-        elif   letter == "y":
-            yield LineElementAnalogy(0,5,"((y))")
-        elif   letter == "z":
-            yield LineElementAnalogy(0,5,"((z))")
-        elif letter == "n":
-            if nominal_f:
-                yield LineElementNumber(0,4,"4711", 0.01)
-            else:
-                yield LineElementNumber(0,4,"4711")
-        else:
-            assert False
+        if letter == "n" and not nominal_f: letter = "nr"
+        yield from line_element_db[letter]
 
 def prepare_match_sequence(mseq):
     return ", ".join("%s:%s" % (m.tolerance_id.name, m.string) for m in mseq)

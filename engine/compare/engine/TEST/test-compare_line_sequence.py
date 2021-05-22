@@ -20,8 +20,6 @@ test are done in 'friends_pairing/TEST'.
 ______________________________________________________________________________
 """
 import sys
-import os
-import re
 
 sys.path.insert(0, "../../../../../")
 
@@ -29,7 +27,6 @@ from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
 import ut.engine.compare.engine.core              as     comperator
 from   ut.engine.compare.engine.analogy_db        import AnalogyDb
 from   ut.engine.compare.TEST.common              import \
-                                                           print_match_sequences, \
                                                            print_match_sequences_lists, \
                                                            print_friends_pairing_max_result, \
                                                            get_LineSequence

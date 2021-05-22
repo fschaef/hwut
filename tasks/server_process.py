@@ -20,7 +20,7 @@ t.start()
 # ... do other things here
 
 # read line without blocking
-    try:  line = q.get_nowait() # or q.get(timeout=.1)
-    except Empty:
-        print('no output yet')
-        else
+try:  line = q.get_nowait() # or q.get(timeout=.1)
+except Empty:
+    print('no output yet')
+    else

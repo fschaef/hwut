@@ -25,11 +25,6 @@ sys.path.insert(0, "../../../../../")
 
 import ut.engine.compare.engine.core          as     comperator
 from   ut.engine.compare.tolerance.chunk_pipe import ChunkPipe
-from   ut.engine.compare.TEST.common          import print_match_sequences, \
-                                                     print_match_sequences_lists, \
-                                                     print_friends_pairing_max_result, \
-                                                     get_LineSequence
-
 
 if "--hwut-info" in sys.argv:
     print("ChunkPipe;")

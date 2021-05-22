@@ -29,12 +29,11 @@ ______________________________________________________________________________
 
 import sys
 import os
-import re
 
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   ut.engine.compare.friends_pairing.match_db import MatchDb
+from   ut.engine.compare.friends_pairing.match_db        import MatchDb
 from   ut.engine.compare.engine.analogy_db               import AnalogyDb
 
 from   copy import copy

@@ -9,6 +9,7 @@ class App:
         self.build_process = build
 
     async def wait_presence(self):
+        pass
 ## return wait self.build_process.wait_result(self.file_name)
 
 async def do(directory, selector):

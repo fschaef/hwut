@@ -16,8 +16,6 @@ ________________________________________________________________________________
 from   ut.engine.compare.friends_pairing.match_db import MatchDb
 from   ut.engine.quex.typed                       import typed
 
-from   collections import defaultdict
-
 @typed(subject_line_list=tuple, nominal_line_list=tuple)
 def do(subject_line_list, nominal_line_list, analogy_db, abort_f=False):
     """RETURNS: [0] verdict

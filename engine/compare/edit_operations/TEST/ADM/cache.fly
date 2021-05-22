@@ -1,32 +1,32 @@
 {
 title: Lines;
 file_name: test-line.py;
-hwut_info_time: 1621578719L;
+hwut_info_time: 1621621635L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.163890; 0; ]
-  [ special; OK; 0.162880; 0; ]
-  [ analogies; OK; 0.161455; 0; ]
+  [ basic; OK; 0.165789; 0; ]
+  [ special; OK; 0.163575; 0; ]
+  [ analogies; OK; 0.161496; 0; ]
 ]
 }
 {
 title: Strings;
 file_name: test-string.py;
-hwut_info_time: 1621578540L;
+hwut_info_time: 1621622119L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 0.165328; 0; ]
+  [ ; OK; 0.157384; 0; ]
 ]
 }
 {
 title: Line list alignment;
 title_group: Edit Distance;
 file_name: test-line_sequence.py;
-hwut_info_time: 1621579156L;
+hwut_info_time: 1621622276L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ subject; OK; 0.164295; 0; ]
-  [ nominal; OK; 0.163988; 0; ]
-  [ special; OK; 0.236404; 0; ]
+  [ subject; OK; 0.163872; 0; ]
+  [ nominal; OK; 0.165141; 0; ]
+  [ special; OK; 0.250542; 0; ]
 ]
 }

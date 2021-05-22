@@ -90,49 +90,67 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
           EditsLine.edit_list  = list of 'Edit'
           EditsLine.analogy_db = 'AnalogyDb' required for equivalences to hold.
     """
-    subject_length = len(subject_match_seq)
-    nominal_length = len(nominal_match_seq)
     if analogy_db is None:
         analogy_db = AnalogyDb()
 
-    work_list = [
-        WorkItem(list(subject_match_seq),
-                 ai         = 0, # index into subject 'LineElement' sequence
-                 bi         = 0, # index into nominal 'LineElement' sequence
-                 cost       = 0,
-                 edit_list  = [],
-                 analogy_db = analogy_db)
-    ]
-
-    max_cost, min_cost = _cost_assumptions(subject_length, nominal_length)
-    if max_cost == 0.0:
+    work_list = WorkList(subject_match_seq, nominal_match_seq, analogy_db)
+    if work_list.max_cost == 0.0:
         return EditsLine(0, [], AnalogyDb())
 
-    best = EditsLine(max_cost + 2, [], [])
     while work_list:
         item = work_list.pop()
 
-        if item.cost > best.cost:
+        work_list.produce_next(item)
+
+    return work_list.get_best()
+
+class WorkList(list):
+    def __init__(self, subject_match_seq, nominal_match_seq, analogy_db):
+        self.append(
+            WorkItem(list(subject_match_seq),
+                     ai         = 0, # index into subject 'LineElement' sequence
+                     bi         = 0, # index into nominal 'LineElement' sequence
+                     cost       = 0,
+                     edit_list  = [],
+                     analogy_db = analogy_db)
+        )
+
+        self.subject_length = len(subject_match_seq)
+        self.nominal_length = len(nominal_match_seq)
+        max_cost, min_cost = _cost_assumptions(self.subject_length, 
+                                               self.nominal_length)
+
+        self.best = EditsLine(max_cost + 2, [], [])
+        self.max_cost = max_cost
+        self.min_cost = min_cost
+
+        self.nominal_match_seq = nominal_match_seq
+
+    def produce_next(self, item):
+        if item.cost > self.best.cost:
             # already worse => no chance of winning.
             pass
-        elif item.ai == subject_length:
-            # reached the end of subject => INSERT to reach end of nominal
-            if _append_overhead(best, item, nominal_length - item.bi, E_EditLine.INSERT):
-                best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-                if best.cost == min_cost: break
-        elif item.bi == nominal_length:
-            # reached the end of nominal => DELETE to cut tail of subject
-            if _append_overhead(best, item, subject_length - item.ai, E_EditLine.DELETE):
-                best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-                if best.cost == min_cost: break
+        elif item.ai == self.subject_length:
+            # reached end of subject => INSERT to reach end of nominal
+            if _append_overhead(self.best, item, self.nominal_length - item.bi, E_EditLine.INSERT):
+                self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
+                if self.best.cost == self.min_cost: self.clear() # => termination
+        elif item.bi == self.nominal_length:
+            # reached end of nominal => DELETE to cut tail of subject
+            if _append_overhead(self.best, item, self.subject_length - item.ai, E_EditLine.DELETE):
+                self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
+                if self.best.cost == self.min_cost: self.clear() # => termination
         else:
             # setup exploration of subsequence steps
-            work_list.extend(
-                item.subsequent_steps(nominal_match_seq)
+            self.extend(
+                item.subsequent_steps(self.nominal_match_seq)
             )
 
-    return EditsLine(best.cost / max_cost, best.edit_list, best.analogy_db)
+    def get_best(self):
+        return EditsLine(self.best.cost / self.max_cost, self.best.edit_list, self.best.analogy_db)
 
+
+        
 position_increment_db = {
     #                        ai-increment  bi-increment
     E_EditLine.GOOD:             (1,           1),    # Step over subject[ai], nominal[bi]

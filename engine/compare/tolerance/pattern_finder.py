@@ -164,7 +164,6 @@ def _find_first_match(table, string, i, useless):
                 [1] Span if character indices where the pattern match.
                 [2] Indices of 'equivalence patterns' that matched.
     """
-    first = len(string)
     best  = Token()
     for index, tolerance in enumerate(table):
         if index in useless or tolerance.id == E_ToleranceId.STRING:

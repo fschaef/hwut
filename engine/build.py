@@ -85,7 +85,7 @@ class Tool_Make(ToolBasic):
     def __init__(self, file_name_list):
         # Apply the system's 'make' application with as many jobs as file names (-jN).
         command_line = [ hwut_system.BUILD_APP_MAKE, "-j%i"  % len(file_name_list) ]
-        command_line += file_name_list)
+        command_line += file_name_list
         ToolBasic.__init__(file_name_list, command_line)
 
 

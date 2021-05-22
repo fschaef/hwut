@@ -8,7 +8,6 @@ tries to associate similar lines. The goal, here, is to provide a line-up
 that can be displayed to expose the 'diff function' via a user interface.
 ________________________________________________________________________________
 """
-from   ut.engine.compare.engine.analogy_db       import AnalogyDb
 from   ut.engine.compare.engine.line_association import LineAssociation
 import ut.engine.compare.edit_operations.line    as     edit_operations_line
 import ut.engine.compare.friends_pairing.exact   as     friends_pairing

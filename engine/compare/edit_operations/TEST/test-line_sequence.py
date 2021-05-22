@@ -19,8 +19,6 @@ line up.
 ______________________________________________________________________________
 """
 import sys
-import os
-import re
 
 sys.path.insert(0, "../../../../../")
 
@@ -33,6 +31,7 @@ if "--hwut-info" in sys.argv:
     print("Edit Distance: Line list alignment;")
     print("CHOICES: subject, nominal, special;")
     sys.exit()
+
 
 def print_lineup(subject, nominal, edit_list):
 
@@ -47,18 +46,16 @@ def print_lineup(subject, nominal, edit_list):
         else:                                    nominal_txt = nominal_txt_list[nominal_i]
         print("   %s %s%s %s" % (subject_txt, space(subject_txt), mid, nominal_txt))
 
+    print_db = {
+        E_EditLineSequence.GOOD:       lambda subject_i, nominal_i: _print(subject_i, "==", nominal_i),
+        E_EditLineSequence.SUBSTITUTE: lambda subject_i, nominal_i: _print(subject_i, "!=", nominal_i),
+        E_EditLineSequence.INSERT:     lambda subject_i, nominal_i: _print(None,      "-<", nominal_i),
+        E_EditLineSequence.DELETE:     lambda subject_i, nominal_i: _print(subject_i, ">-", None),
+    }
+
     subject_i, nominal_i = 0, 0
     for edit_id, edit_list in edit_list:
-        if edit_id == E_EditLineSequence.GOOD:
-            _print(subject_i, "==", nominal_i)
-        elif edit_id == E_EditLineSequence.SUBSTITUTE:
-            _print(subject_i, "!=", nominal_i)
-        elif edit_id == E_EditLineSequence.INSERT:
-            _print(None, "-<", nominal_i)
-        elif edit_id == E_EditLineSequence.DELETE:
-            _print(subject_i, ">-", None)
-        else:
-            assert False
+        print_db[edit_id](subject_i, nominal_i)
 
         subject_i += edit_distance_line_sequence.position_increment_db[edit_id][0]
         nominal_i += edit_distance_line_sequence.position_increment_db[edit_id][1]

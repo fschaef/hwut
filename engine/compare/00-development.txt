@@ -2,8 +2,6 @@
 FUTURE: 2 presentations: intern.odt -- explaining the internal processes
                          extern.odt -- explaining the API.
 
-FUTURE: 'pylama' code check --> no errors.
-
 FUTURE: '.get_string()' --> make LineAssociationChunks transparent.
         => ut.show might demonstrate the effect of configurations, e.g.
 
@@ -13,6 +11,11 @@ FUTURE: '.get_string()' --> make LineAssociationChunks transparent.
 
         > echo "my line of text" | ut.show --app-config my-test.cpp
 
+
+2021y05m22d: <fschaef> run 'pylama' an removed an warning and remarks,
+             except for two cases where 'mccabe' complexity was considering
+             the complexity of nested functions added to the outer 
+             function.
 
 2021y05m21d: <fschaef> completed code review
 

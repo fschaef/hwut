@@ -23,8 +23,7 @@ There are two types of list of lines:
 _______________________________________________________________________________
 """ 
 from ut.engine.compare.engine.line              import Line 
-from ut.engine.compare.engine.input_chunk       import E_Chunk, \
-                                                       LineSequence, \
+from ut.engine.compare.engine.input_chunk       import LineSequence, \
                                                        InputChunkTerminal
 from ut.engine.compare.tolerance.pattern_finder import PatternFinder
 
