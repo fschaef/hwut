@@ -48,9 +48,6 @@ class InputChunk(ABC):
         self.end_line_n    = end_line_n
         self.configuration = config
 
-    def type(self):
-        return E_Chunk.VOID
-
     def compare(self, nominal, analogy_db) -> E_Verdict:
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
@@ -97,6 +94,9 @@ class InputChunk(ABC):
     def contrary(cls):
         if cls == LineSequence: return Potpourri
         else:                   return LineSequence
+
+    @abstractmethod
+    def type(self): pass
 
     @abstractmethod
     def _compare(self, other, analogy_db):  pass

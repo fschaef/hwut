@@ -145,7 +145,7 @@ class LineElement:
         """RETURNS: [0] True, any way.
                     [1] None
         """
-        assert False
+        assert False # pragma no cover
 
     def __hash__(self):
         # NOTE: This function is only overwritten if it is safe to assume

@@ -41,13 +41,7 @@ def do(a, b):
     work_list   = list(zip_longest(a_word_list, b_word_list, fillvalue=""))
     while work_list:
         a_word, b_word = work_list.pop()
-        if   len(a_word) > n: a_remainder = a_word[n:]; a_word = a_word[:n];
-        else:                 a_remainder = ""
-        if   len(b_word) > n: b_remainder = b_word[n:]; b_word = b_word[:n];
-        else:                 a_remainder = ""
         result += _levenshtein(a_word, b_word)
-        if a_remainder or b_remainder:
-            work_list.append(a_remainder, b_remainder)
 
     return result
 

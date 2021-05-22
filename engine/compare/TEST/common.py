@@ -114,11 +114,11 @@ def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost,
         if match_seq is None:
             return "None", "--"
         elif match_seq.line_n is None:
-            return match_seq.sequence[0].string, "--"
+            return match_seq.sequence[0].string, "--" # pragma no cover
         elif match_seq.line_n + line_offset < len(line_list):
             return line_list[match_seq.line_n + line_offset], "%02i" % match_seq.line_n
         else:
-            return "<end>", "%02i" % match_seq.line_n
+            return "<end>", "%02i" % match_seq.line_n # pragma no cover
 
     for lina in line_associations:
         subject_txt, subject_line_n = _name(subject_line_list, lina.subject_seq)

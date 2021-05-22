@@ -11,6 +11,8 @@ FUTURE: '.get_string()' --> make LineAssociationChunks transparent.
 
         > echo "my line of text" | ut.show --app-config my-test.cpp
 
+2021y05m22d: <fschaef> run test coverage: 100% 
+             (exception TEST/common.py with 99% -- irrelevant)
 
 2021y05m22d: <fschaef> run 'pylama' an removed an warning and remarks,
              except for two cases where 'mccabe' complexity was considering

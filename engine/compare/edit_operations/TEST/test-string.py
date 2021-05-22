@@ -23,6 +23,7 @@ import ut.engine.compare.edit_operations.string as     edit_distance_string
 
 if "--hwut-info" in sys.argv:
     print("Strings;")
+    print("CHOICES: basic, long;")
     sys.exit()
 
 def test(a, b):
@@ -30,22 +31,28 @@ def test(a, b):
     print("nominal: '%s'" % b)
     print("=> %s" % edit_distance_string.do(a, b))
 
-test("",                "")        # empty vs. empty
-test("",                "a")       # empty vs. one
-test("a",               "")        # one vs. empty
-test("a",               "a")       # one vs. one
-test("a",               "b")       # one != one
-test("baa",             "aa")      # inserted front
-test("aba",             "aa")      # inserted middle
-test("aab",             "aa")      # inserted end
-test("aa",              "baa")     # deleted front
-test("aa",              "aba")     # deleted middle
-test("aa",              "aab")     # deleted end
-test("ab",              "ba")      # transposed adjacently
-test("axxb",            "bxxa")    # transposed far
-test("1--2--3",         "2--3--1") # transpose sequence
+if "basic" in sys.argv:
+    test("",                "")        # empty vs. empty
+    test("",                "a")       # empty vs. one
+    test("a",               "")        # one vs. empty
+    test("a",               "a")       # one vs. one
+    test("a",               "b")       # one != one
+    test("baa",             "aa")      # inserted front
+    test("aba",             "aa")      # inserted middle
+    test("aab",             "aa")      # inserted end
+    test("aa",              "baa")     # deleted front
+    test("aa",              "aba")     # deleted middle
+    test("aa",              "aab")     # deleted end
+    test("ab",              "ba")      # transposed adjacently
+    test("axxb",            "bxxa")    # transposed far
+    test("1--2--3",         "2--3--1") # transpose sequence
 
-test(" a b ",           " a b ")   # two words (with padding)
-test(" a b ",           " b b ")   # two words different
-test("aba aa ab axxb ", " aa aba ba bxxa")
+    test(" a b ",           " a b ")   # two words (with padding)
+    test(" a b ",           " b b ")   # two words different
+    test("aba aa ab axxb ", " aa aba ba bxxa")
+
+if "long" in sys.argv:
+    test("12345678901234567890", "12345678901234567890")
+    test("X2345678901234567890", "12345678901234567890")
+    test("1234567890123456789X", "12345678901234567890")
 

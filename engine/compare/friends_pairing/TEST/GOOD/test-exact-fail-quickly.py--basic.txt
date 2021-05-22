@@ -1,0 +1,54 @@
+--------------------------------
+subject: ['otto']
+nominal: ['otto']
+association: True
+   [0] otto            --> [0] otto
+--------------------------------
+subject: ['otto']
+nominal: ['fritz']
+association: False
+--------------------------------
+subject: ['otto']
+nominal: []
+association: False
+--------------------------------
+subject: ['otto']
+nominal: ['']
+association: False
+--------------------------------
+subject: ['']
+nominal: ['fritz']
+association: False
+--------------------------------
+subject: ['otto']
+nominal: []
+association: False
+--------------------------------
+subject: []
+nominal: ['fritz']
+association: False
+--------------------------------
+subject: ['otto', 'heinz']
+nominal: ['fritz']
+association: False
+--------------------------------
+subject: ['funny', 'happy', 'glad']
+nominal: ['happy', 'glad', 'glad']
+association: True
+   [0] funny           --> [1] glad
+   [1] happy           --> [0] happy
+   [2] glad            --> [2] glad
+--------------------------------
+subject: ['funny', 'funny', 'funny']
+nominal: ['glad', 'glad', 'something']
+association: False
+--------------------------------
+subject: ['fit ((1))', 'fitter ((2))', 'misfit ((1))']
+nominal: ['fit ((A))', 'fitter ((B))', 'misfit ((C))']
+db: size 2; analogy_db: size 2;
+association: False
+--------------------------------
+subject: ['fit ((1))', 'funny ((2))', 'happy ((1))']
+nominal: ['fit ((A))', 'happy ((B))', 'funny ((C))']
+association: False
+

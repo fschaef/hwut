@@ -1,0 +1,79 @@
+--------------------------------
+subject: []
+nominal: []
+association: True
+--------------------------------
+subject: ['']
+nominal: []
+association: False
+--------------------------------
+subject: []
+nominal: ['']
+association: False
+--------------------------------
+subject: ['']
+nominal: ['']
+association: True
+   [0]                 --> [0] 
+--------------------------------
+subject: ['x', 'y']
+nominal: []
+association: False
+--------------------------------
+subject: []
+nominal: ['x', 'y']
+association: False
+--------------------------------
+subject: ['x', 'y']
+nominal: []
+association: False
+--------------------------------
+subject: ['x', 'x']
+nominal: ['x']
+association: False
+--------------------------------
+subject: ['x']
+nominal: ['x', 'x']
+association: False
+--------------------------------
+subject: ['happy', 'funny']
+nominal: ['happy']
+association: False
+--------------------------------
+subject: ['funny']
+nominal: ['happy', 'funny']
+association: False
+--------------------------------
+subject: ['((1))', '((2))']
+nominal: ['((A))']
+association: False
+--------------------------------
+subject: ['((A))']
+nominal: ['((1))', '((2))']
+association: False
+--------------------------------
+subject: ['one ((A))', 'two ((A))']
+nominal: ['one ((1))', 'two ((2))']
+db: size 1; analogy_db: size 1;
+association: False
+--------------------------------
+subject: ['happy ((A)) ((B))', 'happy ((A)) ((C))']
+nominal: ['funny ((1)) ((2))', 'funny ((2)) ((1))']
+db: size 0; analogy_db: size 0;
+association: False
+--------------------------------
+subject: ['funny ((A)) ((D))', 'happy ((A)) ((B))', 'glad ((C)) ((D))']
+nominal: ['smart ((4)) ((1))', 'happy ((1)) ((2))', 'glad ((3)) ((4))']
+db: size 2; analogy_db: size 2;
+association: False
+--------------------------------
+subject: ['funny ((B)) ((A))', 'happy ((A)) ((B))', 'glad ((C)) ((D))']
+nominal: ['smart ((2)) ((1))', 'happy ((1)) ((2))', 'glad ((3)) ((4))']
+association: True
+   [0] funny ((B)) ((A)) --> [0] smart ((2)) ((1))
+   [1] happy ((A)) ((B)) --> [1] happy ((1)) ((2))
+   [2] glad ((C)) ((D)) --> [2] glad ((3)) ((4))
+--------------------------------
+subject: ['funny ((B)) ((A))', 'happy ((A)) ((B))', 'smart ((C)) ((D))', 'glad ((B)) ((A))', 'something ((B)) ((A))']
+nominal: ['something ((2)) ((1))', 'happy ((1)) ((2))', 'smart ((3)) ((4))', 'glad ((2)) ((1))', 'something ((2)) ((1))']
+association: False
