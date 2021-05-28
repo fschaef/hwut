@@ -76,7 +76,18 @@ class E_EditLine(IntEnum):
     SUBSTITUTE      = 4  # Bad:  Content of subject and nominal 'LineElement' differs.
     SUBSTITUTE_TYPE = 5  # Bad:  Type of subject and nominal 'LineElement' differs.
 
-Edit      = namedtuple("Edit", ("id", "transpose_ai"))
+Edit = namedtuple("Edit", ("id", "transpose_ai"))
+def Edit_list_description(edit_list):
+    if not edit_list:
+        return "[]"
+    def _iterable(edit_list):
+        for i, edit in enumerate(edit_list):
+            if edit.id != E_EditLine.TRANSPOSE:
+                yield edit.id.name 
+            else:
+                yield "%s:%i<->%i" % (edit.id.name, i, edit.transpose_ai)
+    return "[%s]" % ", ".join(_iterable(edit_list))
+
 EditsLine = namedtuple("EditsLine", ("cost", "edit_list", "analogy_db"))
 
 
@@ -99,7 +110,6 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
 
     while work_list:
         item = work_list.pop()
-
         work_list.produce_next(item)
 
     return work_list.get_best()

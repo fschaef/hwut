@@ -24,12 +24,11 @@ class LineAssociation:
     from the nominal input stream.
     """
     @typed(subject_seq=(None, Line), nominal_seq=(None, Line), analogy_db=(None, AnalogyDb))
-    def __init__(self, subject_seq, nominal_seq, edit_list=tuple(), analogy_db=None):
+    def __init__(self, subject_seq, nominal_seq, edit_list=tuple()):
         assert edit_list is None or all(isinstance(x, edit_operations_line.Edit) for x in edit_list)
         self.edit_list   = edit_list
         self.subject_seq = subject_seq
         self.nominal_seq = nominal_seq
-        self.analogy_db  = analogy_db
 
     @staticmethod
     def empty(subject_seq):
@@ -46,3 +45,11 @@ class LineAssociation:
 
         return adapt(self.subject_seq) < adapt(other.subject_seq)
 
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'ut.engine.pretty.do()'.
+        """
+        return "LineAssociation", [
+            ("subject",    self.subject_seq),
+            ("nominal",    self.nominal_seq),
+            ("edit_list",  edit_operations_line.Edit_list_description(self.edit_list)),
+        ]

@@ -42,7 +42,7 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
     for ia, ib in sorted(couples.items()):
         subject_seq, nominal_seq = subject_db[ia], nominal_db[ib]
         cost, edit_list, analogy_db = subject_seq.edit_operations(nominal_seq, analogy_db)
-        result.append(LineAssociation(subject_seq, nominal_seq, edit_list, analogy_db))
+        result.append(LineAssociation(subject_seq, nominal_seq, edit_list))
 
     if verdict == False:
         # Associate the remaining subject and nominal lines according to similarity,

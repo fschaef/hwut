@@ -223,10 +223,11 @@ class WorkItem:
                                         self.editions.edit_list + [ (edit_id, edit_list) ],
                                         new_analogy_db)
 
-       return WorkItem(self.ai + increment_ai,
-                       self.bi + increment_bi,
-                       new_editions,
-                       self.history.clone())
+       result = WorkItem(self.ai + increment_ai,
+                         self.bi + increment_bi,
+                         new_editions,
+                         self.history.clone())
+       return result
 
    def min_cost_remaining(self, subject_length, nominal_length):
        """RETURNS: The lowest possible total cost of the remaining comparisons.

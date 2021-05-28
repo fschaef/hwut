@@ -115,11 +115,11 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
                                      subject_line_provider, nominal_line_provider,
                                      fillvalue=InputChunkEmpty()):
 
-        line_associations = subject.line_associations(nominal, analogy_db)
+        line_associations, \
+        analogy_db         = subject.line_associations(nominal, analogy_db)
 
         if not line_associations: continue
 
-        analogy_db = line_associations[-1].analogy_db
-        yield LineAssociationChunk(subject.type(), line_associations)
+        yield LineAssociationChunk(subject.type(), line_associations, analogy_db)
 
 

@@ -45,6 +45,8 @@ _______________________________________________________________________________
 """
 from   collections          import namedtuple, defaultdict
 
+from   math import ceil, log10
+
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
 class AnalogyDb(dict):
@@ -72,9 +74,10 @@ class AnalogyDb(dict):
         return self
 
     def assign(self, other):
-        dict.clear(self)
-        self.line_number_db.clear()
-        self.update(other)
+        if id(self) != id(other): # ESSENTIAL: otherwise, self is just emptied.
+            dict.clear(self)
+            self.line_number_db.clear()
+            self.update(other)
 
     def is_consistent(self, analogy):
         """RETURNS: True, if analogy = tuple(subject, nominal) is consistent
@@ -140,6 +143,42 @@ class AnalogyDb(dict):
             entry = self.line_number_db.get(subject)
             if entry is None or entry.subject_line_n > subject_line_n:
                 self.line_number_db[subject] = line_number_pair
+
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'ut.engine.pretty.do()'.
+        """
+        def length(n):
+            if n is None: return 1 # -> " "
+            else:         return ceil(log10(n))
+
+        def prefix(line_number_pair, Ls, Ln):
+            if line_number_pair is not None:
+                return ":%s%s&%s%s" % (" " * (Ls - length(p.subject_line_n)), p.subject_line_n,
+                                          " " * (Ln - length(p.nominal_line_n)), p.nominal_line_n)
+            else:
+                return ""
+
+        def show(analogy_list):
+            return ", ".join('"%s"="%s"' % (subject, nominal) for subject, nominal in sorted(analogy_list))
+
+        if self.line_number_db:
+            Ls = max(length(p.subject_line_n) for p in self.line_number_db.values())
+            Ln = max(length(p.nominal_line_n) for p in self.line_number_db.values())
+        else:
+            Ls, Ln = 0, 0
+
+        content_db = defaultdict(list)
+        for subject, nominal in self.items():
+            p = self.line_number_db.get(subject)
+            if p is None: p = LineNumberPair(" ", " ")
+            content_db[p].append((subject, nominal))
+
+        txt = [
+            (prefix(p, Ls, Ln), show(analogy_list))
+            for p, analogy_list in sorted(content_db.items())
+        ]
+        
+        return "AnalogyDb", txt
 
     def __repr__(self):
         content_db = defaultdict(list)

@@ -89,3 +89,10 @@ class Line:
     def __repr__(self): # pragma no cover
         return ", ".join("[%s]" % str(x) for x in self.sequence)
 
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'ut.engine.pretty.do()'.
+        """
+        return "Line", [
+            ("line_n",   self.line_n),
+            ("sequence", self.sequence)
+        ]

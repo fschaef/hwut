@@ -66,10 +66,10 @@ if "info" in sys.argv:
         nominal = get_LineSequence(pf, nominal_list, config)
         print_match_sequences_lists(subject.line_list, nominal.line_list)
 
-        line_associations = subject.line_associations(nominal, AnalogyDb())
+        line_associations, analogy_db = subject.line_associations(nominal, AnalogyDb())
 
         print_friends_pairing_max_result(subject_list, nominal_list, 0,
-                                         line_associations, AnalogyDb())
+                                         line_associations, analogy_db)
 
     test([],         [])
     test([""],         [""])

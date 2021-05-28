@@ -64,13 +64,13 @@ if "info" in sys.argv:
         subject = get_Potpourri(pf, subject_line_list, config)
         nominal = get_Potpourri(pf, nominal_line_list, config)
 
-        line_associations = subject.line_associations(nominal, AnalogyDb())
+        line_associations, analogy_db = subject.line_associations(nominal, AnalogyDb())
 
         subject_line_list = frame_with_potpourri_borders(subject_line_list)
         nominal_line_list = frame_with_potpourri_borders(nominal_line_list)
 
         print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0.0,
-                                         line_associations, AnalogyDb(), line_offset=1)
+                                         line_associations, analogy_db, line_offset=1)
 
     test(["a", "b"], ["b", "a"])
     test(["a"],      ["b", "a b"])

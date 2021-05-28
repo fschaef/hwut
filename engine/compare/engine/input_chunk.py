@@ -18,6 +18,7 @@ The two main functions of an 'InputChunk' are
 ________________________________________________________________________________
 """
 from   ut.engine.compare.engine.core                   import E_Verdict
+from   ut.engine.compare.engine.analogy_db             import AnalogyDb
 from   ut.engine.compare.engine.line                   import Line
 from   ut.engine.compare.engine.line_association       import LineAssociation
 import ut.engine.compare.friends_pairing.similar           as     friends_pairing_max
@@ -67,7 +68,8 @@ class InputChunk(ABC):
             return self._compare(nominal, analogy_db)
 
     def line_associations(self, nominal, analogy_db):
-        """RETURNS: list of 'LineAssociation'-s
+        """RETURNS: [0] list of 'LineAssociation'-s
+                    [1] required analogy_db
 
         Each 'LineAssociation' informs about what two lines are to be displayed
         side-by-side to clarify the comparison process and its verdicts. A line
@@ -76,19 +78,21 @@ class InputChunk(ABC):
         the development of the analogy database.
         """
         if self.__class__ == nominal.__class__:
-            return self._line_associations(nominal, analogy_db)
-
-        # Comparison of 'LineSequence' and 'Potpourri' is flawed,
-        # Show first nominal compared to nothing, then subject compared to nothing.
-        result = [
-            LineAssociation(None, nominal_seq, edit_list=[])
-            for nominal_seq in nominal.line_list
-        ]
-        result.extend(
-            LineAssociation(subject_seq, None, edit_list=[])
-            for subject_seq in self.line_list
-        )
-        return result
+            result,        \
+            new_analogy_db = self._line_associations(nominal, analogy_db)
+        else:
+            # Comparison of 'LineSequence' and 'Potpourri' is flawed,
+            # Show first nominal compared to nothing, then subject compared to nothing.
+            result = [
+                LineAssociation(None, nominal_seq, edit_list=[])
+                for nominal_seq in nominal.line_list
+            ]
+            result.extend(
+                LineAssociation(subject_seq, None, edit_list=[])
+                for subject_seq in self.line_list
+            )
+            new_analogy_db = AnalogyDb()
+        return result, new_analogy_db
 
     @classmethod
     def contrary(cls):
@@ -103,7 +107,6 @@ class InputChunk(ABC):
 
     @abstractmethod
     def _line_associations(self, nominal, analogy_db): pass
-
 
 
 class LineSequence(InputChunk):
@@ -135,7 +138,7 @@ class LineSequence(InputChunk):
         assert isinstance(editions, EditsLineSequence)
 
         if not editions.edit_list:
-            return []
+            return [], editions.analogy_db
 
         def iterable(edit_line_list):
             si, ni = 0, 0
@@ -157,10 +160,11 @@ class LineSequence(InputChunk):
                 si += s_incr
                 ni += n_incr
 
-        return [
-            LineAssociation(subject_seq, nominal_seq, edit_list, analogy_db)
+        result = [
+            LineAssociation(subject_seq, nominal_seq, edit_list)
             for subject_seq, nominal_seq, edit_list in iterable(editions.edit_list)
         ]
+        return result, editions.analogy_db
 
     def __repr__(self): # pragma no cover
         return "\n".join("%03i: %s" % (line.line_n, line) for line in self.line_list)
@@ -217,7 +221,7 @@ class Potpourri(InputChunk):
             LineAssociation(self.line_list[-1], nominal.line_list[-1], edit_list=[])
         )
 
-        return result
+        return result, new_analogy_db
 
     def __repr__(self): # pragma no cover
         return "\n".join("%03i| %s" % (line.line_n, line) for line in self.line_list)
@@ -231,7 +235,7 @@ class InputChunkTerminal(InputChunk):
                             config=None)
     def type(self):                                    return E_Chunk.TERMINAL
     def _compare(self, other, analogy_db):             assert False
-    def _line_associations(self, nominal, analogy_db): return []
+    def _line_associations(self, nominal, analogy_db): return [], AnalogyDb()
     def __repr__(self):                                return "InputChunkTerminal"
 
 class InputChunkEmpty(InputChunk):
@@ -241,5 +245,5 @@ class InputChunkEmpty(InputChunk):
         InputChunk.__init__(self, None, None, [Line.from_nothing()], config=None)
     def type(self):                                    return E_Chunk.EMPTY
     def _compare(self, other, analogy_db):             assert False
-    def _line_associations(self, nominal, analogy_db): return []
+    def _line_associations(self, nominal, analogy_db): return [], AnalogyDb()
     def __repr__(self):                                return "InputChunkEmpty"

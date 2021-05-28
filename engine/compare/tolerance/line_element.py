@@ -33,9 +33,14 @@ class E_ToleranceId(IntEnum):
 
 
 class Token:
-    """Pre-version of a 'LineElement' produced by the 'PatternFinder'.
+    """The PatternFinder calls a function 
+        
+           _find_first_match()          --> 'Token'
+    
+    which returns an object of class 'Token'. By means of this object the
+    'LineElement' is according produced via:
 
-           LineElement.from_Token(...)  --> real 'LineElement'
+           LineElement.from_Token(...)  --> 'LineElement'
 
     """
     def __init__(self):
@@ -155,6 +160,11 @@ class LineElement:
     def __repr__(self):
         return "(%i,%i): %s '%s'" % (self.start, self.end, self.tolerance_id.name, self.string)
 
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'ut.engine.pretty.do()'.
+        """
+        return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
+
 class LineElementString(LineElement):
     def __init__(self, start, end, string):
         LineElement.__init__(self, E_ToleranceId.STRING, start, end, string)
@@ -192,14 +202,12 @@ class LineElementNumber(LineElement):
         assert numeric_tolerance_ratio is None or 0.0 <= numeric_tolerance_ratio <= 1.0
         LineElement.__init__(self, E_ToleranceId.NUMERIC, start, end, string)
         self.number  = float(self.string)
-        if numeric_tolerance_ratio is not None:
-            self.epsilon = self.number * numeric_tolerance_ratio
-        else:
-            self.epsilon = None
+        self.numeric_tolerance_ratio = 0 if numeric_tolerance_ratio is None \
+                                       else numeric_tolerance_ratio
 
     def edit_distance_relative(self, nominal):
         max_number = max(self.number, nominal.number)
-        delta     = abs(self.number - nominal.number)
+        delta      = abs(self.number - nominal.number)
         return delta / max_number
 
     def _compare(self, nominal):
@@ -209,9 +217,15 @@ class LineElementNumber(LineElement):
                     [1] None (no analogy required)
         """
         ## assert self.epsilon is None        # Subject does not define precision!
-        assert nominal.epsilon is not None # Nominal must define epsilon range!
-        verdict = abs(self.number - nominal.number) <= nominal.epsilon
+        nominal_epsilon = self.number * nominal.numeric_tolerance_ratio
+
+        verdict = abs(self.number - nominal.number) <= nominal_epsilon
         return verdict, None
+
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'ut.engine.pretty.do()'.
+        """
+        return "LineElement:%s(\"%s,tol=%s\")" % (self.tolerance_id.name, self.string, self.numeric_tolerance_ratio), []
 
     # NOTE: '__hash__' cannot be overwritten here; see '_compare()'.
     #       Equivalence is based on deviation. Equivalency can ONLY
