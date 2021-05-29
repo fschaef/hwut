@@ -1,22 +1,22 @@
 --------------------------------
 BEFORE: {
-[01]-[100]: "lucia":"anabella", "otto":"fritz"
-[01]-[101]: "otto":"heinz"
-[03]-[101]: "lucia":"anabella", "otto":"heinz"
-[03]-[100]: "otto":"fritz"
+[01]-[100]: : & : "lucia"="anabella", "otto"="fritz"
+[01]-[101]: : & : "otto"="heinz"
+[03]-[101]: : & : "lucia"="anabella", "otto"="heinz"
+[03]-[100]: : & : "otto"="fritz"
 }
 AFTER: --> True {
-[01]-[100]: "lucia":"anabella", "otto":"fritz"
-[03]-[100]: "otto":"fritz"
+[01]-[100]: : & : "lucia"="anabella", "otto"="fritz"
+[03]-[100]: : & : "otto"="fritz"
 }
 AFTER(abort=True): --> True {
-[01]-[100]: "lucia":"anabella", "otto":"fritz"
-[03]-[100]: "otto":"fritz"
+[01]-[100]: : & : "lucia"="anabella", "otto"="fritz"
+[03]-[100]: : & : "otto"="fritz"
 }
 --------------------------------
 BEFORE: {
-[01]-[100]: "lucia":"anabella", "otto":"fritz"
-[03]-[100]: "otto":"fritz"
+[01]-[100]: : & : "lucia"="anabella", "otto"="fritz"
+[03]-[100]: : & : "otto"="fritz"
 }
 AFTER: --> False {
 

@@ -1,15 +1,15 @@
 ---( basic )-----------------------------
 BEFORE: {
-[01]-[100]: "otto":"heinz"
-[01]-[101]: "mark":"heinz"
-[02]-[100]: "otto":"heinz"
-[02]-[101]: "mark":"otto"
+[01]-[100]: : & : "otto"="heinz"
+[01]-[101]: : & : "mark"="heinz"
+[02]-[100]: : & : "otto"="heinz"
+[02]-[101]: : & : "mark"="otto"
 }
 AFTER: --> {
-[01]-[100]: "otto":"heinz"
-[01]-[101]: "mark":"heinz"
-[02]-[100]: "otto":"heinz"
-[02]-[101]: "mark":"otto"
+[01]-[100]: : & : "otto"="heinz"
+[01]-[101]: : & : "mark"="heinz"
+[02]-[100]: : & : "otto"="heinz"
+[02]-[101]: : & : "mark"="otto"
 }
 couples: 
   01 <-> 100

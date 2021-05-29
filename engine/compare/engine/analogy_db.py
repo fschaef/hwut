@@ -148,13 +148,15 @@ class AnalogyDb(dict):
         """RETURNS: Representation of object state formatted by 'ut.engine.pretty.do()'.
         """
         def length(n):
-            if n is None: return 1 # -> " "
-            else:         return ceil(log10(n))
+            if   n is None:          return 1 # -> " "
+            elif isinstance(n, str): return len(n)
+            elif n <= 1:             return 1
+            else:                    return ceil(log10(n))
 
-        def prefix(line_number_pair, Ls, Ln):
-            if line_number_pair is not None:
+        def prefix(p, Ls, Ln):
+            if p is not None:
                 return ":%s%s&%s%s" % (" " * (Ls - length(p.subject_line_n)), p.subject_line_n,
-                                          " " * (Ln - length(p.nominal_line_n)), p.nominal_line_n)
+                                       " " * (Ln - length(p.nominal_line_n)), p.nominal_line_n)
             else:
                 return ""
 
@@ -181,21 +183,6 @@ class AnalogyDb(dict):
         return "AnalogyDb", txt
 
     def __repr__(self):
-        content_db = defaultdict(list)
-        for subject, nominal in self.items():
-            content_db[self.line_number_db.get(subject)].append((subject, nominal))
-
-        def prefix(line_number_pair):
-            if line_number_pair is not None:
-                return "[%s]:[%s] " % line_number_pair
-            else:
-                return ""
-
-        def show(analogy_list):
-            return ", ".join('"%s":"%s"' % (subject, nominal) for subject, nominal in sorted(analogy_list))
-
-        return "; ".join(
-            '%s%s' % (prefix(line_number_pair), show(analogy_list))
-            for line_number_pair, analogy_list in sorted(content_db.items())
-        )
+        name, txt = self.__pretty__()
+        return "\n".join("%s: %s" % (x, y) for x, y in txt)
 

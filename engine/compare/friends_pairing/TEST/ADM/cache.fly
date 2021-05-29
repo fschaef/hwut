@@ -4,9 +4,9 @@ file_name: test-match_db.py;
 hwut_info_time: 1621621697L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ analogy_interferences; OK; 0.160921; 0; ]
-  [ extract_ultimates; OK; 0.176591; 0; ]
-  [ pairing; OK; 0.160723; 0; ]
+  [ analogy_interferences; OK; 0.199959; -264501998; ]
+  [ extract_ultimates; OK; 0.162774; 1201567405; ]
+  [ pairing; OK; 0.172466; -563224067; ]
 ]
 }
 {
@@ -16,12 +16,12 @@ file_name: test-exact.py;
 hwut_info_time: 1621621712L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.167253; 0; ]
-  [ analogy; OK; 0.168561; 0; ]
-  [ wild; OK; 0.513476; 0; ]
-  [ wild-2; OK; 0.475533; 0; ]
-  [ border; OK; 0.174166; 0; ]
-  [ special; OK; 0.166598; 0; ]
+  [ basic; OK; 0.173567; 0; ]
+  [ analogy; OK; 0.170014; 1425247872; ]
+  [ wild; OK; 0.514089; 0; ]
+  [ wild-2; OK; 0.451106; 0; ]
+  [ border; OK; 0.204202; -1788578578; ]
+  [ special; OK; 0.183243; 0; ]
 ]
 }
 {
@@ -31,10 +31,10 @@ file_name: test-exact-fail-quickly.py;
 hwut_info_time: 1621675285L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.165937; 0; ]
-  [ analogy; OK; 0.173305; 0; ]
-  [ wild; OK; 0.494576; 0; ]
-  [ border; OK; 0.174368; 0; ]
+  [ basic; OK; 0.178009; 0; ]
+  [ analogy; OK; 0.169312; 0; ]
+  [ wild; OK; 0.507006; 0; ]
+  [ border; OK; 0.190220; 0; ]
 ]
 }
 {
@@ -44,7 +44,7 @@ file_name: test-similar.py;
 hwut_info_time: 1621621679L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.174060; 0; ]
-  [ restricted_cmp; OK; 0.168504; 0; ]
+  [ basic; OK; 0.177111; 0; ]
+  [ restricted_cmp; OK; 0.182334; 0; ]
 ]
 }

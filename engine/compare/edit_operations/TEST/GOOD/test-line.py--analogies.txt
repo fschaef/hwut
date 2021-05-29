@@ -5,7 +5,7 @@ Cost: 0.000000
 [0] GOOD
 [1] GOOD
 AnalogyDb:
-"((x))":"((y))", "((y))":"((x))"
+: & : "((x))"="((y))", "((y))"="((x))"
 
 subject:  ANALOGY:((x)), ANALOGY:((x))
 nominal:  ANALOGY:((z)), ANALOGY:((x))
@@ -14,7 +14,7 @@ Cost: 0.250000
 [0] GOOD
 [1] SUBSTITUTE
 AnalogyDb:
-"((x))":"((z))"
+: & : "((x))"="((z))"
 
 subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
 nominal:  ANALOGY:((z)), ANALOGY:((z)), ANALOGY:((x))
@@ -24,5 +24,5 @@ Cost: 0.083333
 [1] TRANSPOSE (2)
 [2] GOOD
 AnalogyDb:
-"((x))":"((z))", "((y))":"((x))"
+: & : "((x))"="((z))", "((y))"="((x))"
 

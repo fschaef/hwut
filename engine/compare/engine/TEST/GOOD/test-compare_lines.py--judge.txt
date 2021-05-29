@@ -12,7 +12,7 @@ nominal:  ANALOGY:((y)), ANALOGY:((z))
 => False, 
 subject:  ANALOGY:((x)), ANALOGY:((y))
 nominal:  ANALOGY:((y)), ANALOGY:((z))
-=> True, [66]:[4711] "((x))":"((y))", "((y))":"((z))"
+=> True, :66&4711: "((x))"="((y))", "((y))"="((z))"
 subject:  ANALOGY:((x)), ANALOGY:((y))
 nominal:  ANALOGY:((y)), ANALOGY:((z)), ANALOGY:((y))
 => False, 

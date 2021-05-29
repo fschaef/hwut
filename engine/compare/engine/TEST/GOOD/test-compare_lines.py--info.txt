@@ -32,7 +32,7 @@ Cost: 0.000000
 [0] GOOD
 [1] GOOD
 AnalogyDb:
-[66]:[4711] "((x))":"((y))", "((y))":"((z))"
+:66&4711: "((x))"="((y))", "((y))"="((z))"
 subject:  ANALOGY:((x)), ANALOGY:((y))
 nominal:  ANALOGY:((y)), ANALOGY:((z)), ANALOGY:((y))
 Cost: 0.250000

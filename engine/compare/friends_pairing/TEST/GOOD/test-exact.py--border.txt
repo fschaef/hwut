@@ -70,7 +70,6 @@ association: False
 subject: ['happy ((A)) ((B))', 'happy ((A)) ((C))']
 nominal: ['funny ((1)) ((2))', 'funny ((2)) ((1))']
 association: False
-##   [1] happy ((A)) ((C)) --> [0] funny ((1)) ((2))
 --------------------------------
 subject: ['funny ((A)) ((D))', 'happy ((A)) ((B))', 'glad ((C)) ((D))']
 nominal: ['smart ((4)) ((1))', 'happy ((1)) ((2))', 'glad ((3)) ((4))']
@@ -85,12 +84,14 @@ association: True (3)
    [1] happy ((A)) ((B)) --> [1] happy ((1)) ((2))
    [2] glad ((C)) ((D)) --> [2] glad ((3)) ((4))
 AnalogyDb:
-[0]:[0] "((A))":"((1))", "((B))":"((2))"; [2]:[2] "((C))":"((3))", "((D))":"((4))"
+:0&0: "((A))"="((1))", "((B))"="((2))"
+:2&2: "((C))"="((3))", "((D))"="((4))"
 --------------------------------
 subject: ['funny ((B)) ((A))', 'happy ((A)) ((B))', 'smart ((C)) ((D))', 'glad ((B)) ((A))', 'something ((B)) ((A))']
 nominal: ['something ((2)) ((1))', 'happy ((1)) ((2))', 'smart ((3)) ((4))', 'glad ((2)) ((1))', 'something ((2)) ((1))']
 association: False
-##   [1] happy ((A)) ((B)) --> [1] happy ((1)) ((2))
-##   [2] smart ((C)) ((D)) --> [2] smart ((3)) ((4))
-##   [3] glad ((B)) ((A)) --> [3] glad ((2)) ((1))
-##   [4] something ((B)) ((A)) --> [4] something ((2)) ((1))
+
+
+
+
+
