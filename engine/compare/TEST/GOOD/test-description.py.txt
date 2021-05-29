@@ -1,0 +1,74 @@
+
+=> 
+
+[LineAssociationChunk:LINE_SEQUENCE]
+.   .line_association_list: <list>
+.   .   [LineAssociation]
+.   .   .   .subject: [Line]
+.   .   .   .   .line_n: 1
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((A))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("good.")
+.   .   .   .nominal: [Line]
+.   .   .   .   .line_n: 1
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((1))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("good.")
+.   .   .   .edit_list: [GOOD, GOOD, GOOD, GOOD, GOOD]
+.   .   [LineAssociation]
+.   .   .   .subject: [Line]
+.   .   .   .   .line_n: 2
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((A))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("bad.")
+.   .   .   .nominal: [Line]
+.   .   .   .   .line_n: 2
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((2))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("not")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("so")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:STRING("good.")
+.   .   .   .edit_list: [SUBSTITUTE, GOOD, GOOD, GOOD, INSERT, INSERT, INSERT, INSERT, SUBSTITUTE]
+.   .   [LineAssociation]
+.   .   .   .subject: [Line]
+.   .   .   .   .line_n: 3
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:NUMERIC("4711,tol=0.1")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:ANALOGY("((is))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:ANALOGY("((a))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN("number")
+.   .   .   .   .   LineElement:STRING(".")
+.   .   .   .nominal: [Line]
+.   .   .   .   .line_n: 3
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:NUMERIC("4712,tol=0.1")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:ANALOGY("((ist))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:ANALOGY("((eine))")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN(" ")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN("Zahl")
+.   .   .   .   .   LineElement:STRING(".")
+.   .   .   .edit_list: [GOOD, GOOD, GOOD, GOOD, GOOD, GOOD, GOOD, GOOD]
+.   .analogy_db: [AnalogyDb]
+.   .   .:1&1: "((A))"="((1))"
+.   .   .:3&3: "((a))"="((eine))", "((is))"="((ist))"
+
+
