@@ -43,9 +43,9 @@ The table above, is what is stored in the analogy database, along with line
 number information about the analogies first occurrence.
 _______________________________________________________________________________
 """
-from   collections          import namedtuple, defaultdict
+from   ut.system.helper  import number_of_decimal_digits
+from   collections       import namedtuple, defaultdict
 
-from   math import ceil, log10
 
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
@@ -151,7 +151,7 @@ class AnalogyDb(dict):
             if   n is None:          return 1 # -> " "
             elif isinstance(n, str): return len(n)
             elif n <= 1:             return 1
-            else:                    return ceil(log10(n))
+            else:                    return number_of_decimal_digits(n) 
 
         def prefix(p, Ls, Ln):
             if p is not None:

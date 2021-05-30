@@ -2,17 +2,8 @@
 FUTURE: 2 presentations: intern.odt -- explaining the internal processes
                          extern.odt -- explaining the API.
 
-FUTURE: '.get_string()' --> make LineAssociationChunks transparent.
-        => ut.show might demonstrate the effect of configurations, e.g.
-
-        > ut.show --app-config my-test.cpp --pseudo-output some-check.txt
-
-        or 
-
-        > echo "my line of text" | ut.show --app-config my-test.cpp
-
-2021y05m22d: <fschaef> consider: 'description()' function mandatory
-             for objects communicated beyond component borders.
+2021y05m28d: <fschaef> added the '__pretty__() function functionality
+             for objects communicated via the main API.
 
 2021y05m22d: <fschaef> run test coverage: 100% 
              (exception TEST/common.py with 99% -- irrelevant)

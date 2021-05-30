@@ -4,16 +4,16 @@ file_name: test-main.py;
 hwut_info_time: 1621767261L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.208424; 0; ]
-  [ line_associations; OK; 0.172074; 0; ]
+  [ compare; OK; 0.170597; 0; ]
+  [ line_associations; OK; 0.182059; 0; ]
 ]
 }
 {
 title: LineAssociationChunk.description();
-file_name: test-description.py;
-hwut_info_time: 1622239915L;
+file_name: test-pretty.py;
+hwut_info_time: 1622272686L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 1.246622; 1462960218; ]
+  [ ; OK; 1.227973; 0; ]
 ]
 }

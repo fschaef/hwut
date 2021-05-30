@@ -2,31 +2,36 @@
 """SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: Testing the description member.
+PURPOSE: Testing the .__pretty__() - print member function.
 
 DESCRIPTION:
 
-Objects which are communicated to the outside, provide a '.description()'
-function. This is a data structure, which can be pretty printed by the
-'description.format()' function.  The receiver of an object through an API,
-shall be able to reflect on the objects contents conveniently. 
+Testing pretty printing of 'LineAssociationChunk', which is the only
+object communicated through the main API.
+                                                   
+The receiver of an object through the main API, shall be able to reflect on the
+objects contents conveniently. Thus, all objects communicated through the main
+API shall provide a pretty print functionality through a member function:
 
-The entry point for '.description()' is: 
+            def __pretty__(self):
+                ...
 
-              LineAssociationChunk.description()
+An object providing this operator can be transformed into a nice-looking
+string by means of 
+
+            ut.engine.pretty.do(object)
+
+The requirements on the return value of '__pretty__()' are described in the
+aforementioned module.
 ______________________________________________________________________________
 """
 import sys
-
+from   io import StringIO
 sys.path.insert(0, "../../../../")
 
 import ut.engine.pretty              as     pretty
 import ut.engine.compare.engine.core as     comperator
 import ut.engine.compare.main        as     main
-from   ut.engine.compare.TEST.common import print_list_sequence_pairs, \
-                                            print_friends_pairing_max_result
-from   io import StringIO
-
 
 
 if "--hwut-info" in sys.argv:
