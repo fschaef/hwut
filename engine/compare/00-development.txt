@@ -1,6 +1,5 @@
 
-FUTURE: 2 presentations: intern.odt -- explaining the internal processes
-                         extern.odt -- explaining the API.
+2021y06m02d: <fschaef> api.odt -- explaining the API
 
 2021y05m28d: <fschaef> added the '__pretty__() function functionality
              for objects communicated via the main API.

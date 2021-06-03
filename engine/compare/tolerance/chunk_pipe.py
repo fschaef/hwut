@@ -23,8 +23,9 @@ There are two types of list of lines:
 _______________________________________________________________________________
 """ 
 from ut.engine.compare.engine.line              import Line 
-from ut.engine.compare.engine.input_chunk       import LineSequence, \
-                                                       InputChunkTerminal
+from ut.engine.compare.engine.line_sequence     import LineSequence
+from ut.engine.compare.engine.potpourri         import Potpourri
+from ut.engine.compare.engine.input_chunk       import InputChunkTerminal
 from ut.engine.compare.tolerance.pattern_finder import PatternFinder
 
 from itertools import count
@@ -62,8 +63,9 @@ class ChunkPipe(PatternFinder):
                 if line_list or chunk_class != LineSequence:
                     yield chunk_class(start_line_n, line_n, line_list, self.configuration)
                 line_list = []
-                # switch 'potpourri' <-> 'line list'
-                chunk_class = chunk_class.contrary()
+                # switch 'Potpourri' <-> 'LineSequence'
+                if chunk_class == LineSequence: chunk_class = Potpourri
+                else:                           chunk_class = LineSequence
                 start_line_n = line_n
             else:
                 line_list.append(Line(line_n, PatternFinder.do(self, line)))

@@ -21,9 +21,6 @@ from   ut.engine.compare.engine.core                   import E_Verdict
 from   ut.engine.compare.engine.analogy_db             import AnalogyDb
 from   ut.engine.compare.engine.line                   import Line
 from   ut.engine.compare.engine.line_association       import LineAssociation
-import ut.engine.compare.friends_pairing.similar           as     friends_pairing_max
-import ut.engine.compare.friends_pairing.exact         as     friends_pairing
-import ut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
 from   ut.engine.compare.edit_operations.line_sequence import E_EditLineSequence, EditsLineSequence
 
 from   enum      import Enum
@@ -94,11 +91,6 @@ class InputChunk(ABC):
             new_analogy_db = AnalogyDb()
         return result, new_analogy_db
 
-    @classmethod
-    def contrary(cls):
-        if cls == LineSequence: return Potpourri
-        else:                   return LineSequence
-
     @abstractmethod
     def type(self): pass
 
@@ -108,123 +100,6 @@ class InputChunk(ABC):
     @abstractmethod
     def _line_associations(self, nominal, analogy_db): pass
 
-
-class LineSequence(InputChunk):
-    """Set of lines where the sequence matters.
-    """
-    def type(self):
-        return E_Chunk.LINE_SEQUENCE
-
-    def _compare(self, nominal, analogy_db) -> E_Verdict:
-        """RETURNS: [0] True, if 'self' and 'nominal' are equivalent.
-                        False, else.
-                    [1] AnalogyDb required for the equivalents of [0] to hold.
-        """
-        for subject_line, nominal_line in zip(self.line_list, nominal.line_list):
-            verdict, analogy_db = subject_line.compare(nominal_line, analogy_db)
-            if verdict == False:
-                return E_Verdict.DIFFERENT, analogy_db
-        else:
-            return E_Verdict.EQUIVALENT, analogy_db
-
-    def _line_associations(self, nominal, analogy_db):
-        """RETURNS: list 'LineAssociation'-s
-
-        See 'InputChunk.line_associations()' for further explanations.
-        """
-        editions = edit_operations_line_sequence.do(self.line_list,
-                                                    nominal.line_list,
-                                                    analogy_db)
-        assert isinstance(editions, EditsLineSequence)
-
-        if not editions.edit_list:
-            return [], editions.analogy_db
-
-        def iterable(edit_line_list):
-            si, ni = 0, 0
-            for edit_id, edit_list in edit_line_list:
-                if   edit_id == E_EditLineSequence.GOOD or edit_id == E_EditLineSequence.SUBSTITUTE:
-                    subject_seq = self.line_list[si]
-                    nominal_seq = nominal.line_list[ni]
-                elif edit_id == E_EditLineSequence.INSERT:
-                    subject_seq = None # nominal inserted, no counterpart in subject
-                    nominal_seq = nominal.line_list[ni]
-                elif edit_id == E_EditLineSequence.DELETE:
-                    subject_seq = self.line_list[si]
-                    nominal_seq = None # subject inserted, no counterpart in nominal
-                else:
-                    assert False # pragma: no cover
-
-                yield subject_seq, nominal_seq, edit_list
-                s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit_id]
-                si += s_incr
-                ni += n_incr
-
-        result = [
-            LineAssociation(subject_seq, nominal_seq, edit_list)
-            for subject_seq, nominal_seq, edit_list in iterable(editions.edit_list)
-        ]
-        return result, editions.analogy_db
-
-    def __repr__(self): # pragma no cover
-        return "\n".join("%03i: %s" % (line.line_n, line) for line in self.line_list)
-
-
-class Potpourri(InputChunk):
-    """Set of lines where the sequence does not matter.
-    """
-    def type(self):
-        return E_Chunk.POTPOURRI
-
-    def __init__(self, start_line_n, end_line_n, iterable, config):
-        def adapt(iterable, start_line_n, end_line_n):
-            yield Line.from_potpourri(start_line_n, begin_f=True)
-            yield from iterable
-            yield Line.from_potpourri(end_line_n, begin_f=False)
-        InputChunk.__init__(self, start_line_n, end_line_n, adapt(iterable, start_line_n, end_line_n), config)
-
-    def _compare(self, nominal, analogy_db):
-        """RETURNS: [0] True, if both potpourris are equivalent. False, else.
-                    [1] analogy_db required for equivalence to hold.
-        """
-        subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:
-        nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
-
-        verdict, _, new_analogy_db = friends_pairing.do(subject_potpourri,
-                                                        nominal_potpourri,
-                                                        analogy_db,
-                                                        abort_f=True)
-
-        if verdict: return E_Verdict.EQUIVALENT, new_analogy_db
-        else:       return E_Verdict.DIFFERENT, analogy_db
-
-    def _line_associations(self, nominal, analogy_db):
-        """RETURNS: list 'LineAssociation'-s
-
-        See 'InputChunk.line_associations()' for further explanations.
-        """
-        assert len(self.line_list) >= 2 and len(nominal.line_list) >= 2
-        subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:
-        nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
-
-        core_result,   \
-        new_analogy_db = friends_pairing_max.do(subject_potpourri,
-                                                nominal_potpourri,
-                                                analogy_db,
-                                                self.configuration.potpourri_max_comparison_count)
-
-        result = [
-            LineAssociation(self.line_list[0], nominal.line_list[0], edit_list=[])
-        ]
-        result.extend(core_result)
-        result.append(
-            LineAssociation(self.line_list[-1], nominal.line_list[-1], edit_list=[])
-        )
-
-        return result, new_analogy_db
-
-    def __repr__(self): # pragma no cover
-        return "\n".join("%03i| %s" % (line.line_n, line) for line in self.line_list)
 
 class InputChunkTerminal(InputChunk):
     """Input chunk that marks the end of an input stream.
@@ -237,6 +112,7 @@ class InputChunkTerminal(InputChunk):
     def _compare(self, other, analogy_db):             assert False
     def _line_associations(self, nominal, analogy_db): return [], AnalogyDb()
     def __repr__(self):                                return "InputChunkTerminal"
+
 
 class InputChunkEmpty(InputChunk):
     """Input chunk that marks the end of an input stream.

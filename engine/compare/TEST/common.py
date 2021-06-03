@@ -14,8 +14,8 @@ from   ut.engine.compare.tolerance.line_element import LineElementString, \
                                                        LineElementAnalogy, \
                                                        LineElementEquivalencePattern
 from   ut.engine.compare.engine.line            import Line
-from   ut.engine.compare.engine.input_chunk     import Potpourri
-from   ut.engine.compare.engine.input_chunk     import LineSequence
+from   ut.engine.compare.engine.potpourri       import Potpourri
+from   ut.engine.compare.engine.line_sequence   import LineSequence
 
 from   itertools import zip_longest
 
