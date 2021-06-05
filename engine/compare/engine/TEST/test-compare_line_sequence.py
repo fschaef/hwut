@@ -24,7 +24,7 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
-import ut.engine.compare.engine.core              as     comperator
+from   ut.engine.compare.configuration            import ConfigurationPatternFinder
 from   ut.engine.compare.engine.analogy_db        import AnalogyDb
 from   ut.engine.compare.TEST.common              import \
                                                            print_match_sequences_lists, \
@@ -36,7 +36,7 @@ if "--hwut-info" in sys.argv:
     print("CHOICES: judge, info;")
     sys.exit()
 
-config = comperator.ConfigurationPatternFinder()
+config = ConfigurationPatternFinder()
 config.analogy_f               = True
 config.numeric_tolerance_ratio = 0.011
 config.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]

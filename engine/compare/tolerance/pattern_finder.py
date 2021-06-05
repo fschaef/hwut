@@ -40,7 +40,7 @@ The 'PatternFinder' serves as lexical analyzer for 'chunk_pipe.py'.
 ________________________________________________________________________________
 """
 from   ut.engine.quex.typed                     import typed
-from   ut.engine.compare.engine.core            import ConfigurationPatternFinder
+from   ut.engine.compare.configuration          import ConfigurationPatternFinder
 from   ut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                        Token, \
                                                        LineElement, \

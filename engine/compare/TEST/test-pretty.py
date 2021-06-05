@@ -29,16 +29,16 @@ import sys
 from   io import StringIO
 sys.path.insert(0, "../../../../")
 
-import ut.engine.pretty              as     pretty
-import ut.engine.compare.engine.core as     comperator
-import ut.engine.compare.main        as     main
+import ut.engine.pretty                as     pretty
+from   ut.engine.compare.configuration import Configuration
+import ut.engine.compare.main          as     main
 
 
 if "--hwut-info" in sys.argv:
     print("LineAssociationChunk.description()")
     sys.exit()
 
-config = comperator.Configuration()
+config = Configuration()
 config.pattern_finder.analogy_f               = True
 config.pattern_finder.whitespace_f            = True
 config.pattern_finder.backslash_f             = False

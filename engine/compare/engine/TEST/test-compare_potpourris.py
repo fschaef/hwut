@@ -25,7 +25,7 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 from   ut.engine.compare.tolerance.pattern_finder import PatternFinder
-import ut.engine.compare.engine.core              as     comperator
+from   ut.engine.compare.configuration            import Configuration
 from   ut.engine.compare.engine.analogy_db        import AnalogyDb
 from   ut.engine.compare.TEST.common              import frame_with_potpourri_borders, \
                                                          get_Potpourri, \
@@ -36,7 +36,7 @@ if "--hwut-info" in sys.argv:
     print("CHOICES: judge, info;")
     sys.exit()
 
-config = comperator.Configuration()
+config = Configuration()
 config.pattern_finder.analogy_f               = True
 config.pattern_finder.numeric_tolerance_ratio = 0.011
 config.pattern_finder.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]

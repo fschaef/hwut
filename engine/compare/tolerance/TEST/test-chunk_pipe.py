@@ -23,7 +23,7 @@ from   io import StringIO
 
 sys.path.insert(0, "../../../../../")
 
-import ut.engine.compare.engine.core          as     comperator
+from   ut.engine.compare.configuration        import Configuration
 from   ut.engine.compare.tolerance.chunk_pipe import ChunkPipe
 
 if "--hwut-info" in sys.argv:
@@ -31,7 +31,7 @@ if "--hwut-info" in sys.argv:
     print("CHOICES: normal, special, comment;")
     sys.exit()
 
-config = comperator.Configuration()
+config = Configuration()
 config.pattern_finder.analogy_f               = True
 config.pattern_finder.numeric_tolerance_ratio = 0.011
 config.pattern_finder.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]

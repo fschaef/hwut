@@ -26,10 +26,10 @@ import sys
 
 sys.path.insert(0, "../../../../")
 
-import ut.engine.compare.engine.core as     comperator
-import ut.engine.compare.main        as     main
-from   ut.engine.compare.TEST.common import print_list_sequence_pairs, \
-                                            print_friends_pairing_max_result
+from   ut.engine.compare.configuration import Configuration
+import ut.engine.compare.main          as     main
+from   ut.engine.compare.TEST.common   import print_list_sequence_pairs, \
+                                              print_friends_pairing_max_result
 from   io import StringIO
 
 
@@ -38,7 +38,7 @@ if "--hwut-info" in sys.argv:
     print("CHOICES: compare, line_associations;")
     sys.exit()
 
-config = comperator.Configuration()
+config = Configuration()
 config.pattern_finder.analogy_f               = False
 config.pattern_finder.whitespace_f            = True
 config.pattern_finder.backslash_f             = False
