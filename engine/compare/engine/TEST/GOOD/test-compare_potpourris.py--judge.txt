@@ -1,8 +1,0 @@
---------------------------------
-subject: ['a', 'b']
-nominal: ['b', 'a']
-=> E_Verdict.EQUIVALENT, 
---------------------------------
-subject: ['a']
-nominal: ['b', 'a']
-=> E_Verdict.DIFFERENT, 

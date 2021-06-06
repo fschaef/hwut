@@ -1,6 +1,0 @@
-Testing the comparison functionality
-------------------------------------
-
-python3-coverage run --omit ./*.py -a *.py 
-
---not common.py
