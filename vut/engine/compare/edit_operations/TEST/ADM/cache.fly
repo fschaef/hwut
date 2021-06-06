@@ -1,0 +1,33 @@
+{
+title: Lines;
+file_name: test-line.py;
+hwut_info_time: 1622981113L;
+interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
+result_list: [
+  [ basic; OK; 0.162865; 0; ]
+  [ special; OK; 0.172920; 0; ]
+  [ analogies; OK; 0.162373; 0; ]
+]
+}
+{
+title: Strings;
+file_name: test-string.py;
+hwut_info_time: 1622981113L;
+interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
+result_list: [
+  [ basic; OK; 0.152867; 0; ]
+  [ long; OK; 0.158589; 1400947710; ]
+]
+}
+{
+title: Line list alignment;
+title_group: Edit Distance;
+file_name: test-line_sequence.py;
+hwut_info_time: 1622981113L;
+interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
+result_list: [
+  [ subject; OK; 0.171892; 0; ]
+  [ nominal; OK; 0.167516; 0; ]
+  [ special; OK; 0.259368; 0; ]
+]
+}

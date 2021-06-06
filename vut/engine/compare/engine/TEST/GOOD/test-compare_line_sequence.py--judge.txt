@@ -1,0 +1,16 @@
+--------------------------------
+   STRING:a    STRING:b
+   STRING:b    STRING:a
+=> E_Verdict.DIFFERENT, 
+--------------------------------
+   STRING:a    STRING:b
+               STRING:a
+=> E_Verdict.DIFFERENT, 
+--------------------------------
+   STRING:a         STRING:a
+   ANALOGY:((b))    ANALOGY:((2))
+=> E_Verdict.EQUIVALENT, :1&1: "((b))"="((2))"
+--------------------------------
+   STRING:b    STRING:a
+   STRING:a    
+=> E_Verdict.DIFFERENT, 

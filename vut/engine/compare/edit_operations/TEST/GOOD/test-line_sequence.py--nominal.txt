@@ -1,0 +1,93 @@
+------------------------------------
+
+   STRING:string    STRING:string
+   STRING:strong    STRING:strong
+   STRING:quant     
+=>
+Cost: (-2, 1.000000)
+   STRING:string    == STRING:string
+   STRING:strong    == STRING:strong
+   STRING:quant     >- 
+
+------------------------------------
+
+   STRING:string    STRING:string
+   STRING:strong    STRING:quant
+   STRING:quant     
+=>
+Cost: (-2, 1.000000)
+   STRING:string    == STRING:string
+   STRING:strong    >- 
+   STRING:quant     == STRING:quant
+
+------------------------------------
+
+   STRING:string    STRING:strong
+   STRING:strong    STRING:quant
+   STRING:quant     
+=>
+Cost: (-2, 1.000000)
+   STRING:string    >- 
+   STRING:strong    == STRING:strong
+   STRING:quant     == STRING:quant
+
+------------------------------------
+
+   STRING:string    STRING:string
+   STRING:strong    
+   STRING:quant     
+=>
+Cost: (-1, 1.500000)
+   STRING:string    == STRING:string
+   STRING:strong    >- 
+   STRING:quant     >- 
+
+------------------------------------
+
+   STRING:string    STRING:strong
+   STRING:strong    
+   STRING:quant     
+=>
+Cost: (-1, 2.000000)
+   STRING:string    >- 
+   STRING:strong    == STRING:strong
+   STRING:quant     >- 
+
+------------------------------------
+
+   STRING:string    STRING:quant
+   STRING:strong    
+   STRING:quant     
+=>
+Cost: (-1, 2.000000)
+   STRING:string    >- 
+   STRING:strong    >- 
+   STRING:quant     == STRING:quant
+
+------------------------------------
+
+   STRING:string    
+   STRING:strong    
+   STRING:quant     
+=>
+Cost: (0, 1.833333)
+   STRING:string    >- 
+   STRING:strong    >- 
+   STRING:quant     >- 
+
+------------------------------------
+
+   STRING:string    
+   STRING:strong    
+=>
+Cost: (0, 1.500000)
+   STRING:string    >- 
+   STRING:strong    >- 
+
+------------------------------------
+
+   STRING:string    
+=>
+Cost: (0, 1.000000)
+   STRING:string    >- 
+

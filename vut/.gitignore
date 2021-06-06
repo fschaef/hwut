@@ -1,0 +1,6 @@
+**/__pycache__
+**/TEST/OUT
+**/tmp
+**/.coverage
+**/htmlcov
+zz-trash.tgz

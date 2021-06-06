@@ -1,0 +1,66 @@
+----------------------------------
+line1
+----------------------------------
+=>
+001: [(0,4): STRING 'line'], [(4,5): NUMERIC '1']
+InputChunkTerminal
+----------------------------------
+line1
+line2
+----------------------------------
+=>
+001: [(0,4): STRING 'line'], [(4,5): NUMERIC '1']
+002: [(0,4): STRING 'line'], [(4,5): NUMERIC '2']
+InputChunkTerminal
+----------------------------------
+||||
+line2
+||||
+----------------------------------
+=>
+001| [(0,22): STRING '|||| (potpourri: open)']
+002| [(0,4): STRING 'line'], [(4,5): NUMERIC '2']
+003| [(0,23): STRING '|||| (potpourri: close)']
+InputChunkTerminal
+----------------------------------
+||||
+line 2
+line 3
+||||
+line 5
+----------------------------------
+=>
+001| [(0,22): STRING '|||| (potpourri: open)']
+002| [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '2']
+003| [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '3']
+004| [(0,23): STRING '|||| (potpourri: close)']
+005: [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '5']
+InputChunkTerminal
+----------------------------------
+line 1
+||||
+line 3
+line 4
+||||
+----------------------------------
+=>
+001: [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '1']
+002| [(0,22): STRING '|||| (potpourri: open)']
+003| [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '3']
+004| [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '4']
+005| [(0,23): STRING '|||| (potpourri: close)']
+InputChunkTerminal
+----------------------------------
+line 1
+||||
+line 3
+||||
+line 5
+----------------------------------
+=>
+001: [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '1']
+002| [(0,22): STRING '|||| (potpourri: open)']
+003| [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '3']
+004| [(0,23): STRING '|||| (potpourri: close)']
+005: [(0,4): STRING 'line'], [(4,5): EQUIVALENCE_PATTERN [0] ' '], [(5,6): NUMERIC '5']
+InputChunkTerminal

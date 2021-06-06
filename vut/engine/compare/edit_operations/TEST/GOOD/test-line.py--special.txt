@@ -1,0 +1,67 @@
+subject:  STRING:string
+nominal:  STRING:string
+=>
+Cost: 0.000000
+[0] GOOD
+
+subject:  STRING:string
+nominal:  STRING:strong
+=>
+Cost: 0.083333
+[0] SUBSTITUTE
+
+subject:  STRING:strong, STRING:string, STRING:string
+nominal:  STRING:string, STRING:string
+=>
+Cost: 0.250000
+[0] DELETE
+[1] GOOD
+[2] GOOD
+
+subject:  STRING:string, STRING:strong, STRING:string
+nominal:  STRING:string, STRING:string
+=>
+Cost: 0.250000
+[0] GOOD
+[1] DELETE
+[2] GOOD
+
+subject:  STRING:string, STRING:string, STRING:strong
+nominal:  STRING:string, STRING:string
+=>
+Cost: 0.250000
+[0] GOOD
+[1] GOOD
+[2] DELETE
+
+subject:  STRING:string, STRING:string
+nominal:  STRING:strong, STRING:string, STRING:string
+=>
+Cost: 0.250000
+[0] INSERT
+[1] GOOD
+[2] GOOD
+
+subject:  STRING:string, STRING:string
+nominal:  STRING:string, STRING:strong, STRING:string
+=>
+Cost: 0.250000
+[0] GOOD
+[1] INSERT
+[2] GOOD
+
+subject:  STRING:string, STRING:string
+nominal:  STRING:string, STRING:string, STRING:strong
+=>
+Cost: 0.250000
+[0] GOOD
+[1] GOOD
+[2] INSERT
+
+subject:  STRING:string, STRING:strong
+nominal:  STRING:strong, STRING:string
+=>
+Cost: 0.083333
+[0] SUBSTITUTE
+[1] SUBSTITUTE
+

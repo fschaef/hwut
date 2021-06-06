@@ -1,0 +1,51 @@
+subject:  STRING:string, STRING:strong
+nominal:  STRING:string, STRING:strong
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+AnalogyDb:
+
+subject:  STRING:string, NUMERIC:4711
+nominal:  STRING:string, STRING:strong
+Cost: 0.500000
+[0] GOOD
+[1] SUBSTITUTE_TYPE
+AnalogyDb:
+
+subject:  STRING:string, STRING:string
+nominal:  STRING:string, STRING:strong
+Cost: 0.041667
+[0] GOOD
+[1] SUBSTITUTE
+AnalogyDb:
+
+subject:  ANALOGY:((x)), ANALOGY:((x))
+nominal:  ANALOGY:((y)), ANALOGY:((z))
+Cost: 0.250000
+[0] GOOD
+[1] SUBSTITUTE
+AnalogyDb:
+
+subject:  ANALOGY:((x)), ANALOGY:((y))
+nominal:  ANALOGY:((y)), ANALOGY:((z))
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+AnalogyDb:
+:66&4711: "((x))"="((y))", "((y))"="((z))"
+subject:  ANALOGY:((x)), ANALOGY:((y))
+nominal:  ANALOGY:((y)), ANALOGY:((z)), ANALOGY:((y))
+Cost: 0.250000
+[0] GOOD
+[1] GOOD
+[2] INSERT
+AnalogyDb:
+
+subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
+nominal:  ANALOGY:((y)), ANALOGY:((z))
+Cost: 0.250000
+[0] GOOD
+[1] GOOD
+[2] DELETE
+AnalogyDb:
+
