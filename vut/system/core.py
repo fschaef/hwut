@@ -1,5 +1,5 @@
 
-"""SPDX-License: MIT; Project UT; (C) Frank-Rene Schaefer
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 
 PURPOSE: Providing information on system where the app is running.

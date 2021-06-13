@@ -16,8 +16,13 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.line          import Line
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
 import vut.engine.compare.edit_operations.line as     edit_operations_line
+from   vut.engine.compare.edit_operations.line import Edit, Edit_none, E_EditLine
 from   vut.engine.quex.typed                   import typed
+
+from   collections import namedtuple
 import sys
+
+LineElementAssociation = namedtuple("LineElementAssociation", ("edit", "subject", "nominal"))
 
 class LineAssociation:
     """An association of a line from the subject input stream and a line
@@ -25,7 +30,7 @@ class LineAssociation:
     """
     @typed(subject=(None, Line), nominal=(None, Line), analogy_db=(None, AnalogyDb))
     def __init__(self, subject, nominal, edit_list=tuple()):
-        assert edit_list is None or all(isinstance(x, edit_operations_line.Edit) for x in edit_list)
+        assert edit_list is None or all(isinstance(x, Edit) for x in edit_list)
         self.edit_list   = edit_list
         self.subject = subject
         self.nominal = nominal
@@ -35,8 +40,51 @@ class LineAssociation:
         return LineAssociation(subject = initial_subject,
                                nominal = None)
 
+    @staticmethod
+    def from_text(subject_line_n, subject_txt, nominal_line_n, nominal_txt):
+        subject = Line.from_string(subject_line_n, subject_txt)
+        nominal = Line.from_string(nominal_line_n, nominal_txt)
+        return LineAssociation(subject, nominal)
+
     def is_empty(self):
         return self.nominal is None
+
+    def line_element_association_list(self):
+        """RETURNS: list of LineElementAssociation-s
+
+        That is, the line elements of the subject and the nominal lines are combined
+        pairwise according to the prescribed edit operations.
+        """
+        if   self.subject is None:
+            result = [
+                LineElementAssociation(Edit_none(), None, n) 
+                for n in self.nominal.sequence
+            ]
+        elif self.nominal is None:
+            result = [
+                LineElementAssociation(Edit_none(), s, None) 
+                for s in self.subject.sequence
+            ]
+        elif not self.edit_list:
+            result = [
+                LineElementAssociation(Edit_none(), s, n) 
+                for s, n in zip(self.subject.sequence, self.nominal.sequence)
+            ]
+        else:
+            subject_length = len(self.subject.sequence)
+            nominal_length = len(self.nominal.sequence)
+            result         = []
+            si = ni = 0
+            for edit in self.edit_list:
+                subject = None if si >= subject_length else self.subject.sequence[si]
+                nominal = None if si >= nominal_length else self.nominal.sequence[ni]
+
+                result.append(LineElementAssociation(edit, subject, nominal))
+
+                s_incr, n_incr = edit_operations_line.position_increment_db[edit.id]
+                si += s_incr
+                ni += n_incr
+        return result
 
     def __lt__(self, other): # pragma no cover
         def adapt(mseq):

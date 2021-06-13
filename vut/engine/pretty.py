@@ -1,4 +1,4 @@
-"""SPDX-Linces: MIT; Project UT; (C) Frank-Rene Schaefer
+"""SPDX-Linces: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
 PURPOSE: Pretty printing of object content.

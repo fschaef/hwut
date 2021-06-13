@@ -30,6 +30,18 @@ class LineAssociationChunk:
     def line_association_list(self):
         return self.__line_association_list
 
+    def max_line_n(self):
+        def _get(line, max_line_n):
+            if line and line.line_n is not None and line.line_n > max_line_n: 
+                return line.line_n
+            else:
+                return max_line_n
+        result = 0
+        for lina in self.__line_association_list:
+            result = _get(lina.subject, result)
+            result = _get(lina.nominal, result)
+        return result
+
     def analogy_db(self):
         return self.__analogy_db
 

@@ -59,8 +59,9 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 
-from  vut.engine.compare.engine.analogy_db import AnalogyDb
-from  vut.engine.compare.engine.core       import E_Verdict
+from  vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
+from  vut.engine.compare.engine.analogy_db        import AnalogyDb
+from  vut.engine.compare.engine.core              import E_Verdict
 
 from  copy        import copy
 from  enum        import IntEnum
@@ -70,13 +71,19 @@ class E_EditLine(IntEnum):
     """Operations moving/substituting 'LineElements'.
     """
     GOOD            = 0  # Subject and nominal 'LineElement' object are equivalent.
-    TRANSPOSE       = 1  # Heal: Two 'LineElement' objects in subject are transposed.
-    INSERT          = 2  # Heal: 'LineElement' from nominal is inserted.
-    DELETE          = 3  # Heal: 'LineElement' from subject is deleted.
-    SUBSTITUTE      = 4  # Bad:  Content of subject and nominal 'LineElement' differs.
-    SUBSTITUTE_TYPE = 5  # Bad:  Type of subject and nominal 'LineElement' differs.
+    GOOD_TOLERATED  = 1  # == GOOD, only that content may differ (used in diff-display).
+    TRANSPOSE       = 2  # Heal: Two 'LineElement' objects in subject are transposed.
+    INSERT          = 3  # Heal: 'LineElement' from nominal is inserted.
+    DELETE          = 4  # Heal: 'LineElement' from subject is deleted.
+    SUBSTITUTE      = 5  # Bad:  Content of subject and nominal 'LineElement' differs.
+    SUBSTITUTE_TYPE = 6  # Bad:  Type of subject and nominal 'LineElement' differs.
+    NONE            = 7  # No operation
 
 Edit = namedtuple("Edit", ("id", "transpose_ai"))
+
+def Edit_none():
+    return Edit(E_EditLine.NONE, None)
+
 def Edit_list_description(edit_list):
     if not edit_list:
         return "[]"
@@ -157,24 +164,28 @@ class WorkList(list):
             )
 
     def get_best(self):
-        return EditsLine(self.best.cost / self.max_cost, self.best.edit_list, self.best.analogy_db)
+        return EditsLine(self.best.cost / self.max_cost, 
+                         self.best.edit_list, 
+                         self.best.analogy_db)
 
 
         
 position_increment_db = {
     #                        ai-increment  bi-increment
     E_EditLine.GOOD:             (1,           1),    # Step over subject[ai], nominal[bi]
+    E_EditLine.GOOD_TOLERATED:   (1,           1),    #          -- " --
     E_EditLine.TRANSPOSE:        (1,           1),    #          -- " --
     E_EditLine.INSERT:           (0,           1),    # Consider 'subject[ai]' as insertion.
-    #                                             # => compare subject[ai+1] with nominal[bi]
+    #                                                 # => compare subject[ai+1] with nominal[bi]
     E_EditLine.DELETE:           (1,           0),    # Consider 'nominal[bi]' as insertion.
-    #                                             # => compare subject[ai] with nominal[bi+1]
+    #                                                 # => compare subject[ai] with nominal[bi+1]
     E_EditLine.SUBSTITUTE:       (1,           1),    # Step over subject[ai], nominal[bi]
     E_EditLine.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
 }
 
 cost_db = {
     E_EditLine.GOOD:             0,  # good
+    E_EditLine.GOOD_TOLERATED:   0,  # good
     E_EditLine.TRANSPOSE:        1,  # good, when swapped elements
     E_EditLine.SUBSTITUTE:       2,  # good, when content is substituted
     E_EditLine.INSERT:           3,  # bad, need to insert element
@@ -223,7 +234,7 @@ class WorkItem:
        #
        # For performance, it is essential that 'cheap' steps are treated first.
        # => more expensive paths are cut early.
-       good_f = False
+       good_id = None
        if   verdict_id == E_Verdict.MISFIT:
            yield self._step(E_EditLine.SUBSTITUTE_TYPE)
        elif verdict_id == E_Verdict.DIFFERENT:
@@ -231,10 +242,14 @@ class WorkItem:
                             cost_factor = subject_match.edit_distance_relative(nominal_match))
        elif not self.analogy_db.is_consistent(analogy):
            yield self._step(E_EditLine.SUBSTITUTE)
-       else:
-           good_f = True
+       elif   subject_match.string       != nominal_match.string:  
+           good_id = E_EditLine.GOOD # _TOLERATED
+       elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
+           good_id = E_EditLine.GOOD # _TOLERATED
+       else:                                                     
+           good_id = E_EditLine.GOOD
 
-       if not good_f:
+       if good_id is None:
            yield from (
                self._step(E_EditLine.TRANSPOSE, transpose_ai=candidate_ai)
                for candidate_ai in range(self.ai+1, len(self.subject))
@@ -244,8 +259,8 @@ class WorkItem:
        yield self._step(E_EditLine.INSERT)
        yield self._step(E_EditLine.DELETE)
 
-       if good_f:
-           yield self._step(E_EditLine.GOOD, new_analogy = analogy)
+       if good_id is not None:
+           yield self._step(good_id, new_analogy = analogy)
 
    def _step(self, edit_id, cost_factor=1, transpose_ai=None, new_analogy=None):
        """RETURNS: WorkItem derived from self after applying an edit operation.
