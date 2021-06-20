@@ -38,13 +38,13 @@ cost: -1.00000; line_associations: 2;
 subject: ['happy', 'fritz']
 nominal: ['fritz', 'funny']
 cost: -1.00000; line_associations: 2;
-   [00] happy                   --> [01] funny                   {GOOD}
+   [00] happy                   --> [01] funny                   {GOOD_TOLERATED}
    [01] fritz                   --> [00] fritz                   {GOOD}
 --------------------------------
 subject: ['happy', 'mummie', 'fritz']
 nominal: ['fritz', 'mummie', 'I smart', 'funny']
 cost: -1.00000; line_associations: 4;
-   [00] happy                   --> [03] funny                   {GOOD}
+   [00] happy                   --> [03] funny                   {GOOD_TOLERATED}
    [01] mummie                  --> [01] mummie                  {GOOD}
    [02] fritz                   --> [00] fritz                   {GOOD}
    [--] None                    --> [02] I smart                 {}
@@ -55,31 +55,31 @@ cost: -1.00000; line_associations: 4;
    [00] fritz                   --> [02] fritz                   {GOOD}
    [01] mummie                  --> [01] mummie                  {GOOD}
    [02] I smart                 --> [--] None                    {}
-   [03] funny                   --> [00] happy                   {GOOD}
+   [03] funny                   --> [00] happy                   {GOOD_TOLERATED}
 --------------------------------
 subject: ['98', '99']
 nominal: ['102', '101', '100', '99']
 cost: -1.00000; line_associations: 4;
-   [00] 98                      --> [03] 99                      {GOOD}
-   [01] 99                      --> [02] 100                     {GOOD}
+   [00] 98                      --> [03] 99                      {GOOD_TOLERATED}
+   [01] 99                      --> [02] 100                     {GOOD_TOLERATED}
    [--] None                    --> [00] 102                     {}
    [--] None                    --> [01] 101                     {}
 --------------------------------
 subject: ['100', '98', '99', '101']
 nominal: ['102', '99']
 cost: -1.00000; line_associations: 4;
-   [00] 100                     --> [01] 99                      {GOOD}
+   [00] 100                     --> [01] 99                      {GOOD_TOLERATED}
    [01] 98                      --> [--] None                    {}
    [02] 99                      --> [--] None                    {}
-   [03] 101                     --> [00] 102                     {GOOD}
+   [03] 101                     --> [00] 102                     {GOOD_TOLERATED}
 --------------------------------
 subject: ['((1))', '((2))', '((2))', '((3))']
 nominal: ['((A))', '((B))', '((C))', '((D))']
 cost: -1.00000; line_associations: 4;
-   [00] ((1))                   --> [00] ((A))                   {GOOD}
-   [01] ((2))                   --> [02] ((C))                   {GOOD}
+   [00] ((1))                   --> [00] ((A))                   {GOOD_TOLERATED}
+   [01] ((2))                   --> [02] ((C))                   {GOOD_TOLERATED}
    [02] ((2))                   --> [01] ((B))                   {SUBSTITUTE}
-   [03] ((3))                   --> [03] ((D))                   {GOOD}
+   [03] ((3))                   --> [03] ((D))                   {GOOD_TOLERATED}
 --------------------------------
 subject: ['a', 'b', 'c', 'd', 'e', 'f']
 nominal: ['x', 'y', 'z']

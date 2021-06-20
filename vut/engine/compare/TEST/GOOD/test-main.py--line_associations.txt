@@ -56,7 +56,7 @@ TYPE: LINE_SEQUENCE
 cost: 0.00000; line_associations: 3;
    [01] Hallo                   --> [01] Hallo                   {GOOD}
    [02] Welt 1                  --> [03] Welt 1                  {GOOD, GOOD, GOOD}
-   [03] Welt 2                  --> [05] Welt  2                 {GOOD, GOOD, GOOD}
+   [03] Welt 2                  --> [05] Welt  2                 {GOOD, GOOD_TOLERATED, GOOD}
 AnalogyDb:
 []
 

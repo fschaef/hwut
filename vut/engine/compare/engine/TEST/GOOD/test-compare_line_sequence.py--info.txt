@@ -33,15 +33,15 @@ AnalogyDb:
 
 --------------------------------
    STRING:a    STRING:b
-               STRING:a, EQUIVALENCE_PATTERN: , STRING:b
+               STRING:a, SEPERATOR: , STRING:b
 cost: 0.00000; line_associations: 2;
    [00] a                       --> [00] b                       {SUBSTITUTE}
    [--] None                    --> [01] a b                     {}
 AnalogyDb:
 
 --------------------------------
-   STRING:a                                     STRING:b
-   STRING:a, EQUIVALENCE_PATTERN: , STRING:b    
+   STRING:a                           STRING:b
+   STRING:a, SEPERATOR: , STRING:b    
 cost: 0.00000; line_associations: 2;
    [00] a                       --> [00] b                       {SUBSTITUTE}
    [01] a b                     --> [--] None                    {}

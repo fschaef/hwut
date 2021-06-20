@@ -62,6 +62,7 @@ _______________________________________________________________________________
 from  vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db        import AnalogyDb
 from  vut.engine.compare.engine.core              import E_Verdict
+from  vut.external.quex.typed                     import typed
 
 from  copy        import copy
 from  enum        import IntEnum
@@ -98,6 +99,7 @@ def Edit_list_description(edit_list):
 EditsLine = namedtuple("EditsLine", ("cost", "edit_list", "analogy_db"))
 
 
+@typed(subject_match_seq=tuple, nominal_match_seq=tuple)
 def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     """RETURNS: EditsLine
 
@@ -111,6 +113,9 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     if analogy_db is None:
         analogy_db = AnalogyDb()
 
+    # seperator_db = SeperatorDb(subject_match_seq, nominal_match_seq)
+    # subject_match_seq, nominal_match_seq = seperator_db.adaption()
+
     work_list = WorkList(subject_match_seq, nominal_match_seq, analogy_db)
     if work_list.max_cost == 0.0:
         return EditsLine(0, [], AnalogyDb())
@@ -119,7 +124,7 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
         item = work_list.pop()
         work_list.produce_next(item)
 
-    return work_list.get_best()
+    return work_list.get_best() # seperator_db)
 
 class WorkList(list):
     def __init__(self, subject_match_seq, nominal_match_seq, analogy_db):
@@ -165,9 +170,52 @@ class WorkList(list):
 
     def get_best(self):
         return EditsLine(self.best.cost / self.max_cost, 
-                         self.best.edit_list, 
+                         self.best.edit_list,
                          self.best.analogy_db)
+# return EditsLine(self.best.cost / self.max_cost, 
+#                        list(seperator_db.insert(self.best.edit_list)),
+#                         self.best.analogy_db)
 
+
+class SeperatorDb:
+    def __init__(self, subject_seq, nominal_seq):
+        self.seperator_verdict_list  = []
+        self.info_list               = []
+        self.new_subject_seq         = []
+        self.new_nominal_seq         = []
+        self.index_map               = {}
+        k = 0
+        for i, entry in enumerate(zip(subject_seq, nominal_seq)):
+            s, n = entry
+            if s.tolerance_id == E_ToleranceId.SEPERATOR and n.tolerance_id == E_ToleranceId.SEPERATOR:
+                if s.string == n.string: verdict = E_EditLine.GOOD
+                else:                    verdict = E_EditLine.GOOD_TOLERATED
+                self.seperator_verdict_list.append(verdict)
+                self.info_list.append(True)
+            else:
+                self.new_subject_seq.append(s)
+                self.new_nominal_seq.append(n)
+                self.info_list.append(False)
+                self.index_map[k] = i
+                k += 1
+
+    def adaption(self):
+        return self.new_subject_seq, self.new_nominal_seq
+                
+    def insert(self, raw_edit_list):
+        i = k = 0
+        for flag in self.info_list:
+            if flag:
+                yield Edit(self.seperator_verdict_list[i], None)
+                i += 1
+            else:
+                edit = raw_edit_list[k]
+                if edit.id == E_EditLine.TRANSPOSE:
+                    yield Edit(E_EditLine.TRANSPOSE, self.index_map[edit.transpose_ai])
+                else:
+                    yield edit
+                k += 1
+        yield from raw_edit_list[k:]
 
         
 position_increment_db = {
@@ -243,9 +291,9 @@ class WorkItem:
        elif not self.analogy_db.is_consistent(analogy):
            yield self._step(E_EditLine.SUBSTITUTE)
        elif   subject_match.string       != nominal_match.string:  
-           good_id = E_EditLine.GOOD # _TOLERATED
+           good_id = E_EditLine.GOOD_TOLERATED
        elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
-           good_id = E_EditLine.GOOD # _TOLERATED
+           good_id = E_EditLine.GOOD_TOLERATED
        else:                                                     
            good_id = E_EditLine.GOOD
 

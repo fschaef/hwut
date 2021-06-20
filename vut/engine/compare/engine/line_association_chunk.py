@@ -9,7 +9,7 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.line_association import LineAssociation
 from   vut.engine.compare.engine.input_chunk      import E_Chunk
 from   vut.engine.compare.engine.analogy_db       import AnalogyDb
-from   vut.engine.quex.typed                      import typed
+from   vut.external.quex.typed                    import typed
 
 class LineAssociationChunk:
     """List of 'LineAssociation'-s where all line are from an input chunk

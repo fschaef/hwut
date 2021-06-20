@@ -2,7 +2,7 @@
 subject: ['A ((1))', 'B ((2))', 'C ((2))', 'D ((3))']
 nominal: ['a ((A))', 'b ((B))', 'c ((C))', 'd ((D))']
 cost: -1.00000; line_associations: 4;
-   [00] A ((1))                 --> [00] a ((A))                 {SUBSTITUTE, GOOD, GOOD}
-   [01] B ((2))                 --> [03] d ((D))                 {SUBSTITUTE, GOOD, GOOD}
+   [00] A ((1))                 --> [00] a ((A))                 {SUBSTITUTE, GOOD, GOOD_TOLERATED}
+   [01] B ((2))                 --> [03] d ((D))                 {SUBSTITUTE, GOOD, GOOD_TOLERATED}
    [02] C ((2))                 --> [02] c ((C))                 {SUBSTITUTE, GOOD, SUBSTITUTE}
-   [03] D ((3))                 --> [01] b ((B))                 {SUBSTITUTE, GOOD, GOOD}
+   [03] D ((3))                 --> [01] b ((B))                 {SUBSTITUTE, GOOD, GOOD_TOLERATED}

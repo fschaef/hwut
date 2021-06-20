@@ -17,12 +17,12 @@ from   vut.engine.compare.engine.line          import Line
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
 import vut.engine.compare.edit_operations.line as     edit_operations_line
 from   vut.engine.compare.edit_operations.line import Edit, Edit_none, E_EditLine
-from   vut.engine.quex.typed                   import typed
+from   vut.external.quex.typed                 import typed
 
 from   collections import namedtuple
 import sys
 
-LineElementAssociation = namedtuple("LineElementAssociation", ("edit", "subject", "nominal"))
+LineElementAssociation = namedtuple("LineElementAssociation", ("edit_id", "subject", "nominal"))
 
 class LineAssociation:
     """An association of a line from the subject input stream and a line
@@ -57,29 +57,37 @@ class LineAssociation:
         """
         if   self.subject is None:
             result = [
-                LineElementAssociation(Edit_none(), None, n) 
+                LineElementAssociation(E_EditLine.NONE, None, n) 
                 for n in self.nominal.sequence
             ]
         elif self.nominal is None:
             result = [
-                LineElementAssociation(Edit_none(), s, None) 
+                LineElementAssociation(E_EditLine.NONE, s, None) 
                 for s in self.subject.sequence
             ]
         elif not self.edit_list:
             result = [
-                LineElementAssociation(Edit_none(), s, n) 
+                LineElementAssociation(E_EditLine.NONE, s, n) 
                 for s, n in zip(self.subject.sequence, self.nominal.sequence)
             ]
         else:
-            subject_length = len(self.subject.sequence)
-            nominal_length = len(self.nominal.sequence)
-            result         = []
+            subject_length  = len(self.subject.sequence)
+            nominal_length  = len(self.nominal.sequence)
+            result          = []
+            transpose_id_set = set()
             si = ni = 0
             for edit in self.edit_list:
-                subject = None if si >= subject_length else self.subject.sequence[si]
-                nominal = None if si >= nominal_length else self.nominal.sequence[ni]
+                if edit.id == E_EditLine.TRANSPOSE:
+                    transpose_id_set.add(edit.transpose_ai)
 
-                result.append(LineElementAssociation(edit, subject, nominal))
+                subject = None if si >= subject_length else self.subject.sequence[si]
+                nominal = None if ni >= nominal_length else self.nominal.sequence[ni]
+
+                print("#sne:", edit.id, edit.transpose_ai, subject, nominal)
+                edit_id = edit.id
+                if si in transpose_id_set and edit.id != E_EditLine.INSERT:
+                    edit_id = E_EditLine.TRANSPOSE
+                result.append(LineElementAssociation(edit_id, subject, nominal))
 
                 s_incr, n_incr = edit_operations_line.position_increment_db[edit.id]
                 si += s_incr

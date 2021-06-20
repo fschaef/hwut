@@ -1,11 +1,11 @@
 from   vut.system.helper                                import number_of_decimal_digits
-from   vut.system.terminal                              import ConsoleCanvas, LEFT, RIGHT, CENTER
+from   vut.system.terminal                              import ConsoleCanvas, LEFT, RIGHT, CENTER, FIXED, Fore, Back
 from   vut.engine.compare.engine.line_association_chunk import LineAssociationChunk
 from   vut.engine.compare.engine.line_association       import LineAssociation
 from   vut.engine.compare.engine.input_chunk            import E_Chunk
 from   vut.engine.compare.edit_operations.line          import E_EditLine
 import vut.engine.compare.edit_operations.line          as     edit_operations_line
-from   vut.engine.quex.typed                            import typed
+from   vut.external.quex.typed                          import typed
 
 @typed(line_associations=[LineAssociationChunk])
 def display(linachunks):
@@ -26,13 +26,17 @@ class ConsoleCanvasDiff(ConsoleCanvas):
 
         self.line_n_width  = number_of_decimal_digits(linachunks[-1].max_line_n())
         
-        remaining     = self.width - 2 * self.line_n_width - 2
+        remaining          = self.width - 2 * self.line_n_width - 2
         self.subject_width = remaining >> 1
         self.nominal_width = remaining - self.subject_width
 
-        self.set_format(LEFT(self.subject_width), " ", LEFT(self.line_n_width), 
-                        "|", 
-                        LEFT(self.line_n_width), " ", LEFT(self.nominal_width))
+        self.set_format(LEFT(self.subject_width), 
+                        FIXED(" ", "Uw"), 
+                        LEFT(self.line_n_width, "Uw"), 
+                        FIXED("|", "Bw"), 
+                        LEFT(self.line_n_width, "Uw"), 
+                        FIXED(" ", "Uw"), 
+                        LEFT(self.nominal_width))
 
     def display_line_association_chunk(self, chunk):
         if chunk.type() == E_Chunk.POTPOURRI:
@@ -54,53 +58,63 @@ class ConsoleCanvasDiff(ConsoleCanvas):
                                "%s" % nominal_line_n, nominal_txt)
 
     def _format_potpourri_border(self, lina, begin):
-        if begin:
-            border_raw = ".-=-._" * (int((self.width - 8) / 12) + 1)
-        else:
-            border_raw = "-._.-=" * (int((self.width - 8) / 12) + 1)
+
         subject_line_n = "" if lina.subject is None else "%s" % lina.subject.line_n
         nominal_line_n = "" if lina.nominal is None else "%s" % lina.nominal.line_n
-        border     = border_raw[:self.width - 8] 
-        self.push_format(LEFT(self.subject_width), " ", LEFT(self.line_n_width), 
-                         "|", 
-                        LEFT(self.line_n_width), " ", RIGHT(self.nominal_width))
-        self.print_line("||||" + border_raw, "%s" % subject_line_n, 
-                        "%s" % nominal_line_n, border_raw + "||||")
+        self.push_format(FIXED("||||", "Ub"), LEFT(self.subject_width-4, "Gb"), 
+                         FIXED(" ", "Uw"), 
+                         LEFT(self.line_n_width, "Uw"), 
+                         FIXED("|", "Uw"), 
+                         LEFT(self.line_n_width, "Uw"), 
+                         FIXED(" ", "Uw"), 
+                         RIGHT(self.nominal_width-4, "Gb"), FIXED("||||", "Ub"))
+        self.print_line("", "%s" % subject_line_n, "%s" % nominal_line_n, "")
         self.pop_format()
 
     @typed(line=LineAssociation)
     def _format_line_association(self, lina):
         subject_txt = []
         nominal_txt = []
+        subject_n   = 0
+        nominal_n   = 0
         for lela in lina.line_element_association_list():
-            s_txt, n_txt = _edit_db[lela.edit.id](lela.subject, lela.nominal)
-            subject_txt.append(s_txt)
-            nominal_txt.append(n_txt)
-        return "".join(subject_txt), "".join(nominal_txt)
+            s_color, s_txt, n_color, n_txt = _edit_db[lela.edit_id](lela.subject, lela.nominal)
+            subject_txt.append((s_color, s_txt))
+            nominal_txt.append((n_color, n_txt))
+        return subject_txt, nominal_txt
 
 def _good(subject, nominal):
-    return subject.string, nominal.string
+    return "", subject.string, "", nominal.string
 
 def _tolerated(subject, nominal):
-    return "t(%s)" % subject.string, nominal.string
+    return Back.GREEN, subject.string, \
+           Back.GREEN, nominal.string
 
 def _deleted(subject, nominal):
-    return "d(%s)" % subject.string, ""
+    return Back.MAGENTA, subject.string, \
+           Back.MAGENTA, " " * len(subject.string)
 
 def _inserted(subject, nominal):
-    return "i(%s)" % (" " * len(nominal.string)), nominal.string
+    return Back.MAGENTA, " " * len(nominal.string), \
+           Back.MAGENTA, nominal.string
 
 def _transpose(subject, nominal):
-    return "T(%s)" % subject.string, nominal.string
+    return Back.BLUE, subject.string, \
+           Back.BLUE, nominal.string
 
 def _substitute(subject, nominal):
-    return "s(%s)" % subject.string, nominal.string
+    return Back.RED + Fore.WHITE, subject.string, \
+           Back.RED + Fore.WHITE, nominal.string
 
 def _substitute_type(subject, nominal):
-    return "S(%s)" % subject.string, nominal.string
+    return Back.RED + Fore.BLACK, subject.string, \
+           Back.RED + Fore.BLACK, nominal.string
 
 def _none(subject, nominal):
-    return "" if not subject else subject.string, "" if not nominal else nominal.string 
+    if subject:
+        return "", subject.string, Back.MAGENTA, ""
+    else:
+        return Back.MAGENTA, "", "", nominal.string
 
 _edit_db = {
     E_EditLine.GOOD:            _good,

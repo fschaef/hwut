@@ -17,12 +17,15 @@ For larger strings of size 'M', the complexity becomes 'O(m1^2 + m2^2 ...)'
 instead of 'O((m1+m2 ...)^2)'.
 _______________________________________________________________________________
 """
-from   itertools import zip_longest
+from itertools import zip_longest
+from functools import lru_cache
+
 
 max_sub_word_size = 16 # number of character for which the computational
 #                      # complexity O(n^2) of the Levenshtein algorithm
 #                      # is considered to be tolerable.
 
+@lru_cache(maxsize=8192)
 def do(a, b):
     """RETURNS: Measure of difference between string 'a' and string 'b'.
 
@@ -31,17 +34,17 @@ def do(a, b):
     n = max_sub_word_size
 
     if a == b:
-        return 0
+        result = 0
     elif len(a) < n and len(b) < n:
-        return _levenshtein(a, b)
-
-    a_word_list = _split_iterable(a, n)
-    b_word_list = _split_iterable(b, n)
-    result      = 0
-    work_list   = list(zip_longest(a_word_list, b_word_list, fillvalue=""))
-    while work_list:
-        a_word, b_word = work_list.pop()
-        result += _levenshtein(a_word, b_word)
+        result = _levenshtein(a, b)
+    else:
+        a_word_list = _split_iterable(a, n)
+        b_word_list = _split_iterable(b, n)
+        result      = 0
+        work_list   = list(zip_longest(a_word_list, b_word_list, fillvalue=""))
+        while work_list:
+            a_word, b_word = work_list.pop()
+            result += _levenshtein(a_word, b_word)
 
     return result
 

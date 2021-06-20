@@ -1,47 +1,49 @@
-"""SPDX-License: MIT; Project UT; (C) Frank-Rene Schaefer
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
 
-PURPOSE: Provide information about the user's interaction console.________________________________________________________________________________
+PURPOSE: Interaction with the user's console.
 
 ________________________________________________________________________________
 """
-import vut.system.core as system
+import vut.system.core          as     system
+import vut.system.terminal_size as     terminal_size
+from   vut.external.colorama    import init as colorama_init, Fore, Back, Style
 
-import fcntl, termios, struct, os
 from   enum        import Enum, auto
 from   collections import namedtuple
 from   itertools   import zip_longest
 
+
 class E_Alignment(Enum):
-    RIGHT  = auto()
     LEFT   = auto()
-    FIXED  = auto()
     CENTER = auto()
+    RIGHT  = auto()
+    FIXED  = auto()
 
 # Format Expression: 'FE'
-CellFormat = namedtuple("CellFormat", ("alignment", "width", "string"))
+CellFormat = namedtuple("CellFormat", ("alignment", "color_code", "width", "string"))
 
-def LEFT(width):
-    return CellFormat(E_Alignment.LEFT, width, None)
+def LEFT(width, color=None):
+    return CellFormat(E_Alignment.LEFT, _color_to_code(color), width, None)
 
-def RIGHT(width):
-    return CellFormat(E_Alignment.RIGHT, width, None)
+def RIGHT(width, color=None):
+    return CellFormat(E_Alignment.RIGHT, _color_to_code(color), width, None)
 
-def CENTER(width):
-    return CellFormat(E_Alignment.CENTER, width, None)
+def CENTER(width, color=None):
+    return CellFormat(E_Alignment.CENTER, _color_to_code(color), width, None)
+
+def FIXED(string, color=None):
+    return CellFormat(E_Alignment.FIXED, _color_to_code(color), len(string), string)
 
 class ConsoleCanvas:
    def __init__(self):
-       self.height, self.width = size()
+       self.height, self.width = terminal_size.get()
        self.__format_list = []
        self.__format_stack = []
+       colorama_init()
 
    def set_format(self, *format_list):
-       def _adapt(x):
-           if type(x) == int: return CellFormat(E_Alignment.LEFT, 1, None)
-           if type(x) == str: return CellFormat(E_Alignment.FIXED, len(x), x)
-           else:              return x
-       self.__format_list = list(_adapt(x) for x in format_list)
+       self.__format_list = list( format_list)
 
    def push_format(self, *format_list):
        self.__format_stack.append(self.__format_list)
@@ -50,136 +52,109 @@ class ConsoleCanvas:
    def pop_format(self):
        self.__format_list = self.__format_stack.pop()
 
-   def print_line(self, *cells):
-       tmp = list(cells)
-       print(self.format_line(*tmp))
+   def print_line(self, *cell_list):
+       tmp = list(cell_list)
+       print(self.format_line(*tmp) + _color_reset_all)
 
-   def format_line(self, *cells):
-       def _iterable(cells, format_list):
+   def format_line(self, *cell_list):
+       def _iterable(cell_list, format_list):
            cell_i = 0
            for fe in self.__format_list:
-               text, cell_i = _format_cell(fe, cells, cell_i)
+               text = _format_cell(fe, cell_list, cell_i)
                yield text
+               # 'FIXED' => content is taken out of 'fe' not from cell_list.
+               if fe.alignment != E_Alignment.FIXED: cell_i += 1
 
-       return "".join(_iterable(cells, self.__format_list))
+       return "".join(_iterable(cell_list, self.__format_list))
                 
 
-def size():
-    """RETURNS: [0] height = number of rows in terminal
-                [1] width  = number of columns in terminal
-
-    This function attemps to access the terminal dimensions in terms of
-    characters in multiple ways. Dependent on the operating system and
-    the shell that it runs, different approaches are needed. If all fails,
-    the default width and height of a terminal is returned.
-    """
-    result = _size_fixed()
-    if result: return result
-
-    result = _size_posix()
-    if result: return result
-       
-    result = _size_windows()
-    if result: return result
-
-    result = _size_tput()
-    if result: return result
-
-    return (80, 25) # Default: width = 80; height = 25;
-
-__fixed_height_width = None
-def set_size_fixed(height, width):
-    """Sets the terminal height and width to a fixed value. This prevents
-    other methods of system-interactive interactions.
-
-    Set 'height' = None, to disable the fixed size handling.
-    """
-    global __fixed_height_width
-    if height is None:
-        __fixed_height_width = None
-    else:
-        __fixed_height_width = (height, width)
-
-def _size_fixed():
-    """RETURNS: [0] height = number of rows in terminal
-                [1] width  = number of columns in terminal
-                None, in case of no success.
-    """
-    global __fixed_height_width
-    return __fixed_height_width
-
-def _size_windows():
-    """RETURNS: [0] height = number of rows in terminal
-                [1] width  = number of columns in terminal
-                None, in case of no success.
-    """
-    csbi = system.windows_csbi()
-    if not csbi:
-        return None
-
-    (_, _, _, _, _, left, top, right, bottom, _, _) = \
-    struct.unpack("hhhhHhhhhhh", csbi.raw)
-
-    width  = right - left + 1
-    height = bottom - top + 1
-    return height, width
-
-def _size_tput():
-    """RETURNS: [0] height = number of rows in terminal
-                [1] width  = number of columns in terminal
-                None, in case of no success.
-    """
-    try:
-       width  = int(system.call("tput", "cols")[0])
-       height = int(system.call("tput", "lines")[0])
-       return height, width
-    except:
-       return None
-
-def _size_posix():
-    """RETURNS: [0] height = number of rows in terminal
-                [1] width  = number of columns in terminal
-                None, in case of no success.
-    """
-    def _get(fd_raw):
-        return struct.unpack('hh', fcntl.ioctl(fd_raw, termios.TIOCGWINSZ,'1234'))
-
-    height_width = _get(0)                 # try standard input
-    if height_width: return height_width                    
-    height_width = _get(1)                 # try standard output
-    if height_width: return height_width                    
-    height_width = _get(2)                 # try standard error output
-    if height_width: return height_width
-    try:
-        with os.fdopen(os.open(os.ctermid(), os.O_RDONLY)) as fd: # try terminal i/o
-            height_width = _get(fd)
-    except:
-        pass
-
-    if height_width: return height_width
-
-    try:
-        return (env['LINES'], env['COLUMNS'])
-    except:
-        return None
-
-def _format_cell(fe, cells, cell_i):
+def _format_fixed(fe):
     if fe.alignment == E_Alignment.FIXED:
-        return fe.string, cell_i
+        return fe.color_code + fe.string
+    else:
+        return None
 
-    cell = cells[cell_i]
-    size = min(fe.width, len(cell))
+def _format_text(fe, content, remaining):
     if fe.alignment == E_Alignment.CENTER:
-        glue_left  = int(fe.width - size) >> 1
-        glue_right = fe.width - size - glue_left
-        text = "%s%s%s" % (" " * glue_left, cell[:size], " " * glue_right)
+        pad_left  = int(remaining) >> 1
+        pad_right = remaining - pad_left
+        text = "%s%s%s" % (" " * pad_left, content, " " * pad_right)
     elif fe.alignment == E_Alignment.RIGHT:
-        glue = int(fe.width - size)
-        text = "%s%s" % (" " * glue, cell[-size:])
+        text = "%s%s" % (" " * remaining, content)
     elif fe.alignment == E_Alignment.LEFT:
-        glue = int(fe.width - size)
-        text = "%s%s" % (cell[:size], " " * glue)
+        text = "%s%s" % (content, " " * remaining)
     else:
         assert False
-    return text, cell_i + 1
+    return fe.color_code + text
 
+def _format_plain(fe, cell):
+    if fe.alignment == E_Alignment.RIGHT:
+        return _format_text(fe, cell[max(0, fe.width - len(cell)):], max(0, fe.width - len(cell)))
+    else:
+        return _format_text(fe, cell[:min(fe.width, len(cell))], max(0, fe.width - len(cell)))
+
+def _format_color_text_tuple_list(fe, color_text_list):
+    def _color(fe, color):
+        return fe.color_code if not color else color
+
+    def _do(text, fe, color_text_list):
+        # remaining >= 0: cell content too small.
+        # => padding is added later.
+        for color, sub_text in color_text_list:
+            text.append(_color(fe, color) + sub_text)
+
+    text_length = sum(len(sub_text) for _, sub_text in color_text_list)
+    text        = []
+
+    if fe.width >= text_length:
+        _do(text, fe, color_text_list)
+        text.append(fe.color_code)
+
+    elif fe.alignment == E_Alignment.RIGHT: # prune *beginning* of text
+        overhead = text_length - fe.width
+        for i, entry in enumerate(color_text_list):
+            color, sub_text = entry
+            if len(sub_text) >= overhead:
+                first = _color(fe, color) + sub_text[overhead:]
+                break
+            overhead = - len(sub_text)
+        text.append(first)
+        _do(text, fe, color_text_list[i+1:])
+
+    else:                                   # prune *end* of text
+        remaining = fe.width
+        for i, entry in enumerate(color_text_list):
+            color, sub_text = entry
+            if len(sub_text) >= remaining:
+                last = _color(fe, color) + sub_text[:remaining]
+                break
+            remaining -= len(sub_text)
+        _do(text, fe, color_text_list[:i])
+        text.append(last)
+
+    return _format_text(fe, "".join(text), max(0, fe.width - text_length))
+
+def _format_cell(fe, cell_list, cell_i):
+   text = _format_fixed(fe)
+   if text is not None:  return text
+
+   cell = cell_list[cell_i]
+   if type(cell) == str: 
+        return _format_plain(fe, cell)
+   else:                 
+        return _format_color_text_tuple_list(fe, cell)
+
+_color_db = {
+    "B": Fore.BLACK,  "R": Fore.RED,  "G": Fore.GREEN,
+    "Y": Fore.YELLOW, "U": Fore.BLUE, "M": Fore.MAGENTA, 
+    "C": Fore.CYAN,   "W": Fore.WHITE, 
+    "b": Back.BLACK,  "r": Back.RED,  "g": Back.GREEN,
+    "y": Back.YELLOW, "u": Back.BLUE, "m": Back.MAGENTA, 
+    "c": Back.CYAN,   "w": Back.WHITE, 
+}
+
+def _color_to_code(color):
+    if color is None: return Fore.RESET + Back.RESET
+    else:             return "".join(_color_db[code] for code in color)
+
+_color_reset_all = Fore.RESET + Back.RESET

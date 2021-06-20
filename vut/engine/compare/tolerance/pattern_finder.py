@@ -18,9 +18,12 @@ tolerant comparison.
  * ANALOGY: pattern allows for different strings to appear, as long as it is 
             always the same strings and their counterpart.
 
- * WHITESPACE/SLASH: the exact number of characters of that type is unimportant
-                     for equivalence. The 'slash' pattern helps with output of
-                     file names under different operating systems.
+ * SLASH: the exact number of characters of that type is unimportant for 
+          equivalence. The 'slash' pattern helps with output of file names 
+          under different operating systems.
+
+ * SEPERATOR: not under consideration for comparison, but sperates elements
+              of the line.
 
  * VISIBLE_NOTHING: is completely ignored during equivalence considerations.
 
@@ -39,12 +42,12 @@ tolerant comparison.
 The 'PatternFinder' serves as lexical analyzer for 'chunk_pipe.py'.
 ________________________________________________________________________________
 """
-from   vut.engine.quex.typed                     import typed
 from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 from   vut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                        Token, \
                                                        LineElement, \
                                                        LineElementString
+from   vut.external.quex.typed                   import typed
 from   collections import namedtuple
 import re
 
@@ -86,7 +89,7 @@ class PatternFinder:
             if config.numeric_tolerance_ratio:
                 _add(table, E_ToleranceId.NUMERIC,             re_number)
             if config.whitespace_f:
-                _add(table, E_ToleranceId.EQUIVALENCE_PATTERN, re_whitespace)
+                _add(table, E_ToleranceId.SEPERATOR,           re_whitespace)
             if config.backslash_f:
                 _add(table, E_ToleranceId.EQUIVALENCE_PATTERN, re_backslash)
             for pattern_index, pattern in enumerate(config.equivalent_pattern_list):

@@ -2,8 +2,8 @@ subject:  ANALOGY:((x)), ANALOGY:((y))
 nominal:  ANALOGY:((y)), ANALOGY:((x))
 =>
 Cost: 0.000000
-[0] GOOD
-[1] GOOD
+[0] GOOD_TOLERATED
+[1] GOOD_TOLERATED
 AnalogyDb:
 : & : "((x))"="((y))", "((y))"="((x))"
 
@@ -11,7 +11,7 @@ subject:  ANALOGY:((x)), ANALOGY:((x))
 nominal:  ANALOGY:((z)), ANALOGY:((x))
 =>
 Cost: 0.250000
-[0] GOOD
+[0] GOOD_TOLERATED
 [1] SUBSTITUTE
 AnalogyDb:
 : & : "((x))"="((z))"
@@ -20,9 +20,9 @@ subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
 nominal:  ANALOGY:((z)), ANALOGY:((z)), ANALOGY:((x))
 =>
 Cost: 0.083333
-[0] GOOD
+[0] GOOD_TOLERATED
 [1] TRANSPOSE (2)
-[2] GOOD
+[2] GOOD_TOLERATED
 AnalogyDb:
 : & : "((x))"="((z))", "((y))"="((x))"
 

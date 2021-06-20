@@ -32,8 +32,8 @@ if "--hwut-info" in sys.argv:
     sys.exit()
 
 def test_mseq(a, b):
-    subject = list(prepare(a))
-    nominal = list(prepare(b, True))
+    subject = tuple(prepare(a))
+    nominal = tuple(prepare(b, True))
     print_match_sequences(subject, nominal)
 
     print("=>")

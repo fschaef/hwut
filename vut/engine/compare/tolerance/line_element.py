@@ -19,8 +19,8 @@ LineElement provide:
 ________________________________________________________________________________
 """
 import vut.engine.compare.edit_operations.string as     edit_distance_string
-from   vut.engine.compare.engine.core           import E_Verdict
-from   vut.engine.quex.typed                   import typed
+from   vut.engine.compare.engine.core            import E_Verdict
+from   vut.external.quex.typed                   import typed
 
 from   enum import IntEnum
 
@@ -30,6 +30,7 @@ class E_ToleranceId(IntEnum):
     ANALOGY             = 3
     NUMERIC             = 4
     EQUIVALENCE_PATTERN = 5
+    SEPERATOR           = 6
 
 
 class Token:
@@ -97,14 +98,20 @@ class LineElement:
 
         if tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
             return None
+
         elif tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
             return LineElementEquivalencePattern(start, end, global_string,
                                           token.pattern_i_set)
+
         elif tolerance_id == E_ToleranceId.NUMERIC:
             return LineElementNumber(start, end, global_string,
                                numeric_tolerance_ratio)
+
         elif tolerance_id == E_ToleranceId.ANALOGY:
             return LineElementAnalogy(start, end, global_string)
+
+        elif tolerance_id == E_ToleranceId.SEPERATOR:
+            return LineElementSeperator(start, end, global_string)
         else:
             assert False # pragma: no cover
 
@@ -164,6 +171,19 @@ class LineElement:
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
         return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
+
+class LineElementSeperator(LineElement):
+    def __init__(self, start, end, string):
+        LineElement.__init__(self, E_ToleranceId.SEPERATOR, start, end, string)
+
+    def _compare(self, nominal):
+        """RETURNS: [0] True, any way.
+                    [1] None
+        """
+        return True, None
+
+    def __hash__(self):
+        return hash(self.string) ^ hash(E_ToleranceId.SEPERATOR)
 
 class LineElementString(LineElement):
     def __init__(self, start, end, string):

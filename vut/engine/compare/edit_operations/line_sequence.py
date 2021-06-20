@@ -20,7 +20,7 @@ _______________________________________________________________________________
 """
 from   vut.engine.compare.edit_operations.line import Edit, EditsLine
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
-from   vut.engine.quex.typed                   import typed
+from   vut.external.quex.typed                 import typed
 
 from   enum        import IntEnum
 import sys
