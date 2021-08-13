@@ -83,10 +83,13 @@ class LineAssociation:
                 subject = None if si >= subject_length else self.subject.sequence[si]
                 nominal = None if ni >= nominal_length else self.nominal.sequence[ni]
 
-                print("#sne:", edit.id, edit.transpose_ai, subject, nominal)
                 edit_id = edit.id
                 if si in transpose_id_set and edit.id != E_EditLine.INSERT:
                     edit_id = E_EditLine.TRANSPOSE
+                elif edit.id == E_EditLine.INSERT:
+                    subject = None
+                elif edit.id == E_EditLine.DELETE:
+                    nominal = None
                 result.append(LineElementAssociation(edit_id, subject, nominal))
 
                 s_incr, n_incr = edit_operations_line.position_increment_db[edit.id]

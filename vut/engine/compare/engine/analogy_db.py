@@ -182,6 +182,14 @@ class AnalogyDb(dict):
         
         return "AnalogyDb", txt
 
+    def __hash__(self):
+        a = hash(frozenset(self.items()))
+        b = hash(frozenset(self.line_number_db.items()))
+        return hash((a, b))
+
+    def __eq__(self, other):
+        return dict.__eq__(self, other) and self.line_number_db == other.line_number_db
+
     def __repr__(self):
         name, txt = self.__pretty__()
         return "\n".join("%s: %s" % (x, y) for x, y in txt)

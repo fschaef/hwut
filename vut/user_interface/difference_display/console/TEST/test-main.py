@@ -18,7 +18,7 @@ from   io import StringIO
 
 config = Configuration()
 config.pattern_finder.numeric_tolerance_ratio = 0.01
-config.pattern_finder.equivalent_pattern_list = ["hanna|bertha", "martha|annie"]
+config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülplein"]
 
 def test(subject_txt, nominal_txt):
     global config
@@ -30,14 +30,82 @@ def test(subject_txt, nominal_txt):
     console.display(compare.line_associations(config, subject, nominal))
 
 
+test(
+     "Sah ein Röslein ein Knab stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War jung morgenschön\n"
+     "Lief er ganz schnell es von nah zu sehn\n"
+     "Schaut's mit manchen Freuden\n"
+     "Röslein, Tülplein, Röslein orange\n"
+     "((Rose)) auf der ((Wiese))\n"
+     "Numerische tolerance: 4711"
+     "Sah ein Röslein ein Knab stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War jung morgenschön\n"
+     "Lief er ganz schnell es von nah zu sehn\n"
+     "Schaut's mit manchen Freuden\n"
+     "Röslein, Tülplein, Röslein orange\n"
+     "((Rose)) auf der ((Wiese))\n"
+     "Numerische tolerance: 4711"
+     "Sah ein Röslein ein Knab stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War jung morgenschön\n"
+     "Lief er ganz schnell es von nah zu sehn\n"
+     "Schaut's mit manchen Freuden\n"
+     "Röslein, Tülplein, Röslein orange\n"
+     "((Rose)) auf der ((Wiese))\n"
+     "Numerische tolerance: 4711"
+     "Sah ein Röslein ein Knab stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War jung morgenschön\n"
+     "Lief er ganz schnell es von nah zu sehn\n"
+     "Schaut's mit manchen Freuden\n"
+     "Röslein, Tülplein, Röslein orange\n"
+     "((Rose)) auf der ((Wiese))\n"
+     "Numerische tolerance: 4711"
+     ,
+     "Sah ein Knab ein Röslein stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War so jung und morgenschön\n"
+     "Lief er schnell es nah zu sehn\n"
+     "Schaut's mit vielen Freuden\n"
+     "Röslein, Röslein, Röslein orange\n"
+     "((Rose)) auf der ((Heiden))\n"
+     "Numerische tolerance: 4711"
+     "Sah ein Knab ein Röslein stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War so jung und morgenschön\n"
+     "Lief er schnell es nah zu sehn\n"
+     "Schaut's mit vielen Freuden\n"
+     "Röslein, Röslein, Röslein orange\n"
+     "((Rose)) auf der ((Heiden))\n"
+     "Numerische tolerance: 4711"
+     "Sah ein Knab ein Röslein stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War so jung und morgenschön\n"
+     "Lief er schnell es nah zu sehn\n"
+     "Schaut's mit vielen Freuden\n"
+     "Röslein, Röslein, Röslein orange\n"
+     "((Rose)) auf der ((Heiden))\n"
+     "Numerische tolerance: 4711"
+     "Sah ein Knab ein Röslein stehen\n"
+     "Röslein   auf der\tHeiden \n"
+     "War so jung und morgenschön\n"
+     "Lief er schnell es nah zu sehn\n"
+     "Schaut's mit vielen Freuden\n"
+     "Röslein, Röslein, Röslein orange\n"
+     "((Rose)) auf der ((Heiden))\n"
+     "Numerische tolerance: 4711"
+    )
+
 if False:
     test(".123456789.123456789.123456789.123456789\n",
          ".123456789\n")
 
-test("Sah   ein Röslein 4711 Knab stehen\n"
-     "Heiden auf der blühenden Röslein\n",
-     "Sah ein   Knab 4712 schönes Röslein stehen\n"
-     "Röslein auf der Heiden\n")
+    test("Sah   ein Röslein 4711 Knab stehen\n"
+         "Heiden auf der blühenden Röslein\n",
+         "Sah ein   Knab 4712 schönes Röslein stehen\n"
+         "Röslein auf der Heiden\n")
 
 if False:
     test("||||\n"

@@ -4,7 +4,7 @@
    STRING:strong    STRING:strong
    STRING:quant     
 =>
-Cost: (-2, 1.000000)
+Cost: 0.500000
    STRING:string    == STRING:string
    STRING:strong    == STRING:strong
    STRING:quant     >- 
@@ -15,7 +15,7 @@ Cost: (-2, 1.000000)
    STRING:strong    STRING:quant
    STRING:quant     
 =>
-Cost: (-2, 1.000000)
+Cost: 0.500000
    STRING:string    == STRING:string
    STRING:strong    >- 
    STRING:quant     == STRING:quant
@@ -26,7 +26,7 @@ Cost: (-2, 1.000000)
    STRING:strong    STRING:quant
    STRING:quant     
 =>
-Cost: (-2, 1.000000)
+Cost: 0.500000
    STRING:string    >- 
    STRING:strong    == STRING:strong
    STRING:quant     == STRING:quant
@@ -37,7 +37,7 @@ Cost: (-2, 1.000000)
    STRING:strong    
    STRING:quant     
 =>
-Cost: (-1, 1.500000)
+Cost: 1.000000
    STRING:string    == STRING:string
    STRING:strong    >- 
    STRING:quant     >- 
@@ -48,7 +48,7 @@ Cost: (-1, 1.500000)
    STRING:strong    
    STRING:quant     
 =>
-Cost: (-1, 2.000000)
+Cost: 1.000000
    STRING:string    >- 
    STRING:strong    == STRING:strong
    STRING:quant     >- 
@@ -59,7 +59,7 @@ Cost: (-1, 2.000000)
    STRING:strong    
    STRING:quant     
 =>
-Cost: (-1, 2.000000)
+Cost: 1.000000
    STRING:string    >- 
    STRING:strong    >- 
    STRING:quant     == STRING:quant
@@ -70,7 +70,7 @@ Cost: (-1, 2.000000)
    STRING:strong    
    STRING:quant     
 =>
-Cost: (0, 1.833333)
+Cost: 1.500000
    STRING:string    >- 
    STRING:strong    >- 
    STRING:quant     >- 
@@ -80,7 +80,7 @@ Cost: (0, 1.833333)
    STRING:string    
    STRING:strong    
 =>
-Cost: (0, 1.500000)
+Cost: 1.000000
    STRING:string    >- 
    STRING:strong    >- 
 
@@ -88,6 +88,6 @@ Cost: (0, 1.500000)
 
    STRING:string    
 =>
-Cost: (0, 1.000000)
+Cost: 0.500000
    STRING:string    >- 
 

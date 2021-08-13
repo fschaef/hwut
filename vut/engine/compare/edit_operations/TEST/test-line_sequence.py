@@ -69,7 +69,7 @@ def test(a_list, b_list):
 
     print("=>")
     editions = edit_distance_line_sequence.do(subject, nominal)
-    print("Cost: (%i, %.6f)" % editions.cost)
+    print("Cost: %.6f" % editions.cost)
     print_lineup(subject, nominal, editions.edit_list)
     if len(editions.analogy_db):
         print("AnalogyDb:")

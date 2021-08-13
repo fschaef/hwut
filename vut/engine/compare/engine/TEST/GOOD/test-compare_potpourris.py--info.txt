@@ -13,8 +13,8 @@ subject: ['a']
 nominal: ['b', 'a b']
 cost: 0.00000; line_associations: 4;
    [-1] ||||                    --> [-1] ||||                    {}
-   [00] a                       --> [00] b                       {SUBSTITUTE}
-   [--] None                    --> [01] a b                     {}
+   [00] a                       --> [01] a b                     {GOOD, INSERT, INSERT}
+   [--] None                    --> [00] b                       {}
    [01] ||||                    --> [02] ||||                    {}
 AnalogyDb:
 

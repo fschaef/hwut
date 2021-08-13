@@ -35,15 +35,15 @@ AnalogyDb:
    STRING:a    STRING:b
                STRING:a, SEPERATOR: , STRING:b
 cost: 0.00000; line_associations: 2;
-   [00] a                       --> [00] b                       {SUBSTITUTE}
-   [--] None                    --> [01] a b                     {}
+   [--] None                    --> [00] b                       {}
+   [00] a                       --> [01] a b                     {GOOD, INSERT, INSERT}
 AnalogyDb:
 
 --------------------------------
    STRING:a                           STRING:b
    STRING:a, SEPERATOR: , STRING:b    
 cost: 0.00000; line_associations: 2;
-   [00] a                       --> [00] b                       {SUBSTITUTE}
-   [01] a b                     --> [--] None                    {}
+   [00] a                       --> [--] None                    {}
+   [01] a b                     --> [00] b                       {DELETE, DELETE, GOOD}
 AnalogyDb:
 

@@ -7,13 +7,13 @@ Cost: 0.000000
 subject:  STRING:string
 nominal:  STRING:strong
 =>
-Cost: 0.083333
+Cost: 0.166667
 [0] SUBSTITUTE
 
 subject:  STRING:strong, STRING:string, STRING:string
 nominal:  STRING:string, STRING:string
 =>
-Cost: 0.250000
+Cost: 0.333333
 [0] DELETE
 [1] GOOD
 [2] GOOD
@@ -21,7 +21,7 @@ Cost: 0.250000
 subject:  STRING:string, STRING:strong, STRING:string
 nominal:  STRING:string, STRING:string
 =>
-Cost: 0.250000
+Cost: 0.333333
 [0] GOOD
 [1] DELETE
 [2] GOOD
@@ -29,7 +29,7 @@ Cost: 0.250000
 subject:  STRING:string, STRING:string, STRING:strong
 nominal:  STRING:string, STRING:string
 =>
-Cost: 0.250000
+Cost: 0.333333
 [0] GOOD
 [1] GOOD
 [2] DELETE
@@ -37,7 +37,7 @@ Cost: 0.250000
 subject:  STRING:string, STRING:string
 nominal:  STRING:strong, STRING:string, STRING:string
 =>
-Cost: 0.250000
+Cost: 0.333333
 [0] INSERT
 [1] GOOD
 [2] GOOD
@@ -45,7 +45,7 @@ Cost: 0.250000
 subject:  STRING:string, STRING:string
 nominal:  STRING:string, STRING:strong, STRING:string
 =>
-Cost: 0.250000
+Cost: 0.333333
 [0] GOOD
 [1] INSERT
 [2] GOOD
@@ -53,7 +53,7 @@ Cost: 0.250000
 subject:  STRING:string, STRING:string
 nominal:  STRING:string, STRING:string, STRING:strong
 =>
-Cost: 0.250000
+Cost: 0.333333
 [0] GOOD
 [1] GOOD
 [2] INSERT
@@ -61,7 +61,7 @@ Cost: 0.250000
 subject:  STRING:string, STRING:strong
 nominal:  STRING:strong, STRING:string
 =>
-Cost: 0.083333
+Cost: 0.166667
 [0] SUBSTITUTE
 [1] SUBSTITUTE
 

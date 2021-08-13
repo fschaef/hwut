@@ -10,7 +10,7 @@ AnalogyDb:
 subject:  ANALOGY:((x)), ANALOGY:((x))
 nominal:  ANALOGY:((z)), ANALOGY:((x))
 =>
-Cost: 0.250000
+Cost: 0.500000
 [0] GOOD_TOLERATED
 [1] SUBSTITUTE
 AnalogyDb:
@@ -19,7 +19,7 @@ AnalogyDb:
 subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
 nominal:  ANALOGY:((z)), ANALOGY:((z)), ANALOGY:((x))
 =>
-Cost: 0.083333
+Cost: 0.166667
 [0] GOOD_TOLERATED
 [1] TRANSPOSE (2)
 [2] GOOD_TOLERATED

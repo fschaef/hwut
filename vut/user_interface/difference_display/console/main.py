@@ -79,8 +79,8 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         nominal_n   = 0
         for lela in lina.line_element_association_list():
             s_color, s_txt, n_color, n_txt = _edit_db[lela.edit_id](lela.subject, lela.nominal)
-            subject_txt.append((s_color, s_txt))
-            nominal_txt.append((n_color, n_txt))
+            subject_txt.append((s_color, s_txt.replace("\t", "\\t")))
+            nominal_txt.append((n_color, n_txt.replace("\t", "\\t")))
         return subject_txt, nominal_txt
 
 def _good(subject, nominal):
@@ -91,16 +91,16 @@ def _tolerated(subject, nominal):
            Back.GREEN, nominal.string
 
 def _deleted(subject, nominal):
-    return Back.MAGENTA, subject.string, \
-           Back.MAGENTA, " " * len(subject.string)
+    return Back.BLUE, subject.string, \
+           Back.CYAN, " " * len(subject.string)
 
 def _inserted(subject, nominal):
-    return Back.MAGENTA, " " * len(nominal.string), \
-           Back.MAGENTA, nominal.string
+    return Back.CYAN, " " * len(nominal.string), \
+           Back.BLUE, nominal.string
 
 def _transpose(subject, nominal):
-    return Back.BLUE, subject.string, \
-           Back.BLUE, nominal.string
+    return Back.YELLOW, subject.string, \
+           Back.YELLOW, nominal.string
 
 def _substitute(subject, nominal):
     return Back.RED + Fore.WHITE, subject.string, \
