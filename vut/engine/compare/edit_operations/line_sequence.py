@@ -23,6 +23,7 @@ from   vut.engine.compare.engine.analogy_db    import AnalogyDb
 from   vut.external.quex.typed                 import typed
 
 from   enum        import IntEnum
+from   collections import defaultdict
 import sys
 
 class E_EditLineSequence(IntEnum):
@@ -53,7 +54,7 @@ class EditsLineSequence:
 
     def last(self):
         if not self.edit_list: return None
-        else:                  return self.edit_list[-1]
+        else:                  return self.edit_list[-1][0]
 
 
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
@@ -80,8 +81,11 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     line_edition_db = LineEditionDb()
 
     best = EditsLineSequence(cost=max_cost, edit_list=[], analogy_db=[])
+    best_cost_db = defaultdict(lambda: 1e37)
+    best_cost_db[(0,0)] = 0
     while work_list:
         item = work_list.pop()
+#print("<rem: %i; best: %f>" % (len(work_list), best.cost) + repr(item))
 
         if item.ai == subject_length:
             if _append_overhead(best, item.editions, nominal_match_seq_list[item.bi:], E_EditLineSequence.INSERT):
@@ -96,9 +100,15 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
         elif item.min_cost_remaining(subject_length, nominal_length) > best.cost:
             pass
         else:
-            work_list.extend(
-                item.subsequent_steps(line_edition_db, subject_match_seq_list, nominal_match_seq_list)
-            )
+            for new_item in item.subsequent_steps(line_edition_db, 
+                                                  subject_match_seq_list, nominal_match_seq_list):
+                if new_item.min_cost_remaining(subject_length, nominal_length) >= best.cost:
+                    continue
+                elif best_cost_db[(new_item.ai, new_item.bi)] <= new_item.editions.cost:
+                    continue
+                else:
+                    best_cost_db[(new_item.ai, new_item.bi)] = new_item.editions.cost
+                    work_list.append(new_item)
 
     return best
 
@@ -185,6 +195,9 @@ class WorkItem:
            self.history = WorkItemHistory()
        else:
            self.history = history
+
+   def __repr__(self):
+       return "[%i:%i] cost: %f; %s; " % (self.ai, self.bi, self.editions.cost, [x[0].name for x in self.editions.edit_list])
 
    def subsequent_steps(self, line_edition_db, subject_list, nominal_list):
        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
