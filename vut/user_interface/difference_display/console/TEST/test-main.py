@@ -25,26 +25,26 @@ def test(subject_txt, nominal_txt):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    terminal_size.set_size_fixed(10, 100)
+    terminal_size.set_size_fixed(10, 600)
     print("------------------------------------------------------------------------")
     console.display(compare.line_associations(config, subject, nominal))
 
 
 wrong_txt = \
 """Sah ein Röslein ein Knab stehen
-Röslein   auf der\tHeiden 
+Röslein   auf der   Heiden 
 War jung morgenschön
 Lief er ganz schnell es von nah zu sehn
 Schaut's mit manchen Freuden
 Röslein, Tülplein, Röslein orange
 ((Rose)) auf der ((Wiese))
-Numerische tolerance: 4711
+Numerische tolerance: 4712
 """
 
 good_txt = \
 """
 Sah ein Knab ein Röslein stehen
-Röslein   auf der\tHeiden 
+Röslein   auf der   Heiden 
 War so jung und morgenschön
 Lief er schnell es nah zu sehn
 Schaut's mit vielen Freuden
@@ -53,8 +53,9 @@ Röslein, Röslein, Röslein orange
 Numerische tolerance: 4711
 """
 
-#test(wrong_txt * 4, good_txt * 4)
-test(good_txt * 2 + wrong_txt + good_txt, good_txt * 4)
+# test(wrong_txt * 4, good_txt * 4)
+# test(good_txt * 2 + wrong_txt + good_txt, good_txt * 4)
+test(wrong_txt.replace("\n", " "), good_txt.replace("\n", " "))
 
 if False:
     test(".123456789.123456789.123456789.123456789\n",

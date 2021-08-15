@@ -85,7 +85,6 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     best_cost_db[(0,0)] = 0
     while work_list:
         item = work_list.pop()
-#print("<rem: %i; best: %f>" % (len(work_list), best.cost) + repr(item))
 
         if item.ai == subject_length:
             if _append_overhead(best, item.editions, nominal_match_seq_list[item.bi:], E_EditLineSequence.INSERT):
@@ -105,6 +104,7 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
                 if new_item.min_cost_remaining(subject_length, nominal_length) >= best.cost:
                     continue
                 elif best_cost_db[(new_item.ai, new_item.bi)] <= new_item.editions.cost:
+                    # The version with 'cost < new_item.editions.cost' will produce a better total solution.
                     continue
                 else:
                     best_cost_db[(new_item.ai, new_item.bi)] = new_item.editions.cost

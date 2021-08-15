@@ -66,7 +66,7 @@ from  vut.external.quex.typed                     import typed
 
 from  copy        import copy
 from  enum        import IntEnum
-from  collections import namedtuple
+from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
 
 class E_EditLine(IntEnum):
@@ -148,6 +148,8 @@ class WorkList(list):
         self.min_cost = min_cost
 
         self.nominal_match_seq = nominal_match_seq
+        self.best_cost_db = defaultdict(lambda: 1e37)
+        self.best_cost_db[(0,0)] = 0
 
     def produce_next(self, item):
         if item.cost > self.best.cost:
@@ -157,23 +159,39 @@ class WorkList(list):
             # reached end of subject => INSERT to reach end of nominal
             if _append_overhead(self.best, item, self.nominal_length - item.bi, E_EditLine.INSERT):
                 self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-                if self.best.cost == self.min_cost: self.clear() # => termination
+                if self.best.cost == self.min_cost: 
+                    self.clear() # => termination
+                else:
+                    work_list = _cut_worse(self.best.cost, self)
         elif item.bi == self.nominal_length:
             # reached end of nominal => DELETE to cut tail of subject
             if _append_overhead(self.best, item, self.subject_length - item.ai, E_EditLine.DELETE):
                 self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-                if self.best.cost == self.min_cost: self.clear() # => termination
+                if self.best.cost == self.min_cost: 
+                    self.clear() # => termination
+                else:
+                    work_list = _cut_worse(self.best.cost, self)
         else:
             # setup exploration of subsequence steps
-            self.extend(
-                item.subsequent_steps(self.nominal_match_seq)
-            )
+            for new_item in item.subsequent_steps(self.nominal_match_seq):
+                if self.best_cost_db[(new_item.ai, new_item.bi)] <= new_item.cost:
+                    # The version with 'cost < new_item.editions.cost' will produce a better total solution.
+                    continue
+                self.best_cost_db[(new_item.ai, new_item.bi)] = new_item.cost
+                self.append(new_item)
 
     def get_best(self, seperator_db):
         return EditsLine(self.best.cost / seperator_db.original_max_cost, 
                          seperator_db.reinsert_seperators(self.best.edit_list),
                          self.best.analogy_db)
 
+
+def _cut_worse(cost, work_list):
+    """RETURNS: list of work list items where cost >= given 'cost'.
+    """
+    return [
+        item for item in work_list if item.cost < cost
+    ]
 
 TRANSPOSE      = E_EditLine.TRANSPOSE
 GOOD           = E_EditLine.GOOD
