@@ -174,7 +174,9 @@ class WorkList(list):
         else:
             # setup exploration of subsequence steps
             for new_item in item.subsequent_steps(self.nominal_match_seq):
-                if self.best_cost_db[(new_item.ai, new_item.bi)] <= new_item.cost:
+                if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
+                    continue
+                elif self.best_cost_db[(new_item.ai, new_item.bi)] <= new_item.cost:
                     # The version with 'cost < new_item.editions.cost' will produce a better total solution.
                     continue
                 self.best_cost_db[(new_item.ai, new_item.bi)] = new_item.cost
@@ -184,7 +186,6 @@ class WorkList(list):
         return EditsLine(self.best.cost / seperator_db.original_max_cost, 
                          seperator_db.reinsert_seperators(self.best.edit_list),
                          self.best.analogy_db)
-
 
 def _cut_worse(cost, work_list):
     """RETURNS: list of work list items where cost >= given 'cost'.
@@ -347,104 +348,130 @@ cost_db = {
 }
 
 class WorkItem:
-   """A 'WorkItem' corresponds to a node for the tree search algorithm
-   that searches the least costly path to the end of the 'LineElement'
-   sequence objects.
+    """A 'WorkItem' corresponds to a node for the tree search algorithm
+    that searches the least costly path to the end of the 'LineElement'
+    sequence objects.
 
-   It maintains:
+    It maintains:
 
-       * Position pair (ai, bi) which is investigated.
+        * Position pair (ai, bi) which is investigated.
 
-   Also, it maintains implications of previous steps:
+    Also, it maintains implications of previous steps:
 
-       * list of previous edit operations.
+        * list of previous edit operations.
 
-       * subject as it might have changed due to transposition.
+        * subject as it might have changed due to transposition.
 
-       * analogy required to hold for all past edit operations.
+        * analogy required to hold for all past edit operations.
 
-   The function '.subsequent_steps()' determines possible steps from the
-   position denoted by 'self'. It does so by yielding 'WorkItem' objects
-   for subsequence positions.
-   """
-   def __init__(self, subject, ai, bi, cost, edit_list, analogy_db):
-       self.subject    = subject
-       self.ai         = ai
-       self.bi         = bi
-       self.cost       = cost
-       self.edit_list  = edit_list
-       self.analogy_db = analogy_db
+    The function '.subsequent_steps()' determines possible steps from the
+    position denoted by 'self'. It does so by yielding 'WorkItem' objects
+    for subsequence positions.
+    """
+    def __init__(self, subject, ai, bi, cost, edit_list, analogy_db):
+        self.subject    = subject
+        self.ai         = ai
+        self.bi         = bi
+        self.cost       = cost
+        self.edit_list  = edit_list
+        self.analogy_db = analogy_db
 
-   def subsequent_steps(self, nominal_match_seq):
-       """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
-       """
-       subject_match = self.subject[self.ai]
-       nominal_match = nominal_match_seq[self.bi]
+    def subsequent_steps(self, nominal_match_seq):
+        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
+        """
+        subject_match = self.subject[self.ai]
+        nominal_match = nominal_match_seq[self.bi]
 
-       verdict_id, analogy = subject_match.compare(nominal_match)
+        verdict_id, analogy = subject_match.compare(nominal_match)
 
-       # IMPORTANT: Worklist is a LIFO (last in, first out).
-       #
-       # For performance, it is essential that 'cheap' steps are treated first.
-       # => more expensive paths are cut early.
-       good_id = None
-       if   verdict_id == E_Verdict.MISFIT:
-           yield self._step(E_EditLine.SUBSTITUTE_TYPE)
-       elif verdict_id == E_Verdict.DIFFERENT:
-           yield self._step(E_EditLine.SUBSTITUTE,
-                            cost_factor = subject_match.edit_distance_relative(nominal_match))
-       elif not self.analogy_db.is_consistent(analogy):
-           yield self._step(E_EditLine.SUBSTITUTE)
-       elif   subject_match.string       != nominal_match.string:  
-           good_id = E_EditLine.GOOD_TOLERATED
-       elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
-           good_id = E_EditLine.GOOD_TOLERATED
-       else:                                                     
-           good_id = E_EditLine.GOOD
+        # IMPORTANT: Worklist is a LIFO (last in, first out).
+        #
+        # For performance, it is essential that 'cheap' steps are treated first.
+        # => more expensive paths are cut early.
+        good_id = None
+        if   verdict_id == E_Verdict.MISFIT:
+            yield self._step(E_EditLine.SUBSTITUTE_TYPE)
+        elif verdict_id == E_Verdict.DIFFERENT:
+            yield self._step(E_EditLine.SUBSTITUTE,
+                             cost_factor = subject_match.edit_distance_relative(nominal_match))
+        elif not self.analogy_db.is_consistent(analogy):
+            yield self._step(E_EditLine.SUBSTITUTE)
+        elif   subject_match.string       != nominal_match.string:  
+            good_id = E_EditLine.GOOD_TOLERATED
+        elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
+            good_id = E_EditLine.GOOD_TOLERATED
+        else:                                                     
+            good_id = E_EditLine.GOOD
 
-       if good_id is None:
-           yield from (
-               self._step(E_EditLine.TRANSPOSE, transpose_ai=candidate_ai)
-               for candidate_ai in range(self.ai+1, len(self.subject))
-               if self.subject[candidate_ai].is_equivalent(nominal_match, self.analogy_db)
-           )
+        if good_id is None:
+            yield from (
+                self._step(E_EditLine.TRANSPOSE, transpose_ai=candidate_ai)
+                for candidate_ai in range(self.ai+1, len(self.subject))
+                if self.subject[candidate_ai].is_equivalent(nominal_match, self.analogy_db)
+            )
 
-       yield self._step(E_EditLine.INSERT)
-       yield self._step(E_EditLine.DELETE)
+        yield self._step(E_EditLine.INSERT)
+        yield self._step(E_EditLine.DELETE)
 
-       if good_id is not None:
-           yield self._step(good_id, new_analogy = analogy)
+        if good_id is not None:
+            yield self._step(good_id, new_analogy = analogy)
 
-   def _step(self, edit_id, cost_factor=1, transpose_ai=None, new_analogy=None):
-       """RETURNS: WorkItem derived from self after applying an edit operation.
+    def _step(self, edit_id, cost_factor=1, transpose_ai=None, new_analogy=None):
+        """RETURNS: WorkItem derived from self after applying an edit operation.
 
-       Given an edit operation 'edit_id' this function generates a modified
-       version of 'self'. It adapts the indices 'ai' and 'bi' according to
-       the position progress related to the operation. The new 'WorkItem'
-       will contain a new 'subject', and 'analogy_db' if they were changed.
-       The 'edit_list' of the 'WorkItem' contains all current edit operations
-       plus the edit operation 'edit_id' that produced the 'WorkItem'.
-       """
+        Given an edit operation 'edit_id' this function generates a modified
+        version of 'self'. It adapts the indices 'ai' and 'bi' according to
+        the position progress related to the operation. The new 'WorkItem'
+        will contain a new 'subject', and 'analogy_db' if they were changed.
+        The 'edit_list' of the 'WorkItem' contains all current edit operations
+        plus the edit operation 'edit_id' that produced the 'WorkItem'.
+        """
 
-       if transpose_ai is not None:
-           new_subject = copy(self.subject) # shallow copy
-           new_subject[self.ai], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.ai]
-       else:
-           new_subject = self.subject
+        if transpose_ai is not None:
+            new_subject = copy(self.subject) # shallow copy
+            new_subject[self.ai], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.ai]
+        else:
+            new_subject = self.subject
 
-       if new_analogy is not None:
-           new_analogy_db = self.analogy_db.clone()
-           new_analogy_db.add(new_analogy)
-       else:
-           new_analogy_db = self.analogy_db
+        if new_analogy is not None:
+            new_analogy_db = self.analogy_db.clone()
+            new_analogy_db.add(new_analogy)
+        else:
+            new_analogy_db = self.analogy_db
 
-       increment_ai, increment_bi = position_increment_db[edit_id]
-       return WorkItem(subject    = new_subject,
-                       ai         = self.ai + increment_ai,
-                       bi         = self.bi + increment_bi,
-                       cost       = self.cost + cost_db[edit_id] * cost_factor,
-                       edit_list  = self.edit_list + [ Edit(edit_id, transpose_ai) ],
-                       analogy_db = new_analogy_db)
+        increment_ai, increment_bi = position_increment_db[edit_id]
+        return WorkItem(subject    = new_subject,
+                        ai         = self.ai + increment_ai,
+                        bi         = self.bi + increment_bi,
+                        cost       = self.cost + cost_db[edit_id] * cost_factor,
+                        edit_list  = self.edit_list + [ Edit(edit_id, transpose_ai) ],
+                        analogy_db = new_analogy_db)
+
+    def min_cost_remaining(self, subject_length, nominal_length):
+        """RETURNS: The lowest possible total cost of the remaining comparisons.
+
+        The lowest possible cost is associated with the case that the maximum
+        number of lines can be paired as 'GOOD' and the rest needs to be
+        inserted/deleted.
+        """
+        common_n, remaining_n = self.__get_common_and_remaining(subject_length, nominal_length)
+
+        # best case: -- all common lines are GOOD
+        #            -- all remaining lines are INSERT/DELETE
+        return self.cost + cost_db[E_EditLine.GOOD] * common_n + cost_db[E_EditLine.INSERT] * remaining_n
+
+
+    def __get_common_and_remaining(self, subject_length, nominal_length):
+        """RETURNS: [0] number of possibly common elements.
+                    [1] number of 'overhanging' elements (remainder).
+        """
+        remaining_subject_n = subject_length - self.ai
+        remaining_nominal_n = nominal_length - self.bi
+        # let: common_n = maximum number of pairs in the remaining lines.
+        common_n    = min(remaining_subject_n, remaining_nominal_n)
+        remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
+        return common_n, remaining_n
+
 
 
 def _cost_assumptions(subject_length, nominal_length):

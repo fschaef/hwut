@@ -25,7 +25,7 @@ def test(subject_txt, nominal_txt):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    terminal_size.set_size_fixed(10, 600)
+    terminal_size.set_size_fixed(10, 200)
     print("------------------------------------------------------------------------")
     console.display(compare.line_associations(config, subject, nominal))
 
@@ -54,8 +54,8 @@ Numerische tolerance: 4711
 """
 
 # test(wrong_txt * 4, good_txt * 4)
-# test(good_txt * 2 + wrong_txt + good_txt, good_txt * 4)
-test(wrong_txt.replace("\n", " "), good_txt.replace("\n", " "))
+test(good_txt * 2 + wrong_txt + good_txt, good_txt * 4)
+# test(wrong_txt.replace("\n", " "), good_txt.replace("\n", " "))
 
 if False:
     test(".123456789.123456789.123456789.123456789\n",
