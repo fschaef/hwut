@@ -16,35 +16,35 @@ in './tolerance/pattern_finder.py'.
 ALGORITHM:
 
 Subject and nominal lines are represented by a sequence of 'LineElement' objects.
-The algorithm walks along the two sequences with two indices 'ai' and 'bi'
+The algorithm walks along the two sequences with two indices 'si' and 'ni'
 pointing to the 'LineElement' objects under comparison.
 
 Example: Let the subject and nominal sequences of 'LineElement' objects be
 represented by the sequences 'a h b e r' and 'a b e r'.
 
-                           ai
+                           si
                            |
                subject:  a h b e r
 
                nominal:  a b e r
                            |
-                           bi
+                           ni
 
-At a given positions (ai, bi), there are the following three possibilities to
+At a given positions (si, ni), there are the following three possibilities to
 proceed.
 
  position      edit             effect in the example above
  change        operation
 ---------------------------------------------------------------------------
- (ai++, bi++)  SUBSTITUTE_TYPE  type of 'b' does not fit type of 'h'
+ (si++, ni++)  SUBSTITUTE_TYPE  type of 'b' does not fit type of 'h'
                SUBSTITUTE       'b != h'. step to next two chars
                GOOD             step to next two chars
                                 (assume 'b' and 'h' are equivalent)
                TRANSPOSE        switch 'h' and 'b' in nominal, then step
                                 to next two chars
- (ai++, bi)    DELETE           do as if 'h' was not there.
+ (si++, ni)    DELETE           do as if 'h' was not there.
                                 next compare 'b' with 'b'.
- (ai,   bi++)  INSERT           do as if 'b' is inserted into subject.
+ (si,   ni++)  INSERT           do as if 'b' is inserted into subject.
                                 next compare 'h' with 'e'.
 
 Each *step* advances further to the end of the sequence. Let each step
@@ -131,8 +131,8 @@ class WorkList(list):
     def __init__(self, subject_match_seq, nominal_match_seq, analogy_db):
         self.append(
             WorkItem(list(subject_match_seq),
-                     ai         = 0, # index into subject 'LineElement' sequence
-                     bi         = 0, # index into nominal 'LineElement' sequence
+                     si         = 0, # index into subject 'LineElement' sequence
+                     ni         = 0, # index into nominal 'LineElement' sequence
                      cost       = 0,
                      edit_list  = [],
                      analogy_db = analogy_db)
@@ -155,17 +155,17 @@ class WorkList(list):
         if item.cost > self.best.cost:
             # already worse => no chance of winning.
             pass
-        elif item.ai == self.subject_length:
+        elif item.si == self.subject_length:
             # reached end of subject => INSERT to reach end of nominal
-            if _append_overhead(self.best, item, self.nominal_length - item.bi, E_EditLine.INSERT):
+            if _append_overhead(self.best, item, self.nominal_length - item.ni, E_EditLine.INSERT):
                 self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
                 if self.best.cost == self.min_cost: 
                     self.clear() # => termination
                 else:
                     work_list = _cut_worse(self.best.cost, self)
-        elif item.bi == self.nominal_length:
+        elif item.ni == self.nominal_length:
             # reached end of nominal => DELETE to cut tail of subject
-            if _append_overhead(self.best, item, self.subject_length - item.ai, E_EditLine.DELETE):
+            if _append_overhead(self.best, item, self.subject_length - item.si, E_EditLine.DELETE):
                 self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
                 if self.best.cost == self.min_cost: 
                     self.clear() # => termination
@@ -176,10 +176,10 @@ class WorkList(list):
             for new_item in item.subsequent_steps(self.nominal_match_seq):
                 if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
                     continue
-                elif self.best_cost_db[(new_item.ai, new_item.bi)] <= new_item.cost:
+                elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.cost:
                     # The version with 'cost < new_item.editions.cost' will produce a better total solution.
                     continue
-                self.best_cost_db[(new_item.ai, new_item.bi)] = new_item.cost
+                self.best_cost_db[(new_item.si, new_item.ni)] = new_item.cost
                 self.append(new_item)
 
     def get_best(self, seperator_db):
@@ -325,15 +325,15 @@ class SeperatorAdaptor:
 
         
 position_increment_db = {
-    #                        ai-increment  bi-increment
-    E_EditLine.GOOD:             (1,           1),    # Step over subject[ai], nominal[bi]
+    #                        si-increment  ni-increment
+    E_EditLine.GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
     E_EditLine.GOOD_TOLERATED:   (1,           1),    #          -- " --
     E_EditLine.TRANSPOSE:        (1,           1),    #          -- " --
-    E_EditLine.INSERT:           (0,           1),    # Consider 'subject[ai]' as insertion.
-    #                                                 # => compare subject[ai+1] with nominal[bi]
-    E_EditLine.DELETE:           (1,           0),    # Consider 'nominal[bi]' as insertion.
-    #                                                 # => compare subject[ai] with nominal[bi+1]
-    E_EditLine.SUBSTITUTE:       (1,           1),    # Step over subject[ai], nominal[bi]
+    E_EditLine.INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
+    #                                                 # => compare subject[si+1] with nominal[ni]
+    E_EditLine.DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
+    #                                                 # => compare subject[si] with nominal[ni+1]
+    E_EditLine.SUBSTITUTE:       (1,           1),    # Step over subject[si], nominal[ni]
     E_EditLine.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
 }
 
@@ -354,7 +354,7 @@ class WorkItem:
 
     It maintains:
 
-        * Position pair (ai, bi) which is investigated.
+        * Position pair (si, ni) which is investigated.
 
     Also, it maintains implications of previous steps:
 
@@ -368,10 +368,10 @@ class WorkItem:
     position denoted by 'self'. It does so by yielding 'WorkItem' objects
     for subsequence positions.
     """
-    def __init__(self, subject, ai, bi, cost, edit_list, analogy_db):
+    def __init__(self, subject, si, ni, cost, edit_list, analogy_db):
         self.subject    = subject
-        self.ai         = ai
-        self.bi         = bi
+        self.si         = si
+        self.ni         = ni
         self.cost       = cost
         self.edit_list  = edit_list
         self.analogy_db = analogy_db
@@ -379,8 +379,8 @@ class WorkItem:
     def subsequent_steps(self, nominal_match_seq):
         """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
         """
-        subject_match = self.subject[self.ai]
-        nominal_match = nominal_match_seq[self.bi]
+        subject_match = self.subject[self.si]
+        nominal_match = nominal_match_seq[self.ni]
 
         verdict_id, analogy = subject_match.compare(nominal_match)
 
@@ -406,7 +406,7 @@ class WorkItem:
         if good_id is None:
             yield from (
                 self._step(E_EditLine.TRANSPOSE, transpose_ai=candidate_ai)
-                for candidate_ai in range(self.ai+1, len(self.subject))
+                for candidate_ai in range(self.si+1, len(self.subject))
                 if self.subject[candidate_ai].is_equivalent(nominal_match, self.analogy_db)
             )
 
@@ -420,7 +420,7 @@ class WorkItem:
         """RETURNS: WorkItem derived from self after applying an edit operation.
 
         Given an edit operation 'edit_id' this function generates a modified
-        version of 'self'. It adapts the indices 'ai' and 'bi' according to
+        version of 'self'. It adapts the indices 'si' and 'ni' according to
         the position progress related to the operation. The new 'WorkItem'
         will contain a new 'subject', and 'analogy_db' if they were changed.
         The 'edit_list' of the 'WorkItem' contains all current edit operations
@@ -429,7 +429,7 @@ class WorkItem:
 
         if transpose_ai is not None:
             new_subject = copy(self.subject) # shallow copy
-            new_subject[self.ai], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.ai]
+            new_subject[self.si], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.si]
         else:
             new_subject = self.subject
 
@@ -441,8 +441,8 @@ class WorkItem:
 
         increment_ai, increment_bi = position_increment_db[edit_id]
         return WorkItem(subject    = new_subject,
-                        ai         = self.ai + increment_ai,
-                        bi         = self.bi + increment_bi,
+                        si         = self.si + increment_ai,
+                        ni         = self.ni + increment_bi,
                         cost       = self.cost + cost_db[edit_id] * cost_factor,
                         edit_list  = self.edit_list + [ Edit(edit_id, transpose_ai) ],
                         analogy_db = new_analogy_db)
@@ -465,8 +465,8 @@ class WorkItem:
         """RETURNS: [0] number of possibly common elements.
                     [1] number of 'overhanging' elements (remainder).
         """
-        remaining_subject_n = subject_length - self.ai
-        remaining_nominal_n = nominal_length - self.bi
+        remaining_subject_n = subject_length - self.si
+        remaining_nominal_n = nominal_length - self.ni
         # let: common_n = maximum number of pairs in the remaining lines.
         common_n    = min(remaining_subject_n, remaining_nominal_n)
         remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n

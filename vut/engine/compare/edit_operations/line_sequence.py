@@ -39,8 +39,8 @@ class EditsLineSequence:
     def __init__(self, cost, edit_list, analogy_db):
         """edit_list: list of tuples (edit_id, edit_list)
 
-                      where     'edit_id' is an 'E_EditLineSequence'
-                            and 'edit_list' is a list of 'Edit' objects
+        where edit_id:    E_EditLineSequence
+              edit_list': list of Edit objects
         """
         assert all(isinstance(first, E_EditLineSequence)
                    for first, _ in edit_list)
