@@ -72,7 +72,7 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     subject_length = len(subject_match_seq_list)
     nominal_length = len(nominal_match_seq_list)
 
-    initial_item = WorkItem(ai=0, bi=0, editions=EditsLineSequence(0, [], analogy_db))
+    initial_item = WorkItem(si=0, ni=0, editions=EditsLineSequence(0, [], analogy_db))
     work_list = [ initial_item ]
 
     min_cost = initial_item.min_cost_remaining(subject_length, nominal_length)
@@ -86,13 +86,13 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     while work_list:
         item = work_list.pop()
 
-        if item.ai == subject_length:
-            if _append_overhead(best, item.editions, nominal_match_seq_list[item.bi:], E_EditLineSequence.INSERT):
+        if item.si == subject_length:
+            if _append_overhead(best, item.editions, nominal_match_seq_list[item.ni:], E_EditLineSequence.INSERT):
                 best = item.editions
                 if best.cost == min_cost: break
                 work_list = _cut_worse(best.cost, work_list)
-        elif item.bi == nominal_length:
-            if _append_overhead(best, item.editions, subject_match_seq_list[item.ai:], E_EditLineSequence.DELETE):
+        elif item.ni == nominal_length:
+            if _append_overhead(best, item.editions, subject_match_seq_list[item.si:], E_EditLineSequence.DELETE):
                 best = item.editions
                 if best.cost == min_cost: break
                 work_list = _cut_worse(best.cost, work_list)
@@ -103,11 +103,11 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
                                                   subject_match_seq_list, nominal_match_seq_list):
                 if new_item.min_cost_remaining(subject_length, nominal_length) >= best.cost:
                     continue
-                elif best_cost_db[(new_item.ai, new_item.bi)] <= new_item.editions.cost:
+                elif best_cost_db[(new_item.si, new_item.ni)] <= new_item.editions.cost:
                     # The version with 'cost < new_item.editions.cost' will produce a better total solution.
                     continue
                 else:
-                    best_cost_db[(new_item.ai, new_item.bi)] = new_item.editions.cost
+                    best_cost_db[(new_item.si, new_item.ni)] = new_item.editions.cost
                     work_list.append(new_item)
 
     return best
@@ -120,11 +120,11 @@ def _cut_worse(cost, work_list):
     ]
 
 position_increment_db = {
-    #                        ai-increment  bi-increment
-    E_EditLineSequence.GOOD:         (1,           1),    # Step over subject[ai], nominal[bi]
-    E_EditLineSequence.SUBSTITUTE:   (1,           1),    # Step over subject[ai], nominal[bi]
-    E_EditLineSequence.INSERT:       (0,           1),    # Must insert before 'subject[ai]' to fix.
-    E_EditLineSequence.DELETE:       (1,           0),    # Must insert before 'nominal[bi]' to fix.
+    #                        si-increment  ni-increment
+    E_EditLineSequence.GOOD:         (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditLineSequence.SUBSTITUTE:   (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditLineSequence.INSERT:       (0,           1),    # Must insert before 'subject[si]' to fix.
+    E_EditLineSequence.DELETE:       (1,           0),    # Must insert before 'nominal[ni]' to fix.
 }
 
 cost_GOOD          = 0.0
@@ -187,9 +187,9 @@ class WorkItemHistory:
             assert False # pragma no cover
 
 class WorkItem:
-   def __init__(self, ai, bi, editions, history=None):
-       self.ai       = ai
-       self.bi       = bi
+   def __init__(self, si, ni, editions, history=None):
+       self.si       = si
+       self.ni       = ni
        self.editions = editions
        if history is None:
            self.history = WorkItemHistory()
@@ -197,12 +197,12 @@ class WorkItem:
            self.history = history
 
    def __repr__(self):
-       return "[%i:%i] cost: %f; %s; " % (self.ai, self.bi, self.editions.cost, [x[0].name for x in self.editions.edit_list])
+       return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.editions.cost, [x[0].name for x in self.editions.edit_list])
 
    def subsequent_steps(self, line_edition_db, subject_list, nominal_list):
        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
        """
-       line_editions = line_edition_db.get(self.ai, self.bi, subject_list, nominal_list, self.editions)
+       line_editions = line_edition_db.get(self.si, self.ni, subject_list, nominal_list, self.editions)
        assert isinstance(line_editions, EditsLine)
 
        # IMPORTANT: Worklist is a LIFO. That is, what comes last is popped
@@ -230,7 +230,7 @@ class WorkItem:
        """RETURNS: WorkItem derived from self after applying an edit operation.
 
        Given an edit operation 'edit_id' this function generates a modified
-       version of 'self'. It adapts the indices 'ai' and 'bi' according to
+       version of 'self'. It adapts the indices 'si' and 'ni' according to
        the position progress related to the operation. The new 'WorkItem'
        will contain a new updated 'edit_list'.
        """
@@ -247,8 +247,8 @@ class WorkItem:
                                         self.editions.edit_list + [ (edit_id, edit_list) ],
                                         new_analogy_db)
 
-       result = WorkItem(self.ai + increment_ai,
-                         self.bi + increment_bi,
+       result = WorkItem(self.si + increment_ai,
+                         self.ni + increment_bi,
                          new_editions,
                          self.history.clone())
        return result
@@ -281,8 +281,8 @@ class WorkItem:
        """RETURNS: [0] number of possibly common elements.
                    [1] number of 'overhanging' elements (remainder).
        """
-       remaining_subject_n = subject_length - self.ai
-       remaining_nominal_n = nominal_length - self.bi
+       remaining_subject_n = subject_length - self.si
+       remaining_nominal_n = nominal_length - self.ni
        # let: common_n = maximum number of pairs in the remaining lines.
        common_n    = min(remaining_subject_n, remaining_nominal_n)
        remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
