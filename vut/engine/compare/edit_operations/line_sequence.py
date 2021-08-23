@@ -56,6 +56,60 @@ class EditsLineSequence:
         if not self.edit_list: return None
         else:                  return self.edit_list[-1][0]
 
+class WorkList(list):
+    def __init__(self, subject, nominal, initial_item, analogy_db):
+        self.subject = subject
+        self.nominal = nominal
+        self.subject_length = len(subject)
+        self.nominal_length = len(nominal)
+
+        self.line_edition_db = LineEditionDb()
+
+        self.min_cost = initial_item.min_cost_remaining(self.subject_length, self.nominal_length)
+        self.max_cost = initial_item.max_cost_remaining(self.subject_length, self.nominal_length) + 1e-6
+
+        self.best = EditsLineSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
+        self.best_cost_db = defaultdict(lambda: 1e37)
+        self.best_cost_db[(0,0)] = 0
+
+        self.append(initial_item)
+
+    def end_of_sequence(self, item):
+        if item.si == self.subject_length:
+            if _append_overhead(self.best, item.editions, self.nominal[item.ni:], E_EditLineSequence.INSERT):
+                self.__set_best(item)
+            return True
+
+        elif item.ni == self.nominal_length:
+            if _append_overhead(self.best, item.editions, self.subject[item.si:], E_EditLineSequence.DELETE):
+                self.__set_best(item)
+            return True
+
+        elif item.min_cost_remaining(self.subject_length, self.nominal_length) > self.best.cost:
+            return True
+
+        else:
+            return False
+
+    def __set_best(self, item):
+        self.best = item.editions
+        if self.best.cost == self.min_cost: self.clear() # => terminate
+
+        # Remove any entry which is already worse than the best.
+        for i, item in reversed(list(enumerate(self))):
+            if item.editions.cost >= self.best.cost: del self[i]
+
+    def produce_next(self, item):
+        for new_item in item.subsequent_steps(self.line_edition_db, 
+                                              self.subject, self.nominal):
+            if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
+                continue
+            elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.editions.cost:
+                # The version with 'cost < new_item.editions.cost' will produce a better total solution.
+                continue
+            else:
+                self.best_cost_db[(new_item.si, new_item.ni)] = new_item.editions.cost
+                self.append(new_item)
 
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """RETURNS: EditsLineSequence
@@ -69,55 +123,20 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """
     if analogy_db is None: analogy_db = AnalogyDb()
 
-    subject_length = len(subject_match_seq_list)
-    nominal_length = len(nominal_match_seq_list)
-
     initial_item = WorkItem(si=0, ni=0, editions=EditsLineSequence(0, [], analogy_db))
-    work_list = [ initial_item ]
+    work_list    = WorkList(subject_match_seq_list, nominal_match_seq_list, 
+                            initial_item, 
+                            analogy_db)
 
-    min_cost = initial_item.min_cost_remaining(subject_length, nominal_length)
-    max_cost = initial_item.max_cost_remaining(subject_length, nominal_length) + 1e-6
+    if work_list.max_cost == 0.0:
+        return EditsLineSequence(cost=0, edit_list=[], analogy_db=analogy_db)
 
-    line_edition_db = LineEditionDb()
-
-    best = EditsLineSequence(cost=max_cost, edit_list=[], analogy_db=[])
-    best_cost_db = defaultdict(lambda: 1e37)
-    best_cost_db[(0,0)] = 0
     while work_list:
         item = work_list.pop()
+        if not work_list.end_of_sequence(item):
+            work_list.produce_next(item)
 
-        if item.si == subject_length:
-            if _append_overhead(best, item.editions, nominal_match_seq_list[item.ni:], E_EditLineSequence.INSERT):
-                best = item.editions
-                if best.cost == min_cost: break
-                work_list = _cut_worse(best.cost, work_list)
-        elif item.ni == nominal_length:
-            if _append_overhead(best, item.editions, subject_match_seq_list[item.si:], E_EditLineSequence.DELETE):
-                best = item.editions
-                if best.cost == min_cost: break
-                work_list = _cut_worse(best.cost, work_list)
-        elif item.min_cost_remaining(subject_length, nominal_length) > best.cost:
-            pass
-        else:
-            for new_item in item.subsequent_steps(line_edition_db, 
-                                                  subject_match_seq_list, nominal_match_seq_list):
-                if new_item.min_cost_remaining(subject_length, nominal_length) >= best.cost:
-                    continue
-                elif best_cost_db[(new_item.si, new_item.ni)] <= new_item.editions.cost:
-                    # The version with 'cost < new_item.editions.cost' will produce a better total solution.
-                    continue
-                else:
-                    best_cost_db[(new_item.si, new_item.ni)] = new_item.editions.cost
-                    work_list.append(new_item)
-
-    return best
-
-def _cut_worse(cost, work_list):
-    """RETURNS: list of work list items where cost >= given 'cost'.
-    """
-    return [
-        item for item in work_list if item.editions.cost < cost
-    ]
+    return work_list.best
 
 position_increment_db = {
     #                        si-increment  ni-increment

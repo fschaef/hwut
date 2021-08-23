@@ -81,6 +81,13 @@ class E_EditLine(IntEnum):
     SUBSTITUTE_TYPE = 6  # Bad:  Type of subject and nominal 'LineElement' differs.
     NONE            = 7  # No operation
 
+TRANSPOSE      = E_EditLine.TRANSPOSE
+GOOD           = E_EditLine.GOOD
+GOOD_TOLERATED = E_EditLine.GOOD_TOLERATED
+DELETE         = E_EditLine.DELETE
+INSERT         = E_EditLine.INSERT
+SEPERATOR      = E_ToleranceId.SEPERATOR
+
 Edit = namedtuple("Edit", ("id", "transpose_ai"))
 
 def Edit_none():
@@ -117,89 +124,102 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     seperator_db = SeperatorAdaptor(subject_match_seq, nominal_match_seq)
     subject_match_seq, nominal_match_seq = seperator_db.strip_separators()
 
-    work_list = WorkList(subject_match_seq, nominal_match_seq, analogy_db)
+    initial_item = WorkItem(list(subject_match_seq),
+                            si         = 0, # index into subject 'LineElement' sequence
+                            ni         = 0, # index into nominal 'LineElement' sequence
+                            cost       = 0,
+                            edit_list  = [],
+                            analogy_db = analogy_db)
+    work_list = WorkList(subject_match_seq, nominal_match_seq, initial_item)
     if work_list.max_cost == 0.0:
         return EditsLine(0, [], AnalogyDb())
 
     while work_list:
         item = work_list.pop()
-        work_list.produce_next(item)
+        if not work_list.end_of_sequence(item): 
+            work_list.produce_derived(item)
 
-    return work_list.get_best(seperator_db)
+    best = work_list.best
+    return EditsLine(best.cost / seperator_db.original_max_cost, 
+                     seperator_db.reinsert_seperators(best.edit_list),
+                     best.analogy_db)
 
 class WorkList(list):
-    def __init__(self, subject_match_seq, nominal_match_seq, analogy_db):
-        self.append(
-            WorkItem(list(subject_match_seq),
-                     si         = 0, # index into subject 'LineElement' sequence
-                     ni         = 0, # index into nominal 'LineElement' sequence
-                     cost       = 0,
-                     edit_list  = [],
-                     analogy_db = analogy_db)
-        )
+    def __init__(self, subject_match_seq, nominal_match_seq, initial_item):
 
         self.subject_length = len(subject_match_seq)
         self.nominal_length = len(nominal_match_seq)
         max_cost, min_cost = _cost_assumptions(self.subject_length, 
                                                self.nominal_length)
 
-        self.best = EditsLine(max_cost + 2, [], [])
+        self.best = EditsLine(max_cost + 1, [], [])
         self.max_cost = max_cost
         self.min_cost = min_cost
 
-        self.nominal_match_seq = nominal_match_seq
+        self.nominal = nominal_match_seq
         self.best_cost_db = defaultdict(lambda: 1e37)
         self.best_cost_db[(0,0)] = 0
 
-    def produce_next(self, item):
+        self.append(initial_item)
+
+    def end_of_sequence(self, item):
+        """RETURNS: True, if the item may be used for deriving subsequent steps.
+                    False, else.
+            
+        Checks whether it makes further sense to follow the path of 'item'. If the 
+        cost is already higher than the best cost, the item is ommitted and no derived
+        steps are produced. If one index reaches the end of its sequence, the total cost
+        is computed and compared with the best. If it is better, the 'best' is adapted.
+        """
         if item.cost > self.best.cost:
             # already worse => no chance of winning.
-            pass
-        elif item.si == self.subject_length:
-            # reached end of subject => INSERT to reach end of nominal
-            if _append_overhead(self.best, item, self.nominal_length - item.ni, E_EditLine.INSERT):
-                self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-                if self.best.cost == self.min_cost: 
-                    self.clear() # => termination
-                else:
-                    work_list = _cut_worse(self.best.cost, self)
-        elif item.ni == self.nominal_length:
-            # reached end of nominal => DELETE to cut tail of subject
-            if _append_overhead(self.best, item, self.subject_length - item.si, E_EditLine.DELETE):
-                self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-                if self.best.cost == self.min_cost: 
-                    self.clear() # => termination
-                else:
-                    work_list = _cut_worse(self.best.cost, self)
+            return True
+        elif item.si == self.subject_length: # reached end of subject => INSERT to reach end of nominal
+            if self.__append_nominal_overhead(item):
+                self.__set_best(item)
+            return True
+        elif item.ni == self.nominal_length: # reached end of nominal => DELETE to cut tail of subject
+            if self.__append_subject_overhead(item):
+                self.__set_best(item)
+            return True
         else:
-            # setup exploration of subsequence steps
-            for new_item in item.subsequent_steps(self.nominal_match_seq):
-                if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
-                    continue
-                elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.cost:
-                    # The version with 'cost < new_item.editions.cost' will produce a better total solution.
-                    continue
-                self.best_cost_db[(new_item.si, new_item.ni)] = new_item.cost
-                self.append(new_item)
+            return False
 
-    def get_best(self, seperator_db):
-        return EditsLine(self.best.cost / seperator_db.original_max_cost, 
-                         seperator_db.reinsert_seperators(self.best.edit_list),
-                         self.best.analogy_db)
+    def produce_derived(self, item):
+        for new_item in item.subsequent_steps(self.nominal):
+            if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
+                continue
+            elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.cost:
+                # The version with 'cost < new_item.editions.cost' will produce a better total solution.
+                continue
+            self.best_cost_db[(new_item.si, new_item.ni)] = new_item.cost
+            self.append(new_item)
 
-def _cut_worse(cost, work_list):
-    """RETURNS: list of work list items where cost >= given 'cost'.
-    """
-    return [
-        item for item in work_list if item.cost < cost
-    ]
+    def __append_subject_overhead(self, item):
+        return self.__append_overhead(self.best, item, self.subject_length - item.si, E_EditLine.DELETE)
 
-TRANSPOSE      = E_EditLine.TRANSPOSE
-GOOD           = E_EditLine.GOOD
-GOOD_TOLERATED = E_EditLine.GOOD_TOLERATED
-DELETE         = E_EditLine.DELETE
-INSERT         = E_EditLine.INSERT
-SEPERATOR      = E_ToleranceId.SEPERATOR
+    def __append_nominal_overhead(self, item):
+        return self.__append_overhead(self.best, item, self.nominal_length - item.ni, E_EditLine.INSERT)
+
+    def __append_overhead(self, best, item, overhead, edit_id):
+        """RETURNS: True, if 'item' is better than 'best'.
+                    False, else.
+
+        Appends edit operations the the 'edit_list' if 'item' and updates
+        the 'cost' according to edit operation 'edit_id'.
+        """
+        item.cost += cost_db[edit_id] * overhead
+        item.edit_list.extend([Edit(edit_id, None)] * overhead)
+        return item.cost < best.cost
+
+    def __set_best(self, item):
+        self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
+        if self.best.cost == self.min_cost: 
+            self.clear() # => termination
+            return
+        # Remove any entry which is already worse than the best.
+        for i, item in reversed(list(enumerate(self))):
+            if item.cost >= self.best.cost: del self[i]
 
 class SeperatorAdaptor:
     """Seperators are elements of a line which appear (often) between line
@@ -487,15 +507,4 @@ def _cost_assumptions(subject_length, nominal_length):
 
     return max_cost, min_cost
 
-
-def _append_overhead(best, item, overhead, edit_id):
-    """RETURNS: True, if 'item' is better than 'best'.
-                False, else.
-
-    Appends edit operations the the 'edit_list' if 'item' and updates
-    the 'cost' according to edit operation 'edit_id'.
-    """
-    item.cost += cost_db[edit_id] * overhead
-    item.edit_list.extend([Edit(edit_id, None)] * overhead)
-    return item.cost < best.cost
 
