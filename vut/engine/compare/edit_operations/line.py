@@ -162,6 +162,8 @@ class WorkList(list):
 
         self.append(initial_item)
 
+        self.cost_insert_delete = cost_db[E_EditLine.INSERT]
+
     def end_of_sequence(self, item):
         """RETURNS: True, if the item may be used for deriving subsequent steps.
                     False, else.
@@ -197,22 +199,20 @@ class WorkList(list):
 
     def __append_subject_overhead(self, item):
         DELETE_obj = Edit(E_EditLine.DELETE, None)
-        cost       = cost_db[E_EditLine.DELETE]
-        return self.__append_overhead(item, self.subject_length - item.si, cost, DELETE_obj)
+        return self.__append_overhead(item, self.subject_length - item.si, DELETE_obj)
 
     def __append_nominal_overhead(self, item):
         INSERT_obj = Edit(E_EditLine.INSERT, None)
-        cost       = cost_db[E_EditLine.INSERT]
-        return self.__append_overhead(item, self.nominal_length - item.ni, cost, INSERT_obj)
+        return self.__append_overhead(item, self.nominal_length - item.ni, INSERT_obj)
 
-    def __append_overhead(self, item, overhead, cost, edit_obj):
+    def __append_overhead(self, item, overhead, edit_obj):
         """RETURNS: True, if 'item' is better than 'best'.
                     False, else.
 
         Appends edit operations the the 'edit_list' if 'item' and updates
         the 'cost' according to edit operation 'edit_id'.
         """
-        item.cost += cost * overhead
+        item.cost += self.cost_insert_delete * overhead
         item.edit_list.extend([edit_obj] * overhead)
         return item.cost < self.best.cost
 
