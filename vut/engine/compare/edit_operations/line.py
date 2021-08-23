@@ -59,6 +59,7 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 
+from  vut.engine.compare.edit_operations.core     import WorkListBase
 from  vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db        import AnalogyDb
 from  vut.engine.compare.engine.core              import E_Verdict
@@ -106,6 +107,32 @@ def Edit_list_description(edit_list):
 
 EditsLine = namedtuple("EditsLine", ("cost", "edit_list", "analogy_db"))
 
+
+class WorkList(WorkListBase):
+    def _adapt_initialization(self):
+        self.best = EditsLine(self.max_cost + 1, [], [])
+        self.cost_insert_delete = cost_db[E_EditLine.INSERT]
+        self.DELETE_obj = Edit(E_EditLine.DELETE, None)
+        self.INSERT_obj = Edit(E_EditLine.INSERT, None)
+
+    def _max_cost(self, subject_length, nominal_length):
+       """RETURNS: maximum cost to transform 'subject' into 'nominal'.
+       """
+       common_n    = min(subject_length, nominal_length)
+       remaining_n = max(subject_length, nominal_length) - common_n
+       return cost_db[E_EditLine.SUBSTITUTE_TYPE] * common_n + cost_db[E_EditLine.INSERT] * remaining_n
+
+    def _set_best(self, item):
+        self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
+        if self.best.cost == self.min_cost: 
+            self.clear() # => termination
+            return
+        # Remove any entry which is already worse than the best.
+        for i, item in reversed(list(enumerate(self))):
+            if item.cost >= self.best.cost: del self[i]
+
+
+
 @lru_cache(maxsize=65536)
 @typed(subject_match_seq=tuple, nominal_match_seq=tuple)
 def do(subject_match_seq, nominal_match_seq, analogy_db=None):
@@ -130,8 +157,10 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
                             cost       = 0,
                             edit_list  = [],
                             analogy_db = analogy_db)
+
     work_list = WorkList(subject_match_seq, nominal_match_seq, initial_item)
-    if work_list.max_cost == 0.0:
+
+    if seperator_db.original_max_cost == 0.0:
         return EditsLine(0, [], AnalogyDb())
 
     while work_list:
@@ -140,93 +169,12 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
             work_list.produce_derived(item)
 
     best = work_list.best
-
     if best.cost != 0: cost = best.cost / seperator_db.original_max_cost
     else:              cost = 0
 
     return EditsLine(cost, 
                      seperator_db.reinsert_seperators(best.edit_list),
                      best.analogy_db)
-
-class WorkList(list):
-    def __init__(self, subject_match_seq, nominal_match_seq, initial_item):
-
-        self.subject_length = len(subject_match_seq)
-        self.nominal_length = len(nominal_match_seq)
-
-        self.min_cost = initial_item.min_cost_remaining(self.subject_length, self.nominal_length)
-        self.max_cost = max_cost(self.subject_length, self.nominal_length) + 1e-6
-
-        self.best = EditsLine(self.max_cost + 1, [], [])
-
-        self.nominal = nominal_match_seq
-        self.best_cost_db = defaultdict(lambda: 1e37)
-        self.best_cost_db[(0,0)] = 0
-
-        self.append(initial_item)
-
-        self.cost_insert_delete = cost_db[E_EditLine.INSERT]
-        self.DELETE_obj = Edit(E_EditLine.DELETE, None)
-        self.INSERT_obj = Edit(E_EditLine.INSERT, None)
-
-    def end_of_sequence(self, item):
-        """RETURNS: True, if the item may be used for deriving subsequent steps.
-                    False, else.
-            
-        Checks whether it makes further sense to follow the path of 'item'. If the 
-        cost is already higher than the best cost, the item is ommitted and no derived
-        steps are produced. If one index reaches the end of its sequence, the total cost
-        is computed and compared with the best. If it is better, the 'best' is adapted.
-        """
-        if item.cost > self.best.cost:
-            # already worse => no chance of winning.
-            return True
-        elif item.si == self.subject_length: # reached end of subject => INSERT to reach end of nominal
-            if self.__append_nominal_overhead(item):
-                self.__set_best(item)
-            return True
-        elif item.ni == self.nominal_length: # reached end of nominal => DELETE to cut tail of subject
-            if self.__append_subject_overhead(item):
-                self.__set_best(item)
-            return True
-        else:
-            return False
-
-    def produce_derived(self, item):
-        for new_item in item.subsequent_steps(self.nominal):
-            if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
-                continue
-            elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.cost:
-                # The version with 'cost < new_item.editions.cost' will produce a better total solution.
-                continue
-            self.best_cost_db[(new_item.si, new_item.ni)] = new_item.cost
-            self.append(new_item)
-
-    def __append_subject_overhead(self, item):
-        return self.__append_overhead(item, self.subject_length - item.si, self.DELETE_obj)
-
-    def __append_nominal_overhead(self, item):
-        return self.__append_overhead(item, self.nominal_length - item.ni, self.INSERT_obj)
-
-    def __append_overhead(self, item, overhead, edit_obj):
-        """RETURNS: True, if 'item' is better than 'best'.
-                    False, else.
-
-        Appends edit operations the the 'edit_list' if 'item' and updates
-        the 'cost' according to edit operation 'edit_id'.
-        """
-        item.cost += self.cost_insert_delete * overhead
-        item.edit_list.extend([edit_obj] * overhead)
-        return item.cost < self.best.cost
-
-    def __set_best(self, item):
-        self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-        if self.best.cost == self.min_cost: 
-            self.clear() # => termination
-            return
-        # Remove any entry which is already worse than the best.
-        for i, item in reversed(list(enumerate(self))):
-            if item.cost >= self.best.cost: del self[i]
 
 class SeperatorAdaptor:
     """Seperators are elements of a line which appear (often) between line
