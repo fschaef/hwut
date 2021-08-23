@@ -196,21 +196,25 @@ class WorkList(list):
             self.append(new_item)
 
     def __append_subject_overhead(self, item):
-        return self.__append_overhead(self.best, item, self.subject_length - item.si, E_EditLine.DELETE)
+        DELETE_obj = Edit(E_EditLine.DELETE, None)
+        cost       = cost_db[E_EditLine.DELETE]
+        return self.__append_overhead(item, self.subject_length - item.si, cost, DELETE_obj)
 
     def __append_nominal_overhead(self, item):
-        return self.__append_overhead(self.best, item, self.nominal_length - item.ni, E_EditLine.INSERT)
+        INSERT_obj = Edit(E_EditLine.INSERT, None)
+        cost       = cost_db[E_EditLine.INSERT]
+        return self.__append_overhead(item, self.nominal_length - item.ni, cost, INSERT_obj)
 
-    def __append_overhead(self, best, item, overhead, edit_id):
+    def __append_overhead(self, item, overhead, cost, edit_obj):
         """RETURNS: True, if 'item' is better than 'best'.
                     False, else.
 
         Appends edit operations the the 'edit_list' if 'item' and updates
         the 'cost' according to edit operation 'edit_id'.
         """
-        item.cost += cost_db[edit_id] * overhead
-        item.edit_list.extend([Edit(edit_id, None)] * overhead)
-        return item.cost < best.cost
+        item.cost += cost * overhead
+        item.edit_list.extend([edit_obj] * overhead)
+        return item.cost < self.best.cost
 
     def __set_best(self, item):
         self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)

@@ -76,12 +76,12 @@ class WorkList(list):
 
     def end_of_sequence(self, item):
         if item.si == self.subject_length:
-            if self._append_overhead(item.editions, self.nominal[item.ni:], E_EditLineSequence.INSERT):
+            if self.__append_nominal_overhead(item):
                 self.__set_best(item)
             return True
 
         elif item.ni == self.nominal_length:
-            if self._append_overhead(item.editions, self.subject[item.si:], E_EditLineSequence.DELETE):
+            if self.__append_subject_overhead(item):
                 self.__set_best(item)
             return True
 
@@ -111,7 +111,13 @@ class WorkList(list):
                 self.best_cost_db[(new_item.si, new_item.ni)] = new_item.editions.cost
                 self.append(new_item)
 
-    def _append_overhead(self, editions, remaining_list, overhead_edit_id):
+    def __append_subject_overhead(self, item):
+        return self._append_overhead(item.editions, self.subject_length - item.si, E_EditLineSequence.DELETE)
+
+    def __append_nominal_overhead(self, item):
+        return self._append_overhead(item.editions, self.nominal_length - item.ni, E_EditLineSequence.INSERT)
+
+    def _append_overhead(self, editions, overhead, overhead_edit_id):
         """RETURNS: True, if the edit_operations is better then 'best'.
                     False, else.
 
@@ -120,9 +126,8 @@ class WorkList(list):
         lines). It assigns them to the 'edit_operations' and compares it with the
         'best'.
         """
-        N = len(remaining_list)
-        editions.cost = editions.cost + cost_INSERT_DELETE * N
-        editions.edit_list.extend([(overhead_edit_id, None)] * len(remaining_list))
+        editions.cost = editions.cost + cost_INSERT_DELETE * overhead
+        editions.edit_list.extend([(overhead_edit_id, None)] * overhead)
         return editions.cost < self.best.cost
 
 
