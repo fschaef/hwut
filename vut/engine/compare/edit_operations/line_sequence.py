@@ -76,12 +76,12 @@ class WorkList(list):
 
     def end_of_sequence(self, item):
         if item.si == self.subject_length:
-            if _append_overhead(self.best, item.editions, self.nominal[item.ni:], E_EditLineSequence.INSERT):
+            if self._append_overhead(item.editions, self.nominal[item.ni:], E_EditLineSequence.INSERT):
                 self.__set_best(item)
             return True
 
         elif item.ni == self.nominal_length:
-            if _append_overhead(self.best, item.editions, self.subject[item.si:], E_EditLineSequence.DELETE):
+            if self._append_overhead(item.editions, self.subject[item.si:], E_EditLineSequence.DELETE):
                 self.__set_best(item)
             return True
 
@@ -110,6 +110,21 @@ class WorkList(list):
             else:
                 self.best_cost_db[(new_item.si, new_item.ni)] = new_item.editions.cost
                 self.append(new_item)
+
+    def _append_overhead(self, editions, remaining_list, overhead_edit_id):
+        """RETURNS: True, if the edit_operations is better then 'best'.
+                    False, else.
+
+        Determines the 'cost' and 'edit operations' for the remaing lines for which
+        their is no counterpart (e.g. nominal lines when there are no more subject
+        lines). It assigns them to the 'edit_operations' and compares it with the
+        'best'.
+        """
+        N = len(remaining_list)
+        editions.cost = editions.cost + cost_INSERT_DELETE * N
+        editions.edit_list.extend([(overhead_edit_id, None)] * len(remaining_list))
+        return editions.cost < self.best.cost
+
 
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """RETURNS: EditsLineSequence
@@ -306,20 +321,6 @@ class WorkItem:
        common_n    = min(remaining_subject_n, remaining_nominal_n)
        remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
        return common_n, remaining_n
-
-def _append_overhead(best, editions, remaining_list, overhead_edit_id):
-    """RETURNS: True, if the edit_operations is better then 'best'.
-                False, else.
-
-    Determines the 'cost' and 'edit operations' for the remaing lines for which
-    their is no counterpart (e.g. nominal lines when there are no more subject
-    lines). It assigns them to the 'edit_operations' and compares it with the
-    'best'.
-    """
-    N = len(remaining_list)
-    editions.cost = editions.cost + cost_INSERT_DELETE * N
-    editions.edit_list.extend([(overhead_edit_id, None)] * len(remaining_list))
-    return editions.cost < best.cost
 
 class LineEditionDb(dict):
     def get(self, subject_i, nominal_i, subject_list, nominal_list, editions):
