@@ -66,13 +66,17 @@ class WorkList(list):
         self.line_edition_db = LineEditionDb()
 
         self.min_cost = initial_item.min_cost_remaining(self.subject_length, self.nominal_length)
-        self.max_cost = initial_item.max_cost_remaining(self.subject_length, self.nominal_length) + 1e-6
+        self.max_cost = max_cost(self.subject_length, self.nominal_length) + 1e-6
 
         self.best = EditsLineSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
         self.best_cost_db = defaultdict(lambda: 1e37)
         self.best_cost_db[(0,0)] = 0
 
         self.append(initial_item)
+
+        self.cost_insert_delete = cost_INSERT_DELETE
+        self.DELETE_obj = (E_EditLineSequence.DELETE, None)
+        self.INSERT_obj = (E_EditLineSequence.INSERT, None)
 
     def end_of_sequence(self, item):
         if item.si == self.subject_length:
@@ -112,12 +116,12 @@ class WorkList(list):
                 self.append(new_item)
 
     def __append_subject_overhead(self, item):
-        return self._append_overhead(item.editions, self.subject_length - item.si, E_EditLineSequence.DELETE)
+        return self._append_overhead(item.editions, self.subject_length - item.si, self.DELETE_obj)
 
     def __append_nominal_overhead(self, item):
-        return self._append_overhead(item.editions, self.nominal_length - item.ni, E_EditLineSequence.INSERT)
+        return self._append_overhead(item.editions, self.nominal_length - item.ni, self.INSERT_obj)
 
-    def _append_overhead(self, editions, overhead, overhead_edit_id):
+    def _append_overhead(self, editions, overhead, edit_obj):
         """RETURNS: True, if the edit_operations is better then 'best'.
                     False, else.
 
@@ -126,8 +130,9 @@ class WorkList(list):
         lines). It assigns them to the 'edit_operations' and compares it with the
         'best'.
         """
-        editions.cost = editions.cost + cost_INSERT_DELETE * overhead
-        editions.edit_list.extend([(overhead_edit_id, None)] * overhead)
+        
+        editions.cost += self.cost_insert_delete * overhead
+        editions.edit_list.extend([edit_obj] * overhead)
         return editions.cost < self.best.cost
 
 
@@ -305,17 +310,6 @@ class WorkItem:
        #            -- all remaining lines are INSERT/DELETE
        return self.editions.cost + cost_GOOD * common_n + cost_INSERT_DELETE * remaining_n
 
-   def max_cost_remaining(self, subject_length, nominal_length):
-       """RETURNS: maximum cost to transform 'subject' into 'nominal'.
-       """
-
-       common_n, remaining_n = self.__get_common_and_remaining(subject_length, nominal_length)
-       # worst case: -- all common lines are SUBSTITUTE
-       #             -- all remaining lines are INSERT/DELETE
-       common_n    = min(subject_length, nominal_length)
-       remaining_n = max(subject_length, nominal_length) - common_n
-       return self.editions.cost + cost_SUBSTITUTION * common_n + cost_INSERT_DELETE * remaining_n
-
    def __get_common_and_remaining(self, subject_length, nominal_length):
        """RETURNS: [0] number of possibly common elements.
                    [1] number of 'overhanging' elements (remainder).
@@ -326,6 +320,14 @@ class WorkItem:
        common_n    = min(remaining_subject_n, remaining_nominal_n)
        remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
        return common_n, remaining_n
+
+def max_cost(subject_length, nominal_length):
+   """RETURNS: maximum cost to transform 'subject' into 'nominal'.
+   """
+   common_n    = min(subject_length, nominal_length)
+   remaining_n = max(subject_length, nominal_length) - common_n
+   return cost_SUBSTITUTION * common_n + cost_INSERT_DELETE * remaining_n
+
 
 class LineEditionDb(dict):
     def get(self, subject_i, nominal_i, subject_list, nominal_list, editions):

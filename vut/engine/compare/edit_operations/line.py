@@ -140,7 +140,11 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
             work_list.produce_derived(item)
 
     best = work_list.best
-    return EditsLine(best.cost / seperator_db.original_max_cost, 
+
+    if best.cost != 0: cost = best.cost / seperator_db.original_max_cost
+    else:              cost = 0
+
+    return EditsLine(cost, 
                      seperator_db.reinsert_seperators(best.edit_list),
                      best.analogy_db)
 
@@ -149,12 +153,11 @@ class WorkList(list):
 
         self.subject_length = len(subject_match_seq)
         self.nominal_length = len(nominal_match_seq)
-        max_cost, min_cost = _cost_assumptions(self.subject_length, 
-                                               self.nominal_length)
 
-        self.best = EditsLine(max_cost + 1, [], [])
-        self.max_cost = max_cost
-        self.min_cost = min_cost
+        self.min_cost = initial_item.min_cost_remaining(self.subject_length, self.nominal_length)
+        self.max_cost = max_cost(self.subject_length, self.nominal_length) + 1e-6
+
+        self.best = EditsLine(self.max_cost + 1, [], [])
 
         self.nominal = nominal_match_seq
         self.best_cost_db = defaultdict(lambda: 1e37)
@@ -163,6 +166,8 @@ class WorkList(list):
         self.append(initial_item)
 
         self.cost_insert_delete = cost_db[E_EditLine.INSERT]
+        self.DELETE_obj = Edit(E_EditLine.DELETE, None)
+        self.INSERT_obj = Edit(E_EditLine.INSERT, None)
 
     def end_of_sequence(self, item):
         """RETURNS: True, if the item may be used for deriving subsequent steps.
@@ -198,12 +203,10 @@ class WorkList(list):
             self.append(new_item)
 
     def __append_subject_overhead(self, item):
-        DELETE_obj = Edit(E_EditLine.DELETE, None)
-        return self.__append_overhead(item, self.subject_length - item.si, DELETE_obj)
+        return self.__append_overhead(item, self.subject_length - item.si, self.DELETE_obj)
 
     def __append_nominal_overhead(self, item):
-        INSERT_obj = Edit(E_EditLine.INSERT, None)
-        return self.__append_overhead(item, self.nominal_length - item.ni, INSERT_obj)
+        return self.__append_overhead(item, self.nominal_length - item.ni, self.INSERT_obj)
 
     def __append_overhead(self, item, overhead, edit_obj):
         """RETURNS: True, if 'item' is better than 'best'.
@@ -268,8 +271,8 @@ class SeperatorAdaptor:
 
         length_relevant_subject_seq = sum(self.subject_flags)
         length_relevant_nominal_seq = sum(self.nominal_flags)
-        self.original_max_cost      = _cost_assumptions(length_relevant_subject_seq, 
-                                                        length_relevant_nominal_seq)[0]
+        self.original_max_cost      = max_cost(length_relevant_subject_seq, 
+                                               length_relevant_nominal_seq)
 
 
     @staticmethod
@@ -497,6 +500,12 @@ class WorkItem:
         return common_n, remaining_n
 
 
+def max_cost(subject_length, nominal_length):
+   """RETURNS: maximum cost to transform 'subject' into 'nominal'.
+   """
+   common_n    = min(subject_length, nominal_length)
+   remaining_n = max(subject_length, nominal_length) - common_n
+   return cost_db[E_EditLine.SUBSTITUTE_TYPE] * common_n + cost_db[E_EditLine.INSERT] * remaining_n
 
 def _cost_assumptions(subject_length, nominal_length):
     """RETURNS: [0] maximum possible cost for transforming subject into nominal
