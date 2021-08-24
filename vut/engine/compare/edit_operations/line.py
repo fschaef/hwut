@@ -350,11 +350,6 @@ class WorkItem:
         verdict_id, analogy = subject_match.compare(nominal_match)
 
         # IMPORTANT: Worklist is a LIFO (last in, first out).
-        #            (1) --> GOOD
-        #            (2) --> SUBSTITUTE
-        #            (3) --> DELETE/INSERT
-        #            (4) --> TRANSPOSE
-        #            (5) --> SUBSTITUTE_TYPE
         #
         # For performance, it is essential that 'cheap' steps are treated first.
         # => more expensive paths are cut early.
