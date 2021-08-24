@@ -110,27 +110,16 @@ EditsLine = namedtuple("EditsLine", ("cost", "edit_list", "analogy_db"))
 
 class WorkList(WorkListBase):
     def _adapt_initialization(self):
+        self.min_cost = self[0].min_cost_remaining(self.subject_length, self.nominal_length)
+        self.max_cost = max_cost(self.subject_length, self.nominal_length) + 1e-6
+
         self.best = EditsLine(self.max_cost + 1, [], [])
         self.cost_insert_delete = cost_db[E_EditLine.INSERT]
         self.DELETE_obj = Edit(E_EditLine.DELETE, None)
         self.INSERT_obj = Edit(E_EditLine.INSERT, None)
 
-    def _max_cost(self, subject_length, nominal_length):
-       """RETURNS: maximum cost to transform 'subject' into 'nominal'.
-       """
-       common_n    = min(subject_length, nominal_length)
-       remaining_n = max(subject_length, nominal_length) - common_n
-       return cost_db[E_EditLine.SUBSTITUTE_TYPE] * common_n + cost_db[E_EditLine.INSERT] * remaining_n
-
     def _set_best(self, item):
         self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
-        if self.best.cost == self.min_cost: 
-            self.clear() # => termination
-            return
-        # Remove any entry which is already worse than the best.
-        for i, item in reversed(list(enumerate(self))):
-            if item.cost >= self.best.cost: del self[i]
-
 
 
 @lru_cache(maxsize=65536)
