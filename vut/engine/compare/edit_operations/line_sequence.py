@@ -130,7 +130,6 @@ class WorkList(list):
         lines). It assigns them to the 'edit_operations' and compares it with the
         'best'.
         """
-        
         editions.cost += self.cost_insert_delete * overhead
         editions.edit_list.extend([edit_obj] * overhead)
         return editions.cost < self.best.cost

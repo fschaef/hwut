@@ -54,8 +54,8 @@ Numerische tolerance: 4711
 """
 
 # test(wrong_txt * 4, good_txt * 4)
-test(good_txt * 2 + wrong_txt + good_txt, good_txt * 4)
-# test(wrong_txt.replace("\n", " "), good_txt.replace("\n", " "))
+# test(good_txt * 2 + wrong_txt + good_txt, good_txt * 4)
+test((wrong_txt+wrong_txt).replace("\n", " "), (good_txt+good_txt).replace("\n", " "))
 
 if False:
     test(".123456789.123456789.123456789.123456789\n",

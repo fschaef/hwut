@@ -140,8 +140,7 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     seperator_db = SeperatorAdaptor(subject_match_seq, nominal_match_seq)
     subject_match_seq, nominal_match_seq = seperator_db.strip_separators()
 
-    initial_item = WorkItem(list(subject_match_seq),
-                            si         = 0, # index into subject 'LineElement' sequence
+    initial_item = WorkItem(si         = 0, # index into subject 'LineElement' sequence
                             ni         = 0, # index into nominal 'LineElement' sequence
                             cost       = 0,
                             edit_list  = [],
@@ -332,23 +331,30 @@ class WorkItem:
     position denoted by 'self'. It does so by yielding 'WorkItem' objects
     for subsequence positions.
     """
-    def __init__(self, subject, si, ni, cost, edit_list, analogy_db):
-        self.subject    = subject
-        self.si         = si
-        self.ni         = ni
-        self.cost       = cost
-        self.edit_list  = edit_list
-        self.analogy_db = analogy_db
+    def __init__(self, si, ni, cost, edit_list, analogy_db, subject_modified=None):
+        self.si               = si
+        self.ni               = ni
+        self.cost             = cost
+        self.edit_list        = edit_list
+        self.analogy_db       = analogy_db
+        self.subject_modified = subject_modified # in case of 'transpose' edits.
 
-    def subsequent_steps(self, nominal_match_seq):
+    def subsequent_steps(self, subject, nominal_match_seq, cache):
         """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
         """
-        subject_match = self.subject[self.si]
+        if self.subject_modified: subject = self.subject_modified
+
+        subject_match = subject[self.si]
         nominal_match = nominal_match_seq[self.ni]
 
         verdict_id, analogy = subject_match.compare(nominal_match)
 
         # IMPORTANT: Worklist is a LIFO (last in, first out).
+        #            (1) --> GOOD
+        #            (2) --> SUBSTITUTE
+        #            (3) --> DELETE/INSERT
+        #            (4) --> TRANSPOSE
+        #            (5) --> SUBSTITUTE_TYPE
         #
         # For performance, it is essential that 'cheap' steps are treated first.
         # => more expensive paths are cut early.
@@ -369,9 +375,9 @@ class WorkItem:
 
         if good_id is None:
             yield from (
-                self._step(E_EditLine.TRANSPOSE, transpose_ai=candidate_ai)
-                for candidate_ai in range(self.si+1, len(self.subject))
-                if self.subject[candidate_ai].is_equivalent(nominal_match, self.analogy_db)
+                self._step(E_EditLine.TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
+                for candidate_ai in range(self.si+1, len(subject))
+                if subject[candidate_ai].is_equivalent(nominal_match, self.analogy_db)
             )
 
         yield self._step(E_EditLine.INSERT)
@@ -380,7 +386,7 @@ class WorkItem:
         if good_id is not None:
             yield self._step(good_id, new_analogy = analogy)
 
-    def _step(self, edit_id, cost_factor=1, transpose_ai=None, new_analogy=None):
+    def _step(self, edit_id, cost_factor=1, transpose_ai=None, new_analogy=None, subject=None):
         """RETURNS: WorkItem derived from self after applying an edit operation.
 
         Given an edit operation 'edit_id' this function generates a modified
@@ -392,10 +398,10 @@ class WorkItem:
         """
 
         if transpose_ai is not None:
-            new_subject = copy(self.subject) # shallow copy
+            new_subject = copy(subject) # shallow copy
             new_subject[self.si], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.si]
         else:
-            new_subject = self.subject
+            new_subject = self.subject_modified
 
         if new_analogy is not None:
             new_analogy_db = self.analogy_db.clone()
@@ -403,13 +409,13 @@ class WorkItem:
         else:
             new_analogy_db = self.analogy_db
 
-        increment_ai, increment_bi = position_increment_db[edit_id]
-        return WorkItem(subject    = new_subject,
-                        si         = self.si + increment_ai,
-                        ni         = self.ni + increment_bi,
-                        cost       = self.cost + cost_db[edit_id] * cost_factor,
-                        edit_list  = self.edit_list + [ Edit(edit_id, transpose_ai) ],
-                        analogy_db = new_analogy_db)
+        increment_ai, increment_bi       = position_increment_db[edit_id]
+        return WorkItem(si               = self.si + increment_ai,
+                        ni               = self.ni + increment_bi,
+                        cost             = self.cost + cost_db[edit_id] * cost_factor,
+                        edit_list        = self.edit_list + [ Edit(edit_id, transpose_ai) ],
+                        analogy_db       = new_analogy_db, 
+                        subject_modified = new_subject)
 
     def min_cost_remaining(self, subject_length, nominal_length):
         """RETURNS: The lowest possible total cost of the remaining comparisons.
