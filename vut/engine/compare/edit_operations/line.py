@@ -118,6 +118,8 @@ class WorkList(WorkListBase):
         self.DELETE_obj = Edit(E_EditLine.DELETE, None)
         self.INSERT_obj = Edit(E_EditLine.INSERT, None)
 
+        self.cache = Cache()
+
     def _set_best(self, item):
         self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
 
@@ -339,15 +341,16 @@ class WorkItem:
         self.analogy_db       = analogy_db
         self.subject_modified = subject_modified # in case of 'transpose' edits.
 
-    def subsequent_steps(self, subject, nominal_match_seq, cache):
+    def subsequent_steps(self, subject, nominal, cache):
         """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
         """
         if self.subject_modified: subject = self.subject_modified
 
-        subject_match = subject[self.si]
-        nominal_match = nominal_match_seq[self.ni]
+        verdict_id, analogy = cache.get(self.si, self.ni, subject, nominal, 
+                                        transpose_f = self.subject_modified is not None)
 
-        verdict_id, analogy = subject_match.compare(nominal_match)
+        subject_match = subject[self.si]
+        nominal_match = nominal[self.ni]
 
         # IMPORTANT: Worklist is a LIFO (last in, first out).
         #
@@ -458,4 +461,21 @@ def _cost_assumptions(subject_length, nominal_length):
 
     return max_cost, min_cost
 
+
+class Cache(dict):
+    def get(self, subject_i, nominal_i, subject, nominal, transpose_f):
+        subject_elm = subject[subject_i]
+        nominal_elm = nominal[nominal_i]
+        # Use 'id' of LineElements, rather than their index. Notably the 'traspose'
+        # edit operation may switch elements to a different position.
+        pair   = (id(subject_elm), id(nominal_elm))
+        result = dict.get(self, pair)
+        if result is not None:
+            verdict_id, analogy = result
+        else:
+            subject_elm = subject[subject_i]
+            nominal_elm = nominal[nominal_i]
+            verdict_id, analogy = subject_elm.compare(nominal_elm)
+            self[pair] = verdict_id, analogy
+        return verdict_id, analogy
 
