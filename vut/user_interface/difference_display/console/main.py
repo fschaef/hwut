@@ -8,12 +8,13 @@ import vut.engine.compare.edit_operations.line          as     edit_operations_l
 from   vut.external.quex.typed                          import typed
 
 @typed(line_associations=[LineAssociationChunk])
-def display(linachunks):
-    if not linachunks:
-        return
+def display(linachunks, text_offset):
     linachunks = list(linachunks)
 
-    canvas = ConsoleCanvasDiff(linachunks)
+    if not linachunks:
+        return
+
+    canvas = ConsoleCanvasDiff(linachunks, text_offset)
     for chunk in linachunks:
         canvas.display_line_association_chunk(chunk)
 
@@ -21,7 +22,7 @@ def display(linachunks):
 
 
 class ConsoleCanvasDiff(ConsoleCanvas):
-    def __init__(self, linachunks):
+    def __init__(self, linachunks, text_offset):
         ConsoleCanvas.__init__(self)
 
         self.line_n_width  = number_of_decimal_digits(linachunks[-1].max_line_n())
@@ -30,13 +31,13 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         self.subject_width = remaining >> 1
         self.nominal_width = remaining - self.subject_width
 
-        self.set_format(LEFT(self.subject_width), 
+        self.set_format(LEFT(self.subject_width, text_offset=text_offset), 
                         FIXED(" ", "Uw"), 
                         LEFT(self.line_n_width, "Uw"), 
                         FIXED("|", "Bw"), 
                         LEFT(self.line_n_width, "Uw"), 
                         FIXED(" ", "Uw"), 
-                        LEFT(self.nominal_width))
+                        LEFT(self.nominal_width, text_offset=text_offset))
 
     def display_line_association_chunk(self, chunk):
         if chunk.type() == E_Chunk.POTPOURRI:

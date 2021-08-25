@@ -25,10 +25,21 @@ def test(subject_txt, nominal_txt):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    terminal_size.set_size_fixed(10, 200)
     print("------------------------------------------------------------------------")
-    console.display(compare.line_associations(config, subject, nominal))
+    la = list(compare.line_associations(config, subject, nominal))
+    terminal_size.set_size_fixed(10, 200)
+    console.display(la, 0)
+    console.display(la, 1)
+    console.display(la, 3)
 
+    console.display(la, 20)
+    console.display(la, 21)
+    console.display(la, 22)
+
+    console.display(la, -20)
+    console.display(la, -21)
+    console.display(la, -22)
+    console.display(la, -200)
 
 wrong_txt = \
 """Sah ein Röslein ein Knab stehen

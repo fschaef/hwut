@@ -59,7 +59,7 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 
-from  vut.engine.compare.edit_operations.core     import WorkListBase
+from  vut.engine.compare.edit_operations.core     import WorkListBase, WorkItemBase
 from  vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db        import AnalogyDb
 from  vut.engine.compare.engine.core              import E_Verdict
@@ -312,7 +312,7 @@ cost_db = {
     E_EditLine.SUBSTITUTE_TYPE:  1   # bad, need to substitute type and content of element
 }
 
-class WorkItem:
+class WorkItem(WorkListBase):
     """A 'WorkItem' corresponds to a node for the tree search algorithm
     that searches the least costly path to the end of the 'LineElement'
     sequence objects.
@@ -334,8 +334,7 @@ class WorkItem:
     for subsequence positions.
     """
     def __init__(self, si, ni, cost, edit_list, analogy_db, subject_modified=None):
-        self.si               = si
-        self.ni               = ni
+        WorkItemBase.__init__(self, si, ni)
         self.cost             = cost
         self.edit_list        = edit_list
         self.analogy_db       = analogy_db

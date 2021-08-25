@@ -18,7 +18,8 @@ operations on 'Line's (see edit_operations/line.py) and strings (see
 Levenshtein Distance).
 _______________________________________________________________________________
 """
-from   vut.engine.compare.edit_operations.core import WorkListBase
+from   vut.engine.compare.edit_operations.core import WorkListBase, \
+                                                      WorkItemBase
 from   vut.engine.compare.edit_operations.line import Edit, EditsLine
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
 from   vut.external.quex.typed                 import typed
@@ -168,15 +169,12 @@ class WorkItemHistory:
         else:
             assert False # pragma no cover
 
-class WorkItem:
+class WorkItem(WorkItemBase):
    def __init__(self, si, ni, editions, history=None):
-       self.si       = si
-       self.ni       = ni
+       WorkItemBase.__init__(self, si, ni)
        self.edit_list = editions
-       if history is None:
-           self.history = WorkItemHistory()
-       else:
-           self.history = history
+       if history is None: self.history = WorkItemHistory()
+       else:               self.history = history
 
    def __repr__(self):
        return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.edit_list.cost, [x[0].name for x in self.edit_list.edit_list])

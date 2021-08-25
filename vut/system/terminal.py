@@ -21,19 +21,19 @@ class E_Alignment(Enum):
     FIXED  = auto()
 
 # Format Expression: 'FE'
-CellFormat = namedtuple("CellFormat", ("alignment", "color_code", "width", "string"))
+CellFormat = namedtuple("CellFormat", ("alignment", "color_code", "width", "string", "text_offset"))
 
-def LEFT(width, color=None):
-    return CellFormat(E_Alignment.LEFT, _color_to_code(color), width, None)
+def LEFT(width, color=None, text_offset=0):
+    return CellFormat(E_Alignment.LEFT, _color_to_code(color), width, None, text_offset)
 
-def RIGHT(width, color=None):
-    return CellFormat(E_Alignment.RIGHT, _color_to_code(color), width, None)
+def RIGHT(width, color=None, text_offset=0):
+    return CellFormat(E_Alignment.RIGHT, _color_to_code(color), width, None, text_offset)
 
-def CENTER(width, color=None):
-    return CellFormat(E_Alignment.CENTER, _color_to_code(color), width, None)
+def CENTER(width, color=None, text_offset=0):
+    return CellFormat(E_Alignment.CENTER, _color_to_code(color), width, None, text_offset)
 
-def FIXED(string, color=None):
-    return CellFormat(E_Alignment.FIXED, _color_to_code(color), len(string), string)
+def FIXED(string, color=None, text_offset=0):
+    return CellFormat(E_Alignment.FIXED, _color_to_code(color), len(string), string, text_offset)
 
 class ConsoleCanvas:
    def __init__(self):
@@ -88,51 +88,72 @@ def _format_text(fe, content, remaining):
     return fe.color_code + text
 
 def _format_plain(fe, cell):
-    if fe.alignment == E_Alignment.RIGHT:
-        return _format_text(fe, cell[max(0, fe.width - len(cell)):], max(0, fe.width - len(cell)))
-    else:
-        return _format_text(fe, cell[:min(fe.width, len(cell))], max(0, fe.width - len(cell)))
+    L = len(cell)
+    W = fe.width
+    T = fe.text_offset
+
+    if fe.alignment == E_Alignment.RIGHT: text = cell[max(0, W - L):L-T]
+    else:                                 text = cell[T:min(W, L)]
+
+    length = max(0, W - L - T)
+    return _format_text(fe, text, length)
 
 def _format_color_text_tuple_list(fe, color_text_list):
     def _color(fe, color):
         return fe.color_code if not color else color
 
-    def _do(text, fe, color_text_list):
-        # remaining >= 0: cell content too small.
-        # => padding is added later.
+    if fe.text_offset > 0:
+        color_text_list = list(_color_text_list_prune_begin(color_text_list, fe.text_offset))
+    elif fe.text_offset == 0:
+        pass
+    elif len(color_text_list):
+        # Add some padding at the beginning
+        first = color_text_list[0]
+        color_text_list = [(first[0], " " * (-fe.text_offset))] + color_text_list
+
+    total_length = sum(len(sub_text) for _, sub_text in color_text_list)
+    cut_n        = total_length - fe.width
+
+    if   cut_n <= 0:          
+        pass
+    elif fe.alignment == E_Alignment.RIGHT: 
+        color_text_list = _color_text_list_prune_begin(color_text_list, cut_n)
+    else:                                   
+        color_text_list = _color_text_list_prune_end(color_text_list, cut_n)
+
+    text = [
+        _color(fe, color) + sub_text
+        for color, sub_text in color_text_list
+    ]
+    text.append(fe.color_code)
+
+    return _format_text(fe, "".join(text), max(0, fe.width - total_length))
+
+def _color_text_list_prune_begin(color_text_list, cut_n):
+    if cut_n <= 0: 
+        yield from color_text_list
+    else:
+        flush_f = False
         for color, sub_text in color_text_list:
-            text.append(_color(fe, color) + sub_text)
+            if flush_f:
+                yield color, sub_text
+            elif len(sub_text) >= cut_n:
+                yield color, sub_text[cut_n:]
+                flush_f = True
+            else:
+                cut_n -= len(sub_text)
 
-    text_length = sum(len(sub_text) for _, sub_text in color_text_list)
-    text        = []
-
-    if fe.width >= text_length:
-        _do(text, fe, color_text_list)
-        text.append(fe.color_code)
-
-    elif fe.alignment == E_Alignment.RIGHT: # prune *beginning* of text
-        overhead = text_length - fe.width
-        for i, entry in enumerate(color_text_list):
-            color, sub_text = entry
-            if len(sub_text) >= overhead:
-                first = _color(fe, color) + sub_text[overhead:]
-                break
-            overhead = - len(sub_text)
-        text.append(first)
-        _do(text, fe, color_text_list[i+1:])
-
-    else:                                   # prune *end* of text
-        remaining = fe.width
-        for i, entry in enumerate(color_text_list):
-            color, sub_text = entry
+def _color_text_list_prune_end(color_text_list, cut_n):
+    remaining = sum(len(t) for c, t in color_text_list) - cut_n
+    if remaining <= 0: 
+        yield from color_text_list
+    else:
+        for color, sub_text in color_text_list:
             if len(sub_text) >= remaining:
-                last = _color(fe, color) + sub_text[:remaining]
+                yield color, sub_text[:remaining]
                 break
             remaining -= len(sub_text)
-        _do(text, fe, color_text_list[:i])
-        text.append(last)
-
-    return _format_text(fe, "".join(text), max(0, fe.width - text_length))
+            yield color, sub_text
 
 def _format_cell(fe, cell_list, cell_i):
    text = _format_fixed(fe)
