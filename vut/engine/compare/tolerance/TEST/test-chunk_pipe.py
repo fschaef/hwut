@@ -40,7 +40,7 @@ chunk_pipe = ChunkPipe(config)
 def test(line_list):
     text = "\n".join(line_list)
     print("----------------------------------")
-    print(text)
+    print(text.replace("||||", "<potpourri>"))
     print("----------------------------------")
     print("=>")
     for x in chunk_pipe.generate(StringIO(text)):

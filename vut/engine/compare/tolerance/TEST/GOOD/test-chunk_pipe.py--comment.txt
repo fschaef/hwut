@@ -2,70 +2,62 @@
 ##line1
 ----------------------------------
 =>
-InputChunkTerminal
 ----------------------------------
 line1##
 ----------------------------------
 =>
-InputChunkTerminal
 ----------------------------------
 ##line1
 line2
 ----------------------------------
 =>
 002: [(0,4): STRING 'line'], [(4,5): NUMERIC '2']
-InputChunkTerminal
 ----------------------------------
 line1
 line2##
 ----------------------------------
 =>
 001: [(0,4): STRING 'line'], [(4,5): NUMERIC '1']
-InputChunkTerminal
 ----------------------------------
-||||
+<potpourri>
 line2##
-||||
+<potpourri>
 ----------------------------------
 =>
 001| [(0,22): STRING '|||| (potpourri: open)']
 003| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal
 ----------------------------------
-||||
+<potpourri>
 ##line2
-||||
+<potpourri>
 ----------------------------------
 =>
 001| [(0,22): STRING '|||| (potpourri: open)']
 003| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal
 ----------------------------------
-||||
+<potpourri>
 ##line 2
 line 3
-||||
+<potpourri>
 ----------------------------------
 =>
 001| [(0,22): STRING '|||| (potpourri: open)']
 003| [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '3']
 004| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal
 ----------------------------------
-||||
+<potpourri>
 line 2
 ##line 3
-||||
+<potpourri>
 ----------------------------------
 =>
 001| [(0,22): STRING '|||| (potpourri: open)']
 002| [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '2']
 004| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal
 ----------------------------------
-##||||
+##<potpourri>
 line1
-||||
+<potpourri>
 line2
 ----------------------------------
 =>
@@ -73,17 +65,15 @@ line2
 003| [(0,22): STRING '|||| (potpourri: open)']
 004| [(0,4): STRING 'line'], [(4,5): NUMERIC '2']
 005| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal
 ----------------------------------
-||||
+<potpourri>
 line1
-||||##
+<potpourri>##
 line2
-||||
+<potpourri>
 ----------------------------------
 =>
 001| [(0,22): STRING '|||| (potpourri: open)']
 002| [(0,4): STRING 'line'], [(4,5): NUMERIC '1']
 004| [(0,4): STRING 'line'], [(4,5): NUMERIC '2']
 005| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal

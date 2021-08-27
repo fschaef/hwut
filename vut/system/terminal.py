@@ -42,6 +42,10 @@ class ConsoleCanvas:
        self.__format_stack = []
        colorama_init()
 
+   @property 
+   def format_list(self):
+       return self.__format_list
+
    def set_format(self, *format_list):
        self.__format_list = list( format_list)
 

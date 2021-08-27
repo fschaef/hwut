@@ -46,6 +46,9 @@ class InputChunk(ABC):
         self.end_line_n    = end_line_n
         self.configuration = config
 
+    def empty_clone(self):
+        return self.__class__(self.start_line_n, self.start_line_n, [], self.configuration)
+
     def compare(self, nominal, analogy_db) -> E_Verdict:
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
@@ -106,7 +109,7 @@ class InputChunkTerminal(InputChunk):
     """
     def __init__(self, line_n):
         InputChunk.__init__(self, line_n, line_n+1,
-                            [Line.from_string(line_n, "<end>")],
+                            [Line.from_string(line_n, "<InputChunkTerminal>")],
                             config=None)
     def type(self):                                    return E_Chunk.TERMINAL
     def _compare(self, other, analogy_db):             assert False

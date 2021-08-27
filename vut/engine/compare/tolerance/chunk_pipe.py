@@ -73,5 +73,5 @@ class ChunkPipe(PatternFinder):
         if line_list:
             yield chunk_class(start_line_n, line_n, line_list, self.configuration)
 
-        yield InputChunkTerminal(line_n)
+##yield InputChunkTerminal(line_n)
 

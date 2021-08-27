@@ -1,3 +1,5 @@
+2021y08m27d: <fschaef> Finalized massive speed improvements
+             '||||' opens potpourri until '||||' or end of file.
 
 2021y06m02d: <fschaef> api.odt -- explaining the API
 

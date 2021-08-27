@@ -20,30 +20,24 @@ config = Configuration()
 config.pattern_finder.numeric_tolerance_ratio = 0.01
 config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülplein"]
 
-def test(subject_txt, nominal_txt):
+def test_core(subject_txt, nominal_txt, offset=0):
     global config
+    terminal_width = 80
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    print("------------------------------------------------------------------------")
+    print("|" + "-" * (terminal_width -2) + "|")
     la = list(compare.line_associations(config, subject, nominal))
-    terminal_size.set_size_fixed(10, 200)
-    console.display(la, 0)
-    console.display(la, 1)
-    console.display(la, 3)
+    terminal_size.set_size_fixed(10, terminal_width)
+    console.display(la, offset)
 
-    console.display(la, 20)
-    console.display(la, 21)
-    console.display(la, 22)
+def test(subject_txt, nominal_txt, offset=0):
+    test_core(subject_txt, nominal_txt, offset)
+    test_core(nominal_txt, subject_txt, offset)
 
-    console.display(la, -20)
-    console.display(la, -21)
-    console.display(la, -22)
-    console.display(la, -200)
-
-wrong_txt = \
+subject_txt = \
 """Sah ein Röslein ein Knab stehen
-Röslein   auf der   Heiden 
+Röslein auf der     Heiden 
 War jung morgenschön
 Lief er ganz schnell es von nah zu sehn
 Schaut's mit manchen Freuden
@@ -52,7 +46,7 @@ Röslein, Tülplein, Röslein orange
 Numerische tolerance: 4712
 """
 
-good_txt = \
+nominal_txt = \
 """
 Sah ein Knab ein Röslein stehen
 Röslein   auf der   Heiden 
@@ -63,33 +57,25 @@ Röslein, Röslein, Röslein orange
 ((Rose)) auf der ((Heiden))
 Numerische tolerance: 4711
 """
+subject_modified_txt = \
+"""Sah ein Röslein ein Knab stehen
+Röslein   auf der   Heiden 
+War jung morgenschön
+Röslein, Tülplein, Röslein orange
+"""
 
-# test(wrong_txt * 4, good_txt * 4)
-# test(good_txt * 2 + wrong_txt + good_txt, good_txt * 4)
-test((wrong_txt+wrong_txt).replace("\n", " "), (good_txt+good_txt).replace("\n", " "))
+if "similar" in sys.argv:
+    # Testing all kinds of similarity
+    test(subject_txt, nominal_txt)
 
-if False:
-    test(".123456789.123456789.123456789.123456789\n",
-         ".123456789\n")
+elif "padding" in sys.argv:
+    test(subject_modified_txt, nominal_txt)
 
-    test("Sah   ein Röslein 4711 Knab stehen\n"
-         "Heiden auf der blühenden Röslein\n",
-         "Sah ein   Knab 4712 schönes Röslein stehen\n"
-         "Röslein auf der Heiden\n")
-
-if False:
+elif "potpourri" in sys.argv:
     test("||||\n"
-         "Ach was darf man oft von bösen\n"
-         "Gören hören oder lesen\n"
-         "Wie zum Beispiel hier von denen\n"
-         "Welche Moritz und Max hießen\n"
-         "||||\n",
+         + subject_txt + subject_modified_txt 
+         + "||||\n",
          "||||\n"
-         "Kindern hören oder lesen\n"
-         "Ach was muß man oft von bösen\n"
-         "Welche Max und Moritz hießen\n"
-         "Wie zum Beispiel hier von diesen\n"
-         "Die anstatt durch weise Lehren\n"
-         "Sich zum Guten zu bekehren\n"
-         "||||\n")
+         + nominal_txt * 2
+         + "||||\n")
 

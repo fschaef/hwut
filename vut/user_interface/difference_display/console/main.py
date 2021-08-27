@@ -7,6 +7,8 @@ from   vut.engine.compare.edit_operations.line          import E_EditLine
 import vut.engine.compare.edit_operations.line          as     edit_operations_line
 from   vut.external.quex.typed                          import typed
 
+from   copy import copy
+
 @typed(line_associations=[LineAssociationChunk])
 def display(linachunks, text_offset):
     linachunks = list(linachunks)
@@ -14,61 +16,64 @@ def display(linachunks, text_offset):
     if not linachunks:
         return
 
-    canvas = ConsoleCanvasDiff(linachunks, text_offset)
+    canvas = ConsoleCanvasDiff(linachunks, text_offset, 
+                               sort_potpourri_by_subject_line_n_f=False,
+                               show_only_analogy_development_f=False)
     for chunk in linachunks:
         canvas.display_line_association_chunk(chunk)
 
     return
 
-
 class ConsoleCanvasDiff(ConsoleCanvas):
-    def __init__(self, linachunks, text_offset):
+    def __init__(self, linachunks, text_offset, sort_potpourri_by_subject_line_n_f, show_only_analogy_development_f):
         ConsoleCanvas.__init__(self)
 
-        self.line_n_width  = number_of_decimal_digits(linachunks[-1].max_line_n())
+        line_n_width = number_of_decimal_digits(linachunks[-1].max_line_n())
+        self.format = ConsoleCanvasFormatter(self.width, line_n_width, 
+                                             text_offset, 
+                                             sort_potpourri_by_subject_line_n_f, 
+                                             show_only_analogy_development_f)
+        self.set_format(*self.format.compare_line_sequence())
         
-        remaining          = self.width - 2 * self.line_n_width - 2
-        self.subject_width = remaining >> 1
-        self.nominal_width = remaining - self.subject_width
+    def display_line_association(self, lina):
+        subject_txt, nominal_txt = self._format_line_association(lina)
+        if lina.subject is None:
+            subject_txt = self.format.empty_subject()
+            self.push_format(*self.format.compare_line_sequence_no_subject())
+        elif lina.nominal is None:
+            nominal_txt = self.format.empty_nominal()
+            self.push_format(*self.format.compare_line_sequence_no_nominal())
 
-        self.set_format(LEFT(self.subject_width, text_offset=text_offset), 
-                        FIXED(" ", "Uw"), 
-                        LEFT(self.line_n_width, "Uw"), 
-                        FIXED("|", "Bw"), 
-                        LEFT(self.line_n_width, "Uw"), 
-                        FIXED(" ", "Uw"), 
-                        LEFT(self.nominal_width, text_offset=text_offset))
+        subject_line_n = "<" if lina.subject is None else "%s" % lina.subject.line_n
+        nominal_line_n = ">" if lina.nominal is None else "%s" % lina.nominal.line_n
+
+        verdict = self.print_line(subject_txt, "%s" % subject_line_n, 
+                                  "%s" % nominal_line_n, nominal_txt)
+        if lina.subject is None or lina.nominal is None: 
+            self.pop_format()
+        return verdict
 
     def display_line_association_chunk(self, chunk):
         if chunk.type() == E_Chunk.POTPOURRI:
             lina_list = chunk.line_association_list()
+            content = lina_list[1:-1]
+            if self.format.sort_potpourri_by_subject_f:
+                content.sort(key=lambda x: (1, x.nominal.line_n) if x.subject is None else (0, x.subject.line_n))
+            else:
+                content.sort(key=lambda x: (1, x.subject.line_n) if x.nominal is None else (0, x.nominal.line_n))
+
             self._format_potpourri_border(lina_list[0], True)
-            for line_association in lina_list[1:-1]:
+            for line_association in content:
                 self.display_line_association(line_association)
             self._format_potpourri_border(lina_list[-1], False)
         else:
             for line_association in chunk.line_association_list():
                 self.display_line_association(line_association)
 
-    def display_line_association(self, lina):
-        subject_txt, nominal_txt = self._format_line_association(lina)
-        subject_line_n = "" if lina.subject is None else "%s" % lina.subject.line_n
-        nominal_line_n = "" if lina.nominal is None else "%s" % lina.nominal.line_n
-
-        return self.print_line(subject_txt, "%s" % subject_line_n, 
-                               "%s" % nominal_line_n, nominal_txt)
-
     def _format_potpourri_border(self, lina, begin):
-
         subject_line_n = "" if lina.subject is None else "%s" % lina.subject.line_n
         nominal_line_n = "" if lina.nominal is None else "%s" % lina.nominal.line_n
-        self.push_format(FIXED("||||", "Ub"), LEFT(self.subject_width-4, "Gb"), 
-                         FIXED(" ", "Uw"), 
-                         LEFT(self.line_n_width, "Uw"), 
-                         FIXED("|", "Uw"), 
-                         LEFT(self.line_n_width, "Uw"), 
-                         FIXED(" ", "Uw"), 
-                         RIGHT(self.nominal_width-4, "Gb"), FIXED("||||", "Ub"))
+        self.push_format(*self.format.compare_potpourri())
         self.print_line("", "%s" % subject_line_n, "%s" % nominal_line_n, "")
         self.pop_format()
 
@@ -84,20 +89,86 @@ class ConsoleCanvasDiff(ConsoleCanvas):
             nominal_txt.append((n_color, n_txt.replace("\t", "\\t")))
         return subject_txt, nominal_txt
 
+class ConsoleCanvasFormatter:
+    def __init__(self, terminal_width, line_n_width, text_offset, sort_potpourri_by_subject_line_n_f, show_only_analogy_development_f):
+        self.line_n_width  = line_n_width
+        
+        remaining          = terminal_width - 2 * self.line_n_width - 3
+        self.subject_width = int(remaining/2)
+        self.nominal_width = remaining - self.subject_width
+        self.text_offset = text_offset
+        self.sort_potpourri_by_subject_f = sort_potpourri_by_subject_line_n_f
+
+
+    def compare_line_sequence(self):
+        return [
+            LEFT(self.subject_width, text_offset=self.text_offset), 
+            FIXED(" ", "Uw"), 
+            LEFT(self.line_n_width, "Uw"), 
+            FIXED("|", "Bw"), 
+            LEFT(self.line_n_width, "Uw"), 
+            FIXED(" ", "Uw"), 
+            LEFT(self.nominal_width, text_offset=self.text_offset)
+        ]
+
+    def compare_line_sequence_no_subject(self):
+        return [
+            LEFT(self.subject_width, text_offset=self.text_offset), 
+            FIXED(" ", "Uw"), 
+            LEFT(self.line_n_width, "Rw"), 
+            FIXED("|", "Bw"), 
+            LEFT(self.line_n_width, "Uw"), 
+            FIXED(" ", "Uw"), 
+            LEFT(self.nominal_width, text_offset=self.text_offset)
+        ]
+
+    def compare_line_sequence_no_nominal(self):
+        return [
+            LEFT(self.subject_width, text_offset=self.text_offset), 
+            FIXED(" ", "Uw"), 
+            LEFT(self.line_n_width, "Uw"), 
+            FIXED("|", "Bw"), 
+            LEFT(self.line_n_width, "Rw"), 
+            FIXED(" ", "Uw"), 
+            LEFT(self.nominal_width, text_offset=self.text_offset)
+        ]
+
+
+    def compare_potpourri(self):
+        return [
+            FIXED("|" * self.subject_width, "Gw"), 
+            FIXED(" ", "Uw"), 
+            LEFT(self.line_n_width, "Uw"), 
+            FIXED("|", "Uw"), 
+            LEFT(self.line_n_width, "Uw"), 
+            FIXED(" ", "Uw"), 
+            FIXED("|" * self.nominal_width, "Gw"),
+        ]
+
+    @staticmethod
+    def _empty(width):
+        return " " * width
+
+    def empty_subject(self):
+        return [(Back.WHITE+Fore.RED, self._empty(self.text_offset) + ">" + self._empty(self.subject_width-1))]
+
+    def empty_nominal(self):
+        return [(Back.WHITE+Fore.RED, self._empty(self.nominal_width-1+self.text_offset) + "<")]
+
 def _good(subject, nominal):
     return "", subject.string, "", nominal.string
 
 def _tolerated(subject, nominal):
-    return Back.GREEN, subject.string, \
-           Back.GREEN, nominal.string
+    return Back.GREEN + Fore.WHITE, subject.string, \
+           Back.GREEN + Fore.WHITE, nominal.string
 
 def _deleted(subject, nominal):
-    return Back.BLUE, subject.string, \
+    return Back.BLUE + Fore.WHITE, subject.string, \
            Back.CYAN, " " * len(subject.string)
 
 def _inserted(subject, nominal):
     return Back.CYAN, " " * len(nominal.string), \
-           Back.BLUE, nominal.string
+           Back.BLUE + Fore.WHITE, nominal.string
 
 def _transpose(subject, nominal):
     return Back.YELLOW, subject.string, \

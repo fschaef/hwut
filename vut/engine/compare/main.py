@@ -113,7 +113,7 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
     # subject, nominal = 'LineSequence' or 'Potpourri'
     for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider,
-                                     fillvalue=InputChunkEmpty()):
+                                     fill_f=True):
 
         line_associations, \
         analogy_db         = subject.line_associations(nominal, analogy_db)

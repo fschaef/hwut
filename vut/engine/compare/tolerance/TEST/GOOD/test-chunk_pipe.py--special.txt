@@ -2,37 +2,31 @@
 
 ----------------------------------
 =>
-InputChunkTerminal
 ----------------------------------
 
 ----------------------------------
 =>
-InputChunkTerminal
 ----------------------------------
 
 
 ----------------------------------
 =>
-InputChunkTerminal
 ----------------------------------
-||||
+<potpourri>
 ----------------------------------
 =>
-InputChunkTerminal
 ----------------------------------
-||||
+<potpourri>
 line
 ----------------------------------
 =>
 001| [(0,22): STRING '|||| (potpourri: open)']
 002| [(0,4): STRING 'line']
 003| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal
 ----------------------------------
-||||
-||||
+<potpourri>
+<potpourri>
 ----------------------------------
 =>
 001| [(0,22): STRING '|||| (potpourri: open)']
 002| [(0,23): STRING '|||| (potpourri: close)']
-InputChunkTerminal
