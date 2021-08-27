@@ -1,11 +1,12 @@
-from   vut.system.helper                                import number_of_decimal_digits
-from   vut.system.terminal                              import ConsoleCanvas, LEFT, RIGHT, CENTER, FIXED, Fore, Back
-from   vut.engine.compare.engine.line_association_chunk import LineAssociationChunk
-from   vut.engine.compare.engine.line_association       import LineAssociation
-from   vut.engine.compare.engine.input_chunk            import E_Chunk
-from   vut.engine.compare.edit_operations.line          import E_EditLine
-import vut.engine.compare.edit_operations.line          as     edit_operations_line
-from   vut.external.quex.typed                          import typed
+from   vut.system.helper                                       import number_of_decimal_digits
+from   vut.system.terminal                                     import ConsoleCanvas, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+from   vut.user_interface.difference_display.console.formatter import ConsoleCanvasFormatter
+from   vut.engine.compare.engine.line_association_chunk        import LineAssociationChunk
+from   vut.engine.compare.engine.line_association              import LineAssociation
+from   vut.engine.compare.engine.input_chunk                   import E_Chunk
+from   vut.engine.compare.edit_operations.line                 import E_EditLine
+import vut.engine.compare.edit_operations.line                 as     edit_operations_line
+from   vut.external.quex.typed                                 import typed
 
 from   copy import copy
 
@@ -16,23 +17,68 @@ def display(linachunks, text_offset):
     if not linachunks:
         return
 
-    canvas = ConsoleCanvasDiff(linachunks, text_offset, 
-                               sort_potpourri_by_subject_line_n_f=False,
-                               show_only_analogy_development_f=False)
-    for chunk in linachunks:
-        canvas.display_line_association_chunk(chunk)
+    line_n_width = number_of_decimal_digits(linachunks[-1].max_line_n())
+    canvas = ConsoleCanvasDiff(line_n_width, text_offset, 
+                               sort_potpourri_by_subject_line_n_f=False)
+    if False:
+        for chunk in linachunks:
+            canvas.do(chunk)
+    else:
+        def _get_lina(linachunks, subject_line_n, nominal_line_n):
+            result = None
+            for chunk in linachunks:
+                result = chunk.get_line_association(subject_line_n, nominal_line_n)
+                if result is not None: break
+            return result
+
+        analogy_db = linachunks[-1].analogy_db()
+        lina_db = {}
+        for subject, p in analogy_db.line_number_db.items():
+            lina_db[(p.subject_line_n, p.nominal_line_n)] = \
+                _get_lina(linachunks, p.subject_line_n, p.nominal_line_n)
+
+        lina_db.update(
+            ((lina.subject.line_n, lina.nominal.line_n), lina)
+            for chunk in linachunks
+            for lina in chunk.line_association_list()
+            if lina.has_analogy_error()
+        )
+
+        for lina in lina_db.values():
+            canvas.display_line_association(lina)
 
     return
 
-class ConsoleCanvasDiff(ConsoleCanvas):
-    def __init__(self, linachunks, text_offset, sort_potpourri_by_subject_line_n_f, show_only_analogy_development_f):
+class ConsoleCanvasAnalogyDiff(ConsoleCanvas):
+    def __init__(self, linachunks, text_offset, sort_potpourri_by_subject_line_n_f):
         ConsoleCanvas.__init__(self)
 
         line_n_width = number_of_decimal_digits(linachunks[-1].max_line_n())
         self.format = ConsoleCanvasFormatter(self.width, line_n_width, 
                                              text_offset, 
-                                             sort_potpourri_by_subject_line_n_f, 
-                                             show_only_analogy_development_f)
+                                             sort_potpourri_by_subject_line_n_f)
+        self.set_format(*self.format.compare_line_sequence())
+
+    def do(chunk):
+        if chunk.type() == E_Chunk.POTPOURRI:
+            lina_list = chunk.line_association_list()
+            content = lina_list[1:-1]
+            self.format.sort_potpourri_content(content)
+            self._format_potpourri_border(lina_list[0], True)
+            for line_association in content:
+                self.display_line_association(line_association)
+            self._format_potpourri_border(lina_list[-1], False)
+        else:
+            for line_association in chunk.line_association_list():
+                self.display_line_association(line_association)
+
+class ConsoleCanvasDiff(ConsoleCanvas):
+    def __init__(self, line_n_width, text_offset, sort_potpourri_by_subject_line_n_f):
+        ConsoleCanvas.__init__(self)
+
+        self.format = ConsoleCanvasFormatter(self.width, line_n_width, 
+                                             text_offset, 
+                                             sort_potpourri_by_subject_line_n_f)
         self.set_format(*self.format.compare_line_sequence())
         
     def display_line_association(self, lina):
@@ -53,14 +99,11 @@ class ConsoleCanvasDiff(ConsoleCanvas):
             self.pop_format()
         return verdict
 
-    def display_line_association_chunk(self, chunk):
+    def do(self, chunk):
         if chunk.type() == E_Chunk.POTPOURRI:
             lina_list = chunk.line_association_list()
             content = lina_list[1:-1]
-            if self.format.sort_potpourri_by_subject_f:
-                content.sort(key=lambda x: (1, x.nominal.line_n) if x.subject is None else (0, x.subject.line_n))
-            else:
-                content.sort(key=lambda x: (1, x.subject.line_n) if x.nominal is None else (0, x.nominal.line_n))
+            self.format.sort_potpourri_content(content)
 
             self._format_potpourri_border(lina_list[0], True)
             for line_association in content:
@@ -88,72 +131,6 @@ class ConsoleCanvasDiff(ConsoleCanvas):
             subject_txt.append((s_color, s_txt.replace("\t", "\\t")))
             nominal_txt.append((n_color, n_txt.replace("\t", "\\t")))
         return subject_txt, nominal_txt
-
-class ConsoleCanvasFormatter:
-    def __init__(self, terminal_width, line_n_width, text_offset, sort_potpourri_by_subject_line_n_f, show_only_analogy_development_f):
-        self.line_n_width  = line_n_width
-        
-        remaining          = terminal_width - 2 * self.line_n_width - 3
-        self.subject_width = int(remaining/2)
-        self.nominal_width = remaining - self.subject_width
-        self.text_offset = text_offset
-        self.sort_potpourri_by_subject_f = sort_potpourri_by_subject_line_n_f
-
-
-    def compare_line_sequence(self):
-        return [
-            LEFT(self.subject_width, text_offset=self.text_offset), 
-            FIXED(" ", "Uw"), 
-            LEFT(self.line_n_width, "Uw"), 
-            FIXED("|", "Bw"), 
-            LEFT(self.line_n_width, "Uw"), 
-            FIXED(" ", "Uw"), 
-            LEFT(self.nominal_width, text_offset=self.text_offset)
-        ]
-
-    def compare_line_sequence_no_subject(self):
-        return [
-            LEFT(self.subject_width, text_offset=self.text_offset), 
-            FIXED(" ", "Uw"), 
-            LEFT(self.line_n_width, "Rw"), 
-            FIXED("|", "Bw"), 
-            LEFT(self.line_n_width, "Uw"), 
-            FIXED(" ", "Uw"), 
-            LEFT(self.nominal_width, text_offset=self.text_offset)
-        ]
-
-    def compare_line_sequence_no_nominal(self):
-        return [
-            LEFT(self.subject_width, text_offset=self.text_offset), 
-            FIXED(" ", "Uw"), 
-            LEFT(self.line_n_width, "Uw"), 
-            FIXED("|", "Bw"), 
-            LEFT(self.line_n_width, "Rw"), 
-            FIXED(" ", "Uw"), 
-            LEFT(self.nominal_width, text_offset=self.text_offset)
-        ]
-
-
-    def compare_potpourri(self):
-        return [
-            FIXED("|" * self.subject_width, "Gw"), 
-            FIXED(" ", "Uw"), 
-            LEFT(self.line_n_width, "Uw"), 
-            FIXED("|", "Uw"), 
-            LEFT(self.line_n_width, "Uw"), 
-            FIXED(" ", "Uw"), 
-            FIXED("|" * self.nominal_width, "Gw"),
-        ]
-
-    @staticmethod
-    def _empty(width):
-        return " " * width
-
-    def empty_subject(self):
-        return [(Back.WHITE+Fore.RED, self._empty(self.text_offset) + ">" + self._empty(self.subject_width-1))]
-
-    def empty_nominal(self):
-        return [(Back.WHITE+Fore.RED, self._empty(self.nominal_width-1+self.text_offset) + "<")]
 
 def _good(subject, nominal):
     return "", subject.string, "", nominal.string

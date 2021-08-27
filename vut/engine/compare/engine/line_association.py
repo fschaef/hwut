@@ -13,11 +13,12 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.line          import Line
-from   vut.engine.compare.engine.analogy_db    import AnalogyDb
-import vut.engine.compare.edit_operations.line as     edit_operations_line
-from   vut.engine.compare.edit_operations.line import Edit, Edit_none, E_EditLine
-from   vut.external.quex.typed                 import typed
+from   vut.engine.compare.tolerance.line_element import E_ToleranceId
+from   vut.engine.compare.engine.line            import Line
+from   vut.engine.compare.engine.analogy_db      import AnalogyDb
+import vut.engine.compare.edit_operations.line   as     edit_operations_line
+from   vut.engine.compare.edit_operations.line   import Edit, Edit_none, E_EditLine
+from   vut.external.quex.typed                   import typed
 
 from   collections import namedtuple
 import sys
@@ -28,12 +29,12 @@ class LineAssociation:
     """An association of a line from the subject input stream and a line
     from the nominal input stream.
     """
-    @typed(subject=(None, Line), nominal=(None, Line), analogy_db=(None, AnalogyDb))
+    @typed(subject=(None, Line), nominal=(None, Line))
     def __init__(self, subject, nominal, edit_list=tuple()):
         assert edit_list is None or all(isinstance(x, Edit) for x in edit_list)
-        self.edit_list   = edit_list
-        self.subject = subject
-        self.nominal = nominal
+        self.edit_list = edit_list
+        self.subject   = subject
+        self.nominal   = nominal
 
     @staticmethod
     def empty(initial_subject):
@@ -48,6 +49,20 @@ class LineAssociation:
 
     def is_empty(self):
         return self.nominal is None
+
+    def has_analogy_error(self):
+        def _is_analogy(le):
+            return le is not None and le.tolerance_id == E_ToleranceId.ANALOGY
+
+        def _is_analogy_error(lela):
+            if     lela.edit_id != E_EditLine.SUBSTITUTE \
+               and lela.edit_id != E_EditLine.SUBSTITUTE_TYPE:
+                return False
+            else:
+                return _is_analogy(lela.subject) or _is_analogy(lela.nominal)
+
+        return any(_is_analogy_error(lela) 
+                   for lela in self.line_element_association_list())
 
     def line_element_association_list(self):
         """RETURNS: list of LineElementAssociation-s

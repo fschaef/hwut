@@ -30,6 +30,16 @@ class LineAssociationChunk:
     def line_association_list(self):
         return self.__line_association_list
 
+    def get_line_association(self, subject_line_n, nominal_line_n):
+        for lina in self.__line_association_list:
+            if lina.subject.line_n != subject_line_n: 
+                continue
+            elif lina.nominal.line_n != nominal_line_n:
+                # 'subject.line_n' is only associated with on 'nominal.line_n'
+                return # => (subject_line_n, nominal_line_n) cannot be found
+            else:
+                return lina
+
     def max_line_n(self):
         def _get(line, max_line_n):
             if line and line.line_n is not None and line.line_n > max_line_n: 

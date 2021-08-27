@@ -29,7 +29,7 @@ sys.path.insert(0, "../../../../")
 from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as     main
 from   vut.engine.compare.TEST.common   import print_list_sequence_pairs, \
-                                              print_friends_pairing_max_result
+                                               print_friends_pairing_max_result
 from   io import StringIO
 
 

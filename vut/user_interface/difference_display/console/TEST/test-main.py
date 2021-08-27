@@ -37,7 +37,7 @@ def test(subject_txt, nominal_txt, offset=0):
 
 subject_txt = \
 """Sah ein Röslein ein Knab stehen
-Röslein auf der     Heiden 
+Röslein auf der     ((Wiese))
 War jung morgenschön
 Lief er ganz schnell es von nah zu sehn
 Schaut's mit manchen Freuden
@@ -49,7 +49,7 @@ Numerische tolerance: 4712
 nominal_txt = \
 """
 Sah ein Knab ein Röslein stehen
-Röslein   auf der   Heiden 
+Röslein   auf der   ((Heiden))
 War so jung und morgenschön
 Lief er schnell es nah zu sehn
 Schaut's mit vielen Freuden
