@@ -50,7 +50,9 @@ class LineAssociation:
     def is_empty(self):
         return self.nominal is None
 
-    def has_analogy_error(self):
+    def analogy_errors(self):
+        """RETURNS: Set of pairs (subject, nominal) where analogies have not been met.
+        """
         def _is_analogy(le):
             return le is not None and le.tolerance_id == E_ToleranceId.ANALOGY
 
@@ -61,8 +63,14 @@ class LineAssociation:
             else:
                 return _is_analogy(lela.subject) or _is_analogy(lela.nominal)
 
-        return any(_is_analogy_error(lela) 
-                   for lela in self.line_element_association_list())
+        def _string(le):
+            return "" if le is None else le.string
+
+        return set(
+             (_string(lela.subject), _string(lela.nominal))
+             for lela in self.line_element_association_list()
+             if _is_analogy_error(lela)
+        )
 
     def line_element_association_list(self):
         """RETURNS: list of LineElementAssociation-s

@@ -1,0 +1,8 @@
+|--------------------------------------------------------------------------------------------------|
+((Röslein)) ((auf)) der ((Wiese))!              3|3 ((Röslein)) ((auf)) der ((Heiden))!             
+((Röslein)), ((Röslein)), ((Tülplein)) rot,     7|7 ((Röslein)), ((Röslein)), ((Röslein)) rot,      
+((Röslein)) ((unter)) der ((Wiese)).            8|8 ((Röslein)) ((auf)) der ((Heiden)).             
+|--------------------------------------------------------------------------------------------------|
+((Röslein)) ((auf)) der ((Heiden))!             3|3 ((Röslein)) ((auf)) der ((Wiese))!              
+((Röslein)), ((Röslein)), ((Röslein)) rot,      7|7 ((Röslein)), ((Röslein)), ((Tülplein)) rot,     
+((Röslein)) ((auf)) der ((Heiden)).             8|8 ((Röslein)) ((unter)) der ((Wiese)).            

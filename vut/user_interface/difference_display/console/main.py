@@ -1,7 +1,9 @@
 from   vut.system.helper                                       import number_of_decimal_digits
 from   vut.system.terminal                                     import ConsoleCanvas, LEFT, RIGHT, CENTER, FIXED, Fore, Back
 from   vut.user_interface.difference_display.console.formatter import ConsoleCanvasFormatter
-from   vut.engine.compare.engine.line_association_chunk        import LineAssociationChunk
+from   vut.engine.compare.engine.line_association_chunk        import LineAssociationChunk, \
+                                                                      line_association_list_sort, \
+                                                                      line_association_chunk_list_find_entries_relevant_to_analogy_errors
 from   vut.engine.compare.engine.line_association              import LineAssociation
 from   vut.engine.compare.engine.input_chunk                   import E_Chunk
 from   vut.engine.compare.edit_operations.line                 import E_EditLine
@@ -10,75 +12,37 @@ from   vut.external.quex.typed                                 import typed
 
 from   copy import copy
 
-@typed(line_associations=[LineAssociationChunk])
-def display(linachunks, text_offset):
-    linachunks = list(linachunks)
+@typed(lina_chunk_list=[LineAssociationChunk], sort_by_subject_line_n_f=bool)
+def comparison(lina_chunk_list, text_offset, sort_by_subject_line_n=False):
+    """Displays a comparison of subject and nominal lines clustered in 
+    'LineAssociationChunk'-s.
+    """
+    line_n_width = number_of_decimal_digits(lina_chunk_list[-1].max_line_n())
+    canvas       = ConsoleCanvasDiff(line_n_width, text_offset, 
+                                     sort_potpourri_by_subject_line_n_f=sort_by_subject_line_n)
+    for chunk in lina_chunk_list:
+        canvas.do(chunk)
 
-    if not linachunks:
-        return
+@typed(lina_chunk_list=[LineAssociationChunk], sort_by_subject_line_n_f=bool)
+def analogy_error(lina_chunk_list, text_offset, sort_by_subject_line_n=False):
+    """Displays lines related to analogy errors. That is, for each analogy error, the
+    line where the analogy is defined and where it causes an error is displayed.
+    """
 
-    line_n_width = number_of_decimal_digits(linachunks[-1].max_line_n())
-    canvas = ConsoleCanvasDiff(line_n_width, text_offset, 
-                               sort_potpourri_by_subject_line_n_f=False)
-    if False:
-        for chunk in linachunks:
-            canvas.do(chunk)
-    else:
-        def _get_lina(linachunks, subject_line_n, nominal_line_n):
-            result = None
-            for chunk in linachunks:
-                result = chunk.get_line_association(subject_line_n, nominal_line_n)
-                if result is not None: break
-            return result
+    line_n_width = number_of_decimal_digits(lina_chunk_list[-1].max_line_n())
+    canvas       = ConsoleCanvasDiff(line_n_width, text_offset) 
 
-        analogy_db = linachunks[-1].analogy_db()
-        lina_db = {}
-        for subject, p in analogy_db.line_number_db.items():
-            lina_db[(p.subject_line_n, p.nominal_line_n)] = \
-                _get_lina(linachunks, p.subject_line_n, p.nominal_line_n)
+    lina_list = line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_chunk_list)
 
-        lina_db.update(
-            ((lina.subject.line_n, lina.nominal.line_n), lina)
-            for chunk in linachunks
-            for lina in chunk.line_association_list()
-            if lina.has_analogy_error()
-        )
-
-        for lina in lina_db.values():
-            canvas.display_line_association(lina)
-
-    return
-
-class ConsoleCanvasAnalogyDiff(ConsoleCanvas):
-    def __init__(self, linachunks, text_offset, sort_potpourri_by_subject_line_n_f):
-        ConsoleCanvas.__init__(self)
-
-        line_n_width = number_of_decimal_digits(linachunks[-1].max_line_n())
-        self.format = ConsoleCanvasFormatter(self.width, line_n_width, 
-                                             text_offset, 
-                                             sort_potpourri_by_subject_line_n_f)
-        self.set_format(*self.format.compare_line_sequence())
-
-    def do(chunk):
-        if chunk.type() == E_Chunk.POTPOURRI:
-            lina_list = chunk.line_association_list()
-            content = lina_list[1:-1]
-            self.format.sort_potpourri_content(content)
-            self._format_potpourri_border(lina_list[0], True)
-            for line_association in content:
-                self.display_line_association(line_association)
-            self._format_potpourri_border(lina_list[-1], False)
-        else:
-            for line_association in chunk.line_association_list():
-                self.display_line_association(line_association)
+    for lina in line_association_list_sort(lina_list, sort_by_subject_line_n):
+        canvas.display_line_association(lina)
 
 class ConsoleCanvasDiff(ConsoleCanvas):
-    def __init__(self, line_n_width, text_offset, sort_potpourri_by_subject_line_n_f):
+    def __init__(self, line_n_width, text_offset, sort_potpourri_by_subject_line_n_f=True):
         ConsoleCanvas.__init__(self)
 
-        self.format = ConsoleCanvasFormatter(self.width, line_n_width, 
-                                             text_offset, 
-                                             sort_potpourri_by_subject_line_n_f)
+        self.format = ConsoleCanvasFormatter(self.width, line_n_width, text_offset)
+        self.sort_potpourri_by_subject_line_n_f = sort_potpourri_by_subject_line_n_f
         self.set_format(*self.format.compare_line_sequence())
         
     def display_line_association(self, lina):
@@ -103,7 +67,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         if chunk.type() == E_Chunk.POTPOURRI:
             lina_list = chunk.line_association_list()
             content = lina_list[1:-1]
-            self.format.sort_potpourri_content(content)
+            line_association_list_sort(content, self.sort_potpourri_by_subject_line_n_f)
 
             self._format_potpourri_border(lina_list[0], True)
             for line_association in content:
@@ -136,28 +100,28 @@ def _good(subject, nominal):
     return "", subject.string, "", nominal.string
 
 def _tolerated(subject, nominal):
-    return Back.GREEN + Fore.WHITE, subject.string, \
-           Back.GREEN + Fore.WHITE, nominal.string
+    return Back.GREEN, subject.string, \
+           Fore.GREEN, nominal.string
 
 def _deleted(subject, nominal):
-    return Back.BLUE + Fore.WHITE, subject.string, \
-           Back.CYAN, " " * len(subject.string)
+    return Back.RED, subject.string, \
+           Back.BLUE + Fore.LIGHTWHITE_EX, " " * len(subject.string)
 
 def _inserted(subject, nominal):
-    return Back.CYAN, " " * len(nominal.string), \
-           Back.BLUE + Fore.WHITE, nominal.string
+    return Back.RED, " " * len(nominal.string), \
+           Back.BLUE + Fore.LIGHTWHITE_EX, nominal.string
 
 def _transpose(subject, nominal):
-    return Back.YELLOW, subject.string, \
+    return Back.RED, subject.string, \
            Back.YELLOW, nominal.string
 
 def _substitute(subject, nominal):
-    return Back.RED + Fore.WHITE, subject.string, \
-           Back.RED + Fore.WHITE, nominal.string
+    return Back.RED, subject.string, \
+           Fore.RED,              nominal.string
 
 def _substitute_type(subject, nominal):
-    return Back.RED + Fore.BLACK, subject.string, \
-           Back.RED + Fore.BLACK, nominal.string
+    return Back.RED,                      subject.string, \
+           Back.BLACK + Fore.LIGHTRED_EX, nominal.string
 
 def _none(subject, nominal):
     if subject:
