@@ -113,7 +113,8 @@ def line_association_chunk_list_find_definitions(lina_chunk_list, subject_nomina
         result = None
         for chunk in lina_chunk_list:
             result = chunk.get_line_association(subject_line_n, nominal_line_n)
-            if result is not None: break
+            if result is not None: 
+                break
         return result
 
     result = {}

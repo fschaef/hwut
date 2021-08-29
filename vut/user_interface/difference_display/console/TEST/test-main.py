@@ -26,13 +26,14 @@ config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülple
 
 def test_core(subject_txt, nominal_txt, offset, function):
     global config
-    terminal_width = 100
+    terminal_width  = 100
+    terminal_height = 1e6
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
     print("|" + "-" * (terminal_width -2) + "|")
     la = list(compare.line_associations(config, subject, nominal))
-    terminal_size.set_size_fixed(10, terminal_width)
+    terminal_size.set_size_fixed(terminal_height, terminal_width)
     function(la, offset)
 
 def test(subject_txt, nominal_txt, offset=0, function=console.comparison):

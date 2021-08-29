@@ -21,7 +21,7 @@ def comparison(lina_chunk_list, text_offset, sort_by_subject_line_n=False):
     canvas       = ConsoleCanvasDiff(line_n_width, text_offset, 
                                      sort_potpourri_by_subject_line_n_f=sort_by_subject_line_n)
     for chunk in lina_chunk_list:
-        canvas.do(chunk)
+        canvas.display_LineAssociationChunk(chunk)
 
 @typed(lina_chunk_list=[LineAssociationChunk], sort_by_subject_line_n_f=bool)
 def analogy_error(lina_chunk_list, text_offset, sort_by_subject_line_n=False):
@@ -35,7 +35,7 @@ def analogy_error(lina_chunk_list, text_offset, sort_by_subject_line_n=False):
     lina_list = line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_chunk_list)
 
     for lina in line_association_list_sort(lina_list, sort_by_subject_line_n):
-        canvas.display_line_association(lina)
+        canvas.display_LineAssociation(lina)
 
 class ConsoleCanvasDiff(ConsoleCanvas):
     def __init__(self, line_n_width, text_offset, sort_potpourri_by_subject_line_n_f=True):
@@ -45,47 +45,65 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         self.sort_potpourri_by_subject_line_n_f = sort_potpourri_by_subject_line_n_f
         self.set_format(*self.format.compare_line_sequence())
         
-    def display_line_association(self, lina):
+    def display_LineAssociation(self, lina):
+        """RETURNS: True, in case of success.
+                    False, else.
+
+        Displays a formatted line of an association of a subject line with a 
+        nominal line.
+        """
         subject_txt, nominal_txt = self._format_line_association(lina)
-        if lina.subject is None:
-            subject_txt = self.format.empty_subject()
-            self.push_format(*self.format.compare_line_sequence_no_subject())
-        elif lina.nominal is None:
-            nominal_txt = self.format.empty_nominal()
-            self.push_format(*self.format.compare_line_sequence_no_nominal())
-
-        subject_line_n = "<" if lina.subject is None else "%s" % lina.subject.line_n
-        nominal_line_n = ">" if lina.nominal is None else "%s" % lina.nominal.line_n
-
-        verdict = self.print_line(subject_txt, "%s" % subject_line_n, 
-                                  "%s" % nominal_line_n, nominal_txt)
-        if lina.subject is None or lina.nominal is None: 
+        if lina.subject is None or lina.nominal is None:
+            if lina.subject is None:
+                subject_txt = self.format.empty_subject()
+                self.push_format(*self.format.compare_line_sequence_no_subject())
+                verdict = self.print_line("%s" % lina.nominal.line_n, nominal_txt)
+            else:
+                self.push_format(*self.format.compare_line_sequence_no_nominal())
+                verdict = self.print_line(subject_txt, "%s" % lina.subject.line_n)
             self.pop_format()
+        else:
+            verdict = self.print_line(subject_txt, 
+                                      "%s" % lina.subject.line_n, "%s" % lina.nominal.line_n, 
+                                      nominal_txt)
         return verdict
 
-    def do(self, chunk):
+    def display_LineAssociationChunk(self, chunk):
+        """Displays a 'LineAssociationChunk' (LineSequences or Potpourri). It relies
+        for each line association on 'display_LineAssociation()'.
+        """
         if chunk.type() == E_Chunk.POTPOURRI:
             lina_list = chunk.line_association_list()
             content = lina_list[1:-1]
             line_association_list_sort(content, self.sort_potpourri_by_subject_line_n_f)
 
-            self._format_potpourri_border(lina_list[0], True)
+            self._print_potpourri_border(lina_list[0], True)
             for line_association in content:
-                self.display_line_association(line_association)
-            self._format_potpourri_border(lina_list[-1], False)
+                self.display_LineAssociation(line_association)
+            self._print_potpourri_border(lina_list[-1], False)
         else:
             for line_association in chunk.line_association_list():
-                self.display_line_association(line_association)
+                self.display_LineAssociation(line_association)
 
-    def _format_potpourri_border(self, lina, begin):
+    def _print_potpourri_border(self, lina, begin_f):
+        """Displays the border of a Potpourri region. 
+
+        'begin_f' = True: display the OPENING of a potpourri region.
+        else:             display the CLOSING of a potpourri region.
+        """
         subject_line_n = "" if lina.subject is None else "%s" % lina.subject.line_n
         nominal_line_n = "" if lina.nominal is None else "%s" % lina.nominal.line_n
-        self.push_format(*self.format.compare_potpourri())
-        self.print_line("", "%s" % subject_line_n, "%s" % nominal_line_n, "")
+        self.push_format(*self.format.compare_potpourri(begin_f))
+        self.print_line(subject_line_n, nominal_line_n)
         self.pop_format()
 
     @typed(line=LineAssociation)
     def _format_line_association(self, lina):
+        """RETURNS: [0] subject text: list of (color, text)
+                    [1] nominal text: list of (color, text)
+
+        Provides text and format information to display the 'LineAssociation'. 
+        """
         subject_txt = []
         nominal_txt = []
         subject_n   = 0
@@ -94,6 +112,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
             s_color, s_txt, n_color, n_txt = _edit_db[lela.edit_id](lela.subject, lela.nominal)
             subject_txt.append((s_color, s_txt.replace("\t", "\\t")))
             nominal_txt.append((n_color, n_txt.replace("\t", "\\t")))
+
         return subject_txt, nominal_txt
 
 def _good(subject, nominal):
