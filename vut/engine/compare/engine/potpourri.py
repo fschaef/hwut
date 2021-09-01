@@ -12,7 +12,8 @@ The two main functions of 'Potpourri' are (derived from 'InputChunk')
                             for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.core             import E_Verdict
+from   vut.engine.compare.engine.core             import E_Verdict, \
+                                                         E_PotpourriBorder
 from   vut.engine.compare.engine.input_chunk      import InputChunk, E_Chunk
 from   vut.engine.compare.engine.line             import Line
 from   vut.engine.compare.engine.line_association import LineAssociation
@@ -64,11 +65,13 @@ class Potpourri(InputChunk):
                                                 self.configuration.potpourri_max_comparison_count)
 
         result = [
-            LineAssociation(self.line_list[0], nominal.line_list[0], edit_list=[])
+            LineAssociation.potpourri_border(self.line_list[0], nominal.line_list[0], 
+                                             E_PotpourriBorder.BEGIN)
         ]
         result.extend(core_result)
         result.append(
-            LineAssociation(self.line_list[-1], nominal.line_list[-1], edit_list=[])
+            LineAssociation.potpourri_border(self.line_list[-1], nominal.line_list[-1],
+                                             E_PotpourriBorder.END)
         )
 
         return result, new_analogy_db

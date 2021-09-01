@@ -13,3 +13,8 @@ class E_Verdict(Enum):
     ERROR_IN_SUBJECT = auto()
     ERROR_IN_NOMINAL = auto()
 
+class E_PotpourriBorder(Enum):
+    NONE  = auto()
+    BEGIN = auto()
+    END   = auto()
+

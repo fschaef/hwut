@@ -15,6 +15,7 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.tolerance.line_element import E_ToleranceId
 from   vut.engine.compare.engine.line            import Line
+from   vut.engine.compare.engine.core            import E_PotpourriBorder
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
 import vut.engine.compare.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.edit_operations.line   import Edit, Edit_none, E_EditLine
@@ -30,11 +31,17 @@ class LineAssociation:
     from the nominal input stream.
     """
     @typed(subject=(None, Line), nominal=(None, Line))
-    def __init__(self, subject, nominal, edit_list=tuple()):
+    def __init__(self, subject, nominal, edit_list=tuple(), potpourri_border=E_PotpourriBorder.NONE):
         assert edit_list is None or all(isinstance(x, Edit) for x in edit_list)
         self.edit_list = edit_list
         self.subject   = subject
         self.nominal   = nominal
+        self.border    = potpourri_border
+
+    @staticmethod
+    @typed(subject=(None, Line), nominal=(None, Line), border=E_PotpourriBorder)
+    def potpourri_border(subject, nominal, border):
+        return LineAssociation(subject, nominal, [], border)
 
     @staticmethod
     def empty(initial_subject):

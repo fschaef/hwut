@@ -8,6 +8,7 @@ ________________________________________________________________________________
 import vut.system.core          as     system
 import vut.system.terminal_size as     terminal_size
 from   vut.external.colorama    import init as colorama_init, Fore, Back, Style
+from   vut.external.quex.typed  import typed
 
 from   enum        import Enum, auto
 from   collections import namedtuple
@@ -19,58 +20,96 @@ class E_Alignment(Enum):
     CENTER = auto()
     RIGHT  = auto()
     FIXED  = auto()
+    GLUE   = auto()  # => FIXED by 'set_format()'
 
 # Format Expression: 'FE'
 CellFormat = namedtuple("CellFormat", ("alignment", "color_code", "width", "string", "text_offset"))
 
+@typed(width=int)
 def LEFT(width, color=None, text_offset=0):
     return CellFormat(E_Alignment.LEFT, _color_to_code(color), width, None, text_offset)
 
+@typed(width=int)
 def RIGHT(width, color=None, text_offset=0):
     return CellFormat(E_Alignment.RIGHT, _color_to_code(color), width, None, text_offset)
 
+@typed(width=int)
 def CENTER(width, color=None, text_offset=0):
     return CellFormat(E_Alignment.CENTER, _color_to_code(color), width, None, text_offset)
 
+@typed(string=str)
 def FIXED(string, color=None, text_offset=0):
     return CellFormat(E_Alignment.FIXED, _color_to_code(color), len(string), string, text_offset)
+
+@typed(string=str)
+def GLUE(string, color=None, text_offset=0):
+    return CellFormat(E_Alignment.GLUE, _color_to_code(color), 0, string, text_offset)
 
 class ConsoleCanvas:
    def __init__(self):
        self.height, self.width = terminal_size.get()
-       self.__format_list = []
-       self.__format_stack = []
+       self.height = int(self.height)
+       self.width = int(self.width)
        colorama_init()
 
-   @property 
-   def format_list(self):
-       return self.__format_list
+   def display(self, line):
+       print(line + _color_reset_all)
 
-   def set_format(self, *format_list):
-       self.__format_list = list( format_list)
-
-   def push_format(self, *format_list):
-       self.__format_stack.append(self.__format_list)
-       self.set_format(*list(format_list))
-
-   def pop_format(self):
-       self.__format_list = self.__format_stack.pop()
-
-   def print_line(self, *cell_list):
-       tmp = list(cell_list)
-       print(self.format_line(*tmp) + _color_reset_all)
-
-   def format_line(self, *cell_list):
-       def _iterable(cell_list, format_list):
+   @typed(cell_content_list=list)
+   def prepare(self, f, cell_content_list=[]):
+       def _iterable(cell_content_list, format_list):
            cell_i = 0
-           for fe in self.__format_list:
-               text = _format_cell(fe, cell_list, cell_i)
+           for fe in format_list:
+               text = _format_cell(fe, cell_content_list, cell_i)
                yield text
                # 'FIXED' => content is taken out of 'fe' not from cell_list.
                if fe.alignment != E_Alignment.FIXED: cell_i += 1
 
-       return "".join(_iterable(cell_list, self.__format_list))
-                
+       return "".join(_iterable(cell_content_list, f))
+
+   def prepare_format(self, *format_list):
+       def _expand_glue(glue_width_db, i, cell):
+           width = glue_width_db[i]
+           if not cell.string: string = " "
+           else:               string = cell.string
+           repetition = int(width / len(cell.string))
+           cell_string = string * repetition + string[:width - repetition * len(cell.string)]
+           return CellFormat(E_Alignment.FIXED, cell.color_code, width, cell_string, cell.text_offset)
+
+       glue_width_db = self.__compute_glue_width_db(list(format_list))
+
+       return [
+           cell if cell.alignment != E_Alignment.GLUE else _expand_glue(glue_width_db, i, cell)
+           for i, cell in enumerate(format_list)
+       ]
+
+   def __compute_glue_width_db(self, format_list):
+       """RETURN: map: cell-index --> width of glue cell
+
+       The dictionary contains only entries for glue cells.
+       """
+       glue_n = sum(cell.alignment == E_Alignment.GLUE for cell in format_list)
+       if glue_n == 0:
+           return None
+
+       occupied         = sum(cell.width for cell in format_list)
+       glue_index_db    = list(index for index, cell in enumerate(format_list) 
+                               if cell.alignment == E_Alignment.GLUE)
+       remaining_glue   = max(0, self.width - occupied)
+       glue_cell_width  = remaining_glue / glue_n
+
+       # 'glue_cell_with' is an integer
+       # => 'glue_cell_with * glue_n' is not necessarily == remaining_glue
+       # => distribute the remainder over the cells.
+       width_array      = [int(glue_cell_width)] * glue_n
+       remaining_glue  -= int(glue_cell_width) * glue_n
+       i = 0
+       while remaining_glue > 0:
+           width_array[i%glue_n] += 1
+           remaining_glue -= 1
+           i += 1
+       return dict((glue_index_db[i], width) for i, width in enumerate(width_array))
+
 
 def _format_fixed(fe):
     if fe.alignment == E_Alignment.FIXED:

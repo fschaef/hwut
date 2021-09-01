@@ -23,11 +23,22 @@ class LineAssociationChunk:
         self.__type_id               = type_id
         self.__line_association_list = line_association_list
         self.__analogy_db            = analogy_db
+        self._sort(True)
 
     def type(self):
         return self.__type_id
 
-    def line_association_list(self):
+    def _sort(self, sort_by_subject_line_n_f):
+        if sort_by_subject_line_n_f:
+            key = lambda x: (1, x.nominal.line_n) if x.subject is None else (0, x.subject.line_n)
+        else:
+            key = lambda x: (1, x.subject.line_n) if x.nominal is None else (0, x.nominal.line_n)
+        self.__line_association_list.sort(key=key)
+        self.__sorted_by_subject_line_n_f = sort_by_subject_line_n_f
+
+    def line_association_list(self, sort_by_subject_line_n_f=True):
+        if sort_by_subject_line_n_f != self.__sorted_by_subject_line_n_f:
+            self._sort(sort_by_subject_line_n_f)
         return self.__line_association_list
 
     def get_line_association(self, subject_line_n, nominal_line_n):
@@ -63,22 +74,8 @@ class LineAssociationChunk:
             ("analogy_db",            self.__analogy_db)
         ]
 
-@typed(lina_list=[LineAssociation], sort_by_subject_f=bool)
-def line_association_list_sort(lina_list, sort_by_subject_f=False):
-    """RETURNS: A sorted list of 'LineAssociation' objects.
-
-    sort_by_subject_f: sort objects by subject line numbers.
-    else:              sort by nominal line number.
-    """
-    result = list(lina_list)
-    if sort_by_subject_f:
-        result.sort(key=lambda x: (1, x.nominal.line_n) if x.subject is None else (0, x.subject.line_n))
-    else:
-        result.sort(key=lambda x: (1, x.subject.line_n) if x.nominal is None else (0, x.nominal.line_n))
-    return result
-
 @typed(lina_chunk_list=[LineAssociationChunk])
-def line_association_chunk_list_analogy_errors(lina_chunk_list, errors_f=True):
+def line_association_chunk_list_analogy_errors(lina_chunk_list, sort_by_subject_line_n_f, errors_f=True):
     """RETURNS: [0] lina_db: 
                     (subject line number, nominal line number) -> LineAssociation
                 [1] set of (subject, nominal)
@@ -91,7 +88,7 @@ def line_association_chunk_list_analogy_errors(lina_chunk_list, errors_f=True):
     lina_db             = {}
     subject_nominal_set = set()
     for chunk in lina_chunk_list:
-        for lina in chunk.line_association_list():
+        for lina in chunk.line_association_list(sort_by_subject_line_n_f):
             linas_subject_nominal_set = lina.analogy_errors()
             if not linas_subject_nominal_set: 
                 continue
@@ -139,6 +136,7 @@ def line_association_chunk_list_find_definitions(lina_chunk_list, subject_nomina
 
 @typed(lina_chunk_list=[LineAssociationChunk], errors_f=bool, definitions_f=bool)
 def line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_chunk_list, 
+                                                                        sort_by_subject_line_n_f,
                                                                         errors_f=True, 
                                                                         definitions_f=True):
     """RETURNS: list of LineAssociation objects.
@@ -154,6 +152,7 @@ def line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_chu
 
     result, \
     subject_nominal_set = line_association_chunk_list_analogy_errors(lina_chunk_list, 
+                                                                     sort_by_subject_line_n_f,
                                                                      errors_f) 
 
     if definitions_f:
