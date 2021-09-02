@@ -41,16 +41,6 @@ class LineAssociationChunk:
             self._sort(sort_by_subject_line_n_f)
         return self.__line_association_list
 
-    def get_line_association(self, subject_line_n, nominal_line_n):
-        for lina in self.__line_association_list:
-            if lina.subject.line_n != subject_line_n: 
-                continue
-            elif lina.nominal.line_n != nominal_line_n:
-                # 'subject.line_n' is only associated with on 'nominal.line_n'
-                return # => (subject_line_n, nominal_line_n) cannot be found
-            else:
-                return lina
-
     def max_line_n(self):
         def _get(line, max_line_n):
             if line and line.line_n is not None and line.line_n > max_line_n: 
@@ -74,8 +64,18 @@ class LineAssociationChunk:
             ("analogy_db",            self.__analogy_db)
         ]
 
+def find_line_association(lina_list, subject_line_n, nominal_line_n):
+    for lina in lina_list:
+        if lina.subject.line_n != subject_line_n: 
+            continue
+        elif lina.nominal.line_n != nominal_line_n:
+            # 'subject.line_n' is only associated with on 'nominal.line_n'
+            return # => (subject_line_n, nominal_line_n) cannot be found
+        else:
+            return lina
+
 @typed(lina_chunk_list=[LineAssociationChunk])
-def line_association_chunk_list_analogy_errors(lina_chunk_list, sort_by_subject_line_n_f, errors_f=True):
+def line_association_chunk_list_analogy_errors(lina_list, sort_by_subject_line_n_f, errors_f=True):
     """RETURNS: [0] lina_db: 
                     (subject line number, nominal line number) -> LineAssociation
                 [1] set of (subject, nominal)
@@ -87,32 +87,34 @@ def line_association_chunk_list_analogy_errors(lina_chunk_list, sort_by_subject_
     """
     lina_db             = {}
     subject_nominal_set = set()
-    for chunk in lina_chunk_list:
-        for lina in chunk.line_association_list(sort_by_subject_line_n_f):
-            linas_subject_nominal_set = lina.analogy_errors()
-            if not linas_subject_nominal_set: 
-                continue
-            elif errors_f:
-                lina_db[(lina.subject.line_n, lina.nominal.line_n)] = lina
-            subject_nominal_set.update(linas_subject_nominal_set)
+    for lina in lina_list:
+        linas_subject_nominal_set = lina.analogy_errors()
+        if not linas_subject_nominal_set: 
+            continue
+        elif errors_f:
+            lina_db[(lina.subject.line_n, lina.nominal.line_n)] = lina
+        subject_nominal_set.update(linas_subject_nominal_set)
 
     return lina_db, subject_nominal_set
 
 @typed(lina_chunk_list=[LineAssociationChunk])
-def line_association_chunk_list_find_definitions(lina_chunk_list, subject_nominal_set):
+def line_association_chunk_list_find_definitions(lina_list, subject_nominal_set):
     """RETURNS: [0] lina_db: 
                     (subject line number, nominal line number) -> LineAssociation
 
     Searches for LineAssociation-s where either the 'subject' or 'nominal' from
     the 'subject_nominal_set' occurrs.
     """
-    def _get_lina(lina_chunk_list, subject_line_n, nominal_line_n):
-        result = None
-        for chunk in lina_chunk_list:
-            result = chunk.get_line_association(subject_line_n, nominal_line_n)
-            if result is not None: 
-                break
-        return result
+    def _enter(result, lina_list, subject):
+        if subject is None:
+            return
+        p = analogy_db.line_number_db.get(subject)
+        if p is None:
+            return
+        lina = find_line_association(lina_list, p.subject_line_n, p.nominal_line_n)
+        if lina is None: 
+            return
+        result[(p.subject_line_n, p.nominal_line_n)] = lina
 
     result = {}
     # For those analogies where errors occur, search for the definition of the
@@ -120,22 +122,14 @@ def line_association_chunk_list_find_definitions(lina_chunk_list, subject_nomina
     analogy_db = lina_chunk_list[-1].analogy_db()
 
     for subject, nominal in subject_nominal_set:
-        p = analogy_db.line_number_db.get(subject)
-        if p is not None:
-            result[(p.subject_line_n, p.nominal_line_n)] = _get_lina(lina_chunk_list, 
-                                                                     p.subject_line_n, 
-                                                                     p.nominal_line_n)
+        _enter(result, lina_list, subject, analogy_db)
         subject = analogy_db.get_subject(nominal)
-        if subject is not None:
-            p = analogy_db.line_number_db.get(subject)
-            result[(p.subject_line_n, p.nominal_line_n)] = _get_lina(lina_chunk_list, 
-                                                                     p.subject_line_n, 
-                                                                     p.nominal_line_n)
+        _enter(result, lina_list, analogy_db, p.subject_line_n, p.nominal_line_n)
 
     return result
 
 @typed(lina_chunk_list=[LineAssociationChunk], errors_f=bool, definitions_f=bool)
-def line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_chunk_list, 
+def line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_list, 
                                                                         sort_by_subject_line_n_f,
                                                                         errors_f=True, 
                                                                         definitions_f=True):
@@ -151,12 +145,12 @@ def line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_chu
     assert errors_f or definitions_f
 
     result, \
-    subject_nominal_set = line_association_chunk_list_analogy_errors(lina_chunk_list, 
+    subject_nominal_set = line_association_chunk_list_analogy_errors(lina_list, 
                                                                      sort_by_subject_line_n_f,
                                                                      errors_f) 
 
     if definitions_f:
-        definition_lina_db = line_association_chunk_list_find_definitions(lina_chunk_list,
+        definition_lina_db = line_association_chunk_list_find_definitions(lina_list,
                                                                           subject_nominal_set)
         result.update(definition_lina_db)
 
