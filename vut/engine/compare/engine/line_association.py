@@ -44,9 +44,10 @@ class LineAssociation:
         return LineAssociation(subject, nominal, [], border)
 
     @staticmethod
-    def empty(initial_subject):
-        return LineAssociation(subject = initial_subject,
-                               nominal = None)
+    def empty(initial_subject=None, edit_list=tuple()):
+        return LineAssociation(subject   = initial_subject,
+                               nominal   = None, 
+                               edit_list = edit_list)
 
     @staticmethod
     def from_text(subject_line_n, subject_txt, nominal_line_n, nominal_txt):
@@ -56,6 +57,17 @@ class LineAssociation:
 
     def is_empty(self):
         return self.nominal is None
+
+    def is_good(self):
+        if   self.subject is None: 
+            return False
+        elif self.nominal is None: 
+            return False
+        elif not self.edit_list:
+            return True
+        else:
+            return all(edit.id == E_EditLine.GOOD or edit.id == E_EditLine.GOOD_TOLERATED 
+                       for edit in self.edit_list)
 
     def analogy_errors(self):
         """RETURNS: Set of pairs (subject, nominal) where analogies have not been met.
@@ -85,7 +97,9 @@ class LineAssociation:
         That is, the line elements of the subject and the nominal lines are combined
         pairwise according to the prescribed edit operations.
         """
-        if   self.subject is None:
+        if   self.subject is None and self.nominal is None:
+            result = []
+        elif self.subject is None:
             result = [
                 LineElementAssociation(E_EditLine.NONE, None, n) 
                 for n in self.nominal.sequence

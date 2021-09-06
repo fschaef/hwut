@@ -3,76 +3,110 @@ from   vut.system.terminal                                     import ConsoleCan
 import vut.system.keyboard                                     as     keyboard
 from   vut.user_interface.difference_display.console.formatter import ConsoleCanvasFormatter
 from   vut.engine.compare.engine.line_association_chunk        import LineAssociationChunk, \
-                                                                      line_association_chunk_list_find_entries_relevant_to_analogy_errors
+                                                                      LineAssociationList
 from   vut.engine.compare.engine.line_association              import LineAssociation
 from   vut.engine.compare.engine.input_chunk                   import E_Chunk
-from   vut.engine.compare.edit_operations.line                 import E_EditLine
 from   vut.engine.compare.engine.core                          import E_PotpourriBorder
+from   vut.engine.compare.edit_operations.line                 import E_EditLine, Edit
 import vut.engine.compare.edit_operations.line                 as     edit_operations_line
 from   vut.external.quex.typed                                 import typed
 
 from   copy import copy
 from   math import ceil
 
-class LineAssociationDecorated(LineAssociation):
-    def __init__(self, chunk_index, lina_index, lina):
-        self.chunk_index = chunk_index
-        self.lina_index  = lina_index
-        LineAssociation.__init__(self, lina.subject, lina.nominal, lina.edit_list, lina.border)
+from   enum import Enum, auto
 
-@typed(lina_chunk_list=[LineAssociationChunk], sort_by_subject_line_n_f=bool)
-def comparison(lina_chunk_list, text_offset, sort_by_subject_line_n_f=False):
+@typed(lina_cnunk_list=[LineAssociationChunk], sort_potpourri_by_subject_line_n_f=bool)
+def do(lina_chunk_list, text_offset, sort_potpourri_by_subject_line_n_f=False):
     """Displays a comparison of subject and nominal lines clustered in 
     'LineAssociationChunk'-s.
     """
-    content_db = [
-        LineAssociationDecorated(chunk_index, lina_index, lina) 
-        for chunk_index, chunk in enumerate(lina_chunk_list)
-        for lina_index, lina in enumerate(chunk.line_association_list(sort_by_subject_line_n_f))
-    ]
 
-    line_n_width = number_of_decimal_digits(lina_chunk_list[-1].max_line_n())
-    canvas       = ConsoleCanvasDiff(line_n_width, text_offset, 
-                                     sort_potpourri_by_subject_line_n_f=sort_by_subject_line_n_f)
-
-    canvas.extend(lina for lina in content_db)
-    canvas.interact()
-
-@typed(lina_chunk_list=[LineAssociationChunk], sort_by_subject_line_n_f=bool)
-def analogy_error(lina_chunk_list, text_offset, sort_by_subject_line_n_f=False):
-    """Displays lines related to analogy errors. That is, for each analogy error, the
-    line where the analogy is defined and where it causes an error is displayed.
-    """
-
-    line_n_width = number_of_decimal_digits(lina_chunk_list[-1].max_line_n())
-    canvas       = ConsoleCanvasDiff(line_n_width, text_offset) 
-
-    lina_list = line_association_chunk_list_find_entries_relevant_to_analogy_errors(lina_chunk_list,
-                                                                                    sort_by_subject_line_n_f)
-
-    canvas.extend(lina_list)
+    canvas = ConsoleCanvasDiff(lina_chunk_list) 
 
     canvas.interact()
+
+class E_DiffMode(Enum):
+    PLAIN     = auto()
+    ERRORS    = auto()
+    ANALOGIES = auto()
+
+
+class LineAssociationDecorated(LineAssociation):
+    def __init__(self, chunk_index, lina_index, lina):
+        self.chunk_index   = chunk_index
+        self.lina_index    = lina_index
+        LineAssociation.__init__(self, lina.subject, lina.nominal, lina.edit_list, lina.border)
+        self.subject_end_f = False
+        self.nominal_end_f = False
+
+def lina_list_from_lina_chunk_list(lina_chunk_list, sort_potpourri_by_subject_line_n_f):
+    result = LineAssociationList([])
+    
+    for chunk_index, chunk in enumerate(lina_chunk_list):
+        lina_list = LineAssociationList(chunk.line_association_list())
+        result.extend(
+            LineAssociationDecorated(chunk_index, lina_index, lina) 
+            for lina_index, lina in enumerate(lina_list)
+        )
+
+    return result
 
 class ConsoleCanvasDiff(ConsoleCanvas):
-    def __init__(self, line_n_width, text_offset, sort_potpourri_by_subject_line_n_f=True):
+    def __init__(self, lina_chunk_list):
         ConsoleCanvas.__init__(self)
+        self.__lina_chunk_list = lina_chunk_list
+        self.__analogy_db      = lina_chunk_list[-1].analogy_db()
 
-        self.format = ConsoleCanvasFormatter(self.width, line_n_width, text_offset, self)
-        self.sort_potpourri_by_subject_line_n_f = sort_potpourri_by_subject_line_n_f
-        self.__lina_list            = []
+        line_n_width = number_of_decimal_digits(lina_chunk_list[-1].max_line_n())
+        self.format  = ConsoleCanvasFormatter(self.width, line_n_width, 0, self)
+        self.__sort_potpourri_by_subject_line_n_f = True
+        
+        self.__lina_list            = [] # filtered list of LineAssociationDecorated objects 
+        #                                # according to mode.
         self.__display_cache_db     = {} # line_index -> formatted line
         self.__display_begin_line_i = 0
         self.__max_line_length      = 0
+        self.__mode                 = E_DiffMode.PLAIN
 
-    @typed(lina=LineAssociationDecorated)
-    def append(self, lina):
-        self.__lina_list.append(lina)
+    @typed(mode=E_DiffMode)
+    def set_mode(self, mode):
+        self.__mode = mode
+        self.prepare_data()
 
-    def extend(self, lina_iterable):
-        self.__lina_list.extend(lina_iterable)
+    def prepare_data(self):
+        lina_list_source = lina_list_from_lina_chunk_list(self.__lina_chunk_list, 
+                                                          self.__sort_potpourri_by_subject_line_n_f)
+        if self.__mode == E_DiffMode.PLAIN:
+            self.__lina_list = lina_list_source
+        elif self.__mode == E_DiffMode.ANALOGIES:
+            self.__lina_list = lina_list_source.find_entries_relevant_to_analogy_errors(self.__analogy_db)
+            self.__lina_list.sort(True)
+        elif self.__mode == E_DiffMode.ERRORS:
+            self.__lina_list = lina_list_source.find_errors()
 
-    def show(self):
+        if not self.__lina_list:
+            return
+
+        # find last of each
+        lina_n             = len(self.__lina_list) 
+        end_subject_lina_i = None
+        end_nominal_lina_i = None
+        for lina_i, lina in reversed(list(enumerate(self.__lina_list))):
+            if lina.subject is not None and end_subject_lina_i is None:
+                end_subject_lina_i = lina_i + 1
+            if lina.nominal is not None and end_nominal_lina_i is None:
+                end_nominal_lina_i = lina_i + 1
+            if end_subject_lina_i is not None and end_nominal_lina_i is not None:
+                break
+
+        if end_subject_lina_i == lina_n or end_nominal_lina_i == lina_n:
+            extra = LineAssociationDecorated(-1, -1, LineAssociation.empty())
+            self.__lina_list.append(extra)
+        self.__lina_list[end_subject_lina_i].subject_end_f = True 
+        self.__lina_list[end_nominal_lina_i].nominal_end_f = True 
+
+    def _display_LineAssociations(self):
         if self.height < 1:
             return
         L     = len(self.__lina_list)
@@ -81,25 +115,37 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         if end <= begin:
             return
 
-        for line_i in range(begin, end):
-            formatted = self.__display_cache_db.get(line_i)
+        for lina_i in range(begin, end):
+            formatted = self.__display_cache_db.get(lina_i)
             if formatted is None:
-                formatted = self._prepare_LineAssociation(self.__lina_list[line_i])
-                self.__display_cache_db[line_i] = formatted
+                formatted = self._prepare_LineAssociation(self.__lina_list[lina_i])
+                self.__display_cache_db[lina_i] = formatted
             self.display(formatted)
 
+        return end
+
+    def _display_fill_empty(self, diplayed_line_n):
+        if diplayed_line_n >= self.height:
+            return
+        empty_formatted = self._prepare_LineAssociation(LineAssociation.empty(None))
+        for line_i in range(diplayed_line_n, self.height - 1):
+            self.display(empty_formatted)
+
+    def _display_status_line(self):
         if L == 0:     ratio = 1
         else:          ratio = min(L, self.__display_begin_line_i + self.height) / L
         if ratio == 1: percentage = "100" + "%"
         else:          percentage = "% 3i" % int(ceil(ratio*100)) + "%"
-            
         self.display(self.prepare(self.format.status_line, [percentage]))
 
     def interact(self):
         delta_horizontal = 5 # int(canvas.width / 8)
         delta_vertical   = 5 # int(canvas.height / 8)
+        self.prepare_data()
         while 1 + 1 == 2:
-            self.show()
+            displayed_line_n = self._display_LineAssociations()
+            self._display_fill_empty(displayed_line_n)
+            self._display_status_line()
             while 1 + 1 == 2:
                 key = keyboard.get()
                 if   key == 'q': return
@@ -107,6 +153,9 @@ class ConsoleCanvasDiff(ConsoleCanvas):
                 elif key == 'd': self.__add_horizontal_offset(delta_horizontal); break
                 elif key == 'w': self.__add_vertical_offset(- delta_vertical); break
                 elif key == 's': self.__add_vertical_offset(delta_vertical); break
+                elif key == 'A': self.set_mode(E_DiffMode.ANALOGIES); break
+                elif key == 'P': self.set_mode(E_DiffMode.PLAIN); break
+                elif key == 'E': self.set_mode(E_DiffMode.ERRORS); break
 
     def __add_horizontal_offset(self, value):
         if self.__max_line_length - (self.format.text_offset + value) <= 0:
@@ -130,11 +179,20 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         subject_txt, nominal_txt = self._format_line_association(lina)
         if lina.border != E_PotpourriBorder.NONE:
             line = self._prepare_potpourri_border(lina)
-        elif lina.subject is None or lina.nominal is None:
-            if lina.subject is None:
-                line = self.prepare(self.format.empty_subject, ["%s" % lina.nominal.line_n, nominal_txt])
-            else:
-                line = self.prepare(self.format.empty_nominal, [nominal_txt, "%s" % lina.subject.line_n])
+        elif lina.subject is None and lina.nominal is None:
+            if lina.subject_end_f and lina.nominal_end_f: f = self.format.both_end
+            elif lina.subject_end_f:                      f = self.format.subject_end_nominal_empty
+            elif lina.nominal_end_f:                      f = self.format.nominal_end_subject_empty
+            else:                                         f = self.format.empty
+            line = self.prepare(f)
+        elif lina.subject is None:
+            if lina.subject_end_f: f = self.format.subject_end
+            else:                  f = self.format.subject_empty
+            line = self.prepare(f, ["%s" % lina.nominal.line_n, nominal_txt])
+        elif lina.nominal is None:
+            if lina.nominal_end_f: f = self.format.nominal_end
+            else:                  f = self.format.nominal_empty
+            line = self.prepare(f, [subject_txt, "%s" % lina.subject.line_n])
         else:
             line = self.prepare(self.format.normal, 
                                 [ subject_txt, "%s" % lina.subject.line_n, 

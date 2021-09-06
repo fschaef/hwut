@@ -24,21 +24,24 @@ config = Configuration()
 config.pattern_finder.numeric_tolerance_ratio = 0.01
 config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülplein"]
 
-def test_core(subject_txt, nominal_txt, offset, function):
+def test_core(subject_txt, nominal_txt, offset, mode):
     global config
-    terminal_width  = 100
+    terminal_width  = 80
     terminal_height = 10
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
     print("|" + "-" * (terminal_width -2) + "|")
     la = list(compare.line_associations(config, subject, nominal))
-# terminal_size.set_size_fixed(terminal_height, terminal_width)
-    function(la, offset)
+    terminal_size.set_size_fixed(terminal_height, terminal_width)
+    canvas = console.ConsoleCanvasDiff(la)
+    canvas.set_mode(mode)
+    canvas.prepare_data()
+    canvas._display_LineAssociations()
 
-def test(subject_txt, nominal_txt, offset=0, function=console.comparison):
-    test_core(subject_txt, nominal_txt, offset, function)
-    test_core(nominal_txt, subject_txt, offset, function)
+def test(subject_txt, nominal_txt, offset=0, mode=console.E_DiffMode.PLAIN):
+    test_core(subject_txt, nominal_txt, offset, mode)
+    test_core(nominal_txt, subject_txt, offset, mode)
 
 subject_txt = \
 """Sah ein Röslein 1.005 Knab stehen
@@ -60,6 +63,7 @@ Schaut's mit vielen Freuden
 Röslein, Röslein, Röslein rot
 Röslein auf der ((Heiden))
 """
+
 subject_modified_txt = \
 """Sah ein Röslein ein Knab stehen
 Röslein   auf der   Heiden 
@@ -134,6 +138,6 @@ elif "mix" in sys.argv:
          + mix_nominal)
 
 elif "analogy" in sys.argv:
-    test(analogy_subject, analogy_nominal, function=console.analogy_error)
+    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES)
 
 #test(subject_txt * 3, nominal_txt * 3)

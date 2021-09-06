@@ -85,7 +85,7 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
     Data structure:
 
           LineAssociationChunk:_______________________________ 
-          |   .type ('E_ChunkType')                           |
+          |   .type ('E_Chunk')                               |
           |   .line_association_list: [                       |
           |       LineAssociation:________________________    |
           |       | .subject_line ('Line')                |   |
