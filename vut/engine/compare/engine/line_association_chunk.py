@@ -44,6 +44,13 @@ class LineAssociationChunk:
             result = _get(lina.nominal, result)
         return result
 
+    def find_indices_of_error_linas(self):
+        """RETURNS: list of LineAssociation that contain some type of errors.
+        """
+        return [lina_i
+                for lina_i, lina in enumerate(self.__line_association_list )
+                if not lina.is_good()]
+
     def analogy_db(self):
         return self.__analogy_db
 
@@ -56,8 +63,8 @@ class LineAssociationChunk:
         ]
 
 class LineAssociationList(list):
-    def __init__(self, iterable):
-        list.__init__(self, iterable)
+    def __init__(self, iterable=None):
+        if iterable is not None: list.__init__(self, iterable)
 
     def sort(self, sort_by_subject_line_n_f):
         if sort_by_subject_line_n_f:
@@ -66,45 +73,6 @@ class LineAssociationList(list):
             key = lambda x: (1, x.subject.line_n) if x.nominal is None else (0, x.nominal.line_n)
         list.sort(self, key=key)
         return self
-
-    def find_errors(self):
-        """RETURNS: list of LineAssociation that contain some type of errors.
-        """
-        return LineAssociationList(lina for lina in self if not lina.is_good())
-
-    @typed(errors_f=bool, definitions_f=bool)
-    def find_entries_relevant_to_analogy_errors(self, 
-                                                analogy_db,
-                                                errors_f=True, 
-                                                definitions_f=True):
-        """RETURNS: list of LineAssociation objects.
-
-        Each 'LineAssociation' contains the association of a subject and a nominal line
-        which is concerned with an analogy error. 
-        
-        errors_f:       report 'LineAssociation' containing analogy errors.
-        definitions_f:  report 'LineAssociation' containing lines where analogies are
-                        defined that later cause errors.
-        """
-        assert errors_f or definitions_f
-
-        error_lina_list, \
-        subject_nominal_set = self.analogy_errors(errors_f) 
-
-        if definitions_f:
-            definition_lina_list = self.find_definitions(analogy_db, subject_nominal_set)
-        else:
-            definition_lina_list = []
-
-        done   = set()
-        result = []
-        for lina in chain(definition_lina_list, error_lina_list):
-            key = (lina.subject.line_n, lina.nominal.line_n)
-            if key in done: continue 
-            result.append(lina)
-            done.add(key)
-
-        return LineAssociationList(result)
 
     def find_line_association(self, subject_line_n, nominal_line_n):
         for lina in self:

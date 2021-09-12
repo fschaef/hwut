@@ -27,17 +27,24 @@ config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülple
 def test_core(subject_txt, nominal_txt, offset, mode):
     global config
     terminal_width  = 80
-    terminal_height = 10
+    terminal_height = 30
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    print("|" + "-" * (terminal_width -2) + "|")
+    print()
+    print("|" + "=" * (terminal_width -2) + "|")
     la = list(compare.line_associations(config, subject, nominal))
-    terminal_size.set_size_fixed(terminal_height, terminal_width)
-    canvas = console.ConsoleCanvasDiff(la)
-    canvas.set_mode(mode)
-    canvas.prepare_data()
-    canvas._display_LineAssociations()
+
+    if True:
+        terminal_size.set_size_fixed(terminal_height, terminal_width)
+        canvas = console.ConsoleCanvasDiff(la)
+        canvas.set_mode(mode)
+        canvas.prepare_data()
+        canvas._display_LineAssociations()
+    else:
+        terminal_size.set_size_fixed(terminal_height, terminal_width)
+        canvas.set_mode(mode)
+        console.do(la)
 
 def test(subject_txt, nominal_txt, offset=0, mode=console.E_DiffMode.PLAIN):
     test_core(subject_txt, nominal_txt, offset, mode)
@@ -109,6 +116,57 @@ Vier
 Fünf
 """
 
+nominal_error_txt = \
+"""
+eins
+zwei
+drei
+vier
+fuenf
+sechs
+sieben
+acht 
+neun
+zehn
+elf
+zwölf
+dreizehn
+vierzehn
+fuenfzehn
+sechzehn
+siebzehn
+achtzehn
+neunzehn
+zwanzig
+einundzwanzig
+zweiundzwanzig
+"""
+
+subject_error_txt = \
+"""
+eins           !!
+zwei           !!
+drei
+vier           !!
+fuenf
+sechs
+sieben         !!
+acht 
+neun
+zehn
+elf            !!
+zwölf
+dreizehn
+vierzehn
+fuenfzehn
+sechzehn       !!
+siebzehn
+achtzehn
+neunzehn
+zwanzig
+einundzwanzig
+zweiundzwanzig !!
+"""
 
 if "similar" in sys.argv:
     # Testing all kinds of similarity
@@ -140,4 +198,6 @@ elif "mix" in sys.argv:
 elif "analogy" in sys.argv:
     test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES)
 
-#test(subject_txt * 3, nominal_txt * 3)
+elif "error" in sys.argv:
+    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS)
+

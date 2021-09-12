@@ -15,9 +15,10 @@ from   copy import copy
 from   math import ceil
 
 from   enum import Enum, auto
+from   itertools import chain
 
 @typed(lina_cnunk_list=[LineAssociationChunk], sort_potpourri_by_subject_line_n_f=bool)
-def do(lina_chunk_list, text_offset, sort_potpourri_by_subject_line_n_f=False):
+def do(lina_chunk_list, text_offset=0, sort_potpourri_by_subject_line_n_f=False):
     """Displays a comparison of subject and nominal lines clustered in 
     'LineAssociationChunk'-s.
     """
@@ -39,6 +40,13 @@ class LineAssociationDecorated(LineAssociation):
         LineAssociation.__init__(self, lina.subject, lina.nominal, lina.edit_list, lina.border)
         self.subject_end_f = False
         self.nominal_end_f = False
+        self.filler_f      = False
+
+    @staticmethod
+    def filler():
+        result = LineAssociationDecorated(0, 0, LineAssociation(None, None))
+        result.filler_f = True
+        return result
 
 def lina_list_from_lina_chunk_list(lina_chunk_list, sort_potpourri_by_subject_line_n_f):
     result = LineAssociationList([])
@@ -78,12 +86,11 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         lina_list_source = lina_list_from_lina_chunk_list(self.__lina_chunk_list, 
                                                           self.__sort_potpourri_by_subject_line_n_f)
         if self.__mode == E_DiffMode.PLAIN:
-            self.__lina_list = lina_list_source
+            self.__lina_list = copy(lina_list_source)
         elif self.__mode == E_DiffMode.ANALOGIES:
-            self.__lina_list = lina_list_source.find_entries_relevant_to_analogy_errors(self.__analogy_db)
-            self.__lina_list.sort(True)
+            self.__lina_list = _prepare_display_analogy_errors(lina_list_source, self.__analogy_db)
         elif self.__mode == E_DiffMode.ERRORS:
-            self.__lina_list = lina_list_source.find_errors()
+            self.__lina_list = _prepare_display_errors(self.__lina_chunk_list)
 
         if not self.__lina_list:
             return
@@ -93,6 +100,10 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         end_subject_lina_i = None
         end_nominal_lina_i = None
         for lina_i, lina in reversed(list(enumerate(self.__lina_list))):
+            if lina.border == E_PotpourriBorder.END: 
+                end_subject_lina_i = lina_i + 1
+                end_nominal_lina_i = lina_i + 1
+                break
             if lina.subject is not None and end_subject_lina_i is None:
                 end_subject_lina_i = lina_i + 1
             if lina.nominal is not None and end_nominal_lina_i is None:
@@ -108,12 +119,13 @@ class ConsoleCanvasDiff(ConsoleCanvas):
 
     def _display_LineAssociations(self):
         if self.height < 1:
-            return
+            return 0
+
         L     = len(self.__lina_list)
         begin = self.__display_begin_line_i
         end   = min(begin + self.height - 1, L)
         if end <= begin:
-            return
+            return 0
 
         for lina_i in range(begin, end):
             formatted = self.__display_cache_db.get(lina_i)
@@ -127,11 +139,12 @@ class ConsoleCanvasDiff(ConsoleCanvas):
     def _display_fill_empty(self, diplayed_line_n):
         if diplayed_line_n >= self.height:
             return
-        empty_formatted = self._prepare_LineAssociation(LineAssociation.empty(None))
+        empty_formatted = self._prepare_LineAssociation(LineAssociationDecorated(0, 0, LineAssociation.empty(None)))
         for line_i in range(diplayed_line_n, self.height - 1):
             self.display(empty_formatted)
 
     def _display_status_line(self):
+        L = len(self.__lina_list)
         if L == 0:     ratio = 1
         else:          ratio = min(L, self.__display_begin_line_i + self.height) / L
         if ratio == 1: percentage = "100" + "%"
@@ -177,7 +190,9 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         nominal line.
         """
         subject_txt, nominal_txt = self._format_line_association(lina)
-        if lina.border != E_PotpourriBorder.NONE:
+        if lina.filler_f:
+            line = self.prepare(self.format.filler)
+        elif lina.border != E_PotpourriBorder.NONE:
             line = self._prepare_potpourri_border(lina)
         elif lina.subject is None and lina.nominal is None:
             if lina.subject_end_f and lina.nominal_end_f: f = self.format.both_end
@@ -194,9 +209,13 @@ class ConsoleCanvasDiff(ConsoleCanvas):
             else:                  f = self.format.nominal_empty
             line = self.prepare(f, [subject_txt, "%s" % lina.subject.line_n])
         else:
+            def _line_n(line_n):
+                return " " if line_n is None else "%s" % line_n         
             line = self.prepare(self.format.normal, 
-                                [ subject_txt, "%s" % lina.subject.line_n, 
-                                "%s" % lina.nominal.line_n, nominal_txt])
+                                [ subject_txt, 
+                                  _line_n(lina.subject.line_n), 
+                                  _line_n(lina.nominal.line_n), 
+                                  nominal_txt])
         return line
 
     def _prepare_potpourri_border(self, lina):
@@ -278,4 +297,82 @@ _edit_db = {
     E_EditLine.SUBSTITUTE_TYPE: _substitute_type,
     E_EditLine.NONE:            _none
 }
+
+def _prepare_display_errors(lina_chunk_list):
+    """RETURNS: list of LineAssociationDecorated
+
+    to display errors. That is, lines which are equivalent are omitted from
+    display, except for those neighbouring error lines.
+    """
+    def _handle(prev_lina_i, lina_i, lina_list):
+        delta = lina_i - prev_lina_i
+        if delta > 4:
+            yield LineAssociationDecorated(0, 0, lina_list[prev_lina_i+1])
+            yield LineAssociationDecorated.filler()
+            yield LineAssociationDecorated(0, 0, lina_list[lina_i - 1])
+        elif delta == 4:
+            yield LineAssociationDecorated(0, 0, lina_list[prev_lina_i+1])
+            yield LineAssociationDecorated(0, 0, lina_list[lina_i - 2])
+            yield LineAssociationDecorated(0, 0, lina_list[lina_i - 1])
+        elif delta == 3:
+            yield LineAssociationDecorated(0, 0, lina_list[lina_i - 2])
+            yield LineAssociationDecorated(0, 0, lina_list[lina_i - 1])
+        elif delta == 2:
+            yield LineAssociationDecorated(0, 0, lina_list[lina_i - 1])
+        yield LineAssociationDecorated(0, 0, lina_list[lina_i])
+
+    result = LineAssociationList()
+    for chunk in lina_chunk_list:
+        lina_list = chunk.line_association_list()
+        if chunk.type() == E_Chunk.LINE_SEQUENCE:
+            lina_index_list = chunk.find_indices_of_error_linas()
+            prev_lina_i = -1
+            for lina_i in lina_index_list:
+                result.extend(
+                    lina
+                    for lina in _handle(prev_lina_i, lina_i, lina_list))
+                prev_lina_i = lina_i
+            if lina_i != len(lina_list) - 1:
+                result.append(LineAssociationDecorated.filler())
+        else:
+            result.extend(
+               LineAssociationDecorated(0, 0, lina_list[lina_i]) 
+               for lina_i in lina_index_list)
+
+    return result
+
+            
+@typed(errors_f=bool, definitions_f=bool)
+def _prepare_display_analogy_errors(lina_list, 
+                                    analogy_db,
+                                    errors_f=True, 
+                                    definitions_f=True):
+    """RETURNS: list of LineAssociation objects.
+
+    Each 'LineAssociation' contains the association of a subject and a nominal line
+    which is concerned with an analogy error. 
+    
+    errors_f:       report 'LineAssociation' containing analogy errors.
+    definitions_f:  report 'LineAssociation' containing lines where analogies are
+                    defined that later cause errors.
+    """
+    assert errors_f or definitions_f
+
+    error_lina_list, \
+    subject_nominal_set = lina_list.analogy_errors(errors_f) 
+
+    if definitions_f:
+        definition_lina_list = lina_list.find_definitions(analogy_db, subject_nominal_set)
+    else:
+        definition_lina_list = []
+
+    done   = set()
+    result = LineAssociationList()
+    for lina in chain(definition_lina_list, error_lina_list):
+        key = (lina.subject.line_n, lina.nominal.line_n)
+        if key in done: continue 
+        result.append(lina)
+        done.add(key)
+
+    return result.sort(True)
 
