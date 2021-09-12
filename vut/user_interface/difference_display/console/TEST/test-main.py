@@ -168,6 +168,32 @@ einundzwanzig
 zweiundzwanzig !!
 """
 
+subject_error2_txt = \
+"""
+eins
+zwei
+drei
+vier         !!
+fuenf
+sechs
+sieben
+acht 
+neun
+zehn
+elf
+zwölf
+dreizehn
+vierzehn
+fuenfzehn
+sechzehn
+siebzehn
+achtzehn
+neunzehn  
+zwanzig        !!
+einundzwanzig
+zweiundzwanzig
+"""
+
 if "similar" in sys.argv:
     # Testing all kinds of similarity
     test(subject_txt, nominal_txt)
@@ -200,4 +226,7 @@ elif "analogy" in sys.argv:
 
 elif "error" in sys.argv:
     test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS)
+
+elif "error2" in sys.argv:
+    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS)
 

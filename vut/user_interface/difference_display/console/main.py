@@ -327,6 +327,11 @@ def _prepare_display_errors(lina_chunk_list):
         if chunk.type() == E_Chunk.LINE_SEQUENCE:
             lina_index_list = chunk.find_indices_of_error_linas()
             prev_lina_i = -1
+            if not lina_index_list:
+                continue
+            elif lina_index_list[0] != 0:
+                result.append(LineAssociationDecorated.filler())
+            prev_lina_i = lina_index_list[0] - 1
             for lina_i in lina_index_list:
                 result.extend(
                     lina
