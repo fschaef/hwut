@@ -90,7 +90,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         elif self.__mode == E_DiffMode.ANALOGIES:
             self.__lina_list = _prepare_display_analogy_errors(lina_list_source, self.__analogy_db)
         elif self.__mode == E_DiffMode.ERRORS:
-            self.__lina_list = _prepare_display_brief(self.__lina_chunk_list)
+            self.__lina_list = _prepare_display_errors(self.__lina_chunk_list)
 
         if not self.__lina_list:
             return
@@ -298,7 +298,7 @@ _edit_db = {
     E_EditLine.NONE:            _none
 }
 
-def _prepare_display_brief(lina_chunk_list, level=3):
+def _prepare_display_brief(lina_list, lina_index_list, level=3):
     """RETURNS: list of LineAssociationDecorated
 
     to display errors. That is, lines which are equivalent are omitted from
@@ -335,6 +335,7 @@ def _prepare_display_brief(lina_chunk_list, level=3):
     if   level == 0: _handle = _no_filler
     elif level == 1: _handle = _no_border
     elif level == 2: _handle = _some_border
+    else:            assert level in (0, 1, 2)
 
     prev_lina_i = -1
     if not lina_index_list:
@@ -350,15 +351,15 @@ def _prepare_display_brief(lina_chunk_list, level=3):
     if lina_i != len(lina_list) - 1 and level > 0:
         yield LineAssociationDecorated.filler()
 
-def _prepare_display_errors(lina_chunk_list, level=3):
+def _prepare_display_errors(lina_chunk_list, level=2):
     result = LineAssociationList()
     for chunk in lina_chunk_list:
         lina_list = chunk.line_association_list()
         if chunk.type() == E_Chunk.LINE_SEQUENCE:
             lina_index_list = chunk.find_indices_of_error_linas()
-            result.extend(_prepare_display_brief(lina_index_list, level)
+            result.extend(_prepare_display_brief(lina_list, lina_index_list, level))
         else:
-            result.extend(_prepare_display_brief(lina_index_list, level=0)
+            result.extend(_prepare_display_brief(lina_index_list, level=0))
 
     return result
 
