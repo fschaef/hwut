@@ -90,7 +90,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         elif self.__mode == E_DiffMode.ANALOGIES:
             self.__lina_list = _prepare_display_analogy_errors(lina_list_source, self.__analogy_db)
         elif self.__mode == E_DiffMode.ERRORS:
-            self.__lina_list = _prepare_display_errors(self.__lina_chunk_list)
+            self.__lina_list = _prepare_display_brief(self.__lina_chunk_list)
 
         if not self.__lina_list:
             return
@@ -298,13 +298,13 @@ _edit_db = {
     E_EditLine.NONE:            _none
 }
 
-def _prepare_display_errors(lina_chunk_list):
+def _prepare_display_brief(lina_chunk_list, level=3):
     """RETURNS: list of LineAssociationDecorated
 
     to display errors. That is, lines which are equivalent are omitted from
     display, except for those neighbouring error lines.
     """
-    def _handle(prev_lina_i, lina_i, lina_list):
+    def _some_border(prev_lina_i, lina_i, lina_list):
         delta = lina_i - prev_lina_i
         if delta > 4:
             yield LineAssociationDecorated(0, 0, lina_list[prev_lina_i+1])
@@ -321,28 +321,44 @@ def _prepare_display_errors(lina_chunk_list):
             yield LineAssociationDecorated(0, 0, lina_list[lina_i - 1])
         yield LineAssociationDecorated(0, 0, lina_list[lina_i])
 
+    def _no_border(prev_lina_i, lina_i, lina_list):
+        delta = lina_i - prev_lina_i
+        if delta > 2:
+            yield LineAssociationDecorated.filler()
+        elif delta == 2:
+            yield LineAssociationDecorated(0, 0, lina_list[lina_i - 1])
+        yield LineAssociationDecorated(0, 0, lina_list[lina_i])
+
+    def _no_filler(prev_lina_i, lina_i, lina_list):
+        yield LineAssociationDecorated(0, 0, lina_list[lina_i])
+
+    if   level == 0: _handle = _no_filler
+    elif level == 1: _handle = _no_border
+    elif level == 2: _handle = _some_border
+
+    prev_lina_i = -1
+    if not lina_index_list:
+        return
+    elif lina_index_list[0] != 0 and level > 0:
+        yield LineAssociationDecorated.filler()
+
+    prev_lina_i = lina_index_list[0] - 1
+    for lina_i in lina_index_list:
+        yield from _handle(prev_lina_i, lina_i, lina_list)
+        prev_lina_i = lina_i
+
+    if lina_i != len(lina_list) - 1 and level > 0:
+        yield LineAssociationDecorated.filler()
+
+def _prepare_display_errors(lina_chunk_list, level=3):
     result = LineAssociationList()
     for chunk in lina_chunk_list:
         lina_list = chunk.line_association_list()
         if chunk.type() == E_Chunk.LINE_SEQUENCE:
             lina_index_list = chunk.find_indices_of_error_linas()
-            prev_lina_i = -1
-            if not lina_index_list:
-                continue
-            elif lina_index_list[0] != 0:
-                result.append(LineAssociationDecorated.filler())
-            prev_lina_i = lina_index_list[0] - 1
-            for lina_i in lina_index_list:
-                result.extend(
-                    lina
-                    for lina in _handle(prev_lina_i, lina_i, lina_list))
-                prev_lina_i = lina_i
-            if lina_i != len(lina_list) - 1:
-                result.append(LineAssociationDecorated.filler())
+            result.extend(_prepare_display_brief(lina_index_list, level)
         else:
-            result.extend(
-               LineAssociationDecorated(0, 0, lina_list[lina_i]) 
-               for lina_i in lina_index_list)
+            result.extend(_prepare_display_brief(lina_index_list, level=0)
 
     return result
 
