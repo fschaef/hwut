@@ -18,13 +18,13 @@ from   io import StringIO
 
 if "--hwut-info" in sys.argv:
     print("Display Modes: Comparison, Analogy Error;")
-    print("CHOICES: similar, padding, potpourri, mix, analogy;")
+    print("CHOICES: similar, padding, potpourri, mix, analogy, error, error2;")
 
 config = Configuration()
 config.pattern_finder.numeric_tolerance_ratio = 0.01
 config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülplein"]
 
-def test_core(subject_txt, nominal_txt, offset, mode):
+def test_core(subject_txt, nominal_txt, offset, mode, level):
     global config
     terminal_width  = 80
     terminal_height = 30
@@ -35,20 +35,23 @@ def test_core(subject_txt, nominal_txt, offset, mode):
     print("|" + "=" * (terminal_width -2) + "|")
     la = list(compare.line_associations(config, subject, nominal))
 
-    if True:
-        terminal_size.set_size_fixed(terminal_height, terminal_width)
-        canvas = console.ConsoleCanvasDiff(la)
-        canvas.set_mode(mode)
-        canvas.prepare_data()
-        canvas._display_LineAssociations()
-    else:
-        terminal_size.set_size_fixed(terminal_height, terminal_width)
-        canvas.set_mode(mode)
-        console.do(la)
+    terminal_size.set_size_fixed(terminal_height, terminal_width)
+    canvas = console.ConsoleCanvasDiff(la)
+    canvas.set_mode(mode, level)
+    canvas.show()
 
-def test(subject_txt, nominal_txt, offset=0, mode=console.E_DiffMode.PLAIN):
-    test_core(subject_txt, nominal_txt, offset, mode)
-    test_core(nominal_txt, subject_txt, offset, mode)
+def test(subject_txt, nominal_txt, offset=0, mode=console.E_DiffMode.PLAIN, level=0, both=True):
+    if "GO" not in sys.argv:
+        test_core(subject_txt, nominal_txt, offset, mode, level)
+        if both:
+            test_core(nominal_txt, subject_txt, offset, mode, level)
+    else:
+        subject = StringIO(subject_txt)
+        nominal = StringIO(nominal_txt)
+
+        la = list(compare.line_associations(config, subject, nominal))
+        canvas = console.ConsoleCanvasDiff(la)
+        canvas.interact()
 
 subject_txt = \
 """Sah ein Röslein 1.005 Knab stehen
@@ -173,8 +176,8 @@ subject_error2_txt = \
 eins
 zwei
 drei
-vier         !!
-fuenf
+vier     
+fuenf !!
 sechs
 sieben
 acht 
@@ -187,19 +190,21 @@ vierzehn
 fuenfzehn
 sechzehn
 siebzehn
-achtzehn
+achtzehn !!
 neunzehn  
-zwanzig        !!
+zwanzig        
 einundzwanzig
 zweiundzwanzig
 """
 
 if "similar" in sys.argv:
     # Testing all kinds of similarity
-    test(subject_txt, nominal_txt)
+    test(subject_txt, nominal_txt, both=True)
 
 elif "padding" in sys.argv:
-    test(subject_modified_txt, nominal_txt)
+    test(subject_modified_txt, nominal_txt, level=2)
+    test(subject_modified_txt, nominal_txt, level=1)
+    test(subject_modified_txt, nominal_txt, level=0)
 
 elif "potpourri" in sys.argv:
     test("||||\n"
@@ -207,7 +212,7 @@ elif "potpourri" in sys.argv:
          + "||||\n",
          "||||\n"
          + nominal_txt
-         + "||||\n")
+         + "||||\n", both=True)
 
 elif "mix" in sys.argv:
     test(mix_subject
@@ -219,14 +224,20 @@ elif "mix" in sys.argv:
          + "||||\n"
          + mix_nominal
          + "||||\n"
-         + mix_nominal)
+         + mix_nominal, both=True)
 
 elif "analogy" in sys.argv:
-    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES)
+    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES, level=2)
+    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES, level=1)
+    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES, level=0)
 
 elif "error" in sys.argv:
-    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS)
+    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=2)
+    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=1)
+    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=0)
 
 elif "error2" in sys.argv:
-    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS)
+    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=2)
+    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=1)
+    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=0)
 

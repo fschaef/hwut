@@ -49,6 +49,13 @@ class LineAssociationChunk:
         """
         return [lina_i
                 for lina_i, lina in enumerate(self.__line_association_list )
+                if not lina.is_good_or_tolerated()]
+
+    def find_indices_of_error_and_tolerated_linas(self):
+        """RETURNS: list of LineAssociation that contain some type of errors.
+        """
+        return [lina_i
+                for lina_i, lina in enumerate(self.__line_association_list )
                 if not lina.is_good()]
 
     def analogy_db(self):
@@ -75,18 +82,18 @@ class LineAssociationList(list):
         return self
 
     def find_line_association(self, subject_line_n, nominal_line_n):
-        for lina in self:
+        for i, lina in enumerate(self):
             if lina.subject.line_n != subject_line_n: 
                 continue
             elif lina.nominal.line_n != nominal_line_n:
                 # 'subject.line_n' is only associated with on 'nominal.line_n'
                 return None # => (subject_line_n, nominal_line_n) cannot be found
             else:
-                return lina
+                return i
         return None
 
     def analogy_errors(lina_list, errors_f=True):
-        """RETURNS: [0] list of LineAssociation objects
+        """RETURNS: [0] list of indices of LineAssociation objects
                         in the same order as in 'lina_list'
                     [1] set of (subject, nominal)
 
@@ -97,18 +104,18 @@ class LineAssociationList(list):
         """
         result              = []
         subject_nominal_set = set()
-        for lina in lina_list:
+        for i, lina in enumerate(lina_list):
             linas_subject_nominal_set = lina.analogy_errors()
             if not linas_subject_nominal_set: 
                 continue
             if errors_f:
-                result.append(lina)
+                result.append(i)
             subject_nominal_set.update(linas_subject_nominal_set)
 
         return result, subject_nominal_set
 
     def find_definitions(self, analogy_db, subject_nominal_set):
-        """RETURNS: [0] list of LineAssociation objects containing analogy
+        """RETURNS: [0] list of indices of LineAssociation objects containing analogy
                         definitions relevant to 'subject_nominal_set'.
 
         Searches for LineAssociation-s where either the 'subject' or 'nominal' from
@@ -120,10 +127,10 @@ class LineAssociationList(list):
             p = analogy_db.line_number_db.get(subject)
             if p is None:
                 return
-            lina = self.find_line_association(p.subject_line_n, p.nominal_line_n)
-            if lina is None: 
+            lina_index = self.find_line_association(p.subject_line_n, p.nominal_line_n)
+            if lina_index is None: 
                 return
-            result.append(lina)
+            result.append(lina_index)
 
         result = []
         # For those analogies where errors occur, search for the definition of the
@@ -135,3 +142,5 @@ class LineAssociationList(list):
 
         return result
 
+    def __pretty__(self):
+        return "LineAssociationList", list(self)

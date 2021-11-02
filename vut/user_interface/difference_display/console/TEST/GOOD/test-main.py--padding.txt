@@ -6,7 +6,8 @@ War    jung     morgenschön           3|4 War so jung und morgenschön
                                      <<|5 Lief er schnell es nah zu sehn        
                                      <<|6 Schaut's mit vielen Freuden           
 Röslein, Tülplein, Röslein orange     4|7 Röslein, Röslein, Röslein rot         
-///////////////////////////////////////|8 Röslein auf der ((Heiden))            
+-------------------------------------<<|8 Röslein auf der ((Heiden))            
+                                       |----------------------------------------
 
 |==============================================================================|
 Sah ein Knab 1 Röslein stehen         2|1 Sah ein Röslein ein Knab stehen       
@@ -15,5 +16,45 @@ War so jung und morgenschön           4|3 War    jung     morgenschön
 Lief er schnell es nah zu sehn        5|>>                                      
 Schaut's mit vielen Freuden           6|>>                                      
 Röslein, Röslein, Röslein rot         7|4 Röslein, Tülplein, Röslein orange     
-Röslein auf der ((Heiden))            8|////////////////////////////////////////
-///////////////////////////////////////|                                        
+Röslein auf der ((Heiden))            8|>>--------------------------------------
+---------------------------------------|                                        
+
+|==============================================================================|
+Sah ein Röslein ein Knab stehen       1|2 Sah ein Knab 1 Röslein stehen         
+Röslein   auf der   Heiden            2|3 Röslein   auf der   ((Heiden))        
+War    jung     morgenschön           3|4 War so jung und morgenschön           
+                                     <<|5 Lief er schnell es nah zu sehn        
+                                     <<|6 Schaut's mit vielen Freuden           
+Röslein, Tülplein, Röslein orange     4|7 Röslein, Röslein, Röslein rot         
+-------------------------------------<<|8 Röslein auf der ((Heiden))            
+                                       |----------------------------------------
+
+|==============================================================================|
+Sah ein Knab 1 Röslein stehen         2|1 Sah ein Röslein ein Knab stehen       
+Röslein   auf der   ((Heiden))        3|2 Röslein   auf der   Heiden            
+War so jung und morgenschön           4|3 War    jung     morgenschön           
+Lief er schnell es nah zu sehn        5|>>                                      
+Schaut's mit vielen Freuden           6|>>                                      
+Röslein, Röslein, Röslein rot         7|4 Röslein, Tülplein, Röslein orange     
+Röslein auf der ((Heiden))            8|>>--------------------------------------
+---------------------------------------|                                        
+
+|==============================================================================|
+Sah ein Röslein ein Knab stehen       1|2 Sah ein Knab 1 Röslein stehen         
+Röslein   auf der   Heiden            2|3 Röslein   auf der   ((Heiden))        
+War    jung     morgenschön           3|4 War so jung und morgenschön           
+                                     <<|5 Lief er schnell es nah zu sehn        
+                                     <<|6 Schaut's mit vielen Freuden           
+Röslein, Tülplein, Röslein orange     4|7 Röslein, Röslein, Röslein rot         
+-------------------------------------<<|8 Röslein auf der ((Heiden))            
+                                       |----------------------------------------
+
+|==============================================================================|
+Sah ein Knab 1 Röslein stehen         2|1 Sah ein Röslein ein Knab stehen       
+Röslein   auf der   ((Heiden))        3|2 Röslein   auf der   Heiden            
+War so jung und morgenschön           4|3 War    jung     morgenschön           
+Lief er schnell es nah zu sehn        5|>>                                      
+Schaut's mit vielen Freuden           6|>>                                      
+Röslein, Röslein, Röslein rot         7|4 Röslein, Tülplein, Röslein orange     
+Röslein auf der ((Heiden))            8|>>--------------------------------------
+---------------------------------------|                                        

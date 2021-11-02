@@ -24,7 +24,8 @@ from   vut.external.quex.typed                   import typed
 from   collections import namedtuple
 import sys
 
-LineElementAssociation = namedtuple("LineElementAssociation", ("edit_id", "subject", "nominal"))
+LineElementAssociation = namedtuple("LineElementAssociation", 
+                                    ("edit_id", "subject", "nominal"))
 
 class LineAssociation:
     """An association of a line from the subject input stream and a line
@@ -58,7 +59,10 @@ class LineAssociation:
     def is_empty(self):
         return self.nominal is None
 
-    def is_good(self):
+    def is_good_or_tolerated(self):
+        """RETURNS: True, if all entries are GOOD or GOOD_TOLERATED.
+                    False, else.
+        """
         if   self.subject is None: 
             return False
         elif self.nominal is None: 
@@ -68,6 +72,19 @@ class LineAssociation:
         else:
             return all(edit.id == E_EditLine.GOOD or edit.id == E_EditLine.GOOD_TOLERATED 
                        for edit in self.edit_list)
+
+    def is_good(self):
+        """RETURNS: True, if all entries are GOOD or GOOD_TOLERATED.
+                    False, else.
+        """
+        if   self.subject is None: 
+            return False
+        elif self.nominal is None: 
+            return False
+        elif not self.edit_list:
+            return True
+        else:
+            return all(edit.id == E_EditLine.GOOD for edit in self.edit_list)
 
     def analogy_errors(self):
         """RETURNS: Set of pairs (subject, nominal) where analogies have not been met.

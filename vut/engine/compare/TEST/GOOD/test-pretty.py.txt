@@ -2,7 +2,7 @@
 => 
 
 [LineAssociationChunk:LINE_SEQUENCE]
-.   .line_association_list: <list>
+.   .line_association_list: <LineAssociationList>
 .   .   [LineAssociation]
 .   .   .   .subject: [Line]
 .   .   .   .   .line_n: 1

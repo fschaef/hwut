@@ -62,7 +62,10 @@ def _class(obj):
     class_name, member_list = obj.__pretty__()
     assert type(member_list) == list
     if not member_list: return [class_name]
-    return _member_sequence(member_list, class_name)
+    if type(member_list[0]) == tuple and len(member_list[0]) == 2:
+        return _member_sequence(member_list, class_name)
+    else:
+        return _list(member_list, class_name)
 
 def _member_sequence(member_list, class_name):
     txt = ["[%s]" % class_name, +1]

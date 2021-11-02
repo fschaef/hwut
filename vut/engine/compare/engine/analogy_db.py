@@ -1,4 +1,4 @@
-"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: hwut
+"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: VUT
 _______________________________________________________________________________
 PURPOSE: A database for terms to be treated as 'analogies'.
 
