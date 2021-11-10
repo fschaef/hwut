@@ -9,16 +9,18 @@ import sys
 
 sys.path.insert(0, "../../../../..")
 
-import vut.engine.compare.main                            as     compare
-from   vut.engine.compare.configuration                   import Configuration
-import vut.user_interface.difference_display.console.main as     console
-import vut.system.terminal_size                           as     terminal_size
+import vut.engine.compare.main                              as     compare
+from   vut.engine.compare.configuration                     import Configuration
+import vut.user_interface.difference_display.console.main   as     console
+from   vut.user_interface.difference_display.console.canvas import ConsoleCanvasDiff, E_DiffMode
+import vut.system.terminal_size                             as     terminal_size
 
 from   io import StringIO
 
 if "--hwut-info" in sys.argv:
     print("Display Modes: Comparison, Analogy Error;")
     print("CHOICES: similar, padding, potpourri, mix, analogy, error, error2;")
+    # Call with 'GO' on command line to interact with a TUI
 
 config = Configuration()
 config.pattern_finder.numeric_tolerance_ratio = 0.01
@@ -36,11 +38,11 @@ def test_core(subject_txt, nominal_txt, offset, mode, level):
     la = list(compare.line_associations(config, subject, nominal))
 
     terminal_size.set_size_fixed(terminal_height, terminal_width)
-    canvas = console.ConsoleCanvasDiff(la)
+    canvas = ConsoleCanvasDiff(la)
     canvas.set_mode(mode, level)
     canvas.show()
 
-def test(subject_txt, nominal_txt, offset=0, mode=console.E_DiffMode.PLAIN, level=0, both=True):
+def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
     if "GO" not in sys.argv:
         test_core(subject_txt, nominal_txt, offset, mode, level)
         if both:
@@ -50,8 +52,7 @@ def test(subject_txt, nominal_txt, offset=0, mode=console.E_DiffMode.PLAIN, leve
         nominal = StringIO(nominal_txt)
 
         la = list(compare.line_associations(config, subject, nominal))
-        canvas = console.ConsoleCanvasDiff(la)
-        canvas.interact()
+        console.do(la)
 
 subject_txt = \
 """Sah ein Röslein 1.005 Knab stehen
@@ -227,17 +228,17 @@ elif "mix" in sys.argv:
          + mix_nominal, both=True)
 
 elif "analogy" in sys.argv:
-    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES, level=2)
-    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES, level=1)
-    test(analogy_subject, analogy_nominal, mode=console.E_DiffMode.ANALOGIES, level=0)
+    test(analogy_subject, analogy_nominal, mode=E_DiffMode.ANALOGIES, level=2)
+    test(analogy_subject, analogy_nominal, mode=E_DiffMode.ANALOGIES, level=1)
+    test(analogy_subject, analogy_nominal, mode=E_DiffMode.ANALOGIES, level=0)
 
 elif "error" in sys.argv:
-    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=2)
-    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=1)
-    test(subject_error_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=0)
+    test(subject_error_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=2)
+    test(subject_error_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=1)
+    test(subject_error_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=0)
 
 elif "error2" in sys.argv:
-    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=2)
-    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=1)
-    test(subject_error2_txt, nominal_error_txt, mode=console.E_DiffMode.ERRORS, level=0)
+    test(subject_error2_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=2)
+    test(subject_error2_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=1)
+    test(subject_error2_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=0)
 

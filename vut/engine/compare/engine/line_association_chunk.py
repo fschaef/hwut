@@ -44,6 +44,9 @@ class LineAssociationChunk:
             result = _get(lina.nominal, result)
         return result
 
+    def find_indices_all(self):
+        return range(len(self.__line_association_list))
+
     def find_indices_of_error_linas(self):
         """RETURNS: list of LineAssociation that contain some type of errors.
         """
