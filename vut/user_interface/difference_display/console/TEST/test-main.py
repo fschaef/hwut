@@ -9,11 +9,12 @@ import sys
 
 sys.path.insert(0, "../../../../..")
 
-import vut.engine.compare.main                              as     compare
-from   vut.engine.compare.configuration                     import Configuration
-import vut.user_interface.difference_display.console.main   as     console
-from   vut.user_interface.difference_display.console.canvas import ConsoleCanvasDiff, E_DiffMode
-import vut.system.terminal_size                             as     terminal_size
+import vut.engine.compare.main                               as     compare
+from   vut.engine.compare.configuration                      import Configuration
+from   vut.engine.compare.engine.line_association_chunk_list import LineAssociationChunkList
+import vut.user_interface.difference_display.console.main    as     console
+from   vut.user_interface.difference_display.console.canvas  import ConsoleCanvasDiff, E_DiffMode
+import vut.system.terminal_size                              as     terminal_size
 
 from   io import StringIO
 
@@ -38,9 +39,9 @@ def test_core(subject_txt, nominal_txt, offset, mode, level):
     la = list(compare.line_associations(config, subject, nominal))
 
     terminal_size.set_size_fixed(terminal_height, terminal_width)
-    canvas = ConsoleCanvasDiff(la)
+    canvas = ConsoleCanvasDiff(LineAssociationChunkList(la))
     canvas.set_mode(mode, level)
-    canvas.show()
+    canvas._display_content()
 
 def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
     if "GO" not in sys.argv:
@@ -52,7 +53,7 @@ def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, bot
         nominal = StringIO(nominal_txt)
 
         la = list(compare.line_associations(config, subject, nominal))
-        console.do(la)
+        console.do(LineAssociationChunkList(la))
 
 subject_txt = \
 """Sah ein Röslein 1.005 Knab stehen

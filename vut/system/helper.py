@@ -12,6 +12,11 @@ def right_aligned(N, n=None, fill=" "):
         return fill * (N - len(n_str)) + n_str
 
 class Interval:
+   """Describes a range of adjacent integers:
+
+         .begin = first integer in range
+         .end   = first integer after the last element of range
+   """
    def __init__(self, begin, end):
        self.begin = begin
        self.end   = end

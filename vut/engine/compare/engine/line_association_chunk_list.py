@@ -1,0 +1,99 @@
+from   vut.engine.compare.engine.line_association_chunk import LineAssociationChunk
+from   vut.external.quex.typed                          import typed
+
+from   collections import defaultdict
+
+class LineAssociationChunkList(list):
+    """List of LineAssociationChunk objects.
+
+    Provides functions to extract LineAssociations of error,
+    analogy errors, and tolerated deviations.  It maintains a list of
+    'LineAssociationChunk' objects. It provides a convenient interface to
+    filter on the level of chunks while investigating 'LineAssociation'
+    objects.  All filter functions provide a list of tuples:
+
+           (chunk, concerned list of LineAssociation indices)
+
+    where the 'chunk' is the chunk where the LineAssociation-s occur and
+    the list reports the indices of concerned LineAssociation-s. 
+    """
+    def __init__(self, iterable):
+        list.__init__(self, iterable)
+        assert all(x.__class__ == LineAssociationChunk for x in self)
+
+    def plain(self):
+        """RETURNS: list of (chunk, lina index list)
+
+        """
+        return [ 
+            (chunk, chunk.indices_plain())
+            for _, chunk in enumerate(self)
+        ]
+
+    def errors(self):
+        """RETURNS: list of (chunk, lina index list)
+
+        where 'chunk' is the chunk of LineAssociation-s where the errors occur
+        and 'lina index list' is the list of indices of LineAssociation which
+        are concerned.
+        """
+        return [
+            (chunk, chunk.indices_error())
+            for chunk in self
+        ]
+
+    def errors_and_tolerated(self):
+        """RETURNS: list of (chunk, lina index list)
+
+        where 'chunk' is the chunk of LineAssociation-s where the errors or 
+        tolerated deviations occur and 'lina index list' is the list of indices 
+        of LineAssociation which are concerned.
+        """
+        return [
+            (chunk, chunk.indices_error_and_tolerated())
+            for chunk in self
+        ]
+
+    @typed(errors_f=bool, definitions_f=bool)
+    def analogy_errors(self, 
+                       analogy_db,
+                       errors_f, 
+                       definitions_f, 
+                       verbosity_level):
+        """RETURNS: list of (chunk, lina index list)
+
+        where 'chunk' is the chunk of LineAssociation-s where the analgy error
+        or according definition occurs and 'lina index list' is the list of 
+        indices of LineAssociation which are concerned.
+        
+        Each 'LineAssociation' contains the association of a subject and a nominal 
+        line which is concerned with an analogy error. 
+        
+        errors_f:       report 'LineAssociation' containing analogy errors.
+        definitions_f:  report 'LineAssociation' containing lines where analogies are
+                        defined that later cause errors.
+        """
+        assert errors_f or definitions_f
+
+        error_info_db = defaultdict(set)
+        subject_nominal_set = set()
+        for i, chunk in enumerate(self):
+            lina_list = chunk.line_association_list()
+
+            new_index_set, \
+            new_subject_nominal_set = lina_list.analogy_errors(errors_f) 
+
+            subject_nominal_set.update(new_subject_nominal_set)
+            error_info_db[i] = set(new_index_set)
+
+        if definitions_f:
+            for i, chunk in enumerate(self):
+                error_info_db[i].update(
+                    chunk.indices_analogy_definitions(analogy_db, subject_nominal_set)
+                )
+
+        return [
+            (self[i], index_set) 
+            for i, index_set in error_info_db.items()
+        ]
+

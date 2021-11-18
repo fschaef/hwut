@@ -44,22 +44,50 @@ class LineAssociationChunk:
             result = _get(lina.nominal, result)
         return result
 
-    def find_indices_all(self):
+    def indices_plain(self):
         return range(len(self.__line_association_list))
 
-    def find_indices_of_error_linas(self):
+    def indices_error(self):
         """RETURNS: list of LineAssociation that contain some type of errors.
         """
         return [lina_i
                 for lina_i, lina in enumerate(self.__line_association_list )
                 if not lina.is_good_or_tolerated()]
 
-    def find_indices_of_error_and_tolerated_linas(self):
+    def indices_error_and_tolerated(self):
         """RETURNS: list of LineAssociation that contain some type of errors.
         """
         return [lina_i
                 for lina_i, lina in enumerate(self.__line_association_list )
                 if not lina.is_good()]
+
+    def indices_analogy_definitions(self, analogy_db, subject_nominal_set):
+        """RETURNS: [0] list of indices of LineAssociation objects containing analogy
+                        definitions relevant to 'subject_nominal_set'.
+
+        Searches for LineAssociation-s where either the 'subject' or 'nominal' from
+        the 'subject_nominal_set' occurrs.
+        """
+        def _enter(result, subject, analogy_db):
+            if subject is None:
+                return
+            p = analogy_db.line_number_db.get(subject)
+            if p is None:
+                return
+            lina_index = self.__line_association_list.find_line_association(p.subject_line_n, p.nominal_line_n)
+            if lina_index is None: 
+                return
+            result.append(lina_index)
+
+        result = []
+        # For those analogies where errors occur, search for the definition of the
+        # original analogy.
+        for subject, nominal in subject_nominal_set:
+            _enter(result, subject, analogy_db)
+            subject = analogy_db.get_subject(nominal)
+            _enter(result, subject, analogy_db)
+
+        return result
 
     def analogy_db(self):
         return self.__analogy_db
@@ -116,34 +144,6 @@ class LineAssociationList(list):
             subject_nominal_set.update(linas_subject_nominal_set)
 
         return result, subject_nominal_set
-
-    def find_definitions(self, analogy_db, subject_nominal_set):
-        """RETURNS: [0] list of indices of LineAssociation objects containing analogy
-                        definitions relevant to 'subject_nominal_set'.
-
-        Searches for LineAssociation-s where either the 'subject' or 'nominal' from
-        the 'subject_nominal_set' occurrs.
-        """
-        def _enter(result, self, subject, analogy_db):
-            if subject is None:
-                return
-            p = analogy_db.line_number_db.get(subject)
-            if p is None:
-                return
-            lina_index = self.find_line_association(p.subject_line_n, p.nominal_line_n)
-            if lina_index is None: 
-                return
-            result.append(lina_index)
-
-        result = []
-        # For those analogies where errors occur, search for the definition of the
-        # original analogy.
-        for subject, nominal in subject_nominal_set:
-            _enter(result, self, subject, analogy_db)
-            subject = analogy_db.get_subject(nominal)
-            _enter(result, self, subject, analogy_db)
-
-        return result
 
     def __pretty__(self):
         return "LineAssociationList", list(self)
