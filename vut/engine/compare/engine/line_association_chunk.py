@@ -13,96 +13,10 @@ from   vut.external.quex.typed                    import typed
 
 from   itertools import chain
 
-class LineAssociationChunk:
-    """List of 'LineAssociation'-s where all line are from an input chunk
-    of the same type, i.e.
-
-            type() = E_Chunk.LINE_SEQUENCE or E_Chunk.POTPOURRI
-
-    """
-    @typed(type_id=E_Chunk, lina_list=[LineAssociation], analogy_db=AnalogyDb)
-    def __init__(self, type_id, line_association_list, analogy_db):
-        self.__type_id               = type_id
-        self.__line_association_list = LineAssociationList(line_association_list)
-        self.__analogy_db            = analogy_db
-
-    def type(self):
-        return self.__type_id
-
-    def line_association_list(self):
-        return self.__line_association_list
-
-    def max_line_n(self):
-        def _get(line, max_line_n):
-            if line and line.line_n is not None and line.line_n > max_line_n: 
-                return line.line_n
-            else:
-                return max_line_n
-        result = 0
-        for lina in self.__line_association_list:
-            result = _get(lina.subject, result)
-            result = _get(lina.nominal, result)
-        return result
-
-    def indices_plain(self):
-        return range(len(self.__line_association_list))
-
-    def indices_error(self):
-        """RETURNS: list of LineAssociation that contain some type of errors.
-        """
-        return [lina_i
-                for lina_i, lina in enumerate(self.__line_association_list )
-                if not lina.is_good_or_tolerated()]
-
-    def indices_error_and_tolerated(self):
-        """RETURNS: list of LineAssociation that contain some type of errors.
-        """
-        return [lina_i
-                for lina_i, lina in enumerate(self.__line_association_list )
-                if not lina.is_good()]
-
-    def indices_analogy_definitions(self, analogy_db, subject_nominal_set):
-        """RETURNS: [0] list of indices of LineAssociation objects containing analogy
-                        definitions relevant to 'subject_nominal_set'.
-
-        Searches for LineAssociation-s where either the 'subject' or 'nominal' from
-        the 'subject_nominal_set' occurrs.
-        """
-        def _enter(result, subject, analogy_db):
-            if subject is None:
-                return
-            p = analogy_db.line_number_db.get(subject)
-            if p is None:
-                return
-            lina_index = self.__line_association_list.find_line_association(p.subject_line_n, p.nominal_line_n)
-            if lina_index is None: 
-                return
-            result.append(lina_index)
-
-        result = []
-        # For those analogies where errors occur, search for the definition of the
-        # original analogy.
-        for subject, nominal in subject_nominal_set:
-            _enter(result, subject, analogy_db)
-            subject = analogy_db.get_subject(nominal)
-            _enter(result, subject, analogy_db)
-
-        return result
-
-    def analogy_db(self):
-        return self.__analogy_db
-
-    def __pretty__(self):
-        """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
-        """
-        return "LineAssociationChunk:%s" % self.__type_id.name, [
-            ("line_association_list", self.__line_association_list),
-            ("analogy_db",            self.__analogy_db)
-        ]
-
 class LineAssociationList(list):
     def __init__(self, iterable=None):
-        if iterable is not None: list.__init__(self, iterable)
+        if iterable is not None: 
+            list.__init__(self, iterable)
 
     def sort(self, sort_by_subject_line_n_f):
         if sort_by_subject_line_n_f:
@@ -147,3 +61,91 @@ class LineAssociationList(list):
 
     def __pretty__(self):
         return "LineAssociationList", list(self)
+
+class LineAssociationChunk(LineAssociationList):
+    """List of 'LineAssociation'-s where all line are from an input chunk
+    of the same type, i.e.
+
+            type() = E_Chunk.LINE_SEQUENCE or E_Chunk.POTPOURRI
+
+    """
+    @typed(type_id=E_Chunk, lina_list=[LineAssociation], analogy_db=AnalogyDb)
+    def __init__(self, type_id, line_association_list, analogy_db):
+        self.__type_id               = type_id
+        self.__analogy_db            = analogy_db
+        LineAssociationList.__init__(self, line_association_list)
+
+    def type(self):
+        return self.__type_id
+
+    def line_association_list(self):
+        return self
+
+    def max_line_n(self):
+        def _get(line, max_line_n):
+            if line and line.line_n is not None and line.line_n > max_line_n: 
+                return line.line_n
+            else:
+                return max_line_n
+        result = 0
+        for lina in self:
+            result = _get(lina.subject, result)
+            result = _get(lina.nominal, result)
+        return result
+
+    def indices_plain(self):
+        return range(len(self))
+
+    def indices_error(self):
+        """RETURNS: list of LineAssociation that contain some type of errors.
+        """
+        return [lina_i
+                for lina_i, lina in enumerate(self)
+                if not lina.is_good_or_tolerated()]
+
+    def indices_error_and_tolerated(self):
+        """RETURNS: list of LineAssociation that contain some type of errors.
+        """
+        return [lina_i
+                for lina_i, lina in enumerate(self)
+                if not lina.is_good()]
+
+    def indices_analogy_definitions(self, analogy_db, subject_nominal_set):
+        """RETURNS: [0] list of indices of LineAssociation objects containing analogy
+                        definitions relevant to 'subject_nominal_set'.
+
+        Searches for LineAssociation-s where either the 'subject' or 'nominal' from
+        the 'subject_nominal_set' occurrs.
+        """
+        def _enter(result, subject, analogy_db):
+            if subject is None:
+                return
+            p = analogy_db.line_number_db.get(subject)
+            if p is None:
+                return
+            lina_index = self.find_line_association(p.subject_line_n, p.nominal_line_n)
+            if lina_index is None: 
+                return
+            result.append(lina_index)
+
+        result = []
+        # For those analogies where errors occur, search for the definition of the
+        # original analogy.
+        for subject, nominal in subject_nominal_set:
+            _enter(result, subject, analogy_db)
+            subject = analogy_db.get_subject(nominal)
+            _enter(result, subject, analogy_db)
+
+        return result
+
+    def analogy_db(self):
+        return self.__analogy_db
+
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
+        """
+        return "LineAssociationChunk:%s" % self.__type_id.name, [
+            ("line_association_list", LineAssociationList(self)),
+            ("analogy_db",            self.__analogy_db)
+        ]
+
