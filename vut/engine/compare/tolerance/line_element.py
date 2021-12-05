@@ -97,15 +97,15 @@ class LineElement:
         start, end   = token.start, token.end
 
         if tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
-            return None
+            return None # LineElementVisibleNothing(start, end, global_string)
 
         elif tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
             return LineElementEquivalencePattern(start, end, global_string,
-                                          token.pattern_i_set)
+                                                 token.pattern_i_set)
 
         elif tolerance_id == E_ToleranceId.NUMERIC:
             return LineElementNumber(start, end, global_string,
-                               numeric_tolerance_ratio)
+                                     numeric_tolerance_ratio)
 
         elif tolerance_id == E_ToleranceId.ANALOGY:
             return LineElementAnalogy(start, end, global_string)
@@ -250,6 +250,26 @@ class LineElementNumber(LineElement):
     # NOTE: '__hash__' cannot be overwritten here; see '_compare()'.
     #       Equivalence is based on deviation. Equivalency can ONLY
     #       be investigated by relating to LineElement-objects.
+
+class LineElementVisibleNothing(LineElement):
+    def __init__(self, start, end, string):
+        LineElement.__init__(self, E_ToleranceId.VISIBLE_NOTHING, start, end, string)
+
+    def edit_distance_relative(self, nominal):
+        return 0
+
+    def _compare(self, nominal):
+        """RETURNS: [0] True, if number 'subject' lies in the epsilon range
+                              of number 'nominal'.
+                        False, else.
+                    [1] None (no analogy required)
+        """
+        return True, None
+
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
+        """
+        return "LineElement:%s(\"%s,tol=%s\")" % (self.tolerance_id.name, self.string), []
 
 
 class LineElementEquivalencePattern(LineElement):

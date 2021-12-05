@@ -117,7 +117,7 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
 
         line_associations, \
         analogy_db         = subject.line_associations(nominal, analogy_db)
-
+    
         if not line_associations: continue
 
         yield LineAssociationChunk(subject.type(), line_associations, analogy_db)

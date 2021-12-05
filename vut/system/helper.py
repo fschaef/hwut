@@ -22,17 +22,20 @@ class Interval:
        self.end   = end
 
    @staticmethod
-   def iterable_from_integer_list(self, integer_list):
+   def iterable_from_integer_list(integer_list):
        """YIELDS: Interval-s
 
        Combines ranges of adjacent integers into 'Range' objects.
        """
+       if not integer_list: return Interval(0,0)
+
        integer_list.sort()
        
-       result = []
-       begin  = integer_list[0]
-       for li in integer_list:
-           if li - begin > 1: 
+       result  = []
+       begin   = integer_list[0]
+       prev_li = begin
+       for li in integer_list[1:]:
+           if li - prev_li > 1: 
                yield Interval(begin, prev_li)
                begin = li
            prev_li = li
@@ -55,4 +58,7 @@ class Interval:
        remainder = 0
        for i in range(ratio-1):
            yield Interval(begin + delta * i, begin + delta * (i+1))
+
+   def __repr__(self):
+       return "[%s,%s)" % (self.begin, self.end)
 

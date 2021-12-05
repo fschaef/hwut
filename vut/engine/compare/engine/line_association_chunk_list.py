@@ -78,10 +78,8 @@ class LineAssociationChunkList(list):
         error_info_db = defaultdict(set)
         subject_nominal_set = set()
         for i, chunk in enumerate(self):
-            lina_list = chunk.line_association_list()
-
             new_index_set, \
-            new_subject_nominal_set = lina_list.analogy_errors(errors_f) 
+            new_subject_nominal_set = chunk.analogy_errors(errors_f) 
 
             subject_nominal_set.update(new_subject_nominal_set)
             error_info_db[i] = set(new_index_set)

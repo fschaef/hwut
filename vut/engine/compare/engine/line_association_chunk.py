@@ -59,28 +59,6 @@ class LineAssociationList(list):
 
         return result, subject_nominal_set
 
-    def __pretty__(self):
-        return "LineAssociationList", list(self)
-
-class LineAssociationChunk(LineAssociationList):
-    """List of 'LineAssociation'-s where all line are from an input chunk
-    of the same type, i.e.
-
-            type() = E_Chunk.LINE_SEQUENCE or E_Chunk.POTPOURRI
-
-    """
-    @typed(type_id=E_Chunk, lina_list=[LineAssociation], analogy_db=AnalogyDb)
-    def __init__(self, type_id, line_association_list, analogy_db):
-        self.__type_id               = type_id
-        self.__analogy_db            = analogy_db
-        LineAssociationList.__init__(self, line_association_list)
-
-    def type(self):
-        return self.__type_id
-
-    def line_association_list(self):
-        return self
-
     def max_line_n(self):
         def _get(line, max_line_n):
             if line and line.line_n is not None and line.line_n > max_line_n: 
@@ -138,6 +116,25 @@ class LineAssociationChunk(LineAssociationList):
 
         return result
 
+    def __pretty__(self):
+        return "LineAssociationList", list(self)
+
+class LineAssociationChunk(LineAssociationList):
+    """List of 'LineAssociation'-s where all line are from an input chunk
+    of the same type, i.e.
+
+            type() = E_Chunk.LINE_SEQUENCE or E_Chunk.POTPOURRI
+
+    """
+    @typed(type_id=E_Chunk, lina_list=[LineAssociation], analogy_db=AnalogyDb)
+    def __init__(self, type_id, line_association_list, analogy_db):
+        self.__type_id    = type_id
+        self.__analogy_db = analogy_db
+        LineAssociationList.__init__(self, line_association_list)
+
+    def type(self):
+        return self.__type_id
+
     def analogy_db(self):
         return self.__analogy_db
 
@@ -145,7 +142,7 @@ class LineAssociationChunk(LineAssociationList):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
         return "LineAssociationChunk:%s" % self.__type_id.name, [
-            ("line_association_list", LineAssociationList(self)),
-            ("analogy_db",            self.__analogy_db)
+            ("<base>",     LineAssociationList(self)),
+            ("analogy_db", self.__analogy_db)
         ]
 

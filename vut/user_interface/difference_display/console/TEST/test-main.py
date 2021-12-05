@@ -9,12 +9,13 @@ import sys
 
 sys.path.insert(0, "../../../../..")
 
-import vut.engine.compare.main                               as     compare
-from   vut.engine.compare.configuration                      import Configuration
-from   vut.engine.compare.engine.line_association_chunk_list import LineAssociationChunkList
-import vut.user_interface.difference_display.console.main    as     console
-from   vut.user_interface.difference_display.console.canvas  import ConsoleCanvasDiff, E_DiffMode
-import vut.system.terminal_size                              as     terminal_size
+from   vut.user_interface.difference_display.console.TEST.cases import *
+import vut.engine.compare.main                                  as     compare
+from   vut.engine.compare.configuration                         import Configuration
+from   vut.engine.compare.engine.line_association_chunk_list    import LineAssociationChunkList
+import vut.user_interface.difference_display.console.main       as     console
+from   vut.user_interface.difference_display.console.canvas     import ConsoleCanvasDiff, E_DiffMode
+import vut.system.terminal_size                                 as     terminal_size
 
 from   io import StringIO
 
@@ -44,160 +45,23 @@ def test_core(subject_txt, nominal_txt, offset, mode, level):
     canvas._display_content()
 
 def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
-    if "GO" not in sys.argv:
-        test_core(subject_txt, nominal_txt, offset, mode, level)
-        if both:
-            test_core(nominal_txt, subject_txt, offset, mode, level)
-    else:
+    if "GO" in sys.argv:
         subject = StringIO(subject_txt)
         nominal = StringIO(nominal_txt)
 
         la = list(compare.line_associations(config, subject, nominal))
-        console.do(LineAssociationChunkList(la))
+        console.diff(LineAssociationChunkList(la))
 
-subject_txt = \
-"""Sah ein Röslein 1.005 Knab stehen
-Röslein auf der     ((Wiese))
-War jung morgenschön
-Lief er ganz schnell es von nah zu sehn
-Schaut's mit 1000 Freuden
-Röslein, Tülplein, Röslein orange
-Röslein auf der ((Wiese))
-"""
+    elif "GONE" in sys.argv:
+        subject = StringIO(subject_txt)
+        nominal = StringIO(nominal_txt)
 
-nominal_txt = \
-"""
-Sah ein Knab 1 Röslein stehen
-Röslein   auf der   ((Heiden))
-War so jung und morgenschön
-Lief er schnell es nah zu sehn
-Schaut's mit vielen Freuden
-Röslein, Röslein, Röslein rot
-Röslein auf der ((Heiden))
-"""
-
-subject_modified_txt = \
-"""Sah ein Röslein ein Knab stehen
-Röslein   auf der   Heiden 
-War jung morgenschön
-Röslein, Tülplein, Röslein orange
-"""
-
-analogy_subject = \
-"""
-Knabe sprach: ((wir)) breche ((dich)),
-((Röslein)) ((auf)) der ((Wiese))!
-((Röslein)) sprach: Ich steche ((dich)),
-daß du ewig denkst an mich,
-und ((wir)) will's nicht leiden.
-((Röslein)), ((Röslein)), ((Tülplein)) rot,
-((Röslein)) ((unter)) der ((Wiese)).
-"""
-
-analogy_nominal = \
-"""
-Knabe sprach: ((ich)) breche ((dich)),
-((Röslein)) ((auf)) der ((Heiden))!
-((Röslein)) sprach: Ich steche ((dich)),
-daß du ewig denkst an mich,
-und ((ich)) will's nicht leiden.
-((Röslein)), ((Röslein)), ((Röslein)) rot,
-((Röslein)) ((auf)) der ((Heiden)).
-"""
-
-mix_subject = \
-"""
-Zwei
-Vier
-Fünf
-"""
-
-mix_nominal = \
-"""
-Eins
-Zwei
-Drei
-Vier
-Fünf
-"""
-
-nominal_error_txt = \
-"""
-eins
-zwei
-drei
-vier
-fuenf
-sechs
-sieben
-acht 
-neun
-zehn
-elf
-zwölf
-dreizehn
-vierzehn
-fuenfzehn
-sechzehn
-siebzehn
-achtzehn
-neunzehn
-zwanzig
-einundzwanzig
-zweiundzwanzig
-"""
-
-subject_error_txt = \
-"""
-eins           !!
-zwei           !!
-drei
-vier           !!
-fuenf
-sechs
-sieben         !!
-acht 
-neun
-zehn
-elf            !!
-zwölf
-dreizehn
-vierzehn
-fuenfzehn
-sechzehn       !!
-siebzehn
-achtzehn
-neunzehn
-zwanzig
-einundzwanzig
-zweiundzwanzig !!
-"""
-
-subject_error2_txt = \
-"""
-eins
-zwei
-drei
-vier     
-fuenf !!
-sechs
-sieben
-acht 
-neun
-zehn
-elf
-zwölf
-dreizehn
-vierzehn
-fuenfzehn
-sechzehn
-siebzehn
-achtzehn !!
-neunzehn  
-zwanzig        
-einundzwanzig
-zweiundzwanzig
-"""
+        la = list(compare.line_associations(config, subject, nominal))
+        console.merge(LineAssociationChunkList(la))
+    else:
+        test_core(subject_txt, nominal_txt, offset, mode, level)
+        if both:
+            test_core(nominal_txt, subject_txt, offset, mode, level)
 
 if "similar" in sys.argv:
     # Testing all kinds of similarity

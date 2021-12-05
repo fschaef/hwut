@@ -74,7 +74,8 @@ def test_line_associations(subject_txt, nominal_txt):
     line_association_chunk_list = list(main.line_associations(config, subject, nominal))
     for chunk in line_association_chunk_list:
         print("TYPE:", chunk.type().name)
-        print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0, chunk.line_association_list(), [], line_offset=-1)
+        print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0, 
+                                         chunk, [], line_offset=-1)
     print()
 
 if "compare" in sys.argv: 

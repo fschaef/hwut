@@ -42,7 +42,7 @@ def do(obj):
 def _indent(obj):
     indent    = 0
     newline_f = True
-    for txt in _class(obj):
+    for txt in _call_pretty_function(obj):
         if   txt == 1:  indent += 1; continue
         elif txt == -1: indent -= 1; continue
 
@@ -53,16 +53,17 @@ def _indent(obj):
 
 def _iterable(element):
     if   element is None:                yield "None"
-    elif hasattr(element, "__pretty__"): yield from _class(element)
+    elif hasattr(element, "__pretty__"): yield from _call_pretty_function(element)
     elif type(element) == list:          yield from _list(element)
     elif type(element) == tuple:         yield from _list(element, "tuple")
     else:                                yield "%s" % element
 
-def _class(obj):
+def _call_pretty_function(obj):
     class_name, member_list = obj.__pretty__()
     assert type(member_list) == list
-    if not member_list: return [class_name]
-    if type(member_list[0]) == tuple and len(member_list[0]) == 2:
+    if not member_list: 
+        return [class_name]
+    elif type(member_list[0]) == tuple and len(member_list[0]) == 2:
         return _member_sequence(member_list, class_name)
     else:
         return _list(member_list, class_name)
