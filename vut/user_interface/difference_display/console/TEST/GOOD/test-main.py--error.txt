@@ -1,0 +1,94 @@
+
+|==============================================================================|
+eins           !!                    2 |2  eins                                 
+zwei           !!                    3 |3  zwei                                 
+drei                                 4 |4  drei                                 
+vier           !!                    5 |5  vier                                 
+fuenf                                6 |6  fuenf                                
+sechs                                7 |7  sechs                                
+sieben         !!                    8 |8  sieben                               
+acht                                 9 |9  acht                                 
+neun                                 10|10 neun                                 
+zehn                                 11|11 zehn                                 
+elf            !!                    12|12 elf                                  
+zwölf                                13|13 zwölf                                
+                                    :  |  :                                     
+fuenfzehn                            16|16 fuenfzehn                            
+sechzehn       !!                    17|17 sechzehn                             
+siebzehn                             18|18 siebzehn                             
+                                    :  |  :                                     
+einundzwanzig                        22|22 einundzwanzig                        
+zweiundzwanzig !!                    23|23 zweiundzwanzig                       
+---------------------------------------|----------------------------------------
+
+|==============================================================================|
+eins                                 2 |2  eins           !!                    
+zwei                                 3 |3  zwei           !!                    
+drei                                 4 |4  drei                                 
+vier                                 5 |5  vier           !!                    
+fuenf                                6 |6  fuenf                                
+sechs                                7 |7  sechs                                
+sieben                               8 |8  sieben         !!                    
+acht                                 9 |9  acht                                 
+neun                                 10|10 neun                                 
+zehn                                 11|11 zehn                                 
+elf                                  12|12 elf            !!                    
+zwölf                                13|13 zwölf                                
+                                    :  |  :                                     
+fuenfzehn                            16|16 fuenfzehn                            
+sechzehn                             17|17 sechzehn       !!                    
+siebzehn                             18|18 siebzehn                             
+                                    :  |  :                                     
+einundzwanzig                        22|22 einundzwanzig                        
+zweiundzwanzig                       23|23 zweiundzwanzig !!                    
+---------------------------------------|----------------------------------------
+
+|==============================================================================|
+eins           !!                    2 |2  eins                                 
+zwei           !!                    3 |3  zwei                                 
+drei                                 4 |4  drei                                 
+vier           !!                    5 |5  vier                                 
+                                    :  |  :                                     
+sieben         !!                    8 |8  sieben                               
+                                    :  |  :                                     
+elf            !!                    12|12 elf                                  
+                                    :  |  :                                     
+sechzehn       !!                    17|17 sechzehn                             
+                                    :  |  :                                     
+zweiundzwanzig !!                    23|23 zweiundzwanzig                       
+---------------------------------------|----------------------------------------
+
+|==============================================================================|
+eins                                 2 |2  eins           !!                    
+zwei                                 3 |3  zwei           !!                    
+drei                                 4 |4  drei                                 
+vier                                 5 |5  vier           !!                    
+                                    :  |  :                                     
+sieben                               8 |8  sieben         !!                    
+                                    :  |  :                                     
+elf                                  12|12 elf            !!                    
+                                    :  |  :                                     
+sechzehn                             17|17 sechzehn       !!                    
+                                    :  |  :                                     
+zweiundzwanzig                       23|23 zweiundzwanzig !!                    
+---------------------------------------|----------------------------------------
+
+|==============================================================================|
+eins           !!                    2 |2  eins                                 
+zwei           !!                    3 |3  zwei                                 
+vier           !!                    5 |5  vier                                 
+sieben         !!                    8 |8  sieben                               
+elf            !!                    12|12 elf                                  
+sechzehn       !!                    17|17 sechzehn                             
+zweiundzwanzig !!                    23|23 zweiundzwanzig                       
+---------------------------------------|----------------------------------------
+
+|==============================================================================|
+eins                                 2 |2  eins           !!                    
+zwei                                 3 |3  zwei           !!                    
+vier                                 5 |5  vier           !!                    
+sieben                               8 |8  sieben         !!                    
+elf                                  12|12 elf            !!                    
+sechzehn                             17|17 sechzehn       !!                    
+zweiundzwanzig                       23|23 zweiundzwanzig !!                    
+---------------------------------------|----------------------------------------
