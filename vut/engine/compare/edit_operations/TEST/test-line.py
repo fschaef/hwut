@@ -62,7 +62,7 @@ if "basic" in sys.argv:
     test_mseq("ss",  "nss")     # deleted front
     test_mseq("ss",  "sns")     # deleted middle
     test_mseq("ss",  "ssn")     # deleted end
-    test_mseq("sn",  "ns")      # trsnsposed sdjscently
+    test_mseq("sn",  "ns")      # transposed adjacently
     test_mseq("snx", "ysn")
     test_mseq("sex", "yse")
 

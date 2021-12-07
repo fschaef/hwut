@@ -44,11 +44,11 @@ class Token:
            LineElement.from_Token(...)  --> 'LineElement'
 
     """
-    def __init__(self):
-        self.tolerance_id  = None
-        self.start         = None
-        self.end           = None
-        self.pattern_i_set = None
+    def __init__(self, tolerance_id=None, start=None, end=None, pattern_i_set=None):
+        self.tolerance_id  = tolerance_id
+        self.start         = start
+        self.end           = end
+        self.pattern_i_set = pattern_i_set
 
     def set(self, tolerance, span):
         self.start        = span[0]
@@ -97,7 +97,7 @@ class LineElement:
         start, end   = token.start, token.end
 
         if tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
-            return None # LineElementVisibleNothing(start, end, global_string)
+            return LineElementVisibleNothing(start, end, global_string)
 
         elif tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
             return LineElementEquivalencePattern(start, end, global_string,
@@ -122,6 +122,10 @@ class LineElement:
                     [1] analogy required for the EQUIVALENT to hold,
                         if it is equivalent.
         """
+        # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
+        assert self.tolerance_id    != E_ToleranceId.VISIBLE_NOTHING
+        assert nominal.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
+
         if self.tolerance_id != nominal.tolerance_id:
             return E_Verdict.MISFIT, None
 
@@ -134,6 +138,10 @@ class LineElement:
     def edit_distance_relative(self, nominal):
         """RETURNS: ratio of edit distance / max. possible edit distance.
         """
+        # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
+        assert self.tolerance_id    != E_ToleranceId.VISIBLE_NOTHING
+        assert nominal.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
+
         max_length = max(len(self.string), len(nominal.string))
         if max_length == 0:
             return 0

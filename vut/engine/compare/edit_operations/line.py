@@ -75,19 +75,14 @@ class E_EditLine(IntEnum):
     """
     GOOD            = 0  # Subject and nominal 'LineElement' object are equivalent.
     GOOD_TOLERATED  = 1  # == GOOD, only that content may differ (used in diff-display).
+    GOOD_INSERT     = 9  # == GOOD, nominal has a 'visible nothing' where subject has nothing.
+    GOOD_DELETE     = 8  # == GOOD, subject has a 'visible nothing' where nominal has nothing.
     TRANSPOSE       = 2  # Heal: Two 'LineElement' objects in subject are transposed.
     INSERT          = 3  # Heal: 'LineElement' from nominal is inserted.
     DELETE          = 4  # Heal: 'LineElement' from subject is deleted.
     SUBSTITUTE      = 5  # Bad:  Content of subject and nominal 'LineElement' differs.
     SUBSTITUTE_TYPE = 6  # Bad:  Type of subject and nominal 'LineElement' differs.
     NONE            = 7  # No operation
-
-TRANSPOSE      = E_EditLine.TRANSPOSE
-GOOD           = E_EditLine.GOOD
-GOOD_TOLERATED = E_EditLine.GOOD_TOLERATED
-DELETE         = E_EditLine.DELETE
-INSERT         = E_EditLine.INSERT
-SEPERATOR      = E_ToleranceId.SEPERATOR
 
 Edit = namedtuple("Edit", ("id", "transpose_ai"))
 
@@ -151,7 +146,9 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     work_list = WorkList(subject_match_seq, nominal_match_seq, initial_item)
 
     if seperator_db.original_max_cost == 0.0:
-        return EditsLine(0, [], AnalogyDb())
+        return EditsLine(0, 
+                         seperator_db.reinsert_seperators([]),
+                         AnalogyDb())
 
     while work_list:
         item = work_list.pop()
@@ -166,6 +163,20 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
                      seperator_db.reinsert_seperators(best.edit_list),
                      best.analogy_db)
 
+# Shortcuts:
+TRANSPOSE       = E_EditLine.TRANSPOSE
+GOOD            = E_EditLine.GOOD
+GOOD_TOLERATED  = E_EditLine.GOOD_TOLERATED
+GOOD_INSERT     = E_EditLine.GOOD_INSERT
+GOOD_DELETE     = E_EditLine.GOOD_DELETE
+DELETE          = E_EditLine.DELETE
+INSERT          = E_EditLine.INSERT
+NONE            = E_EditLine.NONE
+SUBSTITUTE_TYPE = E_EditLine.SUBSTITUTE_TYPE
+
+SEPERATOR       = E_ToleranceId.SEPERATOR
+VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
+
 class SeperatorAdaptor:
     """Seperators are elements of a line which appear (often) between line
     elements. Their exact 'shape' is irrelevant. Two patterns matching a 
@@ -175,6 +186,9 @@ class SeperatorAdaptor:
           to reduce the required amount of matching. Later, once the 
           edit list is determined, re-insert the seperator related 
           content.
+
+    A seperator may be a 'SEPERATOR' or 'VISIBLE_NOTHING'. The latter
+    does not cause errors if present in one and missing in the other.
 
     The constructor takes to line element sequences, subject and nominal.
     It then strips out the seperators, but stores their original position.
@@ -191,10 +205,12 @@ class SeperatorAdaptor:
                                         consideration.
     """
     def __init__(self, subject_seq, nominal_seq):
-        self.subject_sequence    = subject_seq
-        self.nominal_sequence    = nominal_seq
-        self.subject_seperators, \
-        self.subject_flags       = self.__map(subject_seq)
+        self.subject_sequence = subject_seq
+        self.nominal_sequence = nominal_seq
+        self.subject_flags    = [x.tolerance_id not in (SEPERATOR, VISIBLE_NOTHING) for x in subject_seq]
+        self.nominal_flags    = [x.tolerance_id not in (SEPERATOR, VISIBLE_NOTHING) for x in nominal_seq]
+        self.subject_visibile_nothing_index_set = [ i for i, x in enumerate(subject_seq) if x.tolerance_id == VISIBLE_NOTHING ]
+        self.nominal_visibile_nothing_index_set = [ i for i, x in enumerate(nominal_seq) if x.tolerance_id == VISIBLE_NOTHING ]
 
         # map: index in subject content --> index in original subject sequence
         self.subject_index_map = {}
@@ -204,31 +220,16 @@ class SeperatorAdaptor:
             self.subject_index_map[k] = i
             k += 1
 
-        self.nominal_seperators, \
-        self.nominal_flags       = self.__map(nominal_seq)
-
         length_relevant_subject_seq = sum(self.subject_flags)
         length_relevant_nominal_seq = sum(self.nominal_flags)
         self.original_max_cost      = max_cost(length_relevant_subject_seq, 
                                                length_relevant_nominal_seq)
 
 
-    @staticmethod
-    def __map(sequence):
-        content    = []
-        flags      = []
-        for i, x in enumerate(sequence):
-            if x.tolerance_id == SEPERATOR:
-                flags.append(False)
-            else:
-                content.append(x)
-                flags.append(True)
-        return content, flags
-
     def strip_separators(self):
         return \
-            [ s for i, s in enumerate(self.subject_sequence) if self.subject_flags[i] ], \
-            [ n for i, n in enumerate(self.nominal_sequence) if self.nominal_flags[i] ]  
+            [ x for x, content_f in zip(self.subject_sequence, self.subject_flags) if content_f ], \
+            [ x for x, content_f in zip(self.nominal_sequence, self.nominal_flags) if content_f ]  
                 
     def reinsert_seperators(self, edit_list_raw):
         """RETURNS: Edit-operations considering seperators being present.
@@ -239,50 +240,122 @@ class SeperatorAdaptor:
         the separators and provides an according list of edit operations based
         on the edit operations derived from the content comparison.
         """
-        return list(self.__reinsert_seperators(edit_list_raw))
+        def iterable(edit_iterable):
+            """Ensure, that adjacent 'DELETE' and 'INSERTS' are combined into 
+            'SUBSTITUTE_TYPE' operations.  The cases of adjacent 'INSERT/DELETE' 
+            operations come from separators being inserted into the list. 
+            Separators are always of different type than content => 'SUBSTITUTE_TYPE' 
+            is safe to use.
+            """
+            sequence_db = {
+                # GOOD_INSERT/DELETE = 'insert/delete' visible nothing.
+                #
+                # Example subject sequence (V = visible nothing, S = string):
+                #
+                #               SV  --- GOOD_INSERT ---> VSV
+                #               ^
+                #               VSV --- DELETE      ---> VV    
+                #                ^
+                #               VV  --- GOOD_DELETE ---> V
+                #                ^
+                # This is equivalent to 'DELETE' at the beginning. The second case
+                # works respectively.
+                (GOOD_INSERT, DELETE, GOOD_DELETE): DELETE,
+                (GOOD_DELETE, INSERT, GOOD_INSERT): INSERT
+            }
+            pair_db = {
+                (DELETE, INSERT): SUBSTITUTE_TYPE,
+                (INSERT, DELETE): SUBSTITUTE_TYPE
+            }
+            def _iterable(edit_list):
+                """YIELDS: (current, look-ahead, look-ahead-ahead)
+                """
+                last = len(edit_list) - 1
+                for i, x in enumerate(edit_iterable):
+                    if i == last:       yield x, NONE, NONE
+                    elif i == last -1 : yield x, edit_iterable[i+1].id, NONE
+                    else:               yield x, edit_iterable[i+1].id, edit_iterable[i+2].id
+                   
+            skip_n = 0
+            for current, ahead_id, ahead2_id in _iterable(edit_iterable):
+                if skip_n: skip_n -= 1; continue
+
+                combined_id = pair_db.get((current.id, ahead_id))
+                if combined_id is not None:
+                    yield Edit(combined_id, None)
+                    skip_n = 1
+                    continue
+
+                combined_id = sequence_db.get((current.id, ahead_id, ahead2_id))
+                if combined_id is not None:
+                    yield Edit(combined_id, None)
+                    skip_n = 2
+                    continue
+
+                yield current
+
+        return list(iterable(list(self.__reinsert_seperators(edit_list_raw))))
 
     def __reinsert_seperators(self, edit_list_raw):
+        def _insert_op(ni):
+            if ni in self.nominal_visibile_nothing_index_set: op = GOOD_INSERT
+            else:                                             op = INSERT
+            return Edit(op, None)
+
+        def _delete_op(si):
+            if si in self.subject_visibile_nothing_index_set: op = GOOD_DELETE
+            else:                                             op = DELETE
+            return Edit(op, None)
+
+        def _good_op(si, ni):
+            if self.subject_sequence[si].tolerance_id != self.nominal_sequence[ni].tolerance_id:
+                return Edit(SUBSTITUTE_TYPE, None) # SEPERATOR vs. VISIBLE_NOTHING
+            elif self.subject_sequence[si].string == self.nominal_sequence[ni].string:
+                return Edit(GOOD, None)            # both equal seperators
+            else:
+                return Edit(GOOD_TOLERATED, None)  # seperators are similar
+
+        def _possible_transpose_op(ei):
+            edit = edit_list_raw[ei]
+            if edit.id == TRANSPOSE:
+                translated_si = self.subject_index_map[edit.transpose_ai]
+                return Edit(TRANSPOSE, translated_si)
+            else:
+                return edit
+
         Le = len(edit_list_raw)
         Ls = len(self.subject_sequence)
         Ln = len(self.nominal_sequence)
         si = ni = ei = 0
         while 1 + 1 == 2:
             if si >= Ls:
-                for _ in range(Ln-ni):
-                    yield Edit(INSERT, None)
+                for tail_ni in range(ni, Ln):
+                    yield _insert_op(tail_ni)
                 return
             elif ni >= Ln:
-                for _ in range(Ls-si):
-                    yield Edit(DELETE, None)
+                for tail_si in range(si, Ls):
+                    yield _delete_op(tail_si)
                 return
+
             s_flag = self.subject_flags[si]
             n_flag = self.nominal_flags[ni]
 
-            if not s_flag and n_flag: 
-                yield Edit(DELETE, None)   # DELETE seperator in subject
-                s_incr, n_incr = 1, 0
-
-            elif s_flag and not n_flag:
-                yield Edit(INSERT, None)   # INSERT seperator in subject
+            if s_flag and not n_flag:    # subject = content,   nominal = seperator
+                yield _insert_op(ni)
                 s_incr, n_incr = 0, 1
 
-            elif not s_flag:              
-                # both are separators
-                if self.subject_sequence[si].string == self.nominal_sequence[ni].string:
-                    yield Edit(GOOD, None)            # both equal seperators
-                else:
-                    yield Edit(GOOD_TOLERATED, None)  # seperators are similar
+            elif not s_flag and n_flag:  # subject = seperator, nominal = content
+                yield _delete_op(si)
+                s_incr, n_incr = 1, 0
+
+            elif not s_flag:             # subject = seperator, nominal = seperator 
+                yield _good_op(si, ni)
                 s_incr, n_incr = 1, 1
 
-            else:
-                # both are content
-                edit = edit_list_raw[ei]
-                if edit.id == TRANSPOSE:
-                    translated_si = self.subject_index_map[edit.transpose_ai]
-                    yield Edit(TRANSPOSE, translated_si)
-                else:
-                    yield edit
+            else:                        # subject = content,   nominal = content
+                edit = _possible_transpose_op(ei)
                 s_incr, n_incr = position_increment_db[edit.id]
+                yield edit
                 ei += 1
 
             si += s_incr

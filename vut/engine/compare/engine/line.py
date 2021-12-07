@@ -10,7 +10,7 @@ ________________________________________________________________________________
 import vut.engine.compare.edit_operations.line as     edit_operations_line
 from   vut.engine.compare.engine.core          import E_Verdict
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
-from   vut.engine.compare.tolerance.line_element      import LineElementString
+from   vut.engine.compare.tolerance.line_element      import LineElementString, E_ToleranceId
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
@@ -42,11 +42,13 @@ class Line:
         In case of failure, the old 'analogy_db' is returned. That is, two lines
         which are not equivalent do not impose new analogies.
         """
-        if len(self.sequence) != len(nominal.sequence):
+        self_sequence    = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
+        nominal_sequence = [ le for le in nominal.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
+        if len(self_sequence) != len(nominal_sequence):
             return False, analogy_db
 
         new_analogy_db = AnalogyDb()
-        for subject_match, nominal_match in zip(self.sequence, nominal.sequence):
+        for subject_match, nominal_match in zip(self_sequence, nominal_sequence):
             verdict, analogy = subject_match.compare(nominal_match)
             if verdict != E_Verdict.EQUIVALENT:
                 return False, analogy_db
