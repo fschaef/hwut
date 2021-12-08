@@ -308,9 +308,7 @@ class SeperatorAdaptor:
             return Edit(op, None)
 
         def _good_op(si, ni):
-            if self.subject_sequence[si].tolerance_id != self.nominal_sequence[ni].tolerance_id:
-                return Edit(SUBSTITUTE_TYPE, None) # SEPERATOR vs. VISIBLE_NOTHING
-            elif self.subject_sequence[si].string == self.nominal_sequence[ni].string:
+            if self.subject_sequence[si].string == self.nominal_sequence[ni].string:
                 return Edit(GOOD, None)            # both equal seperators
             else:
                 return Edit(GOOD_TOLERATED, None)  # seperators are similar
@@ -337,27 +335,31 @@ class SeperatorAdaptor:
                     yield _delete_op(tail_si)
                 return
 
-            s_flag = self.subject_flags[si]
-            n_flag = self.nominal_flags[ni]
+            s_is_content = self.subject_flags[si]
+            n_is_content = self.nominal_flags[ni]
 
-            if s_flag and not n_flag:    # subject = content,   nominal = seperator
-                yield _insert_op(ni)
-                s_incr, n_incr = 0, 1
+            if       s_is_content and not n_is_content: 
+                edit = _insert_op(ni)
 
-            elif not s_flag and n_flag:  # subject = seperator, nominal = content
-                yield _delete_op(si)
-                s_incr, n_incr = 1, 0
+            elif not s_is_content and     n_is_content:  
+                edit = _delete_op(si)
 
-            elif not s_flag:             # subject = seperator, nominal = seperator 
-                yield _good_op(si, ni)
-                s_incr, n_incr = 1, 1
+            elif not s_is_content and not n_is_content:                   
+                subject_tid = self.subject_sequence[si].tolerance_id
+                nominal_tid = self.nominal_sequence[ni].tolerance_id
+                if   subject_tid == SEPERATOR       and nominal_tid == VISIBLE_NOTHING:
+                    edit = Edit(DELETE, None)          # remove separator from subject
+                elif subject_tid == VISIBLE_NOTHING and nominal_tid == SEPERATOR:
+                    edit = Edit(INSERT, None)          # insert seperator into subject
+                else:
+                    edit = _good_op(si, ni)
 
-            else:                        # subject = content,   nominal = content
+            else:                                    # subject = content,   nominal = content
                 edit = _possible_transpose_op(ei)
-                s_incr, n_incr = position_increment_db[edit.id]
-                yield edit
                 ei += 1
 
+            yield edit
+            s_incr, n_incr = position_increment_db[edit.id]
             si += s_incr
             ni += n_incr
 
@@ -366,6 +368,8 @@ position_increment_db = {
     #                        si-increment  ni-increment
     E_EditLine.GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
     E_EditLine.GOOD_TOLERATED:   (1,           1),    #          -- " --
+    E_EditLine.GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
+    E_EditLine.GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
     E_EditLine.TRANSPOSE:        (1,           1),    #          -- " --
     E_EditLine.INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
     #                                                 # => compare subject[si+1] with nominal[ni]
