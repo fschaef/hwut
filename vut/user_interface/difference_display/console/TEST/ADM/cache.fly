@@ -5,12 +5,12 @@ file_name: test-main.py;
 hwut_info_time: 1638174122L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ similar; OK; 0.236536; 0; ]
-  [ padding; OK; 0.424247; 0; ]
-  [ potpourri; OK; 0.236637; 0; ]
-  [ mix; OK; 0.228358; 0; ]
-  [ analogy; OK; 0.279749; 0; ]
-  [ error; OK; 0.312766; 0; ]
-  [ error2; OK; 0.280799; 0; ]
+  [ similar; OK; 0.291304; 0; ]
+  [ padding; OK; 0.391291; 0; ]
+  [ potpourri; OK; 0.252938; 0; ]
+  [ mix; OK; 0.229949; 0; ]
+  [ analogy; OK; 0.306551; 0; ]
+  [ error; OK; 0.323527; 0; ]
+  [ error2; OK; 0.286824; 0; ]
 ]
 }

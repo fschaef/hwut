@@ -207,10 +207,8 @@ class SeperatorAdaptor:
     def __init__(self, subject_seq, nominal_seq):
         self.subject_sequence = subject_seq
         self.nominal_sequence = nominal_seq
-        self.subject_flags    = [x.tolerance_id not in (SEPERATOR, VISIBLE_NOTHING) for x in subject_seq]
-        self.nominal_flags    = [x.tolerance_id not in (SEPERATOR, VISIBLE_NOTHING) for x in nominal_seq]
-        self.subject_visibile_nothing_index_set = [ i for i, x in enumerate(subject_seq) if x.tolerance_id == VISIBLE_NOTHING ]
-        self.nominal_visibile_nothing_index_set = [ i for i, x in enumerate(nominal_seq) if x.tolerance_id == VISIBLE_NOTHING ]
+        self.subject_flags    = [x.tolerance_id != SEPERATOR for x in subject_seq]
+        self.nominal_flags    = [x.tolerance_id != SEPERATOR for x in nominal_seq]
 
         # map: index in subject content --> index in original subject sequence
         self.subject_index_map = {}
@@ -298,14 +296,10 @@ class SeperatorAdaptor:
 
     def __reinsert_seperators(self, edit_list_raw):
         def _insert_op(ni):
-            if ni in self.nominal_visibile_nothing_index_set: op = GOOD_INSERT
-            else:                                             op = INSERT
-            return Edit(op, None)
+            return Edit(INSERT, None)
 
         def _delete_op(si):
-            if si in self.subject_visibile_nothing_index_set: op = GOOD_DELETE
-            else:                                             op = DELETE
-            return Edit(op, None)
+            return Edit(DELETE, None)
 
         def _good_op(si, ni):
             if self.subject_sequence[si].string == self.nominal_sequence[ni].string:

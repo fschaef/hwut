@@ -21,7 +21,6 @@ class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
         ConsoleCanvasDiff.set_mode(self, mode, verbosity_level)
         self._range_list = prepare.get_Interval_list(self._lina_chunk_list)
         print_callstack()
-        print("#mode", mode)
 
     def set_focus_range_i(self, value):
         self._focus_range_i = value
