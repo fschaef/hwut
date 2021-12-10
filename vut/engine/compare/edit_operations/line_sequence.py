@@ -21,6 +21,7 @@ _______________________________________________________________________________
 from   vut.engine.compare.edit_operations.core import WorkListBase, \
                                                       WorkItemBase
 from   vut.engine.compare.edit_operations.line import Edit, EditsLine
+from   vut.engine.compare.engine.core          import E_EditId
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
 from   vut.external.quex.typed                 import typed
 
@@ -28,23 +29,15 @@ from   enum        import IntEnum
 from   collections import defaultdict
 import sys
 
-class E_EditLineSequence(IntEnum):
-    """Operations moving/substituting 'Lines'.
-    """
-    GOOD        = 0  # Subject and nominal 'LineElement' object are equivalent.
-    INSERT      = 1  # Heal: 'LineElement' from nominal is inserted.
-    DELETE      = 2  # Heal: 'LineElement' from subject is deleted.
-    SUBSTITUTE  = 3  # Bad:  Content of subject and nominal 'LineElement' differs.
-
 
 class EditsLineSequence:
     def __init__(self, cost, edit_list, analogy_db):
         """edit_list: list of tuples (edit_id, edit_list)
 
-        where edit_id:    E_EditLineSequence
+        where edit_id:    E_EditId
               edit_list': list of Edit objects
         """
-        assert all(isinstance(first, E_EditLineSequence)
+        assert all(isinstance(first, E_EditId)
                    for first, _ in edit_list)
         assert all(isinstance(x, Edit)
                    for _, second in edit_list
@@ -68,8 +61,8 @@ class WorkList(WorkListBase):
 
         self.best = EditsLineSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
         self.cost_insert_delete = cost_INSERT_DELETE
-        self.DELETE_obj = (E_EditLineSequence.DELETE, None)
-        self.INSERT_obj = (E_EditLineSequence.INSERT, None)
+        self.DELETE_obj = (E_EditId.DELETE, None)
+        self.INSERT_obj = (E_EditId.INSERT, None)
 
         self.cache = LineEditionDb()
 
@@ -104,10 +97,10 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
 
 position_increment_db = {
     #                        si-increment  ni-increment
-    E_EditLineSequence.GOOD:         (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditLineSequence.SUBSTITUTE:   (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditLineSequence.INSERT:       (0,           1),    # Must insert before 'subject[si]' to fix.
-    E_EditLineSequence.DELETE:       (1,           0),    # Must insert before 'nominal[ni]' to fix.
+    E_EditId.GOOD:         (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditId.SUBSTITUTE:   (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditId.INSERT:       (0,           1),    # Must insert before 'subject[si]' to fix.
+    E_EditId.DELETE:       (1,           0),    # Must insert before 'nominal[ni]' to fix.
 }
 
 cost_GOOD          = 0.0
@@ -139,13 +132,13 @@ class WorkItemHistory:
         Editions of the same kind appear in adjacent blocks, they are cheaper.
         They are not so 'bad', because in their context they are consistent.
         """
-        if edit_id == E_EditLineSequence.GOOD:
+        if edit_id == E_EditId.GOOD:
             self.substitute_n  = 0
             self.insert_n      = 0
             self.delete_n      = 0
             # value of GOOD decreases with number of corrections preceeding it.
             return cost_GOOD
-        elif edit_id == E_EditLineSequence.SUBSTITUTE:
+        elif edit_id == E_EditId.SUBSTITUTE:
             if editions != self.substitute_editions:
                 self.substitute_editions = editions
                 self.substitute_n        = 0
@@ -154,13 +147,13 @@ class WorkItemHistory:
             self.delete_n      = 0
             # cost of SUBSTITUTE decreases with same substitution patterns preceeding
             return relative_edit_distance / self.substitute_n
-        elif edit_id == E_EditLineSequence.INSERT:
+        elif edit_id == E_EditId.INSERT:
             self.substitute_n  = 0
             self.insert_n     += 1
             self.delete_n      = 0
             # cost of DELETE decreases with number of preceeding deletions number
             return cost_INSERT_DELETE / self.insert_n
-        elif edit_id == E_EditLineSequence.DELETE:
+        elif edit_id == E_EditId.DELETE:
             self.substitute_n  = 0
             self.insert_n      = 0
             self.delete_n     += 1
@@ -199,21 +192,21 @@ class WorkItem(WorkItemBase):
        # possible.
        # NOTE: Subsequent INSERT-DELETE or DELETE-INSERT do not make sense!
        #       They are equivalent to 'SUBSTITUTE'.
-       if self.edit_list.last() != E_EditLineSequence.DELETE:
-           yield self._step(E_EditLineSequence.INSERT)
-       if self.edit_list.last() != E_EditLineSequence.INSERT:
-           yield self._step(E_EditLineSequence.DELETE)
+       if self.edit_list.last() != E_EditId.DELETE:
+           yield self._step(E_EditId.INSERT)
+       if self.edit_list.last() != E_EditId.INSERT:
+           yield self._step(E_EditId.DELETE)
 
        if line_editions.cost == 0.0:
-           yield self._step(E_EditLineSequence.GOOD,
+           yield self._step(E_EditId.GOOD,
                             edit_list      = line_editions.edit_list,
                             new_analogy_db = line_editions.analogy_db)
        else:
-           yield self._step(E_EditLineSequence.SUBSTITUTE,
+           yield self._step(E_EditId.SUBSTITUTE,
                             relative_edit_distance = line_editions.cost,
                             edit_list              = line_editions.edit_list)
 
-   @typed(edit_id=E_EditLineSequence, edit_list=[Edit])
+   @typed(edit_id=E_EditId, edit_list=[Edit])
    def _step(self, edit_id, relative_edit_distance=None, new_analogy_db=None, edit_list=None):
        """RETURNS: WorkItem derived from self after applying an edit operation.
 

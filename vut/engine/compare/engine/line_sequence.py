@@ -17,7 +17,7 @@ from   vut.engine.compare.engine.input_chunk            import InputChunk, \
                                                               E_Chunk
 from   vut.engine.compare.engine.line_association       import LineAssociation
 import vut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
-from   vut.engine.compare.edit_operations.line_sequence import E_EditLineSequence, \
+from   vut.engine.compare.edit_operations.line_sequence import E_EditId, \
                                                               EditsLineSequence
 
 class LineSequence(InputChunk):
@@ -54,13 +54,13 @@ class LineSequence(InputChunk):
         def iterable(edit_line_list):
             si, ni = 0, 0
             for edit_id, edit_list in edit_line_list:
-                if   edit_id == E_EditLineSequence.GOOD or edit_id == E_EditLineSequence.SUBSTITUTE:
+                if   edit_id == E_EditId.GOOD or edit_id == E_EditId.SUBSTITUTE:
                     subject_seq = self.line_list[si]
                     nominal_seq = nominal.line_list[ni]
-                elif edit_id == E_EditLineSequence.INSERT:
+                elif edit_id == E_EditId.INSERT:
                     subject_seq = None # nominal inserted, no counterpart in subject
                     nominal_seq = nominal.line_list[ni]
-                elif edit_id == E_EditLineSequence.DELETE:
+                elif edit_id == E_EditId.DELETE:
                     subject_seq = self.line_list[si]
                     nominal_seq = None # subject inserted, no counterpart in nominal
                 else:

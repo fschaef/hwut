@@ -15,10 +15,10 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.tolerance.line_element import E_ToleranceId
 from   vut.engine.compare.engine.line            import Line
-from   vut.engine.compare.engine.core            import E_PotpourriBorder
+from   vut.engine.compare.engine.core            import E_PotpourriBorder, E_EditId
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
 import vut.engine.compare.edit_operations.line   as     edit_operations_line
-from   vut.engine.compare.edit_operations.line   import Edit, Edit_none, E_EditLine
+from   vut.engine.compare.edit_operations.line   import Edit, Edit_none
 from   vut.external.quex.typed                   import typed
 
 from   collections import namedtuple
@@ -70,7 +70,7 @@ class LineAssociation:
         elif not self.edit_list:
             return True
         else:
-            return all(edit.id == E_EditLine.GOOD or edit.id == E_EditLine.GOOD_TOLERATED 
+            return all(edit.id == E_EditId.GOOD or edit.id == E_EditId.GOOD_TOLERATED 
                        for edit in self.edit_list)
 
     def is_good(self):
@@ -84,7 +84,7 @@ class LineAssociation:
         elif not self.edit_list:
             return True
         else:
-            return all(edit.id == E_EditLine.GOOD for edit in self.edit_list)
+            return all(edit.id == E_EditId.GOOD for edit in self.edit_list)
 
     def analogy_errors(self):
         """RETURNS: Set of pairs (subject, nominal) where analogies have not been met.
@@ -93,8 +93,8 @@ class LineAssociation:
             return le is not None and le.tolerance_id == E_ToleranceId.ANALOGY
 
         def _is_analogy_error(lela):
-            if     lela.edit_id != E_EditLine.SUBSTITUTE \
-               and lela.edit_id != E_EditLine.SUBSTITUTE_TYPE:
+            if     lela.edit_id != E_EditId.SUBSTITUTE \
+               and lela.edit_id != E_EditId.SUBSTITUTE_TYPE:
                 return False
             else:
                 return _is_analogy(lela.subject) or _is_analogy(lela.nominal)
@@ -118,17 +118,17 @@ class LineAssociation:
             result = []
         elif self.subject is None:
             result = [
-                LineElementAssociation(E_EditLine.NONE, None, n) 
+                LineElementAssociation(E_EditId.NONE, None, n) 
                 for n in self.nominal.sequence
             ]
         elif self.nominal is None:
             result = [
-                LineElementAssociation(E_EditLine.NONE, s, None) 
+                LineElementAssociation(E_EditId.NONE, s, None) 
                 for s in self.subject.sequence
             ]
         elif not self.edit_list:
             result = [
-                LineElementAssociation(E_EditLine.NONE, s, n) 
+                LineElementAssociation(E_EditId.NONE, s, n) 
                 for s, n in zip(self.subject.sequence, self.nominal.sequence)
             ]
         else:
@@ -138,18 +138,18 @@ class LineAssociation:
             transpose_id_set = set()
             si = ni = 0
             for edit in self.edit_list:
-                if edit.id == E_EditLine.TRANSPOSE:
+                if edit.id == E_EditId.TRANSPOSE:
                     transpose_id_set.add(edit.transpose_ai)
 
                 subject = None if si >= subject_length else self.subject.sequence[si]
                 nominal = None if ni >= nominal_length else self.nominal.sequence[ni]
 
                 edit_id = edit.id
-                if si in transpose_id_set and edit.id != E_EditLine.INSERT:
-                    edit_id = E_EditLine.TRANSPOSE
-                elif edit.id == E_EditLine.INSERT:
+                if si in transpose_id_set and edit.id != E_EditId.INSERT:
+                    edit_id = E_EditId.TRANSPOSE
+                elif edit.id == E_EditId.INSERT:
                     subject = None
-                elif edit.id == E_EditLine.DELETE:
+                elif edit.id == E_EditId.DELETE:
                     nominal = None
                 result.append(LineElementAssociation(edit_id, subject, nominal))
 

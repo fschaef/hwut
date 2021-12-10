@@ -62,7 +62,7 @@ _______________________________________________________________________________
 from  vut.engine.compare.edit_operations.core     import WorkListBase, WorkItemBase
 from  vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db        import AnalogyDb
-from  vut.engine.compare.engine.core              import E_Verdict
+from  vut.engine.compare.engine.core              import E_Verdict, E_EditId
 from  vut.external.quex.typed                     import typed
 
 from  copy        import copy
@@ -70,31 +70,17 @@ from  enum        import IntEnum
 from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
 
-class E_EditLine(IntEnum):
-    """Operations moving/substituting 'LineElements'.
-    """
-    GOOD            = 0  # Subject and nominal 'LineElement' object are equivalent.
-    GOOD_TOLERATED  = 1  # == GOOD, only that content may differ (used in diff-display).
-    GOOD_INSERT     = 9  # == GOOD, nominal has a 'visible nothing' where subject has nothing.
-    GOOD_DELETE     = 8  # == GOOD, subject has a 'visible nothing' where nominal has nothing.
-    TRANSPOSE       = 2  # Heal: Two 'LineElement' objects in subject are transposed.
-    INSERT          = 3  # Heal: 'LineElement' from nominal is inserted.
-    DELETE          = 4  # Heal: 'LineElement' from subject is deleted.
-    SUBSTITUTE      = 5  # Bad:  Content of subject and nominal 'LineElement' differs.
-    SUBSTITUTE_TYPE = 6  # Bad:  Type of subject and nominal 'LineElement' differs.
-    NONE            = 7  # No operation
-
 Edit = namedtuple("Edit", ("id", "transpose_ai"))
 
 def Edit_none():
-    return Edit(E_EditLine.NONE, None)
+    return Edit(E_EditId.NONE, None)
 
 def Edit_list_description(edit_list):
     if not edit_list:
         return "[]"
     def _iterable(edit_list):
         for i, edit in enumerate(edit_list):
-            if edit.id != E_EditLine.TRANSPOSE:
+            if edit.id != E_EditId.TRANSPOSE:
                 yield edit.id.name 
             else:
                 yield "%s:%i<->%i" % (edit.id.name, i, edit.transpose_ai)
@@ -109,9 +95,9 @@ class WorkList(WorkListBase):
         self.max_cost = max_cost(self.subject_length, self.nominal_length) + 1e-6
 
         self.best = EditsLine(self.max_cost + 1, [], [])
-        self.cost_insert_delete = cost_db[E_EditLine.INSERT]
-        self.DELETE_obj = Edit(E_EditLine.DELETE, None)
-        self.INSERT_obj = Edit(E_EditLine.INSERT, None)
+        self.cost_insert_delete = cost_db[E_EditId.INSERT]
+        self.DELETE_obj = Edit(E_EditId.DELETE, None)
+        self.INSERT_obj = Edit(E_EditId.INSERT, None)
 
         self.cache = Cache()
 
@@ -164,15 +150,15 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
                      best.analogy_db)
 
 # Shortcuts:
-TRANSPOSE       = E_EditLine.TRANSPOSE
-GOOD            = E_EditLine.GOOD
-GOOD_TOLERATED  = E_EditLine.GOOD_TOLERATED
-GOOD_INSERT     = E_EditLine.GOOD_INSERT
-GOOD_DELETE     = E_EditLine.GOOD_DELETE
-DELETE          = E_EditLine.DELETE
-INSERT          = E_EditLine.INSERT
-NONE            = E_EditLine.NONE
-SUBSTITUTE_TYPE = E_EditLine.SUBSTITUTE_TYPE
+TRANSPOSE       = E_EditId.TRANSPOSE
+GOOD            = E_EditId.GOOD
+GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
+GOOD_INSERT     = E_EditId.GOOD_INSERT
+GOOD_DELETE     = E_EditId.GOOD_DELETE
+DELETE          = E_EditId.DELETE
+INSERT          = E_EditId.INSERT
+NONE            = E_EditId.NONE
+SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
 
 SEPERATOR       = E_ToleranceId.SEPERATOR
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
@@ -360,27 +346,27 @@ class SeperatorAdaptor:
         
 position_increment_db = {
     #                        si-increment  ni-increment
-    E_EditLine.GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditLine.GOOD_TOLERATED:   (1,           1),    #          -- " --
-    E_EditLine.GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
-    E_EditLine.GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
-    E_EditLine.TRANSPOSE:        (1,           1),    #          -- " --
-    E_EditLine.INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
+    E_EditId.GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditId.GOOD_TOLERATED:   (1,           1),    #          -- " --
+    E_EditId.GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
+    E_EditId.GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
+    E_EditId.TRANSPOSE:        (1,           1),    #          -- " --
+    E_EditId.INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
     #                                                 # => compare subject[si+1] with nominal[ni]
-    E_EditLine.DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
+    E_EditId.DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
     #                                                 # => compare subject[si] with nominal[ni+1]
-    E_EditLine.SUBSTITUTE:       (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditLine.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
+    E_EditId.SUBSTITUTE:       (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditId.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
 }
 
 cost_db = {
-    E_EditLine.GOOD:             0,  # good
-    E_EditLine.GOOD_TOLERATED:   0,  # good
-    E_EditLine.TRANSPOSE:        0.5,  # good, when swapped elements
-    E_EditLine.SUBSTITUTE:       1,  # good, when content is substituted
-    E_EditLine.INSERT:           1,  # bad, need to insert element
-    E_EditLine.DELETE:           1,  # bad, need to remove element
-    E_EditLine.SUBSTITUTE_TYPE:  1   # bad, need to substitute type and content of element
+    E_EditId.GOOD:             0,  # good
+    E_EditId.GOOD_TOLERATED:   0,  # good
+    E_EditId.TRANSPOSE:        0.5,  # good, when swapped elements
+    E_EditId.SUBSTITUTE:       1,  # good, when content is substituted
+    E_EditId.INSERT:           1,  # bad, need to insert element
+    E_EditId.DELETE:           1,  # bad, need to remove element
+    E_EditId.SUBSTITUTE_TYPE:  1   # bad, need to substitute type and content of element
 }
 
 class WorkItem(WorkListBase):
@@ -428,28 +414,28 @@ class WorkItem(WorkListBase):
         # => more expensive paths are cut early.
         good_id = None
         if   verdict_id == E_Verdict.MISFIT:
-            yield self._step(E_EditLine.SUBSTITUTE_TYPE)
+            yield self._step(E_EditId.SUBSTITUTE_TYPE)
         elif verdict_id == E_Verdict.DIFFERENT:
-            yield self._step(E_EditLine.SUBSTITUTE,
+            yield self._step(E_EditId.SUBSTITUTE,
                              cost_factor = subject_match.edit_distance_relative(nominal_match))
         elif not self.analogy_db.is_consistent(analogy):
-            yield self._step(E_EditLine.SUBSTITUTE)
+            yield self._step(E_EditId.SUBSTITUTE)
         elif   subject_match.string       != nominal_match.string:  
-            good_id = E_EditLine.GOOD_TOLERATED
+            good_id = E_EditId.GOOD_TOLERATED
         elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
-            good_id = E_EditLine.GOOD_TOLERATED
+            good_id = E_EditId.GOOD_TOLERATED
         else:                                                     
-            good_id = E_EditLine.GOOD
+            good_id = E_EditId.GOOD
 
         if good_id is None:
             yield from (
-                self._step(E_EditLine.TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
+                self._step(E_EditId.TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
                 for candidate_ai in range(self.si+1, len(subject))
                 if subject[candidate_ai].is_equivalent(nominal_match, self.analogy_db)
             )
 
-        yield self._step(E_EditLine.INSERT)
-        yield self._step(E_EditLine.DELETE)
+        yield self._step(E_EditId.INSERT)
+        yield self._step(E_EditId.DELETE)
 
         if good_id is not None:
             yield self._step(good_id, new_analogy = analogy)
@@ -496,7 +482,7 @@ class WorkItem(WorkListBase):
 
         # best case: -- all common lines are GOOD
         #            -- all remaining lines are INSERT/DELETE
-        return self.cost + cost_db[E_EditLine.GOOD] * common_n + cost_db[E_EditLine.INSERT] * remaining_n
+        return self.cost + cost_db[E_EditId.GOOD] * common_n + cost_db[E_EditId.INSERT] * remaining_n
 
 
     def __get_common_and_remaining(self, subject_length, nominal_length):
@@ -516,18 +502,18 @@ def max_cost(subject_length, nominal_length):
    """
    common_n    = min(subject_length, nominal_length)
    remaining_n = max(subject_length, nominal_length) - common_n
-   return cost_db[E_EditLine.SUBSTITUTE_TYPE] * common_n + cost_db[E_EditLine.INSERT] * remaining_n
+   return cost_db[E_EditId.SUBSTITUTE_TYPE] * common_n + cost_db[E_EditId.INSERT] * remaining_n
 
 def _cost_assumptions(subject_length, nominal_length):
     """RETURNS: [0] maximum possible cost for transforming subject into nominal
                 [1] minimum possible cost for transforming subject into nominal
     """
     # worst case: everything is a SUBSTITUTE_TYPE error
-    max_cost = max(subject_length, nominal_length) * cost_db[E_EditLine.SUBSTITUTE_TYPE]
+    max_cost = max(subject_length, nominal_length) * cost_db[E_EditId.SUBSTITUTE_TYPE]
 
     # best case:  all are GOOD, except for a missing tail
     #             GOOD cost = 0; INSERT/DELETE cost = same
-    min_cost = abs(subject_length - nominal_length) * cost_db[E_EditLine.INSERT]
+    min_cost = abs(subject_length - nominal_length) * cost_db[E_EditId.INSERT]
 
     return max_cost, min_cost
 

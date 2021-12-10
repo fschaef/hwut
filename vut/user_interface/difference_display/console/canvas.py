@@ -212,13 +212,13 @@ def _none(subject, nominal):
         return Back.MAGENTA, "", "", nominal.string
 
 _edit_db = {
-    E_EditLine.GOOD:            _good,
-    E_EditLine.GOOD_TOLERATED:  _tolerated,
-    E_EditLine.DELETE:          _deleted,
-    E_EditLine.INSERT:          _inserted,
-    E_EditLine.TRANSPOSE:       _transpose,
-    E_EditLine.SUBSTITUTE:      _substitute,
-    E_EditLine.SUBSTITUTE_TYPE: _substitute_type,
-    E_EditLine.NONE:            _none
+    E_EditId.GOOD:            _good,
+    E_EditId.GOOD_TOLERATED:  _tolerated,
+    E_EditId.DELETE:          _deleted,
+    E_EditId.INSERT:          _inserted,
+    E_EditId.TRANSPOSE:       _transpose,
+    E_EditId.SUBSTITUTE:      _substitute,
+    E_EditId.SUBSTITUTE_TYPE: _substitute_type,
+    E_EditId.NONE:            _none
 }
 

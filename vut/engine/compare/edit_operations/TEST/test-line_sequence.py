@@ -23,7 +23,7 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 import vut.engine.compare.edit_operations.line_sequence  as     edit_distance_line_sequence
-from   vut.engine.compare.edit_operations.line_sequence  import E_EditLineSequence
+from   vut.engine.compare.edit_operations.line_sequence  import E_EditId
 from   vut.engine.compare.TEST.common                    import prepare, print_match_sequences_lists, prepare_line_up
 from   vut.engine.compare.engine.line                    import Line
 
@@ -47,10 +47,10 @@ def print_lineup(subject, nominal, edit_list):
         print("   %s %s%s %s" % (subject_txt, space(subject_txt), mid, nominal_txt))
 
     print_db = {
-        E_EditLineSequence.GOOD:       lambda subject_i, nominal_i: _print(subject_i, "==", nominal_i),
-        E_EditLineSequence.SUBSTITUTE: lambda subject_i, nominal_i: _print(subject_i, "!=", nominal_i),
-        E_EditLineSequence.INSERT:     lambda subject_i, nominal_i: _print(None,      "-<", nominal_i),
-        E_EditLineSequence.DELETE:     lambda subject_i, nominal_i: _print(subject_i, ">-", None),
+        E_EditId.GOOD:       lambda subject_i, nominal_i: _print(subject_i, "==", nominal_i),
+        E_EditId.SUBSTITUTE: lambda subject_i, nominal_i: _print(subject_i, "!=", nominal_i),
+        E_EditId.INSERT:     lambda subject_i, nominal_i: _print(None,      "-<", nominal_i),
+        E_EditId.DELETE:     lambda subject_i, nominal_i: _print(subject_i, ">-", None),
     }
 
     subject_i, nominal_i = 0, 0

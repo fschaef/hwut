@@ -21,7 +21,7 @@ from   vut.engine.compare.engine.core                   import E_Verdict
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 from   vut.engine.compare.engine.line                   import Line
 from   vut.engine.compare.engine.line_association       import LineAssociation
-from   vut.engine.compare.edit_operations.line_sequence import E_EditLineSequence, EditsLineSequence
+from   vut.engine.compare.edit_operations.line_sequence import E_EditId, EditsLineSequence
 
 from   enum      import Enum
 from   abc       import ABC, abstractmethod
