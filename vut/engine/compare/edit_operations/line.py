@@ -110,7 +110,9 @@ class WorkList(WorkListBase):
 
     def _append_nominal_overhead(self, item):
         L          = self.nominal_length - item.ni
-        extra_cost = (self.nominal_length - item.ni) * self.cost_insert_delete 
+        extra_cost = sum(self.nominal[ni].tolerance_id != VISIBLE_NOTHING 
+                         for ni in range(item.ni, self.nominal_length)) \
+                     * self.cost_insert_delete 
         overhead   = [ Edit(E_EditId.INSERT, None) ] * L
         return self._append_overhead(item, overhead, extra_cost)
 

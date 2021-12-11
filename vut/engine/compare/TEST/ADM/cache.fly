@@ -4,8 +4,8 @@ file_name: test-main.py;
 hwut_info_time: 1639156409L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.190821; 0; ]
-  [ line_associations; OK; 0.195601; 0; ]
+  [ compare; OK; 0.190442; 0; ]
+  [ line_associations; OK; 0.192176; 0; ]
 ]
 }
 {
@@ -14,6 +14,6 @@ file_name: test-pretty.py;
 hwut_info_time: 1639156409L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 0.194814; -224376928; ]
+  [ ; OK; 0.191114; -224376928; ]
 ]
 }
