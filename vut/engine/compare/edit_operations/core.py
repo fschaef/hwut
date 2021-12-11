@@ -55,7 +55,6 @@ class WorkListBase(list):
         self.subject_length = len(subject)
         self.nominal_length = len(nominal)
 
-        self.nominal = nominal
         self.best_cost_db = defaultdict(lambda: 1e37)
         self.best_cost_db[(0,0)] = 0
 
@@ -77,11 +76,11 @@ class WorkListBase(list):
             # already worse => no chance of winning.
             return True
         elif item.si == self.subject_length: # reached end of subject => INSERT to reach end of nominal
-            if self.__append_nominal_overhead(item):
+            if self._append_nominal_overhead(item):
                 self.__record_best(item)
             return True
         elif item.ni == self.nominal_length: # reached end of nominal => DELETE to cut tail of subject
-            if self.__append_subject_overhead(item):
+            if self._append_subject_overhead(item):
                 self.__record_best(item)
             return True
         else:
@@ -106,20 +105,14 @@ class WorkListBase(list):
         for i, item in reversed(list(enumerate(self))):
             if item.cost >= self.best.cost: del self[i]
 
-    def __append_subject_overhead(self, item):
-        return self.__append_overhead(item, self.subject_length - item.si, self.DELETE_obj)
-
-    def __append_nominal_overhead(self, item):
-        return self.__append_overhead(item, self.nominal_length - item.ni, self.INSERT_obj)
-
-    def __append_overhead(self, item, overhead, edit_obj):
+    def _append_overhead(self, item, overhead):
         """RETURNS: True, if 'item' is better than 'best'.
                     False, else.
 
         Appends edit operations the the 'edit_list' if 'item' and updates
         the 'cost' according to edit operation 'edit_id'.
         """
-        item.cost += self.cost_insert_delete * overhead
-        item.edit_list.extend([edit_obj] * overhead)
+        item.cost += self.cost_insert_delete * len(overhead)
+        item.edit_list.extend(overhead)
         return item.cost < self.best.cost
 

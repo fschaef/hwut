@@ -96,13 +96,22 @@ class WorkList(WorkListBase):
 
         self.best = EditsLine(self.max_cost + 1, [], [])
         self.cost_insert_delete = cost_db[E_EditId.INSERT]
-        self.DELETE_obj = Edit(E_EditId.DELETE, None)
-        self.INSERT_obj = Edit(E_EditId.INSERT, None)
 
         self.cache = Cache()
 
     def _set_best(self, item):
         self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
+
+    def _append_subject_overhead(self, item):
+        L        = self.subject_length - item.si
+        overhead = [ Edit(E_EditId.DELETE, None) ] * L
+        return self._append_overhead(item, overhead)
+
+    def _append_nominal_overhead(self, item):
+        L        = self.nominal_length - item.ni
+        overhead = [ Edit(E_EditId.INSERT, None) ] * L
+        return self._append_overhead(item, overhead)
+
 
 
 @lru_cache(maxsize=65536)

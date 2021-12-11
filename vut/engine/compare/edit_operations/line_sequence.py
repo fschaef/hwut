@@ -61,13 +61,24 @@ class WorkList(WorkListBase):
 
         self.best = EditsLineSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
         self.cost_insert_delete = cost_INSERT_DELETE
-        self.DELETE_obj = (E_EditId.DELETE, None)
-        self.INSERT_obj = (E_EditId.INSERT, None)
 
         self.cache = LineEditionDb()
 
     def _set_best(self, item):
         self.best = item.edit_list
+
+    def _append_subject_overhead(self, item):
+        L        = self.subject_length - item.si
+        # delete all remaining subjects to conform the nominal
+        overhead = [(E_EditId.DELETE, None) ] * L
+        return self._append_overhead(item, overhead)
+
+    def _append_nominal_overhead(self, item):
+        L        = self.nominal_length - item.ni
+        # insert all nominals into subject to conform nominal
+        overhead = [(E_EditId.INSERT, None) ] * L
+        return self._append_overhead(item, overhead)
+
 
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """RETURNS: EditsLineSequence
