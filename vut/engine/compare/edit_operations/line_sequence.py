@@ -68,16 +68,18 @@ class WorkList(WorkListBase):
         self.best = item.edit_list
 
     def _append_subject_overhead(self, item):
-        L        = self.subject_length - item.si
         # delete all remaining subjects to conform the nominal
-        overhead = [(E_EditId.DELETE, None) ] * L
-        return self._append_overhead(item, overhead)
+        L          = self.subject_length - item.si
+        overhead   = [(E_EditId.DELETE, None) ] * L
+        extra_cost = L * self.cost_insert_delete
+        return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
-        L        = self.nominal_length - item.ni
         # insert all nominals into subject to conform nominal
-        overhead = [(E_EditId.INSERT, None) ] * L
-        return self._append_overhead(item, overhead)
+        L          = self.nominal_length - item.ni
+        overhead   = [(E_EditId.INSERT, None) ] * L
+        extra_cost = L * self.cost_insert_delete 
+        return self._append_overhead(item, overhead, extra_cost)
 
 
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):

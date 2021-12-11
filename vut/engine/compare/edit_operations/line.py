@@ -103,14 +103,16 @@ class WorkList(WorkListBase):
         self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
 
     def _append_subject_overhead(self, item):
-        L        = self.subject_length - item.si
-        overhead = [ Edit(E_EditId.DELETE, None) ] * L
-        return self._append_overhead(item, overhead)
+        L          = self.subject_length - item.si
+        extra_cost = (self.subject_length - item.si) * self.cost_insert_delete
+        overhead   = [ Edit(E_EditId.DELETE, None) ] * L
+        return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
-        L        = self.nominal_length - item.ni
-        overhead = [ Edit(E_EditId.INSERT, None) ] * L
-        return self._append_overhead(item, overhead)
+        L          = self.nominal_length - item.ni
+        extra_cost = (self.nominal_length - item.ni) * self.cost_insert_delete 
+        overhead   = [ Edit(E_EditId.INSERT, None) ] * L
+        return self._append_overhead(item, overhead, extra_cost)
 
 
 

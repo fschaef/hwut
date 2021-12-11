@@ -105,14 +105,14 @@ class WorkListBase(list):
         for i, item in reversed(list(enumerate(self))):
             if item.cost >= self.best.cost: del self[i]
 
-    def _append_overhead(self, item, overhead):
+    def _append_overhead(self, item, overhead, extra_cost):
         """RETURNS: True, if 'item' is better than 'best'.
                     False, else.
 
         Appends edit operations the the 'edit_list' if 'item' and updates
         the 'cost' according to edit operation 'edit_id'.
         """
-        item.cost += self.cost_insert_delete * len(overhead)
+        item.cost += extra_cost
         item.edit_list.extend(overhead)
         return item.cost < self.best.cost
 
