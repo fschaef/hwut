@@ -1,3 +1,5 @@
+2021y12m11d: <fschaef> Added the 'visibible nothing' feature in the engine.
+
 2021y08m27d: <fschaef> Finalized massive speed improvements
              '||||' opens potpourri until '||||' or end of file.
 

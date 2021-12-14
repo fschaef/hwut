@@ -232,7 +232,6 @@ class SeperatorAdaptor:
         self.original_max_cost      = max_cost(length_relevant_subject_seq, 
                                                length_relevant_nominal_seq)
 
-
     def strip_separators(self):
         return \
             [ x for x, content_f in zip(self.subject_sequence, self.subject_flags) if content_f ], \

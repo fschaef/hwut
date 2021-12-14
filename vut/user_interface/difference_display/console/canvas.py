@@ -185,8 +185,16 @@ def _tolerated(subject, nominal):
     return Back.GREEN, subject.string, \
            Fore.GREEN, nominal.string
 
+def _good_deleted(subject, nominal):
+    return Back.GREEN,                     subject.string, \
+           Back.GREEN + Fore.LIGHTWHITE_EX, " " * len(subject.string)
+
+def _good_inserted(subject, nominal):
+    return Back.GREEN,                     " " * len(nominal.string), \
+           Back.GREEN + Fore.LIGHTWHITE_EX, nominal.string
+
 def _deleted(subject, nominal):
-    return Back.RED, subject.string, \
+    return Back.RED,                       subject.string, \
            Back.BLUE + Fore.LIGHTWHITE_EX, " " * len(subject.string)
 
 def _inserted(subject, nominal):
@@ -214,6 +222,8 @@ def _none(subject, nominal):
 _edit_db = {
     E_EditId.GOOD:            _good,
     E_EditId.GOOD_TOLERATED:  _tolerated,
+    E_EditId.GOOD_DELETE:     _good_deleted,
+    E_EditId.GOOD_INSERT:     _good_inserted,
     E_EditId.DELETE:          _deleted,
     E_EditId.INSERT:          _inserted,
     E_EditId.TRANSPOSE:       _transpose,

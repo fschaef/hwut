@@ -1,7 +1,7 @@
 subject_txt = \
 """Sah ein Röslein 1.005 Knab stehen
 Röslein auf der     ((Wiese))
-War jung morgenschön
+War jung morgenschön, wtf,
 Lief er ganz schnell es von nah zu sehn
 Schaut's mit 1000 Freuden
 Röslein, Tülplein, Röslein orange
@@ -10,11 +10,11 @@ Röslein auf der ((Wiese))
 
 nominal_txt = \
 """
-Sah ein Knab 1 Röslein stehen
+Sah ein Knab 1 Röslein stehen, hm,
 Röslein   auf der   ((Heiden))
 War so jung und morgenschön
 Lief er schnell es nah zu sehn
-Schaut's mit vielen Freuden
+Schaut's mit vielen Freuden (who cares)
 Röslein, Röslein, Röslein rot
 Röslein auf der ((Heiden))
 """

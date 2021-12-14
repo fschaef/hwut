@@ -27,6 +27,7 @@ if "--hwut-info" in sys.argv:
 config = Configuration()
 config.pattern_finder.numeric_tolerance_ratio = 0.01
 config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülplein"]
+config.pattern_finder.visible_nothing_pattern_list = [", hm,", ", wtf,", "\(who cares\)"]
 
 def test_core(subject_txt, nominal_txt, offset, mode, level):
     global config

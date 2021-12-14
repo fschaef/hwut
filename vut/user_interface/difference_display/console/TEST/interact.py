@@ -15,6 +15,7 @@ from   io import StringIO
 config = Configuration()
 config.pattern_finder.numeric_tolerance_ratio = 0.01
 config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülplein"]
+config.pattern_finder.visible_nothing_pattern_list = [", hm,", ", wtf,", "[ ]*\(who cares\)"]
 
 
 def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
