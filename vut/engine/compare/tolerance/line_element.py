@@ -123,10 +123,15 @@ class LineElement:
                         if it is equivalent.
         """
         # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
-        assert self.tolerance_id    != E_ToleranceId.VISIBLE_NOTHING
-        assert nominal.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
+        if self.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+                return E_Verdict.EQUIVALENT, None
+            else:
+                return E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING, None
+        elif nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
 
-        if self.tolerance_id != nominal.tolerance_id:
+        elif self.tolerance_id != nominal.tolerance_id:
             return E_Verdict.MISFIT, None
 
         verdict, analogy = self._compare(nominal)

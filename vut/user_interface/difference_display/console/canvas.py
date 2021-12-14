@@ -9,7 +9,7 @@ from   vut.engine.compare.engine.line_association_chunk        import LineAssoci
                                                                       LineAssociationList
 from   vut.engine.compare.engine.line_association              import LineAssociation
 from   vut.engine.compare.engine.core                          import E_PotpourriBorder
-from   vut.engine.compare.edit_operations.line                 import E_EditLine, Edit
+from   vut.engine.compare.edit_operations.line                 import E_EditId, Edit
 from   vut.external.quex.typed                                 import typed
 
 from   copy import copy

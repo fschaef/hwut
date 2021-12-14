@@ -103,17 +103,27 @@ class WorkList(WorkListBase):
         self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
 
     def _append_subject_overhead(self, item):
-        L          = self.subject_length - item.si
-        extra_cost = (self.subject_length - item.si) * self.cost_insert_delete
-        overhead   = [ Edit(E_EditId.DELETE, None) ] * L
+        visible_list   = [
+            self.subject[si].tolerance_id != VISIBLE_NOTHING 
+            for si in range(item.si, self.subject_length)
+        ]
+        extra_cost = sum(visible_list) * self.cost_insert_delete 
+        overhead   = [ 
+            Edit(DELETE, None) if visible else Edit(GOOD_DELETE, None)
+            for visible in visible_list
+        ] 
         return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
-        L          = self.nominal_length - item.ni
-        extra_cost = sum(self.nominal[ni].tolerance_id != VISIBLE_NOTHING 
-                         for ni in range(item.ni, self.nominal_length)) \
-                     * self.cost_insert_delete 
-        overhead   = [ Edit(E_EditId.INSERT, None) ] * L
+        visible_list   = [
+            self.nominal[ni].tolerance_id != VISIBLE_NOTHING 
+            for ni in range(item.ni, self.nominal_length)
+        ]
+        extra_cost = sum(visible_list) * self.cost_insert_delete 
+        overhead   = [ 
+            Edit(INSERT, None) if visible else Edit(GOOD_INSERT, None)
+            for visible in visible_list
+        ] 
         return self._append_overhead(item, overhead, extra_cost)
 
 
@@ -244,22 +254,6 @@ class SeperatorAdaptor:
             Separators are always of different type than content => 'SUBSTITUTE_TYPE' 
             is safe to use.
             """
-            sequence_db = {
-                # GOOD_INSERT/DELETE = 'insert/delete' visible nothing.
-                #
-                # Example subject sequence (V = visible nothing, S = string):
-                #
-                #               SV  --- GOOD_INSERT ---> VSV
-                #               ^
-                #               VSV --- DELETE      ---> VV    
-                #                ^
-                #               VV  --- GOOD_DELETE ---> V
-                #                ^
-                # This is equivalent to 'DELETE' at the beginning. The second case
-                # works respectively.
-                (GOOD_INSERT, DELETE, GOOD_DELETE): DELETE,
-                (GOOD_DELETE, INSERT, GOOD_INSERT): INSERT
-            }
             pair_db = {
                 (DELETE, INSERT): SUBSTITUTE_TYPE,
                 (INSERT, DELETE): SUBSTITUTE_TYPE
@@ -267,26 +261,20 @@ class SeperatorAdaptor:
             def _iterable(edit_list):
                 """YIELDS: (current, look-ahead, look-ahead-ahead)
                 """
-                last = len(edit_list) - 1
-                for i, x in enumerate(edit_iterable):
-                    if i == last:       yield x, NONE, NONE
-                    elif i == last -1 : yield x, edit_iterable[i+1].id, NONE
-                    else:               yield x, edit_iterable[i+1].id, edit_iterable[i+2].id
+                if not edit_list:
+                    return
+                for i, x in enumerate(edit_iterable[:-1]):
+                    yield x, edit_iterable[i+1].id
+                yield edit_iterable[-1], NONE
                    
             skip_n = 0
-            for current, ahead_id, ahead2_id in _iterable(edit_iterable):
+            for current, ahead_id in _iterable(edit_iterable):
                 if skip_n: skip_n -= 1; continue
 
                 combined_id = pair_db.get((current.id, ahead_id))
                 if combined_id is not None:
                     yield Edit(combined_id, None)
                     skip_n = 1
-                    continue
-
-                combined_id = sequence_db.get((current.id, ahead_id, ahead2_id))
-                if combined_id is not None:
-                    yield Edit(combined_id, None)
-                    skip_n = 2
                     continue
 
                 yield current
@@ -306,7 +294,7 @@ class SeperatorAdaptor:
             else:
                 return Edit(GOOD_TOLERATED, None)  # seperators are similar
 
-        def _possible_transpose_op(ei):
+        def _from_edit_list(ei):
             edit = edit_list_raw[ei]
             if edit.id == TRANSPOSE:
                 translated_si = self.subject_index_map[edit.transpose_ai]
@@ -318,38 +306,17 @@ class SeperatorAdaptor:
         Ls = len(self.subject_sequence)
         Ln = len(self.nominal_sequence)
         si = ni = ei = 0
-        while 1 + 1 == 2:
-            if si >= Ls:
-                for tail_ni in range(ni, Ln):
-                    yield _insert_op(tail_ni)
-                return
-            elif ni >= Ln:
-                for tail_si in range(si, Ls):
-                    yield _delete_op(tail_si)
-                return
 
-            s_is_content = self.subject_flags[si]
-            n_is_content = self.nominal_flags[ni]
+        while si < Ls or ni < Ln:
+            if si < Ls: s_is_seperator = self.subject_sequence[si].tolerance_id == SEPERATOR
+            else:       s_is_seperator = False
+            if ni < Ln: n_is_seperator = self.nominal_sequence[ni].tolerance_id == SEPERATOR
+            else:       n_is_seperator = False
 
-            if       s_is_content and not n_is_content: 
-                edit = _insert_op(ni)
-
-            elif not s_is_content and     n_is_content:  
-                edit = _delete_op(si)
-
-            elif not s_is_content and not n_is_content:                   
-                subject_tid = self.subject_sequence[si].tolerance_id
-                nominal_tid = self.nominal_sequence[ni].tolerance_id
-                if   subject_tid == SEPERATOR       and nominal_tid == VISIBLE_NOTHING:
-                    edit = Edit(DELETE, None)          # remove separator from subject
-                elif subject_tid == VISIBLE_NOTHING and nominal_tid == SEPERATOR:
-                    edit = Edit(INSERT, None)          # insert seperator into subject
-                else:
-                    edit = _good_op(si, ni)
-
-            else:                                    # subject = content,   nominal = content
-                edit = _possible_transpose_op(ei)
-                ei += 1
+            if       s_is_seperator and not n_is_seperator: edit = _delete_op(si)
+            elif not s_is_seperator and     n_is_seperator: edit = _insert_op(ni)
+            elif     s_is_seperator and n_is_seperator:     edit = _good_op(si, ni)
+            else:                                           edit = _from_edit_list(ei); ei += 1
 
             yield edit
             s_incr, n_incr = position_increment_db[edit.id]
@@ -373,13 +340,15 @@ position_increment_db = {
 }
 
 cost_db = {
-    E_EditId.GOOD:             0,  # good
-    E_EditId.GOOD_TOLERATED:   0,  # good
+    E_EditId.GOOD:             0,    # good
+    E_EditId.GOOD_TOLERATED:   0,    # good
+    E_EditId.GOOD_INSERT:      0,    # good
+    E_EditId.GOOD_DELETE:      0,    # good
     E_EditId.TRANSPOSE:        0.5,  # good, when swapped elements
-    E_EditId.SUBSTITUTE:       1,  # good, when content is substituted
-    E_EditId.INSERT:           1,  # bad, need to insert element
-    E_EditId.DELETE:           1,  # bad, need to remove element
-    E_EditId.SUBSTITUTE_TYPE:  1   # bad, need to substitute type and content of element
+    E_EditId.SUBSTITUTE:       1,    # good, when content is substituted
+    E_EditId.INSERT:           1,    # bad, need to insert element
+    E_EditId.DELETE:           1,    # bad, need to remove element
+    E_EditId.SUBSTITUTE_TYPE:  1     # bad, need to substitute type and content of element
 }
 
 class WorkItem(WorkListBase):
@@ -431,14 +400,21 @@ class WorkItem(WorkListBase):
         elif verdict_id == E_Verdict.DIFFERENT:
             yield self._step(E_EditId.SUBSTITUTE,
                              cost_factor = subject_match.edit_distance_relative(nominal_match))
-        elif not self.analogy_db.is_consistent(analogy):
-            yield self._step(E_EditId.SUBSTITUTE)
-        elif   subject_match.string       != nominal_match.string:  
-            good_id = E_EditId.GOOD_TOLERATED
-        elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
-            good_id = E_EditId.GOOD_TOLERATED
-        else:                                                     
-            good_id = E_EditId.GOOD
+        elif verdict_id == E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
+            yield self._step(E_EditId.GOOD_DELETE)
+        elif verdict_id == E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
+            yield self._step(E_EditId.GOOD_INSERT)
+        elif verdict_id == E_Verdict.EQUIVALENT:
+            if not self.analogy_db.is_consistent(analogy):
+                yield self._step(E_EditId.SUBSTITUTE)
+            elif subject_match.string       != nominal_match.string:  
+                good_id = E_EditId.GOOD_TOLERATED
+            elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
+                good_id = E_EditId.GOOD_TOLERATED
+            else:                                                     
+                good_id = E_EditId.GOOD
+        else:
+            assert False
 
         if good_id is None:
             yield from (
