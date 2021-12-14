@@ -1,0 +1,120 @@
+--(1)------------------------------------------------------------------
+      subject:  STRING:4711, STRING:4711
+      nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711, STRING:4711
+      => edits: DELETE, GOOD_INSERT, GOOD_INSERT, GOOD
+
+      subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711, STRING:4711
+      nominal:  STRING:4711, STRING:4711
+      => edits: GOOD_DELETE, GOOD_DELETE, GOOD, INSERT
+--(2)------------------------------------------------------------------
+      subject:  STRING:4711, STRING:4711
+      nominal:  ANALOGY:4711, ANALOGY:4711, STRING:4711
+      => edits: INSERT, SUBSTITUTE_TYPE, GOOD
+
+      subject:  ANALOGY:4711, ANALOGY:4711, STRING:4711
+      nominal:  STRING:4711, STRING:4711
+      => edits: DELETE, SUBSTITUTE_TYPE, GOOD
+--(3)------------------------------------------------------------------
+      subject:  STRING:4711, STRING:4711
+      nominal:  NUMERIC:4711, NUMERIC:4711, STRING:4711
+      => edits: INSERT, SUBSTITUTE_TYPE, GOOD
+
+      subject:  NUMERIC:4711, NUMERIC:4711, STRING:4711
+      nominal:  STRING:4711, STRING:4711
+      => edits: DELETE, SUBSTITUTE_TYPE, GOOD
+--(4)------------------------------------------------------------------
+      subject:  STRING:4711, STRING:4711
+      nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, STRING:4711
+      => edits: INSERT, SUBSTITUTE_TYPE, GOOD
+
+      subject:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, STRING:4711
+      nominal:  STRING:4711, STRING:4711
+      => edits: DELETE, SUBSTITUTE_TYPE, GOOD
+--(5)------------------------------------------------------------------
+      subject:  STRING:4711, STRING:4711
+      nominal:  SEPERATOR:4711, SEPERATOR:4711, STRING:4711
+      => edits: INSERT, INSERT, GOOD, DELETE
+
+      subject:  SEPERATOR:4711, SEPERATOR:4711, STRING:4711
+      nominal:  STRING:4711, STRING:4711
+      => edits: DELETE, DELETE, GOOD, INSERT
+--(6)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      nominal:  ANALOGY:4711, ANALOGY:4711, VISIBLE_NOTHING:4711
+      => edits: INSERT, INSERT, GOOD, GOOD_DELETE
+
+      subject:  ANALOGY:4711, ANALOGY:4711, VISIBLE_NOTHING:4711
+      nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      => edits: DELETE, DELETE, GOOD, GOOD_INSERT
+--(7)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      nominal:  NUMERIC:4711, NUMERIC:4711, VISIBLE_NOTHING:4711
+      => edits: INSERT, INSERT, GOOD, GOOD_DELETE
+
+      subject:  NUMERIC:4711, NUMERIC:4711, VISIBLE_NOTHING:4711
+      nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      => edits: DELETE, DELETE, GOOD, GOOD_INSERT
+--(8)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, VISIBLE_NOTHING:4711
+      => edits: INSERT, INSERT, GOOD, GOOD_DELETE
+
+      subject:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, VISIBLE_NOTHING:4711
+      nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      => edits: DELETE, DELETE, GOOD, GOOD_INSERT
+--(9)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      nominal:  SEPERATOR:4711, SEPERATOR:4711, VISIBLE_NOTHING:4711
+      => edits: INSERT, INSERT, GOOD, GOOD_DELETE
+
+      subject:  SEPERATOR:4711, SEPERATOR:4711, VISIBLE_NOTHING:4711
+      nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
+      => edits: DELETE, DELETE, GOOD, GOOD_INSERT
+--(10)------------------------------------------------------------------
+      subject:  ANALOGY:4711, ANALOGY:4711
+      nominal:  NUMERIC:4711, NUMERIC:4711, ANALOGY:4711
+      => edits: INSERT, SUBSTITUTE_TYPE, GOOD_TOLERATED
+
+      subject:  NUMERIC:4711, NUMERIC:4711, ANALOGY:4711
+      nominal:  ANALOGY:4711, ANALOGY:4711
+      => edits: DELETE, SUBSTITUTE_TYPE, GOOD_TOLERATED
+--(11)------------------------------------------------------------------
+      subject:  ANALOGY:4711, ANALOGY:4711
+      nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, ANALOGY:4711
+      => edits: INSERT, SUBSTITUTE_TYPE, GOOD_TOLERATED
+
+      subject:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, ANALOGY:4711
+      nominal:  ANALOGY:4711, ANALOGY:4711
+      => edits: DELETE, SUBSTITUTE_TYPE, GOOD_TOLERATED
+--(12)------------------------------------------------------------------
+      subject:  ANALOGY:4711, ANALOGY:4711
+      nominal:  SEPERATOR:4711, SEPERATOR:4711, ANALOGY:4711
+      => edits: INSERT, INSERT, GOOD_TOLERATED, DELETE
+
+      subject:  SEPERATOR:4711, SEPERATOR:4711, ANALOGY:4711
+      nominal:  ANALOGY:4711, ANALOGY:4711
+      => edits: DELETE, DELETE, GOOD_TOLERATED, INSERT
+--(13)------------------------------------------------------------------
+      subject:  NUMERIC:4711, NUMERIC:4711
+      nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, NUMERIC:4711
+      => edits: INSERT, SUBSTITUTE_TYPE, GOOD
+
+      subject:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, NUMERIC:4711
+      nominal:  NUMERIC:4711, NUMERIC:4711
+      => edits: DELETE, SUBSTITUTE_TYPE, GOOD
+--(14)------------------------------------------------------------------
+      subject:  NUMERIC:4711, NUMERIC:4711
+      nominal:  SEPERATOR:4711, SEPERATOR:4711, NUMERIC:4711
+      => edits: INSERT, INSERT, GOOD, DELETE
+
+      subject:  SEPERATOR:4711, SEPERATOR:4711, NUMERIC:4711
+      nominal:  NUMERIC:4711, NUMERIC:4711
+      => edits: DELETE, DELETE, GOOD, INSERT
+--(15)------------------------------------------------------------------
+      subject:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711
+      nominal:  SEPERATOR:4711, SEPERATOR:4711, EQUIVALENCE_PATTERN:4711
+      => edits: INSERT, INSERT, GOOD, DELETE
+
+      subject:  SEPERATOR:4711, SEPERATOR:4711, EQUIVALENCE_PATTERN:4711
+      nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711
+      => edits: DELETE, DELETE, GOOD, INSERT

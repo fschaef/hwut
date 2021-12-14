@@ -1,6 +1,8 @@
 **/__pycache__
 **/TEST/OUT
 **/tmp
-**/.coverage
+**/tmp.*
+**/*.coverage
+**/*.bak
 **/htmlcov
 zz-trash.tgz

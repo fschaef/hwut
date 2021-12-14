@@ -1,0 +1,168 @@
+--(1)------------------------------------------------------------------
+      subject:  
+      nominal:  STRING:4711
+      => edits: INSERT
+
+      subject:  STRING:4711
+      nominal:  
+      => edits: DELETE
+--(2)------------------------------------------------------------------
+      subject:  
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: GOOD_INSERT
+
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  
+      => edits: GOOD_DELETE
+--(3)------------------------------------------------------------------
+      subject:  
+      nominal:  ANALOGY:4711
+      => edits: INSERT
+
+      subject:  ANALOGY:4711
+      nominal:  
+      => edits: DELETE
+--(4)------------------------------------------------------------------
+      subject:  
+      nominal:  NUMERIC:4711
+      => edits: INSERT
+
+      subject:  NUMERIC:4711
+      nominal:  
+      => edits: DELETE
+--(5)------------------------------------------------------------------
+      subject:  
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: INSERT
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  
+      => edits: DELETE
+--(6)------------------------------------------------------------------
+      subject:  
+      nominal:  SEPERATOR:4711
+      => edits: INSERT
+
+      subject:  SEPERATOR:4711
+      nominal:  
+      => edits: DELETE
+--(7)------------------------------------------------------------------
+      subject:  STRING:4711
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: DELETE, GOOD_INSERT
+
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  STRING:4711
+      => edits: INSERT, GOOD_DELETE
+--(8)------------------------------------------------------------------
+      subject:  STRING:4711
+      nominal:  ANALOGY:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  ANALOGY:4711
+      nominal:  STRING:4711
+      => edits: SUBSTITUTE_TYPE
+--(9)------------------------------------------------------------------
+      subject:  STRING:4711
+      nominal:  NUMERIC:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  NUMERIC:4711
+      nominal:  STRING:4711
+      => edits: SUBSTITUTE_TYPE
+--(10)------------------------------------------------------------------
+      subject:  STRING:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  STRING:4711
+      => edits: SUBSTITUTE_TYPE
+--(11)------------------------------------------------------------------
+      subject:  STRING:4711
+      nominal:  SEPERATOR:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  SEPERATOR:4711
+      nominal:  STRING:4711
+      => edits: SUBSTITUTE_TYPE
+--(12)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  ANALOGY:4711
+      => edits: INSERT, GOOD_DELETE
+
+      subject:  ANALOGY:4711
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: DELETE, GOOD_INSERT
+--(13)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  NUMERIC:4711
+      => edits: INSERT, GOOD_DELETE
+
+      subject:  NUMERIC:4711
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: DELETE, GOOD_INSERT
+--(14)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: INSERT, GOOD_DELETE
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: DELETE, GOOD_INSERT
+--(15)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  SEPERATOR:4711
+      => edits: INSERT, GOOD_DELETE
+
+      subject:  SEPERATOR:4711
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: DELETE, GOOD_INSERT
+--(16)------------------------------------------------------------------
+      subject:  ANALOGY:4711
+      nominal:  NUMERIC:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  NUMERIC:4711
+      nominal:  ANALOGY:4711
+      => edits: SUBSTITUTE_TYPE
+--(17)------------------------------------------------------------------
+      subject:  ANALOGY:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  ANALOGY:4711
+      => edits: SUBSTITUTE_TYPE
+--(18)------------------------------------------------------------------
+      subject:  ANALOGY:4711
+      nominal:  SEPERATOR:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  SEPERATOR:4711
+      nominal:  ANALOGY:4711
+      => edits: SUBSTITUTE_TYPE
+--(19)------------------------------------------------------------------
+      subject:  NUMERIC:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  NUMERIC:4711
+      => edits: SUBSTITUTE_TYPE
+--(20)------------------------------------------------------------------
+      subject:  NUMERIC:4711
+      nominal:  SEPERATOR:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  SEPERATOR:4711
+      nominal:  NUMERIC:4711
+      => edits: SUBSTITUTE_TYPE
+--(21)------------------------------------------------------------------
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  SEPERATOR:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  SEPERATOR:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE

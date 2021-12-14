@@ -1,0 +1,56 @@
+--(1)------------------------------------------------------------------
+      subject:  
+      nominal:  
+      => edits: 
+
+      subject:  
+      nominal:  
+      => edits: 
+--(2)------------------------------------------------------------------
+      subject:  STRING:4711
+      nominal:  STRING:4711
+      => edits: GOOD
+
+      subject:  STRING:4711
+      nominal:  STRING:4711
+      => edits: GOOD
+--(3)------------------------------------------------------------------
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: GOOD
+
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: GOOD
+--(4)------------------------------------------------------------------
+      subject:  ANALOGY:4711
+      nominal:  ANALOGY:4711
+      => edits: GOOD_TOLERATED
+
+      subject:  ANALOGY:4711
+      nominal:  ANALOGY:4711
+      => edits: GOOD_TOLERATED
+--(5)------------------------------------------------------------------
+      subject:  NUMERIC:4711
+      nominal:  NUMERIC:4711
+      => edits: GOOD
+
+      subject:  NUMERIC:4711
+      nominal:  NUMERIC:4711
+      => edits: GOOD
+--(6)------------------------------------------------------------------
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: GOOD
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: GOOD
+--(7)------------------------------------------------------------------
+      subject:  SEPERATOR:4711
+      nominal:  SEPERATOR:4711
+      => edits: GOOD
+
+      subject:  SEPERATOR:4711
+      nominal:  SEPERATOR:4711
+      => edits: GOOD
