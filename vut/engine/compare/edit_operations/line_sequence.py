@@ -188,10 +188,10 @@ class WorkItem(WorkItemBase):
    def cost(self, value):
        self.edit_list.cost = value
 
-   def subsequent_steps(self, subject_list, nominal_list, line_edition_db):
+   def subsequent_steps(self, subject_list, nominal_list, cache):
        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
        """
-       line_editions = line_edition_db.get(self.si, self.ni, subject_list, nominal_list, self.edit_list.analogy_db)
+       line_editions = cache.get(self.si, self.ni, subject_list, nominal_list, self.edit_list.analogy_db)
        assert isinstance(line_editions, EditsLine)
 
        # IMPORTANT: Worklist is a LIFO. That is, what comes last is popped
@@ -223,7 +223,7 @@ class WorkItem(WorkItemBase):
        the position progress related to the operation. The new 'WorkItem'
        will contain a new updated 'edit_list'.
        """
-       increment_ai, increment_bi = position_increment_db[edit_id]
+       increment_si, increment_ni = position_increment_db[edit_id]
 
        delta_cost = self.history.note(edit_id, edit_list, relative_edit_distance)
 
@@ -236,8 +236,8 @@ class WorkItem(WorkItemBase):
                                         self.edit_list.edit_list + [ (edit_id, edit_list) ],
                                         new_analogy_db)
 
-       result = WorkItem(self.si + increment_ai,
-                         self.ni + increment_bi,
+       result = WorkItem(self.si + increment_si,
+                         self.ni + increment_ni,
                          new_editions,
                          self.history.clone())
        return result

@@ -135,11 +135,11 @@ class WorkList(WorkListBase):
 
 
 @lru_cache(maxsize=65536)
-@typed(subject_match_seq=tuple, nominal_match_seq=tuple)
-def do(subject_match_seq, nominal_match_seq, analogy_db=None):
+@typed(subject_le_seq=tuple, nominal_le_seq=tuple)
+def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     """RETURNS: EditsLine
 
-    Compares the line elements of 'subject_match_seq' and 'nominal_match_seq' and
+    Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
     determines the editions required to transform the former into the latter.
 
     where EditsLine.cost       = cost / max. cost; thus in range of [0...1].
@@ -149,14 +149,14 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     if analogy_db is None:
         analogy_db = AnalogyDb()
 
-    seperator_db = SeperatorAdaptor(subject_match_seq, 
-                                    nominal_match_seq,
+    seperator_db = SeperatorAdaptor(subject_le_seq, 
+                                    nominal_le_seq,
                                     lambda x: x.tolerance_id == SEPERATOR,
                                     cost_db[E_EditId.SUBSTITUTE_TYPE],
                                     cost_db[E_EditId.INSERT],
                                     Edit)
-    subject_match_seq, \
-    nominal_match_seq = seperator_db.strip_separators()
+    subject_le_seq, \
+    nominal_le_seq = seperator_db.strip_separators()
 
     initial_item = WorkItem(si         = 0, # index into subject 'LineElement' sequence
                             ni         = 0, # index into nominal 'LineElement' sequence
@@ -164,7 +164,7 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
                             edit_list  = [],
                             analogy_db = analogy_db)
 
-    work_list = WorkList(subject_match_seq, nominal_match_seq, initial_item)
+    work_list = WorkList(subject_le_seq, nominal_le_seq, initial_item)
 
     if seperator_db.original_max_cost == 0.0:
         return EditsLine(0, 
@@ -246,8 +246,8 @@ class WorkItem(WorkListBase):
         verdict_id, analogy = cache.get(self.si, self.ni, subject, nominal, 
                                         transpose_f = self.subject_modified is not None)
 
-        subject_match = subject[self.si]
-        nominal_match = nominal[self.ni]
+        subject_le = subject[self.si]
+        nominal_le = nominal[self.ni]
 
         # IMPORTANT: Worklist is a LIFO (last in, first out).
         #
@@ -258,7 +258,7 @@ class WorkItem(WorkListBase):
             yield self._step(E_EditId.SUBSTITUTE_TYPE)
         elif verdict_id == E_Verdict.DIFFERENT:
             yield self._step(E_EditId.SUBSTITUTE,
-                             cost_factor = subject_match.edit_distance_relative(nominal_match))
+                             cost_factor = subject_le.edit_distance_relative(nominal_le))
         elif verdict_id == E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
             yield self._step(E_EditId.GOOD_DELETE)
         elif verdict_id == E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
@@ -266,9 +266,9 @@ class WorkItem(WorkListBase):
         elif verdict_id == E_Verdict.EQUIVALENT:
             if not self.analogy_db.is_consistent(analogy):
                 yield self._step(E_EditId.SUBSTITUTE)
-            elif subject_match.string       != nominal_match.string:  
+            elif subject_le.string       != nominal_le.string:  
                 good_id = E_EditId.GOOD_TOLERATED
-            elif subject_match.tolerance_id == E_ToleranceId.ANALOGY: 
+            elif subject_le.tolerance_id == E_ToleranceId.ANALOGY: 
                 good_id = E_EditId.GOOD_TOLERATED
             else:                                                     
                 good_id = E_EditId.GOOD
@@ -279,7 +279,7 @@ class WorkItem(WorkListBase):
             yield from (
                 self._step(E_EditId.TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
                 for candidate_ai in range(self.si+1, len(subject))
-                if subject[candidate_ai].is_equivalent(nominal_match, self.analogy_db)
+                if subject[candidate_ai].is_equivalent(nominal_le, self.analogy_db)
             )
 
         yield self._step(E_EditId.INSERT)
