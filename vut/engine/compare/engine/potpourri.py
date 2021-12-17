@@ -39,8 +39,8 @@ class Potpourri(InputChunk):
         """RETURNS: [0] True, if both potpourris are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
         """
-        subject_potpourri = tuple(subject_line_list[1:-1]) # exclude [0] and [-1]:
-        nominal_potpourri = tuple(nominal_line_list[1:-1]) # first and last line carry Potpourri markers.
+        subject_potpourri = subject_line_list[1:-1] # exclude [0] and [-1]:
+        nominal_potpourri = nominal_line_list[1:-1] # first and last line carry Potpourri markers.
 
         verdict, _, new_analogy_db = friends_pairing.do(subject_potpourri,
                                                         nominal_potpourri,

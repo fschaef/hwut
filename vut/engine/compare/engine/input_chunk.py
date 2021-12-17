@@ -73,13 +73,13 @@ class InputChunk(ABC):
             elif all(x.tolerance_id == VISIBLE_NOTHING for x in line): return False
             else:                                                      return True
 
-        subject_line_list = [line for line in self.line_list    if _condition(line)]
+        subject_line_list = tuple(line for line in self.line_list    if _condition(line))
         if len(nominal.line_list) < len(subject_line_list): 
             # 'nominal_line_list' will only shrink. 
             # if it is already longer => impossible match.
             return E_Verdict.DIFFERENT, analogy_db
 
-        nominal_line_list = [line for line in nominal.line_list if _condition(line)]
+        nominal_line_list = tuple(line for line in nominal.line_list if _condition(line))
         if len(nominal_line_list) != len(subject_line_list): 
             # filtered list are not of same size => impossible match
             return E_Verdict.DIFFERENT, analogy_db
