@@ -361,18 +361,20 @@ def _cost_assumptions(subject_length, nominal_length):
 
 class Cache(dict):
     def get(self, subject_i, nominal_i, subject, nominal, transpose_f):
-        subject_elm = subject[subject_i]
-        nominal_elm = nominal[nominal_i]
-        # Use 'id' of LineElements, rather than their index. Notably the 'traspose'
+        """RETURNS: [0] verdict id
+                    [1] required analogy
+        """
+        subject = subject[subject_i]
+        nominal = nominal[nominal_i]
+
+        # Use 'id' of LineElements, rather than their index. Notably the 'transpose'
         # edit operation may switch elements to a different position.
-        pair   = (id(subject_elm), id(nominal_elm))
+        pair   = (id(subject), id(nominal))
         result = dict.get(self, pair)
         if result is not None:
             verdict_id, analogy = result
         else:
-            subject_elm = subject[subject_i]
-            nominal_elm = nominal[nominal_i]
-            verdict_id, analogy = subject_elm.compare(nominal_elm)
+            verdict_id, analogy = subject.compare(nominal)
             self[pair] = verdict_id, analogy
         return verdict_id, analogy
 

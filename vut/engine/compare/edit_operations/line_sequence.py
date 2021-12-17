@@ -65,7 +65,7 @@ class WorkList(WorkListBase):
         self.best = EditsLineSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
         self.cost_insert_delete = cost_INSERT_DELETE
 
-        self.cache = LineEditionDb()
+        self.cache = Cache()
 
     def _set_best(self, item):
         self.best = item.edit_list
@@ -266,11 +266,13 @@ class WorkItem(WorkItemBase):
        remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
        return common_n, remaining_n
 
-class LineEditionDb(dict):
+class Cache(dict):
     def get(self, subject_i, nominal_i, subject_list, nominal_list, analogy_db):
+        """RETURNS: Edit operations to transform subject line into the nominal line
+        """
         pair = (subject_i, nominal_i)
-
         result = dict.get(self, pair)
+
         if result is not None:
             line_editions, used_analogy_db = result
             if used_analogy_db.is_all_consistent(analogy_db):
@@ -280,6 +282,6 @@ class LineEditionDb(dict):
         nominal = nominal_list[nominal_i]
 
         line_editions = subject.edit_operations(nominal, analogy_db)
-        self[pair] = line_editions, analogy_db
+        self[pair]    = line_editions, analogy_db
         return line_editions
 
