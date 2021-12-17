@@ -21,6 +21,7 @@ from   vut.engine.compare.engine.core                   import E_Verdict
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 from   vut.engine.compare.engine.line                   import Line
 from   vut.engine.compare.engine.line_association       import LineAssociation
+from   vut.engine.compare.tolerance.pattern_finder      import E_ToleranceId
 from   vut.engine.compare.edit_operations.line_sequence import E_EditId, EditsLineSequence
 
 from   enum      import Enum
@@ -32,6 +33,8 @@ class E_Chunk(Enum):
     TERMINAL             = 2
     EMPTY                = 4
     VOID                 = 4711
+
+VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
 class InputChunk(ABC):
     """Interface definition for input chunks.
@@ -62,10 +65,27 @@ class InputChunk(ABC):
             return E_Verdict.DIFFERENT, analogy_db
         elif self.__class__ == InputChunkTerminal:
             return E_Verdict.EQUIVALENT, analogy_db  # here: both are 'InputChunkTerminal'
-        elif len(self.line_list) != len(nominal.line_list):
+
+
+        # filter empty and VISIBLE_NOTHING lines.
+        def _condition(line):
+            if not line:                                               return False
+            elif all(x.tolerance_id == VISIBLE_NOTHING for x in line): return False
+            else:                                                      return True
+
+        subject_line_list = [line for line in self.line_list    if _condition(line)]
+        if len(nominal.line_list) < len(subject_line_list): 
+            # 'nominal_line_list' will only shrink. 
+            # if it is already longer => impossible match.
             return E_Verdict.DIFFERENT, analogy_db
+
+        nominal_line_list = [line for line in nominal.line_list if _condition(line)]
+        if len(nominal_line_list) != len(subject_line_list): 
+            # filtered list are not of same size => impossible match
+            return E_Verdict.DIFFERENT, analogy_db
+
         else:
-            return self._compare(nominal, analogy_db)
+            return self._compare(subject_line_list, nominal_line_list, analogy_db)
 
     def line_associations(self, nominal, analogy_db):
         """RETURNS: [0] list of 'LineAssociation'-s

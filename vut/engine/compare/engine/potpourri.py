@@ -35,12 +35,12 @@ class Potpourri(InputChunk):
         InputChunk.__init__(self, start_line_n, end_line_n, 
                             adapt(iterable, start_line_n, end_line_n), config)
 
-    def _compare(self, nominal, analogy_db):
+    def _compare(self, subject_line_list, nominal_line_list, analogy_db):
         """RETURNS: [0] True, if both potpourris are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
         """
-        subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:
-        nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
+        subject_potpourri = tuple(subject_line_list[1:-1]) # exclude [0] and [-1]:
+        nominal_potpourri = tuple(nominal_line_list[1:-1]) # first and last line carry Potpourri markers.
 
         verdict, _, new_analogy_db = friends_pairing.do(subject_potpourri,
                                                         nominal_potpourri,

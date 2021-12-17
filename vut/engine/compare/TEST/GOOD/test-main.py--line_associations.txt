@@ -53,9 +53,11 @@ AnalogyDb:
 => 
 
 TYPE: LINE_SEQUENCE
-cost: 0.00000; line_associations: 3;
+cost: 0.00000; line_associations: 5;
    [01] Hallo                   --> [01] Hallo                   {GOOD}
+   [--] None                    --> [02]                         {}
    [02] Welt 1                  --> [03] Welt 1                  {GOOD, GOOD, GOOD}
+   [--] None                    --> [04]                         {}
    [03] Welt 2                  --> [05] Welt  2                 {GOOD, GOOD_TOLERATED, GOOD}
 AnalogyDb:
 []
@@ -141,7 +143,9 @@ AnalogyDb:
 => 
 
 TYPE: LINE_SEQUENCE
-cost: 0.00000; line_associations: 1;
+cost: 0.00000; line_associations: 3;
+   [01] Hallo##                 --> [01] ##Hello                 {GOOD_TOLERATED}
+   [02] ##Welt                  --> [02] World##                 {GOOD_TOLERATED}
    [03] Good                    --> [03] Good                    {GOOD}
 AnalogyDb:
 []
@@ -158,8 +162,10 @@ AnalogyDb:
 => 
 
 TYPE: POTPOURRI
-cost: 0.00000; line_associations: 3;
+cost: 0.00000; line_associations: 5;
    [01] ||||                    --> [01] ||||                    {}
+   [02] Hallo##                 --> [02] ##Hello                 {GOOD_TOLERATED}
+   [03] ##Welt                  --> [03] World##                 {GOOD_TOLERATED}
    [04] Good                    --> [04] Good                    {GOOD}
    [05] ||||                    --> [05] ||||                    {}
 AnalogyDb:

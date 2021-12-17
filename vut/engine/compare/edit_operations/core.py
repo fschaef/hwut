@@ -1,6 +1,22 @@
-from   collections             import defaultdict
+from   vut.engine.compare.engine.core  import E_EditId
+from   collections                     import defaultdict
 
 from abc import ABC, abstractmethod
+
+position_increment_db = {
+    #                        si-increment  ni-increment
+    E_EditId.GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditId.GOOD_TOLERATED:   (1,           1),    #          -- " --
+    E_EditId.GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
+    E_EditId.GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
+    E_EditId.TRANSPOSE:        (1,           1),    #          -- " --
+    E_EditId.INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
+    #                                                 # => compare subject[si+1] with nominal[ni]
+    E_EditId.DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
+    #                                                 # => compare subject[si] with nominal[ni+1]
+    E_EditId.SUBSTITUTE:       (1,           1),    # Step over subject[si], nominal[ni]
+    E_EditId.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
+}
 
 class WorkItemBase(ABC):
     """WorkItem used in the 'WorkListBase'. It contains indices into the subject
@@ -115,4 +131,11 @@ class WorkListBase(list):
         item.cost += extra_cost
         item.edit_list.extend(overhead)
         return item.cost < self.best.cost
+
+def max_cost(subject_length, nominal_length, cost_substitute_type, cost_insert):
+   """RETURNS: maximum cost to transform 'subject' into 'nominal'.
+   """
+   common_n    = min(subject_length, nominal_length)
+   remaining_n = max(subject_length, nominal_length) - common_n
+   return cost_substitute_type * common_n + cost_insert * remaining_n
 

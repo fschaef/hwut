@@ -59,11 +59,15 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 
-from  vut.engine.compare.edit_operations.core     import WorkListBase, WorkItemBase
-from  vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
-from  vut.engine.compare.engine.analogy_db        import AnalogyDb
-from  vut.engine.compare.engine.core              import E_Verdict, E_EditId
-from  vut.external.quex.typed                     import typed
+from  vut.engine.compare.edit_operations.core              import WorkListBase, \
+                                                                  WorkItemBase, \
+                                                                  position_increment_db, \
+                                                                  max_cost
+from  vut.engine.compare.edit_operations.separator_adaptor import SeperatorAdaptor
+from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
+from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
+from  vut.engine.compare.engine.core                       import E_Verdict, E_EditId
+from  vut.external.quex.typed                              import typed
 
 from  copy        import copy
 from  enum        import IntEnum
@@ -92,7 +96,9 @@ EditsLine = namedtuple("EditsLine", ("cost", "edit_list", "analogy_db"))
 class WorkList(WorkListBase):
     def _adapt_initialization(self):
         self.min_cost = self[0].min_cost_remaining(self.subject_length, self.nominal_length)
-        self.max_cost = max_cost(self.subject_length, self.nominal_length) + 1e-6
+        self.max_cost = max_cost(self.subject_length, self.nominal_length,
+                                 cost_db[E_EditId.SUBSTITUTE_TYPE],
+                                 cost_db[E_EditId.INSERT]) + 1e-6
 
         self.best = EditsLine(self.max_cost + 1, [], [])
         self.cost_insert_delete = cost_db[E_EditId.INSERT]
@@ -143,8 +149,14 @@ def do(subject_match_seq, nominal_match_seq, analogy_db=None):
     if analogy_db is None:
         analogy_db = AnalogyDb()
 
-    seperator_db = SeperatorAdaptor(subject_match_seq, nominal_match_seq)
-    subject_match_seq, nominal_match_seq = seperator_db.strip_separators()
+    seperator_db = SeperatorAdaptor(subject_match_seq, 
+                                    nominal_match_seq,
+                                    lambda x: x.tolerance_id == SEPERATOR,
+                                    cost_db[E_EditId.SUBSTITUTE_TYPE],
+                                    cost_db[E_EditId.INSERT],
+                                    Edit)
+    subject_match_seq, \
+    nominal_match_seq = seperator_db.strip_separators()
 
     initial_item = WorkItem(si         = 0, # index into subject 'LineElement' sequence
                             ni         = 0, # index into nominal 'LineElement' sequence
@@ -185,158 +197,6 @@ SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
 
 SEPERATOR       = E_ToleranceId.SEPERATOR
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
-
-class SeperatorAdaptor:
-    """Seperators are elements of a line which appear (often) between line
-    elements. Their exact 'shape' is irrelevant. Two patterns matching a 
-    seperator are always equivalent. 
-
-    IDEA: Seperate the seperators from the line element sequence in order
-          to reduce the required amount of matching. Later, once the 
-          edit list is determined, re-insert the seperator related 
-          content.
-
-    A seperator may be a 'SEPERATOR' or 'VISIBLE_NOTHING'. The latter
-    does not cause errors if present in one and missing in the other.
-
-    The constructor takes to line element sequences, subject and nominal.
-    It then strips out the seperators, but stores their original position.
-
-    strip_separators(): returns the two line element sequences for 
-                        subject and nominal where the seperators are 
-                        stripped.
-
-    Now, edit operations are determined based on the 'content' sequences
-    without any seperators.
-   
-    reinsert_seperators(raw_edit_list): produces an edit list that takes
-                                        the existence of sperators into
-                                        consideration.
-    """
-    def __init__(self, subject_seq, nominal_seq):
-        self.subject_sequence = subject_seq
-        self.nominal_sequence = nominal_seq
-        self.subject_flags    = [x.tolerance_id != SEPERATOR for x in subject_seq]
-        self.nominal_flags    = [x.tolerance_id != SEPERATOR for x in nominal_seq]
-
-        # map: index in subject content --> index in original subject sequence
-        self.subject_index_map = {}
-        k = 0
-        for i, content_f in enumerate(self.subject_flags):
-            if not content_f: continue
-            self.subject_index_map[k] = i
-            k += 1
-
-        length_relevant_subject_seq = sum(self.subject_flags)
-        length_relevant_nominal_seq = sum(self.nominal_flags)
-        self.original_max_cost      = max_cost(length_relevant_subject_seq, 
-                                               length_relevant_nominal_seq)
-
-    def strip_separators(self):
-        return \
-            [ x for x, content_f in zip(self.subject_sequence, self.subject_flags) if content_f ], \
-            [ x for x, content_f in zip(self.nominal_sequence, self.nominal_flags) if content_f ]  
-                
-    def reinsert_seperators(self, edit_list_raw):
-        """RETURNS: Edit-operations considering seperators being present.
-
-        The 'edit_list_raw' has been generated to transform all content elements
-        of the subject into equivalent content elements of the nominal All
-        seperators have been taken out for this purpose. This function re-inserts
-        the separators and provides an according list of edit operations based
-        on the edit operations derived from the content comparison.
-        """
-        def iterable(edit_iterable):
-            """Ensure, that adjacent 'DELETE' and 'INSERTS' are combined into 
-            'SUBSTITUTE_TYPE' operations.  The cases of adjacent 'INSERT/DELETE' 
-            operations come from separators being inserted into the list. 
-            Separators are always of different type than content => 'SUBSTITUTE_TYPE' 
-            is safe to use.
-            """
-            pair_db = {
-                (DELETE, INSERT): SUBSTITUTE_TYPE,
-                (INSERT, DELETE): SUBSTITUTE_TYPE
-            }
-            def _iterable(edit_list):
-                """YIELDS: (current, look-ahead, look-ahead-ahead)
-                """
-                if not edit_list:
-                    return
-                for i, x in enumerate(edit_iterable[:-1]):
-                    yield x, edit_iterable[i+1].id
-                yield edit_iterable[-1], NONE
-                   
-            skip_n = 0
-            for current, ahead_id in _iterable(edit_iterable):
-                if skip_n: skip_n -= 1; continue
-
-                combined_id = pair_db.get((current.id, ahead_id))
-                if combined_id is not None:
-                    yield Edit(combined_id, None)
-                    skip_n = 1
-                    continue
-
-                yield current
-
-        return list(iterable(list(self.__reinsert_seperators(edit_list_raw))))
-
-    def __reinsert_seperators(self, edit_list_raw):
-        def _insert_op(ni):
-            return Edit(INSERT, None)
-
-        def _delete_op(si):
-            return Edit(DELETE, None)
-
-        def _good_op(si, ni):
-            if self.subject_sequence[si].string == self.nominal_sequence[ni].string:
-                return Edit(GOOD, None)            # both equal seperators
-            else:
-                return Edit(GOOD_TOLERATED, None)  # seperators are similar
-
-        def _from_edit_list(ei):
-            edit = edit_list_raw[ei]
-            if edit.id == TRANSPOSE:
-                translated_si = self.subject_index_map[edit.transpose_ai]
-                return Edit(TRANSPOSE, translated_si)
-            else:
-                return edit
-
-        Le = len(edit_list_raw)
-        Ls = len(self.subject_sequence)
-        Ln = len(self.nominal_sequence)
-        si = ni = ei = 0
-
-        while si < Ls or ni < Ln:
-            if si < Ls: s_is_seperator = self.subject_sequence[si].tolerance_id == SEPERATOR
-            else:       s_is_seperator = False
-            if ni < Ln: n_is_seperator = self.nominal_sequence[ni].tolerance_id == SEPERATOR
-            else:       n_is_seperator = False
-
-            if       s_is_seperator and not n_is_seperator: edit = _delete_op(si)
-            elif not s_is_seperator and     n_is_seperator: edit = _insert_op(ni)
-            elif     s_is_seperator and n_is_seperator:     edit = _good_op(si, ni)
-            else:                                           edit = _from_edit_list(ei); ei += 1
-
-            yield edit
-            s_incr, n_incr = position_increment_db[edit.id]
-            si += s_incr
-            ni += n_incr
-
-        
-position_increment_db = {
-    #                        si-increment  ni-increment
-    E_EditId.GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditId.GOOD_TOLERATED:   (1,           1),    #          -- " --
-    E_EditId.GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
-    E_EditId.GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
-    E_EditId.TRANSPOSE:        (1,           1),    #          -- " --
-    E_EditId.INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
-    #                                                 # => compare subject[si+1] with nominal[ni]
-    E_EditId.DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
-    #                                                 # => compare subject[si] with nominal[ni+1]
-    E_EditId.SUBSTITUTE:       (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditId.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
-}
 
 cost_db = {
     E_EditId.GOOD:             0,    # good
@@ -484,13 +344,6 @@ class WorkItem(WorkListBase):
         remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
         return common_n, remaining_n
 
-
-def max_cost(subject_length, nominal_length):
-   """RETURNS: maximum cost to transform 'subject' into 'nominal'.
-   """
-   common_n    = min(subject_length, nominal_length)
-   remaining_n = max(subject_length, nominal_length) - common_n
-   return cost_db[E_EditId.SUBSTITUTE_TYPE] * common_n + cost_db[E_EditId.INSERT] * remaining_n
 
 def _cost_assumptions(subject_length, nominal_length):
     """RETURNS: [0] maximum possible cost for transforming subject into nominal

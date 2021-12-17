@@ -14,11 +14,12 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.core                   import E_Verdict
 from   vut.engine.compare.engine.input_chunk            import InputChunk, \
-                                                              E_Chunk
+                                                               E_Chunk
 from   vut.engine.compare.engine.line_association       import LineAssociation
 import vut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
 from   vut.engine.compare.edit_operations.line_sequence import E_EditId, \
-                                                              EditsLineSequence
+                                                               EditsLineSequence
+
 
 class LineSequence(InputChunk):
     """Set of lines where the sequence matters.
@@ -26,12 +27,13 @@ class LineSequence(InputChunk):
     def type(self):
         return E_Chunk.LINE_SEQUENCE
 
-    def _compare(self, nominal, analogy_db) -> E_Verdict:
+    def _compare(self, filtered_subject_line_list, filtered_nominal_line_list, analogy_db) -> E_Verdict:
         """RETURNS: [0] True, if 'self' and 'nominal' are equivalent.
                         False, else.
                     [1] AnalogyDb required for the equivalents of [0] to hold.
         """
-        for subject_line, nominal_line in zip(self.line_list, nominal.line_list):
+        # Compare line by line
+        for subject_line, nominal_line in zip(filtered_subject_line_list, filtered_nominal_line_list):
             verdict, analogy_db = subject_line.compare(nominal_line, analogy_db)
             if verdict == False:
                 return E_Verdict.DIFFERENT, analogy_db

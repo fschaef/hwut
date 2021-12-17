@@ -44,9 +44,10 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 from   vut.engine.compare.tolerance.line_element import E_ToleranceId, \
-                                                       Token, \
-                                                       LineElement, \
-                                                       LineElementString
+                                                        Token, \
+                                                        LineElement, \
+                                                        LineElementString, \
+                                                        LineElementVisibleNothing
 from   vut.external.quex.typed                   import typed
 from   collections import namedtuple
 import re
@@ -136,13 +137,17 @@ class PatternFinder:
         if self.strip_whitespace_f:
             string = string.strip()
 
-        return tuple(_analyze(string))
+        if not string:
+            return tuple()
+        elif self.is_irrelevant(string):
+            return (LineElementVisibleNothing(0, len(string), string.rstrip()),)
+        else:
+            return tuple(_analyze(string))
 
     def is_irrelevant(self, line):
         """RETURN: True, if the line does not contain content subject to comparison.
                    False, else.
         """
-        line = line.strip()
         if not line:
             return True
         elif any(line.startswith(m) for m in self.ignored_line_begin_marker):

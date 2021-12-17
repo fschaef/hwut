@@ -19,7 +19,9 @@ Levenshtein Distance).
 _______________________________________________________________________________
 """
 from   vut.engine.compare.edit_operations.core import WorkListBase, \
-                                                      WorkItemBase
+                                                      WorkItemBase, \
+                                                      position_increment_db, \
+                                                      max_cost
 from   vut.engine.compare.edit_operations.line import Edit, EditsLine
 from   vut.engine.compare.engine.core          import E_EditId
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
@@ -57,7 +59,8 @@ class EditsLineSequence:
 class WorkList(WorkListBase):
     def _adapt_initialization(self):
         self.min_cost = self[0].min_cost_remaining(self.subject_length, self.nominal_length)
-        self.max_cost = max_cost(self.subject_length, self.nominal_length) + 1e-6
+        self.max_cost = max_cost(self.subject_length, self.nominal_length,
+                                 cost_SUBSTITUTION, cost_INSERT_DELETE) + 1e-6
 
         self.best = EditsLineSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
         self.cost_insert_delete = cost_INSERT_DELETE
@@ -107,14 +110,6 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
             work_list.produce_derived(item)
 
     return work_list.best
-
-position_increment_db = {
-    #                        si-increment  ni-increment
-    E_EditId.GOOD:         (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditId.SUBSTITUTE:   (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditId.INSERT:       (0,           1),    # Must insert before 'subject[si]' to fix.
-    E_EditId.DELETE:       (1,           0),    # Must insert before 'nominal[ni]' to fix.
-}
 
 cost_GOOD          = 0.0
 cost_SUBSTITUTION  = 1.0
@@ -270,14 +265,6 @@ class WorkItem(WorkItemBase):
        common_n    = min(remaining_subject_n, remaining_nominal_n)
        remaining_n = max(remaining_subject_n, remaining_nominal_n) - common_n
        return common_n, remaining_n
-
-def max_cost(subject_length, nominal_length):
-   """RETURNS: maximum cost to transform 'subject' into 'nominal'.
-   """
-   common_n    = min(subject_length, nominal_length)
-   remaining_n = max(subject_length, nominal_length) - common_n
-   return cost_SUBSTITUTION * common_n + cost_INSERT_DELETE * remaining_n
-
 
 class LineEditionDb(dict):
     def get(self, subject_i, nominal_i, subject_list, nominal_list, analogy_db):

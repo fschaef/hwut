@@ -57,11 +57,11 @@ class ChunkPipe(PatternFinder):
             line = line_provider.readline()
             if not line:
                 break
-            elif self.is_irrelevant(line):
-                continue
             elif self.is_region_delimiter(line):
                 if line_list or chunk_class != LineSequence:
-                    yield chunk_class(start_line_n, line_n, line_list, self.configuration)
+                    yield chunk_class(start_line_n, line_n, 
+                                      line_list, 
+                                      self.configuration)
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
                 if chunk_class == LineSequence: chunk_class = Potpourri
