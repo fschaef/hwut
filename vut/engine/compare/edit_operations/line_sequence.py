@@ -18,12 +18,11 @@ operations on 'Line's (see edit_operations/line.py) and strings (see
 Levenshtein Distance).
 _______________________________________________________________________________
 """
-from  vut.engine.compare.edit_operations.edit  import Edit, EditList 
+from  vut.engine.compare.edit_operations.edit  import E_EditId, Edit, EditSequence 
 from   vut.engine.compare.edit_operations.core import WorkListBase, \
                                                       WorkItemBase, \
                                                       position_increment_db, \
                                                       max_cost
-from   vut.engine.compare.engine.core          import E_EditId
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
 from   vut.external.quex.typed                 import typed
 
@@ -38,7 +37,7 @@ class WorkList(WorkListBase):
         self.max_cost = max_cost(self.subject_length, self.nominal_length,
                                  cost_SUBSTITUTION, cost_INSERT_DELETE) + 1e-6
 
-        self.best = EditList(cost=self.max_cost, edit_list=[], analogy_db=[])
+        self.best = EditSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
         self.cost_insert_delete = cost_INSERT_DELETE
 
         self.cache = Cache()
@@ -62,7 +61,7 @@ class WorkList(WorkListBase):
 
 
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
-    """RETURNS: EditList
+    """RETURNS: EditSequence
 
     Determine how the sequence of subject 'Line' objects can be transformed
     into the sequence of nominal 'Line' objects. It determines a 'cost' value
@@ -73,12 +72,12 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """
     if analogy_db is None: analogy_db = AnalogyDb()
 
-    initial_item = WorkItem(si=0, ni=0, editions=EditList(0, [], analogy_db))
+    initial_item = WorkItem(si=0, ni=0, editions=EditSequence(0, [], analogy_db))
     work_list    = WorkList(subject_match_seq_list, nominal_match_seq_list, 
                             initial_item)
 
     if work_list.max_cost == 0.0:
-        return EditList(cost=0, edit_list=[], analogy_db=analogy_db)
+        return EditSequence(cost=0, edit_list=[], analogy_db=analogy_db)
 
     while work_list:
         item = work_list.pop()
@@ -168,7 +167,7 @@ class WorkItem(WorkItemBase):
        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
        """
        line_editions = cache.get(self.si, self.ni, subject_list, nominal_list, self.edit_list.analogy_db)
-       assert isinstance(line_editions, EditList)
+       assert isinstance(line_editions, EditSequence)
 
        # IMPORTANT: Worklist is a LIFO. That is, what comes last is popped
        # first from the worklist. It is essential that 'cheap' steps are
@@ -208,7 +207,7 @@ class WorkItem(WorkItemBase):
        else:
            new_analogy_db = self.edit_list.analogy_db
 
-       new_editions = EditList(self.cost + delta_cost,
+       new_editions = EditSequence(self.cost + delta_cost,
                                self.edit_list.edit_list + [ (edit_id, edit_list) ],
                                new_analogy_db)
 

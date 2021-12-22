@@ -59,7 +59,7 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 
-from  vut.engine.compare.edit_operations.edit              import Edit, EditList
+from  vut.engine.compare.edit_operations.edit              import E_EditId, Edit, EditSequence
 from  vut.engine.compare.edit_operations.core              import WorkListBase, \
                                                                   WorkItemBase, \
                                                                   position_increment_db, \
@@ -67,7 +67,7 @@ from  vut.engine.compare.edit_operations.core              import WorkListBase, 
 from  vut.engine.compare.edit_operations.separator_adaptor import SeperatorAdaptor
 from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
-from  vut.engine.compare.engine.core                       import E_Verdict, E_EditId
+from  vut.engine.compare.engine.core                       import E_Verdict
 from  vut.external.quex.typed                              import typed
 
 from  copy        import copy
@@ -82,13 +82,13 @@ class WorkList(WorkListBase):
                                  cost_db[E_EditId.SUBSTITUTE_TYPE],
                                  cost_db[E_EditId.INSERT]) + 1e-6
 
-        self.best = EditList(self.max_cost + 1, [], [])
+        self.best = EditSequence(self.max_cost + 1, [], [])
         self.cost_insert_delete = cost_db[E_EditId.INSERT]
 
         self.cache = Cache()
 
     def _set_best(self, item):
-        self.best = EditList(item.cost, item.edit_list, item.analogy_db)
+        self.best = EditSequence(item.cost, item.edit_list, item.analogy_db)
 
     def _append_subject_overhead(self, item):
         visible_list   = [
@@ -119,14 +119,14 @@ class WorkList(WorkListBase):
 @lru_cache(maxsize=65536)
 @typed(subject_le_seq=tuple, nominal_le_seq=tuple)
 def do(subject_le_seq, nominal_le_seq, analogy_db=None):
-    """RETURNS: EditList
+    """RETURNS: EditSequence
 
     Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
     determines the editions required to transform the former into the latter.
 
-    where EditList.cost       = cost / max. cost; thus in range of [0...1].
-          EditList.edit_list  = list of 'Edit'
-          EditList.analogy_db = 'AnalogyDb' required for equivalences to hold.
+    where EditSequence.cost       = cost / max. cost; thus in range of [0...1].
+          EditSequence.edit_list  = list of 'Edit'
+          EditSequence.analogy_db = 'AnalogyDb' required for equivalences to hold.
     """
     if analogy_db is None:
         analogy_db = AnalogyDb()
@@ -149,7 +149,7 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     work_list = WorkList(subject_le_seq, nominal_le_seq, initial_item)
 
     if seperator_db.original_max_cost == 0.0:
-        return EditList(0, 
+        return EditSequence(0, 
                          seperator_db.reinsert_seperators([]),
                          AnalogyDb())
 
@@ -162,7 +162,7 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     if best.cost != 0: cost = best.cost / seperator_db.original_max_cost
     else:              cost = 0
 
-    return EditList(cost, 
+    return EditSequence(cost, 
                      seperator_db.reinsert_seperators(best.edit_list),
                      best.analogy_db)
 

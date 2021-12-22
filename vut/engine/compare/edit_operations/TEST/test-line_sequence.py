@@ -23,7 +23,7 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 import vut.engine.compare.edit_operations.line_sequence  as     edit_distance_line_sequence
-from   vut.engine.compare.edit_operations.line_sequence  import E_EditId
+from   vut.engine.compare.edit_operations.edit           import E_EditId
 from   vut.engine.compare.TEST.common                    import prepare, print_match_sequences_lists, prepare_line_up
 from   vut.engine.compare.engine.line                    import Line
 

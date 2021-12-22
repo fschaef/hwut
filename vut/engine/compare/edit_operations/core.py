@@ -1,7 +1,7 @@
-from   vut.engine.compare.engine.core  import E_EditId
-from   collections                     import defaultdict
+from   vut.engine.compare.edit_operations.edit  import E_EditId
 
-from abc import ABC, abstractmethod
+from   collections import defaultdict
+from   abc         import ABC, abstractmethod
 
 position_increment_db = {
     #                        si-increment  ni-increment

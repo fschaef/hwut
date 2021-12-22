@@ -62,14 +62,14 @@ class Line:
             return True, analogy_db
 
     def edit_operations(self, nominal, analogy_db):
-        """RETURNS: EditList
+        """RETURNS: EditSequence
 
         Calls 'edit_operations_line.do()' and sets line numbers in analogy
         database if necessary.
 
-        EditList.cost       = cost / max. cost; thus in range of [0...1].
-        EditList.edit_list  = list of 'Edit' objects
-        EditList.analogy_db = 'AnalogyDb' required for equivalences to hold.
+        EditSequence.cost       = cost / max. cost; thus in range of [0...1].
+        EditSequence.edit_list  = list of 'Edit' objects
+        EditSequence.analogy_db = 'AnalogyDb' required for equivalences to hold.
         """
         result = edit_operations_line.do(self.sequence, nominal.sequence, analogy_db)
 
@@ -79,7 +79,7 @@ class Line:
         else:
             result.analogy_db.assign(analogy_db)
 
-        assert isinstance(result, edit_operations_line.EditList)
+        assert isinstance(result, edit_operations_line.EditSequence)
         return result
 
     def __lt__(self, other): # pragma no cover
