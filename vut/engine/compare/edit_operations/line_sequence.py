@@ -178,7 +178,7 @@ class WorkItem(WorkItemBase):
        else:               self.history = history
 
    def __repr__(self):
-       return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.edit_list.cost, [x[0].name for x in self.edit_list.edit_list])
+       return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.cost, [x[0].name for x in self.edit_list.edit_list])
 
    @property
    def cost(self):
@@ -232,7 +232,7 @@ class WorkItem(WorkItemBase):
        else:
            new_analogy_db = self.edit_list.analogy_db
 
-       new_editions = EditsLineSequence(self.edit_list.cost + delta_cost,
+       new_editions = EditsLineSequence(self.cost + delta_cost,
                                         self.edit_list.edit_list + [ (edit_id, edit_list) ],
                                         new_analogy_db)
 
@@ -253,7 +253,7 @@ class WorkItem(WorkItemBase):
 
        # best case: -- all common lines are GOOD
        #            -- all remaining lines are INSERT/DELETE
-       return self.edit_list.cost + cost_GOOD * common_n + cost_INSERT_DELETE * remaining_n
+       return self.cost + cost_GOOD * common_n + cost_INSERT_DELETE * remaining_n
 
    def __get_common_and_remaining(self, subject_length, nominal_length):
        """RETURNS: [0] number of possibly common elements.
