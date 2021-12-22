@@ -32,30 +32,6 @@ from   collections import defaultdict
 import sys
 
 
-class EditsLineSequence:
-    def __init__(self, cost, edit_list, analogy_db):
-        """edit_list: list of tuples (edit_id, edit_list)
-
-        where edit_id:    E_EditId
-              edit_list': list of Edit objects
-        """
-        assert all(isinstance(first, E_EditId)
-                   for first, _ in edit_list)
-        assert all(isinstance(x, Edit)
-                   for _, second in edit_list
-                   if second is not None
-                   for x in second)
-        self.cost       = cost
-        self.edit_list  = edit_list
-        self.analogy_db = analogy_db
-
-    def last(self):
-        if not self.edit_list: return None
-        else:                  return self.edit_list[-1][0]
-
-    def extend(self, edit_iterable):
-        self.edit_list.extend(edit_iterable)
-
 class WorkList(WorkListBase):
     def _adapt_initialization(self):
         self.min_cost = self[0].min_cost_remaining(self.subject_length, self.nominal_length)
