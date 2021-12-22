@@ -90,7 +90,27 @@ def Edit_list_description(edit_list):
                 yield "%s:%i<->%i" % (edit.id.name, i, edit.transpose_ai)
     return "[%s]" % ", ".join(_iterable(edit_list))
 
-EditsLine = namedtuple("EditsLine", ("cost", "edit_list", "analogy_db"))
+class EditsLine:
+    def __init__(self, cost, edit_list, analogy_db):
+        """edit_list: list of tuples (edit_id, edit_list)
+
+        where edit_id:    E_EditId
+              edit_list': list of Edit objects
+        """
+        assert all(isinstance(first, E_EditId)
+                   for first, _ in edit_list)
+        self.cost       = cost
+        self.edit_list  = edit_list
+        self.analogy_db = analogy_db
+
+    def __iter__(self):
+        yield from (self.cost, self.edit_list, self.analogy_db)
+    def last(self):
+        if not self.edit_list: return None
+        else:                  return self.edit_list[-1][0]
+
+    def extend(self, edit_iterable):
+        self.edit_list.extend(edit_iterable)
 
 
 class WorkList(WorkListBase):
