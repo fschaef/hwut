@@ -17,8 +17,8 @@ from   vut.engine.compare.tolerance.line_element import E_ToleranceId
 from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.engine.core            import E_PotpourriBorder, E_EditId
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
+from   vut.engine.compare.edit_operations.edit   import Edit, EditList
 import vut.engine.compare.edit_operations.line   as     edit_operations_line
-from   vut.engine.compare.edit_operations.line   import Edit, Edit_none
 from   vut.external.quex.typed                   import typed
 
 from   collections import namedtuple
@@ -171,5 +171,5 @@ class LineAssociation:
         return "LineAssociation", [
             ("subject",    self.subject),
             ("nominal",    self.nominal),
-            ("edit_list",  edit_operations_line.Edit_list_description(self.edit_list)),
+            ("edit_list",  EditList.describe(self.edit_list)),
         ]

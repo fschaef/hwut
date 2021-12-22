@@ -22,7 +22,7 @@ from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 from   vut.engine.compare.engine.line                   import Line
 from   vut.engine.compare.engine.line_association       import LineAssociation
 from   vut.engine.compare.tolerance.pattern_finder      import E_ToleranceId
-from   vut.engine.compare.edit_operations.line_sequence import E_EditId, EditsLineSequence
+from   vut.engine.compare.edit_operations.line_sequence import E_EditId
 
 from   enum      import Enum
 from   abc       import ABC, abstractmethod

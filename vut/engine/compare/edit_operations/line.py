@@ -59,6 +59,7 @@ subject into the nominal.
 _______________________________________________________________________________
 """
 
+from  vut.engine.compare.edit_operations.edit              import Edit, EditList
 from  vut.engine.compare.edit_operations.core              import WorkListBase, \
                                                                   WorkItemBase, \
                                                                   position_increment_db, \
@@ -74,45 +75,6 @@ from  enum        import IntEnum
 from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
 
-Edit = namedtuple("Edit", ("id", "transpose_ai"))
-
-def Edit_none():
-    return Edit(E_EditId.NONE, None)
-
-def Edit_list_description(edit_list):
-    if not edit_list:
-        return "[]"
-    def _iterable(edit_list):
-        for i, edit in enumerate(edit_list):
-            if edit.id != E_EditId.TRANSPOSE:
-                yield edit.id.name 
-            else:
-                yield "%s:%i<->%i" % (edit.id.name, i, edit.transpose_ai)
-    return "[%s]" % ", ".join(_iterable(edit_list))
-
-class EditsLine:
-    def __init__(self, cost, edit_list, analogy_db):
-        """edit_list: list of tuples (edit_id, edit_list)
-
-        where edit_id:    E_EditId
-              edit_list': list of Edit objects
-        """
-        assert all(isinstance(first, E_EditId)
-                   for first, _ in edit_list)
-        self.cost       = cost
-        self.edit_list  = edit_list
-        self.analogy_db = analogy_db
-
-    def __iter__(self):
-        yield from (self.cost, self.edit_list, self.analogy_db)
-    def last(self):
-        if not self.edit_list: return None
-        else:                  return self.edit_list[-1][0]
-
-    def extend(self, edit_iterable):
-        self.edit_list.extend(edit_iterable)
-
-
 class WorkList(WorkListBase):
     def _adapt_initialization(self):
         self.min_cost = self[0].min_cost_remaining(self.subject_length, self.nominal_length)
@@ -120,13 +82,13 @@ class WorkList(WorkListBase):
                                  cost_db[E_EditId.SUBSTITUTE_TYPE],
                                  cost_db[E_EditId.INSERT]) + 1e-6
 
-        self.best = EditsLine(self.max_cost + 1, [], [])
+        self.best = EditList(self.max_cost + 1, [], [])
         self.cost_insert_delete = cost_db[E_EditId.INSERT]
 
         self.cache = Cache()
 
     def _set_best(self, item):
-        self.best = EditsLine(item.cost, item.edit_list, item.analogy_db)
+        self.best = EditList(item.cost, item.edit_list, item.analogy_db)
 
     def _append_subject_overhead(self, item):
         visible_list   = [
@@ -157,14 +119,14 @@ class WorkList(WorkListBase):
 @lru_cache(maxsize=65536)
 @typed(subject_le_seq=tuple, nominal_le_seq=tuple)
 def do(subject_le_seq, nominal_le_seq, analogy_db=None):
-    """RETURNS: EditsLine
+    """RETURNS: EditList
 
     Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
     determines the editions required to transform the former into the latter.
 
-    where EditsLine.cost       = cost / max. cost; thus in range of [0...1].
-          EditsLine.edit_list  = list of 'Edit'
-          EditsLine.analogy_db = 'AnalogyDb' required for equivalences to hold.
+    where EditList.cost       = cost / max. cost; thus in range of [0...1].
+          EditList.edit_list  = list of 'Edit'
+          EditList.analogy_db = 'AnalogyDb' required for equivalences to hold.
     """
     if analogy_db is None:
         analogy_db = AnalogyDb()
@@ -187,7 +149,7 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     work_list = WorkList(subject_le_seq, nominal_le_seq, initial_item)
 
     if seperator_db.original_max_cost == 0.0:
-        return EditsLine(0, 
+        return EditList(0, 
                          seperator_db.reinsert_seperators([]),
                          AnalogyDb())
 
@@ -200,7 +162,7 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     if best.cost != 0: cost = best.cost / seperator_db.original_max_cost
     else:              cost = 0
 
-    return EditsLine(cost, 
+    return EditList(cost, 
                      seperator_db.reinsert_seperators(best.edit_list),
                      best.analogy_db)
 

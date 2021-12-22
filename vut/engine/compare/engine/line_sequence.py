@@ -18,7 +18,7 @@ from   vut.engine.compare.engine.input_chunk            import InputChunk, \
 from   vut.engine.compare.engine.line_association       import LineAssociation
 import vut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
 from   vut.engine.compare.edit_operations.line_sequence import E_EditId, \
-                                                               EditsLineSequence
+                                                               EditList
 
 
 class LineSequence(InputChunk):
@@ -48,7 +48,7 @@ class LineSequence(InputChunk):
         editions = edit_operations_line_sequence.do(self.line_list,
                                                     nominal.line_list,
                                                     analogy_db)
-        assert isinstance(editions, EditsLineSequence)
+        assert isinstance(editions, EditList)
 
         if not editions.edit_list:
             return [], editions.analogy_db
