@@ -142,16 +142,14 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
 
     initial_item = WorkItem(si         = 0, # index into subject 'LineElement' sequence
                             ni         = 0, # index into nominal 'LineElement' sequence
-                            cost       = 0,
-                            edit_list  = [],
-                            analogy_db = analogy_db)
+                            editions = EditSequence(0, [], analogy_db))
 
     work_list = WorkList(subject_le_seq, nominal_le_seq, initial_item)
 
     if seperator_db.original_max_cost == 0.0:
         return EditSequence(0, 
-                         seperator_db.reinsert_seperators([]),
-                         AnalogyDb())
+                            seperator_db.reinsert_seperators([]),
+                            AnalogyDb())
 
     while work_list:
         item = work_list.pop()
@@ -163,8 +161,8 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     else:              cost = 0
 
     return EditSequence(cost, 
-                     seperator_db.reinsert_seperators(best.edit_list),
-                     best.analogy_db)
+                        seperator_db.reinsert_seperators(best.edit_list),
+                        best.analogy_db)
 
 # Shortcuts:
 TRANSPOSE       = E_EditId.TRANSPOSE
@@ -213,11 +211,11 @@ class WorkItem(WorkListBase):
     position denoted by 'self'. It does so by yielding 'WorkItem' objects
     for subsequence positions.
     """
-    def __init__(self, si, ni, cost, edit_list, analogy_db, subject_modified=None):
+    def __init__(self, si, ni, editions, subject_modified=None):
         WorkItemBase.__init__(self, si, ni)
-        self.cost             = cost
-        self.edit_list        = edit_list
-        self.analogy_db       = analogy_db
+        self.cost             = editions.cost
+        self.edit_list        = editions.edit_list
+        self.analogy_db       = editions.analogy_db
         self.subject_modified = subject_modified # in case of 'transpose' edits.
 
     def subsequent_steps(self, subject, nominal, cache):
@@ -293,12 +291,12 @@ class WorkItem(WorkListBase):
         else:
             new_analogy_db = self.analogy_db
 
-        increment_ai, increment_bi       = position_increment_db[edit_id]
-        return WorkItem(si               = self.si + increment_ai,
-                        ni               = self.ni + increment_bi,
-                        cost             = self.cost + cost_db[edit_id] * cost_factor,
-                        edit_list        = self.edit_list + [ Edit(edit_id, transpose_ai) ],
-                        analogy_db       = new_analogy_db, 
+        increment_ai, increment_bi = position_increment_db[edit_id]
+        return WorkItem(si         = self.si + increment_ai,
+                        ni         = self.ni + increment_bi,
+                        editions   = EditSequence(self.cost + cost_db[edit_id] * cost_factor,
+                                                  self.edit_list + [ Edit(edit_id, transpose_ai) ],
+                                                  new_analogy_db), 
                         subject_modified = new_subject)
 
     def min_cost_remaining(self, subject_length, nominal_length):
