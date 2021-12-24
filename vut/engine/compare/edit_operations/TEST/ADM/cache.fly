@@ -4,9 +4,9 @@ file_name: test-line.py;
 hwut_info_time: 1640179395L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.191125; 0; ]
-  [ special; OK; 0.189278; 0; ]
-  [ analogies; OK; 0.191315; 0; ]
+  [ basic; OK; 0.192379; 0; ]
+  [ special; OK; 0.192671; 0; ]
+  [ analogies; OK; 0.190398; 0; ]
 ]
 }
 {
@@ -15,8 +15,8 @@ file_name: test-string.py;
 hwut_info_time: 1640179395L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.180802; 0; ]
-  [ long; OK; 0.180134; 0; ]
+  [ basic; OK; 0.181140; 0; ]
+  [ long; OK; 0.180881; 0; ]
 ]
 }
 {
@@ -26,9 +26,9 @@ file_name: test-line_sequence.py;
 hwut_info_time: 1640179840L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ subject; OK; 0.193277; 0; ]
-  [ nominal; OK; 0.194991; 0; ]
-  [ special; OK; 0.197830; 0; ]
+  [ subject; OK; 0.214919; 0; ]
+  [ nominal; OK; 0.197317; 0; ]
+  [ special; OK; 0.227442; 0; ]
 ]
 }
 {
@@ -38,10 +38,10 @@ file_name: test-line-permutation.py;
 hwut_info_time: 1640179395L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ different; OK; 0.193881; -1511708920; ]
-  [ different-2; OK; 0.194232; 1796370069; ]
-  [ different-good-2; OK; 0.195954; -124846319; ]
-  [ different-void-2; OK; 0.196982; 735927751; ]
-  [ same; OK; 0.193306; -2023374619; ]
+  [ different; OK; 0.202870; -1511708920; ]
+  [ different-2; OK; 0.225629; 1796370069; ]
+  [ different-good-2; OK; 0.244478; -124846319; ]
+  [ different-void-2; OK; 0.271725; 735927751; ]
+  [ same; OK; 0.223541; -2023374619; ]
 ]
 }

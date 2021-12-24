@@ -87,7 +87,7 @@ class WorkList(WorkListBase):
         self.cache = Cache()
 
     def _set_best(self, item):
-        self.best = EditSequence(item.cost, item.edit_list, item.analogy_db)
+        self.best = EditSequence(item.cost, item.edit_list.edit_list, item.analogy_db)
 
     def _append_subject_overhead(self, item):
         visible_list   = [
@@ -199,7 +199,7 @@ class WorkItem(WorkListBase):
     def __init__(self, si, ni, editions, subject_modified=None):
         WorkItemBase.__init__(self, si, ni)
         self.cost             = editions.cost
-        self.edit_list        = editions.edit_list
+        self.edit_list        = editions
         self.analogy_db       = editions.analogy_db
         self.subject_modified = subject_modified # in case of 'transpose' edits.
 
@@ -280,7 +280,7 @@ class WorkItem(WorkListBase):
         return WorkItem(si         = self.si + increment_ai,
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.cost + cost_db[edit_id] * cost_factor,
-                                                  self.edit_list + [ Edit(edit_id, transpose_ai) ],
+                                                  self.edit_list.edit_list + [ Edit(edit_id, transpose_ai) ],
                                                   new_analogy_db), 
                         subject_modified = new_subject)
 
