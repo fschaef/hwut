@@ -58,7 +58,6 @@ The result is the optimal sequence of edit operations required to transform the
 subject into the nominal.
 _______________________________________________________________________________
 """
-
 from  vut.engine.compare.edit_operations.edit              import E_EditId, Edit, EditSequence
 from  vut.engine.compare.edit_operations.core              import WorkListBase, \
                                                                   WorkItemBase, \
@@ -140,29 +139,22 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     subject_le_seq, \
     nominal_le_seq = seperator_db.strip_separators()
 
-    initial_item = WorkItem(si         = 0, # index into subject 'LineElement' sequence
-                            ni         = 0, # index into nominal 'LineElement' sequence
-                            editions = EditSequence(0, [], analogy_db))
+    initial_editions = EditSequence(0, [], analogy_db)
+    initial_item = WorkItem(si       = 0, # index into subject 'LineElement' sequence
+                            ni       = 0, # index into nominal 'LineElement' sequence
+                            editions = initial_editions)
 
     work_list = WorkList(subject_le_seq, nominal_le_seq, initial_item)
 
     if seperator_db.original_max_cost == 0.0:
-        return EditSequence(0, 
-                            seperator_db.reinsert_seperators([]),
-                            AnalogyDb())
+        return initial_editions.prepare_as_best(seperator_db, True)
 
     while work_list:
         item = work_list.pop()
         if not work_list.end_of_sequence(item): 
             work_list.produce_derived(item)
 
-    best = work_list.best
-    if best.cost != 0: cost = best.cost / seperator_db.original_max_cost
-    else:              cost = 0
-
-    return EditSequence(cost, 
-                        seperator_db.reinsert_seperators(best.edit_list),
-                        best.analogy_db)
+    return work_list.best.prepare_as_best(seperator_db, True)
 
 # Shortcuts:
 TRANSPOSE       = E_EditId.TRANSPOSE
