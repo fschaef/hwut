@@ -143,21 +143,12 @@ class WorkItemHistory:
 
 class WorkItem(WorkItemBase):
    def __init__(self, si, ni, editions, history=None):
-       WorkItemBase.__init__(self, si, ni)
-       self.edit_list = editions
+       WorkItemBase.__init__(self, si, ni, editions)
        if history is None: self.history = WorkItemHistory()
        else:               self.history = history
 
    def __repr__(self):
        return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.edit_list.cost, [x[0].name for x in self.edit_list.edit_list])
-
-   @property
-   def cost(self):
-       return self.edit_list.cost
-
-   @cost.setter
-   def cost(self, value):
-       self.edit_list.cost = value
 
    def subsequent_steps(self, subject_list, nominal_list, cache):
        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.

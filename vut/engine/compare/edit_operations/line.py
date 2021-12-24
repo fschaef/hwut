@@ -197,8 +197,7 @@ class WorkItem(WorkListBase):
     for subsequence positions.
     """
     def __init__(self, si, ni, editions, subject_modified=None):
-        WorkItemBase.__init__(self, si, ni)
-        self.edit_list        = editions
+        WorkItemBase.__init__(self, si, ni, editions)
         self.subject_modified = subject_modified # in case of 'transpose' edits.
 
     def subsequent_steps(self, subject, nominal, cache):

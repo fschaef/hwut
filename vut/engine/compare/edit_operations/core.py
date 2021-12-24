@@ -23,9 +23,10 @@ class WorkItemBase(ABC):
     and the nominal list. The functions required are mentioned here as an abstract
     methed.
     """
-    def __init__(self, si, ni):
-        self.si = si
-        self.ni = ni
+    def __init__(self, si, ni, edit_sequence):
+        self.si        = si
+        self.ni        = ni
+        self.edit_list = edit_sequence
 
     @abstractmethod
     def subsequent_steps(self, subject, nominal, cache): 
