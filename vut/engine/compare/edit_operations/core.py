@@ -1,3 +1,48 @@
+"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: VUT
+_______________________________________________________________________________
+
+PURPOSE: Classes and algorithms for finding edit sequences.
+
+An 'edit sequence' is a sequence of edit operations applied to a subject
+sequence such that it is transformed into a nominal sequence. An edit operation
+consists of a change operation (GOOD, INSERT, DELETE, ...) and an according
+increment of the pointers into the subject list and the nominal lists.
+
+ALGORITHM:
+
+The algorithm is explained in 'line.py' of this directory. It is basically
+the same for both, lines and line sequences. This module provides the 
+base required base classes. Both, 'line.py' and 'line_sequence.py' implement
+derived classes of:
+
+
+  WorkItem:
+      
+     Maintains the indices 'si' and 'ni' pointing to positions in the
+     subject and the nominal sequence. An 'edit_list' documents the
+     edit operations how this position has been reached. 
+
+  WorkList: 
+   
+     A container that maintains the list of 'WorkItems'. It takes work items,
+     one by one, and derived further work items derived from them. A step
+     considers of finding a list of possible operations given the current
+     positions (si, ni). For each possible operation, the current edit sequence
+     is extended by one and it builds a new work item.
+
+Eventually, a work item is derived which reaches the end of one or both
+sequences.  If its according 'edit_list' is less costy than the best, the best
+is adapted.  This continues until no work item remains on the list.
+
+OPTIMIZATION:
+
+Caches store comparisons of elements in subject and nominal. More likely to win
+edit operations are added first. WorkItem's with no chance of winning are cut
+of early.
+
+_______________________________________________________________________________
+"""
+
 from   vut.engine.compare.edit_operations.edit  import E_EditId, EditSequence
 
 from   collections import defaultdict
@@ -90,15 +135,14 @@ class WorkListBase(list):
 
         self.append(initial_item)
 
-        self.min_cost           = self[0].min_cost_remaining(self.subject_length, 
-                                                             self.nominal_length)
-        self.max_cost           = max_cost(self.subject_length, 
-                                           self.nominal_length,
-                                           cost_db[substitute_op_worst],
-                                           cost_db[INSERT]) + 1e-6
+        self.min_cost = self[0].min_cost_remaining(self.subject_length, 
+                                                   self.nominal_length)
+        self.max_cost = max_cost(self.subject_length, 
+                                 self.nominal_length,
+                                 cost_db[substitute_op_worst],
+                                 cost_db[INSERT]) + 1e-6
 
-        self.best               = EditSequence(self.max_cost, [], [])
-        self.cost_insert_delete = cost_db[INSERT]
+        self.best     = EditSequence(self.max_cost, [], [])
 
     def run(self):
         while self:
@@ -142,7 +186,7 @@ class WorkListBase(list):
             self.append(new_item)
 
     def __record_best(self, item):
-        self._set_best(item)
+        self.best = item.edit_list
         if self.best.cost == self.min_cost: 
             self.clear() # => termination
             return

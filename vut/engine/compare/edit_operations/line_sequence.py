@@ -46,6 +46,11 @@ cost_db = {
    DELETE:     0.5
 }
 
+cost_GOOD          = cost_db[GOOD]
+cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
+cost_INSERT_DELETE = cost_db[INSERT]
+
+
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """RETURNS: EditSequence
 
@@ -74,27 +79,20 @@ class WorkList(WorkListBase):
         WorkListBase.__init__(self, subject, nominal, initial_item, cost_db, SUBSTITUTE)
         self.cache = Cache()
 
-    def _set_best(self, item):
-        self.best = item.edit_list
-
     def _append_subject_overhead(self, item):
         # delete all remaining subjects to conform the nominal
         L          = self.subject_length - item.si
-        overhead   = [(E_EditId.DELETE, None) ] * L
-        extra_cost = L * self.cost_insert_delete
+        overhead   = [(DELETE, None) ] * L
+        extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
         # insert all nominals into subject to conform nominal
         L          = self.nominal_length - item.ni
-        overhead   = [(E_EditId.INSERT, None) ] * L
-        extra_cost = L * self.cost_insert_delete 
+        overhead   = [(INSERT, None) ] * L
+        extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 
-
-cost_GOOD          = 0.0
-cost_SUBSTITUTION  = 1.0
-cost_INSERT_DELETE = 0.5 
 
 class WorkItemHistory:
     """A 'WorkItemHistory' keeps track of the preceeding edit operations in
@@ -121,13 +119,13 @@ class WorkItemHistory:
         Editions of the same kind appear in adjacent blocks, they are cheaper.
         They are not so 'bad', because in their context they are consistent.
         """
-        if edit_id == E_EditId.GOOD:
+        if edit_id == GOOD:
             self.substitute_n  = 0
             self.insert_n      = 0
             self.delete_n      = 0
             # value of GOOD decreases with number of corrections preceeding it.
             return cost_GOOD
-        elif edit_id == E_EditId.SUBSTITUTE:
+        elif edit_id == SUBSTITUTE:
             if editions != self.substitute_editions:
                 self.substitute_editions = editions
                 self.substitute_n        = 0
@@ -136,13 +134,13 @@ class WorkItemHistory:
             self.delete_n      = 0
             # cost of SUBSTITUTE decreases with same substitution patterns preceeding
             return relative_edit_distance / self.substitute_n
-        elif edit_id == E_EditId.INSERT:
+        elif edit_id == INSERT:
             self.substitute_n  = 0
             self.insert_n     += 1
             self.delete_n      = 0
             # cost of DELETE decreases with number of preceeding deletions number
             return cost_INSERT_DELETE / self.insert_n
-        elif edit_id == E_EditId.DELETE:
+        elif edit_id == DELETE:
             self.substitute_n  = 0
             self.insert_n      = 0
             self.delete_n     += 1
@@ -172,17 +170,17 @@ class WorkItem(WorkItemBase):
        # possible.
        # NOTE: Subsequent INSERT-DELETE or DELETE-INSERT do not make sense!
        #       They are equivalent to 'SUBSTITUTE'.
-       if self.edit_list.last() != E_EditId.DELETE:
-           yield self._step(E_EditId.INSERT)
-       if self.edit_list.last() != E_EditId.INSERT:
-           yield self._step(E_EditId.DELETE)
+       if self.edit_list.last() != DELETE:
+           yield self._step(INSERT)
+       if self.edit_list.last() != INSERT:
+           yield self._step(DELETE)
 
        if line_editions.cost == 0.0:
-           yield self._step(E_EditId.GOOD,
+           yield self._step(GOOD,
                             edit_list      = line_editions.edit_list,
                             new_analogy_db = line_editions.analogy_db)
        else:
-           yield self._step(E_EditId.SUBSTITUTE,
+           yield self._step(SUBSTITUTE,
                             relative_edit_distance = line_editions.cost,
                             edit_list              = line_editions.edit_list)
 

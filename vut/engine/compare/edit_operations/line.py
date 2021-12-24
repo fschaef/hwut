@@ -138,20 +138,19 @@ cost_db = {
     SUBSTITUTE_TYPE:  1     # bad, need to substitute type and content of element
 }
 
+cost_INSERT_DELETE = cost_db[INSERT]
+
 class WorkList(WorkListBase):
     def __init__(self, subject, nominal, initial_item):
         WorkListBase.__init__(self, subject, nominal, initial_item, cost_db, SUBSTITUTE_TYPE)
         self.cache = Cache()
-
-    def _set_best(self, item):
-        self.best = EditSequence(item.edit_list.cost, item.edit_list.edit_list, item.edit_list.analogy_db)
 
     def _append_subject_overhead(self, item):
         visible_list   = [
             self.subject[si].tolerance_id != VISIBLE_NOTHING 
             for si in range(item.si, self.subject_length)
         ]
-        extra_cost = sum(visible_list) * self.cost_insert_delete 
+        extra_cost = sum(visible_list) * cost_INSERT_DELETE
         overhead   = [ 
             Edit(DELETE, None) if visible else Edit(GOOD_DELETE, None)
             for visible in visible_list
@@ -163,7 +162,7 @@ class WorkList(WorkListBase):
             self.nominal[ni].tolerance_id != VISIBLE_NOTHING 
             for ni in range(item.ni, self.nominal_length)
         ]
-        extra_cost = sum(visible_list) * self.cost_insert_delete 
+        extra_cost = sum(visible_list) * cost_INSERT_DELETE
         overhead   = [ 
             Edit(INSERT, None) if visible else Edit(GOOD_INSERT, None)
             for visible in visible_list
