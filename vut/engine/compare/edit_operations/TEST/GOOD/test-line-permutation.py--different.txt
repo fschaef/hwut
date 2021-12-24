@@ -49,11 +49,11 @@
 --(7)------------------------------------------------------------------
       subject:  STRING:4711
       nominal:  VISIBLE_NOTHING:4711
-      => edits: DELETE, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE
 
       subject:  VISIBLE_NOTHING:4711
       nominal:  STRING:4711
-      => edits: INSERT, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT
 --(8)------------------------------------------------------------------
       subject:  STRING:4711
       nominal:  ANALOGY:4711
@@ -89,27 +89,27 @@
 --(12)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  ANALOGY:4711
-      => edits: INSERT, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT
 
       subject:  ANALOGY:4711
       nominal:  VISIBLE_NOTHING:4711
-      => edits: DELETE, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE
 --(13)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  NUMERIC:4711
-      => edits: INSERT, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT
 
       subject:  NUMERIC:4711
       nominal:  VISIBLE_NOTHING:4711
-      => edits: DELETE, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE
 --(14)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  EQUIVALENCE_PATTERN:4711
-      => edits: INSERT, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT
 
       subject:  EQUIVALENCE_PATTERN:4711
       nominal:  VISIBLE_NOTHING:4711
-      => edits: DELETE, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE
 --(15)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  SEPERATOR:4711

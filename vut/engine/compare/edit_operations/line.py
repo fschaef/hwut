@@ -74,16 +74,73 @@ from  enum        import IntEnum
 from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
 
+@lru_cache(maxsize=65536)
+@typed(subject_le_seq=tuple, nominal_le_seq=tuple)
+def do(subject_le_seq, nominal_le_seq, analogy_db=None):
+    """RETURNS: EditSequence
+
+    Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
+    determines the editions required to transform the former into the latter.
+
+    where EditSequence.cost       = cost / max. cost; thus in range of [0...1].
+          EditSequence.edit_list  = list of 'Edit'
+          EditSequence.analogy_db = 'AnalogyDb' required for equivalences to hold.
+    """
+    if analogy_db is None:
+        analogy_db = AnalogyDb()
+
+    seperator_db = SeperatorAdaptor(subject_le_seq, 
+                                    nominal_le_seq,
+                                    lambda x: x.tolerance_id == SEPERATOR,
+                                    cost_db[SUBSTITUTE_TYPE],
+                                    cost_db[INSERT],
+                                    Edit)
+
+    initial_editions = EditSequence(0, [], analogy_db)
+
+    if seperator_db and seperator_db.original_max_cost == 0.0:
+        best = initial_editions
+    else:
+        subject_le_seq,  \
+        nominal_le_seq   = seperator_db.strip_separators()
+        initial_item     = WorkItem(0, 0, initial_editions)
+        best             = WorkList(subject_le_seq, nominal_le_seq, initial_item).run()
+
+    return best.prepare_as_best(seperator_db, True)
+
+
+
+# Shortcuts:
+TRANSPOSE       = E_EditId.TRANSPOSE
+GOOD            = E_EditId.GOOD
+GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
+GOOD_INSERT     = E_EditId.GOOD_INSERT
+GOOD_DELETE     = E_EditId.GOOD_DELETE
+DELETE          = E_EditId.DELETE
+INSERT          = E_EditId.INSERT
+NONE            = E_EditId.NONE
+SUBSTITUTE      = E_EditId.SUBSTITUTE     
+SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
+
+ANALOGY         = E_ToleranceId.ANALOGY
+SEPERATOR       = E_ToleranceId.SEPERATOR
+VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
+
+cost_db = {
+    GOOD:             0,    # good
+    GOOD_TOLERATED:   0,    # good
+    GOOD_INSERT:      0,    # good
+    GOOD_DELETE:      0,    # good
+    TRANSPOSE:        0.5,  # good, when swapped elements
+    SUBSTITUTE:       1,    # good, when content is substituted
+    INSERT:           1,    # bad, need to insert element
+    DELETE:           1,    # bad, need to remove element
+    SUBSTITUTE_TYPE:  1     # bad, need to substitute type and content of element
+}
+
 class WorkList(WorkListBase):
-    def _adapt_initialization(self):
-        self.min_cost = self[0].min_cost_remaining(self.subject_length, self.nominal_length)
-        self.max_cost = max_cost(self.subject_length, self.nominal_length,
-                                 cost_db[E_EditId.SUBSTITUTE_TYPE],
-                                 cost_db[E_EditId.INSERT]) + 1e-6
-
-        self.best = EditSequence(self.max_cost + 1, [], [])
-        self.cost_insert_delete = cost_db[E_EditId.INSERT]
-
+    def __init__(self, subject, nominal, initial_item):
+        WorkListBase.__init__(self, subject, nominal, initial_item, cost_db, SUBSTITUTE_TYPE)
         self.cache = Cache()
 
     def _set_best(self, item):
@@ -112,68 +169,6 @@ class WorkList(WorkListBase):
             for visible in visible_list
         ] 
         return self._append_overhead(item, overhead, extra_cost)
-
-
-
-@lru_cache(maxsize=65536)
-@typed(subject_le_seq=tuple, nominal_le_seq=tuple)
-def do(subject_le_seq, nominal_le_seq, analogy_db=None):
-    """RETURNS: EditSequence
-
-    Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
-    determines the editions required to transform the former into the latter.
-
-    where EditSequence.cost       = cost / max. cost; thus in range of [0...1].
-          EditSequence.edit_list  = list of 'Edit'
-          EditSequence.analogy_db = 'AnalogyDb' required for equivalences to hold.
-    """
-    if analogy_db is None:
-        analogy_db = AnalogyDb()
-
-    seperator_db = SeperatorAdaptor(subject_le_seq, 
-                                    nominal_le_seq,
-                                    lambda x: x.tolerance_id == SEPERATOR,
-                                    cost_db[E_EditId.SUBSTITUTE_TYPE],
-                                    cost_db[E_EditId.INSERT],
-                                    Edit)
-
-    initial_editions = EditSequence(0, [], analogy_db)
-
-    if seperator_db and seperator_db.original_max_cost == 0.0:
-        best = initial_editions
-    else:
-        subject_le_seq,  \
-        nominal_le_seq   = seperator_db.strip_separators()
-        initial_item     = WorkItem(0, 0, initial_editions)
-        best             = WorkList(subject_le_seq, nominal_le_seq, initial_item).run()
-
-    return best.prepare_as_best(seperator_db, True)
-
-# Shortcuts:
-TRANSPOSE       = E_EditId.TRANSPOSE
-GOOD            = E_EditId.GOOD
-GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
-GOOD_INSERT     = E_EditId.GOOD_INSERT
-GOOD_DELETE     = E_EditId.GOOD_DELETE
-DELETE          = E_EditId.DELETE
-INSERT          = E_EditId.INSERT
-NONE            = E_EditId.NONE
-SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
-
-SEPERATOR       = E_ToleranceId.SEPERATOR
-VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
-
-cost_db = {
-    E_EditId.GOOD:             0,    # good
-    E_EditId.GOOD_TOLERATED:   0,    # good
-    E_EditId.GOOD_INSERT:      0,    # good
-    E_EditId.GOOD_DELETE:      0,    # good
-    E_EditId.TRANSPOSE:        0.5,  # good, when swapped elements
-    E_EditId.SUBSTITUTE:       1,    # good, when content is substituted
-    E_EditId.INSERT:           1,    # bad, need to insert element
-    E_EditId.DELETE:           1,    # bad, need to remove element
-    E_EditId.SUBSTITUTE_TYPE:  1     # bad, need to substitute type and content of element
-}
 
 class WorkItem(WorkListBase):
     """A 'WorkItem' corresponds to a node for the tree search algorithm
@@ -205,7 +200,8 @@ class WorkItem(WorkListBase):
         """
         if self.subject_modified: subject = self.subject_modified
 
-        verdict_id, analogy = cache.get(self.si, self.ni, subject, nominal, 
+        verdict_id, analogy = cache.get(self.si, self.ni, 
+                                        subject, nominal, 
                                         transpose_f = self.subject_modified is not None)
 
         subject_le = subject[self.si]
@@ -217,35 +213,35 @@ class WorkItem(WorkListBase):
         # => more expensive paths are cut early.
         good_id = None
         if   verdict_id == E_Verdict.MISFIT:
-            yield self._step(E_EditId.SUBSTITUTE_TYPE)
+            yield self._step(SUBSTITUTE_TYPE)
         elif verdict_id == E_Verdict.DIFFERENT:
-            yield self._step(E_EditId.SUBSTITUTE,
+            yield self._step(SUBSTITUTE,
                              cost_factor = subject_le.edit_distance_relative(nominal_le))
         elif verdict_id == E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
-            yield self._step(E_EditId.GOOD_DELETE)
+            yield self._step(GOOD_DELETE)
         elif verdict_id == E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
-            yield self._step(E_EditId.GOOD_INSERT)
+            yield self._step(GOOD_INSERT)
         elif verdict_id == E_Verdict.EQUIVALENT:
             if not self.edit_list.analogy_db.is_consistent(analogy):
-                yield self._step(E_EditId.SUBSTITUTE)
+                yield self._step(SUBSTITUTE)
             elif subject_le.string       != nominal_le.string:  
-                good_id = E_EditId.GOOD_TOLERATED
-            elif subject_le.tolerance_id == E_ToleranceId.ANALOGY: 
-                good_id = E_EditId.GOOD_TOLERATED
+                good_id = GOOD_TOLERATED
+            elif subject_le.tolerance_id == ANALOGY: 
+                good_id = GOOD_TOLERATED
             else:                                                     
-                good_id = E_EditId.GOOD
+                good_id = GOOD
         else:
             assert False
 
         if good_id is None:
             yield from (
-                self._step(E_EditId.TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
+                self._step(TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
                 for candidate_ai in range(self.si+1, len(subject))
                 if subject[candidate_ai].is_equivalent(nominal_le, self.edit_list.analogy_db)
             )
 
-        yield self._step(E_EditId.INSERT)
-        yield self._step(E_EditId.DELETE)
+        yield self._step(INSERT)
+        yield self._step(DELETE)
 
         if good_id is not None:
             yield self._step(good_id, new_analogy = analogy)
@@ -292,7 +288,7 @@ class WorkItem(WorkListBase):
 
         # best case: -- all common lines are GOOD
         #            -- all remaining lines are INSERT/DELETE
-        return self.edit_list.cost + cost_db[E_EditId.GOOD] * common_n + cost_db[E_EditId.INSERT] * remaining_n
+        return self.edit_list.cost + cost_db[GOOD] * common_n + cost_db[INSERT] * remaining_n
 
 
     def __get_common_and_remaining(self, subject_length, nominal_length):
@@ -307,36 +303,22 @@ class WorkItem(WorkListBase):
         return common_n, remaining_n
 
 
-def _cost_assumptions(subject_length, nominal_length):
-    """RETURNS: [0] maximum possible cost for transforming subject into nominal
-                [1] minimum possible cost for transforming subject into nominal
-    """
-    # worst case: everything is a SUBSTITUTE_TYPE error
-    max_cost = max(subject_length, nominal_length) * cost_db[E_EditId.SUBSTITUTE_TYPE]
-
-    # best case:  all are GOOD, except for a missing tail
-    #             GOOD cost = 0; INSERT/DELETE cost = same
-    min_cost = abs(subject_length - nominal_length) * cost_db[E_EditId.INSERT]
-
-    return max_cost, min_cost
-
-
 class Cache(dict):
-    def get(self, subject_i, nominal_i, subject, nominal, transpose_f):
+    def get(self, subject_i, nominal_i, subject_list, nominal_list, transpose_f):
         """RETURNS: [0] verdict id
                     [1] required analogy
         """
-        subject = subject[subject_i]
-        nominal = nominal[nominal_i]
+        subject = subject_list[subject_i]
+        nominal = nominal_list[nominal_i]
 
         # Use 'id' of LineElements, rather than their index. Notably the 'transpose'
         # edit operation may switch elements to a different position.
-        pair   = (id(subject), id(nominal))
-        result = dict.get(self, pair)
+        key    = (id(subject), id(nominal))
+        result = dict.get(self, key)
         if result is not None:
             verdict_id, analogy = result
         else:
             verdict_id, analogy = subject.compare(nominal)
-            self[pair] = verdict_id, analogy
+            self[key] = verdict_id, analogy
         return verdict_id, analogy
 

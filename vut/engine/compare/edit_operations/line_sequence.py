@@ -30,35 +30,21 @@ from   enum        import IntEnum
 from   collections import defaultdict
 import sys
 
+# Shortcuts:
+GOOD            = E_EditId.GOOD
+GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
+GOOD_INSERT     = E_EditId.GOOD_INSERT
+GOOD_DELETE     = E_EditId.GOOD_DELETE
+DELETE          = E_EditId.DELETE
+INSERT          = E_EditId.INSERT
+SUBSTITUTE      = E_EditId.SUBSTITUTE     
 
-class WorkList(WorkListBase):
-    def _adapt_initialization(self):
-        self.min_cost = self[0].min_cost_remaining(self.subject_length, self.nominal_length)
-        self.max_cost = max_cost(self.subject_length, self.nominal_length,
-                                 cost_SUBSTITUTION, cost_INSERT_DELETE) + 1e-6
-
-        self.best = EditSequence(cost=self.max_cost, edit_list=[], analogy_db=[])
-        self.cost_insert_delete = cost_INSERT_DELETE
-
-        self.cache = Cache()
-
-    def _set_best(self, item):
-        self.best = item.edit_list
-
-    def _append_subject_overhead(self, item):
-        # delete all remaining subjects to conform the nominal
-        L          = self.subject_length - item.si
-        overhead   = [(E_EditId.DELETE, None) ] * L
-        extra_cost = L * self.cost_insert_delete
-        return self._append_overhead(item, overhead, extra_cost)
-
-    def _append_nominal_overhead(self, item):
-        # insert all nominals into subject to conform nominal
-        L          = self.nominal_length - item.ni
-        overhead   = [(E_EditId.INSERT, None) ] * L
-        extra_cost = L * self.cost_insert_delete 
-        return self._append_overhead(item, overhead, extra_cost)
-
+cost_db = {
+   GOOD:       0.0,
+   SUBSTITUTE: 1.0,
+   INSERT:     0.5,
+   DELETE:     0.5
+}
 
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """RETURNS: EditSequence
@@ -81,6 +67,30 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
         return initial_editions
     else:
         return work_list.run()
+
+
+class WorkList(WorkListBase):
+    def __init__(self, subject, nominal, initial_item):
+        WorkListBase.__init__(self, subject, nominal, initial_item, cost_db, SUBSTITUTE)
+        self.cache = Cache()
+
+    def _set_best(self, item):
+        self.best = item.edit_list
+
+    def _append_subject_overhead(self, item):
+        # delete all remaining subjects to conform the nominal
+        L          = self.subject_length - item.si
+        overhead   = [(E_EditId.DELETE, None) ] * L
+        extra_cost = L * self.cost_insert_delete
+        return self._append_overhead(item, overhead, extra_cost)
+
+    def _append_nominal_overhead(self, item):
+        # insert all nominals into subject to conform nominal
+        L          = self.nominal_length - item.ni
+        overhead   = [(E_EditId.INSERT, None) ] * L
+        extra_cost = L * self.cost_insert_delete 
+        return self._append_overhead(item, overhead, extra_cost)
+
 
 cost_GOOD          = 0.0
 cost_SUBSTITUTION  = 1.0
@@ -232,9 +242,9 @@ class Cache(dict):
     def get(self, subject_i, nominal_i, subject_list, nominal_list, analogy_db):
         """RETURNS: Edit operations to transform subject line into the nominal line
         """
-        pair = (subject_i, nominal_i)
-        result = dict.get(self, pair)
+        key = (subject_i, nominal_i)
 
+        result = dict.get(self, key)
         if result is not None:
             line_editions, used_analogy_db = result
             if used_analogy_db.is_all_consistent(analogy_db):
@@ -244,6 +254,6 @@ class Cache(dict):
         nominal = nominal_list[nominal_i]
 
         line_editions = subject.edit_operations(nominal, analogy_db)
-        self[pair]    = line_editions, analogy_db
+        self[key]     = line_editions, analogy_db
         return line_editions
 

@@ -1,21 +1,34 @@
-from   vut.engine.compare.edit_operations.edit  import E_EditId
+from   vut.engine.compare.edit_operations.edit  import E_EditId, EditSequence
 
 from   collections import defaultdict
 from   abc         import ABC, abstractmethod
 
+# Shortcuts:
+TRANSPOSE       = E_EditId.TRANSPOSE
+GOOD            = E_EditId.GOOD
+GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
+GOOD_INSERT     = E_EditId.GOOD_INSERT
+GOOD_DELETE     = E_EditId.GOOD_DELETE
+DELETE          = E_EditId.DELETE
+INSERT          = E_EditId.INSERT
+NONE            = E_EditId.NONE
+SUBSTITUTE      = E_EditId.SUBSTITUTE     
+SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
+
+
 position_increment_db = {
-    #                        si-increment  ni-increment
-    E_EditId.GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditId.GOOD_TOLERATED:   (1,           1),    #          -- " --
-    E_EditId.GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
-    E_EditId.GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
-    E_EditId.TRANSPOSE:        (1,           1),    #          -- " --
-    E_EditId.INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
-    #                                                 # => compare subject[si+1] with nominal[ni]
-    E_EditId.DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
-    #                                                 # => compare subject[si] with nominal[ni+1]
-    E_EditId.SUBSTITUTE:       (1,           1),    # Step over subject[si], nominal[ni]
-    E_EditId.SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
+    #                 si-increment  ni-increment
+    GOOD:             (1,           1),    # Step over subject[si], nominal[ni]
+    GOOD_TOLERATED:   (1,           1),    #          -- " --
+    GOOD_INSERT:      (0,           1),    # Consider 'subject[si]' visible nothing as insertion.
+    GOOD_DELETE:      (1,           0),    # Consider 'nominal[ni]' visible nothing as insertion.
+    TRANSPOSE:        (1,           1),    #          -- " --
+    INSERT:           (0,           1),    # Consider 'subject[si]' as insertion.
+    #                                      # => compare subject[si+1] with nominal[ni]
+    DELETE:           (1,           0),    # Consider 'nominal[ni]' as insertion.
+    #                                      # => compare subject[si] with nominal[ni+1]
+    SUBSTITUTE:       (1,           1),    # Step over subject[si], nominal[ni]
+    SUBSTITUTE_TYPE:  (1,           1),    #          -- " --
 }
 
 class WorkItemBase(ABC):
@@ -65,7 +78,7 @@ class WorkListBase(list):
     exhaustion (all work items treated), or by 'clearing' when it is impossible
     to achieve a better result.
     """
-    def __init__(self, subject, nominal, initial_item):
+    def __init__(self, subject, nominal, initial_item, cost_db, substitute_op_worst):
         self.subject = subject
         self.nominal = nominal
 
@@ -77,8 +90,15 @@ class WorkListBase(list):
 
         self.append(initial_item)
 
-        self.cache = None
-        self._adapt_initialization()
+        self.min_cost           = self[0].min_cost_remaining(self.subject_length, 
+                                                             self.nominal_length)
+        self.max_cost           = max_cost(self.subject_length, 
+                                           self.nominal_length,
+                                           cost_db[substitute_op_worst],
+                                           cost_db[INSERT]) + 1e-6
+
+        self.best               = EditSequence(self.max_cost, [], [])
+        self.cost_insert_delete = cost_db[INSERT]
 
     def run(self):
         while self:
