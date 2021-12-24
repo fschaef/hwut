@@ -87,7 +87,7 @@ class WorkList(WorkListBase):
         self.cache = Cache()
 
     def _set_best(self, item):
-        self.best = EditSequence(item.cost, item.edit_list.edit_list, item.analogy_db)
+        self.best = EditSequence(item.cost, item.edit_list.edit_list, item.edit_list.analogy_db)
 
     def _append_subject_overhead(self, item):
         visible_list   = [
@@ -200,7 +200,6 @@ class WorkItem(WorkListBase):
         WorkItemBase.__init__(self, si, ni)
         self.cost             = editions.cost
         self.edit_list        = editions
-        self.analogy_db       = editions.analogy_db
         self.subject_modified = subject_modified # in case of 'transpose' edits.
 
     def subsequent_steps(self, subject, nominal, cache):
@@ -229,7 +228,7 @@ class WorkItem(WorkListBase):
         elif verdict_id == E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
             yield self._step(E_EditId.GOOD_INSERT)
         elif verdict_id == E_Verdict.EQUIVALENT:
-            if not self.analogy_db.is_consistent(analogy):
+            if not self.edit_list.analogy_db.is_consistent(analogy):
                 yield self._step(E_EditId.SUBSTITUTE)
             elif subject_le.string       != nominal_le.string:  
                 good_id = E_EditId.GOOD_TOLERATED
@@ -244,7 +243,7 @@ class WorkItem(WorkListBase):
             yield from (
                 self._step(E_EditId.TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
                 for candidate_ai in range(self.si+1, len(subject))
-                if subject[candidate_ai].is_equivalent(nominal_le, self.analogy_db)
+                if subject[candidate_ai].is_equivalent(nominal_le, self.edit_list.analogy_db)
             )
 
         yield self._step(E_EditId.INSERT)
@@ -271,10 +270,10 @@ class WorkItem(WorkListBase):
             new_subject = self.subject_modified
 
         if new_analogy is not None:
-            new_analogy_db = self.analogy_db.clone()
+            new_analogy_db = self.edit_list.analogy_db.clone()
             new_analogy_db.add(new_analogy)
         else:
-            new_analogy_db = self.analogy_db
+            new_analogy_db = self.edit_list.analogy_db
 
         increment_ai, increment_bi = position_increment_db[edit_id]
         return WorkItem(si         = self.si + increment_ai,
