@@ -87,7 +87,7 @@ class WorkList(WorkListBase):
         self.cache = Cache()
 
     def _set_best(self, item):
-        self.best = EditSequence(item.cost, item.edit_list.edit_list, item.edit_list.analogy_db)
+        self.best = EditSequence(item.edit_list.cost, item.edit_list.edit_list, item.edit_list.analogy_db)
 
     def _append_subject_overhead(self, item):
         visible_list   = [
@@ -198,7 +198,6 @@ class WorkItem(WorkListBase):
     """
     def __init__(self, si, ni, editions, subject_modified=None):
         WorkItemBase.__init__(self, si, ni)
-        self.cost             = editions.cost
         self.edit_list        = editions
         self.subject_modified = subject_modified # in case of 'transpose' edits.
 
@@ -278,7 +277,7 @@ class WorkItem(WorkListBase):
         increment_ai, increment_bi = position_increment_db[edit_id]
         return WorkItem(si         = self.si + increment_ai,
                         ni         = self.ni + increment_bi,
-                        editions   = EditSequence(self.cost + cost_db[edit_id] * cost_factor,
+                        editions   = EditSequence(self.edit_list.cost + cost_db[edit_id] * cost_factor,
                                                   self.edit_list.edit_list + [ Edit(edit_id, transpose_ai) ],
                                                   new_analogy_db), 
                         subject_modified = new_subject)
@@ -294,7 +293,7 @@ class WorkItem(WorkListBase):
 
         # best case: -- all common lines are GOOD
         #            -- all remaining lines are INSERT/DELETE
-        return self.cost + cost_db[E_EditId.GOOD] * common_n + cost_db[E_EditId.INSERT] * remaining_n
+        return self.edit_list.cost + cost_db[E_EditId.GOOD] * common_n + cost_db[E_EditId.INSERT] * remaining_n
 
 
     def __get_common_and_remaining(self, subject_length, nominal_length):

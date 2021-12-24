@@ -96,7 +96,7 @@ class WorkListBase(list):
         steps are produced. If one index reaches the end of its sequence, the total cost
         is computed and compared with the best. If it is better, the 'best' is adapted.
         """
-        if item.cost > self.best.cost:
+        if item.edit_list.cost > self.best.cost:
             # already worse => no chance of winning.
             return True
         elif item.si == self.subject_length: # reached end of subject => INSERT to reach end of nominal
@@ -114,10 +114,10 @@ class WorkListBase(list):
         for new_item in item.subsequent_steps(self.subject, self.nominal, self.cache):
             if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
                 continue
-            elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.cost:
+            elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.edit_list.cost:
                 # The version with 'cost < new_item.editions.cost' will produce a better total solution.
                 continue
-            self.best_cost_db[(new_item.si, new_item.ni)] = new_item.cost
+            self.best_cost_db[(new_item.si, new_item.ni)] = new_item.edit_list.cost
             self.append(new_item)
 
     def __record_best(self, item):
@@ -127,7 +127,7 @@ class WorkListBase(list):
             return
         # Remove any entry which is already worse than the best.
         for i, item in reversed(list(enumerate(self))):
-            if item.cost >= self.best.cost: del self[i]
+            if item.edit_list.cost >= self.best.cost: del self[i]
 
     def _append_overhead(self, item, overhead, extra_cost):
         """RETURNS: True, if 'item' is better than 'best'.
@@ -136,9 +136,9 @@ class WorkListBase(list):
         Appends edit operations the the 'edit_list' if 'item' and updates
         the 'cost' according to edit operation 'edit_id'.
         """
-        item.cost += extra_cost
+        item.edit_list.cost += extra_cost
         item.edit_list.extend(overhead)
-        return item.cost < self.best.cost
+        return item.edit_list.cost < self.best.cost
 
 def max_cost(subject_length, nominal_length, cost_substitute_type, cost_insert):
    """RETURNS: maximum cost to transform 'subject' into 'nominal'.
