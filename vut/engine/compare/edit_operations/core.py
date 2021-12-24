@@ -79,6 +79,14 @@ class WorkListBase(list):
         self.cache = None
         self._adapt_initialization()
 
+    def run(self):
+        while self:
+            item = self.pop()
+            if not self.end_of_sequence(item): 
+                self.produce_derived(item)
+        return self.best
+
+
     def end_of_sequence(self, item):
         """RETURNS: True, if the item may be used for deriving subsequent steps.
                     False, else.

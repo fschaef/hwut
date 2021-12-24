@@ -136,25 +136,18 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
                                     cost_db[E_EditId.SUBSTITUTE_TYPE],
                                     cost_db[E_EditId.INSERT],
                                     Edit)
-    subject_le_seq, \
-    nominal_le_seq = seperator_db.strip_separators()
 
     initial_editions = EditSequence(0, [], analogy_db)
-    initial_item = WorkItem(si       = 0, # index into subject 'LineElement' sequence
-                            ni       = 0, # index into nominal 'LineElement' sequence
-                            editions = initial_editions)
 
-    work_list = WorkList(subject_le_seq, nominal_le_seq, initial_item)
+    if seperator_db and seperator_db.original_max_cost == 0.0:
+        best = initial_editions
+    else:
+        subject_le_seq,  \
+        nominal_le_seq   = seperator_db.strip_separators()
+        initial_item     = WorkItem(0, 0, initial_editions)
+        best             = WorkList(subject_le_seq, nominal_le_seq, initial_item).run()
 
-    if seperator_db.original_max_cost == 0.0:
-        return initial_editions.prepare_as_best(seperator_db, True)
-
-    while work_list:
-        item = work_list.pop()
-        if not work_list.end_of_sequence(item): 
-            work_list.produce_derived(item)
-
-    return work_list.best.prepare_as_best(seperator_db, True)
+    return best.prepare_as_best(seperator_db, True)
 
 # Shortcuts:
 TRANSPOSE       = E_EditId.TRANSPOSE

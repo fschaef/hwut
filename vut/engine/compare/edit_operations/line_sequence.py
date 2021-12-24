@@ -72,19 +72,15 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """
     if analogy_db is None: analogy_db = AnalogyDb()
 
-    initial_item = WorkItem(si=0, ni=0, editions=EditSequence(0, [], analogy_db))
-    work_list    = WorkList(subject_match_seq_list, nominal_match_seq_list, 
-                            initial_item)
+    initial_editions = EditSequence(0, [], analogy_db)
+    initial_item     = WorkItem(0, 0, editions=initial_editions)
+    work_list        = WorkList(subject_match_seq_list, nominal_match_seq_list, 
+                                initial_item)
 
     if work_list.max_cost == 0.0:
-        return EditSequence(cost=0, edit_list=[], analogy_db=analogy_db)
-
-    while work_list:
-        item = work_list.pop()
-        if not work_list.end_of_sequence(item):
-            work_list.produce_derived(item)
-
-    return work_list.best
+        return initial_editions
+    else:
+        return work_list.run()
 
 cost_GOOD          = 0.0
 cost_SUBSTITUTION  = 1.0
