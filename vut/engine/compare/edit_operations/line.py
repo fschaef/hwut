@@ -63,7 +63,7 @@ from  vut.engine.compare.edit_operations.core              import WorkListBase, 
                                                                   WorkItemBase, \
                                                                   position_increment_db, \
                                                                   max_cost
-from  vut.engine.compare.edit_operations.separator_adaptor import SeperatorAdaptor
+from  vut.engine.compare.edit_operations.separator_adaptor import SeparatorAdaptor
 from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from  vut.engine.compare.engine.core                       import E_Verdict
@@ -89,7 +89,7 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     if analogy_db is None:
         analogy_db = AnalogyDb()
 
-    seperator_db = SeperatorAdaptor(subject_le_seq, 
+    separator_db = SeparatorAdaptor(subject_le_seq, 
                                     nominal_le_seq,
                                     lambda x: x.tolerance_id == SEPERATOR,
                                     cost_db[SUBSTITUTE_TYPE],
@@ -98,15 +98,15 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
 
     initial_editions = EditSequence(0, [], analogy_db)
 
-    if seperator_db and seperator_db.original_max_cost == 0.0:
+    if separator_db and separator_db.original_max_cost == 0.0:
         best = initial_editions
     else:
         subject_le_seq,  \
-        nominal_le_seq   = seperator_db.strip_separators()
+        nominal_le_seq   = separator_db.strip_separators()
         initial_item     = WorkItem(0, 0, initial_editions)
         best             = WorkList(subject_le_seq, nominal_le_seq, initial_item).run()
 
-    return best.prepare_as_best(seperator_db, True)
+    return best.prepare_as_best(separator_db, True)
 
 
 

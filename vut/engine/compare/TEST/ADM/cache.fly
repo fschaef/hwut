@@ -1,19 +1,19 @@
 {
 title: Line Comparison;
 file_name: test-main.py;
-hwut_info_time: 1640179395L;
+hwut_info_time: 1640369372L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.193852; 0; ]
-  [ line_associations; OK; 0.201917; 0; ]
+  [ compare; OK; 0.210067; 0; ]
+  [ line_associations; OK; 0.218794; 0; ]
 ]
 }
 {
 title: LineAssociationChunk.description();
 file_name: test-pretty.py;
-hwut_info_time: 1640179395L;
+hwut_info_time: 1640369372L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 0.197455; -224376928; ]
+  [ ; OK; 0.213619; -224376928; ]
 ]
 }

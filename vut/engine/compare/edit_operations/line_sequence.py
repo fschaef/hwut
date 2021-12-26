@@ -82,14 +82,14 @@ class WorkList(WorkListBase):
     def _append_subject_overhead(self, item):
         # delete all remaining subjects to conform the nominal
         L          = self.subject_length - item.si
-        overhead   = [(DELETE, None) ] * L
+        overhead   = [(DELETE, None)] * L
         extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
         # insert all nominals into subject to conform nominal
         L          = self.nominal_length - item.ni
-        overhead   = [(INSERT, None) ] * L
+        overhead   = [(INSERT, None)] * L
         extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 

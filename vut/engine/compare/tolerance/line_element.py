@@ -111,7 +111,7 @@ class LineElement:
             return LineElementAnalogy(start, end, global_string)
 
         elif tolerance_id == E_ToleranceId.SEPERATOR:
-            return LineElementSeperator(start, end, global_string)
+            return LineElementSeparator(start, end, global_string)
         else:
             assert False # pragma: no cover
 
@@ -185,7 +185,7 @@ class LineElement:
         """
         return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
 
-class LineElementSeperator(LineElement):
+class LineElementSeparator(LineElement):
     def __init__(self, start, end, string):
         LineElement.__init__(self, E_ToleranceId.SEPERATOR, start, end, string)
 

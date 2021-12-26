@@ -16,13 +16,13 @@ base required base classes. Both, 'line.py' and 'line_sequence.py' implement
 derived classes of:
 
 
-  WorkItem:
+  WorkItemBase:
       
      Maintains the indices 'si' and 'ni' pointing to positions in the
      subject and the nominal sequence. An 'edit_list' documents the
      edit operations how this position has been reached. 
 
-  WorkList: 
+  WorkListBase: 
    
      A container that maintains the list of 'WorkItems'. It takes work items,
      one by one, and derived further work items derived from them. A step
