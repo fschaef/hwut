@@ -50,7 +50,6 @@ cost_GOOD          = cost_db[GOOD]
 cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
 cost_INSERT_DELETE = cost_db[INSERT]
 
-
 def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """RETURNS: EditSequence
 
