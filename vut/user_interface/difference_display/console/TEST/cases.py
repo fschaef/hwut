@@ -1,3 +1,7 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+PURPOSE:
+"""
 subject_txt = \
 """Sah ein Röslein 1.005 Knab stehen
 Röslein auf der     ((Wiese))

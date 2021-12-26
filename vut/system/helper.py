@@ -1,3 +1,7 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+PURPOSE:
+"""
 from   vut.external.quex.typed   import typed
 from   math import ceil, log10
 

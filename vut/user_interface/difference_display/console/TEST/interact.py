@@ -1,3 +1,7 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+PURPOSE:
+"""
 import sys
 
 sys.path.insert(0, "../../../../..")

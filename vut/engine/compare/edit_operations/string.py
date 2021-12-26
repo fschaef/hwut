@@ -1,4 +1,4 @@
-"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: hwut
+"""SPDX-License: MIT; (C) Frank-Rene Schäfer; Project: hwut
 _______________________________________________________________________________
 PURPOSE: Determine edit distance between two character strings.
 

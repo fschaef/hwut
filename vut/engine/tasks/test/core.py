@@ -1,3 +1,6 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+"""
 
 class App:
     def __init__(self, file_name, build_type):

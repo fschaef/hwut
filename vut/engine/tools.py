@@ -1,3 +1,8 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+________________________________________________________________________________
+
+PURPOSE:
+"""
 from collections import deque
 
 class Cache(dict):

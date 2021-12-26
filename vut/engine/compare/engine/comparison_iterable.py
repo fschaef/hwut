@@ -1,4 +1,4 @@
-"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: hwut
+"""SPDX-License: MIT; (C) Frank-Rene Schäfer; Project: hwut
 _______________________________________________________________________________
 
 PURPOSE: Yielding pairs of 'InputChunk'-s from subject and nominal to be

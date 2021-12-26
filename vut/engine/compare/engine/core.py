@@ -1,4 +1,4 @@
-"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: hwut
+"""SPDX-License: MIT; (C) Frank-Rene Schäfer; Project: hwut
 _______________________________________________________________________________
 
 PURPOSE: Definition of core structures, namely 'E_Verdict' and 'Configuration'.

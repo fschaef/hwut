@@ -1,4 +1,4 @@
-"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: VUT
+"""SPDX-License: MIT; (C) Frank-Rene Schäfer; Project: VUT
 _______________________________________________________________________________
 PURPOSE: Prepare LineAssociationDecorated objects for display
 

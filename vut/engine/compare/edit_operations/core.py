@@ -1,4 +1,4 @@
-"""SPDX License: MIT; (C) Frank-Rene Schäfer; Project: VUT
+"""SPDX-License: MIT; (C) Frank-Rene Schäfer; Project: VUT
 _______________________________________________________________________________
 
 PURPOSE: Classes and algorithms for finding edit sequences.

@@ -1,3 +1,8 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+PURPOSE:
+"""
+
 from   vut.system.terminal             import GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
 from   vut.engine.compare.engine.line  import Line
 

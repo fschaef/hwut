@@ -1,3 +1,6 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+"""
 from   vut.engine.compare.engine.line_association_chunk import LineAssociationChunk
 from   vut.external.quex.typed                          import typed
 

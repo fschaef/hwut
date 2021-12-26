@@ -1,3 +1,7 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+PURPOSE:
+"""
 from   vut.user_interface.difference_display.console.canvas    import ConsoleCanvasDiff, E_DiffMode
 from   vut.engine.compare.engine.line_association_chunk        import LineAssociationChunk
 from   vut.engine.compare.engine.line_association              import LineAssociation

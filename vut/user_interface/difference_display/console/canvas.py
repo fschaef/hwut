@@ -1,3 +1,7 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+PURPOSE:
+"""
 from   vut.system.helper                                       import number_of_decimal_digits
 from   vut.system.terminal                                     import ConsoleCanvas, GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
 from   vut.user_interface.difference_display.console.formatter import ConsoleCanvasFormatter

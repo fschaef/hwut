@@ -1,3 +1,6 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+"""
 import sys
 from subprocess import PIPE, Popen
 from threading  import Thread

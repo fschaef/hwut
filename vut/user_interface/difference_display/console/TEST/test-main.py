@@ -1,4 +1,4 @@
-"""SPDX-Linces: MIT; Project VUT; (C) Frank-Rene Schaefer
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 _______________________________________________________________________________
 
 PURPOSE: Difftool command line

@@ -1,3 +1,8 @@
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+________________________________________________________________________________
+
+PURPOSE:
+"""
 from quex_enum  import QuexEnum
 from enum import auto
 
