@@ -16,19 +16,32 @@ import vut.system.terminal_size                                 as     terminal_
 
 from   io import StringIO
 
-config = Configuration()
-config.pattern_finder.numeric_tolerance_ratio = 0.01
-config.pattern_finder.equivalent_pattern_list = ["rot|orange", "Röslein|Tülplein"]
-config.pattern_finder.visible_nothing_pattern_list = [", hm,", ", wtf,", "[ ]*\(who cares\)"]
-
-
-def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
+def test_(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
-    la = list(compare.line_associations(config, subject, nominal))
+    la = list(compare.line_associations(cases.config, subject, nominal))
 
-    if   "diff" in sys.argv:  console.diff(LineAssociationChunkList(la))
-    elif "merge" in sys.argv: console.merge(LineAssociationChunkList(la))
+    la_list = LineAssociationChunkList(la)
+    if   "diff" in sys.argv:  console.diff(la_list)
+    elif "merge" in sys.argv: console.merge(la_list)
+    elif "test" in sys.argv:  cases.test(subject_txt, nominal_txt)
     else:                     print("Specify 'diff' or 'merge' on command line.")
 
-test(cases.subject_txt + "\n" + "\n" + cases.nominal_txt, cases.nominal_txt * 2)
+if False:
+    test(cases.subject_txt + "\n" + "\n" + cases.nominal_txt, cases.nominal_txt * 2)
+else:
+    subject_txt = \
+"""Röslein 
+der ((Wiese))
+Knab 
+der   ((Heiden))
+"""
+
+    nominal_txt = \
+"""
+Knab 
+der   ((Heiden))
+Knab 
+der   ((Heiden))
+"""
+    cases.test(subject_txt, nominal_txt, both=False)

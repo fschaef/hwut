@@ -314,10 +314,8 @@ class Cache(dict):
         # edit operation may switch elements to a different position.
         key    = (id(subject), id(nominal))
         result = dict.get(self, key)
-        if result is not None:
-            verdict_id, analogy = result
-        else:
-            verdict_id, analogy = subject.compare(nominal)
-            self[key] = verdict_id, analogy
-        return verdict_id, analogy
+        if result is None:
+            result = subject.compare(nominal)
+            self[key] = result
+        return result
 

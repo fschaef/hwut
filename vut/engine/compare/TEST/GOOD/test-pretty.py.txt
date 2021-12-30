@@ -42,7 +42,7 @@
 .   .   .   .   .   LineElement:STRING("so")
 .   .   .   .   .   LineElement:SEPERATOR(" ")
 .   .   .   .   .   LineElement:STRING("good.")
-.   .   .   .edit_list: [SUBSTITUTE, GOOD, GOOD, GOOD, INSERT, INSERT, INSERT, INSERT, SUBSTITUTE]
+.   .   .   .edit_list: [GOOD_TOLERATED, GOOD, GOOD, GOOD, INSERT, INSERT, INSERT, INSERT, SUBSTITUTE]
 .   .   [LineAssociation]
 .   .   .   .subject: [Line]
 .   .   .   .   .line_n: 3

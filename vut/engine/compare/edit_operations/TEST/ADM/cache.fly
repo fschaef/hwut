@@ -4,9 +4,9 @@ file_name: test-line.py;
 hwut_info_time: 1640369372L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.190170; 0; ]
-  [ special; OK; 0.189635; 0; ]
-  [ analogies; OK; 0.187797; 0; ]
+  [ basic; OK; 0.218249; 0; ]
+  [ special; OK; 0.210917; 0; ]
+  [ analogies; OK; 0.211915; 0; ]
 ]
 }
 {
@@ -15,20 +15,20 @@ file_name: test-string.py;
 hwut_info_time: 1640369372L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.179774; 0; ]
-  [ long; OK; 0.178668; 0; ]
+  [ basic; OK; 0.195597; 0; ]
+  [ long; OK; 0.194941; 0; ]
 ]
 }
 {
 title: Line list alignment;
 title_group: Edit Distance;
 file_name: test-line_sequence.py;
-hwut_info_time: 1640369372L;
+hwut_info_time: 1640520834L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ subject; OK; 0.193890; 0; ]
-  [ nominal; OK; 0.192440; 0; ]
-  [ special; OK; 0.194701; 0; ]
+  [ subject; OK; 0.234954; 0; ]
+  [ nominal; OK; 0.207860; 0; ]
+  [ special; OK; 0.220831; 0; ]
 ]
 }
 {
@@ -38,10 +38,10 @@ file_name: test-line-permutation.py;
 hwut_info_time: 1640369372L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ different; OK; 0.191193; -975805717; ]
-  [ different-2; OK; 0.197908; 1796370069; ]
-  [ different-good-2; OK; 0.195515; -124846319; ]
-  [ different-void-2; OK; 0.198815; 735927751; ]
-  [ same; OK; 0.194581; -2023374619; ]
+  [ different; OK; 0.215794; -975805717; ]
+  [ different-2; OK; 0.250330; 1796370069; ]
+  [ different-good-2; OK; 0.219406; -124846319; ]
+  [ different-void-2; OK; 0.213561; 735927751; ]
+  [ same; OK; 0.203767; -2023374619; ]
 ]
 }

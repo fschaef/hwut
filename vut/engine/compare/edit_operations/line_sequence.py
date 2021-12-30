@@ -160,7 +160,14 @@ class WorkItem(WorkItemBase):
    def subsequent_steps(self, subject_list, nominal_list, cache):
        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
        """
-       line_editions = cache.get(self.si, self.ni, subject_list, nominal_list, self.edit_list.analogy_db)
+       line_editions = cache.get(self.si, self.ni, subject_list, nominal_list)
+
+       if not line_editions.analogy_db.is_all_consistent(self.edit_list.analogy_db):
+           # If there is a clash in analogy considerations, the comparison must be 
+           # redone, such that edit operations adapt.
+           line_editions = subject_list[self.si].edit_operations(nominal_list[self.ni], self.edit_list.analogy_db)
+
+
        assert isinstance(line_editions, EditSequence)
 
        # IMPORTANT: Worklist is a LIFO. That is, what comes last is popped
@@ -236,21 +243,17 @@ class WorkItem(WorkItemBase):
        return common_n, remaining_n
 
 class Cache(dict):
-    def get(self, subject_i, nominal_i, subject_list, nominal_list, analogy_db):
-        """RETURNS: Edit operations to transform subject line into the nominal line
+    def get(self, subject_i, nominal_i, subject_list, nominal_list):
+        """RETURNS: edit operations to transform subject line into the nominal line
+                    (including required analogy db)
         """
         key = (subject_i, nominal_i)
 
         result = dict.get(self, key)
-        if result is not None:
-            line_editions, used_analogy_db = result
-            if used_analogy_db.is_all_consistent(analogy_db):
-                return line_editions
-
-        subject = subject_list[subject_i]
-        nominal = nominal_list[nominal_i]
-
-        line_editions = subject.edit_operations(nominal, analogy_db)
-        self[key]     = line_editions, analogy_db
-        return line_editions
+        if result is None:
+            subject   = subject_list[subject_i]
+            nominal   = nominal_list[nominal_i]
+            result    = subject.edit_operations(nominal, None)
+            self[key] = result
+        return result
 

@@ -37,7 +37,7 @@ from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 from   vut.engine.compare.engine.comparison_iterable    import generate
 from   vut.engine.compare.engine.line_association_chunk import LineAssociationChunk
 from   vut.engine.compare.engine.input_chunk            import E_Verdict, \
-                                                              InputChunkEmpty
+                                                               InputChunkEmpty
 
 
 def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
