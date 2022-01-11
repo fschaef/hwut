@@ -35,7 +35,7 @@ from   io import StringIO
 
 if "--hwut-info" in sys.argv:
     print("Line Comparison;")
-    print("CHOICES: compare, line_associations;")
+    print("CHOICES: compare, compare-2, line_associations;")
     sys.exit()
 
 config = Configuration()
@@ -51,18 +51,30 @@ def test_core(subject_txt, nominal_txt):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
     subject_line_list = subject_txt.splitlines()
-    max_length = max(len(txt) for txt in subject_line_list)
+    if subject_line_list:
+        max_length = max(len(txt) for txt in subject_line_list)
+    else:
+        max_length = 0
+    max_length = max(max_length, 10)
     def space(txt):
         return " " * (max_length - len(txt))
     print_list_sequence_pairs(subject_txt.splitlines(), space, nominal_txt.splitlines(),
                               line_numbers_f=True)
     return subject, nominal
 
-def test_compare(subject_txt, nominal_txt):
+def test_compare(subject_txt, nominal_txt, both_f=False):
+    if both_f:
+        print("(1)")
     subject, nominal = test_core(subject_txt, nominal_txt)
     print()
     print("=> verdict: %s" % main.compare(config, subject, nominal))
     print()
+    if both_f:
+        print("(2)")
+        nominal, subject = test_core(nominal_txt, subject_txt)
+        print()
+        print("=> verdict: %s" % main.compare(config, subject, nominal))
+        print()
 
 def test_line_associations(subject_txt, nominal_txt):
     subject_line_list = subject_txt.splitlines()
@@ -77,6 +89,18 @@ def test_line_associations(subject_txt, nominal_txt):
         print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0, 
                                          chunk, [], line_offset=-1)
     print()
+
+if "compare-2" in sys.argv:
+    test = test_compare
+    test("||||\nHello\n||||",         "", both_f=True)
+    test("Hello",                     "", both_f=True)
+    test("Hello\n||||\nHello\n||||",  "", both_f=True)
+    test("Hello\n||||\nHello\n||||",  "Hello", both_f=True)
+    test("Hello\n||||\nHello\n||||",  "||||\nHello\n|||", both_f=True)
+    test("||||\nHello\n||||\nHello",  "", both_f=True)
+    test("||||\nHello\n||||\nHello",  "Hello", both_f=True)
+    test("||||\nHello\n||||\nHello",  "||||\nHello\n|||", both_f=True)
+    sys.exit(-1)
 
 if "compare" in sys.argv: 
     test = test_compare
@@ -97,3 +121,4 @@ test("||||\nHallo##\n##Welt\nGood\n||||", "||||\n##Hello\nWorld##\nGood\n||||")
 
 test("Hallo\nWelt",                 "||||\nHello\nWorld\n||||")
 test("||||\nHello\nLe Monde\n||||", "||||\nHello\nWorld\n||||")
+

@@ -179,7 +179,6 @@ def test_core(subject_txt, nominal_txt, offset, mode, level):
 
 def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
     test_core(subject_txt, nominal_txt, offset, mode, level)
-    print("#bot", both)
-    if both:
-        test_core(nominal_txt, subject_txt, offset, mode, level)
+    if not both: return
+    test_core(nominal_txt, subject_txt, offset, mode, level)
 

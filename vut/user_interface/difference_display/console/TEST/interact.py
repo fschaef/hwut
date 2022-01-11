@@ -11,14 +11,16 @@ import vut.engine.compare.main                                  as     compare
 from   vut.engine.compare.configuration                         import Configuration
 from   vut.engine.compare.engine.line_association_chunk_list    import LineAssociationChunkList
 import vut.user_interface.difference_display.console.main       as     console
-from   vut.user_interface.difference_display.console.canvas     import ConsoleCanvasDiff, E_DiffMode
+from   vut.user_interface.difference_display.console.canvas     import E_DiffMode
+import vut.user_interface.difference_display.console.prepare    as     prepare
 import vut.system.terminal_size                                 as     terminal_size
 
 from   io import StringIO
 
-def test_(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
+def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
+
     la = list(compare.line_associations(cases.config, subject, nominal))
 
     la_list = LineAssociationChunkList(la)
@@ -27,21 +29,4 @@ def test_(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, bo
     elif "test" in sys.argv:  cases.test(subject_txt, nominal_txt)
     else:                     print("Specify 'diff' or 'merge' on command line.")
 
-if False:
-    test(cases.subject_txt + "\n" + "\n" + cases.nominal_txt, cases.nominal_txt * 2)
-else:
-    subject_txt = \
-"""Röslein 
-der ((Wiese))
-Knab 
-der   ((Heiden))
-"""
-
-    nominal_txt = \
-"""
-Knab 
-der   ((Heiden))
-Knab 
-der   ((Heiden))
-"""
-    cases.test(subject_txt, nominal_txt, both=False)
+test(cases.subject_txt + "\n" + "\n" + cases.nominal_txt, cases.nominal_txt * 2)

@@ -60,13 +60,13 @@ def select(lina_chunk_list, mode, analogy_db, verbosity_level):
         return errors_and_tolerated(lina_chunk_list, 
                                     verbosity_level=verbosity_level)
 
-def plain(lina_chunk_list):
+def plain(lina_chunk_list, verbosity_level=2):
     """RETURNS: sequence of all 'LineAssociation' objects in the 
                 given 'LineAssociationChunk' list.
     """
 
     return _display_brief_core(lina_chunk_list.plain(), 
-                               verbosity_level=0)
+                               verbosity_level)
 
 def errors(lina_chunk_list, verbosity_level=2):
     """RETURNS: list of 'LineAssociationDecorated' objects

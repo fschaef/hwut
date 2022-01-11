@@ -1,11 +1,12 @@
 {
 title: Line Comparison;
 file_name: test-main.py;
-hwut_info_time: 1640369372L;
+hwut_info_time: 1641376537L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.208593; 0; ]
-  [ line_associations; OK; 0.214852; 0; ]
+  [ compare; OK; 0.207721; 0; ]
+  [ compare-2; OK; 0.000000; 1991157338; ]
+  [ line_associations; OK; 0.217619; 0; ]
 ]
 }
 {
@@ -14,6 +15,6 @@ file_name: test-pretty.py;
 hwut_info_time: 1640369372L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 0.243060; -1799659555; ]
+  [ ; OK; 0.223330; -1799659555; ]
 ]
 }

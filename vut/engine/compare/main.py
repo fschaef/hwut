@@ -58,7 +58,11 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
 
     # subject, nominal = 'LineSequence' or 'Potpourri'
     for subject, nominal in generate(config,
-                                     subject_line_provider, nominal_line_provider):
+                                     subject_line_provider, nominal_line_provider,
+                                     replace_none_f=False):
+        if subject is None or nominal is None:
+            return False
+
         verdict,   \
         analogy_db = subject.compare(nominal, analogy_db)
 
@@ -113,7 +117,7 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
     # subject, nominal = 'LineSequence' or 'Potpourri'
     for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider,
-                                     fill_f=True):
+                                     replace_none_f=True):
 
         line_associations, \
         analogy_db         = subject.line_associations(nominal, analogy_db)

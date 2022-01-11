@@ -21,7 +21,7 @@ from vut.engine.compare.tolerance.chunk_pipe import ChunkPipe
 from itertools import zip_longest
 
 
-def generate(config, subject_line_provider, nominal_line_provider, fill_f=False):
+def generate(config, subject_line_provider, nominal_line_provider, replace_none_f):
     """YIELDS: pairs of (subject input chunk, nominal input chunk).
 
     Input chunk: 'LineSequence' or 'Potpourri'.
@@ -38,7 +38,7 @@ def generate(config, subject_line_provider, nominal_line_provider, fill_f=False)
     nominal_iterable = chunk_pipe.generate(nominal_line_provider)
 
     # chunk: 'LineSequence' or 'Potpourri' both derived from 'InputChunk'.
-    if not fill_f:
+    if not replace_none_f:
         yield from zip_longest(subject_iterable, nominal_iterable)
     else:
         for subject, nominal in zip_longest(subject_iterable, nominal_iterable):
