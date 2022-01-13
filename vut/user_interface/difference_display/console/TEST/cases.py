@@ -5,7 +5,7 @@ PURPOSE:
 
 import vut.engine.compare.main                                  as     compare
 from   vut.engine.compare.configuration                         import Configuration
-from   vut.engine.compare.engine.line_association_chunk_list    import LineAssociationChunkList
+from   vut.engine.compare.engine.chunk_pair_list    import ChunkPairList
 import vut.user_interface.difference_display.console.main       as     console
 from   vut.user_interface.difference_display.console.canvas     import ConsoleCanvasDiff, E_DiffMode
 import vut.system.terminal_size                                 as     terminal_size
@@ -170,10 +170,10 @@ def test_core(subject_txt, nominal_txt, offset, mode, level):
 
     print()
     print("|" + "=" * (terminal_width -2) + "|")
-    la = list(compare.line_associations(config, subject, nominal))
+    la = list(compare.line_pairs(config, subject, nominal))
 
     terminal_size.set_size_fixed(terminal_height, terminal_width)
-    canvas = ConsoleCanvasDiff(LineAssociationChunkList(la))
+    canvas = ConsoleCanvasDiff(ChunkPairList(la))
     canvas.set_mode(mode, level)
     canvas._display_content()
 

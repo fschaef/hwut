@@ -9,7 +9,7 @@ sys.path.insert(0, "../../../../..")
 import vut.user_interface.difference_display.console.TEST.cases as     cases
 import vut.engine.compare.main                                  as     compare
 from   vut.engine.compare.configuration                         import Configuration
-from   vut.engine.compare.engine.line_association_chunk_list    import LineAssociationChunkList
+from   vut.engine.compare.engine.chunk_pair_list    import ChunkPairList
 import vut.user_interface.difference_display.console.main       as     console
 from   vut.user_interface.difference_display.console.canvas     import E_DiffMode
 import vut.user_interface.difference_display.console.prepare    as     prepare
@@ -21,9 +21,9 @@ def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, bot
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    la = list(compare.line_associations(cases.config, subject, nominal))
+    la = list(compare.line_pairs(cases.config, subject, nominal))
 
-    la_list = LineAssociationChunkList(la)
+    la_list = ChunkPairList(la)
     if   "diff" in sys.argv:  console.diff(la_list)
     elif "merge" in sys.argv: console.merge(la_list)
     elif "test" in sys.argv:  cases.test(subject_txt, nominal_txt)

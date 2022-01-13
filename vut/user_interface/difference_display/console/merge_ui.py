@@ -4,16 +4,16 @@ PURPOSE:
 """
 from   vut.user_interface.difference_display.console.canvas    import ConsoleCanvasDiff, E_DiffMode
 import vut.user_interface.difference_display.console.prepare   as     prepare
-from   vut.engine.compare.engine.line_association_chunk        import LineAssociationChunk
-from   vut.engine.compare.engine.line_association_chunk_list   import LineAssociationChunkList
-from   vut.engine.compare.engine.line_association              import LineAssociation
+from   vut.engine.compare.engine.chunk_pair        import ChunkPair
+from   vut.engine.compare.engine.chunk_pair_list   import ChunkPairList
+from   vut.engine.compare.engine.line_pair              import LinePair
 import vut.system.keyboard                                     as     keyboard
 from   vut.external.quex.typed                                 import typed
 from   vut.external.quex.tools                                 import print_callstack
 from   vut.system.terminal                                     import Back
 
 class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
-    @typed(lina_chunk_list=LineAssociationChunkList)
+    @typed(lina_chunk_list=ChunkPairList)
     def __init__(self, lina_chunk_list):
         ConsoleCanvasDiff.__init__(self, lina_chunk_list)
         self._range_list    = None
@@ -59,15 +59,15 @@ class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
             r = self._range_list[self._focus_range_i]
             return r.begin <= line_n < r.end
 
-    @typed(line=LineAssociation)
+    @typed(line=LinePair)
     def _format_line_elements(self, lina, lina_i):
         """RETURNS: [0] subject text: list of (color, text)
                     [1] nominal text: list of (color, text)
 
-        This function is called by 'ConsoleCanvas._prepare_LineAssociation()'
+        This function is called by 'ConsoleCanvas._prepare_LinePair()'
         to format the output lines.  It provides basic text and format
         information to display the LineElements. That is, if a
-        'LineAssociation' is element of a merge range, it is highlighted
+        'LinePair' is element of a merge range, it is highlighted
         accordingly.
         """
         if lina_i is None:                     add_background_color = ""

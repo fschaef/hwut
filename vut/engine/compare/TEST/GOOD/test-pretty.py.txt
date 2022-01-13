@@ -1,9 +1,9 @@
 
 => 
 
-[LineAssociationChunk:LINE_SEQUENCE]
-.   .<base>: <LineAssociationList>
-.   .   [LineAssociation]
+[ChunkPair:LINE_SEQUENCE]
+.   .<base>: <LinePairList>
+.   .   [LinePair]
 .   .   .   .subject: [Line]
 .   .   .   .   .line_n: 1
 .   .   .   .   .sequence: <tuple>
@@ -21,7 +21,7 @@
 .   .   .   .   .   LineElement:SEPERATOR(" ")
 .   .   .   .   .   LineElement:STRING("good.")
 .   .   .   .edit_list: [GOOD_TOLERATED, GOOD, GOOD, GOOD, GOOD]
-.   .   [LineAssociation]
+.   .   [LinePair]
 .   .   .   .subject: [Line]
 .   .   .   .   .line_n: 2
 .   .   .   .   .sequence: <tuple>
@@ -43,7 +43,7 @@
 .   .   .   .   .   LineElement:SEPERATOR(" ")
 .   .   .   .   .   LineElement:STRING("good.")
 .   .   .   .edit_list: [GOOD_TOLERATED, GOOD, GOOD, GOOD, INSERT, INSERT, INSERT, INSERT, SUBSTITUTE]
-.   .   [LineAssociation]
+.   .   [LinePair]
 .   .   .   .subject: [Line]
 .   .   .   .   .line_n: 3
 .   .   .   .   .sequence: <tuple>

@@ -8,7 +8,7 @@ The two main functions of 'Potpourri' are (derived from 'InputChunk')
 
    .compare()           --> determines whether the chunk is equivalent to
                             another.
-   .line_associations() --> determines which lines should be best associated
+   .line_pairs() --> determines which lines should be best associated
                             for display.
 ________________________________________________________________________________
 """
@@ -16,8 +16,8 @@ from   vut.engine.compare.engine.core                   import E_Verdict, \
                                                                E_PotpourriBorder
 from   vut.engine.compare.engine.input_chunk            import InputChunk, E_Chunk
 from   vut.engine.compare.engine.line                   import Line
-from   vut.engine.compare.engine.line_association       import LineAssociation
-from   vut.engine.compare.engine.line_association_chunk import LineAssociationList
+from   vut.engine.compare.engine.line_pair       import LinePair
+from   vut.engine.compare.engine.chunk_pair import LinePairList
 import vut.engine.compare.friends_pairing.similar       as     friends_pairing_max
 import vut.engine.compare.friends_pairing.exact         as     friends_pairing
 
@@ -51,9 +51,9 @@ class Potpourri(InputChunk):
         else:       return E_Verdict.DIFFERENT, analogy_db
 
     def _line_associations(self, nominal, analogy_db):
-        """RETURNS: list 'LineAssociation'-s
+        """RETURNS: list 'LinePair'-s
 
-        See 'InputChunk.line_associations()' for further explanations.
+        See 'InputChunk.line_pairs()' for further explanations.
         """
         assert len(self.line_list) >= 2 and len(nominal.line_list) >= 2
         subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:
@@ -66,12 +66,12 @@ class Potpourri(InputChunk):
                                                 self.configuration.potpourri_max_comparison_count)
 
         result = [
-            LineAssociation.potpourri_border(self.line_list[0], nominal.line_list[0], 
+            LinePair.potpourri_border(self.line_list[0], nominal.line_list[0], 
                                              E_PotpourriBorder.BEGIN)
         ]
-        result.extend(LineAssociationList(core_result).sort(True))
+        result.extend(LinePairList(core_result).sort(True))
         result.append(
-            LineAssociation.potpourri_border(self.line_list[-1], nominal.line_list[-1],
+            LinePair.potpourri_border(self.line_list[-1], nominal.line_list[-1],
                                              E_PotpourriBorder.END)
         )
 

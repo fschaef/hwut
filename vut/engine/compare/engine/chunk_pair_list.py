@@ -1,28 +1,48 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 """
-from   vut.engine.compare.engine.line_association_chunk import LineAssociationChunk
+from   vut.engine.compare.engine.chunk_pair import ChunkPair, \
+                                                               LinePairList
 from   vut.external.quex.typed                          import typed
 
 from   collections import defaultdict
 
-class LineAssociationChunkList(list):
-    """List of LineAssociationChunk objects.
+class ChunkPairList(list):
+    """List of ChunkPair objects.
 
-    Provides functions to extract LineAssociations of error,
+    Provides functions to extract LinePairs of error,
     analogy errors, and tolerated deviations.  It maintains a list of
-    'LineAssociationChunk' objects. It provides a convenient interface to
-    filter on the level of chunks while investigating 'LineAssociation'
+    'ChunkPair' objects. It provides a convenient interface to
+    filter on the level of chunks while investigating 'LinePair'
     objects.  All filter functions provide a list of tuples:
 
-           (chunk, concerned list of LineAssociation indices)
+           (chunk, concerned list of LinePair indices)
 
-    where the 'chunk' is the chunk where the LineAssociation-s occur and
-    the list reports the indices of concerned LineAssociation-s. 
+    where the 'chunk' is the chunk where the LinePair-s occur and
+    the list reports the indices of concerned LinePair-s. 
     """
     def __init__(self, iterable):
         list.__init__(self, iterable)
-        assert all(x.__class__ == LineAssociationChunk for x in self)
+        assert all(x.__class__ == ChunkPair for x in self)
+
+    @staticmethod
+    def from_input_chunks(subject, nominal, analogy_db):
+        if subject.__class__ == nominal.__class__:
+            result,        \
+            new_analogy_db = subject.line_pairs(nominal, analogy_db)
+            yield ChunkPair(nominal.type(), result, new_analogy_db)
+        else:
+            if subject is None:
+                assert nominal is not None
+                yield ChunkPair.from_nominal_only(nominal, analogy_db)
+            elif nominal is None:
+                assert subject is not None
+                yield ChunkPair.from_subject_only(subject, analogy_db)
+            else:
+                # Comparison of 'LineSequence' and 'Potpourri' is flawed,
+                # Show first nominal compared to nothing, then subject compared to nothing.
+                yield ChunkPair.from_nominal_only(nominal, analogy_db)
+                yield ChunkPair.from_subject_only(subject, analogy_db)
 
     def plain(self):
         """RETURNS: list of (chunk, lina index list)
@@ -36,8 +56,8 @@ class LineAssociationChunkList(list):
     def errors(self):
         """RETURNS: list of (chunk, lina index list)
 
-        where 'chunk' is the chunk of LineAssociation-s where the errors occur
-        and 'lina index list' is the list of indices of LineAssociation which
+        where 'chunk' is the chunk of LinePair-s where the errors occur
+        and 'lina index list' is the list of indices of LinePair which
         are concerned.
         """
         return [
@@ -48,9 +68,9 @@ class LineAssociationChunkList(list):
     def errors_and_tolerated(self):
         """RETURNS: list of (chunk, lina index list)
 
-        where 'chunk' is the chunk of LineAssociation-s where the errors or 
+        where 'chunk' is the chunk of LinePair-s where the errors or 
         tolerated deviations occur and 'lina index list' is the list of indices 
-        of LineAssociation which are concerned.
+        of LinePair which are concerned.
         """
         return [
             (chunk, chunk.indices_error_and_tolerated())
@@ -65,15 +85,15 @@ class LineAssociationChunkList(list):
                        verbosity_level):
         """RETURNS: list of (chunk, lina index list)
 
-        where 'chunk' is the chunk of LineAssociation-s where the analgy error
+        where 'chunk' is the chunk of LinePair-s where the analgy error
         or according definition occurs and 'lina index list' is the list of 
-        indices of LineAssociation which are concerned.
+        indices of LinePair which are concerned.
         
-        Each 'LineAssociation' contains the association of a subject and a nominal 
+        Each 'LinePair' contains the association of a subject and a nominal 
         line which is concerned with an analogy error. 
         
-        errors_f:       report 'LineAssociation' containing analogy errors.
-        definitions_f:  report 'LineAssociation' containing lines where analogies are
+        errors_f:       report 'LinePair' containing analogy errors.
+        definitions_f:  report 'LinePair' containing lines where analogies are
                         defined that later cause errors.
         """
         assert errors_f or definitions_f

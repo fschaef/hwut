@@ -27,7 +27,7 @@ import sys
 LineElementAssociation = namedtuple("LineElementAssociation", 
                                     ("edit_id", "subject", "nominal"))
 
-class LineAssociation:
+class LinePair:
     """An association of a line from the subject input stream and a line
     from the nominal input stream.
     """
@@ -42,11 +42,11 @@ class LineAssociation:
     @staticmethod
     @typed(subject=(None, Line), nominal=(None, Line), border=E_PotpourriBorder)
     def potpourri_border(subject, nominal, border):
-        return LineAssociation(subject, nominal, [], border)
+        return LinePair(subject, nominal, [], border)
 
     @staticmethod
     def empty(initial_subject=None, edit_list=tuple()):
-        return LineAssociation(subject   = initial_subject,
+        return LinePair(subject   = initial_subject,
                                nominal   = None, 
                                edit_list = edit_list)
 
@@ -54,7 +54,7 @@ class LineAssociation:
     def from_text(subject_line_n, subject_txt, nominal_line_n, nominal_txt):
         subject = Line.from_string(subject_line_n, subject_txt)
         nominal = Line.from_string(nominal_line_n, nominal_txt)
-        return LineAssociation(subject, nominal)
+        return LinePair(subject, nominal)
 
     def is_empty(self):
         return self.nominal is None
@@ -168,7 +168,7 @@ class LineAssociation:
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
-        return "LineAssociation", [
+        return "LinePair", [
             ("subject",    self.subject),
             ("nominal",    self.nominal),
             ("edit_list",  EditSequence.describe(self.edit_list)),

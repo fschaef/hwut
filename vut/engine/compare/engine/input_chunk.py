@@ -13,26 +13,27 @@ The two main functions of an 'InputChunk' are
 
    .compare()           --> determines whether the chunk is equivalent to
                             another.
-   .line_associations() --> determines which lines should be best associated
+   .line_pairs() --> determines which lines should be best associated
                             for display.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.core               import E_Verdict
 from   vut.engine.compare.engine.analogy_db         import AnalogyDb
 from   vut.engine.compare.engine.line               import Line
-from   vut.engine.compare.engine.line_association   import LineAssociation
+from   vut.engine.compare.engine.line_pair   import LinePair
 from   vut.engine.compare.tolerance.pattern_finder  import E_ToleranceId
 from   vut.engine.compare.edit_operations.edit      import E_EditId
 
-from   enum      import Enum
+from   enum      import Enum, auto
 from   abc       import ABC, abstractmethod
 
 class E_Chunk(Enum):
-    LINE_SEQUENCE        = 0
-    POTPOURRI            = 1
-    TERMINAL             = 2
-    EMPTY                = 4
-    VOID                 = 4711
+    LINE_SEQUENCE = auto()
+    POTPOURRI     = auto()
+    TERMINAL      = auto()
+    EMPTY         = auto()
+    VOID          = auto()
+    NONE          = auto()
 
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
@@ -40,7 +41,7 @@ class InputChunk(ABC):
     """Interface definition for input chunks.
 
         .compare()           --> compare two InputChunk-s.
-        .line_associations() --> determine best line associations for display.
+        .line_pairs() --> determine best line associations for display.
 
     """
     def __init__(self, start_line_n, end_line_n, iterable, config):
@@ -50,7 +51,7 @@ class InputChunk(ABC):
         self.configuration = config
 
     def empty_clone(self):
-        return self.__class__(self.start_line_n, self.start_line_n, [], self.configuration)
+        return self.__class__(None, None, [], self.configuration)
 
     def compare(self, nominal, analogy_db) -> E_Verdict:
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
@@ -59,7 +60,7 @@ class InputChunk(ABC):
         The 'analogy_db' contains analogies imposed from lines which are
         equivalent. If the test fails ([0] == False), the analogy database is
         irrelevant, since the global comparison needs to stop. For display
-        (see .line_associations()), this different.
+        (see .line_pairs()), this different.
         """
         if self.__class__ != nominal.__class__:
             return E_Verdict.DIFFERENT, analogy_db
@@ -88,31 +89,17 @@ class InputChunk(ABC):
             return self._compare(subject_line_list, nominal_line_list, analogy_db)
 
     def line_associations(self, nominal, analogy_db):
-        """RETURNS: [0] list of 'LineAssociation'-s
+        """RETURNS: [0] list of 'LinePair'-s
                     [1] required analogy_db
 
-        Each 'LineAssociation' informs about what two lines are to be displayed
+        Each 'LinePair' informs about what two lines are to be displayed
         side-by-side to clarify the comparison process and its verdicts. A line
         may be associated with 'None', meaning that there is no line one the
-        other side of the display. 'LineAssociation' objects also report about
+        other side of the display. 'LinePair' objects also report about
         the development of the analogy database.
         """
-        if self.__class__ == nominal.__class__:
-            result,        \
-            new_analogy_db = self._line_associations(nominal, analogy_db)
-        else:
-            # Comparison of 'LineSequence' and 'Potpourri' is flawed,
-            # Show first nominal compared to nothing, then subject compared to nothing.
-            result = [
-                LineAssociation(None, nominal_seq, edit_list=[])
-                for nominal_seq in nominal.line_list
-            ]
-            result.extend(
-                LineAssociation(subject_seq, None, edit_list=[])
-                for subject_seq in self.line_list
-            )
-            new_analogy_db = AnalogyDb()
-        return result, new_analogy_db
+        assert self.__class__ == nominal.__class__
+        return self._line_associations(nominal, analogy_db)
 
     @abstractmethod
     def type(self): pass

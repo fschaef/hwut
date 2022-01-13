@@ -8,10 +8,10 @@ from   vut.user_interface.difference_display.console.formatter import ConsoleCan
 import vut.user_interface.difference_display.console.prepare   as     prepare
 E_DiffMode = prepare.E_DiffMode
 
-from   vut.engine.compare.engine.line_association_chunk_list   import LineAssociationChunkList
-from   vut.engine.compare.engine.line_association_chunk        import LineAssociationChunk, \
-                                                                      LineAssociationList
-from   vut.engine.compare.engine.line_association              import LineAssociation
+from   vut.engine.compare.engine.chunk_pair_list   import ChunkPairList
+from   vut.engine.compare.engine.chunk_pair        import ChunkPair, \
+                                                                      LinePairList
+from   vut.engine.compare.engine.line_pair              import LinePair
 from   vut.engine.compare.engine.core                          import E_PotpourriBorder
 from   vut.engine.compare.edit_operations.edit                 import E_EditId, Edit
 from   vut.external.quex.typed                                 import typed
@@ -21,7 +21,7 @@ from   math import ceil
 
 
 class ConsoleCanvasDiff(ConsoleCanvas):
-    @typed(lina_chunk_list=LineAssociationChunkList)
+    @typed(lina_chunk_list=ChunkPairList)
     def __init__(self, lina_chunk_list):
         ConsoleCanvas.__init__(self)
         self._lina_chunk_list = lina_chunk_list
@@ -31,7 +31,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         self.format  = ConsoleCanvasFormatter(self.width, line_n_width, 0, self)
         self.__sort_potpourri_by_subject_line_n_f = True
         
-        self.__lina_list            = [] # filtered list of LineAssociationDecorated objects 
+        self.__lina_list            = [] # filtered list of LinePairDecorated objects 
         #                                # according to mode.
         self.__display_cache_db     = {} # line_index -> formatted line
         self.__display_begin_line_i = 0
@@ -61,7 +61,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         for lina_i in range(begin, end):
             formatted = self.__display_cache_db.get(lina_i)
             if formatted is None:
-                formatted = self._prepare_LineAssociation(self.__lina_list[lina_i], lina_i)
+                formatted = self._prepare_LinePair(self.__lina_list[lina_i], lina_i)
                 self.__display_cache_db[lina_i] = formatted
             self.display(formatted)
 
@@ -84,8 +84,8 @@ class ConsoleCanvasDiff(ConsoleCanvas):
     def _display_fill_empty(self, diplayed_line_n):
         if diplayed_line_n >= self.height:
             return
-        empty_formatted = self._prepare_LineAssociation(
-            prepare.LineAssociationDecorated(0, 0, LineAssociation.empty(None)))
+        empty_formatted = self._prepare_LinePair(
+            prepare.LinePairDecorated(0, 0, LinePair.empty(None)))
         for line_i in range(diplayed_line_n, self.height - 1):
             self.display(empty_formatted)
 
@@ -113,7 +113,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         if self.__display_begin_line_i < 0:
             self.__display_begin_line_i = 0
         
-    def _prepare_LineAssociation(self, lina, lina_i=None):
+    def _prepare_LinePair(self, lina, lina_i=None):
         """Displays a formatted line of an association of a subject line with a 
         nominal line.
         """
@@ -158,14 +158,14 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         else:                                      f = self.format.potpourri_end
         return self.prepare(f, [subject_line_n, nominal_line_n])
 
-    @typed(line=LineAssociation)
+    @typed(line=LinePair)
     def _format_line_elements(self, lina, lina_i, add_background_color=""):
         """RETURNS: [0] subject text: list of (color, text)
                     [1] nominal text: list of (color, text)
 
            ADAPTS:  'self.__max_line_length' if a longer line occurred.
 
-        Provides text and format information to display the 'LineAssociation'. 
+        Provides text and format information to display the 'LinePair'. 
         """
         subject_txt, nominal_txt = [], []
         subject_n,   nominal_n   = 0, 0

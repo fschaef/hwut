@@ -8,7 +8,7 @@ tries to associate similar lines. The goal, here, is to provide a line-up
 that can be displayed to expose the 'diff function' via a user interface.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.line_association import LineAssociation
+from   vut.engine.compare.engine.line_pair import LinePair
 import vut.engine.compare.edit_operations.line    as     edit_operations_line
 import vut.engine.compare.friends_pairing.exact   as     friends_pairing
 
@@ -16,7 +16,7 @@ import sys
 
 
 def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):
-    """RETURNS: sorted list of LineAssociation objects.
+    """RETURNS: sorted list of LinePair objects.
         
     Sort order: sorted by line number of subject. 
 
@@ -42,7 +42,7 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
     for ia, ib in sorted(couples.items()):
         subject_seq, nominal_seq = subject_db[ia], nominal_db[ib]
         cost, edit_list, analogy_db = subject_seq.edit_operations(nominal_seq, analogy_db)
-        result.append(LineAssociation(subject_seq, nominal_seq, edit_list))
+        result.append(LinePair(subject_seq, nominal_seq, edit_list))
 
     if verdict == False:
         # Associate the remaining subject and nominal lines according to similarity,
@@ -54,13 +54,13 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
 
         result.extend(forced_matches)
         # Associate with 'None' what has no counterpart.
-        result.extend(LineAssociation(subject_db[ia], None) for ia in sorted(subjects_remaining))
-        result.extend(LineAssociation(None, nominal_db[ib]) for ib in sorted(nominals_remaining))
+        result.extend(LinePair(subject_db[ia], None) for ia in sorted(subjects_remaining))
+        result.extend(LinePair(None, nominal_db[ib]) for ib in sorted(nominals_remaining))
 
     return result, analogy_db
 
 def _pair_maximum(couples, subject_db, nominal_db, analogy_db, max_comparison_count):
-    """RETURNS: [0] list of 'LineAssociation' objects.
+    """RETURNS: [0] list of 'LinePair' objects.
                 [1] line numbers of unpaired subject lines
                 [2] line numbers of unpaired nominal lines
 
@@ -143,7 +143,7 @@ def _couple_remainders(subjects_available,
                        nominals_available_db,
                        nominals_on_call,
                        analogy_db):
-    """RETURNS: list of LineAssociation objects.
+    """RETURNS: list of LinePair objects.
 
     Find couples in the set of remainders according to a least cost
     function. The cost is the amount of difference between the line
@@ -181,7 +181,7 @@ def _find_best_match(subject_seq, nominal_match_db, analogy_db):
     assert nominal_match_db
 
     # Abort counting as soon as a perfect match has been found (cost = 0).
-    best = LineAssociation.empty(subject_seq) # cost = max.
+    best = LinePair.empty(subject_seq) # cost = max.
     best_cost = sys.float_info.max
     for ib, nominal_seq in sorted(nominal_match_db.items()):
         cost,      \

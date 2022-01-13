@@ -6,7 +6,7 @@ PURPOSE: Testing the .__pretty__() - print member function.
 
 DESCRIPTION:
 
-Testing pretty printing of 'LineAssociationChunk', which is the only
+Testing pretty printing of 'ChunkPair', which is the only
 object communicated through the main API.
                                                    
 The receiver of an object through the main API, shall be able to reflect on the
@@ -35,7 +35,7 @@ import vut.engine.compare.main          as     main
 
 
 if "--hwut-info" in sys.argv:
-    print("LineAssociationChunk.description()")
+    print("ChunkPair.description()")
     sys.exit()
 
 config = Configuration()

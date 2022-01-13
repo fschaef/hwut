@@ -35,7 +35,7 @@ from   io import StringIO
 
 if "--hwut-info" in sys.argv:
     print("Line Comparison;")
-    print("CHOICES: compare, compare-2, line_associations;")
+    print("CHOICES: compare, compare-2, line_pairs, line_pairs-2;")
     sys.exit()
 
 config = Configuration()
@@ -76,7 +76,8 @@ def test_compare(subject_txt, nominal_txt, both_f=False):
         print("=> verdict: %s" % main.compare(config, subject, nominal))
         print()
 
-def test_line_associations(subject_txt, nominal_txt):
+config_print_only_chunk_type = False
+def test_line_associations_core(subject_txt, nominal_txt):
     subject_line_list = subject_txt.splitlines()
     nominal_line_list = nominal_txt.splitlines()
     subject, nominal = test_core(subject_txt, nominal_txt)
@@ -85,40 +86,62 @@ def test_line_associations(subject_txt, nominal_txt):
     print()
     line_association_chunk_list = list(main.line_associations(config, subject, nominal))
     for chunk in line_association_chunk_list:
-        print("TYPE:", chunk.type().name)
+        st, nt = chunk.types()
+        print("TYPE:", st.name, nt.name)
+        if config_print_only_chunk_type: continue
         print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0, 
                                          chunk, [], line_offset=-1)
+        print()
     print()
 
-if "compare-2" in sys.argv:
-    test = test_compare
-    test("||||\nHello\n||||",         "", both_f=True)
-    test("Hello",                     "", both_f=True)
-    test("Hello\n||||\nHello\n||||",  "", both_f=True)
-    test("Hello\n||||\nHello\n||||",  "Hello", both_f=True)
-    test("Hello\n||||\nHello\n||||",  "||||\nHello\n|||", both_f=True)
-    test("||||\nHello\n||||\nHello",  "", both_f=True)
-    test("||||\nHello\n||||\nHello",  "Hello", both_f=True)
-    test("||||\nHello\n||||\nHello",  "||||\nHello\n|||", both_f=True)
-    sys.exit(-1)
+def test_line_associations(subject_txt, nominal_txt, both_f=False):
+    if both_f:
+        print("(1)")
+    test_line_associations_core(subject_txt, nominal_txt)
+    if both_f:
+        print("(2)")
+        test_line_associations_core(nominal_txt, subject_txt)
 
-if "compare" in sys.argv: 
-    test = test_compare
+if sys.argv[1].endswith("-2"):
+    if "compare-2" in sys.argv:    test = test_compare
+    if "line_pairs-2" in sys.argv: test = test_line_associations
 
-if "line_associations" in sys.argv:
-    test = test_line_associations
+    config_print_only_chunk_type = True
+    p = "||||\nHello\n||||\n"
+    l = "Hello\n"
+    if True:
+        test(p,          "",         both_f=True)
+        test(l,          "",         both_f=True)
+        test(l + p,      "",         both_f=True)
+        test(l + p,      l,          both_f=True)
+        test(l + p,      p,          both_f=True) 
+        test(p + l,      p,          both_f=True)
+        test(p + l,      l,          both_f=True)
+        test(p + p,      p + l,      both_f=True)
+        test(p + p,      l + p,      both_f=True)
+        test(p + l + p,  p,          both_f=True)
+        test(p + l + p,  p + l,      both_f=True)
+        test(p + l + p,  l,          both_f=True)
+        test(p + l + p,  l + p,      both_f=True)
+        test(p + l + p,  l + p + l,  both_f=True)
+        test(p + l + p,  p + p + l,  both_f=True)
+        test(p + l + p,  p + l + p,  both_f=True)
 
-test("Hallo\nWelt", "Hallo\nWelt")
-test("Welt X", "Welt Y")
-test("Hallo\nWorld", "Hallo\nWelt")
-test("Hallo\nWelt 1\nWelt 2", "Hallo\n\nWelt 1\n   \nWelt  2")
-test("Hallo\n||||\nWelt", "Hallo\n||||\nWelt\n||||")
-test("Hallo\n||||\nWelt\n||||", "Hallo\n||||\nWelt")
-test("Hallo\n||||\nWelt\nLe Monde\n||||", "Hallo\n||||\nLe Monde\nWelt\n||||")
+else:
+    if "compare" in sys.argv:    test = test_compare
+    if "line_pairs" in sys.argv: test = test_line_associations
 
-test("Hallo##\n##Welt\nGood", "##Hello\nWorld##\nGood")
-test("||||\nHallo##\n##Welt\nGood\n||||", "||||\n##Hello\nWorld##\nGood\n||||")
+    test("Hallo\nWelt", "Hallo\nWelt")
+    test("Welt X", "Welt Y")
+    test("Hallo\nWorld", "Hallo\nWelt")
+    test("Hallo\nWelt 1\nWelt 2", "Hallo\n\nWelt 1\n   \nWelt  2")
+    test("Hallo\n||||\nWelt", "Hallo\n||||\nWelt\n||||")
+    test("Hallo\n||||\nWelt\n||||", "Hallo\n||||\nWelt")
+    test("Hallo\n||||\nWelt\nLe Monde\n||||", "Hallo\n||||\nLe Monde\nWelt\n||||")
 
-test("Hallo\nWelt",                 "||||\nHello\nWorld\n||||")
-test("||||\nHello\nLe Monde\n||||", "||||\nHello\nWorld\n||||")
+    test("Hallo##\n##Welt\nGood", "##Hello\nWorld##\nGood")
+    test("||||\nHallo##\n##Welt\nGood\n||||", "||||\n##Hello\nWorld##\nGood\n||||")
+
+    test("Hallo\nWelt",                 "||||\nHello\nWorld\n||||")
+    test("||||\nHello\nLe Monde\n||||", "||||\nHello\nWorld\n||||")
 

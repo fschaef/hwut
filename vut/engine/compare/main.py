@@ -33,11 +33,12 @@ is that they must provide the function:
                  "",              if end of stream has been reached.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.analogy_db             import AnalogyDb
-from   vut.engine.compare.engine.comparison_iterable    import generate
-from   vut.engine.compare.engine.line_association_chunk import LineAssociationChunk
-from   vut.engine.compare.engine.input_chunk            import E_Verdict, \
-                                                               InputChunkEmpty
+from   vut.engine.compare.engine.analogy_db                  import AnalogyDb
+from   vut.engine.compare.engine.comparison_iterable         import generate
+from   vut.engine.compare.engine.chunk_pair      import ChunkPair
+from   vut.engine.compare.engine.chunk_pair_list import ChunkPairList
+from   vut.engine.compare.engine.input_chunk                 import E_Verdict, \
+                                                                    InputChunkEmpty
 
 
 def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
@@ -59,7 +60,7 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
     # subject, nominal = 'LineSequence' or 'Potpourri'
     for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider,
-                                     replace_none_f=False):
+                                     align_f=False):
         if subject is None or nominal is None:
             return False
 
@@ -73,25 +74,25 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
 
 
 def line_associations(config, subject_line_provider, nominal_line_provider):
-    """YIELDS: LineAssociationChunk
+    """YIELDS: ChunkPair
 
     where:
 
-         LineAssociationChunk.type() in (LINE_SEQUENCE, POTPOURRI)
+         ChunkPair.type() in (LINE_SEQUENCE, POTPOURRI)
 
     This function iterates over subject and nominal lines and compares them.
     When lines are too deviant from each other, 'plugs' in one sequence are
     inserted until it fits again the other sequences. Line associations are
     reported (yielded) in blocks of their type, i.e. assocations of
     'LineSequence'-s and 'Potpourri'-s are yielded in separate objects
-    of type 'LineAssociationChunk'.
+    of type 'ChunkPair'.
 
     Data structure:
 
-          LineAssociationChunk:_______________________________ 
+          ChunkPair:_______________________________ 
           |   .type ('E_Chunk')                               |
-          |   .line_association_list: [                       |
-          |       LineAssociation:________________________    |
+          |   .line_pair_list: [                       |
+          |       LinePair:________________________    |
           |       | .subject_line ('Line')                |   |
           |       | .nominal_line ('Line')                |   |
           |       | .edit_list    (list of 'Edit')        |   |
@@ -114,16 +115,10 @@ def line_associations(config, subject_line_provider, nominal_line_provider):
     """
     analogy_db = AnalogyDb()
 
-    # subject, nominal = 'LineSequence' or 'Potpourri'
+    # subject, nominal = 'LineSequence', 'Potpourri' or None
     for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider,
-                                     replace_none_f=True):
+                                     align_f=True):
 
-        line_associations, \
-        analogy_db         = subject.line_associations(nominal, analogy_db)
-    
-        if not line_associations: continue
-
-        yield LineAssociationChunk(subject.type(), line_associations, analogy_db)
-
+        yield ChunkPair.from_input_chunks(subject, nominal, analogy_db)
 

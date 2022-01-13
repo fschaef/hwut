@@ -8,14 +8,14 @@ The two main functions of 'LineSequence' are (derived from 'InputChunk')
 
    .compare()           --> determines whether the chunk is equivalent to
                             another.
-   .line_associations() --> determines which lines should be best associated
+   .line_pairs() --> determines which lines should be best associated
                             for display.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.core                   import E_Verdict
 from   vut.engine.compare.engine.input_chunk            import InputChunk, \
                                                                E_Chunk
-from   vut.engine.compare.engine.line_association       import LineAssociation
+from   vut.engine.compare.engine.line_pair       import LinePair
 import vut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
 from   vut.engine.compare.edit_operations.edit          import E_EditId, \
                                                                EditSequence
@@ -41,9 +41,9 @@ class LineSequence(InputChunk):
             return E_Verdict.EQUIVALENT, analogy_db
 
     def _line_associations(self, nominal, analogy_db):
-        """RETURNS: list 'LineAssociation'-s
+        """RETURNS: list 'LinePair'-s
 
-        See 'InputChunk.line_associations()' for further explanations.
+        See 'InputChunk.line_pairs()' for further explanations.
         """
         editions = edit_operations_line_sequence.do(self.line_list,
                                                     nominal.line_list,
@@ -74,7 +74,7 @@ class LineSequence(InputChunk):
                 ni += n_incr
 
         result = [
-            LineAssociation(subject_seq, nominal_seq, edit_list)
+            LinePair(subject_seq, nominal_seq, edit_list)
             for subject_seq, nominal_seq, edit_list in iterable(editions.edit_list)
         ]
         return result, editions.analogy_db
