@@ -25,25 +25,6 @@ class ChunkPairList(list):
         list.__init__(self, iterable)
         assert all(x.__class__ == ChunkPair for x in self)
 
-    @staticmethod
-    def from_input_chunks(subject, nominal, analogy_db):
-        if subject.__class__ == nominal.__class__:
-            result,        \
-            new_analogy_db = subject.line_pairs(nominal, analogy_db)
-            yield ChunkPair(nominal.type(), result, new_analogy_db)
-        else:
-            if subject is None:
-                assert nominal is not None
-                yield ChunkPair.from_nominal_only(nominal, analogy_db)
-            elif nominal is None:
-                assert subject is not None
-                yield ChunkPair.from_subject_only(subject, analogy_db)
-            else:
-                # Comparison of 'LineSequence' and 'Potpourri' is flawed,
-                # Show first nominal compared to nothing, then subject compared to nothing.
-                yield ChunkPair.from_nominal_only(nominal, analogy_db)
-                yield ChunkPair.from_subject_only(subject, analogy_db)
-
     def plain(self):
         """RETURNS: list of (chunk, lina index list)
 

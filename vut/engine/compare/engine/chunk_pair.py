@@ -18,6 +18,12 @@ class LinePairList(list):
         if iterable is not None: 
             list.__init__(self, iterable)
 
+    def from_subject_only(line_list):
+        return LinePairList(LinePair(x, None, edit_list=[]) for x in line_list)
+
+    def from_nominal_only(line_list):
+        return LinePairList(LinePair(None, x, edit_list=[]) for x in line_list)
+
     def sort(self, sort_by_subject_line_n_f):
         if sort_by_subject_line_n_f:
             key = lambda x: (1, x.nominal.line_n) if x.subject is None else (0, x.subject.line_n)
@@ -126,7 +132,7 @@ class ChunkPair(LinePairList):
             type() = E_Chunk.LINE_SEQUENCE or E_Chunk.POTPOURRI
 
     """
-    @typed(type_id=E_Chunk, lina_list=[LinePair], analogy_db=AnalogyDb)
+    @typed(type_id=E_Chunk, lina_list=LinePairList, analogy_db=AnalogyDb)
     def __init__(self, subject_type_id, nominal_type_id, line_association_list, analogy_db):
         self.__subject_type_id = subject_type_id
         self.__nominal_type_id = nominal_type_id
@@ -138,23 +144,21 @@ class ChunkPair(LinePairList):
         """RETURNS: 'ChunkPair' generated from a subject and nominal input 
                     chunk.
         """
-
         if subject is None:
             subject_type   = E_Chunk.NONE
             nominal_type   = nominal.type()
-            line_pair_list = [LinePair(None, x, edit_list=[]) for x in nominal.line_list]
+            line_pair_list = LinePairList.from_nominal_only(nominal.line_list)
             new_analogy_db = analogy_db
         elif nominal is None:
             subject_type   = subject.type()
             nominal_type   = E_Chunk.NONE
-            line_pair_list = [LinePair(x, None, edit_list=[]) for x in subject.line_list]
+            line_pair_list = LinePairList.from_subject_only(subject.line_list)
             new_analogy_db = analogy_db
         else: 
             assert subject.type() == nominal.type()
             nominal_type = subject_type = subject.type()
             line_pair_list,             \
-            new_analogy_db              = subject.line_associations(nominal, 
-                                                                   analogy_db)
+            new_analogy_db              = subject.line_associations(nominal, analogy_db)
 
         return ChunkPair(subject_type, nominal_type, line_pair_list, new_analogy_db)
 
