@@ -75,7 +75,7 @@ from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
 
 class LineSeparatorAdaptor(SeparatorAdaptor):
-    def is_separator(self, le):
+    def _is_separator(self, le):
         """RETURNS: True, if 'x' is a separator.
                     False, else.
         """

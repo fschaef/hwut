@@ -33,11 +33,11 @@
 --(5)------------------------------------------------------------------
       subject:  STRING:4711, STRING:4711
       nominal:  SEPERATOR:4711, SEPERATOR:4711, STRING:4711
-      => edits: INSERT, SUBSTITUTE_TYPE, GOOD
+      => edits: INSERT, INSERT, GOOD, DELETE
 
       subject:  SEPERATOR:4711, SEPERATOR:4711, STRING:4711
       nominal:  STRING:4711, STRING:4711
-      => edits: DELETE, SUBSTITUTE_TYPE, GOOD
+      => edits: DELETE, DELETE, GOOD, INSERT
 --(6)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
       nominal:  ANALOGY:4711, ANALOGY:4711, VISIBLE_NOTHING:4711
@@ -89,11 +89,11 @@
 --(12)------------------------------------------------------------------
       subject:  ANALOGY:4711, ANALOGY:4711
       nominal:  SEPERATOR:4711, SEPERATOR:4711, ANALOGY:4711
-      => edits: INSERT, SUBSTITUTE_TYPE, GOOD_TOLERATED
+      => edits: INSERT, INSERT, GOOD_TOLERATED, DELETE
 
       subject:  SEPERATOR:4711, SEPERATOR:4711, ANALOGY:4711
       nominal:  ANALOGY:4711, ANALOGY:4711
-      => edits: DELETE, SUBSTITUTE_TYPE, GOOD_TOLERATED
+      => edits: DELETE, DELETE, GOOD_TOLERATED, INSERT
 --(13)------------------------------------------------------------------
       subject:  NUMERIC:4711, NUMERIC:4711
       nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, NUMERIC:4711
@@ -105,16 +105,16 @@
 --(14)------------------------------------------------------------------
       subject:  NUMERIC:4711, NUMERIC:4711
       nominal:  SEPERATOR:4711, SEPERATOR:4711, NUMERIC:4711
-      => edits: INSERT, SUBSTITUTE_TYPE, GOOD
+      => edits: INSERT, INSERT, GOOD, DELETE
 
       subject:  SEPERATOR:4711, SEPERATOR:4711, NUMERIC:4711
       nominal:  NUMERIC:4711, NUMERIC:4711
-      => edits: DELETE, SUBSTITUTE_TYPE, GOOD
+      => edits: DELETE, DELETE, GOOD, INSERT
 --(15)------------------------------------------------------------------
       subject:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711
       nominal:  SEPERATOR:4711, SEPERATOR:4711, EQUIVALENCE_PATTERN:4711
-      => edits: INSERT, SUBSTITUTE_TYPE, GOOD
+      => edits: INSERT, INSERT, GOOD, DELETE
 
       subject:  SEPERATOR:4711, SEPERATOR:4711, EQUIVALENCE_PATTERN:4711
       nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711
-      => edits: DELETE, SUBSTITUTE_TYPE, GOOD
+      => edits: DELETE, DELETE, GOOD, INSERT

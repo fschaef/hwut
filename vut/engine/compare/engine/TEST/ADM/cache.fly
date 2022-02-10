@@ -4,8 +4,8 @@ file_name: test-compare_lines.py;
 hwut_info_time: 1642507768L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ judge; OK; 0.192686; 0; ]
-  [ info; OK; 0.195491; 0; ]
+  [ judge; OK; 0.191693; 0; ]
+  [ info; OK; 0.196329; 0; ]
 ]
 }
 {
@@ -14,8 +14,8 @@ file_name: test-compare_line_sequence.py;
 hwut_info_time: 1644519649L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ judge; OK; 0.196431; 0; ]
-  [ info; OK; 0.195030; 0; ]
+  [ judge; OK; 0.193389; 0; ]
+  [ info; OK; 0.197563; 0; ]
 ]
 }
 {
@@ -24,7 +24,7 @@ file_name: test-compare_potpourris.py;
 hwut_info_time: 1642507768L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ judge; OK; 0.193993; 0; ]
-  [ info; OK; 0.194418; 0; ]
+  [ judge; OK; 0.193781; 0; ]
+  [ info; OK; 0.193990; 0; ]
 ]
 }
