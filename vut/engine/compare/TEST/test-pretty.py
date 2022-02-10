@@ -53,7 +53,7 @@ def test(table):
     print()
     print("=> ")
     print()
-    line_association_chunk_list = list(main.line_associations(config, subject, nominal))
+    line_association_chunk_list = list(main.associate(config, subject, nominal))
     for chunk in line_association_chunk_list:
         print(pretty.do(chunk))
     print()

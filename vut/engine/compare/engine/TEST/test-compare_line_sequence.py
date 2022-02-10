@@ -71,7 +71,7 @@ if "info" in sys.argv:
         print_friends_pairing_max_result(subject_list, nominal_list, 0,
                                          line_associations, analogy_db)
 
-    test([],         [])
+    test([],           [])
     test([""],         [""])
     test(["a"],        ["a"])
     test(["a", "b"],   ["a", "b"])

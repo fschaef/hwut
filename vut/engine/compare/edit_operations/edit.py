@@ -30,7 +30,21 @@ class E_EditId(IntEnum):
     SUBSTITUTE_TYPE = 6  # Bad:  Type of subject and nominal 'element' differs.
     NONE            = 7  # No operation
 
-Edit = namedtuple("Edit", ("id", "transpose_ai"))
+class Edit:
+    def __init__(self, id, transpose_ai=None, edit_list=None):
+        assert transpose_ai is None or edit_list is None
+        self.id        = id
+        if   transpose_ai is not None: self.__auxiliary = transpose_ai
+        elif edit_list    is not None: self.__auxiliary = edit_list
+        else:                          self.__auxiliary = None
+
+    @property
+    def transpose_ai(self):
+        return self.__auxiliary
+
+    @property
+    def edit_list(self):
+        return self.__auxiliary
 
 class EditSequence:
     """Maintains a list of edit objects, their cost and the required analogy database.
@@ -41,7 +55,7 @@ class EditSequence:
         where edit_id:    E_EditId
               edit_list': list of Edit objects
         """
-        assert all(isinstance(first, E_EditId) for first, _ in edit_list)
+        assert all(isinstance(x, Edit) for x in edit_list)
         self.cost       = cost
         self.edit_list  = edit_list
         self.analogy_db = analogy_db
@@ -51,7 +65,7 @@ class EditSequence:
 
     def last(self):
         if not self.edit_list: return None
-        else:                  return self.edit_list[-1][0]
+        else:                  return self.edit_list[-1].id
 
     def extend(self, edit_iterable):
         self.edit_list.extend(edit_iterable)

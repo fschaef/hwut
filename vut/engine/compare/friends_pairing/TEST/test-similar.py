@@ -34,10 +34,10 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-import vut.engine.compare.friends_pairing.similar  as     friends_pairing_max
-from   vut.engine.compare.tolerance.pattern_finder import PatternFinder
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
+from   vut.engine.compare.configuration             import ConfigurationPatternFinder
+import vut.engine.compare.friends_pairing.associate as     pair_associate
+from   vut.engine.compare.tolerance.pattern_finder  import PatternFinder
+from   vut.engine.compare.engine.analogy_db         import AnalogyDb
 
 from   vut.engine.compare.TEST.common import get_Potpourri, \
                                             print_friends_pairing_max_result
@@ -60,10 +60,10 @@ def test_pure(subject_line_list, nominal_line_list, max_comparison_count):
 
     analogy_db = AnalogyDb()
     line_associations, \
-    analogy_db         = friends_pairing_max.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
-                                                get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
-                                                analogy_db,
-                                                max_comparison_count)
+    analogy_db         = pair_associate.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
+                                           get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
+                                           analogy_db,
+                                           max_comparison_count)
 
     return line_associations, analogy_db
 
@@ -110,7 +110,7 @@ if "restricted_cmp" in sys.argv:
     # Special case, where analogy inconsistency filtering removes some entries.
     #
     test(["A ((1))", "B ((2))", "C ((2))", "D ((3))"],
-         ["a ((A))", "b ((B))", "c ((C))", "d ((D))"],
+         ["a ((A))", "B ((B))", "c ((C))", "d ((D))"],
          max_comparison_count=1)
 
 if "analogy" in sys.argv:

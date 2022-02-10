@@ -12,7 +12,7 @@ sys.path.insert(0, "../../../../..")
 from   vut.user_interface.difference_display.console.TEST.cases import *
 if "--hwut-info" in sys.argv:
     print("Display Modes: Comparison, Analogy Error;")
-    print("CHOICES: similar, padding, potpourri, mix, analogy, error, error2;")
+    print("CHOICES: similar, padding, potpourri, mix, analogy, error, error2, comment;")
     # Call with 'GO' on command line to interact with a TUI
 
 config = Configuration()
@@ -50,17 +50,20 @@ elif "mix" in sys.argv:
          + mix_nominal, both=True)
 
 elif "analogy" in sys.argv:
-    test(analogy_subject, analogy_nominal, mode=E_DiffMode.ANALOGIES, level=2)
-    test(analogy_subject, analogy_nominal, mode=E_DiffMode.ANALOGIES, level=1)
-    test(analogy_subject, analogy_nominal, mode=E_DiffMode.ANALOGIES, level=0)
+    test(analogy_subject, analogy_nominal, mode=E_LinePairSelectionMode.ANALOGIES, level=2)
+    test(analogy_subject, analogy_nominal, mode=E_LinePairSelectionMode.ANALOGIES, level=1)
+    test(analogy_subject, analogy_nominal, mode=E_LinePairSelectionMode.ANALOGIES, level=0)
 
 elif "error" in sys.argv:
-    test(subject_error_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=2)
-    test(subject_error_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=1)
-    test(subject_error_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=0)
+    test(subject_error_txt, nominal_error_txt, mode=E_LinePairSelectionMode.ERRORS, level=2)
+    test(subject_error_txt, nominal_error_txt, mode=E_LinePairSelectionMode.ERRORS, level=1)
+    test(subject_error_txt, nominal_error_txt, mode=E_LinePairSelectionMode.ERRORS, level=0)
 
 elif "error2" in sys.argv:
-    test(subject_error2_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=2)
-    test(subject_error2_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=1)
-    test(subject_error2_txt, nominal_error_txt, mode=E_DiffMode.ERRORS, level=0)
+    test(subject_error2_txt, nominal_error_txt, mode=E_LinePairSelectionMode.ERRORS, level=2)
+    test(subject_error2_txt, nominal_error_txt, mode=E_LinePairSelectionMode.ERRORS, level=1)
+    test(subject_error2_txt, nominal_error_txt, mode=E_LinePairSelectionMode.ERRORS, level=0)
+
+elif "comment" in sys.argv:
+    test(subject_comment_txt, nominal_comment_txt, mode=E_LinePairSelectionMode.ERRORS, both=False, level=2)
 

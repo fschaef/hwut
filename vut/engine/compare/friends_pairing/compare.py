@@ -19,7 +19,7 @@ from   vut.external.quex.typed                     import typed
 @typed(subject_line_list=tuple, nominal_line_list=tuple)
 def do(subject_line_list, nominal_line_list, analogy_db, abort_f=False):
     """RETURNS: [0] verdict
-                [1] map: 'ia' --> 'ib'
+                [1] map: subject line number --> nominal line number
                 [2] analogy_db
 
     Where 'ia' is the index of a line in 'subject_lines' that is equivalent
@@ -51,4 +51,34 @@ def do(subject_line_list, nominal_line_list, analogy_db, abort_f=False):
     if verdict: couples.update(new_couples)
     return pre_verdict and verdict, couples, analogy_db
 
+def filter_equivalence(line_list):
+    """MODIFIES: 'line_list' such that equivalent lines are removed.
+
+       RETURNS:  map: line number --> list of equivalent Line-s
+    """
+    equivalence_db,  \
+    superfluous_set = _investigate_equivalence(line_list)
+
+    for i in sorted(superfluous_set, reverse=True):
+        del line_list[i]
+
+    return equivalence_db
+
+def _investigate_equivalence(line_list):
+    """RETURNS: [0] map: index ---> list of equivalent indices
+                [1] set of indices in 'line_list' to be removed for equivalence.
+    """
+    equivalence_db   = {}
+    superfluous_set = set()
+    for ia, a_line in line_list:
+        if ia in superfluous_set: continue
+        superfluous = [
+            b_line
+            for ib, b_line in enumerate(line_list[ia+1:]) 
+            if a_line.compare_safely(b_line)
+        ]
+        equivalence_db[a_line.line_n] = [b_line for b_line in superfluous]
+        superfluous_set.extend(b_line.line_n for b_line in superfluous)
+                
+    return equivalence_db, superfluous_set
 

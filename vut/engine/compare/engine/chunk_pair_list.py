@@ -60,7 +60,6 @@ class ChunkPairList(list):
 
     @typed(errors_f=bool, definitions_f=bool)
     def analogy_errors(self, 
-                       analogy_db,
                        errors_f, 
                        definitions_f, 
                        verbosity_level):
@@ -78,6 +77,10 @@ class ChunkPairList(list):
                         defined that later cause errors.
         """
         assert errors_f or definitions_f
+        if not len(self): 
+            return []
+
+        analogy_db = self[-1].analogy_db()
 
         error_info_db = defaultdict(set)
         subject_nominal_set = set()

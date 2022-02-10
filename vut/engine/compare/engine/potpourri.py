@@ -16,10 +16,10 @@ from   vut.engine.compare.engine.core                   import E_Verdict, \
                                                                E_PotpourriBorder
 from   vut.engine.compare.engine.input_chunk            import InputChunk, E_Chunk
 from   vut.engine.compare.engine.line                   import Line
-from   vut.engine.compare.engine.line_pair       import LinePair
-from   vut.engine.compare.engine.chunk_pair import LinePairList
-import vut.engine.compare.friends_pairing.similar       as     friends_pairing_max
-import vut.engine.compare.friends_pairing.exact         as     friends_pairing
+from   vut.engine.compare.engine.line_pair              import LinePair
+from   vut.engine.compare.engine.chunk_pair             import LinePairList
+import vut.engine.compare.friends_pairing.associate     as     pair_associate
+import vut.engine.compare.friends_pairing.compare       as     pair_compare
 
 class Potpourri(InputChunk):
     """Set of lines where the sequence does not matter.
@@ -42,10 +42,10 @@ class Potpourri(InputChunk):
         subject_potpourri = subject_line_list[1:-1] # exclude [0] and [-1]:
         nominal_potpourri = nominal_line_list[1:-1] # first and last line carry Potpourri markers.
 
-        verdict, _, new_analogy_db = friends_pairing.do(subject_potpourri,
-                                                        nominal_potpourri,
-                                                        analogy_db,
-                                                        abort_f=True)
+        verdict, _, new_analogy_db = pair_compare.do(subject_potpourri,
+                                                     nominal_potpourri,
+                                                     analogy_db,
+                                                     abort_f=True)
 
         if verdict: return E_Verdict.EQUIVALENT, new_analogy_db
         else:       return E_Verdict.DIFFERENT, analogy_db
@@ -60,19 +60,19 @@ class Potpourri(InputChunk):
         nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
 
         core_result,   \
-        new_analogy_db = friends_pairing_max.do(subject_potpourri,
-                                                nominal_potpourri,
-                                                analogy_db,
-                                                self.configuration.potpourri_max_comparison_count)
+        new_analogy_db = pair_associate.do(subject_potpourri,
+                                           nominal_potpourri,
+                                           analogy_db,
+                                           self.configuration.potpourri_max_comparison_count)
 
         result = [
             LinePair.potpourri_border(self.line_list[0], nominal.line_list[0], 
-                                             E_PotpourriBorder.BEGIN)
+                                      E_PotpourriBorder.BEGIN)
         ]
         result.extend(LinePairList(core_result).sort(True))
         result.append(
             LinePair.potpourri_border(self.line_list[-1], nominal.line_list[-1],
-                                             E_PotpourriBorder.END)
+                                      E_PotpourriBorder.END)
         )
 
         return result, new_analogy_db

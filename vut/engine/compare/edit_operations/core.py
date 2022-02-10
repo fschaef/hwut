@@ -135,6 +135,7 @@ class WorkListBase(list):
 
         self.append(initial_item)
 
+        # Determine min and max cost without considering the actual content
         self.min_cost = self[0].min_cost_remaining(self.subject_length, 
                                                    self.nominal_length)
         self.max_cost = max_cost(self.subject_length, 
@@ -206,7 +207,8 @@ class WorkListBase(list):
         return item.edit_list.cost < self.best.cost
 
 def max_cost(subject_length, nominal_length, cost_substitute_type, cost_insert):
-   """RETURNS: maximum cost to transform 'subject' into 'nominal'.
+   """RETURNS: maximum cost to transform 'subject' into 'nominal' without 
+               considering the actual content.
    """
    common_n    = min(subject_length, nominal_length)
    remaining_n = max(subject_length, nominal_length) - common_n

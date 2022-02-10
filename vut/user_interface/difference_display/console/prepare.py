@@ -25,17 +25,19 @@ from   collections import defaultdict
 from   enum import Enum, auto
 
 
-class E_DiffMode(Enum):
-    PLAIN                = auto()
-    ERRORS               = auto()
-    ERRORS_AND_TOLERATED = auto()
-    ANALOGIES            = auto()
+class E_LinePairSelectionMode(Enum):
+    PLAIN                      = auto()
+    ERRORS                     = auto()
+    ERRORS_AND_TOLERATED       = auto()
+    ANALOGIES                  = auto()
+    ANALOGIES_ERRORS_ONLY      = auto()
+    ANALOGIES_DEFINITIONS_ONLY = auto()
 
 class LinePairDecorated(LinePair):
-    def __init__(self, chunk_index, lina_index, lina):
+    def __init__(self, chunk_index, lp_index, lp):
         self.chunk_index   = chunk_index
-        self.lina_index    = lina_index
-        LinePair.__init__(self, lina.subject, lina.nominal, lina.edit_list, lina.border)
+        self.lp_index    = lp_index
+        LinePair.__init__(self, lp.subject, lp.nominal, lp.edit_list, lp.border)
         self.subject_end_f = False
         self.nominal_end_f = False
         self.filler_f      = False
@@ -46,72 +48,94 @@ class LinePairDecorated(LinePair):
         result.filler_f = True
         return result
 
-def select(lina_chunk_list, mode, analogy_db, verbosity_level):
-    if mode == E_DiffMode.PLAIN:
-        return plain(lina_chunk_list)
-    elif mode == E_DiffMode.ANALOGIES:
-        return analogy_errors(lina_chunk_list, analogy_db, 
-                              verbosity_level=verbosity_level)
-    elif mode == E_DiffMode.ERRORS:
-        return errors(lina_chunk_list, 
-                      verbosity_level=verbosity_level)
-
-    elif mode == E_DiffMode.ERRORS_AND_TOLERATED:
-        return errors_and_tolerated(lina_chunk_list, 
-                                    verbosity_level=verbosity_level)
-
-def plain(lina_chunk_list, verbosity_level=2):
+def plain(lp_chunk_list, verbosity_level=2):
     """RETURNS: sequence of all 'LinePair' objects in the 
                 given 'ChunkPair' list.
     """
 
-    return _display_brief_core(lina_chunk_list.plain(), 
+    return _display_brief_core(lp_chunk_list.plain(), 
                                verbosity_level)
 
-def errors(lina_chunk_list, verbosity_level=2):
+def errors(lp_chunk_list, verbosity_level=2):
     """RETURNS: list of 'LinePairDecorated' objects
 
     Extracts 'LinePair'-s from the given list of chunks and provides
     a list containing only errors. 
     """
-    return _display_brief_core(lina_chunk_list.errors(), 
+    return _display_brief_core(lp_chunk_list.errors(), 
                                verbosity_level)
             
-def errors_and_tolerated(lina_chunk_list, verbosity_level=2):
+def errors_and_tolerated(lp_chunk_list, verbosity_level=2):
     """RETURNS: list of 'LinePairDecorated' objects
 
     Extracts 'LinePair'-s from the given list of chunks and provides
     a list containing only errors. 
     """
-    return _display_brief_core(lina_chunk_list.errors_and_tolerated(), 
+    return _display_brief_core(lp_chunk_list.errors_and_tolerated(), 
                                verbosity_level)
 
-@typed(errors_f=bool, definitions_f=bool)
-def analogy_errors(lina_chunk_list, 
-                   analogy_db,
-                   errors_f=True, 
-                   definitions_f=True, 
-                   verbosity_level=3):
+def analogy_errors_only(lp_chunk_list, verbosity_level):
+    return _analogy_errors(lp_chunk_list, errors_f=True, definitions_f=False, verbosity_level=verbosity_level)
 
-    error_info_list = lina_chunk_list.analogy_errors(analogy_db,
-                                                     errors_f, 
-                                                     definitions_f, 
-                                                     verbosity_level)
+def analogy_errors_and_definitions(lp_chunk_list, verbosity_level):
+    return _analogy_errors(lp_chunk_list, errors_f=True, definitions_f=True, verbosity_level=verbosity_level)
+
+def analogy_definitions_only(lp_chunk_list, verbosity_level):
+    return _analogy_errors(lp_chunk_list, errors_f=False, definitions_f=True, verbosity_level=verbosity_level)
+
+@typed(errors_f=bool, definitions_f=bool)
+def _analogy_errors(lp_chunk_list, 
+                    errors_f=True, 
+                    definitions_f=True, 
+                    verbosity_level=3):
+
+    error_info_list = lp_chunk_list.analogy_errors(errors_f, 
+                                                   definitions_f, 
+                                                   verbosity_level)
     return _display_brief_core(error_info_list, verbosity_level)
 
-def get_Interval_list(lina_list):
-    """'chunk_lina_list': list of (chunk, line indices)
+#______________________________________________________________________________
+# selection_mode_db: 
+#  
+#      E_LinePairSelectionMode --> function
+#
+# with
+# 
+#      function(line pair chunk list, mode, verbosity_level)
+#      -> list of LinePairDecorated
+#
+# verbosity_level: level of verbosity in diff display
+#           0  - only error line associations are displayed
+#           1  - add '...' line associtions to show borders
+#           2  - add one good line and '...' around error lines
+#
+# The 'verbosity_level' argument is only used for analogy errors and 
+# 'error' display
+#______________________________________________________________________________
+__selection_mode_db = {
+    E_LinePairSelectionMode.PLAIN:                      plain,
+    E_LinePairSelectionMode.ANALOGIES:                  analogy_errors_and_definitions,
+    E_LinePairSelectionMode.ANALOGIES_ERRORS_ONLY:      analogy_errors_only,
+    E_LinePairSelectionMode.ANALOGIES_DEFINITIONS_ONLY: analogy_definitions_only,
+    E_LinePairSelectionMode.ERRORS:                     errors, 
+    E_LinePairSelectionMode.ERRORS_AND_TOLERATED:       errors_and_tolerated,
+}
+def select(selection_mode, lp_chunk_list, verbosity_level):
+    return __selection_mode_db[selection_mode](lp_chunk_list, verbosity_level)
+
+def get_Interval_list(lp_list):
+    """'chunk_lp_list': list of (chunk, line indices)
 
     This object is the output of the aforementioned filter functions.
         
     RETURNS: list of 'Interval' objects buildt from line indices in 
-             'chunk_lina_list'.
+             'chunk_lp_list'.
     """
     return list(Interval.iterable_from_integer_list(flatten(
-                lina.indices_plain() for lina in lina_list)))
+                lp.indices_plain() for lp in lp_list)))
 
-def plug_end(lina_list):
-    """ADAPTS: lina_list, i.e. prepares the 'end of stream' for 
+def plug_end(lp_list):
+    """ADAPTS: lp_list, i.e. prepares the 'end of stream' for 
                subject and nominal.
 
     In order to mark the end of file/stream in the list of 'LinePair'-s
@@ -121,40 +145,40 @@ def plug_end(lina_list):
     list, then a new 'LinePair' is appended.
     """
 
-    if not lina_list:
+    if not lp_list:
         return
 
-    # Iterate over 'lina_list' from the rear and mark with 'end_subject_lina_i'
-    # and 'end_nominal_lina_i' the 'LinePair' which contains the first
+    # Iterate over 'lp_list' from the rear and mark with 'end_subject_lp_i'
+    # and 'end_nominal_lp_i' the 'LinePair' which contains the first
     # line after end of stream.
-    lina_n             = len(lina_list) 
-    end_subject_lina_i = None
-    end_nominal_lina_i = None
-    for lina_i, lina in reversed(list(enumerate(lina_list))):
-        if lina.border == E_PotpourriBorder.END: 
-            end_subject_lina_i = lina_i + 1
-            end_nominal_lina_i = lina_i + 1
+    lp_n             = len(lp_list) 
+    end_subject_lp_i = None
+    end_nominal_lp_i = None
+    for lp_i, lp in reversed(list(enumerate(lp_list))):
+        if lp.border == E_PotpourriBorder.END: 
+            end_subject_lp_i = lp_i + 1
+            end_nominal_lp_i = lp_i + 1
             break
-        elif lina.filler_f: 
-            end_subject_lina_i = lina_i + 1
-            end_nominal_lina_i = lina_i + 1
+        elif lp.filler_f: 
+            end_subject_lp_i = lp_i + 1
+            end_nominal_lp_i = lp_i + 1
             break
         else:
-            if lina.subject is not None and end_subject_lina_i is None:
-                end_subject_lina_i = lina_i + 1
-            if lina.nominal is not None and end_nominal_lina_i is None:
-                end_nominal_lina_i = lina_i + 1
-        if end_subject_lina_i is not None and end_nominal_lina_i is not None:
+            if lp.subject is not None and end_subject_lp_i is None:
+                end_subject_lp_i = lp_i + 1
+            if lp.nominal is not None and end_nominal_lp_i is None:
+                end_nominal_lp_i = lp_i + 1
+        if end_subject_lp_i is not None and end_nominal_lp_i is not None:
            break
 
     # One of subject/nominal must have a valid entry in the last 
     # 'LinePair'. Else, there would be invalid 'LinePair'-s.
-    assert end_subject_lina_i == lina_n or end_nominal_lina_i == lina_n
+    assert end_subject_lp_i == lp_n or end_nominal_lp_i == lp_n
     extra = LinePairDecorated(-1, -1, LinePair.empty())
-    lina_list.append(extra)
+    lp_list.append(extra)
 
-    lina_list[end_subject_lina_i].subject_end_f = True 
-    lina_list[end_nominal_lina_i].nominal_end_f = True 
+    lp_list[end_subject_lp_i].subject_end_f = True 
+    lp_list[end_nominal_lp_i].nominal_end_f = True 
 
 def _display_brief_core(error_info_list, verbosity_level):
     """error_info_list: list of (ChunkPair, set of line indices)
@@ -163,66 +187,66 @@ def _display_brief_core(error_info_list, verbosity_level):
     """
     result = LinePairList()
     for chunk, index_set in error_info_list:
-        if chunk.type() == E_Chunk.LINE_SEQUENCE: buffer_verbosity_level = verbosity_level
-        else:                                     buffer_verbosity_level = 0
+        if chunk.same_type() == E_Chunk.LINE_SEQUENCE: chunk_verbosity_level = verbosity_level
+        else:                                          chunk_verbosity_level = 0
         result.extend(_prepare_display_brief(chunk, 
                                              sorted(index_set), 
-                                             verbosity_level))
+                                             chunk_verbosity_level))
 
     return result
 
-def _prepare_display_brief(lina_list, lina_index_list, verbosity_level=3):
+def _prepare_display_brief(lp_list, lp_index_list, verbosity_level=3):
     """RETURNS: list of LinePairDecorated
 
     to display errors. That is, lines which are equivalent are omitted from
     display, except for those neighbouring error lines.
     """
-    def _some_border(prev_lina_i, lina_i, lina_list):
-        delta = lina_i - prev_lina_i
+    def _some_border(prev_lp_i, lp_i, lp_list):
+        delta = lp_i - prev_lp_i
         if delta > 4:
-            yield LinePairDecorated(0, 0, lina_list[prev_lina_i+1])
+            yield LinePairDecorated(0, 0, lp_list[prev_lp_i+1])
             yield LinePairDecorated.filler()
-            yield LinePairDecorated(0, 0, lina_list[lina_i - 1])
+            yield LinePairDecorated(0, 0, lp_list[lp_i - 1])
         elif delta == 4:
-            yield LinePairDecorated(0, 0, lina_list[prev_lina_i+1])
-            yield LinePairDecorated(0, 0, lina_list[lina_i - 2])
-            yield LinePairDecorated(0, 0, lina_list[lina_i - 1])
+            yield LinePairDecorated(0, 0, lp_list[prev_lp_i+1])
+            yield LinePairDecorated(0, 0, lp_list[lp_i - 2])
+            yield LinePairDecorated(0, 0, lp_list[lp_i - 1])
         elif delta == 3:
-            yield LinePairDecorated(0, 0, lina_list[lina_i - 2])
-            yield LinePairDecorated(0, 0, lina_list[lina_i - 1])
+            yield LinePairDecorated(0, 0, lp_list[lp_i - 2])
+            yield LinePairDecorated(0, 0, lp_list[lp_i - 1])
         elif delta == 2:
-            yield LinePairDecorated(0, 0, lina_list[lina_i - 1])
+            yield LinePairDecorated(0, 0, lp_list[lp_i - 1])
 
-        if lina_i != len(lina_list):
-            yield LinePairDecorated(0, 0, lina_list[lina_i])
+        if lp_i != len(lp_list):
+            yield LinePairDecorated(0, 0, lp_list[lp_i])
 
-    def _no_border(prev_lina_i, lina_i, lina_list):
-        delta = lina_i - prev_lina_i
+    def _no_border(prev_lp_i, lp_i, lp_list):
+        delta = lp_i - prev_lp_i
         if delta > 2:
             yield LinePairDecorated.filler()
         elif delta == 2:
-            yield LinePairDecorated(0, 0, lina_list[lina_i - 1])
-        if lina_i != len(lina_list):
-            yield LinePairDecorated(0, 0, lina_list[lina_i])
+            yield LinePairDecorated(0, 0, lp_list[lp_i - 1])
+        if lp_i != len(lp_list):
+            yield LinePairDecorated(0, 0, lp_list[lp_i])
 
-    def _no_filler(prev_lina_i, lina_i, lina_list):
-        if lina_i != len(lina_list):
-            yield LinePairDecorated(0, 0, lina_list[lina_i])
+    def _no_filler(prev_lp_i, lp_i, lp_list):
+        if lp_i != len(lp_list):
+            yield LinePairDecorated(0, 0, lp_list[lp_i])
 
     if   verbosity_level == 0: _handle = _no_filler
     elif verbosity_level == 1: _handle = _no_border
     elif verbosity_level == 2: _handle = _some_border
     else:                      assert verbosity_level in (0, 1, 2)
 
-    prev_lina_i = -1
-    if not lina_index_list:
+    prev_lp_i = -1
+    if not lp_index_list:
         return
 
-    lina_index_list.sort()
-    prev_lina_i = -1
-    for lina_i in lina_index_list:
-        yield from _handle(prev_lina_i, lina_i, lina_list)
-        prev_lina_i = lina_i
+    lp_index_list.sort()
+    prev_lp_i = -1
+    for lp_i in lp_index_list:
+        yield from _handle(prev_lp_i, lp_i, lp_list)
+        prev_lp_i = lp_i
 
-    yield from _handle(prev_lina_i, len(lina_list), lina_list)
+    yield from _handle(prev_lp_i, len(lp_list), lp_list)
 

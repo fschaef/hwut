@@ -2,15 +2,17 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-
-from   vut.system.terminal             import GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
-from   vut.engine.compare.engine.line  import Line
+from   vut.system.terminal                  import GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+from   vut.engine.compare.engine.line       import Line
+from   vut.engine.compare.engine.line_pair  import LinePair
+from   vut.engine.compare.edit_operations.edit  import E_EditId
+from   vut.external.quex.typed              import typed
 
 class ConsoleCanvasFormatter:
-    def __init__(self, terminal_width, line_n_width, text_offset, canvas):
+    def __init__(self, line_n_width, text_offset, canvas):
         self.line_n_width  = line_n_width
         
-        remaining          = terminal_width - 2 * self.line_n_width - 3
+        remaining          = canvas.width - 2 * self.line_n_width - 3
         self.subject_width = int(remaining/2)
         self.nominal_width = remaining - self.subject_width
         self.text_offset   = text_offset
@@ -155,4 +157,83 @@ class ConsoleCanvasFormatter:
 
     def end_of_stream_nominal(self, line_n):
         return Line.from_string(line_n, "/" * self.nominal_width)
+
+@typed(line=LinePair)
+def do_line_elements(max_line_length, lip, lip_i, add_background_color=""):
+    """RETURNS: [0] new max line length
+                [0] subject text: list of (color, text)
+                [1] nominal text: list of (color, text)
+
+       ADAPTS:  'self.__max_line_length' if a longer line occurred.
+
+    Provides text and format information to display the 'LinePair'. 
+    """
+    subject_txt, nominal_txt = [], []
+    subject_n,   nominal_n   = 0, 0
+    s_length,    n_length    = 0, 0
+    for lep in lip.line_element_pair_list():
+        s_color, s_txt, n_color, n_txt = _edit_db[lep.edit_id](lep.subject, lep.nominal)
+        subject_txt.append((s_color + add_background_color, s_txt.replace("\t", "\\t")))
+        nominal_txt.append((n_color + add_background_color, n_txt.replace("\t", "\\t")))
+        s_length += len(s_txt)
+        n_length += len(n_txt)
+
+    if max(s_length, n_length) > max_line_length: 
+        max_line_length = max(s_length, n_length)
+
+    return max_line_length, subject_txt, nominal_txt
+
+def _good(subject, nominal):
+    return "", subject.string, "", nominal.string
+
+def _tolerated(subject, nominal):
+    return Back.GREEN, subject.string, \
+           Fore.GREEN, nominal.string
+
+def _good_deleted(subject, nominal):
+    return Back.GREEN, subject.string, \
+           Fore.GREEN, " " * len(subject.string)
+
+def _good_inserted(subject, nominal):
+    return Back.GREEN, " " * len(nominal.string), \
+           Fore.GREEN, nominal.string
+
+def _deleted(subject, nominal):
+    return Back.RED,                       subject.string, \
+           Back.BLUE + Fore.LIGHTWHITE_EX, " " * len(subject.string)
+
+def _inserted(subject, nominal):
+    return Back.RED, " " * len(nominal.string), \
+           Back.BLUE + Fore.LIGHTWHITE_EX, nominal.string
+
+def _transpose(subject, nominal):
+    return Back.RED, subject.string, \
+           Back.YELLOW, nominal.string
+
+def _substitute(subject, nominal):
+    return Back.RED, subject.string, \
+           Fore.RED,              nominal.string
+
+def _substitute_type(subject, nominal):
+    return Back.RED,                      subject.string, \
+           Back.BLACK + Fore.LIGHTRED_EX, nominal.string
+
+def _none(subject, nominal):
+    if subject:
+        return "", subject.string, Back.MAGENTA, ""
+    else:
+        return Back.MAGENTA, "", "", nominal.string
+
+_edit_db = {
+    E_EditId.GOOD:            _good,
+    E_EditId.GOOD_TOLERATED:  _tolerated,
+    E_EditId.GOOD_DELETE:     _good_deleted,
+    E_EditId.GOOD_INSERT:     _good_inserted,
+    E_EditId.DELETE:          _deleted,
+    E_EditId.INSERT:          _inserted,
+    E_EditId.TRANSPOSE:       _transpose,
+    E_EditId.SUBSTITUTE:      _substitute,
+    E_EditId.SUBSTITUTE_TYPE: _substitute_type,
+    E_EditId.NONE:            _none
+}
 

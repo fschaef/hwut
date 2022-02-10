@@ -128,7 +128,7 @@ def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost,
         space2 = " " * (23 - len(nominal_txt))
         if lina.edit_list is None: edit_list = []
         else:                      edit_list = lina.edit_list
-        edit_txt = ", ".join(edit_id.name for edit_id, transpose_ai in edit_list)
+        edit_txt = ", ".join(edit.id.name for edit in edit_list)
         print("   [%s] %s%s --> [%s] %s %s{%s}" % (subject_line_n, subject_txt,
                                                    space,
                                                    nominal_line_n, nominal_txt,

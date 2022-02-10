@@ -45,14 +45,12 @@ SEPERATOR       = E_ToleranceId.SEPERATOR
 
 class SeparatorAdaptor:
     def __init__(self, subject_seq, nominal_seq, 
-                 is_separator, 
                  cost_SUBSTITUTION, cost_INSERT_DELETE, 
                  Edit_constructor):
         self.subject_sequence = subject_seq
         self.nominal_sequence = nominal_seq
-        subject_flags         = [not is_separator(x) for x in subject_seq]
-        nominal_flags         = [not is_separator(x) for x in nominal_seq]
-        self.is_separator     = is_separator
+        subject_flags         = [not self._is_separator(x) for x in subject_seq]
+        nominal_flags         = [not self._is_separator(x) for x in nominal_seq]
 
         # map: index in subject content --> index in original subject sequence
         self.subject_index_map = {}
@@ -73,8 +71,8 @@ class SeparatorAdaptor:
 
     def strip_separators(self):
         return \
-            [x for x in self.subject_sequence if not self.is_separator(x)], \
-            [x for x in self.nominal_sequence if not self.is_separator(x)]  
+            [x for x in self.subject_sequence if not self._is_separator(x)], \
+            [x for x in self.nominal_sequence if not self._is_separator(x)]  
                 
     def reinsert_separators(self, edit_list_raw):
         """RETURNS: Edit-operations considering separators being present.
@@ -127,10 +125,7 @@ class SeparatorAdaptor:
             return self.Edit(DELETE, None)
 
         def _good_op(si, ni):
-            if self.subject_sequence[si].string == self.nominal_sequence[ni].string:
-                return self.Edit(GOOD, None)            # both equal separators
-            else:
-                return self.Edit(GOOD_TOLERATED, None)  # separators are similar
+            return self._good_Edit(self.subject_sequence[si], self.nominal_sequence[ni])
 
         def _from_edit_list(ei):
             edit = edit_list_raw[ei]
@@ -146,9 +141,9 @@ class SeparatorAdaptor:
         si = ni = ei = 0
 
         while si < Ls or ni < Ln:
-            if si < Ls: s_is_separator = self.is_separator(self.subject_sequence[si])
+            if si < Ls: s_is_separator = self._is_separator(self.subject_sequence[si])
             else:       s_is_separator = False
-            if ni < Ln: n_is_separator = self.is_separator(self.nominal_sequence[ni])
+            if ni < Ln: n_is_separator = self._is_separator(self.nominal_sequence[ni])
             else:       n_is_separator = False
 
             if       s_is_separator and not n_is_separator: edit = _delete_op(si)
@@ -162,3 +157,16 @@ class SeparatorAdaptor:
             ni += n_incr
 
         
+    def _is_separator(self, x):
+        """RETURNS: True, if 'x' is a separator.
+                    False, else.
+        """
+        return False
+        
+    def _good_Edit(self, subject, nominal):
+        """RETURNS: The appropriate 'Edit' object for the pair of 'subject', and 'nominal'.
+
+        Assuming that subject, and nominal are equivalent, the return value provides
+        the according 'Edit' object, i.e. GOOD or GOOD_TOLERATED.
+        """
+        assert False

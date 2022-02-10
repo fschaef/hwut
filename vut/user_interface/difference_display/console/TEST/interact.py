@@ -11,13 +11,13 @@ import vut.engine.compare.main                                  as     compare
 from   vut.engine.compare.configuration                         import Configuration
 from   vut.engine.compare.engine.chunk_pair_list    import ChunkPairList
 import vut.user_interface.difference_display.console.main       as     console
-from   vut.user_interface.difference_display.console.canvas     import E_DiffMode
+from   vut.user_interface.difference_display.console.canvas     import E_LinePairSelectionMode
 import vut.user_interface.difference_display.console.prepare    as     prepare
 import vut.system.terminal_size                                 as     terminal_size
 
 from   io import StringIO
 
-def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
+def test(subject_txt, nominal_txt, offset=0, mode=E_LinePairSelectionMode.PLAIN, level=0, both=True):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 

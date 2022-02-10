@@ -13,7 +13,7 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.tolerance.line_element import E_ToleranceId
+from   vut.engine.compare.tolerance.line_element import E_ToleranceId, LineElement
 from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.engine.core            import E_PotpourriBorder
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
@@ -24,8 +24,31 @@ from   vut.external.quex.typed                   import typed
 from   collections import namedtuple
 import sys
 
-LineElementAssociation = namedtuple("LineElementAssociation", 
-                                    ("edit_id", "subject", "nominal"))
+class LineElementPair:
+   @typed(edit_id=E_EditId, subject=(None,LineElement), nominal=(None,LineElement))
+   def __init__(self, edit_id, subject, nominal):
+       self.edit_id = edit_id
+       self.subject = subject
+       self.nominal = nominal
+
+   @staticmethod
+   def none(subject, nominal):
+       return LineElementPair(E_EditId.NONE, subject, nominal)
+
+   def is_analogy_error(self):
+       if     self.edit_id != E_EditId.SUBSTITUTE \
+          and self.edit_id != E_EditId.SUBSTITUTE_TYPE:
+            return False
+
+       def _is_analogy(le):
+           return le is not None and le.tolerance_id == E_ToleranceId.ANALOGY
+
+       return _is_analogy(self.subject) or _is_analogy(self.nominal)
+
+   def string_pair(self):
+       return "" if self.subject is None else self.subject, \
+              "" if self.nominal is None else self.nominal
+              
 
 class LinePair:
     """An association of a line from the subject input stream and a line
@@ -89,27 +112,14 @@ class LinePair:
     def analogy_errors(self):
         """RETURNS: Set of pairs (subject, nominal) where analogies have not been met.
         """
-        def _is_analogy(le):
-            return le is not None and le.tolerance_id == E_ToleranceId.ANALOGY
-
-        def _is_analogy_error(lela):
-            if     lela.edit_id != E_EditId.SUBSTITUTE \
-               and lela.edit_id != E_EditId.SUBSTITUTE_TYPE:
-                return False
-            else:
-                return _is_analogy(lela.subject) or _is_analogy(lela.nominal)
-
-        def _string(le):
-            return "" if le is None else le.string
-
         return set(
-             (_string(lela.subject), _string(lela.nominal))
-             for lela in self.line_element_association_list()
-             if _is_analogy_error(lela)
+             lep.string_pair()
+             for lep in self.line_element_pair_list()
+             if lep.is_analogy_error()
         )
 
-    def line_element_association_list(self):
-        """RETURNS: list of LineElementAssociation-s
+    def line_element_pair_list(self):
+        """RETURNS: list of LineElementPair-s
 
         That is, the line elements of the subject and the nominal lines are combined
         pairwise according to the prescribed edit operations.
@@ -118,23 +128,21 @@ class LinePair:
             result = []
         elif self.subject is None:
             result = [
-                LineElementAssociation(E_EditId.NONE, None, n) 
-                for n in self.nominal.sequence
+                LineElementPair.none(None, n) for n in self.nominal.sequence
             ]
         elif self.nominal is None:
             result = [
-                LineElementAssociation(E_EditId.NONE, s, None) 
-                for s in self.subject.sequence
+                LineElementPair.none(s, None) for s in self.subject.sequence
             ]
         elif not self.edit_list:
             result = [
-                LineElementAssociation(E_EditId.NONE, s, n) 
+                LineElementPair.none(s, n) 
                 for s, n in zip(self.subject.sequence, self.nominal.sequence)
             ]
         else:
-            subject_length  = len(self.subject.sequence)
-            nominal_length  = len(self.nominal.sequence)
-            result          = []
+            subject_length   = len(self.subject.sequence)
+            nominal_length   = len(self.nominal.sequence)
+            result           = []
             transpose_id_set = set()
             si = ni = 0
             for edit in self.edit_list:
@@ -151,7 +159,7 @@ class LinePair:
                     subject = None
                 elif edit.id == E_EditId.DELETE:
                     nominal = None
-                result.append(LineElementAssociation(edit_id, subject, nominal))
+                result.append(LineElementPair(edit_id, subject, nominal))
 
                 s_incr, n_incr = edit_operations_line.position_increment_db[edit.id]
                 si += s_incr

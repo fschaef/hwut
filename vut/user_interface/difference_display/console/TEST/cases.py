@@ -7,7 +7,7 @@ import vut.engine.compare.main                                  as     compare
 from   vut.engine.compare.configuration                         import Configuration
 from   vut.engine.compare.engine.chunk_pair_list    import ChunkPairList
 import vut.user_interface.difference_display.console.main       as     console
-from   vut.user_interface.difference_display.console.canvas     import ConsoleCanvasDiff, E_DiffMode
+from   vut.user_interface.difference_display.console.canvas     import ConsoleCanvasDiff, E_LinePairSelectionMode
 import vut.system.terminal_size                                 as     terminal_size
 
 from   io import StringIO
@@ -39,6 +39,26 @@ Röslein   auf der   Heiden
 War jung morgenschön
 Röslein, Tülplein, Röslein orange
 """
+
+subject_comment_txt = \
+"""## Wilhem the Tell
+Sah ein Röslein ein Knab stehen
+Röslein   auf der   Heiden 
+War jung morgenschön
+## Was willst Du mit dem Dolche sprich
+Röslein, Tülplein, Röslein orange
+Das sollst Du mir am Kreuz bereun##
+"""
+
+nominal_comment_txt = \
+"""Sah ein Röslein ein Knab stehen
+## So fragt ihn ernst der Wüterich
+Röslein   auf der   Heiden 
+War jung morgenschön
+Das Land vom Tyrannen befrein ##
+Röslein, Tülplein, Röslein orange
+"""
+
 
 analogy_subject = \
 """
@@ -168,17 +188,17 @@ def test_core(subject_txt, nominal_txt, offset, mode, level):
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    print()
     print("|" + "=" * (terminal_width -2) + "|")
-    la = list(compare.line_pairs(config, subject, nominal))
+    la = list(compare.associate(config, subject, nominal))
 
     terminal_size.set_size_fixed(terminal_height, terminal_width)
     canvas = ConsoleCanvasDiff(ChunkPairList(la))
-    canvas.set_mode(mode, level)
+    canvas.set_selection_mode(mode, level)
     canvas._display_content()
 
-def test(subject_txt, nominal_txt, offset=0, mode=E_DiffMode.PLAIN, level=0, both=True):
-    test_core(subject_txt, nominal_txt, offset, mode, level)
-    if not both: return
-    test_core(nominal_txt, subject_txt, offset, mode, level)
+def test(subject_txt, nominal_txt, offset=0, mode=E_LinePairSelectionMode.PLAIN, level=0, both=True):
+    if True:
+        test_core(subject_txt, nominal_txt, offset, mode, level)
+    if both: 
+        test_core(nominal_txt, subject_txt, offset, mode, level)
 

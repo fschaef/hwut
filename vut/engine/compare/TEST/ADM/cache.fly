@@ -1,21 +1,21 @@
 {
 title: ChunkPair.description();
 file_name: test-pretty.py;
-hwut_info_time: 1642017708L;
+hwut_info_time: 1642507768L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 0.204570; -1330488687; ]
+  [ ; OK; 0.217308; -1330488687; ]
 ]
 }
 {
 title: Line Comparison;
 file_name: test-main.py;
-hwut_info_time: 1642098864L;
+hwut_info_time: 1642507768L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.199681; 0; ]
-  [ compare-2; OK; 0.209767; -1015886605; ]
-  [ line_pairs; OK; 0.208996; 111071505; ]
-  [ line_pairs-2; OK; 0.213688; 1320854434; ]
+  [ compare; OK; 0.197229; 0; ]
+  [ compare-2; OK; 0.206440; 0; ]
+  [ associate; OK; 0.202874; 0; ]
+  [ associate-2; OK; 0.217017; 0; ]
 ]
 }

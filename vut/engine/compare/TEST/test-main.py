@@ -35,7 +35,7 @@ from   io import StringIO
 
 if "--hwut-info" in sys.argv:
     print("Line Comparison;")
-    print("CHOICES: compare, compare-2, line_pairs, line_pairs-2;")
+    print("CHOICES: compare, compare-2, associate, associate-2;")
     sys.exit()
 
 config = Configuration()
@@ -84,7 +84,7 @@ def test_line_associations_core(subject_txt, nominal_txt):
     print()
     print("=> ")
     print()
-    line_association_chunk_list = list(main.line_associations(config, subject, nominal))
+    line_association_chunk_list = list(main.associate(config, subject, nominal))
     for chunk in line_association_chunk_list:
         st, nt = chunk.types()
         print("TYPE:", st.name, nt.name)
@@ -103,8 +103,8 @@ def test_line_associations(subject_txt, nominal_txt, both_f=False):
         test_line_associations_core(nominal_txt, subject_txt)
 
 if sys.argv[1].endswith("-2"):
-    if "compare-2" in sys.argv:    test = test_compare
-    if "line_pairs-2" in sys.argv: test = test_line_associations
+    if "compare-2" in sys.argv:   test = test_compare
+    if "associate-2" in sys.argv: test = test_line_associations
 
     config_print_only_chunk_type = True
     p = "||||\nHello\n||||\n"
@@ -128,8 +128,8 @@ if sys.argv[1].endswith("-2"):
         test(p + l + p,  p + l + p,  both_f=True)
 
 else:
-    if "compare" in sys.argv:    test = test_compare
-    if "line_pairs" in sys.argv: test = test_line_associations
+    if "compare" in sys.argv:   test = test_compare
+    if "associate" in sys.argv: test = test_line_associations
 
     test("Hallo\nWelt", "Hallo\nWelt")
     test("Welt X", "Welt Y")

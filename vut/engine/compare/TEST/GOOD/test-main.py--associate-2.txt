@@ -1,0 +1,509 @@
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       
+   [02] Hello      
+   [03] ||||       
+
+=> 
+
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01]            ||||
+   [02]            Hello
+   [03]            ||||
+
+=> 
+
+TYPE: NONE POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] Hello      
+
+=> 
+
+TYPE: LINE_SEQUENCE NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01]            Hello
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+
+(1)
+--------------------------------------------------
+
+
+   [01] Hello      
+   [02] ||||       
+   [03] Hello      
+   [04] ||||       
+
+=> 
+
+TYPE: LINE_SEQUENCE NONE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01]            Hello
+   [02]            ||||
+   [03]            Hello
+   [04]            ||||
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+TYPE: NONE POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] Hello      Hello
+   [02] ||||       
+   [03] Hello      
+   [04] ||||       
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] Hello      Hello
+   [02]            ||||
+   [03]            Hello
+   [04]            ||||
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: NONE POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] Hello      ||||
+   [02] ||||       Hello
+   [03] Hello      ||||
+   [04] ||||       
+
+=> 
+
+TYPE: LINE_SEQUENCE NONE
+TYPE: POTPOURRI POTPOURRI
+
+(2)
+--------------------------------------------------
+
+
+   [01] ||||       Hello
+   [02] Hello      ||||
+   [03] ||||       Hello
+   [04]            ||||
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04]            Hello
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: NONE LINE_SEQUENCE
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       Hello
+   [02] Hello      
+   [03] ||||       
+   [04] Hello      
+
+=> 
+
+TYPE: POTPOURRI NONE
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+
+(2)
+--------------------------------------------------
+
+
+   [01] Hello      ||||
+   [02]            Hello
+   [03]            ||||
+   [04]            Hello
+
+=> 
+
+TYPE: NONE POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] ||||       Hello
+   [05] Hello      
+   [06] ||||       
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: NONE LINE_SEQUENCE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      ||||
+   [05]            Hello
+   [06]            ||||
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: NONE POTPOURRI
+TYPE: LINE_SEQUENCE NONE
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       Hello
+   [02] Hello      ||||
+   [03] ||||       Hello
+   [04] ||||       ||||
+   [05] Hello      
+   [06] ||||       
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] Hello      ||||
+   [02] ||||       Hello
+   [03] Hello      ||||
+   [04] ||||       ||||
+   [05]            Hello
+   [06]            ||||
+
+=> 
+
+TYPE: LINE_SEQUENCE NONE
+TYPE: POTPOURRI POTPOURRI
+TYPE: NONE POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      
+   [05] ||||       
+   [06] Hello      
+   [07] ||||       
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE NONE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04]            Hello
+   [05]            ||||
+   [06]            Hello
+   [07]            ||||
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: NONE LINE_SEQUENCE
+TYPE: NONE POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      Hello
+   [05] ||||       
+   [06] Hello      
+   [07] ||||       
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      Hello
+   [05]            ||||
+   [06]            Hello
+   [07]            ||||
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: NONE POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       Hello
+   [02] Hello      
+   [03] ||||       
+   [04] Hello      
+   [05] ||||       
+   [06] Hello      
+   [07] ||||       
+
+=> 
+
+TYPE: POTPOURRI NONE
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] Hello      ||||
+   [02]            Hello
+   [03]            ||||
+   [04]            Hello
+   [05]            ||||
+   [06]            Hello
+   [07]            ||||
+
+=> 
+
+TYPE: NONE POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: NONE POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       Hello
+   [02] Hello      ||||
+   [03] ||||       Hello
+   [04] Hello      ||||
+   [05] ||||       
+   [06] Hello      
+   [07] ||||       
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE NONE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] Hello      ||||
+   [02] ||||       Hello
+   [03] Hello      ||||
+   [04] ||||       Hello
+   [05]            ||||
+   [06]            Hello
+   [07]            ||||
+
+=> 
+
+TYPE: NONE POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       Hello
+   [02] Hello      ||||
+   [03] ||||       Hello
+   [04] Hello      ||||
+   [05] ||||       Hello
+   [06] Hello      
+   [07] ||||       
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] Hello      ||||
+   [02] ||||       Hello
+   [03] Hello      ||||
+   [04] ||||       Hello
+   [05] Hello      ||||
+   [06]            Hello
+   [07]            ||||
+
+=> 
+
+TYPE: NONE POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE NONE
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      ||||
+   [05] ||||       Hello
+   [06] Hello      ||||
+   [07] ||||       Hello
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: NONE POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI NONE
+
+(2)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] ||||       Hello
+   [05] Hello      ||||
+   [06] ||||       Hello
+   [07] Hello      ||||
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: NONE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE NONE
+
+(1)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      Hello
+   [05] ||||       ||||
+   [06] Hello      Hello
+   [07] ||||       ||||
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+
+(2)
+--------------------------------------------------
+
+
+   [01] ||||       ||||
+   [02] Hello      Hello
+   [03] ||||       ||||
+   [04] Hello      Hello
+   [05] ||||       ||||
+   [06] Hello      Hello
+   [07] ||||       ||||
+
+=> 
+
+TYPE: POTPOURRI POTPOURRI
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+TYPE: POTPOURRI POTPOURRI
+

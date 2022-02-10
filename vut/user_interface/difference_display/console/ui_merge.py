@@ -2,15 +2,15 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-from   vut.user_interface.difference_display.console.canvas    import ConsoleCanvasDiff, E_DiffMode
-import vut.user_interface.difference_display.console.prepare   as     prepare
-from   vut.engine.compare.engine.chunk_pair        import ChunkPair
-from   vut.engine.compare.engine.chunk_pair_list   import ChunkPairList
-from   vut.engine.compare.engine.line_pair              import LinePair
-import vut.system.keyboard                                     as     keyboard
-from   vut.external.quex.typed                                 import typed
-from   vut.external.quex.tools                                 import print_callstack
-from   vut.system.terminal                                     import Back
+from   vut.user_interface.difference_display.console.canvas   import ConsoleCanvasDiff, E_LinePairSelectionMode
+import vut.user_interface.difference_display.console.prepare  as     prepare
+from   vut.engine.compare.engine.chunk_pair                   import ChunkPair
+from   vut.engine.compare.engine.chunk_pair_list              import ChunkPairList
+from   vut.engine.compare.engine.line_pair                    import LinePair
+import vut.system.keyboard                                    as     keyboard
+from   vut.external.quex.typed                                import typed
+from   vut.external.quex.tools                                import print_callstack
+from   vut.system.terminal                                    import Back
 
 class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
     @typed(lina_chunk_list=ChunkPairList)
@@ -20,7 +20,7 @@ class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
         self._focus_range_i = None
         self._focus_cell_i  = None
 
-    @typed(mode=E_DiffMode)
+    @typed(mode=E_LinePairSelectionMode)
     def set_mode(self, mode, verbosity_level=2):
         ConsoleCanvasDiff.set_mode(self, mode, verbosity_level)
         self._range_list = prepare.get_Interval_list(self._lina_chunk_list)
@@ -79,7 +79,7 @@ class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
     def interact(self):
         delta_horizontal = 5 # int(canvas.width / 8)
         delta_vertical   = 5 # int(canvas.height / 8)
-        self.set_mode(E_DiffMode.PLAIN, verbosity_level=2)
+        self.set_mode(E_LinePairSelectionMode.PLAIN, verbosity_level=2)
         while 1 + 1 == 2:
             self.show()
             while 1 + 1 == 2:
@@ -89,8 +89,8 @@ class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
                 elif key == 'd': self._add_horizontal_offset(delta_horizontal); break
                 elif key == 'w': self._add_vertical_offset(- delta_vertical); break
                 elif key == 's': self._add_vertical_offset(delta_vertical); break
-                elif key == 'A': self.set_mode(E_DiffMode.ANALOGIES); break
-                elif key == 'P': self.set_mode(E_DiffMode.PLAIN); break
-                elif key == 'E': self.set_mode(E_DiffMode.ERRORS); break
+                elif key == 'A': self.set_mode(E_LinePairSelectionMode.ANALOGIES); break
+                elif key == 'P': self.set_mode(E_LinePairSelectionMode.PLAIN); break
+                elif key == 'E': self.set_mode(E_LinePairSelectionMode.ERRORS); break
 
 

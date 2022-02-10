@@ -74,6 +74,24 @@ from  enum        import IntEnum
 from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
 
+class LineSeparatorAdaptor(SeparatorAdaptor):
+    def is_separator(self, le):
+        """RETURNS: True, if 'x' is a separator.
+                    False, else.
+        """
+        return le.tolerance_id == SEPERATOR
+
+    def _good_Edit(self, le_a, le_b):
+        """RETURNS: The appropriate 'Edit' object for the pair of 'le_a', and 'le_b'.
+
+        Assuming that le_a, and le_b are equivalent, the return value provides
+        the according 'Edit' object, i.e. GOOD or GOOD_TOLERATED.
+        """
+        if le_a.string == le_b.string:
+            return self.Edit(GOOD, None)            # both equal separators
+        else:
+            return self.Edit(GOOD_TOLERATED, None)  # separators are similar
+
 @lru_cache(maxsize=65536)
 @typed(subject_le_seq=tuple, nominal_le_seq=tuple)
 def do(subject_le_seq, nominal_le_seq, analogy_db=None):
@@ -89,22 +107,22 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     if analogy_db is None:
         analogy_db = AnalogyDb()
 
-    separator_db = SeparatorAdaptor(subject_le_seq, 
-                                    nominal_le_seq,
-                                    lambda x: x.tolerance_id == SEPERATOR,
-                                    cost_db[SUBSTITUTE_TYPE],
-                                    cost_db[INSERT],
-                                    Edit)
+    separator_db = LineSeparatorAdaptor(subject_le_seq, nominal_le_seq,
+                                        cost_db[SUBSTITUTE_TYPE],
+                                        cost_db[INSERT],
+                                        Edit)
 
-    initial_editions = EditSequence(0, [], analogy_db)
+    initial_edit_sequence = EditSequence(0, [], analogy_db)
 
     if separator_db and separator_db.original_max_cost == 0.0:
-        best = initial_editions
+        best = initial_edit_sequence
     else:
         subject_le_seq,  \
         nominal_le_seq   = separator_db.strip_separators()
-        initial_item     = WorkItem(0, 0, initial_editions)
-        best             = WorkList(subject_le_seq, nominal_le_seq, initial_item).run()
+        initial_item     = WorkItem(0, 0, initial_edit_sequence)
+        best             = WorkList(subject_le_seq, 
+                                    nominal_le_seq, 
+                                    initial_item).run()
 
     return best.prepare_as_best(separator_db, True)
 

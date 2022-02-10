@@ -1,50 +1,50 @@
 {
 title: MatchDb;
 file_name: test-match_db.py;
-hwut_info_time: 1642017708L;
+hwut_info_time: 1642507768L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ analogy_interferences; OK; 0.188600; 0; ]
-  [ extract_ultimates; OK; 0.189210; 0; ]
-  [ pairing; OK; 0.188622; 0; ]
+  [ analogy_interferences; OK; 0.182534; 0; ]
+  [ extract_ultimates; OK; 0.186769; 0; ]
+  [ pairing; OK; 0.184159; 0; ]
 ]
 }
 {
 title: Search anyway;
 title_group: FriendsPairing;
 file_name: test-exact.py;
-hwut_info_time: 1642017708L;
+hwut_info_time: 1643230110L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.208318; 0; ]
-  [ analogy; OK; 0.197509; 0; ]
-  [ wild; OK; 0.618194; 0; ]
-  [ wild-2; OK; 0.509879; 0; ]
-  [ border; OK; 0.213461; 0; ]
-  [ special; OK; 0.209307; 0; ]
+  [ basic; OK; 0.197278; 0; ]
+  [ analogy; OK; 0.199256; 0; ]
+  [ wild; OK; 0.584799; 0; ]
+  [ wild-2; OK; 0.488510; 0; ]
+  [ border; OK; 0.202564; 0; ]
+  [ special; OK; 0.196477; 0; ]
 ]
 }
 {
 title: fail quickly;
 title_group: FriendsPairing;
 file_name: test-exact-fail-quickly.py;
-hwut_info_time: 1642017708L;
+hwut_info_time: 1643230083L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.202843; 0; ]
-  [ analogy; OK; 0.205369; 0; ]
-  [ wild; OK; 0.616439; 0; ]
-  [ border; OK; 0.204125; 0; ]
+  [ basic; OK; 0.198628; 0; ]
+  [ analogy; OK; 0.207364; 0; ]
+  [ wild; OK; 0.580225; 0; ]
+  [ border; OK; 0.200536; 0; ]
 ]
 }
 {
 title: Search anyway;
 title_group: FriendsPairingMax;
 file_name: test-similar.py;
-hwut_info_time: 1642017708L;
+hwut_info_time: 1644477478L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.212771; 0; ]
-  [ restricted_cmp; OK; 0.202081; 0; ]
+  [ basic; OK; 0.206829; 0; ]
+  [ restricted_cmp; OK; 0.194987; 1753851973; ]
 ]
 }

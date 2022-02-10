@@ -18,11 +18,13 @@ operations on 'Line's (see edit_operations/line.py) and strings (see
 Levenshtein Distance).
 _______________________________________________________________________________
 """
-from  vut.engine.compare.edit_operations.edit  import E_EditId, Edit, EditSequence 
+from   vut.engine.compare.edit_operations.edit import E_EditId, Edit, EditSequence 
 from   vut.engine.compare.edit_operations.core import WorkListBase, \
                                                       WorkItemBase, \
                                                       position_increment_db, \
                                                       max_cost
+from   vut.engine.compare.edit_operations.separator_adaptor import SeparatorAdaptor
+from   vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
 from   vut.external.quex.typed                 import typed
 
@@ -62,16 +64,42 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """
     if analogy_db is None: analogy_db = AnalogyDb()
 
-    initial_editions = EditSequence(0, [], analogy_db)
-    initial_item     = WorkItem(0, 0, editions=initial_editions)
-    work_list        = WorkList(subject_match_seq_list, nominal_match_seq_list, 
-                                initial_item)
+    if False:
+        separator_db = SeparatorAdaptor(subject_match_seq_list,
+                                        nominal_match_seq_list,
+                                        cost_db[SUBSTITUTE],
+                                        cost_db[INSERT],
+                                        EditSequence)
 
-    if work_list.max_cost == 0.0:
-        return initial_editions
+    initial_edit_sequence = EditSequence(0, [], analogy_db)
+    if False: # and separator_db and separator_db.original_max_cost == 0.0:
+        best            = initial_edit_sequence
     else:
-        return work_list.run()
+        subject_le_seq, \
+        nominal_le_seq  = subject_match_seq_list, nominal_match_seq_list # separator_db.strip_separators()
+        initial_item    = WorkItem(0, 0, edit_list=initial_edit_sequence)
+        work_list       = WorkList(subject_le_seq, 
+                                   nominal_le_seq, 
+                                   initial_item)
+        best            = work_list.run()
 
+    return best # .prepare_as_best(separator_db, True)
+
+def _is_separator(line):
+    """RETURN: True, if 'line' is considered a separator. 
+               False, else.
+
+    A separator is an element that matches a pattern which is equivalent
+    whenever it occurs, i.e. comparison delivers 'True' with any other
+    seperator. It can be taken out of the sequence and re-inserted.
+    """
+    if not line.sequence:
+        return True
+    elif all(x.tolerance_id == E_ToleranceId.VISIBLE_NOTHING
+           for x in line.sequence):
+        return True
+    else:
+        return False
 
 class WorkList(WorkListBase):
     def __init__(self, subject, nominal, initial_item):
@@ -81,17 +109,16 @@ class WorkList(WorkListBase):
     def _append_subject_overhead(self, item):
         # delete all remaining subjects to conform the nominal
         L          = self.subject_length - item.si
-        overhead   = [(DELETE, None)] * L
+        overhead   = [ Edit(DELETE)] * L
         extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
         # insert all nominals into subject to conform nominal
         L          = self.nominal_length - item.ni
-        overhead   = [(INSERT, None)] * L
+        overhead   = [ Edit(INSERT) ] * L
         extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
-
 
 class WorkItemHistory:
     """A 'WorkItemHistory' keeps track of the preceeding edit operations in
@@ -149,13 +176,15 @@ class WorkItemHistory:
             assert False # pragma no cover
 
 class WorkItem(WorkItemBase):
-   def __init__(self, si, ni, editions, history=None):
-       WorkItemBase.__init__(self, si, ni, editions)
+   @typed(edit_list=EditSequence)
+   def __init__(self, si, ni, edit_list, history=None):
+       WorkItemBase.__init__(self, si, ni, edit_list)
        if history is None: self.history = WorkItemHistory()
        else:               self.history = history
 
    def __repr__(self):
-       return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.edit_list.cost, [x[0].name for x in self.edit_list.edit_list])
+       return "[%i:%i] cost: %f; %s; " % (self.si, self.ni, self.edit_list.cost, 
+                                          [x[0].name for x in self.edit_list.edit_list])
 
    def subsequent_steps(self, subject_list, nominal_list, cache):
        """YIELDS: 'WorkItems' based on possible edit operations applied on 'self'.
@@ -165,8 +194,8 @@ class WorkItem(WorkItemBase):
        if not line_editions.analogy_db.is_all_consistent(self.edit_list.analogy_db):
            # If there is a clash in analogy considerations, the comparison must be 
            # redone, such that edit operations adapt.
-           line_editions = subject_list[self.si].edit_operations(nominal_list[self.ni], self.edit_list.analogy_db)
-
+           line_editions = subject_list[self.si].edit_operations(nominal_list[self.ni], 
+                                                                 self.edit_list.analogy_db)
 
        assert isinstance(line_editions, EditSequence)
 
@@ -174,10 +203,11 @@ class WorkItem(WorkItemBase):
        # first from the worklist. It is essential that 'cheap' steps are
        # treated first, so that more expensive paths can be cut as early as
        # possible.
-       # NOTE: Subsequent INSERT-DELETE or DELETE-INSERT do not make sense!
+       # NOTE: Concatinating INSERT-DELETE or DELETE-INSERT does not make sense!
        #       They are equivalent to 'SUBSTITUTE'.
        if self.edit_list.last() != DELETE:
            yield self._step(INSERT)
+
        if self.edit_list.last() != INSERT:
            yield self._step(DELETE)
 
@@ -209,8 +239,8 @@ class WorkItem(WorkItemBase):
            new_analogy_db = self.edit_list.analogy_db
 
        new_editions = EditSequence(self.edit_list.cost + delta_cost,
-                               self.edit_list.edit_list + [ (edit_id, edit_list) ],
-                               new_analogy_db)
+                                   self.edit_list.edit_list + [ Edit(edit_id, edit_list) ],
+                                   new_analogy_db)
 
        result = WorkItem(self.si + increment_si,
                          self.ni + increment_ni,
@@ -247,8 +277,7 @@ class Cache(dict):
         """RETURNS: edit operations to transform subject line into the nominal line
                     (including required analogy db)
         """
-        key = (subject_i, nominal_i)
-
+        key    = (subject_i, nominal_i)
         result = dict.get(self, key)
         if result is None:
             subject   = subject_list[subject_i]

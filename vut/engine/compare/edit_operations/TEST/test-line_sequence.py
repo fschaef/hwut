@@ -54,11 +54,11 @@ def print_lineup(subject, nominal, edit_list):
     }
 
     subject_i, nominal_i = 0, 0
-    for edit_id, edit_list in edit_list:
-        print_db[edit_id](subject_i, nominal_i)
+    for edit in edit_list:
+        print_db[edit.id](subject_i, nominal_i)
 
-        subject_i += edit_distance_line_sequence.position_increment_db[edit_id][0]
-        nominal_i += edit_distance_line_sequence.position_increment_db[edit_id][1]
+        subject_i += edit_distance_line_sequence.position_increment_db[edit.id][0]
+        nominal_i += edit_distance_line_sequence.position_increment_db[edit.id][1]
 
 def test(a_list, b_list):
     print("------------------------------------")
@@ -93,16 +93,17 @@ if "subject" in sys.argv:
     test([], [])
 
 if "nominal" in sys.argv:
-    test(["s", "S", "Q"], ["s", "S"])
-    test(["s", "S", "Q"], ["s", "Q"])
-    test(["s", "S", "Q"], ["S", "Q"])
+    if True:
+        test(["s", "S", "Q"], ["s", "S"])
+        test(["s", "S", "Q"], ["s", "Q"])
+        test(["s", "S", "Q"], ["S", "Q"])
 
-    test(["s", "S", "Q"], ["s"])
-    test(["s", "S", "Q"], ["S"])
-    test(["s", "S", "Q"], ["Q"])
+        test(["s", "S", "Q"], ["s"])
+        test(["s", "S", "Q"], ["S"])
+        test(["s", "S", "Q"], ["Q"])
 
-    test(["s", "S", "Q"], [])
-    test(["s", "S"], [])
+        test(["s", "S", "Q"], [])
+        test(["s", "S"], [])
     test(["s"], [])
 
 if "special" in sys.argv:

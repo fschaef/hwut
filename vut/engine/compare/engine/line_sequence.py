@@ -53,23 +53,23 @@ class LineSequence(InputChunk):
         if not editions.edit_list:
             return [], editions.analogy_db
 
-        def iterable(edit_line_list):
+        def iterable(edit_sequence):
             si, ni = 0, 0
-            for edit_id, edit_list in edit_line_list:
-                if   edit_id == E_EditId.GOOD or edit_id == E_EditId.SUBSTITUTE:
+            for edit in edit_sequence:
+                if   edit.id == E_EditId.GOOD or edit.id == E_EditId.SUBSTITUTE:
                     subject_seq = self.line_list[si]
                     nominal_seq = nominal.line_list[ni]
-                elif edit_id == E_EditId.INSERT:
+                elif edit.id == E_EditId.INSERT:
                     subject_seq = None # nominal inserted, no counterpart in subject
                     nominal_seq = nominal.line_list[ni]
-                elif edit_id == E_EditId.DELETE:
+                elif edit.id == E_EditId.DELETE:
                     subject_seq = self.line_list[si]
                     nominal_seq = None # subject inserted, no counterpart in nominal
                 else:
                     assert False # pragma: no cover
 
-                yield subject_seq, nominal_seq, edit_list
-                s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit_id]
+                yield subject_seq, nominal_seq, edit.edit_list
+                s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit.id]
                 si += s_incr
                 ni += n_incr
 

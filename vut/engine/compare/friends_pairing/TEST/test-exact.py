@@ -47,7 +47,7 @@ this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-import vut.engine.compare.friends_pairing.exact    as     friends_pairing
+import vut.engine.compare.friends_pairing.compare  as     pair_compare
 from   vut.engine.compare.tolerance.pattern_finder import PatternFinder
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import get_Potpourri
@@ -71,10 +71,10 @@ def test_pure(subject_line_list, nominal_line_list):
     analogy_db = AnalogyDb()
     total_verdict, \
     db,            \
-    analogy_db     = friends_pairing.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
-                                        get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
-                                        analogy_db,
-                                        abort_f=False)
+    analogy_db     = pair_compare.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
+                                     get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
+                                     analogy_db,
+                                     abort_f=False)
 
     if total_verdict:
         print("association: %s (%i)" % (total_verdict, len(db)))

@@ -21,7 +21,7 @@ API:
 
      returns 'True' if both streams are equivalent, 'False' else.
 
-  line_associations(subject_stream, nominal_stream)
+  associate(subject_stream, nominal_stream)
 
      yields comparison information about the lines and potpourris that appear
      in the input streams.
@@ -33,12 +33,12 @@ is that they must provide the function:
                  "",              if end of stream has been reached.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.analogy_db                  import AnalogyDb
-from   vut.engine.compare.engine.comparison_iterable         import generate
-from   vut.engine.compare.engine.chunk_pair      import ChunkPair
-from   vut.engine.compare.engine.chunk_pair_list import ChunkPairList
-from   vut.engine.compare.engine.input_chunk                 import E_Verdict, \
-                                                                    InputChunkEmpty
+from   vut.engine.compare.engine.analogy_db           import AnalogyDb
+from   vut.engine.compare.engine.comparison_iterable  import generate
+from   vut.engine.compare.engine.chunk_pair           import ChunkPair
+from   vut.engine.compare.engine.chunk_pair_list      import ChunkPairList
+from   vut.engine.compare.engine.input_chunk          import E_Verdict, \
+                                                             InputChunkEmpty
 
 
 def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
@@ -73,7 +73,7 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
         return True
 
 
-def line_associations(config, subject_line_provider, nominal_line_provider):
+def associate(config, subject_line_provider, nominal_line_provider):
     """YIELDS: ChunkPair
 
     where:

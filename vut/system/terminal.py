@@ -56,7 +56,7 @@ class ConsoleCanvas:
        print(line + _color_reset_all)
 
    @typed(cell_content_list=list)
-   def prepare(self, f, cell_content_list=[]):
+   def prepare(self, f, cell_content_list=[]) -> str:
        def _iterable(cell_content_list, format_list):
            cell_i = 0
            for fe in format_list:
