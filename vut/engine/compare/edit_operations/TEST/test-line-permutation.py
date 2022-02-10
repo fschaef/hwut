@@ -90,7 +90,7 @@ call_n = 0
 def test_core(subject, nominal):
     global call_n
     call_n += 1
-    if False and call_n != 2: return
+    if False and call_n != 12: return
     print("--(%i)------------------------------------------------------------------" % call_n)
     call(subject, nominal)
     print()

@@ -113,11 +113,11 @@
 --(15)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  SEPERATOR:4711
-      => edits: INSERT, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT
 
       subject:  SEPERATOR:4711
       nominal:  VISIBLE_NOTHING:4711
-      => edits: DELETE, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE
 --(16)------------------------------------------------------------------
       subject:  ANALOGY:4711
       nominal:  NUMERIC:4711
