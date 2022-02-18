@@ -15,9 +15,11 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.core                   import E_Verdict
 from   vut.engine.compare.engine.input_chunk            import InputChunk, \
                                                                E_Chunk
-from   vut.engine.compare.engine.line_pair       import LinePair
+from   vut.engine.compare.engine.line_pair              import LinePair
 import vut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
+import vut.engine.compare.edit_operations.line          as     edit_operations_line
 from   vut.engine.compare.edit_operations.edit          import E_EditId, \
+                                                               Edit, \
                                                                EditSequence
 
 
@@ -56,17 +58,22 @@ class LineSequence(InputChunk):
         def iterable(edit_sequence):
             si, ni = 0, 0
             for edit in edit_sequence:
-                if   edit.id == E_EditId.GOOD or edit.id == E_EditId.SUBSTITUTE:
+                if edit.id == E_EditId.SUBSTITUTE:
                     subject_seq = self.line_list[si]
                     nominal_seq = nominal.line_list[ni]
-                elif edit.id == E_EditId.INSERT:
+                elif   edit.id == E_EditId.GOOD or edit.id == E_EditId.GOOD_TOLERATED:
+                    subject_seq = self.line_list[si]
+                    nominal_seq = nominal.line_list[ni]
+                elif edit.id == E_EditId.INSERT or edit.id == E_EditId.GOOD_INSERT:
                     subject_seq = None # nominal inserted, no counterpart in subject
                     nominal_seq = nominal.line_list[ni]
-                elif edit.id == E_EditId.DELETE:
+                elif edit.id == E_EditId.DELETE or edit.id == E_EditId.GOOD_DELETE:
                     subject_seq = self.line_list[si]
                     nominal_seq = None # subject inserted, no counterpart in nominal
                 else:
-                    assert False # pragma: no cover
+                    assert edit.id != E_EditId.TRANSPOSE         # pragma: no cover
+                    assert edit.id != E_EditId.SUBSTITUTE_TYPE   # pragma: no cover
+                    assert False                                 # pragma: no cover
 
                 yield subject_seq, nominal_seq, edit.edit_list
                 s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit.id]

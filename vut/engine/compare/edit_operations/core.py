@@ -152,7 +152,6 @@ class WorkListBase(list):
                 self.produce_derived(item)
         return self.best
 
-
     def end_of_sequence(self, item):
         """RETURNS: True, if the item may be used for deriving subsequent steps.
                     False, else.

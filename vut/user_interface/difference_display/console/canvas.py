@@ -5,12 +5,12 @@ PURPOSE:
 import vut.user_interface.difference_display.console.formatter as     formatter
 import vut.user_interface.difference_display.console.prepare   as     prepare
 
-from   vut.engine.compare.engine.chunk_pair                    import ChunkPair
-from   vut.engine.compare.engine.chunk_pair_list               import ChunkPairList
-from   vut.engine.compare.engine.line_pair                     import LinePair
-from   vut.engine.compare.engine.line_pair_list                import LinePairList
-from   vut.engine.compare.engine.core                          import E_PotpourriBorder
-from   vut.engine.compare.edit_operations.edit                 import E_EditId, Edit
+from   vut.engine.compare.engine.chunk_pair        import ChunkPair
+from   vut.engine.compare.engine.chunk_pair_list   import ChunkPairList
+from   vut.engine.compare.engine.line_pair         import LinePair
+from   vut.engine.compare.engine.line_pair_list    import LinePairList
+from   vut.engine.compare.engine.core              import E_PotpourriBorder
+from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit
 
 from   vut.external.quex.typed  import typed
 from   vut.system.helper        import number_of_decimal_digits

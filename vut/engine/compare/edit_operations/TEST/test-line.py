@@ -20,6 +20,7 @@ for equivalences to hold.
 ______________________________________________________________________________
 """
 import sys
+from   copy import copy
 
 sys.path.insert(0, "../../../../../")
 
@@ -28,7 +29,7 @@ from   vut.engine.compare.TEST.common            import prepare, print_match_seq
 
 if "--hwut-info" in sys.argv:
     print("Lines;")
-    print("CHOICES: basic, special, analogies;")
+    print("CHOICES: basic, visible-nothing, special, analogies;")
     sys.exit()
 
 def test_mseq(a, b):
@@ -65,6 +66,36 @@ if "basic" in sys.argv:
     test_mseq("sn",  "ns")      # transposed adjacently
     test_mseq("snx", "ysn")
     test_mseq("sex", "yse")
+
+if "visible-nothing" in sys.argv:
+    def test_mseqx(a, b): 
+        test_mseq("".join(a), "".join(b))
+    test_mseq("v",   "v")
+    test_mseq("V",   "v")
+    test_mseq("vs",   "vs")
+    test_mseq("vs",   "sv")
+    test_mseq("vS",   "vs")
+    test_mseq("vS",   "sv")
+
+    vstr = list("vvv")
+    for p in range(3):
+        str0 = copy(vstr); str0[p] = "s"
+        str1 = copy(vstr); str1[p] = "s"
+        test_mseqx(str0, str1)
+    for p in range(3):
+        str0 = copy(vstr); str0[p] = "s"
+        str1 = copy(vstr); str1[p] = "S"
+        test_mseqx(str0, str1)
+
+    vstr = list("SsS")
+    for p in range(3):
+        str0 = copy(vstr); str0[p] = "v"
+        str1 = copy(vstr); str1[p] = "v"
+        test_mseqx(str0, str1)
+    for p in range(3):
+        str0 = copy(vstr); str0[p] = "v"
+        str1 = copy(vstr); str1[p] = "V"
+        test_mseqx(str0, str1)
 
 if "special" in sys.argv:
     test_mseq("s",   "s")

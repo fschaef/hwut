@@ -146,7 +146,9 @@ class LinePair:
             transpose_id_set = set()
             si = ni = 0
             for edit in self.edit_list:
-                if edit.id == E_EditId.TRANSPOSE:
+                if si == subject_length and ni == nominal_length:
+                    break
+                elif edit.id == E_EditId.TRANSPOSE:
                     transpose_id_set.add(edit.transpose_ai)
 
                 subject = None if si >= subject_length else self.subject.sequence[si]

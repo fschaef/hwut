@@ -18,15 +18,16 @@ operations on 'Line's (see edit_operations/line.py) and strings (see
 Levenshtein Distance).
 _______________________________________________________________________________
 """
-from   vut.engine.compare.edit_operations.edit import E_EditId, Edit, EditSequence 
-from   vut.engine.compare.edit_operations.core import WorkListBase, \
-                                                      WorkItemBase, \
-                                                      position_increment_db, \
-                                                      max_cost
+from   vut.engine.compare.edit_operations.edit              import E_EditId, Edit, EditSequence, \
+                                                                   list_EditGOOD_line_sequence, \
+                                                                   list_EditGOOD_line
+from   vut.engine.compare.edit_operations.core              import WorkListBase, \
+                                                                   WorkItemBase, \
+                                                                   position_increment_db
 from   vut.engine.compare.edit_operations.separator_adaptor import SeparatorAdaptor
 from   vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
-from   vut.engine.compare.engine.analogy_db    import AnalogyDb
-from   vut.external.quex.typed                 import typed
+from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
+from   vut.external.quex.typed                              import typed
 
 from   enum        import IntEnum
 from   collections import defaultdict
@@ -52,7 +53,7 @@ cost_GOOD          = cost_db[GOOD]
 cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
 cost_INSERT_DELETE = cost_db[INSERT]
 
-def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
+def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None) -> EditSequence:
     """RETURNS: EditSequence
 
     Determine how the sequence of subject 'Line' objects can be transformed
@@ -64,42 +65,68 @@ def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None):
     """
     if analogy_db is None: analogy_db = AnalogyDb()
 
-    if False:
-        separator_db = SeparatorAdaptor(subject_match_seq_list,
-                                        nominal_match_seq_list,
-                                        cost_db[SUBSTITUTE],
-                                        cost_db[INSERT],
-                                        EditSequence)
+    separator_db = LineSequenceSeparatorAdaptor(subject_match_seq_list,
+                                                nominal_match_seq_list,
+                                                cost_db[SUBSTITUTE],
+                                                cost_db[INSERT],
+                                                Edit)
 
-    initial_edit_sequence = EditSequence(0, [], analogy_db)
-    if False: # and separator_db and separator_db.original_max_cost == 0.0:
-        best            = initial_edit_sequence
+    if separator_db and separator_db.original_max_cost == 0.0:
+        best = EditSequence(0, list_EditGOOD_line_sequence(subject_match_seq_list, nominal_match_seq_list), 
+                            analogy_db)
     else:
+        initial_edit_sequence = EditSequence(0, [], analogy_db)
+
         subject_le_seq, \
-        nominal_le_seq  = subject_match_seq_list, nominal_match_seq_list # separator_db.strip_separators()
+        nominal_le_seq  = separator_db.strip_separators()
         initial_item    = WorkItem(0, 0, edit_list=initial_edit_sequence)
-        work_list       = WorkList(subject_le_seq, 
-                                   nominal_le_seq, 
+        work_list       = WorkList(subject_le_seq, nominal_le_seq, 
                                    initial_item)
         best            = work_list.run()
 
-    return best # .prepare_as_best(separator_db, True)
+    return best.prepare_as_best(separator_db, relative_f=False)
 
-def _is_separator(line):
-    """RETURN: True, if 'line' is considered a separator. 
-               False, else.
+class LineSequenceSeparatorAdaptor(SeparatorAdaptor):
+    def _is_separator(self, line):
+        """RETURN: True, if 'line' is considered a separator. 
+                   False, else.
 
-    A separator is an element that matches a pattern which is equivalent
-    whenever it occurs, i.e. comparison delivers 'True' with any other
-    seperator. It can be taken out of the sequence and re-inserted.
-    """
-    if not line.sequence:
-        return True
-    elif all(x.tolerance_id == E_ToleranceId.VISIBLE_NOTHING
-           for x in line.sequence):
-        return True
-    else:
-        return False
+        A separator is an element that matches a pattern which is equivalent
+        whenever it occurs, i.e. comparison delivers 'True' with any other
+        seperator. It can be taken out of the sequence and re-inserted.
+        """
+        if not line.sequence: # empty line
+            return True
+        elif all(le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for le in line.sequence):
+            return True
+        else:
+            return False
+
+    def _insert_Edit(self, ni):
+        if all(x.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for x in self.nominal_sequence[ni]):
+            return self.Edit(GOOD_INSERT, None)
+        else:
+            return self.Edit(INSERT, None)
+
+    def _delete_Edit(self, si):
+        if all(x.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for x in self.subject_sequence[si]):
+            return self.Edit(GOOD_DELETE, None)
+        else:
+            return self.Edit(DELETE, None)
+
+    def _good_Edit(self, line_a, line_b):
+        """RETURNS: The appropriate 'Edit' object for the pair of 'line_a', and 'line_a'.
+
+        Assuming that line_a, and line_a are equivalent, the return value provides
+        the according 'Edit' object, i.e. GOOD or GOOD_TOLERATED.
+        """
+        edit_list = list_EditGOOD_line(line_a.sequence, line_b.sequence)
+        if any(edit.id == GOOD_TOLERATED for edit in edit_list):
+            return Edit(GOOD_TOLERATED, edit_list)
+        else:
+            return Edit(GOOD, edit_list)
+
+
 
 class WorkList(WorkListBase):
     def __init__(self, subject, nominal, initial_item):
@@ -109,7 +136,7 @@ class WorkList(WorkListBase):
     def _append_subject_overhead(self, item):
         # delete all remaining subjects to conform the nominal
         L          = self.subject_length - item.si
-        overhead   = [ Edit(DELETE)] * L
+        overhead   = [ Edit(DELETE) ] * L
         extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 

@@ -1,0 +1,138 @@
+subject:  VISIBLE_NOTHING:nix
+nominal:  VISIBLE_NOTHING:nix
+=>
+Cost: 0.000000
+[0] GOOD
+
+subject:  VISIBLE_NOTHING:nothing
+nominal:  VISIBLE_NOTHING:nix
+=>
+Cost: 0.000000
+[0] GOOD_TOLERATED
+
+subject:  VISIBLE_NOTHING:nix, STRING:string
+nominal:  VISIBLE_NOTHING:nix, STRING:string
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+
+subject:  VISIBLE_NOTHING:nix, STRING:string
+nominal:  STRING:string, VISIBLE_NOTHING:nix
+=>
+Cost: 0.000000
+[0] GOOD_DELETE
+[1] GOOD
+[2] GOOD_INSERT
+
+subject:  VISIBLE_NOTHING:nix, STRING:strong
+nominal:  VISIBLE_NOTHING:nix, STRING:string
+=>
+Cost: 0.083333
+[0] GOOD
+[1] SUBSTITUTE
+
+subject:  VISIBLE_NOTHING:nix, STRING:strong
+nominal:  STRING:string, VISIBLE_NOTHING:nix
+=>
+Cost: 0.083333
+[0] GOOD_DELETE
+[1] SUBSTITUTE
+[2] GOOD_INSERT
+
+subject:  STRING:string, VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix
+nominal:  STRING:string, VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+[2] GOOD
+
+subject:  VISIBLE_NOTHING:nix, STRING:string, VISIBLE_NOTHING:nix
+nominal:  VISIBLE_NOTHING:nix, STRING:string, VISIBLE_NOTHING:nix
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+[2] GOOD
+
+subject:  VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix, STRING:string
+nominal:  VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix, STRING:string
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+[2] GOOD
+
+subject:  STRING:string, VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix
+nominal:  STRING:strong, VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix
+=>
+Cost: 0.055556
+[0] SUBSTITUTE
+[1] GOOD
+[2] GOOD
+
+subject:  VISIBLE_NOTHING:nix, STRING:string, VISIBLE_NOTHING:nix
+nominal:  VISIBLE_NOTHING:nix, STRING:strong, VISIBLE_NOTHING:nix
+=>
+Cost: 0.055556
+[0] GOOD
+[1] SUBSTITUTE
+[2] GOOD
+
+subject:  VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix, STRING:string
+nominal:  VISIBLE_NOTHING:nix, VISIBLE_NOTHING:nix, STRING:strong
+=>
+Cost: 0.055556
+[0] GOOD
+[1] GOOD
+[2] SUBSTITUTE
+
+subject:  VISIBLE_NOTHING:nix, STRING:string, STRING:strong
+nominal:  VISIBLE_NOTHING:nix, STRING:string, STRING:strong
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+[2] GOOD
+
+subject:  STRING:strong, VISIBLE_NOTHING:nix, STRING:strong
+nominal:  STRING:strong, VISIBLE_NOTHING:nix, STRING:strong
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+[2] GOOD
+
+subject:  STRING:strong, STRING:string, VISIBLE_NOTHING:nix
+nominal:  STRING:strong, STRING:string, VISIBLE_NOTHING:nix
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+[2] GOOD
+
+subject:  VISIBLE_NOTHING:nix, STRING:string, STRING:strong
+nominal:  VISIBLE_NOTHING:nothing, STRING:string, STRING:strong
+=>
+Cost: 0.000000
+[0] GOOD_TOLERATED
+[1] GOOD
+[2] GOOD
+
+subject:  STRING:strong, VISIBLE_NOTHING:nix, STRING:strong
+nominal:  STRING:strong, VISIBLE_NOTHING:nothing, STRING:strong
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD_TOLERATED
+[2] GOOD
+
+subject:  STRING:strong, STRING:string, VISIBLE_NOTHING:nix
+nominal:  STRING:strong, STRING:string, VISIBLE_NOTHING:nothing
+=>
+Cost: 0.000000
+[0] GOOD
+[1] GOOD
+[2] GOOD_TOLERATED
+

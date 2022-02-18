@@ -1,0 +1,172 @@
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment 
+
+=> verdict: True
+
+(2)
+--------------------------------------------------
+
+
+   [01]            ## the comment
+
+=> verdict: True
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment ## the comment
+
+=> verdict: True
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment ## the comment
+
+=> verdict: True
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment der kommentar##
+
+=> verdict: True
+
+(2)
+--------------------------------------------------
+
+
+   [01] der kommentar## ## the comment
+
+=> verdict: True
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment nothing same nix
+
+=> verdict: False
+
+(2)
+--------------------------------------------------
+
+
+   [01] nothing same nix ## the comment
+
+=> verdict: False
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment  
+
+=> verdict: True
+
+(2)
+--------------------------------------------------
+
+
+   [01]            ## the comment
+
+=> verdict: True
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar## ## the comment
+   [02]                 nothing same nix
+
+=> verdict: False
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment   der kommentar##
+   [02] nothing same nix 
+
+=> verdict: False
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar## der kommentar##
+   [02]                 nix same nothing
+
+=> verdict: False
+
+(2)
+--------------------------------------------------
+
+
+   [01] der kommentar##  der kommentar##
+   [02] nix same nothing 
+
+=> verdict: False
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar## ## the comment
+   [02]                 der kommentar##
+   [03]                 nothing same nix
+
+=> verdict: False
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment   der kommentar##
+   [02] der kommentar##  
+   [03] nothing same nix 
+
+=> verdict: False
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar##  ## the comment
+   [02] nothing same nix nothing same nix
+
+=> verdict: True
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment   der kommentar##
+   [02] nothing same nix nothing same nix
+
+=> verdict: True
+
+(1)
+--------------------------------------------------
+
+
+   [01]            
+   [02]            
+
+=> verdict: True
+
+(2)
+--------------------------------------------------
+
+
+   [01]             
+   [02]             
+
+=> verdict: True
+

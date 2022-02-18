@@ -35,15 +35,16 @@ from   io import StringIO
 
 if "--hwut-info" in sys.argv:
     print("Line Comparison;")
-    print("CHOICES: compare, compare-2, associate, associate-2;")
+    print("CHOICES: compare, compare-2, associate, associate-2, compare-3, associate-3;")
     sys.exit()
 
 config = Configuration()
-config.pattern_finder.analogy_f               = False
-config.pattern_finder.whitespace_f            = True
-config.pattern_finder.backslash_f             = False
-config.pattern_finder.numeric_tolerance_ratio = 0
-config.pattern_finder.equivalent_pattern_list = []
+config.pattern_finder.analogy_f                    = False
+config.pattern_finder.whitespace_f                 = True
+config.pattern_finder.backslash_f                  = False
+config.pattern_finder.numeric_tolerance_ratio      = 0
+config.pattern_finder.equivalent_pattern_list      = []
+config.pattern_finder.visible_nothing_pattern_list = ["nothing", "nix"]
 
 def test_core(subject_txt, nominal_txt):
     print("--------------------------------------------------\n")
@@ -76,7 +77,7 @@ def test_compare(subject_txt, nominal_txt, both_f=False):
         print("=> verdict: %s" % main.compare(config, subject, nominal))
         print()
 
-config_print_only_chunk_type = False
+CONFIGURATION_print_only_chunk_type = False
 def test_line_associations_core(subject_txt, nominal_txt):
     subject_line_list = subject_txt.splitlines()
     nominal_line_list = nominal_txt.splitlines()
@@ -88,7 +89,7 @@ def test_line_associations_core(subject_txt, nominal_txt):
     for chunk in line_association_chunk_list:
         st, nt = chunk.types()
         print("TYPE:", st.name, nt.name)
-        if config_print_only_chunk_type: continue
+        if CONFIGURATION_print_only_chunk_type: continue
         print_friends_pairing_max_result(subject_line_list, nominal_line_list, 0, 
                                          chunk, [], line_offset=-1)
         print()
@@ -102,30 +103,52 @@ def test_line_associations(subject_txt, nominal_txt, both_f=False):
         print("(2)")
         test_line_associations_core(nominal_txt, subject_txt)
 
-if sys.argv[1].endswith("-2"):
+if sys.argv[1].endswith("-3"):
+    if "compare-3" in sys.argv:   test = test_compare
+    if "associate-3" in sys.argv: test = test_line_associations
+
+    CONFIGURATION_print_only_chunk_type = False
+    c0  = "## the comment\n"
+    c1  = "der kommentar##\n"
+    c2  = "nothing same nix\n"
+    c3  = "nix same nothing\n"
+    c4  = " \n"
+
+    test(c0     , "",             both_f=True)
+    test(c0     , c0,             both_f=True)
+    test(c0     , c1,             both_f=True)
+    test(c0     , c2,             both_f=True)
+    test(c0     , c4,             both_f=True)
+    test(c1     , c0 + c2,        both_f=True)
+    test(c1     , c1 + c3,        both_f=True)
+    test(c1     , c0 + c1 + c2,   both_f=True)
+    test(c1 + c2, c0 + c2,        both_f=True)
+    test(c4 + c4, "",             both_f=True)
+
+elif sys.argv[1].endswith("-2"):
     if "compare-2" in sys.argv:   test = test_compare
     if "associate-2" in sys.argv: test = test_line_associations
 
-    config_print_only_chunk_type = True
+    CONFIGURATION_print_only_chunk_type = True
     p = "||||\nHello\n||||\n"
     l = "Hello\n"
-    if True:
-        test(p,          "",         both_f=True)
-        test(l,          "",         both_f=True)
-        test(l + p,      "",         both_f=True)
-        test(l + p,      l,          both_f=True)
-        test(l + p,      p,          both_f=True) 
-        test(p + l,      p,          both_f=True)
-        test(p + l,      l,          both_f=True)
-        test(p + p,      p + l,      both_f=True)
-        test(p + p,      l + p,      both_f=True)
-        test(p + l + p,  p,          both_f=True)
-        test(p + l + p,  p + l,      both_f=True)
-        test(p + l + p,  l,          both_f=True)
-        test(p + l + p,  l + p,      both_f=True)
-        test(p + l + p,  l + p + l,  both_f=True)
-        test(p + l + p,  p + p + l,  both_f=True)
-        test(p + l + p,  p + l + p,  both_f=True)
+
+    test(p,          "",         both_f=True)
+    test(l,          "",         both_f=True)
+    test(l + p,      "",         both_f=True)
+    test(l + p,      l,          both_f=True)
+    test(l + p,      p,          both_f=True) 
+    test(p + l,      p,          both_f=True)
+    test(p + l,      l,          both_f=True)
+    test(p + p,      p + l,      both_f=True)
+    test(p + p,      l + p,      both_f=True)
+    test(p + l + p,  p,          both_f=True)
+    test(p + l + p,  p + l,      both_f=True)
+    test(p + l + p,  l,          both_f=True)
+    test(p + l + p,  l + p,      both_f=True)
+    test(p + l + p,  l + p + l,  both_f=True)
+    test(p + l + p,  p + p + l,  both_f=True)
+    test(p + l + p,  p + l + p,  both_f=True)
 
 else:
     if "compare" in sys.argv:   test = test_compare

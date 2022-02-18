@@ -10,9 +10,10 @@ applications.
 ______________________________________________________________________________
 """
 from   vut.engine.compare.tolerance.line_element import LineElementString, \
-                                                       LineElementNumber, \
-                                                       LineElementAnalogy, \
-                                                       LineElementEquivalencePattern
+                                                        LineElementNumber, \
+                                                        LineElementAnalogy, \
+                                                        LineElementVisibleNothing, \
+                                                        LineElementEquivalencePattern
 from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.engine.potpourri       import Potpourri
 from   vut.engine.compare.engine.line_sequence   import LineSequence
@@ -41,7 +42,9 @@ def frame_with_potpourri_borders(line_list):
 
 
 line_element_db = {
-    "e":  [ LineElementString(0,6,"") ],
+    "e":  [ LineElementString(0,0,"") ],
+    "v":  [ LineElementVisibleNothing(0,3,"nix") ],
+    "V":  [ LineElementVisibleNothing(0,7,"nothing") ],
     "1":  [ LineElementString(0,1,"a") ],
     "2":  [ LineElementString(0,1,"b") ],
     "3":  [ LineElementString(0,1,"a b"), 
@@ -107,7 +110,8 @@ def print_list_sequence_pairs(subject_txt_list, space, nominal_txt_list, line_nu
         line_n += 1
         print("   %s%s%s %s" % (line_number_str(line_n), s_text, space(s_text), n_text))
 
-def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost, line_associations, analogy_db, line_offset=0):
+def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost, \
+                                     line_associations, analogy_db, line_offset=0):
     print("cost: %.5f; line_associations: %i;" % (cost, len(line_associations)))
 
     def _name(line_list, match_seq):
@@ -129,6 +133,7 @@ def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost,
         if lina.edit_list is None: edit_list = []
         else:                      edit_list = lina.edit_list
         edit_txt = ", ".join(edit.id.name for edit in edit_list)
+        # lina has itself no information about, insert, delete, substitute of lines.
         print("   [%s] %s%s --> [%s] %s %s{%s}" % (subject_line_n, subject_txt,
                                                    space,
                                                    nominal_line_n, nominal_txt,

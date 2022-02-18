@@ -1,0 +1,326 @@
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment 
+
+=> 
+
+TYPE: LINE_SEQUENCE NONE
+cost: 0.00000; line_associations: 1;
+   [01] ## the comment          --> [--] None                    {}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01]            ## the comment
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+cost: 0.00000; line_associations: 1;
+   [--] None                    --> [01] ## the comment          {}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment ## the comment
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 1;
+   [01] ## the comment          --> [01] ## the comment          {GOOD}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment ## the comment
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 1;
+   [01] ## the comment          --> [01] ## the comment          {GOOD}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment der kommentar##
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 1;
+   [01] ## the comment          --> [01] der kommentar##         {GOOD_TOLERATED}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01] der kommentar## ## the comment
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 1;
+   [01] der kommentar##         --> [01] ## the comment          {GOOD_TOLERATED}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment nothing same nix
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [01] ## the comment          --> [--] None                    {}
+   [--] None                    --> [01] nothing same nix        {}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01] nothing same nix ## the comment
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [--] None                    --> [01] ## the comment          {}
+   [01] nothing same nix        --> [--] None                    {}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] ## the comment  
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 1;
+   [01] ## the comment          --> [01]                         {GOOD_TOLERATED}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01]            ## the comment
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 1;
+   [01]                         --> [01] ## the comment          {GOOD_TOLERATED}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar## ## the comment
+   [02]                 nothing same nix
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [01] der kommentar##         --> [01] ## the comment          {GOOD_TOLERATED}
+   [--] None                    --> [02] nothing same nix        {}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment   der kommentar##
+   [02] nothing same nix 
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [01] ## the comment          --> [01] der kommentar##         {GOOD_TOLERATED}
+   [02] nothing same nix        --> [--] None                    {}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar## der kommentar##
+   [02]                 nix same nothing
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [01] der kommentar##         --> [01] der kommentar##         {GOOD}
+   [--] None                    --> [02] nix same nothing        {}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01] der kommentar##  der kommentar##
+   [02] nix same nothing 
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [01] der kommentar##         --> [01] der kommentar##         {GOOD}
+   [02] nix same nothing        --> [--] None                    {}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar## ## the comment
+   [02]                 der kommentar##
+   [03]                 nothing same nix
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 3;
+   [01] der kommentar##         --> [01] ## the comment          {GOOD_TOLERATED}
+   [--] None                    --> [02] der kommentar##         {}
+   [--] None                    --> [03] nothing same nix        {}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment   der kommentar##
+   [02] der kommentar##  
+   [03] nothing same nix 
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 3;
+   [01] ## the comment          --> [01] der kommentar##         {GOOD_TOLERATED}
+   [02] der kommentar##         --> [--] None                    {}
+   [03] nothing same nix        --> [--] None                    {}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01] der kommentar##  ## the comment
+   [02] nothing same nix nothing same nix
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [01] der kommentar##         --> [01] ## the comment          {GOOD_TOLERATED}
+   [02] nothing same nix        --> [02] nothing same nix        {GOOD, GOOD, GOOD, GOOD, GOOD}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01] ## the comment   der kommentar##
+   [02] nothing same nix nothing same nix
+
+=> 
+
+TYPE: LINE_SEQUENCE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [01] ## the comment          --> [01] der kommentar##         {GOOD_TOLERATED}
+   [02] nothing same nix        --> [02] nothing same nix        {GOOD, GOOD, GOOD, GOOD, GOOD}
+AnalogyDb:
+[]
+
+
+(1)
+--------------------------------------------------
+
+
+   [01]            
+   [02]            
+
+=> 
+
+TYPE: LINE_SEQUENCE NONE
+cost: 0.00000; line_associations: 2;
+   [01]                         --> [--] None                    {}
+   [02]                         --> [--] None                    {}
+AnalogyDb:
+[]
+
+
+(2)
+--------------------------------------------------
+
+
+   [01]             
+   [02]             
+
+=> 
+
+TYPE: NONE LINE_SEQUENCE
+cost: 0.00000; line_associations: 2;
+   [--] None                    --> [01]                         {}
+   [--] None                    --> [02]                         {}
+AnalogyDb:
+[]
+
+

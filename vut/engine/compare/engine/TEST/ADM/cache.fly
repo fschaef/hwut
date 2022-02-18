@@ -4,27 +4,27 @@ file_name: test-compare_lines.py;
 hwut_info_time: 1642507768L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ judge; OK; 0.191693; 0; ]
-  [ info; OK; 0.196329; 0; ]
+  [ judge; OK; 0.187953; 0; ]
+  [ info; OK; 0.193282; 0; ]
 ]
 }
 {
 title: Line Sequence;
 file_name: test-compare_line_sequence.py;
-hwut_info_time: 1644519649L;
+hwut_info_time: 1644561646L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ judge; OK; 0.193389; 0; ]
-  [ info; OK; 0.197563; 0; ]
+  [ judge; OK; 0.188717; 0; ]
+  [ info; OK; 0.191333; 18724091; ]
 ]
 }
 {
 title: Potpourri;
 file_name: test-compare_potpourris.py;
-hwut_info_time: 1642507768L;
+hwut_info_time: 1644561639L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ judge; OK; 0.193781; 0; ]
-  [ info; OK; 0.193990; 0; ]
+  [ judge; OK; 0.188574; 0; ]
+  [ info; OK; 0.190853; 0; ]
 ]
 }

@@ -64,7 +64,7 @@ if "info" in sys.argv:
         subject = get_Potpourri(pf, subject_line_list, config)
         nominal = get_Potpourri(pf, nominal_line_list, config)
 
-        line_associations, analogy_db = subject.line_associations(nominal, AnalogyDb())
+        line_associations, analogy_db = subject.associate(nominal, AnalogyDb())
 
         subject_line_list = frame_with_potpourri_borders(subject_line_list)
         nominal_line_list = frame_with_potpourri_borders(nominal_line_list)

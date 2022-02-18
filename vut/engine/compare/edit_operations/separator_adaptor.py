@@ -90,10 +90,6 @@ class SeparatorAdaptor:
             Separators are always of different type than content => 'SUBSTITUTE_TYPE' 
             is safe to use.
             """
-            pair_db = {
-                (DELETE, INSERT): SUBSTITUTE_TYPE,
-                (INSERT, DELETE): SUBSTITUTE_TYPE
-            }
             def _iterable(edit_list):
                 """YIELDS: (current, look-ahead, look-ahead-ahead)
                 """
@@ -107,9 +103,9 @@ class SeparatorAdaptor:
             for current, ahead_id in _iterable(edit_iterable):
                 if skip_n: skip_n -= 1; continue
 
-                combined_id = pair_db.get((current.id, ahead_id))
+                combined_id = self._pair_db.get((current.id, ahead_id))
                 if combined_id is not None:
-                    yield self.Edit(combined_id, None)
+                    yield self.Edit(combined_id, None) 
                     skip_n = 1
                     continue
 
@@ -117,12 +113,18 @@ class SeparatorAdaptor:
 
         return list(iterable(list(self.__reinsert_separators(edit_list_raw))))
 
+    def _insert_Edit(self, ni):
+        return self.Edit(INSERT, None)
+
+    def _delete_Edit(self, si):
+        return self.Edit(DELETE, None)
+
     def __reinsert_separators(self, edit_list_raw):
         def _insert_op(ni):
-            return self.Edit(INSERT, None)
+            return self._insert_Edit(ni)
 
         def _delete_op(si):
-            return self.Edit(DELETE, None)
+            return self._delete_Edit(si)
 
         def _good_op(si, ni):
             return self._good_Edit(self.subject_sequence[si], self.nominal_sequence[ni])
@@ -155,8 +157,9 @@ class SeparatorAdaptor:
             s_incr, n_incr = position_increment_db[edit.id]
             si += s_incr
             ni += n_incr
-
         
+    _pair_db = {} # must be defined by derived class
+
     def _is_separator(self, x):
         """RETURNS: True, if 'x' is a separator.
                     False, else.

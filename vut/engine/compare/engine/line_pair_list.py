@@ -3,9 +3,11 @@ ________________________________________________________________________________
 PURPOSE: A list of 'LinePair' objects.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.line_pair    import LinePair
-from   vut.engine.compare.engine.analogy_db   import AnalogyDb
-from   vut.external.quex.typed                import typed
+from   vut.engine.compare.engine.line_pair         import LinePair
+from   vut.engine.compare.engine.analogy_db        import AnalogyDb
+from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit, list_EditDELETE, list_EditINSERT
+from   vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
+from   vut.external.quex.typed                     import typed
 
 class LinePairList(list):
     def __init__(self, iterable=None):
@@ -14,11 +16,11 @@ class LinePairList(list):
 
     @staticmethod
     def from_subject_only(line_list):
-        return LinePairList(LinePair(x, None, edit_list=[]) for x in line_list)
+        return LinePairList(LinePair(x, None, []) for x in line_list)
 
     @staticmethod
     def from_nominal_only(line_list):
-        return LinePairList(LinePair(None, x, edit_list=[]) for x in line_list)
+        return LinePairList(LinePair(None, x, []) for x in line_list)
 
     def enumerate(self, begin, end):
         if begin >= 0 or end < len(self) and begin < end: 

@@ -3,9 +3,9 @@ cost: 0.00000; line_associations: 0;
 AnalogyDb:
 
 --------------------------------
-            
+   VISIBLE_NOTHING:    VISIBLE_NOTHING:
 cost: 0.00000; line_associations: 1;
-   [00]                         --> [00]                         {}
+   [00]                         --> [00]                         {GOOD}
 AnalogyDb:
 
 --------------------------------

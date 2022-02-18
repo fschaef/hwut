@@ -13,6 +13,9 @@ Edit:         identifies names the operation and provides a possible
 
 EditSequence: maintains a list of edit objects. 
 """
+from  vut.engine.compare.tolerance.line_element import LineElement, E_ToleranceId
+from  vut.external.quex.typed                   import typed
+
 from  collections import namedtuple
 from  enum        import IntEnum
 
@@ -89,4 +92,86 @@ class EditSequence:
             self.edit_list = separator_db.reinsert_separators(self.edit_list)
         return self
 
+
+def list_EditDELETE(line_element_list):
+    """RETURNS: List of Edit GOOD_DELETE/DELETE objects depending on the 
+                according line element being 'visible nothing' or not.
+
+    ASSUMPTION: 'nominal_line_element_list' is empty.
+    """
+    def iterable(line_element_list):
+        for le in line_element_list.sequence:
+            if le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING: yield Edit(E_EditId.GOOD_DELETE)
+            else:                                                yield Edit(E_EditId.DELETE)
+    return list(iterable(line_element_list))
+
+def list_EditINSERT(nominal_line_element_list):
+    """RETURNS: List of Edit GOOD_INSERT/INSERT objects depending on the 
+                according line element being 'visible nothing' or not.
+
+    ASSUMPTION: 'subject_line_element_list' is empty.
+    """
+    def iterable(nominal_line_element_list):
+        for le in nominal_line_element_list.sequence:
+            if le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING: yield Edit(E_EditId.GOOD_INSERT)
+            else:                                                yield Edit(E_EditId.INSERT)
+    return list(iterable(nominal_line_element_list))
+
+def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_visible_nothing, func_is_identical):
+    """RETURNS: List of Edit GOOD/GOOD_TOLERATED/GOOD_INSERT/GOOD_DELETE 
+                objects depending on the according line element being 
+                'visible nothing' or not.
+
+    ASSUMPTION: 'subject_line_element_list' and 'nominal_line_element_list' are judged
+                 as 'equivalent'.
+    """
+    def iterable(subject_line_element_list, nominal_line_element_list, is_visible_nothing, is_identical):
+        Ls, Ln = len(subject_line_element_list), len(nominal_line_element_list)
+        si, ni = 0, 0
+        while 1 + 1 == 2:
+            if si >= Ls:
+                for _ in range(Ln - ni): 
+                    yield Edit(E_EditId.GOOD_INSERT)
+                break
+            elif ni >= Ln:
+                for _ in range(Ls - si): 
+                    yield Edit(E_EditId.GOOD_DELETE)
+                break
+            else:
+                subject = subject_line_element_list[si]
+                nominal = nominal_line_element_list[ni]
+                if is_identical(subject, nominal): 
+                    op = E_EditId.GOOD
+                elif is_visible_nothing(subject):
+                    if is_visible_nothing(nominal): op = E_EditId.GOOD_TOLERATED
+                    else:                           op = E_EditId.GOOD_INSERT
+                else:
+                    if is_visible_nothing(nominal): op = E_EditId.GOOD_INSERT
+                    else:                           op = E_EditId.GOOD_TOLERATED
+
+            yield Edit(op, None)
+            if   op == E_EditId.GOOD:           si += 1; ni += 1
+            elif op == E_EditId.GOOD_TOLERATED: si += 1; ni += 1
+            elif op == E_EditId.GOOD_INSERT:    ni += 1
+            elif op == E_EditId.GOOD_DELETE:    si += 1
+            else:                               assert False
+
+    return list(iterable(subject_line_element_list, nominal_line_element_list, 
+                         func_is_visible_nothing, func_is_identical))
+
+
+# @typed(subject_list=[LineElement], nominal_list=[LineElement])
+def list_EditGOOD_line(subject_list, nominal_list):
+    return list_EditGOOD(subject_list, nominal_list,
+                         lambda le:               le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING,
+                         lambda subject, nominal: subject.string == nominal.string)
+
+# @typed(subject_list=[Line], nominal_list=[Line])
+def list_EditGOOD_line_sequence(subject_list, nominal_list):
+    return list_EditGOOD([x.sequence for x in subject_list], [x.sequence for x in nominal_list],
+                         lambda le_list: 
+                         all(le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for le in le_list),
+                         lambda subject, nominal: 
+                         len(subject) == len(nominal) \
+                         and all(s.string == n.string for s, n in zip(subject, nominal)))
 

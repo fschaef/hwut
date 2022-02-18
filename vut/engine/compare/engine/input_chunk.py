@@ -74,7 +74,7 @@ class InputChunk(ABC):
             elif all(x.tolerance_id == VISIBLE_NOTHING for x in line): return False
             else:                                                      return True
 
-        subject_line_list = tuple(line for line in self.line_list    if _condition(line))
+        subject_line_list = tuple(line for line in self.line_list if _condition(line))
         if len(nominal.line_list) < len(subject_line_list): 
             # 'nominal_line_list' will only shrink. 
             # if it is already longer => impossible match.
@@ -88,7 +88,7 @@ class InputChunk(ABC):
         else:
             return self._compare(subject_line_list, nominal_line_list, analogy_db)
 
-    def line_associations(self, nominal, analogy_db):
+    def associate(self, nominal, analogy_db):
         """RETURNS: [0] list of 'LinePair'-s
                     [1] required analogy_db
 

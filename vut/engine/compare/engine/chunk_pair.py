@@ -33,20 +33,21 @@ class ChunkPair(LinePairList):
                     chunk.
         """
         if subject is None:
-            subject_type   = E_Chunk.NONE
-            nominal_type   = nominal.type()
-            line_pair_list = LinePairList.from_nominal_only(nominal.line_list)
-            new_analogy_db = analogy_db
+            subject_type    = E_Chunk.NONE
+            nominal_type    = nominal.type()
+            line_pair_list  = LinePairList.from_nominal_only(nominal.line_list)
+            new_analogy_db  = analogy_db
         elif nominal is None:
-            subject_type   = subject.type()
-            nominal_type   = E_Chunk.NONE
-            line_pair_list = LinePairList.from_subject_only(subject.line_list)
-            new_analogy_db = analogy_db
+            subject_type    = subject.type()
+            nominal_type    = E_Chunk.NONE
+            line_pair_list  = LinePairList.from_subject_only(subject.line_list)
+            new_analogy_db  = analogy_db
         else: 
             assert subject.type() == nominal.type()
-            nominal_type = subject_type = subject.type()
-            line_pair_list,             \
-            new_analogy_db              = subject.line_associations(nominal, analogy_db)
+            subject_type    = subject.type()
+            nominal_type    = subject_type
+            line_pair_list, \
+            new_analogy_db  = subject.associate(nominal, analogy_db)
 
         return ChunkPair(subject_type, nominal_type, line_pair_list, new_analogy_db)
 

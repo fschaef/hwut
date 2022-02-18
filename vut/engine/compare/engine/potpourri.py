@@ -53,7 +53,7 @@ class Potpourri(InputChunk):
     def _line_associations(self, nominal, analogy_db):
         """RETURNS: list 'LinePair'-s
 
-        See 'InputChunk.line_pairs()' for further explanations.
+        See 'InputChunk.associate()' for further explanations.
         """
         assert len(self.line_list) >= 2 and len(nominal.line_list) >= 2
         subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:

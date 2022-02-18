@@ -40,10 +40,14 @@ def generate(config, subject_line_provider, nominal_line_provider, align_f):
     subject_iterable = chunk_pipe.generate(subject_line_provider)
     nominal_iterable = chunk_pipe.generate(nominal_line_provider)
 
-    if not align_f: zipper = zip_longest
-    else:           zipper = _zip_aligned
+    if not align_f: 
+        for s, n in zip_longest(subject_iterable, nominal_iterable):
+            if s is None: s = n.empty_clone()
+            if n is None: n = s.empty_clone()
+            yield s, n
+    else:           
+        yield from _zip_aligned(subject_iterable, nominal_iterable)
     
-    yield from zipper(subject_iterable, nominal_iterable)
 
 def _zip_aligned(subject_iterable, nominal_iterable):
     """YIELDS: [0] subject input chunk

@@ -61,9 +61,6 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
     for subject, nominal in generate(config,
                                      subject_line_provider, nominal_line_provider,
                                      align_f=False):
-        if subject is None or nominal is None:
-            return False
-
         verdict,   \
         analogy_db = subject.compare(nominal, analogy_db)
 

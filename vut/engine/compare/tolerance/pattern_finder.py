@@ -137,9 +137,7 @@ class PatternFinder:
         if self.strip_whitespace_f:
             string = string.strip()
 
-        if not string:
-            return tuple()
-        elif self.is_irrelevant(string):
+        if self.is_irrelevant(string):
             return (LineElementVisibleNothing(0, len(string), string.rstrip()),)
         else:
             return tuple(_analyze(string))
@@ -149,6 +147,8 @@ class PatternFinder:
                    False, else.
         """
         if not line:
+            return True
+        elif line.isspace(): 
             return True
         elif any(line.startswith(m) for m in self.ignored_line_begin_marker):
             return True

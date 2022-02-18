@@ -58,7 +58,7 @@ The result is the optimal sequence of edit operations required to transform the
 subject into the nominal.
 _______________________________________________________________________________
 """
-from  vut.engine.compare.edit_operations.edit              import E_EditId, Edit, EditSequence
+from  vut.engine.compare.edit_operations.edit              import E_EditId, Edit, EditSequence, list_EditGOOD_line
 from  vut.engine.compare.edit_operations.core              import WorkListBase, \
                                                                   WorkItemBase, \
                                                                   position_increment_db, \
@@ -73,24 +73,6 @@ from  copy        import copy
 from  enum        import IntEnum
 from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
-
-class LineSeparatorAdaptor(SeparatorAdaptor):
-    def _is_separator(self, le):
-        """RETURNS: True, if 'x' is a separator.
-                    False, else.
-        """
-        return le.tolerance_id == SEPERATOR
-
-    def _good_Edit(self, le_a, le_b):
-        """RETURNS: The appropriate 'Edit' object for the pair of 'le_a', and 'le_b'.
-
-        Assuming that le_a, and le_b are equivalent, the return value provides
-        the according 'Edit' object, i.e. GOOD or GOOD_TOLERATED.
-        """
-        if le_a.string == le_b.string:
-            return self.Edit(GOOD, None)            # both equal separators
-        else:
-            return self.Edit(GOOD_TOLERATED, None)  # separators are similar
 
 @lru_cache(maxsize=65536)
 @typed(subject_le_seq=tuple, nominal_le_seq=tuple)
@@ -112,11 +94,12 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
                                         cost_db[INSERT],
                                         Edit)
 
-    initial_edit_sequence = EditSequence(0, [], analogy_db)
 
     if separator_db and separator_db.original_max_cost == 0.0:
-        best = initial_edit_sequence
+        best = EditSequence(0, list_EditGOOD_line(subject_le_seq, nominal_le_seq), 
+                            analogy_db)
     else:
+        initial_edit_sequence = EditSequence(0, [], analogy_db)
         subject_le_seq,  \
         nominal_le_seq   = separator_db.strip_separators()
         initial_item     = WorkItem(0, 0, initial_edit_sequence)
@@ -125,7 +108,6 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
                                     initial_item).run()
 
     return best.prepare_as_best(separator_db, True)
-
 
 
 # Shortcuts:
@@ -144,16 +126,40 @@ ANALOGY         = E_ToleranceId.ANALOGY
 SEPERATOR       = E_ToleranceId.SEPERATOR
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
+
+class LineSeparatorAdaptor(SeparatorAdaptor):
+    _pair_db = {
+        (DELETE, INSERT): SUBSTITUTE_TYPE,
+        (INSERT, DELETE): SUBSTITUTE_TYPE
+    }
+    def _is_separator(self, le):
+        """RETURNS: True, if 'x' is a separator.
+                    False, else.
+        """
+        return le.tolerance_id == SEPERATOR
+
+    def _good_Edit(self, le_a, le_b):
+        """RETURNS: The appropriate 'Edit' object for the pair of 'le_a', and 'le_b'.
+
+        Assuming that le_a, and le_b are equivalent, the return value provides
+        the according 'Edit' object, i.e. GOOD or GOOD_TOLERATED.
+        """
+        if le_a.string == le_b.string:
+            return self.Edit(GOOD, None)            # both equal separators
+        else:
+            return self.Edit(GOOD_TOLERATED, None)  # separators are similar
+
+
 cost_db = {
-    GOOD:             0,    # good
-    GOOD_TOLERATED:   0,    # good
-    GOOD_INSERT:      0,    # good
-    GOOD_DELETE:      0,    # good
-    TRANSPOSE:        0.5,  # good, when swapped elements
-    SUBSTITUTE:       1,    # good, when content is substituted
-    INSERT:           1,    # bad, need to insert element
-    DELETE:           1,    # bad, need to remove element
-    SUBSTITUTE_TYPE:  1     # bad, need to substitute type and content of element
+    GOOD:             0,       # good
+    GOOD_TOLERATED:   0,       # good, tolerated is bettern than good insert + delete delete
+    GOOD_INSERT:      1e-10,   # good insert visible nothing (slightly worse than 'good')
+    GOOD_DELETE:      1e-10,   # good delete visible nothing (slightly worse than 'good')
+    TRANSPOSE:        0.5,     # good, when swapped elements
+    SUBSTITUTE:       1,       # good, when content is substituted
+    INSERT:           1,       # bad, need to insert element
+    DELETE:           1,       # bad, need to remove element
+    SUBSTITUTE_TYPE:  1        # bad, need to substitute type and content of element
 }
 
 cost_INSERT_DELETE = cost_db[INSERT]
@@ -235,9 +241,9 @@ class WorkItem(WorkListBase):
             yield self._step(SUBSTITUTE,
                              cost_factor = subject_le.edit_distance_relative(nominal_le))
         elif verdict_id == E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
-            yield self._step(GOOD_DELETE)
+            good_id = GOOD_DELETE
         elif verdict_id == E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
-            yield self._step(GOOD_INSERT)
+            good_id = GOOD_INSERT
         elif verdict_id == E_Verdict.EQUIVALENT:
             if not self.edit_list.analogy_db.is_consistent(analogy):
                 yield self._step(SUBSTITUTE)

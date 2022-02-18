@@ -1,7 +1,7 @@
 --(1)------------------------------------------------------------------
       subject:  STRING:4711, STRING:4711
       nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711, STRING:4711
-      => edits: DELETE, GOOD_INSERT, GOOD_INSERT, GOOD
+      => edits: GOOD_INSERT, GOOD_INSERT, GOOD, DELETE
 
       subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711, STRING:4711
       nominal:  STRING:4711, STRING:4711
@@ -41,27 +41,27 @@
 --(6)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
       nominal:  ANALOGY:4711, ANALOGY:4711, VISIBLE_NOTHING:4711
-      => edits: INSERT, INSERT, GOOD, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT, INSERT, GOOD
 
       subject:  ANALOGY:4711, ANALOGY:4711, VISIBLE_NOTHING:4711
       nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
-      => edits: DELETE, DELETE, GOOD, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE, DELETE, GOOD
 --(7)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
       nominal:  NUMERIC:4711, NUMERIC:4711, VISIBLE_NOTHING:4711
-      => edits: INSERT, INSERT, GOOD, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT, INSERT, GOOD
 
       subject:  NUMERIC:4711, NUMERIC:4711, VISIBLE_NOTHING:4711
       nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
-      => edits: DELETE, DELETE, GOOD, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE, DELETE, GOOD
 --(8)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
       nominal:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, VISIBLE_NOTHING:4711
-      => edits: INSERT, INSERT, GOOD, GOOD_DELETE
+      => edits: GOOD_DELETE, INSERT, INSERT, GOOD
 
       subject:  EQUIVALENCE_PATTERN:4711, EQUIVALENCE_PATTERN:4711, VISIBLE_NOTHING:4711
       nominal:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
-      => edits: DELETE, DELETE, GOOD, GOOD_INSERT
+      => edits: GOOD_INSERT, DELETE, DELETE, GOOD
 --(9)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711, VISIBLE_NOTHING:4711
       nominal:  SEPERATOR:4711, SEPERATOR:4711, VISIBLE_NOTHING:4711
