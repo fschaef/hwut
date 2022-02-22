@@ -4,7 +4,7 @@ file_name: test-pretty.py;
 hwut_info_time: 1644519649L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ ; OK; 0.196644; -1330488687; ]
+  [ ; OK; 0.208767; -1330488687; ]
 ]
 }
 {
@@ -13,11 +13,11 @@ file_name: test-main.py;
 hwut_info_time: 1645200502L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ compare; OK; 0.192643; 0; ]
-  [ compare-2; OK; 0.194706; 0; ]
-  [ associate; OK; 0.198011; 0; ]
-  [ associate-2; OK; 0.205687; 0; ]
-  [ compare-3; OK; 0.192545; -97929201; ]
-  [ associate-3; OK; 0.196720; 1767472371; ]
+  [ compare; OK; 0.196117; 0; ]
+  [ compare-2; OK; 0.199408; 0; ]
+  [ associate; OK; 0.202888; 0; ]
+  [ associate-2; OK; 0.226275; 0; ]
+  [ compare-3; OK; 0.198201; -97929201; ]
+  [ associate-3; OK; 0.203069; 1767472371; ]
 ]
 }

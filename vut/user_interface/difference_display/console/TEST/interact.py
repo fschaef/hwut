@@ -21,7 +21,7 @@ def test(subject_txt, nominal_txt, offset=0, mode=E_LinePairSelectionMode.PLAIN,
     subject = StringIO(subject_txt)
     nominal = StringIO(nominal_txt)
 
-    la = list(compare.line_pairs(cases.config, subject, nominal))
+    la = list(compare.associate(cases.config, subject, nominal))
 
     la_list = ChunkPairList(la)
     if   "diff" in sys.argv:  console.diff(la_list)

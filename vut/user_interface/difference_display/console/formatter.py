@@ -145,7 +145,7 @@ class ConsoleCanvasFormatter:
         )
 
         self.status_line = self.canvas.prepare_format(
-            FIXED("[q] quit [h] help [w] up [s] down [a] left [d] right", "Bg"), 
+            LEFT(self.canvas.width-19, "Bg"), 
             GLUE(" ", "Wg"),
             RIGHT(15, "Bg"),
             FIXED(" ", "Bg"),

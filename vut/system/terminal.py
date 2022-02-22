@@ -14,6 +14,22 @@ from   enum        import Enum, auto
 from   collections import namedtuple
 from   itertools   import zip_longest
 
+_color_db = {
+    "B": Fore.BLACK,  "R": Fore.RED,  "G": Fore.GREEN,
+    "Y": Fore.YELLOW, "U": Fore.BLUE, "M": Fore.MAGENTA, 
+    "C": Fore.CYAN,   "W": Fore.WHITE, 
+    "b": Back.BLACK,  "r": Back.RED,  "g": Back.GREEN,
+    "y": Back.YELLOW, "u": Back.BLUE, "m": Back.MAGENTA, 
+    "c": Back.CYAN,   "w": Back.WHITE, 
+}
+
+_color_reset_all = Fore.RESET + Back.RESET
+
+def _color_id_to_code(color):
+    """RETURNS: Terminal color for given color (enum of Fore, or Back).
+    """
+    if color is None: return Fore.RESET + Back.RESET
+    else:             return "".join(_color_db[code] for code in color)
 
 class E_Alignment(Enum):
     LEFT   = auto()
@@ -27,23 +43,23 @@ CellFormat = namedtuple("CellFormat", ("alignment", "color_code", "width", "stri
 
 @typed(width=int)
 def LEFT(width, color=None, text_offset=0):
-    return CellFormat(E_Alignment.LEFT, _color_to_code(color), width, None, text_offset)
+    return CellFormat(E_Alignment.LEFT, _color_id_to_code(color), width, None, text_offset)
 
 @typed(width=int)
 def RIGHT(width, color=None, text_offset=0):
-    return CellFormat(E_Alignment.RIGHT, _color_to_code(color), width, None, text_offset)
+    return CellFormat(E_Alignment.RIGHT, _color_id_to_code(color), width, None, text_offset)
 
 @typed(width=int)
 def CENTER(width, color=None, text_offset=0):
-    return CellFormat(E_Alignment.CENTER, _color_to_code(color), width, None, text_offset)
+    return CellFormat(E_Alignment.CENTER, _color_id_to_code(color), width, None, text_offset)
 
 @typed(string=str)
 def FIXED(string, color=None, text_offset=0):
-    return CellFormat(E_Alignment.FIXED, _color_to_code(color), len(string), string, text_offset)
+    return CellFormat(E_Alignment.FIXED, _color_id_to_code(color), len(string), string, text_offset)
 
 @typed(string=str)
 def GLUE(string, color=None, text_offset=0):
-    return CellFormat(E_Alignment.GLUE, _color_to_code(color), 0, string, text_offset)
+    return CellFormat(E_Alignment.GLUE, _color_id_to_code(color), 0, string, text_offset)
 
 class ConsoleCanvas:
    def __init__(self):
@@ -60,7 +76,7 @@ class ConsoleCanvas:
        def _iterable(cell_content_list, format_list):
            cell_i = 0
            for fe in format_list:
-               text = _format_cell(fe, cell_content_list, cell_i)
+               text = _format_cell(fe, cell_content_list[cell_i])
                yield text
                # 'FIXED' => content is taken out of 'fe' not from cell_list.
                if fe.alignment != E_Alignment.FIXED: cell_i += 1
@@ -110,38 +126,62 @@ class ConsoleCanvas:
            i += 1
        return dict((glue_index_db[i], width) for i, width in enumerate(width_array))
 
+def _format_cell(fe, cell):
+    """RETURNS: Colored formatted text for given cell.
 
-def _format_fixed(fe):
-    if fe.alignment == E_Alignment.FIXED:
-        return fe.color_code + fe.string
-    else:
-        return None
+    Takes the cell at 'cell_list[cell_i]', investigates wether it is
+    text or a tuple (color, text) and formats it appropriately.
+    """
+    if fe.alignment == E_Alignment.FIXED:  
+         return fe.color_code + fe.string
+    elif type(cell) == str: 
+         return _format_plain(fe, cell)
+    else:                 
+         return _format_color_text_tuple_list(fe, cell)
 
-def _format_text(fe, content, remaining):
+def _add_padding(fe, content, remaining_n):
+    """RETURNS: Formatted text of format expression + content.
+
+    Prepares content according to format expression and returns the
+    text.
+    """
     if fe.alignment == E_Alignment.CENTER:
-        pad_left  = int(remaining) >> 1
-        pad_right = remaining - pad_left
-        text = "%s%s%s" % (" " * pad_left, content, " " * pad_right)
+        pad_left  = int(remaining_n) >> 1
+        pad_right = remaining_n - pad_left
+        text      = "%s%s%s" % (" " * pad_left, content, " " * pad_right)
     elif fe.alignment == E_Alignment.RIGHT:
-        text = "%s%s" % (" " * remaining, content)
+        text      = "%s%s" % (" " * remaining_n, content)
     elif fe.alignment == E_Alignment.LEFT:
-        text = "%s%s" % (content, " " * remaining)
+        text      = "%s%s" % (content, " " * remaining_n)
     else:
         assert False
     return fe.color_code + text
 
-def _format_plain(fe, cell):
-    L = len(cell)
+def _format_plain(fe, cell_txt):
+    """RETURNS: Plain text of formatted 'cell_txt'. 
+        
+    In case, that text exceeds boundaries, it is pruned,  Right aligned
+    text is pruned from the left, and vice versa.
+    """
+    L = len(cell_txt)
     W = fe.width
     T = fe.text_offset
 
-    if fe.alignment == E_Alignment.RIGHT: text = cell[max(0, W - L):L-T]
-    else:                                 text = cell[T:min(W, L)]
+    # Prune text, in case that exceeds boundaries:
+    # Right aligned => prune from left,
+    # Left aligned  => prune from right.
+    if fe.alignment == E_Alignment.RIGHT: text = cell_txt[max(0, W - L):L-T]
+    else:                                 text = cell_txt[T:min(W, L)]
 
     length = max(0, W - L - T)
-    return _format_text(fe, text, length)
+    return _add_padding(fe, text, length)
 
 def _format_color_text_tuple_list(fe, color_text_list):
+    """RETURNS: Colored, formatted text.
+        
+    Formats cell according to format expression and the text provided as tuples
+    (color, text). Right aligned text is pruned from left, and vice versa.
+    """
     def _color(fe, color):
         return fe.color_code if not color else color
 
@@ -170,9 +210,14 @@ def _format_color_text_tuple_list(fe, color_text_list):
     ]
     text.append(fe.color_code)
 
-    return _format_text(fe, "".join(text), max(0, fe.width - total_length))
+    return _add_padding(fe, "".join(text), max(0, fe.width - total_length))
 
 def _color_text_list_prune_begin(color_text_list, cut_n):
+    """RETURNS: Colored text.
+
+    Considers list of tuples (color, text) and cuts of 'cut_n' characters
+    from the front of the text.
+    """
     if cut_n <= 0: 
         yield from color_text_list
     else:
@@ -187,6 +232,11 @@ def _color_text_list_prune_begin(color_text_list, cut_n):
                 cut_n -= len(sub_text)
 
 def _color_text_list_prune_end(color_text_list, cut_n):
+    """RETURNS: Colored text.
+
+    Considers list of tuples (color, text) and cuts of 'cut_n' characters
+    from the back of the text.
+    """
     remaining = sum(len(t) for c, t in color_text_list) - cut_n
     if remaining <= 0: 
         yield from color_text_list
@@ -198,27 +248,3 @@ def _color_text_list_prune_end(color_text_list, cut_n):
             remaining -= len(sub_text)
             yield color, sub_text
 
-def _format_cell(fe, cell_list, cell_i):
-   text = _format_fixed(fe)
-   if text is not None:  return text
-
-   cell = cell_list[cell_i]
-   if type(cell) == str: 
-        return _format_plain(fe, cell)
-   else:                 
-        return _format_color_text_tuple_list(fe, cell)
-
-_color_db = {
-    "B": Fore.BLACK,  "R": Fore.RED,  "G": Fore.GREEN,
-    "Y": Fore.YELLOW, "U": Fore.BLUE, "M": Fore.MAGENTA, 
-    "C": Fore.CYAN,   "W": Fore.WHITE, 
-    "b": Back.BLACK,  "r": Back.RED,  "g": Back.GREEN,
-    "y": Back.YELLOW, "u": Back.BLUE, "m": Back.MAGENTA, 
-    "c": Back.CYAN,   "w": Back.WHITE, 
-}
-
-def _color_to_code(color):
-    if color is None: return Fore.RESET + Back.RESET
-    else:             return "".join(_color_db[code] for code in color)
-
-_color_reset_all = Fore.RESET + Back.RESET

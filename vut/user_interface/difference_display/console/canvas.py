@@ -55,7 +55,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         self.data.select_line_pair_list(mode, verbosity_level)
 
     def do(self):
-        displayed_line_n = self._display_content(self.data.line_pair_list)
+        displayed_line_n = self._display_content()
         self._display_fill_empty(displayed_line_n)
         self._display_status_line()
 
@@ -88,13 +88,14 @@ class ConsoleCanvasDiff(ConsoleCanvas):
 
     def _display_status_line(self):
         L = len(self.data.line_pair_list)
+        key_txt = "[q] quit [h] help [w] up [s] down [a] left [d] right"
         if L == 0:     ratio = 1
         else:          ratio = min(L, self.__begin_line_pair_i + self.height) / L
         if ratio == 1: percentage = "100" + "%"
         else:          percentage = "% 3i" % int(ceil(ratio*100)) + "%"
 
         lp_list = self.prepare(self.format.status_line, 
-                               [self.data.selection_mode.name, percentage])
+                               [key_txt, self.data.selection_mode.name, percentage])
         self.display(lp_list)
 
     def _add_horizontal_offset(self, value):
