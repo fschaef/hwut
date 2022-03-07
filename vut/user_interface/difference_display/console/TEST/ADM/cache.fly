@@ -2,16 +2,16 @@
 title: Comparison, Analogy Error;
 title_group: Display Modes;
 file_name: test-main.py;
-hwut_info_time: 1644599933L;
+hwut_info_time: 1645773383L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ similar; OK; 0.251764; -1894150291; ]
-  [ padding; OK; 0.391162; -870998512; ]
-  [ potpourri; OK; 0.226359; -1761272383; ]
-  [ mix; OK; 0.227927; 2105972147; ]
-  [ analogy; OK; 0.262020; 2103576328; ]
-  [ error; OK; 0.317182; 1192819213; ]
-  [ error2; OK; 0.284630; -981246158; ]
-  [ comment; OK; 0.211052; 2000572131; ]
+  [ similar; OK; 0.254460; 0; ]
+  [ padding; OK; 0.394977; 0; ]
+  [ potpourri; OK; 0.231992; 0; ]
+  [ mix; OK; 0.232291; 0; ]
+  [ analogy; OK; 0.264768; 0; ]
+  [ error; OK; 0.324962; 0; ]
+  [ error2; OK; 0.288062; 0; ]
+  [ comment; OK; 0.214535; 0; ]
 ]
 }

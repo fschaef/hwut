@@ -1,0 +1,7 @@
+System Functions
+------------------------------------
+
+python3-coverage run --omit ./*.py -a *.py 
+         
+--not data.py
+

@@ -5,10 +5,10 @@ PURPOSE:
 
 import vut.engine.compare.main                                  as     compare
 from   vut.engine.compare.configuration                         import Configuration
-from   vut.engine.compare.engine.chunk_pair_list    import ChunkPairList
+from   vut.engine.compare.engine.chunk_pair_list                import ChunkPairList
 import vut.user_interface.difference_display.console.main       as     console
 from   vut.user_interface.difference_display.console.canvas     import ConsoleCanvasDiff, E_LinePairSelectionMode
-import vut.system.terminal_size                                 as     terminal_size
+import vut.system.terminal.size                                 as     terminal_size
 
 from   io import StringIO
 

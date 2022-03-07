@@ -2,11 +2,11 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-from   vut.system.terminal                  import GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
-from   vut.engine.compare.engine.line       import Line
-from   vut.engine.compare.engine.line_pair  import LinePair
-from   vut.engine.compare.edit_operations.edit  import E_EditId
-from   vut.external.quex.typed              import typed
+from   vut.system.terminal.core                import GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+from   vut.engine.compare.engine.line          import Line
+from   vut.engine.compare.engine.line_pair     import LinePair
+from   vut.engine.compare.edit_operations.edit import E_EditId
+from   vut.external.quex.typed                 import typed
 
 class ConsoleCanvasFormatter:
     def __init__(self, line_n_width, text_offset, canvas):
@@ -29,7 +29,7 @@ class ConsoleCanvasFormatter:
         """Adapts the format expression to local settings of text width's and
         offsets.
         """
-        self.normal = self.canvas.prepare_format(
+        self.normal = [
             LEFT(self.subject_width, text_offset=self.text_offset), 
             FIXED(" ", "Uw"), 
             LEFT(self.line_n_width, "Uw"), 
@@ -37,9 +37,8 @@ class ConsoleCanvasFormatter:
             LEFT(self.line_n_width, "Uw"), 
             FIXED(" ", "Uw"), 
             LEFT(self.nominal_width, text_offset=self.text_offset)
-        )
-
-        self.subject_empty = self.canvas.prepare_format(
+        ]
+        self.subject_empty = [
             FIXED(" " * self.subject_width, "Rw"),
             FIXED("<", "Rw"), 
             FIXED("<" * self.line_n_width, "Rw"), 
@@ -47,9 +46,9 @@ class ConsoleCanvasFormatter:
             LEFT(self.line_n_width, "Uw"), 
             FIXED(" ", "Uw"), 
             LEFT(self.nominal_width, text_offset=self.text_offset)
-        )
+        ]
 
-        self.subject_end = self.canvas.prepare_format(
+        self.subject_end = [
             FIXED("-" * self.subject_width, "Bw"),
             FIXED("<", "Rw"), 
             FIXED("<" * self.line_n_width, "Rw"), 
@@ -57,8 +56,8 @@ class ConsoleCanvasFormatter:
             LEFT(self.line_n_width, "Uw"), 
             FIXED(" ", "Uw"), 
             LEFT(self.nominal_width, text_offset=self.text_offset)
-        )
-        self.subject_end_nominal_empty = self.canvas.prepare_format(
+        ]
+        self.subject_end_nominal_empty = [
             FIXED("-" * self.subject_width, "Bw"),
             FIXED("-", "Bw"), 
             FIXED("-" * self.line_n_width, "Bw"), 
@@ -66,9 +65,8 @@ class ConsoleCanvasFormatter:
             FIXED(" " * self.line_n_width, "Rw"), 
             FIXED(" ", "Rw"), 
             FIXED(" " * self.nominal_width, "Rw")
-        )
-
-        self.nominal_empty = self.canvas.prepare_format(
+        ]
+        self.nominal_empty = [
             LEFT(self.subject_width, text_offset=self.text_offset), 
             FIXED(" ", "Uw"), 
             LEFT(self.line_n_width, "Uw"), 
@@ -76,9 +74,8 @@ class ConsoleCanvasFormatter:
             FIXED(">" * self.line_n_width, "Rw"), 
             FIXED(">", "Rw"), 
             FIXED(" " * self.nominal_width, "Rw")
-        )
-
-        self.nominal_end = self.canvas.prepare_format(
+        ]
+        self.nominal_end = [
             LEFT(self.subject_width, text_offset=self.text_offset), 
             FIXED(" ", "Uw"), 
             LEFT(self.line_n_width, "Uw"), 
@@ -86,9 +83,8 @@ class ConsoleCanvasFormatter:
             FIXED(">" * self.line_n_width, "Rw"), 
             FIXED(">", "Rw"), 
             FIXED("-" * self.nominal_width, "Bw")
-        )
-
-        self.nominal_end_subject_empty = self.canvas.prepare_format(
+        ]
+        self.nominal_end_subject_empty = [
             FIXED(" " * self.subject_width, "Rw"),
             FIXED(" ", "Rw"), 
             FIXED(" " * self.line_n_width, "Rw"), 
@@ -96,9 +92,8 @@ class ConsoleCanvasFormatter:
             FIXED("-" * self.line_n_width, "Bw"), 
             FIXED("-", "Bw"), 
             FIXED("-" * self.nominal_width, "Bw")
-        )
-
-        self.both_end = self.canvas.prepare_format(
+        ]
+        self.both_end = [
             FIXED("-" * self.subject_width, "Bw"),
             FIXED("-", "Bw"), 
             FIXED("-" * self.line_n_width, "Bw"), 
@@ -106,9 +101,8 @@ class ConsoleCanvasFormatter:
             FIXED("-" * self.line_n_width, "Bw"), 
             FIXED("-", "Bw"), 
             FIXED("-" * self.nominal_width, "Bw")
-        )
-
-        self.empty = self.canvas.prepare_format(
+        ]
+        self.empty = [
             FIXED(" " * self.subject_width, "Rw", text_offset=self.text_offset),
             FIXED(" ", "Rw"), 
             FIXED(" " * self.line_n_width, "Bw"), 
@@ -116,9 +110,8 @@ class ConsoleCanvasFormatter:
             FIXED(" " * self.line_n_width, "Bw"), 
             FIXED(" ", "Rw"), 
             FIXED(" " * self.nominal_width, "Rw", text_offset=self.text_offset)
-        )
-
-        self.filler = self.canvas.prepare_format(
+        ]
+        self.filler = [
             FIXED(" " * self.subject_width, "Rw", text_offset=self.text_offset),
             FIXED(":", "Bw"), 
             FIXED(" " * self.line_n_width, "Bw"), 
@@ -126,25 +119,22 @@ class ConsoleCanvasFormatter:
             FIXED(" " * self.line_n_width, "Bw"), 
             FIXED(":", "Bw"), 
             FIXED(" " * self.nominal_width, "Rw", text_offset=self.text_offset)
-        )
-
-        self.potpourri_begin = self.canvas.prepare_format(
+        ]
+        self.potpourri_begin = [
             FIXED("|" * self.subject_width + "|", "Gw"), 
             LEFT(self.line_n_width, "Uw"), 
             FIXED("|", "Uw"), 
             LEFT(self.line_n_width, "Uw"), 
             FIXED("|" + "|" * self.nominal_width, "Gw"),
-        )
-
-        self.potpourri_end = self.canvas.prepare_format(
+        ]
+        self.potpourri_end = [
             FIXED("|" * self.subject_width + "|", "Gw"), 
             LEFT(self.line_n_width, "Uw"), 
             FIXED("|", "Uw"), 
             LEFT(self.line_n_width, "Uw"), 
             FIXED("|" + "|" * self.nominal_width, "Gw"),
-        )
-
-        self.status_line = self.canvas.prepare_format(
+        ]
+        self.status_line = self.canvas.fix_glue(
             LEFT(self.canvas.width-19, "Bg"), 
             GLUE(" ", "Wg"),
             RIGHT(15, "Bg"),

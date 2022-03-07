@@ -1,48 +1,48 @@
 {
 title: Lines;
 file_name: test-line.py;
-hwut_info_time: 1644906857L;
+hwut_info_time: 1645773383L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.194995; 0; ]
-  [ visible-nothing; OK; 0.195305; -1103775693; ]
-  [ special; OK; 0.193994; 0; ]
-  [ analogies; OK; 0.193401; 0; ]
+  [ basic; OK; 0.200962; 0; ]
+  [ visible-nothing; OK; 0.207217; -1103775693; ]
+  [ special; OK; 0.198524; 0; ]
+  [ analogies; OK; 0.196278; 0; ]
 ]
 }
 {
 title: Strings;
 file_name: test-string.py;
-hwut_info_time: 1642507768L;
+hwut_info_time: 1645773383L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ basic; OK; 0.182922; 0; ]
-  [ long; OK; 0.182236; 0; ]
+  [ basic; OK; 0.191515; 0; ]
+  [ long; OK; 0.192094; 0; ]
 ]
 }
 {
 title: Line list alignment;
 title_group: Edit Distance;
 file_name: test-line_sequence.py;
-hwut_info_time: 1644519649L;
+hwut_info_time: 1645773383L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ subject; OK; 0.196771; 0; ]
-  [ nominal; OK; 0.196370; 0; ]
-  [ special; OK; 0.196285; 0; ]
+  [ subject; OK; 0.205107; 0; ]
+  [ nominal; OK; 0.202966; 0; ]
+  [ special; OK; 0.205294; 0; ]
 ]
 }
 {
 title: Permutation LineElement-types;
 title_group: Lines;
 file_name: test-line-permutation.py;
-hwut_info_time: 1644519920L;
+hwut_info_time: 1645773383L;
 interpreter_list: [ python3-coverage; run; --omit; ./*.py; -a; ]
 result_list: [
-  [ different; OK; 0.198652; 0; ]
-  [ different-2; OK; 0.197570; 0; ]
-  [ different-good-2; OK; 0.198497; 0; ]
-  [ different-void-2; OK; 0.201521; -723644071; ]
-  [ same; OK; 0.194945; 0; ]
+  [ different; OK; 0.201208; 0; ]
+  [ different-2; OK; 0.206598; 0; ]
+  [ different-good-2; OK; 0.207183; 0; ]
+  [ different-void-2; OK; 0.207280; -723644071; ]
+  [ same; OK; 0.196442; 0; ]
 ]
 }

@@ -14,7 +14,7 @@ from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit
 
 from   vut.external.quex.typed  import typed
 from   vut.system.helper        import number_of_decimal_digits
-from   vut.system.terminal      import ConsoleCanvas, GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+from   vut.system.terminal.core      import ConsoleCanvas, GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
 
 from   copy import copy
 from   math import ceil

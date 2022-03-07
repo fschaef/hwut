@@ -1,5 +1,6 @@
 **/__pycache__
 **/TEST/OUT
+**/TEST/ADM
 **/tmp
 **/tmp.*
 **/*.coverage

@@ -10,7 +10,7 @@ from   vut.engine.compare.engine.line_pair                    import LinePair
 import vut.system.keyboard                                    as     keyboard
 from   vut.external.quex.typed                                import typed
 from   vut.external.quex.tools                                import print_callstack
-from   vut.system.terminal                                    import Back
+from   vut.system.terminal.core                                    import Back
 
 class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
     @typed(lina_chunk_list=ChunkPairList)
