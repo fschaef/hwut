@@ -47,7 +47,6 @@ class ConsoleCanvasFormatter:
             FIXED(" ", "Uw"), 
             LEFT(self.nominal_width, text_offset=self.text_offset)
         ]
-
         self.subject_end = [
             FIXED("-" * self.subject_width, "Bw"),
             FIXED("<", "Rw"), 
