@@ -29,6 +29,7 @@ def _plain_text(fe, string):
     result       = _plain_text_prepare_offset(fe.text_offset, string)
     total_length = len(result)
     result       = _plain_text_prune(total_length, fe.width, fe.alignment, result)
+    total_length = len(result)
 
     return _plain_text_padding(fe, total_length, result)
 
@@ -169,7 +170,7 @@ def _plain_text_padding(fe, total_length, text):
     if   fe.alignment == E_Alignment.CENTER: return text.center(fe.width, " ")
     elif fe.alignment == E_Alignment.RIGHT:  return text.rjust(fe.width, " ") 
     elif fe.alignment == E_Alignment.LEFT:   return text.ljust(fe.width, " ")
-    else:                                    assert False
+    else:                                    return text
 
 
 def _color_text_list_padding(fe, total_length, color_text_list):

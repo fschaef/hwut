@@ -2,8 +2,9 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-import vut.user_interface.difference_display.console.formatter as     formatter
-import vut.user_interface.difference_display.console.prepare   as     prepare
+from   vut.user_interface.difference_display.console.interaction_mode import InteractionMode
+import vut.user_interface.difference_display.console.formatter        as     formatter
+import vut.user_interface.difference_display.console.prepare          as     prepare
 
 from   vut.engine.compare.engine.chunk_pair        import ChunkPair
 from   vut.engine.compare.engine.chunk_pair_list   import ChunkPairList
@@ -14,7 +15,8 @@ from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit
 
 from   vut.external.quex.typed  import typed
 from   vut.system.helper        import number_of_decimal_digits
-from   vut.system.terminal.core      import ConsoleCanvas, GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+from   vut.system.terminal.core import ConsoleCanvas, GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+import vut.system.keyboard      as     keyboard
 
 from   copy import copy
 from   math import ceil
@@ -36,9 +38,9 @@ class Data:
         prepare.plug_end(self.line_pair_list)
 
 
-class ConsoleCanvasDiff(ConsoleCanvas):
-    @typed(chunk_pair_list=ChunkPairList)
-    def __init__(self, chunk_pair_list):
+class ConsoleUI(ConsoleCanvas):
+    @typed(chunk_pair_list=ChunkPairList, interaction_mode=type)
+    def __init__(self, chunk_pair_list, interaction_mode):
         ConsoleCanvas.__init__(self)
         self.data         = Data(chunk_pair_list)
         self._analogy_db  = chunk_pair_list[-1].analogy_db()
@@ -49,6 +51,23 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         
         self.__begin_line_pair_i = 0
         self.__max_line_length   = 0
+        self.interaction         = interaction_mode(self)
+
+        self.format.set_status_line(
+            LEFT(self.width-19, "Bg"), 
+            GLUE(" ", "Wg"),
+            LEFT(15, "Bg"),
+            FIXED("/", "Bg"),
+            LEFT(15, "Bg"),
+            FIXED(" ", "Bg"),
+            RIGHT(4, "Bg")
+        )
+
+    def interact(self):
+        self.interaction.init()
+        while 1 + 1 == 2:
+            if not self.interaction.do(keyboard.get()):
+                return
 
     @typed(mode=E_LinePairSelectionMode)
     def set_selection_mode(self, mode, verbosity_level=2):
@@ -74,7 +93,7 @@ class ConsoleCanvasDiff(ConsoleCanvas):
             if formatted is None:
                 formatted = self._prepare_LinePair(line_pair, lip_i)
                 self.cache_db[lip_i] = formatted
-            self.display(formatted)
+            self.print_line(formatted)
 
         return end
 
@@ -84,19 +103,19 @@ class ConsoleCanvasDiff(ConsoleCanvas):
         empty_formatted = self._prepare_LinePair(
             prepare.LinePairDecorated(0, 0, LinePair.empty(None)))
         for line_i in range(diplayed_line_n, self.height - 1):
-            self.display(empty_formatted)
+            self.print_line(empty_formatted)
 
     def _display_status_line(self):
-        L = len(self.data.line_pair_list)
-        key_txt = "[q] quit [h] help [w] up [s] down [a] left [d] right"
+        L                  = len(self.data.line_pair_list)
+        key_txt, mode_name = self.interaction.get_status_line_content()
         if L == 0:     ratio = 1
         else:          ratio = min(L, self.__begin_line_pair_i + self.height) / L
         if ratio == 1: percentage = "100" + "%"
         else:          percentage = "% 3i" % int(ceil(ratio*100)) + "%"
 
         lp_list = self.prepare(self.format.status_line, 
-                               [key_txt, self.data.selection_mode.name, percentage])
-        self.display(lp_list)
+                               [key_txt, mode_name, self.data.selection_mode.name.lower(), percentage])
+        self.print_line(lp_list)
 
     def _add_horizontal_offset(self, value):
         if self.__max_line_length - (self.format.text_offset + value) <= 0:

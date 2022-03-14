@@ -1,8 +1,14 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 _______________________________________________________________________________
 
-PURPOSE: Termina - test formatting
+PURPOSE: Terminal - test formatting
 
+CHOICES: padding-plain, padding-color, prune-plain, prune-color;
+
+Text comes in two types: plain strings and tuples of (color, string). 
+For both types functions exist for padding, pruning.  
+
+AUTHOR: Frank-Rene Schaefer, 2022.
 ______________________________________________________________________________
 """
 import sys

@@ -17,15 +17,15 @@ class ConsoleCanvasFormatter:
         self.nominal_width = remaining - self.subject_width
         self.text_offset   = text_offset
         self.canvas        = canvas
-        self.setup_formats()
+        self.init_line_formats()
 
     def add_text_offset(self, value):
         self.text_offset += value
         if self.text_offset < 0:
             self.text_offset = 0
-        self.setup_formats()
+        self.init_line_formats()
 
-    def setup_formats(self):
+    def init_line_formats(self):
         """Adapts the format expression to local settings of text width's and
         offsets.
         """
@@ -133,13 +133,10 @@ class ConsoleCanvasFormatter:
             LEFT(self.line_n_width, "Uw"), 
             FIXED("|" + "|" * self.nominal_width, "Gw"),
         ]
-        self.status_line = self.canvas.fix_glue(
-            LEFT(self.canvas.width-19, "Bg"), 
-            GLUE(" ", "Wg"),
-            RIGHT(15, "Bg"),
-            FIXED(" ", "Bg"),
-            RIGHT(4, "Bg")
-        )
+        self.status_line = [GLUE(" ", "Wg"), FIXED("<no mode>", "Wg"), GLUE(" ", "Wg")]
+
+    def set_status_line(self, *format_list):
+        self.status_line = self.canvas.fix_glue(*format_list)
 
     def end_of_stream_subject(self, line_n):
         return Line.from_string(line_n, "/" * self.subject_width)

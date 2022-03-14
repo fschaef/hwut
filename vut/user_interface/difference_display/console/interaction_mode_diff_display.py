@@ -2,20 +2,16 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-from   vut.user_interface.difference_display.console.canvas import ConsoleCanvasDiff, \
-                                                                   E_LinePairSelectionMode
-from   vut.engine.compare.engine.chunk_pair_list            import ChunkPairList
-from   vut.engine.compare.engine.chunk_pair                 import ChunkPair
-from   vut.engine.compare.engine.line_pair                  import LinePair
-import vut.system.keyboard                                  as     keyboard
-from   vut.external.quex.typed                              import typed
-
-class InteractionMode:
-    def __init__(self, canvas):
-        self.canvas = canvas
+from   vut.user_interface.difference_display.console.interaction_mode import InteractionMode
+from   vut.user_interface.difference_display.console.canvas           import E_LinePairSelectionMode
+from   vut.system.terminal.core                                       import ConsoleCanvas, \
+                                                                             GLUE, LEFT, RIGHT, CENTER, FIXED, \
+                                                                             Fore, Back
+from   vut.external.quex.typed                                        import typed
 
 class InteractionModeDiff(InteractionMode):
     def init(self):
+        self.name = "difference"
         self.canvas.set_selection_mode(E_LinePairSelectionMode.ERRORS, verbosity_level=2)
         self.canvas.do()
 
@@ -27,12 +23,17 @@ class InteractionModeDiff(InteractionMode):
         elif key == 'd': self.canvas._add_horizontal_offset(delta_horizontal)
         elif key == 'w': self.canvas._add_vertical_offset(- delta_vertical)
         elif key == 's': self.canvas._add_vertical_offset(delta_vertical)
-        elif key == 'S': self.canvas.set_mode(E_LinePairSelectionMode.ANALOGIES)
-        elif key == 'P': self.canvas.set_mode(E_LinePairSelectionMode.PLAIN)
-        elif key == 'E': self.canvas.set_mode(E_LinePairSelectionMode.ERRORS)
+        elif key == 'S': self.canvas.set_selection_mode(E_LinePairSelectionMode.ANALOGIES)
+        elif key == 'P': self.canvas.set_selection_mode(E_LinePairSelectionMode.PLAIN)
+        elif key == 'E': self.canvas.set_selection_mode(E_LinePairSelectionMode.ERRORS)
         else:            return True
         self.canvas.do()
         return True
+
+    def get_status_line_content(self):
+        key_txt = "[q] quit [h] help [w] up [s] down [a] left [d] right"
+
+        return key_txt, self.name
 
 class InteractionModeSpecifySelection(InteractionMode):
     def init(self):
@@ -49,16 +50,4 @@ class InteractionModeSpecifySelection(InteractionMode):
         self.canvas.do()
         return True
 
-class ConsoleCanvasDiffUI(ConsoleCanvasDiff):
-    @typed(chunk_pair_list=ChunkPairList)
-    def __init__(self, chunk_pair_list):
-        ConsoleCanvasDiff.__init__(self, chunk_pair_list)
-        self.mode = InteractionModeDiff(self)
-
-    def interact(self):
-        self.mode.init()
-        while 1 + 1 == 2:
-            if not self.mode.do(keyboard.get()):
-                return
-        
 

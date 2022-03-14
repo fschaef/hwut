@@ -3,7 +3,7 @@ ______________________________________________________________________________
 PURPOSE:
 ______________________________________________________________________________
 """
-from   vut.user_interface.difference_display.console.ui_diff  import ConsoleCanvasDiffUI
+from   vut.user_interface.difference_display.console.ui_diff  import ConsoleUIUI
 from   vut.user_interface.difference_display.console.ui_merge import ConsoleCanvasMergeUI
 from   vut.engine.compare.engine.chunk_pair                   import ChunkPair, \
                                                                      LinePairList
@@ -15,7 +15,7 @@ def diff(lina_chunk_list, text_offset=0, sort_potpourri_by_subject_line_n_f=Fals
     """Displays a comparison of subject and nominal lines clustered in 
     'ChunkPair'-s.
     """
-    canvas = ConsoleCanvasDiffUI(lina_chunk_list) 
+    canvas = ConsoleUIUI(lina_chunk_list) 
     canvas.interact()
 
 @typed(lina_cnunk_list=ChunkPairList, sort_potpourri_by_subject_line_n_f=bool)

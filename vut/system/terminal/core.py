@@ -63,7 +63,7 @@ class ConsoleCanvas:
        self.width = int(self.width)
        colorama_init()
 
-   def display(self, line):
+   def print_line(self, line):
        print(line + _color_reset_all)
 
    @typed(cell_content_list=list)
@@ -88,7 +88,7 @@ class ConsoleCanvas:
 
        return "".join(_iterable(cell_content_list, format_list))
 
-   def fix_glue(self, *format_list):
+   def fix_glue(self, format_list):
        """RETURNS: list of CellFormat-s
 
        which has the glue inside tranformed into 'FIXED' so that the line fits 
@@ -107,7 +107,7 @@ class ConsoleCanvas:
            return CellFormat(E_Alignment.FIXED, fe.color_code, width, glue_str, fe.text_offset)
 
        # Determine the width of each 'glue' cell.
-       glue_width_db = self.__compute_glue_width_db(list(format_list))
+       glue_width_db = self.__compute_glue_width_db(format_list)
 
        return [ _expand(fe, glue_width_db.get(i)) for i, fe in enumerate(format_list) ]
 

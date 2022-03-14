@@ -2,7 +2,7 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-from   vut.user_interface.difference_display.console.canvas   import ConsoleCanvasDiff, E_LinePairSelectionMode
+from   vut.user_interface.difference_display.console.canvas   import ConsoleUI, E_LinePairSelectionMode
 import vut.user_interface.difference_display.console.prepare  as     prepare
 from   vut.engine.compare.engine.chunk_pair                   import ChunkPair
 from   vut.engine.compare.engine.chunk_pair_list              import ChunkPairList
@@ -12,17 +12,17 @@ from   vut.external.quex.typed                                import typed
 from   vut.external.quex.tools                                import print_callstack
 from   vut.system.terminal.core                                    import Back
 
-class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
+class ConsoleCanvasMergeUI(ConsoleUI):
     @typed(lina_chunk_list=ChunkPairList)
     def __init__(self, lina_chunk_list):
-        ConsoleCanvasDiff.__init__(self, lina_chunk_list)
+        ConsoleUI.__init__(self, lina_chunk_list)
         self._range_list    = None
         self._focus_range_i = None
         self._focus_cell_i  = None
 
     @typed(mode=E_LinePairSelectionMode)
     def set_mode(self, mode, verbosity_level=2):
-        ConsoleCanvasDiff.set_mode(self, mode, verbosity_level)
+        ConsoleUI.set_mode(self, mode, verbosity_level)
         self._range_list = prepare.get_Interval_list(self._lina_chunk_list)
         print_callstack()
 
@@ -74,7 +74,7 @@ class ConsoleCanvasMergeUI(ConsoleCanvasDiff):
         elif not self._in_merge_range(lina_i): add_background_color = "" 
         elif self._in_focus_range(lina_i):     add_background_color = Back,YELLOW
         else:                                  add_background_color = Back.BLUE
-        return ConsoleCanvasDiff._format_line_elements(self, lina, lina_i, add_background_color)
+        return ConsoleUI._format_line_elements(self, lina, lina_i, add_background_color)
             
     def interact(self):
         delta_horizontal = 5 # int(canvas.width / 8)

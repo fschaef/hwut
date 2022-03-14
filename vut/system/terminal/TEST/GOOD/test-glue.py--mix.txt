@@ -1,0 +1,47 @@
+(0)-----------------------
+input: (total width: 2)
+   width: 1; string: 'b'; alignment: FIXED; color: ; toff: 0;
+   width: 0; string: '*'; alignment: GLUE; color: ; toff: 0;
+   width: 1; string: 'a'; alignment: FIXED; color: ; toff: 0;
+result: (total width: 6)
+   width: 1; string: 'b'; alignment: FIXED; color: ; toff: 0;
+   width: 4; string: '****'; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: 'a'; alignment: FIXED; color: ; toff: 0;
+(0)-----------------------
+input: (total width: 1)
+   width: 1; string: 'b'; alignment: FIXED; color: ; toff: 0;
+   width: 0; string: '*'; alignment: GLUE; color: ; toff: 0;
+result: (total width: 6)
+   width: 1; string: 'b'; alignment: FIXED; color: ; toff: 0;
+   width: 5; string: '*****'; alignment: FIXED; color: ; toff: 0;
+(0)-----------------------
+input: (total width: 1)
+   width: 0; string: '*'; alignment: GLUE; color: ; toff: 0;
+   width: 1; string: 'a'; alignment: FIXED; color: ; toff: 0;
+result: (total width: 6)
+   width: 5; string: '*****'; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: 'a'; alignment: FIXED; color: ; toff: 0;
+(0)-----------------------
+input: (total width: 1)
+   width: 0; string: '<'; alignment: GLUE; color: ; toff: 0;
+   width: 1; string: 'c'; alignment: FIXED; color: ; toff: 0;
+   width: 0; string: '>'; alignment: GLUE; color: ; toff: 0;
+result: (total width: 6)
+   width: 3; string: '<<<'; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: 'c'; alignment: FIXED; color: ; toff: 0;
+   width: 2; string: '>>'; alignment: FIXED; color: ; toff: 0;
+(0)-----------------------
+input: (total width: 3)
+   width: 1; string: ' '; alignment: FIXED; color: ; toff: 0;
+   width: 0; string: '*'; alignment: GLUE; color: ; toff: 0;
+   width: 1; string: ' '; alignment: FIXED; color: ; toff: 0;
+   width: 0; string: '*'; alignment: GLUE; color: ; toff: 0;
+   width: 1; string: ' '; alignment: FIXED; color: ; toff: 0;
+   width: 0; string: '*'; alignment: GLUE; color: ; toff: 0;
+result: (total width: 6)
+   width: 1; string: ' '; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: '*'; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: ' '; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: '*'; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: ' '; alignment: FIXED; color: ; toff: 0;
+   width: 1; string: '*'; alignment: FIXED; color: ; toff: 0;
