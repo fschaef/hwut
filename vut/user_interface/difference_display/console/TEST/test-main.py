@@ -11,7 +11,7 @@ sys.path.insert(0, "../../../../..")
 
 from   vut.user_interface.difference_display.console.TEST.cases import *
 if "--hwut-info" in sys.argv:
-    print("Display Modes: Comparison, Analogy Error;")
+    print("Display Scenarios;")
     print("CHOICES: similar, padding, potpourri, mix, analogy, error, error2, comment;")
     # Call with 'GO' on command line to interact with a TUI
 

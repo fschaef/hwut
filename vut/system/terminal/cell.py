@@ -2,20 +2,16 @@ from   enum      import Enum, auto
 from   itertools import chain
 
 class E_Alignment(Enum):
-    LEFT   = auto()
-    CENTER = auto()
-    RIGHT  = auto()
-    FIXED  = auto()
-    GLUE   = auto()  # => FIXED by 'set_format()'
-
+    LEFT  = auto()
+    RIGHT = auto()
 
 def format(fe, content):
     """RETURNS: Formats 'content' to fit cell specified by 'fe'.
     """
-    if fe.alignment == E_Alignment.FIXED:  
+    if content is None:
         return fe.color_code + fe.string
     elif type(content) == str: 
-        return _plain_text(fe, content)
+        return fe.color_code + _plain_text(fe, content)
     else:                 
         result = _color_text_list(fe, content)
         return _color_text_list_apply(fe, result)
@@ -96,8 +92,7 @@ def _plain_text_prune(total_length, width, alignment, text):
     cut_n = total_length - width
     if   cut_n <= 0:                      return text
     elif alignment == E_Alignment.RIGHT:  return text[cut_n:] 
-    elif alignment != E_Alignment.CENTER: return text[:-cut_n]
-    else:                                 return text[(cut_n>>1):-(cut_n - (cut_n>>1))]
+    else:                                 return text[:-cut_n]
 
 def _color_text_list_prune(total_length, width, alignment, color_text_list):
     """RETURNS: list of (color, text)
@@ -111,21 +106,9 @@ def _color_text_list_prune(total_length, width, alignment, color_text_list):
         return color_text_list
     elif alignment == E_Alignment.RIGHT: 
         return list(_color_text_list_prune_begin(color_text_list, cut_n))
-    elif alignment != E_Alignment.CENTER: 
+    else:
         remaining_n = total_length - cut_n
         return list(_color_text_list_prune_end(color_text_list, remaining_n))
-    else:
-        result     = color_text_list
-        cut_n_half = cut_n >> 1
-        if cut_n_half: 
-            result = list(_color_text_list_prune_begin(result, cut_n_half))
-
-        remaining_n = total_length - cut_n
-            
-        if remaining_n >= 0: 
-            result = list(_color_text_list_prune_end(result, remaining_n))
-
-        return result
 
 def _color_text_list_prune_begin(color_text_list, cut_n):
     """RETURNS: Colored text.
@@ -167,8 +150,7 @@ def _plain_text_padding(fe, total_length, text):
     assert fe.width     >= total_length
     assert total_length >= len(text)
 
-    if   fe.alignment == E_Alignment.CENTER: return text.center(fe.width, " ")
-    elif fe.alignment == E_Alignment.RIGHT:  return text.rjust(fe.width, " ") 
+    if   fe.alignment == E_Alignment.RIGHT:  return text.rjust(fe.width, " ") 
     elif fe.alignment == E_Alignment.LEFT:   return text.ljust(fe.width, " ")
     else:                                    return text
 
@@ -185,12 +167,6 @@ def _color_text_list_padding(fe, total_length, color_text_list):
 
     add_n = fe.width - total_length
     if add_n <= 0: 
-        return color_text_list
-    elif fe.alignment == E_Alignment.CENTER:
-        left_n  = int(add_n) >> 1
-        right_n = add_n - left_n
-        if left_n:  color_text_list = [(None, " " * left_n)] + color_text_list
-        if right_n: color_text_list = color_text_list + [(None, " " * right_n)]
         return color_text_list
     elif fe.alignment == E_Alignment.RIGHT:
         if add_n: return [(None, " " * add_n)] + color_text_list 

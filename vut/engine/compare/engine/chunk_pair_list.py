@@ -2,8 +2,8 @@
 ______________________________________________________________________________
 """
 from   vut.engine.compare.engine.chunk_pair import ChunkPair, \
-                                                               LinePairList
-from   vut.external.quex.typed                          import typed
+                                                   LinePairList
+from   vut.external.quex.typed              import typed
 
 from   collections import defaultdict
 

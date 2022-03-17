@@ -46,8 +46,8 @@ class LineElementPair:
        return _is_analogy(self.subject) or _is_analogy(self.nominal)
 
    def string_pair(self):
-       return "" if self.subject is None else self.subject, \
-              "" if self.nominal is None else self.nominal
+       return "" if self.subject is None else self.subject.string, \
+              "" if self.nominal is None else self.nominal.string
               
 
 class LinePair:

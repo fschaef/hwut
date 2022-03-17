@@ -104,13 +104,8 @@ class LinePairList(list):
         Searches for LinePair-s where either the 'subject' or 'nominal' from
         the 'subject_nominal_set' occurrs.
         """
-        def _enter(result, subject, analogy_db):
-            if subject is None:
-                return
-            p = analogy_db.line_number_db.get(subject)
-            if p is None:
-                return
-            lina_index = self.find_line_association(p.subject_line_n, p.nominal_line_n)
+        def _enter(result, subject_line_n, nominal_line_n):
+            lina_index = self.find_line_association(subject_line_n, nominal_line_n)
             if lina_index is None: 
                 return
             result.append(lina_index)
@@ -119,9 +114,12 @@ class LinePairList(list):
         # For those analogies where errors occur, search for the definition of the
         # original analogy.
         for subject, nominal in subject_nominal_set:
-            _enter(result, subject, analogy_db)
-            subject = analogy_db.get_subject(nominal)
-            _enter(result, subject, analogy_db)
+            s_line_n, n_line_n, associated = analogy_db.first_association_subject(subject)
+            if associated is not None:
+                _enter(result, s_line_n, n_line_n)
+            s_line_n, n_line_n, associated = analogy_db.first_association_nominal(nominal)
+            if associated is not None:
+                _enter(result, s_line_n, n_line_n)
 
         return result
 

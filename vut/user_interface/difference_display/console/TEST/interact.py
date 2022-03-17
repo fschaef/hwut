@@ -28,3 +28,4 @@ def test(subject_txt, nominal_txt, offset=0, mode=E_LinePairSelectionMode.PLAIN,
     console.interact()
 
 test(cases.subject_txt + "\n" + "\n" + cases.nominal_txt, cases.nominal_txt * 2)
+

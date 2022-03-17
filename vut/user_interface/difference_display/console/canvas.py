@@ -15,7 +15,7 @@ from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit
 
 from   vut.external.quex.typed  import typed
 from   vut.system.helper        import number_of_decimal_digits
-from   vut.system.terminal.core import ConsoleCanvas, GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+from   vut.system.terminal.core import ConsoleCanvas, LEFT, RIGHT, FIXED, Fore, Back
 import vut.system.keyboard      as     keyboard
 
 from   copy import copy
@@ -51,23 +51,18 @@ class ConsoleUI(ConsoleCanvas):
         
         self.__begin_line_pair_i = 0
         self.__max_line_length   = 0
-        self.interaction         = interaction_mode(self)
-
-        self.format.set_status_line(
-            LEFT(self.width-19, "Bg"), 
-            GLUE(" ", "Wg"),
-            LEFT(15, "Bg"),
-            FIXED("/", "Bg"),
-            LEFT(15, "Bg"),
-            FIXED(" ", "Bg"),
-            RIGHT(4, "Bg")
-        )
+        self.set_interaction(interaction_mode)
 
     def interact(self):
-        self.interaction.init()
+        assert self.interaction is not None
         while 1 + 1 == 2:
+            self.do()
             if not self.interaction.do(keyboard.get()):
                 return
+
+    def set_interaction(self, interaction_mode):
+        self.interaction = interaction_mode(self)
+        self.interaction.init()
 
     @typed(mode=E_LinePairSelectionMode)
     def set_selection_mode(self, mode, verbosity_level=2):
@@ -106,15 +101,43 @@ class ConsoleUI(ConsoleCanvas):
             self.print_line(empty_formatted)
 
     def _display_status_line(self):
-        L                  = len(self.data.line_pair_list)
-        key_txt, mode_name = self.interaction.get_status_line_content()
-        if L == 0:     ratio = 1
-        else:          ratio = min(L, self.__begin_line_pair_i + self.height) / L
-        if ratio == 1: percentage = "100" + "%"
-        else:          percentage = "% 3i" % int(ceil(ratio*100)) + "%"
+        def _percentage():
+            L = len(self.data.line_pair_list)
+            if L == 0:     ratio = 1
+            else:          ratio = min(L, self.__begin_line_pair_i + self.height) / L
+            if ratio == 1: return "100" + "%"
+            else:          return "% 3i" % int(ceil(ratio*100)) + "%"
 
-        lp_list = self.prepare(self.format.status_line, 
-                               [key_txt, mode_name, self.data.selection_mode.name.lower(), percentage])
+        remainder   = self.width - 3 # '4' spaces
+        percentage  = _percentage()
+        remainder  -= 4 # percentage: 4 chars
+
+        key_txt, mode_name = self.interaction.get_status_line_content()
+        L_key_txt  = len(key_txt)
+        if L_key_txt > remainder: key_txt = key_txt[:remainder]
+        remainder -= L_key_txt
+
+        L_mode     = len(mode_name)
+        if L_mode > remainder: mode_name = mode_name[:remainder]
+        remainder -= L_mode
+
+        selection_mode   = self.data.selection_mode.name.lower()
+        L_selection_mode = len(selection_mode)
+        if L_selection_mode > remainder - 2: selection_mode = selection_mode[:remainder-2]
+        remainder -= L_selection_mode + 2
+
+        format_list = [
+            FIXED(key_txt, "Bg"), 
+            FIXED(" ", "Wg"),
+            FIXED(" " * remainder, "Wg"),
+            FIXED(mode_name, "Bg"),
+            FIXED(" ", "Bg"),
+            FIXED("[%s]" % selection_mode, "Bg"),
+            FIXED(" ", "Bg"),
+            FIXED(percentage, "Bg")
+        ]
+
+        lp_list = self.prepare(format_list)
         self.print_line(lp_list)
 
     def _add_horizontal_offset(self, value):

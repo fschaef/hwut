@@ -2,7 +2,7 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-from   vut.system.terminal.core                import GLUE, LEFT, RIGHT, CENTER, FIXED, Fore, Back
+from   vut.system.terminal.core                import LEFT, RIGHT, FIXED, Fore, Back
 from   vut.engine.compare.engine.line          import Line
 from   vut.engine.compare.engine.line_pair     import LinePair
 from   vut.engine.compare.edit_operations.edit import E_EditId
@@ -133,10 +133,6 @@ class ConsoleCanvasFormatter:
             LEFT(self.line_n_width, "Uw"), 
             FIXED("|" + "|" * self.nominal_width, "Gw"),
         ]
-        self.status_line = [GLUE(" ", "Wg"), FIXED("<no mode>", "Wg"), GLUE(" ", "Wg")]
-
-    def set_status_line(self, *format_list):
-        self.status_line = self.canvas.fix_glue(*format_list)
 
     def end_of_stream_subject(self, line_n):
         return Line.from_string(line_n, "/" * self.subject_width)

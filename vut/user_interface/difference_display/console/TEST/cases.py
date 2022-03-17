@@ -8,6 +8,7 @@ from   vut.engine.compare.configuration                         import Configura
 from   vut.engine.compare.engine.chunk_pair_list                import ChunkPairList
 from   vut.user_interface.difference_display.console.canvas     import ConsoleUI, E_LinePairSelectionMode
 import vut.system.terminal.size                                 as     terminal_size
+from   vut.user_interface.difference_display.console.interaction_mode_diff_display import InteractionModeDiff
 
 from   io import StringIO
 
@@ -191,7 +192,7 @@ def test_core(subject_txt, nominal_txt, offset, mode, level):
     la = list(compare.associate(config, subject, nominal))
 
     terminal_size.set_size_fixed(terminal_height, terminal_width)
-    canvas = ConsoleUI(ChunkPairList(la))
+    canvas = ConsoleUI(ChunkPairList(la), InteractionModeDiff)
     canvas.set_selection_mode(mode, level)
     canvas._display_content()
 

@@ -43,8 +43,9 @@ The table above, is what is stored in the analogy database, along with line
 number information about the analogies first occurrence.
 _______________________________________________________________________________
 """
-from   vut.system.helper import number_of_decimal_digits
-from   collections       import namedtuple, defaultdict
+from   vut.system.helper        import number_of_decimal_digits
+from   collections              import namedtuple, defaultdict
+from   vut.external.quex.typed  import typed
 
 from   vut.external.quex.tools import print_callstack
 
@@ -80,6 +81,26 @@ class AnalogyDb(dict):
             dict.clear(self)
             self.line_number_db.clear()
             self.update(other)
+
+    @typed(string=str)
+    def first_association_subject(self, string):
+        """RETURNS: [0] line number of first occurrence in subject stream
+                    [1] line number of first occurrence in nominal stream
+                    [2] nominal string of association
+        """
+        if string not in self.line_number_db:
+            return None, None, None
+
+        s_line_n, n_line_n = self.line_number_db[string]
+        nominal_string     = self[string]
+        return s_line_n, n_line_n, nominal_string
+
+    @typed(string=str)
+    def first_association_nominal(self, string):
+        for subject, nominal in self.items():
+            if nominal == string:
+                return self.first_association_subject(subject)
+        return None, None, None
 
     def is_consistent(self, analogy):
         """RETURNS: True, if analogy = tuple(subject, nominal) is consistent
