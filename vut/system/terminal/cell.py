@@ -4,15 +4,16 @@ from   typeguard   import typechecked
 from   collections import namedtuple
 from   vut.system.terminal.styled_text import ColorText, ColorTextList, E_Alignment, CellFormat
 
-def format(fe, content):
+@typechecked
+def format(fe: CellFormat, content: None | str | ColorTextList):
     """RETURNS: Formats 'content' to fit cell specified by 'fe'.
     """
     if content is None:
         return fe.color_code + fe.string
     elif type(content) == str: 
         return fe.color_code + _plain_text(fe, content)
-    else:                 
-        result = _color_text_list(fe, content)
+    elif isinstance(content, ColorTextList):                 
+        result = content.format(fe)
         return result.render(fe.color_code)
 
 def _plain_text(fe, string):
@@ -49,19 +50,6 @@ def _plain_text_prune(total_length, width, alignment, text):
     if   cut_n <= 0:                      return text
     elif alignment == E_Alignment.RIGHT:  return text[cut_n:] 
     else:                                 return text[:-cut_n]
-
-def _color_text_list(fe, color_text_list):
-    """RETURNS: Colored, formatted text.
-        
-    Formats cell according to format expression and the text provided as tuples
-    (color, text). Right aligned text is pruned from left, and vice versa.
-    """
-    result       = color_text_list.prepare_offset(fe.text_offset)
-    total_length = sum(len(sub_text) for _, sub_text in result)
-    result       = result.prune(total_length, fe.width, fe.alignment)
-    total_length = sum(len(sub_text) for _, sub_text in result)
-
-    return result.padding(fe, total_length)
 
 def _plain_text_padding(fe, total_length, text):
     """RETURNS: string

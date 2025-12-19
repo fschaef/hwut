@@ -107,7 +107,7 @@ class ColorTextList:
 
         return ColorTextList(_ for _ in _iter(remaining_n))
 
-    def _prepare_offset(self, text_offset):
+    def prepare_offset(self, text_offset):
         """RETURNS: list of (color, string)
 
         where the string is adapted such that the text offset is prepared.
@@ -129,3 +129,17 @@ class ColorTextList:
             for ct in self._items
             for part in (RESET_BG, ct.color or default_fg, ct.text)
         ) + RESET_ALL
+
+    def format(self, fe: CellFormat):
+        """RETURNS: Colored, formatted text.
+            
+        Formats cell according to format expression and the text provided as tuples
+        (color, text). Right aligned text is pruned from left, and vice versa.
+        """
+        result       = self.prepare_offset(fe.text_offset)
+        total_length = sum(len(sub_text) for _, sub_text in result)
+        result       = result.prune(total_length, fe.width, fe.alignment)
+        total_length = sum(len(sub_text) for _, sub_text in result)
+
+        return result.padding(fe, total_length)
+

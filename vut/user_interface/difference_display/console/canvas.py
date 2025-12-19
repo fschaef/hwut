@@ -21,6 +21,7 @@ import vut.system.keyboard      as     keyboard
 
 from   copy import copy
 from   math import ceil
+from   typeguard import typechecked
 
 E_LinePairSelectionMode = prepare.E_LinePairSelectionMode
 
@@ -65,8 +66,8 @@ class Data:
         return result
 
 class ConsoleUI(ConsoleCanvas):
-    @typed(chunk_pair_list=ChunkPairList, interaction_mode=type)
-    def __init__(self, chunk_pair_list, interaction_mode):
+    @typechecked
+    def __init__(self, chunk_pair_list: ChunkPairList, interaction_mode: type):
         ConsoleCanvas.__init__(self)
         self.data        = Data(chunk_pair_list)
         self._analogy_db = chunk_pair_list[-1].analogy_db()

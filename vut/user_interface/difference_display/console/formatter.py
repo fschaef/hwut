@@ -13,7 +13,6 @@ from   vut.engine.constants                    import E_Side
 class MarkDisplaySide(object):
     __slots__ = ("lip_i_1st", "lip_i_2nd", "lip_i_last", "tags", "referene_defined_f")
 
-    @typed(side=E_Side)
     def __init__(self):
         self.lip_i_1st  = None   # lip_i_1st, lip_i_2nd -- borders of focus region
         self.lip_i_2nd  = None
@@ -61,8 +60,8 @@ class MarkDisplays(object):
 
     def __init__(self):
         self.focus_side        = E_Side.SUBJECT
-        self.subject           = MarkDisplaySide(E_Side.SUBJECT)
-        self.nominal           = MarkDisplaySide(E_Side.NOMINAL)
+        self.subject           = MarkDisplaySide() # E_Side.SUBJECT
+        self.nominal           = MarkDisplaySide() # E_Side.NOMINAL
         self.focus_index       = 0 # 0: subject first; 1: subject second; 
         #                          # 2: nominal first; 3: nominal second;
         self._focus_mirror = { 0: 3, 1: 2, 2: 1, 3: 0 }

@@ -14,6 +14,7 @@ from   vut.external.quex.typed   import typed
 
 from   enum        import Enum, auto
 from   itertools   import zip_longest
+from   typeguard   import typechecked
 
 _color_db = {
     "B": Fore.BLACK,  "R": Fore.RED,  "G": Fore.GREEN,
@@ -56,8 +57,8 @@ class ConsoleCanvas:
        if newline_f: print(line + _color_reset_all)
        else:         print(line + _color_reset_all, end="", flush=True)
 
-   @typed(cell_content_list=list)
-   def prepare(self, format_list, cell_content_list=[]) -> str:
+   @typechecked
+   def prepare(self, format_list=list[CellFormat], cell_content_list=list[str]) -> str:
        """RETURNS: Colored and formatted string. 
        
        Takes the 'format_list' and the according content to produce a colored 
@@ -67,6 +68,7 @@ class ConsoleCanvas:
            for fe in format_list:
                if fe.string is None: content = cell_content_list.pop(0)
                else:                 content = None
+               print("#content:", content)
                yield cell.format(fe, content)
 
        return "".join(_iterable(format_list, cell_content_list))
