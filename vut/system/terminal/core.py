@@ -5,15 +5,14 @@ PURPOSE: Interaction with the user's console.
 
 ________________________________________________________________________________
 """
-import vut.system.core               as     system
-import vut.system.terminal.cell      as     cell
-from   vut.system.terminal.cell      import E_Alignment
-import vut.system.terminal.size      as     terminal_size
-from   vut.external.colorama         import init as colorama_init, Fore, Back, Style
-from   vut.external.quex.typed       import typed
+import vut.system.core           as     system
+import vut.system.terminal.cell  as     cell
+from   vut.system.terminal.styled_text  import CellFormat, E_Alignment
+import vut.system.terminal.size  as     terminal_size
+from   vut.external.colorama     import init as colorama_init, Fore, Back, Style
+from   vut.external.quex.typed   import typed
 
 from   enum        import Enum, auto
-from   collections import namedtuple
 from   itertools   import zip_longest
 
 _color_db = {
@@ -32,9 +31,6 @@ def _color_id_to_code(color):
     """
     if color is None: return Fore.RESET + Back.RESET
     else:             return "".join(_color_db[code] for code in color)
-
-# Format Expression: 'FE'
-CellFormat = namedtuple("CellFormat", ("alignment", "color_code", "width", "string", "text_offset"))
 
 @typed(width=int)
 def LEFT(width, color=None, text_offset=0):

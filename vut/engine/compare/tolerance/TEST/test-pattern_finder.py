@@ -140,9 +140,9 @@ if "tolerance_id" in sys.argv:
     print("Map:")
     for i, tolerance in enumerate(pattern_finder.table):
         if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
-            print("  [%i] %s %s" % (i, tolerance.id, tolerance.pattern_index))
+            print("  [%i] %s %s" % (i, tolerance.id.name, tolerance.pattern_index))
         else:
-            print("  [%i] %s" % (i, tolerance.id))
+            print("  [%i] %s" % (i, tolerance.id.name))
 
 if "do" in sys.argv:
     config                              = empty_config()
