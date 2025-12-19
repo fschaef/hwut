@@ -27,7 +27,7 @@ def do_and_delete_if(the_list, do, result):
     for i in range(len(the_list)-1, -1, -1):
         if do(the_list[i], result): del the_list[i]
 
-def print_callstack(BaseNameF=False):
+def print_callstack(BaseNameF=False, fh=sys.stdout):
     try:
         i = 1
         name_list = []
@@ -60,7 +60,7 @@ def print_callstack(BaseNameF=False):
                 name = " " * (len(file_name) - len(base_name)) + base_name
             prev_file_name = file_name
             
-        print("%s%s:%s:%s(...)" % (" " * (i*4), name, x[1], x[2])) 
+        fh.write("%s%s:%s:%s(...)\n" % (" " * (i*4), name, x[1], x[2])) 
 
 def pair_combinations(iterable):
     other = tuple(iterable)

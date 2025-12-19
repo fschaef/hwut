@@ -20,9 +20,9 @@ _color_db = {
     "B": Fore.BLACK,  "R": Fore.RED,  "G": Fore.GREEN,
     "Y": Fore.YELLOW, "U": Fore.BLUE, "M": Fore.MAGENTA, 
     "C": Fore.CYAN,   "W": Fore.WHITE, 
-    "b": Back.BLACK,  "r": Back.RED,  "g": Back.GREEN,
-    "y": Back.YELLOW, "u": Back.BLUE, "m": Back.MAGENTA, 
-    "c": Back.CYAN,   "w": Back.WHITE, 
+    "b": Back.BLACK,  "r": Back.RED,  "g":  Back.GREEN,
+    "y": Back.YELLOW, "u": Back.BLUE, "m":  Back.MAGENTA, 
+    "c": Back.CYAN,   "w": Back.WHITE
 }
 
 _color_reset_all = Fore.RESET + Back.RESET
@@ -56,8 +56,9 @@ class ConsoleCanvas:
        self.width = int(self.width)
        colorama_init()
 
-   def print_line(self, line):
-       print(line + _color_reset_all)
+   def print_line(self, line, newline_f=True):
+       if newline_f: print(line + _color_reset_all)
+       else:         print(line + _color_reset_all, end="", flush=True)
 
    @typed(cell_content_list=list)
    def prepare(self, format_list, cell_content_list=[]) -> str:

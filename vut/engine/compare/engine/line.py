@@ -35,6 +35,11 @@ class Line:
     def from_nothing():
         return Line.from_string(None, "")
 
+    def character_n(self):
+        """RETURNS: Number of characters in present in the line.
+        """
+        return sum(len(le.string) for le in self.sequence)
+
     def compare_quickly(self, nominal_line):
         """RETURNS: A 'cost' approximation > 0
 

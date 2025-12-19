@@ -12,12 +12,15 @@ provide a sub-set of the 'LinePair'-s which are inside them. The return
 value of these functions is then used for the line-by-line display.
 _______________________________________________________________________________
 """
-from   vut.engine.compare.engine.line_pair        import LinePair
-from   vut.engine.compare.engine.chunk_pair  import ChunkPair, \
-                                                                LinePairList
-from   vut.engine.compare.engine.core                    import E_PotpourriBorder
-from   vut.engine.compare.engine.input_chunk             import E_Chunk
-from   vut.system.helper                                 import Interval
+import vut.user_interface.difference_display.console.formatter as formatter
+
+from   vut.engine.compare.engine.line_pair     import LinePair
+from   vut.engine.compare.engine.chunk_pair    import ChunkPair, \
+                                                      LinePairList
+from   vut.engine.compare.engine.core          import E_PotpourriBorder
+from   vut.engine.compare.engine.input_chunk   import E_Chunk
+from   vut.system.helper                       import Interval
+
 from   vut.external.quex.typed   import typed
 from   vut.external.quex.tools   import flatten
 
@@ -35,18 +38,56 @@ class E_LinePairSelectionMode(Enum):
 
 class LinePairDecorated(LinePair):
     def __init__(self, chunk_index, lp_index, lp):
-        self.chunk_index   = chunk_index
-        self.lp_index    = lp_index
+        self.chunk_index    = chunk_index
+        self.lp_index       = lp_index
         LinePair.__init__(self, lp.subject, lp.nominal, lp.edit_list, lp.border)
-        self.subject_end_f = False
-        self.nominal_end_f = False
-        self.filler_f      = False
+        self.subject_end_f  = False
+        self.nominal_end_f  = False
+        self.filler_f       = False
+        self.__nominal_text = None
+        self.__subject_text = None
 
     @staticmethod
     def filler():
         result = LinePairDecorated(0, 0, LinePair(None, None))
         result.filler_f = True
         return result
+
+    def subject_text(self):
+        if self.__subject_text is None:
+            self.__get_text_pairs()
+        return self.__subject_text
+
+    def subject_line_n(self):
+        if self.subject is None: return None
+        else:                    return subject.line_n
+
+    def nominal_line_n(self):
+        if self.nominal is None: return None
+        else:                    return nominal.line_n
+
+    def nominal_text(self):
+        if self.__nominal_text is None:
+            self.__get_text_pairs()
+        return self.__nominal_text
+
+    def __get_text_pairs(self):
+        """Determines a colored text representation of the subject and its 
+        correspondent nominal line.  The 'text' is a representation of the 
+        line elements of subject and nominal and their relation SUBSTITUTE, 
+        INSERT, DELETE, TRANSPOSE.
+
+        SETS: self.__subject_text
+              self.__nominal_text
+        """
+        subject_txt, nominal_txt = [], []
+        for lep in self.line_element_pair_list():
+            s_color, s_txt, \
+            n_color, n_txt  = formatter.edit_db[lep.edit_id](lep.subject, lep.nominal)
+            subject_txt.append((s_color, s_txt.replace("\t", "\\t")))
+            nominal_txt.append((n_color, n_txt.replace("\t", "\\t")))
+        self.__subject_text = subject_txt
+        self.__nominal_text = nominal_txt
 
 def plain(lp_chunk_list, verbosity_level=2):
     """RETURNS: sequence of all 'LinePair' objects in the 

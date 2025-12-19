@@ -3,7 +3,7 @@ ______________________________________________________________________________
 PURPOSE:
 """
 from   vut.external.quex.typed   import typed
-from   math import ceil, log10
+from   math                      import ceil, log10
 
 def number_of_decimal_digits(n):
     return ceil(log10(n+1))

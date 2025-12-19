@@ -55,6 +55,9 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
     The '.get()' function either returns a line of text or 'None' in case
     that the stream terminated.
     """
+    assert hasattr(subject_line_provider, "readline")
+    assert hasattr(nominal_line_provider, "readline")
+
     analogy_db = AnalogyDb()
 
     # subject, nominal = 'LineSequence' or 'Potpourri'
@@ -86,18 +89,18 @@ def associate(config, subject_line_provider, nominal_line_provider):
 
     Data structure:
 
-          ChunkPair:_______________________________ 
-          |   .type ('E_Chunk')                               |
+          ChunkPair:___________________________________
+          |   .type ('E_Chunk')                        |
           |   .line_pair_list: [                       |
           |       LinePair:________________________    |
-          |       | .subject_line ('Line')                |   |
-          |       | .nominal_line ('Line')                |   |
-          |       | .edit_list    (list of 'Edit')        |   |
-          |       | .analogy_db   ('AnalogyDb')           |   |
-          |       '---------------------------------------'   |
-          |       ...                                         |  
-          |   ]                                               |
-          '.__________________________________________________'
+          |       | .subject_line ('Line')         |   |
+          |       | .nominal_line ('Line')         |   |
+          |       | .edit_list    (list of 'Edit') |   |
+          |       | .analogy_db   ('AnalogyDb')    |   |
+          |       '--------------------------------'   |
+          |       ...                                  |  
+          |   ]                                        |
+          '.___________________________________________'
 
           Line:____________________________________
           |    .line_n                             |
@@ -110,6 +113,9 @@ def associate(config, subject_line_provider, nominal_line_provider):
           |    ]                                   |
           '----------------------------------------'
     """
+    assert hasattr(subject_line_provider, "readline")
+    assert hasattr(nominal_line_provider, "readline")
+
     analogy_db = AnalogyDb()
 
     # subject, nominal = 'LineSequence', 'Potpourri' or None

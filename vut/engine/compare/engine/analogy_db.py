@@ -47,9 +47,6 @@ from   vut.system.helper        import number_of_decimal_digits
 from   collections              import namedtuple, defaultdict
 from   vut.external.quex.typed  import typed
 
-from   vut.external.quex.tools import print_callstack
-
-
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
 class AnalogyDb(dict):

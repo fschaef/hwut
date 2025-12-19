@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 PURPOSE:
@@ -27,5 +28,5 @@ def test(subject_txt, nominal_txt, offset=0, mode=E_LinePairSelectionMode.PLAIN,
     console = ConsoleUI(cp_list, InteractionModeDiff)
     console.interact()
 
-test(cases.subject_txt + "\n" + "\n" + cases.nominal_txt, cases.nominal_txt * 2)
+test(("\n" + cases.subject_txt + "\n" + "\n" + cases.nominal_txt) * 3, cases.nominal_txt * 6)
 

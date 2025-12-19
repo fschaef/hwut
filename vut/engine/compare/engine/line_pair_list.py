@@ -13,6 +13,7 @@ class LinePairList(list):
     def __init__(self, iterable=None):
         if iterable is not None: 
             list.__init__(self, iterable)
+            assert all(isinstance(x, LinePair) for x in self)
 
     @staticmethod
     def from_subject_only(line_list):
@@ -21,6 +22,19 @@ class LinePairList(list):
     @staticmethod
     def from_nominal_only(line_list):
         return LinePairList(LinePair(None, x, []) for x in line_list)
+
+    def append(self, lp):
+        assert isinstance(lp, LinePair)
+        list.append(self, lp)
+
+    def extend(self, lp_iterable):
+        end_i = len(self)
+        list.extend(self, lp_iterable)
+        assert all(isinstance(x, LinePair) for x in self[end_i:])
+
+    def __setitem__(self, lp):
+        assert isinstance(lp, LinePair)
+        list.__setitem__(self, lp)
 
     def enumerate(self, begin, end):
         if begin >= 0 or end < len(self) and begin < end: 
@@ -36,10 +50,10 @@ class LinePairList(list):
 
     def find_line_association(self, subject_line_n, nominal_line_n):
         for i, lina in enumerate(self):
-            if lina.subject.line_n != subject_line_n: 
+            if lina.subject is None or lina.subject.line_n != subject_line_n: 
                 continue
-            elif lina.nominal.line_n != nominal_line_n:
-                # 'subject.line_n' is only associated with on 'nominal.line_n'
+            elif lina.nominal is None or lina.nominal.line_n != nominal_line_n:
+                # 'subject.line_n' is only associated with one 'nominal.line_n'
                 return None # => (subject_line_n, nominal_line_n) cannot be found
             else:
                 return i
