@@ -5,15 +5,10 @@ PURPOSE: Interaction with the user's console.
 
 ________________________________________________________________________________
 """
-import vut.system.core           as     system
-import vut.system.terminal.cell  as     cell
-from   vut.system.terminal.styled_text  import CellFormat, E_Alignment
-import vut.system.terminal.size  as     terminal_size
-from   vut.external.colorama     import init as colorama_init, Fore, Back, Style
-from   vut.external.quex.typed   import typed
+from   vut.external.colorama           import Fore, Back
+from   vut.system.terminal.cell        import StaticCell
+from   vut.system.terminal.styled_text import CellFormat, E_Alignment
 
-from   enum        import Enum, auto
-from   itertools   import zip_longest
 from   typeguard   import typechecked
 
 _color_db = {
@@ -33,43 +28,27 @@ def _color_id_to_code(color):
     if color is None: return Fore.RESET + Back.RESET
     else:             return "".join(_color_db[code] for code in color)
 
-@typed(width=int)
-def LEFT(width, color=None, text_offset=0):
-    return CellFormat(E_Alignment.LEFT, _color_id_to_code(color), width, None, text_offset)
+def LEFT(width, color=None, text_offset=0) -> CellFormat:
+    return CellFormat(
+        width       = width,
+        alignment   = E_Alignment.LEFT,
+        color_code  = _color_id_to_code(color),
+        text_offset = text_offset,
+    )
 
-@typed(width=int)
-def RIGHT(width, color=None, text_offset=0):
-    return CellFormat(E_Alignment.RIGHT, _color_id_to_code(color), width, None, text_offset)
+def RIGHT(width, color=None, text_offset=0) -> CellFormat:
+    return CellFormat(
+        width       = width,
+        alignment   = E_Alignment.RIGHT,
+        color_code  = _color_id_to_code(color),
+        text_offset = text_offset,
+    )
 
-@typed(string=str)
 def FIXED(string, color=None, text_offset=0):
-    return CellFormat(E_Alignment.LEFT, _color_id_to_code(color), len(string), string, text_offset)
-
-
-class ConsoleCanvas:
-   def __init__(self):
-       self.height, self.width = terminal_size.get()
-       self.height = int(self.height)
-       self.width = int(self.width)
-       colorama_init()
-
-   def print_line(self, line, newline_f=True):
-       if newline_f: print(line + _color_reset_all)
-       else:         print(line + _color_reset_all, end="", flush=True)
-
-   @typechecked
-   def prepare(self, format_list=list[CellFormat], cell_content_list=list[str]) -> str:
-       """RETURNS: Colored and formatted string. 
-       
-       Takes the 'format_list' and the according content to produce a colored 
-       and formatted string.
-       """
-       def _iterable(format_list, cell_content_list):
-           for fe in format_list:
-               if fe.string is None: content = cell_content_list.pop(0)
-               else:                 content = None
-               print("#content:", content)
-               yield cell.format(fe, content)
-
-       return "".join(_iterable(format_list, cell_content_list))
-
+    fmt = CellFormat(
+        width       = len(string),
+        alignment   = E_Alignment.LEFT,
+        color_code  = _color_id_to_code(color),
+        text_offset = text_offset,
+    )
+    return StaticCell(fmt, string)

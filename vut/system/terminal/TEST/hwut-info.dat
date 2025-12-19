@@ -3,5 +3,5 @@ System Functions
 
 python *.py 
          
---not data.py
+--not data.py tmp.py
 
