@@ -13,11 +13,12 @@ from   vut.engine.compare.engine.line_pair_list    import LinePairList
 from   vut.engine.compare.engine.core              import E_PotpourriBorder
 from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit
 
-from   vut.engine.constants     import E_Side
-from   vut.external.quex.typed  import typed
-from   vut.system.helper        import number_of_decimal_digits
-from   vut.system.terminal.core import ConsoleCanvas, LEFT, RIGHT, FIXED, Fore, Back
-import vut.system.keyboard      as     keyboard
+from   vut.engine.constants               import E_Side
+from   vut.external.quex.typed            import typed
+from   vut.system.helper                  import number_of_decimal_digits
+from   vut.system.terminal.core           import LEFT, RIGHT, FIXED, Fore, Back
+from   vut.system.terminal.console_canvas import ConsoleCanvas
+import vut.system.keyboard                as     keyboard
 
 from   copy import copy
 from   math import ceil

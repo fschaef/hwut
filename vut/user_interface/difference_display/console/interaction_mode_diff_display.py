@@ -4,8 +4,8 @@ PURPOSE:
 """
 from   vut.user_interface.difference_display.console.interaction_mode import InteractionMode
 from   vut.user_interface.difference_display.console.canvas           import E_LinePairSelectionMode
-from   vut.system.terminal.core                                       import ConsoleCanvas, \
-                                                                             LEFT, RIGHT, \
+from   vut.system.terminal.console_canvas                             import ConsoleCanvas
+from   vut.system.terminal.core                                       import LEFT, RIGHT, \
                                                                              Fore, Back
 from   vut.external.quex.typed                                        import typed
 from   vut.engine.constants                                           import E_Side

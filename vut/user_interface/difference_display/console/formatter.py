@@ -157,7 +157,7 @@ class ConsoleCanvasFormatter:
             FIXED("_" * (self.line_n_width+1), "Uw"), 
             LEFT(self.subject_width, "Bg")
         ]
-        return self.canvas.prepare(f, ["GOOD:", "OUT: %s %s" % (app_name, choice_name)])
+        return self.canvas.render(f, ["GOOD:", "OUT: %s %s" % (app_name, choice_name)])
 
     def _center_column(self, lip_i, sc="Uw", nc="Uw"):
         s, n = self.cursor.marks(lip_i)
