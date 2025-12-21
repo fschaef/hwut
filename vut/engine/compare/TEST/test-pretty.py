@@ -36,6 +36,7 @@ import vut.engine.compare.main          as     main
 
 if "--hwut-info" in sys.argv:
     print("ChunkPair.description()")
+    print("CHOICES: line-sequence, potpourri;")
     sys.exit()
 
 config = Configuration()
@@ -60,10 +61,20 @@ def test(table):
 
 
 # Test wether a failed analogy does not clear the analogies of 'good' lines.
-test([
-     ["((A)) is good.",             "((1)) is good."],
-     ["((A)) is bad.",              "((2)) is not so good."],
-     ["4711 ((is)) ((a)) number.",  "4712 ((ist)) ((eine)) Zahl."],
-])
+if "line-sequence" in sys.argv:
+    test([
+         ["((A)) is good.",             "((1)) is good."],
+         ["((A)) is bad.",              "((2)) is not so good."],
+         ["4711 ((is)) ((a)) number.",  "4712 ((ist)) ((eine)) Zahl."],
+    ])
+else:
+    test([
+         ["||||",                       "||||"],
+         ["((A)) is good.",             "4712 ((ist)) ((eine)) Zahl."],
+         ["9.9 is good.",               "((1)) is good."],
+         ["((A)) is bad.",              "((1)) is not so good."],
+         ["0.815 ((is)) ((a)) number.",  "9.99 good."],
+         ["||||",                       "||||"],
+    ])
 
 

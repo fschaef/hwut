@@ -23,6 +23,7 @@ from   vut.engine.compare.engine.core            import E_Verdict
 from   vut.external.quex.typed                   import typed
 
 from   enum import IntEnum
+from   typeguard import typechecked
 
 class E_ToleranceId(IntEnum):
     STRING              = 1
@@ -47,7 +48,7 @@ class Token:
         self.tolerance_id  = tolerance_id
         self.start         = start
         self.end           = end
-        self.pattern_i_set = pattern_i_set
+        self.pattern_i_set = pattern_i_set # set of pattern indices involved
 
     def set(self, tolerance, span):
         self.start        = span[0]
@@ -63,28 +64,32 @@ class Token:
             self.tolerance_id  = tolerance.id
             self.pattern_i_set = set([tolerance.pattern_index])
 
-
 class LineElement:
     """Base class for all 'LineElement' classes. It contains:
 
-     .tolerance_id:  identifies the line element type, i.e. the 
-                     type of tolerance which is to be applied.
-     .reference      text fragment where the pattern occured.
+     .tolerance_id:  identifies the line element type, i.e. the type of 
+                     tolerance which is to be applied.
+
+    Instead of extraing a string corresponding to the LineElement, it 
+    refers to the according sub-string by indices into a global string 
+    '.reference'.
+
      .start          index pointing into '.reference' where the 
                      according pattern gettings.
      .end            index pointing into '.reference' after the 
                      last character.
+     .reference      text fragment where the pattern occured.
     """
-    @typed(tolerance_id=E_ToleranceId)
-    def __init__(self, tolerance_id, start, end, string):
+    @typechecked
+    def __init__(self, tolerance_id: E_ToleranceId, start, end, string):
         self.tolerance_id = tolerance_id
         self.start        = start
         self.end          = end
         self.reference    = string
 
     @classmethod
-    @typed(token=Token, global_string=str)
-    def from_Token(cls, token, global_string, numeric_tolerance_ratio):
+    @typechecked
+    def from_Token(cls, token: Token, global_string: str, numeric_tolerance_ratio):
         """RETURNS: A 'LineElement' object based on the provided match data
                     inside this object.
         """
@@ -282,7 +287,6 @@ class LineElementVisibleNothing(LineElement):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
         return "LineElement:%s(\"%s,tol=%s\")" % (self.tolerance_id.name, self.string), []
-
 
 class LineElementEquivalencePattern(LineElement):
     def __init__(self, start, end, string, pattern_index_set):

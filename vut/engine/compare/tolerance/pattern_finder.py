@@ -204,4 +204,3 @@ def _find_first_match(table, string, i, useless):
             best.add(tolerance)               # same range => try to consider all
 
     return best
-

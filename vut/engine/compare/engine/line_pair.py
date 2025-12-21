@@ -13,7 +13,8 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.tolerance.line_element import E_ToleranceId, LineElement
+from   vut.engine.compare.tolerance.line_element import E_ToleranceId, \
+                                                        LineElement
 from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.engine.core            import E_PotpourriBorder
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
@@ -22,11 +23,12 @@ import vut.engine.compare.edit_operations.line   as     edit_operations_line
 from   vut.external.quex.typed                   import typed
 
 from   collections import namedtuple
+from   typeguard   import typechecked
 import sys
 
 class LineElementPair:
-   @typed(edit_id=E_EditId, subject=(None,LineElement), nominal=(None,LineElement))
-   def __init__(self, edit_id, subject, nominal):
+   @typechecked 
+   def __init__(self, edit_id: E_EditId, subject: LineElement|None, nominal: LineElement|None):
        self.edit_id = edit_id
        self.subject = subject
        self.nominal = nominal
@@ -54,8 +56,12 @@ class LinePair:
     """An association of a line from the subject input stream and a line
     from the nominal input stream.
     """
-    @typed(subject=(None, Line), nominal=(None, Line))
-    def __init__(self, subject, nominal, edit_list=tuple(), potpourri_border=E_PotpourriBorder.NONE):
+    @typechecked 
+    def __init__(self, 
+                 subject:          Line|None, 
+                 nominal:          Line|None, 
+                 edit_list         = tuple(), 
+                 potpourri_border: E_PotpourriBorder = E_PotpourriBorder.NONE):
         assert edit_list is None or all(isinstance(x, Edit) for x in edit_list)
         self.edit_list = edit_list
         self.subject   = subject
@@ -118,12 +124,15 @@ class LinePair:
             if lep.is_analogy_error()
         )
 
-    def line_element_pair_list(self):
+    def line_element_pair_list(self) -> list[LineElementPair]:
         """RETURNS: list of LineElementPair-s
 
         That is, the line elements of the subject and the nominal lines are combined
         pairwise according to the prescribed edit operations.
         """
+        ## TODO: a subject list of LineElement and a nominal one
+        ##       E_CellInfo.GOOD, TOLERATED, INSERTED, DELETED, TRANSPOSED, etc. for subject.
+        ##       E_CellInfo.NOMINAL_AND_SUBJECT_GOOD etc. for nominal line element
         if   self.subject is None and self.nominal is None:
             result = []
         elif self.subject is None:
@@ -166,6 +175,7 @@ class LinePair:
                 s_incr, n_incr = edit_operations_line.position_increment_db[edit.id]
                 si += s_incr
                 ni += n_incr
+
         return result
 
     def max_character_n(self):
