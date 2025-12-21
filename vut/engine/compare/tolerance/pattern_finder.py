@@ -65,7 +65,8 @@ class TolerancePattern:
     pattern_index: int | None
 
     def __init__(self, tolerance_id, re_str):
-        self.tolerance_id = tolerance_id
+        global TolerancePattern_id_count
+        self.id = tolerance_id
 
         if re_str is not None: self.pattern = re.compile(re_str)
         else:                  self.pattern = None
