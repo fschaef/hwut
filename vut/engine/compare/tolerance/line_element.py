@@ -44,7 +44,8 @@ class Token:
            LineElement.from_Token(...)  --> 'LineElement'
 
     """
-    def __init__(self, tolerance_id=None, start=None, end=None, pattern_i_set=None):
+    @typechecked
+    def __init__(self, tolerance_id: E_ToleranceId|None=None, start=None, end=None, pattern_i_set=None):
         self.tolerance_id  = tolerance_id
         self.start         = start
         self.end           = end

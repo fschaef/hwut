@@ -52,8 +52,30 @@ from   vut.external.quex.typed                   import typed
 from   collections import namedtuple
 import regex as re
 from   typeguard import typechecked
+from   dataclasses import dataclass
 
 TolerancePattern = namedtuple("TolerancePattern", ("id", "pattern", "pattern_index"))
+
+TolerancePattern_id_count = 0
+
+@dataclass
+class TolerancePattern:
+    id:            int
+    pattern:       re.Pattern
+    pattern_index: int | None
+
+    def __init__(self, tolerance_id, re_str):
+        self.tolerance_id = tolerance_id
+
+        if re_str is not None: self.pattern = re.compile(re_str)
+        else:                  self.pattern = None
+
+        if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
+            self.pattern_index = TolerancePattern_id_count
+            TolerancePattern_id_count += 1
+        else:
+            self.pattern_index = None
+
 
 class PatternFinder:
     """Maintains a list of tolerance patterns to be found in a string.
@@ -67,47 +89,34 @@ class PatternFinder:
     def __init__(self, config: ConfigurationPatternFinder):
         """Setup the tolerance pattern table according to a given configuration.
         """
-        def _tolerance_pattern(tolerance_id, re_str):
-            if re_str is not None: pattern = re.compile(re_str)
-            else:                  pattern = None
-
-            if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
-                pattern_index             = PatternFinder.id_counter
-                PatternFinder.id_counter += 1
-            else:
-                pattern_index = None
-
-            return TolerancePattern(tolerance_id, pattern, pattern_index)
-
         def _build(config):
-
-            yield _tolerance_pattern(E_ToleranceId.STRING, None)
+            yield TolerancePattern(E_ToleranceId.STRING, None)
 
             for pattern in config.visible_nothing_pattern_list:
-                yield _tolerance_pattern(E_ToleranceId.VISIBLE_NOTHING, pattern)
+                yield TolerancePattern(E_ToleranceId.VISIBLE_NOTHING, pattern)
 
             if config.analogy_f:
                 re_analogy =   re.escape(config.analogy_begin_marker) \
                              + r"([^\)]|[\)][^\)])+"                \
                              + re.escape(config.analogy_end_marker)
-                yield _tolerance_pattern(E_ToleranceId.ANALOGY, re_analogy)
+                yield TolerancePattern(E_ToleranceId.ANALOGY, re_analogy)
 
             if config.numeric_tolerance_ratio:
                 re_number = r"-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
-                yield _tolerance_pattern(E_ToleranceId.NUMERIC, re_number)
+                yield TolerancePattern(E_ToleranceId.NUMERIC, re_number)
 
             if config.whitespace_f:
                 re_whitespace = r"[ \t]+"
-                yield _tolerance_pattern(E_ToleranceId.SEPERATOR, re_whitespace)
+                yield TolerancePattern(E_ToleranceId.SEPERATOR, re_whitespace)
 
             if config.backslash_f: # back-slash is equivalent to forward-slash
                 re_backslash = r"[\\/]+"
-                yield _tolerance_pattern(E_ToleranceId.EQUIVALENCE_PATTERN, re_backslash)
+                yield TolerancePattern(E_ToleranceId.EQUIVALENCE_PATTERN, re_backslash)
 
             for pattern_index, pattern in enumerate(config.equivalent_pattern_list):
                 # If subject and nominal match the same pattern, then
                 # this is sufficient to say 'equivalent'.
-                yield _tolerance_pattern(E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
+                yield TolerancePattern(E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
 
         self.strip_whitespace_f         = config.strip_whitespace_f
         self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
@@ -175,7 +184,8 @@ class PatternFinder:
         line = line.strip()
         return line.startswith(self.potpourri_begin_end_marker) and len(set(line)) == 1
 
-def _find_first_match(table, string, i, useless):
+@typechecked
+def _find_first_match(table, string, i, useless) -> Token:
     """RETURNS: [0] Index of first tolerance patterns that matched after
                           position in string 'i'.
                     Set of indices, if more than one user pattern matches
