@@ -27,11 +27,14 @@ from vut.engine.compare.engine.line_sequence     import LineSequence
 from vut.engine.compare.engine.potpourri         import Potpourri
 from vut.engine.compare.engine.input_chunk       import InputChunkTerminal
 from vut.engine.compare.tolerance.pattern_finder import PatternFinder
+from vut.engine.compare.configuration            import Configuration
 
 from itertools import count
+from typeguard import typechecked
 
 class ChunkPipe(PatternFinder):
-    def __init__(self, configuration):
+    @typechecked
+    def __init__(self, configuration: Configuration):
         PatternFinder.__init__(self, configuration.pattern_finder)
         self.configuration = configuration
 

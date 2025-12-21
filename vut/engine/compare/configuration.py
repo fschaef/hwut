@@ -14,7 +14,10 @@ class ConfigurationPatternFinder(object):
                  "equivalent_pattern_list",
                  "visible_nothing_pattern_list",
                  "ignored_line_begin_marker",
-                 "ignored_line_end_marker")
+                 "ignored_line_end_marker",
+                 "potpourri_begin_end_marker",
+                 "analogy_begin_marker",
+                 "analogy_end_marker")
     def __init__(self):
         self.strip_whitespace_f           = True
         self.analogy_f                    = True
@@ -25,7 +28,9 @@ class ConfigurationPatternFinder(object):
         self.visible_nothing_pattern_list = []
         self.ignored_line_begin_marker    = "##"
         self.ignored_line_end_marker      = "##"
-
+        self.potpourri_begin_end_marker   = "||||"
+        self.analogy_begin_marker         = "(("
+        self.analogy_end_marker           = "))"
         
 class Configuration(object):
     __slots__ = ("pattern_finder",

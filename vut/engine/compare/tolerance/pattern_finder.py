@@ -50,7 +50,8 @@ from   vut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                         LineElementVisibleNothing
 from   vut.external.quex.typed                   import typed
 from   collections import namedtuple
-import re
+import regex as re
+from   typeguard import typechecked
 
 TolerancePattern = namedtuple("TolerancePattern", ("id", "pattern", "pattern_index"))
 
@@ -60,51 +61,61 @@ class PatternFinder:
     The '.do()' function interprets a string as a sequence of 'LineElement' 
     objects.
     """
-    @typed(config=ConfigurationPatternFinder)
-    def __init__(self, config):
+    id_counter = 0
+
+    @typechecked
+    def __init__(self, config: ConfigurationPatternFinder):
         """Setup the tolerance pattern table according to a given configuration.
         """
-        def _add(table, tolerance_id, regex):
-            if regex is not None: pattern = re.compile(regex)
-            else:                 pattern = None
+        def _tolerance_pattern(tolerance_id, re_str):
+            if re_str is not None: pattern = re.compile(re_str)
+            else:                  pattern = None
+
             if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
-                pattern_index = sum(x.id == E_ToleranceId.EQUIVALENCE_PATTERN
-                                    for x in table)
+                pattern_index             = PatternFinder.id_counter
+                PatternFinder.id_counter += 1
             else:
                 pattern_index = None
-            table.append(TolerancePattern(tolerance_id, pattern, pattern_index))
+
+            return TolerancePattern(tolerance_id, pattern, pattern_index)
 
         def _build(config):
-            re_analogy    = r"\(\(" + r"([^\)]|[\)][^\)])+" + r"\)\)"
-            re_whitespace = r"[ \t]+"
-            re_backslash  = r"[\\/]+"
-            re_number     = r"-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
 
-            table         = []
-            _add(table, E_ToleranceId.STRING, None)
+            yield _tolerance_pattern(E_ToleranceId.STRING, None)
 
             for pattern in config.visible_nothing_pattern_list:
-                _add(table, E_ToleranceId.VISIBLE_NOTHING,     pattern)
+                yield _tolerance_pattern(E_ToleranceId.VISIBLE_NOTHING, pattern)
+
             if config.analogy_f:
-                _add(table, E_ToleranceId.ANALOGY,             re_analogy)
+                re_analogy =   re.escape(config.analogy_begin_marker) \
+                             + r"([^\)]|[\)][^\)])+"                \
+                             + re.escape(config.analogy_end_marker)
+                yield _tolerance_pattern(E_ToleranceId.ANALOGY, re_analogy)
+
             if config.numeric_tolerance_ratio:
-                _add(table, E_ToleranceId.NUMERIC,             re_number)
+                re_number = r"-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?"
+                yield _tolerance_pattern(E_ToleranceId.NUMERIC, re_number)
+
             if config.whitespace_f:
-                _add(table, E_ToleranceId.SEPERATOR,           re_whitespace)
-            if config.backslash_f:
-                _add(table, E_ToleranceId.EQUIVALENCE_PATTERN, re_backslash)
+                re_whitespace = r"[ \t]+"
+                yield _tolerance_pattern(E_ToleranceId.SEPERATOR, re_whitespace)
+
+            if config.backslash_f: # back-slash is equivalent to forward-slash
+                re_backslash = r"[\\/]+"
+                yield _tolerance_pattern(E_ToleranceId.EQUIVALENCE_PATTERN, re_backslash)
+
             for pattern_index, pattern in enumerate(config.equivalent_pattern_list):
                 # If subject and nominal match the same pattern, then
                 # this is sufficient to say 'equivalent'.
-                _add(table, E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
+                yield _tolerance_pattern(E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
 
-            return table
+        self.strip_whitespace_f         = config.strip_whitespace_f
+        self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
+        self.ignored_line_begin_marker  = config.ignored_line_begin_marker
+        self.ignored_line_end_marker    = config.ignored_line_end_marker
+        self.potpourri_begin_end_marker = config.potpourri_begin_end_marker
 
-        self.table                     = tuple(_build(config))
-        self.strip_whitespace_f        = config.strip_whitespace_f
-        self.numeric_tolerance_ratio   = config.numeric_tolerance_ratio
-        self.ignored_line_begin_marker = config.ignored_line_begin_marker
-        self.ignored_line_end_marker   = config.ignored_line_end_marker
+        self.table = tuple(_build(config))
 
     def do(self, string):
         """RETURNS: sequence of 'LineElement' objects.
@@ -162,7 +173,7 @@ class PatternFinder:
                     False, else.
         """
         line = line.strip()
-        return line.startswith("||||") and len(set(line)) == 1
+        return line.startswith(self.potpourri_begin_end_marker) and len(set(line)) == 1
 
 def _find_first_match(table, string, i, useless):
     """RETURNS: [0] Index of first tolerance patterns that matched after

@@ -178,21 +178,21 @@ class ConsoleCanvasFormatter:
             + center \
             + [ LEFT(self.subject_width, text_offset=self.text_offset, color=sc) ]
         sline_str, nline_str = lip.line_number_strings()
-        return self.canvas.prepare(f, [ lip.nominal_text(), nline_str, sline_str, lip.subject_text()])
+        return self.canvas.render(f, [ lip.nominal_text(), nline_str, sline_str, lip.subject_text()])
 
     def subject_empty(self, lip_i, lip):
         center, sc, nc = self._center_column(lip_i, nc="Rw")
         f =   [ LEFT(self.nominal_width, color=nc) ] \
             + center                             \
             + [ LEFT(" " * self.subject_width, text_offset=self.text_offset, colord=sc) ]
-        return self.canvas.prepare(f, [lip.nominal_text(), "%s" % lip.nominal.line_n])
+        return self.canvas.render(f, [lip.nominal_text(), "%s" % lip.nominal.line_n])
 
     def subject_end(self, lip_i, lip):
         center, sc, nc = self._center_column(lip_i, nc="Rw")
         f =   [ FIXED("-" * self.nominal_width, color=nc) ] \
             + center                                    \
             + [ LEFT(self.subject_width, text_offset=self.text_offset, color=sc) ]
-        return self.canvas.prepare(f, [lip.nominal_text(), "%s" % lip.nominal.line_n])
+        return self.canvas.render(f, [lip.nominal_text(), "%s" % lip.nominal.line_n])
 
     def subject_end_nominal_empty(self, lip_i, lip):
         f = [
@@ -200,21 +200,21 @@ class ConsoleCanvasFormatter:
             FIXED("|", "Bw"), 
             FIXED("_" * (self.nominal_width + self.line_n_width + 1), color=sc),
         ]
-        return self.canvas.prepare(f)
+        return self.canvas.render(f)
 
     def nominal_empty(self, lip_i, lip):
         center, sc, nc = self._center_column(lip_i, sc="Rw")
         f =   [ FIXED(" " * self.nominal_width, text_offset=self.text_offset, color=nc) ] \
             + center                                                            \
             + [ LEFT(self.subject_width, color=sc) ]
-        return self.canvas.prepare(f, ["%s" % lip.subject.line_n, lip.subject_text()])
+        return self.canvas.render(f, ["%s" % lip.subject.line_n, lip.subject_text()])
 
     def nominal_end(self, lip_i, lip):
         center, sc, nc = self._center_column(lip_i, sc="Rw")
         f =   [ FIXED("_" * self.nominal_width, text_offset=self.text_offset, color=nc) ] \
             + center                                                            \
             + [ LEFT(self.subject_width, color=sc) ]
-        return self.canvas.prepare(f, ["%s" % lip.subject.line_n, lip.subject_text()])
+        return self.canvas.render(f, ["%s" % lip.subject.line_n, lip.subject_text()])
 
     def nominal_end_subject_empty(self, lip_i, lip):
         f = [
@@ -222,7 +222,7 @@ class ConsoleCanvasFormatter:
             FIXED("|", "Bw"), 
             FIXED(" " * (self.nominal_width + self.line_n_width + 1), color=sc),
         ]
-        return self.canvas.prepare(f)
+        return self.canvas.render(f)
 
     def both_end(self, lip_i, lip):
         f = [
@@ -230,7 +230,7 @@ class ConsoleCanvasFormatter:
             FIXED("|", "Bw"), 
             FIXED("_" * (self.line_n_width + self.subject_width + 1), "Bw")
         ]
-        return self.canvas.prepare(f)
+        return self.canvas.render(f)
 
     def empty(self, lip_i, lip):
         f = [
@@ -242,7 +242,7 @@ class ConsoleCanvasFormatter:
             FIXED(" ", "Rw"), 
             FIXED(" " * self.subject_width, "Bw", text_offset=self.text_offset)
         ]
-        return self.canvas.prepare(f)
+        return self.canvas.render(f)
 
     def filler(self, lip_i, lip):
         f = [
@@ -254,7 +254,7 @@ class ConsoleCanvasFormatter:
             FIXED(":", "Bw"), 
             FIXED(" " * self.subject_width, "Rw", text_offset=self.text_offset)
         ]
-        return self.canvas.prepare(f)
+        return self.canvas.render(f)
 
     def potpourri_begin(self, lip_i, lip):
         f = [
@@ -265,7 +265,7 @@ class ConsoleCanvasFormatter:
             FIXED("|" + "|" * self.subject_width, "Gw"),
         ]
         sline_str, nline_str = lip.line_number_strings()
-        return self.canvas.prepare(f, [nline_str, sline_str])
+        return self.canvas.render(f, [nline_str, sline_str])
 
     def potpourri_end(self, lip_i, lip):
         f = [
@@ -276,7 +276,7 @@ class ConsoleCanvasFormatter:
             FIXED("|" + "|" * self.subject_width, "Gw"),
         ]
         sline_str, nline_str = lip.line_number_strings()
-        return self.canvas.prepare(f, [nline_str, sline_str])
+        return self.canvas.render(f, [nline_str, sline_str])
 
     def end_of_stream_subject(self, line_n):
         return Line.from_string(line_n, "/" * self.nominal_width)

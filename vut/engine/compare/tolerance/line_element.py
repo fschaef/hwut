@@ -32,7 +32,6 @@ class E_ToleranceId(IntEnum):
     EQUIVALENCE_PATTERN = 5
     SEPERATOR           = 6
 
-
 class Token:
     """The PatternFinder calls a function 
         

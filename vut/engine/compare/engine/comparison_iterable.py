@@ -18,11 +18,14 @@ _______________________________________________________________________________
 
 from vut.engine.compare.tolerance.chunk_pipe import ChunkPipe
 from vut.engine.compare.engine.input_chunk   import InputChunkEmpty, E_Chunk
+from   vut.engine.compare.configuration      import Configuration
 
 from itertools import zip_longest
+from typeguard import typechecked
 
 
-def generate(config, subject_line_provider, nominal_line_provider, align_f):
+@typechecked
+def generate(config: Configuration, subject_line_provider, nominal_line_provider, align_f):
     """YIELDS: [0] subject input chunk
                [1] nominal input chunk
 

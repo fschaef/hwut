@@ -40,8 +40,12 @@ from   vut.engine.compare.engine.chunk_pair_list      import ChunkPairList
 from   vut.engine.compare.engine.input_chunk          import E_Verdict, \
                                                              InputChunkEmpty
 
+from   vut.engine.compare.configuration               import Configuration
 
-def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
+from   typeguard import typechecked
+
+@typechecked
+def compare(config: Configuration, subject_line_provider, nominal_line_provider) -> bool:
     """RETURNS: True, if subject and nominal stream are equivalent.
                 False, else.
 
@@ -72,8 +76,8 @@ def compare(config, subject_line_provider, nominal_line_provider) -> E_Verdict:
     else:
         return True
 
-
-def associate(config, subject_line_provider, nominal_line_provider):
+@typechecked
+def associate(config: Configuration, subject_line_provider, nominal_line_provider):
     """YIELDS: ChunkPair
 
     where:

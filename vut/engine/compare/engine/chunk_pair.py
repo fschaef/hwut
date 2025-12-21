@@ -12,6 +12,7 @@ from   vut.engine.compare.engine.input_chunk    import E_Chunk
 from   vut.engine.compare.engine.analogy_db     import AnalogyDb
 from   vut.external.quex.typed                  import typed
 
+from   typeguard import typechecked
 
 class ChunkPair(LinePairList):
     """List of 'LinePair'-s where all line are from an input chunk
@@ -20,8 +21,12 @@ class ChunkPair(LinePairList):
             type() = E_Chunk.LINE_SEQUENCE or E_Chunk.POTPOURRI
 
     """
-    @typed(type_id=E_Chunk, lina_list=LinePairList, analogy_db=AnalogyDb)
-    def __init__(self, subject_type_id, nominal_type_id, line_association_list, analogy_db):
+    @typechecked
+    def __init__(self, 
+                 subject_type_id:       E_Chunk, 
+                 nominal_type_id:       E_Chunk, 
+                 line_association_list: list, 
+                 analogy_db:            AnalogyDb):
         self.__subject_type_id = subject_type_id
         self.__nominal_type_id = nominal_type_id
         self.__analogy_db      = analogy_db

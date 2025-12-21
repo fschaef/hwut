@@ -1,7 +1,7 @@
 Comparison Console Display
 ------------------------------------
 
-python3-coverage run --omit ./*.py -a *.py 
+coverage run --omit ./*.py -a *.py 
 
 --not common.py
 --not cases.py
