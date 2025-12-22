@@ -1,0 +1,28 @@
+TEST: Accordion (Large Displacement Gaps)
+INPUT SEQUENCES:
+  Subject: ['S1', 'S2']
+  Nominal: ['N1', 'N2']
+EDIT LIST:
+  [00] DELETE
+  [01] DELETE
+  [02] INSERT
+  [03] INSERT
+
+RESULT TABLE:
+SIDE  | RELATION        | TOL    | TEXT | REF  
+------+-----------------+--------+------+------
+S[00] | NOMINAL_HAS_NOT | STRING | 'S1' | nom:0
+N[00] | SUBJECT_HAS     | STRING | None | sub:0
+------+-----------------+--------+------+------
+S[01] | NOMINAL_HAS_NOT | STRING | 'S2' | nom:1
+N[01] | SUBJECT_HAS     | STRING | None | sub:1
+------+-----------------+--------+------+------
+S[02] | NOMINAL_HAS     | STRING | None | nom:2
+N[02] | SUBJECT_HAS_NOT | STRING | 'N1' | sub:2
+------+-----------------+--------+------+------
+S[03] | NOMINAL_HAS     | STRING | None | nom:3
+N[03] | SUBJECT_HAS_NOT | STRING | 'N2' | sub:3
+------+-----------------+--------+------+------
+
+================================================================================
+

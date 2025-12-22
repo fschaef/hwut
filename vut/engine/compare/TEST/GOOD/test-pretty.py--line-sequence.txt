@@ -1,0 +1,74 @@
+
+=> 
+
+[ChunkPair:LINE_SEQUENCE]
+.   .<base>: <LinePairList>
+.   .   [LinePair]
+.   .   .   .subject: [Line]
+.   .   .   .   .line_n: 1
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((A))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("good.")
+.   .   .   .nominal: [Line]
+.   .   .   .   .line_n: 1
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((1))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("good.")
+.   .   .   .edit_list: [GOOD_TOLERATED, GOOD, GOOD, GOOD, GOOD]
+.   .   [LinePair]
+.   .   .   .subject: [Line]
+.   .   .   .   .line_n: 2
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((A))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("bad.")
+.   .   .   .nominal: [Line]
+.   .   .   .   .line_n: 2
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:ANALOGY("((2))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("is")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("not")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("so")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:STRING("good.")
+.   .   .   .edit_list: [GOOD_TOLERATED, GOOD, GOOD, GOOD, INSERT, INSERT, INSERT, INSERT, SUBSTITUTE]
+.   .   [LinePair]
+.   .   .   .subject: [Line]
+.   .   .   .   .line_n: 3
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:NUMERIC("4711,tol=0.1")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:ANALOGY("((is))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:ANALOGY("((a))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN("number")
+.   .   .   .   .   LineElement:STRING(".")
+.   .   .   .nominal: [Line]
+.   .   .   .   .line_n: 3
+.   .   .   .   .sequence: <tuple>
+.   .   .   .   .   LineElement:NUMERIC("4712,tol=0.1")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:ANALOGY("((ist))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:ANALOGY("((eine))")
+.   .   .   .   .   LineElement:SEPERATOR(" ")
+.   .   .   .   .   LineElement:EQUIVALENCE_PATTERN("Zahl")
+.   .   .   .   .   LineElement:STRING(".")
+.   .   .   .edit_list: [GOOD_TOLERATED, GOOD, GOOD_TOLERATED, GOOD, GOOD_TOLERATED, GOOD, GOOD_TOLERATED, GOOD]
+.   .analogy_db: [AnalogyDb]
+.   .   .:1&1: "((A))"="((1))"
+.   .   .:3&3: "((a))"="((eine))", "((is))"="((ist))"
+
+

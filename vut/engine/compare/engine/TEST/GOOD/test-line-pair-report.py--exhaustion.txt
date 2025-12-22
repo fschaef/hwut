@@ -1,0 +1,24 @@
+TEST: Ghost Stream (Edit list exceeds sequences)
+INPUT SEQUENCES:
+  Subject: ['RealSubject']
+  Nominal: ['RealNominal']
+EDIT LIST:
+  [00] GOOD
+  [01] SUBSTITUTE
+  [02] DELETE
+
+RESULT TABLE:
+SIDE  | RELATION        | TOL    | TEXT          | REF  
+------+-----------------+--------+---------------+------
+S[00] | GOOD            | STRING | 'RealSubject' | nom:0
+N[00] | GOOD            | STRING | 'RealNominal' | sub:0
+------+-----------------+--------+---------------+------
+S[01] | NOMINAL_DIFFERS | STRING | None          | nom:1
+N[01] | SUBJECT_DIFFERS | STRING | None          | sub:1
+------+-----------------+--------+---------------+------
+S[02] | NOMINAL_HAS_NOT | STRING | None          | nom:2
+N[02] | SUBJECT_HAS     | STRING | None          | sub:2
+------+-----------------+--------+---------------+------
+
+================================================================================
+

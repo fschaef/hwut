@@ -1,0 +1,24 @@
+TEST: Visible Nothing (Placeholder Alignment)
+INPUT SEQUENCES:
+  Subject: ['Hello', 'World']
+  Nominal: ['Hello', '[VN]', 'World']
+EDIT LIST:
+  [00] GOOD
+  [01] GOOD_INSERT
+  [02] GOOD
+
+RESULT TABLE:
+SIDE  | RELATION                | TOL    | TEXT    | REF  
+------+-------------------------+--------+---------+------
+S[00] | GOOD                    | STRING | 'Hello' | nom:0
+N[00] | GOOD                    | STRING | 'Hello' | sub:0
+------+-------------------------+--------+---------+------
+S[01] | NOMINAL_VISIBLE_NOTHING | STRING | None    | nom:1
+N[01] | VISIBLE_NOTHING         | STRING | '[VN]'  | sub:1
+------+-------------------------+--------+---------+------
+S[02] | GOOD                    | STRING | 'World' | nom:2
+N[02] | GOOD                    | STRING | 'World' | sub:2
+------+-------------------------+--------+---------+------
+
+================================================================================
+
