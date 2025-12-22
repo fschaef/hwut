@@ -33,6 +33,7 @@ import vut.engine.pretty                as     pretty
 from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as     main
 
+import asyncio
 
 if "--hwut-info" in sys.argv:
     print("ChunkPair.description()")
@@ -46,7 +47,7 @@ config.pattern_finder.backslash_f             = False
 config.pattern_finder.numeric_tolerance_ratio = 0.1
 config.pattern_finder.equivalent_pattern_list = ["number|Zahl"]
 
-def test(table):
+async def test(table):
     subject_line_list = [ x for x, y in table ]
     nominal_line_list = [ y for x, y in table ]
     subject = StringIO("\n".join(subject_line_list))
@@ -54,27 +55,26 @@ def test(table):
     print()
     print("=> ")
     print()
-    line_association_chunk_list = list(main.associate(config, subject, nominal))
-    for chunk in line_association_chunk_list:
+    async for chunk in main.associate(config, subject, nominal):
         print(pretty.do(chunk))
     print()
 
 
 # Test wether a failed analogy does not clear the analogies of 'good' lines.
 if "line-sequence" in sys.argv:
-    test([
+    asyncio.run(test([
          ["((A)) is good.",             "((1)) is good."],
          ["((A)) is bad.",              "((2)) is not so good."],
          ["4711 ((is)) ((a)) number.",  "4712 ((ist)) ((eine)) Zahl."],
-    ])
+    ]))
 else:
-    test([
+    asyncio.run(test([
          ["||||",                       "||||"],
          ["((A)) is good.",             "4712 ((ist)) ((eine)) Zahl."],
          ["9.9 is good.",               "((1)) is good."],
          ["((A)) is bad.",              "((1)) is not so good."],
          ["0.815 ((is)) ((a)) number.",  "9.99 good."],
          ["||||",                       "||||"],
-    ])
+    ]))
 
 

@@ -41,12 +41,11 @@ from   vut.engine.compare.engine.input_chunk          import E_Verdict, \
                                                              InputChunkEmpty
 
 from   vut.engine.compare.configuration               import Configuration
-from   vut.auxiliary.async_stream_reader_adapter      import AsyncStreamReaderAdapter
 
 from   typeguard import typechecked
 
 @typechecked
-def compare(config: Configuration, subject_line_provider, nominal_line_provider) -> bool:
+async def compare(config: Configuration, subject_line_provider, nominal_line_provider) -> bool:
     """RETURNS: True, if subject and nominal stream are equivalent.
                 False, else.
 
@@ -66,9 +65,9 @@ def compare(config: Configuration, subject_line_provider, nominal_line_provider)
     analogy_db = AnalogyDb()
 
     # subject, nominal = 'LineSequence' or 'Potpourri'
-    for subject, nominal in generate(config,
-                                     subject_line_provider, nominal_line_provider,
-                                     align_f=False):
+    async for subject, nominal in generate(config,
+                                           subject_line_provider, nominal_line_provider,
+                                           align_f=False):
         verdict,   \
         analogy_db = subject.compare(nominal, analogy_db)
 
@@ -78,7 +77,7 @@ def compare(config: Configuration, subject_line_provider, nominal_line_provider)
         return True
 
 @typechecked
-def associate(config: Configuration, subject_line_provider, nominal_line_provider):
+async def associate(config: Configuration, subject_line_provider, nominal_line_provider):
     """YIELDS: ChunkPair
 
     where:
@@ -124,9 +123,9 @@ def associate(config: Configuration, subject_line_provider, nominal_line_provide
     analogy_db = AnalogyDb()
 
     # subject, nominal = 'LineSequence', 'Potpourri' or None
-    for subject, nominal in generate(config,
-                                     subject_line_provider, nominal_line_provider,
-                                     align_f=True):
+    async for subject, nominal in generate(config,
+                                           subject_line_provider, nominal_line_provider,
+                                           align_f=True):
 
         yield ChunkPair.from_input_chunks(subject, nominal, analogy_db)
 

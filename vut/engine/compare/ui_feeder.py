@@ -20,11 +20,11 @@ class DisplayCmd:
     cells_n:    List[NominalCell] = field(default_factory=list)
     source_ref: Any = None
 
-def ui_feeder(config, subject_stream, nominal_stream):
+async def ui_feeder(config, subject_stream, nominal_stream):
     """
     Consumes the engine's associate() generator and yields flat DisplayCmds.
     """
-    for chunk in associate(config, subject_stream, nominal_stream):
+    async for chunk in associate(config, subject_stream, nominal_stream):
         # 1. Yield Header for the Chunk
         # (Identifying if it is a LineSequence or Potpourri)
         yield DisplayCmd(

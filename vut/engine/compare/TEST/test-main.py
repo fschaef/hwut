@@ -32,6 +32,7 @@ import vut.engine.compare.main          as     main
 from   vut.engine.compare.TEST.common   import print_list_sequence_pairs, \
                                                print_friends_pairing_max_result
 from   io import StringIO
+import asyncio
 
 
 if "--hwut-info" in sys.argv:
@@ -64,30 +65,29 @@ def test_core(subject_txt, nominal_txt):
                               line_numbers_f=True)
     return subject, nominal
 
-def test_compare(subject_txt, nominal_txt, both_f=False):
+async def test_compare(subject_txt, nominal_txt, both_f=False):
     if both_f:
         print("(1)")
     subject, nominal = test_core(subject_txt, nominal_txt)
     print()
-    print("=> verdict: %s" % main.compare(config, subject, nominal))
+    print("=> verdict: %s" % await main.compare(config, subject, nominal))
     print()
     if both_f:
         print("(2)")
         nominal, subject = test_core(nominal_txt, subject_txt)
         print()
-        print("=> verdict: %s" % main.compare(config, subject, nominal))
+        print("=> verdict: %s" % await main.compare(config, subject, nominal))
         print()
 
 CONFIGURATION_print_only_chunk_type = False
-def test_line_associations_core(subject_txt, nominal_txt):
+async def test_line_associations_core(subject_txt, nominal_txt):
     subject_line_list = subject_txt.splitlines()
     nominal_line_list = nominal_txt.splitlines()
     subject, nominal = test_core(subject_txt, nominal_txt)
     print()
     print("=> ")
     print()
-    line_association_chunk_list = list(main.associate(config, subject, nominal))
-    for chunk in line_association_chunk_list:
+    async for chunk in main.associate(config, subject, nominal):
         st, nt = chunk.types()
         print("TYPE:", st.name, nt.name)
         if CONFIGURATION_print_only_chunk_type: continue
@@ -96,13 +96,13 @@ def test_line_associations_core(subject_txt, nominal_txt):
         print()
     print()
 
-def test_line_associations(subject_txt, nominal_txt, both_f=False):
-    if both_f:
-        print("(1)")
-    test_line_associations_core(subject_txt, nominal_txt)
+async def test_line_associations(subject_txt, nominal_txt, both_f=False):
+    if both_f: print("(1)")
+    await test_line_associations_core(subject_txt, nominal_txt)
+
     if both_f:
         print("(2)")
-        test_line_associations_core(nominal_txt, subject_txt)
+        await test_line_associations_core(nominal_txt, subject_txt)
 
 if sys.argv[1].endswith("-3"):
     if "compare-3" in sys.argv:   test = test_compare
@@ -115,16 +115,16 @@ if sys.argv[1].endswith("-3"):
     c3  = "nix same nothing\n"
     c4  = " \n"
 
-    test(c0     , "",             both_f=True)
-    test(c0     , c0,             both_f=True)
-    test(c0     , c1,             both_f=True)
-    test(c0     , c2,             both_f=True)
-    test(c0     , c4,             both_f=True)
-    test(c1     , c0 + c2,        both_f=True)
-    test(c1     , c1 + c3,        both_f=True)
-    test(c1     , c0 + c1 + c2,   both_f=True)
-    test(c1 + c2, c0 + c2,        both_f=True)
-    test(c4 + c4, "",             both_f=True)
+    asyncio.run(test(c0     , "",             both_f=True))
+    asyncio.run(test(c0     , c0,             both_f=True))
+    asyncio.run(test(c0     , c1,             both_f=True))
+    asyncio.run(test(c0     , c2,             both_f=True))
+    asyncio.run(test(c0     , c4,             both_f=True))
+    asyncio.run(test(c1     , c0 + c2,        both_f=True))
+    asyncio.run(test(c1     , c1 + c3,        both_f=True))
+    asyncio.run(test(c1     , c0 + c1 + c2,   both_f=True))
+    asyncio.run(test(c1 + c2, c0 + c2,        both_f=True))
+    asyncio.run(test(c4 + c4, "",             both_f=True))
 
 elif sys.argv[1].endswith("-2"):
     if "compare-2" in sys.argv:   test = test_compare
@@ -134,38 +134,38 @@ elif sys.argv[1].endswith("-2"):
     p = "||||\nHello\n||||\n"
     l = "Hello\n"
 
-    test(p,          "",         both_f=True)
-    test(l,          "",         both_f=True)
-    test(l + p,      "",         both_f=True)
-    test(l + p,      l,          both_f=True)
-    test(l + p,      p,          both_f=True) 
-    test(p + l,      p,          both_f=True)
-    test(p + l,      l,          both_f=True)
-    test(p + p,      p + l,      both_f=True)
-    test(p + p,      l + p,      both_f=True)
-    test(p + l + p,  p,          both_f=True)
-    test(p + l + p,  p + l,      both_f=True)
-    test(p + l + p,  l,          both_f=True)
-    test(p + l + p,  l + p,      both_f=True)
-    test(p + l + p,  l + p + l,  both_f=True)
-    test(p + l + p,  p + p + l,  both_f=True)
-    test(p + l + p,  p + l + p,  both_f=True)
+    asyncio.run(test(p,          "",         both_f=True))
+    asyncio.run(test(l,          "",         both_f=True))
+    asyncio.run(test(l + p,      "",         both_f=True))
+    asyncio.run(test(l + p,      l,          both_f=True))
+    asyncio.run(test(l + p,      p,          both_f=True))
+    asyncio.run(test(p + l,      p,          both_f=True))
+    asyncio.run(test(p + l,      l,          both_f=True))
+    asyncio.run(test(p + p,      p + l,      both_f=True))
+    asyncio.run(test(p + p,      l + p,      both_f=True))
+    asyncio.run(test(p + l + p,  p,          both_f=True))
+    asyncio.run(test(p + l + p,  p + l,      both_f=True))
+    asyncio.run(test(p + l + p,  l,          both_f=True))
+    asyncio.run(test(p + l + p,  l + p,      both_f=True))
+    asyncio.run(test(p + l + p,  l + p + l,  both_f=True))
+    asyncio.run(test(p + l + p,  p + p + l,  both_f=True))
+    asyncio.run(test(p + l + p,  p + l + p,  both_f=True))
 
 else:
     if "compare" in sys.argv:   test = test_compare
     if "associate" in sys.argv: test = test_line_associations
 
-    test("Hallo\nWelt", "Hallo\nWelt")
-    test("Welt X", "Welt Y")
-    test("Hallo\nWorld", "Hallo\nWelt")
-    test("Hallo\nWelt 1\nWelt 2", "Hallo\n\nWelt 1\n   \nWelt  2")
-    test("Hallo\n||||\nWelt", "Hallo\n||||\nWelt\n||||")
-    test("Hallo\n||||\nWelt\n||||", "Hallo\n||||\nWelt")
-    test("Hallo\n||||\nWelt\nLe Monde\n||||", "Hallo\n||||\nLe Monde\nWelt\n||||")
-
-    test("Hallo##\n##Welt\nGood", "##Hello\nWorld##\nGood")
-    test("||||\nHallo##\n##Welt\nGood\n||||", "||||\n##Hello\nWorld##\nGood\n||||")
-
-    test("Hallo\nWelt",                 "||||\nHello\nWorld\n||||")
-    test("||||\nHello\nLe Monde\n||||", "||||\nHello\nWorld\n||||")
+    asyncio.run(test("Hallo\nWelt", "Hallo\nWelt"))
+    asyncio.run(test("Welt X", "Welt Y"))
+    asyncio.run(test("Hallo\nWorld", "Hallo\nWelt"))
+    asyncio.run(test("Hallo\nWelt 1\nWelt 2", "Hallo\n\nWelt 1\n   \nWelt  2"))
+    asyncio.run(test("Hallo\n||||\nWelt", "Hallo\n||||\nWelt\n||||"))
+    asyncio.run(test("Hallo\n||||\nWelt\n||||", "Hallo\n||||\nWelt"))
+    asyncio.run(test("Hallo\n||||\nWelt\nLe Monde\n||||", "Hallo\n||||\nLe Monde\nWelt\n||||"))
+                 
+    asyncio.run(test("Hallo##\n##Welt\nGood", "##Hello\nWorld##\nGood"))
+    asyncio.run(test("||||\nHallo##\n##Welt\nGood\n||||", "||||\n##Hello\nWorld##\nGood\n||||"))
+                 
+    asyncio.run(test("Hallo\nWelt",                 "||||\nHello\nWorld\n||||"))
+    asyncio.run(test("||||\nHello\nLe Monde\n||||", "||||\nHello\nWorld\n||||"))
 

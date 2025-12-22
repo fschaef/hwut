@@ -80,7 +80,7 @@ HTML_TEMPLATE = """
 </style></head><body><div class="container">
 """
 
-def generate_html():
+async def generate_html():
     config = Configuration()
     # Ensure analogies are tracked: Socrates in Subject maps to Author in Nominal
     s_stream = io.StringIO(subject)
@@ -88,7 +88,7 @@ def generate_html():
 
     output = [HTML_TEMPLATE]
 
-    for cmd in ui_feeder(config, s_stream, n_stream):
+    async for cmd in ui_feeder(config, s_stream, n_stream):
         if cmd.kind == E_DisplayCmd.SECTION_HEADER:
             output.append(f"<div class='header'>{cmd.text}</div>")
         
@@ -114,4 +114,5 @@ def generate_html():
     print("\n".join(output))
 
 if __name__ == "__main__":
-    generate_html()
+    import asyncio
+    asyncio.run(generate_html())

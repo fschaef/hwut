@@ -1,0 +1,49 @@
+import asyncio
+
+class AsyncStreamReaderAdapter:
+    def __init__(self, sync_stream):
+        # sync_stream might be a file-handle OR a generator
+        self.sync_stream = sync_stream
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        line = await self.readline()
+        if not line:
+            raise StopAsyncIteration
+        return line
+
+    async def readline(self):
+        # 1. Handle standard file-like objects
+        if hasattr(self.sync_stream, "readline"):
+            return self.sync_stream.readline()
+        
+        # 2. Handle generators/iterators (common in tests)
+        try:
+            # We use next() because it's a synchronous generator
+            return next(self.sync_stream)
+        except StopIteration:
+            return "" # Return empty string to signal EOF to our __anext__
+
+async def async_zip_longest(aiter1, aiter2, sentinel=None):
+    """Asynchronous version of itertools.zip_longest."""
+
+    async def next_or_sentinel(aiter):
+        try:
+            return await aiter.__anext__()
+        except StopAsyncIteration:
+            return sentinel
+
+    while True:
+        # Fetch next from both concurrently
+        res1, res2 = await asyncio.gather(
+            next_or_sentinel(aiter1),
+            next_or_sentinel(aiter2)
+        )
+
+        if res1 is sentinel and res2 is sentinel:
+            break
+            
+        yield (None if res1 is sentinel else res1), \
+              (None if res2 is sentinel else res2)
