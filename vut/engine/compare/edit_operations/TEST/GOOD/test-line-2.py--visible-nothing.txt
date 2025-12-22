@@ -1,0 +1,52 @@
+subject: 'v'
+nominal: 'v'
+=> Cost: 0.000000
+[0] GOOD
+
+subject: 'v'
+nominal: 'V'
+=> Cost: 0.000000
+[0] GOOD_TOLERATED
+
+subject: 'sv'
+nominal: 's'
+=> Cost: 0.000000
+[0] GOOD
+[1] GOOD_DELETE
+
+subject: 's'
+nominal: 'sv'
+=> Cost: 0.000000
+[0] GOOD
+[1] GOOD_INSERT
+
+subject: 'svn'
+nominal: 'nvs'
+=> Cost: 0.222222
+[0] TRANSPOSE (2)
+[1] GOOD
+[2] GOOD
+
+subject: 'vvsvv'
+nominal: 's'
+=> Cost: 0.000000
+[0] GOOD_DELETE
+[1] GOOD_DELETE
+[2] GOOD
+[3] GOOD_DELETE
+[4] GOOD_DELETE
+
+subject: 'snv'
+nominal: 'ns'
+=> Cost: 0.166667
+[0] TRANSPOSE (1)
+[1] GOOD
+[2] GOOD_DELETE
+
+subject: 'vsv'
+nominal: 'vnv'
+=> Cost: 0.333333
+[0] GOOD
+[1] SUBSTITUTE_TYPE
+[2] GOOD
+

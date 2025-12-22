@@ -3,9 +3,9 @@ ______________________________________________________________________________
 """
 from   vut.engine.compare.engine.chunk_pair import ChunkPair, \
                                                    LinePairList
-from   vut.external.quex.typed              import typed
 
 from   collections import defaultdict
+from   typeguard import typechecked
 
 class ChunkPairList(list):
     """List of ChunkPair objects.
@@ -58,11 +58,8 @@ class ChunkPairList(list):
             for chunk in self
         ]
 
-    @typed(errors_f=bool, definitions_f=bool)
-    def analogy_errors(self, 
-                       errors_f, 
-                       definitions_f, 
-                       verbosity_level):
+    @typechecked
+    def analogy_errors(self, errors_f: bool, definitions_f: bool, verbosity_level):
         """RETURNS: list of (chunk, lina index list)
 
         where 'chunk' is the chunk of LinePair-s where the analgy error

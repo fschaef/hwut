@@ -85,7 +85,7 @@ Cost: 0.250000
 subject:  STRING:string, NUMERIC:4711, ANALOGY:((x))
 nominal:  ANALOGY:((y)), STRING:string, NUMERIC:4711
 =>
-Cost: 0.333333
+Cost: 0.388889
 [0] TRANSPOSE (2)
 [1] TRANSPOSE (2)
 [2] GOOD
@@ -93,7 +93,7 @@ Cost: 0.333333
 subject:  STRING:string, STRING:, ANALOGY:((x))
 nominal:  ANALOGY:((y)), STRING:string, STRING:
 =>
-Cost: 0.333333
+Cost: 0.388889
 [0] TRANSPOSE (2)
 [1] TRANSPOSE (2)
 [2] GOOD

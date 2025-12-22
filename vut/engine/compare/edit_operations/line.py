@@ -61,21 +61,56 @@ _______________________________________________________________________________
 from  vut.engine.compare.edit_operations.edit              import E_EditId, Edit, EditSequence, list_EditGOOD_line
 from  vut.engine.compare.edit_operations.core              import WorkListBase, \
                                                                   WorkItemBase, \
-                                                                  position_increment_db, \
-                                                                  max_cost
+                                                                  position_increment_db
 from  vut.engine.compare.edit_operations.separator_adaptor import SeparatorAdaptor
 from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from  vut.engine.compare.engine.core                       import E_Verdict
-from  vut.external.quex.typed                              import typed
 
 from  copy        import copy
-from  enum        import IntEnum
-from  collections import namedtuple, defaultdict
 from  functools   import lru_cache
+from  typeguard   import typechecked
+
+# Shortcuts:
+TRANSPOSE       = E_EditId.TRANSPOSE
+GOOD            = E_EditId.GOOD
+GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
+GOOD_INSERT     = E_EditId.GOOD_INSERT
+GOOD_DELETE     = E_EditId.GOOD_DELETE
+DELETE          = E_EditId.DELETE
+INSERT          = E_EditId.INSERT
+SUBSTITUTE      = E_EditId.SUBSTITUTE     
+SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
+
+ANALOGY         = E_ToleranceId.ANALOGY
+SEPERATOR       = E_ToleranceId.SEPERATOR
+VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
+
+cost_db = {
+    GOOD:             0,       # good
+    GOOD_TOLERATED:   0,       # good, tolerated is bettern than good insert + delete delete
+    GOOD_INSERT:      1e-10,   # good insert visible nothing (slightly worse than 'good')
+    GOOD_DELETE:      1e-10,   # good delete visible nothing (slightly worse than 'good')
+    TRANSPOSE:        0.5,     # good, when swapped elements (--> cost_TRANSPOSE)
+    SUBSTITUTE:       1,       # good, when content is substituted
+    INSERT:           1,       # bad, need to insert element
+    DELETE:           1,       # bad, need to remove element
+    SUBSTITUTE_TYPE:  1        # bad, need to substitute type and content of element
+}
+
+cost_INSERT_DELETE = cost_db[INSERT]
+
+def cost_TRANSPOSE(si, transpose_ai):
+    """ Distance:       Cost:
+        1 (adjacent) -> 1 - 1/2 = 0.5
+        2            -> 1 - 1/3 = 0.66
+        10           -> 1 - 1/11 = 0.909
+        infinity     -> 1.0
+    """
+    # distance is the physical offset between the subject and nominal indices
+    return 1.0 - (1.0 / (1 + abs(si - transpose_ai)))
 
 @lru_cache(maxsize=65536)
-@typed(subject_le_seq=tuple, nominal_le_seq=tuple)
 def do(subject_le_seq, nominal_le_seq, analogy_db=None):
     """RETURNS: EditSequence
 
@@ -103,28 +138,10 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
         subject_le_seq,  \
         nominal_le_seq   = separator_db.strip_separators()
         initial_item     = WorkItem(0, 0, initial_edit_sequence)
-        best             = WorkList(subject_le_seq, 
-                                    nominal_le_seq, 
-                                    initial_item).run()
+        best             = WorkList(subject_le_seq, nominal_le_seq, initial_item).run()
 
     return best.prepare_as_best(separator_db, True)
 
-
-# Shortcuts:
-TRANSPOSE       = E_EditId.TRANSPOSE
-GOOD            = E_EditId.GOOD
-GOOD_TOLERATED  = E_EditId.GOOD_TOLERATED
-GOOD_INSERT     = E_EditId.GOOD_INSERT
-GOOD_DELETE     = E_EditId.GOOD_DELETE
-DELETE          = E_EditId.DELETE
-INSERT          = E_EditId.INSERT
-NONE            = E_EditId.NONE
-SUBSTITUTE      = E_EditId.SUBSTITUTE     
-SUBSTITUTE_TYPE = E_EditId.SUBSTITUTE_TYPE
-
-ANALOGY         = E_ToleranceId.ANALOGY
-SEPERATOR       = E_ToleranceId.SEPERATOR
-VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
 
 class LineSeparatorAdaptor(SeparatorAdaptor):
@@ -150,19 +167,6 @@ class LineSeparatorAdaptor(SeparatorAdaptor):
             return self.Edit(GOOD_TOLERATED, None)  # separators are similar
 
 
-cost_db = {
-    GOOD:             0,       # good
-    GOOD_TOLERATED:   0,       # good, tolerated is bettern than good insert + delete delete
-    GOOD_INSERT:      1e-10,   # good insert visible nothing (slightly worse than 'good')
-    GOOD_DELETE:      1e-10,   # good delete visible nothing (slightly worse than 'good')
-    TRANSPOSE:        0.5,     # good, when swapped elements
-    SUBSTITUTE:       1,       # good, when content is substituted
-    INSERT:           1,       # bad, need to insert element
-    DELETE:           1,       # bad, need to remove element
-    SUBSTITUTE_TYPE:  1        # bad, need to substitute type and content of element
-}
-
-cost_INSERT_DELETE = cost_db[INSERT]
 
 class WorkList(WorkListBase):
     def __init__(self, subject, nominal, initial_item):
@@ -236,17 +240,17 @@ class WorkItem(WorkListBase):
         # => more expensive paths are cut early.
         good_id = None
         if   verdict_id == E_Verdict.MISFIT:
-            yield self._step(SUBSTITUTE_TYPE)
+            yield self._step_standard(SUBSTITUTE_TYPE)
         elif verdict_id == E_Verdict.DIFFERENT:
-            yield self._step(SUBSTITUTE,
-                             cost_factor = subject_le.edit_distance_relative(nominal_le))
+            yield self._step_standard(SUBSTITUTE,
+                                     cost_factor = subject_le.edit_distance_relative(nominal_le))
         elif verdict_id == E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
             good_id = GOOD_DELETE
         elif verdict_id == E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
             good_id = GOOD_INSERT
         elif verdict_id == E_Verdict.EQUIVALENT:
             if not self.edit_list.analogy_db.is_consistent(analogy):
-                yield self._step(SUBSTITUTE)
+                yield self._step_standard(SUBSTITUTE)
             elif subject_le.string       != nominal_le.string:  
                 good_id = GOOD_TOLERATED
             elif subject_le.tolerance_id == ANALOGY: 
@@ -258,47 +262,56 @@ class WorkItem(WorkListBase):
 
         if good_id is None:
             yield from (
-                self._step(TRANSPOSE, transpose_ai=candidate_ai, subject=subject)
+                self._step_transpose(candidate_ai, subject)
                 for candidate_ai in range(self.si+1, len(subject))
                 if subject[candidate_ai].is_equivalent(nominal_le, self.edit_list.analogy_db)
             )
 
-        yield self._step(INSERT)
-        yield self._step(DELETE)
+        yield self._step_standard(INSERT)
+        yield self._step_standard(DELETE)
 
         if good_id is not None:
-            yield self._step(good_id, new_analogy = analogy)
+            if analogy is not None:
+                yield self._step_analogy(good_id, analogy)
+            else:
+                yield self._step_standard(good_id)
 
-    def _step(self, edit_id, cost_factor=1, transpose_ai=None, new_analogy=None, subject=None):
-        """RETURNS: WorkItem derived from self after applying an edit operation.
-
-        Given an edit operation 'edit_id' this function generates a modified
-        version of 'self'. It adapts the indices 'si' and 'ni' according to
-        the position progress related to the operation. The new 'WorkItem'
-        will contain a new 'subject', and 'analogy_db' if they were changed.
-        The 'edit_list' of the 'WorkItem' contains all current edit operations
-        plus the edit operation 'edit_id' that produced the 'WorkItem'.
-        """
-
-        if transpose_ai is not None:
-            new_subject = copy(subject) # shallow copy
-            new_subject[self.si], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.si]
-        else:
-            new_subject = self.subject_modified
-
-        if new_analogy is not None:
-            new_analogy_db = self.edit_list.analogy_db.clone()
-            new_analogy_db.add(new_analogy)
-        else:
-            new_analogy_db = self.edit_list.analogy_db
-
+    def _step_standard(self, edit_id, cost_factor=1):
+        """Standard transition for operations without sequence modification or analogy changes."""
         increment_ai, increment_bi = position_increment_db[edit_id]
         return WorkItem(si         = self.si + increment_ai,
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.edit_list.cost + cost_db[edit_id] * cost_factor,
-                                                  self.edit_list.edit_list + [ Edit(edit_id, transpose_ai) ],
+                                                  self.edit_list.edit_list + [ Edit(edit_id, None) ],
+                                                  self.edit_list.analogy_db), 
+                        subject_modified = self.subject_modified)
+
+    def _step_transpose(self, transpose_ai, subject):
+        """Transition specifically for TRANSPOSE operations with distance scaling."""
+        actual_cost = cost_TRANSPOSE(self.si, transpose_ai)
+        new_subject = list(subject) # shallow copy
+        new_subject[self.si], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.si]
+        
+        increment_ai, increment_bi = position_increment_db[TRANSPOSE]
+        return WorkItem(si         = self.si + increment_ai,
+                        ni         = self.ni + increment_bi,
+                        editions   = EditSequence(self.edit_list.cost + actual_cost,
+                                                  self.edit_list.edit_list + [ Edit(TRANSPOSE, transpose_ai) ],
+                                                  self.edit_list.analogy_db), 
+                        subject_modified = tuple(new_subject))
+
+    def _step_analogy(self, edit_id, new_analogy):
+        """Transition specifically for operations that update the Analogy Database."""
+        new_analogy_db = self.edit_list.analogy_db.clone()
+        new_analogy_db.add(new_analogy)
+        
+        increment_ai, increment_bi = position_increment_db[edit_id]
+        return WorkItem(si         = self.si + increment_ai,
+                        ni         = self.ni + increment_bi,
+                        editions   = EditSequence(self.edit_list.cost + cost_db[edit_id],
+                                                  self.edit_list.edit_list + [ Edit(edit_id, None) ],
                                                   new_analogy_db), 
-                        subject_modified = new_subject)
+                        subject_modified = self.subject_modified)
 
     def min_cost_remaining(self, subject_length, nominal_length):
         """RETURNS: The lowest possible total cost of the remaining comparisons.

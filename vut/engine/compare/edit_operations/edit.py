@@ -33,6 +33,8 @@ class E_EditId(IntEnum):
     SUBSTITUTE_TYPE = 6  # Bad:  Type of subject and nominal 'element' differs.
     NONE            = 7  # No operation
 
+E_EditId.good = { E_EditId.GOOD, E_EditId.GOOD_TOLERATED, E_EditId.GOOD_INSERT, E_EditId.DELETE }
+
 class Edit:
     def __init__(self, id, transpose_ai=None, edit_list=None):
         assert transpose_ai is None or edit_list is None
