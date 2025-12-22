@@ -41,6 +41,7 @@ from   vut.engine.compare.engine.input_chunk          import E_Verdict, \
                                                              InputChunkEmpty
 
 from   vut.engine.compare.configuration               import Configuration
+from   vut.auxiliary.async_stream_reader_adapter      import AsyncStreamReaderAdapter
 
 from   typeguard import typechecked
 

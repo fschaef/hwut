@@ -38,8 +38,8 @@ def ui_feeder(config, subject_stream, nominal_stream):
             ln_s, ln_n       = line_pair.line_number_strings()
 
             yield DisplayCmd(kind       = E_DisplayCmd.ROW_DATA,
-                             line_n_s   = ln_s,
-                             line_n_n   = ln_n,
+                             line_n_s   = -1 if line_pair.subject is None else line_pair.subject.line_n,
+                             line_n_n   = -1 if line_pair.nominal is None else line_pair.nominal.line_n,
                              cells_s    = s_cells,
                              cells_n    = n_cells,
                              source_ref = line_pair)
