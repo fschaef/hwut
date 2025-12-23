@@ -227,9 +227,7 @@ class WorkItem(WorkListBase):
         """
         if self.subject_modified: subject = self.subject_modified
 
-        verdict_id, analogy = cache.get(self.si, self.ni, 
-                                        subject, nominal, 
-                                        transpose_f = self.subject_modified is not None)
+        verdict_id, analogy = cache.get(self.si, self.ni, subject, nominal) 
 
         subject_le = subject[self.si]
         nominal_le = nominal[self.ni]
@@ -340,7 +338,7 @@ class WorkItem(WorkListBase):
 
 
 class Cache(dict):
-    def get(self, subject_i, nominal_i, subject_list, nominal_list, transpose_f):
+    def get(self, subject_i, nominal_i, subject_list, nominal_list):
         """RETURNS: [0] verdict id
                     [1] required analogy
         """
