@@ -18,6 +18,7 @@ from  vut.external.quex.typed                   import typed
 
 from  collections import namedtuple
 from  enum        import IntEnum
+from  typeguard   import typechecked
 
 class E_EditId(IntEnum):
     """Operations moving/substituting in subject to produce nominal.
@@ -36,12 +37,13 @@ class E_EditId(IntEnum):
 E_EditId.good = { E_EditId.GOOD, E_EditId.GOOD_TOLERATED, E_EditId.GOOD_INSERT, E_EditId.DELETE }
 
 class Edit:
-    def __init__(self, id, transpose_ai=None, edit_list=None):
+    def __init__(self, id, transpose_ai=None, edit_list=None, cost: float = 0.0):
         assert transpose_ai is None or edit_list is None
         self.id        = id
         if   transpose_ai is not None: self.__auxiliary = transpose_ai
         elif edit_list    is not None: self.__auxiliary = edit_list
         else:                          self.__auxiliary = None
+        self.cost = cost
 
     @property
     def transpose_ai(self):
@@ -54,13 +56,13 @@ class Edit:
 class EditSequence:
     """Maintains a list of edit objects, their cost and the required analogy database.
     """
-    def __init__(self, cost, edit_list, analogy_db):
+    @typechecked
+    def __init__(self, cost: float, edit_list: list[Edit], analogy_db):
         """edit_list: list of tuples (edit_id, edit_list)
 
         where edit_id:    E_EditId
               edit_list': list of Edit objects
         """
-        assert all(isinstance(x, Edit) for x in edit_list)
         self.cost       = cost
         self.edit_list  = edit_list
         self.analogy_db = analogy_db

@@ -41,8 +41,8 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
     result = []
     for si, ni in sorted(couples.items()):
         subject_seq, nominal_seq = subject_db[si], nominal_db[ni]
-        _, edit_list, analogy_db = subject_seq.edit_operations(nominal_seq, analogy_db)
-        result.append(LinePair(subject_seq, nominal_seq, edit_list))
+        cost, edit_list, analogy_db = subject_seq.edit_operations(nominal_seq, analogy_db)
+        result.append(LinePair(subject_seq, nominal_seq, edit_list, cost = cost))
 
     if verdict == False:
         # Associate the remaining subject and nominal lines according to similarity,
@@ -54,8 +54,8 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
 
         result.extend(line_pair_list)
         # Associate with 'None' what has no counterpart.
-        result.extend(LinePair(s, None) for s in sorted(subjects_remaining, key=lambda x: x.line_n))
-        result.extend(LinePair(None, n) for n in sorted(nominals_remaining, key=lambda x: x.line_n))
+        result.extend(LinePair(s, None, cost = 1.0) for s in sorted(subjects_remaining, key=lambda x: x.line_n))
+        result.extend(LinePair(None, n, cost = 1.0) for n in sorted(nominals_remaining, key=lambda x: x.line_n))
 
     return result, analogy_db
 
@@ -105,9 +105,9 @@ def _couple_remainders(couples, subject_db, nominal_db, analogy_db):
         if subject.line_n in subject_done or nominal.line_n in nominal_done:
             continue
 
-        _, edit_list, analogy_db = edit_operations_line.do(subject.sequence, nominal.sequence, analogy_db)
+        cost, edit_list, analogy_db = edit_operations_line.do(subject.sequence, nominal.sequence, analogy_db)
 
-        result.append(LinePair(subject, nominal, edit_list))
+        result.append(LinePair(subject, nominal, edit_list, cost = cost))
         subject_done.add(subject.line_n)
         nominal_done.add(nominal.line_n)
 

@@ -125,13 +125,13 @@ def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost,
             return "<end>", "%02i" % match_seq.line_n # pragma no cover
 
     for lina in line_associations:
-        subject_txt, subject_line_n = _name(subject_line_list, lina.subject)
-        nominal_txt, nominal_line_n = _name(nominal_line_list, lina.nominal)
+        subject_txt, subject_line_n = _name(subject_line_list, lina._raw.subject)
+        nominal_txt, nominal_line_n = _name(nominal_line_list, lina._raw.nominal)
 
         space  = " " * (23 - len(subject_txt))
         space2 = " " * (23 - len(nominal_txt))
-        if lina.edit_list is None: edit_list = []
-        else:                      edit_list = lina.edit_list
+        if lina._raw.edit_list is None: edit_list = []
+        else:                           edit_list = lina._raw.edit_list
         edit_txt = ", ".join(edit.id.name for edit in edit_list)
         # lina has itself no information about, insert, delete, substitute of lines.
         print("   [%s] %s%s --> [%s] %s %s{%s}" % (subject_line_n, subject_txt,

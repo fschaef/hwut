@@ -111,7 +111,7 @@ def FRAME_execute_and_print(subject, nominal, edit_list):
         print(f"  [{i:02d}] {e.id.name}{aux}")
     print()
 
-    s_cells, n_cells = lp.subject_and_nominal_line_element_lists()
+    s_cells, n_cells = lp.subject_list(), lp.nominal_list()
     FRAME_print_table(s_cells, n_cells)
 
 def FRAME_print_table(subject_list, nominal_list):

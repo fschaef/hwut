@@ -42,9 +42,9 @@ class LinePairList(list):
                 
     def sort(self, sort_by_subject_line_n_f):
         if sort_by_subject_line_n_f:
-            key = lambda x: (1, x.nominal.line_n) if x.subject is None else (0, x.subject.line_n)
+            key = lambda x: (1, x.nominal_line_n) if x.subject_line_n == -1 else (0, x.subject_line_n)
         else:
-            key = lambda x: (1, x.subject.line_n) if x.nominal is None else (0, x.nominal.line_n)
+            key = lambda x: (1, x.subject_line_n) if x.nominal_line_n == -1 else (0, x.nominal_line_n)
         list.sort(self, key=key)
         return self
 

@@ -110,9 +110,9 @@ class LineSequenceSeparatorAdaptor(SeparatorAdaptor):
 
     def _delete_Edit(self, si):
         if all(x.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for x in self.subject_sequence[si]):
-            return self.Edit(GOOD_DELETE, None)
+            return self.Edit(GOOD_DELETE, None, cost=cost_INSERT_DELETE)
         else:
-            return self.Edit(DELETE, None)
+            return self.Edit(DELETE, None, cost=cost_INSERT_DELETE)
 
     def _good_Edit(self, line_a, line_b):
         """RETURNS: The appropriate 'Edit' object for the pair of 'line_a', and 'line_a'.
@@ -136,14 +136,14 @@ class WorkList(WorkListBase):
     def _append_subject_overhead(self, item):
         # delete all remaining subjects to conform the nominal
         L          = self.subject_length - item.si
-        overhead   = [ Edit(DELETE) ] * L
+        overhead   = [ Edit(DELETE, cost=cost_INSERT_DELETE) ] * L
         extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 
     def _append_nominal_overhead(self, item):
         # insert all nominals into subject to conform nominal
         L          = self.nominal_length - item.ni
-        overhead   = [ Edit(INSERT) ] * L
+        overhead   = [ Edit(INSERT, cost=cost_INSERT_DELETE) ] * L
         extra_cost = L * cost_INSERT_DELETE
         return self._append_overhead(item, overhead, extra_cost)
 
@@ -266,7 +266,7 @@ class WorkItem(WorkItemBase):
            new_analogy_db = self.edit_list.analogy_db
 
        new_editions = EditSequence(self.edit_list.cost + delta_cost,
-                                   self.edit_list.edit_list + [ Edit(edit_id, edit_list) ],
+                                   self.edit_list.edit_list + [ Edit(edit_id, edit_list, cost=delta_cost) ],
                                    new_analogy_db)
 
        result = WorkItem(self.si + increment_si,

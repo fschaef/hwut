@@ -47,10 +47,9 @@ class LineSequence(InputChunk):
 
         See 'InputChunk.line_pairs()' for further explanations.
         """
-        editions = edit_operations_line_sequence.do(self.line_list,
-                                                    nominal.line_list,
-                                                    analogy_db)
-        assert isinstance(editions, EditSequence)
+        editions: EditSequence = edit_operations_line_sequence.do(self.line_list,
+                                                                  nominal.line_list,
+                                                                  analogy_db)
 
         if not editions.edit_list:
             return [], editions.analogy_db
@@ -75,14 +74,14 @@ class LineSequence(InputChunk):
                     assert edit.id != E_EditId.SUBSTITUTE_TYPE   # pragma: no cover
                     assert False                                 # pragma: no cover
 
-                yield subject_seq, nominal_seq, edit.edit_list
+                yield subject_seq, nominal_seq, edit.edit_list, edit.cost
                 s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit.id]
                 si += s_incr
                 ni += n_incr
 
         result = [
-            LinePair(subject_seq, nominal_seq, edit_list)
-            for subject_seq, nominal_seq, edit_list in iterable(editions.edit_list)
+            LinePair(subject_seq, nominal_seq, edit_list, cost = cost)
+            for subject_seq, nominal_seq, edit_list, cost in iterable(editions.edit_list)
         ]
         return result, editions.analogy_db
 

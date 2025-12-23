@@ -10,6 +10,7 @@ sys.path.insert(0, "../../../../")
 from vut.engine.compare.ui_feeder import (
     ui_feeder, 
     ConfigInst, 
+    ProtocolHeader,
     SectionBeginInst, 
     LinePairInst, 
     EndOfStreamInst
@@ -21,68 +22,74 @@ if "--hwut-info" in sys.argv:
     sys.exit()
 
 # --- 1. Wisdom vs. Distortion (Data remains same) ---
-nominal = """((Author)) says time is like Gold
-((It)) shines as the stories unfold
-Walk slowly and see
-The fruit on the tree
-Lest wisdom should never take hold
+nominal = """
+There once was a ((Object)) made of ((Material)),
+Who pondered the things that it said.
+"Even the largest fahrt," it began with a roar,
+"Starts with 1.0 gas atom leaving the door."
+Then it dissolved into raindrops of bread.
 
-((Author)) says silence is Best
-((It)) gives the tired spirit some Rest
-A word left unsaid
-Is peace in the head
-Put truth to the ultimate test
+A ((Persona)) in a ((Location)) maze,
+Observed the electric 0.5 blue haze.
+"I think, therefore I am... not quite sure,"
+He whispered while scrubbing the floor of the pure,
+"For a bug in the code ends 100.0 days."
 
 ||||
-((Author)) says focus is Key
-To unlock the things you can be
-Don't scatter your light
-In the middle of night
-Stay steady as 10 ships on the sea
+The ((Animal)) in the desert was dry,
+With a telescope aimed at the sky.
+"That which does not kill us makes us 42.0 percent strange,"
+((Object)) noted while rearranging the range,
+Then ate a gold watch and started to fly.
 ||||
+
+||||
+A ((Object)) sat down on a chair,
+To contemplate why it was there.
+"To be, or not to be... a small grape,"
+It sighed as it shifted its 3.14159 geological shape,
+"Is a question that leaves me quite bare."
+||||
+
+A ((hole in the wall)) looked out at its arse,
+And watched the transparent 10.0 years pass.
+"The unexamined life is a pane in the neck,"
+It muttered while counting a solitary speck,
+Then turned into liquid and sat on the grass.
 """
 
-subject = """((Socrates)) says time is like Lead
-((Elfriede)) shines as the stories unfold
-And see slowly
-The fruit on the tree
-Lest wisdom should never take hold
+subject = """
+There once was a ((mouse)) made of ((Glass)),
+Who pondered the things that it said.
+"Even the largest fahrt," it began with a roar,
+"Starts with 1.05 gas atom leaving the door."
+Then it dissolved into raindrops of bread.
 
-((Socrates)) says is silence Best
-((Elfriede)) gives the tired spirit some Sleep
-A word left unsaid
-Put truth to the ultimate test
+A ((Monk)) in a ((Monastery)) maze,
+Observed the electric 0.51 blue haze.
+"I think, therefore I am... not quite sure,"
+"For a bug in the code ends 102.0 days."
 
 ||||
-To unlock the things you can pee
-Don't scatter your light
-Stay steady as 12 ships on the sea
-((Heinz)) disagreed
-((Socrates)) says focus is Lock
+"That which does not kill us makes us 42.1 percent strange,"
+The ((Animal)) in the desert was dry,
+With a telescope aimed at the sky.
+A ((mouse)) noted while rearranging the range,
+Then ate a gold watch and started to fly.
 ||||
-"""
 
-# --- 2. HTML Boilerplate with Heatmap Support ---
-HTML_TEMPLATE = """
-<html><head><style>
-    body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #e0e0e0; padding: 20px; }
-    .container { max-width: 1200px; margin: auto; }
-    .config-box { font-size: 0.8em; color: #888; border: 1px solid #333; padding: 10px; margin-bottom: 20px; border-radius: 4px; }
-    .header { background: #1f1f1f; padding: 12px; border-radius: 8px 8px 0 0; margin-top: 20px; border-left: 5px solid #007acc; color: #007acc; font-weight: bold; }
-    .row { display: flex; margin-bottom: 1px; background: #1e1e1e; overflow: hidden; transition: background 0.2s; }
-    .row:hover { filter: brightness(1.2); }
-    .line-no { width: 50px; background: rgba(0,0,0,0.2); color: #858585; text-align: center; padding: 6px 0; font-size: 0.8em; flex-shrink: 0; border-right: 1px solid #333; }
-    .side { flex: 1; padding: 6px; display: flex; flex-wrap: wrap; align-content: flex-start; position: relative; }
-    .token { margin: 0 2px; padding: 0 3px; border-radius: 2px; white-space: pre; }
-    
-    /* Semantic Highlighting */
-    .OK_GOOD { color: #9cdcfe; }
-    .OK_TOLERATED { color: #4ec9b0; border-bottom: 1px solid #4ec9b0; }
-    .BAD_TRANSPOSE { color: #dcdcaa; background: #3e3e10; border: 1px dashed #dcdcaa; }
-    .BAD_SUBJECT_DIFFERS { color: #f48771; background: #4b1818; text-decoration: underline wavy red; }
-    .BAD_SUBJECT_HAS_NOT { background: #2d3e2d; color: #75beff; opacity: 0.8; } /* Inserted */
-    .BAD_SUBJECT_HAS { background: #4b1818; color: #f48771; opacity: 0.8; }     /* Deleted */
-</style></head><body><div class="container">
+||||
+A ((Object)) sat down on a chair,
+To contemplate why it was there.
+"To be, or not to be... a small grape,"
+"Is a question that leaves me quite bare."
+It sighed as it shifted its 3.14 geological shape,
+||||
+
+A ((Window)) looked out at its glas,
+"The unexamined life is a pane in the heck,"
+It muttered pendant que counting a solitary speck,
+Then turned into butter and sat on the grass.
 """
 
 async def generate_html():
@@ -90,40 +97,84 @@ async def generate_html():
     s_stream = io.StringIO(subject)
     n_stream = io.StringIO(nominal)
 
-    output = [HTML_TEMPLATE]
+    EXPECTED_SIGNATURE = '6AE8E2F3'
 
-    # Pipe the streams through the ui_feeder (Instruction Streamer)
+    HTML_HEAD = """
+    <html><head><style>
+        :root {
+            --bg: #0d1117;        --text: #c9d1d9;
+            --ln-bg: #010409;     --ln-color: #484f58;
+            --border: #30363d;
+            --err-bg: rgba(248, 81, 73, 0.15);  --err-border: #f85149;
+            --tol-bg: rgba(210, 153, 34, 0.15); --tol-border: #d29922;
+            --dimmed: #484f58;
+        }
+        body { 
+            background: var(--bg); color: var(--text); 
+            font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; margin: 0; padding: 20px; 
+        }
+        .console { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg); }
+        .config-bar { background: var(--ln-bg); padding: 4px 10px; border-bottom: 1px solid var(--border); color: #8b949e; font-size: 11px; }
+        .header { background: #1f242c; padding: 4px 10px; border-bottom: 1px solid var(--border); color: #58a6ff; font-weight: bold; }
+        .row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px minmax(0, 1fr); border-bottom: 1px solid #21262d; position: relative; }
+        .ln { background: var(--ln-bg); color: var(--ln-color); text-align: right; padding: 2px 8px; border-right: 1px solid var(--border); }
+        .side { padding: 2px 6px; white-space: pre; display: flex; flex-wrap: wrap; }
+        .token { padding: 0 2px; border-radius: 2px; margin: 0 1px; border: 1px solid transparent; }
+        .BAD_SUBJECT_DIFFERS { background: var(--err-bg); border-color: var(--err-border); color: #ff7b72; }
+        .BAD_SUBJECT_HAS     { background: var(--err-bg); border-color: var(--err-border); color: #ff7b72; }
+        .OK_TOLERATED        { background: var(--tol-bg); border-color: var(--tol-border); color: #e3b341; }
+        .BAD_SUBJECT_HAS_NOT { color: #3fb950; font-weight: bold; }
+        .dimmed { color: var(--dimmed) !important; }
+        .OK_GOOD { color: var(--text); }
+        .heatmap-marker { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    </style></head><body><div class="console">
+    """
+
+    output = [HTML_HEAD]
+
     async for inst in ui_feeder(config, s_stream, n_stream):
-        
         match inst:
+            case ProtocolHeader(signature=sig, engine_id=eid):
+                if sig != EXPECTED_SIGNATURE:
+                    print(f"CRITICAL ERROR: Protocol Mismatch!", file=sys.stderr)
+                    print(f"Receiver expects: {EXPECTED_SIGNATURE}", file=sys.stderr)
+                    print(f"Engine provided:  {sig} ({eid})", file=sys.stderr)
+                    sys.exit(1)
+                # Success: Protocol is verified.
+                
             case ConfigInst() as c:
-                output.append(f"<div class='config-box'>Config: Markers={c.ignored_line_begin_marker} | Tolerance={c.numeric_tolerance_ratio}</div>")
-
-            case SectionBeginInst(title=t, chunk_type=ct):
-                output.append(f"<div class='header'>{t} <small style='color:#555'>({ct})</small></div>")
+                output.append(f"<div class='config-bar'>TOLERANCE: {c.numeric_tolerance_ratio}</div>")
+                
+            case SectionBeginInst(title=t):
+                output.append(f"<div class='header'>:: {t}</div>")
             
             case LinePairInst() as lp:
-                # Use the 'cost' to generate a heatmap color (Red component grows with cost)
-                # 0.0 cost = gray-ish background; 1.0 cost = reddish background
-                bg_intensity = int(lp.cost * 60) # 0 to 60
-                row_style = f"style='background: rgb({30 + bg_intensity}, 30, 30);'"
+                has_error = any(not c.relation_id.name.startswith("OK_") for c in lp.cells_s)
+                alpha = min(0.3, lp.cost * 0.4)
+                row_style = f"style='background: rgba(248, 81, 73, {alpha});'" if lp.cost > 0 else ""
                 
                 output.append(f"<div class='row' {row_style}>")
                 
-                # --- Subject Side ---
-                output.append(f"<div class='line-no'>{lp.line_n_s}</div><div class='side'>")
+                # --- Subject ---
+                output.append(f"<div class='ln'>{lp.line_n_s if lp.line_n_s != -1 else '-'}</div><div class='side'>")
+                if lp.cost > 0:
+                    output.append(f"<div class='heatmap-marker' style='background: var(--err-border); opacity: {lp.cost};'></div>")
+                
                 for cell in lp.cells_s:
-                    output.append(f"<span class='token {cell.relation_id.name}' title='Cost: {lp.cost}'>{cell.subject or ''}</span>")
+                    content = (cell.subject or "").replace(" ", "&middot;")
+                    output.append(f"<span class='token {cell.relation_id.name}'>{content}</span>")
                 output.append("</div>")
 
-                # --- Nominal Side ---
-                output.append(f"<div class='line-no'>{lp.line_n_n}</div><div class='side'>")
+                # --- Nominal ---
+                output.append(f"<div class='ln'>{lp.line_n_n if lp.line_n_n != -1 else '-'}</div><div class='side'>")
+                dim_class = "dimmed" if has_error else ""
                 for cell in lp.cells_n:
-                    output.append(f"<span class='token {cell.relation_id.name}'>{cell.nominal or ''}</span>")
+                    content = (cell.nominal or "").replace(" ", "&middot;")
+                    output.append(f"<span class='token {cell.relation_id.name} {dim_class}'>{content}</span>")
                 output.append("</div></div>")
 
             case EndOfStreamInst():
-                output.append("<div style='text-align:center; padding: 20px; color: #444;'>--- End of Comparison ---</div>")
+                break
 
     output.append("</div></body></html>")
     print("\n".join(output))
