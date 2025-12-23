@@ -32,7 +32,6 @@ class E_Chunk(Enum):
     POTPOURRI     = auto()
     TERMINAL      = auto()
     EMPTY         = auto()
-    VOID          = auto()
     NONE          = auto()
 
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING

@@ -12,8 +12,6 @@ class E_Verdict(Enum):
     EQUIVALENT                         = auto()
     EQUIVALENT_SUBJECT_VISIBLE_NOTHING = auto()
     EQUIVALENT_NOMINAL_VISIBLE_NOTHING = auto()
-    ERROR_IN_SUBJECT                   = auto()
-    ERROR_IN_NOMINAL                   = auto()
 
 class E_PotpourriBorder(Enum):
     NONE  = auto()

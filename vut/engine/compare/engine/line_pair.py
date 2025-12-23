@@ -90,31 +90,6 @@ class NominalCell(Cell):
     nominal:        str | None
     subject_ref_i:  int
 
-class LineElementPair:
-   @typechecked 
-   def __init__(self, edit_id: E_EditId, subject: LineElement|None, nominal: LineElement|None):
-       self.edit_id = edit_id
-       self.subject = subject
-       self.nominal = nominal
-
-   @staticmethod
-   def none(subject, nominal):
-       return LineElementPair(E_EditId.NONE, subject, nominal)
-
-   def is_analogy_error(self):
-       if     self.edit_id != E_EditId.SUBSTITUTE \
-          and self.edit_id != E_EditId.SUBSTITUTE_TYPE:
-            return False
-
-       def _is_analogy(le):
-           return le is not None and le.tolerance_id == E_ToleranceId.ANALOGY
-
-       return _is_analogy(self.subject) or _is_analogy(self.nominal)
-
-   def string_pair(self):
-       return "" if self.subject is None else self.subject.string, \
-              "" if self.nominal is None else self.nominal.string
-              
 
 class LinePair:
     """An association of a line from the subject input stream and a line
@@ -142,12 +117,6 @@ class LinePair:
         return LinePair(subject   = initial_subject,
                         nominal   = None, 
                         edit_list = edit_list)
-
-    @staticmethod
-    def from_text(subject_line_n, subject_txt, nominal_line_n, nominal_txt):
-        subject = Line.from_string(subject_line_n, subject_txt)
-        nominal = Line.from_string(nominal_line_n, nominal_txt)
-        return LinePair(subject, nominal)
 
     def is_empty(self):
         return self.nominal is None

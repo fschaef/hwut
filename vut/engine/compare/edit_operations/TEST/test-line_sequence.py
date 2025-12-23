@@ -93,17 +93,16 @@ if "subject" in sys.argv:
     test([], [])
 
 if "nominal" in sys.argv:
-    if True:
-        test(["s", "S", "Q"], ["s", "S"])
-        test(["s", "S", "Q"], ["s", "Q"])
-        test(["s", "S", "Q"], ["S", "Q"])
+    test(["s", "S", "Q"], ["s", "S"])
+    test(["s", "S", "Q"], ["s", "Q"])
+    test(["s", "S", "Q"], ["S", "Q"])
 
-        test(["s", "S", "Q"], ["s"])
-        test(["s", "S", "Q"], ["S"])
-        test(["s", "S", "Q"], ["Q"])
+    test(["s", "S", "Q"], ["s"])
+    test(["s", "S", "Q"], ["S"])
+    test(["s", "S", "Q"], ["Q"])
 
-        test(["s", "S", "Q"], [])
-        test(["s", "S"], [])
+    test(["s", "S", "Q"], [])
+    test(["s", "S"], [])
     test(["s"], [])
 
 if "special" in sys.argv:

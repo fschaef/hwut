@@ -137,7 +137,6 @@ class SeparatorAdaptor:
             else:
                 return edit
 
-        Le = len(edit_list_raw)
         Ls = len(self.subject_sequence)
         Ln = len(self.nominal_sequence)
         si = ni = ei = 0

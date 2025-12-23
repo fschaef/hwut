@@ -18,7 +18,7 @@ from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.engine.core            import E_PotpourriBorder
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
 import vut.engine.compare.edit_operations.line   as     edit_operations_line
-from   vut.engine.compare.edit_operations.line   import Edit, Edit_none, E_EditLine
+from   vut.engine.compare.edit_operations.line   import Edit, E_EditLine
 from   vut.external.quex.typed                   import typed
 
 from   collections import namedtuple
@@ -48,12 +48,6 @@ class LineAssociation:
         return LineAssociation(subject   = initial_subject,
                                nominal   = None, 
                                edit_list = edit_list)
-
-    @staticmethod
-    def from_text(subject_line_n, subject_txt, nominal_line_n, nominal_txt):
-        subject = Line.from_string(subject_line_n, subject_txt)
-        nominal = Line.from_string(nominal_line_n, nominal_txt)
-        return LineAssociation(subject, nominal)
 
     def is_empty(self):
         return self.nominal is None

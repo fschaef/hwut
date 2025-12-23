@@ -59,13 +59,6 @@ class ChunkPair(LinePairList):
     def types(self):
         return self.__subject_type_id, self.__nominal_type_id
 
-    def same_type(self):
-        """RETURNS: E_Chunk - type id if subject and nominal have the same type.
-                    None, else.
-        """
-        if self.__subject_type_id == self.__nominal_type_id: return self.__subject_type_id
-        else:                                                return None
-
     def analogy_db(self):
         return self.__analogy_db
 

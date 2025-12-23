@@ -74,9 +74,6 @@ tolerance_db = {
    5: E_ToleranceId.SEPERATOR
 }
 
-string_le = (get_example(E_ToleranceId.STRING),)
-
-
 def stringy(x):
     return "%s:%s" % (x.tolerance_id.name, x.string)
 
@@ -90,7 +87,6 @@ call_n = 0
 def test_core(subject, nominal):
     global call_n
     call_n += 1
-    if False and call_n != 12: return
     print("--(%i)------------------------------------------------------------------" % call_n)
     call(subject, nominal)
     print()

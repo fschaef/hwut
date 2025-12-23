@@ -35,7 +35,6 @@ async def ui_feeder(config, subject_stream, nominal_stream):
         # 2. Yield individual line comparisons
         for line_pair in chunk:
             s_cells, n_cells = line_pair.subject_and_nominal_line_element_lists()
-            ln_s, ln_n       = line_pair.line_number_strings()
 
             yield DisplayCmd(kind       = E_DisplayCmd.ROW_DATA,
                              line_n_s   = -1 if line_pair.subject is None else line_pair.subject.line_n,
