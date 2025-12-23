@@ -5,32 +5,22 @@ PURPOSE: Configuration of the compar module.
 ________________________________________________________________________________
 """
 
-class ConfigurationPatternFinder(object):
-    __slots__ = ("strip_whitespace_f",
-                 "analogy_f",
-                 "whitespace_f",
-                 "backslash_f",
-                 "numeric_tolerance_ratio",
-                 "equivalent_pattern_list",
-                 "visible_nothing_pattern_list",
-                 "ignored_line_begin_marker",
-                 "ignored_line_end_marker",
-                 "potpourri_begin_end_marker",
-                 "analogy_begin_marker",
-                 "analogy_end_marker")
-    def __init__(self):
-        self.strip_whitespace_f           = True
-        self.analogy_f                    = True
-        self.whitespace_f                 = True
-        self.backslash_f                  = True
-        self.numeric_tolerance_ratio      = 0    # [0:1] 0=perfect fit; 1=any number works
-        self.equivalent_pattern_list      = []
-        self.visible_nothing_pattern_list = []
-        self.ignored_line_begin_marker    = "##"
-        self.ignored_line_end_marker      = "##"
-        self.potpourri_begin_end_marker   = "||||"
-        self.analogy_begin_marker         = "(("
-        self.analogy_end_marker           = "))"
+from dataclasses import dataclass, field
+
+@dataclass
+class ConfigurationPatternFinder:
+    strip_whitespace_f:           bool  = True
+    analogy_f:                    bool  = True
+    whitespace_f:                 bool  = True
+    backslash_f:                  bool  = True
+    numeric_tolerance_ratio:      float = 0      # [0:1] 0=perfect fit; 1=any number works
+    equivalent_pattern_list:      list  = field(default_factory=list)
+    visible_nothing_pattern_list: list  = field(default_factory=list)
+    ignored_line_begin_marker:    str   = "##"
+    ignored_line_end_marker:      str   = "##"
+    potpourri_begin_end_marker:   str   = "||||"
+    analogy_begin_marker:         str   = "(("
+    analogy_end_marker:           str   = "))"
         
 class Configuration(object):
     __slots__ = ("pattern_finder",

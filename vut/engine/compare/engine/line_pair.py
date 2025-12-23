@@ -106,6 +106,7 @@ class LinePair:
         self.subject   = subject
         self.nominal   = nominal
         self.border    = potpourri_border
+        self.cost      = -1
 
     @staticmethod
     @typed(subject=(None, Line), nominal=(None, Line), border=E_PotpourriBorder)
@@ -140,16 +141,12 @@ class LinePair:
             return set()
 
         # --- SLOW PATH ---
-        result  = set()
+        result = set()
         si = ni = 0
-        
         for edit in self.edit_list:
             if edit.id not in E_EditId.good:
                 # Check if current indices are in our pre-calculated analogy sets
-                s_is_ana = si in s_ana_indices
-                n_is_ana = ni in n_ana_indices
-                
-                if s_is_ana or n_is_ana:
+                if si in s_ana_indices or ni in n_ana_indices:
                     s_str = s_seq[si].string if si < len(s_seq) else ""
                     n_str = n_seq[ni].string if ni < len(n_seq) else ""
                     result.add((s_str, n_str))
