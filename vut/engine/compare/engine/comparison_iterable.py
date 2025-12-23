@@ -18,16 +18,20 @@ _______________________________________________________________________________
 
 from vut.engine.compare.tolerance.chunk_pipe import ChunkPipe
 from vut.engine.compare.engine.input_chunk   import InputChunkEmpty, E_Chunk
-from   vut.engine.compare.configuration      import Configuration
+from vut.engine.compare.configuration        import Configuration
+from vut.auxiliary.async_helper              import async_zip_longest, \
+                                                    prefetch
 
 from itertools import zip_longest
 from typeguard import typechecked
+from typing    import AsyncIterator
 
-from   vut.auxiliary.async_helper      import AsyncStreamReaderAdapter, \
-                                              async_zip_longest
 
 @typechecked
-async def generate(config: Configuration, subject_line_provider, nominal_line_provider, align_f):
+async def generate(config:                Configuration, 
+                   subject_line_provider: AsyncIterator, 
+                   nominal_line_provider: AsyncIterator, 
+                   align_f:               bool):
     """YIELDS: [0] subject input chunk
                [1] nominal input chunk
 
@@ -36,14 +40,13 @@ async def generate(config: Configuration, subject_line_provider, nominal_line_pr
     If one line provider exhausts, the 'fillvalue' is setup as its input chunk.
     When both line providers exhaust, the generator terminates.
     """
-    
     chunk_pipe = ChunkPipe(config)
-    # chunk_pipe.generate must now be an 'async def' generator
-    subject_iterable = chunk_pipe.generate(subject_line_provider)
-    nominal_iterable = chunk_pipe.generate(nominal_line_provider)
 
-    subject_iterable = AsyncStreamReaderAdapter(subject_iterable)
-    nominal_iterable = AsyncStreamReaderAdapter(nominal_iterable)
+    # PREFETCH: In the background new data is requested, even if the outer loop does not
+    #           'await' and give us a thread, the data is already on the way while the 
+    #           CPU is working on the data.
+    subject_iterable = prefetch(chunk_pipe.generate(subject_line_provider), buffer_size=10)
+    nominal_iterable = prefetch(chunk_pipe.generate(nominal_line_provider), buffer_size=10)
 
     if not align_f: 
         async for s, n in async_zip_longest(subject_iterable, nominal_iterable):

@@ -39,6 +39,7 @@ from   vut.engine.compare.engine.chunk_pair           import ChunkPair
 from   vut.engine.compare.engine.chunk_pair_list      import ChunkPairList
 from   vut.engine.compare.engine.input_chunk          import E_Verdict, \
                                                              InputChunkEmpty
+from   vut.auxiliary.async_helper                     import AsyncIterator_ensured
 
 from   vut.engine.compare.configuration               import Configuration
 
@@ -66,7 +67,8 @@ async def compare(config: Configuration, subject_line_provider, nominal_line_pro
 
     # subject, nominal = 'LineSequence' or 'Potpourri'
     async for subject, nominal in generate(config,
-                                           subject_line_provider, nominal_line_provider,
+                                           AsyncIterator_ensured(subject_line_provider), 
+                                           AsyncIterator_ensured(nominal_line_provider),
                                            align_f=False):
         verdict,   \
         analogy_db = subject.compare(nominal, analogy_db)
@@ -124,7 +126,8 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
 
     # subject, nominal = 'LineSequence', 'Potpourri' or None
     async for subject, nominal in generate(config,
-                                           subject_line_provider, nominal_line_provider,
+                                           AsyncIterator_ensured(subject_line_provider), 
+                                           AsyncIterator_ensured(nominal_line_provider),
                                            align_f=True):
 
         yield ChunkPair.from_input_chunks(subject, nominal, analogy_db)

@@ -25,6 +25,8 @@ sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.configuration        import Configuration
 from   vut.engine.compare.tolerance.chunk_pipe import ChunkPipe
+from   vut.auxiliary.async_helper              import AsyncIterator_ensured
+import asyncio
 
 if "--hwut-info" in sys.argv:
     print("ChunkPipe;")
@@ -37,14 +39,17 @@ config.pattern_finder.numeric_tolerance_ratio = 0.011
 config.pattern_finder.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]
 chunk_pipe = ChunkPipe(config)
 
-def test(line_list):
+async def test_core(line_list):
     text = "\n".join(line_list)
     print("----------------------------------")
     print(text.replace("||||", "<potpourri>"))
     print("----------------------------------")
     print("=>")
-    for x in chunk_pipe.generate(StringIO(text)):
+    async for x in chunk_pipe.generate(AsyncIterator_ensured(StringIO(text))):
         print(x)
+
+def test(line_list):
+    asyncio.run(test_core(line_list))
 
 if "normal" in sys.argv:
     test(["line1"])

@@ -31,6 +31,7 @@ from vut.engine.compare.configuration            import Configuration
 
 from itertools import count
 from typeguard import typechecked
+from typing    import AsyncIterator
 
 class ChunkPipe(PatternFinder):
     @typechecked
@@ -38,7 +39,8 @@ class ChunkPipe(PatternFinder):
         PatternFinder.__init__(self, configuration.pattern_finder)
         self.configuration = configuration
 
-    def generate(self, line_provider):
+    @typechecked
+    async def generate(self, line_provider: AsyncIterator):
         """Generates 'chunks' from lines of the line provider. A chunk can either
         be a single line or a potpourri (bracketted by '||||' lines).
 
@@ -51,13 +53,11 @@ class ChunkPipe(PatternFinder):
                 Potpourri          if text element is a potpourri.
                 TerminalInputChunk to mark end of stream.
         """
-        assert hasattr(line_provider, "readline")
-
         chunk_class  = LineSequence
         line_list    = []
         start_line_n = 1
         for line_n in count(1):
-            line = line_provider.readline()
+            line = await line_provider.readline()
             if not line:
                 break
             elif self.is_region_delimiter(line):
@@ -76,5 +76,4 @@ class ChunkPipe(PatternFinder):
         if line_list:
             yield chunk_class(start_line_n, line_n, line_list, self.configuration)
 
-##yield InputChunkTerminal(line_n)
 

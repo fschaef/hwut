@@ -5,7 +5,7 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.line_pair         import LinePair
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit, list_EditDELETE, list_EditINSERT
+from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit
 from   vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
 from   vut.external.quex.typed                     import typed
 

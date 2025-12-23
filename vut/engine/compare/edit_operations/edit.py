@@ -95,30 +95,6 @@ class EditSequence:
         return self
 
 
-def list_EditDELETE(line_element_list):
-    """RETURNS: List of Edit GOOD_DELETE/DELETE objects depending on the 
-                according line element being 'visible nothing' or not.
-
-    ASSUMPTION: 'nominal_line_element_list' is empty.
-    """
-    def iterable(line_element_list):
-        for le in line_element_list.sequence:
-            if le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING: yield Edit(E_EditId.GOOD_DELETE)
-            else:                                                yield Edit(E_EditId.DELETE)
-    return list(iterable(line_element_list))
-
-def list_EditINSERT(nominal_line_element_list):
-    """RETURNS: List of Edit GOOD_INSERT/INSERT objects depending on the 
-                according line element being 'visible nothing' or not.
-
-    ASSUMPTION: 'subject_line_element_list' is empty.
-    """
-    def iterable(nominal_line_element_list):
-        for le in nominal_line_element_list.sequence:
-            if le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING: yield Edit(E_EditId.GOOD_INSERT)
-            else:                                                yield Edit(E_EditId.INSERT)
-    return list(iterable(nominal_line_element_list))
-
 def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_visible_nothing, func_is_identical):
     """RETURNS: List of Edit GOOD/GOOD_TOLERATED/GOOD_INSERT/GOOD_DELETE 
                 objects depending on the according line element being 
