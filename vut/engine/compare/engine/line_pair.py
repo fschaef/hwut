@@ -294,15 +294,6 @@ class LinePair:
         nominal_n = 0 if self.nominal is None else self.nominal.character_n()
         return max(subject_n, nominal_n)
 
-    def line_number_strings(self):
-        """RETURNS: tuple (subject string, nominal string) 
-            
-        where each string represents the according line number. No line number is reported 
-        as empty string.
-        """
-        return ("" if self.subject is None else "%s" % self.subject.line_n,
-                "" if self.nominal is None else "%s" % self.nominal.line_n)
-
     def __lt__(self, other): # pragma no cover
         def adapt(mseq):
             if mseq is None: return sys.float_info.max

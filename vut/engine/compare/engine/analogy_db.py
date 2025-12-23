@@ -127,14 +127,6 @@ class AnalogyDb(dict):
         subject, nominal = analogy
         self[subject] = nominal
 
-    def get_subject(self, nominal):
-        """RETURNS: 'subject' associated by analogy with 'nominal'.
-                    None, if no such 'nominal' is registered.
-        """
-        for s, n in self.items():
-            if nominal == n: return s
-        return None
-
     def extend(self, analogy_db, subject_line_n, nominal_line_n):
         dict.update(self, analogy_db)
         self.mark_line_numbers(subject_line_n, nominal_line_n, analogy_db.keys())

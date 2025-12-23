@@ -77,15 +77,12 @@ class TolerancePattern:
         else:
             self.pattern_index = None
 
-
 class PatternFinder:
     """Maintains a list of tolerance patterns to be found in a string.
 
     The '.do()' function interprets a string as a sequence of 'LineElement' 
     objects.
     """
-    id_counter = 0
-
     @typechecked
     def __init__(self, config: ConfigurationPatternFinder):
         """Setup the tolerance pattern table according to a given configuration.

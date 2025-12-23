@@ -88,9 +88,9 @@ class LineElement:
         self.end          = end
         self.reference    = string
 
-    @classmethod
+    @staticmethod
     @typechecked
-    def from_Token(cls, token: Token, global_string: str, numeric_tolerance_ratio):
+    def from_Token(token: Token, global_string: str, numeric_tolerance_ratio):
         """RETURNS: A 'LineElement' object based on the provided match data
                     inside this object.
         """

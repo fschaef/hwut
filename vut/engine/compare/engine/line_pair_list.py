@@ -93,50 +93,6 @@ class LinePairList(list):
             result = _get(lina.nominal, result)
         return result
 
-    def indices_plain(self):
-        return range(len(self))
-
-    def indices_error(self):
-        """RETURNS: list of LinePair that contain some type of errors.
-        """
-        return [lina_i
-                for lina_i, lina in enumerate(self)
-                if not lina.is_good_or_tolerated()]
-
-    def indices_error_and_tolerated(self):
-        """RETURNS: list of LinePair that contain some type of errors.
-        """
-        return [lina_i
-                for lina_i, lina in enumerate(self)
-                if not lina.is_good()]
-
-    @typed(analogy_db=AnalogyDb, subject_nominal_set=set)
-    def indices_analogy_definitions(self, analogy_db, subject_nominal_set):
-        """RETURNS: [0] list of indices of LinePair objects containing analogy
-                        definitions relevant to 'subject_nominal_set'.
-
-        Searches for LinePair-s where either the 'subject' or 'nominal' from
-        the 'subject_nominal_set' occurrs.
-        """
-        def _enter(result, subject_line_n, nominal_line_n):
-            lina_index = self.find_line_association(subject_line_n, nominal_line_n)
-            if lina_index is None: 
-                return
-            result.append(lina_index)
-
-        result = []
-        # For those analogies where errors occur, search for the definition of the
-        # original analogy.
-        for subject, nominal in subject_nominal_set:
-            s_line_n, n_line_n, associated = analogy_db.first_association_subject(subject)
-            if associated is not None:
-                _enter(result, s_line_n, n_line_n)
-            s_line_n, n_line_n, associated = analogy_db.first_association_nominal(nominal)
-            if associated is not None:
-                _enter(result, s_line_n, n_line_n)
-
-        return result
-
     def __pretty__(self):
         return "LinePairList", list(self)
 
