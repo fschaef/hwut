@@ -48,17 +48,6 @@ class LinePairList(list):
         list.sort(self, key=key)
         return self
 
-    def find_line_association(self, subject_line_n, nominal_line_n):
-        for i, lina in enumerate(self):
-            if lina.subject is None or lina.subject.line_n != subject_line_n: 
-                continue
-            elif lina.nominal is None or lina.nominal.line_n != nominal_line_n:
-                # 'subject.line_n' is only associated with one 'nominal.line_n'
-                return None # => (subject_line_n, nominal_line_n) cannot be found
-            else:
-                return i
-        return None
-
     def analogy_errors(lina_list, errors_f=True):
         """RETURNS: [0] list of indices of LinePair objects
                         in the same order as in 'lina_list'

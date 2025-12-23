@@ -18,6 +18,8 @@ class DisplayCmd:
     line_n_n:   str = ""
     cells_s:    List[SubjectCell] = field(default_factory=list)
     cells_n:    List[NominalCell] = field(default_factory=list)
+    s_char_n:   int = 0
+    n_char_n:   int = 0
     source_ref: Any = None
 
 async def ui_feeder(config, subject_stream, nominal_stream):
@@ -41,6 +43,8 @@ async def ui_feeder(config, subject_stream, nominal_stream):
                              line_n_n   = -1 if line_pair.nominal is None else line_pair.nominal.line_n,
                              cells_s    = s_cells,
                              cells_n    = n_cells,
+                             s_char_n   = 0 if line_pair.subject is None else line_pair.subject.character_n(),
+                             n_char_n   = 0 if line_pair.nominal is None else line_pair.nominal.character_n(),
                              source_ref = line_pair)
 
         yield DisplayCmd(kind=E_DisplayCmd.ROW_GAP)

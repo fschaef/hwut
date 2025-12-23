@@ -121,33 +121,6 @@ class LinePair:
     def is_empty(self):
         return self.nominal is None
 
-    def is_good_or_tolerated(self):
-        """RETURNS: True, if all entries are GOOD or GOOD_TOLERATED.
-                    False, else.
-        """
-        if   self.subject is None: 
-            return False
-        elif self.nominal is None: 
-            return False
-        elif not self.edit_list:
-            return True
-        else:
-            return all(edit.id == E_EditId.GOOD or edit.id == E_EditId.GOOD_TOLERATED 
-                       for edit in self.edit_list)
-
-    def is_good(self):
-        """RETURNS: True, if all entries are GOOD.
-                    False, else.
-        """
-        if   self.subject is None: 
-            return False
-        elif self.nominal is None: 
-            return False
-        elif not self.edit_list:
-            return True
-        else:
-            return all(edit.id == E_EditId.GOOD for edit in self.edit_list)
-
     def analogy_errors(self):
         """RETURNS: set of tuples (subject string, nominal string)"""
         if self.subject is None or self.nominal is None or not self.edit_list:
@@ -286,13 +259,6 @@ class LinePair:
                 ))
                 
         return s_cells, n_cells
-
-    def max_character_n(self):
-        """RETURNS: Max. number of characters in either subject or nominal.
-        """
-        subject_n = 0 if self.subject is None else self.subject.character_n()
-        nominal_n = 0 if self.nominal is None else self.nominal.character_n()
-        return max(subject_n, nominal_n)
 
     def __lt__(self, other): # pragma no cover
         def adapt(mseq):

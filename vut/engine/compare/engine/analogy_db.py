@@ -79,26 +79,6 @@ class AnalogyDb(dict):
             self.line_number_db.clear()
             self.update(other)
 
-    @typed(string=str)
-    def first_association_subject(self, string):
-        """RETURNS: [0] line number of first occurrence in subject stream
-                    [1] line number of first occurrence in nominal stream
-                    [2] nominal string of association
-        """
-        if string not in self.line_number_db:
-            return None, None, None
-
-        s_line_n, n_line_n = self.line_number_db[string]
-        nominal_string     = self[string]
-        return s_line_n, n_line_n, nominal_string
-
-    @typed(string=str)
-    def first_association_nominal(self, string):
-        for subject, nominal in self.items():
-            if nominal == string:
-                return self.first_association_subject(subject)
-        return None, None, None
-
     def is_consistent(self, analogy):
         """RETURNS: True, if analogy = tuple(subject, nominal) is consistent
                           with all entries in database; False, else.

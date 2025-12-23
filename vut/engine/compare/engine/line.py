@@ -60,14 +60,6 @@ class Line:
 
         return (length_d + error_n) / (2 * l_max)
 
-    def compare_safely(self, nominal):
-        """RETURNS: True, if it is safe to state self == nominal **without**
-                          considering analogies.
-                    False, else.
-        """
-        verdict, analogy_list = self.__compare_core(nominal)
-        return verdict and not analogy_list
-
     def compare(self, nominal, analogy_db):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.

@@ -52,17 +52,6 @@ class LineAssociation:
     def is_empty(self):
         return self.nominal is None
 
-    def is_good(self):
-        if   self.subject is None: 
-            return False
-        elif self.nominal is None: 
-            return False
-        elif not self.edit_list:
-            return True
-        else:
-            return all(edit.id == E_EditLine.GOOD or edit.id == E_EditLine.GOOD_TOLERATED 
-                       for edit in self.edit_list)
-
     def analogy_errors(self):
         """RETURNS: Set of pairs (subject, nominal) where analogies have not been met.
         """
