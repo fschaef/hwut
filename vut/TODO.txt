@@ -1,3 +1,14 @@
+NARRATIVE:
+  -- terms 'structured execution narrative' --> hwut philosophy
+  -- goal 'scenario coverage' not 'line coverage'
+  -- investigate 'behavioral transitions' --> 'structural distinct scenarios' instead of 'reference classes' and 'border conditions'
+  -- elimite any possible doubt 'what happens when ...?'
+  -- causality is visible, consistence challenged and prooven
+
+  QUOTE: A test is good if a domain-knowledgeable reader can say
+         “Yes — that is exactly what should happen”
+         without running the code or reading the implementation.
+
 HWUT-app definition:
 
 All in a file 'hwut.info'. Syntax
