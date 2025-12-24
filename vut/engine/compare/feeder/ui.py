@@ -1,14 +1,36 @@
+"""
+PURPOSE:   Implementation of feeds for UIs in terms of DisplayInst objects.
+
+SIGNATURE: 45C0FFBC
+
+   This signature identifies the structure of the protocol. A receiver 
+   may check the ProtocolHeader for this signature in order to be safe
+   to be compliant.
+
+NOTE: > python path/to/this/file.py 
+
+        shows the protocol signature.
+
+      > python path/to/this/file.py -w
+
+        writes the protocol signature to "SIGNATURE_UI_PROTOCOL.txt" in
+        the project root directory.
+"""
 from __future__ import annotations
 import sys
 
-sys.path.insert(0, "../../../")
+import os
 
-from dataclasses import dataclass, field
-from typing import List, Any, AsyncIterable, Iterator
-from vut.engine.compare.main import associate
-from vut.engine.compare.engine.line_pair import SubjectCell, NominalCell
+root_dir = os.path.dirname(__file__) + "/../../../.."
+sys.path.insert(0, root_dir)
+
+from   vut.engine.compare.main             import associate
+from   vut.engine.compare.engine.line_pair import SubjectCell, NominalCell
+
 import zlib
-from   inspect import isclass
+from   inspect     import isclass
+from   dataclasses import dataclass, field
+from   typing      import List, Any, AsyncIterable, Iterator
 
 
 @dataclass(frozen=True)
@@ -49,8 +71,8 @@ class LinePairInst(DisplayInst):
 class EndOfStreamInst(DisplayInst):
     pass
 
-async def ui_feeder(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayInst]:
-    """Connects the engine to the factory.
+async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayInst]:
+    """YIELDS: DisplayInst representing the line comparions.
     """
     # Associate produces the 'sleeping' Chunks/LinePairs
     raw_chunks = associate(config, subject_stream, nominal_stream)
@@ -61,7 +83,17 @@ async def ui_feeder(config, subject_stream, nominal_stream) -> AsyncIterable[Dis
 
 @dataclass(frozen=True)
 class ProtocolHeader(DisplayInst):
-    signature: str  # Hex representation of the hash (e.g., "0x1A2B3C4D")
+    """This instruction identifies the protocol convention. The signature
+    uniquely determines the instructions and their content. As soon as one
+    changes, the signature changes.
+
+    This may be used by he receiver of the ProtocolHeader in order to 
+    check whether he is setup correctly for receiption.
+
+    NOTE: The current signature is presented on top of this file and can
+          be produced by calling this file as script directly.
+    """
+    signature: str  # Hex representation of the hash (e.g., "1A2B3C4D")
     engine_id: str = "HWUT Version 2.0"
 
 async def DisplayInst_factory(config, chunk_stream: AsyncIterable) -> AsyncIterable[DisplayInst]:
@@ -127,7 +159,8 @@ def _get_protocol_hash() -> str:
     fingerprint = []
     for cls in inst_classes:
         # Get member names from the dataclass fields
-        fields = sorted(cls.__dataclass_fields__.keys())
+        # DO NOT SORT, SO WE GET THEM IN THE DEFINITION ORDER!
+        fields = list(cls.__dataclass_fields__.keys())
         fingerprint.append(f"{cls.__name__}({','.join(fields)})")
     
     protocol_str = "|".join(fingerprint)
@@ -136,4 +169,8 @@ def _get_protocol_hash() -> str:
 
 if __name__ == "__main__":
     # helper to provide a protocol hash
-    print("Protocol Hash: ", _get_protocol_hash())
+    ph = _get_protocol_hash()
+    print("Protocol Hash: ", ph)
+    if "-w" in sys.argv:
+        with open(root_dir + "/vut/SIGNATURE_UI_PROTOCOL.txt", "w") as fh:
+            fh.write(ph)

@@ -5,16 +5,17 @@ import sys
 import os
 
 # Adjust path to find vut
-sys.path.insert(0, "../../../../")
+sys.path.insert(0, "../../../../../")
 
-from vut.engine.compare.ui_feeder import (
-    ui_feeder, 
-    ConfigInst, 
-    ProtocolHeader,
-    SectionBeginInst, 
-    LinePairInst, 
-    EndOfStreamInst
-)
+SIGNATURE = '45C0FFBC'
+
+from vut.engine.compare.feeder.ui import (feed, 
+                                          ConfigInst, 
+                                          ProtocolHeader,
+                                          SectionBeginInst, 
+                                          LinePairInst, 
+                                          EndOfStreamInst)
+
 from vut.engine.compare.configuration import Configuration
 
 if "--hwut-info" in sys.argv:
@@ -97,7 +98,6 @@ async def generate_html():
     s_stream = io.StringIO(subject)
     n_stream = io.StringIO(nominal)
 
-    EXPECTED_SIGNATURE = '6AE8E2F3'
 
     HTML_HEAD = """
     <html><head><style>
@@ -132,12 +132,12 @@ async def generate_html():
 
     output = [HTML_HEAD]
 
-    async for inst in ui_feeder(config, s_stream, n_stream):
+    async for inst in feed(config, s_stream, n_stream):
         match inst:
             case ProtocolHeader(signature=sig, engine_id=eid):
-                if sig != EXPECTED_SIGNATURE:
+                if sig != SIGNATURE:
                     print(f"CRITICAL ERROR: Protocol Mismatch!", file=sys.stderr)
-                    print(f"Receiver expects: {EXPECTED_SIGNATURE}", file=sys.stderr)
+                    print(f"Receiver expects: {SIGNATURE}", file=sys.stderr)
                     print(f"Engine provided:  {sig} ({eid})", file=sys.stderr)
                     sys.exit(1)
                 # Success: Protocol is verified.
