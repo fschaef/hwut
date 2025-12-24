@@ -1,0 +1,5 @@
+Protocol Hash: 45C0FFBC
+currently produced signature:                     ((45C0FFBC))
+signature announced in ui.py:                     ((45C0FFBC))
+signature used in test-ui_feeder.py:              ((45C0FFBC))
+signature announced in SIGNATURE_UI_PROTOCOL.txt: ((45C0FFBC))

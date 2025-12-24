@@ -286,7 +286,7 @@ class LineElementVisibleNothing(LineElement):
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
-        return "LineElement:%s(\"%s,tol=%s\")" % (self.tolerance_id.name, self.string), []
+        return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
 
 class LineElementEquivalencePattern(LineElement):
     def __init__(self, start, end, string, pattern_index_set):

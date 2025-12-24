@@ -1,0 +1,6 @@
+exclude = [
+    "**/TEST/*"
+]
+# E701, E702 -- multiple statements in one line
+# E221 -- multiple whitespace after assignment
+lint.ignore = ["E701", "E702", "E221"]

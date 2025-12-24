@@ -15,14 +15,15 @@ ______________________________________________________________________________
 import sys
 import os
 
+# adopt path before imports --> disable code check error E402
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-import vut.engine.compare.friends_pairing.compare  as     pair_compare
-from   vut.engine.compare.tolerance.pattern_finder import PatternFinder
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-from   vut.engine.compare.TEST.common              import get_Potpourri
+from   vut.engine.compare.configuration            import ConfigurationPatternFinder #noqa E402
+import vut.engine.compare.friends_pairing.compare  as     pair_compare               #noqa E402
+from   vut.engine.compare.tolerance.pattern_finder import PatternFinder              #noqa E402
+from   vut.engine.compare.engine.analogy_db        import AnalogyDb                  #noqa E402
+from   vut.engine.compare.TEST.common              import get_Potpourri              #noqa E402
 
 if "--hwut-info" in sys.argv:
     print("FriendsPairing: fail quickly;")
@@ -47,7 +48,7 @@ def test_pure(subject_line_list, nominal_line_list):
                                                     AnalogyDb(),
                                                     abort_f=True)
 
-    if False == total_verdict and (db or analogy_db):
+    if not total_verdict and (db or analogy_db):
         # Quick fail sets objects to 'None'
         print("db: %s; analogy_db: %s;" % ("None" if db is None else "size %i" % len(db),
                                            "None" if analogy_db is None else "size %i" % len(db)))
