@@ -1,5 +1,8 @@
-Protocol Hash: 45C0FFBC
-currently produced signature:                     ((45C0FFBC))
-signature announced in ui.py:                     ((45C0FFBC))
-signature used in test-ui_feeder.py:              ((45C0FFBC))
-signature announced in SIGNATURE_UI_PROTOCOL.txt: ((45C0FFBC))
+currently produced signature:                     ((PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc))
+## --> produced by 'python ui.py'
+signature announced in ui.py:                     ((PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc))
+## --> see file header 'SIGNATURE: ...
+signature used in test-ui_feeder.py:              ((PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc))
+## --> see SIGNATURE = ...
+signature announced in SIGNATURE_UI_PROTOCOL.txt: ((PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc))
+## --> call 'python ui.py -w'

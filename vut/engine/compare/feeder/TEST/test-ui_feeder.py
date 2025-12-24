@@ -15,7 +15,7 @@ from vut.engine.compare.feeder.ui import (feed,
 
 from vut.engine.compare.configuration import Configuration
 
-SIGNATURE = '45C0FFBC'
+SIGNATURE = 'PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc'
 
 
 if "--hwut-info" in sys.argv:

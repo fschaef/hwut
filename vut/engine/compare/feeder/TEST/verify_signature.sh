@@ -14,7 +14,6 @@ GLOBAL_SIG_FILE="../../../../SIGNATURE_UI_PROTOCOL.txt"
 # 1. Extraction: currently produced signature (from running ui.py)
 # Runs the script, finds the line, takes the 3rd word after the label
 UI_OUTPUT=$(python3 "$UI_FILE" 2>/dev/null)
-echo $UI_OUTPUT
 CURRENT_PROD_HASH=$(echo "$UI_OUTPUT" | awk '/Protocol/ {print $3}')
 
 # 2. Extraction: signature announced in ui.py (the file content)
@@ -35,6 +34,10 @@ fi
 
 # --- Final Output ---
 echo "currently produced signature:                     (($CURRENT_PROD_HASH))"
+echo "## --> produced by 'python ui.py'" 
 echo "signature announced in ui.py:                     (($UI_FILE_SIG))"
+echo "## --> see file header 'SIGNATURE: ..." 
 echo "signature used in test-ui_feeder.py:              (($FEEDER_SIG))"
+echo "## --> see SIGNATURE = ..." 
 echo "signature announced in SIGNATURE_UI_PROTOCOL.txt: (($GLOBAL_SIG))"
+echo "## --> call 'python ui.py -w'" 

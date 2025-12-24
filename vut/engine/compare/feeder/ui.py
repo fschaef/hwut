@@ -1,7 +1,7 @@
 """
 PURPOSE:   Implementation of feeds for UIs in terms of DisplayInst objects.
 
-SIGNATURE: 45C0FFBC
+SIGNATURE: PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc
 
    This signature identifies the structure of the protocol. A receiver 
    may check the ProtocolHeader for this signature in order to be safe
@@ -28,10 +28,13 @@ sys.path.insert(0, root_dir)
 from   vut.engine.compare.main             import associate                   #noqa: E402
 from   vut.engine.compare.engine.line_pair import SubjectCell, NominalCell    #noqa: E402
 
-import zlib                                                                   #noqa: E402
 from   inspect     import isclass                                             #noqa: E402
 from   typing      import List, Any, AsyncIterable                            #noqa: E402
 from   dataclasses import dataclass                                           #noqa: E402
+import hashlib                                                                #noqa: E402
+import base64                                                                 #noqa: E402
+
+
 
 
 @dataclass(frozen=True)
@@ -142,31 +145,31 @@ async def DisplayInst_factory(config, chunk_stream: AsyncIterable) -> AsyncItera
     yield EndOfStreamInst()
 
 def _get_protocol_hash() -> str:
-    """RETURNS: 32 hash as hex-string
-
-    As soon as one member of a Inst-class changes, the receiver knows that it is not 
-    compatible with the sendings.
+    """RETURNS: 256-bit SHA-256 hash of the protocol structure as base64
     """
-    # Collect all subclasses of DisplayInst
+    # 1. Gather the instruction classes as before
     inst_classes = [
-        cls 
-        for cls in globals().values() 
-        if isclass(cls) and issubclass(cls, DisplayInst)
+        obj for obj in globals().values() 
+        if isclass(obj) and issubclass(obj, DisplayInst) and obj is not DisplayInst
     ]
-    
-    # Sort by name to ensure deterministic hashing
     inst_classes.sort(key=lambda x: x.__name__)
-    
-    fingerprint = []
-    for cls in inst_classes:
-        # Get member names from the dataclass fields
-        # DO NOT SORT, SO WE GET THEM IN THE DEFINITION ORDER!
-        fields = list(cls.__dataclass_fields__.keys())
-        fingerprint.append(f"{cls.__name__}({','.join(fields)})")
-    
-    protocol_str = "|".join(fingerprint)
-    return hex(zlib.crc32(protocol_str.encode('utf-8')) & 0xFFFFFFFF).upper()[2:]
 
+    # 2. Build the structural fingerprint
+    protocol_strs = []
+    for cls in inst_classes:
+        fields = cls.__dataclass_fields__.keys()
+        protocol_strs.append(f"{cls.__name__}({','.join(fields)})")
+    
+    fingerprint = "|".join(protocol_strs).encode('utf-8')
+
+    # 3. Hash to 256-bit (32 bytes)
+    raw_hash = hashlib.sha256(fingerprint).digest()
+
+    # 4. Encode to Base64
+    # We use urlsafe_b64encode to avoid '+' and '/' which can be annoying in URIs/logs
+    b64_signature = base64.urlsafe_b64encode(raw_hash).decode('utf-8').rstrip('=')
+    
+    return b64_signature
 
 if __name__ == "__main__":
     # helper to provide a protocol hash
