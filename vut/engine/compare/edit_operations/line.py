@@ -67,9 +67,7 @@ from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from  vut.engine.compare.engine.core                       import E_Verdict
 
-from  copy        import copy
 from  functools   import lru_cache
-from  typeguard   import typechecked
 
 # Shortcuts:
 TRANSPOSE       = E_EditId.TRANSPOSE

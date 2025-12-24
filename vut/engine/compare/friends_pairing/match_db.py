@@ -287,8 +287,8 @@ class MatchDb(dict):
         RETURNS: True, if 'ia' are either in match_db or couples.
                  False, if some 'ia' dropped out completely
         """
-        nominal_available = lambda ib, required_analogy_db: \
-                            ib not in nominals
+        def nominal_available(ib, required_analogy_db): 
+            return ib not in nominals
 
         ok_f = True
         for ia, mate_list in sorted(self.items()):
@@ -310,8 +310,8 @@ class MatchDb(dict):
         interferences with others must be excluded, before diving deeper into
         possible combinations.
         """
-        consistent_with_analogy_db = lambda ib, required_analogy_db: \
-                                     analogy_db.is_all_consistent(required_analogy_db)
+        def consistent_with_analogy_db(ib, required_analogy_db): 
+            return analogy_db.is_all_consistent(required_analogy_db)
 
         ok_f = True
         for ia, mate_list in sorted(self.items()):

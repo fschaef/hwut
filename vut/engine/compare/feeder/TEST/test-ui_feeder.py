@@ -2,12 +2,9 @@
 #! /usr/bin/env python
 import io
 import sys
-import os
 
 # Adjust path to find vut
 sys.path.insert(0, "../../../../../")
-
-SIGNATURE = '45C0FFBC'
 
 from vut.engine.compare.feeder.ui import (feed, 
                                           ConfigInst, 
@@ -17,6 +14,9 @@ from vut.engine.compare.feeder.ui import (feed,
                                           EndOfStreamInst)
 
 from vut.engine.compare.configuration import Configuration
+
+SIGNATURE = '45C0FFBC'
+
 
 if "--hwut-info" in sys.argv:
     print("Testing the ui-feeder producing HTML code using Polymorphic Instructions.")
@@ -136,7 +136,7 @@ async def generate_html():
         match inst:
             case ProtocolHeader(signature=sig, engine_id=eid):
                 if sig != SIGNATURE:
-                    print(f"CRITICAL ERROR: Protocol Mismatch!", file=sys.stderr)
+                    print("CRITICAL ERROR: Protocol Mismatch!", file=sys.stderr)
                     print(f"Receiver expects: {SIGNATURE}", file=sys.stderr)
                     print(f"Engine provided:  {sig} ({eid})", file=sys.stderr)
                     sys.exit(1)

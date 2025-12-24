@@ -20,9 +20,7 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.core               import E_Verdict
 from   vut.engine.compare.engine.analogy_db         import AnalogyDb
 from   vut.engine.compare.engine.line               import Line
-from   vut.engine.compare.engine.line_pair          import LinePair
 from   vut.engine.compare.tolerance.pattern_finder  import E_ToleranceId
-from   vut.engine.compare.edit_operations.edit      import E_EditId
 
 from   enum      import Enum, auto
 from   abc       import ABC, abstractmethod

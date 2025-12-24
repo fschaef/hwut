@@ -44,7 +44,7 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
         cost, edit_list, analogy_db = subject_seq.edit_operations(nominal_seq, analogy_db)
         result.append(LineAssociation(subject_seq, nominal_seq, edit_list))
 
-    if verdict == False:
+    if not verdict:
         # Associate the remaining subject and nominal lines according to similarity,
         # until either no subject or no nominal remains as mating candidate.
         forced_matches,     \

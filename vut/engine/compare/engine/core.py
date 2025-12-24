@@ -4,7 +4,7 @@ _______________________________________________________________________________
 PURPOSE: Definition of core structures, namely 'E_Verdict' and 'Configuration'.
 _______________________________________________________________________________
 """
-from enum import Enum, IntEnum, auto
+from enum import Enum, auto
 
 class E_Verdict(Enum):
     MISFIT                             = auto()

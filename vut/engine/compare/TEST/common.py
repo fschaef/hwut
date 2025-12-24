@@ -101,9 +101,9 @@ def print_match_sequences_lists(subject, nominal):
 
 def print_list_sequence_pairs(subject_txt_list, space, nominal_txt_list, line_numbers_f=False):
     if line_numbers_f:
-        line_number_str = lambda line_n: "[%02i] " % line_n
+        def line_number_str(line_n): return "[%02i] " % line_n
     else:
-        line_number_str = lambda line_n: ""
+        def line_number_str(line_n): return ""
 
     line_n = 0
     for s_text, n_text in zip_longest(subject_txt_list, nominal_txt_list, fillvalue=""):

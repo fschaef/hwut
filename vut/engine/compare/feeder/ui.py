@@ -21,16 +21,17 @@ import sys
 
 import os
 
+# Write code before further imports --> disable E402 code checker error
 root_dir = os.path.dirname(__file__) + "/../../../.."
 sys.path.insert(0, root_dir)
 
-from   vut.engine.compare.main             import associate
-from   vut.engine.compare.engine.line_pair import SubjectCell, NominalCell
+from   vut.engine.compare.main             import associate                   #noqa: E402
+from   vut.engine.compare.engine.line_pair import SubjectCell, NominalCell    #noqa: E402
 
-import zlib
-from   inspect     import isclass
-from   dataclasses import dataclass, field
-from   typing      import List, Any, AsyncIterable, Iterator
+import zlib                                                                   #noqa: E402
+from   inspect     import isclass                                             #noqa: E402
+from   typing      import List, Any, AsyncIterable                            #noqa: E402
+from   dataclasses import dataclass                                           #noqa: E402
 
 
 @dataclass(frozen=True)

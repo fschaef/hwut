@@ -132,24 +132,24 @@ elif sys.argv[1].endswith("-2"):
 
     CONFIGURATION_print_only_chunk_type = True
     p = "||||\nHello\n||||\n"
-    l = "Hello\n"
+    q = "Hello\n"
 
     asyncio.run(test(p,          "",         both_f=True))
-    asyncio.run(test(l,          "",         both_f=True))
-    asyncio.run(test(l + p,      "",         both_f=True))
-    asyncio.run(test(l + p,      l,          both_f=True))
-    asyncio.run(test(l + p,      p,          both_f=True))
-    asyncio.run(test(p + l,      p,          both_f=True))
-    asyncio.run(test(p + l,      l,          both_f=True))
-    asyncio.run(test(p + p,      p + l,      both_f=True))
-    asyncio.run(test(p + p,      l + p,      both_f=True))
-    asyncio.run(test(p + l + p,  p,          both_f=True))
-    asyncio.run(test(p + l + p,  p + l,      both_f=True))
-    asyncio.run(test(p + l + p,  l,          both_f=True))
-    asyncio.run(test(p + l + p,  l + p,      both_f=True))
-    asyncio.run(test(p + l + p,  l + p + l,  both_f=True))
-    asyncio.run(test(p + l + p,  p + p + l,  both_f=True))
-    asyncio.run(test(p + l + p,  p + l + p,  both_f=True))
+    asyncio.run(test(q,          "",         both_f=True))
+    asyncio.run(test(q + p,      "",         both_f=True))
+    asyncio.run(test(q + p,      q,          both_f=True))
+    asyncio.run(test(q + p,      p,          both_f=True))
+    asyncio.run(test(p + q,      p,          both_f=True))
+    asyncio.run(test(p + q,      q,          both_f=True))
+    asyncio.run(test(p + p,      p + q,      both_f=True))
+    asyncio.run(test(p + p,      q + p,      both_f=True))
+    asyncio.run(test(p + q + p,  p,          both_f=True))
+    asyncio.run(test(p + q + p,  p + q,      both_f=True))
+    asyncio.run(test(p + q + p,  q,          both_f=True))
+    asyncio.run(test(p + q + p,  q + p,      both_f=True))
+    asyncio.run(test(p + q + p,  q + p + q,  both_f=True))
+    asyncio.run(test(p + q + p,  p + p + q,  both_f=True))
+    asyncio.run(test(p + q + p,  p + q + p,  both_f=True))
 
 else:
     if "compare" in sys.argv:   test = test_compare

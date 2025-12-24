@@ -36,8 +36,7 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.analogy_db           import AnalogyDb
 from   vut.engine.compare.engine.comparison_iterable  import generate
 from   vut.engine.compare.engine.chunk_pair           import ChunkPair
-from   vut.engine.compare.engine.input_chunk          import E_Verdict, \
-                                                             InputChunkEmpty
+from   vut.engine.compare.engine.input_chunk          import E_Verdict
 from   vut.auxiliary.async_helper                     import AsyncIterator_ensured
 
 from   vut.engine.compare.configuration               import Configuration

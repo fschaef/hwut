@@ -40,8 +40,6 @@ from   vut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                         LineElementString, \
                                                         Token
 import vut.engine.compare.edit_operations.line   as     edit_operations_line
-from   vut.engine.compare.TEST.common            import prepare, \
-                                                        print_match_sequences
 
 from   itertools import combinations
 

@@ -16,7 +16,6 @@ ________________________________________________________________________________
 from   vut.engine.compare.tolerance.line_element import E_ToleranceId
 from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.engine.core            import E_PotpourriBorder
-from   vut.engine.compare.engine.analogy_db      import AnalogyDb
 import vut.engine.compare.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.edit_operations.line   import Edit, E_EditLine
 from   vut.external.quex.typed                   import typed

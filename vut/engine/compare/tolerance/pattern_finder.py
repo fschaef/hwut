@@ -48,13 +48,9 @@ from   vut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                         LineElement, \
                                                         LineElementString, \
                                                         LineElementVisibleNothing
-from   vut.external.quex.typed                   import typed
-from   collections import namedtuple
 import regex as re
 from   typeguard import typechecked
 from   dataclasses import dataclass
-
-TolerancePattern = namedtuple("TolerancePattern", ("id", "pattern", "pattern_index"))
 
 TolerancePattern_id_count = 0
 

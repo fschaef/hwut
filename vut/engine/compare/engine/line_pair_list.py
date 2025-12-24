@@ -4,10 +4,6 @@ PURPOSE: A list of 'LinePair' objects.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.line_pair         import LinePair
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-from   vut.engine.compare.edit_operations.edit     import E_EditId, Edit
-from   vut.engine.compare.tolerance.pattern_finder import E_ToleranceId
-from   vut.external.quex.typed                     import typed
 
 class LinePairList(list):
     def __init__(self, iterable=None):
@@ -42,9 +38,10 @@ class LinePairList(list):
                 
     def sort(self, sort_by_subject_line_n_f):
         if sort_by_subject_line_n_f:
-            key = lambda x: (1, x.nominal_line_n) if x.subject_line_n == -1 else (0, x.subject_line_n)
+            def key(x): return (1, x.nominal_line_n) if x.subject_line_n == -1 else (0, x.subject_line_n)
         else:
-            key = lambda x: (1, x.subject_line_n) if x.nominal_line_n == -1 else (0, x.nominal_line_n)
+            def key(x): return (1, x.subject_line_n) if x.nominal_line_n == -1 else (0, x.nominal_line_n)
+
         list.sort(self, key=key)
         return self
 

@@ -6,11 +6,9 @@ A chunk of 'LinePair'-s either belongs to a block of 'LineSequences'
 or 'Potpourri'.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.line_pair      import LinePair
 from   vut.engine.compare.engine.line_pair_list import LinePairList
 from   vut.engine.compare.engine.input_chunk    import E_Chunk
 from   vut.engine.compare.engine.analogy_db     import AnalogyDb
-from   vut.external.quex.typed                  import typed
 
 from   typeguard import typechecked
 

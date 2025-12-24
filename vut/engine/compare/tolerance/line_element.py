@@ -20,7 +20,6 @@ ________________________________________________________________________________
 """
 import vut.engine.compare.edit_operations.string as     edit_distance_string
 from   vut.engine.compare.engine.core            import E_Verdict
-from   vut.external.quex.typed                   import typed
 
 from   enum import IntEnum
 from   typeguard import typechecked

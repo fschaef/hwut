@@ -22,7 +22,6 @@ from vut.engine.compare.configuration        import Configuration
 from vut.auxiliary.async_helper              import async_zip_longest, \
                                                     prefetch
 
-from itertools import zip_longest
 from typeguard import typechecked
 from typing    import AsyncIterator
 

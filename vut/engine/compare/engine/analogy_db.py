@@ -45,7 +45,6 @@ _______________________________________________________________________________
 """
 from   vut.system.helper        import number_of_decimal_digits
 from   collections              import namedtuple, defaultdict
-from   vut.external.quex.typed  import typed
 
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
@@ -89,7 +88,7 @@ class AnalogyDb(dict):
         subject, nominal = analogy
         related_nominal  = self.get(subject)
         if related_nominal is None:
-            return not nominal in self.values()
+            return nominal not in self.values()
         else:
             return related_nominal == nominal
 

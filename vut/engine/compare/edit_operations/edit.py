@@ -13,10 +13,8 @@ Edit:         identifies names the operation and provides a possible
 
 EditSequence: maintains a list of edit objects. 
 """
-from  vut.engine.compare.tolerance.line_element import LineElement, E_ToleranceId
-from  vut.external.quex.typed                   import typed
+from  vut.engine.compare.tolerance.line_element import E_ToleranceId
 
-from  collections import namedtuple
 from  enum        import IntEnum
 from  typeguard   import typechecked
 

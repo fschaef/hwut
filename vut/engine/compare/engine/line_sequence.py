@@ -17,9 +17,7 @@ from   vut.engine.compare.engine.input_chunk            import InputChunk, \
                                                                E_Chunk
 from   vut.engine.compare.engine.line_pair              import LinePair
 import vut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
-import vut.engine.compare.edit_operations.line          as     edit_operations_line
 from   vut.engine.compare.edit_operations.edit          import E_EditId, \
-                                                               Edit, \
                                                                EditSequence
 
 
@@ -37,7 +35,7 @@ class LineSequence(InputChunk):
         # Compare line by line
         for subject_line, nominal_line in zip(filtered_subject_line_list, filtered_nominal_line_list):
             verdict, analogy_db = subject_line.compare(nominal_line, analogy_db)
-            if verdict == False:
+            if not verdict:
                 return E_Verdict.DIFFERENT, analogy_db
         else:
             return E_Verdict.EQUIVALENT, analogy_db

@@ -25,7 +25,6 @@ _______________________________________________________________________________
 from vut.engine.compare.engine.line              import Line 
 from vut.engine.compare.engine.line_sequence     import LineSequence
 from vut.engine.compare.engine.potpourri         import Potpourri
-from vut.engine.compare.engine.input_chunk       import InputChunkTerminal
 from vut.engine.compare.tolerance.pattern_finder import PatternFinder
 from vut.engine.compare.configuration            import Configuration
 
