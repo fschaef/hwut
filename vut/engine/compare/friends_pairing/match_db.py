@@ -25,22 +25,27 @@ ________________________________________________________________________________
 from vut.engine.compare.engine.analogy_db import AnalogyDb
 from collections import defaultdict
 
-class MatchDb(dict):
-    """Maintains a map:
+class CoupledPairs(dict): # dict[int, int]
+    """Map:
 
-    subject line number --> list of (nominal line number, required analogy_db)
+          subject index  -->  nominal index
 
-    That is, it lists for each subject line number the possible 'mates' from
-    the nominal line number list together with the required analogies. 
-
-    Required analogies: A set of paired terms that must always appear side-by-
-    side in subject and nominal. If for example '((frieda))' in subject
-    appears once instead of '((olga))' in nominal, but later '((frieda))'
-    appears instead of '((vera))', then this breaks the analogy and the
-    equivalence cannot hold.
+    This indicates for a given subject index to what nominal index it is
+    to be paired in the final solution.
     """
+    pass
 
-    def __init__(self, subject_line_list, nominal_line_list, abort_f):
+class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
+    """Map: 
+
+           subject index  --> list of tuples (nominal index, analogy constraints)
+
+    This map indicates what subject lines may potentially be paired with what 
+    lines in the nominal. The 'analogy constraints' indicate what analogies 
+    need to hold in order to mate 'subject index' to 'nominal index'.
+    """
+    @staticmethod
+    def from_raw(subject_line_list, nominal_line_list, abort_f):
         """Set 'abort_f' = True, if further processing becomes obsolete in case 
                                  impossible success of complete matching.
         """
@@ -75,7 +80,6 @@ class MatchDb(dict):
 
         L_subject     = len(subject_line_list)
         L_nominal     = len(nominal_line_list)
-        self.max_size = max(L_subject, L_nominal)
 
         # sizes of the sets differ => complete matching is impossible.
         if abort_f and L_subject != L_nominal: return 
@@ -85,10 +89,37 @@ class MatchDb(dict):
         for le_sequence in nominal_line_list:
             nominal_hash_db[hash(le_sequence.sequence)].append(le_sequence)
 
+        result = UnpairedCandidateGraph()
         try:
-            dict.__init__(self, _iterable(subject_line_list, nominal_hash_db, abort_f))
+            result.__init__(_iterable(subject_line_list, nominal_hash_db, abort_f))
         except ValueError:
-            pass
+            return None
+        return result
+
+class MatchDb(dict):
+    """Maintains a map:
+
+    subject line number --> list of (nominal line number, required analogy_db)
+
+    That is, it lists for each subject line number the possible 'mates' from
+    the nominal line number list together with the required analogies. 
+
+    Required analogies: A set of paired terms that must always appear side-by-
+    side in subject and nominal. If for example '((frieda))' in subject
+    appears once instead of '((olga))' in nominal, but later '((frieda))'
+    appears instead of '((vera))', then this breaks the analogy and the
+    equivalence cannot hold.
+    """
+
+    def __init__(self, subject_line_list, nominal_line_list, abort_f):
+        """Set 'abort_f' = True, if further processing becomes obsolete in case 
+                                 impossible success of complete matching.
+        """
+        tmp = UnpairedCandidateGraph.from_raw(subject_line_list, nominal_line_list, abort_f)
+        if tmp is not None:
+            super().__init__(tmp)
+        self.max_size = max(0 if not subject_line_list else len(subject_line_list), 
+                            0 if not nominal_line_list else len(nominal_line_list))
 
     def clone(self):
         """RETURNS: clone of 'self'
