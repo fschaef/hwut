@@ -13,13 +13,13 @@ def pair_with_analogy_constraints(potential_pair_db, global_analogy_db, global_p
         for nominal_i, analogy_db in mate_list:
             verdict, new_analogy_db = get_analogy_db(global_analogy_db, analogy_db)
             if not verdict: continue
-            work_list.append((frozenset({(subject_i, nominal_i)}), new_analogy_db))
+            work_list.append((frozenset({(subject_i, nominal_i)}), new_analogy_db, frozenset({nominal_i})))
     
     best_size = 0; best_pair_set = frozenset(); best_analogy_db = AnalogyDb()
     considered_set = set() 
 
     while work_list:
-        pair_set, aggregated_analogy_db = work_list.pop()
+        pair_set, aggregated_analogy_db, used_nominals = work_list.pop()
 
         if len(pair_set) > best_size:
             best_size       = len(pair_set)
@@ -28,7 +28,7 @@ def pair_with_analogy_constraints(potential_pair_db, global_analogy_db, global_p
         if best_size == L:
             break
 
-        for ia, ib, required_analogy_db in candidates(db, pair_set):
+        for ia, ib, required_analogy_db in candidates(db, pair_set, used_nominals):
             verdict, new_analogy_db = get_analogy_db(aggregated_analogy_db, 
                                                      required_analogy_db)
             if not verdict: continue
@@ -36,7 +36,9 @@ def pair_with_analogy_constraints(potential_pair_db, global_analogy_db, global_p
             # Neues frozenset erstellen durch Mengen-Union
             new_pair_set = pair_set | {(ia, ib)}
             if new_pair_set not in considered_set:
-                work_list.append((new_pair_set, new_analogy_db))
+                work_list.append((new_pair_set, 
+                                  new_analogy_db, 
+                                  used_nominals | {ib}))
 
     return Result(potential_pair_db     = {},
                   pair_db               = global_pair_db | dict(best_pair_set), 
@@ -59,12 +61,12 @@ def get_analogy_db(aggregated_analogy_db, required_analogy_db):
         else:
             return True, None
 
-def candidates(db, pair_set):
+def candidates(db, pair_set, used_nominals):
     subjects_paired = {p[0] for p in pair_set}
-    nominals_paired = {p[1] for p in pair_set}
+    # Computed along the path: used_nominals = {p[1] for p in pair_set} 
     for subject_i, mate_list in db.items():
         if subject_i in subjects_paired: continue
         for nominal_i, analogy_db in mate_list:
-            if nominal_i in nominals_paired: continue
+            if nominal_i in used_nominals: continue
             yield subject_i, nominal_i, analogy_db
 
