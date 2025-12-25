@@ -13,47 +13,45 @@ def pair_with_analogy_constraints(potential_pair_db, global_analogy_db, global_p
         for nominal_i, analogy_db in mate_list:
             verdict, new_analogy_db = get_analogy_db(global_analogy_db, analogy_db)
             if not verdict: continue
-            work_list.append(({subject_i: nominal_i}, new_analogy_db))
+            work_list.append((frozenset({(subject_i, nominal_i)}), new_analogy_db))
     
-    best_size = 0; best_pair_db = {}; best_analogy_db = AnalogyDb()
+    best_size = 0; best_pair_set = frozenset(); best_analogy_db = AnalogyDb()
     considered_set = set() 
 
-    def candidates(db, pair_db):
-        nominals_paired = set(pair_db.values())
+    # Hilfsfunktion: Muss jetzt mit dem frozenset umgehen
+    def candidates(db, pair_set):
+        # Wir extrahieren die bereits belegten Subjekte und Nominale
+        subjects_paired = {p[0] for p in pair_set}
+        nominals_paired = {p[1] for p in pair_set}
         for subject_i, mate_list in db.items():
-            if subject_i in pair_db: continue
+            if subject_i in subjects_paired: continue
             for nominal_i, analogy_db in mate_list:
                 if nominal_i in nominals_paired: continue
                 yield subject_i, nominal_i, analogy_db
 
     while work_list:
-        pair_db, aggregated_analogy_db = work_list.pop()
+        pair_set, aggregated_analogy_db = work_list.pop()
 
-        # Check if we have seen this specific combination of pairs before
-        # Using frozenset of the items makes the dictionary hashable
 
-        if len(pair_db) > best_size:
-            best_size       = len(pair_db)
-            best_pair_db    = pair_db
+        if len(pair_set) > best_size:
+            best_size       = len(pair_set)
+            best_pair_set   = pair_set
             best_analogy_db = aggregated_analogy_db
         if best_size == L:
             break
 
-        for ia, ib, required_analogy_db in candidates(db, pair_db):
+        for ia, ib, required_analogy_db in candidates(db, pair_set):
             verdict, new_analogy_db = get_analogy_db(aggregated_analogy_db, 
                                                      required_analogy_db)
             if not verdict: continue
 
-            new_pair_db = pair_db | { ia: ib }  # isolate 'couple' database
-
-            passport = frozenset(new_pair_db.items())
-            if passport in considered_set: continue
-            considered_set.add(passport)
-
-            work_list.append((new_pair_db, new_analogy_db))
+            # Neues frozenset erstellen durch Mengen-Union
+            new_pair_set = pair_set | {(ia, ib)}
+            if new_pair_set not in considered_set:
+                work_list.append((new_pair_set, new_analogy_db))
 
     return Result(potential_pair_db     = {},
-                  pair_db               = global_pair_db | best_pair_db, 
+                  pair_db               = global_pair_db | dict(best_pair_set), 
                   analogy_constraint_db = best_analogy_db,
                   required_pair_n       = required_pair_n,
                   aborted_f             = best_size != L)
