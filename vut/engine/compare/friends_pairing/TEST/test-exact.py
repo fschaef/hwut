@@ -74,7 +74,7 @@ def test_pure(subject_line_list, nominal_line_list):
     analogy_db     = pair_compare.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
                                      get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
                                      analogy_db,
-                                     abort_f=False)
+                                     abort_early_f=False)
 
     if total_verdict:
         print("association: %s (%i)" % (total_verdict, len(db)))

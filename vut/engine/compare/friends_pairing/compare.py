@@ -13,11 +13,11 @@ as a complete solution is impossible. Such a quit abort means, that the two
 Potpourri cannot be equivalent (compare() --> False).
 ________________________________________________________________________________
 """
-from   vut.engine.compare.friends_pairing.match_db import MatchDb
-from   vut.external.quex.typed                     import typed
+import vut.engine.compare.friends_pairing.match_db as mdb
+from   typeguard import typechecked
 
-@typed(subject_line_list=tuple, nominal_line_list=tuple)
-def do(subject_line_list, nominal_line_list, analogy_db, abort_f=False):
+@typechecked
+def do(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
     """RETURNS: [0] verdict
                 [1] map: subject line number --> nominal line number
                 [2] analogy_db
@@ -25,29 +25,29 @@ def do(subject_line_list, nominal_line_list, analogy_db, abort_f=False):
     Where 'ia' is the index of a line in 'subject_lines' that is equivalent
     and, thus, associated with 'ib' which is a line from 'nominal_lines'.
     """
-    pre_verdict = True
+    def _assert_progress(state, previous_pair_n):
+        assert previous_pair_n <= (pair_n := len(state.pair_db))
+        return pair_n
+        
+    if (state := mdb.get_initial_state(subject_line_list, nominal_line_list, abort_early_f)).aborted_f:
+        if abort_early_f: return False, state.pair_db, None
 
-    # -- find for each subject line the matching candidates of nominal lines.
-    #
-    match_db = MatchDb(subject_line_list, nominal_line_list, abort_f)
+    previous_pair_n = _assert_progress(state, 0)
 
-    if not match_db.complete_pairing_possible():
-        if abort_f: return False, None, None  
-        else:       pre_verdict = False
+    if not mdb.complete_pairing_is_possible(state): 
+        return False, state.pair_db, None
+    
+    if (state := mdb.extract_ultimates_and_hopeless(state, abort_early_f)).aborted_f:
+        if abort_early_f: return False, state.pair_db, None
 
-    # -- extract matches for which there is no alternative.
-    # -- extract subject and nominal lines, that cannot match at all.
-    couples = match_db.extract_ultimates_and_hopeless(analogy_db, abort_f)
+    previous_pair_n = _assert_progress(state, previous_pair_n)
 
-    if len(match_db) == 0:
-        return len(couples) == match_db.max_size, couples, analogy_db
+    if not mdb.complete_pairing_is_possible(state): 
+        return False, state.pair_db, None
+    
+    if (state := mdb.pairing(state)).aborted_f and abort_early_f: 
+        if abort_early_f: return False, state.pair_db, None
 
-    elif not match_db.complete_pairing_possible(len(couples)):
-        if abort_f: return False, None, None  
-        else:       pre_verdict = False
+    previous_pair_n = _assert_progress(state, previous_pair_n)
 
-    # -- Find solution for possible pairings.
-    verdict, new_couples, analogy_db = match_db.pairing(analogy_db)
-    if verdict: couples.update(new_couples)
-    return pre_verdict and verdict, couples, analogy_db
-
+    return not state.aborted_f, state.pair_db, state.analogy_constraint_db

@@ -46,12 +46,14 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
     need to hold in order to mate 'subject index' to 'nominal index'.
     """
     @staticmethod
-    def from_raw(subject_line_list, nominal_line_list, abort_f):
+    def from_raw(subject_line_list, nominal_line_list, abort_early_f):
         """RETURNS: UnpairedCandidateGraph, if successful.
                     None,                   else.
 
-        Set 'abort_f' = True, if further processing becomes obsolete in case 
-                              impossible success of complete matching.
+        Set 'abort_early_f' = True, if further processing becomes obsolete in case 
+                                    impossible success of complete matching.
+                                     
+                                    => in 'judgement mode' get a quick 'NO'.
         """
         def _match_candidates(subject_le_seq, nominal_hash_db):
             """YIELDS: [0] line number in nominal line list where
@@ -64,7 +66,7 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
                 if verdict:
                     yield nominal_le_seq.line_n, analogy_db
 
-        def _iterable(subject_line_list, nominal_hash_db, abort_f):
+        def _iterable(subject_line_list, nominal_hash_db, abort_early_f):
             """YIELDS: 
                 
             subject line number --> list of (nominal line number, required analogeis)
@@ -73,20 +75,21 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
                 mate_list = list(_match_candidates(subject_le_seq, nominal_hash_db))
                 # 'mate_list' = list of (nominal line number, analogy_db)
                 if not mate_list:
-                    if abort_f:
+                    if abort_early_f:
                         raise ValueError
                 else:
                     yield subject_le_seq.line_n, mate_list
 
         # abort construction -- attributes are set by caller (see '.from_iterable()')
-        if subject_line_list is None and nominal_line_list is None and abort_f is None:
-            return
+        if subject_line_list is None and nominal_line_list is None:
+            return None
 
         L_subject = 0 if not subject_line_list else len(subject_line_list)
         L_nominal = 0 if not nominal_line_list else len(nominal_line_list)
 
         # sizes of the sets differ => complete matching is impossible.
-        if abort_f and L_subject != L_nominal: return 
+        if L_subject != L_nominal: 
+            if abort_early_f: return None
 
         # Hash bucket => find comparison candidates quickly.
         nominal_hash_db = defaultdict(list)
@@ -95,7 +98,7 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
 
         result = UnpairedCandidateGraph()
         try:
-            result.__init__(_iterable(subject_line_list, nominal_hash_db, abort_f))
+            result.__init__(_iterable(subject_line_list, nominal_hash_db, abort_early_f))
         except ValueError:
             return None
         return result
@@ -117,6 +120,128 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
             elif not analogy_db.is_all_consistent(required_analogy_db): continue
             yield ib, required_analogy_db
 
+    def extract_ultimate_subject_partners(self, pair_db, analogy_db, abort_early_f: bool):
+        """Find 'ia'-s which have only one possible matching 'ib'. Extract
+        them into 'pair_db', Elements in 'pair_db' do not participate in the
+        later matching procedure.
+
+        RETURNS: True, in case of success
+                 False, else.
+        """
+        ok_f = True
+        if len(self) == 0: return ok_f
+
+        nominals_coupled = set()
+        for ia, mate_list in sorted(self.items()):
+            if len(mate_list) != 1: continue
+            ib, required_analogy_db = mate_list[0]
+            del self[ia]
+            if ok_f := (ib in nominals_coupled):
+                if abort_early_f: break
+            elif not (ok_f := analogy_db.extend_if_consistent(required_analogy_db, ia, ib)):
+                if abort_early_f: break
+            else:
+                pair_db[ia] = ib
+                nominals_coupled.add(ib)
+
+        if ok_f:
+            ok_f &= self.remove_nominals(nominals_coupled, abort_early_f)
+
+        return ok_f
+
+    def extract_ultimate_nominal_partners(self, pair_db, analogy_db, abort_early_f: bool):
+        """Find 'ib'-s which have only one possible matching 'ia'. 
+        
+        Even if 'ia' has multiple options, if 'ib' can ONLY be matched with 
+        this 'ia', then this pairing is mandatory.
+        
+        RETURNS: True, in case of success
+                 False, else.
+        """
+        ok_f = True
+        if len(self) == 0: return ok_f
+        
+        # Map each ib to the ia-s that can match it
+        ib_to_ia_map = defaultdict(list)
+        for ia, mate_list in self.items():
+            for ib, req_adb in mate_list:
+                ib_to_ia_map[ib].append((ia, req_adb))
+
+        nominals_coupled = set()
+
+        # Identify ib-s appearing exactly once
+        # Sort by ib for deterministic behavior in tests
+        for ib, mate_list in sorted(ib_to_ia_map.items()):
+            if len(mate_list) != 1: continue
+            
+            ia, required_analogy_db = mate_list[0]
+
+            if ok_f := (ia not in self):
+                # 'ia' has been removed by another ultimate matcher
+                if abort_early_f: break
+            elif not (ok_f := analogy_db.extend_if_consistent(required_analogy_db, ia, ib)):
+                if abort_early_f: break
+            else:
+                pair_db[ia] = ib
+                nominals_coupled.add(ib)
+                del self[ia] # ia is now coupled, remove from work graph
+
+        if ok_f:
+            ok_f &= self.remove_nominals(nominals_coupled, abort_early_f)
+
+        return ok_f
+
+    def remove_nominals(self, nominal_set, abort_early_f: bool):
+        ok_f = True
+        if len(self) == 0: return ok_f
+
+        for ia, mate_list in sorted(self.items()):
+            new_mate_list = [ 
+                (ib, req_adb) 
+                for ib, req_adb in mate_list 
+                if ib not in nominal_set 
+            ]
+            if not new_mate_list:             
+                # This subject now has no possible mates left
+                ok_f = False
+                if abort_early_f: break
+            else:
+                self[ia] = new_mate_list
+        return ok_f
+
+    def remove_pairs_with_analogy_interferences(self, analogy_db, abort_early_f: bool):
+        """RETURNS: False, if analogy consistency requirement results in lines
+                           remaining unmatched.
+                    True, else.
+
+        Combinations of (ia, ib) which are impossible without causing analogy
+        interferences with others must be excluded, before diving deeper into
+        possible combinations.
+        """
+        ok_f = True
+        if len(self) == 0: return ok_f
+
+        for ia, mate_list in sorted(self.items()):
+            new_mate_list = [ 
+                (ib, required_analogy_db) 
+                for ib, required_analogy_db in mate_list 
+                if analogy_db.is_all_consistent(required_analogy_db)
+            ]
+            if not new_mate_list: 
+                ok_f = False
+                del self[ia]
+                if abort_early_f: break
+            else:
+                self[ia] = new_mate_list
+        return ok_f
+
+    def __repr__(self):
+        return "\n".join(
+            "[%02i]-[%02i]: %s" % (ia, ib, analogy_db)
+            for ia, entry in self.items()
+            for ib, analogy_db in entry
+        )
+
 @dataclass
 class Result:
     potential_pair_db:     UnpairedCandidateGraph
@@ -125,10 +250,10 @@ class Result:
     required_pair_n:       int
     aborted_f:             bool
 
-def get_initial_state(subject_line_list, nominal_line_list, abort_f) -> Result:
+def get_initial_state(subject_line_list, nominal_line_list, abort_early_f: bool) -> Result:
     potential_pair_db = UnpairedCandidateGraph.from_raw(subject_line_list, 
-                                         nominal_line_list, 
-                                         abort_f)
+                                                        nominal_line_list, 
+                                                        abort_early_f)
     subject_n = 0 if not subject_line_list else len(subject_line_list)
     nominal_n = 0 if not nominal_line_list else len(nominal_line_list)
 
@@ -136,7 +261,7 @@ def get_initial_state(subject_line_list, nominal_line_list, abort_f) -> Result:
                   pair_db               = PairedGraph(), 
                   analogy_constraint_db = AnalogyDb(),
                   required_pair_n       = max(subject_n, nominal_n), 
-                  aborted_f             = db is None)
+                  aborted_f             = potential_pair_db is None)
 
 def complete_pairing_is_possible(state: Result) -> bool:
     """RETURNS: True, if a complete pairing is possible under the given 
@@ -147,7 +272,7 @@ def complete_pairing_is_possible(state: Result) -> bool:
 
     pair_n          = len(state.pair_db)
     db              = state.potential_pair_db
-    required_pair_n = db.required_pair_n
+    required_pair_n = state.required_pair_n
     # every subject has a counterpart?
     if   pair_n + len(db)             != required_pair_n: return False 
     # every nominal has a counterpart?
@@ -155,11 +280,45 @@ def complete_pairing_is_possible(state: Result) -> bool:
     # else: there may be a solution where all lines are matched
     else:                                                 return True
 
-def pairing(state: Result) -> Result:
-    db = state.potential_pair_db
-    L = len(db)
+def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result:
+    db         = state.potential_pair_db
+    pair_db    = state.pair_db
+    analogy_db = state.analogy_constraint_db
 
+    # Iterate until no further improvements are made
+    previous_pair_n = -1
+    pair_n          = len(pair_db)
+    ok_f            = True
+    while pair_n > previous_pair_n:
+        previous_pair_n = pair_n
+
+        # Extract those pairs, for which there is no alternative
+        # => constraints on analogies
+        if not (ok_f := db.extract_ultimate_subject_partners(pair_db, analogy_db, abort_early_f)):
+            if abort_early_f: break
+        if not (ok_f := db.extract_ultimate_nominal_partners(pair_db, analogy_db, abort_early_f)):
+            if abort_early_f: break
+
+        pair_n = len(pair_db)
+
+        # Extract those potential pairs, which interfere with imposed analogies
+        if not (ok_f := db.remove_pairs_with_analogy_interferences(analogy_db, abort_early_f)):
+            if abort_early_f: break
+
+    return Result(potential_pair_db     = db,
+                  pair_db               = pair_db,
+                  analogy_constraint_db = analogy_db,
+                  required_pair_n       = state.required_pair_n,
+                  aborted_f             = not ok_f)
+
+def pairing(state: Result) -> Result:
+    # Done already?
+    if not state.potential_pair_db: return state
+
+    db                  = state.potential_pair_db
+    L                   = len(db)
     subject_singles_all = set(db)
+    analogy_db          = state.analogy_constraint_db
 
     work_list = [
         (ia, {}, analogy_db) for ia in subject_singles_all
@@ -188,7 +347,7 @@ def pairing(state: Result) -> Result:
 
             if len(new_couples) == L:
                 return Result(potential_pair_db     = {},
-                              pair_db               = new_couples, 
+                              pair_db               = state.pair_db | new_couples, 
                               analogy_constraint_db = analogy_db,
                               required_pair_n       = state.required_pair_n,
                               aborted_f             = False)
@@ -199,287 +358,8 @@ def pairing(state: Result) -> Result:
             )
 
     return Result(potential_pair_db     = {},
-                  pair_db               = best_couples, 
+                  pair_db               = state.pair_db | best_couples, 
                   analogy_constraint_db = best_analogy_db,
                   required_pair_n       = state.required_pair_n,
                   aborted_f             = True)
 
-class MatchDb(dict):
-    """Maintains a map:
-
-    subject line number --> list of (nominal line number, required analogy_db)
-
-    That is, it lists for each subject line number the possible 'mates' from
-    the nominal line number list together with the required analogies. 
-
-    Required analogies: A set of paired terms that must always appear side-by-
-    side in subject and nominal. If for example '((frieda))' in subject
-    appears once instead of '((olga))' in nominal, but later '((frieda))'
-    appears instead of '((vera))', then this breaks the analogy and the
-    equivalence cannot hold.
-    """
-
-    def __init__(self, subject_line_list, nominal_line_list, abort_f):
-        """Set 'abort_f' = True, if further processing becomes obsolete in case 
-                                 impossible success of complete matching.
-        """
-        tmp = UnpairedCandidateGraph.from_raw(subject_line_list, nominal_line_list, abort_f)
-        if tmp is not None:
-            super().__init__(tmp)
-        self.max_size = max(0 if not subject_line_list else len(subject_line_list), 
-                            0 if not nominal_line_list else len(nominal_line_list))
-
-    def clone(self):
-        """RETURNS: clone of 'self'
-        """
-        return MatchDb.from_iterable(self)
-
-    @staticmethod
-    def from_iterable(iterable):
-        """RETURNS: 'MatchDb' constructed from iterable of pairs shown below
-            
-                (subject line number, list of (nominal line number, analogy_db))
-
-        This function fills the underlying dictionary directly.
-        """
-        result = MatchDb(None, None, None)
-        dict.__init__(result, iterable)
-        L_subject = len(result)
-        L_nominal = result._count_nominals()
-        result.max_size = max(L_subject, L_nominal)
-        return result
-
-    def pairing(self, analogy_db):
-        """The 'couples' dictionary maps: map 'ia' --> 'ib'. It contains
-        information about lines, that have already been paired.
-
-        RETURNS: [0] True, if solution covers all subject and nominal lines.
-                     False, else.
-                 [1] map: 'ia' --> 'ib'
-                 [2] analogy_db
-        """
-        L = len(self)
-
-        subject_singles_all = set(self)
-
-        work_list = [
-            (ia, {}, analogy_db) for ia in subject_singles_all
-        ]
-        best_size = 0; best_couples = {}; best_analogy_db = AnalogyDb()
-        while work_list:
-            ia, couples, analogy_db = work_list.pop()
-
-            remaining_subject_singles = subject_singles_all.difference(couples.keys())
-            remaining_subject_singles.remove(ia)
-            remaining_nominal_singles = self._remaining_nominal_singles(ia, couples, analogy_db)
-
-            for ib, required_analogy_db in remaining_nominal_singles:
-                if required_analogy_db:
-                    new_analogy_db = analogy_db.clone().extend(required_analogy_db, ia, ib)
-                else:
-                    new_analogy_db = analogy_db
-
-                new_couples     = dict(couples)  # isolate 'couple' database
-                new_couples[ia] = ib
-
-                if len(new_couples) > best_size:
-                    best_size       = len(new_couples)
-                    best_couples    = new_couples
-                    best_analogy_db = new_analogy_db
-
-                if len(new_couples) == L:
-                    return True, new_couples, new_analogy_db
-
-                work_list.extend(
-                    (ia, new_couples, new_analogy_db)
-                    for ia in remaining_subject_singles
-                )
-
-        return False, best_couples, best_analogy_db
-
-    def extract_ultimates_and_hopeless(self, analogy_db, abort_f):
-        """Search for entries in 'match_db' where there is only one possible
-        mate. Those entries are extracted into the 'couples' database.
-
-        RETURNS: [0] 'couples': ia --> ib
-                                for those 'ia' and 'ib' for which there is no alternative.
-
-        ADAPTS: 'analogy_db'
-
-        The 'abort_f' controls what has to happen as soon at it becomes clear
-        that a perfect solution is impossible. If set 'True' the function
-        reacts immediately by returning '(None, None, None)'.
-        """
-        couples = {}
-        while 1 + 1 == 2:
-            ok_f, coupled_nominals = self._find_couples(couples, analogy_db, abort_f)
-            if not ok_f: 
-                break
-            elif not self._remove_nominals(coupled_nominals, abort_f):
-                break
-            elif not self._find_couples_inverse(couples, analogy_db, abort_f):
-                break
-            elif not self._filter_analogy_interference(analogy_db, abort_f):
-                break
-            elif not coupled_nominals: 
-                break
-
-        return couples
-
-    def complete_pairing_possible(self, couple_n=0):
-        """RETURNS: True, if a complete pairing is possible under the given 
-                          cicumstances.
-                    False, else.
-        """
-        # every subject has a counterpart?
-        if   couple_n + len(self)             != self.max_size:  return False 
-        # every nominal has a counterpart?
-        elif couple_n + self._count_nominals() != self.max_size: return False 
-        # else: there may be a solution where all lines are matched
-        else:                                                    return True
-
-    def _count_nominals(self):
-        """RETURN: number of different nominals in mate lists.
-        """
-        found = set()
-        for ia, mate_list in self.items():
-            found.update(ib for ib, _ in mate_list)
-        return len(found)
-
-    def _remaining_nominal_singles(self, ia, couples, analogy_db):
-        """YIELDS: mate from remaining mate_list for 'ia'.
-
-        Consider that all nominals 'ib' from the iterable 'nominals_taken are no
-        longer available for 'ia' to mate. Yield each of the remaining 'ib'-s.
-        """
-        taken_set = set(couples.values()) # A set allows for a quick search
-        for ib, required_analogy_db in sorted(self[ia]):
-            if ib in taken_set: continue
-            elif not analogy_db.is_all_consistent(required_analogy_db): continue
-            yield ib, required_analogy_db
-
-    def _find_couples(self, couples, analogy_db, abort_f):
-        """Find 'ia'-s which have only one possible matching 'ib'. Extract
-        them into 'couples', Elements in 'couples' do not participate in the
-        later matching procedure.
-
-        RETURNS: [0] True, if 'ia' are either in match_db or couples.
-                     False, some 'ia' dropped out completely
-                     => there is an 'ia' for which there is no matching 'ib'!
-                 [1] 'ib'-s that have been coupled.
-
-        These 'ib'-s may occur in other match entries and need now to be
-        removed from there.
-        """
-        ok_f             = True
-        nominals_coupled = set()
-        for ia, mate_list in sorted(self.items()):
-            if len(mate_list) > 1:
-                continue
-            ib, required_analogy_db = mate_list[0]
-            del self[ia]
-            if ib in nominals_coupled:
-                ok_f = False
-                if abort_f: break
-            elif not analogy_db.extend_if_consistent(required_analogy_db, ia, ib):
-                ok_f = False
-                if abort_f: break
-            else:
-                couples[ia] = ib
-                nominals_coupled.add(ib)
-        return ok_f, nominals_coupled
-
-    def _find_couples_inverse(self, couples, analogy_db, abort_f):
-        """Find 'ib'-s that have only one possible matching 'ia'. Extract
-        them from 'match_db' into 'couples'.
-
-        RETURNS: True, if 'ia' are either in match_db or couples.
-                 False, some 'ia' dropped out completely
-
-        The found 'ib'-s occur only once in 'match_db' and are removed from
-        there. No further treatment necessary.
-        """
-        ok_f = True
-        ib_mate_count = defaultdict(int)
-        proposed = {}
-        for ia, mate_list in self.items():
-            for ib, required_analogy_db in mate_list:
-                if ib_mate_count[ib] == 0: proposed[ib] = (ia, required_analogy_db)
-                ib_mate_count[ib] += 1
-
-        # consider nominals that only have one possible mate
-        nominals_ultimate = [ib for ib, count in ib_mate_count.items() if count == 1]
-        for ib in nominals_ultimate:
-            ia, required_analogy_db = proposed[ib]
-            if ia in self:
-                del self[ia] # The one and only occurence of 'ib' is removed here.
-            if not analogy_db.extend_if_consistent(required_analogy_db, ia, ib):
-                ok_f = False
-                if abort_f: break
-            else:
-                couples[ia] = ib
-
-        return ok_f
-
-    def _remove_nominals(self, nominals, abort_f):
-        """Remove already coupled 'nominals' from mate_lists-s.
-
-        RETURNS: True, if 'ia' are either in match_db or couples.
-                 False, if some 'ia' dropped out completely
-        """
-        def nominal_available(ib, required_analogy_db): 
-            return ib not in nominals
-
-        ok_f = True
-        for ia, mate_list in sorted(self.items()):
-            if not any(ib in nominals for ib, _ in mate_list):
-                continue
-            # remove entries from 'mate_list' where the nominals are already coupled.
-            elif not self._filter_mate_list(ia, mate_list, nominal_available):
-                ok_f = False
-                if abort_f: break
-
-        return ok_f
-
-    def _filter_analogy_interference(self, analogy_db, abort_f):
-        """RETURNS: False, if analogy consistency requirement results in lines
-                           remaining unmatched.
-                    True, else.
-
-        Combinations of (ia, ib) which are impossible without causing analogy
-        interferences with others must be excluded, before diving deeper into
-        possible combinations.
-        """
-        def consistent_with_analogy_db(ib, required_analogy_db): 
-            return analogy_db.is_all_consistent(required_analogy_db)
-
-        ok_f = True
-        for ia, mate_list in sorted(self.items()):
-            # remove entries from 'mate_list' which are inconsistent with analogy_db
-            if not self._filter_mate_list(ia, mate_list, consistent_with_analogy_db):
-                ok_f = False
-                if abort_f: break
-        return ok_f
-
-    def _filter_mate_list(self, ia, mate_list, condition):
-        """RETURNS: True, if filtering left at least one entry in 'self[ia]'.
-                    False, else.
-        """
-        new_mate_list = [
-            (ib, required_analogy_db)
-            for ib, required_analogy_db in mate_list
-            if condition(ib, required_analogy_db)
-        ]
-        if not new_mate_list:
-            del self[ia]      
-            return False
-        else:
-            self[ia] = new_mate_list
-            return True
-
-    def __repr__(self):
-        return "\n".join(
-            "[%02i]-[%02i]: %s" % (ia, ib, analogy_db)
-            for ia, entry in self.items()
-            for ib, analogy_db in entry
-        )

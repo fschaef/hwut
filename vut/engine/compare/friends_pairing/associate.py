@@ -11,7 +11,9 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.line_pair        import LinePair
 import vut.engine.compare.edit_operations.line    as     edit_operations_line
 import vut.engine.compare.friends_pairing.compare as     pair_compare
+from   vut.engine.compare.engine.analogy_db       import AnalogyDb
 
+from   typeguard import typechecked
 
 
 def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):
@@ -32,7 +34,7 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
     verdict, couples, analogy_db = pair_compare.do(subject_line_list,
                                                    nominal_line_list,
                                                    analogy_db,
-                                                   abort_f=abort_f)
+                                                   abort_early_f=abort_f)
 
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
     nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object
@@ -77,7 +79,7 @@ def _couple_uncoupled(couples, subject_db, nominal_db, analogy_db, max_compariso
     are associated which are similar but not equivalent. Thus, they do not
     impose any analogy constraints.
     """
-    analogy_db          = analogy_db.clone() # isolate
+    analogy_db          = None if not analogy_db else analogy_db.clone() # isolate
 
     line_pair_list,     \
     subjects_remaining, \
@@ -88,7 +90,8 @@ def _couple_uncoupled(couples, subject_db, nominal_db, analogy_db, max_compariso
 
     return line_pair_list, subjects_remaining, nominals_remaining
 
-def _couple_remainders(couples, subject_db, nominal_db, analogy_db):
+@typechecked
+def _couple_remainders(couples, subject_db, nominal_db, analogy_db: AnalogyDb | None):
     """RETURNS: list of LinePair objects.
 
     Find couples in the set of remainders according to a least cost

@@ -53,6 +53,7 @@ BEFORE: {
 [01]-[101]: : & : "mark"="heinz"
 }
 AFTER: --> {
+[01]-[101]: : & : "mark"="heinz"
 }
 couples: 
   00 <-> 100
@@ -123,8 +124,9 @@ AFTER: --> {
 couples: 
   00 <-> 101
   01 <-> 100
+  02 <-> 101
 
----( a removed nominal leaves entry hopeless (abort) )-----------------------------
+---( a removed nominal leaves entry hopeless (ABORT EARLY) )-----------------------------
 BEFORE: {
 [00]-[101]: : & : "otto"="fritz"
 [01]-[100]: : & : "mark"="heinz"
@@ -132,6 +134,8 @@ BEFORE: {
 [02]-[101]: : & : "mark"="heinz"
 }
 AFTER: --> {
+[02]-[100]: : & : "otto"="heinz"
+[02]-[101]: : & : "mark"="heinz"
 }
 couples: 
   00 <-> 101
@@ -155,6 +159,7 @@ BEFORE: {
 [01]-[101]: : & : "mark"="heinz"
 }
 AFTER: --> {
+[01]-[100]: : & : "otto"="heinz"
 }
 couples: 
   00 <-> 101

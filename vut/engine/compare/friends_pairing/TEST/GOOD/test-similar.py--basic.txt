@@ -14,8 +14,8 @@ cost: -1.00000; line_associations: 2;
 subject: ['otto']
 nominal: ['otto', 'otto']
 cost: -1.00000; line_associations: 2;
-   [00] otto                    --> [01] otto                    {GOOD}
-   [--] None                    --> [00] otto                    {}
+   [00] otto                    --> [00] otto                    {GOOD}
+   [--] None                    --> [01] otto                    {}
 --------------------------------
 subject: ['otto', 'fritz']
 nominal: ['otto']
@@ -26,8 +26,8 @@ cost: -1.00000; line_associations: 2;
 subject: ['otto', 'fritz']
 nominal: ['otto', 'otto']
 cost: -1.00000; line_associations: 2;
-   [00] otto                    --> [01] otto                    {GOOD}
-   [01] fritz                   --> [00] otto                    {SUBSTITUTE}
+   [00] otto                    --> [00] otto                    {GOOD}
+   [01] fritz                   --> [01] otto                    {SUBSTITUTE}
 --------------------------------
 subject: ['otto', 'fritz']
 nominal: ['otto', 'fritz']

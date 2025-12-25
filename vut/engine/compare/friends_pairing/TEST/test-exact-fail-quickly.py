@@ -46,7 +46,7 @@ def test_pure(subject_line_list, nominal_line_list):
     total_verdict, db, analogy_db = pair_compare.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
                                                     get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
                                                     AnalogyDb(),
-                                                    abort_f=True)
+                                                    abort_early_f=True)
 
     if not total_verdict and (db or analogy_db):
         # Quick fail sets objects to 'None'

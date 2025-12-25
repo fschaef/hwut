@@ -23,10 +23,12 @@ from   itertools import zip_longest
 def get_Potpourri(pattern_finder, line_text_list, configuration):
     start_line_n = -1
     end_line_n   = len(line_text_list)
-    return Potpourri(start_line_n, end_line_n,
-                     (tuple(Line(line_n, pattern_finder.do(line_text))
-                            for line_n, line_text in enumerate(line_text_list))),
-                     configuration)
+    result = Potpourri(start_line_n, end_line_n,
+                         (tuple(Line(line_n, pattern_finder.do(line_text))
+                                for line_n, line_text in enumerate(line_text_list))),
+                         configuration)
+    ## print("#POT", result)
+    return result
 
 def get_LineSequence(pattern_finder, line_text_list, configuration):
     start_line_n = -1
