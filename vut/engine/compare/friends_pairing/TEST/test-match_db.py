@@ -33,16 +33,13 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.friends_pairing.match_db import (
-    UnpairedCandidateGraph,
-    PairedGraph,
-    Result,
-    extract_ultimates_and_hopeless,
-    pairing,
-)
-from   vut.engine.compare.engine.analogy_db import AnalogyDb
-
-from   copy import copy
+from   vut.engine.compare.friends_pairing.matching import (UnpairedCandidateGraph,           #noqa E402
+                                                           PairedGraph,
+                                                           Result,
+                                                           extract_ultimates_and_hopeless,
+                                                           pairing)
+from   vut.engine.compare.engine.analogy_db        import AnalogyDb                          #noqa E402
+from   copy import copy                                                                      #noqa E402
 
 
 if "--hwut-info" in sys.argv:
