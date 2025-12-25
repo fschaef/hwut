@@ -31,10 +31,7 @@ def pair_with_analogy_constraints(potential_pair_db, global_analogy_db, global_p
 
         # Check if we have seen this specific combination of pairs before
         # Using frozenset of the items makes the dictionary hashable
-        passport = frozenset(pair_db.items())
-        if passport in considered_set:
-            continue
-        considered_set.add(passport)
+
         if len(pair_db) > best_size:
             best_size       = len(pair_db)
             best_pair_db    = pair_db
@@ -48,6 +45,10 @@ def pair_with_analogy_constraints(potential_pair_db, global_analogy_db, global_p
             if not verdict: continue
 
             new_pair_db = pair_db | { ia: ib }  # isolate 'couple' database
+
+            passport = frozenset(new_pair_db.items())
+            if passport in considered_set: continue
+            considered_set.add(passport)
 
             work_list.append((new_pair_db, new_analogy_db))
 
