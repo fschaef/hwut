@@ -65,6 +65,14 @@ class AnalogyDb(dict):
     def clone(self):
         return AnalogyDb(self)
 
+    def clone_updated(self, other):
+        """RETURNS: updated clone, if other is consistent with self
+                    None, else
+        """
+        result = self.clone()
+        if other is not None: result.update(other)
+        return result
+
     def update(self, other):
         if other is not None:
             dict.update(self, other)
