@@ -18,20 +18,8 @@ def pair_with_analogy_constraints(potential_pair_db, global_analogy_db, global_p
     best_size = 0; best_pair_set = frozenset(); best_analogy_db = AnalogyDb()
     considered_set = set() 
 
-    # Hilfsfunktion: Muss jetzt mit dem frozenset umgehen
-    def candidates(db, pair_set):
-        # Wir extrahieren die bereits belegten Subjekte und Nominale
-        subjects_paired = {p[0] for p in pair_set}
-        nominals_paired = {p[1] for p in pair_set}
-        for subject_i, mate_list in db.items():
-            if subject_i in subjects_paired: continue
-            for nominal_i, analogy_db in mate_list:
-                if nominal_i in nominals_paired: continue
-                yield subject_i, nominal_i, analogy_db
-
     while work_list:
         pair_set, aggregated_analogy_db = work_list.pop()
-
 
         if len(pair_set) > best_size:
             best_size       = len(pair_set)
@@ -70,3 +58,13 @@ def get_analogy_db(aggregated_analogy_db, required_analogy_db):
             return True, required_analogy_db.clone()
         else:
             return True, None
+
+def candidates(db, pair_set):
+    subjects_paired = {p[0] for p in pair_set}
+    nominals_paired = {p[1] for p in pair_set}
+    for subject_i, mate_list in db.items():
+        if subject_i in subjects_paired: continue
+        for nominal_i, analogy_db in mate_list:
+            if nominal_i in nominals_paired: continue
+            yield subject_i, nominal_i, analogy_db
+
