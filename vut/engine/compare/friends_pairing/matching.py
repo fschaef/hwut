@@ -91,4 +91,10 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
                   aborted_f             = not ok_f)
 
 def pairing(state: Result) -> Result:
-    return p.pair_with_analogy_constraints(state)
+    if not state.potential_pair_db:
+        return state 
+
+    return p.pair_with_analogy_constraints(state.potential_pair_db, 
+                                           state.analogy_constraint_db, 
+                                           state.pair_db, 
+                                           state.required_pair_n)
