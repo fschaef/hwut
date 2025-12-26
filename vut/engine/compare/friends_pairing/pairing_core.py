@@ -59,7 +59,8 @@ def solve_unconstrained_matching(subject_to_nominals: dict[int, set[int]]) -> di
             # EARLY ABORT: If can_match returns False, it means there is no 
             # augmenting path for this subject. Based on Berge's Lemma, 
             # a perfect matching is now impossible.
-            return None
+            break # return what has been found so far
+            #     # caller checks for completeness
 
     # Invert the result to get {subject: nominal}
     return {s: n for n, s in nominal_owner.items()}
@@ -133,19 +134,14 @@ def solve_analogy_constraint_matching(potential_pair_db, global_analogy_db, glob
                   required_pair_n, True)
 
 def get_analogy_db(aggregated_analogy_db, required_analogy_db):
-    if aggregated_analogy_db:
-        if required_analogy_db:
-            if aggregated_analogy_db.is_all_consistent(required_analogy_db):
-                return True, aggregated_analogy_db.clone_updated(required_analogy_db)
-            else:
-                return False, None
-        else:
-            return True, aggregated_analogy_db.clone()
+    if not required_analogy_db:
+        return True, (aggregated_analogy_db.clone() if aggregated_analogy_db else None)
+    elif not aggregated_analogy_db:
+        return True, required_analogy_db.clone()
+    elif aggregated_analogy_db.is_all_consistent(required_analogy_db):
+        return True, aggregated_analogy_db.clone_updated(required_analogy_db)
     else:
-        if required_analogy_db:
-            return True, required_analogy_db.clone()
-        else:
-            return True, None
+        return False, None
 
 def candidates(db, pair_set, used_nominals):
     subjects_paired = {p[0] for p in pair_set}
