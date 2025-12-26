@@ -35,7 +35,10 @@ def run_benchmark(n_range:     list[int],
         # Note: ac_pp_n is kept constant for baseline, but could be swept too
         db = scn.scenario(n=n, c_vs_uc_ratio=ratio, k_avg=k, ac_pp_n=2)
 
-        print("#DB\n", db) 
+        for ia, mate_list in db.items():
+            for ib, analogy_db in mate_list:
+                print(f"[{ia}]-[{ib}] -- {analogy_db}")
+
         # Wrap the dictionary into the Result structure required by pairing()
         # Assuming UnpairedCandidateGraph can be initialized from our dict
         state = m.Result(potential_pair_db     = db, 
@@ -65,9 +68,9 @@ if __name__ == "__main__":
     N_SAMPLES = list(range(1, 100))
    
     # Example: See how 'ambiguity' (partners per entry) affects backtracking
-    K_SAMPLES = [1.5]
+    K_SAMPLES = [5.5]
     
     # Example: See how constraint density affects speed
-    RATIO_SAMPLES = [0.5 ]
+    RATIO_SAMPLES = [0.0 ]
 
     results = run_benchmark(N_SAMPLES, K_SAMPLES, RATIO_SAMPLES)

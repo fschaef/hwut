@@ -207,14 +207,22 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
         and leave the remaining in 'potential_pair_db'.
         """
         result = {}
-        for ia, mate_list in self.items():
-            # subject_i --> set of those nominal_i without analogy_db 
-            unconditional_mate_list = { 
-                ib for ib, analogy_db in mate_list 
-                if not analogy_db 
-            }
-            if not unconditional_mate_list: continue
-            result[ia] = unconditional_mate_list
+        for ia, mate_list in list(self.items()):
+            unconstrained_mates = [
+                ib
+                for ib, analogy_db in mate_list
+                if not analogy_db
+            ]
+            if not unconstrained_mates: continue
+            result[ia] = unconstrained_mates
+            new_mate_list = [
+                (ib, analogy_db)
+                for ib, analogy_db in mate_list
+                if ib not in unconstrained_mates
+            ]
+            if not new_mate_list: del self[ia]
+            else:                 self[ia] = new_mate_list
+
         return result
 
     def __repr__(self):

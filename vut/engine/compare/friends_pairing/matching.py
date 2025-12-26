@@ -91,6 +91,11 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
                   aborted_f             = not ok_f)
 
 def pairing(state: Result) -> Result:
+    """RETURNS: Result
+
+    Pairing first separates unconstrained potential pairs from those who
+    are constrained. Each set has a separate dedicated solving algorithm.
+    """
     if not state.potential_pair_db:
         return state 
     
@@ -99,8 +104,11 @@ def pairing(state: Result) -> Result:
         new_pair_db = p.solve_unconstrained_matching(unconstrained_db)
         state.pair_db |= new_pair_db
 
-    return p.solve_analogy_constraint_matching(state.potential_pair_db, 
-                                               state.analogy_constraint_db, 
-                                               state.pair_db, 
-                                               state.required_pair_n)
+    if not state.potential_pair_db:
+        return state
+    else:
+        return p.solve_analogy_constraint_matching(state.potential_pair_db, 
+                                                   state.analogy_constraint_db, 
+                                                   state.pair_db, 
+                                                   state.required_pair_n)
 
