@@ -102,9 +102,12 @@ def pairing(state: Result) -> Result:
     if unconstrained_db := state.potential_pair_db.extract_unconstrained():
         # unconstrained_db: subject_i -> set of nominal_i
         new_pair_db = p.solve_unconstrained_matching(unconstrained_db)
-        state.pair_db |= new_pair_db
+        if new_pair_db is None:
+            state.aborted_f = True
+        else:
+            state.pair_db |= new_pair_db
 
-    if not state.potential_pair_db:
+    if state.aborted_f or not state.potential_pair_db:
         return state
     else:
         return p.solve_analogy_constraint_matching(state.potential_pair_db, 

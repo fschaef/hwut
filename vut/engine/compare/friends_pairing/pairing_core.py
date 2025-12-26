@@ -54,7 +54,12 @@ def solve_unconstrained_matching(subject_to_nominals: dict[int, set[int]]) -> di
     # Sorting keys ensures deterministic behavior (useful for UTs)
     for subject in sorted(subject_to_nominals.keys()):
         visited = set() # Reset visited for each new path attempt
-        can_match(subject, visited)
+
+        if not can_match(subject, visited):
+            # EARLY ABORT: If can_match returns False, it means there is no 
+            # augmenting path for this subject. Based on Berge's Lemma, 
+            # a perfect matching is now impossible.
+            return None
 
     # Invert the result to get {subject: nominal}
     return {s: n for n, s in nominal_owner.items()}
