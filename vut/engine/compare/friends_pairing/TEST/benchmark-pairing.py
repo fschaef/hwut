@@ -34,7 +34,8 @@ def run_benchmark(n_range:     list[int],
         # Generate the potential_pair_db using our deterministic generator
         # Note: ac_pp_n is kept constant for baseline, but could be swept too
         db = scn.scenario(n=n, c_vs_uc_ratio=ratio, k_avg=k, ac_pp_n=2)
-        
+
+        print("#DB\n", db) 
         # Wrap the dictionary into the Result structure required by pairing()
         # Assuming UnpairedCandidateGraph can be initialized from our dict
         state = m.Result(potential_pair_db     = db, 

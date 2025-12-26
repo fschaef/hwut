@@ -93,8 +93,14 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
 def pairing(state: Result) -> Result:
     if not state.potential_pair_db:
         return state 
+    
+    if unconstrained_db := state.potential_pair_db.extract_unconstrained():
+        # unconstrained_db: subject_i -> set of nominal_i
+        new_pair_db = p.solve_unconstrained_matching(unconstrained_db)
+        state.pair_db |= new_pair_db
 
-    return p.pair_with_analogy_constraints(state.potential_pair_db, 
-                                           state.analogy_constraint_db, 
-                                           state.pair_db, 
-                                           state.required_pair_n)
+    return p.solve_analogy_constraint_matching(state.potential_pair_db, 
+                                               state.analogy_constraint_db, 
+                                               state.pair_db, 
+                                               state.required_pair_n)
+

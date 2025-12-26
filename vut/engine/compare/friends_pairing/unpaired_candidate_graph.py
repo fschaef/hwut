@@ -199,6 +199,24 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
                 self[ia] = new_mate_list
         return ok_f
 
+    def extract_unconstrained(self):
+        """RETURNS: dict[int, set[int]] potential matches without analogy constraints
+           ADAPTS:  potential_pair_db
+
+        Extracts those candidate matches which do not depend on analogy constraints,
+        and leave the remaining in 'potential_pair_db'.
+        """
+        result = {}
+        for ia, mate_list in self.items():
+            # subject_i --> set of those nominal_i without analogy_db 
+            unconditional_mate_list = { 
+                ib for ib, analogy_db in mate_list 
+                if not analogy_db 
+            }
+            if not unconditional_mate_list: continue
+            result[ia] = unconditional_mate_list
+        return result
+
     def __repr__(self):
         return "\n".join(
             "[%02i]-[%02i]: %s" % (ia, ib, analogy_db)
