@@ -60,48 +60,72 @@ def solve_unconstrained_matching(subject_to_nominals: dict[int, set[int]]) -> di
     return {s: n for n, s in nominal_owner.items()}
 
 def solve_analogy_constraint_matching(potential_pair_db, global_analogy_db, global_pair_db, required_pair_n) -> tuple[dict,AnalogyDb]:
-    assert potential_pair_db
+    if not potential_pair_db:
+        return Result({}, global_pair_db, global_analogy_db, required_pair_n, True)
 
-    db = potential_pair_db
-    L  = len(db)
-
-    work_list = []
-    for subject_i, mate_list in db.items():
-        for nominal_i, analogy_db in mate_list:
-            verdict, new_analogy_db = get_analogy_db(global_analogy_db, analogy_db)
-            if not verdict: continue
-            work_list.append((frozenset({(subject_i, nominal_i)}), new_analogy_db, frozenset({nominal_i})))
+    # 1. FIXED ORDERING (The "Sudoku" strategy)
+    # Sort subjects by "constriction" (fewest partners first).
+    # This prevents the algorithm from wasting time on easy subjects 
+    # before realizing a hard subject is impossible.
+    subj_order = sorted(potential_pair_db.keys(), 
+                        key=lambda s: len(potential_pair_db[s]))
+    L = len(subj_order)
     
-    best_size = 0; best_pair_set = frozenset(); best_analogy_db = AnalogyDb()
-    considered_set = set() 
+    # 2. THE EXPLICIT STACK
+    # Each entry: (subject_index, current_pairs_dict, current_adb, used_nominals_set)
+    # Start at index 0 (the first subject in our sorted list)
+    stack = [(0, {}, global_analogy_db, frozenset())]
 
-    while work_list:
-        pair_set, aggregated_analogy_db, used_nominals = work_list.pop()
+    best_pairs = {}
+    best_adb = global_analogy_db
 
-        if len(pair_set) > best_size:
-            best_size       = len(pair_set)
-            best_pair_set   = pair_set
-            best_analogy_db = aggregated_analogy_db
-        if best_size == L:
-            break
+    while stack:
+        idx, pairs, adb, used_noms = stack.pop()
 
-        for ia, ib, required_analogy_db in candidates(db, pair_set, used_nominals):
-            verdict, new_analogy_db = get_analogy_db(aggregated_analogy_db, 
-                                                     required_analogy_db)
-            if not verdict: continue
+        # Update best seen (Partial results are valid fallback)
+        if len(pairs) > len(best_pairs):
+            best_pairs, best_adb = pairs, adb
 
-            # Neues frozenset erstellen durch Mengen-Union
-            new_pair_set = pair_set | {(ia, ib)}
-            if new_pair_set not in considered_set:
-                work_list.append((new_pair_set, 
-                                  new_analogy_db, 
-                                  used_nominals | {ib}))
+        # SUCCESS: Found a full matching
+        if idx == L:
+            return Result({}, global_pair_db | best_pairs, best_adb, 
+                          required_pair_n, False)
 
-    return Result(potential_pair_db     = {},
-                  pair_db               = global_pair_db | dict(best_pair_set), 
-                  analogy_constraint_db = best_analogy_db,
-                  required_pair_n       = required_pair_n,
-                  aborted_f             = best_size != L)
+        # 3. SELECT NEXT SUBJECT
+        # We don't search for "who is next". The list decides.
+        s_i = subj_order[idx]
+        
+        # 4. BRANCHING
+        # Try every nominal partner for s_i
+        # We iterate in REVERSE so the first option is popped first (LIFO behavior)
+        candidates = potential_pair_db[s_i]
+        
+        # Optimization: Sort candidates to try "easiest" analogies first if possible, 
+        # or just reverse the list.
+        for n_i, local_adb in reversed(candidates):
+            
+            # A. Structural Check (Fast O(1))
+            if n_i in used_noms:
+                continue
+
+            # B. Analogy Check (Evolving Constraint)
+            # This is where we check if the path is still valid
+            verdict, new_adb = get_analogy_db(adb, local_adb)
+            if not verdict:
+                continue
+
+            # C. Push Next State
+            # We move to idx + 1 (Next subject in strict order)
+            # 'pairs | {s_i: n_i}' creates a NEW dict efficiently
+            # 'used_noms | {n_i}' creates a NEW set efficiently
+            stack.append((idx + 1, 
+                          pairs | {s_i: n_i}, 
+                          new_adb, 
+                          used_noms | {n_i}))
+
+    # If stack empties and we haven't returned, we didn't find a full match.
+    return Result({}, global_pair_db | best_pairs, best_adb, 
+                  required_pair_n, True)
 
 def get_analogy_db(aggregated_analogy_db, required_analogy_db):
     if aggregated_analogy_db:
