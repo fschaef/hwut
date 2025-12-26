@@ -28,6 +28,7 @@ from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 from   .unpaired_candidate_graph          import UnpairedCandidateGraph
 from   .result                            import PairedGraph, Result
 
+from   typeguard import typechecked
 
 def get_initial_state(subject_line_list, nominal_line_list, abort_early_f: bool) -> Result:
     potential_pair_db = UnpairedCandidateGraph.from_raw(subject_line_list, 
@@ -90,26 +91,33 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
                   required_pair_n       = state.required_pair_n,
                   aborted_f             = not ok_f)
 
-def pairing(state: Result) -> Result:
+@typechecked
+def pairing(state: Result, abort_early_f: bool) -> Result:
     """RETURNS: Result
 
     Pairing first separates unconstrained potential pairs from those who
     are constrained. Each set has a separate dedicated solving algorithm.
     """
-    if not state.potential_pair_db:
-        return state 
+    db = state.potential_pair_db
+    if not db: return state 
     
-    if unconstrained_db := state.potential_pair_db.extract_unconstrained():
+    if unconstrained_db := db.extract_unconstrained():
         # unconstrained_db: subject_i -> set of nominal_i
         new_pair_db = p.solve_unconstrained_matching(unconstrained_db)
         state.pair_db |= new_pair_db
         if len(new_pair_db) != len(unconstrained_db):
             state.aborted_f = True
 
-    if state.aborted_f or not state.potential_pair_db:
+    if abort_early_f:
+        # Investigate if unconstrained is solveable (very fast)
+        pseudo_new_pair_db = p.solve_unconstrained_matching(db.unconstrained_clone())
+        if len(pseudo_new_pair_db) != len(db):
+            state.aborted_f = True
+
+    if state.aborted_f or not db:
         return state
     else:
-        return p.solve_analogy_constraint_matching(state.potential_pair_db, 
+        return p.solve_analogy_constraint_matching(db, 
                                                    state.analogy_constraint_db, 
                                                    state.pair_db, 
                                                    state.required_pair_n)

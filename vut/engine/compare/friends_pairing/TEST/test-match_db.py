@@ -83,7 +83,7 @@ if "pairing" in sys.argv:
             print("analogy_db:", analogy_db)
 
         state   = _state_from_db(match_db, analogy_db)
-        outcome = pairing(state)
+        outcome = pairing(state, abort_early_f=False)
 
         # Keep output identical: print "couples" only (no verdict line).
         couples = dict(outcome.pair_db)

@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 

@@ -53,7 +53,7 @@ def run_benchmark(n_range:     list[int],
         abort_f = True
         for _ in range(1):
             start    = time.perf_counter()
-            output   = m.pairing(state)
+            output   = m.pairing(state, abort_early_f=False)
             end      = time.perf_counter()
             abort_f &= output.aborted_f
             avg_t   += (end - start) / float(iterations)

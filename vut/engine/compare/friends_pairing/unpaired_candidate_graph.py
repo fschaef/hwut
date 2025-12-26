@@ -67,6 +67,19 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
             return None
         return result
 
+    def unconstrained_clone(self) -> dict[int, set[int]]:
+        """RETURNS:  subject_i -> set of nominal_i 
+
+        The returned dictionary returns an 'analogy unconstrained' version of
+        the 'self'. It may be used to check QUICKLY whether a solution exists.
+        If even no unconstrained solution exists, then constrained solutions not
+        possible.
+        """
+        return {
+            ib: { ia for ia, _ in mate_list }
+            for ib, mate_list in self.items()
+        }
+
     def count_nominals(self):
         """RETURN: number of different nominals in mate lists.
         """

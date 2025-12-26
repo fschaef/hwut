@@ -45,7 +45,7 @@ def do(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
     if not m.complete_pairing_is_possible(state): 
         return False, state.pair_db, None
     
-    if (state := m.pairing(state)).aborted_f and abort_early_f: 
+    if (state := m.pairing(state, abort_early_f)).aborted_f and abort_early_f: 
         if abort_early_f: return False, state.pair_db, None
 
     previous_pair_n = _assert_progress(state, previous_pair_n)
