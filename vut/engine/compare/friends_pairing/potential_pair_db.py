@@ -1,4 +1,4 @@
-from vut.engine.compare.engine.analogy_db import AnalogyDb
+from vut.engine.compare.engine.analogy_db import AnalogyDb, FrozenAnalogyDb
 from collections import defaultdict
 from typeguard import typechecked
 
@@ -79,6 +79,16 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             ib: { ia for ia, _ in mate_list }
             for ib, mate_list in self.items()
         }
+
+    def clone_with_FrozenAnalogyDb(self):
+        result = PotentialPairDb()
+        for ia, mate_list in list(self.items()):
+            result[ia] = [
+                (ib, FrozenAnalogyDb(analogy_db))
+                for ib, analogy_db in mate_list
+            ]
+        return result
+
 
     def count_nominals(self):
         """RETURN: number of different nominals in mate lists.
@@ -241,8 +251,8 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
     @typechecked
     def get_analogy_constraints(self, pair_set: set[tuple[int,int]]):
         result = AnalogyDb()
-        for ib, mate_list in self.items():
-            for ia, analogy_db in mate_list:
+        for ia, mate_list in self.items():
+            for ib, analogy_db in mate_list:
                 key = (ia, ib) 
                 if (ia, ib) in pair_set: result.update(analogy_db)
         return result

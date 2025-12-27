@@ -98,34 +98,38 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
     Pairing first separates unconstrained potential pairs from those who
     are constrained. Each set has a separate dedicated solving algorithm.
     """
+    db = state.potential_pair_db
+    if not db: return state 
+    
+    if unconstrained_db := db.extract_unconstrained():
+        # unconstrained_db: subject_i -> set of nominal_i
+        new_pair_db = p.solve_unconstrained_matching(unconstrained_db)
+        state.pair_db |= new_pair_db
+        if len(new_pair_db) != len(unconstrained_db):
+            state.aborted_f = True
+
+    if abort_early_f:
+        # Investigate if unconstrained is solveable (very fast)
+        pseudo_new_pair_db = p.solve_unconstrained_matching(db.unconstrained_clone())
+        if len(pseudo_new_pair_db) != len(db):
+            state.aborted_f = True
+
+    if state.aborted_f or not db: return state
+
     if True:
-        db = state.potential_pair_db
-        if not db: return state 
-        
-        if unconstrained_db := db.extract_unconstrained():
-            # unconstrained_db: subject_i -> set of nominal_i
-            new_pair_db = p.solve_unconstrained_matching(unconstrained_db)
-            state.pair_db |= new_pair_db
-            if len(new_pair_db) != len(unconstrained_db):
-                state.aborted_f = True
-
-        if abort_early_f:
-            # Investigate if unconstrained is solveable (very fast)
-            pseudo_new_pair_db = p.solve_unconstrained_matching(db.unconstrained_clone())
-            if len(pseudo_new_pair_db) != len(db):
-                state.aborted_f = True
-
-        if state.aborted_f or not db:
-            return state
-        else:
-            return p.solve_analogy_constraint_matching(db, 
-                                                       state.analogy_constraint_db, 
-                                                       state.pair_db, 
-                                                       state.required_pair_n)
+        return p.solve_analogy_constraint_matching(db, 
+                                                   state.analogy_constraint_db, 
+                                                   state.pair_db, 
+                                                   state.required_pair_n)
+    elif False:
+        import vut.engine.compare.friends_pairing.lilly_pad_lanes_walker as lilly_pad_walker
+        return lilly_pad_walker.solve_lazy(db)
     else:
         import vut.engine.compare.friends_pairing.lilly_pad_lanes_walker as lilly_pad_walker
         from   vut.engine.compare.friends_pairing.lilly_pad_lanes_adapter import LillyPadLanesAdapter
 
+        print("#potential_pair_db")
+        print(state.potential_pair_db)
         adapter = LillyPadLanesAdapter(state.potential_pair_db)
         db, pad_ids_by_lane_db = adapter.prepare_problem()
 
@@ -135,7 +139,8 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
             state.aborted_f = True
         else:
             state.potential_pair_db = {}
-            state.paid_db  = adapter.interprete_solution(solution)
+            state.pair_db,              \
+            state.analogy_constraint_db = adapter.interprete_solution(solution)
 
         return state
 

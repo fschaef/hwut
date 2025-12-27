@@ -51,95 +51,80 @@ class LillyPadLanesAdapter:
     """
 
     def __init__(self, db: PotentialPairDb):
-        # Find mappings for 'sidx <--> subject_i'
-        # => sidx = 0 ... N-1 (while the subject_i-s may be anything)
-        subject_indices   = set(db)
-        subject_i_by_sidx = sorted(subject_indices)
-        sidx_by_subject_i = { subject_i: sidx for sidx, subject_i in enumerate(subject_i_by_sidx) }
+        self.subject_i_by_sidx = sorted(db.keys())
 
-        pad_id_to_pair_db = []  # pad_id          --> sidx, nominal_i
-        pair_to_pad_id_db = {}  # sidx, nominal_i --> pad_id
-        pad_id = 0
-        for sidx, subject_i in enumerate(subject_i_by_sidx):
-            for nominal_i, analogy_db in sorted(db[subject_i]):
-                pad_id_to_pair_db.append((sidx, nominal_i))
-                pair_to_pad_id_db[(sidx, nominal_i)] = pad_id
-                pad_id += 1
-                
-        # pad_db[pad_id] --> list of pads that are blocked by 'pad_id'
+        self.original_potential_pair_db = db
+
+        cloned_db = db.clone_with_FrozenAnalogyDb()
+        
+        # 1. Coordinate Mapping: Convert DB to flat list of 'Pads'
+        # pad_info[pad_id] -> (sidx, nominal_i, frozen_adb)
+        self.pad_info = self._linearize_board(cloned_db)
+        
+        # 2. Constraint Mapping: Identify 'Sinks'
+        # pad_db[pad_id] -> set of blocked future pad_ids
+        self.pad_db = self._build_sink_database()
+
+    def _linearize_board(self, db):
+        """Map subject/nominal pairs to sequential pad_ids."""
+        pad_info = []
+        for sidx, subject_i in enumerate(self.subject_i_by_sidx):
+            for nominal_i, adb in sorted(db[subject_i]):
+                # Assume adb is already frozen or freeze it here
+                frozen_adb = adb.freeze() if hasattr(adb, 'freeze') else adb
+                pad_info.append((sidx, nominal_i, frozen_adb))
+        return pad_info
+
+    def _build_sink_database(self):
+        """Calculate the ripple effect (sink) for every pad."""
         pad_db = {}
-        pad_id = 0
-        for sidx, subject_i in enumerate(subject_i_by_sidx):
-            for nominal_i, analogy_db in sorted(db[subject_i]):
-                pad_db[pad_id] = find_blocked_pads_beyond_sidx(db, sidx, nominal_i, analogy_db,
-                                                               subject_i_by_sidx,
-                                                               pair_to_pad_id_db)
-                pad_id += 1
+        total_pads = len(self.pad_info)
+        
+        # Monogamy Index: Map nominal_i -> list of pad_ids that use it
+        nom_map = {}
+        for p_id, (_, nominal_i, _) in enumerate(self.pad_info):
+            nom_map.setdefault(nominal_i, []).append(p_id)
 
-        self.pad_db            = pad_db
-        self.pad_id_to_pair_db = pad_id_to_pair_db
-        self.subject_i_by_sidx = subject_i_by_sidx
-        self.potential_pair_db = db
+        for p_id in range(total_pads):
+            pad_db[p_id] = self._find_sinks_for_pad(p_id, nom_map)
+        return pad_db
+
+    def _find_sinks_for_pad(self, p_id, nom_map):
+        """Finds all future pads sunk by p_id (Monogamy + Analogy)."""
+        sidx, nominal_i, f_adb = self.pad_info[p_id]
+        blocked = set()
+
+        # 1. Sink future pads sharing the same nominal (Monogamy)
+        for target_pid in nom_map.get(nominal_i, []):
+            if target_pid > p_id and self.pad_info[target_pid][0] > sidx:
+                blocked.add(target_pid)
+
+        # 2. Sink future pads with conflicting analogies
+        if f_adb:
+            for t_id in range(p_id + 1, len(self.pad_info)):
+                t_sidx, t_nom, t_f_adb = self.pad_info[t_id]
+                if t_sidx > sidx and t_id not in blocked:
+                    if t_f_adb and not f_adb.is_all_consistent(t_f_adb):
+                        blocked.add(t_id)
+        return blocked
 
     def prepare_problem(self):
-        """RETURNS: 
-
-           [0] pad_db:             pad_id -> set[blocked_pad_ids] when 'pad_id' is touched
-           [1] pad_ids_by_lane_db: sidx   -> list[pad_ids]  of the lane 'sidx'
-        """
-        lane_n             = len(self.subject_i_by_sidx)
+        """RETURNS: [0] pad_db, [1] pad_ids_by_lane_db"""
+        lane_n = len(self.subject_i_by_sidx)
         pad_ids_by_lane_db = [[] for _ in range(lane_n)]
         
-        for p_id, (sidx, _) in enumerate(self.pad_id_to_pair_db):
+        for p_id, (sidx, _, _) in enumerate(self.pad_info):
             pad_ids_by_lane_db[sidx].append(p_id)
             
         return self.pad_db, pad_ids_by_lane_db
 
     def interprete_solution(self, lilly_pad_path: Iterable[int]) -> tuple[dict[int, int], AnalogyDb]:
-        """RETURNS: dict: subject_i --> paired nominal_i
+        """Convert lilly_pad_path back to subject_i -> nominal_i."""
+        raw_pairs = []
+        for p_id in lilly_pad_path:
+            sidx, nominal_i, _ = self.pad_info[p_id]
+            raw_pairs.append((self.subject_i_by_sidx[sidx], nominal_i))
 
-        Takes the path over the lilly pad lanes and interprets it as a set of pairings
-        between subject_i-s and nominal_i-s.
-        """
-        def interprete(pad_id):
-            sidx, nominal_i = self.pad_id_to_pair_db[pad_id]
-            subject_i       = self.subject_i_by_sidx[sidx]
-            return subject_i, nominal_i
-
-        pair_db = set(interprete(pad_id) for pad_id in lilly_pad_path)
-
-        analogy_db = self.potential_pair_db.get_analogy_constraints(pair_db)
-
-        return dict(pair_db), analogy_db
-
-
-def find_blocked_pads_beyond_sidx(db, 
-                                  current_sidx, 
-                                  current_nominal_i, 
-                                  current_analogy_db, 
-                                  subject_i_by_sidx, pair_to_pad_id_db):
-    """
-    RETURNS: set of pad_id-s in FUTURE lanes that become impossible (sink).
-    
-    PURPOSE: Pruning the search space by identifying which future lilly pads 
-             'sink' as a result of stepping on the current pad.
-    """
-    def consistent(adb_0, adb_1):
-        if   not adb_1: return True
-        elif not adb_0: return True
-        else:           return adb_0.is_all_consistent(adb_1)
-    
-    # We only look at strictly future lanes (sidx > current_sidx)
-    result = set()
-    for sidx in range(current_sidx + 1, len(subject_i_by_sidx)):
-        subject_i = subject_i_by_sidx[sidx]
-        for nominal_i, analogy_db in sorted(db[subject_i]):
-            if nominal_i == current_nominal_i:
-                # Monogamie constraint: This nominal_i is now taken
-                result.add(pair_to_pad_id_db[(sidx, nominal_i)])
-            elif not consistent(current_analogy_db, analogy_db):
-                # Analogy constraint: This future pad's rules conflict with ours
-                result.add(pair_to_pad_id_db[(sidx, nominal_i)])
-    return result
-
-        
+        pair_dict = dict(raw_pairs)
+        analogy_db = self.original_potential_pair_db.get_analogy_constraints(set(raw_pairs))
+        return pair_dict, analogy_db
