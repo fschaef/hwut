@@ -45,7 +45,7 @@ class Potpourri(InputChunk):
         verdict, _, new_analogy_db = pair_compare.do(subject_potpourri,
                                                      nominal_potpourri,
                                                      analogy_db,
-                                                     abort_f=True)
+                                                     abort_early_f=True)
 
         if verdict: return E_Verdict.EQUIVALENT, new_analogy_db
         else:       return E_Verdict.DIFFERENT, analogy_db
