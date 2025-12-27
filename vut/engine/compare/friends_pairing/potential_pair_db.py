@@ -1,4 +1,6 @@
+from vut.engine.compare.engine.analogy_db import AnalogyDb
 from collections import defaultdict
+from typeguard import typechecked
 
 class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
     """Map: 
@@ -234,6 +236,15 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             if not new_mate_list: del self[ia]
             else:                 self[ia] = new_mate_list
 
+        return result
+
+    @typechecked
+    def get_analogy_constraints(self, pair_set: set[tuple[int,int]]):
+        result = AnalogyDb()
+        for ib, mate_list in self.items():
+            for ia, analogy_db in mate_list:
+                key = (ia, ib) 
+                if (ia, ib) in pair_set: result.update(analogy_db)
         return result
 
     def __repr__(self):

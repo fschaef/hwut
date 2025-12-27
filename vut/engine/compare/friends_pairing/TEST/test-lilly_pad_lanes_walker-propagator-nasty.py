@@ -205,8 +205,8 @@ def generate_nasty_blockers(lane_definition, good_path_set, rng,
 
     return initial_blockers
 
-M_PADS =  4096
-N_LANES = 1024
+M_PADS =  1024
+N_LANES = 256
 
 rng = DeterministicStream(0x42)
 

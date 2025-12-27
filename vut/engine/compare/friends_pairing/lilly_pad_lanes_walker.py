@@ -65,6 +65,8 @@ from functools import lru_cache
 
 def solve(pad_db: dict[int, set[int]], pad_ids_by_lane_db: list[list[int]]):
     """
+    RETURNS: pad-ids of path through all lilly pad lanes.
+
     Solves the Lilly Pad Lane problem using Constraint Propagation + Backtracking.
     
     Phase 1: Propagation 
@@ -104,7 +106,8 @@ def solve_refined(refined_lanes:      list[list[int]],
                   lane_mask_db:       list[int], 
                   refined_blocker_db: list[int], 
                   full_mask:          int):
-    """
+    """RETURNS: pad-ids of path through all lilly pad lanes.
+
     Core backtracking solver. Executes the search using a 'Decision Vector' 
     (Partial Assignment) across lanes pruned by constraint propagation.
     """

@@ -3,8 +3,10 @@ PURPOSE: Re-interpretation of the analogy constraint matching database
          in terms of 'lanes of lilly pads'.
 """
 from typing import Iterable
+from .potential_pair_db import PotentialPairDb
+from vut.engine.compare.engine.analogy_db import AnalogyDb
 
-class LillyPadLanes:
+class LillyPadLanesAdapter:
     """
     Adapts a constrained matching problem into a linearized state-space search 
     modeled as a traversal across sequential 'lily pad lanes'. The pairing of
@@ -47,21 +49,21 @@ class LillyPadLanes:
     implemented by preventing the blocked pad to be accepted on the path 
     when the blocking pad is touched.
     """
+
     def __init__(self, db: PotentialPairDb):
         # Find mappings for 'sidx <--> subject_i'
         # => sidx = 0 ... N-1 (while the subject_i-s may be anything)
-        subject_indices = set(db)
+        subject_indices   = set(db)
         subject_i_by_sidx = sorted(subject_indices)
         sidx_by_subject_i = { subject_i: sidx for sidx, subject_i in enumerate(subject_i_by_sidx) }
 
-        
-        pad_id_to_sidx_nominal_i_db = []  # pad_id --> corresponding (sidx, nominal_i) 
-        sidx_nominal_i_to_pad_id_db = {}  # (sidx, nominal_i) --> corresponding pad_i
+        pad_id_to_pair_db = []  # pad_id          --> sidx, nominal_i
+        pair_to_pad_id_db = {}  # sidx, nominal_i --> pad_id
         pad_id = 0
         for sidx, subject_i in enumerate(subject_i_by_sidx):
             for nominal_i, analogy_db in sorted(db[subject_i]):
-                pad_id_to_sidx_nominal_i_db.append((sidx, nominal_i))
-                sidx_nominal_i_to_pad_id_db[(sidx, nominal_i)] = pad_id
+                pad_id_to_pair_db.append((sidx, nominal_i))
+                pair_to_pad_id_db[(sidx, nominal_i)] = pad_id
                 pad_id += 1
                 
         # pad_db[pad_id] --> list of pads that are blocked by 'pad_id'
@@ -71,12 +73,13 @@ class LillyPadLanes:
             for nominal_i, analogy_db in sorted(db[subject_i]):
                 pad_db[pad_id] = find_blocked_pads_beyond_sidx(db, sidx, nominal_i, analogy_db,
                                                                subject_i_by_sidx,
-                                                               sidx_nominal_i_to_pad_id_db)
+                                                               pair_to_pad_id_db)
                 pad_id += 1
 
-        self.pad_db                      = pad_db
-        self.pad_id_to_sidx_nominal_i_db = pad_id_to_sidx_nominal_i_db
-        self.subject_i_by_sidx           = subject_i_by_sidx
+        self.pad_db            = pad_db
+        self.pad_id_to_pair_db = pad_id_to_pair_db
+        self.subject_i_by_sidx = subject_i_by_sidx
+        self.potential_pair_db = db
 
     def prepare_problem(self):
         """RETURNS: 
@@ -84,48 +87,59 @@ class LillyPadLanes:
            [0] pad_db:             pad_id -> set[blocked_pad_ids] when 'pad_id' is touched
            [1] pad_ids_by_lane_db: sidx   -> list[pad_ids]  of the lane 'sidx'
         """
-        num_lanes = len(self.subject_i_by_sidx)
-        pad_ids_by_lane_db = [[] for _ in range(num_lanes)]
+        lane_n             = len(self.subject_i_by_sidx)
+        pad_ids_by_lane_db = [[] for _ in range(lane_n)]
         
-        for p_id, (sidx, _) in enumerate(self.pad_id_to_sidx_nominal_i_db):
+        for p_id, (sidx, _) in enumerate(self.pad_id_to_pair_db):
             pad_ids_by_lane_db[sidx].append(p_id)
             
         return self.pad_db, pad_ids_by_lane_db
 
-    def interprete_solution(self, lilly_pad_path: Iterable[int]) -> dict[int, int]:
+    def interprete_solution(self, lilly_pad_path: Iterable[int]) -> tuple[dict[int, int], AnalogyDb]:
         """RETURNS: dict: subject_i --> paired nominal_i
 
         Takes the path over the lilly pad lanes and interprets it as a set of pairings
         between subject_i-s and nominal_i-s.
         """
         def interprete(pad_id):
-            sidx, nominal_i = self.pad_id_to_sidx_nominal_i_db[pad_id]
+            sidx, nominal_i = self.pad_id_to_pair_db[pad_id]
             subject_i       = self.subject_i_by_sidx[sidx]
             return subject_i, nominal_i
-        return dict(interprete(pad_id) for pad_id in lilly_pad_path)
+
+        pair_db = set(interprete(pad_id) for pad_id in lilly_pad_path)
+
+        analogy_db = self.potential_pair_db.get_analogy_constraints(pair_db)
+
+        return dict(pair_db), analogy_db
 
 
-def find_blocked_pads_beyond_sidx(db, current_sidx, current_nominal_i, current_analogy_db, 
-                                 subject_i_by_sidx, sidx_nominal_i_to_pad_id_db):
+def find_blocked_pads_beyond_sidx(db, 
+                                  current_sidx, 
+                                  current_nominal_i, 
+                                  current_analogy_db, 
+                                  subject_i_by_sidx, pair_to_pad_id_db):
     """
     RETURNS: set of pad_id-s in FUTURE lanes that become impossible (sink).
     
     PURPOSE: Pruning the search space by identifying which future lilly pads 
              'sink' as a result of stepping on the current pad.
     """
-    result = set()
+    def consistent(adb_0, adb_1):
+        if   not adb_1: return True
+        elif not adb_0: return True
+        else:           return adb_0.is_all_consistent(adb_1)
     
     # We only look at strictly future lanes (sidx > current_sidx)
+    result = set()
     for sidx in range(current_sidx + 1, len(subject_i_by_sidx)):
         subject_i = subject_i_by_sidx[sidx]
         for nominal_i, analogy_db in sorted(db[subject_i]):
             if nominal_i == current_nominal_i:
                 # Monogamie constraint: This nominal_i is now taken
-                result.add(sidx_nominal_i_to_pad_id_db[(sidx, nominal_i)])
-            elif not current_analogy_db.is_consistent(analogy_db):
+                result.add(pair_to_pad_id_db[(sidx, nominal_i)])
+            elif not consistent(current_analogy_db, analogy_db):
                 # Analogy constraint: This future pad's rules conflict with ours
-                result.add(sidx_nominal_i_to_pad_id_db[(sidx, nominal_i)])
-                    
+                result.add(pair_to_pad_id_db[(sidx, nominal_i)])
     return result
 
         
