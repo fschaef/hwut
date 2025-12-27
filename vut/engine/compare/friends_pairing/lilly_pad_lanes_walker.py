@@ -62,15 +62,55 @@ def solve(pad_db: dict[int, set[int]], pad_ids_by_lane_db: list[list[int]]):
         stack.append([sidx + 1, next_mask, 0])
 
     return None
-
 @typechecked
 def propagate_blockers(pad_blocker_db: list[int], lane_mask_db):
-    """RETURNS: [0] set of pad_id-s to be taken out.
-                    => when they are touched a whole lane sinks.
-                [1] updated 'pad_blocker_db': 
-                    pad_id --> bitmask representing block pads
+    """
+    RETURNS: [0] muritori -- pads to be removed (they sink a complete lane)
+                             => touching such a pad is a dead-end.
+             [1] pad_blocker_db -- remaining, aggregated blocker database
+                                   pad-id --> block mask
+    
+             None, None => contradiction is found, i.e. due to given 
+                           constraints, a lane becomes ineveitably empty
+                           => problem is globally UNSOLVABLE.
 
-    Propagates blockers by looking at the intersections of surviving options.
+    Performs constraint propagation to refine the blockage masks for each pad
+    via fixed-point iteration.
+
+    This function implements a look-ahead mechanism similar to **Arc
+    Consistency (AC-3)** algorithms used in Constraint Satisfaction Problems.
+    It iteratively determines the transitive closure of "unavoidable
+    blockages".
+
+    The algorithm evaluates the *logical implication* of selecting a specific
+    pad:
+    
+        1. Forward Checking: If selecting `pad_A` leaves only a subset of pads 
+           (survivors) available in a future lane, `pad_A` effectively forces 
+           the user to pick one of those survivors.
+
+        2. Intersection of Consequences: If *all* survivors in that future lane 
+           share a common blocker (e.g., they all block `pad_Z`), then `pad_A` 
+           itself implicitly blocks `pad_Z`.
+
+        3. Domain Pruning (Muritori): If selecting `pad_A` leaves *zero* 
+           survivors in a future lane, `pad_A` is a dead-end (inconsistent state) 
+           and is pruned from the solution space ("Muritori").
+
+    The process repeats until a *Fixed Point* is reached (no further updates
+    occur), ensuring the system is locally consistent.
+
+    ARGUMENTS:
+
+    pad_blocker_db: 
+        A dense list where the index corresponds to the `pad_id`.
+        Value is a bitmask representing the set of pads blocked by `pad_id`.
+        Assumes `pad_id`s are sequential integers [0..N-1] for O(1) access.
+        
+    lane_mask_db: 
+        A list of bitmasks, where each entry represents the set of all pads 
+        present in a specific lane.
+
     """
     # Assume 'pad_blocker_db' is a dense list and the pad_ids = 0 ... N-1.
     # => very quick access
