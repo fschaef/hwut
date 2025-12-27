@@ -1,7 +1,7 @@
 from vut.engine.compare.engine.analogy_db import AnalogyDb
 from dataclasses                          import dataclass
 
-from .unpaired_candidate_graph import UnpairedCandidateGraph
+from .potential_pair_db import PotentialPairDb
 
 class PairedGraph(dict): # dict[int, int]
     """Map:
@@ -15,7 +15,7 @@ class PairedGraph(dict): # dict[int, int]
 
 @dataclass
 class Result:
-    potential_pair_db:     UnpairedCandidateGraph
+    potential_pair_db:     PotentialPairDb
     pair_db:               PairedGraph
     analogy_constraint_db: AnalogyDb       # constraints for to make 'pair_db' possible
     required_pair_n:       int

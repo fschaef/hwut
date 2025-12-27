@@ -1,0 +1,48 @@
+## Scenario 1: Immediate Empty Lane.
+## Pad 0 kills the only option in Lane 1. Lane 0 becomes empty.
+--------------------------------
+Lanes:
+  Lane 0: [0]
+  Lane 1: [1]
+  Lane 2: [2]
+
+Initial Blockers:
+    [00] blocks: [1]
+
+Result: UNSOLVABLE (Lane became empty)
+## Scenario 2: The 'Pincer' (Simultaneous Death).
+## Lane 1 has [1, 2]. Both independently block [3] (Lane 2).
+## Both die. Lane 1 becomes empty. Abort.
+--------------------------------
+Lanes:
+  Lane 0: [0]
+  Lane 1: [1, 2]
+  Lane 2: [3]
+
+Initial Blockers:
+    [01] blocks: [3]
+    [02] blocks: [3]
+
+Result: UNSOLVABLE (Lane became empty)
+## Scenario 3: Complex Feedback Loop.
+## Lane 0:[0] -> Lane 1:[1, 2] -> Lane 2:[3]
+## 1. Pad 0 blocks 2 (forces 1).
+## 2. Pad 1 blocks 3 (it is a dead end).
+## Execution:
+##   - Pad 0 propagates: learns that via 1, it effectively blocks 3.
+##   - Pad 1 dies (leads to dead end at Lane 2). Lane 1 loses 1.
+##   - Loop restarts.
+##   - Pad 0 checks Lane 1: Only [2] remains.
+##   - Pad 0 blocks 2 (explicitly). Survivors: {}.
+##   - Pad 0 dies. Lane 0 becomes empty. Abort.
+--------------------------------
+Lanes:
+  Lane 0: [0]
+  Lane 1: [1, 2]
+  Lane 2: [3]
+
+Initial Blockers:
+    [00] blocks: [2]
+    [01] blocks: [3]
+
+Result: UNSOLVABLE (Lane became empty)

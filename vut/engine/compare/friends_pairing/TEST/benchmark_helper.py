@@ -30,7 +30,7 @@ RETURNS:
 
 from vut.auxiliary.deterministic_random   import DeterministicStream
 from vut.engine.compare.engine.analogy_db import AnalogyDb
-from vut.engine.compare.friends_pairing.unpaired_candidate_graph import UnpairedCandidateGraph
+from vut.engine.compare.friends_pairing.potential_pair_db import PotentialPairDb
 
 from typing import Optional, Any
 
@@ -39,7 +39,7 @@ def scenario(n: int,
              k_avg: float, 
              ac_pp_n: int, 
              ac_universe_size: int = 100) -> dict[int, list[tuple[int, Optional[AnalogyDb]]]]:
-    """RETURNS: UnpairedCandidateGraph
+    """RETURNS: PotentialPairDb
 
     Generates a combined database by partitioning 'n' into constrained and 
     unconstrained blocks based on 'c_vs_uc_ratio'.
@@ -58,10 +58,7 @@ def scenario(n: int,
         # Start index is offset to ensure global index uniqueness
         result_db.update(unconstraint_db(n_uc, k_avg, start_index=n_c))
 
-    result = UnpairedCandidateGraph()
-    result.update(result_db)
-    return result
-
+    return PotentialPairDb(result_db)
 
 def unconstraint_db(n: int, 
                     k_avg: float, 

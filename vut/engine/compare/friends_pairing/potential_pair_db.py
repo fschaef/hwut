@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
+class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
     """Map: 
 
            subject index  --> list of tuples (nominal index, analogy constraints)
@@ -11,7 +11,7 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
     """
     @staticmethod
     def from_raw(subject_line_list, nominal_line_list, abort_early_f):
-        """RETURNS: UnpairedCandidateGraph, if successful.
+        """RETURNS: PotentialPairDb, if successful.
                     None,                   else.
 
         Set 'abort_early_f' = True, if further processing becomes obsolete in case 
@@ -60,12 +60,10 @@ class UnpairedCandidateGraph(dict): # dict[int, list[tuple(int, Optional[Analogy
         for le_sequence in nominal_line_list:
             nominal_hash_db[hash(le_sequence.sequence)].append(le_sequence)
 
-        result = UnpairedCandidateGraph()
         try:
-            result.__init__(_iterable(subject_line_list, nominal_hash_db, abort_early_f))
-        except ValueError:
+            return PotentialPairDb(_iterable(subject_line_list, nominal_hash_db, abort_early_f))
+        except Exception:
             return None
-        return result
 
     def unconstrained_clone(self) -> dict[int, set[int]]:
         """RETURNS:  subject_i -> set of nominal_i 

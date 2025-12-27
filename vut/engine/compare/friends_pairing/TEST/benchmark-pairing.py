@@ -41,7 +41,7 @@ def run_benchmark(n_range:     list[int],
                     print(f"[{ia}]-[{ib}] -- {analogy_db}")
 
         # Wrap the dictionary into the Result structure required by pairing()
-        # Assuming UnpairedCandidateGraph can be initialized from our dict
+        # Assuming 'PotentialPairDb' can be initialized from our dict
         state = m.Result(potential_pair_db     = db, 
                          pair_db               = {}, # Start with empty paired graph
                          analogy_constraint_db = AnalogyDb(),

@@ -1,0 +1,29 @@
+## Scenario 1: No conflicts.
+--------------------------------
+Lanes:
+  Lane 0: [0]
+  Lane 1: [1, 2]
+  Lane 2: [3]
+
+Initial Blockers:
+    [01] blocks: [3]
+
+Muritori (Dead Pads):
+  [1]
+
+Blockers (Final):
+  (Active Constraints)
+    [01] blocks: [3]
+
+## Scenario 2: Implicit Blocking (Forced Move).
+## Pad 0 MUST go to Pad 1. Pad 1 blocks 2. Thus 0 blocks 2.
+--------------------------------
+Lanes:
+  Lane 0: [0]
+  Lane 1: [1]
+  Lane 2: [2]
+
+Initial Blockers:
+    [01] blocks: [2]
+
+Result: UNSOLVABLE (Lane became empty)

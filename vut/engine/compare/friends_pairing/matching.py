@@ -25,13 +25,13 @@ ________________________________________________________________________________
 import vut.engine.compare.friends_pairing.pairing_core  as p
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 
-from   .unpaired_candidate_graph          import UnpairedCandidateGraph
-from   .result                            import PairedGraph, Result
+from   .potential_pair_db  import PotentialPairDb
+from   .result             import PairedGraph, Result
 
 from   typeguard import typechecked
 
 def get_initial_state(subject_line_list, nominal_line_list, abort_early_f: bool) -> Result:
-    potential_pair_db = UnpairedCandidateGraph.from_raw(subject_line_list, 
+    potential_pair_db = PotentialPairDb.from_raw(subject_line_list, 
                                                         nominal_line_list, 
                                                         abort_early_f)
     subject_n = 0 if not subject_line_list else len(subject_line_list)
