@@ -1,0 +1,13 @@
+==================================================================
+## TEST CASE: Basic (Direct Path)
+BOARD LAYOUT:
+  Lane  0: [10]
+  Lane  1: [20]
+  Lane  2: [30]
+
+BLOCKER MAP (Constraints):
+
+SEARCH RESULT:
+  => SUCCESS: [10, 20, 30]
+==================================================================
+

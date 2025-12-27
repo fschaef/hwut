@@ -1,0 +1,13 @@
+==================================================================
+## TEST CASE: Total Dead End
+BOARD LAYOUT:
+  Lane  0: [0]
+  Lane  1: [10]
+
+BLOCKER MAP (Constraints):
+  Pad [0] sinks -> Lane 1:[10]
+
+SEARCH RESULT:
+  => UNSOLVABLE: Solver exhausted all branches via backtracking.
+==================================================================
+
