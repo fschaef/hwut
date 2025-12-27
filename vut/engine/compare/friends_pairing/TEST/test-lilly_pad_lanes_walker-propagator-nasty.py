@@ -74,24 +74,24 @@ class Statistics:
         self.block_per_lane_avg = sum(lane_constraint_counts) / len(lane_constraint_counts)
 
     def print_report(self):
-        print("## STATISTICS --------------------------")
-        print("## Problem Size:")
-        print("##   Total Pads:      %d" % self.total_pads)
-        print("##   Total Lanes:     %d" % self.total_lanes)
-        print("##")
-        print("## Lane Distribution (Pads per Lane):")
-        print("##   Min: %3d, Max: %3d, Avg: %.2f" % (self.lane_pad_min, self.lane_pad_max, self.lane_pad_avg))
-        print("##")
-        print("## Blocker Distribution (Constraints per Pad - Active Only):")
-        print("##   Min: %3d, Max: %3d, Avg: %.2f" % (self.block_per_pad_min, self.block_per_pad_max, self.block_per_pad_avg))
-        print("##")
-        print("## Lane Aggression (Total Constraints originating from Lane):")
-        print("##   Min: %3d, Max: %3d, Avg: %.2f" % (self.block_per_lane_min, self.block_per_lane_max, self.block_per_lane_avg))
-        print("##")
-        print("## Global Density:")
-        print("##   Total Constraints: %d" % self.total_constraints)
-        print("##   Avg Constraints/Pad: %.2f" % self.global_block_avg)
-        print("## -------------------------------------")
+        print("# STATISTICS --------------------------")
+        print("# Problem Size:")
+        print("#   Total Pads:      %d" % self.total_pads)
+        print("#   Total Lanes:     %d" % self.total_lanes)
+        print("#")
+        print("# Lane Distribution (Pads per Lane):")
+        print("#   Min: %3d, Max: %3d, Avg: %.2f" % (self.lane_pad_min, self.lane_pad_max, self.lane_pad_avg))
+        print("#")
+        print("# Blocker Distribution (Constraints per Pad - Active Only):")
+        print("#   Min: %3d, Max: %3d, Avg: %.2f" % (self.block_per_pad_min, self.block_per_pad_max, self.block_per_pad_avg))
+        print("#")
+        print("# Lane Aggression (Total Constraints originating from Lane):")
+        print("#   Min: %3d, Max: %3d, Avg: %.2f" % (self.block_per_lane_min, self.block_per_lane_max, self.block_per_lane_avg))
+        print("#")
+        print("# Global Density:")
+        print("#   Total Constraints: %d" % self.total_constraints)
+        print("#   Avg Constraints/Pad: %.2f" % self.global_block_avg)
+        print("# -------------------------------------")
 
 def generate_lanes(M_PADS, N_LANES, rng):
     """
@@ -205,8 +205,8 @@ def generate_nasty_blockers(lane_definition, good_path_set, rng,
 
     return initial_blockers
 
-M_PADS =  1000
-N_LANES = 256
+M_PADS =  4096
+N_LANES = 1024
 
 rng = DeterministicStream(0x42)
 
