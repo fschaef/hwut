@@ -60,8 +60,8 @@ AUTHOR: Frank-Rene Schaefer
 ______________________________________________________________________________________
 """
 
-from .result import Result
-from vut.engine.compare.engine.analogy_db        import FrozenAnalogyDb
+from .result   import Result
+from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 from typeguard import typechecked
 from functools import lru_cache
 
@@ -119,7 +119,7 @@ def solve_lazy(db):
         ])
 
     # 2. State Vector: [Cumulative_ADB, Used_Nominals_Set, Next_Candidate_Index]
-    empty_adb = FrozenAnalogyDb({})
+    empty_adb       = FrozenAnalogyDb({})
     decision_vector = [[empty_adb, set(), 0]]
 
     while decision_vector:
@@ -148,7 +148,7 @@ def solve_lazy(db):
         # --- COMMIT DECISION ---
         decision_vector[-1][2] = c_idx 
         new_nom, new_adb = found_candidate
-        next_path_adb = current_path_adb.merge(new_adb)
+        next_path_adb    = current_path_adb.merge(new_adb)
         
         # --- CHECK SUCCESS ---
         if sidx + 1 == lane_n:

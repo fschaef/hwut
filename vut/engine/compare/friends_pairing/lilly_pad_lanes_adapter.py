@@ -53,13 +53,11 @@ class LillyPadLanesAdapter:
     def __init__(self, db: PotentialPairDb):
         self.subject_i_by_sidx = sorted(db.keys())
 
-        self.original_potential_pair_db = db
+        self.potential_pair_db = db.clone_with_FrozenAnalogyDb()
 
-        cloned_db = db.clone_with_FrozenAnalogyDb()
-        
         # 1. Coordinate Mapping: Convert DB to flat list of 'Pads'
         # pad_info[pad_id] -> (sidx, nominal_i, frozen_adb)
-        self.pad_info = self._linearize_board(cloned_db)
+        self.pad_info = self._linearize_board(self.potential_pair_db)
         
         # 2. Constraint Mapping: Identify 'Sinks'
         # pad_db[pad_id] -> set of blocked future pad_ids
@@ -126,5 +124,5 @@ class LillyPadLanesAdapter:
             raw_pairs.append((self.subject_i_by_sidx[sidx], nominal_i))
 
         pair_dict = dict(raw_pairs)
-        analogy_db = self.original_potential_pair_db.get_analogy_constraints(set(raw_pairs))
+        analogy_db = self.potential_pair_db.get_analogy_constraints(set(raw_pairs))
         return pair_dict, analogy_db

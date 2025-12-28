@@ -45,7 +45,6 @@ _______________________________________________________________________________
 """
 from   vut.system.helper        import number_of_decimal_digits
 from   collections              import namedtuple, defaultdict
-from   functools                import lru_cache
 
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
@@ -202,94 +201,3 @@ class AnalogyDb(dict):
         name, txt = self.__pretty__()
         return "\n".join("%s: %s" % (x, y) for x, y in txt)
 
-class FrozenAnalogyDb:
-    """
-    A canonicalized, interned representation of Analogy constraints.
-    Multiple 'creations' of the same data return the same object.
-    """
-    _POOL = {}  # The internal reference pool (hash -> instance)
-
-    def __new__(cls, adb_dict: dict):
-        # 1. Canonicalize the data to create a stable hash
-        # We sort by subject to ensure {A:1, B:2} and {B:2, A:1} are identical
-        items = tuple(sorted(adb_dict.items()))
-
-        # 2. Check the pool
-        existing = cls._POOL.get(items)
-        if existing is not None:
-            return existing
-
-        # 3. Create new instance if not found
-        instance = super().__new__(cls)
-        cls._POOL[items] = instance
-        
-        # Initialize the new instance
-        instance._items    = items
-        instance._subjects = tuple(s for s, n in items)
-        instance._nominals = tuple(n for s, n in items)
-        instance._nominal_set = set(instance._nominals)
-        
-        # 4. Store in pool and return
-        return instance
-
-    def items(self):
-        return  self._items
-
-    def merge(self, other: 'FrozenAnalogyDb') -> 'FrozenAnalogyDb':
-        """RETURNS: new interned FrozenAnalogyDb representing the union 
-                    of two consistent databases.
-        """
-        if other is None or not other._items:
-            return self
-        if not self._items:
-            return other
-            
-        # Since the solver ensures consistency before merging, 
-        # we can just combine and re-intern.
-        combined_dict = dict(self._items)
-        combined_dict.update(other._items)
-        return FrozenAnalogyDb(combined_dict)
-    
-    @lru_cache(maxsize=8196)
-    def is_all_consistent(self, other: 'FrozenAnalogyDb') -> bool:
-        """
-        Check consistency. Identity check handles interned duplicates in O(1).
-        Otherwise, performs a Sorted-Merge Scan in O(N+M).
-        """
-        # Identity comparison: Extremely fast thanks to interning
-        if self is other: 
-            return True
-
-        i, j = 0, 0
-        n1, n2 = len(self._subjects), len(other._subjects)
-        
-        # Parallel Sorted-Merge Scan
-        while i < n1 and j < n2:
-            s1, s2 = self._subjects[i], other._subjects[j]
-            
-            if s1 == s2:
-                if self._nominals[i] != other._nominals[j]:
-                    return False
-                i += 1
-                j += 1
-            elif s1 < s2:
-                if self._nominals[i] in other._nominal_set:
-                    return False
-                i += 1
-            else:
-                if other._nominals[j] in self._nominal_set:
-                    return False
-                j += 1
-
-        # Final cleanup for remaining unique subjects
-        while i < n1:
-            if self._nominals[i] in other._nominal_set: return False
-            i += 1
-        while j < n2:
-            if other._nominals[j] in self._nominal_set: return False
-            j += 1
-
-        return True
-
-    def __hash__(self):      return id(self)
-    def __eq__(self, other): return self is other

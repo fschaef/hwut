@@ -1,6 +1,6 @@
-from vut.engine.compare.engine.analogy_db import AnalogyDb, FrozenAnalogyDb
+from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 from collections import defaultdict
-from typeguard import typechecked
+from typeguard   import typechecked
 
 class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
     """Map: 
@@ -250,12 +250,12 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
 
     @typechecked
     def get_analogy_constraints(self, pair_set: set[tuple[int,int]]):
-        result = AnalogyDb()
-        for ia, mate_list in self.items():
-            for ib, analogy_db in mate_list:
-                key = (ia, ib) 
-                if (ia, ib) in pair_set: result.update(analogy_db)
-        return result
+        return FrozenAnalogyDb.merge_all(
+            analogy_db
+            for ia, mate_list in self.items()
+            for ib, analogy_db in mate_list
+            if (ia, ib) in pair_set
+        )
 
     def __repr__(self):
         return "\n".join(
