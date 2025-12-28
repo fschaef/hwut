@@ -29,25 +29,31 @@ def do(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
         assert previous_pair_n <= (pair_n := len(state.pair_db))
         return pair_n
         
+    aborted_f = False
     if (state := m.get_initial_state(subject_line_list, nominal_line_list, abort_early_f)).aborted_f:
-        if abort_early_f: return False, state.pair_db, None
+        if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
+        else:             aborted_f = True
 
     previous_pair_n = _assert_progress(state, 0)
 
     if not m.complete_pairing_is_possible(state): 
-        return False, state.pair_db, None
+        if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
+        else:             aborted_f = True
     
     if (state := m.extract_ultimates_and_hopeless(state, abort_early_f)).aborted_f:
-        if abort_early_f: return False, state.pair_db, None
+        if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
+        else:             aborted_f = True
 
     previous_pair_n = _assert_progress(state, previous_pair_n)
 
     if not m.complete_pairing_is_possible(state): 
-        return False, state.pair_db, None
+        if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
+        else:             aborted_f = True
     
-    if (state := m.pairing(state, abort_early_f)).aborted_f and abort_early_f: 
-        if abort_early_f: return False, state.pair_db, None
+    if (state := m.pairing(state, abort_early_f)).aborted_f: 
+        if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
+        else:             aborted_f = True
 
     previous_pair_n = _assert_progress(state, previous_pair_n)
 
-    return not state.aborted_f, state.pair_db, state.analogy_constraint_db
+    return not aborted_f, state.pair_db, state.analogy_constraint_db

@@ -1,0 +1,417 @@
+
+<html><head><style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; padding: 20px; }
+    .container { max-width: 1000px; margin: auto; }
+    .header { background: #1f1f1f; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #007acc; color: #007acc; }
+    .row { display: flex; margin-bottom: 2px; background: #1e1e1e; border-radius: 4px; overflow: hidden; }
+    .line-no { width: 40px; background: #252526; color: #858585; text-align: center; padding: 8px 0; font-size: 0.8em; flex-shrink: 0; }
+    .side { flex: 1; padding: 8px; display: flex; flex-wrap: wrap; align-content: flex-start; border-right: 1px solid #333; }
+    .token { margin: 0 2px; padding: 0 3px; border-radius: 2px; }
+    
+    /* Semantic Highlighting */
+    .OK_GOOD { color: #9cdcfe; }
+    .OK_TOLERATED { color: #4ec9b0; border-bottom: 1px solid #4ec9b0; }
+    .BAD_TRANSPOSE { color: #dcdcaa; background: #3e3e10; border: 1px dashed #dcdcaa; }
+    .BAD_SUBJECT_DIFFERS { color: #f48771; background: #4b1818; text-decoration: underline wavy red; }
+    .BAD_SUBJECT_HAS_NOT { background: #2d3e2d; color: #75beff; opacity: 0.6; } /* Inserted */
+    .BAD_SUBJECT_HAS { background: #4b1818; color: #f48771; opacity: 0.6; }     /* Deleted */
+    .GAP { height: 30px; }
+</style></head><body><div class="container">
+
+<div class='header'>LINE_SEQUENCE/LINE_SEQUENCE</div>
+<div class='row'>
+<div class='line-no'>1</div><div class='side'>
+<span class='token OK_TOLERATED' title='Ref Cell: 0'>((Socrates))</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>says</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>time</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>is</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>like</span>
+<span class='token OK_GOOD' title='Ref Cell: 9'> </span>
+<span class='token BAD_NOMINAL_DIFFERS' title='Ref Cell: 10'>Lead</span>
+</div>
+<div class='line-no'>1</div><div class='side'>
+<span class='token OK_TOLERATED'>((Author))</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>says</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>time</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>is</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>like</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_SUBJECT_DIFFERS'>Gold</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>2</div><div class='side'>
+<span class='token OK_TOLERATED' title='Ref Cell: 0'>((Elfriede))</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>shines</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>as</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>the</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>stories</span>
+<span class='token OK_GOOD' title='Ref Cell: 9'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 10'>unfold</span>
+</div>
+<div class='line-no'>2</div><div class='side'>
+<span class='token OK_TOLERATED'>((It))</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>shines</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>as</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>the</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>stories</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>unfold</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>3</div><div class='side'>
+<span class='token BAD_NOMINAL_DIFFERS' title='Ref Cell: 0'>And</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token BAD_TRANSPOSE' title='Ref Cell: 4'>see</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 4'></span>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 5'></span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>slowly</span>
+</div>
+<div class='line-no'>3</div><div class='side'>
+<span class='token BAD_SUBJECT_DIFFERS'>Walk</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_TRANSPOSE'>slowly</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_SUBJECT_HAS_NOT'>and</span>
+<span class='token BAD_SUBJECT_HAS_NOT'> </span>
+<span class='token OK_GOOD'>see</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>4</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'>The</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>fruit</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>on</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>the</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>tree</span>
+</div>
+<div class='line-no'>4</div><div class='side'>
+<span class='token OK_GOOD'>The</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>fruit</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>on</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>the</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>tree</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>5</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'>Lest</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>wisdom</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>should</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>never</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>take</span>
+<span class='token OK_GOOD' title='Ref Cell: 9'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 10'>hold</span>
+</div>
+<div class='line-no'>5</div><div class='side'>
+<span class='token OK_GOOD'>Lest</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>wisdom</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>should</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>never</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>take</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>hold</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>6</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'></span>
+</div>
+<div class='line-no'>6</div><div class='side'>
+<span class='token OK_GOOD'></span>
+</div></div>
+<div class='row'>
+<div class='line-no'>7</div><div class='side'>
+<span class='token OK_TOLERATED' title='Ref Cell: 0'>((Socrates))</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>says</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token BAD_TRANSPOSE' title='Ref Cell: 6'>is</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>silence</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>Best</span>
+</div>
+<div class='line-no'>7</div><div class='side'>
+<span class='token OK_TOLERATED'>((Author))</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>says</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_TRANSPOSE'>silence</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>is</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>Best</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>8</div><div class='side'>
+<span class='token OK_TOLERATED' title='Ref Cell: 0'>((Elfriede))</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>gives</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>the</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>tired</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>spirit</span>
+<span class='token OK_GOOD' title='Ref Cell: 9'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 10'>some</span>
+<span class='token OK_GOOD' title='Ref Cell: 11'> </span>
+<span class='token BAD_NOMINAL_DIFFERS' title='Ref Cell: 12'>Sleep</span>
+</div>
+<div class='line-no'>8</div><div class='side'>
+<span class='token OK_TOLERATED'>((It))</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>gives</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>the</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>tired</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>spirit</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>some</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_SUBJECT_DIFFERS'>Rest</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>9</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'>A</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>word</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>left</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>unsaid</span>
+</div>
+<div class='line-no'>9</div><div class='side'>
+<span class='token OK_GOOD'>A</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>word</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>left</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>unsaid</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>-1</div><div class='side'>
+</div>
+<div class='line-no'>10</div><div class='side'>
+<span class='token BAD_SUBJECT_HAS'>Is</span>
+<span class='token BAD_SUBJECT_HAS'> </span>
+<span class='token BAD_SUBJECT_HAS'>peace</span>
+<span class='token BAD_SUBJECT_HAS'> </span>
+<span class='token BAD_SUBJECT_HAS'>in</span>
+<span class='token BAD_SUBJECT_HAS'> </span>
+<span class='token BAD_SUBJECT_HAS'>the</span>
+<span class='token BAD_SUBJECT_HAS'> </span>
+<span class='token BAD_SUBJECT_HAS'>head</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>10</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'>Put</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>truth</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>to</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>the</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>ultimate</span>
+<span class='token OK_GOOD' title='Ref Cell: 9'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 10'>test</span>
+</div>
+<div class='line-no'>11</div><div class='side'>
+<span class='token OK_GOOD'>Put</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>truth</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>to</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>the</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>ultimate</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>test</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>11</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'></span>
+</div>
+<div class='line-no'>12</div><div class='side'>
+<span class='token OK_GOOD'></span>
+</div></div>
+<div class='GAP'></div>
+<div class='header'>POTPOURRI/POTPOURRI</div>
+<div class='row'>
+<div class='line-no'>12</div><div class='side'>
+</div>
+<div class='line-no'>13</div><div class='side'>
+</div></div>
+<div class='row'>
+<div class='line-no'>13</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'>To</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>unlock</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>the</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>things</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>you</span>
+<span class='token OK_GOOD' title='Ref Cell: 9'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 10'>can</span>
+<span class='token OK_GOOD' title='Ref Cell: 11'> </span>
+<span class='token BAD_NOMINAL_DIFFERS' title='Ref Cell: 12'>pee</span>
+</div>
+<div class='line-no'>15</div><div class='side'>
+<span class='token OK_GOOD'>To</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>unlock</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>the</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>things</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>you</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>can</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_SUBJECT_DIFFERS'>be</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>14</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'>Don't</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>scatter</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>your</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>light</span>
+</div>
+<div class='line-no'>16</div><div class='side'>
+<span class='token OK_GOOD'>Don't</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>scatter</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>your</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>light</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>15</div><div class='side'>
+<span class='token OK_GOOD' title='Ref Cell: 0'>Stay</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>steady</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>as</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token BAD_NOMINAL_DIFFERS' title='Ref Cell: 6'>12</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 8'>ships</span>
+<span class='token OK_GOOD' title='Ref Cell: 9'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 10'>on</span>
+<span class='token OK_GOOD' title='Ref Cell: 11'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 12'>the</span>
+<span class='token OK_GOOD' title='Ref Cell: 13'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 14'>sea</span>
+</div>
+<div class='line-no'>18</div><div class='side'>
+<span class='token OK_GOOD'>Stay</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>steady</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>as</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_SUBJECT_DIFFERS'>10</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>ships</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>on</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>the</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>sea</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>16</div><div class='side'>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 0'></span>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 1'></span>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 2'></span>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 3'></span>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 4'></span>
+<span class='token BAD_NOMINAL_HAS' title='Ref Cell: 5'></span>
+<span class='token BAD_NOMINAL_TYPE_DIFFERS' title='Ref Cell: 6'>((Heinz))</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token BAD_NOMINAL_DIFFERS' title='Ref Cell: 8'>disagreed</span>
+</div>
+<div class='line-no'>17</div><div class='side'>
+<span class='token BAD_SUBJECT_HAS_NOT'>In</span>
+<span class='token BAD_SUBJECT_HAS_NOT'> </span>
+<span class='token BAD_SUBJECT_HAS_NOT'>the</span>
+<span class='token BAD_SUBJECT_HAS_NOT'> </span>
+<span class='token BAD_SUBJECT_HAS_NOT'>middle</span>
+<span class='token BAD_SUBJECT_HAS_NOT'> </span>
+<span class='token BAD_SUBJECT_TYPE_DIFFERS'>of</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_SUBJECT_DIFFERS'>night</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>17</div><div class='side'>
+<span class='token OK_TOLERATED' title='Ref Cell: 0'>((Socrates))</span>
+<span class='token OK_GOOD' title='Ref Cell: 1'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 2'>says</span>
+<span class='token OK_GOOD' title='Ref Cell: 3'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 4'>focus</span>
+<span class='token OK_GOOD' title='Ref Cell: 5'> </span>
+<span class='token OK_GOOD' title='Ref Cell: 6'>is</span>
+<span class='token OK_GOOD' title='Ref Cell: 7'> </span>
+<span class='token BAD_NOMINAL_DIFFERS' title='Ref Cell: 8'>Lock</span>
+</div>
+<div class='line-no'>14</div><div class='side'>
+<span class='token OK_TOLERATED'>((Author))</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>says</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>focus</span>
+<span class='token OK_GOOD'> </span>
+<span class='token OK_GOOD'>is</span>
+<span class='token OK_GOOD'> </span>
+<span class='token BAD_SUBJECT_DIFFERS'>Key</span>
+</div></div>
+<div class='row'>
+<div class='line-no'>18</div><div class='side'>
+</div>
+<div class='line-no'>19</div><div class='side'>
+</div></div>
+<div class='GAP'></div>
+</div></body></html>

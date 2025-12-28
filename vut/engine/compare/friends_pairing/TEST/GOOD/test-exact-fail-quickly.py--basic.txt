@@ -45,10 +45,10 @@ association: False
 --------------------------------
 subject: ['fit ((1))', 'fitter ((2))', 'misfit ((1))']
 nominal: ['fit ((A))', 'fitter ((B))', 'misfit ((C))']
-db: size 2; analogy_db: None;
+db: size 2; analogy_db: size 2;
 association: False
 --------------------------------
 subject: ['fit ((1))', 'funny ((2))', 'happy ((1))']
 nominal: ['fit ((A))', 'happy ((B))', 'funny ((C))']
-db: size 1; analogy_db: None;
+db: size 1; analogy_db: size 1;
 association: False
