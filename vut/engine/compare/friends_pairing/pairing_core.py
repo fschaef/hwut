@@ -1,6 +1,7 @@
 from vut.engine.compare.engine.analogy_db import AnalogyDb
 
-from .result import Result
+from .result   import Result
+from functools import lru_cache
 
 def solve_unconstrained_matching(subject_to_nominals: dict[int, set[int]]) -> dict[int, int]:
     """
@@ -133,13 +134,14 @@ def solve_analogy_constraint_matching(potential_pair_db, global_analogy_db, glob
     return Result({}, global_pair_db | best_pairs, best_adb, 
                   required_pair_n, True)
 
+@lru_cache(maxsize=4096)
 def get_analogy_db(aggregated_analogy_db, required_analogy_db):
     if not required_analogy_db:
         return True, (aggregated_analogy_db.clone() if aggregated_analogy_db else None)
     elif not aggregated_analogy_db:
-        return True, required_analogy_db.clone()
+        return True, required_analogy_db
     elif aggregated_analogy_db.is_all_consistent(required_analogy_db):
-        return True, aggregated_analogy_db.clone_updated(required_analogy_db)
+        return True, aggregated_analogy_db.merge(required_analogy_db)
     else:
         return False, None
 

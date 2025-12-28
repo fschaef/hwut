@@ -8,10 +8,11 @@ tries to associate similar lines. The goal, here, is to provide a line-up
 that can be displayed to expose the 'diff function' via a user interface.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.line_pair        import LinePair
-import vut.engine.compare.edit_operations.line    as     edit_operations_line
-import vut.engine.compare.friends_pairing.compare as     pair_compare
-from   vut.engine.compare.engine.analogy_db       import AnalogyDb
+from   vut.engine.compare.engine.line_pair         import LinePair
+import vut.engine.compare.edit_operations.line     as     edit_operations_line
+import vut.engine.compare.friends_pairing.compare  as     pair_compare
+from   vut.engine.compare.engine.analogy_db        import AnalogyDb
+from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from   typeguard import typechecked
 
@@ -35,6 +36,9 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
                                                    nominal_line_list,
                                                    analogy_db,
                                                    abort_early_f=abort_f)
+
+    if isinstance(analogy_db, FrozenAnalogyDb):
+        analogy_db = analogy_db.to_AnalogyDb()
 
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
     nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object

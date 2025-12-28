@@ -117,6 +117,7 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
     if state.aborted_f or not db: return state
 
     if True:
+        db = db.clone_with_FrozenAnalogyDb()
         return p.solve_analogy_constraint_matching(db, 
                                                    state.analogy_constraint_db, 
                                                    state.pair_db, 
