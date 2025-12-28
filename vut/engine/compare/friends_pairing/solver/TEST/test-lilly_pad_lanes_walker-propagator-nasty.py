@@ -23,8 +23,8 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-from vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_walker import (propagate_blockers,  #noqa E402
-                                                                              pad_ids_to_bitmask)
+from vut.engine.compare.friends_pairing.solver.csp_arc_consistency import (propagate_blockers,  #noqa E402
+                                                                           pad_ids_to_bitmask)
 
 from vut.auxiliary.deterministic_random import DeterministicStream                                 #noqa E402
 

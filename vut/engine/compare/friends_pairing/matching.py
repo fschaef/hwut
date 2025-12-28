@@ -22,8 +22,11 @@ process:
 The 'MatchDb' is used by the 'exact.py' module.
 ________________________________________________________________________________
 """
-import vut.engine.compare.friends_pairing.solver.pairing_core            as     p
-import vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_walker  as     lilly_pad
+import vut.engine.compare.friends_pairing.solver.maximum_bipartite_matching     as solver_max_bpm
+import vut.engine.compare.friends_pairing.solver.csp_backtracking_mrv           as solver_csp_mrv
+import vut.engine.compare.friends_pairing.solver.solver_csp_arc_consistency     as solver_csp_arc
+import vut.engine.compare.friends_pairing.solver.csp_chronological_backtracking as solver_csp_chbt
+
 from   vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_adapter import LillyPadLanesAdapter
 
 from   vut.engine.compare.engine.analogy_db import AnalogyDb
@@ -113,7 +116,7 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
 
     if abort_early_f:
         # Investigate if unconstrained is solveable (very fast)
-        pseudo_new_pair_db = p.solve_unconstrained_matching(db.unconstrained_clone())
+        pseudo_new_pair_db = solver_max_bpm.do(db.unconstrained_clone())
         if len(pseudo_new_pair_db) != len(db):
             state.aborted_f = True
 
@@ -121,16 +124,15 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
 
     if True:
         db = db.clone_with_FrozenAnalogyDb()
-        return p.solve_analogy_constraint_matching(db, 
-                                                   state.analogy_constraint_db, 
-                                                   state.pair_db, 
-                                                   state.required_pair_n)
+        return solver_csp_mrv.do(db, state.analogy_constraint_db, 
+                                 state.pair_db, 
+                                 state.required_pair_n)
     elif False:
-        return lilly_pad.solve_lazy(db)
+        return solver_csp_chbt.do(db)
     else:
         adapter                = LillyPadLanesAdapter(state.potential_pair_db)
         db, pad_ids_by_lane_db = adapter.prepare_problem()
-        solution               = lilly_pad.solve(db, pad_ids_by_lane_db)
+        solution               = solver_csp_arc.do(db, pad_ids_by_lane_db)
 
         if solution is None:
             state.aborted_f = True
