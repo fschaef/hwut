@@ -72,19 +72,24 @@ class FrozenAnalogyDb:
             return cls.pairs[pair]
 
     @typechecked
-    def __new__(cls, adb: dict | None = None, _pair_ids = tuple | None):
+    def __new__(cls, adb: dict | None = None, _pair_ids: tuple | None = None):
         """RETURNS: FrozenAnalogyDb that represents the AnalogyDb passed by 'adb'.
 
         NOTE: AnalogyDb is a 'dict' -- it is accepted here.
         """
-        if isinstance(adb, FrozenAnalogyDb): return adb
-        
-        # 1. Convert input to a canonical tuple of Pair IDs
-        pair_ids = tuple(sorted(
-            cls._Registry.get_pair_id(s, n) for s, n in adb.items()
-        ))
+        # Get pair_ids required as key for flyweight pool.
+        if isinstance(adb, FrozenAnalogyDb): 
+            return adb
+        elif _pair_ids:
+            pair_ids = _pair_ids
+        elif adb is None:
+            pair_ids = tuple()
+        else:
+            pair_ids = tuple(sorted(
+                cls._Registry.get_pair_id(s, n) for s, n in adb.items()
+            ))
 
-        # 2. Flyweight lookup
+        # Flyweight lookup
         if pair_ids in cls._pool:
             return cls._pool[pair_ids]
 

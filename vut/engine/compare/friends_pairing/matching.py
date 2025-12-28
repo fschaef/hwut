@@ -128,8 +128,6 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
         import vut.engine.compare.friends_pairing.lilly_pad_lanes_walker as lilly_pad_walker
         from   vut.engine.compare.friends_pairing.lilly_pad_lanes_adapter import LillyPadLanesAdapter
 
-        print("#potential_pair_db")
-        print(state.potential_pair_db)
         adapter = LillyPadLanesAdapter(state.potential_pair_db)
         db, pad_ids_by_lane_db = adapter.prepare_problem()
 

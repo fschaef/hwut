@@ -36,11 +36,6 @@ def run_benchmark(n_range:     list[int],
         # Note: ac_pp_n is kept constant for baseline, but could be swept too
         db = scn.scenario(n=n, c_vs_uc_ratio=ratio, k_avg=k, ac_pp_n=2)
 
-        if False:
-            for ia, mate_list in db.items():
-                for ib, analogy_db in mate_list:
-                    print(f"[{ia}]-[{ib}] -- {analogy_db}")
-
         # Wrap the dictionary into the Result structure required by pairing()
         # Assuming 'PotentialPairDb' can be initialized from our dict
         state = m.Result(potential_pair_db     = db, 
@@ -50,17 +45,17 @@ def run_benchmark(n_range:     list[int],
                          aborted_f             = False)
 
         # Timing execution
-        avg_t   = 0
-        abort_f = True
-        for _ in range(1):
-            start    = time.perf_counter()
-            output   = m.pairing(state, abort_early_f=False)
-            end      = time.perf_counter()
-            abort_f &= output.aborted_f
-            avg_t   += (end - start) / float(iterations)
+        start  = time.perf_counter()
+        output = m.pairing(state, abort_early_f=True)
+        end    = time.perf_counter()
+        avg_t  = end - start
 
-        status = "ABORTED" if abort_f else "SUCCESS"
+        status = "ABORTED" if output.aborted_f else "SUCCESS"
         print(f"{n:5d} | {k:6.1f} | {ratio:6.2f} | {avg_t:10.5f} | {status}")
+        if output.aborted_f:
+            for ia, mate_list in db.items():
+                for ib, analogy_db in mate_list:
+                    print(f"{status} [{ia}]-[{ib}] -- {analogy_db}")
 
     return results
 
