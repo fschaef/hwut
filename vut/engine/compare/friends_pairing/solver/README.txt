@@ -15,6 +15,32 @@ Matching with Constraints" problem. Specifically, these modules aim to pair
 The algorithms range from purely structural graph theory to advanced Constraint 
 Satisfaction Problem (CSP) solvers.
 
+IMPORTANT:
+==========
+
+The author did extensive benchmarking with the different approaches and here 
+are the practical conclusions:
+
+Best Approach: 
+
+   'maximum_bipartite_matching.py' --> potential pairings that are unconstrained 
+                                       of any analogies. 
+
+   'csp_backtracking_mrv.py' --> for the pairings that are constrained by 
+                                 analogies.
+
+This combination can find mappings in fractions of a second for datasets of
+1000 or more. Any other approach, was exponentially slower. The author left the
+algorithms in place, together with the BENCHMARK suite, for further
+investigations.
+
+The currently used approach was achieved by strong improvements on the AnalogyDb
+which was translated into a computationally highly efficient Flyweight-Pattern
+implementation of immutable AnalogyDb-s, namely 'FrozenAnalogyDb-s'.
+
+As said, if futuer optimizations show that any of the other algorithms are better
+the stage is set to proof that.
+
 FILE DESCRIPTIONS
 =================
 

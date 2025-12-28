@@ -1,3 +1,20 @@
+"""
+PURPOSE:
+    Finds the maximum bipartite matching using the Augmenting Path algorithm
+    (Iterative implementation).
+
+ALGORITHM:
+    Ford-Fulkerson / Hopcroft-Karp logic using Iterative DFS.
+    
+    We search for an "Augmenting Path": a path starting at an unmatched subject,
+    alternating between unmatched and matched edges, and ending at an unmatched 
+    nominal. If such a path exists, we can "flip" the edges along the path to 
+    increase the total matching size by 1.
+
+COMPLEXITY:
+    Time: O(E * V) in worst case (standard DFS behavior).
+    Space: O(V) for stack and tracking maps.
+"""
 
 def do(subject_to_nominals: dict[int, set[int]]) -> dict[int, int]:
     """
@@ -29,36 +46,83 @@ def do(subject_to_nominals: dict[int, set[int]]) -> dict[int, int]:
     Returns:
         A dictionary representing the Maximum Matching: {Subject_ID: Nominal_ID}
     """
-    # Track who owns which nominal: {nominal_id: subject_id}
-    nominal_owner = {}
+    # nominal_owner: maps Nominal_ID -> Subject_ID (The primary result)
+    nominal_owner = {} 
+    
+    # subject_match: maps Subject_ID -> Nominal_ID 
+    # (Inverse map required for efficient O(1) path reconstruction without recursion)
+    subject_match = {}
 
-    def can_match(u: int, visited_nominals: set) -> bool:
-        # Try every nominal 'v' that subject 'u' can accept
-        for v in subject_to_nominals[u]:
-            if v in visited_nominals:
-                continue
-            visited_nominals.add(v)
+    # Try to find an augmenting path for every subject
+    # Sorting ensures deterministic behavior
+    for start_node in sorted(subject_to_nominals.keys()):
+        
+        # 1. ITERATIVE DFS
+        # ----------------
+        # We look for a path from 'start_node' to ANY free nominal.
+        
+        stack = [start_node]
+        
+        # pred: nominal -> subject
+        # Keeps track of the path: "We reached nominal 'v' from subject 'u'"
+        # This doubles as our 'visited' set for nominals.
+        pred = {} 
+        
+        augmenting_path_end = None
 
-            # CORE LOGIC:
-            # 1. Is nominal 'v' free? -> Take it!
-            # 2. Is nominal 'v' taken? -> Ask the current owner to move.
-            if v not in nominal_owner or can_match(nominal_owner[v], visited_nominals):
-                nominal_owner[v] = u
-                return True
-        return False
+        while stack:
+            u = stack.pop()
+            
+            # Get candidates (nominals) for subject 'u'
+            candidates = subject_to_nominals.get(u, [])
+            
+            for v in candidates:
+                if v in pred:
+                    continue # Already visited this nominal in this traversal
+                
+                # Record the path step: u -> v
+                pred[v] = u
+                
+                if v not in nominal_owner:
+                    # CASE 1: 'v' is free! 
+                    # We found an augmenting path ending at 'v'.
+                    augmenting_path_end = v
+                    break
+                else:
+                    # CASE 2: 'v' is taken. 
+                    # We must try to move the current owner of 'v' to a different nominal.
+                    # Push the current owner onto the stack.
+                    stack.append(nominal_owner[v])
+            
+            if augmenting_path_end is not None:
+                break # Stop DFS, we found a path
 
-    # Main Loop: Try to find a match for every subject
-    # Sorting keys ensures deterministic behavior (useful for UTs)
-    for subject in sorted(subject_to_nominals.keys()):
-        visited = set() # Reset visited for each new path attempt
+        # 2. PATH RECONSTRUCTION (Backtracking)
+        # -------------------------------------
+        # If we found an augmenting path, we traverse 'pred' backwards 
+        # to flip the edges and update the matching.
+        
+        if augmenting_path_end is None: continue
 
-        if not can_match(subject, visited):
-            # EARLY ABORT: If can_match returns False, it means there is no 
-            # augmenting path for this subject. Based on Berge's Lemma, 
-            # a perfect matching is now impossible.
-            break # return what has been found so far
-            #     # caller checks for completeness
+        curr_nom = augmenting_path_end
+        
+        # Iterate backwards until we hit the start of the chain
+        while curr_nom is not None:
+            # Who reached this nominal?
+            new_subj = pred[curr_nom]
+            
+            # If 'new_subj' was previously matched to 'old_nom', 
+            # we need to process 'old_nom' in the next iteration 
+            # (because 'old_nom' just became free).
+            old_nom = subject_match.get(new_subj)
+            
+            # Commit the new match
+            nominal_owner[curr_nom] = new_subj
+            subject_match[new_subj] = curr_nom
+            
+            # Move to the previous link in the chain
+            curr_nom = old_nom
 
-    # Invert the result to get {subject: nominal}
+    # Return only the subject->nominal mapping as requested
     return {s: n for n, s in nominal_owner.items()}
 

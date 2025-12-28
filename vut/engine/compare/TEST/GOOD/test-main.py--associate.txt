@@ -175,8 +175,8 @@ AnalogyDb:
 TYPE: POTPOURRI POTPOURRI
 cost: 0.00000; line_associations: 5;
    [01] ||||                    --> [01] ||||                    {}
-   [02] Hallo##                 --> [03] World##                 {GOOD_TOLERATED}
-   [03] ##Welt                  --> [02] ##Hello                 {GOOD_TOLERATED}
+   [02] Hallo##                 --> [02] ##Hello                 {GOOD_TOLERATED}
+   [03] ##Welt                  --> [03] World##                 {GOOD_TOLERATED}
    [04] Good                    --> [04] Good                    {GOOD}
    [05] ||||                    --> [05] ||||                    {}
 AnalogyDb:

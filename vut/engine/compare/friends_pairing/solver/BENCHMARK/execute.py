@@ -5,12 +5,12 @@ import time
 import sys
 import os
 
-this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
+this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
 import vut.engine.compare.friends_pairing.matching              as m              #noqa E402
 from   vut.engine.compare.engine.analogy_db                     import AnalogyDb  #noqa E402
-import vut.engine.compare.friends_pairing.TEST.benchmark_helper as scn            #noqa E402
+import vut.engine.compare.friends_pairing.solver.BENCHMARK.scenario_creator as scn            #noqa E402
 
 def run_benchmark(n_range:     list[int], 
                   k_range:     list[float], 
@@ -36,6 +36,8 @@ def run_benchmark(n_range:     list[int],
         # Note: ac_pp_n is kept constant for baseline, but could be swept too
         db = scn.scenario(n=n, c_vs_uc_ratio=ratio, k_avg=k, ac_pp_n=2)
 
+        lane_n = len(db)
+
         # Wrap the dictionary into the Result structure required by pairing()
         # Assuming 'PotentialPairDb' can be initialized from our dict
         state = m.Result(potential_pair_db     = db, 
@@ -51,7 +53,7 @@ def run_benchmark(n_range:     list[int],
         avg_t  = end - start
 
         status = "ABORTED" if output.aborted_f else "SUCCESS"
-        print(f"{n:5d} | {k:6.1f} | {ratio:6.2f} | {avg_t:10.5f} | {status}")
+        print(f"{n:5d} | {lane_n} | {len(output.pair_db)} | {k:6.1f} | {ratio:6.2f} | {avg_t:10.5f} | {status}")
         if output.aborted_f:
             for ia, mate_list in db.items():
                 for ib, analogy_db in mate_list:
@@ -62,12 +64,12 @@ def run_benchmark(n_range:     list[int],
 if __name__ == "__main__":
     # Define the variations you want to test
     # Example: See how scaling N from 10 to 100 affects time
-    N_SAMPLES = list(range(1, 100))
+    N_SAMPLES = list(range(1, 10000, 50))
    
     # Example: See how 'ambiguity' (partners per entry) affects backtracking
-    K_SAMPLES = [5.5]
+    K_SAMPLES = [10]
     
     # Example: See how constraint density affects speed
-    RATIO_SAMPLES = [1.0 ]
+    RATIO_SAMPLES = [0.5 ]
 
     results = run_benchmark(N_SAMPLES, K_SAMPLES, RATIO_SAMPLES)

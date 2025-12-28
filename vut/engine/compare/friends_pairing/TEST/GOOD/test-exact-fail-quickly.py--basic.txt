@@ -35,9 +35,9 @@ association: False
 subject: ['funny', 'happy', 'glad']
 nominal: ['happy', 'glad', 'glad']
 association: True
-   [0] funny           --> [2] glad
+   [0] funny           --> [1] glad
    [1] happy           --> [0] happy
-   [2] glad            --> [1] glad
+   [2] glad            --> [2] glad
 --------------------------------
 subject: ['funny', 'funny', 'funny']
 nominal: ['glad', 'glad', 'something']
