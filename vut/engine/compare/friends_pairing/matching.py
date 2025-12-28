@@ -24,7 +24,7 @@ ________________________________________________________________________________
 """
 import vut.engine.compare.friends_pairing.solver.maximum_bipartite_matching     as solver_max_bpm
 import vut.engine.compare.friends_pairing.solver.csp_backtracking_mrv           as solver_csp_mrv
-import vut.engine.compare.friends_pairing.solver.solver_csp_arc_consistency     as solver_csp_arc
+import vut.engine.compare.friends_pairing.solver.csp_arc_consistency            as solver_csp_arc
 import vut.engine.compare.friends_pairing.solver.csp_chronological_backtracking as solver_csp_chbt
 
 from   vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_adapter import LillyPadLanesAdapter
@@ -109,16 +109,22 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
     
     if unconstrained_db := db.extract_unconstrained():
         # unconstrained_db: subject_i -> set of nominal_i
-        new_pair_db = p.solve_unconstrained_matching(unconstrained_db)
+        new_pair_db = solver_max_bpm.do(unconstrained_db)
         state.pair_db |= new_pair_db
         if len(new_pair_db) != len(unconstrained_db):
             state.aborted_f = True
+            if abort_early_f: return state
 
     if abort_early_f:
-        # Investigate if unconstrained is solveable (very fast)
+        # EARLY ABORT: Before diving deeply into the evolving constraints
+        #              algorithms, find quickly out, if a solution exists
+        #              for the case that no constraints evolve.
         pseudo_new_pair_db = solver_max_bpm.do(db.unconstrained_clone())
         if len(pseudo_new_pair_db) != len(db):
+            # No solution for case with no evolving constraints
+            # => no solution possible for case of evolving constraints
             state.aborted_f = True
+            return state
 
     if state.aborted_f or not db: return state
 
@@ -142,6 +148,4 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
             state.analogy_constraint_db = adapter.interprete_solution(solution)
 
         return state
-
-        
 

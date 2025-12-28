@@ -16,8 +16,9 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-from vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_walker import (
-    solve_refined, pad_ids_to_bitmask
+from vut.engine.compare.friends_pairing.solver.csp_arc_consistency import ( #noqa E402
+    solve_refined, 
+    pad_ids_to_bitmask
 )
 
 if "--hwut-info" in sys.argv:

@@ -1,5 +1,5 @@
-from vut.engine.compare.friends_pairing.result import Result
-from vut.engine.compare.engine.analogy_db      import FrozenAnalogyDb
+from vut.engine.compare.friends_pairing.result   import Result
+from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 def do(db):
     """

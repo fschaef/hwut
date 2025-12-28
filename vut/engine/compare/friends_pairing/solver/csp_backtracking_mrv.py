@@ -1,8 +1,7 @@
 from functools import lru_cache
 from vut.engine.compare.friends_pairing.result import Result
-from vut.engine.compare.engine.analogy_db      import AnalogyDb
 
-def do(potential_pair_db, global_analogy_db, global_pair_db, required_pair_n) -> tuple[dict,AnalogyDb]:
+def do(potential_pair_db, global_analogy_db, global_pair_db, required_pair_n) -> Result:
     if not potential_pair_db:
         return Result({}, global_pair_db, global_analogy_db, required_pair_n, True)
 
