@@ -145,7 +145,7 @@ class WorkListBase(list):
 
         self.best     = EditSequence(self.max_cost, [], [])
 
-    def run(self):
+    def run(self) -> EditSequence:
         while self:
             item = self.pop()
             if not self.end_of_sequence(item): 

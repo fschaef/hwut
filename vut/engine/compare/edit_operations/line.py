@@ -109,7 +109,7 @@ def cost_TRANSPOSE(si, transpose_ai):
     return 1.0 - (1.0 / (1 + abs(si - transpose_ai)))
 
 @lru_cache(maxsize=65536)
-def do(subject_le_seq, nominal_le_seq, analogy_db=None):
+def do(subject_le_seq, nominal_le_seq, analogy_db=None) -> EditSequence:
     """RETURNS: EditSequence
 
     Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
@@ -139,7 +139,6 @@ def do(subject_le_seq, nominal_le_seq, analogy_db=None):
         best             = WorkList(subject_le_seq, nominal_le_seq, initial_item).run()
 
     return best.prepare_as_best(separator_db, True)
-
 
 
 class LineSeparatorAdaptor(SeparatorAdaptor):
