@@ -3,8 +3,8 @@ PURPOSE: Re-interpretation of the analogy constraint matching database
          in terms of 'lanes of lilly pads'.
 """
 from typing import Iterable
-from .potential_pair_db import PotentialPairDb
-from vut.engine.compare.engine.analogy_db import AnalogyDb
+from vut.engine.compare.friends_pairing.potential_pair_db import PotentialPairDb
+from vut.engine.compare.engine.analogy_db                 import AnalogyDb
 
 class LillyPadLanesAdapter:
     """

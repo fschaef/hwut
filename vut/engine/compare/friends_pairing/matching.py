@@ -22,8 +22,11 @@ process:
 The 'MatchDb' is used by the 'exact.py' module.
 ________________________________________________________________________________
 """
-import vut.engine.compare.friends_pairing.pairing_core  as p
-from   vut.engine.compare.engine.analogy_db             import AnalogyDb
+import vut.engine.compare.friends_pairing.solver.pairing_core            as     p
+import vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_walker  as     lilly_pad
+from   vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_adapter import LillyPadLanesAdapter
+
+from   vut.engine.compare.engine.analogy_db import AnalogyDb
 
 from   .potential_pair_db  import PotentialPairDb
 from   .result             import PairedGraph, Result
@@ -123,16 +126,11 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
                                                    state.pair_db, 
                                                    state.required_pair_n)
     elif False:
-        import vut.engine.compare.friends_pairing.lilly_pad_lanes_walker as lilly_pad_walker
-        return lilly_pad_walker.solve_lazy(db)
+        return lilly_pad.solve_lazy(db)
     else:
-        import vut.engine.compare.friends_pairing.lilly_pad_lanes_walker as lilly_pad_walker
-        from   vut.engine.compare.friends_pairing.lilly_pad_lanes_adapter import LillyPadLanesAdapter
-
-        adapter = LillyPadLanesAdapter(state.potential_pair_db)
+        adapter                = LillyPadLanesAdapter(state.potential_pair_db)
         db, pad_ids_by_lane_db = adapter.prepare_problem()
-
-        solution = lilly_pad_walker.solve(db, pad_ids_by_lane_db)
+        solution               = lilly_pad.solve(db, pad_ids_by_lane_db)
 
         if solution is None:
             state.aborted_f = True

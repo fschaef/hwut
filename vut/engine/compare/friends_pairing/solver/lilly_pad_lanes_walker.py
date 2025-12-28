@@ -60,7 +60,7 @@ AUTHOR: Frank-Rene Schaefer
 ______________________________________________________________________________________
 """
 
-from .result   import Result
+from vut.engine.compare.friends_pairing.result   import Result
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 from typeguard import typechecked
 from functools import lru_cache

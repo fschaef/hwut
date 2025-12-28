@@ -13,10 +13,10 @@ import sys
 import os
 
 # Adopt path for imports (Adjust to your project structure)
-this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
+this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-from vut.engine.compare.friends_pairing.lilly_pad_lanes_walker import (
+from vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_walker import (
     solve_refined, pad_ids_to_bitmask
 )
 

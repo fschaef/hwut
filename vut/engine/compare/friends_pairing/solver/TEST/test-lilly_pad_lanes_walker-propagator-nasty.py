@@ -20,11 +20,13 @@ import sys
 import os
 
 # Adopt path before imports --> disable code check error E402
-this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
+this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-from vut.engine.compare.friends_pairing.lilly_pad_lanes_walker import propagate_blockers, pad_ids_to_bitmask
-from vut.auxiliary.deterministic_random import DeterministicStream
+from vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_walker import (propagate_blockers,  #noqa E402
+                                                                              pad_ids_to_bitmask)
+
+from vut.auxiliary.deterministic_random import DeterministicStream                                 #noqa E402
 
 if "--hwut-info" in sys.argv:
     print("Propagate Blockers: Constraint Propagation;")
@@ -39,7 +41,7 @@ class Statistics:
         self.total_pads   = total_pads
         self.total_lanes  = len(lane_definition)
         
-        lane_lengths      = [len(l) for l in lane_definition]
+        lane_lengths      = [len(ld) for ld in lane_definition]
         self.lane_pad_min = min(lane_lengths)
         self.lane_pad_max = max(lane_lengths)
         self.lane_pad_avg = sum(lane_lengths) / len(lane_lengths)
@@ -148,8 +150,8 @@ def generate_lanes(M_PADS, N_LANES, rng):
         cursor += count
 
     # Sort lanes
-    for l in lane_definition:
-        l.sort()
+    for ld in lane_definition:
+        ld.sort()
         
     return lane_definition, good_path
 
@@ -183,8 +185,6 @@ def generate_nasty_blockers(lane_definition, good_path_set, rng,
         pads_ahead = pads_ahead_by_lane[lane_idx]
         if not pads_ahead: continue
         
-        n_ahead = len(pads_ahead)
-
         for pad in lane:
             is_good_pad = (pad in good_path_set)
             blocked = []
@@ -228,7 +228,7 @@ stats = Statistics(lane_definition, initial_blockers, M_PADS)
 stats.print_report()
 
 # 5. Run Test
-lane_masks = [pad_ids_to_bitmask(l) for l in lane_definition]
+lane_masks = [pad_ids_to_bitmask(ld) for ld in lane_definition]
 blocker_db = [0] * M_PADS
 for p, b in initial_blockers.items():
     blocker_db[p] = pad_ids_to_bitmask(b)

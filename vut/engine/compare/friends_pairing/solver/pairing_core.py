@@ -1,6 +1,5 @@
-from vut.engine.compare.engine.analogy_db import AnalogyDb
-
-from .result   import Result
+from vut.engine.compare.engine.analogy_db      import AnalogyDb
+from vut.engine.compare.friends_pairing.result import Result
 from functools import lru_cache
 
 def solve_unconstrained_matching(subject_to_nominals: dict[int, set[int]]) -> dict[int, int]:
