@@ -1,36 +1,36 @@
 GOOD.compare:            (EQUIVALENT, None)
 GOOD.string:             'jump'
 GOOD.difference_cost:    0.000000
-GOOD.representation:     (6,10): STRING 'jump'
+GOOD.representation:     STRING 'jump'
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          'elephant'
 FAILURE.difference_cost: 0.875000
-FAILURE.representation:  (3,11): STRING 'elephant'
+FAILURE.representation:  STRING 'elephant'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          'jump'
 NOMINAL.difference_cost: 0.000000
-NOMINAL.representation:  (11,16): STRING 'jump'
+NOMINAL.representation:  STRING 'jump'
 GOOD.compare:            (DIFFERENT, None)
 GOOD.string:             ''
 GOOD.difference_cost:    1.000000
-GOOD.representation:     (6,6): STRING ''
+GOOD.representation:     STRING ''
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          'elephant'
 FAILURE.difference_cost: 0.875000
-FAILURE.representation:  (3,11): STRING 'elephant'
+FAILURE.representation:  STRING 'elephant'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          'jump'
 NOMINAL.difference_cost: 0.000000
-NOMINAL.representation:  (11,16): STRING 'jump'
+NOMINAL.representation:  STRING 'jump'
 GOOD.compare:            (DIFFERENT, None)
 GOOD.string:             'jump'
 GOOD.difference_cost:    1.000000
-GOOD.representation:     (6,10): STRING 'jump'
+GOOD.representation:     STRING 'jump'
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          'elephant'
 FAILURE.difference_cost: 1.000000
-FAILURE.representation:  (3,11): STRING 'elephant'
+FAILURE.representation:  STRING 'elephant'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          ''
 NOMINAL.difference_cost: 0.000000
-NOMINAL.representation:  (11,11): STRING ''
+NOMINAL.representation:  STRING ''

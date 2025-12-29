@@ -2,27 +2,27 @@
 --- Aggressive Scenarios: Overlaps and Gaps ---
 
 Processing: 'otto vs fritz'
-  (0,13): STRING 'otto vs fritz'
+  STRING 'otto vs fritz'
 
 Processing: 'funny'
   EQUIVALENCE_PATTERN [0, 1, 2] 'funny'
 
 Processing: 'funny and smart'
   EQUIVALENCE_PATTERN [0, 1, 2] 'funny'
-  (5,10): STRING ' and '
+  STRING ' and '
   EQUIVALENCE_PATTERN [1] 'smart'
 
 Processing: '((A)) middle ((B))'
-  (0,5): ANALOGY '((A))'
-  (5,13): STRING ' middle '
-  (13,18): ANALOGY '((B))'
+  ANALOGY '((A))'
+  STRING ' middle '
+  ANALOGY '((B))'
 
 Processing: 'me is happy'
   EQUIVALENCE_PATTERN [3] 'me'
-  (2,6): STRING ' is '
+  STRING ' is '
   EQUIVALENCE_PATTERN [0] 'happy'
 
 Processing: 'value: 100.5 units'
-  (0,7): STRING 'value: '
-  (7,12): NUMERIC '100.5'
-  (12,18): STRING ' units'
+  STRING 'value: '
+  NUMERIC '100.5'
+  STRING ' units'

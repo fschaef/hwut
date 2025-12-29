@@ -11,7 +11,7 @@
 
 ----------------------------------
 =>
-001: [(0,0): VISIBLE_NOTHING '']
+001: [VISIBLE_NOTHING '']
 ----------------------------------
 <potpourri>
 ----------------------------------
@@ -21,13 +21,13 @@
 line
 ----------------------------------
 =>
-001| [(0,22): STRING '|||| (potpourri: open)']
-002| [(0,4): STRING 'line']
-003| [(0,23): STRING '|||| (potpourri: close)']
+001| [STRING '|||| (potpourri: open)']
+002| [STRING 'line']
+003| [STRING '|||| (potpourri: close)']
 ----------------------------------
 <potpourri>
 <potpourri>
 ----------------------------------
 =>
-001| [(0,22): STRING '|||| (potpourri: open)']
-002| [(0,23): STRING '|||| (potpourri: close)']
+001| [STRING '|||| (potpourri: open)']
+002| [STRING '|||| (potpourri: close)']

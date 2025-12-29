@@ -2,23 +2,23 @@
 line1
 ----------------------------------
 =>
-001: [(0,4): STRING 'line'], [(4,5): NUMERIC '1']
+001: [STRING 'line'], [NUMERIC '1']
 ----------------------------------
 line1
 line2
 ----------------------------------
 =>
-001: [(0,4): STRING 'line'], [(4,5): NUMERIC '1']
-002: [(0,4): STRING 'line'], [(4,5): NUMERIC '2']
+001: [STRING 'line'], [NUMERIC '1']
+002: [STRING 'line'], [NUMERIC '2']
 ----------------------------------
 <potpourri>
 line2
 <potpourri>
 ----------------------------------
 =>
-001| [(0,22): STRING '|||| (potpourri: open)']
-002| [(0,4): STRING 'line'], [(4,5): NUMERIC '2']
-003| [(0,23): STRING '|||| (potpourri: close)']
+001| [STRING '|||| (potpourri: open)']
+002| [STRING 'line'], [NUMERIC '2']
+003| [STRING '|||| (potpourri: close)']
 ----------------------------------
 <potpourri>
 line 2
@@ -27,11 +27,11 @@ line 3
 line 5
 ----------------------------------
 =>
-001| [(0,22): STRING '|||| (potpourri: open)']
-002| [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '2']
-003| [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '3']
-004| [(0,23): STRING '|||| (potpourri: close)']
-005: [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '5']
+001| [STRING '|||| (potpourri: open)']
+002| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '2']
+003| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '3']
+004| [STRING '|||| (potpourri: close)']
+005: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '5']
 ----------------------------------
 line 1
 <potpourri>
@@ -40,11 +40,11 @@ line 4
 <potpourri>
 ----------------------------------
 =>
-001: [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '1']
-002| [(0,22): STRING '|||| (potpourri: open)']
-003| [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '3']
-004| [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '4']
-005| [(0,23): STRING '|||| (potpourri: close)']
+001: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '1']
+002| [STRING '|||| (potpourri: open)']
+003| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '3']
+004| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '4']
+005| [STRING '|||| (potpourri: close)']
 ----------------------------------
 line 1
 <potpourri>
@@ -53,8 +53,8 @@ line 3
 line 5
 ----------------------------------
 =>
-001: [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '1']
-002| [(0,22): STRING '|||| (potpourri: open)']
-003| [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '3']
-004| [(0,23): STRING '|||| (potpourri: close)']
-005: [(0,4): STRING 'line'], [(4,5): SEPERATOR ' '], [(5,6): NUMERIC '5']
+001: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '1']
+002| [STRING '|||| (potpourri: open)']
+003| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '3']
+004| [STRING '|||| (potpourri: close)']
+005: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '5']

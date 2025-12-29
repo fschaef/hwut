@@ -169,7 +169,7 @@ class LineElement:
         return hash(self.tolerance_id)
 
     def __repr__(self):
-        return "(%i,%i): %s '%s'" % (self.start, self.end, self.tolerance_id.name, self.string)
+        return "%s '%s'" % (self.tolerance_id.name, self.string)
 
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
