@@ -126,7 +126,7 @@ class PatternFinder:
             string = string.strip()
 
         if self.is_irrelevant(string):
-            return (LineElementVisibleNothing(0, len(string), string.rstrip()),)
+            return (LineElementVisibleNothing(string.rstrip()),)
 
         def _analyze_optimized(string):
             i = 0

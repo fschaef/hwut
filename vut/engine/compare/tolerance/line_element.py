@@ -83,7 +83,7 @@ class LineElement:
 
         match tolerance_id:
             case E_ToleranceId.VISIBLE_NOTHING:
-                return LineElementVisibleNothing(start, end, global_string)
+                return LineElementVisibleNothing(global_string[start:end])
             case E_ToleranceId.EQUIVALENCE_PATTERN:
                 indices = pattern_i_set if pattern_i_set is not None else {pattern.pattern_index}
                 return LineElementEquivalencePattern(start, end, global_string, indices)
@@ -252,8 +252,8 @@ class LineElementNumber(LineElement):
     #       be investigated by relating to LineElement-objects.
 
 class LineElementVisibleNothing(LineElement):
-    def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.VISIBLE_NOTHING,  string[start:end])
+    def __init__(self, content):
+        LineElement.__init__(self, E_ToleranceId.VISIBLE_NOTHING, content)
 
     def edit_distance_relative(self, nominal):
         return 0

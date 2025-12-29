@@ -45,8 +45,8 @@ def frame_with_potpourri_borders(line_list):
 
 line_element_db = {
     "e":  [ LineElementString(0,0,"") ],
-    "v":  [ LineElementVisibleNothing(0,3,"nix") ],
-    "V":  [ LineElementVisibleNothing(0,7,"nothing") ],
+    "v":  [ LineElementVisibleNothing("nix") ],
+    "V":  [ LineElementVisibleNothing("nothing") ],
     "1":  [ LineElementString(0,1,"a") ],
     "2":  [ LineElementString(0,1,"b") ],
     "3":  [ LineElementString(0,1,"a b"), 
