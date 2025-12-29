@@ -1,0 +1,17 @@
+--- Scenario: Simple 1-to-1 ---
+Matching Size: 2
+  [0] -> 10
+  [1] -> 11
+Status: Done
+## time:  -3.0040740966796875e-05
+--- Scenario: Conflict 2-to-1 ---
+Matching Size: 1
+  [0] -> 10
+Status: Done
+## time:  -1.0728836059570312e-05
+--- Scenario: Cross Match ---
+Matching Size: 2
+  [0] -> 11
+  [1] -> 10
+Status: Done
+## time:  -1.0251998901367188e-05

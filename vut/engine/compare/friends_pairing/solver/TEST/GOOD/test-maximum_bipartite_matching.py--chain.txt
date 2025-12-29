@@ -1,0 +1,11 @@
+--- Scenario: Long Augmenting Path (50000) ---
+Matching Size: 50000
+  First: [0] -> 0
+  Last:  [49999] -> 49999
+Status: Done
+## time:  -0.24851703643798828
+--- Scenario: Bottleneck (50000) ---
+Matching Size: 1
+  [0] -> 0
+Status: Done
+## time:  -0.11864519119262695

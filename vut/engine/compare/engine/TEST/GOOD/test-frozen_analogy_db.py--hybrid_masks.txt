@@ -1,0 +1,10 @@
+
+--- INVARIANT: HYBRID BITMASK/ID LOGIC ---
+-----------------------------------------------------------------------------------------------
+| Test Case                 | Stimulus (Input Data)               | Expected     | Result   |
+-----------------------------------------------------------------------------------------------
+| INFO                      | Inflating Registry > 256            | ...          | ...      |
+| Mask Disable Logic        | ID > 256                            | Masks = -1   | PASS     |
+| High-ID Conflict          | Same Subj, Diff Nom                 | False        | PASS     |
+| High-ID Rule 2            | Diff Subj, Same Nom                 | False        | PASS     |
+| High-ID Valid             | Disjoint High IDs                   | True         | PASS     |

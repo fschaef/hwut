@@ -1,0 +1,8 @@
+
+--- INVARIANT: LOGICAL CONSISTENCY (1-to-1 MAPPING) ---
+-----------------------------------------------------------------------------------------------
+| Test Case                 | Stimulus (Input Data)               | Expected     | Result   |
+-----------------------------------------------------------------------------------------------
+| Subject Conflict          | {S1:N1} vs {S1:N2}                  | False        | PASS     |
+| Nominal Conflict          | {S1:N1} vs {S2:N1}                  | False        | PASS     |
+| Disjoint Set              | {S1:N1} vs {S2:N2}                  | True         | PASS     |

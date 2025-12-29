@@ -1,0 +1,9 @@
+
+--- INVARIANT: MEMBER FUNCTION INTEGRITY ---
+-----------------------------------------------------------------------------------------------
+| Test Case                 | Stimulus (Input Data)               | Expected     | Result   |
+-----------------------------------------------------------------------------------------------
+| Bitmask Alignment         | 1 pair -> masks                     | Match IDs    | PASS     |
+| Items() Reconstruction    | 3 pairs -> items()                  | Full Match   | PASS     |
+| to_AnalogyDb()            | Frozen -> Mutable                   | Valid Dict   | PASS     |
+| Bulk merge_all            | [db, None, {}]                      | Identity db  | PASS     |

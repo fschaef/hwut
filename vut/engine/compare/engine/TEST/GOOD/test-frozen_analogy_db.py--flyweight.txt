@@ -1,0 +1,8 @@
+
+--- INVARIANT: REFERENCE IDENTITY (FLYWEIGHT) ---
+-----------------------------------------------------------------------------------------------
+| Test Case                 | Stimulus (Input Data)               | Expected     | Result   |
+-----------------------------------------------------------------------------------------------
+| Order Independence        | Merge(A,B) vs Init(B,A)             | Identical    | PASS     |
+| Subset Merging            | MergedSet.merge(Subset)             | Identical    | PASS     |
+| Null Singleton            | Init({}) vs Init()                  | Identical    | PASS     |

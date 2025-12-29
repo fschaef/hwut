@@ -1,0 +1,7 @@
+
+--- INVARIANT: IMMUTABILITY & SIDE-EFFECTS ---
+-----------------------------------------------------------------------------------------------
+| Test Case                 | Stimulus (Input Data)               | Expected     | Result   |
+-----------------------------------------------------------------------------------------------
+| Merge Side-Effect         | id(base) post-merge                 | Unchanged    | PASS     |
+| Attribute Guard           | Write access to slots               | Error        | PASS     |

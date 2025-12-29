@@ -4,10 +4,8 @@ from functools   import lru_cache
 from typing      import Iterable
 from typeguard   import typechecked
 
-from .analogy_db import LineNumberPair
-
-# Assumes LineNumberPair and AnalogyDb are available in the namespace
-# from vut.engine.compare.engine.analogy_db import AnalogyDb, LineNumberPair
+# Assuming local import context exists as per your snippet
+# from .analogy_db import LineNumberPair
 
 class FrozenAnalogyDb:
     """Fast and efficient representation of 'AnalogyDb'.
@@ -27,11 +25,9 @@ class FrozenAnalogyDb:
       result in the same constraints, they share the same memory address, 
       reducing 'is_all_consistent' to an O(1) pointer identity check.
 
-    - Bit-Vector Representation: Subject and Nominal terms are mapped to 
-      global integer IDs. Constraints are represented as large bitmasks.
-
-    - O(1) Disjoint Check: Uses bitwise AND on masks to instantly verify 
-      consistency between disjoint constraint sets (the most frequent case).
+    - Hybrid Bit-Vector Representation: For small IDs (< 256), constraints 
+      are bitmasks for O(1) checks. For large IDs, bitmasks are disabled 
+      to prevent memory explosion, falling back to efficient ID lookups.
 
     - Memory Efficiency: Replaces heavy dictionary objects with low-level 
       integer masks and tuples of integer Pair-IDs.
@@ -44,14 +40,28 @@ class FrozenAnalogyDb:
     1. A subject string cannot map to two different nominal strings.
 
     2. Two different subject strings cannot map to the same nominal string.
-    
+     
     By representing (subject, nominal) pairs as unique 'Pair-IDs', the 
     'is_consistent' operation validates these rules using bitwise 
-    intersections and Pair-ID set comparisons.
+    intersections (if small) or Pair-ID set comparisons.
     """
-    _pool     = {} # pool of existing objects --> flyweight pattern
-    #              # (use references to immutables instead of copies of objects)
-    __slots__ = ('_pair_ids', 'subj_mask', 'nom_mask')
+    _pool     = {} 
+    # REPAIR: Prefix slots with underscores to allow read-only property access
+    __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask')
+    
+    # HYBRID THRESHOLD: If IDs exceed this, we skip bitmask generation.
+    # 256 bits = 32 bytes (CPU word efficient)
+    _MASK_LIMIT = 256
+
+    # --- Property Accessors (Read-Only) ---
+    @property
+    def subj_mask(self) -> int: return self._subj_mask
+
+    @property
+    def nom_mask(self) -> int: return self._nom_mask
+
+    @property
+    def pair_ids(self) -> tuple: return self._pair_ids
 
     class _Registry:
         """Global mapping of strings and pairs to unique integer IDs."""
@@ -147,13 +157,35 @@ class FrozenAnalogyDb:
         instance = super().__new__(cls)
         instance._pair_ids = pair_ids
         
-        # Build Bitmasks for O(1) disjoint checks
-        instance.subj_mask = 0
-        instance.nom_mask  = 0
+        s_mask = 0
+        n_mask = 0
+        limit = cls._MASK_LIMIT
+        
+        # --- REPAIR START: Optional Bitmask Generation ---
+        # If any ID exceeds the limit, we abort mask generation and set to -1 (All 1s).
+        # -1 ensures we fall through to the deep check in is_all_consistent.
+        use_masks = True
+        
+        # Pre-scan (or check during loop) to ensure we don't blow up memory
         for pid in pair_ids:
             s_id, n_id = cls._Registry.pair_to_info[pid]
-            instance.subj_mask |= (1 << s_id)
-            instance.nom_mask  |= (1 << n_id)
+            if s_id >= limit or n_id >= limit:
+                use_masks = False
+                break
+        
+        if use_masks:
+            for pid in pair_ids:
+                s_id, n_id = cls._Registry.pair_to_info[pid]
+                s_mask |= (1 << s_id)
+                n_mask |= (1 << n_id)
+        else:
+            # Disable optimization: -1 means "Assume overlap, check deeply"
+            s_mask = -1 
+            n_mask = -1
+        # --- REPAIR END ---
+
+        instance._subj_mask = s_mask
+        instance._nom_mask  = n_mask
 
         cls._pool[pair_ids] = instance
         return instance
@@ -203,19 +235,27 @@ class FrozenAnalogyDb:
         if self is other: return True
 
         # Bitmask Fast-Fail 
-        if not (self.subj_mask & other.subj_mask | self.nom_mask & other.nom_mask):
-            return True
+        # Only use bitmasks if they are enabled (not -1).
+        # If disabled, we must fall through to deep ID validation.
+        if self._subj_mask != -1 and other._subj_mask != -1:
+            if not (self._subj_mask & other._subj_mask | self._nom_mask & other._nom_mask):
+                return True
 
-        # Deep Validation (Only if bits overlap) 
-        # Since we use a Flyweight for the whole DB, we can also use 
-        # a Set of Pair IDs for O(1) intersection checks of the components.
-        # This is faster than iterating bits for very large masks.
-        s_set = set(self._pair_ids)
+        self_pairs = {}
+        self_noms = set()
+        _info = self._Registry.pair_to_info
+        
+        for pid in self._pair_ids:
+            s_id, n_id = _info[pid]
+            self_pairs[s_id] = n_id
+            self_noms.add(n_id)
+
         for pid in other._pair_ids:
-            s_id, n_id = self._Registry.pair_to_info[pid]
-            # If subject or nominal overlap, the exact Pair ID must match
-            if ((1 << s_id) & self.subj_mask) or ((1 << n_id) & self.nom_mask):
-                if pid not in s_set: return False
+            os_id, on_id = _info[pid]
+            if os_id in self_pairs:
+                if self_pairs[os_id] != on_id: return False
+            elif on_id in self_noms:
+                return False
         return True
 
     @lru_cache(maxsize=16384)

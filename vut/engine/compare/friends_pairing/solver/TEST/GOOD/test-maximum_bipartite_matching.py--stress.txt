@@ -1,0 +1,18 @@
+--- Scenario: Large Pipe (2000) ---
+Matching Size: 200000
+  First: [0] -> 0
+  Last:  [199999] -> 199999
+Status: Done
+## time:  -0.534160852432251
+--- Scenario: Complete Bipartite (2000) ---
+Matching Size: 2000
+  First: [0] -> 0
+  Last:  [1999] -> 1999
+Status: Done
+## time:  -0.9342222213745117
+--- Scenario: Sudoku Pivot (2000) ---
+Matching Size: 2000
+  First: [0] -> 1999
+  Last:  [1999] -> 1998
+Status: Done
+## time:  -0.92983078956604
