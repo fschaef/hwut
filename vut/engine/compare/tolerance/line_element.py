@@ -303,6 +303,8 @@ class LineElementEquivalencePattern(LineElement):
     #       be investigated by relating two LineElement-objects.
 
     def __repr__(self):
-        return "(%i,%i): %s %s '%s'" % (self.start, self.end, self.tolerance_id.name,
-                                        list(sorted(self.pattern_index_set)), self.string)
+        tolerance_str   = self.tolerance_id.name
+        pattern_ids_str = list(sorted(self.pattern_index_set)) 
+        content_str     = self.string
+        return "%s %s '%s'" % (tolerance_str, pattern_ids_str, content_str)
 

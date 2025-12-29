@@ -5,12 +5,12 @@ Processing: 'otto vs fritz'
   (0,13): STRING 'otto vs fritz'
 
 Processing: 'funny'
-  (0,5): EQUIVALENCE_PATTERN [0, 1, 2] 'funny'
+  EQUIVALENCE_PATTERN [0, 1, 2] 'funny'
 
 Processing: 'funny and smart'
-  (0,5): EQUIVALENCE_PATTERN [0, 1, 2] 'funny'
+  EQUIVALENCE_PATTERN [0, 1, 2] 'funny'
   (5,10): STRING ' and '
-  (10,15): EQUIVALENCE_PATTERN [1] 'smart'
+  EQUIVALENCE_PATTERN [1] 'smart'
 
 Processing: '((A)) middle ((B))'
   (0,5): ANALOGY '((A))'
@@ -18,9 +18,9 @@ Processing: '((A)) middle ((B))'
   (13,18): ANALOGY '((B))'
 
 Processing: 'me is happy'
-  (0,2): EQUIVALENCE_PATTERN [3] 'me'
+  EQUIVALENCE_PATTERN [3] 'me'
   (2,6): STRING ' is '
-  (6,11): EQUIVALENCE_PATTERN [0] 'happy'
+  EQUIVALENCE_PATTERN [0] 'happy'
 
 Processing: 'value: 100.5 units'
   (0,7): STRING 'value: '

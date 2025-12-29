@@ -2,12 +2,12 @@
 size: 6;
 None -> STRING
 nothing -> VISIBLE_NOTHING
-\(\((?:.|\\n)+?\)\) -> ANALOGY
+\(\((?:.|\n)+?\)\) -> ANALOGY
 -?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
 [ \t]+ -> SEPERATOR
 hallo -> EQUIVALENCE_PATTERN
 string: 'hallo welt 4711'
-   (0,5): EQUIVALENCE_PATTERN [0] 'hallo'
+   EQUIVALENCE_PATTERN [0] 'hallo'
    (5,6): SEPERATOR ' '
    (6,10): STRING 'welt'
    (10,11): SEPERATOR ' '
@@ -15,7 +15,7 @@ string: 'hallo welt 4711'
 string: '4711 hallo 4711 nothing'
    (0,4): NUMERIC '4711'
    (4,5): SEPERATOR ' '
-   (5,10): EQUIVALENCE_PATTERN [0] 'hallo'
+   EQUIVALENCE_PATTERN [0] 'hallo'
    (10,11): SEPERATOR ' '
    (11,15): NUMERIC '4711'
    (15,16): SEPERATOR ' '
