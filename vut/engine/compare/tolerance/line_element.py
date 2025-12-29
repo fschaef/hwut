@@ -26,6 +26,7 @@ from   typeguard   import typechecked
 from   typing      import Any
 import regex       as re
 from   dataclasses import dataclass
+import sys  # REQUIRED for sys.intern optimization => store same strings once
 
 class E_ToleranceId(IntEnum):
     STRING              = 1
@@ -57,12 +58,24 @@ class LineElement:
                      last character.
      .reference      text fragment where the pattern occured.
     """
+    # OPTIMIZATION: __slots__ saves massive memory by removing __dict__ overhead
+    __slots__ = ('tolerance_id', 'start', 'end', 'reference', '_content')
+
     @typechecked
     def __init__(self, tolerance_id: E_ToleranceId, start, end, string):
         self.tolerance_id = tolerance_id
         self.start        = start
         self.end          = end
         self.reference    = string
+        
+        # OPTIMIZATION: Snapshot + Interning (The "Pool" Approach)
+        # We slice ONCE here. Accessing .string later is now O(1).
+        # sys.intern() deduplicates memory, so 1000 "foo" objects share 1 address.
+        substring = string[start:end]
+        if tolerance_id in (E_ToleranceId.STRING, E_ToleranceId.ANALOGY, E_ToleranceId.SEPERATOR):
+            self._content = sys.intern(substring)
+        else:
+            self._content = substring
 
     @staticmethod
     @typechecked
@@ -123,15 +136,18 @@ class LineElement:
         assert self.tolerance_id    != E_ToleranceId.VISIBLE_NOTHING
         assert nominal.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
 
-        max_length = max(len(self.string), len(nominal.string))
+        # Use cached _content for fast length check
+        max_length = max(len(self._content), len(nominal._content))
         if max_length == 0:
             return 0
         else:
-            return float(edit_distance_string.do(self.string, nominal.string)) / max_length
+            # Use cached _content to avoid re-slicing
+            return float(edit_distance_string.do(self._content, nominal._content)) / max_length
 
     def is_equivalent(self, nominal, analogy_db):
         """RETURNS: True, if self is equivalent to 'nominal' under the given
-                          analogy_db; False, else.
+                          analogy_db; 
+                    False, else.
         """
         verdict_id, analogy = self.compare(nominal)
         if   verdict_id != E_Verdict.EQUIVALENT:    return False
@@ -140,7 +156,7 @@ class LineElement:
 
     @property
     def string(self):
-        return self.reference[self.start:self.end]
+        return self._content
 
     def _compare(self, nominal):
         """RETURNS: [0] True, any way.
@@ -207,6 +223,8 @@ class LineElementAnalogy(LineElement):
     #       Equivalence is derived later as a function of consistency.
 
 class LineElementNumber(LineElement):
+    __slots__ = ('number', 'numeric_tolerance_ratio')
+
     def __init__(self, start, end, string, numeric_tolerance_ratio=None):
         assert numeric_tolerance_ratio is None or 0.0 <= numeric_tolerance_ratio <= 1.0
         LineElement.__init__(self, E_ToleranceId.NUMERIC, start, end, string)
@@ -217,6 +235,7 @@ class LineElementNumber(LineElement):
     def edit_distance_relative(self, nominal):
         max_number = max(self.number, nominal.number)
         delta      = abs(self.number - nominal.number)
+        if max_number == 0: return 0.0 # Guard against div/0
         return delta / max_number
 
     def _compare(self, nominal):
@@ -261,6 +280,8 @@ class LineElementVisibleNothing(LineElement):
         return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
 
 class LineElementEquivalencePattern(LineElement):
+    __slots__ = ('pattern_index_set',)
+
     def __init__(self, start, end, string, pattern_index_set):
         LineElement.__init__(self, E_ToleranceId.EQUIVALENCE_PATTERN, start, end, string)
         # Indices of patterns which are matched.
