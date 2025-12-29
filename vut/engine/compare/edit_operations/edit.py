@@ -14,48 +14,48 @@ Edit:         identifies names the operation and provides a possible
 EditSequence: maintains a list of edit objects. 
 """
 from  vut.engine.compare.tolerance.line_element import E_ToleranceId
-
 from  enum        import IntEnum
-from  typeguard   import typechecked
 
 class E_EditId(IntEnum):
-    """Operations moving/substituting in subject to produce nominal.
-    """
-    GOOD            = 0  # Subject and nominal 'element' object are equivalent.
-    GOOD_TOLERATED  = 1  # == GOOD, only that content may differ (used in diff-display).
-    GOOD_INSERT     = 9  # == GOOD, nominal has a 'visible nothing' where subject has nothing.
-    GOOD_DELETE     = 8  # == GOOD, subject has a 'visible nothing' where nominal has nothing.
-    TRANSPOSE       = 2  # Heal: Two 'element' objects in subject are transposed.
-    INSERT          = 3  # Heal: 'element' from nominal is inserted.
-    DELETE          = 4  # Heal: 'element' from subject is deleted.
-    SUBSTITUTE      = 5  # Bad:  Content of subject and nominal 'element' differs.
-    SUBSTITUTE_TYPE = 6  # Bad:  Type of subject and nominal 'element' differs.
-    NONE            = 7  # No operation
+    GOOD            = 0
+    GOOD_TOLERATED  = 1
+    GOOD_INSERT     = 9
+    GOOD_DELETE     = 8
+    TRANSPOSE       = 2
+    INSERT          = 3
+    DELETE          = 4
+    SUBSTITUTE      = 5
+    SUBSTITUTE_TYPE = 6
+    NONE            = 7
 
 E_EditId.good = { E_EditId.GOOD, E_EditId.GOOD_TOLERATED, E_EditId.GOOD_INSERT, E_EditId.DELETE }
 
 class Edit:
+    __slots__ = ('id', '_auxiliary', 'cost')
     def __init__(self, id, transpose_ai=None, edit_list=None, cost: float = 0.0):
-        assert transpose_ai is None or edit_list is None
-        self.id        = id
-        if   transpose_ai is not None: self.__auxiliary = transpose_ai
-        elif edit_list    is not None: self.__auxiliary = edit_list
-        else:                          self.__auxiliary = None
+        # TOO EXPENSIVE: assert transpose_ai is None or edit_list is None
+        # (this function is called too often, mio of times)
+        self.id = id
+        if transpose_ai is not None: self._auxiliary = transpose_ai
+        elif edit_list is not None:  self._auxiliary = edit_list
+        else:                        self._auxiliary = None
         self.cost = cost
 
     @property
     def transpose_ai(self):
-        return self.__auxiliary
+        return self._auxiliary
 
     @property
     def edit_list(self):
-        return self.__auxiliary
+        return self._auxiliary
 
 class EditSequence:
     """Maintains a list of edit objects, their cost and the required analogy database.
     """
-    @typechecked
-    def __init__(self, cost: float, edit_list: list[Edit], analogy_db):
+    __slots__ = ('cost', 'edit_list', 'analogy_db')
+
+    # @typechecked -- too expensive here! called mio. of times!
+    def __init__(self, cost: float, edit_list: list, analogy_db):
         """edit_list: list of tuples (edit_id, edit_list)
 
         where edit_id:    E_EditId
@@ -70,7 +70,7 @@ class EditSequence:
 
     def last(self):
         if not self.edit_list: return None
-        else:                  return self.edit_list[-1].id
+        return self.edit_list[-1].id
 
     def extend(self, edit_iterable):
         self.edit_list.extend(edit_iterable)
@@ -84,7 +84,7 @@ class EditSequence:
                 if edit.id != E_EditId.TRANSPOSE:
                     yield edit.id.name 
                 else:
-                    yield "%s:%i<->%i" % (edit.id.name, i, edit.transpose_ai)
+                    yield "%s:%i<->%i" % (edit.id.name, i, edit._auxiliary)
         return "[%s]" % ", ".join(_iterable(raw_edit_tuple))
 
     def prepare_as_best(self, separator_db=None, relative_f=False):

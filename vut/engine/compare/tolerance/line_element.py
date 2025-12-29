@@ -22,7 +22,6 @@ import vut.engine.compare.edit_operations.string as     edit_distance_string
 from   vut.engine.compare.engine.core            import E_Verdict
 
 from   enum        import IntEnum
-from   typeguard   import typechecked
 from   typing      import Any
 import regex       as re
 from   dataclasses import dataclass
@@ -61,7 +60,7 @@ class LineElement:
     # OPTIMIZATION: __slots__ saves massive memory by removing __dict__ overhead
     __slots__ = ('tolerance_id', 'start', 'end', 'reference', '_content')
 
-    @typechecked
+    # @typechecked -- likely to be too expensive, called mio-s of times!
     def __init__(self, tolerance_id: E_ToleranceId, start, end, string):
         self.tolerance_id = tolerance_id
         self.start        = start
@@ -78,7 +77,7 @@ class LineElement:
             self._content = substring
 
     @staticmethod
-    @typechecked
+    # @typechecked likely to be too expensive: called mios of times
     def from_match(pattern: TolerancePattern, m: Any, global_string: str, numeric_tolerance_ratio: float, pattern_i_set=None):
         """RETURNS: A 'LineElement' object based on the provided match data
                     inside this object.
