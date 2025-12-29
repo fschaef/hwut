@@ -92,7 +92,7 @@ class LineElement:
             case E_ToleranceId.ANALOGY:
                 return LineElementAnalogy(start, end, global_string)
             case E_ToleranceId.SEPERATOR:
-                return LineElementSeparator(start, end, global_string)
+                return LineElementSeparator(global_string[start:end])
             case _:
                 assert False # pragma: no cover
 
@@ -170,8 +170,8 @@ class LineElement:
         return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
 
 class LineElementSeparator(LineElement):
-    def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.SEPERATOR,  string[start:end])
+    def __init__(self, content):
+        LineElement.__init__(self, E_ToleranceId.SEPERATOR, content)
 
     def _compare(self, nominal):
         """RETURNS: [0] True, any way.
