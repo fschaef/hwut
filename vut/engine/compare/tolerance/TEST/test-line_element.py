@@ -97,6 +97,6 @@ if choice == "LineElementEquivalencePattern":
          LineElementEquivalencePattern(0, 4, "Mice don't", (3,4,5)))
 
 if choice == "LineElementAnalogy":
-    test(LineElementAnalogy(2, 9,  "A ((fox)) jumps"),
-         LineElementAnalogy(0, 29, "((there is no false analogy))"),
-         LineElementAnalogy(0, 9,  "((mouse))"))
+    test(LineElementAnalogy("A ((fox)) jumps"[2:9]),
+         LineElementAnalogy("((there is no false analogy))"[0:29]),
+         LineElementAnalogy("((mouse))"[0:9]))

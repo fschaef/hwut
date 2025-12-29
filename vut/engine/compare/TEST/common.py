@@ -55,9 +55,9 @@ line_element_db = {
     "s":  [ LineElementString(0,6,"string") ],
     "S":  [ LineElementString(0,6,"strong") ],
     "Q":  [ LineElementString(0,6,"quant") ],
-    "x":  [ LineElementAnalogy(0,5,"((x))") ],
-    "y":  [ LineElementAnalogy(0,5,"((y))") ],
-    "z":  [ LineElementAnalogy(0,5,"((z))") ],
+    "x":  [ LineElementAnalogy("((x))") ],
+    "y":  [ LineElementAnalogy("((y))") ],
+    "z":  [ LineElementAnalogy("((z))") ],
     "n":  [ LineElementNumber("4711", 0.01) ], 
     "nr": [ LineElementNumber("4711") ]
 }

@@ -90,7 +90,7 @@ class LineElement:
             case E_ToleranceId.NUMERIC:
                 return LineElementNumber(global_string[start:end], numeric_tolerance_ratio)
             case E_ToleranceId.ANALOGY:
-                return LineElementAnalogy(start, end, global_string)
+                return LineElementAnalogy(global_string[start:end])
             case E_ToleranceId.SEPERATOR:
                 return LineElementSeparator(global_string[start:end])
             case _:
@@ -196,8 +196,8 @@ class LineElementString(LineElement):
         return hash(self.string) ^ hash(self.tolerance_id)
 
 class LineElementAnalogy(LineElement):
-    def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.ANALOGY,  string[start:end])
+    def __init__(self, content):
+        LineElement.__init__(self, E_ToleranceId.ANALOGY, content)
 
     def _compare(self, nominal):
         """RETURNS: [0] True, any way.
