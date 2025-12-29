@@ -130,27 +130,34 @@ class PatternFinder:
 
         def _analyze_optimized(string):
             i = 0
-            # finditer is highly optimized; it performs the search and return matches in C
             for m in self.master_re.finditer(string):
                 start, end = m.span()
                 
-                # Gap before match: Create string literal element
-                if i != start:
+                if i < start: # Changed != to < for safety
                     yield LineElementString(i, start, string)
 
-                # RADICAL OPTIMIZATION: Bypass 'Token' object creation.
-                # We fetch metadata from the map and call the factory directly.
+                # Correctly handle multiple equivalence groups
+                pattern_indices = None
                 tolerance = self._group_map[m.lastgroup]
                 
-                # Directly produce LineElement without intermediate Token allocation
-                match = LineElement.from_match(tolerance, m, string, self.numeric_tolerance_ratio)
-                if match is not None:
-                    yield match
+                if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
+                    matched_text = m.group()
+                    # Re-scan the table to find all overlapping equivalence IDs
+                    pattern_indices = {
+                        tp.pattern_index for tp in self._group_map.values()
+                        if tp.id == E_ToleranceId.EQUIVALENCE_PATTERN and 
+                        tp.pattern and tp.pattern.fullmatch(matched_text)
+                    }
 
+                match = LineElement.from_match(tolerance, m, string, 
+                                               self.numeric_tolerance_ratio, 
+                                               pattern_i_set=pattern_indices)
+                if match:
+                    yield match
+                
                 i = end
 
-            # Remainder of the line
-            if i != len(string):
+            if i < len(string):
                 yield LineElementString(i, len(string), string)
 
         return tuple(_analyze_optimized(string))

@@ -80,11 +80,10 @@ class LineElement:
             case E_ToleranceId.VISIBLE_NOTHING:
                 return LineElementVisibleNothing(start, end, global_string)
             case E_ToleranceId.EQUIVALENCE_PATTERN:
-                return LineElementEquivalencePattern(start, end, global_string,
-                                                     set([pattern.pattern_index]))
+                indices = pattern_i_set if pattern_i_set is not None else {pattern.pattern_index}
+                return LineElementEquivalencePattern(start, end, global_string, indices)
             case E_ToleranceId.NUMERIC:
-                return LineElementNumber(start, end, global_string,
-                                     numeric_tolerance_ratio)
+                return LineElementNumber(start, end, global_string, numeric_tolerance_ratio)
             case E_ToleranceId.ANALOGY:
                 return LineElementAnalogy(start, end, global_string)
             case E_ToleranceId.SEPERATOR:

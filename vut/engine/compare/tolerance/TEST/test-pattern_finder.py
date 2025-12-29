@@ -38,7 +38,7 @@ from   vut.engine.compare.tolerance.line_element   import E_ToleranceId
 
 if "--hwut-info" in sys.argv:
     print("Tolerance PatternFinder;")
-    print("CHOICES: setup, tolerance_id, do;")
+    print("CHOICES: setup, tolerance_id, do, aggressive;")
     sys.exit()
 
 
@@ -123,3 +123,43 @@ if "do" in sys.argv:
     test("4711 hallo 4711 nothing")
     test("bonjour ((4711)) le monde")
 
+if "aggressive" in sys.argv:
+    print("\n--- Aggressive Scenarios: Overlaps and Gaps ---")
+    config = empty_config()
+    config.analogy_f = True
+    config.numeric_tolerance_ratio = 0.01
+    # Overlapping equivalence patterns: 'funny' belongs to three groups
+    config.equivalent_pattern_list = [ 
+        r"funny|happy", # ID 0
+        r"funny|smart", # ID 1
+        r"funny|glad",  # ID 2
+        r"I|me"         # ID 3
+    ]
+    pf = PatternFinder(config)
+
+    def test_agg(string):
+        print(f"\nProcessing: '{string}'")
+        elements = pf.do(string)
+        for e in elements:
+            # We use repr to see the pattern_index_set for Equivalence elements
+            print(f"  {repr(e)}")
+
+    # Case 1: The "Otto" check (Ensuring literal text survives when no patterns match)
+    test_agg("otto vs fritz")
+
+    # Case 2: The "Overlap" check (Ensuring 'funny' gets indices [0, 1, 2])
+    test_agg("funny")
+
+    # Case 3: Mixed bag (Patterns with literal gaps)
+    # 'funny' (pattern) + ' and ' (literal) + 'smart' (pattern)
+    test_agg("funny and smart")
+
+    # Case 4: The "Analogy/Literal" sandwich
+    test_agg("((A)) middle ((B))")
+
+    # Case 5: Complex identity check
+    # 'me' should only get ID [3], 'happy' only [0]
+    test_agg("me is happy")
+
+    # Case 6: Numeric next to literal
+    test_agg("value: 100.5 units")
