@@ -61,17 +61,13 @@ class LineElement:
     __slots__ = ('tolerance_id', 'start', 'end', 'reference', '_content')
 
     # @typechecked -- likely to be too expensive, called mio-s of times!
-    def __init__(self, tolerance_id: E_ToleranceId, start, end, string):
+    def __init__(self, tolerance_id: E_ToleranceId, content):
         self.tolerance_id = tolerance_id
         
         # OPTIMIZATION: Snapshot + Interning (The "Pool" Approach)
         # We slice ONCE here. Accessing .string later is now O(1).
         # sys.intern() deduplicates memory, so 1000 "foo" objects share 1 address.
-        substring = string[start:end]
-        if tolerance_id in (E_ToleranceId.STRING, E_ToleranceId.ANALOGY, E_ToleranceId.SEPERATOR):
-            self._content = sys.intern(substring)
-        else:
-            self._content = substring
+        self._content = sys.intern(content)
 
     @staticmethod
     # @typechecked likely to be too expensive: called mios of times
@@ -175,7 +171,7 @@ class LineElement:
 
 class LineElementSeparator(LineElement):
     def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.SEPERATOR, start, end, string)
+        LineElement.__init__(self, E_ToleranceId.SEPERATOR,  string[start:end])
 
     def _compare(self, nominal):
         """RETURNS: [0] True, any way.
@@ -188,7 +184,7 @@ class LineElementSeparator(LineElement):
 
 class LineElementString(LineElement):
     def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.STRING, start, end, string)
+        LineElement.__init__(self, E_ToleranceId.STRING,  string[start:end])
 
     def _compare(self, nominal):
         """RETURNS: [0] True, any way.
@@ -201,7 +197,7 @@ class LineElementString(LineElement):
 
 class LineElementAnalogy(LineElement):
     def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.ANALOGY, start, end, string)
+        LineElement.__init__(self, E_ToleranceId.ANALOGY,  string[start:end])
 
     def _compare(self, nominal):
         """RETURNS: [0] True, any way.
@@ -223,7 +219,7 @@ class LineElementNumber(LineElement):
 
     def __init__(self, start, end, string, numeric_tolerance_ratio=None):
         assert numeric_tolerance_ratio is None or 0.0 <= numeric_tolerance_ratio <= 1.0
-        LineElement.__init__(self, E_ToleranceId.NUMERIC, start, end, string)
+        LineElement.__init__(self, E_ToleranceId.NUMERIC,  string[start:end])
         self.number  = float(self.string)
         self.numeric_tolerance_ratio = 0 if numeric_tolerance_ratio is None \
                                        else numeric_tolerance_ratio
@@ -257,7 +253,7 @@ class LineElementNumber(LineElement):
 
 class LineElementVisibleNothing(LineElement):
     def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.VISIBLE_NOTHING, start, end, string)
+        LineElement.__init__(self, E_ToleranceId.VISIBLE_NOTHING,  string[start:end])
 
     def edit_distance_relative(self, nominal):
         return 0
@@ -279,7 +275,7 @@ class LineElementEquivalencePattern(LineElement):
     __slots__ = ('pattern_index_set',)
 
     def __init__(self, start, end, string, pattern_index_set):
-        LineElement.__init__(self, E_ToleranceId.EQUIVALENCE_PATTERN, start, end, string)
+        LineElement.__init__(self, E_ToleranceId.EQUIVALENCE_PATTERN,  string[start:end])
         # Indices of patterns which are matched.
         self.pattern_index_set = set(pattern_index_set)
 
