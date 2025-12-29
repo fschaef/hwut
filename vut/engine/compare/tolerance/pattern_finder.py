@@ -134,7 +134,7 @@ class PatternFinder:
                 start, end = m.span()
                 
                 if i < start: # Changed != to < for safety
-                    yield LineElementString(i, start, string)
+                    yield LineElementString(string[i:start])
 
                 # Correctly handle multiple equivalence groups
                 pattern_indices = None
@@ -157,7 +157,7 @@ class PatternFinder:
                 i = end
 
             if i < len(string):
-                yield LineElementString(i, len(string), string)
+                yield LineElementString(string[i:])
 
         return tuple(_analyze_optimized(string))
 

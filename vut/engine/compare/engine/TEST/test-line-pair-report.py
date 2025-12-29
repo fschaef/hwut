@@ -92,7 +92,7 @@ def TEST_monkey_chaos():
 # ------------------------------------------------------------------------------
 
 def FRAME_create_line(line_n, texts):
-    sequence = [LineElementString(0, len(t), t) for t in texts]
+    sequence = [LineElementString(t) for t in texts]
     return Line(line_n, sequence)
 
 def FRAME_execute_and_print(subject, nominal, edit_list):

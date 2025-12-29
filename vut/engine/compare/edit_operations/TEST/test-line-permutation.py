@@ -58,7 +58,7 @@ def get_example(tolerance_id, example_str="4711"):
     assert tolerance_id in E_ToleranceId
 
     if tolerance_id == E_ToleranceId.STRING:
-        return LineElementString(0, len(example_str), example_str)
+        return LineElementString(example_str)
     else:
         # Simulate a match and use the new from_match factory
         match = re.match(re.escape(example_str), example_str)

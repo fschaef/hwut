@@ -181,8 +181,8 @@ class LineElementSeparator(LineElement):
         return hash(self.string) ^ hash(E_ToleranceId.SEPERATOR)
 
 class LineElementString(LineElement):
-    def __init__(self, start, end, string):
-        LineElement.__init__(self, E_ToleranceId.STRING,  string[start:end])
+    def __init__(self, content):
+        LineElement.__init__(self, E_ToleranceId.STRING, content)
 
     def _compare(self, nominal):
         """RETURNS: [0] True, any way.

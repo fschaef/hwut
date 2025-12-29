@@ -59,7 +59,7 @@ def compare(first, second):
     return "(%s, %s)" % (verdict.name, analogy)
 
 def test(good_subject, bad_subject, nominal):
-    misfit_subject = LineElementString(0, 0, "")
+    misfit_subject = LineElementString("")
     if good_subject.tolerance_id == E_ToleranceId.STRING:
         misfit_subject.tolerance_id = E_ToleranceId.ANALOGY
     print("GOOD.compare:            %s"   % compare(good_subject, nominal))
@@ -76,15 +76,15 @@ def test(good_subject, bad_subject, nominal):
     print("NOMINAL.representation:  %s"   % nominal)
 
 if choice == "LineElementString":
-    test(LineElementString(6, 10,  "A fox jumps high"),
-         LineElementString(3, 11,  "An elephant does not jump"),
-         LineElementString(11, 16, "Mice don't jump"))
-    test(LineElementString(6, 6,   "A fox jumps high"), # Empty:
-         LineElementString(3, 11,  "An elephant does not jump"),
-         LineElementString(11, 16, "Mice don't jump"))
-    test(LineElementString(6, 10,  "A fox jumps high"),
-         LineElementString(3, 11,  "An elephant does not jump"),
-         LineElementString(11, 11, "Mice don't jump"))  # Empty:
+    test(LineElementString("A fox jumps high"[6:10]),
+         LineElementString("An elephant does not jump"[3:11]),
+         LineElementString("Mice don't jump"[11:16]))
+    test(LineElementString("A fox jumps high"[6:6]), # Empty:
+         LineElementString("An elephant does not jump"[3:11]),
+         LineElementString("Mice don't jump"[11:16]))
+    test(LineElementString("A fox jumps high"[6:10]),
+         LineElementString("An elephant does not jump"[3:11]),
+         LineElementString("Mice don't jump"[11:11]))  # Empty:
 
 if choice == "LineElementNumber":
     test(LineElementNumber("A fox 4712 high"[6:10]),

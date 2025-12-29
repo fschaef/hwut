@@ -22,7 +22,7 @@ class Line:
 
     @staticmethod
     def from_string(line_n, string):
-        return Line(line_n, [LineElementString(0, len(string), string)])
+        return Line(line_n, [LineElementString(string)])
 
     @staticmethod
     def from_potpourri(line_n, begin_f):

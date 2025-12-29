@@ -20,8 +20,8 @@ used to display the difference of a subject's output and the nominal output.
 The tests play with several line elements, indicated in the tests by 
 characters, namely:
 
-        "s": LineElementString(0,6,"string")      # strings
-        "S": LineElementString(0,6,"strong")
+        "s": LineElementString("string")      # strings
+        "S": LineElementString("strong")
         "x": LineElementAnalogy(0,5,"((x))")      # analogies 
         "y": LineElementAnalogy(0,5,"((y))")
         "z": LineElementAnalogy(0,5,"((z))")
