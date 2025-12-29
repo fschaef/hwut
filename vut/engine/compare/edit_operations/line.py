@@ -234,26 +234,28 @@ class WorkItem(WorkListBase):
         # For performance, it is essential that 'cheap' steps are treated first.
         # => more expensive paths are cut early.
         good_id = None
-        if   verdict_id == E_Verdict.MISFIT:
-            yield self._step_standard(SUBSTITUTE_TYPE)
-        elif verdict_id == E_Verdict.DIFFERENT:
-            yield self._step_standard(SUBSTITUTE,
-                                     cost_factor = subject_le.edit_distance_relative(nominal_le))
-        elif verdict_id == E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
-            good_id = GOOD_DELETE
-        elif verdict_id == E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
-            good_id = GOOD_INSERT
-        elif verdict_id == E_Verdict.EQUIVALENT:
-            if not self.edit_list.analogy_db.is_consistent(analogy):
-                yield self._step_standard(SUBSTITUTE)
-            elif subject_le.string       != nominal_le.string:  
-                good_id = GOOD_TOLERATED
-            elif subject_le.tolerance_id == ANALOGY: 
-                good_id = GOOD_TOLERATED
-            else:                                                     
-                good_id = GOOD
-        else:
-            assert False
+
+        match verdict_id:
+            case E_Verdict.MISFIT:
+                yield self._step_standard(SUBSTITUTE_TYPE)
+            case E_Verdict.DIFFERENT:
+                yield self._step_standard(SUBSTITUTE,
+                                          cost_factor = subject_le.edit_distance_relative(nominal_le))
+            case E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
+                good_id = GOOD_DELETE
+            case E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
+                good_id = GOOD_INSERT
+            case E_Verdict.EQUIVALENT:
+                if not self.edit_list.analogy_db.is_consistent(analogy):
+                    yield self._step_standard(SUBSTITUTE)
+                elif subject_le.string       != nominal_le.string:  
+                    good_id = GOOD_TOLERATED
+                elif subject_le.tolerance_id == ANALOGY: 
+                    good_id = GOOD_TOLERATED
+                else:                                                     
+                    good_id = GOOD
+            case _:
+                assert False
 
         if good_id is None:
             yield from (
