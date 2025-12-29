@@ -87,9 +87,9 @@ if choice == "LineElementString":
          LineElementString(11, 11, "Mice don't jump"))  # Empty:
 
 if choice == "LineElementNumber":
-    test(LineElementNumber(6, 10,  "A fox 4712 high"),
-         LineElementNumber(3, 7,   "An 5000 13  does not jump"),
-         LineElementNumber(11, 16, "Mice don't 4711", 0.01))
+    test(LineElementNumber("A fox 4712 high"[6:10]),
+         LineElementNumber("An 5000 13  does not jump"[3:7]),
+         LineElementNumber("Mice don't 4711"[11:16], 0.01))
 
 if choice == "LineElementEquivalencePattern":
     test(LineElementEquivalencePattern(2, 5, "A fox jumps high", (1,2,3)),

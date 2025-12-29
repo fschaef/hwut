@@ -58,8 +58,8 @@ line_element_db = {
     "x":  [ LineElementAnalogy(0,5,"((x))") ],
     "y":  [ LineElementAnalogy(0,5,"((y))") ],
     "z":  [ LineElementAnalogy(0,5,"((z))") ],
-    "n":  [ LineElementNumber(0,4,"4711", 0.01) ], 
-    "nr": [ LineElementNumber(0,4,"4711") ]
+    "n":  [ LineElementNumber("4711", 0.01) ], 
+    "nr": [ LineElementNumber("4711") ]
 }
 def prepare(x, nominal_f=False):
     for letter in x:

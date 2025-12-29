@@ -25,7 +25,7 @@ characters, namely:
         "x": LineElementAnalogy(0,5,"((x))")      # analogies 
         "y": LineElementAnalogy(0,5,"((y))")
         "z": LineElementAnalogy(0,5,"((z))")
-        "n": LineElementNumber(0,4,"4711", 0.01)  # number
+        "n": LineElementNumber("4711", 0.01)  # number
 
 The tests compose a 'Line' object as a sequence of line elements. With 
 these 'Line' objects '.compare()' and '.edit_operations()' is called.

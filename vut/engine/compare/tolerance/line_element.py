@@ -88,7 +88,7 @@ class LineElement:
                 indices = pattern_i_set if pattern_i_set is not None else {pattern.pattern_index}
                 return LineElementEquivalencePattern(start, end, global_string, indices)
             case E_ToleranceId.NUMERIC:
-                return LineElementNumber(start, end, global_string, numeric_tolerance_ratio)
+                return LineElementNumber(global_string[start:end], numeric_tolerance_ratio)
             case E_ToleranceId.ANALOGY:
                 return LineElementAnalogy(start, end, global_string)
             case E_ToleranceId.SEPERATOR:
@@ -217,9 +217,9 @@ class LineElementAnalogy(LineElement):
 class LineElementNumber(LineElement):
     __slots__ = ('number', 'numeric_tolerance_ratio')
 
-    def __init__(self, start, end, string, numeric_tolerance_ratio=None):
+    def __init__(self, content, numeric_tolerance_ratio=None):
         assert numeric_tolerance_ratio is None or 0.0 <= numeric_tolerance_ratio <= 1.0
-        LineElement.__init__(self, E_ToleranceId.NUMERIC,  string[start:end])
+        LineElement.__init__(self, E_ToleranceId.NUMERIC, content)
         self.number  = float(self.string)
         self.numeric_tolerance_ratio = 0 if numeric_tolerance_ratio is None \
                                        else numeric_tolerance_ratio
