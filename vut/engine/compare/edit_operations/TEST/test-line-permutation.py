@@ -64,7 +64,7 @@ def get_example(tolerance_id, example_str="4711"):
         match = re.match(re.escape(example_str), example_str)
         p_idx = 1 if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN else None
         tp    = TolerancePattern(tolerance_id, None, p_idx)
-        return LineElement.from_match(tp, match, example_str, 0.1)
+        return LineElement.from_match(tp, example_str, 0.1)
 
 tolerance_db = {
    0: E_ToleranceId.STRING,

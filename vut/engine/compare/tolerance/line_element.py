@@ -22,7 +22,6 @@ import vut.engine.compare.edit_operations.string as     edit_distance_string
 from   vut.engine.compare.engine.core            import E_Verdict
 
 from   enum        import IntEnum
-from   typing      import Any
 import regex       as re
 from   dataclasses import dataclass
 import sys  # REQUIRED for sys.intern optimization => store same strings once
@@ -71,28 +70,27 @@ class LineElement:
 
     @staticmethod
     # @typechecked likely to be too expensive: called mios of times
-    def from_match(pattern: TolerancePattern, m: Any, global_string: str, numeric_tolerance_ratio: float, pattern_i_set=None):
+    def from_match(pattern: TolerancePattern, content: str, numeric_tolerance_ratio: float, pattern_i_set=None):
         """RETURNS: A 'LineElement' object based on the provided match data
                     inside this object.
         """
         tolerance_id = pattern.id
-        start, end   = m.span()
         # LineElementString objects are the 'waste' of pattern finding.
         # They are not generated from tokens.
         assert tolerance_id != E_ToleranceId.STRING
 
         match tolerance_id:
             case E_ToleranceId.VISIBLE_NOTHING:
-                return LineElementVisibleNothing(global_string[start:end])
+                return LineElementVisibleNothing(content)
             case E_ToleranceId.EQUIVALENCE_PATTERN:
                 indices = pattern_i_set if pattern_i_set is not None else {pattern.pattern_index}
-                return LineElementEquivalencePattern(global_string[start:end], indices)
+                return LineElementEquivalencePattern(content, indices)
             case E_ToleranceId.NUMERIC:
-                return LineElementNumber(global_string[start:end], numeric_tolerance_ratio)
+                return LineElementNumber(content, numeric_tolerance_ratio)
             case E_ToleranceId.ANALOGY:
-                return LineElementAnalogy(global_string[start:end])
+                return LineElementAnalogy(content)
             case E_ToleranceId.SEPERATOR:
-                return LineElementSeparator(global_string[start:end])
+                return LineElementSeparator(content)
             case _:
                 assert False # pragma: no cover
 

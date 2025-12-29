@@ -1,0 +1,10 @@
+Starting benchmark (n=50000, complexity=0.7)...
+------------------------------
+Benchmark Results:
+  Processed: 50000 lines
+  Found:     243842 elements
+  Time:      8.1751 seconds
+  Throughput: 6116.14 lines/sec
+------------------------------
+Starting verification of 50000 lines...
+Verification successful: Results are consistent with expectations.
