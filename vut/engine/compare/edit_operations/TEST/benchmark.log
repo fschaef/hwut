@@ -1,10 +1,9 @@
 --- Line Element Benchmark (N=100, Len=50) ---
-Total Time: 6.6081s
-Throughput: 1514.66 elements/sec
+Total Time: 5.9788s
+Throughput: 1674.07 elements/sec
 ----------------------------------------
 
 --- Line Sequence Benchmark (N=100, Lines=50) ---
-Total Time: 1.0137s
-Throughput: 4932.33 lines/sec
+Total Time: 0.8924s
+Throughput: 5602.76 lines/sec
 ----------------------------------------
-

@@ -54,7 +54,7 @@ class ScenarioGenerator:
         """Creates a mock LineElement."""
         tol_id = self.type_pool[self.stream.next_int(0, len(self.type_pool) - 1)]
         content = "".join(chr(self.stream.next_int(97, 122)) for _ in range(content_len))
-        le = LineElementString(0, content_len, content)
+        le = LineElementString(content)
         le.tolerance_id = tol_id
         return le
 
