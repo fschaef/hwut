@@ -63,9 +63,6 @@ class LineElement:
     # @typechecked -- likely to be too expensive, called mio-s of times!
     def __init__(self, tolerance_id: E_ToleranceId, start, end, string):
         self.tolerance_id = tolerance_id
-        self.start        = start
-        self.end          = end
-        self.reference    = string
         
         # OPTIMIZATION: Snapshot + Interning (The "Pool" Approach)
         # We slice ONCE here. Accessing .string later is now O(1).
