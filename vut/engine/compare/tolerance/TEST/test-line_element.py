@@ -92,9 +92,9 @@ if choice == "LineElementNumber":
          LineElementNumber("Mice don't 4711"[11:16], 0.01))
 
 if choice == "LineElementEquivalencePattern":
-    test(LineElementEquivalencePattern(2, 5, "A fox jumps high", (1,2,3)),
-         LineElementEquivalencePattern(2, 6, "A mize not jump", (7,8)),
-         LineElementEquivalencePattern(0, 4, "Mice don't", (3,4,5)))
+    test(LineElementEquivalencePattern("A fox jumps high"[2:5], (1,2,3)),
+         LineElementEquivalencePattern("A mize not jump"[2:6], (7,8)),
+         LineElementEquivalencePattern("Mice don't"[0:4], (3,4,5)))
 
 if choice == "LineElementAnalogy":
     test(LineElementAnalogy("A ((fox)) jumps"[2:9]),

@@ -86,7 +86,7 @@ class LineElement:
                 return LineElementVisibleNothing(global_string[start:end])
             case E_ToleranceId.EQUIVALENCE_PATTERN:
                 indices = pattern_i_set if pattern_i_set is not None else {pattern.pattern_index}
-                return LineElementEquivalencePattern(start, end, global_string, indices)
+                return LineElementEquivalencePattern(global_string[start:end], indices)
             case E_ToleranceId.NUMERIC:
                 return LineElementNumber(global_string[start:end], numeric_tolerance_ratio)
             case E_ToleranceId.ANALOGY:
@@ -274,8 +274,8 @@ class LineElementVisibleNothing(LineElement):
 class LineElementEquivalencePattern(LineElement):
     __slots__ = ('pattern_index_set',)
 
-    def __init__(self, start, end, string, pattern_index_set):
-        LineElement.__init__(self, E_ToleranceId.EQUIVALENCE_PATTERN,  string[start:end])
+    def __init__(self, content, pattern_index_set):
+        LineElement.__init__(self, E_ToleranceId.EQUIVALENCE_PATTERN, content)
         # Indices of patterns which are matched.
         self.pattern_index_set = set(pattern_index_set)
 

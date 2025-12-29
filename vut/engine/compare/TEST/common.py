@@ -50,7 +50,7 @@ line_element_db = {
     "1":  [ LineElementString(0,1,"a") ],
     "2":  [ LineElementString(0,1,"b") ],
     "3":  [ LineElementString(0,1,"a b"), 
-            LineElementEquivalencePattern(1,2, "a b", [0 ]),
+           LineElementEquivalencePattern("a b"[1:2], [0 ]),
             LineElementString(2,3,"a b")  ],
     "s":  [ LineElementString(0,6,"string") ],
     "S":  [ LineElementString(0,6,"strong") ],
