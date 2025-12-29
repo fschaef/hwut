@@ -81,7 +81,7 @@ class LineElement:
                 return LineElementVisibleNothing(start, end, global_string)
             case E_ToleranceId.EQUIVALENCE_PATTERN:
                 return LineElementEquivalencePattern(start, end, global_string,
-                                                 set([pattern.pattern_index]))
+                                                     set([pattern.pattern_index]))
             case E_ToleranceId.NUMERIC:
                 return LineElementNumber(start, end, global_string,
                                      numeric_tolerance_ratio)
