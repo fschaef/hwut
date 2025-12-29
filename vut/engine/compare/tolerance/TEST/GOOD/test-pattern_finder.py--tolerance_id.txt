@@ -1,7 +1,7 @@
 
 size: 5;
 None -> STRING
-\(\(([^\)]|[\)][^\)])+\)\) -> ANALOGY
+\(\((?:.|\\n)+?\)\) -> ANALOGY
 -?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
 otto -> EQUIVALENCE_PATTERN
 fritz -> EQUIVALENCE_PATTERN

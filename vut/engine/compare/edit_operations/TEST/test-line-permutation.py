@@ -4,7 +4,7 @@ ______________________________________________________________________________
 
 PURPOSE: Edit operations for different cases of line elements interferring.
 
-CHOICES: different   -- categories of LineElement-s are different.
+CHOICES: different    -- categories of LineElement-s are different.
          different-2 -- same as 'different', but with bordering line elements.
          same        -- categories are the same.
 
@@ -16,10 +16,10 @@ of 'LineElement'-s dependent on their 'E_ToleranceId':
 
         STRING              
         VISIBLE_NOTHING     
-        ANALOGY             
-        NUMERIC             
-        EQUIVALENCE_PATTERN 
-        SEPERATOR           
+        ANALOGY              
+        NUMERIC              
+        EQUIVALENCE_PATTERN  
+        SEPERATOR            
 
 This enumeration is checked upon entry, such that all tests fail if the
 enumeration struct is different.
@@ -32,16 +32,17 @@ AUTHOR: 2021, Frank-Rene Schaefer.
 ______________________________________________________________________________
 """
 import sys
+import re
 
 sys.path.insert(0, "../../../../../")
 
-from   vut.engine.compare.tolerance.line_element import E_ToleranceId, \
+from    vut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                         LineElement, \
-                                                        LineElementString, \
-                                                        Token
-import vut.engine.compare.edit_operations.line   as     edit_operations_line
+                                                        LineElementString
+from    vut.engine.compare.tolerance.pattern_finder import TolerancePattern
+import vut.engine.compare.edit_operations.line   as      edit_operations_line
 
-from   itertools import combinations
+from    itertools import combinations
 
 if "--hwut-info" in sys.argv:
     print("Lines: Permutation LineElement-types;")
@@ -59,9 +60,11 @@ def get_example(tolerance_id, example_str="4711"):
     if tolerance_id == E_ToleranceId.STRING:
         return LineElementString(0, len(example_str), example_str)
     else:
-        token = Token(tolerance_id, 0, len(example_str), 
-                      pattern_i_set = [1] if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN else None)
-        return LineElement.from_Token(token, example_str, 0.1)
+        # Simulate a match and use the new from_match factory
+        match = re.match(re.escape(example_str), example_str)
+        p_idx = 1 if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN else None
+        tp    = TolerancePattern(tolerance_id, None, p_idx)
+        return LineElement.from_match(tp, match, example_str, 0.1)
 
 tolerance_db = {
    0: E_ToleranceId.STRING,

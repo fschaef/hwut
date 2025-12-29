@@ -4,7 +4,7 @@ ____________________________________________________________________________
 
 PURPOSE:  PatternFinder -- identfiying tolerance pattern in text lines.
 
-CHOICES:  setup, find_first_match, tolerance_id, do;
+CHOICES:  setup, tolerance_id, do;
 
 The 'PatternFinder' searches patterns in a line of text and produces 
 'LineElement'-s. Each line element corresponds to an identified pattern
@@ -17,11 +17,6 @@ setup:
 
    setup the tolerance table in the PatterFinder according to configuration
    settings.
-
-find_first_match:
-
-   finding the first pattern that matches starting from a given position in the
-   string.
 
 tolerance_id:
 
@@ -37,13 +32,13 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-from   vut.engine.compare.tolerance.pattern_finder import PatternFinder, _find_first_match
+from   vut.engine.compare.tolerance.pattern_finder import PatternFinder
 from   vut.engine.compare.tolerance.line_element   import E_ToleranceId
 
 
 if "--hwut-info" in sys.argv:
     print("Tolerance PatternFinder;")
-    print("CHOICES: setup, find_first_match, tolerance_id, do;")
+    print("CHOICES: setup, tolerance_id, do;")
     sys.exit()
 
 
@@ -93,41 +88,6 @@ if "setup" in sys.argv:
     config = empty_config()
     config.visible_nothing_pattern_list = [ "nothing", "error" ]
     show(PatternFinder(config))
-
-if "find_first_match" in sys.argv:
-    config = empty_config()
-    config.equivalent_pattern_list = [ r"hallo", r"welt", r"hallodrio", "happy|funny", "happy|glad", "[0-9]+", "happ" ]
-    config.numeric_tolerance_ratio = 0.1
-    pattern_finder = PatternFinder(config)
-    show(pattern_finder)
-
-    def test(string, i):
-        useless = set()
-        token             = _find_first_match(pattern_finder.table, string, i, useless)
-        tolerance_id      = token.tolerance_id
-        pattern_index_set = token.pattern_i_set
-        span              = (token.start, token.end)
-        if tolerance_id is None:
-            print("string: '%s' at %i" % (string, i) + " -> None; useless %s" % useless)
-        elif tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
-            print("string: '%s' at %i" % (string, i) + " -> %s %s; %s; useless %s" % (tolerance_id.name, sorted(pattern_index_set), span, useless))
-        else:
-            print("string: '%s' at %i" % (string, i) + " -> %s; %s; useless %s" % (tolerance_id.name, span, useless))
-
-    for text in "hallo", "welti":
-        test("%s  " % text, 0)
-        test(" %s " % text, 0)
-        test("  %s" % text, 0)
-        test("%s  " % text, 1)
-        test(" %s " % text, 1)
-        test("  %s" % text, 1)
-        test("%s  " % text, 2)
-        test(" %s " % text, 2)
-        test("  %s" % text, 2)
-
-    test(" happy", 0)
-    test(" hallodrio", 0)
-    test("   4711", 0)
 
 if "tolerance_id" in sys.argv:
     config                         = empty_config()

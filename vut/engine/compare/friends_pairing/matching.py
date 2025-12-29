@@ -24,10 +24,13 @@ ________________________________________________________________________________
 """
 import vut.engine.compare.friends_pairing.solver.maximum_bipartite_matching     as solver_max_bpm
 import vut.engine.compare.friends_pairing.solver.csp_backtracking_mrv           as solver_csp_mrv
-import vut.engine.compare.friends_pairing.solver.csp_arc_consistency            as solver_csp_arc
-import vut.engine.compare.friends_pairing.solver.csp_chronological_backtracking as solver_csp_chbt
+###
+## The following algorithms are 'on hold' since the former algos outperformed them in any scenario
+## However, they have been left in place, in the case that someone finds solutions for the bottle-necks.
+##
+## import vut.engine.compare.friends_pairing.solver.csp_arc_consistency            as solver_csp_arc
+## import vut.engine.compare.friends_pairing.solver.csp_chronological_backtracking as solver_csp_chbt
 
-from   vut.engine.compare.friends_pairing.solver.lilly_pad_lanes_adapter import LillyPadLanesAdapter
 
 from   vut.engine.compare.engine.analogy_db import AnalogyDb
 
@@ -128,24 +131,7 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
 
     if state.aborted_f or not db: return state
 
-    if True:
-        db = db.clone_with_FrozenAnalogyDb()
-        return solver_csp_mrv.do(db, state.analogy_constraint_db, 
-                                 state.pair_db, 
-                                 state.required_pair_n)
-    elif False:
-        return solver_csp_chbt.do(db)
-    else:
-        adapter                = LillyPadLanesAdapter(state.potential_pair_db)
-        db, pad_ids_by_lane_db = adapter.prepare_problem()
-        solution               = solver_csp_arc.do(db, pad_ids_by_lane_db)
-
-        if solution is None:
-            state.aborted_f = True
-        else:
-            state.potential_pair_db = {}
-            state.pair_db,              \
-            state.analogy_constraint_db = adapter.interprete_solution(solution)
-
-        return state
-
+    db = db.clone_with_FrozenAnalogyDb()
+    return solver_csp_mrv.do(db, state.analogy_constraint_db, 
+                             state.pair_db, 
+                             state.required_pair_n)

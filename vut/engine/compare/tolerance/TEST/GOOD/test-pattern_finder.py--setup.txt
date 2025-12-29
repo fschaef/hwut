@@ -4,7 +4,7 @@ None -> STRING
 
 size: 2;
 None -> STRING
-\(\(([^\)]|[\)][^\)])+\)\) -> ANALOGY
+\(\((?:.|\\n)+?\)\) -> ANALOGY
 
 size: 2;
 None -> STRING

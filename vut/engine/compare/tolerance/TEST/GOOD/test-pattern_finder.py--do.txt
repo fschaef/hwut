@@ -2,7 +2,7 @@
 size: 6;
 None -> STRING
 nothing -> VISIBLE_NOTHING
-\(\(([^\)]|[\)][^\)])+\)\) -> ANALOGY
+\(\((?:.|\\n)+?\)\) -> ANALOGY
 -?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
 [ \t]+ -> SEPERATOR
 hallo -> EQUIVALENCE_PATTERN
@@ -28,4 +28,3 @@ string: 'bonjour ((4711)) le monde'
    (17,19): STRING 'le'
    (19,20): SEPERATOR ' '
    (20,25): STRING 'monde'
-

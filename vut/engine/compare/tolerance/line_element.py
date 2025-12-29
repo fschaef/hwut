@@ -21,8 +21,11 @@ ________________________________________________________________________________
 import vut.engine.compare.edit_operations.string as     edit_distance_string
 from   vut.engine.compare.engine.core            import E_Verdict
 
-from   enum import IntEnum
-from   typeguard import typechecked
+from   enum        import IntEnum
+from   typeguard   import typechecked
+from   typing      import Any
+import regex       as re
+from   dataclasses import dataclass
 
 class E_ToleranceId(IntEnum):
     STRING              = 1
@@ -32,37 +35,11 @@ class E_ToleranceId(IntEnum):
     EQUIVALENCE_PATTERN = 5
     SEPERATOR           = 6
 
-class Token:
-    """The PatternFinder calls a function 
-        
-           _find_first_match()          --> 'Token'
-    
-    which returns an object of class 'Token'. By means of this object the
-    'LineElement' is according produced via:
-
-           LineElement.from_Token(...)  --> 'LineElement'
-
-    """
-    @typechecked
-    def __init__(self, tolerance_id: E_ToleranceId|None=None, start=None, end=None, pattern_i_set=None):
-        self.tolerance_id  = tolerance_id
-        self.start         = start
-        self.end           = end
-        self.pattern_i_set = pattern_i_set # set of pattern indices involved
-
-    def set(self, tolerance, span):
-        self.start        = span[0]
-        self.end          = span[1]
-        self.tolerance_id = tolerance.id
-        if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
-            self.pattern_i_set = set([tolerance.pattern_index])
-
-    def add(self, tolerance):
-        if self.tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
-            self.pattern_i_set.add(tolerance.pattern_index)
-        else:
-            self.tolerance_id  = tolerance.id
-            self.pattern_i_set = set([tolerance.pattern_index])
+@dataclass
+class TolerancePattern:
+    id:            int
+    pattern:       re.Pattern | None
+    pattern_index: int | None
 
 class LineElement:
     """Base class for all 'LineElement' classes. It contains:
@@ -89,35 +66,31 @@ class LineElement:
 
     @staticmethod
     @typechecked
-    def from_Token(token: Token, global_string: str, numeric_tolerance_ratio):
+    def from_match(pattern: TolerancePattern, m: Any, global_string: str, numeric_tolerance_ratio: float, pattern_i_set=None):
         """RETURNS: A 'LineElement' object based on the provided match data
                     inside this object.
         """
+        tolerance_id = pattern.id
+        start, end   = m.span()
         # LineElementString objects are the 'waste' of pattern finding.
         # They are not generated from tokens.
-        assert token.tolerance_id != E_ToleranceId.STRING
+        assert tolerance_id != E_ToleranceId.STRING
 
-        tolerance_id = token.tolerance_id
-        start, end   = token.start, token.end
-
-        if tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
-            return LineElementVisibleNothing(start, end, global_string)
-
-        elif tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN:
-            return LineElementEquivalencePattern(start, end, global_string,
-                                                 token.pattern_i_set)
-
-        elif tolerance_id == E_ToleranceId.NUMERIC:
-            return LineElementNumber(start, end, global_string,
+        match tolerance_id:
+            case E_ToleranceId.VISIBLE_NOTHING:
+                return LineElementVisibleNothing(start, end, global_string)
+            case E_ToleranceId.EQUIVALENCE_PATTERN:
+                return LineElementEquivalencePattern(start, end, global_string,
+                                                 set([pattern.pattern_index]))
+            case E_ToleranceId.NUMERIC:
+                return LineElementNumber(start, end, global_string,
                                      numeric_tolerance_ratio)
-
-        elif tolerance_id == E_ToleranceId.ANALOGY:
-            return LineElementAnalogy(start, end, global_string)
-
-        elif tolerance_id == E_ToleranceId.SEPERATOR:
-            return LineElementSeparator(start, end, global_string)
-        else:
-            assert False # pragma: no cover
+            case E_ToleranceId.ANALOGY:
+                return LineElementAnalogy(start, end, global_string)
+            case E_ToleranceId.SEPERATOR:
+                return LineElementSeparator(start, end, global_string)
+            case _:
+                assert False # pragma: no cover
 
     def compare(self, nominal):
         """RETURNS: [0] MISFIT,     if 'other' is of another class.

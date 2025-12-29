@@ -3,4 +3,5 @@ Testing the comparison functionality
 
 coverage run --omit ./*.py -a *.py 
 
+--not benchmark.py
 --not common.py
