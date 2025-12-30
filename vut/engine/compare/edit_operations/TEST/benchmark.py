@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 from vut.auxiliary.deterministic_random import DeterministicStream
-from vut.engine.compare.tolerance.line_element import E_ToleranceId, LineElementString
+from vut.engine.compare.tolerance.line_element import E_ToleranceId, LineElement
 from vut.engine.compare.engine.line import Line
 import vut.engine.compare.edit_operations.line as edit_line
 import vut.engine.compare.edit_operations.line_sequence as edit_seq
@@ -54,8 +54,7 @@ class ScenarioGenerator:
         """Creates a mock LineElement."""
         tol_id = self.type_pool[self.stream.next_int(0, len(self.type_pool) - 1)]
         content = "".join(chr(self.stream.next_int(97, 122)) for _ in range(content_len))
-        le = LineElementString(content)
-        le.tolerance_id = tol_id
+        le = LineElement.from_match(tol_id, content, 0.01, (1,2,3))
         return le
 
     def generate_le_pair(self, length: int, profile: MutationProfile) -> Tuple[List, List, float]:

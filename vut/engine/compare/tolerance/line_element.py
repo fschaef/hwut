@@ -1,12 +1,12 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: Unified "Boxed" LineElement using a frozen dataclass.
+PURPOSE: Polymorphic Slotted LineElements (High Performance).
 
-- Uses a frozen dataclass for automatic immutability (read-only attributes).
-- slots=True ensures a minimal memory footprint (no __dict__).
-- Flyweight pooling is implemented in __new__.
-- Maintains the homogeneous "Box" structure with generic val/aux slots.
-- Backward compatible factories and __repr__.
+OPTIMIZATIONS:
+- Polymorphic Dispatch: Bypasses 'match' overhead for hot-loop comparisons.
+- Manual __slots__: Minimal memory footprint per type.
+- Base-Class Pooling: Centralized Flyweight logic in LineElement.__new__.
+- Immutability: Protected against assignment via __setattr__ lock.
 ________________________________________________________________________________
 """
 import vut.engine.compare.edit_operations.string as edit_distance_string
@@ -16,7 +16,6 @@ from   dataclasses  import dataclass
 import regex        as re
 import sys
 import weakref
-from   typing       import Any
 
 class E_ToleranceId(IntEnum):
     STRING              = 1
@@ -32,166 +31,160 @@ class TolerancePattern:
     pattern:       re.Pattern | None
     pattern_index: int | None
 
-@dataclass(frozen=True, slots=True, repr=False)
 class LineElement:
-    """A homogeneous frozen 'Box' for all line element types.
-    
-    The @dataclass(frozen=True) decorator automatically prevents assignment.
-    The Flyweight pattern is implemented in __new__.
+    """Base class for all LineElements. 
+    Handles Flyweight pooling and immutability.
     """
-    tolerance_id: E_ToleranceId
-    _content:     str
-    val:          Any = None
-    aux:          Any = None
-    __weakref__:  Any
-
+    __slots__ = ('tolerance_id', '_content', '__weakref__')
     _pool = weakref.WeakValueDictionary()
 
-    def __new__(cls, tolerance_id, content, val=None, aux=None):
-        # 1. Standard Interning
-        interned_content = sys.intern(content)
+    def __new__(cls, tolerance_id, content, *args):
+        # 1. Fast Interning
+        content = sys.intern(content)
         
-        # 2. Identity Key
-        key = (tolerance_id, interned_content, val, aux)
-        
+        # 2. Pooling logic (Selective: Numbers and Patterns are usually unique)
+        if tolerance_id in (E_ToleranceId.NUMERIC, E_ToleranceId.EQUIVALENCE_PATTERN):
+            instance = object.__new__(cls)
+            object.__setattr__(instance, 'tolerance_id', tolerance_id)
+            object.__setattr__(instance, '_content', content)
+            return instance
+
+        key = (cls, tolerance_id, content)
         if (instance := cls._pool.get(key)):
             return instance
 
-        # 3. Create the frozen instance
+        # 3. Create new polymorphic instance
         instance = object.__new__(cls)
-        # We must use object.__setattr__ because the instance is 'frozen' 
-        # from the moment it is created.
         object.__setattr__(instance, 'tolerance_id', tolerance_id)
-        object.__setattr__(instance, '_content', interned_content)
-        object.__setattr__(instance, 'val', val)
-        object.__setattr__(instance, 'aux', aux)
-        
+        object.__setattr__(instance, '_content', content)
         cls._pool[key] = instance
         return instance
 
-    def __init__(self, *args, **kwargs):
-        # Dataclass generated __init__ is ignored as state is set in __new__
-        pass
+    def __init__(self, *args): pass
+
+    def __setattr__(self, name, value):
+        raise AttributeError("LineElement is read-only")
 
     @staticmethod
-    def from_match(pattern: TolerancePattern, content: str, numeric_tolerance_ratio: float, pattern_i_set=None):
-        tid = pattern.id
+    def from_match(tid: E_ToleranceId, content: str, numeric_tolerance_ratio: float, pattern_i_set=None):
         match tid:
             case E_ToleranceId.NUMERIC:
-                try:
-                    num_val = float(content)
-                except ValueError:
-                    num_val = 0.0
-                epsilon = abs(num_val * (numeric_tolerance_ratio or 0.0))
-                return LineElement(tid, content, val=num_val, aux=epsilon)
-            
+                return LineElementNumber(content, numeric_tolerance_ratio)
             case E_ToleranceId.EQUIVALENCE_PATTERN:
-                indices = frozenset(pattern_i_set if pattern_i_set is not None else (pattern.pattern_index,))
-                return LineElement(tid, content, val=indices)
-            
-            case E_ToleranceId.VISIBLE_NOTHING | E_ToleranceId.ANALOGY | E_ToleranceId.SEPERATOR:
-                return LineElement(tid, content)
-            
+                return LineElementEquivalencePattern(content, pattern_i_set)
+            case E_ToleranceId.VISIBLE_NOTHING:
+                return LineElementVisibleNothing(content)
+            case E_ToleranceId.ANALOGY:
+                return LineElementAnalogy(content)
+            case E_ToleranceId.SEPERATOR:
+                return LineElementSeparator(content)
             case _:
-                return LineElement(E_ToleranceId.STRING, content)
+                return LineElementString(content)
 
     def compare(self, nominal):
-        """Unified dispatch logic using match."""
+        """Standard polymorphic entrance."""
         if self is nominal:
             return E_Verdict.EQUIVALENT, None
-
+        
+        # Cross-type logic (Visible Nothing)
         s_tid, n_tid = self.tolerance_id, nominal.tolerance_id
+        if s_tid == E_ToleranceId.VISIBLE_NOTHING:
+            return (E_Verdict.EQUIVALENT if n_tid == E_ToleranceId.VISIBLE_NOTHING 
+                    else E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING), None
+        if n_tid == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+
         if s_tid != n_tid:
             return E_Verdict.MISFIT, None
 
-        match s_tid:
-            case E_ToleranceId.VISIBLE_NOTHING:
-                return E_Verdict.EQUIVALENT, None
-            case E_ToleranceId.NUMERIC:
-                if abs(self.val - nominal.val) <= nominal.aux:
-                    return E_Verdict.EQUIVALENT, None
-                return E_Verdict.DIFFERENT, None
-            case E_ToleranceId.EQUIVALENCE_PATTERN:
-                if not self.val.isdisjoint(nominal.val):
-                    return E_Verdict.EQUIVALENT, None
-                return E_Verdict.DIFFERENT, None
-            case E_ToleranceId.ANALOGY:
-                return E_Verdict.EQUIVALENT, (self._content, nominal._content)
-            case E_ToleranceId.SEPERATOR:
-                return E_Verdict.EQUIVALENT, None
-            case _: # STRING
-                if self._content == nominal._content:
-                    return E_Verdict.EQUIVALENT, None
-                return E_Verdict.DIFFERENT, None
+        return self._compare(nominal)
 
     def is_equivalent(self, nominal, analogy_db):
         if self is nominal: return True
         verdict_id, analogy = self.compare(nominal)
         return verdict_id == E_Verdict.EQUIVALENT and analogy_db.is_consistent(analogy)
 
-    def edit_distance_relative(self, nominal):
-        if self is nominal: return 0.0
-        match self.tolerance_id:
-            case E_ToleranceId.VISIBLE_NOTHING:
-                return 0.0
-            case E_ToleranceId.ANALOGY:
-                return 0.0
-            case E_ToleranceId.EQUIVALENCE_PATTERN:
-                if not self.val.isdisjoint(nominal.val): return 0
-                # Diff like a normal string
-                max_l = max(len(self._content), len(nominal._content))
-                if max_l == 0: return 0.0
-                return float(edit_distance_string.do(self._content, nominal._content)) / max_l
-            case E_ToleranceId.NUMERIC:
-                if self.val == nominal.val: return 0 # quick pass
-                # diff - tolerance (aux): distance is 0 if within dead-zone.
-                error = max(abs(self.val - nominal.val) - nominal.aux, 0.0)
-                if error == 0.0: return 0.0 # quick pass
-                mag = max(abs(self.val), abs(nominal.val))
-                # NOTE: 'mag' cannot be zero, because self.val != nominal.val
-                #       => check mag != 0 only as a guard rail against numeric weird events
-                return error / mag if mag != 0 else 1.0 
-            case _:
-                max_l = max(len(self._content), len(nominal._content))
-                if max_l == 0: return 0.0
-                return float(edit_distance_string.do(self._content, nominal._content)) / max_l
-
     @property
-    def string(self):
-        return self._content
+    def string(self): return self._content
+    def __len__(self): return len(self._content)
+    def __hash__(self): return id(self)
+    def __repr__(self): return "%s '%s'" % (self.tolerance_id.name, self._content)
 
-    def __len__(self):
-        return len(self._content)
+class LineElementString(LineElement):
+    __slots__ = ()
+    def __new__(cls, content):
+        return LineElement.__new__(cls, E_ToleranceId.STRING, content)
+    def _compare(self, nominal):
+        if self._content == nominal._content:
+            return E_Verdict.EQUIVALENT, None
+        return E_Verdict.DIFFERENT, None
+    def edit_distance_relative(self, nominal):
+        max_l = max(len(self._content), len(nominal._content))
+        if max_l == 0: return 0.0
+        return float(edit_distance_string.do(self._content, nominal._content)) / max_l
 
-    def __repr__(self):
-        match self.tolerance_id:
-            case E_ToleranceId.EQUIVALENCE_PATTERN:
-                return "%s %s '%s'" % (self.tolerance_id.name, sorted(self.val), self._content)
-            case _:
-                return "%s '%s'" % (self.tolerance_id.name, self._content)
+class LineElementNumber(LineElement):
+    __slots__ = ('number', 'epsilon')
+    def __new__(cls, content, ratio=0.0):
+        instance = LineElement.__new__(cls, E_ToleranceId.NUMERIC, content)
+        try:              v = float(content)
+        except Exception: v = 0.0
+        object.__setattr__(instance, 'number', v)
+        object.__setattr__(instance, 'epsilon', abs(v * (ratio or 0.0)))
+        return instance
 
-# ______________________________________________________________________________
-# BACKWARD COMPATIBILITY FACTORY FUNCTIONS
+    def _compare(self, nominal):
+        if abs(self.number - nominal.number) <= nominal.epsilon:
+            return E_Verdict.EQUIVALENT, None
+        return E_Verdict.DIFFERENT, None
 
-def LineElementString(content):
-    return LineElement(E_ToleranceId.STRING, content)
+    def edit_distance_relative(self, nominal):
+        diff = abs(self.number - nominal.number)
+        error = diff - nominal.epsilon
+        if error <= 0: return 0.0
+        mag = max(abs(self.number), abs(nominal.number))
+        return error / mag if mag != 0 else 1.0
 
-def LineElementSeparator(content):
-    return LineElement(E_ToleranceId.SEPERATOR, content)
+class LineElementEquivalencePattern(LineElement):
+    __slots__ = ('indices',)
+    def __new__(cls, content, indices):
+        instance = LineElement.__new__(cls, E_ToleranceId.EQUIVALENCE_PATTERN, content)
+        object.__setattr__(instance, 'indices', frozenset(indices))
+        return instance
 
-def LineElementAnalogy(content):
-    return LineElement(E_ToleranceId.ANALOGY, content)
+    def _compare(self, nominal):
+        if not self.indices.isdisjoint(nominal.indices):
+            return E_Verdict.EQUIVALENT, None
+        return E_Verdict.DIFFERENT, None
 
-def LineElementNumber(content, numeric_tolerance_ratio=0.0):
-    try:
-        num_val = float(content)
-    except ValueError:
-        num_val = 0.0
-    epsilon = abs(num_val * (numeric_tolerance_ratio or 0.0))
-    return LineElement(E_ToleranceId.NUMERIC, content, val=num_val, aux=epsilon)
+    def edit_distance_relative(self, nominal):
+        if not self.indices.isdisjoint(nominal.indices): return 0.0
+        max_l = max(len(self._content), len(nominal._content))
+        if max_l == 0: return 0.0
+        return float(edit_distance_string.do(self._content, nominal._content)) / max_l
 
-def LineElementVisibleNothing(content):
-    return LineElement(E_ToleranceId.VISIBLE_NOTHING, content)
+class LineElementAnalogy(LineElement):
+    __slots__ = ()
+    def __new__(cls, content):
+        return LineElement.__new__(cls, E_ToleranceId.ANALOGY, content)
+    def _compare(self, nominal):
+        return E_Verdict.EQUIVALENT, (self._content, nominal._content)
+    def edit_distance_relative(self, nominal): return 0.0
 
-def LineElementEquivalencePattern(content, indices):
-    return LineElement(E_ToleranceId.EQUIVALENCE_PATTERN, content, val=frozenset(indices))
+class LineElementSeparator(LineElement):
+    __slots__ = ()
+    def __new__(cls, content):
+        return LineElement.__new__(cls, E_ToleranceId.SEPERATOR, content)
+    def _compare(self, nominal): return E_Verdict.EQUIVALENT, None
+    def edit_distance_relative(self, nominal):
+        max_l = max(len(self._content), len(nominal._content))
+        if max_l == 0: return 0.0
+        return float(edit_distance_string.do(self._content, nominal._content)) / max_l
+
+class LineElementVisibleNothing(LineElement):
+    __slots__ = ()
+    def __new__(cls, content):
+        return LineElement.__new__(cls, E_ToleranceId.VISIBLE_NOTHING, content)
+    def _compare(self, nominal): return E_Verdict.EQUIVALENT, None
+    def edit_distance_relative(self, nominal): return 0.0
+

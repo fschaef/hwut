@@ -149,7 +149,7 @@ class PatternFinder:
                         tp.pattern and tp.pattern.fullmatch(matched_text)
                     }
 
-                match = LineElement.from_match(tolerance, m[0], self.numeric_tolerance_ratio, 
+                match = LineElement.from_match(tolerance.id, m[0], self.numeric_tolerance_ratio, 
                                                pattern_i_set=pattern_indices)
                 if match:
                     yield match
