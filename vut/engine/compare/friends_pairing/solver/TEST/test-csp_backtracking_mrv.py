@@ -53,5 +53,7 @@ elif "massive-pipe" in sys.argv:
     test("Massive Pipe (5k)", gen.analogy_pipe(5000))
 
 elif "lane-trap" in sys.argv:
-    n = 10000
+    try:              n = int(sys.argv[2])
+    except Exception: n = 10000
+
     test(f"Lane Trap {n}:", gen.lane_trap(n))
