@@ -3,9 +3,10 @@ from collections import defaultdict
 from functools   import lru_cache
 from typing      import Iterable
 from typeguard   import typechecked
+import weakref
 
 # Assuming local import context exists as per your snippet
-# from .analogy_db import LineNumberPair
+from .analogy_db import LineNumberPair, AnalogyDb
 
 class FrozenAnalogyDb:
     """Fast and efficient representation of 'AnalogyDb'.
@@ -45,15 +46,15 @@ class FrozenAnalogyDb:
     'is_consistent' operation validates these rules using bitwise 
     intersections (if small) or Pair-ID set comparisons.
     """
+    # Use WeakValueDictionary to prevent memory leaks in backtracking search
+    _pool     = weakref.WeakValueDictionary() 
     _pool     = {} 
-    # REPAIR: Prefix slots with underscores to allow read-only property access
     __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask')
     
     # HYBRID THRESHOLD: If IDs exceed this, we skip bitmask generation.
     # 256 bits = 32 bytes (CPU word efficient)
     _MASK_LIMIT = 256
 
-    # --- Property Accessors (Read-Only) ---
     @property
     def subj_mask(self) -> int: return self._subj_mask
 
@@ -108,9 +109,15 @@ class FrozenAnalogyDb:
             if diff > 0:
                 cls.pair_provenance.extend([None] * diff)
             
-            # Direct assignment
-            if cls.pair_provenance[pair_id] is None:
+            old_lp = cls.pair_provenance[pair_id]
+            if old_lp is None:
                 cls.pair_provenance[pair_id] = lp
+            else:
+                # Comparison logic for "earliest"
+                new_key = (lp.subject_line_n, lp.nominal_line_n)
+                old_key = (old_lp.subject_line_n, old_lp.nominal_line_n)
+                if new_key < old_key:
+                    cls.pair_provenance[pair_id] = lp
 
         @classmethod
         def string_pair(cls, pair_id):
@@ -121,7 +128,7 @@ class FrozenAnalogyDb:
 
     @typechecked
     def __new__(cls, adb: dict | None = None, _pair_ids: tuple | None = None):
-        """RETURNS: FrozenAnalogyDb that represents the AnalogyDb passed by 'adb'.
+        """RETURNS: FrozenAnalogyDb that represents the AnalogyDb passed by 'adb'., AnalogyDb
 
         NOTE: AnalogyDb is a 'dict' -- it is accepted here.
         """
@@ -157,8 +164,7 @@ class FrozenAnalogyDb:
         instance = super().__new__(cls)
         instance._pair_ids = pair_ids
         
-        s_mask = 0
-        n_mask = 0
+        s_mask, n_mask = 0, 0
         limit = cls._MASK_LIMIT
         
         # --- REPAIR START: Optional Bitmask Generation ---
@@ -180,9 +186,7 @@ class FrozenAnalogyDb:
                 n_mask |= (1 << n_id)
         else:
             # Disable optimization: -1 means "Assume overlap, check deeply"
-            s_mask = -1 
-            n_mask = -1
-        # --- REPAIR END ---
+            s_mask, n_mask = -1, -1
 
         instance._subj_mask = s_mask
         instance._nom_mask  = n_mask
@@ -196,9 +200,6 @@ class FrozenAnalogyDb:
         Reconstructs the full dictionary and line number metadata from the 
         internal integer IDs.
         """
-        # Local import to avoid circular dependency with analogy_db.py
-        from .analogy_db import AnalogyDb
-
         result = AnalogyDb()
         
         # Cache registry lookups for speed
@@ -221,8 +222,8 @@ class FrozenAnalogyDb:
     def merge_all(cls, adbs: Iterable[FrozenAnalogyDb|None]) -> FrozenAnalogyDb:
         """Bulk merges multiple databases bypassing intermediate steps."""
         active = [adb for adb in adbs if adb and adb._pair_ids]
-        if not active: return cls({})
-        if len(active) == 1: return active[0]
+        if   not active:       return cls({})
+        elif len(active) == 1: return active[0]
 
         merged_ids = set()
         _update = merged_ids.update
