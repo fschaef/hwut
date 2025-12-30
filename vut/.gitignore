@@ -1,4 +1,4 @@
-./build
+build/
 **/__pycache__
 **/TEST/OUT
 **/TEST/ADM
