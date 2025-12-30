@@ -68,6 +68,9 @@ class LineElement:
         # sys.intern() deduplicates memory, so 1000 "foo" objects share 1 address.
         self._content = sys.intern(content)
 
+    def __lt__(self, other):
+        return id(self) < id(other) # quick tiebreaker
+
     @staticmethod
     # @typechecked likely to be too expensive: called mios of times
     def from_match(pattern: TolerancePattern, content: str, numeric_tolerance_ratio: float, pattern_i_set=None):
