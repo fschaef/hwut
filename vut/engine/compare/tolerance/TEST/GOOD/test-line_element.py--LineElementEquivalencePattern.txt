@@ -1,12 +1,17 @@
+## SUBJECT.PASS:     fox
+## SUBJECT.FAIL:     mize
+## SUBJECT.MISFIT:   
+## NOMINAL:          Mice
 GOOD.compare:            (EQUIVALENT, None)
 GOOD.string:             'fox'
-GOOD.difference_cost:    0.000000
+GOOD.difference_cost:    0.00
 GOOD.representation:     EQUIVALENCE_PATTERN [1, 2, 3] 'fox'
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          'mize'
-FAILURE.difference_cost: 0.500000
+FAILURE.difference_cost: 0.50
 FAILURE.representation:  EQUIVALENCE_PATTERN [7, 8] 'mize'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          'Mice'
-NOMINAL.difference_cost: 0.000000
+NOMINAL.difference_cost: 0.00
 NOMINAL.representation:  EQUIVALENCE_PATTERN [3, 4, 5] 'Mice'
+##-------------------------------

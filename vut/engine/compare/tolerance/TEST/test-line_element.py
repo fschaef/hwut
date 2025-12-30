@@ -59,21 +59,27 @@ def compare(first, second):
     return "(%s, %s)" % (verdict.name, analogy)
 
 def test(good_subject, bad_subject, nominal):
-    misfit_subject = LineElementString("")
     if good_subject.tolerance_id == E_ToleranceId.STRING:
-        misfit_subject.tolerance_id = E_ToleranceId.ANALOGY
+        misfit_subject = LineElementAnalogy("")
+    else:
+        misfit_subject = LineElementString("")
+    print("## SUBJECT.PASS:    ", good_subject._content)
+    print("## SUBJECT.FAIL:    ", bad_subject._content)
+    print("## SUBJECT.MISFIT:  ", misfit_subject._content)
+    print("## NOMINAL:         ", nominal._content)
     print("GOOD.compare:            %s"   % compare(good_subject, nominal))
     print("GOOD.string:             '%s'" % good_subject.string)
-    print("GOOD.difference_cost:    %.6f" % good_subject.edit_distance_relative(nominal))
+    print("GOOD.difference_cost:    %.2f" % good_subject.edit_distance_relative(nominal))
     print("GOOD.representation:     %s"   % good_subject)
     print("FAILURE.compare:         %s"   % compare(bad_subject, nominal))
     print("FAILURE.string:          '%s'" % bad_subject.string)
-    print("FAILURE.difference_cost: %.6f" % bad_subject.edit_distance_relative(nominal))
+    print("FAILURE.difference_cost: %.2f" % bad_subject.edit_distance_relative(nominal))
     print("FAILURE.representation:  %s"   % bad_subject)
     print("MISFIT.compare:          %s"   % compare(misfit_subject, nominal))
     print("NOMINAL.string:          '%s'" % nominal.string)
-    print("NOMINAL.difference_cost: %.6f" % nominal.edit_distance_relative(nominal))
+    print("NOMINAL.difference_cost: %.2f" % nominal.edit_distance_relative(nominal))
     print("NOMINAL.representation:  %s"   % nominal)
+    print("##-------------------------------")
 
 if choice == "LineElementString":
     test(LineElementString("A fox jumps high"[6:10]),

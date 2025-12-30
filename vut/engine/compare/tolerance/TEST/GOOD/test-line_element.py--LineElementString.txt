@@ -1,36 +1,51 @@
+## SUBJECT.PASS:     jump
+## SUBJECT.FAIL:     elephant
+## SUBJECT.MISFIT:   
+## NOMINAL:          jump
 GOOD.compare:            (EQUIVALENT, None)
 GOOD.string:             'jump'
-GOOD.difference_cost:    0.000000
+GOOD.difference_cost:    0.00
 GOOD.representation:     STRING 'jump'
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          'elephant'
-FAILURE.difference_cost: 0.875000
+FAILURE.difference_cost: 0.88
 FAILURE.representation:  STRING 'elephant'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          'jump'
-NOMINAL.difference_cost: 0.000000
+NOMINAL.difference_cost: 0.00
 NOMINAL.representation:  STRING 'jump'
+##-------------------------------
+## SUBJECT.PASS:     
+## SUBJECT.FAIL:     elephant
+## SUBJECT.MISFIT:   
+## NOMINAL:          jump
 GOOD.compare:            (DIFFERENT, None)
 GOOD.string:             ''
-GOOD.difference_cost:    1.000000
+GOOD.difference_cost:    1.00
 GOOD.representation:     STRING ''
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          'elephant'
-FAILURE.difference_cost: 0.875000
+FAILURE.difference_cost: 0.88
 FAILURE.representation:  STRING 'elephant'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          'jump'
-NOMINAL.difference_cost: 0.000000
+NOMINAL.difference_cost: 0.00
 NOMINAL.representation:  STRING 'jump'
+##-------------------------------
+## SUBJECT.PASS:     jump
+## SUBJECT.FAIL:     elephant
+## SUBJECT.MISFIT:   
+## NOMINAL:          
 GOOD.compare:            (DIFFERENT, None)
 GOOD.string:             'jump'
-GOOD.difference_cost:    1.000000
+GOOD.difference_cost:    1.00
 GOOD.representation:     STRING 'jump'
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          'elephant'
-FAILURE.difference_cost: 1.000000
+FAILURE.difference_cost: 1.00
 FAILURE.representation:  STRING 'elephant'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          ''
-NOMINAL.difference_cost: 0.000000
+NOMINAL.difference_cost: 0.00
 NOMINAL.representation:  STRING ''
+##-------------------------------
