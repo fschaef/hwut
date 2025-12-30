@@ -16,7 +16,7 @@
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='is', subject_ref_i=2)
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=3)
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='good.', subject_ref_i=4)
-.   .   .   .cost: 0.0
+.   .   .   .cost: 0.0000
 .   .   [LinePair]
 .   .   .   .subject: <list>
 .   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, subject='((A))', nominal_ref_i=0)
@@ -38,7 +38,7 @@
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_HAS_NOT: 6>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='so', subject_ref_i=6)
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_HAS_NOT: 6>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=7)
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_DIFFERS: 8>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='good.', subject_ref_i=8)
-.   .   .   .cost: 0.52
+.   .   .   .cost: 0.5200
 .   .   [LinePair]
 .   .   .   .subject: <list>
 .   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.NUMERIC: 4>, subject='4711', nominal_ref_i=0)
@@ -58,7 +58,7 @@
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=5)
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.EQUIVALENCE_PATTERN: 5>, nominal='Zahl', subject_ref_i=6)
 .   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='.', subject_ref_i=7)
-.   .   .   .cost: 0.0
+.   .   .   .cost: 0.0000
 .   .analogy_db: [AnalogyDb]
 .   .   .:1&1: "((A))"="((1))"
 .   .   .:3&3: "((a))"="((eine))", "((is))"="((ist))"

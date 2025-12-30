@@ -236,5 +236,5 @@ class LinePair:
         return "LinePair", [
             ("subject", self.subject_list()),
             ("nominal", self.nominal_list()),
-            ("cost",    self.cost),
+            ("cost",    "%0.4f" % self.cost),
         ]

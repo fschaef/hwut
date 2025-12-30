@@ -213,20 +213,23 @@ class LineElementAnalogy(LineElement):
     #       Equivalence is derived later as a function of consistency.
 
 class LineElementNumber(LineElement):
-    __slots__ = ('number', 'numeric_tolerance_ratio')
+    __slots__ = ('number', 'epsilon')
 
     def __init__(self, content, numeric_tolerance_ratio=None):
         assert numeric_tolerance_ratio is None or 0.0 <= numeric_tolerance_ratio <= 1.0
         LineElement.__init__(self, E_ToleranceId.NUMERIC, content)
         self.number  = float(self.string)
-        self.numeric_tolerance_ratio = 0 if numeric_tolerance_ratio is None \
-                                       else numeric_tolerance_ratio
+        self.epsilon = self.number * numeric_tolerance_ratio if numeric_tolerance_ratio else 0.0
 
     def edit_distance_relative(self, nominal):
-        max_number = max(self.number, nominal.number)
-        delta      = abs(self.number - nominal.number)
-        if max_number == 0: return 0.0 # Guard against div/0
-        return delta / max_number
+        if self.number == nominal.number: return 0 # quick pass
+        # diff - tolerance (aux): distance is 0 if within dead-zone.
+        error = max(abs(self.number - nominal.number) - self.epsilon, 0.0)
+        if error == 0.0: return 0.0 # quick pass
+        mag = max(abs(self.number), abs(nominal.number))
+        # NOTE: 'mag' cannot be zero, because self.val != nominal.val
+        #       => check mag != 0 only as a guard rail against numeric weird events
+        return error / mag if mag != 0 else 1.0 
 
     def _compare(self, nominal):
         """RETURNS: [0] True, if number 'subject' lies in the epsilon range
@@ -235,15 +238,12 @@ class LineElementNumber(LineElement):
                     [1] None (no analogy required)
         """
         ## assert self.epsilon is None        # Subject does not define precision!
-        nominal_epsilon = self.number * nominal.numeric_tolerance_ratio
-
-        verdict = abs(self.number - nominal.number) <= nominal_epsilon
-        return verdict, None
+        return abs(self.number - nominal.number) <= nominal.epsilon, None
 
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
-        return "LineElement:%s(\"%s,tol=%s\")" % (self.tolerance_id.name, self.string, self.numeric_tolerance_ratio), []
+        return "LineElement:%s(\"%s,tol=%s\")" % (self.tolerance_id.name, self.number, self.epsilon), []
 
     # NOTE: '__hash__' cannot be overwritten here; see '_compare()'.
     #       Equivalence is based on deviation. Equivalency can ONLY
