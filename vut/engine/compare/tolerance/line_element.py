@@ -66,21 +66,19 @@ class LineElement:
 
     @staticmethod
     # @typechecked likely to be too expensive: called mios of times
-    def from_match(pattern: TolerancePattern, content: str, numeric_tolerance_ratio: float, pattern_i_set=None):
+    def from_match(tolerance_id: E_ToleranceId, content: str, numeric_tolerance_ratio: float, pattern_i_set=None):
         """RETURNS: A 'LineElement' object based on the provided match data
                     inside this object.
         """
-        tolerance_id = pattern.id
         # LineElementString objects are the 'waste' of pattern finding.
         # They are not generated from tokens.
-        assert tolerance_id != E_ToleranceId.STRING
+        ## assert tolerance_id != E_ToleranceId.STRING
 
         match tolerance_id:
             case E_ToleranceId.VISIBLE_NOTHING:
                 return LineElementVisibleNothing(content)
             case E_ToleranceId.EQUIVALENCE_PATTERN:
-                indices = pattern_i_set if pattern_i_set is not None else {pattern.pattern_index}
-                return LineElementEquivalencePattern(content, indices)
+                return LineElementEquivalencePattern(content, pattern_i_set)
             case E_ToleranceId.NUMERIC:
                 return LineElementNumber(content, numeric_tolerance_ratio)
             case E_ToleranceId.ANALOGY:
@@ -102,6 +100,8 @@ class LineElement:
         # LineElementVisibleNothing implements 'compare()' 
         # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
         if self.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            print("#clas", self.__class__)
+            assert False
             if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
                 return E_Verdict.EQUIVALENT, None
             else:

@@ -32,14 +32,12 @@ AUTHOR: 2021, Frank-Rene Schaefer.
 ______________________________________________________________________________
 """
 import sys
-import re
 
 sys.path.insert(0, "../../../../../")
 
 from    vut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                         LineElement, \
                                                         LineElementString
-from    vut.engine.compare.tolerance.pattern_finder import TolerancePattern
 import vut.engine.compare.edit_operations.line   as      edit_operations_line
 
 from    itertools import combinations
@@ -61,10 +59,7 @@ def get_example(tolerance_id, example_str="4711"):
         return LineElementString(example_str)
     else:
         # Simulate a match and use the new from_match factory
-        match = re.match(re.escape(example_str), example_str)
-        p_idx = 1 if tolerance_id == E_ToleranceId.EQUIVALENCE_PATTERN else None
-        tp    = TolerancePattern(tolerance_id, None, p_idx)
-        return LineElement.from_match(tp, example_str, 0.1)
+        return LineElement.from_match(tolerance_id, example_str, 0.1, {1,2,3})
 
 tolerance_db = {
    0: E_ToleranceId.STRING,
