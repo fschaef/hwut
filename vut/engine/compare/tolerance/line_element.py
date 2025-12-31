@@ -96,17 +96,12 @@ class LineElement:
                         if it is equivalent.
         """
         # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
-        # LineElementAnalogy implements 'compare()' completely self
+        # LineElementAnalogy implements 'compare()'
         # LineElementVisibleNothing implements 'compare()' 
+        # LineElementString implements 'compare()'
+        # LineElementSeparator
         # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
-        if self.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
-            print("#clas", self.__class__)
-            assert False
-            if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
-                return E_Verdict.EQUIVALENT, None
-            else:
-                return E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING, None
-        elif nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
             return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
 
         elif self.tolerance_id != nominal.tolerance_id:
@@ -161,6 +156,19 @@ class LineElementSeparator(LineElement):
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.SEPERATOR, content)
 
+    def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' is of same kind, but content differs.
+                        EQUIVALENT, if 'other' is equivalent to 'self'.
+                    [1] None, since no analogy required for the EQUIVALENT to hold,
+        """
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+        elif self.tolerance_id != nominal.tolerance_id:
+            return E_Verdict.MISFIT, None
+        else:
+            return E_Verdict.EQUIVALENT, None
+
     def _compare(self, nominal):
         return True
 
@@ -170,6 +178,25 @@ class LineElementSeparator(LineElement):
 class LineElementString(LineElement):
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.STRING, content)
+
+    def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' is of same kind, but content differs.
+                        EQUIVALENT, if 'other' is equivalent to 'self'.
+                    [1] analogy required for the EQUIVALENT to hold,
+                        if it is equivalent.
+        """
+        # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
+        # LineElementAnalogy implements 'compare()' completely self
+        # LineElementVisibleNothing implements 'compare()' 
+        # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+        elif self.tolerance_id != nominal.tolerance_id:
+            return E_Verdict.MISFIT, None
+
+        if self.string == nominal.string: return E_Verdict.EQUIVALENT, None
+        else:                             return E_Verdict.DIFFERENT, None
 
     def _compare(self, nominal):
         return self.string == nominal.string
@@ -232,6 +259,21 @@ class LineElementNumber(LineElement):
         #       => check mag != 0 only as a guard rail against numeric weird events
         return error / mag if mag != 0 else 1.0 
 
+    def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' is of same kind, but content differs.
+                        EQUIVALENT, if 'other' is equivalent to 'self'.
+                    [1] None, no analogy required
+        """
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+        elif self.tolerance_id != nominal.tolerance_id:
+            return E_Verdict.MISFIT, None
+        elif abs(self.number - nominal.number) <= nominal.epsilon:
+            return E_Verdict.EQUIVALENT, None
+        else:       
+            return E_Verdict.DIFFERENT, None
+
     def _compare(self, nominal):
         """RETURNS: True, if number 'subject' lies in the epsilon range
                           of number 'nominal'.
@@ -282,6 +324,28 @@ class LineElementEquivalencePattern(LineElement):
         LineElement.__init__(self, E_ToleranceId.EQUIVALENCE_PATTERN, content)
         # Indices of patterns which are matched.
         self.pattern_index_set = set(pattern_index_set)
+
+    def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' is of same kind, but content differs.
+                        EQUIVALENT, if 'other' is equivalent to 'self'.
+                    [1] analogy required for the EQUIVALENT to hold,
+                        if it is equivalent.
+        """
+        # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
+        # LineElementAnalogy implements 'compare()'
+        # LineElementVisibleNothing implements 'compare()' 
+        # LineElementString implements 'compare()'
+        # LineElementSeparator
+        # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+        elif self.tolerance_id != nominal.tolerance_id:
+            return E_Verdict.MISFIT, None
+        elif not nominal.pattern_index_set.isdisjoint(self.pattern_index_set):
+            return E_Verdict.EQUIVALENT, None
+        else:       
+            return E_Verdict.DIFFERENT, None
 
     def _compare(self, nominal):
         """RETURNS: True, if subject and nominal match a common pattern
