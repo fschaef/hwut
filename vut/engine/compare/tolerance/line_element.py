@@ -155,6 +155,9 @@ class LineElementSeparator(LineElement):
         else:
             return E_Verdict.EQUIVALENT, None
 
+    def _compare(self, nominal):
+        return True
+
     def __hash__(self):
         return hash(self.string) ^ hash(E_ToleranceId.SEPERATOR)
 
@@ -180,6 +183,9 @@ class LineElementString(LineElement):
 
         if self.string == nominal.string: return E_Verdict.EQUIVALENT, None
         else:                             return E_Verdict.DIFFERENT, None
+
+    def _compare(self, nominal):
+        return self.string == nominal.string
 
     def __hash__(self):
         return hash(self.string) ^ hash(self.tolerance_id)
@@ -254,6 +260,14 @@ class LineElementNumber(LineElement):
         else:       
             return E_Verdict.DIFFERENT, None
 
+    def _compare(self, nominal):
+        """RETURNS: True, if number 'subject' lies in the epsilon range
+                          of number 'nominal'.
+                    False, else.
+                    None (no analogy required)
+        """
+        return abs(self.number - nominal.number) <= nominal.epsilon
+
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
@@ -280,6 +294,9 @@ class LineElementVisibleNothing(LineElement):
             return E_Verdict.EQUIVALENT, None
         else:
             return E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING, None
+
+    def _compare(self, nominal):
+        return True
 
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
@@ -315,6 +332,12 @@ class LineElementEquivalencePattern(LineElement):
             return E_Verdict.EQUIVALENT, None
         else:       
             return E_Verdict.DIFFERENT, None
+
+    def _compare(self, nominal):
+        """RETURNS: True, if subject and nominal match a common pattern
+                    False, else.
+        """
+        return not nominal.pattern_index_set.isdisjoint(self.pattern_index_set)
 
     def edit_distance_relative(self, nominal):
         if not nominal.pattern_index_set.isdisjoint(self.pattern_index_set):
