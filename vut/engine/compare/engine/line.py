@@ -102,7 +102,8 @@ class Line:
         else:
             result.analogy_db.assign(analogy_db)
 
-        assert isinstance(result, edit_operations_line.EditSequence)
+        # too slow for mios of operations
+        # assert isinstance(result, edit_operations_line.EditSequence)
         return result
 
     def __compare_core(self, nominal):
