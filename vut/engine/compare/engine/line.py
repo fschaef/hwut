@@ -55,7 +55,7 @@ class Line:
         l_nominal = len(nominal)
         l_max     = max(l_subject, l_nominal)
         length_d  = abs(l_subject - l_nominal)
-        error_n   = sum(s.tolerance_id != n.tolerance_id or not s._compare(n)[0]
+        error_n   = sum(s.compare(n)[0] != E_Verdict.EQUIVALENT
                         for s, n in zip(subject, nominal))
 
         return (length_d + error_n) / (2 * l_max)

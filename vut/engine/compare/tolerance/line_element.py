@@ -46,18 +46,11 @@ class LineElement:
      .tolerance_id:  identifies the line element type, i.e. the type of 
                      tolerance which is to be applied.
 
-    Instead of extraing a string corresponding to the LineElement, it 
-    refers to the according sub-string by indices into a global string 
-    '.reference'.
-
-     .start          index pointing into '.reference' where the 
-                     according pattern gettings.
-     .end            index pointing into '.reference' after the 
-                     last character.
-     .reference      text fragment where the pattern occured.
+     .string:   reference to a string in the sys.intern() string pool 
+                => same strings are kept as same objects.
     """
     # OPTIMIZATION: __slots__ saves massive memory by removing __dict__ overhead
-    __slots__ = ('tolerance_id', 'start', 'end', 'reference', '_content')
+    __slots__ = ('tolerance_id', 'string')
 
     # @typechecked -- likely to be too expensive, called mio-s of times!
     def __init__(self, tolerance_id: E_ToleranceId, content):
@@ -66,7 +59,10 @@ class LineElement:
         # OPTIMIZATION: Snapshot + Interning (The "Pool" Approach)
         # We slice ONCE here. Accessing .string later is now O(1).
         # sys.intern() deduplicates memory, so 1000 "foo" objects share 1 address.
-        self._content = sys.intern(content)
+        self.string = sys.intern(content)
+
+    def __lt__(self, other):
+        return id(self) < id(other) # quick tiebreaker
 
     @staticmethod
     # @typechecked likely to be too expensive: called mios of times
@@ -113,46 +109,37 @@ class LineElement:
         elif self.tolerance_id != nominal.tolerance_id:
             return E_Verdict.MISFIT, None
 
-        verdict, analogy = self._compare(nominal)
-        if verdict:
-            return E_Verdict.EQUIVALENT, analogy
-        else:
-            return E_Verdict.DIFFERENT, analogy
+        verdict = self._compare(nominal)
+        # 'LineElementAnalogy' implements its own 'self.compare()'
+        return E_Verdict.EQUIVALENT if verdict else E_Verdict.DIFFERENT, None
 
     def edit_distance_relative(self, nominal):
         """RETURNS: ratio of edit distance / max. possible edit distance.
         """
         # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
-        assert self.tolerance_id    != E_ToleranceId.VISIBLE_NOTHING
-        assert nominal.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
+        ## assert self.tolerance_id    != E_ToleranceId.VISIBLE_NOTHING
+        ## assert nominal.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
 
-        # Use cached _content for fast length check
-        max_length = max(len(self._content), len(nominal._content))
+        # Use cached string for fast length check
+        max_length = max(len(self.string), len(nominal.string))
         if max_length == 0:
             return 0
         else:
-            # Use cached _content to avoid re-slicing
-            return float(edit_distance_string.do(self._content, nominal._content)) / max_length
+            # Use cached string to avoid re-slicing
+            return float(edit_distance_string.do(self.string, nominal.string)) / max_length
 
     def is_equivalent(self, nominal, analogy_db):
         """RETURNS: True, if self is equivalent to 'nominal' under the given
                           analogy_db; 
                     False, else.
         """
-        verdict_id, analogy = self.compare(nominal)
-        if   verdict_id != E_Verdict.EQUIVALENT:    return False
-        elif not analogy_db.is_consistent(analogy): return False
-        else:                                       return True
-
-    @property
-    def string(self):
-        return self._content
+        verdict_id, _ = self.compare(nominal)
+        # LineElementAnalogy implements 'is_equivalent()' completely self
+        # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
+        return verdict_id == E_Verdict.EQUIVALENT
 
     def _compare(self, nominal):
-        """RETURNS: [0] True, any way.
-                    [1] None
-        """
-        assert False # pragma no cover
+        raise NotImplementedError
 
     def __hash__(self):
         # NOTE: This function is only overwritten if it is safe to assume
@@ -172,10 +159,7 @@ class LineElementSeparator(LineElement):
         LineElement.__init__(self, E_ToleranceId.SEPERATOR, content)
 
     def _compare(self, nominal):
-        """RETURNS: [0] True, any way.
-                    [1] None
-        """
-        return True, None
+        return True
 
     def __hash__(self):
         return hash(self.string) ^ hash(E_ToleranceId.SEPERATOR)
@@ -185,10 +169,7 @@ class LineElementString(LineElement):
         LineElement.__init__(self, E_ToleranceId.STRING, content)
 
     def _compare(self, nominal):
-        """RETURNS: [0] True, any way.
-                    [1] None
-        """
-        return self.string == nominal.string, None
+        return self.string == nominal.string
 
     def __hash__(self):
         return hash(self.string) ^ hash(self.tolerance_id)
@@ -197,14 +178,31 @@ class LineElementAnalogy(LineElement):
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.ANALOGY, content)
 
-    def _compare(self, nominal):
-        """RETURNS: [0] True, any way.
-                    [1] Required analogy
-
-        The judgement whether the subject and the nominal fit must be made
-        by the analogy_db.
+    def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' is of same kind, but content differs.
+                        EQUIVALENT, if 'other' is equivalent to 'self'.
+                    [1] analogy required for the EQUIVALENT to hold,
+                        if it is equivalent.
         """
-        return True, (self.string, nominal.string)
+        # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+        elif self.tolerance_id != nominal.tolerance_id:
+            return E_Verdict.MISFIT, None
+        else:
+            # 'LineElementAnalogy' implements its own 'self.compare()'
+            return E_Verdict.EQUIVALENT, (self.string, nominal.string)
+
+    def is_equivalent(self, nominal, analogy_db):
+        if self.tolerance_id != nominal.tolerance_id: 
+            return False
+        elif self.string == nominal.string:       
+            return True
+        else:
+            # IMPORTANT: analogy_db MUST be defined here!
+            #            this is the somewhat 'global' analogy_db
+            return analogy_db.is_consistent((self.string, nominal.string))
 
     def edit_distance_relative(self, nominal):
         return 0 # Analogies are never wrong
@@ -232,13 +230,12 @@ class LineElementNumber(LineElement):
         return error / mag if mag != 0 else 1.0 
 
     def _compare(self, nominal):
-        """RETURNS: [0] True, if number 'subject' lies in the epsilon range
-                              of number 'nominal'.
-                        False, else.
-                    [1] None (no analogy required)
+        """RETURNS: True, if number 'subject' lies in the epsilon range
+                          of number 'nominal'.
+                    False, else.
+                    None (no analogy required)
         """
-        ## assert self.epsilon is None        # Subject does not define precision!
-        return abs(self.number - nominal.number) <= nominal.epsilon, None
+        return abs(self.number - nominal.number) <= nominal.epsilon
 
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
@@ -257,12 +254,7 @@ class LineElementVisibleNothing(LineElement):
         return 0
 
     def _compare(self, nominal):
-        """RETURNS: [0] True, if number 'subject' lies in the epsilon range
-                              of number 'nominal'.
-                        False, else.
-                    [1] None (no analogy required)
-        """
-        return True, None
+        return True
 
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
@@ -278,13 +270,13 @@ class LineElementEquivalencePattern(LineElement):
         self.pattern_index_set = set(pattern_index_set)
 
     def _compare(self, nominal):
-        """RETURNS: [0] True, any way.
-                    [1] None
+        """RETURNS: True, if subject and nominal match a common pattern
+                    False, else.
         """
-        return not nominal.pattern_index_set.isdisjoint(self.pattern_index_set), None
+        return not nominal.pattern_index_set.isdisjoint(self.pattern_index_set)
 
     def edit_distance_relative(self, nominal):
-        if self._compare(nominal)[0]:
+        if not nominal.pattern_index_set.isdisjoint(self.pattern_index_set):
             return 0
         else:
             return LineElement.edit_distance_relative(self, nominal)
