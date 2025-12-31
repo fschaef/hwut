@@ -139,6 +139,8 @@ class LineElement:
         return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self._string), []
 
 class LineElementSeparator(LineElement):
+    __slots__ = ()
+
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.SEPERATOR, content)
 
@@ -162,6 +164,8 @@ class LineElementSeparator(LineElement):
         return hash(self._string) ^ hash(E_ToleranceId.SEPERATOR)
 
 class LineElementString(LineElement):
+    __slots__ = ()
+
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.STRING, content)
 
@@ -191,6 +195,8 @@ class LineElementString(LineElement):
         return hash(self._string) ^ hash(self.tolerance_id)
 
 class LineElementAnalogy(LineElement):
+    __slots__ = ()
+
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.ANALOGY, content)
 
@@ -278,6 +284,8 @@ class LineElementNumber(LineElement):
     #       be investigated by relating to LineElement-objects.
 
 class LineElementVisibleNothing(LineElement):
+    __slots__ = ()
+
     def __init__(self, content):
         LineElement.__init__(self, E_ToleranceId.VISIBLE_NOTHING, content)
 
