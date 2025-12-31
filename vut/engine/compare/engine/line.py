@@ -20,6 +20,7 @@ class Line:
     def __init__(self, line_n, iterable):
         self.line_n           = line_n
         self.sequence         = tuple(iterable)
+        self.sequence_v       = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
         self._structural_hash = hash(bytes(x.tolerance_id for x in self.sequence))
 
     @staticmethod
@@ -84,6 +85,25 @@ class Line:
             analogy_db = new_analogy_db
         return True, analogy_db
 
+    def __compare_core(self, nominal):
+        """RETURNS: [0] verdict: True or False
+                    [1] list of required analogies for verdict (if True)
+        """
+        self_sequence    = self.sequence_v
+        nominal_sequence = nominal.sequence_v
+        if len(self_sequence) != len(nominal_sequence):
+            return False, []
+
+        analogy_list = []
+        for subject_le, nominal_le in zip(self_sequence, nominal_sequence):
+            verdict, analogy = subject_le.compare(nominal_le)
+            if verdict != E_Verdict.EQUIVALENT:
+                return False, []
+            elif analogy:
+                analogy_list.append(analogy)
+
+        return True, analogy_list
+
     def edit_operations(self, nominal, analogy_db):
         """RETURNS: EditSequence
 
@@ -105,25 +125,6 @@ class Line:
         # too slow for mios of operations
         # assert isinstance(result, edit_operations_line.EditSequence)
         return result
-
-    def __compare_core(self, nominal):
-        """RETURNS: [0] verdict: True or False
-                    [1] list of required analogies for verdict (if True)
-        """
-        self_sequence    = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
-        nominal_sequence = [ le for le in nominal.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
-        if len(self_sequence) != len(nominal_sequence):
-            return False, []
-
-        analogy_list = []
-        for subject_le, nominal_le in zip(self_sequence, nominal_sequence):
-            verdict, analogy = subject_le.compare(nominal_le)
-            if verdict != E_Verdict.EQUIVALENT:
-                return False, []
-            elif analogy:
-                analogy_list.append(analogy)
-
-        return  True, analogy_list
 
     def __lt__(self, other): # pragma no cover
         return (self.line_n, len(self.sequence)) < (other.line_n, len(other.sequence))
