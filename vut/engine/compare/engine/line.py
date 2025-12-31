@@ -11,14 +11,16 @@ import vut.engine.compare.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.engine.core            import E_Verdict
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
 from   vut.engine.compare.tolerance.line_element import LineElementString, E_ToleranceId
+from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
     objects. Additionally, the line number is stored along.
     """
     def __init__(self, line_n, iterable):
-        self.line_n   = line_n
-        self.sequence = tuple(iterable)
+        self.line_n           = line_n
+        self.sequence         = tuple(iterable)
+        self._structural_hash = hash(bytes(x.tolerance_id for x in self.sequence))
 
     @staticmethod
     def from_string(line_n, string):
@@ -26,10 +28,11 @@ class Line:
 
     @staticmethod
     def from_potpourri(line_n, begin_f):
+        marker = ConfigurationPatternFinder.potpourri_begin_end_marker
         if begin_f:
-            return Line.from_string(line_n, "|||| (potpourri: open)")
+            return Line.from_string(line_n, "%s (potpourri: open)" % marker)
         else:
-            return Line.from_string(line_n, "|||| (potpourri: close)")
+            return Line.from_string(line_n, "%s (potpourri: close)" % marker)
 
     @staticmethod
     def from_nothing():
