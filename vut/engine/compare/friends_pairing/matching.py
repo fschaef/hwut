@@ -41,8 +41,8 @@ from   typeguard import typechecked
 
 def get_initial_state(subject_line_list, nominal_line_list, abort_early_f: bool) -> Result:
     potential_pair_db = PotentialPairDb.from_raw(subject_line_list, 
-                                                        nominal_line_list, 
-                                                        abort_early_f)
+                                                 nominal_line_list, 
+                                                 abort_early_f)
     subject_n = 0 if not subject_line_list else len(subject_line_list)
     nominal_n = 0 if not nominal_line_list else len(nominal_line_list)
 
