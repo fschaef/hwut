@@ -186,7 +186,7 @@ class LineElementString(LineElement):
             return E_Verdict.MISFIT, None
 
         if self._string == nominal._string: return E_Verdict.EQUIVALENT, None
-        else:                             return E_Verdict.DIFFERENT, None
+        else:                               return E_Verdict.DIFFERENT, None
 
     def _compare(self, nominal):
         return self._string == nominal._string
