@@ -95,21 +95,7 @@ class LineElement:
                     [1] analogy required for the EQUIVALENT to hold,
                         if it is equivalent.
         """
-        # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
-        # LineElementAnalogy implements 'compare()'
-        # LineElementVisibleNothing implements 'compare()' 
-        # LineElementString implements 'compare()'
-        # LineElementSeparator
-        # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
-        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
-            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
-
-        elif self.tolerance_id != nominal.tolerance_id:
-            return E_Verdict.MISFIT, None
-
-        verdict = self._compare(nominal)
-        if verdict: return E_Verdict.EQUIVALENT, None
-        else:       return E_Verdict.DIFFERENT, None
+        raise NotImplementedError
 
     def edit_distance_relative(self, nominal):
         """RETURNS: ratio of edit distance / max. possible edit distance.
