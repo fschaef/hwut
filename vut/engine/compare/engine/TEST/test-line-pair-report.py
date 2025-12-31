@@ -99,8 +99,8 @@ def FRAME_execute_and_print(subject, nominal, edit_list):
     lp = LinePair(subject, nominal, edit_list)
     
     print("INPUT SEQUENCES:")
-    s_txt = [el.string for el in subject.sequence] if subject else []
-    n_txt = [el.string for el in nominal.sequence] if nominal else []
+    s_txt = [el._string for el in subject.sequence] if subject else []
+    n_txt = [el._string for el in nominal.sequence] if nominal else []
     print(f"  Subject: {s_txt}")
     print(f"  Nominal: {n_txt}")
     

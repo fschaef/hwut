@@ -67,7 +67,7 @@ def prepare(x, nominal_f=False):
         yield from line_element_db[letter]
 
 def prepare_match_sequence(mseq):
-    return ", ".join("%s:%s" % (m.tolerance_id.name, m.string) for m in mseq)
+    return ", ".join("%s:%s" % (m.tolerance_id.name, m._string) for m in mseq)
 
 def print_match_sequences(subject, nominal):
     print("subject:  %s" % prepare_match_sequence(subject))
@@ -120,7 +120,7 @@ def print_friends_pairing_max_result(subject_line_list, nominal_line_list, cost,
         if match_seq is None:
             return "None", "--"
         elif match_seq.line_n is None:
-            return match_seq.sequence[0].string, "--" # pragma no cover
+            return match_seq.sequence[0]._string, "--" # pragma no cover
         elif match_seq.line_n + line_offset < len(line_list):
             return line_list[match_seq.line_n + line_offset], "%02i" % match_seq.line_n
         else:

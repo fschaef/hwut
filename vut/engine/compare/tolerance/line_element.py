@@ -46,20 +46,20 @@ class LineElement:
      .tolerance_id:  identifies the line element type, i.e. the type of 
                      tolerance which is to be applied.
 
-     .string:   reference to a string in the sys.intern() string pool 
+     ._string:   reference to a string in the sys.intern() string pool 
                 => same strings are kept as same objects.
     """
     # OPTIMIZATION: __slots__ saves massive memory by removing __dict__ overhead
-    __slots__ = ('tolerance_id', 'string')
+    __slots__ = ('tolerance_id', '_string')
 
     # @typechecked -- likely to be too expensive, called mio-s of times!
     def __init__(self, tolerance_id: E_ToleranceId, content):
         self.tolerance_id = tolerance_id
         
         # OPTIMIZATION: Snapshot + Interning (The "Pool" Approach)
-        # We slice ONCE here. Accessing .string later is now O(1).
+        # We slice ONCE here. Accessing ._string later is now O(1).
         # sys.intern() deduplicates memory, so 1000 "foo" objects share 1 address.
-        self.string = sys.intern(content)
+        self._string = sys.intern(content)
 
     def __lt__(self, other):
         return id(self) < id(other) # quick tiebreaker
@@ -105,12 +105,12 @@ class LineElement:
         ## assert nominal.tolerance_id != E_ToleranceId.VISIBLE_NOTHING
 
         # Use cached string for fast length check
-        max_length = max(len(self.string), len(nominal.string))
+        max_length = max(len(self._string), len(nominal._string))
         if max_length == 0:
             return 0
         else:
             # Use cached string to avoid re-slicing
-            return float(edit_distance_string.do(self.string, nominal.string)) / max_length
+            return float(edit_distance_string.do(self._string, nominal._string)) / max_length
 
     def is_equivalent(self, nominal, analogy_db):
         """RETURNS: True, if self is equivalent to 'nominal' under the given
@@ -131,12 +131,12 @@ class LineElement:
         return hash(self.tolerance_id)
 
     def __repr__(self):
-        return "%s '%s'" % (self.tolerance_id.name, self.string)
+        return "%s '%s'" % (self.tolerance_id.name, self._string)
 
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
-        return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
+        return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self._string), []
 
 class LineElementSeparator(LineElement):
     def __init__(self, content):
@@ -159,7 +159,7 @@ class LineElementSeparator(LineElement):
         return True
 
     def __hash__(self):
-        return hash(self.string) ^ hash(E_ToleranceId.SEPERATOR)
+        return hash(self._string) ^ hash(E_ToleranceId.SEPERATOR)
 
 class LineElementString(LineElement):
     def __init__(self, content):
@@ -181,14 +181,14 @@ class LineElementString(LineElement):
         elif self.tolerance_id != nominal.tolerance_id:
             return E_Verdict.MISFIT, None
 
-        if self.string == nominal.string: return E_Verdict.EQUIVALENT, None
+        if self._string == nominal._string: return E_Verdict.EQUIVALENT, None
         else:                             return E_Verdict.DIFFERENT, None
 
     def _compare(self, nominal):
-        return self.string == nominal.string
+        return self._string == nominal._string
 
     def __hash__(self):
-        return hash(self.string) ^ hash(self.tolerance_id)
+        return hash(self._string) ^ hash(self.tolerance_id)
 
 class LineElementAnalogy(LineElement):
     def __init__(self, content):
@@ -208,17 +208,17 @@ class LineElementAnalogy(LineElement):
             return E_Verdict.MISFIT, None
         else:
             # 'LineElementAnalogy' implements its own 'self.compare()'
-            return E_Verdict.EQUIVALENT, (self.string, nominal.string)
+            return E_Verdict.EQUIVALENT, (self._string, nominal._string)
 
     def is_equivalent(self, nominal, analogy_db):
         if self.tolerance_id != nominal.tolerance_id: 
             return False
-        elif self.string == nominal.string:       
+        elif self._string == nominal._string:       
             return True
         else:
             # IMPORTANT: analogy_db MUST be defined here!
             #            this is the somewhat 'global' analogy_db
-            return analogy_db.is_consistent((self.string, nominal.string))
+            return analogy_db.is_consistent((self._string, nominal._string))
 
     def edit_distance_relative(self, nominal):
         return 0 # Analogies are never wrong
@@ -232,7 +232,7 @@ class LineElementNumber(LineElement):
     def __init__(self, content, numeric_tolerance_ratio=None):
         assert numeric_tolerance_ratio is None or 0.0 <= numeric_tolerance_ratio <= 1.0
         LineElement.__init__(self, E_ToleranceId.NUMERIC, content)
-        self.number  = float(self.string)
+        self.number  = float(self._string)
         self.epsilon = self.number * numeric_tolerance_ratio if numeric_tolerance_ratio else 0.0
 
     def edit_distance_relative(self, nominal):
@@ -301,7 +301,7 @@ class LineElementVisibleNothing(LineElement):
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
-        return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self.string), []
+        return "LineElement:%s(\"%s\")" % (self.tolerance_id.name, self._string), []
 
 class LineElementEquivalencePattern(LineElement):
     __slots__ = ('pattern_index_set',)
@@ -352,6 +352,6 @@ class LineElementEquivalencePattern(LineElement):
     def __repr__(self):
         tolerance_str   = self.tolerance_id.name
         pattern_ids_str = list(sorted(self.pattern_index_set)) 
-        content_str     = self.string
+        content_str     = self._string
         return "%s %s '%s'" % (tolerance_str, pattern_ids_str, content_str)
 

@@ -142,7 +142,7 @@ def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_
 def list_EditGOOD_line(subject_list, nominal_list):
     return list_EditGOOD(subject_list, nominal_list,
                          lambda le:               le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING,
-                         lambda subject, nominal: subject.string == nominal.string)
+                         lambda subject, nominal: subject._string == nominal._string)
 
 # @typed(subject_list=[Line], nominal_list=[Line])
 def list_EditGOOD_line_sequence(subject_list, nominal_list):
@@ -151,5 +151,5 @@ def list_EditGOOD_line_sequence(subject_list, nominal_list):
                          all(le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for le in le_list),
                          lambda subject, nominal: 
                          len(subject) == len(nominal) \
-                         and all(s.string == n.string for s, n in zip(subject, nominal)))
+                         and all(s._string == n._string for s, n in zip(subject, nominal)))
 

@@ -158,7 +158,7 @@ class LineSeparatorAdaptor(SeparatorAdaptor):
         Assuming that le_a, and le_b are equivalent, the return value provides
         the according 'Edit' object, i.e. GOOD or GOOD_TOLERATED.
         """
-        if le_a.string == le_b.string:
+        if le_a._string == le_b._string:
             return self.Edit(GOOD, None)            # both equal separators
         else:
             return self.Edit(GOOD_TOLERATED, None)  # separators are similar
@@ -248,7 +248,7 @@ class WorkItem(WorkListBase):
             case E_Verdict.EQUIVALENT:
                 if not self.edit_list.analogy_db.is_consistent(analogy):
                     yield self._step_standard(SUBSTITUTE)
-                elif subject_le.string       != nominal_le.string:  
+                elif subject_le._string      != nominal_le._string:  
                     good_id = GOOD_TOLERATED
                 elif subject_le.tolerance_id == ANALOGY: 
                     good_id = GOOD_TOLERATED

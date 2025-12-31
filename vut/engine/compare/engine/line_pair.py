@@ -117,7 +117,7 @@ class LinePairRaw:
 
             # Extract Subject Data
             if s_incr > 0 and self.subject and si < len(self.subject.sequence):
-                s_txt, s_tol = self.subject.sequence[si].string, self.subject.sequence[si].tolerance_id
+                s_txt, s_tol = self.subject.sequence[si]._string, self.subject.sequence[si].tolerance_id
             else: 
                 s_txt, s_tol = None, E_ToleranceId.STRING
 
@@ -134,7 +134,7 @@ class LinePairRaw:
 
             # Extract Nominal Data
             if n_incr > 0 and self.nominal and ni < len(self.nominal.sequence):
-                n_txt, n_tol = self.nominal.sequence[ni].string, self.nominal.sequence[ni].tolerance_id
+                n_txt, n_tol = self.nominal.sequence[ni]._string, self.nominal.sequence[ni].tolerance_id
             else:
                 n_txt, n_tol = None, E_ToleranceId.STRING
 
@@ -152,12 +152,12 @@ class LinePairRaw:
         subject_list, nominal_list = [], []
         if self.subject and not self.nominal:
             subject_list = [
-                SubjectCell(E_SubjectRelationId.BAD_NOMINAL_HAS_NOT, el.tolerance_id, el.string, -1) 
+                SubjectCell(E_SubjectRelationId.BAD_NOMINAL_HAS_NOT, el.tolerance_id, el._string, -1) 
                 for el in self.subject.sequence
             ]
         elif self.nominal and not self.subject:
             nominal_list = [
-                NominalCell(E_NominalRelationId.BAD_SUBJECT_HAS, el.tolerance_id, el.string, -1) 
+                NominalCell(E_NominalRelationId.BAD_SUBJECT_HAS, el.tolerance_id, el._string, -1) 
                 for el in self.nominal.sequence
             ]
         return subject_list, nominal_list

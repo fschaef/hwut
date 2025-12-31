@@ -38,7 +38,7 @@ class Line:
     def character_n(self):
         """RETURNS: Number of characters in present in the line.
         """
-        return sum(len(le.string) for le in self.sequence)
+        return sum(len(le._string) for le in self.sequence)
 
     def compare_quickly(self, nominal_line):
         """RETURNS: A 'cost' approximation > 0
@@ -55,8 +55,7 @@ class Line:
         l_nominal = len(nominal)
         l_max     = max(l_subject, l_nominal)
         length_d  = abs(l_subject - l_nominal)
-        error_n   = sum(s.compare(n)[0] != E_Verdict.EQUIVALENT
-                        for s, n in zip(subject, nominal))
+        error_n   = sum(s._string != n._string for s, n in zip(subject, nominal))
 
         return (length_d + error_n) / (2 * l_max)
 

@@ -71,7 +71,7 @@ tolerance_db = {
 }
 
 def stringy(x):
-    return "%s:%s" % (x.tolerance_id.name, x.string)
+    return "%s:%s" % (x.tolerance_id.name, x._string)
 
 def call(subject, nominal):
     result  = edit_operations_line.do(subject, nominal)
