@@ -13,6 +13,12 @@ class E_Verdict(Enum):
     EQUIVALENT_SUBJECT_VISIBLE_NOTHING = auto()
     EQUIVALENT_NOMINAL_VISIBLE_NOTHING = auto()
 
+    @staticmethod
+    def is_equivalent(x):
+        return x in (E_Verdict.EQUIVALENT, 
+                     E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING,
+                     E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING)
+
 class E_PotpourriBorder(Enum):
     NONE  = auto()
     BEGIN = auto()

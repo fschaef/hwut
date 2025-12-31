@@ -98,6 +98,9 @@ class LineElement:
                         if it is equivalent.
         """
         # VISIBLE_NOTHING *must* be removed before the comparison of two sequences!
+        # LineElementAnalogy implements 'compare()' completely self
+        # LineElementVisibleNothing implements 'compare()' 
+        # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
         if self.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
             if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
                 return E_Verdict.EQUIVALENT, None
@@ -110,8 +113,8 @@ class LineElement:
             return E_Verdict.MISFIT, None
 
         verdict = self._compare(nominal)
-        # 'LineElementAnalogy' implements its own 'self.compare()'
-        return E_Verdict.EQUIVALENT if verdict else E_Verdict.DIFFERENT, None
+        if verdict: return E_Verdict.EQUIVALENT, None
+        else:       return E_Verdict.DIFFERENT, None
 
     def edit_distance_relative(self, nominal):
         """RETURNS: ratio of edit distance / max. possible edit distance.
@@ -252,6 +255,17 @@ class LineElementVisibleNothing(LineElement):
 
     def edit_distance_relative(self, nominal):
         return 0
+
+    def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' is of same kind, but content differs.
+                        EQUIVALENT, if 'other' is equivalent to 'self'.
+                    [1] None, anyways
+        """
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT, None
+        else:
+            return E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING, None
 
     def _compare(self, nominal):
         return True
