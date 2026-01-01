@@ -1,0 +1,9 @@
+Edit Operations for Line -- Sequence of line elements
+------------------------------------
+
+coverage run --omit ./*.py -a *.py 
+
+--not common.py
+--not benchmark.py
+--not tmp.py
+--not analyze*.py

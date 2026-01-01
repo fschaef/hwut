@@ -1,0 +1,12 @@
+--- CATEGORY: MONKEY LIKE TEST ---
+NOTE: B -> 2, because it can switch with a later 'D'
+   Subject: ['A', 'B', 'C', 'B', 'B', 'B', 'C', 'C', 'C', 'A', 'B', 'C']
+   Nominal: ['1', '2', '3', '1', '1', '1', '2', '2', '2', '3', '2', '1']
+   => Mapping:
+  'A' -> '1'
+  'B' -> '2'
+  'C' -> '3'
+   => Id representation: 'same id <=> analogy valid':
+   Subject-ids: [0, 1, 2, 1, 1, 1, 2, 2, 2, 0, 1, 2]
+   Nominal-ids: [0, 1, 2, 0, 0, 0, 1, 1, 1, 2, 1, 0]
+------------------------------
