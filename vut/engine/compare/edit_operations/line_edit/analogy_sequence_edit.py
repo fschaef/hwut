@@ -58,60 +58,52 @@ def do(subject_list, nominal_list):
     
     return cost, final_sequence, analogy_map
 
+from itertools import zip_longest
+from collections import Counter
+
 def find_best_analogies(subject_list, nominal_list):
     """
-    Creates a 1:1 translation map.
+    Creates a 1:1 translation map based on Strict Linear Alignment.
     
-    Strategy: "Positional Proximity > Appearance Order"
-    
-    Greedy Minimum Distance:
-       Tokens are mapped based on the distance between their 
-       first appearance indices.
-       - A token at index 3 prefers a target at index 3 (Distance 0).
-       - This prevents early tokens from "stealing" perfectly aligned 
-         later matches.
+    Strategy:
+    1. Linear Scan (Zip): Iterate through both lists in parallel. If both
+       tokens at index I are "fresh" (unmapped), map them immediately.
+       This captures positional structure (e.g., C at index 3 matches 1 at index 3).
+       
+    2. Leftovers: Collect any tokens skipped in Phase 1 and map them 1:1 
+       based on their first appearance order.
     """
-    if not subject_list or not nominal_list:
-        return {}
-
-    # 1. Identify First Appearances (O(N))
-    # We manually build these to get indices.
-    s_first_idx = {}
-    for i, item in enumerate(subject_list):
-        if item not in s_first_idx:
-            s_first_idx[item] = i
-            
-    n_first_idx = {}
-    for i, item in enumerate(nominal_list):
-        if item not in n_first_idx:
-            n_first_idx[item] = i
-            
     mapping = {}
-    mapped_n = set()
+    # Use set for fast O(1) lookups of 'consumed' nominal tokens.
+    # Mapped subject tokens are tracked via 'mapping' keys.
+    n_mentioned = set()
     
-    # --- Greedy Minimum Distance ---
-    # Prepare list of candidates with their indices
-    s_candidates = list(s_first_idx.items())
-    n_candidates = list(n_first_idx.items())
-    
-    # Generate all possible pairs with their distance
-    # Structure: (distance, s_index, s_item, n_item)
-    pairs = []
-    for s_item, s_idx in s_candidates:
-        for n_item, n_idx in n_candidates:
-            dist = abs(s_idx - n_idx)
-            pairs.append((dist, s_idx, s_item, n_item))
+    # --- Phase 1: Strict Positional Alignment ---
+    # We iterate through both lists in parallel. 
+    # zip_longest ensures we process up to the end of the longer list.
+    for s, n in zip_longest(subject_list, nominal_list):
+        # If lengths differ, one will be None. We cannot align a gap.
+        if s is None or n is None:
+            continue
             
-    # Sort by Distance (asc), then by Subject Index (asc) for stability
-    # This prioritizes perfect positional matches (dist 0), then close ones.
-    pairs.sort(key=lambda x: (x[0], x[1]))
-    
-    # Greedy Selection
-    for _, _, s_item, n_item in pairs:
-        if s_item not in mapping and n_item not in mapped_n:
-            mapping[s_item] = n_item
-            mapped_n.add(n_item)
+        # If both are "fresh" at this index, we lock the alignment.
+        # This solves the "Slot Stealing" problem by prioritizing the exact index.
+        if s not in mapping and n not in n_mentioned:
+            mapping[s] = n
+            n_mentioned.add(n)
             
+    # --- Phase 2: Map Leftovers ---
+    # Any tokens that were skipped (because their slot was taken by a previous mapping)
+    # get mapped to available targets in order of first appearance.
+    
+    # Counter keys are insertion-ordered (Python 3.7+), so this preserves appearance order.
+    # We assume standard Python dictionaries are used.
+    s_left = (s for s in Counter(subject_list) if s not in mapping)
+    n_left = (n for n in Counter(nominal_list) if n not in n_mentioned)
+    
+    # Map remaining items 1:1
+    mapping.update((s, n) for s, n in zip(s_left, n_left))
+        
     return mapping
 
 def assign_token_ids(subject_list, nominal_list, analogy_map):
