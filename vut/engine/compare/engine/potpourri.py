@@ -18,7 +18,7 @@ from   vut.engine.compare.engine.input_chunk                import InputChunk, E
 from   vut.engine.compare.engine.line                       import Line
 from   vut.engine.compare.engine.line_pair                  import LinePair
 from   vut.engine.compare.engine.chunk_pair                 import LinePairList
-import vut.engine.compare.friends_pairing.associate         as     association
+import vut.engine.compare.friends_pairing.association         as     association
 import vut.engine.compare.friends_pairing.equivalence_check as     equivalence_check
 
 class Potpourri(InputChunk):
@@ -53,7 +53,7 @@ class Potpourri(InputChunk):
     def _associate_lines(self, nominal, analogy_db):
         """RETURNS: list 'LinePair'-s
 
-        See 'InputChunk.associate()' for further explanations.
+        See 'InputChunk.association()' for further explanations.
         """
         assert len(self.line_list) >= 2 and len(nominal.line_list) >= 2
         subject_potpourri = self.line_list[1:-1]    # exclude [0] and [-1]:

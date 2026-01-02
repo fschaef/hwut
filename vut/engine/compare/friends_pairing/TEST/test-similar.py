@@ -35,13 +35,13 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.configuration             import ConfigurationPatternFinder
-import vut.engine.compare.friends_pairing.associate as     pair_associate
-from   vut.engine.compare.tolerance.pattern_finder  import PatternFinder
-from   vut.engine.compare.engine.analogy_db         import AnalogyDb
+from   vut.engine.compare.configuration               import ConfigurationPatternFinder
+import vut.engine.compare.friends_pairing.association as     association
+from   vut.engine.compare.tolerance.pattern_finder    import PatternFinder
+from   vut.engine.compare.engine.analogy_db           import AnalogyDb
 
 from   vut.engine.compare.TEST.common import get_Potpourri, \
-                                            print_friends_pairing_max_result
+                                             print_friends_pairing_max_result
 
 if "--hwut-info" in sys.argv:
     print("FriendsPairingMax: Search anyway;")
@@ -61,10 +61,10 @@ def test_pure(subject_line_list, nominal_line_list, max_comparison_count):
 
     analogy_db = AnalogyDb()
     line_associations, \
-    analogy_db         = pair_associate.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
-                                           get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
-                                           analogy_db,
-                                           max_comparison_count)
+    analogy_db         = association.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
+                                        get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
+                                        analogy_db,
+                                        max_comparison_count)
 
     return line_associations, analogy_db
 
