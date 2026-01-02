@@ -22,7 +22,7 @@ class Potpourri(InputChunk):
     def type(self):
         return E_Chunk.POTPOURRI
 
-    def __init__(self, start_line_n, end_line_n, iterable, config):
+    def __init__(self, chunk_type, start_line_n, end_line_n, iterable, config):
         def adapt(iterable, start_line_n, end_line_n):
             yield Line.from_potpourri(start_line_n, begin_f=True)
             yield from iterable

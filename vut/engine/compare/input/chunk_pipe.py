@@ -63,7 +63,7 @@ class ChunkPipe(PatternFinder):
                 break
             elif self.is_region_delimiter(line):
                 if line_list or chunk_class != LineSequence:
-                    yield chunk_class(start_line_n, line_n, 
+                    yield chunk_class(chunk_type, start_line_n, line_n, 
                                       line_list, 
                                       self.configuration)
                 line_list = []
@@ -75,6 +75,6 @@ class ChunkPipe(PatternFinder):
                 line_list.append(Line(line_n, PatternFinder.do(self, line)))
 
         if line_list:
-            yield chunk_class(start_line_n, line_n, line_list, self.configuration)
+            yield chunk_class(chunk_type, start_line_n, line_n, line_list, self.configuration)
 
 

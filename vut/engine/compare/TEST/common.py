@@ -14,6 +14,7 @@ from   vut.engine.compare.input.line_element import LineElementString, \
                                                         LineElementAnalogy, \
                                                         LineElementVisibleNothing, \
                                                         LineElementEquivalencePattern
+from   vut.engine.compare.engine.enums           import E_Chunk
 from   vut.engine.compare.engine.line            import Line
 from   vut.engine.compare.potpourri.core         import Potpourri
 from   vut.engine.compare.line_sequence.core     import LineSequence
@@ -23,7 +24,8 @@ from   itertools import zip_longest
 def get_Potpourri(pattern_finder, line_text_list, configuration):
     start_line_n = -1
     end_line_n   = len(line_text_list)
-    result = Potpourri(start_line_n, end_line_n,
+    result = Potpourri(E_Chunk.POTPOURRI, 
+                       start_line_n, end_line_n,
                          (tuple(Line(line_n, pattern_finder.do(line_text))
                                 for line_n, line_text in enumerate(line_text_list))),
                          configuration)
@@ -33,7 +35,7 @@ def get_Potpourri(pattern_finder, line_text_list, configuration):
 def get_LineSequence(pattern_finder, line_text_list, configuration):
     start_line_n = -1
     end_line_n   = len(line_text_list)
-    return LineSequence(start_line_n, end_line_n,
+    return LineSequence(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n,
                         (Line(line_n, pattern_finder.do(line_text))
                          for line_n, line_text in enumerate(line_text_list)),
                         configuration)

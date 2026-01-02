@@ -41,7 +41,7 @@ class InputChunk(ABC):
         self.__chunk_type  = chunk_type
 
     def empty_clone(self):
-        return self.__class__(None, None, [], self.configuration)
+        return self.__class__(self.__chunk_type, None, None, [], self.configuration)
 
     @abstractmethod
     def type(self): pass
