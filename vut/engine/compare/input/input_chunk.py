@@ -94,9 +94,6 @@ class InputChunk(ABC):
     def type(self): pass
 
     @abstractmethod
-    def _is_equivalent(self, other, analogy_db):  pass
-
-    @abstractmethod
     def _associate_lines(self, nominal, analogy_db): pass
 
 

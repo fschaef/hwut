@@ -12,7 +12,6 @@ The two main functions of 'LineSequence' are (derived from 'InputChunk')
                             for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums                  import E_Verdict
 from   vut.engine.compare.input.input_chunk             import InputChunk, \
                                                                E_Chunk
 from   vut.engine.compare.engine.association.line_pair                     import LinePair
@@ -20,25 +19,11 @@ import vut.engine.compare.engine.association.edit_operations.line_sequence as   
 from   vut.engine.compare.engine.association.edit_operations.edit          import E_EditId, \
                                                                                   EditSequence
 
-
 class LineSequence(InputChunk):
     """Set of lines where the sequence matters.
     """
     def type(self):
         return E_Chunk.LINE_SEQUENCE
-
-    def _is_equivalent(self, filtered_subject_line_list, filtered_nominal_line_list, analogy_db) -> E_Verdict:
-        """RETURNS: [0] True, if 'self' and 'nominal' are equivalent.
-                        False, else.
-                    [1] AnalogyDb required for the equivalents of [0] to hold.
-        """
-        # Compare line by line
-        for subject_line, nominal_line in zip(filtered_subject_line_list, filtered_nominal_line_list):
-            verdict, analogy_db = subject_line.compare(nominal_line, analogy_db)
-            if not verdict:
-                return E_Verdict.DIFFERENT, analogy_db
-        else:
-            return E_Verdict.EQUIVALENT, analogy_db
 
     def _associate_lines(self, nominal, analogy_db):
         """RETURNS: list 'LinePair'-s
