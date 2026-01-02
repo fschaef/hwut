@@ -22,14 +22,14 @@ process:
 The 'MatchDb' is used by the 'exact.py' module.
 ________________________________________________________________________________
 """
-import vut.engine.compare.potpourri.solver.maximum_bipartite_matching     as solver_max_bpm
-import vut.engine.compare.potpourri.solver.csp_backtracking_mrv           as solver_csp_mrv
+import vut.engine.compare.engine.potpourri.solver.maximum_bipartite_matching     as solver_max_bpm
+import vut.engine.compare.engine.potpourri.solver.csp_backtracking_mrv           as solver_csp_mrv
 ###
 ## The following algorithms are 'on hold' since the former algos outperformed them in any scenario
 ## However, they have been left in place, in the case that someone finds solutions for the bottle-necks.
 ##
-## import vut.engine.compare.potpourri.solver.csp_arc_consistency            as solver_csp_arc
-## import vut.engine.compare.potpourri.solver.csp_chronological_backtracking as solver_csp_chbt
+## import vut.engine.compare.engine.potpourri.solver.csp_arc_consistency            as solver_csp_arc
+## import vut.engine.compare.engine.potpourri.solver.csp_chronological_backtracking as solver_csp_chbt
 
 
 from   vut.engine.compare.engine.analogy_db import AnalogyDb
