@@ -24,7 +24,5 @@ class LineSequence(InputChunk):
     def type(self):
         return E_Chunk.LINE_SEQUENCE
 
-    def __repr__(self): # pragma no cover
-        return "\n".join("%03i: %s" % (line.line_n, line) for line in self.line_list)
 
 

@@ -46,6 +46,10 @@ class InputChunk(ABC):
     @abstractmethod
     def type(self): pass
 
+    def __repr__(self): 
+        sep = ":" if self.__chunk_type is E_Chunk.LINE_SEQUENCE else "|"
+        return "\n".join("%03i%s %s" % (line.line_n, sep, line) for line in self.line_list)
+
 class InputChunkTerminal(InputChunk):
     """Input chunk that marks the end of an input stream.
     """

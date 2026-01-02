@@ -30,6 +30,4 @@ class Potpourri(InputChunk):
         InputChunk.__init__(self, E_Chunk.POTPOURRI, start_line_n, end_line_n, 
                             adapt(iterable, start_line_n, end_line_n), config)
 
-    def __repr__(self): # pragma no cover
-        return "\n".join("%03i| %s" % (line.line_n, line) for line in self.line_list)
 
