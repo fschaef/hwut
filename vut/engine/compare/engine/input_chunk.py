@@ -17,7 +17,7 @@ The two main functions of an 'InputChunk' are
                             for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.core               import E_Verdict
+from   vut.engine.compare.engine.enums              import E_Verdict
 from   vut.engine.compare.engine.analogy_db         import AnalogyDb
 from   vut.engine.compare.engine.line               import Line
 from   vut.engine.compare.tolerance.pattern_finder  import E_ToleranceId

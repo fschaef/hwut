@@ -65,7 +65,7 @@ from  vut.engine.compare.edit_operations.core              import WorkListBase, 
 from  vut.engine.compare.edit_operations.separator_adaptor import SeparatorAdaptor
 from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
-from  vut.engine.compare.engine.core                       import E_Verdict
+from  vut.engine.compare.engine.enums                      import E_Verdict
 
 from  functools   import lru_cache
 

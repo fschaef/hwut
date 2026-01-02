@@ -19,7 +19,7 @@ LineElement provide:
 ________________________________________________________________________________
 """
 import vut.engine.compare.edit_operations.string as     edit_distance_string
-from   vut.engine.compare.engine.core            import E_Verdict
+from   vut.engine.compare.engine.enums           import E_Verdict
 
 from   enum        import IntEnum
 import regex       as re

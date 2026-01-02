@@ -12,7 +12,7 @@ The two main functions of 'Potpourri' are (derived from 'InputChunk')
                             for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.core                 import E_Verdict, \
+from   vut.engine.compare.engine.enums                import E_Verdict, \
                                                              E_PotpourriBorder
 from   vut.engine.compare.engine.input_chunk          import InputChunk, E_Chunk
 from   vut.engine.compare.engine.line                 import Line
