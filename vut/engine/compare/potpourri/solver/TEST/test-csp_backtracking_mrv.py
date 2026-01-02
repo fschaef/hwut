@@ -10,7 +10,7 @@ from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 import scenario_generator_adb as gen
 
 # Import your algorithm module
-from vut.engine.compare.friends_pairing.solver.csp_backtracking_mrv import do
+from vut.engine.compare.potpourri.solver.csp_backtracking_mrv import do
 
 if "--hwut-info" in sys.argv:
     print("CSP Backtracking MRV: Friends Pairing Stress Test;")

@@ -23,9 +23,9 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-from vut.engine.compare.friends_pairing.solver.csp_arc_consistency import (propagate_blockers,  #noqa E402
-                                                                           bitmask_to_pad_ids, 
-                                                                           pad_ids_to_bitmask)
+from vut.engine.compare.potpourri.solver.csp_arc_consistency import (propagate_blockers,  #noqa E402
+                                                                     bitmask_to_pad_ids, 
+                                                                     pad_ids_to_bitmask)
 
 if "--hwut-info" in sys.argv:
     print("Propagate Blockers: Constraint Propagation;")

@@ -1,7 +1,7 @@
 # You likely need to install this: pip install pyrsistent
 from pyrsistent import pmap, pset
 from functools import lru_cache
-from vut.engine.compare.friends_pairing.result import Result
+from vut.engine.compare.potpourri.result import Result
 
 def do(potential_pair_db, global_analogy_db, global_pair_db, required_pair_n) -> Result:
     if not potential_pair_db:

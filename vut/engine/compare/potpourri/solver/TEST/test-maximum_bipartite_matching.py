@@ -8,8 +8,8 @@ this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../"
 sys.path.insert(0, this_directory)
 
 # Import the algorithm (assuming it's in vut.engine.compare.friends_pairing.matching)
-from   vut.engine.compare.friends_pairing.solver.maximum_bipartite_matching import do #noqa E402
-import scenario_generator as gen                             #noqa E402
+from   vut.engine.compare.potpourri.solver.maximum_bipartite_matching import do   #noqa E402
+import scenario_generator                                             as     gen  #noqa E402
 
 if "--hwut-info" in sys.argv:
     print("Bipartite Matching: Augmenting Path Algorithm;")

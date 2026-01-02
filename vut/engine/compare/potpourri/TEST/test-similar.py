@@ -2,96 +2,115 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: Failling early on EXACT matching algorithm.
+PURPOSE: Algorithm to associate SIMILAR lines from subject and nominal.
 
-CHOICES: basic, analogy, wild, border;
+CHOICES: basic, restricted_cmp;
 
 DESCRIPTION:
 
-This test checks for the circumstances under which the exact matching algorithm
-can fail without a detailed similarity analysis.
+The 'friends_pairing/similar' match algorithm associates as many lines as
+possible, i.e. the number of associations is
+
+              max(subject line number, nominal line number)
+
+First, equivalent lines are associated. 
+
+Seconds, associations are done according to similarity in terms of their 'edit
+distance'. That is, it is measured how many editions of (SUBSTITUTE, DELETE,
+INSERT, TRANSPOSE) are necessary to transform the subject into the nominal 
+line. Line pairs which require less of edit operations than others are 
+considered more similar.  
+
+Third, if there are more lines of one kind than the other, it associates the
+existing lines with 'None'.
+
+'restricted_cmp' tests on the restricted amount of comparisons. This is 
+introduced in order to avoid a computational overload in case of many
+similar lines.
 ______________________________________________________________________________
 """
-
 import sys
 import os
 
-# adopt path before imports --> disable code check error E402
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.configuration                      import ConfigurationPatternFinder #noqa E402
-import vut.engine.compare.friends_pairing.equivalence_check  as     equivalence_check          #noqa E402
-from   vut.engine.compare.tolerance.pattern_finder           import PatternFinder              #noqa E402
-from   vut.engine.compare.engine.analogy_db                  import AnalogyDb                  #noqa E402
-from   vut.engine.compare.TEST.common                        import get_Potpourri              #noqa E402
+from   vut.engine.compare.configuration               import ConfigurationPatternFinder      #noqa E402
+import vut.engine.compare.potpourri.association       as     association                     #noqa E402
+from   vut.engine.compare.tolerance.pattern_finder    import PatternFinder                   #noqa E402
+from   vut.engine.compare.engine.analogy_db           import AnalogyDb                       #noqa E402
+from   vut.engine.compare.TEST.common import get_Potpourri, print_friends_pairing_max_result #noqa E402
 
 if "--hwut-info" in sys.argv:
-    print("FriendsPairing: fail quickly;")
-    print("CHOICES: basic, analogy, wild, border;")
+    print("FriendsPairingMax: Search anyway;")
+    print("CHOICES: basic, restricted_cmp;")
     sys.exit()
 
 config = ConfigurationPatternFinder()
-config.analogy_f = True
+config.analogy_f               = True
 config.numeric_tolerance_ratio = 0.011
 config.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]
+pf                             = PatternFinder(config)
 
-pf = PatternFinder(config)
-
-def test_pure(subject_line_list, nominal_line_list):
+def test_pure(subject_line_list, nominal_line_list, max_comparison_count):
     print("--------------------------------")
     print("subject:", subject_line_list)
     print("nominal:", nominal_line_list)
 
     analogy_db = AnalogyDb()
-    total_verdict, db, analogy_db = equivalence_check.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
-                                                         get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
-                                                         AnalogyDb(),
-                                                         abort_early_f=True)
+    line_associations, \
+    analogy_db         = association.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
+                                        get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
+                                        analogy_db,
+                                        max_comparison_count)
 
-    if not total_verdict and (db or analogy_db):
-        # Quick fail sets objects to 'None'
-        print("db: %s; analogy_db: %s;" % ("None" if db is None else "size %i" % len(db),
-                                           "None" if analogy_db is None else "size %i" % len(db)))
+    return line_associations, analogy_db
 
-    print("association: %s" % (total_verdict))
+def test(subject_line_list, nominal_line_list, max_comparison_count=100):
+    line_associations, analogy_db = test_pure(subject_line_list, nominal_line_list,
+                                              max_comparison_count)
 
-    return total_verdict, db, analogy_db
+    print_friends_pairing_max_result(subject_line_list, nominal_line_list,
+                                     -1.0, sorted(line_associations), analogy_db)
 
-def test(subject_line_list, nominal_line_list):
-    total_verdict, db, analogy_db = test_pure(subject_line_list, nominal_line_list)
-
-    def _name(cmp_info_list, i):
-        if cmp_info_list: return cmp_info_list[i]
-        else:            return None
-
-    if not total_verdict: prefix = "##" # HWUT comment (ignore line)
-    else:                 prefix = ""
-    if total_verdict:
-        for ia, ib in sorted(db.items()):
-            print(prefix + "   [%i] %s%s --> [%i] %s" % (ia, _name(subject_line_list, ia),
-                                                         " " * (15 - len(_name(subject_line_list, ia))),
-                                                         ib, _name(nominal_line_list, ib)))
 if "basic" in sys.argv:
-    test(["otto"], ["otto"])
-    test(["otto"], ["fritz"])
-    test(["otto"], [])
-    test(["otto"], [""])
-    test([""], ["fritz"])
-    test(["otto"], [])
-    test([], ["fritz"])
-    test(["otto", "heinz"],  ["fritz"])
-    test(["funny", "happy", "glad"], ["happy", "glad", "glad"])      # funny matchs all, happy only happy
-    test(["funny", "funny", "funny"], ["glad", "glad", "something"]) # funny matchs all, happy only happy
-    # A little special: Every subject has its counterpart.
-    # But, when unique couples are extracted, the analogies fail
-    # and the last one remains without match.
-    test(["fit ((1))", "fitter ((2))", "misfit ((1))"],
-         ["fit ((A))", "fitter ((B))", "misfit ((C))"])
-    # A little special: analogies at the end are interfering with analogies
-    # of ultimate couples.
-    test(["fit ((1))", "funny ((2))", "happy ((1))"],
-         ["fit ((A))", "happy ((B))", "funny ((C))"])
+    test([],
+         ["otto", "otto"])
+    test(["otto", "fritz"],
+         [])
+    test(["otto"],
+         ["otto", "otto"])
+    test(["otto", "fritz"],
+         ["otto"])
+    test(["otto", "fritz"],
+         ["otto", "otto"])
+    test(["otto", "fritz"],
+         ["otto", "fritz"])
+    test(["happy", "fritz"],
+         ["fritz", "funny"])
+    test(["happy", "mummie", "fritz"],
+         ["fritz", "mummie", "I smart", "funny"])
+    test(["fritz", "mummie", "I smart", "funny"],
+         ["happy", "mummie", "fritz"])
+
+    test(["98", "99", ],
+         ["102", "101", "100", "99"])
+
+    test(["100", "98", "99", "101"],
+         ["102", "99"])
+
+    test(["((1))", "((2))", "((2))", "((3))"],
+         ["((A))", "((B))", "((C))", "((D))"])
+
+    test(["a", "b", "c", "d", "e", "f"],
+         ["x", "y", "z"])
+
+if "restricted_cmp" in sys.argv:
+    # Special case, where analogy inconsistency filtering removes some entries.
+    #
+    test(["A ((1))", "B ((2))", "C ((2))", "D ((3))"],
+         ["a ((A))", "B ((B))", "c ((C))", "d ((D))"],
+         max_comparison_count=1)
 
 if "analogy" in sys.argv:
     test(["((1)) happy", "((2))",       "((3)) me"],
@@ -102,13 +121,6 @@ if "analogy" in sys.argv:
 
     test(["((1)) ((2))", "((2)) ((3))", "((3)) ((1))"],
          ["((C)) ((A))", "((A)) ((B))", "((B)) ((C))"])
-
-    # A large set of analogies where a contradictions is inserted, so that
-    # the pairing must fail.
-    size = 5
-    bad_subject = ["((3)) ((2)) ((1))"] + [ "((%i)) ((%i)) ((%i))" % (i % 25, (i+1) % 25, (i+2) % 25) for i in range(1,size) ]
-    bad_nominal = ["((z)) ((y)) ((x))"] + [ "((%s)) ((%s)) ((%s))" % (chr(i % 25 + ord('a')), chr((i+1)%25 + ord('a')), chr((i+2)%25 + ord('a'))) for i in range(0,size-1) ]
-    total_verdict, db, analogy_db = test_pure(bad_subject, bad_nominal)
 
 if "wild" in sys.argv:
     # Subject and nominal are subject to numeric tolerances. Each element may
@@ -138,7 +150,7 @@ if "wild" in sys.argv:
     size = 100
     subject = [ "((%i)) ((%i)) ((%i))" % (i % 25, (i+1) % 25, (i+2) % 25) for i in range(1,size) ]
     nominal = [ "((%s)) ((%s)) ((%s))" % (chr(i % 25 + ord('a')), chr((i+1)%25 + ord('a')), chr((i+2)%25 + ord('a'))) for i in range(0,size-1) ]
-    total_verdict, db, analogy_db = test_pure(subject, nominal)
+    total_verdict, _, analogy_db = test_pure(subject, nominal)
 
     for subject_term, nominal_term in sorted(analogy_db.items()):
         print("  %s <-> %s" % (subject_term, nominal_term))
@@ -148,7 +160,7 @@ if "wild" in sys.argv:
     size = 5
     bad_subject = ["((3)) ((2)) ((1))"] + [ "((%i)) ((%i)) ((%i))" % (i % 25, (i+1) % 25, (i+2) % 25) for i in range(1,size) ]
     bad_nominal = ["((z)) ((y)) ((x))"] + [ "((%s)) ((%s)) ((%s))" % (chr(i % 25 + ord('a')), chr((i+1)%25 + ord('a')), chr((i+2)%25 + ord('a'))) for i in range(0,size-1) ]
-    total_verdict, db, analogy_db = test_pure(bad_subject, bad_nominal)
+    total_verdict, _, analogy_db = test_pure(bad_subject, bad_nominal)
 
 if "border" in sys.argv:
 
@@ -191,3 +203,18 @@ if "border" in sys.argv:
     test(["funny ((B)) ((A))", "happy ((A)) ((B))", "smart ((C)) ((D))", "glad ((B)) ((A))", "something ((B)) ((A))"],
          ["something ((2)) ((1))", "happy ((1)) ((2))", "smart ((3)) ((4))", "glad ((2)) ((1))", "something ((2)) ((1))"])
 
+if "wild-2" in sys.argv:
+    a_elements = ("funny", "funny", "funny", "4711", "((1))", "((2))", "same")
+    b_elements = ("happy", "funny", "glad", "4712", "((A))", "((B))", "same")
+    def generate(elements):
+        L = len(elements)
+        for offset in range(L * 25):
+            yield " ".join((elements[i % L]) for i in range(offset, offset + 3))
+
+    a_lines = [line for line in generate(a_elements)]
+    b_lines = [line for line in generate(b_elements)]
+    test_pure(a_lines, b_lines)
+
+if "DEBUG" in sys.argv:
+    test(["I smart", "funny"],
+         ["happy"])

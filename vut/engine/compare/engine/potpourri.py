@@ -12,14 +12,14 @@ The two main functions of 'Potpourri' are (derived from 'InputChunk')
                             for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.core                       import E_Verdict, \
-                                                                   E_PotpourriBorder
-from   vut.engine.compare.engine.input_chunk                import InputChunk, E_Chunk
-from   vut.engine.compare.engine.line                       import Line
-from   vut.engine.compare.engine.line_pair                  import LinePair
-from   vut.engine.compare.engine.chunk_pair                 import LinePairList
-import vut.engine.compare.friends_pairing.association         as     association
-import vut.engine.compare.friends_pairing.equivalence_check as     equivalence_check
+from   vut.engine.compare.engine.core                 import E_Verdict, \
+                                                             E_PotpourriBorder
+from   vut.engine.compare.engine.input_chunk          import InputChunk, E_Chunk
+from   vut.engine.compare.engine.line                 import Line
+from   vut.engine.compare.engine.line_pair            import LinePair
+from   vut.engine.compare.engine.chunk_pair           import LinePairList
+import vut.engine.compare.potpourri.association       as     association
+import vut.engine.compare.potpourri.equivalence_check as     equivalence_check
 
 class Potpourri(InputChunk):
     """Set of lines where the sequence does not matter.

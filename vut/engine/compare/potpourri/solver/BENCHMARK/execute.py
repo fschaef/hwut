@@ -8,8 +8,8 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-import vut.engine.compare.friends_pairing.matching              as m              #noqa E402
-from   vut.engine.compare.engine.analogy_db                     import AnalogyDb  #noqa E402
+import vut.engine.compare.potpourri.matching                                as m              #noqa E402
+from   vut.engine.compare.engine.analogy_db                                 import AnalogyDb  #noqa E402
 import vut.engine.compare.friends_pairing.solver.BENCHMARK.scenario_creator as scn            #noqa E402
 
 def run_benchmark(n_range:     list[int], 
