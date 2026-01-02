@@ -23,9 +23,8 @@ import sys
 
 sys.path.insert(0, "../../../../../")
 
-from   vut.engine.compare.input.pattern_finder     import PatternFinder
+from   vut.engine.compare.input.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-import vut.engine.compare.engine.equivalence_check.core as equivalence_check
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import print_match_sequences_lists, \
                                                           print_friends_pairing_max_result, \
@@ -51,7 +50,7 @@ if "judge" in sys.argv:
         nominal = get_LineSequence(pf, nominal_list, config)
         print_match_sequences_lists(subject.line_list, nominal.line_list)
 
-        print("=> %s, %s" % equivalence_check.do(subject, nominal, AnalogyDb()))
+        print("=> %s, %s" % subject.is_equivalent(nominal, AnalogyDb()))
 
     test(["a", "b"],     ["b", "a"])
     test(["a"],          ["b", "a"])

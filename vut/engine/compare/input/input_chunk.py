@@ -17,7 +17,8 @@ The two main functions of an 'InputChunk' are
                      for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums          import E_Chunk
+from   vut.engine.compare.engine.enums          import E_Verdict, \
+                                                       E_Chunk
 from   vut.engine.compare.engine.analogy_db     import AnalogyDb
 from   vut.engine.compare.engine.line           import Line
 from   vut.engine.compare.input.pattern_finder  import E_ToleranceId
@@ -42,6 +43,39 @@ class InputChunk(ABC):
     def empty_clone(self):
         return self.__class__(None, None, [], self.configuration)
 
+    def is_equivalent(self, nominal, analogy_db) -> E_Verdict:
+        """RETURNS: [0] True, if both sequences are equivalent. False, else.
+                    [1] analogy_db required for equivalence to hold.
+
+        The 'analogy_db' contains analogies imposed from lines which are
+        equivalent. If the test fails ([0] == False), the analogy database is
+        irrelevant, since the global comparison needs to stop. For display
+        (see .line_pairs()), this different.
+        """
+        if self.__class__ != nominal.__class__:
+            return E_Verdict.DIFFERENT, analogy_db
+        elif self.__class__ == InputChunkTerminal:
+            return E_Verdict.EQUIVALENT, analogy_db  # here: both are 'InputChunkTerminal'
+
+        # filter empty and VISIBLE_NOTHING lines.
+        def _condition(line):
+            if not line:                                               return False
+            elif all(x.tolerance_id == VISIBLE_NOTHING for x in line): return False
+            else:                                                      return True
+
+        subject_line_list = tuple(line for line in self.line_list if _condition(line))
+        if len(nominal.line_list) < len(subject_line_list): 
+            # 'nominal_line_list' will only shrink. 
+            # if it is already longer => impossible match.
+            return E_Verdict.DIFFERENT, analogy_db
+
+        nominal_line_list = tuple(line for line in nominal.line_list if _condition(line))
+        if len(nominal_line_list) != len(subject_line_list): 
+            # filtered list are not of same size => impossible match
+            return E_Verdict.DIFFERENT, analogy_db
+
+        else:
+            return self._is_equivalent(subject_line_list, nominal_line_list, analogy_db)
 
     def associate(self, nominal, analogy_db):
         """RETURNS: [0] list of 'LinePair'-s

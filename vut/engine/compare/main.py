@@ -33,14 +33,13 @@ is that they must provide the function:
                  "",              if end of stream has been reached.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums                  import E_Verdict
-from   vut.engine.compare.engine.analogy_db             import AnalogyDb
-from   vut.engine.compare.input.input_chunk_zip         import do as async_input_chunk_zip
-from   vut.engine.compare.engine.chunk_pair             import ChunkPair
-import vut.engine.compare.engine.equivalence_check.core as equivalence_check
-from   vut.auxiliary.async_helper                       import AsyncIterator_ensured
+from   vut.engine.compare.engine.enums           import E_Verdict
+from   vut.engine.compare.engine.analogy_db      import AnalogyDb
+from   vut.engine.compare.input.input_chunk_zip  import do as async_input_chunk_zip
+from   vut.engine.compare.engine.chunk_pair      import ChunkPair
+from   vut.auxiliary.async_helper                import AsyncIterator_ensured
 
-from   vut.engine.compare.configuration                 import Configuration
+from   vut.engine.compare.configuration          import Configuration
 
 from   typeguard import typechecked
 
@@ -69,8 +68,8 @@ async def is_equivalent(config: Configuration, subject_line_provider, nominal_li
                                                         AsyncIterator_ensured(subject_line_provider), 
                                                         AsyncIterator_ensured(nominal_line_provider),
                                                         align_f=False):
-
-        verdict, analogy_db = equivalence_check.do(subject, nominal, analogy_db)
+        verdict,   \
+        analogy_db = subject.is_equivalent(nominal, analogy_db)
         # analogy db is updated as required to main 'equivalence', else not (of course)
 
         if verdict != E_Verdict.EQUIVALENT:
