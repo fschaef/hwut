@@ -1,4 +1,4 @@
-Testing the comparison functionality
+Equivalence check and association of potpourri lines
 ------------------------------------
 
 coverage run --omit ./*.py -a *.py 
