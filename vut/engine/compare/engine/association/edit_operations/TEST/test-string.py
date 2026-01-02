@@ -17,9 +17,9 @@ ______________________________________________________________________________
 """
 import sys
 
-sys.path.insert(0, "../../../../../")
+sys.path.insert(0, "../../../../../../../")
 
-import vut.engine.compare.edit_operations.string as     edit_distance_string
+import vut.engine.compare.engine.association.edit_operations.string as     edit_distance_string
 
 if "--hwut-info" in sys.argv:
     print("Strings;")

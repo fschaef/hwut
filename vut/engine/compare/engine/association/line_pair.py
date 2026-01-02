@@ -16,8 +16,8 @@ ________________________________________________________________________________
 from    vut.engine.compare.tolerance.line_element import E_ToleranceId
 from    vut.engine.compare.engine.line            import Line
 from    vut.engine.compare.engine.enums           import E_PotpourriBorder
-from    vut.engine.compare.edit_operations.edit   import E_EditId, Edit
-from    vut.engine.compare.edit_operations.line   import position_increment_db
+from    vut.engine.compare.engine.association.edit_operations.edit   import E_EditId, Edit
+from    vut.engine.compare.engine.association.edit_operations.line   import position_increment_db
 from    vut.external.quex.typed                   import typed
 
 from    typeguard   import typechecked

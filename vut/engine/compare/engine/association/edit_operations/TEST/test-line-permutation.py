@@ -33,12 +33,12 @@ ______________________________________________________________________________
 """
 import sys
 
-sys.path.insert(0, "../../../../../")
+sys.path.insert(0, "../../../../../../../")
 
 from    vut.engine.compare.tolerance.line_element import E_ToleranceId, \
                                                         LineElement, \
                                                         LineElementString
-import vut.engine.compare.edit_operations.line   as      edit_operations_line
+import vut.engine.compare.engine.association.edit_operations.line   as      edit_operations_line
 
 from    itertools import combinations
 

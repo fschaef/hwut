@@ -4,9 +4,9 @@ PURPOSE: Verify Transposition distance scaling and VISIBLE_NOTHING logic.
 CHOICES: transpose, visible-nothing;
 """
 import sys
-sys.path.insert(0, "../../../../../")
+sys.path.insert(0, "../../../../../../../")
 
-import vut.engine.compare.edit_operations.line as edit_distance_line
+import vut.engine.compare.engine.association.edit_operations.line as edit_distance_line
 from vut.engine.compare.TEST.common import prepare
 
 if "--hwut-info" in sys.argv:

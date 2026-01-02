@@ -3,7 +3,7 @@ ________________________________________________________________________________
 PURPOSE: A list of 'LinePair' objects.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.line_pair         import LinePair
+from   vut.engine.compare.engine.association.line_pair import LinePair
 
 class LinePairList(list):
     def __init__(self, iterable=None):

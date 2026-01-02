@@ -58,11 +58,11 @@ The result is the optimal sequence of edit operations required to transform the
 subject into the nominal.
 _______________________________________________________________________________
 """
-from  vut.engine.compare.edit_operations.edit              import E_EditId, Edit, EditSequence, list_EditGOOD_line
-from  vut.engine.compare.edit_operations.core              import WorkListBase, \
+from  vut.engine.compare.engine.association.edit_operations.edit              import E_EditId, Edit, EditSequence, list_EditGOOD_line
+from  vut.engine.compare.engine.association.edit_operations.core              import WorkListBase, \
                                                                   WorkItemBase, \
                                                                   position_increment_db
-from  vut.engine.compare.edit_operations.separator_adaptor import SeparatorAdaptor
+from  vut.engine.compare.engine.association.edit_operations.separator_adaptor import SeparatorAdaptor
 from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from  vut.engine.compare.engine.enums                      import E_Verdict
@@ -162,6 +162,7 @@ class LineSeparatorAdaptor(SeparatorAdaptor):
             return self.Edit(GOOD, None)            # both equal separators
         else:
             return self.Edit(GOOD_TOLERATED, None)  # separators are similar
+
 
 
 class WorkList(WorkListBase):

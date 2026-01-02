@@ -15,10 +15,10 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.enums                  import E_Verdict
 from   vut.engine.compare.engine.input_chunk            import InputChunk, \
                                                                E_Chunk
-from   vut.engine.compare.engine.line_pair              import LinePair
-import vut.engine.compare.edit_operations.line_sequence as     edit_operations_line_sequence
-from   vut.engine.compare.edit_operations.edit          import E_EditId, \
-                                                               EditSequence
+from   vut.engine.compare.engine.association.line_pair                     import LinePair
+import vut.engine.compare.engine.association.edit_operations.line_sequence as     edit_operations_line_sequence
+from   vut.engine.compare.engine.association.edit_operations.edit          import E_EditId, \
+                                                                                  EditSequence
 
 
 class LineSequence(InputChunk):

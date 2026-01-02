@@ -10,11 +10,11 @@ ________________________________________________________________________________
 """
 from typeguard import typechecked
 
-from   vut.engine.compare.engine.line_pair                   import LinePair
-import vut.engine.compare.edit_operations.line               as     edit_operations_line
-import vut.engine.compare.potpourri.equivalence_check        as     equivalence_check
-from   vut.engine.compare.engine.analogy_db                  import AnalogyDb
-from   vut.engine.compare.engine.frozen_analogy_db           import FrozenAnalogyDb
+from   vut.engine.compare.engine.association.line_pair            import LinePair
+import vut.engine.compare.engine.association.edit_operations.line as     edit_operations_line
+import vut.engine.compare.potpourri.equivalence_check             as     equivalence_check
+from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
+from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb
 
 
 def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):

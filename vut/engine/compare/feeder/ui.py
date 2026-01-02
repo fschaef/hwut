@@ -25,8 +25,8 @@ import os
 root_dir = os.path.dirname(__file__) + "/../../../.."
 sys.path.insert(0, root_dir)
 
-import vut.engine.compare.main             as     main                        #noqa: E402
-from   vut.engine.compare.engine.line_pair import SubjectCell, NominalCell    #noqa: E402
+import vut.engine.compare.main                         as     main                        #noqa: E402
+from   vut.engine.compare.engine.association.line_pair import SubjectCell, NominalCell    #noqa: E402
 
 from   inspect     import isclass                                             #noqa: E402
 from   typing      import List, Any, AsyncIterable                            #noqa: E402

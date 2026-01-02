@@ -7,10 +7,10 @@ ________________________________________________________________________________
 import sys
 sys.path.insert(0, "../../../../../")
 
-from vut.engine.compare.tolerance.line_element import LineElementString
-from vut.engine.compare.engine.line            import Line
-from vut.engine.compare.edit_operations.edit   import E_EditId, Edit
-from vut.engine.compare.engine.line_pair       import LinePair
+from vut.engine.compare.tolerance.line_element                  import LineElementString
+from vut.engine.compare.engine.line                             import Line
+from vut.engine.compare.engine.association.edit_operations.edit import E_EditId, Edit
+from vut.engine.compare.engine.association.line_pair            import LinePair
 
 if "--hwut-info" in sys.argv:
     print("LinePair: subject_and_nominal_line_element_lists();")
