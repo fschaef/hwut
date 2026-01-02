@@ -22,6 +22,7 @@ There are two types of list of lines:
                  each line has its equivalent counterpart-somewhere.
 _______________________________________________________________________________
 """ 
+from vut.engine.compare.engine.enums             import E_Chunk 
 from vut.engine.compare.engine.line              import Line 
 from vut.engine.compare.line_sequence.core       import LineSequence
 from vut.engine.compare.potpourri.core           import Potpourri
@@ -52,6 +53,7 @@ class ChunkPipe(PatternFinder):
                 Potpourri          if text element is a potpourri.
                 TerminalInputChunk to mark end of stream.
         """
+        chunk_type   = E_Chunk.LINE_SEQUENCE
         chunk_class  = LineSequence
         line_list    = []
         start_line_n = 1
@@ -66,8 +68,8 @@ class ChunkPipe(PatternFinder):
                                       self.configuration)
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
-                if chunk_class == LineSequence: chunk_class = Potpourri
-                else:                           chunk_class = LineSequence
+                if chunk_class == LineSequence: chunk_class = Potpourri;    chunk_type = E_Chunk.LINE_SEQUENCE
+                else:                           chunk_class = LineSequence; chunk_type = E_Chunk.POTPOURRI
                 start_line_n = line_n
             else:
                 line_list.append(Line(line_n, PatternFinder.do(self, line)))
