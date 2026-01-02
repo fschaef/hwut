@@ -24,8 +24,6 @@ _______________________________________________________________________________
 """ 
 from vut.engine.compare.engine.enums             import E_Chunk 
 from vut.engine.compare.engine.line              import Line 
-from vut.engine.compare.line_sequence.core       import LineSequence
-from vut.engine.compare.potpourri.core           import Potpourri
 from vut.engine.compare.input.input_chunk        import InputChunk
 from vut.engine.compare.input.pattern_finder     import PatternFinder
 from vut.engine.compare.configuration            import Configuration
@@ -55,7 +53,6 @@ class ChunkPipe(PatternFinder):
                 TerminalInputChunk to mark end of stream.
         """
         chunk_type   = E_Chunk.LINE_SEQUENCE
-        chunk_class  = LineSequence
         line_list    = []
         start_line_n = 1
         for line_n in count(1):
@@ -63,14 +60,14 @@ class ChunkPipe(PatternFinder):
             if not line:
                 break
             elif self.is_region_delimiter(line):
-                if line_list or chunk_class != LineSequence:
+                if line_list or chunk_type is not E_Chunk.LINE_SEQUENCE:
                     yield InputChunk(chunk_type, start_line_n, line_n, 
                                      line_list, 
                                      self.configuration)
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
-                if chunk_class == LineSequence: chunk_class = Potpourri;    chunk_type = E_Chunk.POTPOURRI
-                else:                           chunk_class = LineSequence; chunk_type = E_Chunk.LINE_SEQUENCE
+                if chunk_type is E_Chunk.LINE_SEQUENCE: chunk_type = E_Chunk.POTPOURRI
+                else:                                   chunk_type = E_Chunk.LINE_SEQUENCE
                 start_line_n = line_n
             else:
                 line_list.append(Line(line_n, PatternFinder.do(self, line)))
