@@ -40,10 +40,7 @@ class InputChunk(ABC):
             yield Line.from_potpourri(end_line_n, begin_f=False)
 
         if chunk_type is E_Chunk.POTPOURRI:
-            iterable = tuple(_adapt(iterable, start_line_n, end_line_n))
-            print("##iterable:", iterable)
-        ## if chunk_type is E_Chunk.POTPOURRI: self.line_list = tuple(_adapt(iterable))
-        ## else:                               self.line_list = tuple(iterable)
+            iterable = _adapt(iterable, start_line_n, end_line_n)
 
         self.line_list     = tuple(iterable)
         self.start_line_n  = start_line_n
