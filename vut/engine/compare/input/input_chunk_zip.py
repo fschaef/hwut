@@ -25,6 +25,21 @@ from vut.auxiliary.async_helper              import async_zip_longest, \
 from typeguard import typechecked
 from typing    import AsyncIterator
 
+@typechecked
+async def pairs_of_LINE_or_POTPOURRI(config:                Configuration, 
+                                     subject_line_provider: AsyncIterator, 
+                                     nominal_line_provider: AsyncIterator, 
+                                     align_f:               bool):
+    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f):
+        yield _
+
+@typechecked
+async def pairs_of_LINE_SEQUENCE_or_POTPOURRI(config:                Configuration, 
+                                     subject_line_provider: AsyncIterator, 
+                                     nominal_line_provider: AsyncIterator, 
+                                     align_f:               bool):
+    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f):
+        yield _
 
 @typechecked
 async def do(config:                Configuration, 

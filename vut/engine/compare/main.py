@@ -35,7 +35,7 @@ ________________________________________________________________________________
 """
 import vut.engine.compare.engine.equivalence_check.core as equivalence_check
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
-from   vut.engine.compare.input.input_chunk_zip  import do as async_input_chunk_zip
+import vut.engine.compare.input.input_chunk_zip  as     async_input_zip
 from   vut.engine.compare.engine.chunk_pair      import ChunkPair
 from   vut.auxiliary.async_helper                import AsyncIterator_ensured
 
@@ -44,7 +44,9 @@ from   vut.engine.compare.configuration          import Configuration
 from   typeguard import typechecked
 
 @typechecked
-async def is_equivalent(config: Configuration, subject_line_provider, nominal_line_provider) -> bool:
+async def is_equivalent(config: Configuration, 
+                        subject_line_provider, 
+                        nominal_line_provider) -> bool:
     """RETURNS: True, if subject and nominal stream are equivalent.
                 False, else.
 
@@ -63,11 +65,11 @@ async def is_equivalent(config: Configuration, subject_line_provider, nominal_li
 
     analogy_db = AnalogyDb()
 
-    # subject, nominal = 'LineSequence' or 'Potpourri'
-    async for subject, nominal in async_input_chunk_zip(config,
-                                                        AsyncIterator_ensured(subject_line_provider), 
-                                                        AsyncIterator_ensured(nominal_line_provider),
-                                                        align_f=False):
+    # subject, nominal = 'LINE' or 'POTPOURRI'
+    async for subject, nominal in async_input_zip.pairs_of_LINE_or_POTPOURRI(config,
+                                                                             AsyncIterator_ensured(subject_line_provider), 
+                                                                             AsyncIterator_ensured(nominal_line_provider),
+                                                                             align_f=False):
         verdict,   \
         analogy_db = equivalence_check.do(subject, nominal, analogy_db)
         # analogy db is updated as required to main 'equivalence', else not (of course)
@@ -124,10 +126,10 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     analogy_db = AnalogyDb()
 
     # subject, nominal = 'LineSequence', 'Potpourri' or None
-    async for subject, nominal in async_input_chunk_zip(config,
-                                                        AsyncIterator_ensured(subject_line_provider), 
-                                                        AsyncIterator_ensured(nominal_line_provider),
-                                                        align_f=True):
+    async for subject, nominal in async_input_zip.pairs_of_LINE_SEQUENCE_or_POTPOURRI(config,
+                                                                                      AsyncIterator_ensured(subject_line_provider), 
+                                                                                      AsyncIterator_ensured(nominal_line_provider),
+                                                                                      align_f=True):
 
         yield ChunkPair.from_input_chunks(subject, nominal, analogy_db)
 
