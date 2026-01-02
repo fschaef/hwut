@@ -1,9 +1,11 @@
-import vut.engine.compare.edit_operations.line_edit.common as edit_operation_search
+import vut.engine.compare.edit_operations.line_edit.common as     edit_operation_search
+from   vut.engine.compare.edit_operations.edit             import E_EditId, EditSequence
 from   collections import defaultdict
 
 
 def do(subject_list, nominal_list):
     """
+    ASSUMPTION: All LineElements in subject and nominal are 'LineElementAnalogy'
     Orchestrates the Analogy Edit Distance process.
     
     1. Solves Analogies (Constraint Satisfaction).
@@ -22,11 +24,16 @@ def do(subject_list, nominal_list):
     # 1. Establish the Vocabulary (Global Constraints)
     analogy_map = find_best_analogies(subject_list, nominal_list)
     
-    
     # 2. Integer Encoding (Tokenization)
     #    Create a shared vocabulary for both lists to feed into the generic solver.
     subject_ids, \
     nominal_ids  = assign_token_ids(subject_list, nominal_list, analogy_map)
+
+    if subject_ids == nominal_ids: # Perfect alignment?
+        # => every single analogy holds and corresponds
+        return EditSequence(cost       = 0, 
+                            sequence   = [E_EditId.GOOD] * len(subject_ids),
+                            analogy_db = analogy_map)
 
     # 3. Calculate Structure (Generic ID-based Solver)
     #    This returns indices: {'code': 'TRANSPOSE', 'old_idx': 0, 'new_idx': 2, ...}

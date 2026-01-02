@@ -32,6 +32,7 @@ E_EditId.good = { E_EditId.GOOD, E_EditId.GOOD_TOLERATED, E_EditId.GOOD_INSERT, 
 
 class Edit:
     __slots__ = ('id', '_auxiliary', 'cost')
+
     def __init__(self, id, transpose_ai=None, edit_list=None, cost: float = 0.0):
         # TOO EXPENSIVE: assert transpose_ai is None or edit_list is None
         # (this function is called too often, mio of times)
