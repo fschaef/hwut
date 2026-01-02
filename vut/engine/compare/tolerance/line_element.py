@@ -122,7 +122,7 @@ class LineElement:
         # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
         return verdict_id == E_Verdict.EQUIVALENT
 
-    def _compare(self, nominal):
+    def _is_equivalent(self, nominal):
         raise NotImplementedError
 
     def __hash__(self):
@@ -157,9 +157,6 @@ class LineElementSeparator(LineElement):
         else:
             return E_Verdict.EQUIVALENT, None
 
-    def _compare(self, nominal):
-        return True
-
     def __hash__(self):
         return hash(self._string) ^ hash(E_ToleranceId.SEPERATOR)
 
@@ -187,9 +184,6 @@ class LineElementString(LineElement):
 
         if self._string == nominal._string: return E_Verdict.EQUIVALENT, None
         else:                               return E_Verdict.DIFFERENT, None
-
-    def _compare(self, nominal):
-        return self._string == nominal._string
 
     def __hash__(self):
         return hash(self._string) ^ hash(self.tolerance_id)
@@ -266,14 +260,6 @@ class LineElementNumber(LineElement):
         else:       
             return E_Verdict.DIFFERENT, None
 
-    def _compare(self, nominal):
-        """RETURNS: True, if number 'subject' lies in the epsilon range
-                          of number 'nominal'.
-                    False, else.
-                    None (no analogy required)
-        """
-        return abs(self.number - nominal.number) <= nominal.epsilon
-
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
@@ -302,9 +288,6 @@ class LineElementVisibleNothing(LineElement):
             return E_Verdict.EQUIVALENT, None
         else:
             return E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING, None
-
-    def _compare(self, nominal):
-        return True
 
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
@@ -340,12 +323,6 @@ class LineElementEquivalencePattern(LineElement):
             return E_Verdict.EQUIVALENT, None
         else:       
             return E_Verdict.DIFFERENT, None
-
-    def _compare(self, nominal):
-        """RETURNS: True, if subject and nominal match a common pattern
-                    False, else.
-        """
-        return not nominal.pattern_index_set.isdisjoint(self.pattern_index_set)
 
     def edit_distance_relative(self, nominal):
         if not nominal.pattern_index_set.isdisjoint(self.pattern_index_set):

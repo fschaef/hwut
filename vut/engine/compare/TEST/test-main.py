@@ -70,13 +70,13 @@ async def test_compare(subject_txt, nominal_txt, both_f=False):
         print("(1)")
     subject, nominal = test_core(subject_txt, nominal_txt)
     print()
-    print("=> verdict: %s" % await main.compare(config, subject, nominal))
+    print("=> verdict: %s" % await main.is_equivalent(config, subject, nominal))
     print()
     if both_f:
         print("(2)")
         nominal, subject = test_core(nominal_txt, subject_txt)
         print()
-        print("=> verdict: %s" % await main.compare(config, subject, nominal))
+        print("=> verdict: %s" % await main.is_equivalent(config, subject, nominal))
         print()
 
 CONFIGURATION_print_only_chunk_type = False

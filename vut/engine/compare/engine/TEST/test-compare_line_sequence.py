@@ -50,7 +50,7 @@ if "judge" in sys.argv:
         nominal = get_LineSequence(pf, nominal_list, config)
         print_match_sequences_lists(subject.line_list, nominal.line_list)
 
-        print("=> %s, %s" % subject.compare(nominal, AnalogyDb()))
+        print("=> %s, %s" % subject.is_equivalent(nominal, AnalogyDb()))
 
     test(["a", "b"],     ["b", "a"])
     test(["a"],          ["b", "a"])

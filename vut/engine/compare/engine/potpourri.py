@@ -35,7 +35,7 @@ class Potpourri(InputChunk):
         InputChunk.__init__(self, start_line_n, end_line_n, 
                             adapt(iterable, start_line_n, end_line_n), config)
 
-    def _compare(self, subject_line_list, nominal_line_list, analogy_db):
+    def _is_equivalent(self, subject_line_list, nominal_line_list, analogy_db):
         """RETURNS: [0] True, if both potpourris are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
         """
@@ -50,7 +50,7 @@ class Potpourri(InputChunk):
         if verdict: return E_Verdict.EQUIVALENT, new_analogy_db
         else:       return E_Verdict.DIFFERENT, analogy_db
 
-    def _line_associations(self, nominal, analogy_db):
+    def _associate_lines(self, nominal, analogy_db):
         """RETURNS: list 'LinePair'-s
 
         See 'InputChunk.associate()' for further explanations.

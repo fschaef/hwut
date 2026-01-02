@@ -50,7 +50,7 @@ class InputChunk(ABC):
     def empty_clone(self):
         return self.__class__(None, None, [], self.configuration)
 
-    def compare(self, nominal, analogy_db) -> E_Verdict:
+    def is_equivalent(self, nominal, analogy_db) -> E_Verdict:
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
 
@@ -63,7 +63,6 @@ class InputChunk(ABC):
             return E_Verdict.DIFFERENT, analogy_db
         elif self.__class__ == InputChunkTerminal:
             return E_Verdict.EQUIVALENT, analogy_db  # here: both are 'InputChunkTerminal'
-
 
         # filter empty and VISIBLE_NOTHING lines.
         def _condition(line):
@@ -83,7 +82,7 @@ class InputChunk(ABC):
             return E_Verdict.DIFFERENT, analogy_db
 
         else:
-            return self._compare(subject_line_list, nominal_line_list, analogy_db)
+            return self._is_equivalent(subject_line_list, nominal_line_list, analogy_db)
 
     def associate(self, nominal, analogy_db):
         """RETURNS: [0] list of 'LinePair'-s
@@ -96,16 +95,16 @@ class InputChunk(ABC):
         the development of the analogy database.
         """
         assert self.__class__ == nominal.__class__
-        return self._line_associations(nominal, analogy_db)
+        return self._associate_lines(nominal, analogy_db)
 
     @abstractmethod
     def type(self): pass
 
     @abstractmethod
-    def _compare(self, other, analogy_db):  pass
+    def _is_equivalent(self, other, analogy_db):  pass
 
     @abstractmethod
-    def _line_associations(self, nominal, analogy_db): pass
+    def _associate_lines(self, nominal, analogy_db): pass
 
 
 class InputChunkTerminal(InputChunk):
@@ -116,8 +115,8 @@ class InputChunkTerminal(InputChunk):
                             [Line.from_string(line_n, "<InputChunkTerminal>")],
                             config=None)
     def type(self):                                    return E_Chunk.TERMINAL
-    def _compare(self, other, analogy_db):             assert False
-    def _line_associations(self, nominal, analogy_db): return [], AnalogyDb()
+    def _is_equivalent(self, other, analogy_db):       assert False
+    def _associate_lines(self, nominal, analogy_db):   return [], AnalogyDb()
     def __repr__(self):                                return "InputChunkTerminal"
 
 
@@ -126,7 +125,7 @@ class InputChunkEmpty(InputChunk):
     """
     def __init__(self):
         InputChunk.__init__(self, None, None, [Line.from_nothing()], config=None)
-    def type(self):                                    return E_Chunk.EMPTY
-    def _compare(self, other, analogy_db):             assert False
-    def _line_associations(self, nominal, analogy_db): return [], AnalogyDb()
-    def __repr__(self):                                return "InputChunkEmpty"
+    def type(self):                                  return E_Chunk.EMPTY
+    def _is_equivalent(self, other, analogy_db):           assert False
+    def _associate_lines(self, nominal, analogy_db): return [], AnalogyDb()
+    def __repr__(self):                              return "InputChunkEmpty"

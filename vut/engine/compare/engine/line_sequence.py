@@ -27,7 +27,7 @@ class LineSequence(InputChunk):
     def type(self):
         return E_Chunk.LINE_SEQUENCE
 
-    def _compare(self, filtered_subject_line_list, filtered_nominal_line_list, analogy_db) -> E_Verdict:
+    def _is_equivalent(self, filtered_subject_line_list, filtered_nominal_line_list, analogy_db) -> E_Verdict:
         """RETURNS: [0] True, if 'self' and 'nominal' are equivalent.
                         False, else.
                     [1] AnalogyDb required for the equivalents of [0] to hold.
@@ -40,7 +40,7 @@ class LineSequence(InputChunk):
         else:
             return E_Verdict.EQUIVALENT, analogy_db
 
-    def _line_associations(self, nominal, analogy_db):
+    def _associate_lines(self, nominal, analogy_db):
         """RETURNS: list 'LinePair'-s
 
         See 'InputChunk.line_pairs()' for further explanations.

@@ -44,7 +44,7 @@ from   vut.engine.compare.configuration               import Configuration
 from   typeguard import typechecked
 
 @typechecked
-async def compare(config: Configuration, subject_line_provider, nominal_line_provider) -> bool:
+async def is_equivalent(config: Configuration, subject_line_provider, nominal_line_provider) -> bool:
     """RETURNS: True, if subject and nominal stream are equivalent.
                 False, else.
 
@@ -69,7 +69,8 @@ async def compare(config: Configuration, subject_line_provider, nominal_line_pro
                                            AsyncIterator_ensured(nominal_line_provider),
                                            align_f=False):
         verdict,   \
-        analogy_db = subject.compare(nominal, analogy_db)
+        analogy_db = subject.is_equivalent(nominal, analogy_db)
+        # analogy db is updated as required to main 'equivalence', else not (of course)
 
         if verdict != E_Verdict.EQUIVALENT:
             return False
