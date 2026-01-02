@@ -22,7 +22,7 @@ from   vut.engine.compare.engine.analogy_db     import AnalogyDb
 from   vut.engine.compare.engine.line           import Line
 from   vut.engine.compare.input.pattern_finder  import E_ToleranceId
 
-from   abc       import ABC, abstractmethod
+from   abc       import ABC
 
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
@@ -54,8 +54,8 @@ class InputChunk(ABC):
     def empty_clone(self):
         return self.__class__(self.__chunk_type, None, None, [], self.configuration)
 
-    @abstractmethod
-    def type(self): pass
+    def type(self): 
+        return self.__chunk_type
 
     def __repr__(self): 
         sep = ":" if self.__chunk_type is E_Chunk.LINE_SEQUENCE else "|"

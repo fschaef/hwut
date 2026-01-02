@@ -26,7 +26,8 @@ from vut.engine.compare.engine.enums             import E_Chunk
 from vut.engine.compare.engine.line              import Line 
 from vut.engine.compare.line_sequence.core       import LineSequence
 from vut.engine.compare.potpourri.core           import Potpourri
-from vut.engine.compare.input.pattern_finder import PatternFinder
+from vut.engine.compare.input.input_chunk        import InputChunk
+from vut.engine.compare.input.pattern_finder     import PatternFinder
 from vut.engine.compare.configuration            import Configuration
 
 from itertools import count
@@ -63,9 +64,9 @@ class ChunkPipe(PatternFinder):
                 break
             elif self.is_region_delimiter(line):
                 if line_list or chunk_class != LineSequence:
-                    yield chunk_class(chunk_type, start_line_n, line_n, 
-                                      line_list, 
-                                      self.configuration)
+                    yield InputChunk(chunk_type, start_line_n, line_n, 
+                                     line_list, 
+                                     self.configuration)
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
                 if chunk_class == LineSequence: chunk_class = Potpourri;    chunk_type = E_Chunk.POTPOURRI
@@ -75,6 +76,6 @@ class ChunkPipe(PatternFinder):
                 line_list.append(Line(line_n, PatternFinder.do(self, line)))
 
         if line_list:
-            yield chunk_class(chunk_type, start_line_n, line_n, line_list, self.configuration)
+            yield InputChunk(chunk_type, start_line_n, line_n, line_list, self.configuration)
 
 
