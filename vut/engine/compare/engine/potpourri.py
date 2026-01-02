@@ -12,14 +12,14 @@ The two main functions of 'Potpourri' are (derived from 'InputChunk')
                             for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.core                   import E_Verdict, \
-                                                               E_PotpourriBorder
-from   vut.engine.compare.engine.input_chunk            import InputChunk, E_Chunk
-from   vut.engine.compare.engine.line                   import Line
-from   vut.engine.compare.engine.line_pair              import LinePair
-from   vut.engine.compare.engine.chunk_pair             import LinePairList
-import vut.engine.compare.friends_pairing.associate     as     pair_associate
-import vut.engine.compare.friends_pairing.compare       as     pair_compare
+from   vut.engine.compare.engine.core                       import E_Verdict, \
+                                                                   E_PotpourriBorder
+from   vut.engine.compare.engine.input_chunk                import InputChunk, E_Chunk
+from   vut.engine.compare.engine.line                       import Line
+from   vut.engine.compare.engine.line_pair                  import LinePair
+from   vut.engine.compare.engine.chunk_pair                 import LinePairList
+import vut.engine.compare.friends_pairing.associate         as     association
+import vut.engine.compare.friends_pairing.equivalence_check as     equivalence_check
 
 class Potpourri(InputChunk):
     """Set of lines where the sequence does not matter.
@@ -42,10 +42,10 @@ class Potpourri(InputChunk):
         subject_potpourri = subject_line_list[1:-1] # exclude [0] and [-1]:
         nominal_potpourri = nominal_line_list[1:-1] # first and last line carry Potpourri markers.
 
-        verdict, _, new_analogy_db = pair_compare.do(subject_potpourri,
-                                                     nominal_potpourri,
-                                                     analogy_db,
-                                                     abort_early_f=True)
+        verdict, _, new_analogy_db = equivalence_check.do(subject_potpourri,
+                                                          nominal_potpourri,
+                                                          analogy_db,
+                                                          abort_early_f=True)
 
         if verdict: return E_Verdict.EQUIVALENT, new_analogy_db
         else:       return E_Verdict.DIFFERENT, analogy_db
@@ -60,10 +60,10 @@ class Potpourri(InputChunk):
         nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
 
         core_result,   \
-        new_analogy_db = pair_associate.do(subject_potpourri,
-                                           nominal_potpourri,
-                                           analogy_db,
-                                           self.configuration.potpourri_max_comparison_count)
+        new_analogy_db = association.do(subject_potpourri,
+                                        nominal_potpourri,
+                                        analogy_db,
+                                        self.configuration.potpourri_max_comparison_count)
 
         result = [
             LinePair.potpourri_border(self.line_list[0], nominal.line_list[0], 

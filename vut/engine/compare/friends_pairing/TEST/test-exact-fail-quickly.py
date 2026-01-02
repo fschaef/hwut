@@ -20,11 +20,11 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.configuration            import ConfigurationPatternFinder #noqa E402
-import vut.engine.compare.friends_pairing.compare  as     pair_compare               #noqa E402
-from   vut.engine.compare.tolerance.pattern_finder import PatternFinder              #noqa E402
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb                  #noqa E402
-from   vut.engine.compare.TEST.common              import get_Potpourri              #noqa E402
+from   vut.engine.compare.configuration                      import ConfigurationPatternFinder #noqa E402
+import vut.engine.compare.friends_pairing.equivalence_check  as     equivalence_check          #noqa E402
+from   vut.engine.compare.tolerance.pattern_finder           import PatternFinder              #noqa E402
+from   vut.engine.compare.engine.analogy_db                  import AnalogyDb                  #noqa E402
+from   vut.engine.compare.TEST.common                        import get_Potpourri              #noqa E402
 
 if "--hwut-info" in sys.argv:
     print("FriendsPairing: fail quickly;")
@@ -44,10 +44,10 @@ def test_pure(subject_line_list, nominal_line_list):
     print("nominal:", nominal_line_list)
 
     analogy_db = AnalogyDb()
-    total_verdict, db, analogy_db = pair_compare.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
-                                                    get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
-                                                    AnalogyDb(),
-                                                    abort_early_f=True)
+    total_verdict, db, analogy_db = equivalence_check.do(get_Potpourri(pf, subject_line_list, config).line_list[1:-1],
+                                                         get_Potpourri(pf, nominal_line_list, config).line_list[1:-1],
+                                                         AnalogyDb(),
+                                                         abort_early_f=True)
 
     if not total_verdict and (db or analogy_db):
         # Quick fail sets objects to 'None'

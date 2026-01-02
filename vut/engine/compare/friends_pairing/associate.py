@@ -3,18 +3,18 @@ ________________________________________________________________________________
 
 PURPOSE: Pairing lines according to similarity (not only equivalent lines).
 
-Where 'exact.py' (or pair_compare) only tried to find exactly equivalent lines, 
+Where 'exact.py' (or equivalence_check) only tried to find exactly equivalent lines, 
 this module tries to associate similar lines. The goal, here, is to provide a 
 line-up that can be displayed to expose the 'diff function' via a user interface.
 ________________________________________________________________________________
 """
 from typeguard import typechecked
 
-from vut.engine.compare.engine.line_pair           import LinePair
-import vut.engine.compare.edit_operations.line     as     edit_operations_line
-import vut.engine.compare.friends_pairing.compare  as     pair_compare
-from vut.engine.compare.engine.analogy_db          import AnalogyDb
-from vut.engine.compare.engine.frozen_analogy_db   import FrozenAnalogyDb
+from vut.engine.compare.engine.line_pair                     import LinePair
+import vut.engine.compare.edit_operations.line               as     edit_operations_line
+import vut.engine.compare.friends_pairing.equivalence_check  as     equivalence_check
+from vut.engine.compare.engine.analogy_db                    import AnalogyDb
+from vut.engine.compare.engine.frozen_analogy_db             import FrozenAnalogyDb
 
 
 def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):
@@ -28,15 +28,15 @@ def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, a
 
     This functions tries to find the best combination of subject and nominal
     lines according to their similarities. Equivalent matches are first found
-    using the 'pair_compare' module. Then, the remaining lines are matched based on
+    using the 'equivalence_check' module. Then, the remaining lines are matched based on
     some cost function that takes their similiarity into account. The cost
     function measures the amount of diffrerence between two lines.
     """
     # 1. STRICT PHASE: High-performance matching
-    verdict, couples, analogy_db = pair_compare.do(subject_line_list,
-                                                   nominal_line_list,
-                                                   analogy_db,
-                                                   abort_early_f=abort_f)
+    verdict, couples, analogy_db = equivalence_check.do(subject_line_list,
+                                                        nominal_line_list,
+                                                        analogy_db,
+                                                        abort_early_f=abort_f)
 
     # Thaw the database to allow 'developing it along the way' in the fuzzy phase
     if isinstance(analogy_db, FrozenAnalogyDb):
