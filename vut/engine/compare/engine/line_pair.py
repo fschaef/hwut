@@ -200,7 +200,9 @@ class LinePair:
 
     def _ensure_expanded(self):
         if self._raw is not None:
-            self._subject_cell_list, self._nominal_cell_list = self._raw.expand()
+            self._subject_cell_list, \
+            self._nominal_cell_list  = self._raw.expand()
+
             self._raw = None  # The kill-switch for memory reclamation:
 
     def subject_list(self) -> list[SubjectCell]:

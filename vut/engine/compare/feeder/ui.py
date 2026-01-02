@@ -25,7 +25,7 @@ import os
 root_dir = os.path.dirname(__file__) + "/../../../.."
 sys.path.insert(0, root_dir)
 
-from   vut.engine.compare.main             import associate                   #noqa: E402
+import vut.engine.compare.main             as     main                        #noqa: E402
 from   vut.engine.compare.engine.line_pair import SubjectCell, NominalCell    #noqa: E402
 
 from   inspect     import isclass                                             #noqa: E402
@@ -44,31 +44,31 @@ class DisplayInst:
 
 @dataclass(frozen=True)
 class ConfigInst(DisplayInst):
-    strip_whitespace_f: bool
-    analogy_f: bool
-    whitespace_f: bool
-    backslash_f: bool
-    numeric_tolerance_ratio: float
-    ignored_line_begin_marker: str
-    ignored_line_end_marker: str
+    strip_whitespace_f:         bool
+    analogy_f:                  bool
+    whitespace_f:               bool
+    backslash_f:                bool
+    numeric_tolerance_ratio:    float
+    ignored_line_begin_marker:  str
+    ignored_line_end_marker:    str
     potpourri_begin_end_marker: str
-    analogy_begin_marker: str
-    analogy_end_marker: str
+    analogy_begin_marker:       str
+    analogy_end_marker:         str
 
 @dataclass(frozen=True)
 class SectionBeginInst(DisplayInst):
-    title: str
+    title:      str
     chunk_type: str
 
 @dataclass(frozen=True)
 class LinePairInst(DisplayInst):
-    line_n_s: int
-    line_n_n: int
-    cells_s: List[SubjectCell]
-    cells_n: List[NominalCell]
-    cost: float
-    s_char_n: int
-    n_char_n: int
+    line_n_s:   int
+    line_n_n:   int
+    cells_s:    List[SubjectCell]
+    cells_n:    List[NominalCell]
+    cost:       float
+    s_char_n:   int
+    n_char_n:   int
     source_ref: Any
 
 @dataclass(frozen=True)
@@ -79,7 +79,7 @@ async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayI
     """YIELDS: DisplayInst representing the line comparions.
     """
     # Associate produces the 'sleeping' Chunks/LinePairs
-    raw_chunks = associate(config, subject_stream, nominal_stream)
+    raw_chunks = main.associate(config, subject_stream, nominal_stream)
 
     # Factory flushes them into 'awake' Instructions
     async for inst in DisplayInst_factory(config, raw_chunks):
@@ -109,18 +109,16 @@ async def DisplayInst_factory(config, chunk_stream: AsyncIterable) -> AsyncItera
 
     # 1. Flush the Configuration first (Snapshotting)
     pf = config.pattern_finder
-    yield ConfigInst(
-        strip_whitespace_f=pf.strip_whitespace_f,
-        analogy_f=pf.analogy_f,
-        whitespace_f=pf.whitespace_f,
-        backslash_f=pf.backslash_f,
-        numeric_tolerance_ratio=pf.numeric_tolerance_ratio,
-        ignored_line_begin_marker=pf.ignored_line_begin_marker,
-        ignored_line_end_marker=pf.ignored_line_end_marker,
-        potpourri_begin_end_marker=pf.potpourri_begin_end_marker,
-        analogy_begin_marker=pf.analogy_begin_marker,
-        analogy_end_marker=pf.analogy_end_marker
-    )
+    yield ConfigInst(strip_whitespace_f=pf.strip_whitespace_f,
+                     analogy_f=pf.analogy_f,
+                     whitespace_f=pf.whitespace_f,
+                     backslash_f=pf.backslash_f,
+                     numeric_tolerance_ratio=pf.numeric_tolerance_ratio,
+                     ignored_line_begin_marker=pf.ignored_line_begin_marker,
+                     ignored_line_end_marker=pf.ignored_line_end_marker,
+                     potpourri_begin_end_marker=pf.potpourri_begin_end_marker,
+                     analogy_begin_marker=pf.analogy_begin_marker,
+                     analogy_end_marker=pf.analogy_end_marker)
 
     async for chunk in chunk_stream:
         # 2. Flush the Section Header
@@ -171,10 +169,16 @@ def _get_protocol_hash() -> str:
     
     return b64_signature
 
+# BEGIN: DO NOT REMOVE THIS!
+#
+# This code is used to produce a 'protocol hash', i.e. something that allows the 
+# receiver to verify that it is parsing content of a compliant version.
+#
 if __name__ == "__main__":
     # helper to provide a protocol hash
     ph = _get_protocol_hash()
     print("Protocol Hash: ", ph)
     if "-w" in sys.argv:
         with open(root_dir + "/vut/SIGNATURE_UI_PROTOCOL.txt", "w") as fh:
+# END: DO NOT REMOVE THIS!
             fh.write(ph)

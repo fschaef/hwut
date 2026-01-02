@@ -27,10 +27,10 @@ from typing    import AsyncIterator
 
 
 @typechecked
-async def generate(config:                Configuration, 
-                   subject_line_provider: AsyncIterator, 
-                   nominal_line_provider: AsyncIterator, 
-                   align_f:               bool):
+async def do(config:                Configuration, 
+             subject_line_provider: AsyncIterator, 
+             nominal_line_provider: AsyncIterator, 
+             align_f:               bool):
     """YIELDS: [0] subject input chunk
                [1] nominal input chunk
 

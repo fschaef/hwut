@@ -34,9 +34,9 @@ is that they must provide the function:
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.analogy_db           import AnalogyDb
-from   vut.engine.compare.engine.comparison_iterable  import generate
-from   vut.engine.compare.engine.chunk_pair           import ChunkPair
+from   vut.engine.compare.engine.input_chunk_zip      import do as async_input_chunk_zip
 from   vut.engine.compare.engine.input_chunk          import E_Verdict
+from   vut.engine.compare.engine.chunk_pair           import ChunkPair
 from   vut.auxiliary.async_helper                     import AsyncIterator_ensured
 
 from   vut.engine.compare.configuration               import Configuration
@@ -64,10 +64,10 @@ async def is_equivalent(config: Configuration, subject_line_provider, nominal_li
     analogy_db = AnalogyDb()
 
     # subject, nominal = 'LineSequence' or 'Potpourri'
-    async for subject, nominal in generate(config,
-                                           AsyncIterator_ensured(subject_line_provider), 
-                                           AsyncIterator_ensured(nominal_line_provider),
-                                           align_f=False):
+    async for subject, nominal in async_input_chunk_zip(config,
+                                                        AsyncIterator_ensured(subject_line_provider), 
+                                                        AsyncIterator_ensured(nominal_line_provider),
+                                                        align_f=False):
         verdict,   \
         analogy_db = subject.is_equivalent(nominal, analogy_db)
         # analogy db is updated as required to main 'equivalence', else not (of course)
@@ -124,10 +124,10 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     analogy_db = AnalogyDb()
 
     # subject, nominal = 'LineSequence', 'Potpourri' or None
-    async for subject, nominal in generate(config,
-                                           AsyncIterator_ensured(subject_line_provider), 
-                                           AsyncIterator_ensured(nominal_line_provider),
-                                           align_f=True):
+    async for subject, nominal in async_input_chunk_zip(config,
+                                                        AsyncIterator_ensured(subject_line_provider), 
+                                                        AsyncIterator_ensured(nominal_line_provider),
+                                                        align_f=True):
 
         yield ChunkPair.from_input_chunks(subject, nominal, analogy_db)
 
