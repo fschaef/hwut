@@ -23,11 +23,18 @@ class Potpourri(InputChunk):
         return E_Chunk.POTPOURRI
 
     def __init__(self, chunk_type, start_line_n, end_line_n, iterable, config):
+        print("##chunk_type:", chunk_type)
+        assert chunk_type is E_Chunk.POTPOURRI
+        print("##chunk_type.passed:", chunk_type)
+        iterable = tuple(iterable)
+        print("##iterable:", iterable)
+
         def adapt(iterable, start_line_n, end_line_n):
             yield Line.from_potpourri(start_line_n, begin_f=True)
             yield from iterable
             yield Line.from_potpourri(end_line_n, begin_f=False)
-        InputChunk.__init__(self, E_Chunk.POTPOURRI, start_line_n, end_line_n, 
-                            adapt(iterable, start_line_n, end_line_n), config)
+        InputChunk.__init__(self, E_Chunk.POTPOURRI, start_line_n, end_line_n, iterable, config)
+        ## InputChunk.__init__(self, E_Chunk.POTPOURRI, start_line_n, end_line_n, 
+        ##                     adapt(iterable, start_line_n, end_line_n), config)
 
 

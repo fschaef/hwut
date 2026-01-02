@@ -68,8 +68,8 @@ class ChunkPipe(PatternFinder):
                                       self.configuration)
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
-                if chunk_class == LineSequence: chunk_class = Potpourri;    chunk_type = E_Chunk.LINE_SEQUENCE
-                else:                           chunk_class = LineSequence; chunk_type = E_Chunk.POTPOURRI
+                if chunk_class == LineSequence: chunk_class = Potpourri;    chunk_type = E_Chunk.POTPOURRI
+                else:                           chunk_class = LineSequence; chunk_type = E_Chunk.LINE_SEQUENCE
                 start_line_n = line_n
             else:
                 line_list.append(Line(line_n, PatternFinder.do(self, line)))
