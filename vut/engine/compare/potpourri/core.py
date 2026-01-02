@@ -27,7 +27,7 @@ class Potpourri(InputChunk):
             yield Line.from_potpourri(start_line_n, begin_f=True)
             yield from iterable
             yield Line.from_potpourri(end_line_n, begin_f=False)
-        InputChunk.__init__(self, start_line_n, end_line_n, 
+        InputChunk.__init__(self, E_Chunk.POTPOURRI, start_line_n, end_line_n, 
                             adapt(iterable, start_line_n, end_line_n), config)
 
     def __repr__(self): # pragma no cover

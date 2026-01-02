@@ -33,11 +33,12 @@ class InputChunk(ABC):
         .line_pairs() --> determine best line associations for display.
 
     """
-    def __init__(self, start_line_n, end_line_n, iterable, config):
+    def __init__(self, chunk_type: E_Chunk, start_line_n, end_line_n, iterable, config):
         self.line_list     = tuple(iterable)
         self.start_line_n  = start_line_n
         self.end_line_n    = end_line_n
         self.configuration = config
+        self.__chunk_type  = chunk_type
 
     def empty_clone(self):
         return self.__class__(None, None, [], self.configuration)
@@ -45,13 +46,11 @@ class InputChunk(ABC):
     @abstractmethod
     def type(self): pass
 
-
-
 class InputChunkTerminal(InputChunk):
     """Input chunk that marks the end of an input stream.
     """
     def __init__(self, line_n):
-        InputChunk.__init__(self, line_n, line_n+1,
+        InputChunk.__init__(self, E_Chunk.TERMINAL, line_n, line_n+1,
                             [Line.from_string(line_n, "<InputChunkTerminal>")],
                             config=None)
     def type(self):                                    return E_Chunk.TERMINAL
@@ -64,7 +63,7 @@ class InputChunkEmpty(InputChunk):
     """Input chunk that marks the end of an input stream.
     """
     def __init__(self):
-        InputChunk.__init__(self, None, None, [Line.from_nothing()], config=None)
+        InputChunk.__init__(self, E_Chunk.EMPTY, None, None, [Line.from_nothing()], config=None)
     def type(self):                                  return E_Chunk.EMPTY
     def _is_equivalent(self, other, analogy_db):           assert False
     def _associate_lines(self, nominal, analogy_db): return [], AnalogyDb()

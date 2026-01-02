@@ -18,6 +18,9 @@ from   vut.engine.compare.input.input_chunk             import InputChunk, \
 class LineSequence(InputChunk):
     """Set of lines where the sequence matters.
     """
+    def __init__(self, start_line_n, end_line_n, iterable, config):
+        InputChunk.__init__(self, E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n, iterable, config)
+
     def type(self):
         return E_Chunk.LINE_SEQUENCE
 
