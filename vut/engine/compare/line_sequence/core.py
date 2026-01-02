@@ -14,59 +14,12 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.input.input_chunk             import InputChunk, \
                                                                E_Chunk
-from   vut.engine.compare.engine.association.line_pair                     import LinePair
-import vut.engine.compare.engine.association.edit_operations.line_sequence as     edit_operations_line_sequence
-from   vut.engine.compare.engine.association.edit_operations.edit          import E_EditId, \
-                                                                                  EditSequence
 
 class LineSequence(InputChunk):
     """Set of lines where the sequence matters.
     """
     def type(self):
         return E_Chunk.LINE_SEQUENCE
-
-    def _associate_lines(self, nominal, analogy_db):
-        """RETURNS: list 'LinePair'-s
-
-        See 'InputChunk.line_pairs()' for further explanations.
-        """
-        editions: EditSequence = edit_operations_line_sequence.do(self.line_list,
-                                                                  nominal.line_list,
-                                                                  analogy_db)
-
-        if not editions.edit_list:
-            return [], editions.analogy_db
-
-        def iterable(edit_sequence):
-            si, ni = 0, 0
-            for edit in edit_sequence:
-                if edit.id == E_EditId.SUBSTITUTE:
-                    subject_seq = self.line_list[si]
-                    nominal_seq = nominal.line_list[ni]
-                elif   edit.id == E_EditId.GOOD or edit.id == E_EditId.GOOD_TOLERATED:
-                    subject_seq = self.line_list[si]
-                    nominal_seq = nominal.line_list[ni]
-                elif edit.id == E_EditId.INSERT or edit.id == E_EditId.GOOD_INSERT:
-                    subject_seq = None # nominal inserted, no counterpart in subject
-                    nominal_seq = nominal.line_list[ni]
-                elif edit.id == E_EditId.DELETE or edit.id == E_EditId.GOOD_DELETE:
-                    subject_seq = self.line_list[si]
-                    nominal_seq = None # subject inserted, no counterpart in nominal
-                else:
-                    assert edit.id != E_EditId.TRANSPOSE         # pragma: no cover
-                    assert edit.id != E_EditId.SUBSTITUTE_TYPE   # pragma: no cover
-                    assert False                                 # pragma: no cover
-
-                yield subject_seq, nominal_seq, edit.edit_list, edit.cost
-                s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit.id]
-                si += s_incr
-                ni += n_incr
-
-        result = [
-            LinePair(subject_seq, nominal_seq, edit_list, cost = cost)
-            for subject_seq, nominal_seq, edit_list, cost in iterable(editions.edit_list)
-        ]
-        return result, editions.analogy_db
 
     def __repr__(self): # pragma no cover
         return "\n".join("%03i: %s" % (line.line_n, line) for line in self.line_list)
