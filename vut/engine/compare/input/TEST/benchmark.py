@@ -4,7 +4,7 @@ sys.path.insert(0, "../../../../../")
 import time
 import string
 from vut.engine.compare.configuration            import ConfigurationPatternFinder
-from vut.engine.compare.tolerance.pattern_finder import PatternFinder
+from vut.engine.compare.input.pattern_finder import PatternFinder
 from vut.auxiliary.deterministic_random          import DeterministicStream
 
 def string_stream(n=10000, complexity=0.5, seed=0x42):

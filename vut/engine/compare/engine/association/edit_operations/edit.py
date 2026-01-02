@@ -13,7 +13,7 @@ Edit:         identifies names the operation and provides a possible
 
 EditSequence: maintains a list of edit objects. 
 """
-from  vut.engine.compare.tolerance.line_element import E_ToleranceId
+from  vut.engine.compare.input.line_element import E_ToleranceId
 from  enum        import IntEnum
 
 class E_EditId(IntEnum):

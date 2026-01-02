@@ -14,8 +14,8 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.enums                 import E_Verdict, \
                                                               E_PotpourriBorder
+from   vut.engine.compare.input.input_chunk            import InputChunk, E_Chunk
 from   vut.engine.compare.engine.chunk_pair            import LinePairList
-from   vut.engine.compare.engine.input_chunk           import InputChunk, E_Chunk
 from   vut.engine.compare.engine.line                  import Line
 from   vut.engine.compare.engine.association.line_pair import LinePair
 

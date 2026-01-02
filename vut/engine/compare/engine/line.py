@@ -10,7 +10,7 @@ ________________________________________________________________________________
 import vut.engine.compare.engine.association.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.engine.enums           import E_Verdict
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
-from   vut.engine.compare.tolerance.line_element import LineElementString, E_ToleranceId
+from   vut.engine.compare.input.line_element import LineElementString, E_ToleranceId
 from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 
 class Line:

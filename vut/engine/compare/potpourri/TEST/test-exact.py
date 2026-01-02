@@ -49,7 +49,7 @@ sys.path.insert(0, this_directory)
 
 from   vut.engine.compare.configuration                      import ConfigurationPatternFinder #noqa E402
 import vut.engine.compare.potpourri.equivalence_check        as     equivalence_check          #noqa E402
-from   vut.engine.compare.tolerance.pattern_finder           import PatternFinder              #noqa E402
+from   vut.engine.compare.input.pattern_finder           import PatternFinder              #noqa E402
 from   vut.engine.compare.engine.analogy_db                  import AnalogyDb                  #noqa E402
 from   vut.engine.compare.TEST.common                        import get_Potpourri              #noqa E402
 

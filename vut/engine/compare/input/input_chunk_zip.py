@@ -16,8 +16,8 @@ compared.
 _______________________________________________________________________________
 """
 
-from vut.engine.compare.tolerance.chunk_pipe import ChunkPipe
-from vut.engine.compare.engine.input_chunk   import InputChunkEmpty, E_Chunk
+from vut.engine.compare.input.chunk_pipe     import ChunkPipe
+from vut.engine.compare.input.input_chunk    import InputChunkEmpty, E_Chunk
 from vut.engine.compare.configuration        import Configuration
 from vut.auxiliary.async_helper              import async_zip_longest, \
                                                     prefetch

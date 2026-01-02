@@ -40,7 +40,7 @@ import sys
 
 sys.path.insert(0, "../../../../../")
 
-from   vut.engine.compare.tolerance.line_element import LineElementString, \
+from   vut.engine.compare.input.line_element import LineElementString, \
                                                   LineElementNumber, \
                                                   LineElementEquivalencePattern, \
                                                   LineElementAnalogy, \

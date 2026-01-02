@@ -9,7 +9,7 @@ This module collects some functions which are used accross multiple tests
 applications.
 ______________________________________________________________________________
 """
-from   vut.engine.compare.tolerance.line_element import LineElementString, \
+from   vut.engine.compare.input.line_element import LineElementString, \
                                                         LineElementNumber, \
                                                         LineElementAnalogy, \
                                                         LineElementVisibleNothing, \

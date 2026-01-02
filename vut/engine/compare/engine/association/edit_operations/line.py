@@ -63,7 +63,7 @@ from  vut.engine.compare.engine.association.edit_operations.core              im
                                                                   WorkItemBase, \
                                                                   position_increment_db
 from  vut.engine.compare.engine.association.edit_operations.separator_adaptor import SeparatorAdaptor
-from  vut.engine.compare.tolerance.pattern_finder          import E_ToleranceId
+from  vut.engine.compare.input.pattern_finder          import E_ToleranceId
 from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from  vut.engine.compare.engine.enums                      import E_Verdict
 

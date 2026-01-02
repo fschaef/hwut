@@ -11,26 +11,19 @@ derived classes representing the two types of input chunks:
 
 The two main functions of an 'InputChunk' are
 
-   .compare()           --> determines whether the chunk is equivalent to
-                            another.
+   .compare()    --> determines whether the chunk is equivalent to
+                     another.
    .line_pairs() --> determines which lines should be best associated
-                            for display.
+                     for display.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.enums              import E_Verdict
-from   vut.engine.compare.engine.analogy_db         import AnalogyDb
-from   vut.engine.compare.engine.line               import Line
-from   vut.engine.compare.tolerance.pattern_finder  import E_ToleranceId
+from   vut.engine.compare.engine.enums          import E_Verdict, \
+                                                       E_Chunk
+from   vut.engine.compare.engine.analogy_db     import AnalogyDb
+from   vut.engine.compare.engine.line           import Line
+from   vut.engine.compare.input.pattern_finder  import E_ToleranceId
 
-from   enum      import Enum, auto
 from   abc       import ABC, abstractmethod
-
-class E_Chunk(Enum):
-    LINE_SEQUENCE = auto()
-    POTPOURRI     = auto()
-    TERMINAL      = auto()
-    EMPTY         = auto()
-    NONE          = auto()
 
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 

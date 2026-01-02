@@ -7,7 +7,7 @@ or 'Potpourri'.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.association.line_pair_list import LinePairList
-from   vut.engine.compare.engine.input_chunk                import E_Chunk
+from   vut.engine.compare.engine.enums                      import E_Chunk
 from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
 
 from   typeguard import typechecked

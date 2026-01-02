@@ -23,7 +23,7 @@ import sys
 
 sys.path.insert(0, "../../../../../")
 
-from   vut.engine.compare.tolerance.pattern_finder import PatternFinder
+from   vut.engine.compare.input.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import print_match_sequences_lists, \

@@ -33,13 +33,13 @@ is that they must provide the function:
                  "",              if end of stream has been reached.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.engine.analogy_db           import AnalogyDb
-from   vut.engine.compare.engine.input_chunk_zip      import do as async_input_chunk_zip
-from   vut.engine.compare.engine.input_chunk          import E_Verdict
-from   vut.engine.compare.engine.chunk_pair           import ChunkPair
-from   vut.auxiliary.async_helper                     import AsyncIterator_ensured
+from   vut.engine.compare.engine.enums           import E_Verdict
+from   vut.engine.compare.engine.analogy_db      import AnalogyDb
+from   vut.engine.compare.input.input_chunk_zip  import do as async_input_chunk_zip
+from   vut.engine.compare.engine.chunk_pair      import ChunkPair
+from   vut.auxiliary.async_helper                import AsyncIterator_ensured
 
-from   vut.engine.compare.configuration               import Configuration
+from   vut.engine.compare.configuration          import Configuration
 
 from   typeguard import typechecked
 

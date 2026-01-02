@@ -24,3 +24,9 @@ class E_PotpourriBorder(Enum):
     BEGIN = auto()
     END   = auto()
 
+class E_Chunk(Enum):
+    LINE_SEQUENCE = auto()
+    POTPOURRI     = auto()
+    TERMINAL      = auto()
+    EMPTY         = auto()
+    NONE          = auto()

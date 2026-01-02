@@ -32,8 +32,8 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-from   vut.engine.compare.tolerance.pattern_finder import PatternFinder
-from   vut.engine.compare.tolerance.line_element   import E_ToleranceId
+from   vut.engine.compare.input.pattern_finder import PatternFinder
+from   vut.engine.compare.input.line_element   import E_ToleranceId
 
 
 if "--hwut-info" in sys.argv:

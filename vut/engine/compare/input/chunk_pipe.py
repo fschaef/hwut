@@ -25,7 +25,7 @@ _______________________________________________________________________________
 from vut.engine.compare.engine.line              import Line 
 from vut.engine.compare.line_sequence.core       import LineSequence
 from vut.engine.compare.potpourri.core           import Potpourri
-from vut.engine.compare.tolerance.pattern_finder import PatternFinder
+from vut.engine.compare.input.pattern_finder import PatternFinder
 from vut.engine.compare.configuration            import Configuration
 
 from itertools import count

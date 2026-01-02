@@ -24,7 +24,7 @@ from   io import StringIO
 sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.configuration        import Configuration
-from   vut.engine.compare.tolerance.chunk_pipe import ChunkPipe
+from   vut.engine.compare.input.chunk_pipe import ChunkPipe
 from   vut.auxiliary.async_helper              import AsyncIterator_ensured
 import asyncio
 
