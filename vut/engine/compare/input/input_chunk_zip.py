@@ -29,21 +29,27 @@ from typing    import AsyncIterator
 async def pair_for_equivalence_check(config:                Configuration, 
                                      subject_line_provider: AsyncIterator, 
                                      nominal_line_provider: AsyncIterator): 
-    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f = False):
-        yield _
+    """YIELDS: [0] subject input chunk
+               [1] nominal input chunk
+
+    """
+    chunk_pipe = ChunkPipe(config)
+
+    # PREFETCH: In the background new data is requested, even if the outer loop does not
+    #           'await' and give us a thread, the data is already on the way while the 
+    #           CPU is working on the data.
+    subject_iterable = prefetch(chunk_pipe.stream_for_equivalence_check(subject_line_provider), buffer_size=10)
+    nominal_iterable = prefetch(chunk_pipe.stream_for_equivalence_check(nominal_line_provider), buffer_size=10)
+
+    async for s, n in async_zip_longest(subject_iterable, nominal_iterable):
+        if s is None: s = n.empty_clone()
+        if n is None: n = s.empty_clone()
+        yield s, n
 
 @typechecked
 async def pair_for_association(config:                Configuration, 
                                subject_line_provider: AsyncIterator, 
                                nominal_line_provider: AsyncIterator): 
-    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f = True):
-        yield _
-
-@typechecked
-async def do(config:                Configuration, 
-             subject_line_provider: AsyncIterator, 
-             nominal_line_provider: AsyncIterator, 
-             align_f:               bool):
     """YIELDS: [0] subject input chunk
                [1] nominal input chunk
 
@@ -56,15 +62,9 @@ async def do(config:                Configuration,
     subject_iterable = prefetch(chunk_pipe.stream_for_association(subject_line_provider), buffer_size=10)
     nominal_iterable = prefetch(chunk_pipe.stream_for_association(nominal_line_provider), buffer_size=10)
 
-    if not align_f: 
-        async for s, n in async_zip_longest(subject_iterable, nominal_iterable):
-            if s is None: s = n.empty_clone()
-            if n is None: n = s.empty_clone()
-            yield s, n
-    else:           
-        # In async generators, 'yield from' is replaced by 'async for ... yield'
-        async for s, n in _zip_aligned(subject_iterable, nominal_iterable):
-            yield s, n
+    # In async generators, 'yield from' is replaced by 'async for ... yield'
+    async for s, n in _zip_aligned(subject_iterable, nominal_iterable):
+        yield s, n
 
 async def _zip_aligned(subject_iterable, nominal_iterable):
     """YIELDS: [0] subject input chunk
