@@ -45,7 +45,7 @@ async def test_core(line_list):
     print(text.replace("||||", "<potpourri>"))
     print("----------------------------------")
     print("=>")
-    async for x in chunk_pipe.generate(AsyncIterator_ensured(StringIO(text))):
+    async for x in chunk_pipe.stream_for_association(AsyncIterator_ensured(StringIO(text))):
         print(x)
 
 def test(line_list):

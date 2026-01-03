@@ -39,18 +39,13 @@ class ChunkPipe(PatternFinder):
         self.configuration = configuration
 
     @typechecked
-    async def generate(self, line_provider: AsyncIterator):
-        """Generates 'chunks' from lines of the line provider. A chunk can either
-        be a single line or a potpourri (bracketted by '||||' lines).
+    async def stream_for_equivalence_check(self, line_provider: AsyncIterator) -> InputChunk:
+        async for _ in self.stream_for_association(line_provider):
+            yield _
 
-        The 'line_provider' must implement the '.readline()' function. It returns
-        '' as soon as no more input is present. It is supposed to block!
-
-        ASSUME: no line contains '\r'!
-
-        YIELDS: LineSequence       if text element was a line.
-                Potpourri          if text element is a potpourri.
-                TerminalInputChunk to mark end of stream.
+    @typechecked
+    async def stream_for_association(self, line_provider: AsyncIterator) -> InputChunk:
+        """YIELDS: Chunks of input useful for association.
         """
         chunk_type   = E_Chunk.LINE_SEQUENCE
         line_list    = []

@@ -26,19 +26,17 @@ from typeguard import typechecked
 from typing    import AsyncIterator
 
 @typechecked
-async def pairs_of_LINE_or_POTPOURRI(config:                Configuration, 
+async def pair_for_equivalence_check(config:                Configuration, 
                                      subject_line_provider: AsyncIterator, 
-                                     nominal_line_provider: AsyncIterator, 
-                                     align_f:               bool):
-    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f):
+                                     nominal_line_provider: AsyncIterator): 
+    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f = False):
         yield _
 
 @typechecked
-async def pairs_of_LINE_SEQUENCE_or_POTPOURRI(config:                Configuration, 
-                                     subject_line_provider: AsyncIterator, 
-                                     nominal_line_provider: AsyncIterator, 
-                                     align_f:               bool):
-    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f):
+async def pair_for_association(config:                Configuration, 
+                               subject_line_provider: AsyncIterator, 
+                               nominal_line_provider: AsyncIterator): 
+    async for _ in do(config, subject_line_provider, nominal_line_provider, align_f = True):
         yield _
 
 @typechecked
@@ -49,18 +47,14 @@ async def do(config:                Configuration,
     """YIELDS: [0] subject input chunk
                [1] nominal input chunk
 
-    Input chunk: 'LineSequence', 'Potpourri', or None.
-
-    If one line provider exhausts, the 'fillvalue' is setup as its input chunk.
-    When both line providers exhaust, the generator terminates.
     """
     chunk_pipe = ChunkPipe(config)
 
     # PREFETCH: In the background new data is requested, even if the outer loop does not
     #           'await' and give us a thread, the data is already on the way while the 
     #           CPU is working on the data.
-    subject_iterable = prefetch(chunk_pipe.generate(subject_line_provider), buffer_size=10)
-    nominal_iterable = prefetch(chunk_pipe.generate(nominal_line_provider), buffer_size=10)
+    subject_iterable = prefetch(chunk_pipe.stream_for_association(subject_line_provider), buffer_size=10)
+    nominal_iterable = prefetch(chunk_pipe.stream_for_association(nominal_line_provider), buffer_size=10)
 
     if not align_f: 
         async for s, n in async_zip_longest(subject_iterable, nominal_iterable):
@@ -71,7 +65,6 @@ async def do(config:                Configuration,
         # In async generators, 'yield from' is replaced by 'async for ... yield'
         async for s, n in _zip_aligned(subject_iterable, nominal_iterable):
             yield s, n
-
 
 async def _zip_aligned(subject_iterable, nominal_iterable):
     """YIELDS: [0] subject input chunk
