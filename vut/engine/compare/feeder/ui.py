@@ -25,6 +25,7 @@ import os
 root_dir = os.path.dirname(__file__) + "/../../../.."
 sys.path.insert(0, root_dir)
 
+import vut.version                                     as     version                            #noqa: E402
 import vut.engine.compare.main                         as     main                               #noqa: E402
 from   vut.engine.compare.engine.association.line_pair import LinePair, SubjectCell, NominalCell #noqa: E402
 
@@ -33,9 +34,6 @@ from   typing      import List, Any, AsyncIterable                            #n
 from   dataclasses import dataclass                                           #noqa: E402
 import hashlib                                                                #noqa: E402
 import base64                                                                 #noqa: E402
-
-
-
 
 @dataclass(frozen=True)
 class DisplayInst:
@@ -98,8 +96,8 @@ class ProtocolHeader(DisplayInst):
     NOTE: The current signature is presented on top of this file and can
           be produced by calling this file as script directly.
     """
-    signature: str  # Hex representation of the hash (e.g., "1A2B3C4D")
-    engine_id: str = "HWUT Version 2.0"
+    signature:    str  # Hex representation of the hash (e.g., "1A2B3C4D")
+    hwut_version: str = version.string
 
 async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayInst]:
     """YIELDS: DisplayInst for display of the line comparison.
@@ -126,10 +124,8 @@ async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayI
     # Associate produces the 'sleeping' Chunks/LinePairs
     async for chunk in main.associate(config, subject_stream, nominal_stream):
         # Flush the Section Header
-        yield SectionBeginInst(
-            title="/".join(ct.name for ct in chunk.types()),
-            chunk_type=type(chunk).__name__
-        )
+        yield SectionBeginInst(title      = "/".join(ct.name for ct in chunk.types()),
+                               chunk_type = type(chunk).__name__)
 
         # Flush the Content
         for line_pair in chunk:
