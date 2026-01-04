@@ -1,11 +1,10 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 """
-from   vut.engine.compare.engine.chunk_pair import ChunkPair, \
-                                                   LinePairList
+from   vut.engine.compare.engine.association.chunk_pair import ChunkPair
 
 from   collections import defaultdict
-from   typeguard import typechecked
+from   typeguard   import typechecked
 
 class ChunkPairList(list):
     """List of ChunkPair objects.
