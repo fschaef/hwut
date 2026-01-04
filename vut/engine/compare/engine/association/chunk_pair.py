@@ -31,7 +31,7 @@ class ChunkPair(LinePairList):
         self.__subject_type_id = subject_type_id
         self.__nominal_type_id = nominal_type_id
         self.__analogy_db      = analogy_db
-        super().extend(self, line_association_list)
+        super().extend(line_association_list)
 
     @typechecked
     @staticmethod
@@ -42,7 +42,7 @@ class ChunkPair(LinePairList):
         if subject is None:
             subject_type    = E_Chunk.NONE
             nominal_type    = nominal.type()
-            line_pair_list  = [LinePair(n, None, []) for n in nominal.line_list]
+            line_pair_list  = [LinePair(None, n, []) for n in nominal.line_list]
             new_analogy_db  = analogy_db
         elif nominal is None:
             subject_type    = subject.type()
