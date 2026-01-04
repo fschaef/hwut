@@ -2,7 +2,7 @@
 => 
 
 [ChunkPair:LINE_SEQUENCE]
-.   .<base>: <LinePairList>
+.   .<base>: <list>
 .   .   [LinePair]
 .   .   .   .subject: <list>
 .   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, subject='((A))', nominal_ref_i=0)

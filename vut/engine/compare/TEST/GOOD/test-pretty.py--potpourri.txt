@@ -2,7 +2,7 @@
 => 
 
 [ChunkPair:POTPOURRI]
-.   .<base>: <LinePairList>
+.   .<base>: <list>
 .   .   [LinePair]
 .   .   .   .subject: <list>
 .   .   .   .nominal: <list>

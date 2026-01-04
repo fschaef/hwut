@@ -74,7 +74,5 @@ class LinePairList(list):
             result = _get(lina.nominal, result)
         return result
 
-    def __pretty__(self):
-        return "LinePairList", list(self)
 
 

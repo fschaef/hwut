@@ -73,7 +73,7 @@ class ChunkPair(LinePairList):
             type_name = "(%s,%s)" % (self.__subject_type_id.name, self.__nominal_type_id.name)
 
         return "ChunkPair:%s" % type_name, [
-            ("<base>",     LinePairList(self)),
+            ("<base>",     list(self)),
             ("analogy_db", self.__analogy_db)
         ]
 
