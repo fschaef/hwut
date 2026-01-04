@@ -34,7 +34,9 @@ class ChunkPair(list):
 
     @typechecked
     @staticmethod
-    def from_input_chunks(subject: InputChunk | None, nominal: InputChunk | None, analogy_db: AnalogyDb | None):
+    def from_input_chunks(subject:    InputChunk | None, 
+                          nominal:    InputChunk | None, 
+                          analogy_db: AnalogyDb | None) -> "ChunkPair":
         """RETURNS: 'ChunkPair' generated from a subject and nominal input 
                     chunk.
         """

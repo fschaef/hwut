@@ -94,31 +94,11 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     'LineSequence'-s and 'Potpourri'-s are yielded in separate objects
     of type 'ChunkPair'.
 
-    Data structure:
+    Data structure:    ChunkPair(list[LinePair])
 
-          ChunkPair:___________________________________
-          |   .type ('E_Chunk')                        |
-          |   .line_pair_list: [                       |
-          |       LinePair:________________________    |
-          |       | .subject_line ('Line')         |   |
-          |       | .nominal_line ('Line')         |   |
-          |       | .edit_list    (list of 'Edit') |   |
-          |       | .analogy_db   ('AnalogyDb')    |   |
-          |       '--------------------------------'   |
-          |       ...                                  |  
-          |   ]                                        |
-          '.___________________________________________'
-
-          Line:____________________________________
-          |    .line_n                             |
-          |    .sequence = [                       |
-          |        LineElement:_________________   |
-          |        |  .tolerance_id             |  |
-          |        |  .string                   |  |
-          |        '----------------------------'  |
-          |        ...                             |  
-          |    ]                                   |
-          '----------------------------------------'
+                       LinePair: .line_n                             
+                                 .subject_list = Cells ...           
+                                 .nominal_list = Cells ...           
     """
     assert hasattr(subject_line_provider, "readline")
     assert hasattr(nominal_line_provider, "readline")

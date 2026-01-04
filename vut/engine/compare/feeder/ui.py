@@ -25,8 +25,8 @@ import os
 root_dir = os.path.dirname(__file__) + "/../../../.."
 sys.path.insert(0, root_dir)
 
-import vut.engine.compare.main                         as     main                        #noqa: E402
-from   vut.engine.compare.engine.association.line_pair import SubjectCell, NominalCell    #noqa: E402
+import vut.engine.compare.main                         as     main                               #noqa: E402
+from   vut.engine.compare.engine.association.line_pair import LinePair, SubjectCell, NominalCell #noqa: E402
 
 from   inspect     import isclass                                             #noqa: E402
 from   typing      import List, Any, AsyncIterable                            #noqa: E402
@@ -71,19 +71,20 @@ class LinePairInst(DisplayInst):
     n_char_n:   int
     source_ref: Any
 
+    @classmethod
+    def from_LinePair(cls, lp: LinePair):
+        return cls(line_n_s   = lp.subject_line_n,
+                   line_n_n   = lp.nominal_line_n,
+                   cells_s    = lp.subject_list(),
+                   cells_n    = lp.nominal_list(),
+                   cost       = lp.cost,
+                   s_char_n   = lp.subject_char_n,
+                   n_char_n   = lp.nominal_char_n,
+                   source_ref = lp)
+
 @dataclass(frozen=True)
 class EndOfStreamInst(DisplayInst):
     pass
-
-async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayInst]:
-    """YIELDS: DisplayInst representing the line comparions.
-    """
-    # Associate produces the 'sleeping' Chunks/LinePairs
-    raw_chunks = main.associate(config, subject_stream, nominal_stream)
-
-    # Factory flushes them into 'awake' Instructions
-    async for inst in DisplayInst_factory(config, raw_chunks):
-        yield inst
 
 @dataclass(frozen=True)
 class ProtocolHeader(DisplayInst):
@@ -100,46 +101,41 @@ class ProtocolHeader(DisplayInst):
     signature: str  # Hex representation of the hash (e.g., "1A2B3C4D")
     engine_id: str = "HWUT Version 2.0"
 
-async def DisplayInst_factory(config, chunk_stream: AsyncIterable) -> AsyncIterable[DisplayInst]:
-    """Transforms nested engine chunks into a flat sequence of Instructions.
+async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayInst]:
+    """YIELDS: DisplayInst for display of the line comparison.
+
+    Transforms nested engine chunks into a flat sequence of Instructions.
     """
 
     # Provide information about the API version for the receiver to check
     yield ProtocolHeader(signature=_get_protocol_hash())
 
-    # 1. Flush the Configuration first (Snapshotting)
+    # Configuration first (Snapshotting)
     pf = config.pattern_finder
-    yield ConfigInst(strip_whitespace_f=pf.strip_whitespace_f,
-                     analogy_f=pf.analogy_f,
-                     whitespace_f=pf.whitespace_f,
-                     backslash_f=pf.backslash_f,
-                     numeric_tolerance_ratio=pf.numeric_tolerance_ratio,
-                     ignored_line_begin_marker=pf.ignored_line_begin_marker,
-                     ignored_line_end_marker=pf.ignored_line_end_marker,
-                     potpourri_begin_end_marker=pf.potpourri_begin_end_marker,
-                     analogy_begin_marker=pf.analogy_begin_marker,
-                     analogy_end_marker=pf.analogy_end_marker)
+    yield ConfigInst(strip_whitespace_f         = pf.strip_whitespace_f,
+                     analogy_f                  = pf.analogy_f,
+                     whitespace_f               = pf.whitespace_f,
+                     backslash_f                = pf.backslash_f,
+                     numeric_tolerance_ratio    = pf.numeric_tolerance_ratio,
+                     ignored_line_begin_marker  = pf.ignored_line_begin_marker,
+                     ignored_line_end_marker    = pf.ignored_line_end_marker,
+                     potpourri_begin_end_marker = pf.potpourri_begin_end_marker,
+                     analogy_begin_marker       = pf.analogy_begin_marker,
+                     analogy_end_marker         = pf.analogy_end_marker)
 
-    async for chunk in chunk_stream:
-        # 2. Flush the Section Header
+    # Associate produces the 'sleeping' Chunks/LinePairs
+    async for chunk in main.associate(config, subject_stream, nominal_stream):
+        # Flush the Section Header
         yield SectionBeginInst(
             title="/".join(ct.name for ct in chunk.types()),
             chunk_type=type(chunk).__name__
         )
 
-        # 3. Flush the Content
-        for lp in chunk:
-            # Waking up the math: Tokenization happens HERE
-            yield LinePairInst(line_n_s   = lp.subject_line_n,
-                               line_n_n   = lp.nominal_line_n,
-                               cells_s    = lp.subject_list(),
-                               cells_n    = lp.nominal_list(),
-                               cost       = lp.cost,
-                               s_char_n   = lp.subject_char_n,
-                               n_char_n   = lp.nominal_char_n,
-                               source_ref = lp)
+        # Flush the Content
+        for line_pair in chunk:
+            yield LinePairInst.from_LinePair(line_pair)
             
-    # 4. Final Flush
+    # Notify Termination
     yield EndOfStreamInst()
 
 def _get_protocol_hash() -> str:
