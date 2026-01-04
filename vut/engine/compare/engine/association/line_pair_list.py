@@ -5,11 +5,14 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.association.line_pair import LinePair
 
+from   typeguard import typechecked
+from   typing    import Iterable
+
 class LinePairList(list):
-    def __init__(self, iterable=None):
+    @typechecked 
+    def __init__(self, iterable=Iterable[LinePair]):
         if iterable is not None: 
             list.__init__(self, iterable)
-            assert all(isinstance(x, LinePair) for x in self)
 
     @staticmethod
     def from_subject_only(line_list):

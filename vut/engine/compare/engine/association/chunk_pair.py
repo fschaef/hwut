@@ -10,6 +10,7 @@ from   vut.engine.compare.engine.association.line_pair_list import LinePairList
 import vut.engine.compare.engine.association.core           as     association
 from   vut.engine.compare.engine.enums                      import E_Chunk
 from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
+from   vut.engine.compare.input.input_chunk                 import InputChunk
 
 from   typeguard import typechecked
 
@@ -31,8 +32,9 @@ class ChunkPair(LinePairList):
         self.__analogy_db      = analogy_db
         LinePairList.extend(self, line_association_list)
 
+    ## @typechecked
     @staticmethod
-    def from_input_chunks(subject, nominal, analogy_db):
+    def from_input_chunks(subject: InputChunk, nominal: InputChunk, analogy_db: AnalogyDb | None):
         """RETURNS: 'ChunkPair' generated from a subject and nominal input 
                     chunk.
         """
