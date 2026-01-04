@@ -14,14 +14,6 @@ class LinePairList(list):
         if iterable is not None: 
             list.__init__(self, iterable)
 
-    @staticmethod
-    def from_subject_only(line_list):
-        return LinePairList(LinePair(x, None, []) for x in line_list)
-
-    @staticmethod
-    def from_nominal_only(line_list):
-        return LinePairList(LinePair(None, x, []) for x in line_list)
-
     def append(self, lp):
         assert isinstance(lp, LinePair)
         list.append(self, lp)

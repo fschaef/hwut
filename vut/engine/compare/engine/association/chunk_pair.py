@@ -6,6 +6,7 @@ A chunk of 'LinePair'-s either belongs to a block of 'LineSequences'
 or 'Potpourri'.
 ________________________________________________________________________________
 """
+from   vut.engine.compare.engine.association.line_pair      import LinePair
 from   vut.engine.compare.engine.association.line_pair_list import LinePairList
 import vut.engine.compare.engine.association.core           as     association
 from   vut.engine.compare.engine.enums                      import E_Chunk
@@ -30,23 +31,23 @@ class ChunkPair(LinePairList):
         self.__subject_type_id = subject_type_id
         self.__nominal_type_id = nominal_type_id
         self.__analogy_db      = analogy_db
-        LinePairList.extend(self, line_association_list)
+        super().extend(self, line_association_list)
 
-    ## @typechecked
+    @typechecked
     @staticmethod
-    def from_input_chunks(subject: InputChunk, nominal: InputChunk, analogy_db: AnalogyDb | None):
+    def from_input_chunks(subject: InputChunk | None, nominal: InputChunk | None, analogy_db: AnalogyDb | None):
         """RETURNS: 'ChunkPair' generated from a subject and nominal input 
                     chunk.
         """
         if subject is None:
             subject_type    = E_Chunk.NONE
             nominal_type    = nominal.type()
-            line_pair_list  = LinePairList.from_nominal_only(nominal.line_list)
+            line_pair_list  = [LinePair(n, None, []) for n in nominal.line_list]
             new_analogy_db  = analogy_db
         elif nominal is None:
             subject_type    = subject.type()
             nominal_type    = E_Chunk.NONE
-            line_pair_list  = LinePairList.from_subject_only(subject.line_list)
+            line_pair_list  = [LinePair(s, None, []) for s in subject.line_list]
             new_analogy_db  = analogy_db
         else: 
             assert subject.type() == nominal.type()
