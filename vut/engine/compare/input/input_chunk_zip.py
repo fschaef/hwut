@@ -33,13 +33,14 @@ async def pair_for_equivalence_check(config:                Configuration,
                [1] nominal input chunk
 
     """
-    chunk_pipe = ChunkPipe(config)
+    chunk_pipe0 = ChunkPipe(config)
+    chunk_pipe1 = ChunkPipe(config)
 
     # PREFETCH: In the background new data is requested, even if the outer loop does not
     #           'await' and give us a thread, the data is already on the way while the 
     #           CPU is working on the data.
-    subject_iterable = prefetch(chunk_pipe.stream_for_equivalence_check(subject_line_provider), buffer_size=10)
-    nominal_iterable = prefetch(chunk_pipe.stream_for_equivalence_check(nominal_line_provider), buffer_size=10)
+    subject_iterable = prefetch(chunk_pipe0.stream_for_equivalence_check(subject_line_provider), buffer_size=10)
+    nominal_iterable = prefetch(chunk_pipe1.stream_for_equivalence_check(nominal_line_provider), buffer_size=10)
 
     async for s, n in async_zip_longest(subject_iterable, nominal_iterable):
         if s is None: s = n.empty_clone()
@@ -54,13 +55,14 @@ async def pair_for_association(config:                Configuration,
                [1] nominal input chunk
 
     """
-    chunk_pipe = ChunkPipe(config)
+    chunk_pipe0 = ChunkPipe(config)
+    chunk_pipe1 = ChunkPipe(config)
 
     # PREFETCH: In the background new data is requested, even if the outer loop does not
     #           'await' and give us a thread, the data is already on the way while the 
     #           CPU is working on the data.
-    subject_iterable = prefetch(chunk_pipe.stream_for_association(subject_line_provider), buffer_size=10)
-    nominal_iterable = prefetch(chunk_pipe.stream_for_association(nominal_line_provider), buffer_size=10)
+    subject_iterable = prefetch(chunk_pipe0.stream_for_association(subject_line_provider), buffer_size=10)
+    nominal_iterable = prefetch(chunk_pipe1.stream_for_association(nominal_line_provider), buffer_size=10)
 
     # In async generators, 'yield from' is replaced by 'async for ... yield'
     async for s, n in _zip_aligned(subject_iterable, nominal_iterable):
