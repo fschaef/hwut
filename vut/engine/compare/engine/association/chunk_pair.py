@@ -7,7 +7,6 @@ or 'Potpourri'.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.association.line_pair      import LinePair
-from   vut.engine.compare.engine.association.line_pair_list import LinePairList
 import vut.engine.compare.engine.association.core           as     association
 from   vut.engine.compare.engine.enums                      import E_Chunk
 from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
@@ -15,7 +14,7 @@ from   vut.engine.compare.input.input_chunk                 import InputChunk
 
 from   typeguard import typechecked
 
-class ChunkPair(LinePairList):
+class ChunkPair(list):
     """List of 'LinePair'-s where all line are from an input chunk
     of the same type, i.e.
 
