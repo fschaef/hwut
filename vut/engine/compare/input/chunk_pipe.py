@@ -45,19 +45,17 @@ class ChunkPipe(PatternFinder):
         start_line_n = 1
         ignored_begin = self.configuration.pattern_finder.ignored_line_begin_marker
         ignored_end   = self.configuration.pattern_finder.ignored_line_end_marker
+        
         for line_n in count(1):
             line = await line_provider.readline()
             if not line:
                 break
             elif self.is_region_delimiter(line):
-                if line_list or chunk_type is not E_Chunk.LINE_SEQUENCE:
-                    if chunk_type is E_Chunk.LINE_SEQUENCE:
-                        for n, line in enumerate(line_list, start=start_line_n):
-                            yield InputChunk(chunk_type, n, n, [line], self.configuration)
-                    else:
-                        yield InputChunk(chunk_type, start_line_n, line_n, 
-                                         line_list, 
-                                         self.configuration)
+                if chunk_type is E_Chunk.POTPOURRI and line_list:
+                    # Flush buffered Potpourri 
+                    yield InputChunk(chunk_type, start_line_n, line_n, 
+                                     line_list, self.configuration)
+                
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
                 if chunk_type is E_Chunk.LINE_SEQUENCE: chunk_type = E_Chunk.POTPOURRI
@@ -66,14 +64,17 @@ class ChunkPipe(PatternFinder):
             else: 
                 stripped = line.strip()
                 if stripped and not stripped.startswith(ignored_begin) and not stripped.endswith(ignored_end):
-                    line_list.append(Line(line_n, PatternFinder.do(self, line)))
+                    processed_line = Line(line_n, PatternFinder.do(self, line))
+                    
+                    if chunk_type is E_Chunk.LINE_SEQUENCE:
+                        yield InputChunk(chunk_type, line_n, line_n, 
+                                         [processed_line], self.configuration)
+                    else:
+                        line_list.append(processed_line)
 
-        if line_list:
-            if chunk_type is E_Chunk.LINE_SEQUENCE:
-                for n, line in enumerate(line_list, start=start_line_n):
-                    yield InputChunk(chunk_type, n, n, [line], self.configuration)
-            else:
-                yield InputChunk(chunk_type, start_line_n, line_n, line_list, self.configuration)
+        # Handle trailing potpourri block if stream ends without closing delimiter
+        if chunk_type is E_Chunk.POTPOURRI and line_list:
+            yield InputChunk(chunk_type, start_line_n, line_n, line_list, self.configuration)
 
     @typechecked
     async def stream_for_association(self, line_provider: AsyncIterator) -> InputChunk:
