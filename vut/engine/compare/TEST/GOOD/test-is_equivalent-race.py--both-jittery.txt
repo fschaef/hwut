@@ -1,0 +1,17 @@
+## SUBJECT: timeline: |1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 |
+## NOMINAL: timeline: |  1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1   1 1 1 |
+[0] SUBJECT: => (1) 'Line 0'
+[2] SUBJECT: => (2) 'Line 1'
+[2] NOMINAL: => (1) 'Line 0'
+[4] NOMINAL: => (2) 'Line 1'
+[6] SUBJECT: => (3) 'Line 2'
+[6] NOMINAL: => (3) 'Line 2'
+[8] SUBJECT: => (4) 'Line 3'
+[10] SUBJECT: => (5) 'SALTY'
+[10] NOMINAL: => (4) 'Line 3'
+[12] NOMINAL: => (5) 'SWEET'
+[14] SUBJECT: => (6) 'Line 5'
+Verdict: False
+Lines Consumed - Subject: 6, Nominal: 5
+NOTE: The eat SUBJECT at time 14, since we try to consume from both
+      streams at the same time, even if we wait for slower one to deliver
