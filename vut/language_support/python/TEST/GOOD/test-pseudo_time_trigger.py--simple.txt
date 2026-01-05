@@ -1,0 +1,8 @@
+=> Testing Simple Sequence
+SETUP:       A |1    |
+SETUP:       B |  1  |
+SETUP:       C |    1|
+[t:0] Trigger 'A' fired.
+[t:2] Trigger 'B' fired.
+[t:4] Trigger 'C' fired.
+

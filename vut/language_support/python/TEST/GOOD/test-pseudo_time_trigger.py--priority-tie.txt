@@ -1,0 +1,18 @@
+=> Testing Priority Tie-Break (Same Tick)
+A, B -- Both fire at tick 0, but B(1) should beat A(2) ... 
+SETUP:       A |21   3|
+SETUP:       B |12   2|
+C, D -- Both fire at tick 2, but C(0) should beat D(9)
+SETUP:       C |  0  1|
+SETUP:       D |  9  0|
+[t:0] Trigger 'B' fired.
+[t:0] Trigger 'A' fired.
+[t:1] Trigger 'A' fired.
+[t:1] Trigger 'B' fired.
+[t:2] Trigger 'C' fired.
+[t:2] Trigger 'D' fired.
+[t:5] Trigger 'D' fired.
+[t:5] Trigger 'C' fired.
+[t:5] Trigger 'B' fired.
+[t:5] Trigger 'A' fired.
+

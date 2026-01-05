@@ -19,7 +19,10 @@ class AsyncStreamReaderAdapter(collections.abc.AsyncIterator):
     async def readline(self):
         # 1. Handle standard file-like objects
         if hasattr(self.sync_stream, "readline"):
-            return self.sync_stream.readline()
+            if asyncio.iscoroutinefunction(self.sync_stream.readline):
+                return await self.sync_stream.readline()
+            else:
+                return self.sync_stream.readline()
         
         # 2. Handle generators/iterators (common in tests)
         try:
@@ -50,16 +53,13 @@ async def async_zip_longest(aiter1, aiter2, sentinel=None):
         yield (None if res1 is sentinel else res1), \
               (None if res2 is sentinel else res2)
 
-
 def AsyncIterator_ensured(input_obj) -> AsyncIterator:
     """RETURNS: Either 
                 (1) 'input_obj' itself, if it can serve as an 'AsyncIterator'
                 (2) A wrapper version of 'input_obj', which can serve as 'AsyncIterator'
     """
     if hasattr(input_obj, 'readline'):
-        if asyncio.iscoroutinefunction(input_obj.readline):
-            return input_obj
-        elif isinstance(input_obj, AsyncIterator):
+        if isinstance(input_obj, AsyncIterator):
             return input_obj
 
     return AsyncStreamReaderAdapter(input_obj)

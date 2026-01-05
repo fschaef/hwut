@@ -25,7 +25,7 @@ RETURNS:
     A dictionary mapping subject_idx to a list of tuples: (nominal_idx, AnalogyDb|None).
 """
 
-from vut.auxiliary.deterministic_random             import DeterministicStream
+from vut.language_support.python.deterministic_random             import DeterministicStream
 from vut.engine.compare.engine.analogy_db           import AnalogyDb
 from vut.engine.compare.engine.potpourri.potential_pair_db import PotentialPairDb
 

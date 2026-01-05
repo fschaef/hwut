@@ -235,8 +235,14 @@ class LinePair:
     def __pretty__(self):
         """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
         """
+        def subject_cell(c):
+            return "[%s:%s(%s) '%s']" % (c.relation_id.name, c.tolerance_id.name, c.nominal_ref_i, c.subject)
+                                                                                                 
+        def nominal_cell(c):                                                                     
+            return "[%s:%s(%s) '%s']" % (c.relation_id.name, c.tolerance_id.name, c.subject_ref_i, c.nominal)
+
         return "LinePair", [
-            ("subject", self.subject_list()),
-            ("nominal", self.nominal_list()),
+            ("subject", ",".join(subject_cell(_) for _ in self.subject_list())),
+            ("nominal", ",".join(nominal_cell(_) for _ in self.nominal_list())),
             ("cost",    "%0.4f" % self.cost),
         ]

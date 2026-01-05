@@ -22,30 +22,105 @@ from vut.engine.compare.configuration        import Configuration
 from vut.auxiliary.async_helper              import async_zip_longest, \
                                                     prefetch
 
-from typeguard import typechecked
-from typing    import AsyncIterator
+from   typeguard import typechecked
+from   typing    import AsyncIterator
+import asyncio
+
 
 @typechecked
-async def pair_for_equivalence_check(config:                Configuration, 
+async def pair_for_equivalence_check(config: Configuration, 
                                      subject_line_provider: AsyncIterator, 
                                      nominal_line_provider: AsyncIterator): 
     """YIELDS: [0] subject input chunk
                [1] nominal input chunk
-
     """
-    chunk_pipe0 = ChunkPipe(config)
-    chunk_pipe1 = ChunkPipe(config)
+    
+    # 1. Setup Pipes
+    pipe0 = ChunkPipe(config)
+    pipe1 = ChunkPipe(config)
+    
+    # 2. Control Mechanisms
+    # Unbounded queues allow "reading into stack" while waiting
+    q_s = asyncio.Queue()
+    q_n = asyncio.Queue()
+    
+    # The GATE: Controls when producers are allowed to fetch
+    fetch_gate = asyncio.Event()
+    fetch_gate.set() # Start open to get the first items
 
-    # PREFETCH: In the background new data is requested, even if the outer loop does not
-    #           'await' and give us a thread, the data is already on the way while the 
-    #           CPU is working on the data.
-    subject_iterable = prefetch(chunk_pipe0.stream_for_equivalence_check(subject_line_provider), buffer_size=10)
-    nominal_iterable = prefetch(chunk_pipe1.stream_for_equivalence_check(nominal_line_provider), buffer_size=10)
+    # Sentinel for EOF
+    EOF = object()
 
-    async for s, n in async_zip_longest(subject_iterable, nominal_iterable):
-        if s is None: s = n.empty_clone()
-        if n is None: n = s.empty_clone()
-        yield s, n
+    # 3. Persistent Producer Logic
+    async def produce(provider, queue):
+        iterator = provider.__aiter__()
+        try:
+            async for item in iterator:
+                await queue.put(item)
+                # GATE CHECK:
+                # After putting an item, we check if we should pause.
+                # We wait here if the gate is closed.
+                await fetch_gate.wait()
+            await queue.put(EOF)
+        except Exception:
+            await queue.put(EOF)
+            raise
+
+    # 4. Start Producers
+    task_s = asyncio.create_task(produce(pipe0.stream_for_equivalence_check(subject_line_provider), q_s))
+    task_n = asyncio.create_task(produce(pipe1.stream_for_equivalence_check(nominal_line_provider), q_n))
+
+    try:
+        while True:
+            # --- FAST PATH ---
+            # If both queues have data, we don't need to wait or touch the gate.
+            if not q_s.empty() and not q_n.empty():
+                # We have a pair!
+                # Logic: If we have a backlog, we should STOP fetching to avoid over-eating.
+                fetch_gate.clear()
+                
+                s_item = await q_s.get()
+                n_item = await q_n.get()
+                
+                # EOF Handling
+                if s_item is EOF and n_item is EOF:
+                    break
+                
+                s_out = s_item if s_item is not EOF else n_item.empty_clone()
+                n_out = n_item if n_item is not EOF else s_item.empty_clone()
+                
+                yield s_out, n_out
+                continue
+
+            # --- WAITING PATH (Case 2) ---
+            # One or both are empty.
+            # ACTION: Open the gate. 
+            # This allows the empty one to fetch, AND the full one to buffer (stack up) 
+            # while we wait, exactly as requested.
+            fetch_gate.set()
+            
+            # Wait for data. 
+            # Note: We get() sequentially. If q_s is empty, we wait for S.
+            # While waiting for S, N's producer sees the open gate and keeps filling q_n.
+            s_item = await q_s.get()
+            n_item = await q_n.get()
+
+            # (Repeat logic from Fast Path)
+            if s_item is EOF and n_item is EOF:
+                break
+
+            s_out = s_item if s_item is not EOF else n_item.empty_clone()
+            n_out = n_item if n_item is not EOF else s_item.empty_clone()
+
+            yield s_out, n_out
+
+    finally:
+        # Cleanup
+        fetch_gate.set() # Unblock tasks so they can exit/cancel
+        for t in [task_s, task_n]:
+            if not t.done(): t.cancel()
+            try:                           await t
+            except asyncio.CancelledError: pass
 
 @typechecked
 async def pair_for_association(config:                Configuration, 
