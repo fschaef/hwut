@@ -21,13 +21,10 @@
 line
 ----------------------------------
 =>
-001| [STRING '|||| (potpourri: open)']
 002| [STRING 'line']
-003| [STRING '|||| (potpourri: close)']
 ----------------------------------
 <potpourri>
 <potpourri>
+
 ----------------------------------
 =>
-001| [STRING '|||| (potpourri: open)']
-002| [STRING '|||| (potpourri: close)']

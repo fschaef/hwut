@@ -20,8 +20,8 @@ def do(subject: InputChunk, nominal: InputChunk, analogy_db: AnalogyDb) -> tuple
     irrelevant, since the global comparison needs to stop. For display
     (see .line_pairs()), this different.
     """
-    if   subject.__class__ is not nominal.__class__: return False, analogy_db
-    elif subject.__class__ is InputChunkTerminal:    return True, analogy_db  # here: both are 'InputChunkTerminal'
+    if   subject.type() is not nominal.type():    return False, analogy_db
+    elif subject.__class__ is InputChunkTerminal: return True, analogy_db  # here: both are 'InputChunkTerminal'
 
     # filter empty and VISIBLE_NOTHING lines.
     def _condition(line):
@@ -65,8 +65,8 @@ def _do_potpourri(subject_line_list: tuple[Line,...],
     """RETURNS: [0] True, if both potpourris are equivalent. False, else.
                 [1] analogy_db required for equivalence to hold.
     """
-    subject_potpourri = subject_line_list[1:-1] # exclude [0] and [-1]:
-    nominal_potpourri = nominal_line_list[1:-1] # first and last line carry Potpourri markers.
+    subject_potpourri = subject_line_list # exclude [0] and [-1]:
+    nominal_potpourri = nominal_line_list # first and last line carry Potpourri markers.
 
     verdict, _, new_analogy_db = potpourri_equivalence_check.do(subject_potpourri,
                                                                 nominal_potpourri,

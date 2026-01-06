@@ -379,11 +379,6 @@
 <span class='token OK_GOOD '></span>
 </div></div>
 <div class='header'>:: POTPOURRI/POTPOURRI</div>
-<div class='row' >
-<div class='ln'>13</div><div class='side'>
-</div>
-<div class='ln'>14</div><div class='side'>
-</div></div>
 <div class='row' style='background: rgba(248, 81, 73, 0.009090909090909092);'>
 <div class='ln'>14</div><div class='side'>
 <div class='heatmap-marker' style='background: var(--err-border); opacity: 0.022727272727272728;'></div>
@@ -565,11 +560,6 @@
 <span class='token OK_GOOD '>&middot;</span>
 <span class='token OK_GOOD '>fly.</span>
 </div></div>
-<div class='row' >
-<div class='ln'>19</div><div class='side'>
-</div>
-<div class='ln'>20</div><div class='side'>
-</div></div>
 <div class='header'>:: LINE_SEQUENCE/LINE_SEQUENCE</div>
 <div class='row' >
 <div class='ln'>20</div><div class='side'>
@@ -579,11 +569,6 @@
 <span class='token OK_GOOD '></span>
 </div></div>
 <div class='header'>:: POTPOURRI/POTPOURRI</div>
-<div class='row' >
-<div class='ln'>21</div><div class='side'>
-</div>
-<div class='ln'>22</div><div class='side'>
-</div></div>
 <div class='row' >
 <div class='ln'>22</div><div class='side'>
 <span class='token OK_GOOD'>A</span>
@@ -755,11 +740,6 @@
 <span class='token OK_GOOD dimmed'>geological</span>
 <span class='token OK_GOOD dimmed'>&middot;</span>
 <span class='token OK_GOOD dimmed'>shape,</span>
-</div></div>
-<div class='row' >
-<div class='ln'>27</div><div class='side'>
-</div>
-<div class='ln'>28</div><div class='side'>
 </div></div>
 <div class='header'>:: LINE_SEQUENCE/LINE_SEQUENCE</div>
 <div class='row' >

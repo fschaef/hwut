@@ -36,10 +36,6 @@ YIELD 2: POTPOURRI <-> POTPOURRI
 [ChunkPair:POTPOURRI]
 .   .<base>: <list>
 .   .   [LinePair]
-.   .   .   .subject: 
-.   .   .   .nominal: 
-.   .   .   .cost: 0.0000
-.   .   [LinePair]
 .   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'albert']
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'karlos']
 .   .   .   .cost: 1.0000
@@ -52,15 +48,11 @@ YIELD 2: POTPOURRI <-> POTPOURRI
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'adelbert']
 .   .   .   .cost: 0.8750
 .   .   [LinePair]
+
 .   .   .   .subject: [OK_GOOD:STRING(0) 'damian']
 .   .   .   .nominal: [OK_GOOD:STRING(0) 'damian']
 .   .   .   .cost: 0.0000
-.   .   [LinePair]
-.   .   .   .subject: 
-.   .   .   .nominal: 
-.   .   .   .cost: 0.0000
 .   .analogy_db: AnalogyDb
-
 [16] NOMINAL: => (9) 'crisper'
 [18] NOMINAL: => (10) 'friedolin'
 [19] NOMINAL: => (11) ''
@@ -68,6 +60,7 @@ YIELD 3: LINE_SEQUENCE <-> LINE_SEQUENCE
 [ChunkPair:LINE_SEQUENCE]
 .   .<base>: <list>
 .   .   [LinePair]
+
 .   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'kasper']
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'crisper']
 .   .   .   .cost: 0.4286

@@ -16,9 +16,7 @@ line2
 <potpourri>
 ----------------------------------
 =>
-001| [STRING '|||| (potpourri: open)']
 002| [STRING 'line'], [NUMERIC '2']
-003| [STRING '|||| (potpourri: close)']
 ----------------------------------
 <potpourri>
 line 2
@@ -27,10 +25,8 @@ line 3
 line 5
 ----------------------------------
 =>
-001| [STRING '|||| (potpourri: open)']
 002| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '2']
 003| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '3']
-004| [STRING '|||| (potpourri: close)']
 005: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '5']
 ----------------------------------
 line 1
@@ -41,10 +37,8 @@ line 4
 ----------------------------------
 =>
 001: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '1']
-002| [STRING '|||| (potpourri: open)']
 003| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '3']
 004| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '4']
-005| [STRING '|||| (potpourri: close)']
 ----------------------------------
 line 1
 <potpourri>
@@ -54,7 +48,5 @@ line 5
 ----------------------------------
 =>
 001: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '1']
-002| [STRING '|||| (potpourri: open)']
 003| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '3']
-004| [STRING '|||| (potpourri: close)']
 005: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '5']

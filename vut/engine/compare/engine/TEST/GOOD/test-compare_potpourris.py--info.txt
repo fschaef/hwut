@@ -1,20 +1,17 @@
 --------------------------------
 subject: ['a', 'b']
 nominal: ['b', 'a']
-cost: 0.00000; line_associations: 4;
-   [-1] ||||                    --> [-1] ||||                    {}
+cost: 0.00000; line_associations: 2;
    [00] a                       --> [01] a                       {GOOD}
    [01] b                       --> [00] b                       {GOOD}
-   [02] ||||                    --> [02] ||||                    {}
-AnalogyDb:
 
+AnalogyDb:
 --------------------------------
 subject: ['a']
 nominal: ['b', 'a b']
-cost: 0.00000; line_associations: 4;
-   [-1] ||||                    --> [-1] ||||                    {}
+cost: 0.00000; line_associations: 2;
+
    [00] a                       --> [01] a b                     {GOOD, INSERT, INSERT}
    [--] None                    --> [00] b                       {}
-   [01] ||||                    --> [02] ||||                    {}
 AnalogyDb:
 

@@ -1,4 +1,4 @@
-from   vut.engine.compare.engine.enums                  import E_PotpourriBorder, E_Chunk
+from   vut.engine.compare.engine.enums                  import E_Chunk
 from   vut.engine.compare.engine.association.line_pair  import LinePair
 import vut.engine.compare.engine.potpourri.association  as     potpourri_association
 
@@ -67,10 +67,8 @@ def _do_line_sequence(subject, nominal, analogy_db):
     return result, editions.analogy_db
 
 def _do_potpourri(subject, nominal, analogy_db):
-    assert len(subject.line_list) >= 2 and len(nominal.line_list) >= 2
-
-    subject_potpourri = subject.line_list[1:-1]    # exclude [0] and [-1]:
-    nominal_potpourri = nominal.line_list[1:-1] # first and last line carry Potpourri markers.
+    subject_potpourri = subject.line_list
+    nominal_potpourri = nominal.line_list
 
     core_result,   \
     new_analogy_db = potpourri_association.do(subject_potpourri,
@@ -78,18 +76,18 @@ def _do_potpourri(subject, nominal, analogy_db):
                                               analogy_db,
                                               subject.configuration.potpourri_max_comparison_count)
 
-    result = [
-        LinePair.potpourri_border(subject.line_list[0], nominal.line_list[0], 
-                                  E_PotpourriBorder.BEGIN)
-    ]
+    ## result = [
+    ##     LinePair.potpourri_border(subject.line_list[0], nominal.line_list[0], 
+    ##                               E_PotpourriBorder.BEGIN)
+    ## ]
 
     def key(x): 
         return (1, x.nominal_line_n) if x.subject_line_n == -1 else (0, x.subject_line_n)
-    result.extend(sorted(core_result, key= key))
+    result = sorted(core_result, key= key)
 
-    result.append(
-        LinePair.potpourri_border(subject.line_list[-1], nominal.line_list[-1],
-                                  E_PotpourriBorder.END)
-    )
+    ## result.append(
+    ##     LinePair.potpourri_border(subject.line_list[-1], nominal.line_list[-1],
+    ##                               E_PotpourriBorder.END)
+    ## )
 
     return result, new_analogy_db

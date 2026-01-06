@@ -54,16 +54,16 @@ def _indent(obj):
 def _iterable(element):
     if   element is None:                yield "None"
     elif hasattr(element, "__pretty__"): yield from _call_pretty_function(element)
-    elif type(element) == list:          yield from _list(element)
-    elif type(element) == tuple:         yield from _list(element, "tuple")
+    elif type(element) is list:          yield from _list(element)
+    elif type(element) is tuple:         yield from _list(element, "tuple")
     else:                                yield "%s" % element
 
 def _call_pretty_function(obj):
     class_name, member_list = obj.__pretty__()
-    assert type(member_list) == list
+    assert type(member_list) is list
     if not member_list: 
         return [class_name]
-    elif type(member_list[0]) == tuple and len(member_list[0]) == 2:
+    elif type(member_list[0]) is tuple and len(member_list[0]) == 2:
         return _member_sequence(member_list, class_name)
     else:
         return _list(member_list, class_name)
