@@ -1,0 +1,80 @@
+SUBJECT timeline: |323 112   1223231|
+NOMINAL timeline: |23  213  231221 3|
+[0] NOMINAL: => (1) 'trudi'
+[0] SUBJECT: => (1) 'heidi'
+[1] SUBJECT: => (2) 'heinz'
+[1] NOMINAL: => (2) 'hein'
+[2] SUBJECT: => (3) '||||'
+[4] SUBJECT: => (4) 'albert'
+[4] NOMINAL: => (3) '||||'
+[5] SUBJECT: => (5) 'berta'
+[5] NOMINAL: => (4) 'karlos'
+[6] SUBJECT: => (6) 'carlos'
+YIELD 1: LINE_SEQUENCE <-> LINE_SEQUENCE
+[ChunkPair:LINE_SEQUENCE]
+.   .<base>: <list>
+.   .   [LinePair]
+.   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'heidi']
+.   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'trudi']
+.   .   .   .cost: 0.6000
+.   .   [LinePair]
+.   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'heinz']
+.   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'hein']
+.   .   .   .cost: 0.2000
+.   .analogy_db: AnalogyDb
+
+[6] NOMINAL: => (5) 'damian'
+[9] NOMINAL: => (6) 'adelbert'
+[10] SUBJECT: => (7) 'damian'
+[10] NOMINAL: => (7) 'berta'
+[11] NOMINAL: => (8) '||||'
+[11] SUBJECT: => (8) '||||'
+[12] SUBJECT: => (9) 'kasper'
+[12] NOMINAL: => (9) 'crisper'
+YIELD 2: POTPOURRI <-> POTPOURRI
+[ChunkPair:POTPOURRI]
+.   .<base>: <list>
+.   .   [LinePair]
+.   .   .   .subject: 
+.   .   .   .nominal: 
+.   .   .   .cost: 0.0000
+.   .   [LinePair]
+.   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'albert']
+.   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'karlos']
+.   .   .   .cost: 1.0000
+.   .   [LinePair]
+.   .   .   .subject: [OK_GOOD:STRING(0) 'berta']
+.   .   .   .nominal: [OK_GOOD:STRING(0) 'berta']
+.   .   .   .cost: 0.0000
+.   .   [LinePair]
+.   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'carlos']
+.   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'adelbert']
+.   .   .   .cost: 0.8750
+.   .   [LinePair]
+.   .   .   .subject: [OK_GOOD:STRING(0) 'damian']
+.   .   .   .nominal: [OK_GOOD:STRING(0) 'damian']
+.   .   .   .cost: 0.0000
+.   .   [LinePair]
+.   .   .   .subject: 
+.   .   .   .nominal: 
+.   .   .   .cost: 0.0000
+.   .analogy_db: AnalogyDb
+
+[13] NOMINAL: => (10) 'friedolin'
+[13] SUBJECT: => (10) 'friedrich'
+[14] NOMINAL: => (11) ''
+[14] SUBJECT: => (11) ''
+YIELD 3: LINE_SEQUENCE <-> LINE_SEQUENCE
+[ChunkPair:LINE_SEQUENCE]
+.   .<base>: <list>
+.   .   [LinePair]
+.   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'kasper']
+.   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'crisper']
+.   .   .   .cost: 0.4286
+.   .   [LinePair]
+.   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'friedrich']
+.   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'friedolin']
+.   .   .   .cost: 0.4444
+.   .analogy_db: AnalogyDb
+
+Finished with 3 chunks.

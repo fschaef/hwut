@@ -4,60 +4,16 @@
 [ChunkPair:LINE_SEQUENCE]
 .   .<base>: <list>
 .   .   [LinePair]
-.   .   .   .subject: <list>
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, subject='((A))', nominal_ref_i=0)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, subject=' ', nominal_ref_i=1)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, subject='is', nominal_ref_i=2)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, subject=' ', nominal_ref_i=3)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, subject='good.', nominal_ref_i=4)
-.   .   .   .nominal: <list>
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, nominal='((1))', subject_ref_i=0)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=1)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='is', subject_ref_i=2)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=3)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='good.', subject_ref_i=4)
+.   .   .   .subject: [OK_TOLERATED:ANALOGY(0) '((A))'],[OK_GOOD:SEPERATOR(1) ' '],[OK_GOOD:STRING(2) 'is'],[OK_GOOD:SEPERATOR(3) ' '],[OK_GOOD:STRING(4) 'good.']
+.   .   .   .nominal: [OK_TOLERATED:ANALOGY(0) '((1))'],[OK_GOOD:SEPERATOR(1) ' '],[OK_GOOD:STRING(2) 'is'],[OK_GOOD:SEPERATOR(3) ' '],[OK_GOOD:STRING(4) 'good.']
 .   .   .   .cost: 0.0000
 .   .   [LinePair]
-.   .   .   .subject: <list>
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, subject='((A))', nominal_ref_i=0)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, subject=' ', nominal_ref_i=1)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, subject='is', nominal_ref_i=2)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, subject=' ', nominal_ref_i=3)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.BAD_NOMINAL_HAS: 6>, tolerance_id=<E_ToleranceId.STRING: 1>, subject=None, nominal_ref_i=4)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.BAD_NOMINAL_HAS: 6>, tolerance_id=<E_ToleranceId.STRING: 1>, subject=None, nominal_ref_i=5)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.BAD_NOMINAL_HAS: 6>, tolerance_id=<E_ToleranceId.STRING: 1>, subject=None, nominal_ref_i=6)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.BAD_NOMINAL_HAS: 6>, tolerance_id=<E_ToleranceId.STRING: 1>, subject=None, nominal_ref_i=7)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.BAD_NOMINAL_DIFFERS: 8>, tolerance_id=<E_ToleranceId.STRING: 1>, subject='bad.', nominal_ref_i=8)
-.   .   .   .nominal: <list>
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, nominal='((2))', subject_ref_i=0)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=1)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='is', subject_ref_i=2)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=3)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_HAS_NOT: 6>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='not', subject_ref_i=4)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_HAS_NOT: 6>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=5)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_HAS_NOT: 6>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='so', subject_ref_i=6)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_HAS_NOT: 6>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=7)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.BAD_SUBJECT_DIFFERS: 8>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='good.', subject_ref_i=8)
+.   .   .   .subject: [OK_TOLERATED:ANALOGY(0) '((A))'],[OK_GOOD:SEPERATOR(1) ' '],[OK_GOOD:STRING(2) 'is'],[OK_GOOD:SEPERATOR(3) ' '],[BAD_NOMINAL_HAS:STRING(4) 'None'],[BAD_NOMINAL_HAS:STRING(5) 'None'],[BAD_NOMINAL_HAS:STRING(6) 'None'],[BAD_NOMINAL_HAS:STRING(7) 'None'],[BAD_NOMINAL_DIFFERS:STRING(8) 'bad.']
+.   .   .   .nominal: [OK_TOLERATED:ANALOGY(0) '((2))'],[OK_GOOD:SEPERATOR(1) ' '],[OK_GOOD:STRING(2) 'is'],[OK_GOOD:SEPERATOR(3) ' '],[BAD_SUBJECT_HAS_NOT:STRING(4) 'not'],[BAD_SUBJECT_HAS_NOT:SEPERATOR(5) ' '],[BAD_SUBJECT_HAS_NOT:STRING(6) 'so'],[BAD_SUBJECT_HAS_NOT:SEPERATOR(7) ' '],[BAD_SUBJECT_DIFFERS:STRING(8) 'good.']
 .   .   .   .cost: 0.5200
 .   .   [LinePair]
-.   .   .   .subject: <list>
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.NUMERIC: 4>, subject='4711', nominal_ref_i=0)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, subject=' ', nominal_ref_i=1)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, subject='((is))', nominal_ref_i=2)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, subject=' ', nominal_ref_i=3)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, subject='((a))', nominal_ref_i=4)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, subject=' ', nominal_ref_i=5)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.EQUIVALENCE_PATTERN: 5>, subject='number', nominal_ref_i=6)
-.   .   .   .   SubjectCell(relation_id=<E_SubjectRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, subject='.', nominal_ref_i=7)
-.   .   .   .nominal: <list>
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.NUMERIC: 4>, nominal='4712', subject_ref_i=0)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=1)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, nominal='((ist))', subject_ref_i=2)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=3)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.ANALOGY: 3>, nominal='((eine))', subject_ref_i=4)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.SEPERATOR: 6>, nominal=' ', subject_ref_i=5)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_TOLERATED: 2>, tolerance_id=<E_ToleranceId.EQUIVALENCE_PATTERN: 5>, nominal='Zahl', subject_ref_i=6)
-.   .   .   .   NominalCell(relation_id=<E_NominalRelationId.OK_GOOD: 1>, tolerance_id=<E_ToleranceId.STRING: 1>, nominal='.', subject_ref_i=7)
+.   .   .   .subject: [OK_TOLERATED:NUMERIC(0) '4711'],[OK_GOOD:SEPERATOR(1) ' '],[OK_TOLERATED:ANALOGY(2) '((is))'],[OK_GOOD:SEPERATOR(3) ' '],[OK_TOLERATED:ANALOGY(4) '((a))'],[OK_GOOD:SEPERATOR(5) ' '],[OK_TOLERATED:EQUIVALENCE_PATTERN(6) 'number'],[OK_GOOD:STRING(7) '.']
+.   .   .   .nominal: [OK_TOLERATED:NUMERIC(0) '4712'],[OK_GOOD:SEPERATOR(1) ' '],[OK_TOLERATED:ANALOGY(2) '((ist))'],[OK_GOOD:SEPERATOR(3) ' '],[OK_TOLERATED:ANALOGY(4) '((eine))'],[OK_GOOD:SEPERATOR(5) ' '],[OK_TOLERATED:EQUIVALENCE_PATTERN(6) 'Zahl'],[OK_GOOD:STRING(7) '.']
 .   .   .   .cost: 0.0000
 .   .analogy_db: [AnalogyDb]
 .   .   .:1&1: "((A))"="((1))"

@@ -29,14 +29,19 @@ async def run_test(subject_timeline, nominal_timeline):
     config = Configuration()
     
     # Test Data: 100 lines, with a mismatch at line 5 (Index 4)
-    subject_time_list = [f"Line {i}\n" for i in range(100)]
-    subject_time_list[4] = "SALTY\n"
-    nominal_line_list = [f"Line {i}\n" for i in range(100)]
-    nominal_line_list[4] = "SWEET\n"
+    n = 25
+    subject_line_list      = [""] * n
+    subject_line_list[:4]  = [f"Line {i}\n" for i in range(4)]
+    subject_line_list[4]   = "SALTY"
+    subject_line_list[5:n] = [f"SALTY {i-4}\n" for i in range(5, n)]
+    nominal_line_list      = [""] * n
+    nominal_line_list[:4]  = [f"Line {i}\n" for i in range(4)]
+    nominal_line_list[4]   = "SWEET"
+    nominal_line_list[5:n] = [f"SWEET {i-4}\n" for i in range(5, n)]
 
     subject,          \
     nominal,          \
-    dispatcher_handle = racing.prepare_dispatcher(subject_timeline, subject_time_list, 
+    dispatcher_handle = racing.prepare_dispatcher(subject_timeline, subject_line_list, 
                                                   nominal_timeline, nominal_line_list)
 
     try:
@@ -59,21 +64,15 @@ if __name__ == "__main__":
         sys.exit()
     elif "subject-slow" in sys.argv:
         # Subject is sparse (Priority 1), Nominal is dense
-        asyncio.run(run_test("1    "*10, "1111"*10))
-        print("NOTE: The of NOMINAL at time 21 is ok, since we try to consume from both")
-        print("      streams at the same time, even if we wait for slower one to deliver")
+        asyncio.run(run_test("1   "*10, "1111"*10))
     elif "nominal-slow" in sys.argv:
         # Subject is dense, Nominal is sparse
         asyncio.run(run_test("11111"*10, "1    "*10))
-        print("NOTE: The eat of SUBJECT at time 21 is ok, since we try to consume from both")
-        print("      streams at the same time, even if we wait for slower one to deliver")
     elif "jittery" in sys.argv: 
         rg = DeterministicStream(seed=17)
         t_sub = "".join(rg.select("12  ") for _ in range(80))
         t_nom = "".join(rg.select("12  ") for _ in range(80))
         # both-jittery: Irregular staggered patterns
         asyncio.run(run_test(t_sub, t_nom))
-        print("NOTE: The eat SUBJECT at time 14, since we try to consume from both")
-        print("      streams at the same time, even if we wait for slower one to deliver")
     else:
         assert False

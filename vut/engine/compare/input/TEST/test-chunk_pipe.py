@@ -23,9 +23,9 @@ from   io import StringIO
 
 sys.path.insert(0, "../../../../../")
 
-from   vut.engine.compare.configuration        import Configuration
-from   vut.engine.compare.input.chunk_pipe import ChunkPipe
-from   vut.auxiliary.async_helper              import AsyncIterator_ensured
+from   vut.engine.compare.configuration    import Configuration
+from   vut.auxiliary.async_helper          import AsyncIterator_ensured
+from   vut.engine.compare.input.chunk_pipe import AssociationChunkPipe
 import asyncio
 
 if "--hwut-info" in sys.argv:
@@ -37,15 +37,15 @@ config = Configuration()
 config.pattern_finder.analogy_f               = True
 config.pattern_finder.numeric_tolerance_ratio = 0.011
 config.pattern_finder.equivalent_pattern_list = [ r"funny|happy", r"funny|smart", r"funny|glad", r"I|me" ]
-chunk_pipe = ChunkPipe(config)
 
 async def test_core(line_list):
     text = "\n".join(line_list)
+    chunk_pipe = AssociationChunkPipe(config, AsyncIterator_ensured(StringIO(text)))
     print("----------------------------------")
     print(text.replace("||||", "<potpourri>"))
     print("----------------------------------")
     print("=>")
-    async for x in chunk_pipe.stream_for_association(AsyncIterator_ensured(StringIO(text))):
+    async for x in chunk_pipe.do():
         print(x)
 
 def test(line_list):

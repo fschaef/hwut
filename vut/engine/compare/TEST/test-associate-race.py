@@ -24,7 +24,7 @@ from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as main
 import vut.engine.pretty                as pretty
 import vut.engine.compare.TEST.racing   as racing
-from   vut.language_support.python.pseudo_time_trigger import Trigger
+from   vut.language_support.python.racing_condition_sim import Trigger
 from   vut.language_support.python.deterministic_random import DeterministicStream
 
 class LineTrigger(Trigger):
@@ -88,8 +88,8 @@ if __name__ == "__main__":
         asyncio.run(test(t_sub, t_nom))
     elif "jittery" in sys.argv:
         rg = DeterministicStream(seed=17)
-        t_sub = "".join(rg.select("123  ") for _ in range(10))
-        t_nom = "".join(rg.select("123  ") for _ in range(10))
+        t_sub = "".join(rg.select("123  ") for _ in range(17))
+        t_nom = "".join(rg.select("123  ") for _ in range(17))
         asyncio.run(test(t_sub, t_nom))
     else:
         assert False, "missing choice argument 1"

@@ -16,7 +16,7 @@ import asyncio
 
 sys.path.insert(0, "../../../../")
 
-from   vut.language_support.python.pseudo_time_trigger import TriggerDispatcher, Trigger #noqa E402
+from   vut.language_support.python.racing_condition_sim import TriggerDispatcher, Trigger #noqa E402
 
 # Assuming the implementation above is in a file named trigger_dispatcher.py
 # or included in the same directory.

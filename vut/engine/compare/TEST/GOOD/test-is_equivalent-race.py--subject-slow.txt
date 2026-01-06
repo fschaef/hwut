@@ -1,32 +1,33 @@
-## SUBJECT: timeline: |1    1    1    1    1    1    1    |
-## NOMINAL: timeline: |111111111111111111111111111111111111111111|
+SUBJECT timeline: |1   1   1   1   1   1   1   1   1   1   |
+NOMINAL timeline: |1111111111111111111111111111111111111111|
 [0] SUBJECT: => (1) 'Line 0'
 [0] NOMINAL: => (1) 'Line 0'
 [1] NOMINAL: => (2) 'Line 1'
 [2] NOMINAL: => (3) 'Line 2'
+##COMPARE: 001: [STRING 'Line'], [SEPERATOR ' '], [STRING '0'] 001: [STRING 'Line'], [SEPERATOR ' '], [STRING '0']
 [3] NOMINAL: => (4) 'Line 3'
+[4] SUBJECT: => (2) 'Line 1'
 [4] NOMINAL: => (5) 'SWEET'
-[5] SUBJECT: => (2) 'Line 1'
-[5] NOMINAL: => (6) 'Line 5'
-[6] NOMINAL: => (7) 'Line 6'
-[7] NOMINAL: => (8) 'Line 7'
-[8] NOMINAL: => (9) 'Line 8'
-[9] NOMINAL: => (10) 'Line 9'
-[10] SUBJECT: => (3) 'Line 2'
-[10] NOMINAL: => (11) 'Line 10'
-[11] NOMINAL: => (12) 'Line 11'
-[12] NOMINAL: => (13) 'Line 12'
-[13] NOMINAL: => (14) 'Line 13'
-[14] NOMINAL: => (15) 'Line 14'
-[15] SUBJECT: => (4) 'Line 3'
-[15] NOMINAL: => (16) 'Line 15'
-[16] NOMINAL: => (17) 'Line 16'
-[17] NOMINAL: => (18) 'Line 17'
-[18] NOMINAL: => (19) 'Line 18'
-[19] NOMINAL: => (20) 'Line 19'
-[20] SUBJECT: => (5) 'SALTY'
-[20] NOMINAL: => (21) 'Line 20'
+##COMPARE: 002: [STRING 'Line'], [SEPERATOR ' '], [STRING '1'] 002: [STRING 'Line'], [SEPERATOR ' '], [STRING '1']
+[5] NOMINAL: => (6) 'SWEET 1'
+[6] NOMINAL: => (7) 'SWEET 2'
+[7] NOMINAL: => (8) 'SWEET 3'
+[8] SUBJECT: => (3) 'Line 2'
+[8] NOMINAL: => (9) 'SWEET 4'
+[9] NOMINAL: => (10) 'SWEET 5'
+##COMPARE: 003: [STRING 'Line'], [SEPERATOR ' '], [STRING '2'] 003: [STRING 'Line'], [SEPERATOR ' '], [STRING '2']
+[10] NOMINAL: => (11) 'SWEET 6'
+[11] NOMINAL: => (12) 'SWEET 7'
+[12] SUBJECT: => (4) 'Line 3'
+[12] NOMINAL: => (13) 'SWEET 8'
+[13] NOMINAL: => (14) 'SWEET 9'
+##COMPARE: 004: [STRING 'Line'], [SEPERATOR ' '], [STRING '3'] 004: [STRING 'Line'], [SEPERATOR ' '], [STRING '3']
+[14] NOMINAL: => (15) 'SWEET 10'
+[15] NOMINAL: => (16) 'SWEET 11'
+[16] SUBJECT: => (5) 'SALTY'
+[16] NOMINAL: => (17) 'SWEET 12'
+[17] NOMINAL: => (18) 'SWEET 13'
+##COMPARE: 005: [STRING 'SALTY'] 005: [STRING 'SWEET']
+[18] NOMINAL: => (19) 'SWEET 14'
 Verdict: False
-Lines Consumed - Subject: 5, Nominal: 21
-NOTE: The of NOMINAL at time 21 is ok, since we try to consume from both
-      streams at the same time, even if we wait for slower one to deliver
+Lines Consumed - Subject: 5, Nominal: 19
