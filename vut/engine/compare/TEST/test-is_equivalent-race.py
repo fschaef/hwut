@@ -20,67 +20,36 @@ import asyncio
 sys.path.insert(0, "../../../../")
 
 from vut.engine.compare.configuration import Configuration
-import vut.engine.compare.main          as main
-from vut.language_support.python.pseudo_time_trigger import Trigger, TriggerDispatcher
+import vut.engine.compare.main        as     main
+import vut.engine.compare.TEST.racing as     racing
+
 
 if "--hwut-info" in sys.argv:
     print("Async Racing: is_equivalent Early Abort;")
-    print("CHOICES: subject-slow, nominal-slow, both-jittery;")
+    print("CHOICES: subject-slow, nominal-slow, jittery;")
     sys.exit()
-
-class LineTrigger(Trigger):
-    def __init__(self, name, timeline, lines):
-        super().__init__(timeline)
-        self.name  = name
-        self.lines = list(lines)
-
-        self.prepared_line = None
-        self.lines_consumed = 0
-        self.pseudo_time_at_preparation = 0
-
-    async def fire(self, pseudo_time):
-        if self.lines:
-            self.prepared_line = self.lines.pop(0)
-        self.pseudo_time_at_preparation = pseudo_time
-
-    async def readline(self):
-        while self.prepared_line is None:
-            await asyncio.sleep(0)
-        result = self.prepared_line
-        self.lines_consumed += 1
-        print(f"[{self.pseudo_time_at_preparation}] {self.name}: => ({self.lines_consumed}) '{self.prepared_line.rstrip()}'")
-        self.prepared_line = None
-        return result
 
 async def run_test(sub_timeline_pattern, nom_timeline_pattern):
     config = Configuration()
     
     # Test Data: 100 lines, with a mismatch at line 5 (Index 4)
-    lines_n = [f"Line {i}\n" for i in range(100)]
-    lines_s = [f"Line {i}\n" for i in range(100)]
-    lines_n[4] = "SWEET\n"
-    lines_s[4] = "SALTY\n"
+    subject_time_list = [f"Line {i}\n" for i in range(100)]
+    subject_time_list[4] = "SALTY\n"
+    nominal_line_list = [f"Line {i}\n" for i in range(100)]
+    nominal_line_list[4] = "SWEET\n"
 
-    # Generate sufficient timeline string from the pattern
-    t_sub_str = (sub_timeline_pattern * 7)[:500] 
-    t_nom_str = (nom_timeline_pattern * 7)[:500]
+    subject_timeline = (sub_timeline_pattern * 7)[:500] 
+    nominal_timeline = (nom_timeline_pattern * 7)[:500]
 
-    print("## SUBJECT: timeline: |%s|" % t_sub_str)
-    print("## NOMINAL: timeline: |%s|" % t_nom_str)
+    subject,          \
+    nominal,          \
+    dispatcher_handle = racing.prepare_dispatcher(subject_timeline, subject_time_list, 
+                                                  nominal_timeline, nominal_line_list)
 
-    subject = LineTrigger("SUBJECT", t_sub_str, lines_s)
-    nominal = LineTrigger("NOMINAL", t_nom_str, lines_n)
-
-    dispatcher = TriggerDispatcher([subject, nominal])
-    clock_task = asyncio.create_task(dispatcher.run())
-    
     try:
         verdict = await main.is_equivalent(config, subject, nominal)
     finally:
-        dispatcher.stop() # prevent further sendings
-        clock_task.cancel()
-        try: await clock_task
-        except asyncio.CancelledError: pass
+        await racing.cleanup(dispatcher_handle)
 
     print(f"Verdict: {verdict}")
     

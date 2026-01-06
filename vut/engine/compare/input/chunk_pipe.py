@@ -32,14 +32,31 @@ from itertools import count
 from typeguard import typechecked
 from typing    import AsyncIterator
 
+import asyncio
+
 class ChunkPipe(PatternFinder):
     @typechecked
-    def __init__(self, configuration: Configuration):
+    def __init__(self, configuration: Configuration, line_provider: AsyncIterator):
         PatternFinder.__init__(self, configuration.pattern_finder)
         self.configuration = configuration
+        self.line_provider = line_provider
 
+    async def produce(self, drain: asyncio.Queue, fetch_gate, EOF):
+        try:
+            async for item in self.do():
+                await drain.put(item)
+                # GATE CHECK:
+                # After putting an item, we check if we should pause.
+                # We wait here if the gate is closed.
+                await fetch_gate.wait()
+            await drain.put(EOF)
+        except Exception:
+            await drain.put(EOF)
+            raise
+
+class EquivalenceCheckChunkPipe(ChunkPipe):
     @typechecked
-    async def stream_for_equivalence_check(self, line_provider: AsyncIterator) -> InputChunk:
+    async def do(self) -> InputChunk:
         chunk_type   = E_Chunk.LINE_SEQUENCE
         line_list    = []
         start_line_n = 1
@@ -47,7 +64,7 @@ class ChunkPipe(PatternFinder):
         ignored_end   = self.configuration.pattern_finder.ignored_line_end_marker
         
         for line_n in count(1):
-            line = await line_provider.readline()
+            line = await self.line_provider.readline()
             if not line:
                 break
             elif self.is_region_delimiter(line):
@@ -76,15 +93,16 @@ class ChunkPipe(PatternFinder):
         if chunk_type is E_Chunk.POTPOURRI and line_list:
             yield InputChunk(chunk_type, start_line_n, line_n, line_list, self.configuration)
 
+class AssociationChunkPipe(ChunkPipe):
     @typechecked
-    async def stream_for_association(self, line_provider: AsyncIterator) -> InputChunk:
+    async def do(self) -> InputChunk:
         """YIELDS: Chunks of input useful for association.
         """
         chunk_type   = E_Chunk.LINE_SEQUENCE
         line_list    = []
         start_line_n = 1
         for line_n in count(1):
-            line = await line_provider.readline()
+            line = await self.line_provider.readline()
             if not line:
                 break
             elif self.is_region_delimiter(line):

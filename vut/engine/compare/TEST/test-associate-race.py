@@ -20,68 +20,51 @@ import asyncio
 
 sys.path.insert(0, "../../../../")
 
-from vut.engine.compare.configuration import Configuration
+from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as main
 import vut.engine.pretty                as pretty
-from vut.language_support.python.pseudo_time_trigger import Trigger, TriggerDispatcher
-
-if "--hwut-info" in sys.argv:
-    print("Async Racing: associate Stream Flow;")
-    print("CHOICES: default, large-blocks;")
-    sys.exit()
+import vut.engine.compare.TEST.racing   as racing
+from   vut.language_support.python.pseudo_time_trigger import Trigger
+from   vut.language_support.python.deterministic_random import DeterministicStream
 
 class LineTrigger(Trigger):
-    """
-    Adapts the push-based Trigger to the pull-based readline() expected by VUT.
-    """
-    def __init__(self, name, timeline, content_str):
+    def __init__(self, name, timeline, lines):
         super().__init__(timeline)
-        self.name = name
-        self.lines = content_str.splitlines(keepends=True)
-        self.queue = asyncio.Queue()
+        self.name  = name
+        self.lines = list(lines)
+
+        self.prepared_line = None
+        self.lines_consumed = 0
+        self.pseudo_time_at_preparation = 0
 
     async def fire(self, pseudo_time):
-        """
-        ACTION: Pushes the next available line to the queue.
-        """
-        line = ""
         if self.lines:
-            line = self.lines.pop(0)
-        
-        # DOCUMENTATION: Log the exact moment and content of injection
-        print(f"    [t:{pseudo_time}] '{self.name}' -> \"{line.rstrip()}\"")
-        await self.queue.put(line)
+            self.prepared_line = self.lines.pop(0)
+        self.pseudo_time_at_preparation = pseudo_time
 
     async def readline(self):
-        """
-        ACTION: Pulls data from the queue (called by main.associate).
-        """
-        return await self.queue.get()
+        while self.prepared_line is None:
+            await asyncio.sleep(0)
+        result = self.prepared_line
+        self.lines_consumed += 1
+        print(f"[{self.pseudo_time_at_preparation}] {self.name}: => ({self.lines_consumed}) '{self.prepared_line.rstrip()}'")
+        self.prepared_line = None
+        return result
 
-async def run_association_race():
+async def test(t_sub, t_nom):
     config = Configuration()
     
     # Test Data: A mix of standard lines and potpourri regions
-    subject_content = "s-line 1\ns-line 2\n||||\ns-pot 1\ns-pot 2\n||||\ns-line 3\n"
-    nominal_content = "n-line 1\nn-line 2\n||||\nn-pot 1\nn-pot 2\n||||\nn-line 3\n"
+    subject_content = ["heidi", "heinz", "||||", "albert", "berta",  "carlos", "damian", "|||", "kasper", "friedrich"]
+    nominal_content = ["heidi", "heinz", "||||", "carlos", "damian", "albert", "berta",  "|||", "kasper", "friedrich"]
+
     
-    # TIMELINES:
-    # Subject runs every tick (Fast): "1111111..."
-    # Nominal runs every 3 ticks (Slow): "2  2  2..."
-    # This forces the engine to buffer Subject while waiting for Nominal.
-    t_sub = "1" * 30
-    t_nom = ("2  " * 10)
+    print("SUBJECT timeline: |%s|" % t_sub)
+    print("NOMINAL timeline: |%s|" % t_nom)
 
-    subject = LineTrigger("subject", t_sub, subject_content)
-    nominal = LineTrigger("nominal", t_nom, nominal_content)
-
-    dispatcher = TriggerDispatcher([subject, nominal])
-
-    print("=> Starting Asynchronous Association Race")
-    print("   (Subject is fast [every tick], Nominal is slow [every 3rd tick])")
-    
-    # Start the deterministic clock in the background
-    clock_task = asyncio.create_task(dispatcher.run())
+    subject, nominal, \
+    dispatcher_handle = racing.prepare_dispatcher(t_sub, subject_content,
+                                                  t_nom, nominal_content)
 
     try:
         pair_count = 0
@@ -91,16 +74,28 @@ async def run_association_race():
             print(f"YIELD {pair_count}: {st.name} <-> {nt.name}")
             print(pretty.do(chunk_pair))
     finally:
-        # Cleanup: Ensure the clock stops when the engine finishes or errors
-        clock_task.cancel()
-        try:
-            await clock_task
-        except asyncio.CancelledError:
-            pass
+        racing.cleanup(dispatcher_handle)
 
     print(f"Finished with {pair_count} chunks.")
 
 if __name__ == "__main__":
-    # In HWUT, arguments control the flow, but here we map choices to the same function
-    # or expand if 'large-blocks' requires different data.
-    asyncio.run(run_association_race())
+    if "--hwut-info" in sys.argv:
+        print("Async Racing: associate Stream Flow;")
+        print("CHOICES: nominal-slow, subject-slow, jitter;")
+    elif "nominal-slow" in sys.argv:
+        t_sub = "11" * 10
+        t_nom = "2 " * 10
+        asyncio.run(test(t_sub, t_nom))
+    elif "subject-slow" in sys.argv:
+        t_sub = "2 " * 10
+        t_nom = "11" * 10
+        asyncio.run(test(t_sub, t_nom))
+    elif "jitter" in sys.argv:
+        rg = DeterministicStream()
+        t_sub = "".join(rg.select("12  ") for _ in range(80))
+        t_nom = "".join(rg.select("12  ") for _ in range(80))
+        asyncio.run(test(t_sub, t_nom))
+    else:
+        assert False, "missing choice argument 1"
+
+

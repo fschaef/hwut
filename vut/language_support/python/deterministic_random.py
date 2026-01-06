@@ -11,6 +11,11 @@ class DeterministicStream:
         self.state = seed & 0x7FFFFFFF
 
     @typechecked
+    def select(self, candidates: list|tuple|str):
+        L = len(candidates)
+        return candidates[self.next_int(0, L-1)]
+
+    @typechecked
     def next_int(self, v_min: int, v_max: int) -> int:
         """Returns a random integer in [v_min, v_max]."""
         self.state = (1103515245 * self.state + 12345) & 0x7FFFFFFF

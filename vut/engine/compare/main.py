@@ -36,8 +36,9 @@ ________________________________________________________________________________
 import vut.engine.compare.engine.equivalence_check.core as     equivalence_check
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 from   vut.engine.compare.engine.association.chunk_pair import ChunkPair
-from   vut.engine.compare.input.input_chunk_zip         import pair_for_equivalence_check, \
-                                                               pair_for_association
+from   vut.engine.compare.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
+                                                               AssociationChunkPipe
+from   vut.engine.compare.input.input_chunk_zip         import pair_for_equivalence_check
 from   vut.auxiliary.async_helper                       import AsyncIterator_ensured
 
 from   vut.engine.compare.configuration                 import Configuration
@@ -65,11 +66,12 @@ async def is_equivalent(config: Configuration,
     assert hasattr(nominal_line_provider, "readline")
 
     analogy_db = AnalogyDb()
+    subject = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
+    nominal = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
 
     # subject, nominal = 'LINE' or 'POTPOURRI'
-    async for subject, nominal in pair_for_equivalence_check(config,
-                                                             AsyncIterator_ensured(subject_line_provider), 
-                                                             AsyncIterator_ensured(nominal_line_provider)):
+    async for subject, nominal in pair_for_equivalence_check(config, subject, nominal):
+
         verdict,   \
         analogy_db = equivalence_check.do(subject, nominal, analogy_db)
         # analogy db is updated as required to main 'equivalence', else not (of course)
@@ -105,10 +107,11 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
 
     analogy_db = AnalogyDb()
 
+    subject = AssociationChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
+    nominal = AssociationChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
+
     # subject, nominal = 'LineSequence', 'Potpourri' or None
-    async for subject, nominal in pair_for_association(config,
-                                                       AsyncIterator_ensured(subject_line_provider), 
-                                                       AsyncIterator_ensured(nominal_line_provider)):
+    async for subject, nominal in pair_for_equivalence_check(config, subject, nominal):
 
         yield ChunkPair.from_input_chunks(subject, nominal, analogy_db)
 
