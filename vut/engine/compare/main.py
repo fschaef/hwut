@@ -66,8 +66,8 @@ async def is_equivalent(config: Configuration,
     assert hasattr(nominal_line_provider, "readline")
 
     analogy_db = AnalogyDb()
-    subject = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
-    nominal = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
+    subject    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
+    nominal    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
 
     # subject, nominal = 'LINE' or 'POTPOURRI'
     async for subject, nominal in pair_for_equivalence_check(config, subject, nominal):

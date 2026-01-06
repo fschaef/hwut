@@ -18,7 +18,10 @@ class DeterministicStream:
     @typechecked
     def next_int(self, v_min: int, v_max: int) -> int:
         """Returns a random integer in [v_min, v_max]."""
-        self.state = (1103515245 * self.state + 12345) & 0x7FFFFFFF
+        # Park-Miller "Minimal Standard" (MINSTD) generator.
+        # Uses Mersenne prime 2^31 - 1 to avoid low-bit correlations found in power-of-2 LCGs.
+        # Multiplier 48271 is the modern standard (improved over original 16807).
+        self.state = (48271 * self.state) % 2147483647
         if v_min == v_max:
             return v_min
         return v_min + (self.state % (v_max - v_min + 1))

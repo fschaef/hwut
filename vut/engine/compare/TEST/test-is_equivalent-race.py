@@ -19,17 +19,13 @@ import asyncio
 
 sys.path.insert(0, "../../../../")
 
-from vut.engine.compare.configuration import Configuration
+from   vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main        as     main
 import vut.engine.compare.TEST.racing as     racing
+from   vut.language_support.python.deterministic_random import DeterministicStream
 
 
-if "--hwut-info" in sys.argv:
-    print("Async Racing: is_equivalent Early Abort;")
-    print("CHOICES: subject-slow, nominal-slow, jittery;")
-    sys.exit()
-
-async def run_test(sub_timeline_pattern, nom_timeline_pattern):
+async def run_test(subject_timeline, nominal_timeline):
     config = Configuration()
     
     # Test Data: 100 lines, with a mismatch at line 5 (Index 4)
@@ -37,9 +33,6 @@ async def run_test(sub_timeline_pattern, nom_timeline_pattern):
     subject_time_list[4] = "SALTY\n"
     nominal_line_list = [f"Line {i}\n" for i in range(100)]
     nominal_line_list[4] = "SWEET\n"
-
-    subject_timeline = (sub_timeline_pattern * 7)[:500] 
-    nominal_timeline = (nom_timeline_pattern * 7)[:500]
 
     subject,          \
     nominal,          \
@@ -60,18 +53,27 @@ async def run_test(sub_timeline_pattern, nom_timeline_pattern):
     print(f"Lines Consumed - Subject: {subject.lines_consumed}, Nominal: {nominal.lines_consumed}")
 
 if __name__ == "__main__":
-    if "subject-slow" in sys.argv:
+    if "--hwut-info" in sys.argv:
+        print("Async Racing: is_equivalent Early Abort;")
+        print("CHOICES: subject-slow, nominal-slow, jittery;")
+        sys.exit()
+    elif "subject-slow" in sys.argv:
         # Subject is sparse (Priority 1), Nominal is dense
-        asyncio.run(run_test("1    ", "111111"))
+        asyncio.run(run_test("1    "*10, "1111"*10))
         print("NOTE: The of NOMINAL at time 21 is ok, since we try to consume from both")
         print("      streams at the same time, even if we wait for slower one to deliver")
     elif "nominal-slow" in sys.argv:
         # Subject is dense, Nominal is sparse
-        asyncio.run(run_test("1111111", "1    "))
+        asyncio.run(run_test("11111"*10, "1    "*10))
         print("NOTE: The eat of SUBJECT at time 21 is ok, since we try to consume from both")
         print("      streams at the same time, even if we wait for slower one to deliver")
-    else: 
+    elif "jittery" in sys.argv: 
+        rg = DeterministicStream(seed=17)
+        t_sub = "".join(rg.select("12  ") for _ in range(80))
+        t_nom = "".join(rg.select("12  ") for _ in range(80))
         # both-jittery: Irregular staggered patterns
-        asyncio.run(run_test("1 1   1 ", "  1 1 1 "))
+        asyncio.run(run_test(t_sub, t_nom))
         print("NOTE: The eat SUBJECT at time 14, since we try to consume from both")
         print("      streams at the same time, even if we wait for slower one to deliver")
+    else:
+        assert False

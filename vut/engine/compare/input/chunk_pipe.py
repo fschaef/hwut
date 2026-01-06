@@ -31,8 +31,8 @@ from vut.engine.compare.configuration            import Configuration
 from itertools import count
 from typeguard import typechecked
 from typing    import AsyncIterator
-
 import asyncio
+
 
 class ChunkPipe(PatternFinder):
     @typechecked
@@ -41,17 +41,18 @@ class ChunkPipe(PatternFinder):
         self.configuration = configuration
         self.line_provider = line_provider
 
-    async def produce(self, drain: asyncio.Queue, fetch_gate, EOF):
+    def create_producer_task(self, queue, EOF, fetch_gate = None):
+        return asyncio.create_task(self._produce(queue, EOF, fetch_gate))
+
+    async def _produce(self, queue, EOF, fetch_gate: asyncio.Event | None):
         try:
             async for item in self.do():
-                await drain.put(item)
-                # GATE CHECK:
-                # After putting an item, we check if we should pause.
-                # We wait here if the gate is closed.
-                await fetch_gate.wait()
-            await drain.put(EOF)
+                await queue.put(item)
+                if fetch_gate is not None:  # Pause, if someone stops you
+                    await fetch_gate.wait()
+            await queue.put(EOF)
         except Exception:
-            await drain.put(EOF)
+            await queue.put(EOF)
             raise
 
 class EquivalenceCheckChunkPipe(ChunkPipe):

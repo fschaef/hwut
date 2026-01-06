@@ -73,6 +73,11 @@ class Trigger:
         self.timeline = timeline
         self.name     = str(id(self))
 
+    async def on_termination(self, pseudo_time: int):
+        """Executions action related to trigger.
+        """
+        raise NotImplementedError
+
     async def fire(self, pseudo_time: int):
         """Executions action related to trigger.
         """
@@ -82,18 +87,18 @@ class Trigger:
 class TriggerDispatcher:
     """Dispatcher executes Triggers according to a pre-calculated timeline.
 
-    The manager translates string-based timelines into a static _trigger_array. 
+    The manager translates string-based timelines into a static _trigger_time_db. 
     Execution is performed by stepping through the array, ensuring absolute 
     determinism regardless of system performance or I/O jitter.
     """
     def __init__(self, triggers: Iterable[Trigger]):
-        self._running_f     = True
-        self._trigger_array = self._build(triggers)
+        self._running_f       = True
+        self._triggers        = list(triggers)
+        self._trigger_time_db = self._build(self._triggers)
 
-    def _build(self, triggers: Iterable[Trigger]):
+    def _build(self, triggers: list[Trigger]):
         """Translates string timelines into prioritized, sorted tick sequences.
         """
-        triggers = list(triggers)
         end_tick = max(len(t.timeline) for t in triggers) if triggers else 0
         result   = [[] for _ in range(end_tick)]
         for trigger in triggers:
@@ -113,20 +118,22 @@ class TriggerDispatcher:
     async def run(self):
         """Sequentially executes all scheduled triggers in the timeline.
 
-        Iterates through the _trigger_array tick by tick. After each fire(), 
+        Iterates through the _trigger_time_db tick by tick. After each fire(), 
         it yields control (sleep 0) to allow other asynchronous tasks 
         (e.g., consumers of data produced by the trigger) to progress.
         """
-        for pseudo_time, tick_sequence in enumerate(self._trigger_array):
+        for pseudo_time, tick_sequence in enumerate(self._trigger_time_db):
             if not self._running_f: break
             for priority, trigger in tick_sequence:
                 if not self._running_f: break
                 await trigger.fire(pseudo_time)
                 await asyncio.sleep(0)
 
+        for t in self._triggers: t.on_termination(pseudo_time) 
+
     def __repr__(self):
         result = ["TriggerDispatcher"]
-        for pseudo_time, trigger_list in enumerate(self._trigger_array):
+        for pseudo_time, trigger_list in enumerate(self._trigger_time_db):
             for priority, t in trigger_list:
                 result.append(f"[pseudo_time] ({priority}){t.name}")
         return "\n".join(result)

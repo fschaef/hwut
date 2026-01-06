@@ -32,82 +32,56 @@ async def pair_for_equivalence_check(config: Configuration,
     """
     
     # Unbounded queues allow "reading into stack" while waiting
-    subject_queue = asyncio.Queue()
-    nominal_queue = asyncio.Queue()
-    
-    # The GATE: Controls when producers are allowed to fetch
-    fetch_gate = asyncio.Event()
-    fetch_gate.set() # Start open to get the first items
+    subject_queue = asyncio.Queue(maxsize=2)
+    nominal_queue = asyncio.Queue(maxsize=10)
 
     # Sentinel for EOF
     EOF = object()
 
-    # 3. Persistent Producer Logic
-    async def produce(provider, queue):
-        iterator = provider.__aiter__()
-        try:
-            async for item in iterator:
-                await queue.put(item)
-                # GATE CHECK:
-                # After putting an item, we check if we should pause.
-                # We wait here if the gate is closed.
-                await fetch_gate.wait()
-            await queue.put(EOF)
-        except Exception:
-            await queue.put(EOF)
-            raise
-
     # 4. Start Producers
-    task_s = asyncio.create_task(produce(subject_pipe.do(), subject_queue))
-    task_n = asyncio.create_task(produce(nominal_pipe.do(), nominal_queue))
+    ## task_s = asyncio.create_task(subject_pipe.produce(subject_queue, fetch_gate, EOF))
+    ## task_n = asyncio.create_task(nominal_pipe.produce(nominal_queue, fetch_gate, EOF))
+
+    task_s = subject_pipe.create_producer_task(subject_queue, EOF)
+    task_n = nominal_pipe.create_producer_task(nominal_queue, EOF)
+
+    def prepare_gather(last_s_item, last_n_item):
+        """RETURNS: subject and nominal getter dependent on EOF has been 
+                    reached or not
+        """
+        def _get_getter(last_item, queue):
+            if last_item is EOF: return asyncio.sleep(0, result=EOF)
+            else:                return queue.get()
+        return _get_getter(last_s_item, subject_queue), \
+               _get_getter(last_n_item, nominal_queue)
+               
+    def prepare_yield(s_item, n_item):
+        s_out = s_item if s_item is not EOF else n_item.empty_clone()
+        n_out = n_item if n_item is not EOF else s_item.empty_clone()
+        return s_out, n_out
 
     try:
+        s_item, n_item = None, None
         while True:
-            # --- FAST PATH ---
-            # If both queues have data, we don't need to wait or touch the gate.
-            if not subject_queue.empty() and not nominal_queue.empty():
-                # We have a pair!
-                # Logic: If we have a backlog, we should STOP fetching to avoid over-eating.
-                fetch_gate.clear()
-                
+            abort_f = False
+            while not subject_queue.empty() and not nominal_queue.empty(): 
+                # item is EOF <=> queue.empty() 
                 s_item = await subject_queue.get()
                 n_item = await nominal_queue.get()
-                
-                # EOF Handling
-                if s_item is EOF and n_item is EOF:
-                    break
-                
-                s_out = s_item if s_item is not EOF else n_item.empty_clone()
-                n_out = n_item if n_item is not EOF else s_item.empty_clone()
-                
-                yield s_out, n_out
-                continue
+                if s_item is EOF and n_item is EOF: abort_f=True; break
+                yield prepare_yield(s_item, n_item)
+            if abort_f: break
 
-            # --- WAITING PATH (Case 2) ---
-            # One or both are empty.
-            # ACTION: Open the gate. 
-            # This allows the empty one to fetch, AND the full one to buffer (stack up) 
-            # while we wait, exactly as requested.
-            fetch_gate.set()
+            subject_get, nominal_get = prepare_gather(s_item, n_item)
+
+            s_item, n_item = await asyncio.gather(subject_get, nominal_get)
+                
+            if s_item is EOF and n_item is EOF: break
             
-            # Wait for data. 
-            # Note: We get() sequentially. If subject_queue is empty, we wait for S.
-            # While waiting for S, N's producer sees the open gate and keeps filling nominal_queue.
-            s_item = await subject_queue.get()
-            n_item = await nominal_queue.get()
-
-            # (Repeat logic from Fast Path)
-            if s_item is EOF and n_item is EOF:
-                break
-
-            s_out = s_item if s_item is not EOF else n_item.empty_clone()
-            n_out = n_item if n_item is not EOF else s_item.empty_clone()
-
-            yield s_out, n_out
+            yield prepare_yield(s_item, n_item)
 
     finally:
         # Cleanup
-        fetch_gate.set() # Unblock tasks so they can exit/cancel
         for t in [task_s, task_n]:
             if not t.done(): t.cancel()
             try:                           await t
