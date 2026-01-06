@@ -34,14 +34,6 @@ class InputChunk(ABC):
 
     """
     def __init__(self, chunk_type: E_Chunk, start_line_n, end_line_n, iterable, config):
-        def _adapt(iterable, start_line_n, end_line_n):
-            ## yield Line.from_potpourri(start_line_n, begin_f=True)
-            yield from iterable
-            ## yield Line.from_potpourri(end_line_n, begin_f=False)
-
-        if chunk_type is E_Chunk.POTPOURRI:
-            iterable = _adapt(iterable, start_line_n, end_line_n)
-
         self.line_list     = tuple(iterable)
         self.start_line_n  = start_line_n
         self.end_line_n    = end_line_n
