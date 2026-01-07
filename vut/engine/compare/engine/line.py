@@ -10,7 +10,7 @@ ________________________________________________________________________________
 import vut.engine.compare.engine.association.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.engine.enums           import E_Verdict
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
-from   vut.engine.compare.input.line_element import LineElementString, E_ToleranceId
+from   vut.engine.compare.input.line_element     import LineElementString, E_ToleranceId
 from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 
 class Line:
@@ -18,10 +18,27 @@ class Line:
     objects. Additionally, the line number is stored along.
     """
     def __init__(self, line_n, iterable):
-        self.line_n           = line_n
-        self.sequence         = tuple(iterable)
-        self.sequence_v       = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
-        self._structural_hash = hash(bytes(x.tolerance_id for x in self.sequence))
+        self.line_n             = line_n
+        self.__raw_line         = None
+        self.__lexical_analyzer = None
+        self.__sequence         = tuple(iterable)
+        self.__sequence_v       = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
+        self._structural_hash   = hash(bytes(x.tolerance_id for x in self.sequence))
+
+    @property
+    def sequence(self):
+        return self.__sequence
+
+    @property
+    def sequence_v(self):
+        return self.__sequence_v
+
+    @staticmethod
+    def from_raw_line(line_n, line, pattern_finder):
+        result = Line(line_n, iterable=None)
+        result.__raw_line         = line
+        result.__lexical_analyzer = pattern_finder
+        return result
 
     @staticmethod
     def from_string(line_n, string):

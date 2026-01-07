@@ -24,6 +24,7 @@ from   vut.engine.compare.input.pattern_finder  import E_ToleranceId
 
 from   abc       import ABC
 from   typing    import Iterable
+from   typeguard import typechecked
 
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
@@ -34,23 +35,16 @@ class InputChunk(ABC):
         .line_pairs() --> determine best line associations for display.
 
     """
+    @typechecked
     def __init__(self, chunk_type: E_Chunk, start_line_n, end_line_n, line_list: Iterable[str], config):
-        ## self.__raw_line_list = tuple(line_list)
-        self.__line_list   = tuple(line_list)
-
         self.start_line_n  = start_line_n
         self.end_line_n    = end_line_n
         self.configuration = config
         self.__chunk_type  = chunk_type
+        self.__line_list   = tuple(line_list)
 
     @property
     def line_list(self):
-        ## if self.__line_list is None:
-        ##     pf = PatternFinder(self.configuration.pattern_finder)
-        ##     self.__line_list = [ 
-        ##        Line(line_n, pf.do(raw_line))
-        ##        for line_n, raw_line in enumerate(self.__raw_line_list, start=self.start_line_n)
-        ##     ]
         return self.__line_list
 
     def empty_clone(self):
