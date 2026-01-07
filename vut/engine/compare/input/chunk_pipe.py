@@ -40,6 +40,7 @@ class ChunkPipe(PatternFinder):
         PatternFinder.__init__(self, configuration.pattern_finder)
         self.configuration = configuration
         self.line_provider = line_provider
+        self.pf = PatternFinder(self.configuration.pattern_finder)
 
     def create_producer_task(self, queue, EOF, fetch_gate = None):
         return asyncio.create_task(self._produce(queue, EOF, fetch_gate))
@@ -84,10 +85,7 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
             elif stripped.startswith(ignored_begin) or stripped.endswith(ignored_end):
                 continue
             else:
-                processed_line = Line(line_n, PatternFinder.do(self, line))
-                ## processed_line2 = Line.from_raw_line(line_n, line, self) # PatternFinder.do(self, line))
-                ## print("#PL0", processed_line)
-                ## print("#PL2", processed_line2)
+                processed_line = Line.from_raw_line(line_n, line, self.pf) 
                 
                 if chunk_type is E_Chunk.LINE_SEQUENCE:
                     yield InputChunk(chunk_type, line_n, line_n, 
@@ -122,7 +120,7 @@ class AssociationChunkPipe(ChunkPipe):
                 else:                                   chunk_type = E_Chunk.LINE_SEQUENCE
                 start_line_n = line_n
             else:
-                line_list.append(Line(line_n, PatternFinder.do(self, line)))
+                line_list.append(Line.from_raw_line(line_n, line, self.pf))
 
         if line_list:
             yield InputChunk(chunk_type, start_line_n, line_n, line_list, self.configuration)

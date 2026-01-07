@@ -15,6 +15,7 @@ from   vut.engine.compare.engine.analogy_db      import AnalogyDb
 from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 
 from   dataclasses import dataclass
+from   typeguard   import typechecked
 
 @dataclass
 class LineRaw:
@@ -22,7 +23,13 @@ class LineRaw:
     lexer:  PatternFinder
 
     def expand(self):
-        return self.lexer.do(self.string)
+        try:
+            return self.lexer.do(self.string)
+        except Exception:
+            import sys
+            import traceback
+            traceback.print_exc()
+            sys.exit(-1)
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
@@ -31,29 +38,17 @@ class Line:
     def __init__(self, line_n, iterable):
         self.line_n             = line_n
         self.__raw              = None
-        self.__sequence         = tuple(iterable)
-        self.__sequence_v       = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
-        self._structural_hash   = hash(bytes(x.tolerance_id for x in self.sequence))
+        if iterable is None:
+            self.__sequence     = None
+            self.__sequence_v   = None
+        else:
+            self.__sequence     = tuple(iterable)
+            self.__sequence_v   = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
+            ## self._structural_hash   = hash(bytes(x.tolerance_id for x in self.sequence))
 
-    @property
-    def sequence(self):
-        if self.__sequence is None:
-            self.__sequence = self.__raw.expand()
-            self.__raw      = None # let the garbage collector deal with it
-        return self.__sequence
-
-    @property
-    def sequence_v(self):
-        if self.__sequence_v is None:
-            # 'self.sequence' instantiates lazily. see property 'sequence'
-            self.__sequence_v = [ 
-                le for le in self.sequence 
-                if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING 
-            ]
-        return self.__sequence_v
-
+    @typechecked
     @staticmethod
-    def from_raw_line(line_n, line, pattern_finder):
+    def from_raw_line(line_n, line:str , pattern_finder: PatternFinder):
         result = Line(line_n, iterable=None)
         result.__raw = LineRaw(line, pattern_finder)
         return result
@@ -73,6 +68,22 @@ class Line:
     @staticmethod
     def from_nothing():
         return Line.from_string(None, "")
+    @property
+    def sequence(self):
+        if self.__sequence is None:
+            self.__sequence = self.__raw.expand()
+            self.__raw      = None # let the garbage collector deal with it
+        return self.__sequence
+
+    @property
+    def sequence_v(self):
+        if self.__sequence_v is None:
+            # 'self.sequence' instantiates lazily. see property 'sequence'
+            self.__sequence_v = [ 
+                le for le in self.sequence 
+                if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING 
+            ]
+        return self.__sequence_v
 
     def character_n(self):
         """RETURNS: Number of characters in present in the line.
