@@ -7,11 +7,22 @@ split up into 'LineElements' objects. Such line elements may be numbers,
 strings, lexemes which match some pattern, whitespace etc.
 ________________________________________________________________________________
 """
+from   vut.engine.compare.input.line_element     import LineElementString, E_ToleranceId
+from   vut.engine.compare.input.pattern_finder   import PatternFinder
 import vut.engine.compare.engine.association.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.engine.enums           import E_Verdict
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
-from   vut.engine.compare.input.line_element     import LineElementString, E_ToleranceId
 from   vut.engine.compare.configuration          import ConfigurationPatternFinder
+
+from   dataclasses import dataclass
+
+@dataclass
+class LineRaw:
+    string: str
+    lexer:  PatternFinder
+
+    def expand(self):
+        return self.lexer.do(self.string)
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
@@ -19,25 +30,32 @@ class Line:
     """
     def __init__(self, line_n, iterable):
         self.line_n             = line_n
-        self.__raw_line         = None
-        self.__lexical_analyzer = None
+        self.__raw              = None
         self.__sequence         = tuple(iterable)
         self.__sequence_v       = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
         self._structural_hash   = hash(bytes(x.tolerance_id for x in self.sequence))
 
     @property
     def sequence(self):
+        if self.__sequence is None:
+            self.__sequence = self.__raw.expand()
+            self.__raw      = None # let the garbage collector deal with it
         return self.__sequence
 
     @property
     def sequence_v(self):
+        if self.__sequence_v is None:
+            # 'self.sequence' instantiates lazily. see property 'sequence'
+            self.__sequence_v = [ 
+                le for le in self.sequence 
+                if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING 
+            ]
         return self.__sequence_v
 
     @staticmethod
     def from_raw_line(line_n, line, pattern_finder):
         result = Line(line_n, iterable=None)
-        result.__raw_line         = line
-        result.__lexical_analyzer = pattern_finder
+        result.__raw = LineRaw(line, pattern_finder)
         return result
 
     @staticmethod
