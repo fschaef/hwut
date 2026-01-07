@@ -42,12 +42,12 @@ tolerant comparison.
 The 'PatternFinder' serves as lexical analyzer for 'chunk_pipe.py'.
 ________________________________________________________________________________
 """
-from    vut.engine.compare.configuration          import ConfigurationPatternFinder
-from    vut.engine.compare.input.line_element import E_ToleranceId, \
-                                                         TolerancePattern, \
-                                                         LineElement, \
-                                                         LineElementString, \
-                                                         LineElementVisibleNothing
+from    vut.engine.compare.configuration      import ConfigurationPatternFinder
+from    vut.engine.compare.input.line_element import E_ToleranceId,     \
+                                                     TolerancePattern,  \
+                                                     LineElement,       \
+                                                     LineElementString, \
+                                                     LineElementVisibleNothing
 import  regex as re
 from    typeguard import typechecked
 from    itertools   import count

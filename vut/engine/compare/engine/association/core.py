@@ -1,3 +1,4 @@
+from   vut.engine.compare.input.input_chunk             import InputChunk
 from   vut.engine.compare.engine.enums                  import E_Chunk
 from   vut.engine.compare.engine.association.line_pair  import LinePair
 import vut.engine.compare.engine.potpourri.association  as     potpourri_association
@@ -5,7 +6,10 @@ import vut.engine.compare.engine.potpourri.association  as     potpourri_associa
 import vut.engine.compare.engine.association.edit_operations.line_sequence as     edit_operations_line_sequence
 from   vut.engine.compare.engine.association.edit_operations.edit          import E_EditId, \
                                                                                   EditSequence
-def do(subject, nominal, analogy_db):
+from typeguard import typechecked
+
+@typechecked
+def do(subject: InputChunk, nominal: InputChunk, analogy_db):
     """RETURNS: [0] list of 'LinePair'-s
                 [1] required analogy_db
 
