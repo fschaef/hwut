@@ -79,16 +79,21 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
                 if chunk_type is E_Chunk.LINE_SEQUENCE: chunk_type = E_Chunk.POTPOURRI
                 else:                                   chunk_type = E_Chunk.LINE_SEQUENCE
                 start_line_n = line_n
-            else: 
-                stripped = line.strip()
-                if stripped and not stripped.startswith(ignored_begin) and not stripped.endswith(ignored_end):
-                    processed_line = Line(line_n, PatternFinder.do(self, line))
-                    
-                    if chunk_type is E_Chunk.LINE_SEQUENCE:
-                        yield InputChunk(chunk_type, line_n, line_n, 
-                                         [processed_line], self.configuration)
-                    else:
-                        line_list.append(processed_line)
+            elif not (stripped := line.strip()):
+                continue
+            elif stripped.startswith(ignored_begin) or stripped.endswith(ignored_end):
+                continue
+            else:
+                processed_line = Line(line_n, PatternFinder.do(self, line))
+                ## processed_line2 = Line.from_raw_line(line_n, line, self) # PatternFinder.do(self, line))
+                ## print("#PL0", processed_line)
+                ## print("#PL2", processed_line2)
+                
+                if chunk_type is E_Chunk.LINE_SEQUENCE:
+                    yield InputChunk(chunk_type, line_n, line_n, 
+                                     [processed_line], self.configuration)
+                else:
+                    line_list.append(processed_line)
 
         # Handle trailing potpourri block if stream ends without closing delimiter
         if chunk_type is E_Chunk.POTPOURRI and line_list:
