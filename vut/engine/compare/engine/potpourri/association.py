@@ -16,7 +16,7 @@ import vut.engine.compare.engine.potpourri.equivalence_check             as     
 from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb
 
-def FUTURE_DO(subject, nominal, analogy_db, max_comparison_count):
+def do(subject, nominal, analogy_db, max_comparison_count):
     # non-analogy lines can never match with analogy lines, and vice versa.
     # => treat them separately
 
@@ -54,10 +54,10 @@ def _core(subject_line_list, nominal_line_list, analogy_db, max_comparison_count
     function measures the amount of diffrerence between two lines.
     """
     # 1. STRICT PHASE: High-performance matching
-    verdict, couples, analogy_db = equivalence_check.do(subject_line_list,
-                                                        nominal_line_list,
-                                                        analogy_db,
-                                                        abort_early_f=abort_f)
+    verdict, couples, analogy_db = equivalence_check._core(subject_line_list,
+                                                           nominal_line_list,
+                                                           analogy_db,
+                                                           abort_early_f=abort_f)
 
     # Thaw the database to allow 'developing it along the way' in the fuzzy phase
     if isinstance(analogy_db, FrozenAnalogyDb):

@@ -72,8 +72,8 @@ def _do_line_sequence(subject, nominal, analogy_db):
 
 def _do_potpourri(subject, nominal, analogy_db):
     result,    \
-    analogy_db = potpourri_association.FUTURE_DO(subject, nominal, analogy_db,
-                                                 subject.configuration.potpourri_max_comparison_count)
+    analogy_db = potpourri_association.do(subject, nominal, analogy_db,
+                                          subject.configuration.potpourri_max_comparison_count)
 
     def key(x): 
         """Sorting the line pairs by subject line number, if present, 

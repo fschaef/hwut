@@ -21,26 +21,28 @@ def FUTURE_DO(subject, nominal, analogy_db, abort_early_f):
     # => treat them separately
 
     # pair non-analogy lines
-    verdict,       \
+    first_verdict, \
     first_pair_db, \
-    _              = do(subject.non_analogy_line_list, 
-                        nominal.non_analogy_line_list, 
-                        {}, abort_early_f)
+    _              = _core(subject.non_analogy_line_list, 
+                           nominal.non_analogy_line_list, 
+                           {}, abort_early_f)
 
-    if verdict is False and abort_early_f:
+    if first_verdict is False and abort_early_f:
         return False, first_pair_db, analogy_db
 
     # pair analogy lines
-    verdict,        \
+    second_verdict, \
     second_pair_db, \
-    analogy_db      = do(subject.analogy_line_list, 
-                         nominal.analogy_line_list, 
-                         analogy_db, abort_early_f)
+    analogy_db      = _core(subject.analogy_line_list, 
+                            nominal.analogy_line_list, 
+                            analogy_db, abort_early_f)
 
-    return verdict, first_pair_db | second_pair_db, analogy_db
+    return first_verdict and second_verdict, \
+           first_pair_db | second_pair_db,   \
+           analogy_db
 
 @typechecked
-def do(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
+def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
     """RETURNS: [0] verdict
                 [1] map: subject line number --> nominal line number
                 [2] analogy_db
