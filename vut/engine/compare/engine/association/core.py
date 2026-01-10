@@ -71,27 +71,14 @@ def _do_line_sequence(subject, nominal, analogy_db):
     return result, editions.analogy_db
 
 def _do_potpourri(subject, nominal, analogy_db):
-    subject_potpourri = subject.line_list
-    nominal_potpourri = nominal.line_list
-
-    core_result,   \
-    new_analogy_db = potpourri_association.do(subject_potpourri,
-                                              nominal_potpourri,
-                                              analogy_db,
-                                              subject.configuration.potpourri_max_comparison_count)
-
-    ## result = [
-    ##     LinePair.potpourri_border(subject.line_list[0], nominal.line_list[0], 
-    ##                               E_PotpourriBorder.BEGIN)
-    ## ]
+    result,    \
+    analogy_db = potpourri_association.FUTURE_DO(subject, nominal, analogy_db,
+                                                 subject.configuration.potpourri_max_comparison_count)
 
     def key(x): 
+        """Sorting the line pairs by subject line number, if present, 
+        else use nominal line number.
+        """
         return (1, x.nominal_line_n) if x.subject_line_n == -1 else (0, x.subject_line_n)
-    result = sorted(core_result, key= key)
 
-    ## result.append(
-    ##     LinePair.potpourri_border(subject.line_list[-1], nominal.line_list[-1],
-    ##                               E_PotpourriBorder.END)
-    ## )
-
-    return result, new_analogy_db
+    return sorted(result, key= key), analogy_db

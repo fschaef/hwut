@@ -17,17 +17,13 @@ import vut.engine.compare.engine.potpourri.matching as m
 from   typeguard import typechecked
 
 def FUTURE_DO(subject, nominal, analogy_db, abort_early_f):
-    def _assert_progress(state, previous_pair_n):
-        assert previous_pair_n <= (pair_n := len(state.pair_db))
-        return pair_n
-
     # non-analogy lines can never match with analogy lines, and vice versa.
     # => treat them separately
 
     # pair non-analogy lines
     verdict,       \
     first_pair_db, \
-    analogy_db     = do(subject.non_analogy_line_list, 
+    _              = do(subject.non_analogy_line_list, 
                         nominal.non_analogy_line_list, 
                         {}, abort_early_f)
 
@@ -35,13 +31,13 @@ def FUTURE_DO(subject, nominal, analogy_db, abort_early_f):
         return False, first_pair_db, analogy_db
 
     # pair analogy lines
-    verdict,   \
-    pair_db,   \
-    analogy_db = do(subject.analogy_line_list, 
-                    nominal.analogy_line_list, 
-                    analogy_db, abort_early_f)
+    verdict,        \
+    second_pair_db, \
+    analogy_db      = do(subject.analogy_line_list, 
+                         nominal.analogy_line_list, 
+                         analogy_db, abort_early_f)
 
-    return verdict, pair_db | first_pair_db, analogy_db
+    return verdict, first_pair_db | second_pair_db, analogy_db
 
 @typechecked
 def do(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):

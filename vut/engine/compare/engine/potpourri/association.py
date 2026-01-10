@@ -16,8 +16,29 @@ import vut.engine.compare.engine.potpourri.equivalence_check             as     
 from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb
 
+def FUTURE_DO(subject, nominal, analogy_db, max_comparison_count):
+    # non-analogy lines can never match with analogy lines, and vice versa.
+    # => treat them separately
 
-def do(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):
+    # pair non-analogy lines
+    first_result, \
+    _             = _core(subject.non_analogy_line_list, 
+                          nominal.non_analogy_line_list, 
+                          {}, 
+                          max_comparison_count, 
+                          abort_f=False)
+
+    # pair analogy lines
+    second_result, \
+    analogy_db     = _core(subject.analogy_line_list, 
+                           nominal.analogy_line_list, 
+                           analogy_db, 
+                           max_comparison_count, 
+                           abort_f=False)
+
+    return first_result + second_result, analogy_db
+
+def _core(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):
     """RETURNS: sorted list of LinePair objects.
         
     Sort order: sorted by line number of subject. 

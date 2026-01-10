@@ -60,10 +60,10 @@ def test_pure(subject_line_list, nominal_line_list, max_comparison_count):
 
     analogy_db = AnalogyDb()
     line_associations, \
-    analogy_db         = association.do(get_Potpourri(pf, subject_line_list, config).line_list,
-                                        get_Potpourri(pf, nominal_line_list, config).line_list,
-                                        analogy_db,
-                                        max_comparison_count)
+    analogy_db         = association.FUTURE_DO(get_Potpourri(pf, subject_line_list, config),
+                                               get_Potpourri(pf, nominal_line_list, config),
+                                               analogy_db,
+                                               max_comparison_count)
 
     return line_associations, analogy_db
 
