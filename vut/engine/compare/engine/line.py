@@ -23,13 +23,24 @@ class LineRaw:
     lexer:  PatternFinder
 
     def expand(self):
-        try:
-            return self.lexer.do(self.string)
-        except Exception:
-            import sys
-            import traceback
-            traceback.print_exc()
-            sys.exit(-1)
+        return self.lexer.do(self.string)
+
+    __analogy_possible_f:  bool = None
+    __analogy_strings:     tuple[str] = None
+
+    def may_have_analogy(self):
+        """RETURNS: True, if there may be analogies
+                    False, if there is no way there are analogies.
+
+        The 'False' case is the safe assumption! We only apply a quick test 
+        checking for the opening analogy bracket.
+        """
+        if self.__analogy_possible_f is not None: return self.__analogy_possible_f
+        self.__analogy_possible_f = self.lexer.may_have_analogy(self.string)
+
+    def analogy_strings(self):
+        if self.__analogy_strings is not None: return self.__analogy_strings
+        self.__analogy_strings = self.lexer.extract_analogy_strings(self.string)
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
@@ -37,7 +48,7 @@ class Line:
     """
     def __init__(self, line_n, iterable):
         self.line_n             = line_n
-        self.__raw              = None
+        self._raw              = None
         if iterable is None:
             self.__sequence     = None
             self.__sequence_v   = None
@@ -50,7 +61,7 @@ class Line:
     @staticmethod
     def from_raw_line(line_n, line:str , pattern_finder: PatternFinder):
         result = Line(line_n, iterable=None)
-        result.__raw = LineRaw(line, pattern_finder)
+        result._raw = LineRaw(line, pattern_finder)
         return result
 
     @staticmethod
@@ -71,8 +82,8 @@ class Line:
     @property
     def sequence(self):
         if self.__sequence is None:
-            self.__sequence = self.__raw.expand()
-            self.__raw      = None # let the garbage collector deal with it
+            self.__sequence = self._raw.expand()
+            # self._raw      = None # let the garbage collector deal with it
         return self.__sequence
 
     @property
@@ -109,9 +120,32 @@ class Line:
 
         return (length_d + error_n) / (2 * l_max)
 
+    def is_equivalent(self, nominal, analogy_db):
+        """RETURNS: [0] True, if both sequences are equivalent. False, else.
+                    [1] adapted analogy_db required for equivalence to hold.
+
+        IMPORTANT: 'analogy_db' evolves here, it absorbs the new analogies.
+
+        The equivalence check plainly aborts, if the analogy check fails. Thus,
+        for the line-by-line stepping this function can be called. It adapts the
+        global analogy db. If it fails, the equivalence check anyways aborts,
+        and the analogy_db is of no use anymore.
+        """
+        verdict, analogy_list = self.__compare_core(nominal)
+        if not verdict:
+            return False, analogy_db
+        elif not analogy_db.is_all_consistent(analogy_list):
+            return False, analogy_db
+        else:
+            analogy_db.update(analogy_list)
+            return True, analogy_db
+
     def compare(self, nominal, analogy_db):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
+
+        IMPORTANT: 'analogy_db' does not evolve here, 
+                   a new one is created with updated content.
 
         In case of failure, the old 'analogy_db' is returned. That is, two lines
         which are not equivalent do not impose new analogies.
@@ -130,6 +164,21 @@ class Line:
             new_analogy_db.update(analogy_db)
             analogy_db = new_analogy_db
         return True, analogy_db
+
+    def compare_raw(self, nominal):
+        """RETURNS: [0] True, if subject and nominal line textually EQUAL
+                        False, they are not textually EQUAL but may be EQUIVALENT
+                    [1] in case of 'True' the list of required analogies.
+
+        In case of [0] == True, the analogies still need to hold.
+        """
+        if self._raw and nominal._raw and self._raw.string == nominal._raw.string:
+            if self._raw.may_have_analogy():
+                # If two lines are textually equal, then all the analogies must be trivial
+                return True, [ (a, a) for a in self._raw.analogy_strings()]
+            else:
+                return True, []
+        return False, None
 
     def __compare_core(self, nominal):
         """RETURNS: [0] verdict: True or False

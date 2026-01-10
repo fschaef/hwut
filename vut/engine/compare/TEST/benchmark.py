@@ -99,6 +99,9 @@ def generate_streams(n_lines):
             nominal_lines.append("The process is quick. The henn is glad.")
             i += 1
             
+        elif mode == 'normal':
+            subject_lines.append("A normal line 4711 that does not deviate from 0.815")
+            nominal_lines.append("A normal line 4711 that does not deviate from 0.815")
         else:
             # --- Analogies (Consistent) ---
             # Select index 0, 1, or 2
@@ -145,11 +148,12 @@ async def run_benchmark(mode):
             result = await main.is_equivalent(config, s_stream, n_stream)
         except TypeError:
             print("ERROR: async handling failed.")
+            sys.exit(-1)
             
         if result:
             print("Verdict: EQUIVALENT (Success)")
         else:
-            print(f"Verdict: {result.verdict} (Fail)")
+            print(f"Verdict: {result} (Fail)")
             print("Result details:", result)
             sys.exit(1)
 

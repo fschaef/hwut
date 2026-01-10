@@ -1,0 +1,53 @@
+Jiffies, Events, and Circularity Resolution
+===========================================
+
+This engine distinguishes strictly between *observation* and *effect* in order
+to achieve deterministic behavior, clear semantics, and robust circularity
+detection.
+
+A **jiffy** is a logical sequencing concept, not a measurable unit of time.
+All jiffies share the same TIME value. A jiffy exists only to separate
+cause from effect. What changes from one jiffy to the next is solely the
+membership of the NOW set.
+
+An EVENT occurs at a given TIME and is visible in the NOW set of the current
+jiffy. As soon as the engine advances to the next jiffy, that event is no longer
+NOW, although it remains fully available in history (OCCURRENCE_DB) with the
+same timestamp. No rule, expression, or action can observe the existence of a
+jiffy itself; only the presence or absence of events in NOW is observable.
+
+META-EVENTS are semantic definitions derived from other events. They are
+evaluated instantaneously and belong to the same NOW as the events that imply
+them. META-EVENTS do not cause effects, do not mutate state, and do not introduce
+causality. They only add meaning.
+
+TSCOPE activation and de-activation are evaluated in the same jiffy as the
+triggering events. TSCOPEs are guards: they decide whether rules are armed or
+disarmed, but they do not cause state changes. If activation and de-activation
+conditions are satisfied simultaneously, de-activation takes precedence.
+
+Rules are purely observational. They are evaluated while their TSCOPE is active,
+observe NOW, history, and the current user state, and may report violations.
+Rules never modify state and never cause new events.
+
+ACTIONS are the only mechanism that can produce effects. Every action executes
+in its own jiffy. Actions may modify user state (G) and may indirectly influence
+future rule evaluations, but never the current NOW. Actions are only permitted
+in explicit @entry and @exit sections of TSCOPEs. There are no inline actions in
+rules.
+
+If multiple TSCOPEs schedule actions in response to the same event, their action
+blocks are executed in declaration order, each in a separate jiffy. This ensures
+deterministic execution and a well-defined causal chain.
+
+Circularity is resolved by construction. Since META-EVENTS, TSCOPE decisions,
+and rule evaluations are instantaneous and side-effect free, circular behavior
+can only arise from action-induced state changes. The engine detects infinite
+loops by observing repeated internal states (user state + active TSCOPE set)
+without intervening external events. Such cycles are reported as errors.
+
+In summary: META-EVENTS define meaning, TSCOPEs define relevance, rules judge,
+and actions act — and only actions are delayed. Jiffies exist solely to separate
+observation from effect, making the system deterministic, analyzable, and safe
+from hidden circularity.
+

@@ -23,6 +23,20 @@ def do(subject: InputChunk, nominal: InputChunk, analogy_db: AnalogyDb) -> tuple
     if   subject.type() is not nominal.type():    return False, analogy_db
     elif subject.__class__ is InputChunkTerminal: return True, analogy_db  # here: both are 'InputChunkTerminal'
 
+    # NOTE: The 'quick path' functions are only quick, if they appear before
+    #       '.sequence' properties are referenced. The referencing of these 
+    #       properties triggers a (lazy) lexical analysis of the line!
+    elif subject.type() == E_Chunk.LINE_SEQUENCE:
+        verdict, analogy_db = _do_line_sequence_quick_path(subject, nominal, analogy_db)
+        if verdict is not None: 
+            return verdict, analogy_db
+       
+        # verdict is False => not equal, but possibly equivanent ...
+    elif subject.type() == E_Chunk.POTPOURRI:
+        verdict, new_analogy_db = _do_potpourri_quick_path(subject, nominal, analogy_db)
+        if verdict is True: return True, new_analogy_db
+        # verdict is False => not equal, but possibly equivanent ...
+
     # filter empty and VISIBLE_NOTHING lines.
     def _condition(line):
         if not line:                                               return False
@@ -52,11 +66,35 @@ def _do_line_sequence(subject_line_list: tuple[Line,...],
                 [1] AnalogyDb required for the equivalents of [0] to hold.
     """
     for subject_line, nominal_line in zip(subject_line_list, nominal_line_list):
-        verdict, analogy_db = subject_line.compare(nominal_line, analogy_db)
+        verdict, analogy_db = subject_line.is_equivalent(nominal_line, analogy_db)
         if not verdict:
             return False, analogy_db
     else:
         return True, analogy_db
+
+def _do_line_sequence_quick_path(subject, nominal, analogy_db):
+    """RETURNS: [0] True, subject and nominal a definitely equal => equivalent
+                    False, subject and nominal are definitely not equivalent
+                    None, undecided
+                [1] equivalent => the required updated analogy_db,
+                    else       => some analogy_db
+    """
+    if len(subject.line_list) != len(nominal.line_list):
+        return False, analogy_db
+    # In 'equivalence check mode' subject and nominal proceed line by line
+    assert len(subject.line_list) == 1 and len(nominal.line_list) == 1
+
+    verdict, analogy_list = subject.line_list[0].compare_raw(nominal.line_list[0])
+
+    if verdict:
+        # if lines are textually equal, the analogies must hold
+        # if not => definitely not equivalent in the global frame
+        for analogy in analogy_list:
+            if not analogy_db.add_if_consistent(analogy):
+                return False, analogy_db
+        return True, analogy_db
+    else:
+        return None, analogy_db 
 
 @typechecked
 def _do_potpourri(subject_line_list: tuple[Line,...], 
@@ -75,3 +113,57 @@ def _do_potpourri(subject_line_list: tuple[Line,...],
 
     if verdict: return True, new_analogy_db
     else:       return False, analogy_db
+
+def _do_potpourri_quick_path(subject, nominal, analogy_db):
+    """RETURNS: [0] True, subject and nominal a definitely equal => equivalent
+                    False, subject and nominal are definitely not equivalent
+                    None, undecided
+                [1] equivalent => the required updated analogy_db,
+                    else       => some analogy_db
+
+    1. Partition lines Lines with analogies and Lines without. 
+    2. counts do not match                                    => False
+    3. Non-analogy lines do not match literally (via sorting) => None, they can still be equivalent
+    4. Analogy lines do not match literally (via sorting)     => None, they can still be equivalent
+    5. Analogies are inconsistent                             => None, possibly lines may be sorted differently
+    => True, lines are literally equal and analogies are consistent
+    """
+    # Buckets for Subject
+    def _paritition(line_list, analogy_raw_f=False):
+        """RETURNS: [0] list of lines subject to analogies
+                    [1] list of lines not subject to analogies
+        """
+        lines_w_anal_possible = []
+        lines_wo_anal         = [] # Keep the Raw object to extract analogies later
+        for line in line_list:
+            item = line._raw if analogy_raw_f else line._raw.string
+            if line._raw.may_have_analogy(): lines_w_anal_possible.append(item)
+            else:                            lines_wo_anal.append(line._raw.string)
+        return lines_w_anal_possible, lines_wo_anal
+
+    def compare_raw_line_lists(lines_a, lines_b):
+        lines_a.sort()
+        lines_b.sort()
+        return lines_a == lines_b
+
+    def check_analogy_consistency(subject_w_anal_possible_raw, analogy_db):
+        # Literal match of analogy lines => analogies must be self-mapping.
+        return all(analogy_db.add_if_consistent((a, a))
+                   for raw in subject_w_anal_possible_raw
+                   for a in raw.analogy_strings())
+
+    subject_w_anal_possible_raw, subject_wo_anal = _paritition(subject.line_list, analogy_raw_f=True)
+    nominal_w_anal_possible, nominal_wo_anal = _paritition(nominal.line_list)
+
+    if len(subject_wo_anal) != len(nominal_wo_anal):
+        return False, analogy_db # EQUIVALENCE impossible!
+    elif not compare_raw_line_lists(subject_wo_anal, nominal_wo_anal):
+        return None, analogy_db  # 'soft interpretation' may yield EQUIVALENCE
+
+    subject_w_anal_possible = [ raw.string for raw in subject_w_anal_possible_raw ]
+    if not compare_raw_line_lists(subject_w_anal_possible, nominal_w_anal_possible):
+        return None, analogy_db  # 'soft interpretation' may yield EQUIVALENCE
+    elif not check_analogy_consistency(subject_w_anal_possible_raw, analogy_db):
+        return None, analogy_db  # 'soft interpretation' may different association
+    else:
+        return True, analogy_db

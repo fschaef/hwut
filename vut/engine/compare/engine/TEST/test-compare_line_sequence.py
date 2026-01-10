@@ -47,12 +47,32 @@ if "judge" in sys.argv:
 
     def test(subject_list, nominal_list):
         print("--------------------------------")
+        # Create full sequences PURELY for the print function (to maintain visual output)
+        subject_full = get_LineSequence(pf, subject_list, config)
+        nominal_full = get_LineSequence(pf, nominal_list, config)
+        print_match_sequences_lists(subject_full.line_list, nominal_full.line_list)
 
-        subject = get_LineSequence(pf, subject_list, config)
-        nominal = get_LineSequence(pf, nominal_list, config)
-        print_match_sequences_lists(subject.line_list, nominal.line_list)
+        analogy_db = AnalogyDb()
+        overall_verdict = True
 
-        print("=> %s, %s" % equivalence_check.do(subject, nominal, AnalogyDb()))
+        if len(subject_list) != len(nominal_list):
+            overall_verdict = False
+        else:
+            for s_str, n_str in zip(subject_list, nominal_list):
+                # Create chunks of length 1
+                s_chunk = get_LineSequence(pf, [s_str], config)
+                n_chunk = get_LineSequence(pf, [n_str], config)
+
+                # Pass the *current* analogy_db. 
+                # It accumulates constraints from previous lines (e.g. A=1).
+                step_verdict, analogy_db = equivalence_check.do(s_chunk, n_chunk, analogy_db)
+
+                if not step_verdict:
+                    overall_verdict = False
+                    # In equivalence mode, one mismatch fails the whole sequence
+                    break 
+
+        print("=> %s, %s" % (overall_verdict, analogy_db))
 
     test(["a", "b"],     ["b", "a"])
     test(["a"],          ["b", "a"])

@@ -65,6 +65,18 @@ class PatternFinder:
         self._group_map = {}
         re_parts = []
 
+        self._analogy_detector_re  = None
+        self._analogy_extractor_re = None
+        if config.analogy_f:
+            b = re.escape(config.analogy_begin_marker)
+            e = re.escape(config.analogy_end_marker)
+            
+            # Quickly check if a line MIGHT contain an analogy 
+            self._analogy_detector_re = re.compile(b)
+            # Extractor: Capture content BETWEEN markers
+            # Pattern: marker_begin + (captured_content) + marker_end
+            self._analogy_extractor_re = re.compile(f"{b}(.*?){e}")            
+
         def _register(tol_id, re_str):
             if not re_str: return
             group_name = f"G{len(self._group_map)}"
@@ -176,4 +188,23 @@ class PatternFinder:
         """
         line = line.strip()
         return line.startswith(self.potpourri_begin_end_marker) and len(set(line)) == 1
+
+    def may_have_analogy(self, line):
+        """RETURNS: True, if the line MAY contains an analogy pattern.
+                    False, if not.
+
+        'True' does not say that it HAS, but it may. 'False' says there 
+        cannot be any analogies in the pattern.
+        """
+        if self._analogy_detector_re is None: return False
+        # .search() is faster than .finditer() or full analysis
+        return self._analogy_detector_re.search(line) is not None
+
+    def extract_analogy_strings(self, line):
+        """RETURNS: List of strings found inside analogy markers.
+        Example: "A ((quick)) brown ((fox))" -> ['quick', 'fox']
+        """
+        if self._analogy_extractor_re is None: return []
+        # .findall() returns the contents of the capturing group (.*?)
+        return self._analogy_extractor_re.findall(line)
 

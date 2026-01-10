@@ -106,6 +106,8 @@ class AnalogyDb(dict):
         """
         if analogy_db is None:
             return True
+        elif type(analogy_db) is list:
+            return all(self.is_consistent(item) for item in analogy_db)
         else:
             return all(self.is_consistent(item) for item in analogy_db.items())
 

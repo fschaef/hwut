@@ -1,0 +1,256 @@
+
+OVERVIEW:
+=========
+
+There is a **STREAM** and a **RULE SPACE**. The STREAM consists of events that
+arrive sequentially. The RULE SPACE consists of rule sets which can be active
+or inactive. The only way the STREAM influences the RULE SPACE is through
+events. Whenever an EVENT occurs, the following steps happen:
+
+  (1) IMPLICATIONS
+
+      -- Determine *meta events* implied by the incoming EVENT. This results in
+         an **EVENT-SEQUENCE**, i.e. a deterministic ordered list starting with
+         the incoming EVENT itself.
+
+      -- Execute implication actions (Lua), which may update variables in the
+         RULE SPACE.
+
+  (2) ACTIVATION / DE-ACTIVATION
+
+      -- Determine which rule sets become active / inactive as a consequence of
+         the current EVENT-SEQUENCE and the current RULE SPACE state.
+
+  (3) RULE CHECK
+
+      -- Evaluate all rules of all active rule sets. Report failures and
+         optionally abort.
+
+A final event **END** is injected automatically when the test ends.
+
+
+STREAM:
+=======
+
+A stream is the output of a program/app under test. Each event line has the format:
+
+  ['@' TIME_SEC] ':' EVENT_NAME [ '(' ATTRIBUTE_SETTING_LIST ')' ]
+
+`TIME_SEC` is optional; if omitted, the engine uses the current system time as
+the time of occurrence. `EVENT_NAME` is the event name. The optional attribute
+list uses annotated arguments:
+
+  NAME '=' VALUE  (',' NAME '=' VALUE )*
+
+Example:
+
+  @0.815: INIT(resources="ABSENT", usb=false, screen="Monitor", power_cpu=true)
+
+In the RULE SPACE, the event appears as an object:
+
+  INIT.time      = 0.815
+      .resources = "ABSENT"
+      .usb       = false
+      .screen    = "Monitor"
+      .power_cpu = true
+
+When an event occurs, it is added to two structures:
+
+  -- **NOW**: the set of events that occurred in the current step
+     (the incoming event plus its implied meta events).
+
+  -- **OCCURRENCE_DB**: the history database of event occurrences.
+
+As soon as the next event occurs, **NOW** is cleared. **OCCURRENCE_DB** persists.
+
+OCCURRENCE_DB is configurable. By default it keeps a bounded history per event:
+the first 100 and the last 100 occurrences (configurable).
+
+Conceptually:
+
+  EVENT_NAME => time-sorted list of OCCURRENCE
+
+where:
+
+  OCCURRENCE.instance = particular instance of EVENT with its attributes
+            .time     = time when the EVENT instance occurred
+
+
+RULE SPACE:
+===========
+
+The RULE SPACE observes the STREAM via NOW and OCCURRENCE_DB. It consists of:
+
+  -- a header section (meta events + Lua helpers), and
+  -- a rules section (rule sets with activation/de-activation and checks).
+
+
+The Rules Section:
+------------------
+
+A basic global monotonicity constraint is assumed:
+
+  time(current_event) - time(previous_event) >= 0
+
+Trivial requirements (e.g. sequences) can be expressed as a sequence statement:
+
+  SEQUENCE: EVENT ',' SEQUENCE
+            SEQUENCE 'or' EVENT
+            '(' SEQUENCE ')'
+            '[' SEQUENCE ']' '*'
+
+Example:
+
+  sequence A, B, C, (C or D), [E or F or G]*
+
+Meaning: `A` must occur before `B`, `B` before `C`, then either `C` or `D`
+follows, and finally any number of repetitions of `E|F|G` may follow.
+
+More sophisticated rules are specified as **rule sets** consisting of:
+
+  -- a TSCOPE (temporal scope) defining activation and de-activation, and
+  -- a RULE SET (checks) evaluated while active.
+
+TSCOPE syntax:
+
+  TSCOPE: ['on' CONDITION] ['until' CONDITION] ['if' EVCOND] ':'
+
+`:` alone means the rule set is always active. A CONDITION can also be `true`
+or `false`.
+
+Activation:
+
+  on CONDITION:
+    CONDITION true  => activate
+    CONDITION false => no change
+
+De-activation:
+
+  until CONDITION:
+    CONDITION true  => deactivate
+    CONDITION false => no change
+
+If activation and de-activation trigger in the same step, **de-activation wins**.
+
+
+Conditions and Expressions
+--------------------------
+
+CONDITION is a boolean expression built from event conditions and Lua conditions:
+
+  CONDITION:
+      TERM
+      CONDITION 'and' CONDITION
+      CONDITION 'or'  CONDITION
+
+  TERM:
+      EVATOM
+      EVER
+      NEVER
+      LUACOND
+      '(' CONDITION ')'
+
+  LUACOND: '{' LUA-CODE '}'
+
+`EVATOM` refers to an event occurrence and may include patterns:
+
+  EVENT         := EVENT_NAME [ '(' PATTERN_LIST ')' ]
+  PATTERN_LIST  := PATTERN (',' PATTERN)*
+  PATTERN       := BIND | CMP
+  BIND          := "." IDENT "=>" IDENT
+  CMP           := "." IDENT "==" VALUE
+
+Binding and matching semantics:
+
+- A raw event atom such as `REGISTER(.id => ID)` is evaluated in the **NOW**
+  context: if `REGISTER` does not occur in the current step, the atom yields
+  `false`; otherwise it yields `true` and immediately binds `ID` to the current
+  attribute value `REGISTER.id`.
+
+- Bindings (`=>`) are only permitted in raw NOW event atoms and are forbidden
+  inside `ever(...)` or `never(...)` (no binding “from the past”).
+
+- After bindings are established, historical queries (below) may reference the
+  bound names in comparisons such as `.id == ID`.
+
+Historical operators:
+
+  EVER  := 'ever'  '(' CONDITION [ 'since' ['first'] CONDITION ] ')'
+  NEVER := 'never' '(' CONDITION [ 'since' ['first'] CONDITION ] ')'
+
+Inside `ever(...)` and `never(...)`, event atoms do **not** refer to NOW. They
+refer to OCCURRENCE_DB (“ever seen”). Concretely:
+
+- `ever(A)` means: there exists at least one occurrence of `A` in OCCURRENCE_DB.
+- `ever(A(.id==5) and B(.name=="otto"))` means: `A` occurred at least once with
+  `.id==5` and `B` occurred at least once with `.name=="otto"`.
+  IMPORTANT: inside `ever(...)` / `never(...)`, conjunctions/disjunctions are
+  interpreted as combinations of independent existential queries over
+  OCCURRENCE_DB. In particular, `ever(A and B)` does NOT mean "A and B occurred
+  in the same step"; it means "A has occurred at least once and B has occurred
+  at least once" (possibly at different times).
+
+- `never(X)` means: `ever(X)` is false.
+
+`since` semantics:
+
+- `ever(X since Y)` restricts `X` to occurrences with time strictly greater than
+  the reference time of `Y`.
+- `since first Y` uses the first occurrence time of `Y` as reference.
+- `since Y` (without `first`) uses the last occurrence time of `Y` as reference.
+- If the reference `Y` has never occurred, the `since`-expression evaluates to
+  `false` (no valid reference time).
+
+`if` sugar (optional):
+
+  EVCOND 'if' EVCOND
+
+`if` is syntactic sugar for `and`, binds weaker than `and/or`, and is only
+allowed as the final suffix of a condition (to reduce parentheses). Example:
+
+  on TERMINAL_OPEN or (GRAPHIC_CARD and XSERVER) if USER_LOGIN:
+
+is equivalent to:
+
+  on (TERMINAL_OPEN or (GRAPHIC_CARD and XSERVER)) and USER_LOGIN:
+
+
+Example (binding + history constraint):
+--------------------------------------
+
+  on REGISTER(.id => ID) and ever(REGISTER(.id == ID)):
+     ...
+
+Activates when a REGISTER event occurs now and the same ID has occurred before.
+Internally, the `.id == ID` part is evaluated as a pure OCCURRENCE_DB lookup.
+
+
+
+The Lua Rule and Action Space
+=============================
+
+The Lua RULE SPACE provides helper functions (conceptual API):
+
+  time()                     -- time of the current step (current EVENT)
+  seen(EVENT)                -- true iff EVENT has occurred at least once
+  time(EVENT, n=1)           -- time of the nth occurrence (1-based)
+  time(EVENT, n=-1)          -- time of the last occurrence
+  count(EVENT)               -- number of occurrences
+  count(EVENT, since=A)      -- occurrences of EVENT since reference A
+  count(EVENT, before=A)     -- occurrences of EVENT before reference A
+  count(EVENT, since=A, before=B)
+
+Retention note:
+
+- OCCURRENCE_DB may keep only a bounded history per event (default: first 100
+  and last 100 occurrences). Functions such as `time(EVENT, n=...)` are only
+  defined if the requested occurrence index `n` is within the retained window.
+  If the occurrence is not retained, the function must either return `nil` or
+  raise a clear error (implementation-defined, but deterministic).
+
+An EVENT argument may refer to all occurrences of an event name, or to a
+filtered instance pattern, e.g.:
+
+  EVENT_NAME(id="something")
+
+which considers only those occurrences where `.id == "something"`.
