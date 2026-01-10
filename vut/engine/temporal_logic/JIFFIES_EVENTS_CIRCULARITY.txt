@@ -1,53 +1,72 @@
-Jiffies, Events, and Circularity Resolution
-===========================================
+EVENTS, META-EVENTS, HISTORY, AND TSCOPE — PRECISE SEMANTICS
+==========================================================
 
-This engine distinguishes strictly between *observation* and *effect* in order
-to achieve deterministic behavior, clear semantics, and robust circularity
-detection.
+An EVENT is a *predicate over NOW* and lives for exactly one **jiffy**.
+A jiffy is a time span smaller than any quantifiable resolution. EVENTS have
+no duration and do not persist. They are true only in the jiffy in which they
+occur.
 
-A **jiffy** is a logical sequencing concept, not a measurable unit of time.
-All jiffies share the same TIME value. A jiffy exists only to separate
-cause from effect. What changes from one jiffy to the next is solely the
-membership of the NOW set.
+A **causal (external) event** is an EVENT injected by the test stream.
+A **META-EVENT** is not a new temporal object; it is a *derived perspective on
+NOW*. META-EVENTS are predicates evaluated on the same NOW and therefore share
+the same lifetime (one jiffy). They never create additional temporal layers.
 
-An EVENT occurs at a given TIME and is visible in the NOW set of the current
-jiffy. As soon as the engine advances to the next jiffy, that event is no longer
-NOW, although it remains fully available in history (OCCURRENCE_DB) with the
-same timestamp. No rule, expression, or action can observe the existence of a
-jiffy itself; only the presence or absence of events in NOW is observable.
+It is crucial to distinguish EVENTS from *state facts*:
 
-META-EVENTS are semantic definitions derived from other events. They are
-evaluated instantaneously and belong to the same NOW as the events that imply
-them. META-EVENTS do not cause effects, do not mutate state, and do not introduce
-causality. They only add meaning.
+- `HEARTS == 0` is **not an event**.
+  It is a persistent state fact derived from history.
+- The EVENT is the jiffy in which `HEARTS` *becomes* `0`.
+  Only that transition can be an EVENT in NOW.
 
-TSCOPE activation and de-activation are evaluated in the same jiffy as the
-triggering events. TSCOPEs are guards: they decide whether rules are armed or
-disarmed, but they do not cause state changes. If activation and de-activation
-conditions are satisfied simultaneously, de-activation takes precedence.
+HISTORY is not composed of events. HISTORY is *knowledge*.
+Expressions such as `ever(X)`, `never(X)`, or `since(...)` query the occurrence
+database. They do not “happen” and are never true *by themselves* in NOW.
 
-Rules are purely observational. They are evaluated while their TSCOPE is active,
-observe NOW, history, and the current user state, and may report violations.
-Rules never modify state and never cause new events.
+However, a HISTORY predicate may participate in forming an EVENT predicate.
+A valid EVENT predicate is therefore:
 
-ACTIONS are the only mechanism that can produce effects. Every action executes
-in its own jiffy. Actions may modify user state (G) and may indirectly influence
-future rule evaluations, but never the current NOW. Actions are only permitted
-in explicit @entry and @exit sections of TSCOPEs. There are no inline actions in
-rules.
+  EVENT ∧ HISTORY
 
-If multiple TSCOPEs schedule actions in response to the same event, their action
-blocks are executed in declaration order, each in a separate jiffy. This ensures
-deterministic execution and a well-defined causal chain.
+For example:
 
-Circularity is resolved by construction. Since META-EVENTS, TSCOPE decisions,
-and rule evaluations are instantaneous and side-effect free, circular behavior
-can only arise from action-induced state changes. The engine detects infinite
-loops by observing repeated internal states (user state + active TSCOPE set)
-without intervening external events. Such cycles are reported as errors.
+  WATER_DROP_ON_GROUND and ever(SEED_ON_GROUND)
 
-In summary: META-EVENTS define meaning, TSCOPEs define relevance, rules judge,
-and actions act — and only actions are delayed. Jiffies exist solely to separate
-observation from effect, making the system deterministic, analyzable, and safe
-from hidden circularity.
+This expression is an EVENT predicate:
+- `WATER_DROP_ON_GROUND` anchors the predicate in NOW (one jiffy).
+- `ever(SEED_ON_GROUND)` restricts it using HISTORY.
+The conjunction as a whole is true for exactly one jiffy and thus qualifies
+as an EVENT. HISTORY predicates are not allowed to stand alone; they must be
+conjoined with an EVENT.
 
+With this model, a temporal scope
+
+  on EVENT until EVENT:
+
+is implemented purely as *recognition*. At each jiffy, the TSCOPE evaluates its
+EVENT predicates against NOW (with optional HISTORY queries). No events are
+created by TSCOPEs; they only recognize whether conditions are present.
+
+CIRCULARITY RESOLUTION
+---------------------
+
+Circularity is resolved by a strict temporal rule:
+
+- EVENTS (causal or meta) exist only in the current jiffy.
+- ACTIONS triggered by TSCOPE entry or exit are executed in a *later jiffy*.
+- Therefore, actions cannot create EVENTS that are visible in the same NOW
+  that triggered them.
+
+Circularity detection is reduced to state repetition:
+If the internal engine state (user state `G`, active TSCOPE set, pending action
+structure) is reached twice *without an intervening external event*, the system
+has entered an infinite internal loop. This condition is deterministic and can
+be detected reliably.
+
+This model cleanly separates:
+- observation (NOW),
+- memory (HISTORY),
+- recognition (TSCOPE),
+- judgment (RULES),
+- and effect (ACTIONS),
+
+yielding a deterministic, analyzable, and non-ambiguous temporal engine.
