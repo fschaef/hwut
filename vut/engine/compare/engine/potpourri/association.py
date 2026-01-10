@@ -26,7 +26,8 @@ def do(subject, nominal, analogy_db, max_comparison_count):
                           nominal.non_analogy_line_list, 
                           {}, 
                           max_comparison_count, 
-                          abort_f=False)
+                          abort_f=False, 
+                          analogies_involved_f = False)
 
     # pair analogy lines
     second_result, \
@@ -34,11 +35,12 @@ def do(subject, nominal, analogy_db, max_comparison_count):
                            nominal.analogy_line_list, 
                            analogy_db, 
                            max_comparison_count, 
-                           abort_f=False)
+                           abort_f=False, 
+                           analogies_involved_f = True)
 
     return first_result + second_result, analogy_db
 
-def _core(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False):
+def _core(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False, analogies_involved_f = True):
     """RETURNS: sorted list of LinePair objects.
         
     Sort order: sorted by line number of subject. 
@@ -57,7 +59,8 @@ def _core(subject_line_list, nominal_line_list, analogy_db, max_comparison_count
     verdict, couples, analogy_db = equivalence_check._core(subject_line_list,
                                                            nominal_line_list,
                                                            analogy_db,
-                                                           abort_early_f=abort_f)
+                                                           abort_early_f=abort_f, 
+                                                           analogies_involved_f = analogies_involved_f)
 
     # Thaw the database to allow 'developing it along the way' in the fuzzy phase
     if isinstance(analogy_db, FrozenAnalogyDb):

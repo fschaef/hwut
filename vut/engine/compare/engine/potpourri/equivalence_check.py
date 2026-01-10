@@ -25,7 +25,8 @@ def do(subject, nominal, analogy_db, abort_early_f):
     first_pair_db, \
     _              = _core(subject.non_analogy_line_list, 
                            nominal.non_analogy_line_list, 
-                           {}, abort_early_f)
+                           {}, abort_early_f,
+                           analogies_involved_f = False)
 
     if first_verdict is False and abort_early_f:
         return False, first_pair_db, analogy_db
@@ -35,14 +36,15 @@ def do(subject, nominal, analogy_db, abort_early_f):
     second_pair_db, \
     analogy_db      = _core(subject.analogy_line_list, 
                             nominal.analogy_line_list, 
-                            analogy_db, abort_early_f)
+                            analogy_db, abort_early_f,
+                            analogies_involved_f = True)
 
     return first_verdict and second_verdict, \
            first_pair_db | second_pair_db,   \
            analogy_db
 
 @typechecked
-def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
+def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False, analogies_involved_f=True):
     """RETURNS: [0] verdict
                 [1] map: subject line number --> nominal line number
                 [2] analogy_db
@@ -74,11 +76,17 @@ def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False)
 
     previous_pair_n = _assert_progress(state, previous_pair_n)
 
-    if not m.complete_pairing_is_possible(state): 
+    if state.required_pair_n == len(state.pair_db):
+        return True, state.pair_db, state.analogy_constraint_db
+
+    elif not m.complete_pairing_is_possible(state): 
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
     
-    if (state := m.pairing(state, abort_early_f)).aborted_f: 
+    if analogies_involved_f: state = m.pairing_analogy_lines(state)
+    else:                    state = m.pairing_non_analogy_lines(state)
+
+    if state.aborted_f:
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
 

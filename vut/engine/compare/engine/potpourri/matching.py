@@ -100,6 +100,29 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
                   required_pair_n       = state.required_pair_n,
                   aborted_f             = not ok_f)
 
+@typechecked 
+def pairing_analogy_lines(state: Result) -> Result:
+    db = state.potential_pair_db.clone_with_FrozenAnalogyDb()
+    return solver_csp_mrv.do(db, 
+                             state.analogy_constraint_db, 
+                             state.pair_db, 
+                             state.required_pair_n)
+
+@typechecked 
+def pairing_non_analogy_lines(state: Result) -> Result:
+    db = state.potential_pair_db
+    if not db: return state 
+    
+    # unconstrained_db: subject_i -> set of nominal_i
+    # easy definition of the problem
+    unconstrained_db = db.extract_unconstrained()
+
+    new_pair_db      = solver_max_bpm.do(unconstrained_db)
+    state.pair_db   |= new_pair_db
+    state.aborted_f &= len(new_pair_db) == len(unconstrained_db)
+ 
+    return state
+
 @typechecked
 def pairing(state: Result, abort_early_f: bool) -> Result:
     """RETURNS: Result
@@ -131,6 +154,7 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
 
     if state.aborted_f or not db: return state
 
+    # HERE: 'db' = potential_pair_db with non-analogies extracted
     db = db.clone_with_FrozenAnalogyDb()
     return solver_csp_mrv.do(db, state.analogy_constraint_db, 
                              state.pair_db, 
