@@ -37,25 +37,13 @@ def do(subject: InputChunk, nominal: InputChunk, analogy_db: AnalogyDb) -> tuple
         if verdict is True: return True, new_analogy_db
         # verdict is False => not equal, but possibly equivanent ...
 
-    # filter empty and VISIBLE_NOTHING lines.
-    def _condition(line):
-        if not line:                                               return False
-        elif all(x.tolerance_id == VISIBLE_NOTHING for x in line): return False
-        else:                                                      return True
-
-    ## FOR EQUIVALENCE CHECK, THERE IS NO 'VISIBILE NOTHING' INVOLVED
-    filtered_subject_line_list = tuple(line for line in subject.line_list if _condition(line))
-    filtered_nominal_line_list = tuple(line for line in nominal.line_list if _condition(line))
-
-    if len(filtered_nominal_line_list) != len(filtered_subject_line_list): 
-        # filtered list are not of same size => impossible match
-        return False, analogy_db
-
-    if   subject.type() is E_Chunk.LINE_SEQUENCE: _do = _do_line_sequence
-    elif subject.type() is E_Chunk.POTPOURRI:     _do = _do_potpourri
-    else:                                         assert False
-
-    return _do(filtered_subject_line_list, filtered_nominal_line_list, analogy_db)
+    if   subject.type() is E_Chunk.LINE_SEQUENCE: 
+        return _do_line_sequence(subject.line_list, nominal.line_list,
+                                 analogy_db)
+    elif subject.type() is E_Chunk.POTPOURRI:     
+        return _do_potpourri(subject, nominal, analogy_db)
+    else:                                         
+        assert False
 
 @typechecked
 def _do_line_sequence(subject_line_list: tuple[Line,...], 
@@ -97,19 +85,14 @@ def _do_line_sequence_quick_path(subject, nominal, analogy_db):
         return None, analogy_db 
 
 @typechecked
-def _do_potpourri(subject_line_list: tuple[Line,...], 
-                  nominal_line_list: tuple[Line,...], 
-                  analogy_db:        AnalogyDb) -> tuple[bool, AnalogyDb]:
+def _do_potpourri(subject:     InputChunk,
+                  nominal:     InputChunk,
+                  analogy_db:  AnalogyDb) -> tuple[bool, AnalogyDb]:
     """RETURNS: [0] True, if both potpourris are equivalent. False, else.
                 [1] analogy_db required for equivalence to hold.
     """
-    subject_potpourri = subject_line_list # exclude [0] and [-1]:
-    nominal_potpourri = nominal_line_list # first and last line carry Potpourri markers.
-
-    verdict, _, new_analogy_db = potpourri_equivalence_check.do(subject_potpourri,
-                                                                nominal_potpourri,
-                                                                analogy_db,
-                                                                abort_early_f=True)
+    verdict, _, new_analogy_db = potpourri_equivalence_check.FUTURE_DO(subject, nominal, analogy_db,
+                                                                       abort_early_f=True)
 
     if verdict: return True, new_analogy_db
     else:       return False, analogy_db

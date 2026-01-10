@@ -16,6 +16,9 @@ ________________________________________________________________________________
 import vut.engine.compare.engine.potpourri.matching as m
 from   typeguard import typechecked
 
+def FUTURE_DO(subject, nominal, analogy_db, abort_early_f):
+    return do(subject.line_list, nominal.line_list, analogy_db, abort_early_f)
+
 @typechecked
 def do(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
     """RETURNS: [0] verdict
