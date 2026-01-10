@@ -53,7 +53,7 @@ class E_TemporalLogicMode(Enum):
 class Engine:
     mode:               E_TemporalLogicMode
 
-    state_space:        StateSpace
+    universe:        Universe
 
     rule_set_manager:   RuleSetManager
 
@@ -63,7 +63,7 @@ class Engine:
                    mode:               E_TemporalLogicMode, 
                    header_source_file: str):
         self.mode = mode
-        self.state_space.initialize(self.boot_strap_file_name, mode)
+        self.universe.initialize(self.boot_strap_file_name, mode)
 
         # Lua-header with convenience functions, enum definitions etc.
         self.parse_test_specific_lua_header(header_source_file)
@@ -88,7 +88,7 @@ class Engine:
         activated_rule_sets,  \
         deactivated_rule_sets = self.rule_set_manager.apply(now, self.history, time_sec)
 
-        verdict = self.state_space.judge(active_rule_sets)
+        verdict = self.universe.judge(active_rule_sets)
         if verdict is False and self.mode is E_TemporalLogicMode.COMPLIANCE:
             return None
 
@@ -125,11 +125,11 @@ class Engine:
                 if self.mode == E_TemporalLogicMode.COMPLIANCE: break
 
             for action in sorted_action_list:
-                work_list.append(self.state_space.new_now_by_action(action))
+                work_list.append(self.universe.new_now_by_action(action))
 
         return verdict
 
-class LuaSpace:
+class LuaObjectSpace:
     lua_executer: Any
 
     def do(self, action):
@@ -142,9 +142,9 @@ class LuaSpace:
 
         # before: state of objects subject to change by action, before execution
         # after:  state of objects subject to change by action, after execution
-        before           = self.hidden_object_space.snapshot(relevant)
+        before           = self.object_space.snapshot(relevant)
         triggered_events = self.lua_executer.do(action)
-        after            = self.hidden_object_space.snapshot(relevant)
+        after            = self.object_space.snapshot(relevant)
 
         state_changes    = self.determine_state_changes(before, after)
 
@@ -152,12 +152,27 @@ class LuaSpace:
 
 @dataclass
 class EventSpace:
-    history:   History
+    history:        History
+    implication_db: Any
+
+    def imply(self, event_list: list[Event]):
+        """RETURNS: event_list + list of implied events
+
+        Finds implied (meta-events) and add them to the current set 
+        of events of 'Now'.
+        """
+        return event_list + [
+            for event, condition in implication_db
+            if self._check(condition) 
+        ]
+
+    def _check(self, condition):
+        ... unclear ...
 
 @dataclass
-class StateSpace:
-    event_space:         EventSpace
-    hidden_object_space: LuaSpace
+class Universe:
+    event_space:  EventSpace
+    object_space: LuaObjectSpace
 
     def initialize(self, bootstrap_file):
         self.initialize_lua()
@@ -178,7 +193,7 @@ class StateSpace:
         Executes action, collects the events it triggered and determines what
         events are triggered by the state changes it performed.
         """
-        events, state_changes = self.hidden_object_space.do(action)
+        events, state_changes = self.object_space.do(action)
 
         return self.event_space.imply(events, time, state_changes)
 

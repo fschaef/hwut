@@ -28,6 +28,9 @@ class LineRaw:
     __analogy_possible_f:  bool = None
     __analogy_strings:     tuple[str] = None
 
+    def has_analogy(self):
+        return self.lexer.has_analogy(self.string)
+
     def may_have_analogy(self):
         """RETURNS: True, if there may be analogies
                     False, if there is no way there are analogies.
@@ -48,7 +51,8 @@ class Line:
     """
     def __init__(self, line_n, iterable):
         self.line_n             = line_n
-        self._raw              = None
+        self._raw               = None
+        self.__analogy_f        = None
         if iterable is None:
             self.__sequence     = None
             self.__sequence_v   = None
@@ -79,6 +83,13 @@ class Line:
     @staticmethod
     def from_nothing():
         return Line.from_string(None, "")
+
+
+    def has_analogy(self):
+        if self.__analogy_f is None:
+            self.__analogy_f = self._raw.has_analogy()
+        return self.__analogy_f
+
     @property
     def sequence(self):
         if self.__sequence is None:

@@ -79,3 +79,24 @@ class InputChunkEmpty(InputChunk):
     def _is_equivalent(self, other, analogy_db):           assert False
     def _associate_lines(self, nominal, analogy_db): return [], AnalogyDb()
     def __repr__(self):                              return "InputChunkEmpty"
+
+class InputChunkPotpourri(InputChunk):
+    def __init__(self, chunk_type: E_Chunk, start_line_n, end_line_n, line_list: Iterable[str], config):
+        super().__init__(chunk_type, start_line_n, end_line_n, line_list, config)
+
+        # partition line list: lines with and without analogies
+        self.analogy_line_list = []
+        self.non_analogy_line_list = []
+        for line in line_list:
+            if line.has_analogy(): self.analogy_line_list.append(line)
+            else:                  self.non_analogy_line_list.append(line)
+
+def InputChunk_factory(chunk_type: E_Chunk, start_line_n, end_line_n, line_list: Iterable[str], config):
+    match chunk_type:
+        case E_Chunk.POTPOURRI:
+            result = InputChunkPotpourri(chunk_type, start_line_n, end_line_n, line_list, config)
+        case _:
+            result = InputChunk(chunk_type, start_line_n, end_line_n, line_list, config)
+
+    return result
+

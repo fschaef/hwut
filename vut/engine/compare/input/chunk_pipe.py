@@ -24,7 +24,8 @@ _______________________________________________________________________________
 """ 
 from vut.engine.compare.engine.enums             import E_Chunk 
 from vut.engine.compare.engine.line              import Line 
-from vut.engine.compare.input.input_chunk        import InputChunk
+from vut.engine.compare.input.input_chunk        import InputChunk, \
+                                                        InputChunk_factory
 from vut.engine.compare.input.pattern_finder     import PatternFinder
 from vut.engine.compare.configuration            import Configuration
 
@@ -72,8 +73,8 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
             elif self.is_region_delimiter(line):
                 if chunk_type is E_Chunk.POTPOURRI and line_list:
                     # Flush buffered Potpourri 
-                    yield InputChunk(chunk_type, start_line_n, line_n, 
-                                     line_list, self.configuration)
+                    yield InputChunk_factory(chunk_type, start_line_n, line_n, 
+                                            line_list, self.configuration)
                 
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
@@ -88,14 +89,15 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
                 processed_line = Line.from_raw_line(line_n, line, self.pf) 
                 
                 if chunk_type is E_Chunk.LINE_SEQUENCE:
-                    yield InputChunk(chunk_type, line_n, line_n, 
-                                     [processed_line], self.configuration)
+                    yield InputChunk_factory(chunk_type, line_n, line_n, 
+                                            [processed_line], self.configuration)
                 else:
                     line_list.append(processed_line)
 
         # Handle trailing potpourri block if stream ends without closing delimiter
         if chunk_type is E_Chunk.POTPOURRI and line_list:
-            yield InputChunk(chunk_type, start_line_n, line_n, line_list, self.configuration)
+            yield InputChunk_factory(chunk_type, start_line_n, line_n, 
+                                    line_list, self.configuration)
 
 class AssociationChunkPipe(ChunkPipe):
     @typechecked
@@ -111,9 +113,9 @@ class AssociationChunkPipe(ChunkPipe):
                 break
             elif self.is_region_delimiter(line):
                 if line_list or chunk_type is not E_Chunk.LINE_SEQUENCE:
-                    yield InputChunk(chunk_type, start_line_n, line_n, 
-                                     line_list, 
-                                     self.configuration)
+                    yield InputChunk_factory(chunk_type, start_line_n, line_n, 
+                                            line_list, 
+                                            self.configuration)
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
                 if chunk_type is E_Chunk.LINE_SEQUENCE: chunk_type = E_Chunk.POTPOURRI
@@ -123,6 +125,6 @@ class AssociationChunkPipe(ChunkPipe):
                 line_list.append(Line.from_raw_line(line_n, line, self.pf))
 
         if line_list:
-            yield InputChunk(chunk_type, start_line_n, line_n, line_list, self.configuration)
+            yield InputChunk_factory(chunk_type, start_line_n, line_n, line_list, self.configuration)
 
 
