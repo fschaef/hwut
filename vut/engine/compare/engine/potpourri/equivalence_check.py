@@ -25,19 +25,23 @@ def FUTURE_DO(subject, nominal, analogy_db, abort_early_f):
     # => treat them separately
 
     # pair non-analogy lines
-    verdict,   \
-    pair_db,   \
-    analogy_db = do(subject.non_analogy_line_list, 
-                    nominal.non_analogy_line_list, 
-                    {}, abort_early_f)
+    verdict,       \
+    first_pair_db, \
+    analogy_db     = do(subject.non_analogy_line_list, 
+                        nominal.non_analogy_line_list, 
+                        {}, abort_early_f)
 
-    if not verdict and abort_early_f:
-        return False, pair_db, analogy_db
+    if verdict is False and abort_early_f:
+        return False, first_pair_db, analogy_db
 
     # pair analogy lines
-    return do(subject.analogy_line_list, 
-              nominal.analogy_line_list, 
-              {}, abort_early_f)
+    verdict,   \
+    pair_db,   \
+    analogy_db = do(subject.analogy_line_list, 
+                    nominal.analogy_line_list, 
+                    analogy_db, abort_early_f)
+
+    return verdict, pair_db | first_pair_db, analogy_db
 
 @typechecked
 def do(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False):
