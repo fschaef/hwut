@@ -10,20 +10,41 @@ class Attribute:
         pass
 
 @dataclass
-class Now(dict[str,list[Event]]):
-    def has(self, event_spec):
+@dataclass
+class Now:
+    """The jiffy where an event actually is existent.
+    """
+    events: list[Event]
+
+    def has(self, spec: EventSpec) -> bool:
         """RETURNS: True, If any event living in now fits the given specification
                     False, else.
         """
-        return any(attribute.is_equivalent(event.get(attribute.name, None))
-                   for event in self.get(event_spec.name, [])
-                   for attribute in event_spec.attributes)
+        return any(spec.matches(ev) for ev in self.events)
 
 @dataclass
 class Event:
     name:       str
     attributes: dict[str, Any]
     
+@dataclass(frozen=True)
+class AttributeConstraint:
+    name: str
+    expected: Any
+
+    def matches(self, value: Any) -> bool:
+        # can later be tolerant, fuzzy, etc.
+        return value == self.expected
+
+@dataclass(frozen=True)
+class EventSpec:
+    name:        str
+    constraints: tuple[AttributeConstraint, ...] = ()
+
+    def matches(self, event: Event) -> bool:
+        if event.name != self.name: return False
+        return all(c.matches(event.attributes.get(c.name, None)))
+
 @dataclass
 class TScope:
     on_event:    Event
@@ -150,10 +171,18 @@ class LuaObjectSpace:
 
         return triggered_events, state_changes
 
+@dataclass(frozen=True)
+class ImplicationRule:
+    condition: EventSpec        # may reference HISTORY internally
+    produces:  Event
+
 @dataclass
 class EventSpace:
-    history:        History
-    implication_db: Any
+    history:           History
+    implication_rules: Any
+
+    def __init__(self, implication_rules: list[ImplicationRule]):
+        self.implication_rules = implication_rules
 
     def imply(self, event_list: list[Event]):
         """RETURNS: event_list + list of implied events
@@ -161,13 +190,27 @@ class EventSpace:
         Finds implied (meta-events) and add them to the current set 
         of events of 'Now'.
         """
-        return event_list + [
-            for event, condition in implication_db
-            if self._check(condition) 
-        ]
+    def imply(self, initial_events: list[Event]) -> Now:
+        events = list(initial_events)
+        seen_signatures = set()
 
-    def _check(self, condition):
-        ... unclear ...
+        while True:
+            signature = frozenset((e.name, frozenset(e.attributes.items()))
+                                  for e in events)
+            if signature in seen_signatures:
+                raise RuntimeError("Circular meta-event implication detected")
+
+            seen_signatures.add(signature)
+
+            added = False
+            for rule in self.implication_rules:
+                if   not rule.condition_matches(events, self.history): continue
+                elif any(rule.produces == e for e in events):          continue
+                events.append(rule.produces)
+                added = True
+
+            if not added:
+                return Now(events)
 
 @dataclass
 class Universe:
