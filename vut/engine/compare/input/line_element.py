@@ -340,3 +340,31 @@ class LineElementEquivalencePattern(LineElement):
         content_str     = self._string
         return "%s %s '%s'" % (tolerance_str, pattern_ids_str, content_str)
 
+def structural_hash(line_element_list: list[LineElement]) -> int:
+    """RETURNS: hash representing the structural 'skeleton' of a line.
+    
+    Two lines with the same structural hash are CANDIDATES for equivalence.
+    Two lines with different structural hashes are DEFINITELY NOT equivalent.
+    
+    Logic:
+      - Fixed elements (String): Hash includes Type + Content.
+      - Variable elements (Separator, Number, Analogy, Patterns): Hash includes ONLY Type.
+    """
+    if not line_element_list:
+        return 0
+        
+    current_hash = 0
+    
+    for element in line_element_list:
+        # 1. Start with the Type ID (Skeleton)
+        # We rotate/mix bits to ensure order matters (tuple-like hashing)
+        # 0x9e3779b9 is a standard mixing constant (phi)
+        current_hash ^= hash(element.tolerance_id) + 0x9e3779b9 + (current_hash << 6) + (current_hash >> 2)
+
+        # 2. Add Content ONLY if it is rigid (Strings / Separators)
+        if element.tolerance_id is E_ToleranceId.STRING:
+            # Mix in the string content
+            content_hash = hash(element._string)
+            current_hash ^= content_hash + 0x9e3779b9 + (current_hash << 6) + (current_hash >> 2)
+
+    return current_hash
