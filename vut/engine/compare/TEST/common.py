@@ -16,28 +16,28 @@ from   vut.engine.compare.input.line_element import LineElementString, \
                                                         LineElementEquivalencePattern
 from   vut.engine.compare.engine.enums           import E_Chunk
 from   vut.engine.compare.engine.line            import Line
-from   vut.engine.compare.input.input_chunk      import InputChunk
+from   vut.engine.compare.input.input_chunk      import InputChunk_factory
 
 from   itertools import zip_longest
 
 def get_Potpourri(pattern_finder, line_text_list, configuration):
     start_line_n = -1
     end_line_n   = len(line_text_list)
-    result = InputChunk(E_Chunk.POTPOURRI, 
-                        start_line_n, end_line_n,
-                        [Line.from_raw_line(line_n, line_text, pattern_finder)
-                         for line_n, line_text in enumerate(line_text_list)],
-                        configuration)
+    result = InputChunk_factory(E_Chunk.POTPOURRI, 
+                                start_line_n, end_line_n,
+                                [Line.from_raw_line(line_n, line_text, pattern_finder)
+                                 for line_n, line_text in enumerate(line_text_list)],
+                                configuration)
     ## print("#POT", result)
     return result
 
 def get_LineSequence(pattern_finder, line_text_list, configuration):
     start_line_n = -1
     end_line_n   = len(line_text_list)
-    return InputChunk(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n,
-                      [Line.from_raw_line(line_n, line_text, pattern_finder)
-                       for line_n, line_text in enumerate(line_text_list)],
-                      configuration)
+    return InputChunk_factory(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n,
+                              [Line.from_raw_line(line_n, line_text, pattern_finder)
+                               for line_n, line_text in enumerate(line_text_list)],
+                              configuration)
 
 
 def frame_with_potpourri_borders(line_list):

@@ -128,42 +128,41 @@ def _do_potpourri_quick_path(subject, nominal, analogy_db):
     5. Analogies are inconsistent                             => None, possibly lines may be sorted differently
     => True, lines are literally equal and analogies are consistent
     """
-    # Buckets for Subject
-    def _paritition(line_list, analogy_raw_f=False):
-        """RETURNS: [0] list of lines subject to analogies
-                    [1] list of lines not subject to analogies
-        """
-        lines_w_anal_possible = []
-        lines_wo_anal         = [] # Keep the Raw object to extract analogies later
-        for line in line_list:
-            item = line._raw if analogy_raw_f else line._raw.string
-            if line._raw.may_have_analogy(): lines_w_anal_possible.append(item)
-            else:                            lines_wo_anal.append(line._raw.string)
-        return lines_w_anal_possible, lines_wo_anal
-
-    def compare_raw_line_lists(lines_a, lines_b):
-        lines_a.sort()
-        lines_b.sort()
-        return lines_a == lines_b
-
-    def check_analogy_consistency(subject_w_anal_possible_raw, analogy_db):
+    def check_analogy_consistency(line_list, analogy_db):
         # Literal match of analogy lines => analogies must be self-mapping.
-        return all(analogy_db.add_if_consistent((a, a))
-                   for raw in subject_w_anal_possible_raw
-                   for a in raw.analogy_strings())
+        return analogy_db.is_all_consistent(
+                   (a, a)
+                   for line in line_list
+                   for a in line._raw.analogy_strings())
 
-    subject_w_anal_possible_raw, subject_wo_anal = _paritition(subject.line_list, analogy_raw_f=True)
-    nominal_w_anal_possible, nominal_wo_anal = _paritition(nominal.line_list)
-
-    if len(subject_wo_anal) != len(nominal_wo_anal):
+    if len(subject.analogy_line_list) != len(nominal.analogy_line_list):
         return False, analogy_db # EQUIVALENCE impossible!
-    elif not compare_raw_line_lists(subject_wo_anal, nominal_wo_anal):
-        return None, analogy_db  # 'soft interpretation' may yield EQUIVALENCE
 
-    subject_w_anal_possible = [ raw.string for raw in subject_w_anal_possible_raw ]
-    if not compare_raw_line_lists(subject_w_anal_possible, nominal_w_anal_possible):
-        return None, analogy_db  # 'soft interpretation' may yield EQUIVALENCE
-    elif not check_analogy_consistency(subject_w_anal_possible_raw, analogy_db):
+    # literal equivalence of non-analogy lines
+    s = { line._raw.string for line in subject.non_analogy_line_list }
+    n = { line._raw.string for line in nominal.non_analogy_line_list }
+    if s != n:
+        if len(s) != len(n): return False, analogy_db # EQUIVALENCE impossible!
+        else:                return None, analogy_db  # 'soft interpretation' may yield EQUIVALENCE
+
+    # literal equivalence of analogy lines
+    s = { line._raw.string for line in subject.analogy_line_list }
+    n = { line._raw.string for line in nominal.analogy_line_list }
+    if s != n:
+        if len(s) != len(n): return False, analogy_db # EQUIVALENCE impossible!
+        else:                return None, analogy_db  # 'soft interpretation' may yield EQUIVALENCE
+
+    # (1) non-analogy lines are literally equal
+    # (2) analogy lines are literally equal
+    # => if analogies are consistent with global analogy_db 
+    # => EQUIVALENCE!
+    analogy_list = [
+        (a, a) 
+        for line in subject.analogy_line_list # one line list == the other
+        for a in line._raw.analogy_strings()
+    ]
+    if not analogy_db.is_all_consistent(analogy_list):
         return None, analogy_db  # 'soft interpretation' may different association
     else:
+        analogy_db.update(analogy_list)
         return True, analogy_db

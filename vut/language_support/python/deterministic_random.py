@@ -1,5 +1,5 @@
 import math
-from   typeguard import typechecked
+# from   typeguard import typechecked -- too costly in most applications
 
 class DeterministicStream:
     """
@@ -10,12 +10,12 @@ class DeterministicStream:
         # Using parameters from glibc/POSIX
         self.state = seed & 0x7FFFFFFF
 
-    @typechecked
+    # @typechecked -- too costly
     def select(self, candidates: list|tuple|str):
         L = len(candidates)
         return candidates[self.next_int(0, L-1)]
 
-    @typechecked
+    # @typechecked -- too costly
     def next_int(self, v_min: int, v_max: int) -> int:
         """Returns a random integer in [v_min, v_max]."""
         # Park-Miller "Minimal Standard" (MINSTD) generator.
@@ -63,7 +63,7 @@ class DeterministicStream:
             result.append(indices[i])
         return result
 
-    @typechecked
+    # @typechecked -- to costly
     def sample(self, population: list, n: int):
         assert len(population) >= n
         return [ 
