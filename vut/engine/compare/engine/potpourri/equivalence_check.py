@@ -16,7 +16,7 @@ ________________________________________________________________________________
 import vut.engine.compare.engine.potpourri.matching as m
 from   typeguard import typechecked
 
-def FUTURE_DO(subject, nominal, analogy_db, abort_early_f):
+def do(subject, nominal, analogy_db, abort_early_f):
     # non-analogy lines can never match with analogy lines, and vice versa.
     # => treat them separately
 

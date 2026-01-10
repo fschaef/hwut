@@ -44,7 +44,7 @@ def test_pure(subject_line_list, nominal_line_list):
     print("nominal:", nominal_line_list)
 
     analogy_db = AnalogyDb()
-    total_verdict, db, analogy_db = equivalence_check.FUTURE_DO(get_Potpourri(pf, subject_line_list, config),
+    total_verdict, db, analogy_db = equivalence_check.do(get_Potpourri(pf, subject_line_list, config),
                                                          get_Potpourri(pf, nominal_line_list, config),
                                                          AnalogyDb(),
                                                          abort_early_f=True)

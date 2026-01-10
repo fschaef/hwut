@@ -72,10 +72,10 @@ def test_pure(subject_line_list, nominal_line_list):
     analogy_db = AnalogyDb()
     total_verdict, \
     db,            \
-    analogy_db     = equivalence_check.FUTURE_DO(get_Potpourri(pf, subject_line_list, config),
-                                                 get_Potpourri(pf, nominal_line_list, config),
-                                                 analogy_db,
-                                                 abort_early_f=False)
+    analogy_db     = equivalence_check.do(get_Potpourri(pf, subject_line_list, config),
+                                          get_Potpourri(pf, nominal_line_list, config),
+                                          analogy_db,
+                                          abort_early_f=False)
 
     if total_verdict:
         print("association: %s (%i)" % (total_verdict, len(db)))

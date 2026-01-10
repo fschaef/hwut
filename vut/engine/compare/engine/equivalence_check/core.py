@@ -91,8 +91,8 @@ def _do_potpourri(subject:     InputChunk,
     """RETURNS: [0] True, if both potpourris are equivalent. False, else.
                 [1] analogy_db required for equivalence to hold.
     """
-    verdict, _, new_analogy_db = potpourri_equivalence_check.FUTURE_DO(subject, nominal, analogy_db,
-                                                                       abort_early_f=True)
+    verdict, _, new_analogy_db = potpourri_equivalence_check.do(subject, nominal, analogy_db,
+                                                                abort_early_f=True)
 
     if verdict: return True, new_analogy_db
     else:       return False, analogy_db
