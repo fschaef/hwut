@@ -1,0 +1,65 @@
+## 4. The Architectural Core: Guards
+
+A **Guard** is a temporal container instantiated to monitor a specific behavioral lifecycle. It provides a formal boundary for state, rules, and causal actions.
+
+### 4.1 The Guard Anatomy
+A Guard is composed of four distinct elements that define its logic and existence:
+
+1.  **The Guard (The Life-Span):**
+    * **On (The Anchor):** A pattern-match against an external event that triggers the instantiation of the Guard (e.g., `on REQUEST(.id => ID)`).
+    * **Until (The Goal):** A condition that, when met, signifies the successful conclusion of the Guard’s mission.
+2.  **@new (The Spawn Handler):**
+    * The initialization logic executed in the infinitesimal Jiffy of the Guard's birth.
+    * **Role:** Initializes the Lua Shadow Model for this specific instance or injects a start-stimulus (Command Event) into the SUT.
+3.  **@delete (The Destruction Handler):**
+    * The finalization logic executed when the Guard "passes away" (is removed from the rule space).
+    * **Role:** Performs "Settlement" checks—verifying that all conditions were met and final latencies are acceptable—before the instance is purged.
+4.  **The Rules (The Invariants):**
+    * A set of temporal logic assertions (e.g., `never(Error)`) that are valid *only* while this specific Guard instance is alive.
+
+### 4.2 Parameterization and Isolation
+Guards are not global monitors; they are **instantiated templates**.
+* **Concurrency:** If multiple transactions overlap, the engine spawns a unique Guard instance for each unique binding (e.g., each `ID`).
+* **Context Safety:** Rules inside a Guard instance only "see" events that match its captured variables. This prevents "ID Leakage," where an event from Transaction A accidentally satisfies a rule in Transaction B.
+
+### 4.3 Deterministic Lifecycle
+The engine guarantees that every Guard that is created via `@new` will eventually be processed via `@delete`.
+* **Orderly Exit:** If the `until` condition is met, `@delete` is called normally.
+* **Termination:** If the test ends while a Guard is still active, the engine systematically triggers `@delete` for that instance. This allows the handler to flag the "dangling" state as a violation (e.g., "Request was never fulfilled before test end").
+
+### 4.2 Lifecycle Handlers and Causal Chains
+Scopes manage the transition between logical Jiffies through internal event injection.
+
+* **@on_entry:** Executed in the Jiffy the scope is born. It can emit internal events to trigger logic in the *next* Jiffy ($T+1$).
+* **@on_exit:** Executed when the `until` condition is met.
+* **Circularity Guard:** Internal events must be causally linked to an external anchor. The engine terminates the Jiffy sequence once all derived internal events are processed, preventing infinite loops.
+
+### 4.3 High-Level Abstractions (Syntactic Sugar)
+To improve readability for complex test scenarios, the engine provides two abstractions that compile directly into Guard logic.
+
+#### 4.3.1 Gaurd Sequence Patterns
+
+**Notation:** `A, ^C, [D | E]`
+
+**Guard Mapping:**
+1.  **Scope 1:** `on A`. Contains a violation rule if `C` occurs.
+2.  **Transition:** The `until` condition for Scope 1 is `D or E`.
+3.  **Scope 2:** Triggered by the exit of Scope 1.
+*This ensures that "Forbidden Intervals" (`^C`) are handled as simple rules within a transient scope.*
+
+Sequence patterns are implemented by means of Guards in the background.
+
+#### 4.3.2 Guard Rail State Machines (GRSM)
+**Concept:** A state machine is a collection of Scopes where only one "State Scope" is active for a given anchor at a time.
+
+* **State as Scope:** Each state in the machine is a Guard instance.
+* **Transitions:** The `until` condition of the current State Scope defines the valid transitions.
+* **Protocol Violations:** If an event occurs that does not match any `until` condition of the active State Scope, but is relevant to the anchor, the engine flags an "Illegal Transition."
+* **Data Integrity:** Because Scopes capture bindings (e.g., `.id => ID`), the State Machine automatically ensures that state transitions only occur for events sharing the same context.
+
+Guard Rail State Machines are implemented by means of Guards in the background.
+
+### 4.4 Completeness and Termination
+The engine uses Scope lifecycles to detect "Liveness" failures.
+* **The END Event:** When the stream terminates, any Guard instances that have not reached their `until` condition are evaluated against an `on END` rule.
+* **Implicit Failure:** This allows the tester to distinguish between a "Success" (Scope closed normally) and a "Drop" (Scope remained open indefinitely).

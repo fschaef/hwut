@@ -12,11 +12,19 @@ from typeguard import typechecked
 
 from   vut.engine.compare.engine.association.line_pair            import LinePair
 import vut.engine.compare.engine.association.edit_operations.line as     edit_operations_line
-import vut.engine.compare.engine.potpourri.equivalence_check             as     equivalence_check
+import vut.engine.compare.engine.potpourri.equivalence_check      as     equivalence_check
 from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb
 
 def do(subject, nominal, analogy_db, max_comparison_count):
+    """RETURNS: [0] list of (subject line number, nominal line number)
+                [1] required analogy db 
+
+    This function (tries to) associates subject lines with nominal lines 
+    as good as possible. The analogy db reflects an attempt to find 
+    consistent analogies. Since we do not assume equivalence, the analogy
+    db may be inconsistent with some of the entries.
+    """
     # non-analogy lines can never match with analogy lines, and vice versa.
     # => treat them separately
 
@@ -40,7 +48,9 @@ def do(subject, nominal, analogy_db, max_comparison_count):
 
     return first_result + second_result, analogy_db
 
-def _core(subject_line_list, nominal_line_list, analogy_db, max_comparison_count, abort_f=False, analogies_involved_f = True):
+def _core(subject_line_list, nominal_line_list, 
+          analogy_db, max_comparison_count, 
+          abort_f=False, analogies_involved_f = True):
     """RETURNS: sorted list of LinePair objects.
         
     Sort order: sorted by line number of subject. 

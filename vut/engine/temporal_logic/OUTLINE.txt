@@ -34,11 +34,11 @@
 ## 4. The Architectural Core: Parameterized Scopes
 *The replacement for global switches. This solves the Concurrency and Completeness problems.*
 
-* **Concept Shift:** A `TSCOPE` is no longer a Global Switch; it is a **Scope Template**.
+* **Concept Shift:** A `Guard` is no longer a Global Switch; it is a **Scope Template**.
 * **Instantiation (The Trigger):**
     * **Syntax:** `on EVENT(.id => ID)`
     * **Behavior:** The engine spawns a new, isolated **Scope Instance** for every unique tuple of captured bindings.
-    * **Concurrency:** Multiple instances of the same TSCOPE can exist simultaneously (e.g., tracking overlapping Requests).
+    * **Concurrency:** Multiple instances of the same Guard can exist simultaneously (e.g., tracking overlapping Requests).
 * **Lifecycle of an Instance:**
     1.  **Born:** When the `on` condition matches.
     2.  **Live:** The instance persists across Jiffies, carrying its captured context (variables).
@@ -67,7 +67,6 @@
 * **Role of Lua:**
     * Data parsing (e.g., decoding binary payloads).
     * Complex arithmetic or string manipulation helpers.
-* **Strict Prohibition:** Lua MUST NOT be used to store test state (e.g., "pending lists" or "counters"). All temporal state must be managed via Scope Instances and History Queries to preserve the Deterministic Guarantee.
 
 ## 7. Practical Examples
 *Concrete usage scenarios.*

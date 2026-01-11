@@ -9,7 +9,7 @@ the lines to appear in the sequence that they are registered in the nominal.
 The algorithm matches subject lines and nominal lines which are equivalent.
 
 The additional 'abort_f' flag may instruct the algorithm to abort, as soon
-as a complete solution is impossible. Such a quit abort means, that the two 
+as a complete solution is impossible. Such a quick abort means, that the two 
 Potpourri cannot be equivalent (compare() --> False).
 ________________________________________________________________________________
 """
@@ -17,6 +17,10 @@ import vut.engine.compare.engine.potpourri.matching as m
 from   typeguard import typechecked
 
 def do(subject, nominal, analogy_db, abort_early_f):
+    """RETURNS: [0] True, if equivalent; False, if not.
+                [1] map: subject line number --> nominal line number
+                [2] required analogy db, if True.
+    """
     # non-analogy lines can never match with analogy lines, and vice versa.
     # => treat them separately
 

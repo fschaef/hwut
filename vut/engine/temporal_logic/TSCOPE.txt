@@ -1,0 +1,21 @@
+A Guard is a Scope Template. It is not a singleton; the engine spawns multiple Instances of a scope based on incoming events.
+
+Trigger (The Anchor):
+
+Syntax: on EVENT(.id => ID)
+
+The Anchoring Rule: A Scope activation condition MUST contain at least one External Event (from the stream) as an anchor.
+
+Prohibition: A Scope cannot be activated solely by internal events (Action-generated) or History queries. This prevents "runaway" self-sustaining loops.
+
+
+Instantiation:
+
+When the on condition is met, the Engine creates a new Scope Instance.
+
+The Instance "captures" the bound variables (e.g., ID=101) and isolates them
+from other instances.
+
+Since every Scope requires an external anchor (or an anchor derived from a
+finite external sequence), and internal events cannot sustain themselves
+indefinitely without new external input, the chain must terminate
