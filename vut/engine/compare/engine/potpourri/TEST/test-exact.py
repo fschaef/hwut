@@ -47,11 +47,11 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.configuration                      import ConfigurationPatternFinder #noqa E402
-import vut.engine.compare.engine.potpourri.equivalence_check        as     equivalence_check          #noqa E402
-from   vut.engine.compare.input.pattern_finder           import PatternFinder              #noqa E402
-from   vut.engine.compare.engine.analogy_db                  import AnalogyDb                  #noqa E402
-from   vut.engine.compare.TEST.common                        import get_Potpourri              #noqa E402
+from   vut.engine.compare.configuration             import ConfigurationPatternFinder #noqa E402
+import vut.engine.compare.engine.potpourri.pairing  as     pairing                    #noqa E402
+from   vut.engine.compare.input.pattern_finder      import PatternFinder              #noqa E402
+from   vut.engine.compare.engine.analogy_db         import AnalogyDb                  #noqa E402
+from   vut.engine.compare.TEST.common               import get_Potpourri              #noqa E402
 
 if "--hwut-info" in sys.argv:
     print("FriendsPairing: Search anyway;")
@@ -72,10 +72,10 @@ def test_pure(subject_line_list, nominal_line_list):
     analogy_db = AnalogyDb()
     total_verdict, \
     db,            \
-    analogy_db     = equivalence_check.do(get_Potpourri(pf, subject_line_list, config),
-                                          get_Potpourri(pf, nominal_line_list, config),
-                                          analogy_db,
-                                          abort_early_f=False)
+    analogy_db     = pairing.do(get_Potpourri(pf, subject_line_list, config),
+                                get_Potpourri(pf, nominal_line_list, config),
+                                analogy_db,
+                                abort_early_f=False)
 
     if total_verdict:
         print("association: %s (%i)" % (total_verdict, len(db)))

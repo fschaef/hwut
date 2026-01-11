@@ -12,7 +12,7 @@ from typeguard import typechecked
 
 from   vut.engine.compare.engine.association.line_pair            import LinePair
 import vut.engine.compare.engine.association.edit_operations.line as     edit_operations_line
-import vut.engine.compare.engine.potpourri.equivalence_check      as     equivalence_check
+import vut.engine.compare.engine.potpourri.pairing                as     pairing
 from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb
 
@@ -61,16 +61,16 @@ def _core(subject_line_list, nominal_line_list,
 
     This functions tries to find the best combination of subject and nominal
     lines according to their similarities. Equivalent matches are first found
-    using the 'equivalence_check' module. Then, the remaining lines are matched based on
+    using the 'pairing' module. Then, the remaining lines are matched based on
     some cost function that takes their similiarity into account. The cost
     function measures the amount of diffrerence between two lines.
     """
     # 1. STRICT PHASE: High-performance matching
-    verdict, couples, analogy_db = equivalence_check._core(subject_line_list,
-                                                           nominal_line_list,
-                                                           analogy_db,
-                                                           abort_early_f=abort_f, 
-                                                           analogies_involved_f = analogies_involved_f)
+    verdict, couples, analogy_db = pairing._core(subject_line_list,
+                                                 nominal_line_list,
+                                                 analogy_db,
+                                                 abort_early_f=abort_f, 
+                                                 analogies_involved_f = analogies_involved_f)
 
     # Thaw the database to allow 'developing it along the way' in the fuzzy phase
     if isinstance(analogy_db, FrozenAnalogyDb):
