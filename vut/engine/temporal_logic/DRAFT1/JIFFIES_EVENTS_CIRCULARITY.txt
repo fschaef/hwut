@@ -1,0 +1,164 @@
+CIRCULARITY, NOW, AND JIFFY SEMANTICS
+===================================
+
+CENTRAL THESES
+--------------
+
+1. EVENTS exist only in NOW and live for exactly one jiffy.
+2. META-EVENTS are predicates over NOW and share the same one-jiffy lifetime.
+3. HISTORY (ever, never, since) is persistent knowledge, not time.
+4. ACTIONS never affect the jiffy in which they are triggered.
+5. TSCOPEs recognize situations; they do not create events.
+6. TSCOPE activation is anchored in external (causal) events.
+7. Time progresses through jiffies triggered by external input and by
+   the controlled execution of TSCOPE handlers.
+8. The event stream is finite or exhausting.
+
+---------------------------------------------------------------------------
+1. NOW, EVENTS, AND JIFFY LIFETIME
+---------------------------------------------------------------------------
+
+A jiffy is the smallest conceptual unit of time in the engine. It has no
+measurable duration and cannot be subdivided.
+
+An EVENT is a predicate over NOW that is true for exactly one jiffy. EVENTS
+have no duration and do not persist beyond the jiffy in which they occur.
+
+NOW is the complete set of EVENT instances that exist in the current jiffy.
+Once the jiffy ends, all EVENTS in NOW cease to exist and cannot reappear in
+later NOWs.
+
+META-EVENTS are not new temporal objects. They are derived predicates over
+NOW (for example, collisions or threshold crossings). META-EVENTS share the
+same lifetime as the EVENTS they are derived from: exactly one jiffy.
+
+---------------------------------------------------------------------------
+2. HISTORY AND EVENT ANCHORING
+---------------------------------------------------------------------------
+
+HISTORY consists of knowledge accumulated over time. Expressions such as
+ever(X), never(X), and since(...) query the occurrence database. HISTORY
+persists across jiffies, but it does not itself form EVENTS.
+
+HISTORY predicates may participate in EVENT recognition only when conjoined
+with a NOW predicate. An expression of the form:
+
+  EVENT ∧ HISTORY
+
+is a valid EVENT predicate: the NOW component anchors the predicate to a
+specific jiffy, while the HISTORY component refines it using past knowledge.
+HISTORY predicates are not allowed to stand alone; without a NOW anchor they
+do not constitute an EVENT.
+
+---------------------------------------------------------------------------
+3. EXTERNAL EVENTS AND JIFFY TRIGGERS
+---------------------------------------------------------------------------
+
+External (causal) events are injected by the event stream. Each external event
+triggers the creation of a new jiffy and a corresponding NOW.
+
+In addition, the execution of TSCOPE entry and exit handlers may trigger
+subsequent jiffies. These jiffies are strictly ordered after the jiffy of the
+external event and are part of the controlled internal progression of time.
+
+Thus:
+- External events initiate jiffy sequences.
+- TSCOPE handlers may extend these sequences.
+- No jiffy occurs spontaneously or without cause.
+
+---------------------------------------------------------------------------
+4. ACTIONS AND TSCOPE ANCHORING
+---------------------------------------------------------------------------
+
+ACTIONS are effects produced by rule sets. ACTIONS never affect the jiffy in
+which they are triggered; they always execute in a later jiffy.
+
+Crucially, ACTIONS are not allowed to produce EVENTS that, *by themselves*,
+satisfy TSCOPE activation or deactivation conditions. Every TSCOPE EVENT
+predicate must include at least one external-event anchor that is present in
+NOW. HISTORY predicates may refine this condition but may not replace the
+anchor.
+
+It is explicitly allowed that a TSCOPE EVENT predicate combines:
+- an external EVENT occurring in NOW, and
+- an EVENT caused by an ACTION (or derived META-EVENT),
+
+for example:
+
+  EXTERNAL_EVENT and ACTION_EVENT
+
+This is safe because the external EVENT provides the anchoring in NOW. The
+ACTION-caused EVENT may contribute additional context, but it cannot on its
+own activate or deactivate a TSCOPE.
+
+This rule ensures that TSCOPEs cannot re-arm or sustain themselves purely
+through internal activity.
+
+---------------------------------------------------------------------------
+5. TYPES OF CIRCULARITY
+---------------------------------------------------------------------------
+
+Two conceptually different forms of circularity must be distinguished.
+
+---------------------------------------------------------------------------
+5.1 Jiffy-Instantaneous Circularity (RULED OUT)
+---------------------------------------------------------------------------
+
+Jiffy-instantaneous circularity would mean that something in NOW causes itself
+to appear again in the same NOW.
+
+This is ruled out by design:
+- META-EVENT implication is monotonic and evaluated to a fixed point.
+- EVENTS exist only for one jiffy and cannot re-enter NOW once that jiffy ends.
+- ACTIONS are delayed and never affect the current NOW.
+
+Therefore, instantaneous self-feedback within a single jiffy is impossible.
+
+---------------------------------------------------------------------------
+5.2 Event-Based Circularity Across Jiffies (INHERENT BUT BOUNDED)
+---------------------------------------------------------------------------
+
+Event-based circularity involves chains such as:
+
+  external EVENT → TSCOPE → ACTION → EVENT → TSCOPE → ...
+
+Such chains may span multiple jiffies and are a natural expression of causal
+behavior over time.
+
+Because TSCOPE activation is anchored in external EVENTS:
+- Internal ACTION-generated EVENTS cannot sustain TSCOPE activation on their
+  own.
+- Once the jiffy of the external anchor ends, the anchor disappears.
+- Any internally generated cascade must therefore terminate unless a new
+  external event arrives.
+
+This form of circularity is inherent to reactive systems and is harmless.
+
+---------------------------------------------------------------------------
+6. EXHAUSTION AND RUNTIME DETECTION
+---------------------------------------------------------------------------
+
+The event stream is finite or exhausting. Each external event advances time and
+initiates a bounded sequence of jiffies.
+
+Consequently, the system cannot remain active indefinitely without new
+external input. Eventually, the stream exhausts and the engine becomes
+quiescent.
+
+Runtime circularity detection is therefore not a necessity for correctness,
+but an opportunity: it can be used to detect unintended feedback introduced
+by the rule or action base. Whether such feedback is allowed or forbidden is
+a design choice that can be enforced by configuration or rule discipline.
+
+---------------------------------------------------------------------------
+7. DESIGN CONSEQUENCES
+---------------------------------------------------------------------------
+
+- Circularity is controlled primarily by semantics, not heuristics.
+- The jiffy model eliminates instantaneous feedback.
+- External anchoring prevents self-sustaining activation.
+- Event-based feedback is bounded and analyzable.
+- Optional runtime detection provides additional safety and diagnostics.
+
+This design yields a deterministic, analyzable, and terminating temporal
+logic engine by construction.

@@ -91,10 +91,18 @@ class InputChunkPotpourri(InputChunk):
             if line.has_analogy(): self.analogy_line_list.append(line)
             else:                  self.non_analogy_line_list.append(line)
 
+class InputChunkLineSequence(InputChunk):
+    @typechecked
+    def __init__(self, chunk_type: E_Chunk, start_line_n, end_line_n, line_list: Iterable[str], config):
+        super().__init__(chunk_type, start_line_n, end_line_n, line_list, config)
+
+
 def InputChunk_factory(chunk_type: E_Chunk, start_line_n, end_line_n, line_list: Iterable[str], config):
     match chunk_type:
         case E_Chunk.POTPOURRI:
             result = InputChunkPotpourri(chunk_type, start_line_n, end_line_n, line_list, config)
+        case E_Chunk.LINE_SEQUENCE:
+            result = InputChunkLineSequence(chunk_type, start_line_n, end_line_n, line_list, config)
         case _:
             result = InputChunk(chunk_type, start_line_n, end_line_n, line_list, config)
 
