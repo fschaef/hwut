@@ -184,7 +184,7 @@ class Line:
         In case of [0] == True, the analogies still need to hold.
         """
         if self._raw and nominal._raw and self._raw.string == nominal._raw.string:
-            if self._raw.may_have_analogy():
+            if self.has_analogy():
                 # If two lines are textually equal, then all the analogies must be trivial
                 return True, [ (a, a) for a in self._raw.analogy_strings()]
             else:

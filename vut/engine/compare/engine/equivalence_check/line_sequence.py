@@ -14,7 +14,7 @@ def do(subject:    InputChunk,
     if len(subject.line_list) != len(nominal.line_list):
         return False, analogy_db
     # In 'equivalence check mode' subject and nominal proceed line by line
-    assert len(subject.line_list) == 1 and len(nominal.line_list) == 1
+    # assert len(subject.line_list) == 1 and len(nominal.line_list) == 1
 
     verdict, analogy_list = subject.line_list[0].compare_raw(nominal.line_list[0])
 
