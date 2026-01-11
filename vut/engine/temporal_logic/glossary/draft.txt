@@ -1,4 +1,34 @@
-# 8. Formal Glossary & The Jiffy Calculus
+GLOSSARY:
+
+[EVENT]
+
+[JIFFY]
+
+[GUARD]
+
+[NOW]
+
+[TWIN WORLD]
+
+### 8.4 The Oracle (Lua-World)
+
+The Oracle is the authoritative, stateful reference model residing within the Lua environment. It serves as the logical "SUT-Prime" (SUT'), a parallel representation of how the system *should* behave.
+
+#### 1. The Role of the Oracle
+While Guards enforce **Temporal Constraints** (the order and timing of events), the Oracle enforces **Data Correctness** (the values and states). A Guard asks the Oracle: *"Is this event valid given our current history?"*
+
+#### 2. Synchronous State Evolvement
+The Oracle evolves in lock-step with the Jiffy Calculus.
+* **Deterministic Mutation:** The Oracle’s state is updated during the `@new` and `@delete` phases of a Guard, or via explicit event handlers. 
+* **Differential Updates:** Each Jiffy (ε) represents a potential mutation point for the Oracle. This ensures the "Reference State" is always perfectly aligned with the "Logical Time."
+
+#### 3. Decoupling Logic from Observation
+The Oracle does not interact with the SUT hardware. It is a "closed-box" calculation based solely on the event stream. This separation ensures that the Oracle remains a pure mathematical reflection of the input, making it an ideal tool for **Falsification** (proving that the SUT has deviated from the model).
+
+#### 4. The Oracle Query
+Rules within a Guard utilize the Oracle through predicate calls:
+`violation if not Oracle.validate_payload(E.id, E.data)`
+This allows the Temporal Engine to delegate high-complexity arithmetic and string manipulation to the Lua-based Oracle while maintaining oversight of the lifecycle.# 8. Formal Glossary & The Jiffy Calculus
 
 This section codifies the temporal mechanics of the Engine, utilizing a non-standard model of time to resolve the tension between physical simultaneity and logical causality.
 

@@ -18,7 +18,6 @@ The two main functions of an 'InputChunk' are
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.enums          import E_Chunk
-from   vut.engine.compare.engine.analogy_db     import AnalogyDb
 from   vut.engine.compare.engine.line           import Line
 from   vut.engine.compare.input.pattern_finder  import E_ToleranceId
 
@@ -40,8 +39,11 @@ class InputChunk(ABC):
         self.start_line_n  = start_line_n
         self.end_line_n    = end_line_n
         self.configuration = config
-        self.__chunk_type  = chunk_type
+        self._chunk_type  = chunk_type
         self.__line_list   = tuple(line_list)
+
+    def is_terminal(self): 
+        return False
 
     @property
     def line_list(self):
@@ -52,23 +54,24 @@ class InputChunk(ABC):
         pass
 
     def type(self): 
-        return self.__chunk_type
+        return self._chunk_type
 
     def __repr__(self): 
-        sep = ":" if self.__chunk_type is E_Chunk.LINE_SEQUENCE else "|"
+        sep = ":" if self._chunk_type is E_Chunk.LINE_SEQUENCE else "|"
         return "\n".join("%03i%s %s" % (line.line_n, sep, line) for line in self.line_list)
+
+class InputChunkVoid(InputChunk):
+    def __init__(self):    self._chunk_type = E_Chunk.VOID
+    def empty_clone(self): return InputChunkVoid()
+    def __repr__(self):    return "InputChunkVoid"
 
 class InputChunkTerminal(InputChunk):
     """Input chunk that marks the end of an input stream.
     """
-    def __init__(self, line_n):
-        InputChunk.__init__(self, E_Chunk.TERMINAL, line_n, line_n+1,
-                            [Line.from_string(line_n, "<InputChunkTerminal>")],
-                            config=None)
-    def type(self):                                    return E_Chunk.TERMINAL
-    def _is_equivalent(self, other, analogy_db):       assert False
-    def _associate_lines(self, nominal, analogy_db):   return [], AnalogyDb()
-    def __repr__(self):                                return "InputChunkTerminal"
+    def __init__(self):    self._chunk_type = E_Chunk.TERMINAL
+    def is_terminal(self): return True
+    def empty_clone(self): return InputChunkTerminal()
+    def __repr__(self):    return "InputChunkTerminal"
 
 class InputChunkPotpourri(InputChunk):
     def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
@@ -95,7 +98,7 @@ class InputChunkLineSequence(InputChunk):
 class InputChunkLine(InputChunk):
     # @typechecked -- too expensive
     def __init__(self, line_n, line: Line, config):
-        super().__init__(E_Chunk.LINE, line_n, [line], config)
+        super().__init__(E_Chunk.LINE, line_n, line_n, [line], config)
 
     def empty_clone(self):
         return InputChunkLine(None, None, self.configuration)

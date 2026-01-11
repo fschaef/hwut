@@ -23,6 +23,7 @@ import sys
 
 sys.path.insert(0, "../../../../../")
 
+from   vut.engine.compare.input.input_chunk    import InputChunkTerminal
 from   vut.engine.compare.input.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
 import vut.engine.compare.engine.equivalence_check.core as equivalence_check
@@ -30,6 +31,7 @@ import vut.engine.compare.engine.association.core       as association
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import print_match_sequences_lists, \
                                                           print_friends_pairing_max_result, \
+                                                          get_sequence_of_Line, \
                                                           get_LineSequence
 
 if "--hwut-info" in sys.argv:
@@ -48,29 +50,25 @@ if "judge" in sys.argv:
     def test(subject_list, nominal_list):
         print("--------------------------------")
         # Create full sequences PURELY for the print function (to maintain visual output)
-        subject_full = get_LineSequence(pf, subject_list, config)
-        nominal_full = get_LineSequence(pf, nominal_list, config)
-        print_match_sequences_lists(subject_full.line_list, nominal_full.line_list)
+        subject_full = get_sequence_of_Line(pf, subject_list, config)
+        nominal_full = get_sequence_of_Line(pf, nominal_list, config)
+        print_match_sequences_lists([l for x in subject_full for l in x.line_list], 
+                                    [k for x in nominal_full for k in x.line_list])
+        subject_full += [InputChunkTerminal()]
+        nominal_full += [InputChunkTerminal()]
 
         analogy_db = AnalogyDb()
         overall_verdict = True
 
-        if len(subject_list) != len(nominal_list):
-            overall_verdict = False
-        else:
-            for s_str, n_str in zip(subject_list, nominal_list):
-                # Create chunks of length 1
-                s_chunk = get_LineSequence(pf, [s_str], config)
-                n_chunk = get_LineSequence(pf, [n_str], config)
+        for s_chunk, n_chunk in zip(subject_full, nominal_full):
+            # Pass the *current* analogy_db. 
+            # It accumulates constraints from previous lines (e.g. A=1).
+            step_verdict, analogy_db = equivalence_check.do(s_chunk, n_chunk, analogy_db)
 
-                # Pass the *current* analogy_db. 
-                # It accumulates constraints from previous lines (e.g. A=1).
-                step_verdict, analogy_db = equivalence_check.do(s_chunk, n_chunk, analogy_db)
-
-                if not step_verdict:
-                    overall_verdict = False
-                    # In equivalence mode, one mismatch fails the whole sequence
-                    break 
+            if not step_verdict:
+                overall_verdict = False
+                # In equivalence mode, one mismatch fails the whole sequence
+                break 
 
         print("=> %s, %s" % (overall_verdict, analogy_db))
 

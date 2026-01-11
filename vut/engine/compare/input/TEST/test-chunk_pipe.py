@@ -45,7 +45,7 @@ async def test_core(line_list):
     print(text.replace("||||", "<potpourri>"))
     print("----------------------------------")
     print("=>")
-    async for x in chunk_pipe.do():
+    async for x in chunk_pipe.yield_input_chunks():
         print(x)
 
 def test(line_list):

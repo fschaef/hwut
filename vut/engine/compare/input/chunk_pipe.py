@@ -24,7 +24,8 @@ _______________________________________________________________________________
 """ 
 from vut.engine.compare.engine.enums             import E_Chunk 
 from vut.engine.compare.engine.line              import Line 
-from vut.engine.compare.input.input_chunk        import InputChunk, \
+from vut.engine.compare.input.input_chunk        import InputChunk,         \
+                                                        InputChunkTerminal, \
                                                         InputChunk_factory
 from vut.engine.compare.input.pattern_finder     import PatternFinder
 from vut.engine.compare.configuration            import Configuration
@@ -41,26 +42,31 @@ class ChunkPipe(PatternFinder):
         PatternFinder.__init__(self, configuration.pattern_finder)
         self.configuration = configuration
         self.line_provider = line_provider
-        self.pf = PatternFinder(self.configuration.pattern_finder)
+        self.pf            = PatternFinder(self.configuration.pattern_finder)
 
-    def create_producer_task(self, queue, EOF, fetch_gate = None):
-        return asyncio.create_task(self._produce(queue, EOF, fetch_gate))
+    def create_producer_task(self, queue, fetch_gate = None):
+        return asyncio.create_task(self._produce(queue, fetch_gate))
 
-    async def _produce(self, queue, EOF, fetch_gate: asyncio.Event | None):
+    async def _produce(self, queue, fetch_gate: asyncio.Event | None):
         try:
-            async for item in self.do():
+            sentinel = InputChunkTerminal()
+
+            async for item in self.yield_input_chunks():
                 await queue.put(item)
                 if fetch_gate is not None:  # Pause, if someone stops you
                     await fetch_gate.wait()
-            await queue.put(EOF)
+            await queue.put(sentinel)
+
         except Exception:
-            await queue.put(EOF)
+            import traceback
+            traceback.print_exc()
+            await queue.put(sentinel)
             raise
 
 class EquivalenceCheckChunkPipe(ChunkPipe):
     @typechecked
-    async def do(self) -> InputChunk:
-        chunk_type   = E_Chunk.LINE_SEQUENCE
+    async def yield_input_chunks(self) -> InputChunk:
+        chunk_type   = E_Chunk.LINE
         line_list    = []
         start_line_n = 1
         ignored_begin = self.configuration.pattern_finder.ignored_line_begin_marker
@@ -78,8 +84,8 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
                 
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
-                if chunk_type is E_Chunk.LINE_SEQUENCE: chunk_type = E_Chunk.POTPOURRI
-                else:                                   chunk_type = E_Chunk.LINE_SEQUENCE
+                if chunk_type is E_Chunk.LINE: chunk_type = E_Chunk.POTPOURRI
+                else:                          chunk_type = E_Chunk.LINE
                 start_line_n = line_n
             elif not (stripped := line.strip()):
                 continue
@@ -88,7 +94,7 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
             else:
                 processed_line = Line.from_raw_line(line_n, line, self.pf) 
                 
-                if chunk_type is E_Chunk.LINE_SEQUENCE:
+                if chunk_type is E_Chunk.LINE:
                     yield InputChunk_factory(chunk_type, line_n, line_n, 
                                             [processed_line], self.configuration)
                 else:
@@ -101,7 +107,7 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
 
 class AssociationChunkPipe(ChunkPipe):
     @typechecked
-    async def do(self) -> InputChunk:
+    async def yield_input_chunks(self) -> InputChunk:
         """YIELDS: Chunks of input useful for association.
         """
         chunk_type   = E_Chunk.LINE_SEQUENCE

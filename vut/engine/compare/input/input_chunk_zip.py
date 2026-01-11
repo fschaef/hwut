@@ -16,8 +16,9 @@ compared.
 _______________________________________________________________________________
 """
 
-from vut.engine.compare.input.chunk_pipe     import ChunkPipe
-from vut.engine.compare.configuration        import Configuration
+from vut.engine.compare.input.chunk_pipe  import ChunkPipe
+from vut.engine.compare.input.input_chunk import InputChunkVoid
+from vut.engine.compare.configuration     import Configuration
 
 from   typeguard import typechecked
 import asyncio
@@ -33,37 +34,33 @@ async def generate_chunk_pairs(config:        Configuration,
     In general the type of the subject chunk is not equal to the type
     of the nominal chunk.
     """
-    q_s = asyncio.Queue(maxsize=10)
-    q_n = asyncio.Queue(maxsize=1000)
-    EOF = object()
+    # Setup Queues
+    q_s, q_n = asyncio.Queue(maxsize=10), asyncio.Queue(maxsize=1000)
 
-    task_s = subject_pipe.create_producer_task(q_s, EOF)
-    task_n = nominal_pipe.create_producer_task(q_n, EOF)
+    # Start Producers
+    tasks = [ subject_pipe.create_producer_task(q_s),
+              nominal_pipe.create_producer_task(q_n) ]
 
-    s_item, n_item = None, None
+    s_item = n_item = InputChunkVoid()
     try:
         while True:
             # Futures: stream exhausted use 'sleep(0)', else use 'queue.get()'
-            coro_s = asyncio.sleep(0, result=EOF) if s_item is EOF else q_s.get()
-            coro_n = asyncio.sleep(0, result=EOF) if n_item is EOF else q_n.get()
+            coro_s = asyncio.sleep(0, result=s_item) if s_item.is_terminal() else q_s.get()
+            coro_n = asyncio.sleep(0, result=n_item) if n_item.is_terminal() else q_n.get()
 
             # Wait in parallel for subject and nominal queue
             s_item, n_item = await asyncio.gather(coro_s, coro_n)
 
             # Termination Check
-            if s_item is EOF and n_item is EOF: break
+            if s_item.is_terminal() and n_item.is_terminal(): break
 
-            # Yield with Padding
-            #    If one side is EOF, cloning the other side's empty structure 
-            #    ensures type safety for the consumer.
-            yield s_item if s_item is not EOF else n_item.empty_clone(), \
-                  n_item if n_item is not EOF else s_item.empty_clone()
+            # Yield with Padding (EOF == InputChunkTerminal)
+            yield s_item, n_item
 
     finally:
-        # Robust Cleanup: Cancel and await to suppress warnings
-        for t in [task_s, task_n]:
+        for t in tasks:
             if not t.done(): t.cancel()
-        await asyncio.gather(task_s, task_n, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 @typechecked
 async def generate_chunk_pairs_type_aligned(config:       Configuration, 
@@ -74,18 +71,17 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
     """
     # Setup Queues
     q_s, q_n = asyncio.Queue(maxsize=10), asyncio.Queue(maxsize=1000)
-    EOF = object()
 
     # Start Producers
-    tasks = [ subject_pipe.create_producer_task(q_s, EOF),
-              nominal_pipe.create_producer_task(q_n, EOF) ]
+    tasks = [ subject_pipe.create_producer_task(q_s),
+              nominal_pipe.create_producer_task(q_n) ]
 
     try:
         # Initial Fetch
         s_prev, n_prev = await asyncio.gather(q_s.get(), q_n.get())
 
         # Loop while BOTH are valid (not EOF)
-        while s_prev is not EOF and n_prev is not EOF:
+        while not s_prev.is_terminal() and not n_prev.is_terminal():
             
             if s_prev.type() == n_prev.type():
                 # MATCH
@@ -96,13 +92,13 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
                 # MISMATCH
                 s_next, n_next = await asyncio.gather(q_s.get(), q_n.get())
 
-                if n_next is not EOF and n_next.type() == s_prev.type():
+                if not n_next.is_terminal() and n_next.type() == s_prev.type():
                     yield (None, n_prev)     # Flush the extra Nominal
                     yield (s_prev, n_next)   # Pair held Subject with next Nominal
                     s_prev = s_next
                     n_prev = await q_n.get() # fill the slot of the consumed n_prev
 
-                elif s_next is not EOF and s_next.type() == n_prev.type():
+                elif not s_next.is_terminal() and s_next.type() == n_prev.type():
                     yield (s_prev, None)     # pair extra subject with nominal 'None'
                     yield (s_next, n_prev)   # pair matching next subject with previous nominal
                     s_prev = await q_s.get() # fill the slot of the consumed 's_prev'
@@ -115,11 +111,11 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
                     n_prev = n_next
 
         # If Nominal still has data (Subject hit EOF)
-        while n_prev is not EOF:
+        while not n_prev.is_terminal():
             yield (None, n_prev)
             n_prev = await q_n.get()
         # If Subject still has data (Nominal hit EOF)
-        while s_prev is not EOF:
+        while not s_prev.is_terminal():
             yield (s_prev, None)
             s_prev = await q_s.get()
 

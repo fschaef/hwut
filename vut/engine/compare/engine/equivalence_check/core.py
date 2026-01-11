@@ -26,8 +26,10 @@ def do(subject: InputChunk, nominal: InputChunk, analogy_db: AnalogyDb) -> tuple
     # NOTE: The 'quick path' functions are only quick, if they appear before
     #       '.sequence' properties are referenced. The referencing of these 
     #       properties triggers a (lazy) lexical analysis of the line!
-    elif subject.type() == E_Chunk.LINE_SEQUENCE:
-        return line_sequence_check.do(subject, nominal, analogy_db)
-    elif subject.type() == E_Chunk.POTPOURRI:
-        return potpourri_check.do(subject, nominal, analogy_db)
-
+    match subject.type():
+        case E_Chunk.LINE:
+            return line_sequence_check.do(subject, nominal, analogy_db)
+        case E_Chunk.POTPOURRI:
+            return potpourri_check.do(subject, nominal, analogy_db)
+        case _:
+            assert False, f"{subject.type().name} not supported for equivalence check!"

@@ -63,3 +63,27 @@ Guard Rail State Machines are implemented by means of Guards in the background.
 The engine uses Scope lifecycles to detect "Liveness" failures.
 * **The END Event:** When the stream terminates, any Guard instances that have not reached their `until` condition are evaluated against an `on END` rule.
 * **Implicit Failure:** This allows the tester to distinguish between a "Success" (Scope closed normally) and a "Drop" (Scope remained open indefinitely).
+
+INTEGRATE:
+
+A Guard is a Scope Template. It is not a singleton; the engine spawns multiple Instances of a scope based on incoming events.
+
+Trigger (The Anchor):
+
+Syntax: on EVENT(.id => ID)
+
+The Anchoring Rule: A Scope activation condition MUST contain at least one External Event (from the stream) as an anchor.
+
+Prohibition: A Scope cannot be activated solely by internal events (Action-generated) or History queries. This prevents "runaway" self-sustaining loops.
+
+
+Instantiation:
+
+When the on condition is met, the Engine creates a new Scope Instance.
+
+The Instance "captures" the bound variables (e.g., ID=101) and isolates them
+from other instances.
+
+Since every Scope requires an external anchor (or an anchor derived from a
+finite external sequence), and internal events cannot sustain themselves
+indefinitely without new external input, the chain must terminate

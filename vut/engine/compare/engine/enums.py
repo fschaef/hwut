@@ -29,5 +29,5 @@ class E_Chunk(Enum):
     LINE          = auto()
     POTPOURRI     = auto()
     TERMINAL      = auto()
-    EMPTY         = auto()
+    VOID          = auto()
     NONE          = auto()

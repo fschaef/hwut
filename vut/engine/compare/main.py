@@ -72,7 +72,6 @@ async def is_equivalent(config: Configuration,
 
     # subject, nominal = 'LINE' or 'POTPOURRI'
     async for subject, nominal in generate_chunk_pairs(config, subject, nominal):
-
         verdict,   \
         analogy_db = equivalence_check.do(subject, nominal, analogy_db)
         # analogy db is updated as required to main 'equivalence', else not (of course)

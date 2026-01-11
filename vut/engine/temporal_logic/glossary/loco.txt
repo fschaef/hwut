@@ -1,0 +1,52 @@
+THE LOCO (Logical Consequence)
+
+Definition:
+
+    A LOCO is a set of persistent logical implications. It is a functional 
+    property of "The Now" that determines how events, history, and the 
+    TWIN WORLD interact to imply instanteneously other events.
+
+To ensure absolute determinism, the LOCO follows a strict causal timeline that
+separates the *cause* of a rule from the Implications of that rule:
+
+- CAUSATION (J_n): An event occurs in "The Now" that satisfies a 
+  LOCO's trigger condition.
+
+- MANIFESTATION (J_n+1): The LOCO becomes an active property of 
+  "The Now." It only begins to imply events from "The Now" to
+  produce other events.
+
+- CEASATION (J_m): An event occurs in "The Now" that satisfies 
+  the LOCO's termination condition.
+
+- PERISHMENT (J_m+1): The LOCO no longer implies events.
+
+This buffer ensures a LOCO never reacts to its own birth-event, 
+preserving a clean causal chain.
+
+DETERMINISM through possitive logic
+===========
+
+The Engine utilizes "Positive Event Logic," meaning implications are
+triggered with repsect to "The Now" solely by the existence of events. 
+
+- Because there is no "NOT Event" operator within a Jiffy, multiple 
+  LOCOs manifesting in the same "Now" cannot contradict one another.
+
+- Logic is additive: every LOCO in "The Now" contributes its 
+  implications to the totality of the engine's perception.
+
+The violation (Primary objective)
+
+A Violation is an Implied Event. It is the fundamental task of the temporal
+logic engine to detect those violations.
+
+
+Technical Aspects
+------------------
+* THE ACTOR: A LOCO is anchored to a specific identity (name/alias) 
+    defined at the moment of Causation.
+
+* INDEPENDENCE: Thousands of LOCOs may exist in "The Now" simultaneously; 
+    their positive-logic nature ensures they function as independent 
+    parallel processors of reality.

@@ -1,0 +1,34 @@
+# 8.9 THE WORLD (The External Reality)
+
+Definition:
+
+	The WORLD is the totality of the external environment being monitored or
+    stimulated. It is the source of all causation and the destination for
+    all "to be injected" events. 
+
+### 1. The Separation of Concerns
+
+The WORLD exists independently of the Temporal Logic Engine. It operates on its
+own timeline and follows its own physical or programmed laws. The Engine
+remains ignorant of the internal state of the WORLD. It knows the state of the
+WORLD solely through the events it emits.
+
+The RULE BASE, the TWIN WORLD and the WORLD can only interact through events
+that occur in "The Now". All observe "The Now" and receive their events from 
+it. "The Now" becomes the syncronization point of events. It is where the 
+junction of related entities happen.
+
+Logically, events of the world must be injected by some interface into "The Now".
+Vice versa, in order to inject events into the WORLD, some type of listener
+must perceive "The Now" and accordingly, sent the information to the WORLD.
+
+At the moment of perception, the event ceases to exist in "The Now." It
+survives only as information within the perceiver (WORLD interface, the TWIN
+WORLD agent, or the RULE BASE instance). This ensures that the Engine remains
+reactive and never processes "stale" reality.
+
+NOTE ---------------------------------------------------------------
+| By making "The Now" the singular synchronization point (the "common ground"),
+| you’ve solved the problem of how three different domains (Logic, Simulation,
+| and Reality) can interact without violating each other's internal laws.
+'-------------------------------------------------------------
