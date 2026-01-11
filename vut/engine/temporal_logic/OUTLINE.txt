@@ -1,0 +1,77 @@
+# Specification: Deterministic Temporal Logic Engine (v2.0)
+
+**Status:** Draft | **Target Audience:** Engineering & Research | **Scope:** Core Architecture
+
+## 1. Core Philosophy: The Deterministic Guarantee
+*This section defines the invariant properties of the system—the "Soul" of the engine.*
+
+* **The Single Thread of Truth:** Execution occurs in discrete, atomic "Jiffies" (Time Steps). No side effects are permitted outside the current Jiffy.
+* **Stateless Logic:** Rules are pure functions of the Event History. They do not maintain internal state variables.
+* **The "No-Hole" Promise:** The Event History is immutable and theoretically infinite (limited only by physical memory, not logic). We explicitly reject bounded buffers or "sliding windows" that introduce amnesia.
+* **Determinism:** Given the same sequence of input events, the engine must always produce the exact same violations and reports, regardless of wall-clock time or host machine speed.
+
+## 2. The Data Model
+*Defines the input contract to avoid the "Primitive Types Only" limitation.*
+
+* **Event Structure:** Events are structured objects supporting nested maps and lists (e.g., JSON-compatible), not just flat primitive key-value pairs.
+* **The Namespace:**
+    * **User Payload:** Accessible via dot-notation (e.g., `event.payload.data`).
+    * **Engine Metadata:** Reserved namespace for engine-injected fields (e.g., `@timestamp`, `@turn`, `@source`).
+* **Type Safety:** While dynamic, the engine enforces strict type checking during comparison operations to prevent JavaScript-style weak equality bugs.
+
+## 3. Temporal Logic Semantics
+*Clarifies operators to resolve the "Semantic Trap" and "Past Naming" issues.*
+
+* **Simultaneity:** `A and B` is strictly defined as "A occurs in the same Jiffy as B."
+* **Existential History:**
+    * `ever(A)`: True if `A` occurred in any previous Jiffy (inclusive of NOW).
+    * `before(A)`: True if `A` occurred strictly before NOW.
+* **Interval Logic:**
+    * `since(A, B)`: Standard LTL definition.
+    * `count(A)`: Returns the integer count of occurrences of `A` in history.
+* **Binding Restrictions:** Binding operators (`=>`) are permitted in Scope Triggers (see Section 4) but are restricted in pure history queries to prevent O(N^2) complexity explosions, unless explicitly flagged as a heavy query.
+
+## 4. The Architectural Core: Parameterized Scopes
+*The replacement for global switches. This solves the Concurrency and Completeness problems.*
+
+* **Concept Shift:** A `TSCOPE` is no longer a Global Switch; it is a **Scope Template**.
+* **Instantiation (The Trigger):**
+    * **Syntax:** `on EVENT(.id => ID)`
+    * **Behavior:** The engine spawns a new, isolated **Scope Instance** for every unique tuple of captured bindings.
+    * **Concurrency:** Multiple instances of the same TSCOPE can exist simultaneously (e.g., tracking overlapping Requests).
+* **Lifecycle of an Instance:**
+    1.  **Born:** When the `on` condition matches.
+    2.  **Live:** The instance persists across Jiffies, carrying its captured context (variables).
+    3.  **Dies:** When the `until` condition is met OR the test terminates.
+* **Completeness Enforcement:**
+    * The engine tracks "Live" instances.
+    * If `END` of test is reached while instances are still Live, the engine evaluates specific "End-of-Life" violations (e.g., "Missing Response").
+
+## 5. The Rule Evaluation Cycle (The Jiffy)
+*The authoritative execution loop.*
+
+1.  **Ingest:** Receive Event `E` and assign Monotonic ID.
+2.  **Scope Management:**
+    * **Reap:** Check `until` conditions for all active Scope Instances. Mark matched instances as "Completed."
+    * **Spawn:** Check `on` conditions against `E`. Create new Scope Instances if matched.
+3.  **Evaluation:**
+    * Iterate through all **Active** Scope Instances.
+    * Evaluate all Rules defined within those scopes against `E` and History.
+4.  **Action:**
+    * Record Violations.
+    * (Optional) Emit Derived Events (Loopback to Step 1 for next Jiffy).
+
+## 6. Host Language Integration (Lua)
+*Defining the "Safe" boundary.*
+
+* **Role of Lua:**
+    * Data parsing (e.g., decoding binary payloads).
+    * Complex arithmetic or string manipulation helpers.
+* **Strict Prohibition:** Lua MUST NOT be used to store test state (e.g., "pending lists" or "counters"). All temporal state must be managed via Scope Instances and History Queries to preserve the Deterministic Guarantee.
+
+## 7. Practical Examples
+*Concrete usage scenarios.*
+
+* **Scenario A: Request/Response Completeness** (Demonstrating Parameterized Scopes).
+* **Scenario B: Performance Constraints** (Demonstrating `time()` deltas within a Scope).
+* **Scenario C: Forbidden Sequences** (Demonstrating `never()` constraints).
