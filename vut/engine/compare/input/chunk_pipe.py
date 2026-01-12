@@ -36,7 +36,7 @@ from typing    import AsyncIterator
 import asyncio
 
 
-class ChunkPipe(PatternFinder):
+class ChunkPipe:
     @typechecked
     def __init__(self, configuration: Configuration, line_provider: AsyncIterator):
         PatternFinder.__init__(self, configuration.pattern_finder)
@@ -76,7 +76,7 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
             line = await self.line_provider.readline()
             if not line:
                 break
-            elif self.is_region_delimiter(line):
+            elif self.pf.is_region_delimiter(line):
                 if chunk_type is E_Chunk.POTPOURRI and line_list:
                     # Flush buffered Potpourri 
                     yield InputChunk_factory(chunk_type, start_line_n, line_n, 
@@ -117,7 +117,7 @@ class AssociationChunkPipe(ChunkPipe):
             line = await self.line_provider.readline()
             if not line:
                 break
-            elif self.is_region_delimiter(line):
+            elif self.pf.is_region_delimiter(line):
                 if line_list or chunk_type is not E_Chunk.LINE_SEQUENCE:
                     yield InputChunk_factory(chunk_type, start_line_n, line_n, 
                                             line_list, 
