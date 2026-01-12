@@ -26,7 +26,6 @@ sys.path.insert(0, "../../../../../")
 from   vut.engine.compare.input.input_chunk    import InputChunkTerminal
 from   vut.engine.compare.input.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-import vut.engine.compare.engine.equivalence_check.core as equivalence_check
 import vut.engine.compare.engine.association.core       as association
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import print_match_sequences_lists, \
@@ -63,7 +62,7 @@ if "judge" in sys.argv:
         for s_chunk, n_chunk in zip(subject_full, nominal_full):
             # Pass the *current* analogy_db. 
             # It accumulates constraints from previous lines (e.g. A=1).
-            step_verdict, analogy_db = equivalence_check.do(s_chunk, n_chunk, analogy_db)
+            step_verdict, analogy_db = s_chunk.is_equivalent_to_nominal(n_chunk, analogy_db)
 
             if not step_verdict:
                 overall_verdict = False

@@ -33,7 +33,6 @@ is that they must provide the function:
                  "",              if end of stream has been reached.
 ________________________________________________________________________________
 """
-import vut.engine.compare.engine.equivalence_check.core as     equivalence_check
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 from   vut.engine.compare.engine.association.chunk_pair import ChunkPair
 from   vut.engine.compare.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
@@ -73,7 +72,7 @@ async def is_equivalent(config: Configuration,
     # subject, nominal = 'LINE' or 'POTPOURRI'
     async for subject, nominal in generate_chunk_pairs(config, subject, nominal):
         verdict,   \
-        analogy_db = equivalence_check.do(subject, nominal, analogy_db)
+        analogy_db = subject.is_equivalent_to_nominal(nominal, analogy_db)
         # analogy db is updated as required to main 'equivalence', else not (of course)
 
         if not verdict:

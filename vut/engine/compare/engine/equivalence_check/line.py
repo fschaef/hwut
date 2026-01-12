@@ -1,43 +1,34 @@
+from __future__ import annotations
+from vut.engine.compare.engine.analogy_db  import AnalogyDb
 
-@typechecked
-def do(subject:        str, 
-       nominal:        str, 
-       pattern_finder: PatternFinder) -> tuple[bool, list[tuple[str,str]]]:
-    """RETURNS: [0] True, if 'self' and 'nominal' are equivalent.
-                    False, else.
-                [1] AnalogyDb required for the equivalents of [0] to hold.
+def do(subject:    InputChunk,    #noqa F821
+       nominal:    InputChunk,    #noqa F821
+       analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
+    """RETURNS: [0] True, subject and nominal a definitely equal => equivalent
+                    False, subject and nominal are definitely not equivalent
+                    None, undecided
+                [1] equivalent => the required updated analogy_db,
+                    else       => some analogy_db
     """
-    def _trivial_analogy_list(subject, nominal):
-        if not pattern_finder.analogy_enabled_f:         
-            return []
-        else:
-            # if both lines are equal => trivial analogies: s -> n with s == n
-            analogy_str_list = pattern_finder.find_analogy_strings(subject)
-            return [(s,s) for s in analogy_str_list]
+    if len(subject.line_list) != len(nominal.line_list):
+        return False, analogy_db
+    # In 'equivalence check mode' subject and nominal proceed line by line
+    # assert len(subject.line_list) == 1 and len(nominal.line_list) == 1
 
-    verdict = None
-    if subject == nominal:
-        return True, _trivial_analogy_list(subject, nominal)
+    verdict, analogy_list = subject.line_list[0].compare_raw(nominal.line_list[0])
 
-    # Make sure that backslashes -> '/' if required and n-space -> single space
-    subject_u = pattern_finder.uniform(subject_line)
-    nominal_u = pattern_finder.uniform(nominal_line)
-    if subject_u == nominal_u: 
-        return True, _trivial_analogy_list(subject_u, nominal_u)
+    if verdict:
+        # if lines are textually equal, the analogies must hold
+        # if not => definitely not equivalent in the global frame
+        for analogy in analogy_list:
+            if not analogy_db.add_if_consistent(analogy):
+                return False, analogy_db
+        return True, analogy_db
 
-    subject_le_list = pattern_finder.do(subject_u)
-    nominal_le_list = pattern_finder.do(nominal_u)
-
-    if len(subject_le_list) != len(nominal_le_list): 
-        return False, []
-
-    analogy_list = []
-    for subject_le, nominal_le in zip(subject, nominal):
-        verdict, analogy = subject_le.compare(nominal_le)
-        if verdict != E_Verdict.EQUIVALENT:
-            return False, []
-        elif analogy:
-            analogy_list.append(analogy)
-
-    return True, analogy_list
+    for subject_line, nominal_line in zip(subject.line_list, nominal.line_list):
+        verdict, analogy_db = subject_line.is_equivalent(nominal_line, analogy_db)
+        if not verdict:
+            return False, analogy_db
+    else:
+        return True, analogy_db
 

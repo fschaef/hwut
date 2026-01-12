@@ -62,17 +62,9 @@ conjuction with an event.
 
 The *causation* of an event, the *existence* of an event itself, and the
 *perceiption* happen in three distinct, subsequent Jiffies. The *perceiption*
-may eventually become a *causation* for another event. The direct logical
-*implication* happens instantaneously in the save Jiffy of the events that
-imply it.
-
-NOTE ----------------------------------------------------------------------------
-| By enforcing that Perception happens in the Jiffy after Existence, we prevent
-| "Infinite Feedback Loops" within a single Jiffy. It creates a stable,
-| clock-like progression where the engine can never get stuck in a "now" that
-| won't end; it must always move to the next Jiffy to perceive what it just did.
-'--------------------------------------------------------------------------------
-
+may The direct
+logical *implication* happens instantaneously in the save Jiffy of the
+events that imply it.
 
 Technical Aspects
 ------------------
@@ -96,13 +88,10 @@ HISTORY
 
 Definition:
 
-	History is the immutable memory of all events that occurred before the
-    current "Now." Association of existing event in "The Now" with of 
-    properties of history with generate instanteous events living in 
-    the same Jiffy of "Now".
-
-It is the structural foundation that allows the engine to reason about, or to
-perceive, time. While the "Now" is *ephemeral*, History is *permanent*.
+    History is the immutable memory of events that happend before the
+    point in time where "The Now" is real. The implication of history
+    into event logic allows for conditionally implied events, based
+    on previous events.
 
 Technical Aspects
 -----------------

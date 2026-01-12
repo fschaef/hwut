@@ -1,12 +1,10 @@
+from   __future__ import annotations
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-from   vut.engine.compare.input.input_chunk        import InputChunk
 import vut.engine.compare.engine.potpourri.pairing as     pairing
 
-from   typeguard import typechecked
 
-@typechecked
-def do(subject:    InputChunk,
-       nominal:    InputChunk,
+def do(subject:    InputChunk,    #noqa F821
+       nominal:    InputChunk,    #noqa F821
        analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
 
     verdict, analogy_db = do_quick_path(subject, nominal, analogy_db)

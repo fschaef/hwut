@@ -26,7 +26,6 @@ sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.input.pattern_finder     import PatternFinder
 from   vut.engine.compare.configuration            import Configuration
-import vut.engine.compare.engine.equivalence_check.core as equivalence_check
 import vut.engine.compare.engine.association.core       as association
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import frame_with_potpourri_borders, \
@@ -52,7 +51,7 @@ if "judge" in sys.argv:
         print("nominal:", nominal_line_list)
         subject = get_Potpourri(pf, subject_line_list, config)
         nominal = get_Potpourri(pf, nominal_line_list, config)
-        print("=> %s, %s" % equivalence_check.do(subject, nominal, AnalogyDb()))
+        print("=> %s, %s" % subject.is_equivalent_to_nominal(nominal, AnalogyDb()))
 
     test(["a", "b"], ["b", "a"])
     test(["a"],      ["b", "a"])

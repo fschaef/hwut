@@ -20,6 +20,9 @@ ________________________________________________________________________________
 from   vut.engine.compare.engine.enums          import E_Chunk
 from   vut.engine.compare.engine.line           import Line
 from   vut.engine.compare.input.pattern_finder  import E_ToleranceId
+from   vut.engine.compare.engine.analogy_db     import AnalogyDb
+import vut.engine.compare.engine.equivalence_check.line      as equivalence_check_line
+import vut.engine.compare.engine.equivalence_check.potpourri as equivalence_check_potpourri
 
 from   abc       import ABC, abstractmethod
 from   typing    import Iterable
@@ -65,15 +68,40 @@ class InputChunkVoid(InputChunk):
     def empty_clone(self): return InputChunkVoid()
     def __repr__(self):    return "InputChunkVoid"
 
-class InputChunkTerminal(InputChunk):
+class EquivalenceRelatedInputChunk(InputChunk):
+    def is_equivalent_to_nominal(self, nominal, analogy_db) -> [bool, AnalogyDb]:
+        """RETURNS: [0] True, if both sequences are equivalent. False, else.
+                    [1] analogy_db required for equivalence to hold.
+
+        The 'analogy_db' contains analogies imposed from lines which are
+        equivalent. If the test fails ([0] == False), the analogy database is
+        irrelevant, since the global comparison needs to stop. For display
+        (see .line_pairs()), this different.
+        """
+        if self.__class__ is not nominal.__class__: 
+            return False, analogy_db
+        return self._is_equivalent_to_nominal(nominal, analogy_db)
+
+class InputChunkLineSequence(InputChunk):
+    @typechecked
+    def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
+        super().__init__(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n, line_list, config)
+
+    def empty_clone(self):
+        return InputChunkLineSequence(None, None, [], self.configuration)
+
+class InputChunkTerminal(EquivalenceRelatedInputChunk):
     """Input chunk that marks the end of an input stream.
     """
     def __init__(self):    self._chunk_type = E_Chunk.TERMINAL
     def is_terminal(self): return True
     def empty_clone(self): return InputChunkTerminal()
+    def _is_equivalent_to_nominal(self, nominal, analogy_db):
+        """called by super().is_equivalent_to_nominal()"""
+        return True, analogy_db
     def __repr__(self):    return "InputChunkTerminal"
 
-class InputChunkPotpourri(InputChunk):
+class InputChunkPotpourri(EquivalenceRelatedInputChunk):
     def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
         super().__init__(E_Chunk.POTPOURRI, start_line_n, end_line_n, line_list, config)
 
@@ -87,21 +115,21 @@ class InputChunkPotpourri(InputChunk):
     def empty_clone(self):
         return InputChunkPotpourri(None, None, [], self.configuration)
 
-class InputChunkLineSequence(InputChunk):
-    @typechecked
-    def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
-        super().__init__(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n, line_list, config)
+    def _is_equivalent_to_nominal(self, nominal, analogy_db):
+        """called by super().is_equivalent_to_nominal()"""
+        return equivalence_check_potpourri.do(self, nominal, analogy_db)
 
-    def empty_clone(self):
-        return InputChunkLineSequence(None, None, [], self.configuration)
-
-class InputChunkLine(InputChunk):
+class InputChunkLine(EquivalenceRelatedInputChunk):
     # @typechecked -- too expensive
     def __init__(self, line_n, line: Line, config):
         super().__init__(E_Chunk.LINE, line_n, line_n, [line], config)
 
     def empty_clone(self):
         return InputChunkLine(None, None, self.configuration)
+
+    def _is_equivalent_to_nominal(self, nominal, analogy_db):
+        """called by super().is_equivalent_to_nominal()"""
+        return equivalence_check_line.do(self, nominal, analogy_db)
 
 def InputChunk_factory(chunk_type: E_Chunk, start_line_n, end_line_n, line_list: Iterable[Line], config):
     """RETURNS: InputChunk derivate depending on 'chunk_type'
