@@ -3,7 +3,7 @@ TWIN WORLD
 
 Definition:
 
-    A 'TwinWorld' is a stateful simulation implemented by the test 
+    A 'TWIN WORLD' is a stateful simulation implemented by the test 
     designed. It provides data context for the temporal evolvement 
     of the test. 
 
@@ -19,46 +19,27 @@ It may act as an Oracle (quote), but its functionalities exceed it.
 
 2. SYNCHRONOUS EVOLVEMENT:
 
-   Every state change in TwinWorld occurs within the Jiffy Calculus (t + ε). This ensures the "Virtual State" is always logically aligned with the "Reported Event," preventing race conditions between the monitor and the reference model.
+   Every state change in TWIN WORLD occurs within the Jiffy Calculus (t + ε).
+   This ensures the "Virtual State" is always logically aligned with the
+   "Reported Event," preventing race conditions between the monitor and the
+   reference model.
 
 3. PREDICATE DELEGATION:
 
-   Temporal Guards delegate data-heavy assertions to TwinWorld Agents. A Guard enforces the "When" (Sequence), while the TwinWorld Agent enforces the "What" (Integrity).
+   Temporal Guards delegate data-heavy assertions to TWIN WORLD Agents. A Guard
+   enforces the "When" (Sequence), while the TWIN WORLD Agent enforces the
+   "What" (Integrity).
 
 4. FEEDBACK LOOP (META-EVENTS):
 
-   TwinWorld can influence the Rule Space by synthesizing "State-Triggered Events." When a virtual agent's internal logic detects a boundary breach (e.g., { npc.power > max }), it injects a new event into the next Jiffy.
+   TWIN WORLD can influence the Rule Space by synthesizing "State-Triggered
+   Events." When a virtual agent's internal logic detects a boundary breach
+   (e.g., { npc.power > max }), it injects a new event into the next Jiffy.
 
 5. INJECTION:
 
-   The TwinWorld has direct access to the INJECTION hub. This allows Reference Agents to not only monitor but also act—injecting command events or stimuli back into the WORLD to drive the test toward specific edge cases or to respond to detected behaviors.
+   The TWIN WORLD has direct access to the INJECTION hub. This allows Reference
+   Agents to not only monitor but also act—injecting command events or stimuli
+   back into the WORLD to drive the test toward specific edge cases or to
+   respond to detected behaviors.
 
-Mathematical Definition
------------------------
-
-Let the RULE SPACE be defined as a tuple (G, W, I, ε), where:
-
-1. THE STATE SPACE (S):
-   The TwinWorld state S_w is the product of all active Reference Agent states: 
-   S_w = A_1 × A_2 × ... × A_n.
-
-2. THE TRANSITION FUNCTION (δ):
-   The evolution of the TwinWorld through a Jiffy (ε) is defined by:
-   δ: S_w × E → S_w
-   Where E is the set of events (External, Meta-Events, or Injected).
-
-3. THE INJECTION MAPPING (γ):
-   The TwinWorld's ability to influence the WORLD is defined by an injection 
-   function γ:
-   γ(S_w, E) → E_inj
-   Where E_inj is a stimulus injected into the WORLD's physical input stream 
-   at the next available Jiffy.
-
-4. THE TEMPORAL COINCIDENCE:
-   For any physical timestamp T, the TwinWorld evolves through a finite 
-   sequence of logical states:
-
-   S_w(T, 0ε) ≺ S_w(T, 1ε) ≺ ... ≺ S_w(T, nε)
-
-   The "Zero-Width" property ensures that for the WORLD, the state S_w(T, nε) 
-   is reached before the physical clock advances to T + Δt.

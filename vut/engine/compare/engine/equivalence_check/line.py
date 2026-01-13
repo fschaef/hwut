@@ -15,7 +15,7 @@ def do(subject:    InputChunk,    #noqa F821
     # In 'equivalence check mode' subject and nominal proceed line by line
     # assert len(subject.line_list) == 1 and len(nominal.line_list) == 1
 
-    verdict, analogy_list = subject.line_list[0].compare_raw(nominal.line_list[0])
+    verdict, analogy_list = subject.line_list[0].is_literally_equivalent_to(nominal.line_list[0])
 
     if verdict:
         # if lines are textually equal, the analogies must hold

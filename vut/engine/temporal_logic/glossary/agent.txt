@@ -1,41 +1,36 @@
 # 8.15 THE AGENT 
 
 Definition:
+
     An AGENT is a persistent entity within the TWIN WORLD. It acts as a 
     temporal bridge: it captures the impulse of an event in one Jiffy 
     and converts it into state changes or new injections in the next.
 
-### 1. The Latch Mechanism (History as Memory)
-    The Agent does not require a private memory buffer to "hold" the 
-    triggering event ($E$) as it perishes. 
-    - At the transition from Jiffy $N$ to $N+1$, Event $E$ moves from 
-      "The Now" into **HISTORY**.
-    - In Jiffy $N+1$, the Agent simply queries this universal latch using 
-      historical predicates (e.g., `ever(E)`, `value_of(E)`).
-    - The TwinWorld State itself also acts as a latch, preserving context 
-      between the flash of the event and the reaction of the Agent.
+An AGENT does not see "The Now", it sees history. If an agent refers
+to an event, it refers to it by queries to history:
 
-### 2. Emergence vs. Entropy
-    The system operates on a cycle of voiding and filling:
-    - **Force of Emergence (The Void):** The natural decay of "The Now" 
-      into emptiness is critical. It clears the stage, creating the necessary 
-      vacuum for new reality to emerge.
-    - **Force of Entropy (History):** As events occur and are recorded, 
-      information accumulates. Agents and External Events fight the total 
-      emptiness of the void by injecting new structure (Events/State).
-    
-    The Agent is the active participant in this cycle: it observes the 
-    Entropy (History) and acts to fill the Void (Emergence).
+   last(Event) -> Event attributes or nil
+   ever(event, since=, until=) -> True, False
+   never(event, since=, until=) -> True, False
+   that(event, with=attributes) -> Event attributes or nil
 
-### 3. The 1-Jiffy Rhythm (Catch & Throw)
-    The Agent operates on a strict "Catch and Throw" cadence:
-    
-    | Jiffy | Phase | Activity |
-    | :--- | :--- | :--- |
-    | **N** | **CATCH** | Event hits "The Now." Agent is instantiated (Wakes). |
-    | **N+1** | **THROW** | Event is gone (moved to History). Agent queries History/State. Agent acts to inject new events or update TwinWorld. |
-    | **N+2** | **RESULT** | The *Next* LOCO sees the updated state/new event. |
+An agent has no access to "The Now" and cannot send events. It can only
+set a state in the TWIN WORLD, that causes an event in "The Now".
 
-### 4. Separation from LOCO
-    While the LOCO judges the *validity* of the transition in the moment ($N$), 
-    the AGENT executes the *mechanics* of the transition for the future ($N+1$).
+
+The Jiffy Rhythm
+----------------
+
+* Jiffy 'i':   EVENT is caused
+
+* Jiffy 'i+1': EVENT exists in NOW
+               Implications of EVENT exist in NOW          
+
+* Jiffy 'i+2': EVENT ceases to exist in NOW and enters history.
+               history of EVENT is visible in TWIN WORLD
+               AGENTS perceive TWIN WORLD
+
+* Jiffy 'i+3': AGENTS act in TWIN WORLD, possibly cause EVENT
+
+* ...
+

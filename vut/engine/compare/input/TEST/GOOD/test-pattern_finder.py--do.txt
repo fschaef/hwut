@@ -4,7 +4,7 @@ None -> STRING
 nothing -> VISIBLE_NOTHING
 \(\((?:.|\n)+?\)\) -> ANALOGY
 -?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
-[ \t]+ -> SEPERATOR
+\s+ -> SEPERATOR
 hallo -> EQUIVALENCE_PATTERN
 string: 'hallo welt 4711'
    EQUIVALENCE_PATTERN [0] 'hallo'

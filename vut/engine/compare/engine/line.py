@@ -25,8 +25,14 @@ class LineRaw:
     def expand(self):
         return self.lexer.do(self.string)
 
+    __uniform_string:      str = None
     __analogy_possible_f:  bool = None
     __analogy_strings:     tuple[str] = None
+
+    def uniform_string(self):
+        if self.__uniform_string is None:
+            self.__uniform_string = self.lexer.uniform(self.string)
+        return self.__uniform_string
 
     def has_analogy(self):
         return self.lexer.has_analogy(self.string)
@@ -44,6 +50,18 @@ class LineRaw:
     def analogy_strings(self):
         if self.__analogy_strings is not None: return self.__analogy_strings
         self.__analogy_strings = self.lexer.extract_analogy_strings(self.string)
+
+    def is_literally_equivalent_to(self, nominal):
+        """RETURNS: True, if 'self == nominal'
+                    False, else.
+
+        For literal equivalence first a byte-to-byte check is tried, then the lexer
+        is used to find uniform representations of the strings (whitespace removed,
+        backslash to slash, ...).
+        """
+        if self.string == nominal.string: 
+            return True
+        return self.uniform_string() == nominal.uniform_string()
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
@@ -93,7 +111,7 @@ class Line:
     @property
     def sequence(self):
         if self.__sequence is None:
-            self.__sequence = self._raw.expand()
+            self.__sequence = tuple(self._raw.expand())
             # self._raw      = None # let the garbage collector deal with it
         return self.__sequence
 
@@ -176,14 +194,18 @@ class Line:
             analogy_db = new_analogy_db
         return True, analogy_db
 
-    def compare_raw(self, nominal):
+    def is_literally_equivalent_to(self, nominal):
         """RETURNS: [0] True, if subject and nominal line textually EQUAL
-                        False, they are not textually EQUAL but may be EQUIVALENT
+                        False, they are not literally EQUAL but may be EQUIVALENT
                     [1] in case of 'True' the list of required analogies.
 
         In case of [0] == True, the analogies still need to hold.
         """
-        if self._raw and nominal._raw and self._raw.string == nominal._raw.string:
+        if self._raw is None or nominal._raw is None: 
+            return False, []
+        # LITERAL: 'lexer' may apply some equivalence replacements: shrink whitespace etc.
+        # BUT: it does not interprete, yet.
+        elif self._raw.is_literally_equivalent_to(nominal._raw):
             if self.has_analogy():
                 # If two lines are textually equal, then all the analogies must be trivial
                 return True, [ (a, a) for a in self._raw.analogy_strings()]

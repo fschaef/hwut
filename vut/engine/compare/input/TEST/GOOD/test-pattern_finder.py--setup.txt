@@ -4,11 +4,11 @@ None -> STRING
 
 size: 2;
 None -> STRING
-\(\((?:.|\\n)+?\)\) -> ANALOGY
+\(\((?:.|\n)+?\)\) -> ANALOGY
 
 size: 2;
 None -> STRING
-[ \t]+ -> SEPERATOR
+\s+ -> SEPERATOR
 
 size: 2;
 None -> STRING

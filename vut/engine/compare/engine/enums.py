@@ -31,3 +31,7 @@ class E_Chunk(Enum):
     TERMINAL      = auto()
     VOID          = auto()
     NONE          = auto()
+
+class E_Mode:
+    EQUIVALENCE_CHECK = auto()
+    ASSOCIATION       = auto()

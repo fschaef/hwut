@@ -67,6 +67,7 @@ class PatternFinder:
 
         self._analogy_detector_may_be_re = None
         self._analogy_extractor_re       = None
+        self._whitespace_re              = re.compile(r"\s+")
         if config.analogy_f:
             b = re.escape(config.analogy_begin_marker)
             e = re.escape(config.analogy_end_marker)
@@ -104,7 +105,7 @@ class PatternFinder:
             _register(E_ToleranceId.NUMERIC, r"-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?")
 
         if config.whitespace_f:
-            _register(E_ToleranceId.SEPERATOR, r"[ \t]+")
+            _register(E_ToleranceId.SEPERATOR, r"\s+")
 
         if config.backslash_f:
             _register(E_ToleranceId.EQUIVALENCE_PATTERN, r"[\\/]+")
@@ -113,6 +114,7 @@ class PatternFinder:
             _register(E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
 
         # Config state
+        self.backslash_f                = config.backslash_f
         self.strip_whitespace_f         = config.strip_whitespace_f
         self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
         self.ignored_line_begin_marker  = config.ignored_line_begin_marker
@@ -150,7 +152,7 @@ class PatternFinder:
 
                 # Correctly handle multiple equivalence groups
                 pattern_indices = None
-                tolerance = self._group_map[m.lastgroup]
+                tolerance       = self._group_map[m.lastgroup]
                 
                 if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
                     matched_text = m.group()
@@ -172,6 +174,12 @@ class PatternFinder:
                 yield LineElementString(string[i:])
 
         return tuple(_analyze_optimized(string))
+
+    def uniform(self, line):
+        if self.strip_whitespace_f: line = self._whitespace_re.sub(" ", line).strip()
+        if self.backslash_f:        line = line.replace("\\", "/")
+        return line
+
 
     def is_irrelevant(self, line):
         """RETURN: True, if the line does not contain content subject to comparison.

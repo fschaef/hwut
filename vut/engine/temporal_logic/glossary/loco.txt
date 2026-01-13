@@ -33,8 +33,12 @@ triggered with repsect to "The Now" solely by the existence of events.
 - Because there is no "NOT Event" operator within a Jiffy, multiple 
   IMPs manifesting in the same "Now" cannot contradict one another.
 
+- A NOT is possible, but only with respect to properties of the 
+  history, i.e. something immutable in "The Now".
+
 - Logic is additive: every IMP in "The Now" contributes its 
   implications to the totality of the engine's perception.
+
 
 The violation (Primary objective)
 
