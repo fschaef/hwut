@@ -27,7 +27,6 @@ from   vut.engine.compare.engine.association.edit_operations.core  import WorkLi
 from   vut.engine.compare.engine.association.edit_operations.separator_adaptor import SeparatorAdaptor
 from   vut.engine.compare.input.pattern_finder import E_ToleranceId
 from   vut.engine.compare.engine.analogy_db    import AnalogyDb
-from   vut.external.quex.typed                 import typed
 
 
 # Shortcuts:
@@ -200,7 +199,6 @@ class WorkItemHistory:
             assert False # pragma no cover
 
 class WorkItem(WorkItemBase):
-   @typed(edit_list=EditSequence)
    def __init__(self, si, ni, edit_list, history=None):
        WorkItemBase.__init__(self, si, ni, edit_list)
        if history is None: self.history = WorkItemHistory()
@@ -244,7 +242,6 @@ class WorkItem(WorkItemBase):
                             relative_edit_distance = line_editions.cost,
                             edit_list              = line_editions.edit_list)
 
-   @typed(edit_id=E_EditId, edit_list=[Edit])
    def _step(self, edit_id, relative_edit_distance=None, new_analogy_db=None, edit_list=None):
        """RETURNS: WorkItem derived from self after applying an edit operation.
 
