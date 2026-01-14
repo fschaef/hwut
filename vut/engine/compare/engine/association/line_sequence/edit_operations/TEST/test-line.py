@@ -22,9 +22,9 @@ ______________________________________________________________________________
 import sys
 from   copy import copy
 
-sys.path.insert(0, "../../../../../../../")
+sys.path.insert(0, "../" * 8)
 
-import vut.engine.compare.engine.association.edit_operations.line   as     edit_distance_line
+import vut.engine.compare.engine.association.line_sequence.edit_operations.line   as     edit_distance_line
 from   vut.engine.compare.TEST.common            import prepare, print_match_sequences
 
 if "--hwut-info" in sys.argv:

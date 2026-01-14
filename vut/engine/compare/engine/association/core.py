@@ -3,8 +3,8 @@ from   vut.engine.compare.engine.enums                  import E_Chunk
 from   vut.engine.compare.engine.association.line_pair  import LinePair
 import vut.engine.compare.engine.potpourri.association  as     potpourri_association
 
-import vut.engine.compare.engine.association.edit_operations.line_sequence as     edit_operations_line_sequence
-from   vut.engine.compare.engine.association.edit_operations.edit          import E_EditId, \
+import vut.engine.compare.engine.association.line_sequence.edit_operations.line_sequence as     edit_operations_line_sequence
+from   vut.engine.compare.engine.association.line_sequence.edit_operations.edit          import E_EditId, \
                                                                                   EditSequence
 from typeguard import typechecked
 

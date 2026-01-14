@@ -43,7 +43,7 @@ of early.
 _______________________________________________________________________________
 """
 
-from   vut.engine.compare.engine.association.edit_operations.edit  import E_EditId, EditSequence
+from   vut.engine.compare.engine.association.line_sequence.edit_operations.edit  import E_EditId, EditSequence
 
 from   collections import defaultdict
 from   abc         import ABC, abstractmethod

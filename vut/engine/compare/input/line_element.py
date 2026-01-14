@@ -18,7 +18,7 @@ LineElement provide:
                                      transform 'self' to 'other'.
 ________________________________________________________________________________
 """
-import vut.engine.compare.engine.association.edit_operations.string as     edit_distance_string
+import vut.engine.compare.engine.association.line_sequence.edit_operations.string as     edit_distance_string
 from   vut.engine.compare.engine.enums                              import E_Verdict
 
 from   enum        import IntEnum

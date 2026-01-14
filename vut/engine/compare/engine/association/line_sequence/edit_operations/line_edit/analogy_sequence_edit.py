@@ -1,5 +1,5 @@
-import vut.engine.compare.engine.association.edit_operations.line_edit.common as     edit_operation_search
-from   vut.engine.compare.engine.association.edit_operations.edit             import E_EditId, EditSequence
+import vut.engine.compare.engine.association.line_sequence.edit_operations.line_edit.common as     edit_operation_search
+from   vut.engine.compare.engine.association.line_sequence.edit_operations.edit             import E_EditId, EditSequence
 from   collections import defaultdict
 
 
