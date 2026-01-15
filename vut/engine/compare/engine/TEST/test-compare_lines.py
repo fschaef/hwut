@@ -59,8 +59,8 @@ pattern_finder = PatternFinder(cfg.pattern_finder)
 if "judge" in sys.argv:
 
     def test(a, b):
-        subject = Line.from_raw_line(66, _make_string_again(prepare(a)), pattern_finder)
-        nominal = Line.from_raw_line(4711, _make_string_again(prepare(b, True)), pattern_finder)
+        subject = Line(66, _make_string_again(prepare(a)), pattern_finder)
+        nominal = Line(4711, _make_string_again(prepare(b, True)), pattern_finder)
         print_match_sequences(subject.sequence, nominal.sequence)
 
         print("=> %s, %s" % subject.compare(nominal, AnalogyDb()))
@@ -77,8 +77,8 @@ if "judge" in sys.argv:
 if "info" in sys.argv:
 
     def test(a, b):
-        subject = Line.from_raw_line(66, _make_string_again(prepare(a)), pattern_finder)
-        nominal = Line.from_raw_line(4711, _make_string_again(prepare(b, True)), pattern_finder)
+        subject = Line(66, _make_string_again(prepare(a)), pattern_finder)
+        nominal = Line(4711, _make_string_again(prepare(b, True)), pattern_finder)
         print_match_sequences(subject.sequence, nominal.sequence)
 
         cost,      \

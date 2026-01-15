@@ -99,7 +99,7 @@ cfg.pattern_finder.numeric_tolerance_ratio = 0.01
 pattern_finder = PatternFinder(cfg.pattern_finder)
 
 def FRAME_create_line(line_n, texts):
-    return Line.from_raw_line(line_n, " ".join(texts), pattern_finder)
+    return Line(line_n, " ".join(texts), pattern_finder)
 
 def FRAME_execute_and_print(subject, nominal, edit_list):
     subject._UT_set_sequence([el for el in subject.sequence if el.tolerance_id is not E_ToleranceId.SEPERATOR])

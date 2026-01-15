@@ -92,7 +92,7 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
             elif stripped.startswith(ignored_begin) or stripped.endswith(ignored_end):
                 continue
             else:
-                processed_line = Line.from_raw_line(line_n, line, self.pf) 
+                processed_line = Line(line_n, line, self.pf) 
                 
                 if chunk_type is E_Chunk.LINE:
                     yield InputChunk_factory(chunk_type, line_n, line_n, 
@@ -128,7 +128,7 @@ class AssociationChunkPipe(ChunkPipe):
                 else:                                   chunk_type = E_Chunk.LINE_SEQUENCE
                 start_line_n = line_n
             else:
-                line_list.append(Line.from_raw_line(line_n, line, self.pf))
+                line_list.append(Line(line_n, line, self.pf))
 
         if line_list:
             yield InputChunk_factory(chunk_type, start_line_n, line_n, line_list, self.configuration)

@@ -25,7 +25,7 @@ def get_Potpourri(pattern_finder, line_text_list, configuration):
     end_line_n   = len(line_text_list)
     result = InputChunk_factory(E_Chunk.POTPOURRI, 
                                 start_line_n, end_line_n,
-                                [Line.from_raw_line(line_n, line_text, pattern_finder)
+                                [Line(line_n, line_text, pattern_finder)
                                  for line_n, line_text in enumerate(line_text_list)],
                                 configuration)
     ## print("#POT", result)
@@ -36,7 +36,7 @@ def get_sequence_of_Line(pattern_finder, line_text_list, configuration):
     end_line_n   = len(line_text_list)
     return [
         InputChunk_factory(E_Chunk.LINE, start_line_n, end_line_n,
-                           [Line.from_raw_line(line_n, line_text, pattern_finder)],
+                           [Line(line_n, line_text, pattern_finder)],
                            configuration)
         for line_n, line_text in enumerate(line_text_list)
     ]
@@ -45,7 +45,7 @@ def get_LineSequence(pattern_finder, line_text_list, configuration):
     start_line_n = -1
     end_line_n   = len(line_text_list)
     return InputChunk_factory(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n,
-                              [Line.from_raw_line(line_n, line_text, pattern_finder)
+                              [Line(line_n, line_text, pattern_finder)
                                for line_n, line_text in enumerate(line_text_list)],
                               configuration)
 

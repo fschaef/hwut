@@ -15,7 +15,6 @@ from   vut.engine.compare.engine.analogy_db      import AnalogyDb
 from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 
 from   dataclasses import dataclass
-from   typeguard   import typechecked
 
 @dataclass
 class LineRaw:
@@ -56,25 +55,13 @@ class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
     objects. Additionally, the line number is stored along.
     """
-    def __init__(self, line_n, iterable):
-        self.line_n             = line_n
-        self._raw               = None
-        self.__analogy_f        = None
-        if iterable is None:
-            self.__sequence     = None
-            self.__sequence_v   = None
-        else:
-            assert False # should not be used anymore
-            self.__sequence     = tuple(iterable)
-            self.__sequence_v   = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
-            ## self._structural_hash   = hash(bytes(x.tolerance_id for x in self.sequence))
-
-    @typechecked
-    @staticmethod
-    def from_raw_line(line_n, line:str , pattern_finder: PatternFinder):
-        result = Line(line_n, iterable=None)
-        result._raw = LineRaw(line, pattern_finder)
-        return result
+    def __init__(self, line_n, line:str , pattern_finder: PatternFinder):
+        self.line_n       = line_n
+        self._raw         = None
+        self.__analogy_f  = None
+        self.__sequence   = None
+        self.__sequence_v = None
+        self._raw         = LineRaw(line, pattern_finder)
 
     @staticmethod
     def from_string(line_n, string):

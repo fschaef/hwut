@@ -75,11 +75,11 @@ def test(a_list, b_list, take_string_f=False):
     print("------------------------------------")
     print()
     if not take_string_f:
-        subject = [Line.from_raw_line(i, _make_string_again(prepare(x)), pattern_finder) for i, x in enumerate(a_list) ]
-        nominal = [Line.from_raw_line(i, _make_string_again(prepare(x)), pattern_finder) for i, x in enumerate(b_list) ]
+        subject = [Line(i, _make_string_again(prepare(x)), pattern_finder) for i, x in enumerate(a_list) ]
+        nominal = [Line(i, _make_string_again(prepare(x)), pattern_finder) for i, x in enumerate(b_list) ]
     else:
-        subject = [Line.from_raw_line(i, line, pattern_finder) for i, line in enumerate(a_list)]
-        nominal = [Line.from_raw_line(i, line, pattern_finder) for i, line in enumerate(b_list)]
+        subject = [Line(i, line, pattern_finder) for i, line in enumerate(a_list)]
+        nominal = [Line(i, line, pattern_finder) for i, line in enumerate(b_list)]
     print_match_sequences_lists(subject, nominal)
 
     print("=>")
