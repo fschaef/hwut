@@ -14,13 +14,13 @@ line2
 ----------------------------------
 =>
 001: [VISIBLE_NOTHING '##line1']
-002: [STRING 'line'], [NUMERIC '2']
+002: [STRING 'line2']
 ----------------------------------
 line1
 line2##
 ----------------------------------
 =>
-001: [STRING 'line'], [NUMERIC '1']
+001: [STRING 'line1']
 002: [VISIBLE_NOTHING 'line2##']
 ----------------------------------
 <potpourri>
@@ -31,12 +31,14 @@ line2##
 002| [VISIBLE_NOTHING 'line2##']
 ----------------------------------
 <potpourri>
+##line2
 <potpourri>
 ----------------------------------
 =>
 002| [VISIBLE_NOTHING '##line2']
 ----------------------------------
 <potpourri>
+##line 2
 line 3
 <potpourri>
 ----------------------------------
@@ -46,20 +48,22 @@ line 3
 ----------------------------------
 <potpourri>
 line 2
+##line 3
 <potpourri>
 ----------------------------------
 =>
 002| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '2']
 003| [VISIBLE_NOTHING '##line 3']
 ----------------------------------
+##<potpourri>
 line1
 <potpourri>
 line2
 ----------------------------------
 =>
 001: [VISIBLE_NOTHING '##||||']
-002: [STRING 'line'], [NUMERIC '1']
-004| [STRING 'line'], [NUMERIC '2']
+002: [STRING 'line1']
+004| [STRING 'line2']
 ----------------------------------
 <potpourri>
 line1
@@ -68,6 +72,6 @@ line2
 <potpourri>
 ----------------------------------
 =>
-002| [STRING 'line'], [NUMERIC '1']
+002| [STRING 'line1']
 003| [VISIBLE_NOTHING '||||##']
-004| [STRING 'line'], [NUMERIC '2']
+004| [STRING 'line2']

@@ -61,8 +61,8 @@ line_element_db = {
     "1":  [ LineElementString("a") ],
     "2":  [ LineElementString("b") ],
     "3":  [ LineElementString("a"), 
-           LineElementEquivalencePattern("a b"[1:2], [0 ]),
-           LineElementString("a b"[2:3])  ],
+            LineElementEquivalencePattern("a b"[1:2], [0 ]),
+            LineElementString("a b"[2:3])  ],
     "s":  [ LineElementString("string"[0:6]) ],
     "S":  [ LineElementString("strong"[0:6]) ],
     "Q":  [ LineElementString("quant"[0:6]) ],
@@ -72,6 +72,7 @@ line_element_db = {
     "n":  [ LineElementNumber("4711", 0.01) ], 
     "nr": [ LineElementNumber("4711") ]
 }
+
 def prepare(x, nominal_f=False):
     for letter in x:
         if letter == "n" and not nominal_f: letter = "nr"

@@ -65,15 +65,12 @@ class PatternFinder:
         self._group_map = {}
         re_parts = []
 
-        self._analogy_detector_may_be_re = None
-        self._analogy_extractor_re       = None
-        self._whitespace_re              = re.compile(r"\s+")
+        self._analogy_extractor_re = None
+        self._whitespace_re        = re.compile(r"\s+")
         if config.analogy_f:
             b = re.escape(config.analogy_begin_marker)
             e = re.escape(config.analogy_end_marker)
             
-            # Quickly check if a line MIGHT contain an analogy 
-            self._analogy_detector_may_be_re = re.compile(b)
             # Extractor: Capture content BETWEEN markers
             # Pattern: marker_begin + (captured_content) + marker_end
             self._analogy_extractor_re = re.compile(f"{b}(.*?){e}")            
@@ -102,7 +99,9 @@ class PatternFinder:
             _register(E_ToleranceId.ANALOGY, f"{b}(?:.|\\n)+?{e}")
 
         if config.numeric_tolerance_ratio:
-            _register(E_ToleranceId.NUMERIC, r"-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?")
+            # (?<!\w) -- at front: look behind: no 'word character directly before'
+            #            at back:  look ahead: no 'word character directly after'
+            _register(E_ToleranceId.NUMERIC, r"(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w)")
 
         if config.whitespace_f:
             _register(E_ToleranceId.SEPERATOR, r"\s+")
@@ -147,7 +146,7 @@ class PatternFinder:
             for m in self.master_re.finditer(string):
                 start, end = m.span()
                 
-                if i < start: # Changed != to < for safety
+                if i < start: 
                     yield LineElementString(string[i:start])
 
                 # Correctly handle multiple equivalence groups
@@ -203,17 +202,6 @@ class PatternFinder:
         """
         if self._analogy_extractor_re is None: return False
         return bool(self._analogy_extractor_re.search(line))
-
-    def may_have_analogy(self, line):
-        """RETURNS: True, if the line MAY contains an analogy pattern.
-                    False, if not.
-
-        'True' does not say that it HAS, but it may. 'False' says there 
-        cannot be any analogies in the pattern.
-        """
-        if self._analogy_detector_may_be_re is None: return False
-        # .search() is faster than .finditer() or full analysis
-        return self._analogy_detector_may_be_re.search(line) is not None
 
     def extract_analogy_strings(self, line):
         """RETURNS: List of strings found inside analogy markers.

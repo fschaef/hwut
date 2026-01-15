@@ -1,51 +1,60 @@
-subject:  STRING:string, STRING:strong
-nominal:  STRING:string, STRING:strong
+subject:  STRING:string, SEPERATOR: , STRING:strong
+nominal:  STRING:string, SEPERATOR: , STRING:strong
 Cost: 0.000000
 [0] GOOD
 [1] GOOD
+[2] GOOD
 AnalogyDb:
 
-subject:  STRING:string, NUMERIC:4711
-nominal:  STRING:string, STRING:strong
+subject:  STRING:string, SEPERATOR: , NUMERIC:4711
+nominal:  STRING:string, SEPERATOR: , STRING:strong
 Cost: 0.500000
 [0] GOOD
-[1] SUBSTITUTE_TYPE
+[1] GOOD
+[2] SUBSTITUTE_TYPE
 AnalogyDb:
 
-subject:  STRING:string, STRING:string
-nominal:  STRING:string, STRING:strong
+subject:  STRING:string, SEPERATOR: , STRING:string
+nominal:  STRING:string, SEPERATOR: , STRING:strong
 Cost: 0.083333
 [0] GOOD
-[1] SUBSTITUTE
+[1] GOOD
+[2] SUBSTITUTE
 AnalogyDb:
 
-subject:  ANALOGY:((x)), ANALOGY:((x))
-nominal:  ANALOGY:((y)), ANALOGY:((z))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((x))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 Cost: 0.500000
 [0] GOOD_TOLERATED
-[1] SUBSTITUTE
+[1] GOOD
+[2] SUBSTITUTE
 AnalogyDb:
 
-subject:  ANALOGY:((x)), ANALOGY:((y))
-nominal:  ANALOGY:((y)), ANALOGY:((z))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 Cost: 0.000000
 [0] GOOD_TOLERATED
-[1] GOOD_TOLERATED
+[1] GOOD
+[2] GOOD_TOLERATED
 AnalogyDb:
 :66&4711: "((x))"="((y))", "((y))"="((z))"
-subject:  ANALOGY:((x)), ANALOGY:((y))
-nominal:  ANALOGY:((y)), ANALOGY:((z)), ANALOGY:((y))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z)), SEPERATOR: , ANALOGY:((y))
 Cost: 0.333333
 [0] GOOD_TOLERATED
-[1] GOOD_TOLERATED
-[2] INSERT
+[1] GOOD
+[2] GOOD_TOLERATED
+[3] INSERT
+[4] INSERT
 AnalogyDb:
 
-subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
-nominal:  ANALOGY:((y)), ANALOGY:((z))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y)), SEPERATOR: , ANALOGY:((x))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 Cost: 0.333333
 [0] GOOD_TOLERATED
-[1] GOOD_TOLERATED
-[2] DELETE
+[1] GOOD
+[2] GOOD_TOLERATED
+[3] DELETE
+[4] DELETE
 AnalogyDb:
 

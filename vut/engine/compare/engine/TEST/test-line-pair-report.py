@@ -7,10 +7,14 @@ ________________________________________________________________________________
 import sys
 sys.path.insert(0, "../../../../../")
 
-from vut.engine.compare.input.line_element                  import LineElementString
-from vut.engine.compare.engine.line                             import Line
+from vut.engine.compare.engine.line                                           import Line
 from vut.engine.compare.engine.association.line_sequence.edit_operations.edit import E_EditId, Edit
-from vut.engine.compare.engine.association.line_pair            import LinePair
+from vut.engine.compare.engine.association.line_pair                          import LinePair
+
+from vut.engine.compare.input.line_element   import E_ToleranceId
+from vut.engine.compare.input.pattern_finder import PatternFinder
+from vut.engine.compare.configuration        import Configuration
+
 
 if "--hwut-info" in sys.argv:
     print("LinePair: subject_and_nominal_line_element_lists();")
@@ -90,12 +94,16 @@ def TEST_monkey_chaos():
 # ------------------------------------------------------------------------------
 # FRAMEWORK SUPPORT
 # ------------------------------------------------------------------------------
+cfg = Configuration()
+cfg.pattern_finder.numeric_tolerance_ratio = 0.01
+pattern_finder = PatternFinder(cfg.pattern_finder)
 
 def FRAME_create_line(line_n, texts):
-    sequence = [LineElementString(t) for t in texts]
-    return Line(line_n, sequence)
+    return Line.from_raw_line(line_n, " ".join(texts), pattern_finder)
 
 def FRAME_execute_and_print(subject, nominal, edit_list):
+    subject._UT_set_sequence([el for el in subject.sequence if el.tolerance_id is not E_ToleranceId.SEPERATOR])
+    nominal._UT_set_sequence([el for el in nominal.sequence if el.tolerance_id is not E_ToleranceId.SEPERATOR])
     lp = LinePair(subject, nominal, edit_list)
     
     print("INPUT SEQUENCES:")

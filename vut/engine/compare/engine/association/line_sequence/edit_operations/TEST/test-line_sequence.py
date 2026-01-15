@@ -26,12 +26,23 @@ import vut.engine.compare.engine.association.line_sequence.edit_operations.line_
 from   vut.engine.compare.engine.association.line_sequence.edit_operations.edit           import E_EditId
 from   vut.engine.compare.TEST.common                    import prepare, print_match_sequences_lists, prepare_line_up
 from   vut.engine.compare.engine.line                    import Line
+from   vut.engine.compare.input.pattern_finder import PatternFinder
+from   vut.engine.compare.configuration        import Configuration
 
 if "--hwut-info" in sys.argv:
     print("Edit Distance: Line list alignment;")
     print("CHOICES: subject, nominal, special;")
     sys.exit()
 
+
+def _make_string_again(x):
+    return " ".join(_._string for _ in x)
+
+cfg = Configuration()
+cfg.pattern_finder.numeric_tolerance_ratio = 0.01
+cfg.pattern_finder.equivalent_pattern_list = [ r"black|white" ]
+
+pattern_finder = PatternFinder(cfg.pattern_finder)
 
 def print_lineup(subject, nominal, edit_list):
 
@@ -60,11 +71,15 @@ def print_lineup(subject, nominal, edit_list):
         subject_i += edit_distance_line_sequence.position_increment_db[edit.id][0]
         nominal_i += edit_distance_line_sequence.position_increment_db[edit.id][1]
 
-def test(a_list, b_list):
+def test(a_list, b_list, take_string_f=False):
     print("------------------------------------")
     print()
-    subject = [Line(i, prepare(x)) for i, x in enumerate(a_list) ]
-    nominal = [Line(i, prepare(x)) for i, x in enumerate(b_list) ]
+    if not take_string_f:
+        subject = [Line.from_raw_line(i, _make_string_again(prepare(x)), pattern_finder) for i, x in enumerate(a_list) ]
+        nominal = [Line.from_raw_line(i, _make_string_again(prepare(x)), pattern_finder) for i, x in enumerate(b_list) ]
+    else:
+        subject = [Line.from_raw_line(i, line, pattern_finder) for i, line in enumerate(a_list)]
+        nominal = [Line.from_raw_line(i, line, pattern_finder) for i, line in enumerate(b_list)]
     print_match_sequences_lists(subject, nominal)
 
     print("=>")
@@ -108,5 +123,5 @@ if "nominal" in sys.argv:
 if "special" in sys.argv:
     test(["ssQ", "sSQ", "SsQ", "QsS"], ["SsQ", "SsQ", "QsS"])
     test(["SsQ", "QsS", "sSQ", "ssQ"], ["SsQ", "QsS", "SsQ", ])
-    test(["1"], ["2", "3"])
+    test(["a"], ["b ", "ablackb"], take_string_f=True)
 

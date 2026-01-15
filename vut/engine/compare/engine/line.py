@@ -25,9 +25,8 @@ class LineRaw:
     def expand(self):
         return self.lexer.do(self.string)
 
-    __uniform_string:      str = None
-    __analogy_possible_f:  bool = None
-    __analogy_strings:     tuple[str] = None
+    __uniform_string:  str = None
+    __analogy_strings: tuple[str] = None
 
     def uniform_string(self):
         if self.__uniform_string is None:
@@ -36,16 +35,6 @@ class LineRaw:
 
     def has_analogy(self):
         return self.lexer.has_analogy(self.string)
-
-    def may_have_analogy(self):
-        """RETURNS: True, if there may be analogies
-                    False, if there is no way there are analogies.
-
-        The 'False' case is the safe assumption! We only apply a quick test 
-        checking for the opening analogy bracket.
-        """
-        if self.__analogy_possible_f is not None: return self.__analogy_possible_f
-        self.__analogy_possible_f = self.lexer.may_have_analogy(self.string)
 
     def analogy_strings(self):
         if self.__analogy_strings is not None: return self.__analogy_strings
@@ -75,6 +64,7 @@ class Line:
             self.__sequence     = None
             self.__sequence_v   = None
         else:
+            assert False # should not be used anymore
             self.__sequence     = tuple(iterable)
             self.__sequence_v   = [ le for le in self.sequence if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING ]
             ## self._structural_hash   = hash(bytes(x.tolerance_id for x in self.sequence))
@@ -107,6 +97,9 @@ class Line:
         if self.__analogy_f is None:
             self.__analogy_f = self._raw.has_analogy()
         return self.__analogy_f
+
+    def _UT_set_sequence(self, sequence):
+        self.__sequence = sequence
 
     @property
     def sequence(self):

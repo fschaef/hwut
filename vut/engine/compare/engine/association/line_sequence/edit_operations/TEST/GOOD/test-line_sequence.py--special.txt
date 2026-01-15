@@ -1,35 +1,35 @@
 ------------------------------------
 
-   STRING:string, STRING:string, STRING:quant    STRING:strong, STRING:string, STRING:quant
-   STRING:string, STRING:strong, STRING:quant    STRING:strong, STRING:string, STRING:quant
-   STRING:strong, STRING:string, STRING:quant    STRING:quant, STRING:string, STRING:strong
-   STRING:quant, STRING:string, STRING:strong    
+   STRING:string, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
+   STRING:string, SEPERATOR: , STRING:strong, SEPERATOR: , STRING:quant    STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
+   STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong
+   STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong    
 =>
 Cost: 0.555556
-   STRING:string, STRING:string, STRING:quant    != STRING:strong, STRING:string, STRING:quant
-   STRING:string, STRING:strong, STRING:quant    >- 
-   STRING:strong, STRING:string, STRING:quant    == STRING:strong, STRING:string, STRING:quant
-   STRING:quant, STRING:string, STRING:strong    == STRING:quant, STRING:string, STRING:strong
+   STRING:string, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    != STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
+   STRING:string, SEPERATOR: , STRING:strong, SEPERATOR: , STRING:quant    >- 
+   STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    == STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
+   STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong    == STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong
 
 ------------------------------------
 
-   STRING:strong, STRING:string, STRING:quant    STRING:strong, STRING:string, STRING:quant
-   STRING:quant, STRING:string, STRING:strong    STRING:quant, STRING:string, STRING:strong
-   STRING:string, STRING:strong, STRING:quant    STRING:strong, STRING:string, STRING:quant
-   STRING:string, STRING:string, STRING:quant    
+   STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
+   STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong    STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong
+   STRING:string, SEPERATOR: , STRING:strong, SEPERATOR: , STRING:quant    STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
+   STRING:string, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    
 =>
 Cost: 0.555556
-   STRING:strong, STRING:string, STRING:quant    == STRING:strong, STRING:string, STRING:quant
-   STRING:quant, STRING:string, STRING:strong    == STRING:quant, STRING:string, STRING:strong
-   STRING:string, STRING:strong, STRING:quant    >- 
-   STRING:string, STRING:string, STRING:quant    != STRING:strong, STRING:string, STRING:quant
+   STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    == STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
+   STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong    == STRING:quant, SEPERATOR: , STRING:string, SEPERATOR: , STRING:strong
+   STRING:string, SEPERATOR: , STRING:strong, SEPERATOR: , STRING:quant    >- 
+   STRING:string, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant    != STRING:strong, SEPERATOR: , STRING:string, SEPERATOR: , STRING:quant
 
 ------------------------------------
 
    STRING:a    STRING:b
-               STRING:a, EQUIVALENCE_PATTERN: , STRING:b
+               STRING:a, EQUIVALENCE_PATTERN:black, STRING:b
 =>
 Cost: 1.166667
                -< STRING:b
-   STRING:a    != STRING:a, EQUIVALENCE_PATTERN: , STRING:b
+   STRING:a    != STRING:a, EQUIVALENCE_PATTERN:black, STRING:b
 

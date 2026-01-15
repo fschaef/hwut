@@ -1,21 +1,21 @@
-subject:  STRING:string, STRING:strong
-nominal:  STRING:string, STRING:strong
+subject:  STRING:string, SEPERATOR: , STRING:strong
+nominal:  STRING:string, SEPERATOR: , STRING:strong
 => True, 
-subject:  STRING:string, NUMERIC:4711
-nominal:  STRING:string, STRING:strong
+subject:  STRING:string, SEPERATOR: , NUMERIC:4711
+nominal:  STRING:string, SEPERATOR: , STRING:strong
 => False, 
-subject:  STRING:string, STRING:string
-nominal:  STRING:string, STRING:strong
+subject:  STRING:string, SEPERATOR: , STRING:string
+nominal:  STRING:string, SEPERATOR: , STRING:strong
 => False, 
-subject:  ANALOGY:((x)), ANALOGY:((x))
-nominal:  ANALOGY:((y)), ANALOGY:((z))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((x))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 => False, 
-subject:  ANALOGY:((x)), ANALOGY:((y))
-nominal:  ANALOGY:((y)), ANALOGY:((z))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 => True, :66&4711: "((x))"="((y))", "((y))"="((z))"
-subject:  ANALOGY:((x)), ANALOGY:((y))
-nominal:  ANALOGY:((y)), ANALOGY:((z)), ANALOGY:((y))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z)), SEPERATOR: , ANALOGY:((y))
 => False, 
-subject:  ANALOGY:((x)), ANALOGY:((y)), ANALOGY:((x))
-nominal:  ANALOGY:((y)), ANALOGY:((z))
+subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y)), SEPERATOR: , ANALOGY:((x))
+nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 => False, 

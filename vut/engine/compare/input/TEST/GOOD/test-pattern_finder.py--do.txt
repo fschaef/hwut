@@ -3,7 +3,7 @@ size: 6;
 None -> STRING
 nothing -> VISIBLE_NOTHING
 \(\((?:.|\n)+?\)\) -> ANALOGY
--?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
+(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w) -> NUMERIC
 \s+ -> SEPERATOR
 hallo -> EQUIVALENCE_PATTERN
 string: 'hallo welt 4711'

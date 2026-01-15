@@ -16,7 +16,7 @@ None -> STRING
 
 size: 2;
 None -> STRING
--?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)? -> NUMERIC
+(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w) -> NUMERIC
 
 size: 3;
 None -> STRING

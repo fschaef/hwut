@@ -36,9 +36,11 @@ import sys
 
 sys.path.insert(0, "../../../../../")
 
-from   vut.engine.compare.engine.line       import Line
-from   vut.engine.compare.engine.analogy_db import AnalogyDb
-from   vut.engine.compare.TEST.common       import prepare, print_match_sequences
+from   vut.engine.compare.engine.line          import Line
+from   vut.engine.compare.engine.analogy_db    import AnalogyDb
+from   vut.engine.compare.TEST.common          import prepare, print_match_sequences
+from   vut.engine.compare.input.pattern_finder import PatternFinder
+from   vut.engine.compare.configuration        import Configuration
 
 
 if "--hwut-info" in sys.argv:
@@ -47,11 +49,18 @@ if "--hwut-info" in sys.argv:
     sys.exit()
 
 
+def _make_string_again(x):
+    return " ".join(_._string for _ in x)
+
+cfg = Configuration()
+cfg.pattern_finder.numeric_tolerance_ratio = 0.01
+pattern_finder = PatternFinder(cfg.pattern_finder)
+
 if "judge" in sys.argv:
 
     def test(a, b):
-        subject = Line(66, list(prepare(a)))
-        nominal = Line(4711, list(prepare(b, True)))
+        subject = Line.from_raw_line(66, _make_string_again(prepare(a)), pattern_finder)
+        nominal = Line.from_raw_line(4711, _make_string_again(prepare(b, True)), pattern_finder)
         print_match_sequences(subject.sequence, nominal.sequence)
 
         print("=> %s, %s" % subject.compare(nominal, AnalogyDb()))
@@ -68,8 +77,8 @@ if "judge" in sys.argv:
 if "info" in sys.argv:
 
     def test(a, b):
-        subject = Line(66, list(prepare(a)))
-        nominal = Line(4711, list(prepare(b, True)))
+        subject = Line.from_raw_line(66, _make_string_again(prepare(a)), pattern_finder)
+        nominal = Line.from_raw_line(4711, _make_string_again(prepare(b, True)), pattern_finder)
         print_match_sequences(subject.sequence, nominal.sequence)
 
         cost,      \

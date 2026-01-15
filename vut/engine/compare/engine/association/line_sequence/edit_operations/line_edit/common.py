@@ -1,88 +1,96 @@
 
-def do(seq1_ids, seq2_ids):
-    """Generic Edit Sequence Finder with Transpose Detection.
-       Operates purely on Integer IDs.
-    
-    Args:
-        seq1_ids (list[int]): Source sequence IDs
-        seq2_ids (list[int]): Target sequence IDs
-    Returns:
-        list[dict]: List of operations with indices.
+MATCH     = 0
+TRANSPOSE = 1
+INSERT    = 2
+DELETE    = 3
+REPLACE   = 4
+
+def extract_matches_and_transposes(s, n):
+    """s, n: lists of int IDs (same length, cursor-aligned)
+
+    RETURNS: [0] edit-ops: list of (opcode, i, j)
+             [1] s_remain: list of remaining s IDs
+             [2] n_remain: list of remaining n IDs
     """
-    # 1. Sequence Alignment (LCS)
-    #    Using difflib here, but this is compatible with rapidfuzz.distance.Levenshtein.editops
-    matcher = difflib.SequenceMatcher(None, seq1_ids, seq2_ids)
-    
-    raw_ops = []
-    
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == 'equal':
-            for k in range(i2 - i1):
-                raw_ops.append({
-                    'code': 'MATCH', 
-                    'old_idx': i1+k,
-                    'new_idx': j1+k,
-                    'id': seq1_ids[i1+k] 
-                })
-        elif tag == 'replace':
-            # Treat replace as Delete + Insert to allow Transpose logic to catch moves
-            for k in range(i2 - i1):
-                raw_ops.append({'code': 'DELETE', 'old_idx': i1+k, 'id': seq1_ids[i1+k]})
-            for k in range(j2 - j1):
-                raw_ops.append({'code': 'INSERT', 'new_idx': j1+k, 'id': seq2_ids[j1+k]})
-        elif tag == 'delete':
-            for k in range(i2 - i1):
-                raw_ops.append({'code': 'DELETE', 'old_idx': i1+k, 'id': seq1_ids[i1+k]})
-        elif tag == 'insert':
-            for k in range(j2 - j1):
-                raw_ops.append({'code': 'INSERT', 'new_idx': j1+k, 'id': seq2_ids[j1+k]})
+    used = [False] * max(len(s), len(n))
+    ops  = []
 
-    # 2. Transpose Detection (The "Ghost" Heuristic)
-    #    Structure: Map[ID] -> List[Op] (Handling duplicates via queue)
-    pending_deletes_map = defaultdict(list)
-    for op in raw_ops:
-        if op['code'] == 'DELETE':
-            pending_deletes_map[op['id']].append(op)
+    # SPEED: binding global functions to local variables
+    ops_append = ops.append 
 
-    final_ops = []
-    consumed_delete_indices = set()
+    # fast path: MATCH
+    for i, (a, b) in enumerate(zip(s, n)):
+        if a == b:
+            used[i] = True
+            ops_append((MATCH, i, i))
 
-    for op in raw_ops:
-        if op['code'] == 'MATCH':
-            final_ops.append(op)
-            
-        elif op['code'] == 'INSERT':
-            ins_id = op['id']
-            # Look for a matching delete
-            candidates = pending_deletes_map.get(ins_id, [])
-            
-            # Find a candidate that hasn't been consumed yet
-            found_delete = None
-            for cand in candidates:
-                if cand['old_idx'] not in consumed_delete_indices:
-                    found_delete = cand
-                    break
-            
-            if found_delete:
-                consumed_delete_indices.add(found_delete['old_idx'])
-                final_ops.append({
-                    'code': 'TRANSPOSE',
-                    'old_idx': found_delete['old_idx'],
-                    'new_idx': op['new_idx'],
-                    # id is helpful for debugging but not strictly needed in output
-                    'id': ins_id 
-                })
-            else:
-                final_ops.append(op)
-                
-        elif op['code'] == 'DELETE':
-            # Defer processing; we add leftovers later
-            pass
+    # transpose detection (first-match wins)
+    last_unmatched_s = {}
+    last_unmatched_n = {}
 
-    # 3. Add Unconsumed Deletes
-    for op in raw_ops:
-        if op['code'] == 'DELETE':
-            if op['old_idx'] not in consumed_delete_indices:
-                final_ops.append(op)
-                
+    # SPEED: binding global functions to local variables
+    last_unmatched_s_get = last_unmatched_s.get
+    last_unmatched_n_get = last_unmatched_n.get
+    last_unmatched_s_pop = last_unmatched_s.pop
+    last_unmatched_n_pop = last_unmatched_n.pop
+    for i in range(len(s)):
+        if used[i]: continue
+
+        a = s[i]
+        b = n[i]
+
+        # check if this closes a transpose
+        js = last_unmatched_n_get(a)
+        jn = last_unmatched_s_get(b)
+
+        if js is not None and jn is not None and js == jn:
+            j = js
+            used[i] = used[j] = True
+            ops_append((TRANSPOSE, j, i))
+            last_unmatched_s_pop(b, None)
+            last_unmatched_n_pop(a, None)
+        else:
+            last_unmatched_s[a] = i 
+            last_unmatched_n[b] = i 
+
+    # build residue for Levenshtein
+    s_remain = [s[i] for i in range(len(s)) if not used[i]]
+    n_remain = [n[i] for i in range(len(n)) if not used[i]]
+
+    return ops, s_remain, n_remain
+
+def merge_ops(pre_ops, s_used, n_used, lev_ops):
+    """RETURNS: final edit operations list of ops with original indices
+
+    Merge MATCH / TRANSPOSE ops with Levenshtein ops on the residue.
+
+    ARGS: 
+
+      pre_ops: list of (opcode, i, j)
+               MATCH and TRANSPOSE detected in step (1), using original indices
+      s_used:  list[bool]
+               True for subject positions already consumed (MATCH / TRANSPOSE)
+      n_used:  list[bool]
+               True for nominal positions already consumed
+      lev_ops: list of (op, si, ni)
+               Levenshtein.editops on the reduced sequences
+    """
+
+    # build index maps: reduced index -> original index
+    s_map = [i for i, u in enumerate(s_used) if not u]
+    n_map = [i for i, u in enumerate(n_used) if not u]
+
+    final_ops = list(pre_ops)
+
+    for op, si, ni in lev_ops:
+        match op:
+            case "equal":   final_ops.append((MATCH, s_map[si], n_map[ni]))
+            case "delete":  final_ops.append((DELETE, s_map[si], -1))
+            case "insert":  final_ops.append((INSERT, -1, n_map[ni]))
+            case "replace": final_ops.append((REPLACE, s_map[si], n_map[ni]))
+
+    # optional: sort by original positions for display
+    final_ops.sort(key=lambda x: (x[1] if x[1] != -1 else float("inf"),
+                                  x[2] if x[2] != -1 else float("inf")))
+
     return final_ops
