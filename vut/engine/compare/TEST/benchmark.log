@@ -4,9 +4,9 @@ Running default check (both modes)...
 --- Starting Benchmark: Mode=associate Lines=5000 ---
 Running main.associate()...
 Processed 281 chunks.
---- Finished in 7.6038 seconds ---
+--- Finished in 1.6480 seconds ---
 
 --- Starting Benchmark: Mode=equivalence Lines=40000 ---
 Running main.compare()...
 Verdict: EQUIVALENT (Success)
---- Finished in 2.9698 seconds ---
+--- Finished in 1.6101 seconds ---

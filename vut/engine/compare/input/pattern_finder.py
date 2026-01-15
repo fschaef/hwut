@@ -115,6 +115,7 @@ class PatternFinder:
         # Config state
         self.backslash_f                = config.backslash_f
         self.strip_whitespace_f         = config.strip_whitespace_f
+        self.whitespace_f               = config.whitespace_f
         self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
         self.ignored_line_begin_marker  = config.ignored_line_begin_marker
         self.ignored_line_end_marker    = config.ignored_line_end_marker
@@ -141,44 +142,44 @@ class PatternFinder:
         if self.is_irrelevant(string):
             return (LineElementVisibleNothing(string.rstrip()),)
 
-        def _analyze_optimized(string):
-            i = 0
-            for m in self.master_re.finditer(string):
-                start, end = m.span()
-                
-                if i < start: 
-                    yield LineElementString(string[i:start])
+        result = []
+        i = 0
+        for m in self.master_re.finditer(string):
+            start, end = m.span()
+            
+            if i < start: 
+                result.append(LineElementString(string[i:start]))
 
-                # Correctly handle multiple equivalence groups
-                pattern_indices = None
-                tolerance       = self._group_map[m.lastgroup]
-                
-                if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
-                    matched_text = m.group()
-                    # Re-scan the table to find all overlapping equivalence IDs
-                    pattern_indices = {
-                        tp.pattern_index for tp in self._group_map.values()
-                        if tp.id == E_ToleranceId.EQUIVALENCE_PATTERN and 
-                        tp.pattern and tp.pattern.fullmatch(matched_text)
-                    }
+            # Correctly handle multiple equivalence groups
+            pattern_indices = None
+            tolerance       = self._group_map[m.lastgroup]
+            
+            if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
+                matched_text = m.group()
+                # Re-scan the table to find all overlapping equivalence IDs
+                pattern_indices = {
+                    tp.pattern_index for tp in self._group_map.values()
+                    if tp.id == E_ToleranceId.EQUIVALENCE_PATTERN and 
+                    tp.pattern and tp.pattern.fullmatch(matched_text)
+                }
 
-                match = LineElement.from_match(tolerance.id, m[0], self.numeric_tolerance_ratio, 
-                                               pattern_i_set=pattern_indices)
-                if match:
-                    yield match
-                
-                i = end
+            match = LineElement.from_match(tolerance.id, m[0], self.numeric_tolerance_ratio, 
+                                           pattern_i_set=pattern_indices)
+            if match:
+                result.append(match)
+            
+            i = end
 
-            if i < len(string):
-                yield LineElementString(string[i:])
+        if i < len(string):
+            result.append(LineElementString(string[i:]))
 
-        return tuple(_analyze_optimized(string))
+        return tuple(result)
 
     def uniform(self, line):
-        if self.strip_whitespace_f: line = self._whitespace_re.sub(" ", line).strip()
+        if self.strip_whitespace_f: line = line.strip()
+        if self.whitespace_f:       line = self._whitespace_re.sub(" ", line)
         if self.backslash_f:        line = line.replace("\\", "/")
         return line
-
 
     def is_irrelevant(self, line):
         """RETURN: True, if the line does not contain content subject to comparison.
