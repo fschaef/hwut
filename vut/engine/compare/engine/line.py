@@ -7,12 +7,11 @@ split up into 'LineElements' objects. Such line elements may be numbers,
 strings, lexemes which match some pattern, whitespace etc.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.input.line_element     import LineElementString, E_ToleranceId
+from   vut.engine.compare.input.line_element     import E_ToleranceId
 from   vut.engine.compare.input.pattern_finder   import PatternFinder
 import vut.engine.compare.engine.association.line_sequence.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.engine.enums           import E_Verdict
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
-from   vut.engine.compare.configuration          import ConfigurationPatternFinder
 
 from   dataclasses import dataclass
 
@@ -21,78 +20,59 @@ class LineRaw:
     string: str
     lexer:  PatternFinder
 
-    def expand(self):
-        return self.lexer.do(self.string)
-
-    __uniform_string:  str = None
-    __analogy_strings: tuple[str] = None
-
-    def uniform_string(self):
-        if self.__uniform_string is None:
-            self.__uniform_string = self.lexer.uniform(self.string)
-        return self.__uniform_string
-
-    def has_analogy(self):
-        return self.lexer.has_analogy(self.string)
-
-    def analogy_strings(self):
-        if self.__analogy_strings is not None: return self.__analogy_strings
-        self.__analogy_strings = self.lexer.extract_analogy_strings(self.string)
-
-    def is_literally_equivalent_to(self, nominal):
-        """RETURNS: True, if 'self == nominal'
-                    False, else.
-
-        For literal equivalence first a byte-to-byte check is tried, then the lexer
-        is used to find uniform representations of the strings (whitespace removed,
-        backslash to slash, ...).
-        """
-        if self.string == nominal.string: 
-            return True
-        return self.uniform_string() == nominal.uniform_string()
-
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'
     objects. Additionally, the line number is stored along.
     """
+    __slots__ = ("line_n", "_string", "__analogy_f", "__analogy_strings", "__uniform_string", "__sequence", "__sequence_v", "lexer")
+
     def __init__(self, line_n, line:str , pattern_finder: PatternFinder):
-        self.line_n       = line_n
-        self._raw         = None
-        self.__analogy_f  = None
-        self.__sequence   = None
-        self.__sequence_v = None
-        self._raw         = LineRaw(line, pattern_finder)
-
-    @staticmethod
-    def from_string(line_n, string):
-        return Line(line_n, [LineElementString(string)])
-
-    @staticmethod
-    def from_potpourri(line_n, begin_f):
-        marker = ConfigurationPatternFinder.potpourri_begin_end_marker
-        if begin_f:
-            return Line.from_string(line_n, "%s (potpourri: open)" % marker)
-        else:
-            return Line.from_string(line_n, "%s (potpourri: close)" % marker)
-
-    @staticmethod
-    def from_nothing():
-        return Line.from_string(None, "")
-
+        self.line_n            = line_n
+        self._string           = line
+        self.__analogy_f       = None
+        self.__analogy_strings = None
+        self.__uniform_string  = None
+        self.__sequence        = None
+        self.__sequence_v      = None
+        self.lexer             = pattern_finder
 
     def has_analogy(self):
         if self.__analogy_f is None:
-            self.__analogy_f = self._raw.has_analogy()
+            self.__analogy_f = self.lexer.has_analogy(self._string)
         return self.__analogy_f
 
     def _UT_set_sequence(self, sequence):
         self.__sequence = sequence
 
+    def uniform_string(self):
+        if self.__uniform_string is None:
+            self.__uniform_string = self.lexer.uniform(self._string)
+        return self.__uniform_string
+
+    def analogy_strings(self):
+        if self.__analogy_strings is not None: 
+            self.__analogy_strings = self.lexer.extract_analogy_strings(self._string)
+        return self.__analogy_strings
+
+    def is_literally_equivalent_to(self, nominal):
+        """RETURNS: [0] True, if subject and nominal line textually EQUAL
+                        False, they are not literally EQUAL but may be EQUIVALENT
+                    [1] in case of 'True' the list of required analogies.
+
+        In case of [0] == True, the analogies still need to hold.
+        """
+        if not (self._string == nominal._string or self.uniform_string() == nominal.uniform_string()):
+            return False, []
+        elif self.has_analogy():
+            # If two lines are textually equal, then all the analogies must be trivial
+            return True, [ (a, a) for a in self.analogy_strings()]
+        else:
+            return True, []
+
     @property
     def sequence(self):
         if self.__sequence is None:
-            self.__sequence = tuple(self._raw.expand())
-            # self._raw      = None # let the garbage collector deal with it
+            self.__sequence = self.lexer.do(self._string)
         return self.__sequence
 
     @property
@@ -173,25 +153,6 @@ class Line:
             new_analogy_db.update(analogy_db)
             analogy_db = new_analogy_db
         return True, analogy_db
-
-    def is_literally_equivalent_to(self, nominal):
-        """RETURNS: [0] True, if subject and nominal line textually EQUAL
-                        False, they are not literally EQUAL but may be EQUIVALENT
-                    [1] in case of 'True' the list of required analogies.
-
-        In case of [0] == True, the analogies still need to hold.
-        """
-        if self._raw is None or nominal._raw is None: 
-            return False, []
-        # LITERAL: 'lexer' may apply some equivalence replacements: shrink whitespace etc.
-        # BUT: it does not interprete, yet.
-        elif self._raw.is_literally_equivalent_to(nominal._raw):
-            if self.has_analogy():
-                # If two lines are textually equal, then all the analogies must be trivial
-                return True, [ (a, a) for a in self._raw.analogy_strings()]
-            else:
-                return True, []
-        return False, None
 
     def __compare_core(self, nominal):
         """RETURNS: [0] verdict: True or False

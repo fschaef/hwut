@@ -44,8 +44,8 @@ def do_quick_path(subject, nominal, analogy_db):
         return False, analogy_db # EQUIVALENCE impossible!
 
     # literal equivalence of non-analogy lines
-    s = { line._raw.string for line in subject.non_analogy_line_list }
-    n = { line._raw.string for line in nominal.non_analogy_line_list }
+    s = { line._string for line in subject.non_analogy_line_list }
+    n = { line._string for line in nominal.non_analogy_line_list }
     if s != n:
         if len(s) != len(n): return False, analogy_db # EQUIVALENCE impossible!
         else:                return None, analogy_db  # 'soft interpretation' may yield EQUIVALENCE
