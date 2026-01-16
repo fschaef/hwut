@@ -232,6 +232,18 @@ class FrozenAnalogyDb:
         return cls(_pair_ids=tuple(sorted(merged_ids)))
 
     @lru_cache(maxsize=16384)
+    def merge(self, other: FrozenAnalogyDb|None) -> FrozenAnalogyDb:
+        """RETURNS: clone of 'self' merged with content of 'other'.
+        """
+        if   other is None or other is self: return self
+        elif not self._pair_ids:             return other
+        elif not other._pair_ids:            return self
+        
+        # Optimized: Merge integer IDs directly. 
+        merged = set(self._pair_ids) | set(other._pair_ids)
+        return FrozenAnalogyDb(_pair_ids=tuple(sorted(merged)))
+
+    @lru_cache(maxsize=16384)
     def is_all_consistent(self, other: FrozenAnalogyDb) -> bool:
         if self is other: return True
 
@@ -258,18 +270,6 @@ class FrozenAnalogyDb:
             elif on_id in self_noms:
                 return False
         return True
-
-    @lru_cache(maxsize=16384)
-    def merge(self, other: FrozenAnalogyDb|None) -> FrozenAnalogyDb:
-        """RETURNS: clone of 'self' merged with content of 'other'.
-        """
-        if   other is None or other is self: return self
-        elif not self._pair_ids:             return other
-        elif not other._pair_ids:            return self
-        
-        # Optimized: Merge integer IDs directly. 
-        merged = set(self._pair_ids) | set(other._pair_ids)
-        return FrozenAnalogyDb(_pair_ids=tuple(sorted(merged)))
 
     def items(self):
         """RETURNS: A list of (subject, nominal) string pairs.

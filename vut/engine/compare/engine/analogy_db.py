@@ -65,7 +65,7 @@ class AnalogyDb(dict):
     def clone(self):
         return AnalogyDb(self)
 
-    def clone_updated(self, other):
+    def DELETED_clone_updated(self, other):
         """RETURNS: updated clone, if other is consistent with self
                     None, else
         """
