@@ -121,6 +121,14 @@ class AnalogyDb(dict):
         self.mark_line_numbers(subject_line_n, nominal_line_n, analogy_db.keys())
         return self
 
+    @staticmethod
+    def _try_update_analogy_db(analogy_db, analogy_set):
+        if analogy_db.is_all_consistent(list(analogy_set)):
+            analogy_db.update(analogy_set)
+            return True, analogy_db
+        else:
+            return False, analogy_db
+
     def add_if_consistent(self, analogy):
         if analogy is None:
             return True    # OK:   nothing added; no inconsistency.

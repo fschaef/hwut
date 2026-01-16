@@ -111,7 +111,7 @@ class Line:
 
     def is_equivalent(self, nominal, analogy_db):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
-                    [1] adapted analogy_db required for equivalence to hold.
+                    [1] required list of analogy pairs
 
         IMPORTANT: 'analogy_db' evolves here, it absorbs the new analogies.
 
@@ -122,12 +122,11 @@ class Line:
         """
         verdict, analogy_list = self.__compare_core(nominal)
         if not verdict:
-            return False, analogy_db
+            return False, analogy_list
         elif not analogy_db.is_all_consistent(analogy_list):
-            return False, analogy_db
+            return False, analogy_list
         else:
-            analogy_db.update(analogy_list)
-            return True, analogy_db
+            return True, analogy_list
 
     def compare(self, nominal, analogy_db):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
@@ -152,6 +151,7 @@ class Line:
             new_analogy_db.mark_line_numbers(self.line_n, nominal.line_n)
             new_analogy_db.update(analogy_db)
             analogy_db = new_analogy_db
+
         return True, analogy_db
 
     def __compare_core(self, nominal):

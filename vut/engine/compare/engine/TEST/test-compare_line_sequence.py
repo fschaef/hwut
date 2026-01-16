@@ -51,7 +51,7 @@ if "judge" in sys.argv:
         # Create full sequences PURELY for the print function (to maintain visual output)
         subject_full = get_sequence_of_Line(pf, subject_list, config)
         nominal_full = get_sequence_of_Line(pf, nominal_list, config)
-        print_match_sequences_lists([l for x in subject_full for l in x.line_list], 
+        print_match_sequences_lists([i for x in subject_full for i in x.line_list], 
                                     [k for x in nominal_full for k in x.line_list])
         subject_full += [InputChunkTerminal()]
         nominal_full += [InputChunkTerminal()]
