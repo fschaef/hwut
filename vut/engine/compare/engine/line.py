@@ -128,7 +128,7 @@ class Line:
         else:
             return True, analogy_list
 
-    def compare(self, nominal, analogy_db):
+    def compare_X(self, nominal, analogy_db):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
 
@@ -140,19 +140,15 @@ class Line:
         """
         verdict, analogy_list = self.__compare_core(nominal)
         if not verdict:
-            return False, analogy_db
+            return False, AnalogyDb()
             
-        new_analogy_db = AnalogyDb()
-        for analogy in analogy_list:
-            if not new_analogy_db.add_if_consistent(analogy):
-                return False, analogy_db
+        new_analogy_db = AnalogyDb.from_iterable(analogy_list)
+        if new_analogy_db is None:
+            return False, AnalogyDb()
 
-        if new_analogy_db:
-            new_analogy_db.mark_line_numbers(self.line_n, nominal.line_n)
-            new_analogy_db.update(analogy_db)
-            analogy_db = new_analogy_db
+        new_analogy_db.mark_line_numbers(self.line_n, nominal.line_n)
 
-        return True, analogy_db
+        return True, new_analogy_db
 
     def __compare_core(self, nominal):
         """RETURNS: [0] verdict: True or False

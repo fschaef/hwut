@@ -46,6 +46,8 @@ _______________________________________________________________________________
 from   vut.system.helper        import number_of_decimal_digits
 from   collections              import namedtuple, defaultdict
 
+from   typing import Iterable
+
 LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
 class AnalogyDb(dict):
@@ -64,6 +66,20 @@ class AnalogyDb(dict):
 
     def clone(self):
         return AnalogyDb(self)
+
+    @staticmethod
+    def from_iterable(iterable: Iterable[tuple[str,str]]):
+        """RETURNS: New AnalogyDb, if analogies in 'iterable' are consistent.
+                    None, else.
+        """
+        subjects = AnalogyDb()
+        nominals = {}
+        for s, n in iterable:
+            if   n in nominals and nominals[n] != s: return None
+            elif s in subjects and subjects[s] != n: return None
+            subjects[s] = n
+            nominals[n] = s
+        return subjects
 
     def DELETED_clone_updated(self, other):
         """RETURNS: updated clone, if other is consistent with self
