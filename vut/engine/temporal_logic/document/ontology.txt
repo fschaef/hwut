@@ -1,0 +1,275 @@
+# THE ONTOLOGY OF THE TEMPORAL LOGIC ENGINE
+
+### 1. EVENTS AND THE NOW
+
+A *Jiffy* is the abstraction of a discrete step—a logical cut in the temporal
+continuum. It is a unit of simultaneity with zero physical duration, serving as
+the interval wherein all logical implications reach a *fixed point*.
+
+> **[FORMALISM]**
+> Let $\mathbb{T} = \mathbb{N}_0$ be the set of discrete time steps (Jiffies).
+> Let $k \in \mathbb{T}$ denote the current Jiffy index.
+
+An *event* is an atomic unit of information existing in "The Observed Now"
+(Obsnow). An event is either *caused* or *implied*. A caused event exists the
+Obsnow of the Jiffy immediately after it's causation. An implied event manifests in
+the Obsnow instantaneously via deduction. The event carries meaning solely
+relative to an observer: an observer derives meaning through *interpretation*
+(of caused events) and a *belief system* (the set of implications applied).
+
+> **[FORMALISM]**
+> Let $\mathbb{E}$ be the finite set of all possible event symbols (the Universe of Discourse).
+> The **Obsnow** at step $k$ is a set $N_k \subseteq \mathbb{E}$.
+> Let $C: \mathcal{H} \to \mathcal{P}(\mathbb{E})$ be the **Causation Function** mapping previous history to initial events in $k$.
+> Let $I: \mathcal{P}(\mathbb{E}) \to \mathcal{P}(\mathbb{E})$ be the **Implication Function** (deduction within $k$).
+
+The Obsnow is singular and persistent; it is the vessel that holds the
+*existence* of events. Events, together with their implications, inhabit the
+Obsnow for exactly one Jiffy—the logical instant required for the set to
+saturate and stabilize. The set of stable events is then committed to
+*history*. *History* is the immutable sequence of event sets that have existed
+in the Obsnow:
+
+> **[FORMALISM]**
+> Let $\mathbb{E}$ be the Universe of Events and $k \in \mathbb{N}_0$ be the current Jiffy index.
+> **History** $H_k$ is defined as the immutable, ordered tuple of event sets up to step $k$:
+>
+> $$H_k := \langle N_0, N_1, \dots, N_k \rangle \in (\mathcal{P}(\mathbb{E}))^{k+1}$$
+>
+> Where:
+> * $N_i \subseteq \mathbb{E}$ is the set of events at Jiffy $i$.
+> * The **Crystallization** (transition) from $k$ to $k+1$ is defined by appending the new stable set:
+>     $$H_{k+1} = H_k \frown \langle N_{k+1} \rangle$$
+
+All events and implications in the Obsnow are topologically co-located. Logical
+implications are instantaneous, independent of the physical location of the
+subject. All of reality collapses for the moment of a Jiffy into the Obsnow as
+a realm of meaning.
+
+The Obsnow hosts events for a Jiffy; new events exist in the *next* Jiffy only
+through *causation*. Without causation, the Obsnow is empty of events—and thus
+empty of meaning. The *causation* of an event and its existence in the Obsnow
+occur in two successive Jiffies ($k$ and $k+1$).
+
+---
+
+### 2. POSITIVE LOGIC AND IMPLICATION
+
+Implications within the Obsnow operate under *positive logic*. Existence is
+strictly additive; there is no operation of 'not event' or 'anti-event'.
+Negation is explicitly barred from the Obsnow. The 'not' operation is
+restricted solely to queries against the immutable *history*.
+
+> **[FORMALISM]**
+> The Implication Function $I(S)$ is **Monotonic**:
+> $$\forall A, B \subseteq \mathbb{E} : A \subseteq B \implies I(A) \subseteq I(B)$$
+> Negation ($\neg e$) is undefined for $e \in N_k$.
+> Negation is valid only for predicates $P(H)$ over history.
+
+In implications, properties of history serve as predicates (gates), but the
+result of an implication is always the *addition* of an event. In such a
+system, *contradictions are structurally impossible*.
+
+Let `$\Leftarrow$` represent Positive Entailment. The expression $A \Leftarrow B$ is
+read: 'The existence of A is implied by the existence of B.' This operator is
+strictly monotonic: the presence of $B$ forces $A$ into existence, but the
+absence of $B$ exerts no force on $A$. It is silence, not negation.
+
+> **[FORMALISM]**
+> An implication rule $r$ is a pair $(Conditions, Consequent)$.
+> $$Condition \subseteq \mathbb{E} \cup \{ P(H) \}$$
+> $$Consequent \in \mathbb{E}$$
+> The update step is strictly additive: $S_{next} = S_{current} \cup \{ e \mid (Cond, e) \in Rules \land Cond \subseteq S_{current} \}$
+
+Given two properties of history, `ever()` and `never()`, consider the
+implications:
+
+    (1) A <= B and ever(C) 
+    (2) A <= B and never(C)
+
+If `C` exists in history, (1) causes the existence of `A`, while (2) remains
+silent. If `C` never existed, then (2) causes the existence of `A` and (1)
+remains silent.
+
+In the Obnow, contradictions cannot arise because the absence of an event is
+not a logical value (False) that conflicts with presence (True); it is simply
+null. While logical operations on history may utilize 'and', 'or', and 'not' to
+form predicates, the Obsnow remains a pure vessel of existence.
+
+---
+
+### 3. STABILITY AND THE LEAST FIXED POINT
+
+This system eliminates logical instability through Idempotence and
+Monotonicity. An implication is a constructive force; it can only add to the
+set of existing events. Once an event is brought into existence within "The
+Now," no subsequent implication can remove it.
+
+> **[FORMALISM]**
+> Let $\Phi(S) = S \cup I(S)$ be the step function for a Jiffy.
+> Since $S \subseteq \Phi(S)$ (Inflationary) and $\Phi$ is Monotonic, by the **Knaster-Tarski Theorem**:
+> $$N_k = \text{lfp}(\Phi) = \bigcup_{i=0}^{\infty} \Phi^i(C(H_{k-1}))$$
+> Since $\mathbb{E}$ is finite, convergence is guaranteed in finite steps.
+
+Because the logic of the Obsnow forbids the negation of current events, the set
+of existing events is strictly monotonically increasing during the calculation
+of a Jiffy. This guarantees that the chain of implications inevitably reaches a
+Least Fixed Point: a stable state where all valid implications are satisfied
+and the set ceases to change.
+
+Consequently, circular dependencies (e.g., 'A <= B' and 'B <= A') do not
+produce infinite loops or oscillation. Instead, they resolve into the
+instantaneous, stable existence of the union of the participants (both A and
+B).
+
+Stability defines the Jiffy. The moment the set of events stops expanding
+($S_{i+1} = S_i$), the Jiffy is complete, and the set enters the record of
+immutable history.
+
+---
+
+### 4. ABSURDITY
+
+The co-existence of implied events in the Obsnow guarantees logical stability,
+but it does not guarantee semantic consistency. In the frame of positive logic,
+events never contradict or "un-exist" each other. However, the information
+carried by these events, once recorded in history, may describe a state that
+the observer considers *absurd*.
+
+Absurdity is not a system error; it is a divergence between *System State* and
+*Observer Expectation*. It arises from two sources:
+
+1.  **Unwanted Behavior (Reality Divergence):** This occurs when external
+    reality emits signals that contradict physical constraints. For example,
+    consider two door sensors, A and B:
+    
+    DOOR_JUST_CLOSED <= SENSOR_A 
+    DOOR_JUST_OPENED <= SENSOR_B
+
+    If both sensors fire in the same Jiffy, the engine faithfully records both
+    events. The interpretation—'door is closed' AND 'door is open'—is
+    physically impossible, yet logically valid within the engine. The engine
+    has correctly captured a sensor failure.
+
+2.  **Misimplication (Belief Divergence):** This occurs when the 'belief
+    system' (the set of implications) contains flawed logic that permits
+    inconsistent states. Consider this chain:
+
+    START_VERY_HAPPY          <= JUST_MARRIED 
+    START_TROUBLE             <= START_LIVING_WITH_A_WOMAN 
+    START_LIVING_WITH_A_WOMAN <= JUST_MARRIED
+    START_VERY_UNHAPPY        <= START_TROUBLE
+
+    If 'JUST_MARRIED' occurs, the Obsnow saturates with both 'START_VERY_HAPPY'
+    and 'START_VERY_UNHAPPY'. The engine does not crash; it simply presents the
+    paradox.
+
+> **[FORMALISM]**
+> Let $\mathcal{K}$ be a set of Consistency Constraints (e.g., mutually exclusive sets).
+> A Jiffy $N_k$ is **Valid** iff: $N_k = \text{lfp}(\Phi)$.
+> A Jiffy $N_k$ is **Absurd** iff: $\exists \kappa \in \mathcal{K} : N_k \not\models \kappa$.
+> The engine computes Validity; the user enforces Consistency.
+
+Note that *absurdity* is relative to a specific set of *Consistency Rules*. A
+state is only absurd if there exists a rule declaring the co-existence of those
+specific elements to be invalid. The engine computes the *existence* of the
+state; the belief system determines the *validity* of the state.
+
+---
+
+### 5. STATE AND HISTORY
+
+History is the immutable, ordered sequence of all sets of events that have ever
+existed in the Obsnow. It is the deep memory of the system. $$H = \langle N_0,
+N_1, \dots, N_k \rangle$$
+
+A *State* is not an event; it is a derived *Interpretation* of History. The
+definition of a *State* intrinsically demands persistence—a non-zero duration
+that survives the transition between Jiffies.
+
+> **[FORMALISM]**
+> Let $\mathbb{S}$ be the set of possible States.
+> A State Interpretation is a function $\Psi: (\mathcal{P}(\mathbb{E}))^* \to \mathbb{S}$.
+> State $S_k = \Psi(H_k)$.
+> Unlike events, states persist: $S_k$ remains valid until $H_{k+n}$ changes the evaluation of $\Psi$.
+
+To maintain the uniformity of the engine, State Interpretations are also
+expressed as implications (Positive Logic), but their domain is the *History*,
+not just the current Jiffy.
+
+    STATE_PROPERTY <= PREDICATE(HISTORY)
+
+For example, to interpret the state 'LIGHT_IS_ON' from a history of 'TURN_ON'
+and 'TURN_OFF' events:
+
+    LIGHT_IS_ON <= ever(TURN_ON) and ( never(TURN_OFF) or last(TURN_ON) >
+    last(TURN_OFF) )
+
+Any implication derived solely from the Obsnow (e.g., `LIGHT_IS_ON <= TURN_ON`)
+precipitates a logical collapse: the inferred state vanishes the instant the
+causing event clears (the subsequent Jiffy). The persistent nature of a *State*
+is the symmetric inverse of the ephemeral nature of an *Event*. To achieve
+persistence, the implication must be anchored in *History*, bridging the
+discrete intervals between Jiffies until a counter-event in the record
+invalidates the predicate.
+
+Thus, the Obsnow is the generator of Truth (Events), and History is the
+sustainer of Meaning (State).
+
+---
+
+### 6. SCHRÖDINGER'S CAT AND RELATIVISTIC TRUTH
+
+The paradox of Schrödinger's cat finds its resolution in the strict constraints
+of the Obsnow. The engine does not model an omniscient "God's Eye View"; it
+models the *Local Truth* of a specific observer.
+
+> **[FORMALISM]**
+> Let $\mathcal{O}$ be the set of Observers.
+> Truth is indexed by observer: $Truth(e, o, k) \iff e \in N_{k, o}$.
+> Global Truth ($\exists k : e \in N_{k, \text{God}}$) is undefined in this ontology.
+
+An observer has no source of truth other than the events manifested in their
+Obsnow. In this sense, the Obsnow is absolute. However, the events themselves
+are merely *interpretations* extracted from "The Raw."
+
+"The Raw" is the substrate that connects all Obsnows. It is absolute, yet it
+does not possess properties tangible to information-based reasoning. It
+manifests *in* information and events, but it does not *consist* of them. The
+Obsnow acts as a reducing valve, collapsing this blinding Absolute Truth into
+manageable, discrete *Facts* (Events).
+
+> **[FORMALISM]**
+> Let $\mathcal{R}$ be The Raw (The Noumenon). $\mathcal{R}$ is not a set.
+> The Obsnow is a projection function $\Pi_o: \mathcal{R} \to \mathcal{P}(\mathbb{E})$.
+> Distinct observers imply distinct projections: $\Pi_{cat} \neq \Pi_{scientist}$.
+
+Crucially, "The Raw" connects observers through Obsnows, but their *Truths*
+remain distinct. The "Cat" is an observer with its own Obsnow.
+
+1.  **In the Cat's Obsnow:** The state `I_AM_ALIVE` is derivable from its local
+history. The truth is immediate and absolute. The Cat perceives no
+superposition. 
+
+2.  **In the Scientist's Obsnow:** The box is closed. No event `CAT_DEAD` or
+`CAT_ALIVE` has been caused. The necessary manifestation of the truth of "The
+Raw" has not yet put the scientist in a position of knowing.
+
+The paradox of superposition (Life and Death co-existing) is a fallacy of
+conflating the Map (the Obsnow) with the Territory (The Raw). The Scientist
+cannot access the Cat's Obsnow or history. In the Scientist's Obsnow, the cat's
+state is not "Both"—it is *Unknown*.
+
+This imposes a critical constraint on logic: **Scientific Reality is not
+Absolute Truth; it is merely a bound Obsnow.** To be rigorous, our logic must
+accept the 'Unknown' as a valid state. We reject the binary assumption that
+"Not True implies False." Falsehood requires evidence (an event) just as Truth
+does. Without an event, a proposition is neither True nor False; it is
+*Undeterminable*.
+
+> **[FORMALISM]**
+> **Ternary Logic:**
+> Value $(p) = \begin{cases} \text{True} & \text{if } p \in N_k \\ \text{False} & \text{if } \text{evidence}(\neg p) \in N_k \\ \text{Unknown} & \text{otherwise} \end{cases}$
+
+Thus, objective reality is an unreachable, unstructured Absolute. We are left
+only with the localized, discrete certainty of our own events.
