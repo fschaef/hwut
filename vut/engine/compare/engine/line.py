@@ -128,7 +128,7 @@ class Line:
         else:
             return True, analogy_list
 
-    def compare_X(self, nominal, analogy_db):
+    def compare_X(self, nominal):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
 

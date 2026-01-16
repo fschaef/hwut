@@ -63,7 +63,9 @@ if "judge" in sys.argv:
         nominal = Line(4711, _make_string_again(prepare(b, True)), pattern_finder)
         print_match_sequences(subject.sequence, nominal.sequence)
 
-        print("=> %s, %s" % subject.compare_X(nominal, AnalogyDb()))
+        verdict, analogy_db = subject.compare_X(nominal)
+        analogy_db.mark_line_numbers(66, 4711)
+        print("=> %s, %s" % (verdict, analogy_db))
 
     test("sS", "sS")
     test("sn", "sS")
