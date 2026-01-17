@@ -65,6 +65,13 @@ class AnalogyDb(dict):
     def clone(self):
         return AnalogyDb(self)
 
+    def clone_and_add(self, analogy):
+        assert analogy is not None
+        result = AnalogyDb(self)
+        subject, nominal = analogy
+        result[subject] = nominal
+        return result
+
     @staticmethod
     def from_iterable(iterable: Iterable[tuple[str,str]]):
         """RETURNS: New AnalogyDb, if analogies in 'iterable' are consistent.
@@ -113,11 +120,6 @@ class AnalogyDb(dict):
             return all(self.is_consistent(item) for item in analogy_db)
         else:
             return all(self.is_consistent(item) for item in analogy_db.items())
-
-    def add(self, analogy):
-        assert analogy is not None
-        subject, nominal = analogy
-        self[subject] = nominal
 
     @staticmethod
     def _try_update_analogy_db(analogy_db, analogy_set):

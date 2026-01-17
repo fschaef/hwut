@@ -298,8 +298,7 @@ class WorkItem(WorkListBase):
 
     def _step_analogy(self, edit_id, new_analogy):
         """Transition specifically for operations that update the Analogy Database."""
-        new_analogy_db = self.edit_list.analogy_db.clone()
-        new_analogy_db.add(new_analogy)
+        new_analogy_db = self.edit_list.analogy_db.clone_and_add(new_analogy)
         
         increment_ai, increment_bi = position_increment_db[edit_id]
         return WorkItem(si         = self.si + increment_ai,
