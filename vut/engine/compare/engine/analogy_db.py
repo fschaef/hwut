@@ -119,8 +119,7 @@ class AnalogyDb(dict):
     @staticmethod
     def _try_update_analogy_db(analogy_db, analogy_set):
         if analogy_db.is_all_consistent(list(analogy_set)):
-            analogy_db.update(analogy_set)
-            return True, analogy_db
+            return True, analogy_db.update(analogy_set)
         else:
             return False, analogy_db
 

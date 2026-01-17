@@ -178,7 +178,7 @@ class Line:
         result = edit_operations_line.do(self.sequence, nominal.sequence, analogy_db)
 
         if result.cost == 0:
-            result.analogy_db.update(analogy_db)
+            result.analogy_db = result.analogy_db.update(analogy_db)
         else:
             result.analogy_db = analogy_db.clone() if analogy_db else AnalogyDb()
 
