@@ -139,16 +139,12 @@ class Line:
         which are not equivalent do not impose new analogies.
         """
         verdict, analogy_list = self.__compare_core(nominal)
-        if not verdict:
-            return False, AnalogyDb()
+        if not verdict:        return False, AnalogyDb()
+        elif not analogy_list: return True, AnalogyDb()
             
-        new_analogy_db = AnalogyDb.from_iterable(analogy_list)
-        if new_analogy_db is None:
-            return False, AnalogyDb()
-
-        new_analogy_db.mark_line_numbers(self.line_n, nominal.line_n)
-
-        return True, new_analogy_db
+        analogy_db = AnalogyDb.from_iterable(analogy_list)
+        if analogy_db is None: return False, AnalogyDb()
+        else:                  return True, analogy_db
 
     def __compare_core(self, nominal):
         """RETURNS: [0] verdict: True or False

@@ -30,8 +30,8 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             subject_hash = structural_hash(subject_le_seq.sequence)
             for nominal_le_seq in nominal_hash_db.get(subject_hash, []):
                 verdict, analogy_db = subject_le_seq.compare_X(nominal_le_seq)
-                analogy_db.mark_line_numbers(subject_le_seq.line_n, nominal_le_seq.line_n)
                 if verdict:
+                    analogy_db.mark_line_numbers(subject_le_seq.line_n, nominal_le_seq.line_n)
                     yield nominal_le_seq.line_n, analogy_db
 
         def _iterable(subject_line_list, nominal_hash_db, abort_early_f):

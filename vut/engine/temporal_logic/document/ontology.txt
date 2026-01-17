@@ -220,129 +220,253 @@ sustainer of Meaning (State).
 
 ### 6. SCHRÖDINGER'S CAT AND RELATIVISTIC TRUTH
 
-The paradox of Schrödinger's cat finds its resolution in the strict constraints
-of the Obsnow. The engine does not model an omniscient "God's Eye View"; it
-models the *Local Truth* of a specific observer.
+Schrödinger’s Cat is a thought experiment designed to illustrate a perceived
+paradox in quantum mechanics. A cat is placed in a sealed box with a device
+that has a 50% chance of killing the cat based on a random subatomic event
+(radioactive decay). According to some interpretations of physics, until the
+box is opened, the cat exists in a "superposition"—being both dead and alive
+simultaneously.
+
+This thought experiment serves as a fundamental anchor for understanding the
+concepts of the ontology. By resolving the paradox through the lens of local
+events, it determines the place of this ontology on a broader map: it is a
+system of localized, observer-dependent truth rather than a model of universal,
+objective reality. The Obsnow provides access to knowledge; it does not provide
+access to being.
+
+There is one absolute truth that is perceived without the necessity of an
+event: the truth of one’s *own* existence. For other observers this truth,
+however, is only accessible in terms of knowledge.
+
+Applying the strict constraints of the Obsnow, no superposition exists. The
+Obsnow does not give an omniscient "God's Eye View"; it models the only source
+of knowledge of a specific observer. This 'knowledge' comes as events
+manifested in the Obsnow. Yet events consist of conceivable information; they
+exist exclusively within the domain of conception and have no existence in "The
+Raw."
+
+"The Raw" is the unreachable, indescribable, and inconceivable Absolute. It
+does not consist of events, nor does it possess properties tangible to
+information-based reasoning. Because the Absolute is inconceivable, so too is
+the ultimate causation of events; we cannot know *how* the Raw precipitates an
+event, only that an event has manifested. 
+
+Crucially, "The Raw" connects observers through their separate Obsnows, but
+their Truths remain distinct. The "Cat" is not an object, but an observer with
+its own Obsnow. 
 
 > **[FORMALISM]**
-> Let $\mathcal{O}$ be the set of Observers.
-> Truth is indexed by observer: $Truth(e, o, k) \iff e \in N_{k, o}$.
-> Global Truth ($\exists k : e \in N_{k, \text{God}}$) is undefined in this ontology.
+> Let $\mathcal{O}$ be the set of Observers. Truth is strictly indexed by the observer:
+> $$Truth(e, o, k) \iff e \in N_{k, o}$$
+> Where $N_{k, o}$ is the Obsnow of observer $o$ at Jiffy $k$.
+> **Ternary Logic of the Obsnow:**
+> $$Value(p) = \begin{cases} \text{True} & \text{if } p \in N_k \\ \text{False} & \text{if } \text{evidence}(\neg p) \in N_k \\ \text{Unknown} & \text{otherwise} \end{cases}$$
 
-An observer has no source of truth other than the events manifested in their
-Obsnow. In this sense, the Obsnow is absolute. However, the events themselves
-are merely *interpretations* extracted from "The Raw."
+1. **In the Cat's Obsnow:** The event of the device triggering (or not)
+   manifests immediately. The state of being alive or dead is tied to its own,
+   single, absolute truth that it can perceive: its own existence. The truth is
+   immediate and absolute. 
 
-"The Raw" is the substrate that connects all Obsnows. It is absolute, yet it
-does not possess properties tangible to information-based reasoning. It
-manifests *in* information and events, but it does not *consist* of them. The
-Obsnow acts as a reducing valve, collapsing this blinding Absolute Truth into
-manageable, discrete *Facts* (Events).
+2. **In the Scientist's Obsnow:** The box is closed. No event `CAT_DEAD` or
+   `CAT_ALIVE` has manifested. The necessary manifestation of the truth of "The
+   Raw" has not yet put the scientist in a position of knowing.
 
-> **[FORMALISM]**
-> Let $\mathcal{R}$ be The Raw (The Noumenon). $\mathcal{R}$ is not a set.
-> The Obsnow is a projection function $\Pi_o: \mathcal{R} \to \mathcal{P}(\mathbb{E})$.
-> Distinct observers imply distinct projections: $\Pi_{cat} \neq \Pi_{scientist}$.
+Objective reality is an unreachable, indescribable, and inconceivable Absolute.
+Even with total scientific rigor, our perception of "reality" is strictly
+limited to the manifestations within our Obsnow. We do not measure proximity to
+the Absolute; we measure the **Coherence of our Interpretations**. 
 
-Crucially, "The Raw" connects observers through Obsnows, but their *Truths*
-remain distinct. The "Cat" is an observer with its own Obsnow.
+Under this view, **Consistency** is the highest metric available to the
+information-based mind. The scientific pursuit is not an approach toward the
+Raw, but the construction of a belief system (a set of implications) where
+events never collapse into Absurdity. The supposed *superposition* of a cat's
+state, being alive and dead at the same time, is factually a consequence of the
+relativity of the perceiver's Obsnow. Claiming superposition mistakes a lack of
+information (which is a necessary consequence of relativity) for a fundamental
+property of the Absolute.
 
-1.  **In the Cat's Obsnow:** The state `I_AM_ALIVE` is derivable from its local
-history. The truth is immediate and absolute. The Cat perceives no
-superposition. 
+-----
 
-2.  **In the Scientist's Obsnow:** The box is closed. No event `CAT_DEAD` or
-`CAT_ALIVE` has been caused. The necessary manifestation of the truth of "The
-Raw" has not yet put the scientist in a position of knowing.
+### 7. THE ABSTRACT AND THE THINKER
 
-The paradox of superposition (Life and Death co-existing) is a fallacy of
-conflating the Map (the Obsnow) with the Territory (The Raw). The Scientist
-cannot access the Cat's Obsnow or history. In the Scientist's Obsnow, the cat's
-state is not "Both"—it is *Unknown*.
+The **Abstract** is the observer’s internal model of the world—a purely
+conceptual domain. It is a workspace constructed from **State** (the
+interpreted history) and **Imagination**. Within this domain, the observer acts
+as a **Thinker**, manipulating objects and simulating outcomes.
 
-This imposes a critical constraint on logic: **Scientific Reality is not
-Absolute Truth; it is merely a bound Obsnow.** To be rigorous, our logic must
-accept the 'Unknown' as a valid state. We reject the binary assumption that
-"Not True implies False." Falsehood requires evidence (an event) just as Truth
-does. Without an event, a proposition is neither True nor False; it is
-*Undeterminable*.
+#### Logic within the Abstract
 
-> **[FORMALISM]**
-> **Ternary Logic:**
-> Value $(p) = \begin{cases} \text{True} & \text{if } p \in N_k \\ \text{False} & \text{if } \text{evidence}(\neg p) \in N_k \\ \text{Unknown} & \text{otherwise} \end{cases}$
+Through implications, the Thinker generates new events directly within the
+Obsnow. For example, by projecting the movement of two spheres in the Abstract
+state space, the engine calculates their intersection and implies the event
+`COLLISION`. This is not "magic," but the deterministic result of the belief
+system (the set of implications) acting upon the current model.
 
-Thus, objective reality is an unreachable, unstructured Absolute. We are left
-only with the localized, discrete certainty of our own events.
+#### The Mystery of Agency
 
-The Cat is never in a state of 'Life-and-Death.' It is in a state of 'Alive'
-(in the Obsnow that it perceives as its reality) and 'Unknown' (in the Obsnow
-that the scientist observe as reality). The paradox is a failure of the
-Scientist to be aware of the boundaries of their own Obsnow.
-
-### 8. REACTORS
-
-A **Reactor** is the engine’s organ of agency, serving as the bridge between
-the immutable past and the potential future. While implications within the
-Obsnow are "horizontal" (Event $\to$ Event), a Reactor is "vertical"—it
-reflects upon the crystallized History to seed the next Jiffy.
-
-#### The Edge of Reaction
-
-A reaction is an event produced specifically upon a **change in state**. It is
-the delta of interpretation that triggers agency. 
-
-* **Example:** Two spheres move through space. Events enter the Obsnow in terms of
-  `POSITION_OF_A` and `POSITION_OF_B`. By attributes of theses events (coordinates
-  'x', 'y' and 'z') the observer may imply a new event, namely `COLLSITION_A_AND_B`.
-  The underlying state change is 'non-touching' to 'touching'.
-
-Notably, this triggerring can only occur a Jiffy after the Obsnow has received
-the events about positions and committed them to history. 
-
-#### Causal Agnosticism
-
-The ontology remains strictly agnostic regarding the *basis* of a reaction. The
-Reactor is a black box of agency. Whether the reaction is deterministic,
-stochastic, teleological (goal-oriented), or an external actuator talented with
-free will, the ontology does not care *why* the Reactor acts. It only asserts
-*when* the action manifests: in the Jiffy immediately following the state
-change.
+Another type of event originates in the Abstract and is 'action', changes in
+reality. The translation of *intent* into *action*, i.e. new events in the
+Obsnow, remains a mystery of the **Absolute**. The Abstract itself has no means
+to exert force; it is pure imagination. Yet, when the Thinker modifies their
+internal world—such as the "wanting" to move an arm—it is the Absolute that
+translates this state change into a "real" caused event in the next Jiffy. The
+"magic" of agency is the Absolute reflecting the state of the Abstract in the
+Obsnow.
 
 > **[FORMALISM]**
-> Let $\Psi(H_k)$ be the State Interpretation function.
-> A Reactor $\rho$ fires an event $e$ at $k+1$ if and only if:
-> $$\Psi(H_k) = \text{TRUE} \land \Psi(H_{k-1}) = \text{FALSE}$$
-> The resulting event is added to the set of Caused Events $C(H_k)$, such that $e \in N_{k+1}$.
+> Let $\mathbb{A}$ be the Abstract Space.
+> 1. **Conceptual Deduction:** $e \in N_k \iff (H_k, \mathbb{A}_k) \vdash e$
+>    *(Events implied by the current model).*
+> 2. **Causal Agency:** $e \in N_{k+1} \iff \text{Absolute}(\Delta \mathbb{A}_k) \to e$
+>    *(Events precipitated by the Absolute following a state change in the Abstract).*
+
+In the context of this ontology, we need to accept that the Absolute is out of
+reach of understanding. We can state that knowledge about being is not being,
+but a real understanding of this fact is impossible. Since the Absolute is not
+conceivable, anything in the Absolute, is not categorizable, not separable.
+Even the notion of 'in' would require an 'out of' which is a concept and
+therefore not related to the Absolute. The statement 'A exists' does not relate
+to a separable existence in the Absolute that is called 'A'. We must admit that
+the reality of 'A' is incomprehensible. We are dependent on the absolute to 
+produce events that let us maintain our concept of 'A' in our Abstract
+consistently.
 
 ---
 
 ### 9. THREE PHASES OF THE CYCLE OF CAUSATION
 
 The engine operates in a rhythmic "breath," a three-phase cycle that ensures
-logical simultaneity is preserved within a Jiffy while physical succession is
-enforced across them.
+logical simultaneity within a Jiffy while enforcing succession across them.
 
 #### Phase I: Deduction (Simultaneity)
 
-Caused events from the previous Jiffy pop into existence in the Obsnow. The
-the internal belief system (the set of implications) potentially add events. Using
-Positive Logic, the set of events expands monotonically until all valid
-implications are satisfied. 
+Events precipitated by the Absolute or caused by the previous Jiffy manifest in
+the Obsnow. The observer's internal belief system (the set of implications)
+then adds implied events. Using Positive Logic, the set of events expands
+monotonically until all valid implications are satisfied. 
 
-* **The Goal:** Reach the **Least Fixed Point** where the set of events is stable.
+* **The Goal:** Reach the **Least Fixed Point** where the set of events $N_k$
+  is stable.
+
+* **Formalism:** $N_k = \text{lfp}(\Phi)$ where $\Phi(S) = S \cup \{e \mid
+  (H_{k-1}, S, \mathbb{A}_k) \vdash e\}$.
 
 #### Phase II: Crystallization (Persistence)
 
 The stable set of events ($N_k$) is committed to the immutable History ($H_k$).
-This phase is the transition from the "flux" of the Now to the "granite" of the
-Past. The history is now ready for an updated interpretation in terms of 
-states. The ephemeral events are "integralized" into persistent States.
+This is the transition from the "flux" of the Now to the "granite" of the Past.
+The observer interprets this history to update the **Abstract** state space.
+Ephemeral events are "integralized" into persistent States.
 
-#### Phase III: Reaction (Succession)
+* **Formalism:** $H_k = H_{k-1} \frown \langle N_k \rangle$ and $\mathbb{A}_k = \Psi(H_k)$.
 
-Reactors evaluate the History in terms of States. They detect the
-transitions—the rising and falling edges of states. Based on their internal
-(and potentially non-deterministic) logic, they cause a new set of 
-events. They pop into existence of the Obsnow in the next Jiffy. 
 
-* **The Result:** The cycle closes and re-enters at Jiffy $k+1$.
+#### Phase III: Manifestation (Succession)
+
+The **Thinker** modifies the Abstract state space, representing imagination or
+intent. The **Absolute** then translates these internal state changes
+(transitions) into a new set of caused events. These events are seeded to
+manifest in the Obsnow of the next Jiffy ($k+1$).
+
+* **The Result:** The cycle closes and the Absolute precipitates the next state
+  of the world.
+
+* **Formalism:** $C_{k+1} = \{e \mid \text{Absolute}(\Delta \mathbb{A}_k) \to
+  e\}$.
+
+
+### 10. THE PERCEPTION OF TIME AND DIMENSION
+
+Within this ontology, time and space are not independent dimensions or
+properties of the Absolute. They are internal constructs of the Thinker,
+perceivable only through the lens of the **Abstract** (derived from
+**States**), i.e. through interpretations of **History**.
+
+#### The Timeless Absolute
+
+The Absolute exists entirely beyond time. It is a non-sequential, non-spatial
+presence. Further "dimensions" are not attributes of the Absolute; they are
+concepts that exist solely within the **States**—the interpretations of the
+history of events. Any notion of a "coordinate" or "sequence" is a conceptual
+layer projected by the Thinker onto the manifestations of the Absolute to make
+them navigable.
+
+#### Time as a Derivative of Change
+
+Time is only perceivable in terms of the elements of history—specifically, the
+interpreted changes of state together with the events that relate to them.
+Without a recorded change (a transition from State A to State B) and the
+associated events in the Obsnow, there is no "movement" for the Thinker to
+measure. Time is the subjective "distance" between manifestations; if the
+Absolute precipitates no events and the Thinker performs no modifications in
+the Abstract, time effectively ceases to exist for that observer.
+
+> **[FORMALISM]**
+> Dimensions (including time) are properties of the Interpretation Function $\Psi$:
+> $$\dim(\mathbb{A}_k) \in \Psi(H_k)$$
+> Since $\mathbb{A}_k$ is a purely conceptual world, its dimensionality and temporal flow are restricted to the capacity of the Thinker to categorize history. The Absolute remains $\text{dim} = 0$ (or non-dimensional).
+
+### 11. THE PARADOX OF THE ABSTRACT
+
+#### The Challenges
+
+1.  **The Absolute** is the only domain with real existence, yet it is unstructured, inseparable, and inconceivable. 
+
+2.  **The Abstract** is a structured, conceivable domain built upon information and imagination. The constructs within the Abstract are not "real" in themselves.
+
+A Thinker can conceptualize a difference between the Absolute and the Abstract
+through reasoning. However, since the Absolute is inconceivable, any attempt to
+define "borders" or "limits" fails, as these are themselves conceivable
+concepts. The only "Truth" we can assign to these concepts is a real,
+equivalent existence grounded in the Absolute—which remains beyond our grasp.
+
+#### The Detection of Reality: Inconsistency
+
+The Thinker is exposed to an **Abstract** based on **States** (interpreted
+History), which is "fed" by the **Obsnow**. In this ontology, the only way to
+distinguish between events originating from the Absolute and events originating
+from the Abstract is **Consistency**.
+
+It is therefore essential to utilize **Positive Logic**. By allowing
+potentially inconsistent events to manifest, the engine provides the Thinker
+with the data necessary to distinguish between the "Real World" (the Absolute's
+manifestations) and their own "Imagination" (the Abstract's implications).
+
+#### The Trap of Coherence
+
+A trap remains: as the Thinker refines their internal implications, their model
+becomes increasingly consistent. The more consistent the events become, the
+more the Thinker is prone to mistake their **Abstract** for the **Absolute**. 
+
+> **[FORMALISM]**
+> Let $E_{abs}$ be events precipitated by the Absolute and $E_{inf}$ be events implied by the Abstract.
+> **Consistency Metric ($\Gamma$):**
+> $$\Gamma = \text{Consistent}(E_{abs} \cup E_{inf})$$
+> If $\Gamma$ is high, the Thinker risks "Ontological Blindness" (mistaking the model for the Raw).
+> If $\Gamma$ is low, the Thinker detects the "Real" through the friction of **Absurdity**.
+
+#### The Resolution: The Real Void
+
+The solution lies in the distinction between **Being** and **Content**. The
+Abstract is not a "thing," but an **Activity of Being**.
+
+* **The Process is Real:** The act of conceiving is a real attribute of the
+  Thinker’s existence. Since the Thinker’s existence is an Absolute certainty,
+  the "thinking process" possesses the quality of Absolute Being.
+
+* **The Product is Unreal:** The content produced by that process—categories,
+  dimensions, objects—remains purely conceptual. It is a **"Real Void"**: a
+  real activity of the mind creating an unreal model.
+
+#### The Final Boundary
+
+The "solution" remains beyond the grip of our understanding. To grasp how a
+real process generates unreal content, or how the Absolute "respects" changes
+in the Abstract, would require stepping outside our own Obsnow—which is
+impossible. 
+
+That remains is a functional mystery: The Absolute is the source of all
+manifestations. While it cannot be conceived, we are dependent on it to
+translate our conceptual modifications into manifest events. Our understanding
+is not a mirror of the Absolute, but a consistent, conceptual scaffolding built
+over history.
