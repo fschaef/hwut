@@ -91,11 +91,6 @@ class AnalogyDb(dict):
             dict.update(self, other)
         return self
 
-    def assign(self, other):
-        if id(self) != id(other): # ESSENTIAL: otherwise, self is just emptied.
-            dict.clear(self)
-            self.update(other)
-
     def is_consistent(self, analogy):
         """RETURNS: True, if analogy = tuple(subject, nominal) is consistent
                           with all entries in database; False, else.

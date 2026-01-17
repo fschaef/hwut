@@ -180,7 +180,7 @@ class Line:
         if result.cost == 0:
             result.analogy_db.update(analogy_db)
         else:
-            result.analogy_db.assign(analogy_db)
+            result.analogy_db = analogy_db.clone() if analogy_db else AnalogyDb()
 
         # too slow for mios of operations
         # assert isinstance(result, edit_operations_line.EditSequence)
