@@ -91,6 +91,12 @@ class AnalogyDb(dict):
             dict.update(self, other)
         return self
 
+    def update_CLONE(self, other):
+        if not other: return self
+        result = self.clone()
+        dict.update(result, other)
+        return result
+
     def is_consistent(self, analogy):
         """RETURNS: True, if analogy = tuple(subject, nominal) is consistent
                           with all entries in database; False, else.
@@ -119,7 +125,7 @@ class AnalogyDb(dict):
     @staticmethod
     def _try_update_analogy_db(analogy_db, analogy_set):
         if analogy_db.is_all_consistent(list(analogy_set)):
-            return True, analogy_db.update(analogy_set)
+            return True, analogy_db.update_CLONE(analogy_set)
         else:
             return False, analogy_db
 
@@ -129,7 +135,7 @@ class AnalogyDb(dict):
         elif not self.is_all_consistent(analogy_db):
             return False   # FAIL: analogy_db inconsistent with self
         else:
-            self.update(analogy_db)
+            dict.update(self, analogy_db)
             return True    # OK:   analogy is added without braking consistency.
 
     def __hash__(self):
