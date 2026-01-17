@@ -127,7 +127,7 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             if ok_f := (ib in nominals_coupled):
                 if abort_early_f: break
             else:
-                ok_f = analogy_db.extend_if_consistent(required_analogy_db)
+                ok_f, analogy_db = analogy_db.extend_if_consistent(required_analogy_db)
                 if not ok_f:
                     if abort_early_f: break
                 else:
@@ -170,7 +170,7 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
                 # 'ia' has been removed by another ultimate matcher
                 if abort_early_f: break
             else:
-                ok_f = analogy_db.extend_if_consistent(required_analogy_db)
+                ok_f, analogy_db = analogy_db.extend_if_consistent(required_analogy_db)
                 if not ok_f:
                     if abort_early_f: break
                 else:

@@ -132,12 +132,12 @@ class AnalogyDb(dict):
 
     def extend_if_consistent(self, analogy_db):
         if analogy_db is None:
-            return True    # OK:   nothing added; no inconsistency.
+            return True, self    # OK:   nothing added; no inconsistency.
         elif not self.is_all_consistent(analogy_db):
-            return False   # FAIL: analogy_db inconsistent with self
+            return False, self  # FAIL: analogy_db inconsistent with self
         else:
             dict.update(self, analogy_db)
-            return True    # OK:   analogy is added without braking consistency.
+            return True, self          # OK:   analogy is added without braking consistency.
 
     def __hash__(self):
         return hash(frozenset(self.items()))
