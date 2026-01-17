@@ -178,7 +178,6 @@ class Line:
         result = edit_operations_line.do(self.sequence, nominal.sequence, analogy_db)
 
         if result.cost == 0:
-            result.analogy_db.mark_line_numbers(self.line_n, nominal.line_n)
             result.analogy_db.update(analogy_db)
         else:
             result.analogy_db.assign(analogy_db)

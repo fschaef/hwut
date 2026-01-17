@@ -64,7 +64,6 @@ if "judge" in sys.argv:
         print_match_sequences(subject.sequence, nominal.sequence)
 
         verdict, analogy_db = subject.compare_X(nominal)
-        analogy_db.mark_line_numbers(66, 4711)
         print("=> %s, %s" % (verdict, analogy_db))
 
     test("sS", "sS")

@@ -16,7 +16,6 @@
 .   .   .   .nominal: [OK_TOLERATED:NUMERIC(0) '4712'],[OK_GOOD:SEPERATOR(1) ' '],[OK_TOLERATED:ANALOGY(2) '((ist))'],[OK_GOOD:SEPERATOR(3) ' '],[OK_TOLERATED:ANALOGY(4) '((eine))'],[OK_GOOD:SEPERATOR(5) ' '],[OK_TOLERATED:EQUIVALENCE_PATTERN(6) 'Zahl'],[OK_GOOD:STRING(7) '.']
 .   .   .   .cost: 0.0000
 .   .analogy_db: [AnalogyDb]
-.   .   .: "((A))"="((1))"
-.   .   .: "((a))"="((eine))", "((is))"="((ist))"
+.   .   .: "((A))"="((1))", "((a))"="((eine))", "((is))"="((ist))"
 
 

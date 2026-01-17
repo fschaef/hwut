@@ -57,10 +57,8 @@ class AnalogyDb(dict):
     the directionality is not automatically inverted.
 
     self:           map: subject term --> nominal term
-    line_number_db: map: subject term --> LineNumberPair
     """
     def __init__(self, other=None):
-        self.line_number_db = {}
         if other is not None:
             self.update(other)
 
@@ -84,14 +82,11 @@ class AnalogyDb(dict):
     def update(self, other):
         if other is not None:
             dict.update(self, other)
-            if isinstance(other, AnalogyDb):
-                self.line_number_db.update(other.line_number_db)
         return self
 
     def assign(self, other):
         if id(self) != id(other): # ESSENTIAL: otherwise, self is just emptied.
             dict.clear(self)
-            self.line_number_db.clear()
             self.update(other)
 
     def is_consistent(self, analogy):
@@ -126,7 +121,6 @@ class AnalogyDb(dict):
 
     def extend(self, analogy_db, subject_line_n, nominal_line_n):
         dict.update(self, analogy_db)
-        self.mark_line_numbers(subject_line_n, nominal_line_n, analogy_db.keys())
         return self
 
     @staticmethod
@@ -155,27 +149,11 @@ class AnalogyDb(dict):
             self.extend(analogy_db, subject_line_n, nominal_line_n)
             return True    # OK:   analogy is added without braking consistency.
 
-    def mark_line_numbers(self, subject_line_n, nominal_line_n, subject_iterable=None):
-        """Marks 'subject_line_n' and 'nominal_line_n' as the pair of lines
-        where the analogies in this databse occurred the first time. If
-        'subject_iterable' is specified, only those subjects are considered.
-        """
-        if subject_iterable is None:
-            subject_iterable = self.keys()
-
-        line_number_pair = LineNumberPair(subject_line_n, nominal_line_n)
-        for subject in subject_iterable:
-            entry = self.line_number_db.get(subject)
-            if entry is None or entry.subject_line_n > subject_line_n:
-                self.line_number_db[subject] = line_number_pair
-
     def __hash__(self):
-        a = hash(frozenset(self.items()))
-        b = hash(frozenset(self.line_number_db.items()))
-        return hash((a, b))
+        return hash(frozenset(self.items()))
 
     def __eq__(self, other):
-        return dict.__eq__(self, other) and self.line_number_db == other.line_number_db
+        return dict.__eq__(self, other)
 
     def __repr__(self):
         name, txt = self.__pretty__()
@@ -196,16 +174,11 @@ class AnalogyDb(dict):
         def show(analogy_list):
             return ", ".join('"%s"="%s"' % (subject, nominal) for subject, nominal in sorted(analogy_list))
 
-        if self.line_number_db:
-            Ls = max(length(p.subject_line_n) for p in self.line_number_db.values())
-            Ln = max(length(p.nominal_line_n) for p in self.line_number_db.values())
-        else:
-            Ls, Ln = 0, 0
+        Ls, Ln = 0, 0
 
         content_db = defaultdict(list)
         for subject, nominal in self.items():
-            p = self.line_number_db.get(subject)
-            if p is None: p = LineNumberPair(" ", " ")
+            p = LineNumberPair(" ", " ")
             content_db[p].append((subject, nominal))
 
         txt = [
