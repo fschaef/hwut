@@ -1,6 +1,6 @@
 ---( one entry )-----------------------------
 BEFORE: {
-[01]-[101]: : & : "otto"="heinz"
+[01]-[101]: : "otto"="heinz"
 }
 AFTER: --> {
 }
@@ -9,9 +9,9 @@ couples:
 
 ---( one entry consistent with analogy_db )-----------------------------
 BEFORE: {
-[01]-[101]: : & : "otto"="heinz"
+[01]-[101]: : "otto"="heinz"
 }
-analogy_db: : & : "otto"="heinz"
+analogy_db: : "otto"="heinz"
 AFTER: --> {
 }
 couples: 
@@ -19,27 +19,27 @@ couples:
 
 ---( one entry inconsistent with analogy_db )-----------------------------
 BEFORE: {
-[01]-[101]: : & : "otto"="heinz"
+[01]-[101]: : "otto"="heinz"
 }
-analogy_db: : & : "max"="heinz"
+analogy_db: : "max"="heinz"
 AFTER: --> {
 }
 couples: 
 
 ---( one entry inconsistent with analogy_db (abort) )-----------------------------
 BEFORE: {
-[01]-[101]: : & : "otto"="heinz"
+[01]-[101]: : "otto"="heinz"
 }
-analogy_db: : & : "max"="heinz"
+analogy_db: : "max"="heinz"
 AFTER: --> {
 }
 couples: 
 
 ---( one entry, when removed makes other alternativeless )-----------------------------
 BEFORE: {
-[00]-[100]: : & : "otto"="heinz"
-[01]-[100]: : & : "otto"="heinz"
-[01]-[101]: : & : "mark"="heinz"
+[00]-[100]: : "otto"="heinz"
+[01]-[100]: : "otto"="heinz"
+[01]-[101]: : "mark"="heinz"
 }
 AFTER: --> {
 }
@@ -48,28 +48,28 @@ couples:
 
 ---( one entry, when removed makes other alternativeless (abort) )-----------------------------
 BEFORE: {
-[00]-[100]: : & : "otto"="heinz"
-[01]-[100]: : & : "otto"="heinz"
-[01]-[101]: : & : "mark"="heinz"
+[00]-[100]: : "otto"="heinz"
+[01]-[100]: : "otto"="heinz"
+[01]-[101]: : "mark"="heinz"
 }
 AFTER: --> {
-[01]-[101]: : & : "mark"="heinz"
+[01]-[101]: : "mark"="heinz"
 }
 couples: 
   00 <-> 100
 
 ---( iterative ultimate creation )-----------------------------
 BEFORE: {
-[00]-[100]: : & : "otto"="heinz"
-[01]-[100]: : & : "otto"="heinz"
-[01]-[101]: : & : "mark"="otto"
-[02]-[100]: : & : "otto"="heinz"
-[02]-[101]: : & : "fritz"="otto"
-[02]-[102]: : & : "mark"="otto"
-[03]-[100]: : & : "otto"="heinz"
-[03]-[101]: : & : "friedhelm"="fritz"
-[03]-[102]: : & : "friedhelm"="fritz"
-[03]-[103]: : & : "mark"="otto"
+[00]-[100]: : "otto"="heinz"
+[01]-[100]: : "otto"="heinz"
+[01]-[101]: : "mark"="otto"
+[02]-[100]: : "otto"="heinz"
+[02]-[101]: : "fritz"="otto"
+[02]-[102]: : "mark"="otto"
+[03]-[100]: : "otto"="heinz"
+[03]-[101]: : "friedhelm"="fritz"
+[03]-[102]: : "friedhelm"="fritz"
+[03]-[103]: : "mark"="otto"
 }
 AFTER: --> {
 }
@@ -81,29 +81,29 @@ couples:
 
 ---( remove nominal with only one mating candidate )-----------------------------
 BEFORE: {
-[00]-[100]: : & : "otto"="heinz"
-[00]-[102]: : & : "mark"="otto"
-[01]-[100]: : & : "otto"="heinz"
-[01]-[101]: : & : "mark"="otto"
-[02]-[100]: : & : "otto"="heinz"
-[02]-[102]: : & : "mark"="otto"
+[00]-[100]: : "otto"="heinz"
+[00]-[102]: : "mark"="otto"
+[01]-[100]: : "otto"="heinz"
+[01]-[101]: : "mark"="otto"
+[02]-[100]: : "otto"="heinz"
+[02]-[102]: : "mark"="otto"
 }
 AFTER: --> {
-[00]-[100]: : & : "otto"="heinz"
-[00]-[102]: : & : "mark"="otto"
-[02]-[100]: : & : "otto"="heinz"
-[02]-[102]: : & : "mark"="otto"
+[00]-[100]: : "otto"="heinz"
+[00]-[102]: : "mark"="otto"
+[02]-[100]: : "otto"="heinz"
+[02]-[102]: : "mark"="otto"
 }
 couples: 
   01 <-> 101
 
 ---( remove nominals with contradicting analogy_db )-----------------------------
 BEFORE: {
-[00]-[100]: : & : "otto"="fritz"
-[00]-[102]: : & : "mark"="otto"
-[01]-[100]: : & : "otto"="heinz"
-[02]-[101]: : & : "otto"="heinz"
-[02]-[102]: : & : "mark"="otto"
+[00]-[100]: : "otto"="fritz"
+[00]-[102]: : "mark"="otto"
+[01]-[100]: : "otto"="heinz"
+[02]-[101]: : "otto"="heinz"
+[02]-[102]: : "mark"="otto"
 }
 AFTER: --> {
 }
@@ -114,10 +114,10 @@ couples:
 
 ---( a removed nominal leaves entry hopeless )-----------------------------
 BEFORE: {
-[00]-[101]: : & : "otto"="fritz"
-[01]-[100]: : & : "mark"="heinz"
-[02]-[100]: : & : "otto"="heinz"
-[02]-[101]: : & : "mark"="heinz"
+[00]-[101]: : "otto"="fritz"
+[01]-[100]: : "mark"="heinz"
+[02]-[100]: : "otto"="heinz"
+[02]-[101]: : "mark"="heinz"
 }
 AFTER: --> {
 }
@@ -128,14 +128,14 @@ couples:
 
 ---( a removed nominal leaves entry hopeless (ABORT EARLY) )-----------------------------
 BEFORE: {
-[00]-[101]: : & : "otto"="fritz"
-[01]-[100]: : & : "mark"="heinz"
-[02]-[100]: : & : "otto"="heinz"
-[02]-[101]: : & : "mark"="heinz"
+[00]-[101]: : "otto"="fritz"
+[01]-[100]: : "mark"="heinz"
+[02]-[100]: : "otto"="heinz"
+[02]-[101]: : "mark"="heinz"
 }
 AFTER: --> {
-[02]-[100]: : & : "otto"="heinz"
-[02]-[101]: : & : "mark"="heinz"
+[02]-[100]: : "otto"="heinz"
+[02]-[101]: : "mark"="heinz"
 }
 couples: 
   00 <-> 101
@@ -143,9 +143,9 @@ couples:
 
 ---( nominal deletion produces ultimate with inconsistent analogy_db )-----------------------------
 BEFORE: {
-[00]-[101]: : & : "otto"="fritz"
-[01]-[100]: : & : "otto"="heinz"
-[01]-[101]: : & : "mark"="heinz"
+[00]-[101]: : "otto"="fritz"
+[01]-[100]: : "otto"="heinz"
+[01]-[101]: : "mark"="heinz"
 }
 AFTER: --> {
 }
@@ -154,20 +154,20 @@ couples:
 
 ---( nominal deletion produces ultimate with inconsistent analogy_db (abort) )-----------------------------
 BEFORE: {
-[00]-[101]: : & : "otto"="fritz"
-[01]-[100]: : & : "otto"="heinz"
-[01]-[101]: : & : "mark"="heinz"
+[00]-[101]: : "otto"="fritz"
+[01]-[100]: : "otto"="heinz"
+[01]-[101]: : "mark"="heinz"
 }
 AFTER: --> {
-[01]-[100]: : & : "otto"="heinz"
+[01]-[100]: : "otto"="heinz"
 }
 couples: 
   00 <-> 101
 
 ---( nominal already taken )-----------------------------
 BEFORE: {
-[00]-[100]: : & : "otto"="heinz"
-[01]-[100]: : & : "otto"="heinz"
+[00]-[100]: : "otto"="heinz"
+[01]-[100]: : "otto"="heinz"
 }
 AFTER: --> {
 }
@@ -176,8 +176,8 @@ couples:
 
 ---( nominal already taken (abort) )-----------------------------
 BEFORE: {
-[00]-[100]: : & : "otto"="heinz"
-[01]-[100]: : & : "otto"="heinz"
+[00]-[100]: : "otto"="heinz"
+[01]-[100]: : "otto"="heinz"
 }
 AFTER: --> {
 }

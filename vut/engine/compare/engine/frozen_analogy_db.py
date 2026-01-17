@@ -1,12 +1,11 @@
 from __future__  import annotations
-from collections import defaultdict
 from functools   import lru_cache
 from typing      import Iterable
 from typeguard   import typechecked
 import weakref
 
 # Assuming local import context exists as per your snippet
-from .analogy_db import LineNumberPair, AnalogyDb
+from .analogy_db import AnalogyDb
 
 class FrozenAnalogyDb:
     """Fast and efficient representation of 'AnalogyDb'.
@@ -71,10 +70,6 @@ class FrozenAnalogyDb:
         pairs        = {} # (subj_id, nom_id) -> pair_id
         pair_to_info = [] # pair_id -> (subj_id, nom_id)
         
-        # Metadata: pair_id -> LineNumberPair | None
-        # Dense list that grows on demand.
-        pair_provenance = []
-
         @classmethod
         def get_symbol_id(cls, s: str) -> int:
             if s not in cls.symbols:
@@ -91,33 +86,6 @@ class FrozenAnalogyDb:
                 cls.pairs[pair] = len(cls.pair_to_info)
                 cls.pair_to_info.append(pair)
             return cls.pairs[pair]
-
-        @classmethod
-        def get_provenance(cls, pair_id: int):
-            """RETURNS: LineNumberPair for pair_id, or None if out of bounds/unset."""
-            if pair_id < len(cls.pair_provenance):
-                return cls.pair_provenance[pair_id]
-            return None
-
-        @classmethod
-        def register_provenance(cls, pair_id: int, lp: LineNumberPair):
-            """Extends vector if needed, then assigns lp to pair_id."""
-            if lp is None: return
-            
-            # Intelligent Growth: Extend with None if pair_id is beyond current length
-            diff = pair_id - len(cls.pair_provenance) + 1
-            if diff > 0:
-                cls.pair_provenance.extend([None] * diff)
-            
-            old_lp = cls.pair_provenance[pair_id]
-            if old_lp is None:
-                cls.pair_provenance[pair_id] = lp
-            else:
-                # Comparison logic for "earliest"
-                new_key = (lp.subject_line_n, lp.nominal_line_n)
-                old_key = (old_lp.subject_line_n, old_lp.nominal_line_n)
-                if new_key < old_key:
-                    cls.pair_provenance[pair_id] = lp
 
         @classmethod
         def string_pair(cls, pair_id):
@@ -139,22 +107,11 @@ class FrozenAnalogyDb:
             pair_ids = _pair_ids
         elif adb is None:
             pair_ids = tuple()
-        elif not (ln_db := getattr(adb, 'line_number_db', None)):
+        else:
             # no line number database or empty => quick absorbtion
             pair_ids = tuple(sorted(
                 cls._Registry.get_pair_id(s, n) for s, n in adb.items()
             ))
-        else:
-            # Ingesting a standard dict or AnalogyDb
-            ln_db = getattr(adb, 'line_number_db', {})
-            p_ids = []
-            for s, n in adb.items():
-                pid = cls._Registry.get_pair_id(s, n)
-                p_ids.append(pid)
-                # Register provenance if available
-                if s in ln_db:
-                    cls._Registry.register_provenance(pid, ln_db[s])
-            pair_ids = tuple(sorted(p_ids))
 
         # Flyweight lookup
         if pair_ids in cls._pool:
@@ -204,16 +161,9 @@ class FrozenAnalogyDb:
         
         # Cache registry lookups for speed
         _str_pair = self._Registry.string_pair
-        _get_prov = self._Registry.get_provenance
-        
         for pid in self._pair_ids:
             s, n = _str_pair(pid)
             result[s] = n
-            
-            # Re-attach line number metadata if it exists
-            lp = _get_prov(pid)
-            if lp is not None:
-                result.line_number_db[s] = lp
                 
         return result
 
@@ -281,9 +231,6 @@ class FrozenAnalogyDb:
         for pid in self._pair_ids:
             yield _get(pid)
 
-    def get_provenance(self, pair_id):
-        return self._Registry.get_provenance(pair_id)
-
     def __iter__(self):      return iter(self._pair_ids)
     def __hash__(self):      return id(self)      # flyweight: equal <-> identical
     def __eq__(self, other): return self is other # flyweight: equal <-> identical
@@ -292,20 +239,14 @@ class FrozenAnalogyDb:
         if not self._pair_ids: return "<empty>"
         
         # Group analogies by their first occurrence for a clean report
-        grouped = defaultdict(list)
+        grouped = []
         for pid in self._pair_ids:
             s, n = self._Registry.string_pair(pid)
-            # Safe getter allows lazy growth
-            prov = self._Registry.get_provenance(pid)
             # Key is LineNumberPair or None
-            grouped[prov].append(f'"{s}"="{n}"')
+            grouped.append(f'"{s}"="{n}"')
 
         def annotation(lp):
-            if lp is None: return "[?]-[?] : "
-            else:          return f"[{lp.subject_line_n}]-[{lp.nominal_line_n}]: " 
+            return ""
 
         # Sort keys carefully handling None
-        sorted_keys = sorted(grouped.keys(), key=lambda x: (x is None, x))
-        
-        return "\n".join(f"  {annotation(lp)}{', '.join(sorted(grouped[lp]))}"
-                         for lp in sorted_keys)
+        return "\n".join(f"  {line}" for line in sorted(grouped))

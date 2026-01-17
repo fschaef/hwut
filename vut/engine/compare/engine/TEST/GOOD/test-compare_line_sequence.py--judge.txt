@@ -9,7 +9,7 @@
 --------------------------------
    STRING:a         STRING:a
    ANALOGY:((b))    ANALOGY:((2))
-=> True, : & : "((b))"="((2))"
+=> True, : "((b))"="((2))"
 --------------------------------
    STRING:b    STRING:a
    STRING:a    

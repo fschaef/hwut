@@ -35,26 +35,32 @@ association: False
 subject: ['x', 'x']
 nominal: ['x']
 association: False
+##   [0] x               --> [0] x
 --------------------------------
 subject: ['x']
 nominal: ['x', 'x']
 association: False
+##   [0] x               --> [0] x
 --------------------------------
 subject: ['happy', 'funny']
 nominal: ['happy']
 association: False
+##   [0] happy           --> [0] happy
 --------------------------------
 subject: ['funny']
 nominal: ['happy', 'funny']
 association: False
+##   [0] funny           --> [0] happy
 --------------------------------
 subject: ['((1))', '((2))']
 nominal: ['((A))']
 association: False
+##   [0] ((1))           --> [0] ((A))
 --------------------------------
 subject: ['((A))']
 nominal: ['((1))', '((2))']
 association: False
+##   [0] ((A))           --> [0] ((1))
 --------------------------------
 subject: ['one ((A))', 'two ((A))']
 nominal: ['one ((1))', 'two ((2))']
@@ -64,7 +70,7 @@ association: False
 subject: ['happy ((A)) ((B))', 'happy ((A)) ((C))']
 nominal: ['funny ((1)) ((2))', 'funny ((2)) ((1))']
 association: False
-##   [1] happy ((A)) ((C)) --> [0] funny ((1)) ((2))
+##   [0] happy ((A)) ((B)) --> [0] funny ((1)) ((2))
 --------------------------------
 subject: ['funny ((A)) ((D))', 'happy ((A)) ((B))', 'glad ((C)) ((D))']
 nominal: ['smart ((4)) ((1))', 'happy ((1)) ((2))', 'glad ((3)) ((4))']
@@ -79,8 +85,8 @@ association: True (3)
    [1] happy ((A)) ((B)) --> [1] happy ((1)) ((2))
    [2] glad ((C)) ((D)) --> [2] glad ((3)) ((4))
 AnalogyDb:
-:0&0: "((A))"="((1))", "((B))"="((2))"
-:2&2: "((C))"="((3))", "((D))"="((4))"
+: "((A))"="((1))", "((B))"="((2))"
+: "((C))"="((3))", "((D))"="((4))"
 --------------------------------
 subject: ['funny ((B)) ((A))', 'happy ((A)) ((B))', 'smart ((C)) ((D))', 'glad ((B)) ((A))', 'something ((B)) ((A))']
 nominal: ['something ((2)) ((1))', 'happy ((1)) ((2))', 'smart ((3)) ((4))', 'glad ((2)) ((1))', 'something ((2)) ((1))']
@@ -91,5 +97,5 @@ association: True (5)
    [3] glad ((B)) ((A)) --> [3] glad ((2)) ((1))
    [4] something ((B)) ((A)) --> [0] something ((2)) ((1))
 AnalogyDb:
-:0&3: "((A))"="((1))", "((B))"="((2))"
-:2&2: "((C))"="((3))", "((D))"="((4))"
+: "((A))"="((1))", "((B))"="((2))"
+: "((C))"="((3))", "((D))"="((4))"

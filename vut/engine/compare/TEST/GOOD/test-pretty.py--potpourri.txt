@@ -20,6 +20,6 @@
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:NUMERIC(0) '4712'],[OK_GOOD:SEPERATOR(1) ' '],[OK_TOLERATED:ANALOGY(2) '((ist))'],[OK_GOOD:SEPERATOR(3) ' '],[OK_TOLERATED:ANALOGY(4) '((eine))'],[OK_GOOD:SEPERATOR(5) ' '],[OK_TOLERATED:EQUIVALENCE_PATTERN(6) 'Zahl'],[OK_GOOD:STRING(7) '.']
 .   .   .   .cost: 0.2000
 .   .analogy_db: [AnalogyDb]
-.   .   .:2&3: "((A))"="((1))"
+.   .   .: "((A))"="((1))"
 
 

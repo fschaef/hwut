@@ -191,11 +191,7 @@ class AnalogyDb(dict):
             else:                    return number_of_decimal_digits(n) 
 
         def prefix(p, Ls, Ln):
-            if p is not None:
-                return ":%s%s&%s%s" % (" " * (Ls - length(p.subject_line_n)), p.subject_line_n,
-                                       " " * (Ln - length(p.nominal_line_n)), p.nominal_line_n)
-            else:
-                return ""
+            return ""
 
         def show(analogy_list):
             return ", ".join('"%s"="%s"' % (subject, nominal) for subject, nominal in sorted(analogy_list))

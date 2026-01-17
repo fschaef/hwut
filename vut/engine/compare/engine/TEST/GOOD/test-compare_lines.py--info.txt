@@ -37,7 +37,7 @@ Cost: 0.000000
 [1] GOOD
 [2] GOOD_TOLERATED
 AnalogyDb:
-:66&4711: "((x))"="((y))", "((y))"="((z))"
+: "((x))"="((y))", "((y))"="((z))"
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z)), SEPERATOR: , ANALOGY:((y))
 Cost: 0.333333
