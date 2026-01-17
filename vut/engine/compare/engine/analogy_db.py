@@ -119,10 +119,6 @@ class AnalogyDb(dict):
         subject, nominal = analogy
         self[subject] = nominal
 
-    def extend(self, analogy_db, subject_line_n, nominal_line_n):
-        dict.update(self, analogy_db)
-        return self
-
     @staticmethod
     def _try_update_analogy_db(analogy_db, analogy_set):
         if analogy_db.is_all_consistent(list(analogy_set)):
@@ -131,22 +127,13 @@ class AnalogyDb(dict):
         else:
             return False, analogy_db
 
-    def add_if_consistent(self, analogy):
-        if analogy is None:
-            return True    # OK:   nothing added; no inconsistency.
-        elif not self.is_consistent(analogy):
-            return False   # FAIL: analogy inconsistent with others.
-        else:
-            self.add(analogy)
-            return True    # OK:   analogy is added without braking consistency.
-
-    def extend_if_consistent(self, analogy_db, subject_line_n, nominal_line_n):
+    def extend_if_consistent(self, analogy_db):
         if analogy_db is None:
             return True    # OK:   nothing added; no inconsistency.
         elif not self.is_all_consistent(analogy_db):
             return False   # FAIL: analogy_db inconsistent with self
         else:
-            self.extend(analogy_db, subject_line_n, nominal_line_n)
+            self.update(analogy_db)
             return True    # OK:   analogy is added without braking consistency.
 
     def __hash__(self):
