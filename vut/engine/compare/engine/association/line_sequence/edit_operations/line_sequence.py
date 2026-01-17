@@ -255,7 +255,7 @@ class WorkItem(WorkItemBase):
        delta_cost = self.history.note(edit_id, edit_list, relative_edit_distance)
 
        if new_analogy_db is not None:
-           new_analogy_db = self.edit_list.analogy_db.clone().update(new_analogy_db)
+           new_analogy_db = self.edit_list.analogy_db.update_CLONE(new_analogy_db)
        else:
            new_analogy_db = self.edit_list.analogy_db
 

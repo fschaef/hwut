@@ -60,7 +60,7 @@ class AnalogyDb(dict):
     """
     def __init__(self, other=None):
         if other is not None:
-            self.update(other)
+            dict.update(self, other)
 
     def clone(self):
         return AnalogyDb(self)
@@ -87,6 +87,7 @@ class AnalogyDb(dict):
         return subjects
 
     def update(self, other):
+        assert False
         if other is not None:
             dict.update(self, other)
         return self

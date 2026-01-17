@@ -83,9 +83,11 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
 
         # Extract those pairs, for which there is no alternative
         # => constraints on analogies
-        if not (ok_f := db.extract_ultimate_subject_partners(pair_db, analogy_db, abort_early_f)):
+        ok_f, analogy_db = db.extract_ultimate_subject_partners(pair_db, analogy_db, abort_early_f)
+        if not ok_f:
             if abort_early_f: break
-        if not (ok_f := db.extract_ultimate_nominal_partners(pair_db, analogy_db, abort_early_f)):
+        ok_f, analogy_db = db.extract_ultimate_nominal_partners(pair_db, analogy_db, abort_early_f)
+        if not ok_f:
             if abort_early_f: break
 
         pair_n = len(pair_db)
