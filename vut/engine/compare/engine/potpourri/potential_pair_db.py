@@ -126,11 +126,13 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             del self[ia]
             if ok_f := (ib in nominals_coupled):
                 if abort_early_f: break
-            elif not (ok_f := analogy_db.extend_if_consistent(required_analogy_db)):
-                if abort_early_f: break
             else:
-                pair_db[ia] = ib
-                nominals_coupled.add(ib)
+                ok_f = analogy_db.extend_if_consistent(required_analogy_db)
+                if not ok_f:
+                    if abort_early_f: break
+                else:
+                    pair_db[ia] = ib
+                    nominals_coupled.add(ib)
 
         if ok_f:
             ok_f &= self.remove_nominals(nominals_coupled, abort_early_f)
@@ -167,12 +169,14 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             if ok_f := (ia not in self):
                 # 'ia' has been removed by another ultimate matcher
                 if abort_early_f: break
-            elif not (ok_f := analogy_db.extend_if_consistent(required_analogy_db)):
-                if abort_early_f: break
             else:
-                pair_db[ia] = ib
-                nominals_coupled.add(ib)
-                del self[ia] # ia is now coupled, remove from work graph
+                ok_f = analogy_db.extend_if_consistent(required_analogy_db)
+                if not ok_f:
+                    if abort_early_f: break
+                else:
+                    pair_db[ia] = ib
+                    nominals_coupled.add(ib)
+                    del self[ia] # ia is now coupled, remove from work graph
 
         if ok_f:
             ok_f &= self.remove_nominals(nominals_coupled, abort_early_f)
