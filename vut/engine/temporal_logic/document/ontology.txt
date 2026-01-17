@@ -43,10 +43,13 @@ relative to an observer: an observer derives meaning through *interpretation*
 (of caused events) and a *belief system* (the set of implications applied).
 
 > **[FORMALISM]**
-> Let $\mathbb{E}$ be the finite set of all possible event symbols (the Universe of Discourse).
+> Let $\mathbb{E}$ be the finite set of all possible event symbols (the Universe
+> of Discourse).
 > The **Obsnow** at step $k$ is a set $N_k \subseteq \mathbb{E}$.
-> Let $C: \mathcal{H} \to \mathcal{P}(\mathbb{E})$ be the **Causation Function** mapping previous history to initial events in $k$.
-> Let $I: \mathcal{P}(\mathbb{E}) \to \mathcal{P}(\mathbb{E})$ be the **Implication Function** (deduction within $k$).
+> Let $C: \mathcal{H} \to \mathcal{P}(\mathbb{E})$ be the **Causation Function**
+> mapping previous history to initial events in $k$.
+> Let $I: \mathcal{P}(\mathbb{E}) \to \mathcal{P}(\mathbb{E})$ be the
+> **Implication Function** (deduction within $k$).
 
 The Obsnow is singular and persistent; it is the vessel that holds the
 *existence* of events. Events, together with their implications, inhabit the
@@ -56,15 +59,18 @@ saturate and stabilize. The set of stable events is then committed to
 in the Obsnow:
 
 > **[FORMALISM]**
-> Let $\mathbb{E}$ be the Universe of Events and $k \in \mathbb{N}_0$ be the current Jiffy index.
-> **History** $H_k$ is defined as the immutable, ordered tuple of event sets up to step $k$:
+> Let $\mathbb{E}$ be the Universe of Events and $k \in \mathbb{N}_0$ be the
+> current Jiffy index.
+> **History** $H_k$ is defined as the immutable, ordered tuple of event sets,
+> up to Jiffy $k-1$ and available in Jiffy $k$.
 >
-> $$H_k := \langle N_0, N_1, \dots, N_k \rangle \in (\mathcal{P}(\mathbb{E}))^{k+1}$$
+> $$H_k := \langle N_0, N_1, \dots, N_{k-1} \rangle \in (\mathcal{P}(\mathbb{E}))^{k}$$
 >
 > Where:
 > * $N_i \subseteq \mathbb{E}$ is the set of events at Jiffy $i$.
-> * The **Crystallization** (transition) from $k$ to $k+1$ is defined by appending the new stable set:
->     $$H_{k+1} = H_k \frown \langle N_{k+1} \rangle$$
+> * The **Crystallization** (transition) from $k$ to $k+1$ is defined by
+>   appending the new stable set:
+>     $$H_{k+1} = H_k \frown \langle N_{k} \rangle$$
 
 All events and implications in the Obsnow are topologically co-located. Logical
 implications are instantaneous, independent of the physical location of the
@@ -95,16 +101,17 @@ In implications, properties of history serve as predicates (gates), but the
 result of an implication is always the *addition* of an event. In such a
 system, *contradictions are structurally impossible*.
 
-Let `$\Leftarrow$` represent Positive Entailment. The expression $A \Leftarrow B$ is
-read: 'The existence of A is implied by the existence of B.' This operator is
-strictly monotonic: the presence of $B$ forces $A$ into existence, but the
+Let `$\Leftarrow$` represent Positive Entailment. The expression $A \Leftarrow B$
+is read: 'The existence of A is implied by the existence of B.' This operator
+is strictly monotonic: the presence of $B$ forces $A$ into existence, but the
 absence of $B$ exerts no force on $A$. It is silence, not negation.
 
 > **[FORMALISM]**
 > An implication rule $r$ is a pair $(Conditions, Consequent)$.
 > $$Condition \subseteq \mathbb{E} \cup \{ P(H) \}$$
 > $$Consequent \in \mathbb{E}$$
-> The update step is strictly additive: $S_{next} = S_{current} \cup \{ e \mid (Cond, e) \in Rules \land Cond \subseteq S_{current} \}$
+> The update step is strictly additive: 
+> $S_{next} = S_{current} \cup \{ e \mid (Cond, e) \in Rules \land Cond \subseteq S_{current} \}$
 
 Given two properties of history, `ever()` and `never()`, consider the
 implications:
@@ -131,12 +138,15 @@ Operator** ('if' / $\Leftarrow$).
 
 1.  **The Domain of Existence (The Consequent):**
     * **Target:** The Obsnow ($N_k$).
-    * **Logic:** Strictly Positive. Events are atomic tokens. They cannot be negated or combined with Boolean operators. An event simply *is*.
+    * **Logic:** Strictly Positive. Events are atomic tokens. They cannot be
+      negated or combined with Boolean operators. An event simply *is*.
     * *Example:* `DOOR_OPEN`, `ALARM_ACTIVE`.
 
 2.  **The Domain of Validation (The Antecedent):**
     * **Source:** History ($H_k$) and State ($\mathbb{A}_k$).
-    * **Logic:** General Logic (Boolean). Because history is immutable, queries against it return definitive **True/False** values. This domain supports negation (`not`), quantification (`ever`, `never`), and comparison.
+    * **Logic:** General Logic (Boolean). Because history is immutable, queries
+      against it return definitive **True/False** values. This domain supports
+      negation (`not`), quantification (`ever`, `never`), and comparison.
     * *Example:* `last(DOOR_OPEN) > last(DOOR_CLOSE)`, `not ever(SYSTEM_RESET)`.
 
 **The Bridging Operator ('if'):**
@@ -155,31 +165,35 @@ The 'if' operator functions as a transducer that converts a **Truth Value**
 
 ### 3. STABILITY AND THE LEAST FIXED POINT
 
-This system eliminates logical instability through Idempotence and
-Monotonicity. An implication is a constructive force; it can only add to the
-set of existing events. Once an event is brought into existence within "The
-Now," no subsequent implication can remove it.
+This system eliminates logical instability through Idempotence and Monotonicity. An
+implication is a constructive force; it can only add to the set of existing events.
+Once an event is brought into existence within the Obsnow, no subsequent implication
+can remove it.
+
+To guarantee stability, we define the Jiffy calculation as an iterative process
+starting from an initial injection of external causes.
 
 > **[FORMALISM]**
-> Let $\Phi(S) = S \cup I(S)$ be the step function for a Jiffy.
-> Since $S \subseteq \Phi(S)$ (Inflationary) and $\Phi$ is Monotonic, by the **Knaster-Tarski Theorem**:
-> $$N_k = \text{lfp}(\Phi) = \bigcup_{i=0}^{\infty} \Phi^i(C(H_{k-1}))$$
-> Since $\mathbb{E}$ is finite, convergence is guaranteed in finite steps.
+> **1. The Injection Step ($S_0$):**
+> The initial state of the Jiffy is populated by events caused by History ($C$)
+> and events precipitated by Agency ($A$).
+> $$S_0 = C(H_k) \cup A(\Delta \mathbb{A}_k)$$
+>
+> **2. The Saturation Step ($S_{i} \to S_{i+1}$):**
+> We apply the Implication Function $I(S)$ iteratively.
+> Let $\Phi(S) = S \cup I(S)$ be the Step Function.
+> $$S_{i+1} = \Phi(S_i)$$
+>
+> **3. Convergence:**
+> Since $S \subseteq \Phi(S)$ (Inflationary) and $\Phi$ is Monotonic, by the
+> **Knaster-Tarski Theorem**, the sequence reaches a **Least Fixed Point**:
+> $$N_k = \text{lfp}(\Phi, S_0) = \bigcup_{i=0}^{\infty} \Phi^i(S_0)$$
+> This fixed point $N_k$ is the final Obsnow committed to history.
 
 Because the logic of the Obsnow forbids the negation of current events, the set
-of existing events is strictly monotonically increasing during the calculation
-of a Jiffy. This guarantees that the chain of implications inevitably reaches a
-Least Fixed Point: a stable state where all valid implications are satisfied
-and the set ceases to change.
-
-Consequently, circular dependencies (e.g., 'A <= B' and 'B <= A') do not
-produce infinite loops or oscillation. Instead, they resolve into the
-instantaneous, stable existence of the union of the participants (both A and
-B).
-
-Stability defines the Jiffy. The moment the set of events stops expanding
-($S_{i+1} = S_i$), the Jiffy is complete, and the set enters the record of
-immutable history.
+of existing events is strictly monotonically increasing during the calculation.
+This guarantees that the chain of implications inevitably reaches a stable state
+where all valid implications are satisfied.
 
 ---
 
@@ -197,7 +211,7 @@ Absurdity is not a system error; it is a divergence between *System State* and
 1.  **Unwanted Behavior (Reality Divergence):** This occurs when external
     reality emits signals that contradict physical constraints. For example,
     consider two door sensors, A and B:
-    
+
     DOOR_JUST_CLOSED <= SENSOR_A 
     DOOR_JUST_OPENED <= SENSOR_B
 
@@ -220,7 +234,8 @@ Absurdity is not a system error; it is a divergence between *System State* and
     paradox.
 
 > **[FORMALISM]**
-> Let $\mathcal{K}$ be a set of Consistency Constraints (e.g., mutually exclusive sets).
+> Let $\mathcal{K}$ be a set of Consistency Constraints (e.g., mutually
+> exclusive sets).
 > A Jiffy $N_k$ is **Valid** iff: $N_k = \text{lfp}(\Phi)$.
 > A Jiffy $N_k$ is **Absurd** iff: $\exists \kappa \in \mathcal{K} : N_k \not\models \kappa$.
 > The engine computes Validity; the user enforces Consistency.
@@ -246,7 +261,8 @@ that survives the transition between Jiffies.
 > Let $\mathbb{S}$ be the set of possible States.
 > A State Interpretation is a function $\Psi: (\mathcal{P}(\mathbb{E}))^* \to \mathbb{S}$.
 > State $S_k = \Psi(H_k)$.
-> Unlike events, states persist: $S_k$ remains valid until $H_{k+n}$ changes the evaluation of $\Psi$.
+> Unlike events, states persist: $S_k$ remains valid until $H_{k+n}$ changes
+> the evaluation of $\Psi$.
 
 To maintain the uniformity of the engine, State Interpretations are also
 expressed as implications (Positive Logic), but their domain is the *History*,
@@ -311,12 +327,14 @@ their Truths remain distinct. The "Cat" is not an object, but an observer with
 its own Obsnow. 
 
 > **[FORMALISM]**
-> Let $\mathcal{O}$ be the set of Observers. Truth is strictly indexed by the observer:
+> Let $\mathcal{O}$ be the set of Observers. Truth is strictly indexed by the
+> observer:
 > $$Truth(e, o, k) \iff e \in N_{k, o}$$
 > Where $N_{k, o}$ is the Obsnow of observer $o$ at Jiffy $k$.
 >
 > **Ternary Logic of the Obsnow:**
-> Let $\mathcal{K}$ be the set of Consistency Constraints (e.g., mutually exclusive sets).
+> Let $\mathcal{K}$ be the set of Consistency Constraints (e.g., mutually
+> exclusive sets).
 > $$Value(p) = \begin{cases} \text{True} & \text{if } p \in N_{k, o} \\ \text{False} & \text{if } \exists e \in N_{k, o} : \{e, p\} \text{ violates } \mathcal{K} \\ \text{Unknown} & \text{otherwise} \end{cases}$$
 
 1. **In the Cat's Obsnow:** The event of the device triggering (or not)
@@ -380,13 +398,14 @@ Abstract) into *action* (a caused event in the Obsnow) represents a singularity
 in the ontology. 
 
 The Abstract itself is a "Real Void"; it possesses structure but no force. It is 
-pure syntax. Conversely, the Absolute possesses Being but no conceivable structure. The 
-mechanism by which the Thinker’s internal state modification (e.g., the "will" 
-to move an arm) precipitates a physical event in the next Jiffy is not a 
-mechanical process, as "mechanism" implies the temporal and spatial dimensions 
-barred from the Absolute. Instead, Agency is a **Transcendental Correspondence**: 
-the Absolute reflects the state change of the Abstract into the Obsnow without 
-a describable, conceivable intermediate linkage.
+pure syntax. Conversely, the Absolute possesses Being but no conceivable
+structure. The mechanism by which the Thinker’s internal state modification
+(e.g., the "will" to move an arm) precipitates a physical event in the next
+Jiffy is not a mechanical process, as "mechanism" implies the temporal and
+spatial dimensions barred from the Absolute. Instead, Agency is a
+**Transcendental Correspondence**: the Absolute reflects the state change of
+the Abstract into the Obsnow without a describable, conceivable intermediate
+linkage.
 
 > **[FORMALISM]**
 > Let $\mathbb{A}$ be the Abstract Space.
@@ -422,7 +441,7 @@ monotonically until all valid implications are satisfied.
   is stable.
 
 * **Formalism:** $N_k = \text{lfp}(\Phi)$ where $\Phi(S) = S \cup \{e \mid
-  (H_{k-1}, S, \mathbb{A}_k) \vdash e\}$.
+  (H_k, S, \mathbb{A}_k) \vdash e\}$.
 
 #### Phase II: Crystallization (Persistence)
 
@@ -431,7 +450,7 @@ This is the transition from the "flux" of the Now to the "granite" of the Past.
 The observer interprets this history to update the **Abstract** state space.
 Ephemeral events are "integralized" into persistent States.
 
-* **Formalism:** $H_k = H_{k-1} \frown \langle N_k \rangle$ and $\mathbb{A}_k = \Psi(H_k)$.
+* **Formalism:** $H_{k+1} = H_k \frown \langle N_k \rangle$ and $\mathbb{A}_{k+1} = \Psi(H_{k+1})$.
 
 
 #### Phase III: Manifestation (Succession)
@@ -477,15 +496,20 @@ the Abstract, time effectively ceases to exist for that observer.
 > **[FORMALISM]**
 > Dimensions (including time) are properties of the Interpretation Function $\Psi$:
 > $$\dim(\mathbb{A}_k) \in \Psi(H_k)$$
-> Since $\mathbb{A}_k$ is a purely conceptual world, its dimensionality and temporal flow are restricted to the capacity of the Thinker to categorize history. The Absolute remains $\text{dim} = 0$ (or non-dimensional).
+> Since $\mathbb{A}_k$ is a purely conceptual world, its dimensionality and 
+> temporal flow are restricted to the capacity of the Thinker to categorize 
+> history. The Absolute remains $\text{dim} = 0$ (or non-dimensional).
 
 ### 10. THE PARADOX OF THE ABSTRACT
 
 #### The Challenges
 
-1.  **The Absolute** is the only domain with real existence, yet it is unstructured, inseparable, and inconceivable. 
+1.  **The Absolute** is the only domain with real existence, yet it is
+    unstructured, inseparable, and inconceivable. 
 
-2.  **The Abstract** is a structured, conceivable domain built upon information and imagination. The constructs within the Abstract are not "real" in themselves.
+2.  **The Abstract** is a structured, conceivable domain built upon information
+    and imagination. The constructs within the Abstract are not "real" in
+    themselves.
 
 A Thinker can conceptualize a difference between the Absolute and the Abstract
 through reasoning. However, since the Absolute is inconceivable, any attempt to
@@ -512,11 +536,14 @@ becomes increasingly consistent. The more consistent the events become, the
 more the Thinker is prone to mistake their **Abstract** for the **Absolute**. 
 
 > **[FORMALISM]**
-> Let $E_{abs}$ be events precipitated by the Absolute and $E_{inf}$ be events implied by the Abstract.
+> Let $E_{abs}$ be events precipitated by the Absolute and $E_{inf}$ be events
+> implied by the Abstract.
 > **Consistency Metric ($\Gamma$):**
 > $$\Gamma = \text{Consistent}(E_{abs} \cup E_{inf})$$
-> If $\Gamma$ is high, the Thinker risks "Ontological Blindness" (mistaking the model for the Raw).
-> If $\Gamma$ is low, the Thinker detects the "Real" through the friction of **Absurdity**.
+> If $\Gamma$ is high, the Thinker risks "Ontological Blindness" (mistaking the
+> model for the Raw).
+> If $\Gamma$ is low, the Thinker detects the "Real" through the friction of
+> **Absurdity**.
 
 #### The Resolution: The Real Void
 
