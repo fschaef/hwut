@@ -2,6 +2,7 @@ from __future__  import annotations
 from functools   import lru_cache
 from typing      import Iterable
 from typeguard   import typechecked
+from typing      import Union
 import weakref
 
 # Assuming local import context exists as per your snippet
@@ -150,6 +151,20 @@ class FrozenAnalogyDb:
 
         cls._pool[pair_ids] = instance
         return instance
+
+    @staticmethod
+    def if_consistent(analogy_list: Iterable) -> Union[FrozenAnalogyDb, None]:
+        subject_db = {}
+        nominal_db = {}
+        for s, n in analogy_list:
+            if (exist_n := subject_db.get(s)) is not None and exist_n != n: 
+                return None
+            if (exist_s := nominal_db.get(n)) is not None and exist_s != s: 
+                return None
+
+            subject_db[s] = n
+            subject_db[n] = s
+        return FrozenAnalogyDb(subject_db)
 
     def to_AnalogyDb(self):
         """RETURNS: A mutable AnalogyDb containing all analogies and provenance.

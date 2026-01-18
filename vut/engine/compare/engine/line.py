@@ -143,6 +143,7 @@ class Line:
         if not verdict:        return False, None
         elif not analogy_list: return True, None
             
+        # analogy_db = FrozenAnalogyDb.if_consistent(analogy_list)
         analogy_db = AnalogyDb.from_iterable(analogy_list)
         if analogy_db is None: return False, None
         else:                  return True, analogy_db
