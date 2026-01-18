@@ -12,10 +12,12 @@ nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 => False, 
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
-=> True, : "((x))"="((y))", "((y))"="((z))"
+=> True, "((x))"="((y))" 
+    "((y))"="((z))"
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z)), SEPERATOR: , ANALOGY:((y))
 => False, 
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y)), SEPERATOR: , ANALOGY:((x))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 => False, 
+

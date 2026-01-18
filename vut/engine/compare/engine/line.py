@@ -12,6 +12,7 @@ from   vut.engine.compare.input.pattern_finder   import PatternFinder
 import vut.engine.compare.engine.association.line_sequence.edit_operations.line   as     edit_operations_line
 from   vut.engine.compare.engine.enums           import E_Verdict
 from   vut.engine.compare.engine.analogy_db      import AnalogyDb
+from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from   dataclasses import dataclass
 
@@ -143,8 +144,8 @@ class Line:
         if not verdict:        return False, None
         elif not analogy_list: return True, None
             
-        # analogy_db = FrozenAnalogyDb.if_consistent(analogy_list)
-        analogy_db = AnalogyDb.from_iterable(analogy_list)
+        analogy_db = FrozenAnalogyDb.if_consistent(analogy_list)
+        # analogy_db = AnalogyDb.from_iterable(analogy_list)
         if analogy_db is None: return False, None
         else:                  return True, analogy_db
 

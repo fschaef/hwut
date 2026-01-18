@@ -86,7 +86,10 @@ class AnalogyDb(dict):
 
     def update(self, other):
         if other is not None:
-            dict.update(self, other)
+            if isinstance(other, (AnalogyDb, dict, list, set, tuple)):
+                dict.update(self, other)
+            else:
+                dict.update(self, other.items())
         return self
 
     def is_consistent(self, analogy):

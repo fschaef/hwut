@@ -3,7 +3,6 @@ from functools   import lru_cache
 from typing      import Iterable
 from typeguard   import typechecked
 from typing      import Union
-import weakref
 
 # Assuming local import context exists as per your snippet
 from .analogy_db import AnalogyDb
@@ -47,7 +46,7 @@ class FrozenAnalogyDb:
     intersections (if small) or Pair-ID set comparisons.
     """
     # Use WeakValueDictionary to prevent memory leaks in backtracking search
-    _pool     = weakref.WeakValueDictionary() 
+    ## _pool     = weakref.WeakValueDictionary() 
     _pool     = {} 
     __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask')
     
@@ -96,7 +95,7 @@ class FrozenAnalogyDb:
             return cls.symbols_inv[s_id], cls.symbols_inv[n_id]
 
     @typechecked
-    def __new__(cls, adb: dict | None = None, _pair_ids: tuple | None = None):
+    def __new__(cls, adb: FrozenAnalogyDb | dict | None = None, _pair_ids: tuple | None = None):
         """RETURNS: FrozenAnalogyDb that represents the AnalogyDb passed by 'adb'., AnalogyDb
 
         NOTE: AnalogyDb is a 'dict' -- it is accepted here.
@@ -163,7 +162,7 @@ class FrozenAnalogyDb:
                 return None
 
             subject_db[s] = n
-            subject_db[n] = s
+            nominal_db[n] = s
         return FrozenAnalogyDb(subject_db)
 
     def to_AnalogyDb(self):
