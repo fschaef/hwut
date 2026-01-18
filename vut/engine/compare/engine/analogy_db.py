@@ -44,11 +44,9 @@ number information about the analogies first occurrence.
 _______________________________________________________________________________
 """
 from   vut.system.helper        import number_of_decimal_digits
-from   collections              import namedtuple, defaultdict
+from   collections              import defaultdict
 
 from   typing import Iterable
-
-LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
 class AnalogyDb(dict):
     """Maintains pairs of terms which are considered analogies.
@@ -161,8 +159,7 @@ class AnalogyDb(dict):
 
         content_db = defaultdict(list)
         for subject, nominal in self.items():
-            p = LineNumberPair(" ", " ")
-            content_db[p].append((subject, nominal))
+            content_db[4711].append((subject, nominal))
 
         txt = [
             (prefix(p, Ls, Ln), show(analogy_list))

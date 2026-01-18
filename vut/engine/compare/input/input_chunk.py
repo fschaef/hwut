@@ -69,7 +69,8 @@ class InputChunkVoid(InputChunk):
     def __repr__(self):    return "InputChunkVoid"
 
 class EquivalenceRelatedInputChunk(InputChunk):
-    def is_equivalent_to_nominal(self, nominal, analogy_db) -> [bool, AnalogyDb]:
+    @typechecked
+    def is_equivalent_to_nominal(self, nominal, analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
 
