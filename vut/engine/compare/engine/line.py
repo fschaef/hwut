@@ -129,7 +129,7 @@ class Line:
         else:
             return True, analogy_list
 
-    def compare_SHOULD_RETURN_FROZENT_ANALOGY_DB(self, nominal):
+    def compare_and_provide_analogies(self, nominal):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold,
                         None, else

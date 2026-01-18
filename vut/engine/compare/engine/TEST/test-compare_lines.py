@@ -63,7 +63,7 @@ if "judge" in sys.argv:
         nominal = Line(4711, _make_string_again(prepare(b, True)), pattern_finder)
         print_match_sequences(subject.sequence, nominal.sequence)
 
-        verdict, analogy_db = subject.compare_SHOULD_RETURN_FROZENT_ANALOGY_DB(nominal)
+        verdict, analogy_db = subject.compare_and_provide_analogies(nominal)
         if analogy_db is None:
             analogy_db = AnalogyDb()
         print("=> %s, %s" % (verdict, analogy_db))
