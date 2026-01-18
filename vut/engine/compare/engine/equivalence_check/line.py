@@ -20,7 +20,7 @@ def do(subject:    InputChunk,    #noqa F821
     if verdict:
         # if lines are textually equal, the analogies must hold
         # if not => definitely not equivalent in the global frame
-        return AnalogyDb._try_update_analogy_db(analogy_db, analogy_list)
+        return analogy_db.extend_if_consistent(analogy_list)
 
     analogy_set = set()
     for subject_line, nominal_line in zip(subject.line_list, nominal.line_list):
@@ -29,5 +29,5 @@ def do(subject:    InputChunk,    #noqa F821
             return False, analogy_db
         analogy_set.update(analogy_list)
     else:
-        return AnalogyDb._try_update_analogy_db(analogy_db, analogy_set)
+        return analogy_db.extend_if_consistent(analogy_set)
 

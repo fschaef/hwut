@@ -44,11 +44,9 @@ number information about the analogies first occurrence.
 _______________________________________________________________________________
 """
 from   vut.system.helper        import number_of_decimal_digits
-from   collections              import namedtuple, defaultdict
+from   collections              import defaultdict
 
 from   typing import Iterable
-
-LineNumberPair = namedtuple("LineNumberPair", ("subject_line_n", "nominal_line_n"))
 
 class AnalogyDb(dict):
     """Maintains pairs of terms which are considered analogies.
@@ -58,19 +56,40 @@ class AnalogyDb(dict):
 
     self:           map: subject term --> nominal term
     """
-    def __init__(self, other=None):
-        if other is not None:
-            dict.update(self, other)
+    def __new__(cls, other=None):
+        # 1. Trivial case: Empty creation
+        if other is None:
+            return super(AnalogyDb, cls).__new__(cls)
 
-    def clone(self):
-        return AnalogyDb(self)
+        # 2. Optimization: If copying an existing AnalogyDb, it's already consistent.
+        if isinstance(other, AnalogyDb):
+            return super(AnalogyDb, cls).__new__(cls)
 
-    def clone_and_add(self, analogy):
-        assert analogy is not None
-        result = AnalogyDb(self)
-        subject, nominal = analogy
-        result[subject] = nominal
-        return result
+        # 3. Determine iterable source
+        # If 'other' is a dict, iterate items. Otherwise iterate 'other' directly.
+        if isinstance(other, dict):
+            iterable = other.items()
+        else:
+            iterable = other
+
+        # 4. Consistency Check (Logic from 'from_iterable')
+        # We use temporary dictionaries to verify the constraints.
+        subject_db = super(AnalogyDb, cls).__new__(cls)
+        nominal_db = {}
+        
+        for s, n in iterable:
+            # Check Nominal Consistency (Injectivity)
+            if n in nominal_db:
+                if nominal_db[n] != s: return None
+            # Check Subject Consistency (Functionality)
+            elif s in subject_db:
+                if subject_db[s] != n: return None
+            else:
+                subject_db[s] = n
+                nominal_db[n] = s
+
+        # 5. consistency confirmed: Create instance
+        return subject_db
 
     @staticmethod
     def from_iterable(iterable: Iterable[tuple[str,str]]):
@@ -86,13 +105,23 @@ class AnalogyDb(dict):
             nominals[n] = s
         return subjects
 
+    def clone(self):
+        return AnalogyDb(self)
+
+    def clone_and_add(self, analogy):
+        assert analogy is not None
+        result = AnalogyDb(self)
+        subject, nominal = analogy
+        result[subject] = nominal
+        return result
+
     def update(self, other):
         assert False
         if other is not None:
             dict.update(self, other)
         return self
 
-    def update_CLONE(self, other):
+    def merge(self, other):
         if not other: return self
         result = self.clone()
         dict.update(result, other)
@@ -118,17 +147,10 @@ class AnalogyDb(dict):
         """
         if analogy_db is None:
             return True
-        elif type(analogy_db) is list:
+        elif type(analogy_db) is list or type(analogy_db) is set:
             return all(self.is_consistent(item) for item in analogy_db)
         else:
             return all(self.is_consistent(item) for item in analogy_db.items())
-
-    @staticmethod
-    def _try_update_analogy_db(analogy_db, analogy_set):
-        if analogy_db.is_all_consistent(list(analogy_set)):
-            return True, analogy_db.update_CLONE(analogy_set)
-        else:
-            return False, analogy_db
 
     def extend_if_consistent(self, analogy_db):
         if analogy_db is None:
@@ -136,8 +158,7 @@ class AnalogyDb(dict):
         elif not self.is_all_consistent(analogy_db):
             return False, self  # FAIL: analogy_db inconsistent with self
         else:
-            dict.update(self, analogy_db)
-            return True, self          # OK:   analogy is added without braking consistency.
+            return True, self.merge(analogy_db) # OK:   analogy is added without braking consistency.
 
     def __hash__(self):
         return hash(frozenset(self.items()))
@@ -168,8 +189,7 @@ class AnalogyDb(dict):
 
         content_db = defaultdict(list)
         for subject, nominal in self.items():
-            p = LineNumberPair(" ", " ")
-            content_db[p].append((subject, nominal))
+            content_db[4711].append((subject, nominal))
 
         txt = [
             (prefix(p, Ls, Ln), show(analogy_list))
