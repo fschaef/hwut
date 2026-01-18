@@ -1,0 +1,694 @@
+# THE ONTOLOGY OF THE TEMPORAL LOGIC ENGINE
+
+ABSTRACT: 
+
+This paper presents a formal ontology for a discrete temporal logic engine 
+governed by "The Observed Now" (Obsnow). Unlike classical models of 
+universal reality, this system defines truth as a localized, observer-dependent 
+manifestation of information called "events." By utilizing a monotonic 
+Positive Logic, the engine ensures that every discrete time step (Jiffy) 
+reaches a stable Least Fixed Point, effectively eliminating logical 
+oscillation and paradox.
+
+The ontology bifurcates the universe into two domains: "The Raw" (the 
+inconceivable, non-dimensional Absolute) and "The Abstract" (the 
+thinker’s conceptual model). We propose that time, space, and causality 
+are not attributes of the Absolute, but are interpretive scaffolds 
+constructed from the crystallization of ephemeral events into immutable 
+history. 
+
+Central to this work is the "Paradox of the Abstract," which identifies 
+the thinker’s internal model as a "Real Void"—a real activity of being 
+producing unreal, information-based content. By resolving agency as a 
+transcendental correspondence between the Abstract and the Absolute, the 
+ontology provides a framework for understanding localized truth, 
+scientific consistency, and the detection of reality through the 
+friction of absurdity.
+
+### 1. EVENTS AND THE NOW
+
+A *Jiffy* is the abstraction of a discrete step—a logical cut in the temporal
+continuum. It is a unit of simultaneity with zero physical duration, serving as
+the interval wherein all logical implications reach a *fixed point*.
+
+> **[FORMALISM]**
+> Let $\mathbb{T} = \mathbb{N}_0$ be the set of discrete time steps (Jiffies).
+> Let $k \in \mathbb{T}$ denote the current Jiffy index.
+
+An *event* is an atomic unit of information existing in "The Observed Now"
+(Obsnow). An event is either *caused* or *implied*. A caused event exists in
+the Obsnow of the Jiffy immediately after its causation. An implied event
+manifests in the Obsnow instantaneously via deduction. The event carries
+meaning solely relative to an observer: an observer derives meaning through
+*interpretation* (of caused events) and a *belief system* (the set of
+implications applied).
+
+> **[FORMALISM]**
+> Let $\mathbb{E}$ be the finite set of all possible event symbols (the Universe
+> of Discourse).
+> The **Obsnow** at step $k$ is a set $N_k \subseteq \mathbb{E}$.
+> Let $C: \mathcal{H} \to \mathcal{P}(\mathbb{E})$ be the **Causation Function**
+> mapping previous history to initial events in $k$.
+> Let $I: \mathcal{P}(\mathbb{E}) \to \mathcal{P}(\mathbb{E})$ be the
+> **Implication Function** (deduction within $k$).
+
+The Obsnow is singular and persistent; it is the vessel that holds the
+*existence* of events. Events, together with their implications, inhabit the
+Obsnow for exactly one Jiffy—the logical instant required for the set to
+saturate and stabilize. The set of stable events is then committed to
+*history*. *History* is the immutable sequence of event sets that have existed
+in the Obsnow:
+
+> **[FORMALISM]**
+> Let $\mathbb{E}$ be the Universe of Events and $k \in \mathbb{N}_0$ be the
+> current Jiffy index.
+> **History** $H_k$ is defined as the immutable, ordered tuple of event sets,
+> up to Jiffy $k-1$ and available in Jiffy $k$.
+>
+> $$H_k := \langle N_0, N_1, \dots, N_{k-1} \rangle \in (\mathcal{P}(\mathbb{E}))^{k}$$
+>
+> Where:
+> * $N_i \subseteq \mathbb{E}$ is the set of events at Jiffy $i$.
+> * The **Crystallization** (transition) from $k$ to $k+1$ is defined by
+>   appending the new stable set:
+>     $$H_{k+1} = H_k \frown \langle N_{k} \rangle$$
+> * **The Prime Mover ($k=0$):**
+>   At $k=0$, History is empty ($H_0 = \langle \rangle$). The first Jiffy $N_0$
+>   cannot be caused by history. It relies on the **Primary Mover**—an initial
+>   injection of events from the Absolute that sets the phases of the Jiffies
+>   in motion.
+
+All events and implications in the Obsnow are topologically co-located. Logical
+implications are instantaneous, independent of the physical location of the
+subject. All of reality collapses for the moment of a Jiffy into the Obsnow as
+a realm of meaning.
+
+The Obsnow hosts events for a Jiffy; new events exist in the *next* Jiffy only
+through *causation*. Without causation, the Obsnow is empty of events—and thus
+empty of meaning. The *causation* of an event and its existence in the Obsnow
+occur in two successive Jiffies ($k$ and $k+1$).
+
+---
+
+### 2. POSITIVE LOGIC AND IMPLICATION
+
+Implications within the Obsnow operate under *positive logic*. Existence is
+strictly additive; there is no operation of 'not event' or 'anti-event'.
+Negation is explicitly barred from the Obsnow. The 'not' operation is
+restricted solely to queries against the immutable *history*.
+
+> **[FORMALISM]**
+> The Implication Function $I(S)$ is **Monotonic**:
+> $$\forall A, B \subseteq \mathbb{E} : A \subseteq B \implies I(A) \subseteq I(B)$$
+> Negation ($\neg e$) is undefined for $e \in N_k$.
+> Negation is valid only for predicates $P(H)$ over history.
+
+In implications, properties of history serve as predicates (gates), but the
+result of an implication is always the *addition* of an event. In such a
+system, *contradictions are structurally impossible*.
+
+Let `$\Leftarrow$` represent Positive Entailment. The expression $A \Leftarrow B$
+is read: 'The existence of A is implied by the existence of B.' This operator
+is strictly monotonic: the presence of $B$ forces $A$ into existence, but the
+absence of $B$ exerts no force on $A$. It is silence, not negation.
+
+> **[FORMALISM]**
+> An implication rule $r$ is a pair $(Conditions, Consequent)$.
+> $$Condition \subseteq \mathbb{E} \cup \{ P(H) \}$$
+> $$Consequent \in \mathbb{E}$$
+> The update step is strictly additive: 
+> $S_{next} = S_{current} \cup \{ e \mid (Cond, e) \in Rules \land Cond \subseteq S_{current} \}$
+
+Given two properties of history, `ever()` and `never()`, consider the
+implications:
+
+    (1) A <= B and ever(C) 
+    (2) A <= B and never(C)
+
+If `C` exists in history, (1) causes the existence of `A`, while (2) remains
+silent. If `C` never existed, then (2) causes the existence of `A` and (1)
+remains silent.
+
+In the Obsnow, contradictions cannot arise because the absence of an event is
+not a logical value (False) that conflicts with presence (True); it is simply
+null. While logical operations on history may utilize 'and', 'or', and 'not' to
+form predicates, the Obsnow remains a pure vessel of existence.
+
+#### Note on Negative Causality
+
+This setup Positive Logic in conjunction with General Logic on history, can
+directly model negative causes (e.g., "Starvation" caused by "Not Eating"). 
+The absence of an event in History is a valid condition for the creation of a 
+positive event in the Now.
+
+* *Example:* `HUNGRY_SIGNAL <= not ever(EAT since last 6 hours)`
+
+In this rule, the antecedent checks for *absence* in the record in history
+(with a binary result 'True' or 'False'), and the consequent produces a
+*presence* of an event in the Obsnow.
+
+---
+
+### 2.1 THE LOGIC FRAME
+
+To maintain the integrity of the Obsnow while allowing for complex reasoning,
+we distinguish between two logical domains connected by the **Bridging
+Operator** ('if' / $\Leftarrow$).
+
+1.  **The Domain of Existence (The Consequent):**
+    * **Target:** The Obsnow ($N_k$).
+    * **Logic:** Strictly Positive. Events are atomic tokens. They cannot be
+      negated or combined with Boolean operators. An event simply *is*.
+    * *Example:* `DOOR_OPEN`, `ALARM_ACTIVE`.
+
+2.  **The Domain of Validation (The Antecedent):**
+    * **Source:** History ($H_k$) and State ($\mathbb{A}_k$).
+    * **Logic:** General Logic (Boolean). Because history is immutable, queries
+      against it return definitive **True/False** values. This domain supports
+      negation (`not`), quantification (`ever`, `never`), and comparison.
+    * *Example:* `last(DOOR_OPEN) > last(DOOR_CLOSE)`, `not ever(SYSTEM_RESET)`.
+
+**The Bridging Operator ('if'):**
+
+The 'if' operator functions as a transducer that converts a **Truth Value**
+(from the Domain of Validation) into an **Event** (in the Domain of Existence).
+
+> **[FORMALISM]**
+> Let $\phi$ be a logical predicate over History $H$.
+> Let $e$ be an event symbol.
+> The rule $e \Leftarrow \phi$ (read: "e if phi") is defined as:
+> $$\text{Evaluate}(\phi, H) = \text{True} \implies N_k \leftarrow N_k \cup \{e\}$$
+> $$\text{Evaluate}(\phi, H) = \text{False} \implies \text{No Action}$$
+
+---
+
+### 3. STABILITY AND THE LEAST FIXED POINT
+
+This system eliminates logical instability through Idempotence and Monotonicity.
+An implication is a constructive force; it can only add to the set of existing
+events. Once an event is brought into existence within the Obsnow, no subsequent
+implication can remove it.
+
+To guarantee stability, we define the Jiffy calculation as an iterative process
+starting from an initial injection of external causes.
+
+> **[FORMALISM]**
+> **1. The Injection Step ($S_0$):**
+> The initial state of the Jiffy is populated by events caused by History ($C$)
+> and events precipitated by Agency ($A$).
+> $$S_0 = C(H_k) \cup A(\Delta \mathbb{A}_k)$$
+>
+> **2. The Saturation Step ($S_{i} \to S_{i+1}$):**
+> We apply the Implication Function $I(S)$ iteratively.
+> Let $\Phi(S) = S \cup I(S)$ be the Step Function.
+> $$S_{i+1} = \Phi(S_i)$$
+>
+> **3. Convergence:**
+> Since $S \subseteq \Phi(S)$ (Inflationary) and $\Phi$ is Monotonic, by the
+> **Knaster-Tarski Theorem**, the sequence reaches a **Least Fixed Point**:
+> $$N_k = \text{lfp}(\Phi, S_0) = \bigcup_{i=0}^{\infty} \Phi^i(S_0)$$
+> This fixed point $N_k$ is the final Obsnow committed to history.
+
+Because the logic of the Obsnow forbids the negation of current events, the set
+of existing events is strictly monotonically increasing during the calculation.
+This guarantees that the chain of implications inevitably reaches a stable state
+where all valid implications are satisfied.
+
+---
+
+### 4. ABSURDITY
+
+The co-existence of implied events in the Obsnow guarantees logical stability,
+but it does not guarantee semantic consistency. In the frame of positive logic,
+events never contradict or "un-exist" each other. However, the information
+carried by these events, once recorded in history, may describe a state that
+the observer considers *absurd*.
+
+Absurdity is not a system error; it is a divergence between *System State* and
+*Observer Expectation*. It arises from two sources:
+
+1.  **Unwanted Behavior (Reality Divergence):** This occurs when external
+    reality emits signals that contradict physical constraints. For example,
+    consider two door sensors, A and B:
+     
+    DOOR_JUST_CLOSED <= SENSOR_A 
+    DOOR_JUST_OPENED <= SENSOR_B
+
+    If both sensors fire in the same Jiffy, the engine faithfully records both
+    events. The interpretation—'door is closed' AND 'door is open'—is
+    physically impossible, yet logically valid within the engine. The engine
+    has correctly captured a sensor failure.
+
+2.  **Misimplication (Belief Divergence):** This occurs when the 'belief
+    system' (the set of implications) contains flawed logic that permits
+    inconsistent states. Consider this chain:
+
+    START_VERY_HAPPY          <= JUST_MARRIED 
+    START_TROUBLE             <= START_LIVING_WITH_A_WOMAN 
+    START_LIVING_WITH_A_WOMAN <= JUST_MARRIED
+    START_VERY_UNHAPPY        <= START_TROUBLE
+
+    If 'JUST_MARRIED' occurs, the Obsnow saturates with both 'START_VERY_HAPPY'
+    and 'START_VERY_UNHAPPY'. The engine does not crash; it simply presents the
+    paradox.
+
+> **[FORMALISM]**
+> Let $\mathcal{K}$ be a set of Consistency Constraints (e.g., mutually
+> exclusive sets).
+> A Jiffy $N_k$ is **Valid** iff: $N_k = \text{lfp}(\Phi)$.
+> A Jiffy $N_k$ is **Absurd** iff: $\exists \kappa \in \mathcal{K} : N_k \not\models \kappa$.
+> The engine computes Validity; the user enforces Consistency.
+
+Note that *absurdity* is relative to a specific set of *Consistency Rules*. A
+state is only absurd if there exists a rule declaring the co-existence of those
+specific elements to be invalid. The engine computes the *existence* of the
+state; the belief system determines the *validity* of the state.
+
+---
+
+### 5. STATE: THE LENS OF HISTORY
+
+This section distinghuishes between the *Object* of history and the *Process* of
+history, and how the observer extracts meaning from them through **State**.
+
+#### 1. The Immutable Snapshot ($H_k$)
+
+At the start of any Jiffy $k$, the history $H_k$ is an immutable object
+representing the "Deep Past." It is a tuple containing exactly $k$ sets
+of events.
+
+> **[FORMALISM]**
+> Let $N_i$ be the set of events at step $i$.
+> $$H_k := \langle N_0, N_1, \dots, N_{k-1} \rangle$$
+> Note that $H_k$ does *not* include the current events $N_k$.
+
+#### 2. The Mutable Evolution
+
+While the snapshot $H_k$ is constant during the Jiffy, the *sequence* of history
+evolves. Upon the completion of Jiffy $k$ (crystallization), the current Obsnow
+is appended to the record to form the starting history for the next step.
+
+> **[FORMALISM]**
+> $$H_{k+1} = H_k \frown \langle N_k \rangle$$
+
+#### 3. State as a Lens (Compression)
+
+As $k \to \infty$, the sheer volume of History becomes 
+intractable by an observer of limited ability to handle complexity. A finite
+observer cannot re-read the entire sequence of time at every step. To function,
+the Thinker requires a way to compress this temporal depth into a tangible
+surface. This compression is called **State**.
+
+A *State* is not an event; it is a derived **Interpretation** of History. It
+acts as a lens, filtering the immense complexity of the event sequence into a
+manageable set of persistent properties.
+
+> **[FORMALISM]**
+> Let $\mathbb{S}$ be the set of possible States.
+> Let $\Psi$ be the **Interpretation Function** (The Lens).
+> $$S_k = \Psi(H_k)$$
+>
+> While $H_k$ grows linearly, the complexity of the State remains bounded:
+> $$|\mathbb{S}| \ll |H_k|$$
+
+#### 4. The Duality: Ephemeral Truth vs. Persistent Meaning
+
+The fundamental tension of the ontology lies in the contrast between Event and
+State.
+
+* **Events are Ephemeral:** An event (e.g., `SENSOR_FIRE`) exists *only* within
+  the Obsnow ($N_k$). It has no duration. It is an infinitely small flash of 
+    **Truth** from the Absolute.
+
+* **States are Persistent:** A state (e.g., `LIGHT_IS_ON`) exists across
+  multiple Jiffies. It remains valid until a new event forces the lens ($\Psi$)
+  to calculate a change. It is a structure of **Meaning** in the Abstract.
+
+To maintain persistence, State Interpretations use the **Logic Frame** (Section
+2.1) to query History. They bridge the gap between the flashes of events:
+
+    LIGHT_IS_ON <= ever(TURN_ON) and ( never(TURN_OFF) or last(TURN_ON) > last(TURN_OFF) )
+
+Any implication derived solely from the Obsnow (e.g., `LIGHT_IS_ON <= TURN_ON`)
+precipitates a logical collapse: the inferred state would vanish the instant the
+causing event clears (in Jiffy $k+1$).
+
+Thus, **The Obsnow** is the source of perceived Truth (Events). **History**
+is the sustainer of Meaning (State). The Thinker never interacts with the raw
+history directly; they interact with the *State*—their specific, subjective
+compression of the past.
+
+--
+
+### 5.1 LOGICAL PRIORITY AND DETERMINATION
+
+It is crucial to distinguish between *Physical Duration* and *Logical Order*. 
+A Jiffy is a logical time slot, not a physical interval. There is no temporal 
+delay between the Cause (History/State) and the Effect in the Obsnow.
+
+However, there is a strict **Logical Priority**:
+1.  **Undetermined Flux ($N_k$):** During the calculation of the Fixed Point, 
+    events are mutable (additive only). They are not yet "Real" in the sense 
+    of History.
+2.  **Determined Object ($H_{k+1}$):** Only when the Jiffy terminates (reaching 
+    the Least Fixed Point) does the set become immutable.
+
+Therefore, the separation between the Thinker's Context ($S_k$) and the 
+Current Reality ($N_k$) is not a "Lag of Perception," but the necessary 
+condition for existence. Nothing can enter History as an immutable object 
+until it is fully determined. The Jiffy is the logical operation of that 
+determination; this logical expansion corresponds to zero physical time.
+---
+
+### 6. SCHRÖDINGER'S CAT AND RELATIVISTIC TRUTH
+
+Schrödinger’s Cat is a thought experiment designed to illustrate a perceived
+paradox in quantum mechanics. A cat is placed in a sealed box with a device
+that has a 50% chance of killing the cat based on a random subatomic event
+(radioactive decay). According to some interpretations of physics, until the
+box is opened, the cat exists in a "superposition"—being both dead and alive
+simultaneously.
+
+This thought experiment serves as a fundamental anchor for understanding the
+concepts of the ontology. By resolving the paradox through the lens of local
+events, it determines the place of this ontology on a broader map: it is a
+system of localized, observer-dependent truth rather than a model of universal,
+objective reality. The Obsnow provides access to knowledge; it does not provide
+access to being.
+
+There is one absolute truth that is perceived without the necessity of an
+event: the truth of one’s *own* existence. For other observers this truth,
+however, is only accessible in terms of knowledge.
+
+Applying the strict constraints of the Obsnow, no superposition exists. The
+Obsnow does not give an omniscient "God's Eye View"; it models the only source
+of knowledge of a specific observer. This 'knowledge' comes as events
+manifested in the Obsnow. Yet events consist of conceivable information; they
+exist exclusively within the domain of conception and have no existence in "The
+Raw."
+
+"The Raw" is the unreachable, indescribable, and inconceivable Absolute. It
+does not consist of events, nor does it possess properties tangible to
+information-based reasoning. Because the Absolute is inconceivable, so too is
+the ultimate causation of events; we cannot know *how* the Raw precipitates an
+event, only that an event has manifested. 
+
+Crucially, "The Raw" connects observers through their separate Obsnows, but
+their Truths remain distinct. The "Cat" is not an object, but an observer with
+its own Obsnow. 
+
+> **[FORMALISM]**
+> Let $\mathcal{O}$ be the set of Observers. Truth is strictly indexed by the
+> observer:
+> $$Truth(e, o, k) \iff e \in N_{k, o}$$
+> Where $N_{k, o}$ is the Obsnow of observer $o$ at Jiffy $k$.
+>
+> **Ternary Logic of the Obsnow:**
+> Let $\mathcal{K}$ be the set of Consistency Constraints (e.g., mutually
+> exclusive sets).
+> $$Value(p) = \begin{cases} \text{True} & \text{if } p \in N_{k, o} \\ \text{False} & \text{if } \exists e \in N_{k, o} : \{e, p\} \text{ violates } \mathcal{K} \\ \text{Unknown} & \text{otherwise} \end{cases}$$
+
+1. **In the Cat's Obsnow:** The event of the device triggering (or not)
+   manifests immediately. The state of being alive or dead is tied to its own,
+   single, absolute truth that it can perceive: its own existence. The truth is
+   immediate and absolute. 
+
+2. **In the Scientist's Obsnow:** The box is closed. No event `CAT_DEAD` or
+   `CAT_ALIVE` has manifested. The necessary manifestation of the truth of "The
+   Raw" has not yet put the scientist in a position of knowing.
+
+Objective reality is an unreachable, indescribable, and inconceivable Absolute.
+Even with total scientific rigor, our perception of "reality" is strictly
+limited to the manifestations within our Obsnow. We do not measure proximity to
+the Absolute; we measure the **Coherence of our Interpretations**. 
+
+Under this view, **Consistency** is the highest metric available to the
+information-based mind. The scientific pursuit is not an approach toward the
+Raw, but the construction of a belief system (a set of implications) where
+events never collapse into Absurdity. The supposed *superposition* of a cat's
+state, being alive and dead at the same time, is factually a consequence of the
+relativity of the perceiver's Obsnow. Claiming superposition mistakes a lack of
+information (which is a necessary consequence of relativity) for a fundamental
+property of the Absolute.
+
+-----
+
+### 7. THE ABSTRACT AND THE THINKER
+
+The **Abstract** is the observer’s internal model of the world—a purely
+conceptual domain. It is a workspace constructed from **State** (the
+interpreted history) and **Imagination**. Within this domain, the observer acts
+as a **Thinker**, manipulating objects and simulating outcomes.
+
+#### Logic within the Abstract
+
+Through implications, the Thinker generates new events directly within the
+Obsnow. For example, by projecting the movement of two spheres in the Abstract
+state space, the engine calculates their intersection and implies the event
+`COLLISION`. This is not "magic," but the deterministic result of the belief
+system (the set of implications) acting upon the current model.
+
+#### The Singularity of Agency
+
+Another class of events originates in the Abstract and manifests as
+'action'—changes in reality. The translation of *intent* (a change in the
+Abstract) into *action* (a caused event in the Obsnow) represents a singularity
+in the ontology. 
+
+The Abstract itself is a "Real Void"; it possesses structure but no force. It is 
+pure syntax. Conversely, the Absolute possesses Being but no conceivable
+structure. The mechanism by which the Thinker’s internal state modification
+(e.g., the "will" to move an arm) precipitates a physical event in the next
+Jiffy is not a mechanical process, as "mechanism" implies the temporal and
+spatial dimensions barred from the Absolute. Instead, Agency is a
+**Transcendental Correspondence**: the Absolute reflects the state change of
+the Abstract into the Obsnow without a describable, conceivable intermediate
+linkage.
+
+> **[FORMALISM]**
+> Let $\mathbb{A}$ be the Abstract Space.
+> 1. **Conceptual Deduction:** $e \in N_k \iff (H_k, \mathbb{A}_k) \vdash e$
+>    *(Events implied by the current model).*
+> 2. **Causal Agency:** $e \in N_{k+1} \iff \text{Absolute}(\Delta \mathbb{A}_k) \to e$
+>    *(Events precipitated by the Absolute following a state change in the Abstract).*
+
+We must accept that this function $\text{Absolute}(\Delta \mathbb{A}_k)$ is 
+computationally opaque. Because the Absolute is inconceivable, it is not 
+categorizable or separable. To say "Event A comes from the Absolute" does not 
+imply there is a distinct object 'A' residing "inside" the Absolute prior to 
+manifestation. The concepts of 'inside', 'outside', and 'process' are spatial 
+constructs of the Abstract. Therefore, we do not 'understand' Agency; we 
+rely on it. We are dependent on the Absolute to produce events that allow us 
+to maintain the consistency of our Abstract model.
+
+---
+
+### 8. THREE PHASES OF THE CYCLE OF CAUSATION
+
+The engine operates in a rhythmic "breath," a three-phase cycle that ensures
+logical simultaneity within a Jiffy while enforcing succession across them.
+
+#### Phase I: Deduction (Simultaneity)
+
+Events precipitated by the Absolute or caused by the previous Jiffy manifest in
+the Obsnow. The observer's internal belief system (the set of implications)
+then adds implied events. Using Positive Logic, the set of events expands
+monotonically until all valid implications are satisfied. 
+
+* **The Goal:** Reach the **Least Fixed Point** where the set of events $N_k$
+  is stable.
+
+* **Formalism:** $N_k = \text{lfp}(\Phi)$ where $\Phi(S) = S \cup \{e \mid
+  (H_k, S, \mathbb{A}_k) \vdash e\}$.
+
+#### Phase II: Crystallization (Persistence)
+
+The stable set of events ($N_k$) is committed to the immutable History ($H_k$).
+This is the transition from the "flux" of the Now to the "granite" of the Past.
+The observer interprets this history to update the **Abstract** state space.
+Ephemeral events are "integralized" into persistent States.
+
+* **Formalism:** $H_{k+1} = H_k \frown \langle N_k \rangle$ and $\mathbb{A}_{k+1} = \Psi(H_{k+1})$.
+
+
+#### Phase III: Manifestation (Succession)
+
+The **Thinker** modifies the Abstract state space, representing imagination or
+intent. The **Absolute** then translates these internal state changes
+(transitions) into a new set of caused events. These events are seeded to
+manifest in the Obsnow of the next Jiffy ($k+1$).
+
+* **The Result:** The cycle closes and the Absolute precipitates the next state
+  of the world.
+
+* **Formalism:** $C_{k+1} = \{e \mid \text{Absolute}(\Delta \mathbb{A}_k) \to
+  e\}$.
+
+
+### 9. THE PERCEPTION OF TIME AND DIMENSION
+
+Within this ontology, time and space are not independent dimensions or
+properties of the Absolute. They are internal constructs of the Thinker,
+perceivable only through the lens of the **Abstract** (derived from
+**States**), i.e. through interpretations of **History**.
+
+#### The Timeless Absolute
+
+The Absolute exists entirely beyond time. It is a non-sequential, non-spatial
+presence. Further "dimensions" are not attributes of the Absolute; they are
+concepts that exist solely within the **States**—the interpretations of the
+history of events. Any notion of a "coordinate" or "sequence" is a conceptual
+layer projected by the Thinker onto the manifestations of the Absolute to make
+them navigable.
+
+#### Time as a Derivative of Change
+
+Time is only perceivable in terms of the elements of history—specifically, the
+interpreted changes of state together with the events that relate to them.
+Without a recorded change (a transition from State A to State B) and the
+associated events in the Obsnow, there is no "movement" for the Thinker to
+measure. Time is the subjective "distance" between manifestations; if the
+Absolute precipitates no events and the Thinker performs no modifications in
+the Abstract, time effectively ceases to exist for that observer.
+
+> **[FORMALISM]**
+> Dimensions (including time) are properties of the Interpretation Function $\Psi$:
+> $$\dim(\mathbb{A}_k) \in \Psi(H_k)$$
+> Since $\mathbb{A}_k$ is a purely conceptual world, its dimensionality and 
+> temporal flow are restricted to the capacity of the Thinker to categorize 
+> history. The Absolute remains $\text{dim} = 0$ (or non-dimensional).
+
+### 10. THE PARADOX OF THE ABSTRACT
+
+#### The Challenges
+
+1.  **The Absolute** is the only domain with real existence, yet it is
+    unstructured, inseparable, and inconceivable. 
+
+2.  **The Abstract** is a structured, conceivable domain built upon information
+    and imagination. The constructs within the Abstract are not "real" in
+    themselves.
+
+A Thinker can conceptualize a difference between the Absolute and the Abstract
+through reasoning. However, since the Absolute is inconceivable, any attempt to
+define "borders" or "limits" fails, as these are themselves conceivable
+concepts. The only "Truth" we can assign to these concepts is a real,
+equivalent existence grounded in the Absolute—which remains beyond our grasp.
+
+#### The Detection of Reality: Inconsistency
+
+The Thinker is exposed to an **Abstract** based on **States** (interpreted
+History), which is "fed" by the **Obsnow**. In this ontology, the only way to
+distinguish between events originating from the Absolute and events originating
+from the Abstract is **Consistency**.
+
+It is therefore essential to utilize **Positive Logic**. By allowing
+potentially inconsistent events to manifest, the engine provides the Thinker
+with the data necessary to distinguish between the "Real World" (the Absolute's
+manifestations) and their own "Imagination" (the Abstract's implications).
+
+#### The Trap of Coherence
+
+A trap remains: as the Thinker refines their internal implications, their model
+becomes increasingly consistent. The more consistent the events become, the
+more the Thinker is prone to mistake their **Abstract** for the **Absolute**. 
+
+> **[FORMALISM]**
+> Let $E_{abs}$ be events precipitated by the Absolute and $E_{inf}$ be events
+> implied by the Abstract.
+> **Consistency Metric ($\Gamma$):**
+> $$\Gamma = \text{Consistent}(E_{abs} \cup E_{inf})$$
+> If $\Gamma$ is high, the Thinker risks "Ontological Blindness" (mistaking the
+> model for the Raw).
+> If $\Gamma$ is low, the Thinker detects the "Real" through the friction of
+> **Absurdity**.
+
+#### The Resolution: The Real Void
+
+The solution lies in the distinction between **Being** and **Content**. The
+Abstract is not a "thing," but an **Activity of Being**.
+
+* **The Process is Real:** The act of conceiving is a real attribute of the
+  Thinker’s existence. Since the Thinker’s existence is an Absolute certainty,
+  the "thinking process" possesses the quality of Absolute Being.
+
+* **The Product is Unreal:** The content produced by that process—categories,
+  dimensions, objects—remains purely conceptual. It is a **"Real Void"**: a
+  real activity of the mind creating an unreal model.
+
+#### The Final Boundary
+
+The "solution" remains beyond the grip of our understanding. To grasp how a
+real process generates unreal content, or how the Absolute "respects" changes
+in the Abstract, would require stepping outside our own Obsnow—which is
+impossible. 
+
+That remains is a functional mystery: The Absolute is the source of all
+manifestations. While it cannot be conceived, we are dependent on it to
+translate our conceptual modifications into manifest events. Our understanding
+is not a mirror of the Absolute, but a consistent, conceptual scaffolding built
+over history.
+
+--
+
+### 10.1 THE LIMITS OF CONCEPTUAL THINKING
+
+At the heart of this ontology is the recognition that whatever we think, reflect, 
+or research, we are working exclusively with **Models**, never with Reality itself. 
+Reality ("The Raw") exists independently of our models.
+
+It is structurally impossible for a model-based understanding to encompass the 
+Raw. This is not because the problem is "hard," but because the tool is 
+categorically distinct from the target.
+
+* **Concepts are Information:** They are conceivable, descriptive, separable, 
+   structured, etc.
+
+* **Reality:** It is the antecedent to anything conceivable.
+
+We can assert *that* Reality exists, because it precedes our imagination
+(State) as necessary cause of our own existence. However, we cannot say *what*
+Reality is. We can attribute to its manifestation. 
+
+Therefore, the "Hard Problems" of Time, Force, and Origin are not puzzles 
+waiting to be solved; they are **Impossible** to resolve within the Abstract. 
+To "solve" them would require the concept to become the reality.
+
+> **[CROSS-REFERENCE]**
+> This epistemological boundary is rigorously encoded in the **Ternary Logic** 
+> of the Obsnow (see Section 6). The logical value **Unknown** is not merely 
+> [cite_start]a lack of data; it is the formal placeholder for the Absolute[cite: 132]. 
+> It represents the "Raw" reality that exists but has not yet manifested as 
+> a conceivable Event ($e \notin N_{k,o}$).
+
+We do not "touch" Reality; we process the **Events** that manifest from it. The
+Obsnow allows us to know *about* existence, but it does not grant us access
+*to* existence.
+
+--
+
+### CONCLUSION: 
+
+The Ontology of the Temporal Logic Engine shifts the focus of inquiry from the
+pursuit of "Objective Reality" to the maintenance of "Local Consistency." By
+defining the Jiffy as a discrete logical breath and the Obsnow as the exclusive
+vessel of truth, we acknowledge that an observer can never grasp "The Raw" (the
+Absolute). We are, instead, inhabitants of the Abstract—a conceptual
+scaffolding built from the persistent crystallization of ephemeral events into
+history.
+
+The rigor of this system lies in its Positive Logic. By barring negation from
+the Now and allowing for the manifestation of Absurdity, the engine does not
+seek to prevent paradox, but to reveal it. Inconsistency becomes the primary
+sensor for the "Real"; it is the friction that reminds the Thinker that their
+Abstract model is not the Absolute.
+
+Ultimately, this ontology defines the Thinker not as a master of the universe,
+but as a steward of a model. Agency—the transformation of intent into action—is
+the point of deepest mystery, where the Absolute reflects the changes of our
+unreal imagination back into the real manifestations of our experience. We must
+accept that the Primary Mover of this cycle—the initial event that initiates the 
+phases of Jiffies—remains an axiomatic reality of the Absolute, perceivable only 
+as the origin of history. In this framework, the highest achievement of the 
+information-based mind is not the discovery of Being, but the construction of a 
+belief system where events never collapse into the void of the inconceivable.
