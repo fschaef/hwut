@@ -72,10 +72,6 @@ def _core(subject_line_list, nominal_line_list,
                                                  abort_early_f=abort_f, 
                                                  analogies_involved_f = analogies_involved_f)
 
-    # Thaw the database to allow 'developing it along the way' in the fuzzy phase
-    if isinstance(analogy_db, FrozenAnalogyDb):
-        analogy_db = analogy_db.to_AnalogyDb()
-
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
     nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object
 
@@ -146,7 +142,7 @@ def _couple_uncoupled(couples, subject_db, nominal_db, analogy_db, max_compariso
     return line_pair_list, subjects_remaining, nominals_remaining
 
 @typechecked
-def _couple_remainders(couples, subject_db, nominal_db, analogy_db: AnalogyDb | None, max_comparison_count):
+def _couple_remainders(couples, subject_db, nominal_db, analogy_db: AnalogyDb | FrozenAnalogyDb | None, max_comparison_count):
     """RETURNS: list of LinePair objects.
 
     Find couples in the set of remainders according to a least cost
