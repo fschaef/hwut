@@ -142,7 +142,7 @@ class Line:
         if not verdict:        return False, AnalogyDb()
         elif not analogy_list: return True, AnalogyDb()
             
-        analogy_db = AnalogyDb(analogy_list)
+        analogy_db = AnalogyDb.from_iterable(analogy_list)
         if analogy_db is None: return False, AnalogyDb()
         else:                  return True, analogy_db
 
@@ -178,7 +178,7 @@ class Line:
         result = edit_operations_line.do(self.sequence, nominal.sequence, analogy_db)
 
         if result.cost == 0:
-            result.analogy_db = result.analogy_db.merge(analogy_db)
+            result.analogy_db = result.analogy_db.update(analogy_db)
         else:
             result.analogy_db = analogy_db.clone() if analogy_db else AnalogyDb()
 

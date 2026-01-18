@@ -117,7 +117,7 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
                  False, else.
         """
         ok_f = True
-        if len(self) == 0: return ok_f, analogy_db
+        if len(self) == 0: return ok_f
 
         nominals_coupled = set()
         for ia, mate_list in sorted(self.items()):
@@ -126,18 +126,16 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             del self[ia]
             if ok_f := (ib in nominals_coupled):
                 if abort_early_f: break
+            elif not (ok_f := analogy_db.extend_if_consistent(required_analogy_db)):
+                if abort_early_f: break
             else:
-                ok_f, analogy_db = analogy_db.extend_if_consistent(required_analogy_db)
-                if not ok_f:
-                    if abort_early_f: break
-                else:
-                    pair_db[ia] = ib
-                    nominals_coupled.add(ib)
+                pair_db[ia] = ib
+                nominals_coupled.add(ib)
 
         if ok_f:
             ok_f &= self.remove_nominals(nominals_coupled, abort_early_f)
 
-        return ok_f, analogy_db
+        return ok_f
 
     def extract_ultimate_nominal_partners(self, pair_db, analogy_db, abort_early_f: bool):
         """Find 'ib'-s which have only one possible matching 'ia'. 
@@ -149,7 +147,7 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
                  False, else.
         """
         ok_f = True
-        if len(self) == 0: return ok_f, analogy_db
+        if len(self) == 0: return ok_f
         
         # Map each ib to the ia-s that can match it
         ib_to_ia_map = defaultdict(list)
@@ -169,19 +167,17 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             if ok_f := (ia not in self):
                 # 'ia' has been removed by another ultimate matcher
                 if abort_early_f: break
+            elif not (ok_f := analogy_db.extend_if_consistent(required_analogy_db)):
+                if abort_early_f: break
             else:
-                ok_f, analogy_db = analogy_db.extend_if_consistent(required_analogy_db)
-                if not ok_f:
-                    if abort_early_f: break
-                else:
-                    pair_db[ia] = ib
-                    nominals_coupled.add(ib)
-                    del self[ia] # ia is now coupled, remove from work graph
+                pair_db[ia] = ib
+                nominals_coupled.add(ib)
+                del self[ia] # ia is now coupled, remove from work graph
 
         if ok_f:
             ok_f &= self.remove_nominals(nominals_coupled, abort_early_f)
 
-        return ok_f, analogy_db
+        return ok_f
 
     def remove_nominals(self, nominal_set, abort_early_f: bool):
         ok_f = True

@@ -3,8 +3,11 @@ from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 import vut.engine.compare.engine.potpourri.pairing as     pairing
 
 
-def do(subject:    InputChunk,    #noqa F821
-       nominal:    InputChunk,    #noqa F821
+from typeguard import typechecked
+
+@typechecked
+def do(subject, #:    InputChunkPotpourri
+       nominal, #:    InputChunkPotpourri
        analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
 
     if len(subject.analogy_line_list) != len(nominal.analogy_line_list):

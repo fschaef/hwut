@@ -56,40 +56,19 @@ class AnalogyDb(dict):
 
     self:           map: subject term --> nominal term
     """
-    def __new__(cls, other=None):
-        # 1. Trivial case: Empty creation
-        if other is None:
-            return super(AnalogyDb, cls).__new__(cls)
+    def __init__(self, other=None):
+        if other is not None:
+            self.update(other)
 
-        # 2. Optimization: If copying an existing AnalogyDb, it's already consistent.
-        if isinstance(other, AnalogyDb):
-            return super(AnalogyDb, cls).__new__(cls)
+    def clone(self):
+        return AnalogyDb(self)
 
-        # 3. Determine iterable source
-        # If 'other' is a dict, iterate items. Otherwise iterate 'other' directly.
-        if isinstance(other, dict):
-            iterable = other.items()
-        else:
-            iterable = other
-
-        # 4. Consistency Check (Logic from 'from_iterable')
-        # We use temporary dictionaries to verify the constraints.
-        subject_db = super(AnalogyDb, cls).__new__(cls)
-        nominal_db = {}
-        
-        for s, n in iterable:
-            # Check Nominal Consistency (Injectivity)
-            if n in nominal_db:
-                if nominal_db[n] != s: return None
-            # Check Subject Consistency (Functionality)
-            elif s in subject_db:
-                if subject_db[s] != n: return None
-            else:
-                subject_db[s] = n
-                nominal_db[n] = s
-
-        # 5. consistency confirmed: Create instance
-        return subject_db
+    def clone_and_add(self, analogy):
+        assert analogy is not None
+        result = AnalogyDb(self)
+        subject, nominal = analogy
+        result[subject] = nominal
+        return result
 
     @staticmethod
     def from_iterable(iterable: Iterable[tuple[str,str]]):
@@ -105,27 +84,10 @@ class AnalogyDb(dict):
             nominals[n] = s
         return subjects
 
-    def clone(self):
-        return AnalogyDb(self)
-
-    def clone_and_add(self, analogy):
-        assert analogy is not None
-        result = AnalogyDb(self)
-        subject, nominal = analogy
-        result[subject] = nominal
-        return result
-
     def update(self, other):
-        assert False
         if other is not None:
             dict.update(self, other)
         return self
-
-    def merge(self, other):
-        if not other: return self
-        result = self.clone()
-        dict.update(result, other)
-        return result
 
     def is_consistent(self, analogy):
         """RETURNS: True, if analogy = tuple(subject, nominal) is consistent
@@ -147,18 +109,25 @@ class AnalogyDb(dict):
         """
         if analogy_db is None:
             return True
-        elif type(analogy_db) is list or type(analogy_db) is set:
+        elif type(analogy_db) is list:
             return all(self.is_consistent(item) for item in analogy_db)
         else:
             return all(self.is_consistent(item) for item in analogy_db.items())
 
+    def try_update(self, analogy_set):
+        if self.is_all_consistent(list(analogy_set)):
+            return True, self.update(analogy_set)
+        else:
+            return False, self
+
     def extend_if_consistent(self, analogy_db):
         if analogy_db is None:
-            return True, self    # OK:   nothing added; no inconsistency.
+            return True    # OK:   nothing added; no inconsistency.
         elif not self.is_all_consistent(analogy_db):
-            return False, self  # FAIL: analogy_db inconsistent with self
+            return False   # FAIL: analogy_db inconsistent with self
         else:
-            return True, self.merge(analogy_db) # OK:   analogy is added without braking consistency.
+            self.update(analogy_db)
+            return True    # OK:   analogy is added without braking consistency.
 
     def __hash__(self):
         return hash(frozenset(self.items()))
