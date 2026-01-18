@@ -1,11 +1,8 @@
 from __future__ import annotations
 from vut.engine.compare.engine.analogy_db  import AnalogyDb
 
-from typeguard import typechecked
-
-@typechecked
-def do(subject, #: InputChunkLine
-       nominal, #: InputChunkLine
+def do(subject:    InputChunk,    #noqa F821
+       nominal:    InputChunk,    #noqa F821
        analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
     """RETURNS: [0] True, subject and nominal a definitely equal => equivalent
                     False, subject and nominal are definitely not equivalent
@@ -23,7 +20,7 @@ def do(subject, #: InputChunkLine
     if verdict:
         # if lines are textually equal, the analogies must hold
         # if not => definitely not equivalent in the global frame
-        return analogy_db.try_update(analogy_list)
+        return AnalogyDb._try_update_analogy_db(analogy_db, analogy_list)
 
     analogy_set = set()
     for subject_line, nominal_line in zip(subject.line_list, nominal.line_list):
@@ -32,5 +29,5 @@ def do(subject, #: InputChunkLine
             return False, analogy_db
         analogy_set.update(analogy_list)
     else:
-        return analogy_db.try_update(analogy_set)
+        return AnalogyDb._try_update_analogy_db(analogy_db, analogy_set)
 

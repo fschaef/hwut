@@ -1,4 +1,5 @@
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from vut.engine.compare.engine.analogy_db        import AnalogyDb
 from vut.engine.compare.input.line_element       import structural_hash
 from collections import defaultdict
 from typeguard   import typechecked
@@ -29,8 +30,9 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
             """
             subject_hash = structural_hash(subject_le_seq.sequence)
             for nominal_le_seq in nominal_hash_db.get(subject_hash, []):
-                verdict, analogy_db = subject_le_seq.compare_X(nominal_le_seq)
+                verdict, analogy_db = subject_le_seq.compare_SHOULD_RETURN_FROZENT_ANALOGY_DB(nominal_le_seq)
                 if verdict:
+                    if analogy_db is None: analogy_db = AnalogyDb()
                     yield nominal_le_seq.line_n, analogy_db
 
         def _iterable(subject_line_list, nominal_hash_db, abort_early_f):

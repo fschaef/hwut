@@ -128,9 +128,10 @@ class Line:
         else:
             return True, analogy_list
 
-    def compare_X(self, nominal):
+    def compare_SHOULD_RETURN_FROZENT_ANALOGY_DB(self, nominal):
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
-                    [1] analogy_db required for equivalence to hold.
+                    [1] analogy_db required for equivalence to hold,
+                        None, else
 
         IMPORTANT: 'analogy_db' does not evolve here, 
                    a new one is created with updated content.
@@ -139,11 +140,11 @@ class Line:
         which are not equivalent do not impose new analogies.
         """
         verdict, analogy_list = self.__compare_core(nominal)
-        if not verdict:        return False, AnalogyDb()
-        elif not analogy_list: return True, AnalogyDb()
+        if not verdict:        return False, None
+        elif not analogy_list: return True, None
             
         analogy_db = AnalogyDb.from_iterable(analogy_list)
-        if analogy_db is None: return False, AnalogyDb()
+        if analogy_db is None: return False, None
         else:                  return True, analogy_db
 
     def __compare_core(self, nominal):

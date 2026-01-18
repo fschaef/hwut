@@ -46,7 +46,7 @@ def test_pure(subject_line_list, nominal_line_list):
     analogy_db = AnalogyDb()
     total_verdict, db, analogy_db = pairing.do(get_Potpourri(pf, subject_line_list, config),
                                                get_Potpourri(pf, nominal_line_list, config),
-                                               AnalogyDb(),
+                                               analogy_db,
                                                abort_early_f=True)
 
     if not total_verdict and (db or analogy_db):

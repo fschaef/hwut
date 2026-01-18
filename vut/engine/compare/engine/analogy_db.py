@@ -114,11 +114,12 @@ class AnalogyDb(dict):
         else:
             return all(self.is_consistent(item) for item in analogy_db.items())
 
-    def try_update(self, analogy_set):
-        if self.is_all_consistent(list(analogy_set)):
-            return True, self.update(analogy_set)
+    @staticmethod
+    def _try_update_analogy_db(analogy_db, analogy_set):
+        if analogy_db.is_all_consistent(list(analogy_set)):
+            return True, analogy_db.update(analogy_set)
         else:
-            return False, self
+            return False, analogy_db
 
     def extend_if_consistent(self, analogy_db):
         if analogy_db is None:
