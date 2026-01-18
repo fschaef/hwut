@@ -235,6 +235,21 @@ class FrozenAnalogyDb:
                 return False
         return True
 
+    def clone(self):
+        """Interface compatibility with AnalogyDb: immutable, so return self."""
+        return self
+
+    def update(self, other):
+        """Interface compatibility with AnalogyDb: alias for merge."""
+        return self.merge(other)
+
+    def clone_and_add(self, analogy: tuple[str, str]):
+        """Interface compatibility with AnalogyDb: returns new instance with analogy added."""
+        return self.merge(FrozenAnalogyDb({analogy[0]: analogy[1]}))
+
+    def is_consistent(self, analogy: tuple[str, str]):
+        """Interface compatibility with AnalogyDb."""
+        return self.is_all_consistent(FrozenAnalogyDb({analogy[0]: analogy[1]}))
     def items(self):
         """RETURNS: A list of (subject, nominal) string pairs.
         
