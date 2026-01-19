@@ -34,7 +34,7 @@ def do(subject, nominal, analogy_db, max_comparison_count):
                           nominal.non_analogy_line_list, 
                           AnalogyDb(), 
                           max_comparison_count, 
-                          abort_f=False, 
+                          abort_early_f=False, 
                           analogies_involved_f = False)
 
     # pair analogy lines
@@ -43,14 +43,24 @@ def do(subject, nominal, analogy_db, max_comparison_count):
                            nominal.analogy_line_list, 
                            analogy_db, 
                            max_comparison_count, 
-                           abort_f=False, 
+                           abort_early_f=False, 
                            analogies_involved_f = True)
 
     return first_result + second_result, analogy_db
 
+## def _non_analogy_core(subject_line_list, nominal_line_list, 
+##                       max_comparison_count, abort_f=False):
+## 
+##     state = m.get_initial_state(subject_line_list, nominal_line_list, abort_early_f)
+##     if state.aborted_f and abort_early_f: return False, state.pair_db
+## 
+##     state = m.pairing_non_analogy_lines(state)
+## 
+##     return state.pair_db
+
 def _core(subject_line_list, nominal_line_list, 
           analogy_db, max_comparison_count, 
-          abort_f=False, analogies_involved_f = True):
+          abort_early_f=False, analogies_involved_f = True):
     """RETURNS: sorted list of LinePair objects.
         
     Sort order: sorted by line number of subject. 
@@ -69,7 +79,7 @@ def _core(subject_line_list, nominal_line_list,
     verdict, couples, analogy_db = pairing._core(subject_line_list,
                                                  nominal_line_list,
                                                  analogy_db,
-                                                 abort_early_f=abort_f, 
+                                                 abort_early_f=abort_early_f, 
                                                  analogies_involved_f = analogies_involved_f)
 
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
