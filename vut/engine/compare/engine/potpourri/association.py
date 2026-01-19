@@ -85,6 +85,10 @@ def _core(subject_line_list, nominal_line_list,
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
     nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object
 
+    return _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_comparison_count)
+
+def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_comparison_count):
+
     result = []
     
     # 2. INTEGRATE STRICT MATCHES
