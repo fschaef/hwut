@@ -249,6 +249,7 @@ class FrozenAnalogyDb:
 
     def is_consistent(self, analogy: tuple[str, str]):
         """Interface compatibility with AnalogyDb."""
+        if analogy is None: return True
         return self.is_all_consistent(FrozenAnalogyDb({analogy[0]: analogy[1]}))
     def items(self):
         """RETURNS: A list of (subject, nominal) string pairs.

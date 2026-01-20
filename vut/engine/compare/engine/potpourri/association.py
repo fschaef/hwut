@@ -30,12 +30,10 @@ def do(subject, nominal, analogy_db, max_comparison_count):
 
     # pair non-analogy lines
     first_result, \
-    _             = _core(subject.non_analogy_line_list, 
-                          nominal.non_analogy_line_list, 
-                          AnalogyDb(), 
-                          max_comparison_count, 
-                          abort_early_f=False, 
-                          analogies_involved_f = False)
+    _             = _core_non_analogy(subject.non_analogy_line_list, 
+                                      nominal.non_analogy_line_list, 
+                                      max_comparison_count, 
+                                      abort_early_f=False) 
 
     # pair analogy lines
     second_result, \
@@ -48,15 +46,19 @@ def do(subject, nominal, analogy_db, max_comparison_count):
 
     return first_result + second_result, analogy_db
 
-## def _non_analogy_core(subject_line_list, nominal_line_list, 
-##                       max_comparison_count, abort_f=False):
-## 
-##     state = m.get_initial_state(subject_line_list, nominal_line_list, abort_early_f)
-##     if state.aborted_f and abort_early_f: return False, state.pair_db
-## 
-##     state = m.pairing_non_analogy_lines(state)
-## 
-##     return state.pair_db
+def _core_non_analogy(subject_line_list, nominal_line_list, 
+                      max_comparison_count, 
+                      abort_early_f=False):
+
+    verdict, couples = pairing._core_non_analogy(subject_line_list,
+                                                 nominal_line_list,
+                                                 abort_early_f = abort_early_f) 
+              
+    subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
+    nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object
+
+    verdict = (len(couples) == len(nominal_line_list) == len(subject_line_list))
+    return _get_line_pairs(verdict, couples, subject_db, nominal_db, FrozenAnalogyDb(), max_comparison_count)
 
 def _core(subject_line_list, nominal_line_list, 
           analogy_db, max_comparison_count, 

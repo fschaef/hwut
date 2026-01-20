@@ -43,9 +43,27 @@ def do(subject, nominal, analogy_db, abort_early_f):
                             analogy_db, abort_early_f,
                             analogies_involved_f = True)
 
-    return first_verdict and second_verdict, \
-           first_pair_db | second_pair_db,   \
-           analogy_db
+    verdict =     (len(first_pair_db)  == len(subject.non_analogy_line_list) == len(nominal.non_analogy_line_list)) \
+              and (len(second_pair_db) == len(subject.analogy_line_list)     == len(nominal.analogy_line_list))
+    pair_db = first_pair_db | second_pair_db
+
+    return verdict, pair_db, analogy_db
+
+def _core_non_analogy(subject_line_list, 
+                      nominal_line_list, 
+                      abort_early_f=False):
+    """RETURNS:   [0] verdict
+                  [1] map: subject line number --> nominal line number
+    """
+
+    state = m.get_initial_state(subject_line_list, nominal_line_list, abort_early_f)
+
+    if state.aborted_f and abort_early_f: return False, state.pair_db
+
+    state = m.pairing_non_analogy_lines(state)
+    verdict = not state.aborted_f
+
+    return verdict, state.pair_db
 
 @typechecked
 def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False, analogies_involved_f=True):
