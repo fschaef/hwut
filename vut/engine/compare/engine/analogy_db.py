@@ -71,11 +71,8 @@ class AnalogyDb(dict):
         return result
 
     @staticmethod
-    def from_iterable(iterable: Iterable[tuple[str,str]]):
-        """RETURNS: New AnalogyDb, if analogies in 'iterable' are consistent.
-                    None, else.
-        """
-        subjects = AnalogyDb()
+    def _aux_consistency(iterable: Iterable[tuple[str,str]], target_db=None):
+        subjects = target_db if target_db is not None else {}
         nominals = {}
         for s, n in iterable:
             if   n in nominals and nominals[n] != s: return None
@@ -83,6 +80,13 @@ class AnalogyDb(dict):
             subjects[s] = n
             nominals[n] = s
         return subjects
+
+    @staticmethod
+    def from_iterable(iterable: Iterable[tuple[str,str]]):
+        """RETURNS: New AnalogyDb, if analogies in 'iterable' are consistent.
+                    None, else.
+        """
+        return AnalogyDb._aux_consistency(iterable, AnalogyDb())
 
     def update(self, other):
         if other is not None:

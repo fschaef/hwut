@@ -21,6 +21,7 @@ from   vut.engine.compare.engine.enums          import E_Chunk
 from   vut.engine.compare.engine.line           import Line
 from   vut.engine.compare.input.pattern_finder  import E_ToleranceId
 from   vut.engine.compare.engine.analogy_db     import AnalogyDb
+from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 import vut.engine.compare.engine.equivalence_check.line      as equivalence_check_line
 import vut.engine.compare.engine.equivalence_check.potpourri as equivalence_check_potpourri
 
@@ -70,7 +71,7 @@ class InputChunkVoid(InputChunk):
 
 class EquivalenceRelatedInputChunk(InputChunk):
     @typechecked
-    def is_equivalent_to_nominal(self, nominal, analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
+    def is_equivalent_to_nominal(self, nominal, analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb | FrozenAnalogyDb]:
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
 

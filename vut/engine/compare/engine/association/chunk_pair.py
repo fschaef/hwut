@@ -10,6 +10,7 @@ from   vut.engine.compare.engine.association.line_pair      import LinePair
 import vut.engine.compare.engine.association.core           as     association
 from   vut.engine.compare.engine.enums                      import E_Chunk
 from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
+from   vut.engine.compare.engine.frozen_analogy_db          import FrozenAnalogyDb
 from   vut.engine.compare.input.input_chunk                 import InputChunk
 
 from   typeguard import typechecked
@@ -26,7 +27,7 @@ class ChunkPair(list):
                  subject_type_id:       E_Chunk, 
                  nominal_type_id:       E_Chunk, 
                  line_association_list: list, 
-                 analogy_db:            AnalogyDb | None):
+                 analogy_db:            AnalogyDb | FrozenAnalogyDb | None):
         self.__subject_type_id = subject_type_id
         self.__nominal_type_id = nominal_type_id
         self.__analogy_db      = analogy_db

@@ -43,8 +43,9 @@ def do(subject, nominal, analogy_db, abort_early_f):
                             analogy_db, abort_early_f,
                             analogies_involved_f = True)
 
-    verdict =     (len(first_pair_db)  == len(subject.non_analogy_line_list) == len(nominal.non_analogy_line_list)) \
-              and (len(second_pair_db) == len(subject.analogy_line_list)     == len(nominal.analogy_line_list))
+    verdict  = first_verdict and second_verdict
+    verdict &=     (len(first_pair_db)  == len(subject.non_analogy_line_list) == len(nominal.non_analogy_line_list)) \
+               and (len(second_pair_db) == len(subject.analogy_line_list)     == len(nominal.analogy_line_list))
     pair_db = first_pair_db | second_pair_db
 
     return verdict, pair_db, analogy_db

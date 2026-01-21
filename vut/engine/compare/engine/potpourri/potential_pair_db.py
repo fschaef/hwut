@@ -124,9 +124,11 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
         nominals_coupled = set()
         for ia, mate_list in sorted(self.items()):
             if len(mate_list) != 1: continue
+            # investigate the one and only equivalent partner
             ib, required_analogy_db = mate_list[0]
             del self[ia]
-            if ok_f := (ib in nominals_coupled):
+            if ib in nominals_coupled:
+                ok_f = False
                 if abort_early_f: break
             elif not (ok_f := analogy_db.extend_if_consistent(required_analogy_db)):
                 if abort_early_f: break
