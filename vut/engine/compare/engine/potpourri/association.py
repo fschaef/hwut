@@ -90,7 +90,6 @@ def _core(subject_line_list, nominal_line_list,
     return _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_comparison_count)
 
 def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_comparison_count):
-
     result = []
     
     # 2. INTEGRATE STRICT MATCHES

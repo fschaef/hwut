@@ -115,5 +115,7 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     # subject, nominal = 'LineSequence', 'Potpourri' or None
     async for subject, nominal in generate_chunk_pairs_type_aligned(config, subject, nominal):
 
-        yield ChunkPair.from_input_chunks(subject, nominal, analogy_db)
+        result = ChunkPair.from_input_chunks(subject, nominal, analogy_db)
+        analogy_db = result.analogy_db()
+        yield result
 

@@ -569,11 +569,12 @@
 <span class='token OK_GOOD '></span>
 </div></div>
 <div class='header'>:: POTPOURRI/POTPOURRI</div>
-<div class='row' >
+<div class='row' style='background: rgba(248, 81, 73, 0.05714285714285714);'>
 <div class='ln'>22</div><div class='side'>
+<div class='heatmap-marker' style='background: var(--err-border); opacity: 0.14285714285714285;'></div>
 <span class='token OK_GOOD'>A</span>
 <span class='token OK_GOOD'>&middot;</span>
-<span class='token OK_TOLERATED'>((Object))</span>
+<span class='token BAD_NOMINAL_DIFFERS'>((Object))</span>
 <span class='token OK_GOOD'>&middot;</span>
 <span class='token OK_GOOD'>sat</span>
 <span class='token OK_GOOD'>&middot;</span>
@@ -586,19 +587,19 @@
 <span class='token OK_GOOD'>chair,</span>
 </div>
 <div class='ln'>23</div><div class='side'>
-<span class='token OK_GOOD '>A</span>
-<span class='token OK_GOOD '>&middot;</span>
-<span class='token OK_TOLERATED '>((Object))</span>
-<span class='token OK_GOOD '>&middot;</span>
-<span class='token OK_GOOD '>sat</span>
-<span class='token OK_GOOD '>&middot;</span>
-<span class='token OK_GOOD '>down</span>
-<span class='token OK_GOOD '>&middot;</span>
-<span class='token OK_GOOD '>on</span>
-<span class='token OK_GOOD '>&middot;</span>
-<span class='token OK_GOOD '>a</span>
-<span class='token OK_GOOD '>&middot;</span>
-<span class='token OK_GOOD '>chair,</span>
+<span class='token OK_GOOD dimmed'>A</span>
+<span class='token OK_GOOD dimmed'>&middot;</span>
+<span class='token BAD_SUBJECT_DIFFERS dimmed'>((Object))</span>
+<span class='token OK_GOOD dimmed'>&middot;</span>
+<span class='token OK_GOOD dimmed'>sat</span>
+<span class='token OK_GOOD dimmed'>&middot;</span>
+<span class='token OK_GOOD dimmed'>down</span>
+<span class='token OK_GOOD dimmed'>&middot;</span>
+<span class='token OK_GOOD dimmed'>on</span>
+<span class='token OK_GOOD dimmed'>&middot;</span>
+<span class='token OK_GOOD dimmed'>a</span>
+<span class='token OK_GOOD dimmed'>&middot;</span>
+<span class='token OK_GOOD dimmed'>chair,</span>
 </div></div>
 <div class='row' >
 <div class='ln'>23</div><div class='side'>

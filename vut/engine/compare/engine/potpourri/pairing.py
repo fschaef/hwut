@@ -14,6 +14,7 @@ Potpourri cannot be equivalent (compare() --> False).
 ________________________________________________________________________________
 """
 import vut.engine.compare.engine.potpourri.matching as m
+from   vut.engine.compare.engine.analogy_db import AnalogyDb
 from   typeguard import typechecked
 
 def do(subject, nominal, analogy_db, abort_early_f):
@@ -29,7 +30,7 @@ def do(subject, nominal, analogy_db, abort_early_f):
     first_pair_db, \
     _              = _core(subject.non_analogy_line_list, 
                            nominal.non_analogy_line_list, 
-                           {}, abort_early_f,
+                           AnalogyDb(), abort_early_f,
                            analogies_involved_f = False)
 
     if first_verdict is False and abort_early_f:
@@ -57,7 +58,7 @@ def _core_non_analogy(subject_line_list,
                   [1] map: subject line number --> nominal line number
     """
 
-    state = m.get_initial_state(subject_line_list, nominal_line_list, abort_early_f)
+    state = m.get_initial_state(subject_line_list, nominal_line_list, None, abort_early_f)
 
     if state.aborted_f and abort_early_f: return False, state.pair_db
 
@@ -80,7 +81,7 @@ def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False,
         return pair_n
         
     aborted_f = False
-    if (state := m.get_initial_state(subject_line_list, nominal_line_list, abort_early_f)).aborted_f:
+    if (state := m.get_initial_state(subject_line_list, nominal_line_list, analogy_db, abort_early_f)).aborted_f:
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
 

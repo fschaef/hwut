@@ -39,7 +39,7 @@ from   .result             import PairedGraph, Result
 
 from   typeguard import typechecked
 
-def get_initial_state(subject_line_list, nominal_line_list, abort_early_f: bool) -> Result:
+def get_initial_state(subject_line_list, nominal_line_list, analogy_db, abort_early_f: bool) -> Result:
     potential_pair_db = PotentialPairDb.from_raw(subject_line_list, 
                                                  nominal_line_list, 
                                                  abort_early_f)
@@ -48,7 +48,7 @@ def get_initial_state(subject_line_list, nominal_line_list, abort_early_f: bool)
 
     return Result(potential_pair_db     = potential_pair_db, 
                   pair_db               = PairedGraph(), 
-                  analogy_constraint_db = AnalogyDb(),
+                  analogy_constraint_db = analogy_db if analogy_db is not None else AnalogyDb,
                   required_pair_n       = max(subject_n, nominal_n), 
                   aborted_f             = potential_pair_db is None)
 

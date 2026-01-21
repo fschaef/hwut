@@ -120,17 +120,22 @@ class AnalogyDb(bidict):
         """
         if analogy_db is None:
             return True
-        elif type(analogy_db) is list:
+
+        # HERE: Check internal consistency of the incoming data
+        # If the input itself is contradictory (e.g. A->1 and A->2), 
+        # it cannot be consistent with us.
+        if isinstance(analogy_db, (list, tuple)):
+             if AnalogyDb.from_iterable(analogy_db) is None:
+                 return False
+        # If it is a raw dict (not an AnalogyDb/bidict), check for value uniqueness
+        elif isinstance(analogy_db, dict) and not isinstance(analogy_db, bidict):
+             if len(set(analogy_db.values())) != len(analogy_db):
+                 return False
+
+        if type(analogy_db) is list:
             return all(self.is_consistent(item) for item in analogy_db)
         else:
             return all(self.is_consistent(item) for item in analogy_db.items())
-
-    @staticmethod
-    def _try_update_analogy_db(analogy_db, analogy_set):
-        if analogy_db.is_all_consistent(list(analogy_set)):
-            return True, analogy_db.update(analogy_set)
-        else:
-            return False, analogy_db
 
     def extend_if_consistent(self, analogy_db):
         if analogy_db is None:
