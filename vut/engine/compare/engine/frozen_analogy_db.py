@@ -95,7 +95,7 @@ class FrozenAnalogyDb:
             return cls.symbols_inv[s_id], cls.symbols_inv[n_id]
 
     @typechecked
-    def __new__(cls, adb: FrozenAnalogyDb | dict | None = None, _pair_ids: tuple | None = None):
+    def __new__(cls, adb: AnalogyDb | FrozenAnalogyDb | dict | None = None, _pair_ids: tuple | None = None):
         """RETURNS: FrozenAnalogyDb that represents the AnalogyDb passed by 'adb'., AnalogyDb
 
         NOTE: AnalogyDb is a 'dict' -- it is accepted here.

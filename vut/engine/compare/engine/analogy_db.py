@@ -45,10 +45,11 @@ _______________________________________________________________________________
 """
 from   vut.system.helper        import number_of_decimal_digits
 from   collections              import defaultdict
+from   bidict                   import bidict
 
 from   typing import Iterable
 
-class AnalogyDb(dict):
+class AnalogyDb(bidict):
     """Maintains pairs of terms which are considered analogies.
 
     A term in 'subject' is mapped to its counterpart in 'nominal'. Notably,
@@ -58,7 +59,9 @@ class AnalogyDb(dict):
     """
     def __init__(self, other=None):
         if other is not None:
-            self.update(other)
+            super().__init__(other)
+        else:
+            super().__init__()
 
     def clone(self):
         return AnalogyDb(self)
@@ -67,33 +70,33 @@ class AnalogyDb(dict):
         assert analogy is not None
         result = AnalogyDb(self)
         subject, nominal = analogy
+        # Note: This might raise ValueDuplicationError if nominal is already 
+        # assigned to a different subject, ensuring integrity.
         result[subject] = nominal
         return result
-
-    @staticmethod
-    def _aux_consistency(iterable: Iterable[tuple[str,str]], target_db=None):
-        subjects = target_db if target_db is not None else {}
-        nominals = {}
-        for s, n in iterable:
-            if   n in nominals and nominals[n] != s: return None
-            elif s in subjects and subjects[s] != n: return None
-            subjects[s] = n
-            nominals[n] = s
-        return subjects
 
     @staticmethod
     def from_iterable(iterable: Iterable[tuple[str,str]]):
         """RETURNS: New AnalogyDb, if analogies in 'iterable' are consistent.
                     None, else.
         """
-        return AnalogyDb._aux_consistency(iterable, AnalogyDb())
+        subjects = AnalogyDb()
+        # bidict maintains the inverse automatically, so we can check it cheaply.
+        for s, n in iterable:
+            # Check 1: Is nominal 'n' already used by a different subject?
+            if n in subjects.inverse and subjects.inverse[n] != s: return None
+            # Check 2: Is subject 's' already mapped to a different nominal?
+            elif s in subjects and subjects[s] != n: return None
+            
+            subjects[s] = n
+        return subjects
 
     def update(self, other):
         if other is not None:
-            if isinstance(other, (AnalogyDb, dict, list, set, tuple)):
-                dict.update(self, other)
+            if isinstance(other, (AnalogyDb, dict, bidict, list, set, tuple)):
+                super().update(other)
             else:
-                dict.update(self, other.items())
+                super().update(other.items())
         return self
 
     def is_consistent(self, analogy):
@@ -106,7 +109,8 @@ class AnalogyDb(dict):
         subject, nominal = analogy
         related_nominal  = self.get(subject)
         if related_nominal is None:
-            return nominal not in self.values()
+            # Efficient O(1) check using the inverse map from bidict
+            return nominal not in self.inverse
         else:
             return related_nominal == nominal
 
@@ -141,7 +145,7 @@ class AnalogyDb(dict):
         return hash(frozenset(self.items()))
 
     def __eq__(self, other):
-        return dict.__eq__(self, other)
+        return bidict.__eq__(self, other)
 
     def __repr__(self):
         name, txt = self.__pretty__()
@@ -174,4 +178,3 @@ class AnalogyDb(dict):
         ]
         
         return "AnalogyDb", txt
-
