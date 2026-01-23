@@ -1,0 +1,17 @@
+--- TEST: Potpourri Mismatch ---
+Packet: HEADER (Signature: ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE)) )
+Packet: CONFIG
+Packet: SECTION 'POTPOURRI/POTPOURRI' Type: ChunkPair
+Packet: ROW S:02 | N:03 (Cost: 0.00)
+    (STR) 'Common' [GOOD]                                             | (STR) 'Common' [GOOD]
+
+Packet: ROW S:03 | N:02 (Cost: 0.54)
+    (STR) 'SubjectOnly_1' [BAD_NOMINAL_DIFFERS]                       | (STR) 'NominalOnly_1' [BAD_SUBJECT_DIFFERS]
+
+Packet: ROW S:04 | N:-- (Cost: 1.00)
+    (STR) 'SubjectOnly_2' [BAD_NOMINAL_HAS_NOT]                       | 
+
+Packet: EOS
+----
+Signature in 'SIGNATURE_UI_PROTOCOL.txt': ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE))
+----

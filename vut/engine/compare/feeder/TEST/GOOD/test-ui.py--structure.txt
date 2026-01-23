@@ -1,0 +1,25 @@
+--- TEST: Structural Mismatch (LineSequence) ---
+Packet: HEADER (Signature: ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE)) )
+Packet: CONFIG
+Packet: SECTION 'LINE_SEQUENCE/LINE_SEQUENCE' Type: ChunkPair
+Packet: ROW S:01 | N:01 (Cost: 0.00)
+    (STR) 'Match' [GOOD]                                              | (STR) 'Match' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (STR) '1' [GOOD]                                                  | (STR) '1' [GOOD]
+
+Packet: ROW S:02 | N:02 (Cost: 0.33)
+    (STR) 'Extra' [GOOD]                                              | (STR) 'Extra' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (STR) 'Subject' [BAD_NOMINAL_DIFFERS]                             | (STR) 'Nominal' [BAD_SUBJECT_DIFFERS]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (STR) 'Line' [GOOD]                                               | (STR) 'Line' [GOOD]
+
+Packet: ROW S:03 | N:03 (Cost: 0.00)
+    (STR) 'Match' [GOOD]                                              | (STR) 'Match' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (STR) '2' [GOOD]                                                  | (STR) '2' [GOOD]
+
+Packet: EOS
+----
+Signature in 'SIGNATURE_UI_PROTOCOL.txt': ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE))
+----

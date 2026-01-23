@@ -1,0 +1,40 @@
+--- TEST: All Types (GOOD vs TOLERATED) ---
+Packet: HEADER (Signature: ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE)) )
+Packet: CONFIG
+Packet: SECTION 'LINE_SEQUENCE/LINE_SEQUENCE' Type: ChunkPair
+Packet: ROW S:01 | N:01 (Cost: 0.25)
+    (STR) 'ExactString' [GOOD]                                        | (STR) 'ExactString' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (STR) 'DiffString' [BAD_NOMINAL_DIFFERS]                          | (STR) 'DiffTarget' [BAD_SUBJECT_DIFFERS]
+
+Packet: ROW S:02 | N:02 (Cost: 0.00)
+    (NUM) '10.0' [GOOD]                                               | (NUM) '10.0' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (NUM) '10.0' [TOLERATED]                                          | (NUM) '10.05' [TOLERATED]
+
+Packet: ROW S:03 | N:03 (Cost: 0.00)
+    (STR) 'A' [GOOD]                                                  | (STR) 'A' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (STR) 'B' [GOOD]                                                  | (STR) 'B' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (STR) 'A' [GOOD]                                                  | (STR) 'A' [GOOD]
+    (SEP) ' ' [TOLERATED]                                             | (SEP) '   ' [TOLERATED]
+    (STR) 'B' [GOOD]                                                  | (STR) 'B' [GOOD]
+
+Packet: ROW S:04 | N:04 (Cost: 0.00)
+    (EQU) 'alpha' [GOOD]                                              | (EQU) 'alpha' [GOOD]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (EQU) 'alpha' [TOLERATED]                                         | (EQU) 'beta' [TOLERATED]
+
+Packet: ROW S:05 | N:05 (Cost: 0.00)
+    (VIS) '<VN>' [GOOD]                                               | (VIS) '<VN>' [GOOD]
+
+Packet: ROW S:06 | N:06 (Cost: 0.00)
+    (ANA) '((Same))' [TOLERATED] [Orig:S=6,N=6]                       | (ANA) '((Same))' [TOLERATED] [Orig:S=6,N=6]
+    (SEP) ' ' [GOOD]                                                  | (SEP) ' ' [GOOD]
+    (ANA) '((Diff))' [TOLERATED] [Orig:S=6,N=6]                       | (ANA) '((1))' [TOLERATED] [Orig:S=6,N=6]
+
+Packet: EOS
+----
+Signature in 'SIGNATURE_UI_PROTOCOL.txt': ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE))
+----

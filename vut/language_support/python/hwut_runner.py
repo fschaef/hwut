@@ -58,7 +58,7 @@ class HwutRunner:
                  argv:        list[str],
                  title:       str,
                  choice_map:  dict[str, Callable],
-                 happy:       list[str] | list[re.Pattern] | str | re.Pattern = None,
+                 happy:       None | list[str] | list[re.Pattern] | str | re.Pattern = None,
                  same_f:      bool = False):
         assert choice_map
         # None indicates the test function for no choice. We only have apps with
