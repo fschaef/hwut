@@ -4,3 +4,5 @@ Feeders to UI and the like
 coverage run --omit ./*.py -a *.py 
 bash *.sh
 
+--not *html*.py
+

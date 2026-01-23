@@ -77,14 +77,21 @@ class Cell(ABC):
     tolerance_id: E_ToleranceId
 
 @dataclass(frozen=True)
+class LineNumberPair:
+    line_n_in_subject: int 
+    line_n_in_nominal: int 
+
+@dataclass(frozen=True)
 class SubjectCell(Cell):
-    subject:        str | None
-    nominal_ref_i:  int
+    subject:       str | None
+    nominal_ref_i: int
+    analogy_origin_line_number_pair:  LineNumberPair | None = None
 
 @dataclass(frozen=True)
 class NominalCell(Cell):
-    nominal:        str | None
-    subject_ref_i:  int
+    nominal:       str | None
+    subject_ref_i: int
+    analogy_origin_line_number_pair:  LineNumberPair | None = None
 
 @dataclass(frozen=True)
 class LinePairRaw:

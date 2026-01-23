@@ -101,6 +101,9 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
                                  .subject_list = Cells ...           
                                  .nominal_list = Cells ...           
 
+    HINT: Use 'AnalogyProvenanceDb' to track the origins of analogies!
+          Simply pass incoming ChunkPairs to '.update()'.
+
     SEE: "feeder/ui.py", for example how to feed an user interface with that 
          information.
     """
@@ -118,4 +121,3 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
         result = ChunkPair.from_input_chunks(subject, nominal, analogy_db)
         analogy_db = result.analogy_db()
         yield result
-
