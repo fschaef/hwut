@@ -35,3 +35,12 @@ class E_Chunk(Enum):
 class E_Mode:
     EQUIVALENCE_CHECK = auto()
     ASSOCIATION       = auto()
+
+class E_ToleranceId(int, Enum):
+    STRING              = 1
+    VISIBLE_NOTHING     = 2
+    ANALOGY             = 3
+    NUMERIC             = 4
+    EQUIVALENCE_PATTERN = 5
+    SEPERATOR           = 6
+

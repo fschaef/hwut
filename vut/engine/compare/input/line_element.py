@@ -18,21 +18,12 @@ LineElement provide:
                                      transform 'self' to 'other'.
 ________________________________________________________________________________
 """
-import vut.engine.compare.engine.association.line_sequence.edit_operations.string as     edit_distance_string
-from   vut.engine.compare.engine.enums                              import E_Verdict
+import vut.engine.compare.engine.association.edit_operations.string as     edit_distance_string
+from   vut.engine.compare.engine.enums                              import E_Verdict, E_ToleranceId
 
-from   enum        import IntEnum
 import regex       as re
 from   dataclasses import dataclass
 import sys  # REQUIRED for sys.intern optimization => store same strings once
-
-class E_ToleranceId(IntEnum):
-    STRING              = 1
-    VISIBLE_NOTHING     = 2
-    ANALOGY             = 3
-    NUMERIC             = 4
-    EQUIVALENCE_PATTERN = 5
-    SEPERATOR           = 6
 
 @dataclass
 class TolerancePattern:

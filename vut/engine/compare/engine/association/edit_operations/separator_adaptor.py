@@ -26,9 +26,9 @@ reinsert_separators(raw_edit_list): produces an edit list that takes
                                     consideration.
 
 """
-from  vut.engine.compare.engine.association.line_sequence.edit_operations.core     import max_cost, \
-                                                         position_increment_db
-from  vut.engine.compare.engine.association.line_sequence.edit_operations.edit     import E_EditId
+from  vut.engine.compare.engine.association.edit_operations.core     import (max_cost, 
+                                                                             position_increment_db)
+from  vut.engine.compare.engine.association.edit_operations.edit     import E_EditId
 from  vut.engine.compare.input.pattern_finder import E_ToleranceId
 
 TRANSPOSE       = E_EditId.TRANSPOSE

@@ -20,12 +20,12 @@ ______________________________________________________________________________
 """
 import sys
 
-sys.path.insert(0, "../" * 8)
+sys.path.insert(0, "../" * 7)
 
-import vut.engine.compare.engine.association.line_sequence.edit_operations.line_sequence  as     edit_distance_line_sequence
-from   vut.engine.compare.engine.association.line_sequence.edit_operations.edit           import E_EditId
-from   vut.engine.compare.TEST.common                    import prepare, print_match_sequences_lists, prepare_line_up
-from   vut.engine.compare.engine.line                    import Line
+import vut.engine.compare.engine.association.edit_operations.line_sequence  as     edit_distance_line_sequence
+from   vut.engine.compare.engine.association.edit_operations.edit           import E_EditId
+from   vut.engine.compare.TEST.common          import prepare, print_match_sequences_lists, prepare_line_up
+from   vut.engine.compare.engine.line          import Line
 from   vut.engine.compare.input.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration        import Configuration
 

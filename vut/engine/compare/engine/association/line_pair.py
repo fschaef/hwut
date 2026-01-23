@@ -13,11 +13,11 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from    vut.engine.compare.input.line_element import E_ToleranceId
+from    vut.engine.compare.engine.enums           import (E_ToleranceId, 
+                                                          E_PotpourriBorder)
 from    vut.engine.compare.engine.line            import Line
-from    vut.engine.compare.engine.enums           import E_PotpourriBorder
-from    vut.engine.compare.engine.association.line_sequence.edit_operations.edit   import E_EditId, Edit
-from    vut.engine.compare.engine.association.line_sequence.edit_operations.line   import position_increment_db
+from    vut.engine.compare.engine.association.edit_operations.edit   import E_EditId, Edit
+from    vut.engine.compare.engine.association.edit_operations.line   import position_increment_db
 
 from    typeguard   import typechecked
 import  sys

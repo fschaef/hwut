@@ -17,10 +17,10 @@ ______________________________________________________________________________
 """
 import sys
 
-sys.path.insert(0, "../" * 9)
+sys.path.insert(0, "../" * 8)
 
 # Adjust import to match your project structure
-import vut.engine.compare.engine.association.line_sequence.edit_operations.line_edit.analogy_sequence_edit as analogy_sequence_edit
+import vut.engine.compare.engine.association.edit_operations.line_edit.analogy_sequence_edit as analogy_sequence_edit
 
 if "--hwut-info" in sys.argv:
     print("Analogy Solver Verification;")

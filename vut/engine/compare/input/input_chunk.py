@@ -24,6 +24,9 @@ from   vut.engine.compare.engine.analogy_db     import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 import vut.engine.compare.engine.equivalence_check.line      as equivalence_check_line
 import vut.engine.compare.engine.equivalence_check.potpourri as equivalence_check_potpourri
+from   vut.engine.compare.engine.association.line_pair       import LinePair
+import vut.engine.compare.engine.association.line_sequence   as association_line_sequence
+import vut.engine.compare.engine.association.potpourri       as association_potpourri
 
 from   abc       import ABC, abstractmethod
 from   typing    import Iterable
@@ -84,13 +87,31 @@ class EquivalenceRelatedInputChunk(InputChunk):
             return False, analogy_db
         return self._is_equivalent_to_nominal(nominal, analogy_db)
 
-class InputChunkLineSequence(InputChunk):
+class AssociationRelatedInputChunk(InputChunk):
+    @typechecked
+    def associate_with_nominal(self, nominal, analogy_db: AnalogyDb) -> tuple[list[LinePair], AnalogyDb | FrozenAnalogyDb]:
+        """RETURNS: [0] True, if both sequences are equivalent. False, else.
+                    [1] analogy_db required for equivalence to hold.
+
+        The 'analogy_db' contains analogies imposed from lines which are
+        equivalent. If the test fails ([0] == False), the analogy database is
+        irrelevant, since the global comparison needs to stop. For display
+        (see .line_pairs()), this different.
+        """
+        if self.__class__ is not nominal.__class__: 
+            return False, analogy_db
+        return self._associate_with_nominal(nominal, analogy_db)
+
+class InputChunkLineSequence(AssociationRelatedInputChunk):
     @typechecked
     def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
         super().__init__(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n, line_list, config)
 
     def empty_clone(self):
         return InputChunkLineSequence(None, None, [], self.configuration)
+
+    def _associate_with_nominal(self, nominal, analogy_db):
+        return association_line_sequence.do(self, nominal, analogy_db)
 
 class InputChunkTerminal(EquivalenceRelatedInputChunk):
     """Input chunk that marks the end of an input stream.
@@ -103,7 +124,7 @@ class InputChunkTerminal(EquivalenceRelatedInputChunk):
         return True, analogy_db
     def __repr__(self):    return "InputChunkTerminal"
 
-class InputChunkPotpourri(EquivalenceRelatedInputChunk):
+class InputChunkPotpourri(AssociationRelatedInputChunk, EquivalenceRelatedInputChunk):
     def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
         super().__init__(E_Chunk.POTPOURRI, start_line_n, end_line_n, line_list, config)
 
@@ -120,6 +141,9 @@ class InputChunkPotpourri(EquivalenceRelatedInputChunk):
     def _is_equivalent_to_nominal(self, nominal, analogy_db):
         """called by super().is_equivalent_to_nominal()"""
         return equivalence_check_potpourri.do(self, nominal, analogy_db)
+
+    def _associate_with_nominal(self, nominal, analogy_db):
+        return association_potpourri.do(self, nominal, analogy_db)
 
 class InputChunkLine(EquivalenceRelatedInputChunk):
     # @typechecked -- too expensive

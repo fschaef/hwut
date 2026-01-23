@@ -26,7 +26,6 @@ sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.input.pattern_finder     import PatternFinder
 from   vut.engine.compare.configuration            import Configuration
-import vut.engine.compare.engine.association.core       as association
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.TEST.common              import frame_with_potpourri_borders, \
                                                          get_Potpourri, \
@@ -65,7 +64,7 @@ if "info" in sys.argv:
         subject = get_Potpourri(pf, subject_line_list, config)
         nominal = get_Potpourri(pf, nominal_line_list, config)
 
-        line_associations, analogy_db = association.do(subject, nominal, AnalogyDb())
+        line_associations, analogy_db = subject.associate_with_nominal(nominal, AnalogyDb())
 
         subject_line_list = frame_with_potpourri_borders(subject_line_list)
         nominal_line_list = frame_with_potpourri_borders(nominal_line_list)

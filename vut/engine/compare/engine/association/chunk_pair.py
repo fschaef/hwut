@@ -7,7 +7,6 @@ or 'Potpourri'.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.association.line_pair      import LinePair
-import vut.engine.compare.engine.association.core           as     association
 from   vut.engine.compare.engine.enums                      import E_Chunk
 from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db          import FrozenAnalogyDb
@@ -56,7 +55,7 @@ class ChunkPair(list):
             subject_type    = subject.type()
             nominal_type    = subject_type
             line_pair_list, \
-            new_analogy_db  = association.do(subject, nominal, analogy_db)
+            new_analogy_db  = subject.associate_with_nominal(nominal, analogy_db)
 
         return ChunkPair(subject_type, nominal_type, line_pair_list, new_analogy_db)
 

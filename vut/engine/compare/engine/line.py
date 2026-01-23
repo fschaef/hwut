@@ -7,11 +7,11 @@ split up into 'LineElements' objects. Such line elements may be numbers,
 strings, lexemes which match some pattern, whitespace etc.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.input.line_element     import E_ToleranceId
-from   vut.engine.compare.input.pattern_finder   import PatternFinder
-import vut.engine.compare.engine.association.line_sequence.edit_operations.line   as     edit_operations_line
-from   vut.engine.compare.engine.enums           import E_Verdict
-from   vut.engine.compare.engine.analogy_db      import AnalogyDb
+import vut.engine.compare.engine.association.edit_operations.line   as     edit_operations_line
+from   vut.engine.compare.input.pattern_finder     import PatternFinder
+from   vut.engine.compare.engine.enums             import (E_Verdict, 
+                                                           E_ToleranceId)
+from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from   dataclasses import dataclass

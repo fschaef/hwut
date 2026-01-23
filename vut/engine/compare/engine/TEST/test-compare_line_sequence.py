@@ -25,13 +25,12 @@ sys.path.insert(0, "../../../../../")
 
 from   vut.engine.compare.input.input_chunk    import InputChunkTerminal
 from   vut.engine.compare.input.pattern_finder import PatternFinder
-from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-import vut.engine.compare.engine.association.core       as association
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-from   vut.engine.compare.TEST.common              import print_match_sequences_lists, \
-                                                          print_friends_pairing_max_result, \
-                                                          get_sequence_of_Line, \
-                                                          get_LineSequence
+from   vut.engine.compare.configuration        import ConfigurationPatternFinder
+from   vut.engine.compare.engine.analogy_db    import AnalogyDb
+from   vut.engine.compare.TEST.common          import print_match_sequences_lists, \
+                                                      print_friends_pairing_max_result, \
+                                                      get_sequence_of_Line, \
+                                                      get_LineSequence
 
 if "--hwut-info" in sys.argv:
     print("Line Sequence;")
@@ -84,7 +83,7 @@ if "info" in sys.argv:
         nominal = get_LineSequence(pf, nominal_list, config)
         print_match_sequences_lists(subject.line_list, nominal.line_list)
 
-        line_associations, analogy_db = association.do(subject, nominal, AnalogyDb())
+        line_associations, analogy_db = subject.associate_with_nominal(nominal, AnalogyDb())
 
         print_friends_pairing_max_result(subject_list, nominal_list, 0,
                                          line_associations, analogy_db)
