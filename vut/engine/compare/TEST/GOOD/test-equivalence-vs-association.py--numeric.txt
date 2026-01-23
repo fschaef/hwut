@@ -1,0 +1,24 @@
+=== AXIS: TOKEN LOGIC (Numeric 10%) ===
+
+SCENARIO: Numeric: Boundary Inclusive
+------------------------------------------------------------
+SUBJECT                        | NOMINAL                       
+------------------------------------------------------------
+Values: 90.0  100.0 110.0      | Values: 100.0 100.0 100.0     
+------------------------------------------------------------
+Judge (is_equivalent): True
+Lawyer (associate):    True
+Consistency:         OK
+Expectation:         MATCH
+
+SCENARIO: Numeric: Boundary Exclusive
+------------------------------------------------------------
+SUBJECT                        | NOMINAL                       
+------------------------------------------------------------
+Values: 89.999999999999  100.0 110.00000000001 | Values: 100.0 100.0 100.0     
+------------------------------------------------------------
+Judge (is_equivalent): False
+Lawyer (associate):    False
+  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
+Consistency:         OK
+Expectation:         MATCH

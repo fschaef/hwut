@@ -1,0 +1,15 @@
+=== AXIS: STRUCTURE (Potpourri) ===
+
+SCENARIO: Potpourri: Shuffle + Analogy
+------------------------------------------------------------
+SUBJECT                        | NOMINAL                       
+------------------------------------------------------------
+||||                           | ||||                          
+Item ((A))                     | Item ((2))                    
+Item ((B))                     | Item ((1))                    
+||||                           | ||||                          
+------------------------------------------------------------
+Judge (is_equivalent): True
+Lawyer (associate):    True
+Consistency:         OK
+Expectation:         MATCH

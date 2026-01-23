@@ -1,0 +1,24 @@
+=== AXIS: TOKEN LOGIC (Analogy) ===
+
+SCENARIO: Analogy: Basic Consistent
+------------------------------------------------------------
+SUBJECT                        | NOMINAL                       
+------------------------------------------------------------
+Map ((A)) to ((B))             | Map ((1)) to ((2))            
+------------------------------------------------------------
+Judge (is_equivalent): True
+Lawyer (associate):    True
+Consistency:         OK
+Expectation:         MATCH
+
+SCENARIO: Analogy: Inconsistent
+------------------------------------------------------------
+SUBJECT                        | NOMINAL                       
+------------------------------------------------------------
+Map ((A)) ... and ... ((A))    | Map ((1)) ... and ... ((2))   
+------------------------------------------------------------
+Judge (is_equivalent): False
+Lawyer (associate):    False
+  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
+Consistency:         OK
+Expectation:         MATCH

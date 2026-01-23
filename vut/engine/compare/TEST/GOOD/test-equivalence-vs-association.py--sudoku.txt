@@ -1,0 +1,16 @@
+=== INTERSECTION: STRUCTURE + AMBIGUITY (The Sudoku Trap) ===
+
+SCENARIO: Sudoku: Pigeonhole (2 items into 1 slot)
+------------------------------------------------------------
+SUBJECT                        | NOMINAL                       
+------------------------------------------------------------
+||||                           | ||||                          
+Val ((A))                      | Val ((1))                     
+Val ((A))                      | Val ((2))                     
+||||                           | ||||                          
+------------------------------------------------------------
+Judge (is_equivalent): False
+Lawyer (associate):    False
+  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
+Consistency:         OK
+Expectation:         MATCH
