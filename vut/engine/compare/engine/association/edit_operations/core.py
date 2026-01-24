@@ -179,10 +179,16 @@ class WorkListBase(list):
         for new_item in item.subsequent_steps(self.subject, self.nominal, self.cache):
             if new_item.min_cost_remaining(self.subject_length, self.nominal_length) >= self.best.cost:
                 continue
-            elif self.best_cost_db[(new_item.si, new_item.ni)] <= new_item.edit_list.cost:
-                # The version with 'cost < new_item.editions.cost' will produce a better total solution.
+            # Retrieve 'subject_modified' if it exists (it exists in Line comparisons, but not LineSequence)
+            # This ensures we don't prune a path with a different sequence permutation.
+            subj_mod = getattr(new_item, 'subject_modified', None)
+            
+            state_key = (new_item.si, new_item.ni, subj_mod)
+
+            if self.best_cost_db[state_key] <= new_item.edit_list.cost:
                 continue
-            self.best_cost_db[(new_item.si, new_item.ni)] = new_item.edit_list.cost
+            
+            self.best_cost_db[state_key] = new_item.edit_list.cost
             self.append(new_item)
 
     def __record_best(self, item):

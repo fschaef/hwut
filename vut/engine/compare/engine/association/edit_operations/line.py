@@ -63,9 +63,10 @@ from  vut.engine.compare.engine.association.edit_operations.core  import (WorkLi
                                                                           WorkItemBase, 
                                                                           position_increment_db)
 from  vut.engine.compare.engine.association.edit_operations.separator_adaptor import SeparatorAdaptor
-from  vut.engine.compare.input.pattern_finder          import E_ToleranceId
-from  vut.engine.compare.engine.analogy_db                 import AnalogyDb
-from  vut.engine.compare.engine.enums                      import E_Verdict
+from  vut.engine.compare.input.pattern_finder  import E_ToleranceId
+from  vut.engine.compare.input.line_element    import LineElement
+from  vut.engine.compare.engine.analogy_db     import AnalogyDb
+from  vut.engine.compare.engine.enums          import E_Verdict
 
 from  functools   import lru_cache
 
@@ -109,7 +110,9 @@ def cost_TRANSPOSE(si, transpose_ai):
     return 1.0 - (1.0 / (1 + abs(si - transpose_ai)))
 
 @lru_cache(maxsize=65536)
-def do(subject_le_seq, nominal_le_seq, analogy_db=None) -> EditSequence:
+def do(subject_le_seq: tuple[LineElement], 
+       nominal_le_seq: tuple[LineElement], 
+       analogy_db=None) -> EditSequence:
     """RETURNS: EditSequence
 
     Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
