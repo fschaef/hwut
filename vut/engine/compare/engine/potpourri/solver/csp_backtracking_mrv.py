@@ -1,9 +1,16 @@
 # You likely need to install this: pip install pyrsistent
 from pyrsistent import pmap, pset
 from functools import lru_cache
-from vut.engine.compare.engine.potpourri.result import Result
+from vut.engine.compare.engine.potpourri.result  import Result
+from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
-def do(potential_pair_db, global_analogy_db, global_pair_db, required_pair_n) -> Result:
+from typeguard import typechecked
+
+@typechecked
+def do(potential_pair_db, 
+       global_analogy_db: FrozenAnalogyDb, 
+       global_pair_db, 
+       required_pair_n) -> Result:
     if not potential_pair_db:
         return Result({}, global_pair_db, global_analogy_db, required_pair_n, True)
 

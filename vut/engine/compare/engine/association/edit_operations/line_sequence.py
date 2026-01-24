@@ -91,6 +91,14 @@ def do(subject_match_seq_list,
     return best.prepare_as_best(separator_db, relative_f=False)
 
 class LineSequenceSeparatorAdaptor(SeparatorAdaptor):
+    _pair_db = {
+        (DELETE, INSERT):       SUBSTITUTE,
+        (INSERT, DELETE):       SUBSTITUTE,
+        (GOOD_DELETE, INSERT):  SUBSTITUTE,
+        (INSERT, GOOD_DELETE):  SUBSTITUTE,
+        (DELETE, GOOD_INSERT):  SUBSTITUTE,
+        (GOOD_INSERT, DELETE):  SUBSTITUTE
+    }
     def _is_separator(self, line):
         """RETURN: True, if 'line' is considered a separator. 
                    False, else.

@@ -193,7 +193,7 @@ class LinePair:
         self.subject_line_n = subject.line_n if subject else -1
         self.nominal_line_n = nominal.line_n if nominal else -1
         self.subject_char_n = 0 if subject is None else subject.character_n()
-        self.nominal_char_n = 0 if nominal is None else nominal.character_n(),
+        self.nominal_char_n = 0 if nominal is None else nominal.character_n()
 
     @staticmethod
     def potpourri_border(subject, nominal, border):

@@ -197,6 +197,12 @@ def _get_cost_db(subjects_available, nominals_available, window_size):
     """
     cost_db = []
     n_len   = len(nominals_available)
+
+    # cheap sort before windowing
+    def key(le_seq):
+        return tuple(len(le._string) for le in le_seq)
+    subjects_available.sort(key=key)
+    nominals_available.sort(key=key)
     
     for i, subject in enumerate(subjects_available):
         # Determine window

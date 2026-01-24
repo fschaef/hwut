@@ -123,7 +123,7 @@ def list_EditGOOD(subject_line_element_list, nominal_line_element_list, func_is_
                     op = E_EditId.GOOD
                 elif is_visible_nothing(subject):
                     if is_visible_nothing(nominal): op = E_EditId.GOOD_TOLERATED
-                    else:                           op = E_EditId.GOOD_INSERT
+                    else:                           op = E_EditId.GOOD_DELETE
                 else:
                     if is_visible_nothing(nominal): op = E_EditId.GOOD_INSERT
                     else:                           op = E_EditId.GOOD_TOLERATED

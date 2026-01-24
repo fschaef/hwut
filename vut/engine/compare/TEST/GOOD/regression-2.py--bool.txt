@@ -1,0 +1,17 @@
+
+================================================================================
+SCENARIO: Boolean Logic (Abort Flag)
+--------------------------------------------------------------------------------
+OBJECTIVE: Verify 'pairing_non_analogy_lines' sets aborted_f=True on partial match.
+STIMULI:   Pigeonhole Conflict (2 Subjects, 1 Nominal) using Numeric Tolerance.
+           Subject 1 ('1.0') -> Nominal 1 ('1.0')
+           Subject 2 ('1.0') -> Nominal 1 ('1.0')
+BUG:       'aborted_f &= success' logic fails if aborted_f starts as False.
+SETUP: Potential Pair DB keys (Subject IDs): [1, 2]
+INPUT state.aborted_f: False
+OUTPUT state.aborted_f: True
+OUTPUT Matches Found:   1
+VERDICT: PASS
+  Flag set to True. Mismatch detected correctly.
+================================================================================
+

@@ -97,9 +97,8 @@ AnalogyDb:
 => 
 
 TYPE: LINE_SEQUENCE LINE_SEQUENCE
-cost: 0.00000; line_associations: 2;
-   [01] ## the comment          --> [--] None                    {}
-   [--] None                    --> [01] nothing same nix        {}
+cost: 0.00000; line_associations: 1;
+   [01] ## the comment          --> [01] nothing same nix        {}
 AnalogyDb:
 []
 
@@ -113,9 +112,8 @@ AnalogyDb:
 => 
 
 TYPE: LINE_SEQUENCE LINE_SEQUENCE
-cost: 0.00000; line_associations: 2;
-   [--] None                    --> [01] ## the comment          {}
-   [01] nothing same nix        --> [--] None                    {}
+cost: 0.00000; line_associations: 1;
+   [01] nothing same nix        --> [01] ## the comment          {}
 AnalogyDb:
 []
 

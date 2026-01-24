@@ -32,7 +32,8 @@ import vut.engine.compare.engine.potpourri.solver.csp_backtracking_mrv          
 ## import vut.engine.compare.engine.potpourri.solver.csp_chronological_backtracking as solver_csp_chbt
 
 
-from   vut.engine.compare.engine.analogy_db import AnalogyDb
+from   vut.engine.compare.engine.analogy_db        import AnalogyDb
+from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from   .potential_pair_db  import PotentialPairDb
 from   .result             import PairedGraph, Result
@@ -106,6 +107,9 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
 @typechecked 
 def pairing_analogy_lines(state: Result) -> Result:
     db = state.potential_pair_db.clone_with_FrozenAnalogyDb()
+
+    state.analogy_constraint_db = FrozenAnalogyDb(state.analogy_constraint_db)
+
     return solver_csp_mrv.do(db, 
                              state.analogy_constraint_db, 
                              state.pair_db, 
@@ -122,7 +126,8 @@ def pairing_non_analogy_lines(state: Result) -> Result:
 
     new_pair_db      = solver_max_bpm.do(unconstrained_db)
     state.pair_db   |= new_pair_db
-    state.aborted_f &= len(new_pair_db) == len(unconstrained_db)
+    is_complete      = len(new_pair_db) == len(unconstrained_db)
+    if not is_complete: state.aborted_f = True
  
     return state
 
@@ -159,6 +164,7 @@ def pairing(state: Result, abort_early_f: bool) -> Result:
 
     # HERE: 'db' = potential_pair_db with non-analogies extracted
     db = db.clone_with_FrozenAnalogyDb()
+    state.analogy_constraint_db = FrozenAnalogyDb(state.analogy_constraint_db)
     return solver_csp_mrv.do(db, state.analogy_constraint_db, 
                              state.pair_db, 
                              state.required_pair_n)

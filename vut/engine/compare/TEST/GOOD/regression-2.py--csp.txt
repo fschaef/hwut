@@ -1,0 +1,10 @@
+
+================================================================================
+SCENARIO: CSP Solver Crash / Mutable State Check
+--------------------------------------------------------------------------------
+OBJECTIVE: Verify 'pairing_analogy_lines' handles the AnalogyDb object correctly.
+BUG:       Passing a mutable AnalogyDb causes AttributeError (.merge missing).
+VERDICT: PASS
+  Function handled mutable DB (Frozen conversion applied).
+================================================================================
+

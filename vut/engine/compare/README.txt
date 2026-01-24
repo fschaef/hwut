@@ -1,110 +1,113 @@
-================================================================================
-VUT: Visual Unit Test Comparison Engine
-================================================================================
+VUT-COMPARE(1)                                                 VUT-COMPARE(1)
 
-1. OVERVIEW
------------
-This module implements a tolerant, semantic comparison engine for text streams.
-It is designed to validate unit test output ("subject") against reference files
-("nominal").
+NAME
+    vut-compare - Semantic comparison engine for Subject and Nominal streams
 
-The engine parses text into semantic tokens ("LineElements") rather than raw
-strings. This allows it to distinguish between significant data errors and
-acceptable variations (floating point tolerance, dynamic pointers/hashes,
-formatting noise).
+SYNOPSIS
+    from vut.engine.compare import main
 
-2. USAGE
---------
-The module provides two primary entry points in `vut/engine/compare/main.py`:
+    # The Judge: Boolean verdict
+    is_ok = await main.is_equivalent(config, subject_stream, nominal_stream)
 
-    1. compare(config, subject_stream, nominal_stream) -> bool
-       - Fast path. Returns True immediately if streams are equivalent.
-       - Used for CI/CD pipelines or automated test verdicts.
+    # The Lawyer: Structural mapping for visualization
+    async for chunk_pair in main.associate(config, subject_stream, nominal_stream):
+        ...
 
-    2. associate(config, subject_stream, nominal_stream) -> iterator
-       - Yields `ChunkPair` objects containing detailed alignment data.
-       - Used for building UI visualizations or Diff reports.
-       - Provides `LinePair` objects with detailed `EditSequence`s.
+DESCRIPTION
+    The VUT Comparison Engine is a high-performance, asynchronous framework 
+    designed to determine the equivalence of two text streams: the 'Subject' 
+    (the output of a test) and the 'Nominal' (the golden reference).
 
-    Prerequisites:
-    The streams passed to these functions must implement a `.readline()` method.
+    Unlike standard line-based diffing tools which are structurally brittle, 
+    this engine performs a deep semantic analysis. It decomposes text into 
+    lexical tokens called LineElements, applying various tolerance principles 
+    to decide if two lines "mean" the same thing, even if they do not "look" 
+    the same.
 
-3. ARCHITECTURE & FILE STRUCTURE
---------------------------------
+MODALITIES
+    The engine operates in two distinct modalities depending on the user's goal:
 
-A. High-Level Flow (Engine)
-   The comparison is orchestrated by the components in `vut/engine/compare/engine/`.
+    1. EQUIVALENCE CHECK (The Judge)
+       Purpose: Rapid automated pass/fail validation.
+       Behavior: Optimized for speed. The engine processes chunks in a 
+       strictly linear fashion. It utilizes a "Fast-Fail" strategy, 
+       terminating the moment a logical contradiction is found. This 
+       minimizes resource consumption in CI/CD pipelines.
 
-   - vut/engine/compare/main.py
-     Entry point. Sets up the generator pipeline.
+    2. ASSOCIATION (The Lawyer/Visualizer)
+       Purpose: Detailed forensic analysis of differences.
+       Behavior: Optimized for clarity and coverage. If a mismatch occurs, 
+       instead of aborting, the engine employs complex algorithms (A* search 
+       and Bipartite Matching) to find the best possible "alignment" of 
+       mismatched content. This produces the data required to render a side-
+       by-side visual diff that explains *how* the streams diverged.
 
-   - vut/engine/compare/engine/chunk_pipe.py
-     Parses raw text streams into high-level chunks:
-     * `LineSequence`: Order of lines matches strictly[cite: 554].
-     * `Potpourri`: Order of lines is irrelevant (delimited by `||||`)[cite: 422].
+CORE CONCEPTS
+    Line Sequences vs. Potpourri
+        Text is partitioned into two types of regions. By default, lines are 
+        treated as a 'LineSequence', where the order of appearance is 
+        imperative. However, regions framed by '||||' markers are treated as 
+        a 'Potpourri'. Inside a Potpourri, lines may appear in any order; the 
+        engine will solve a Constraint Satisfaction Problem (CSP) to find a 
+        consistent 1-to-1 mapping between the sets.
 
-   - vut/engine/compare/engine/line_pair.py
-     Defines `LinePair`, the core result object for the UI. It holds the
-     association between a Subject line and a Nominal line, including the list
-     of edit operations (`Edit`) required to transform one to the other.
+    Analogies
+        VUT supports symbolic placeholders marked by '((' and '))'. A subject 
+        token '((A))' is equivalent to a nominal token '((1))' if, and only 
+        if, that relationship remains consistent across the entire stream. 
+        This is invaluable for comparing outputs containing randomized IDs, 
+        pointers, or timestamps that change per run but must maintain 
+        internal structural integrity.
 
-   - vut/engine/compare/engine/analogy_db.py
-     `AnalogyDb` tracks consistent substitutions (e.g., pointer addresses).
-     It ensures that if 'A' maps to 'B' once, it maps to 'B' everywhere.
+    Numeric Tolerance
+        Numerical values can be compared with a configurable epsilon ratio. 
+        If the ratio is 0.1, then 100.0 in the subject is equivalent to 105.0 
+        in the nominal.
 
-B. Lexical Analysis (Tolerance)
-   Located in `vut/engine/compare/tolerance/`.
+    Visible Nothing
+        Specific patterns (like "SUCCESS" or "IGNORE") can be configured as 
+        'Visible Nothing'. These elements are treated as semantically 
+        transparent—their presence or absence does not affect equivalence, 
+        effectively allowing the engine to "see through" noise.
 
-   - pattern_finder.py
-     `PatternFinder` scans lines using Regex to identify tokens.
+USE CASES
+    Forensic Log Comparison
+        Analyzing application logs where thread IDs or memory addresses 
+        change every execution. By using Analogies, you verify the logic 
+        remains identical despite the volatile identifiers.
 
-   - line_element.py
-     Defines `LineElement` subclasses (`LineElementNumber`, `LineElementAnalogy`,
-     `LineElementVisibleNothing`). These objects handle the specific equality
-     checks (e.g., `abs(a-b) < epsilon`).
+    Scientific Output Validation
+        Comparing large datasets of floating-point results where minor 
+        rounding differences between CPU architectures are expected. The 
+        Numeric Tolerance ensures the test passes as long as the drift is 
+        within acceptable bounds.
 
-C. Algorithmic Core (Edit Operations)
-   Located in `vut/engine/compare/edit_operations/`.
-   This implements the "Best-First Search" (A*-like) to align sequences.
+    Unordered Set Validation
+        Validating the output of a system that prints a list of items 
+        retrieved from a database where the sort order is non-deterministic. 
+        The Potpourri logic handles the reordering automatically.
 
-   - line.py
-     The heavy lifter. Contains the `WorkList` and `WorkItem` classes that
-     explore the edit distance matrix.
-     * Key Logic: `_step_transpose` implements the asymptotic cost
-       function (1 - 1/x) to prioritize moving tokens over rewriting them.
+ARCHITECTURE & PERFORMANCE
+    The engine is built on sophisticated computer science foundations to ensure 
+    it remains performant even with massive input streams:
 
-   - edit.py
-     Defines `E_EditId` (GOOD, SUBSTITUTE, TRANSPOSE, etc.) and `EditSequence`.
+    - Flyweight Pattern: The 'FrozenAnalogyDb' uses a global registry to 
+      intern all strings and mappings into unique integer IDs. This transforms 
+      complex string logic into O(1) integer bitmask operations.
+    - A* Search: The 'edit_operations' logic uses a heuristic-driven tree 
+      search to find the minimum edit distance between similar lines without 
+      exploring every possible permutation.
+    - CSP Solver (MRV): For complex Potpourri mapping, the engine employs a 
+      Minimum Remaining Values (MRV) backtracking solver, enabling it to solve 
+      "Sudoku-style" dependency traps efficiently.
+    - Async I/O: The entire pipeline is non-blocking, allowing it to process 
+      subject data while the test process is still generating it.
 
-   - line_sequence.py
-     Handles the alignment of entire lines within a `LineSequence` chunk.
+NOTES
+    Software engineers should refer to 'feeder/ui.py' to see how the 'associate' 
+    output is serialized for UI consumption, and 'engine/enums.py' for a 
+    complete list of verdict types.
 
-   - separator_adaptor.py
-     Optimizes performance by stripping "Separator" tokens (whitespace) before
-     comparison and re-inserting them into the result afterwards.
+AUTHOR
+    (C) Frank-Rene Schaefer, Project VUT.
 
-D. Potpourri Logic
-   Located in `vut/engine/compare/friends_pairing/`.
-
-   - match_db.py & exact.py
-     Algorithms to pair lines in unordered blocks (`Potpourri`). It first
-     solves for exact matches and then approximates best-fit matches for
-     remaining lines.
-
-4. KEY CONCEPTS FOR DEVELOPERS
-------------------------------
-* **LineElement**: The atomic unit of comparison. A line is a tuple of these.
-* **WorkList**: The engine does not use a simple dynamic programming matrix
-  due to the complexity of Transpositions and Analogies. It uses a priority
-  queue (`WorkList`) to expand the lowest-cost alignment paths first.
-* **Visible Nothing**: Elements with `E_ToleranceId.VISIBLE_NOTHING` (like
-  timestamps or comments) have a near-zero cost (1e-10), ensuring they don't
-  break matches but are still tracked in the edit list.
-
-5. CONFIGURATION
-----------------
-Configuration logic is found in `vut/engine/compare/configuration.py`.
-It controls:
-- Numeric tolerance ratios.
-- Regex patterns for "Visible Nothing" or "Analogy" markers (default `((...))`).
-- Delimiters for Potpourri blocks (default `||||`).
