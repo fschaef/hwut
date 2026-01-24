@@ -67,6 +67,7 @@ from  vut.engine.compare.input.pattern_finder  import E_ToleranceId
 from  vut.engine.compare.input.line_element    import LineElement
 from  vut.engine.compare.engine.analogy_db     import AnalogyDb
 from  vut.engine.compare.engine.enums          import E_Verdict
+from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from  functools   import lru_cache
 
@@ -110,9 +111,10 @@ def cost_TRANSPOSE(si, transpose_ai):
     return 1.0 - (1.0 / (1 + abs(si - transpose_ai)))
 
 @lru_cache(maxsize=65536)
+## LATER @typechecked
 def do(subject_le_seq: tuple[LineElement], 
        nominal_le_seq: tuple[LineElement], 
-       analogy_db=None) -> EditSequence:
+       analogy_db:     FrozenAnalogyDb | None = None) -> EditSequence:
     """RETURNS: EditSequence
 
     Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and

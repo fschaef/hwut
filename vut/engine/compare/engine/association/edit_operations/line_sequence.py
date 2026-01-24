@@ -27,8 +27,10 @@ from   vut.engine.compare.engine.association.edit_operations.core  import (WorkL
                                                                            WorkItemBase, 
                                                                            position_increment_db)
 from   vut.engine.compare.engine.association.edit_operations.separator_adaptor import SeparatorAdaptor
-from   vut.engine.compare.input.pattern_finder import E_ToleranceId
-from   vut.engine.compare.engine.analogy_db    import AnalogyDb
+
+from   vut.engine.compare.engine.analogy_db import AnalogyDb
+from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
+from   vut.engine.compare.input.pattern_finder     import E_ToleranceId
 
 
 # Shortcuts:
@@ -51,7 +53,10 @@ cost_GOOD          = cost_db[GOOD]
 cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
 cost_INSERT_DELETE = cost_db[INSERT]
 
-def do(subject_match_seq_list, nominal_match_seq_list, analogy_db=None) -> EditSequence:
+## LATER @typechecked
+def do(subject_match_seq_list, 
+       nominal_match_seq_list, 
+       analogy_db:  FrozenAnalogyDb | None = None) -> EditSequence:
     """RETURNS: EditSequence
 
     Determine how the sequence of subject 'Line' objects can be transformed
