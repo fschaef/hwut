@@ -3,6 +3,7 @@ from functools   import lru_cache
 from typing      import Iterable
 from typing      import Union
 
+import contextvars
 import weakref
 
 # Assuming local import context exists as per your snippet
@@ -43,7 +44,11 @@ class FrozenAnalogyRegistry:
         s_id, n_id = self.pair_to_info[pair_id]
         return self.symbols_inv[s_id], self.symbols_inv[n_id]
 
-frozen_analogy_registry = FrozenAnalogyRegistry()
+# Context variables are local to thread / asyncio Task
+# => parallel execution of 'is_equivalent' and 'associate' on multiple
+#    streams does not cause problems.
+context_frozen_analogy_db_registry = contextvars.ContextVar("context_frozen_analogy_db_registry", 
+                                                            default = FrozenAnalogyRegistry())
 
 class FrozenAnalogyDb:
     """Fast and efficient representation of 'AnalogyDb'.
@@ -101,8 +106,9 @@ class FrozenAnalogyDb:
 
         NOTE: AnalogyDb is a 'dict' -- it is accepted here.
         """
-        global frozen_analogy_registry
-        registry = frozen_analogy_registry
+        global context_frozen_analogy_db_registry
+        registry = context_frozen_analogy_db_registry.get()
+
         if adb.__class__ is cls: return adb
         
         # Determine pair_ids (Key for the flyweight pool)

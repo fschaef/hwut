@@ -34,6 +34,7 @@ is that they must provide the function:
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
+import vut.engine.compare.engine.frozen_analogy_db      as     frozen_analogy_db
 from   vut.engine.compare.engine.association.chunk_pair import ChunkPair
 from   vut.engine.compare.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
                                                                AssociationChunkPipe
@@ -65,20 +66,26 @@ async def is_equivalent(config: Configuration,
     assert hasattr(subject_line_provider, "readline")
     assert hasattr(nominal_line_provider, "readline")
 
-    analogy_db = AnalogyDb()
-    subject    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
-    nominal    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
+    # Ensure that the flyweight-required registry is context-local (thread/asyncio task)
+    token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry()) 
 
-    # subject, nominal = 'LINE' or 'POTPOURRI'
-    async for subject, nominal in generate_chunk_pairs(config, subject, nominal):
-        verdict,   \
-        analogy_db = subject.is_equivalent_to_nominal(nominal, analogy_db)
-        # analogy db is updated as required to main 'equivalence', else not (of course)
+    try:
+        analogy_db = AnalogyDb()
+        subject    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
+        nominal    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
 
-        if not verdict:
-            return False
-    else:
-        return True
+        # subject, nominal = 'LINE' or 'POTPOURRI'
+        async for subject, nominal in generate_chunk_pairs(config, subject, nominal):
+            verdict,   \
+            analogy_db = subject.is_equivalent_to_nominal(nominal, analogy_db)
+            # analogy db is updated as required to main 'equivalence', else not (of course)
+
+            if not verdict:
+                return False
+        else:
+            return True
+    finally:
+        frozen_analogy_db.context_frozen_analogy_db_registry.reset(token)
 
 @typechecked
 async def associate(config: Configuration, subject_line_provider, nominal_line_provider):
@@ -110,14 +117,21 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     assert hasattr(subject_line_provider, "readline")
     assert hasattr(nominal_line_provider, "readline")
 
-    analogy_db = AnalogyDb()
+    # Ensure that the flyweight-required registry is context-local (thread/asyncio task)
+    token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry()) 
 
-    subject = AssociationChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
-    nominal = AssociationChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
+    try:
+        analogy_db = AnalogyDb()
 
-    # subject, nominal = 'LineSequence', 'Potpourri' or None
-    async for subject, nominal in generate_chunk_pairs_type_aligned(config, subject, nominal):
+        subject = AssociationChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
+        nominal = AssociationChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
 
-        result = ChunkPair.from_input_chunks(subject, nominal, analogy_db)
-        analogy_db = result.analogy_db()
-        yield result
+        # subject, nominal = 'LineSequence', 'Potpourri' or None
+        async for subject, nominal in generate_chunk_pairs_type_aligned(config, subject, nominal):
+
+            result = ChunkPair.from_input_chunks(subject, nominal, analogy_db)
+            analogy_db = result.analogy_db()
+            yield result
+
+    finally:
+        frozen_analogy_db.context_frozen_analogy_db_registry.reset(token)
