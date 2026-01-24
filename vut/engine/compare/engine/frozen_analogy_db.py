@@ -4,6 +4,8 @@ from typing      import Iterable
 from typeguard   import typechecked
 from typing      import Union
 
+import weakref
+
 # Assuming local import context exists as per your snippet
 from .analogy_db import AnalogyDb
 
@@ -46,9 +48,8 @@ class FrozenAnalogyDb:
     intersections (if small) or Pair-ID set comparisons.
     """
     # Use WeakValueDictionary to prevent memory leaks in backtracking search
-    ## _pool     = weakref.WeakValueDictionary() 
-    _pool     = {} 
-    __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask')
+    _pool     = weakref.WeakValueDictionary() 
+    __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask', '__weakref__')
     
     # HYBRID THRESHOLD: If IDs exceed this, we skip bitmask generation.
     # 256 bits = 32 bytes (CPU word efficient)
@@ -195,7 +196,7 @@ class FrozenAnalogyDb:
             _update(adb._pair_ids)
         return cls(_pair_ids=tuple(sorted(merged_ids)))
 
-    @lru_cache(maxsize=16384)
+    @lru_cache(maxsize=8196)
     def merge(self, other: FrozenAnalogyDb|None) -> FrozenAnalogyDb:
         """RETURNS: clone of 'self' merged with content of 'other'.
         """
@@ -207,7 +208,7 @@ class FrozenAnalogyDb:
         merged = set(self._pair_ids) | set(other._pair_ids)
         return FrozenAnalogyDb(_pair_ids=tuple(sorted(merged)))
 
-    @lru_cache(maxsize=16384)
+    @lru_cache(maxsize=8196)
     def is_all_consistent(self, other: FrozenAnalogyDb) -> bool:
         if self is other: return True
 
@@ -216,7 +217,12 @@ class FrozenAnalogyDb:
         # If disabled, we must fall through to deep ID validation.
         if self._subj_mask != -1 and other._subj_mask != -1:
             if not (self._subj_mask & other._subj_mask | self._nom_mask & other._nom_mask):
+                # Both have complete different symbols for subjects and nominals
                 return True
+            elif self._subj_mask == other._subj_mask and self._nom_mask == other._nom_mask:
+                # They involve the same symbols but are different Flyweight instances.
+                # Therefore, the mappings MUST differ.
+                return False
 
         self_pairs = {}
         self_noms = set()

@@ -60,7 +60,8 @@ def _core_non_analogy(subject_line_list, nominal_line_list,
     verdict = (len(couples) == len(nominal_line_list) == len(subject_line_list))
     return _get_line_pairs(verdict, couples, subject_db, nominal_db, FrozenAnalogyDb(), max_comparison_count)
 
-def _core(subject_line_list, nominal_line_list, 
+def _core(subject_line_list, 
+          nominal_line_list, 
           analogy_db, max_comparison_count, 
           abort_early_f=False, analogies_involved_f = True):
     """RETURNS: sorted list of LinePair objects.
@@ -87,7 +88,7 @@ def _core(subject_line_list, nominal_line_list,
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
     nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object
 
-    return _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_comparison_count)
+    return _get_line_pairs(verdict, couples, subject_db, nominal_db, FrozenAnalogyDb(analogy_db), max_comparison_count)
 
 def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_comparison_count):
     result = []
@@ -130,7 +131,7 @@ def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_co
 
     result.sort(key=sort_key)
 
-    return result, analogy_db
+    return result, analogy_db.to_AnalogyDb()
 
 def _couple_uncoupled(couples, subject_db, nominal_db, analogy_db, max_comparison_count):
     """RETURNS: [0] list of 'LinePair' objects.

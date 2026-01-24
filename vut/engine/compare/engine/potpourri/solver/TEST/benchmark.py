@@ -62,7 +62,7 @@ def run_benchmark(n_range:     list[int],
 if __name__ == "__main__":
     # Define the variations you want to test
     # Example: See how scaling N from 10 to 100 affects time
-    N_SAMPLES = [ 1000 * i for i in range(1, 10) ]
+    N_SAMPLES = [ 1000 * i for i in range(1, 7) ]
    
     # Example: See how 'ambiguity' (partners per entry) affects backtracking
     K_SAMPLES = [2, 5, 10]
