@@ -35,8 +35,8 @@ if "member_functions" in sys.argv:
     sym_n = "nominal_omega"
     db = FrozenAnalogyDb({sym_s: sym_n})
     
-    s_id = db._Registry.get_symbol_id(sym_s)
-    n_id = db._Registry.get_symbol_id(sym_n)
+    s_id = FrozenAnalogyDb()._registry.get_symbol_id(sym_s)
+    n_id = FrozenAnalogyDb()._registry.get_symbol_id(sym_n)
     
     # Ensure we are below the limit for this basic test
     if s_id < 256 and n_id < 256:
@@ -126,13 +126,13 @@ if "hybrid_masks" in sys.argv:
 
     # 1. SETUP: Force Registry ID Inflation
     # We must register enough symbols to exceed the _MASK_LIMIT (256)
-    limit = FrozenAnalogyDb._MASK_LIMIT
+    limit = FrozenAnalogyDb()._registry._MASK_LIMIT
     print(f"| {'INFO':<25} | {'Inflating Registry > ' + str(limit):<35} | {'...':<12} | {'...':<8} |")
     
     # Generate 300 dummy symbols to push counter high
     for i in range(limit + 50):
-        FrozenAnalogyDb._Registry.get_symbol_id(f"DUMMY_SUBJ_{i}")
-        FrozenAnalogyDb._Registry.get_symbol_id(f"DUMMY_NOM_{i}")
+        FrozenAnalogyDb()._registry.get_symbol_id(f"DUMMY_SUBJ_{i}")
+        FrozenAnalogyDb()._registry.get_symbol_id(f"DUMMY_NOM_{i}")
 
     # 2. TEST CASE: High-ID Analogies (Should have Masks Disabled)
     high_s = f"DUMMY_SUBJ_{limit + 10}"

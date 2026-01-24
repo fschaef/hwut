@@ -8,6 +8,43 @@ import weakref
 # Assuming local import context exists as per your snippet
 from .analogy_db import AnalogyDb
 
+class FrozenAnalogyRegistry:
+    """Global mapping of strings and pairs to unique integer IDs."""
+    # Use WeakValueDictionary to prevent memory leaks in backtracking search.
+    def __init__(self):
+        self.pool            = weakref.WeakValueDictionary()
+        self.symbols         = {} # string -> int_id
+        self.symbols_inv     = [] # pair_id -> string
+        self.pairs           = {} # (subj_id, nom_id) -> pair_id
+        self.pair_to_info    = [] # pair_id -> (subj_id, nom_id)
+        self._EMPTY_INSTANCE = None # Singleton for empty databases
+        # HYBRID THRESHOLD: If IDs exceed this, we skip bitmask generation.
+        # 256 bits = 32 bytes (CPU word efficient)
+        self._MASK_LIMIT     = 256
+    
+    def get_symbol_id(self, s: str) -> int:
+        if s not in self.symbols:
+            self.symbols[s] = len(self.symbols_inv)
+            self.symbols_inv.append(s)
+        return self.symbols[s]
+
+    def get_pair_id(self, subj_s: str, nom_s: str) -> int:
+        s_id = self.get_symbol_id(subj_s)
+        n_id = self.get_symbol_id(nom_s)
+        pair = (s_id, n_id)
+        if pair not in self.pairs:
+            self.pairs[pair] = len(self.pair_to_info)
+            self.pair_to_info.append(pair)
+        return self.pairs[pair]
+
+    def string_pair(self, pair_id):
+        """RETURNS: subject string, nominal string that corresponds to pair_id.
+        """
+        s_id, n_id = self.pair_to_info[pair_id]
+        return self.symbols_inv[s_id], self.symbols_inv[n_id]
+
+frozen_analogy_registry = FrozenAnalogyRegistry()
+
 class FrozenAnalogyDb:
     """Fast and efficient representation of 'AnalogyDb'.
 
@@ -46,16 +83,9 @@ class FrozenAnalogyDb:
     'is_consistent' operation validates these rules using bitwise 
     intersections (if small) or Pair-ID set comparisons.
     """
-    # Use WeakValueDictionary to prevent memory leaks in backtracking search.
-    _pool = weakref.WeakValueDictionary()
     # Lazy-lookup cache slots: _s2n (subject-to-nominal), _n2s (nominal-to-subject)
-    __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask', '_s2n', '_n2s', '__weakref__')
+    __slots__ = ('_registry', '_pair_ids', '_subj_mask', '_nom_mask', '_s2n', '_n2s', '__weakref__')
     
-    # HYBRID THRESHOLD: If IDs exceed this, we skip bitmask generation.
-    # 256 bits = 32 bytes (CPU word efficient)
-    _MASK_LIMIT = 256
-    _EMPTY_INSTANCE = None # Singleton for empty databases
-
     @property
     def subj_mask(self) -> int: return self._subj_mask
 
@@ -65,68 +95,39 @@ class FrozenAnalogyDb:
     @property
     def pair_ids(self) -> tuple: return self._pair_ids
 
-    class _Registry:
-        """Global mapping of strings and pairs to unique integer IDs."""
-        symbols      = {} # string -> int_id
-        symbols_inv  = [] # pair_id -> string
-        pairs        = {} # (subj_id, nom_id) -> pair_id
-        pair_to_info = [] # pair_id -> (subj_id, nom_id)
-        
-        @classmethod
-        def get_symbol_id(cls, s: str) -> int:
-            if s not in cls.symbols:
-                cls.symbols[s] = len(cls.symbols_inv)
-                cls.symbols_inv.append(s)
-            return cls.symbols[s]
-
-        @classmethod
-        def get_pair_id(cls, subj_s: str, nom_s: str) -> int:
-            s_id = cls.get_symbol_id(subj_s)
-            n_id = cls.get_symbol_id(nom_s)
-            pair = (s_id, n_id)
-            if pair not in cls.pairs:
-                cls.pairs[pair] = len(cls.pair_to_info)
-                cls.pair_to_info.append(pair)
-            return cls.pairs[pair]
-
-        @classmethod
-        def string_pair(cls, pair_id):
-            """RETURNS: subject string, nominal string that corresponds to pair_id.
-            """
-            s_id, n_id = cls.pair_to_info[pair_id]
-            return cls.symbols_inv[s_id], cls.symbols_inv[n_id]
-
     # @typechecked -- way to expensive during CSP
     def __new__(cls, adb: AnalogyDb | FrozenAnalogyDb | dict | None = None, _pair_ids: tuple | None = None):
         """RETURNS: FrozenAnalogyDb that represents the AnalogyDb passed by 'adb'., AnalogyDb
 
         NOTE: AnalogyDb is a 'dict' -- it is accepted here.
         """
+        global frozen_analogy_registry
+        registry = frozen_analogy_registry
         if adb.__class__ is cls: return adb
         
         # Determine pair_ids (Key for the flyweight pool)
         if _pair_ids is not None:
             pair_ids = _pair_ids
         elif not adb:
-            if cls._EMPTY_INSTANCE: return cls._EMPTY_INSTANCE
+            if registry._EMPTY_INSTANCE: return registry._EMPTY_INSTANCE
             pair_ids = tuple()
         else:
             # Optimization: Localize registry lookup for speed in loop
-            get_pid = cls._Registry.get_pair_id
+            get_pid = registry.get_pair_id
             pair_ids = tuple(sorted(get_pid(s, n) for s, n in adb.items()))
-            
 
         # Flyweight lookup
-        if (instance := cls._pool.get(pair_ids)) is not None:
+        if (instance := registry.pool.get(pair_ids)) is not None:
             return instance
 
         # Initialize unique instance
         instance = super().__new__(cls)
+        instance._registry = registry
         instance._pair_ids = pair_ids
         
         s_mask, n_mask = 0, 0
-        limit = cls._MASK_LIMIT
-        _info = cls._Registry.pair_to_info
+        limit = registry._MASK_LIMIT
+        _info = registry.pair_to_info
         
         # Single-pass mask generation
         for pid in pair_ids:
@@ -140,10 +141,10 @@ class FrozenAnalogyDb:
         instance._subj_mask = s_mask
         instance._nom_mask  = n_mask
         
-        if not pair_ids and not cls._EMPTY_INSTANCE:
-            cls._EMPTY_INSTANCE = instance
+        if not pair_ids and not registry._EMPTY_INSTANCE:
+            registry._EMPTY_INSTANCE = instance
 
-        cls._pool[pair_ids] = instance
+        registry.pool[pair_ids] = instance
         return instance
 
     def _ensure_lookups(self):
@@ -152,7 +153,7 @@ class FrozenAnalogyDb:
             return self._s2n
         except AttributeError:
             s2n, n2s = {}, {}
-            _info = self._Registry.pair_to_info
+            _info = self._registry.pair_to_info
             for pid in self._pair_ids:
                 sid, nid = _info[pid]
                 s2n[sid] = nid
@@ -180,7 +181,7 @@ class FrozenAnalogyDb:
         Reconstructs the full dictionary and line number metadata from the 
         internal integer IDs.
         """
-        _str_pair = self._Registry.string_pair # Cache registry lookups for speed
+        _str_pair = self._registry.string_pair # Cache registry lookups for speed
         return AnalogyDb(_str_pair(pid) for pid in self._pair_ids)
 
     @classmethod
@@ -231,7 +232,7 @@ class FrozenAnalogyDb:
 
         # Optimized Deep Check
         self._ensure_lookups()
-        _info = self._Registry.pair_to_info
+        _info = self._registry.pair_to_info
         
         # Bi-directional O(1) check per pair in 'other'
         for pid in other._pair_ids:
@@ -262,7 +263,7 @@ class FrozenAnalogyDb:
         This reconstructs the original string representations from the 
         interned integer IDs stored in the registry.
         """
-        _get = self._Registry.string_pair
+        _get = self._registry.string_pair
         for pid in self._pair_ids:
             yield _get(pid)
 
@@ -276,7 +277,7 @@ class FrozenAnalogyDb:
         # Group analogies by their first occurrence for a clean report
         grouped = []
         for pid in self._pair_ids:
-            s, n = self._Registry.string_pair(pid)
+            s, n = self._registry.string_pair(pid)
             # Key is LineNumberPair or None
             grouped.append(f'"{s}"="{n}"')
 
