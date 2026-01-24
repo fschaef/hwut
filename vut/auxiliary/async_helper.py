@@ -7,6 +7,17 @@ class AsyncStreamReaderAdapter(collections.abc.AsyncIterator):
         # sync_stream might be a file-handle OR a generator
         self.sync_stream = sync_stream
 
+        if hasattr(sync_stream, "readline"):
+            if asyncio.iscoroutinefunction(sync_stream.readline):
+                self._read_call = sync_stream.readline
+                self._is_async = True
+            else:
+                self._read_call = sync_stream.readline
+                self._is_async = False
+            self._readline = True
+        else:
+            self._readline = False
+
     def __aiter__(self):
         return self
 
@@ -18,11 +29,9 @@ class AsyncStreamReaderAdapter(collections.abc.AsyncIterator):
 
     async def readline(self):
         # 1. Handle standard file-like objects
-        if hasattr(self.sync_stream, "readline"):
-            if asyncio.iscoroutinefunction(self.sync_stream.readline):
-                return await self.sync_stream.readline()
-            else:
-                return self.sync_stream.readline()
+        if self._readline:
+            if self._is_async: return await self._read_call()
+            else:              return self._read_call()
         
         # 2. Handle generators/iterators (common in tests)
         try:

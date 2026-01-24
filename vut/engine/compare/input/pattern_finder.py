@@ -42,20 +42,22 @@ tolerant comparison.
 The 'PatternFinder' serves as lexical analyzer for 'chunk_pipe.py'.
 ________________________________________________________________________________
 """
-from    vut.engine.compare.configuration      import ConfigurationPatternFinder
-from    vut.engine.compare.input.line_element import E_ToleranceId,     \
-                                                     TolerancePattern,  \
-                                                     LineElement,       \
-                                                     LineElementString, \
-                                                     LineElementVisibleNothing
-import  regex as re
-from    typeguard import typechecked
-from    itertools   import count
+import regex as re
+from functools import lru_cache
+from itertools import count
+from typing import Iterable, Tuple, FrozenSet
+
+from vut.engine.compare.configuration import ConfigurationPatternFinder
+from vut.engine.compare.input.line_element import (E_ToleranceId,
+                                                   TolerancePattern,
+                                                   LineElement,
+                                                   LineElementString,
+                                                   LineElementVisibleNothing)
 
 class PatternFinder:
     """Maintains a master regex to identify all tolerance patterns in one pass.
+    Optimized for high-frequency matching using LRU caching for overlapping patterns.
     """
-    @typechecked
     def __init__(self, config: ConfigurationPatternFinder):
         """Setup the tolerance pattern table and compile the master regex.
         """
@@ -73,7 +75,7 @@ class PatternFinder:
             
             # Extractor: Capture content BETWEEN markers
             # Pattern: marker_begin + (captured_content) + marker_end
-            self._analogy_extractor_re = re.compile(f"{b}(.*?){e}")            
+            self._analogy_extractor_re = re.compile(f"{b}(.*?){e}")
 
         def _register(tol_id, re_str):
             if not re_str: return
@@ -90,7 +92,7 @@ class PatternFinder:
         # 1. Base String (Metadata only)
         self._group_map["BASE"] = TolerancePattern(E_ToleranceId.STRING, None, None)
 
-        # 2. Register patterns in priority order (Specific -> General)
+        # 1. Register patterns 
         for pattern in config.visible_nothing_pattern_list:
             _register(E_ToleranceId.VISIBLE_NOTHING, pattern)
 
@@ -112,7 +114,14 @@ class PatternFinder:
         for pattern in config.equivalent_pattern_list:
             _register(E_ToleranceId.EQUIVALENCE_PATTERN, pattern)
 
-        # Config state
+        # Pre-filter equivalence patterns for the secondary overlap check
+        self._equiv_patterns = tuple(
+            (tp.pattern_index, tp.pattern)
+            for tp in self._group_map.values()
+            if tp.id == E_ToleranceId.EQUIVALENCE_PATTERN and tp.pattern is not None
+        )
+
+        # Configuration state
         self.backslash_f                = config.backslash_f
         self.strip_whitespace_f         = config.strip_whitespace_f
         self.whitespace_f               = config.whitespace_f
@@ -122,13 +131,25 @@ class PatternFinder:
         self.potpourri_begin_end_marker = config.potpourri_begin_end_marker
 
         # Master Regex Compilation
-        master_str = "|".join(re_parts) if re_parts else r"$.^" 
+        master_str = "|".join(re_parts) if re_parts else r"$.^"
         self.master_re = re.compile(master_str)
 
-        # Legacy 'table' support for external visibility/unit tests
-        self.table = tuple(self._group_mapping.values()) if hasattr(self, '_group_mapping') else tuple(self._group_map.values())
+        self.table = tuple(self._group_map.values()) if hasattr(self, '_group_map') else tuple(self._group_map.values())
 
-    def do(self, string):
+    @lru_cache(maxsize=2048)
+    def _get_matching_pattern_indices(self, matched_text: str, primary_idx: int) -> FrozenSet[int]:
+        """
+        Finds all equivalence pattern indices that match the text.
+        The master regex only tells us ONE group that matched. This method
+        checks the others and caches the result.
+        """
+        indices = {primary_idx}
+        for p_idx, p_re in self._equiv_patterns:
+            if p_idx != primary_idx and p_re.fullmatch(matched_text):
+                indices.add(p_idx)
+        return frozenset(indices)
+
+    def do(self, string: str) -> Tuple[LineElement, ...]:
         """RETURNS: sequence of 'LineElement' objects.
 
         Identifies tolerance patterns in 'string' and returns a sequence of
@@ -143,35 +164,38 @@ class PatternFinder:
             return (LineElementVisibleNothing(string.rstrip()),)
 
         result = []
-        i = 0
+        last_idx = 0
+        
         for m in self.master_re.finditer(string):
             start, end = m.span()
             
-            if i < start: 
-                result.append(LineElementString(string[i:start]))
+            # Add text between matches
+            if start > last_idx:
+                result.append(LineElementString(string[last_idx:start]))
 
-            # Correctly handle multiple equivalence groups
+            group_name = m.lastgroup
+            tolerance = self._group_map[group_name]
+            
             pattern_indices = None
-            tolerance       = self._group_map[m.lastgroup]
-            
             if tolerance.id == E_ToleranceId.EQUIVALENCE_PATTERN:
-                matched_text = m.group()
-                # Re-scan the table to find all overlapping equivalence IDs
-                pattern_indices = {
-                    tp.pattern_index for tp in self._group_map.values()
-                    if tp.id == E_ToleranceId.EQUIVALENCE_PATTERN and 
-                    tp.pattern and tp.pattern.fullmatch(matched_text)
-                }
+                # Use the cached overlap checker
+                pattern_indices = self._get_matching_pattern_indices(m.group(), tolerance.pattern_index)
 
-            match = LineElement.from_match(tolerance.id, m[0], self.numeric_tolerance_ratio, 
-                                           pattern_i_set=pattern_indices)
-            if match:
-                result.append(match)
+            match_obj = LineElement.from_match(
+                tolerance.id, 
+                m.group(), 
+                self.numeric_tolerance_ratio, 
+                pattern_i_set=pattern_indices
+            )
             
-            i = end
+            if match_obj:
+                result.append(match_obj)
+            
+            last_idx = end
 
-        if i < len(string):
-            result.append(LineElementString(string[i:]))
+        # Add remaining text
+        if last_idx < len(string):
+            result.append(LineElementString(string[last_idx:]))
 
         return tuple(result)
 
@@ -191,20 +215,20 @@ class PatternFinder:
         if line.endswith(self.ignored_line_end_marker): return True
         return False
 
-    def is_region_delimiter(self, line):
+    def is_region_delimiter(self, line: str) -> bool:
         """RETURNS: True, if current 'line' marks the begin/end of potpourri.
         """
         line = line.strip()
         return line.startswith(self.potpourri_begin_end_marker) and len(set(line)) == 1
 
-    def has_analogy(self, line):
+    def has_analogy(self, line: str) -> bool:
         """RETURNS: True, if line contains an analogy.
                     False, else.
         """
         if self._analogy_extractor_re is None: return False
         return bool(self._analogy_extractor_re.search(line))
 
-    def extract_analogy_strings(self, line):
+    def extract_analogy_strings(self, line: str) -> Iterable[str]:
         """RETURNS: List of strings found inside analogy markers.
         Example: "A ((quick)) brown ((fox))" -> ['quick', 'fox']
         """

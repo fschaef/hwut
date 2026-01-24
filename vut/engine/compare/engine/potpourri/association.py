@@ -117,8 +117,8 @@ def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_co
         # until either no subject or no nominal remains as mating candidate.
         line_pair_list,     \
         subjects_remaining, \
-        nominals_remaining  = _couple_uncoupled(couples, subject_db, nominal_db,
-                                                analogy_db, max_comparison_count)
+        nominals_remaining  = _couple_remainders(couples, subject_db, nominal_db,
+                                                 analogy_db, max_comparison_count)
 
         result.extend(line_pair_list)
         # Associate with 'None' what has no counterpart.
@@ -133,7 +133,11 @@ def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_co
 
     return result, analogy_db.to_AnalogyDb()
 
-def _couple_uncoupled(couples, subject_db, nominal_db, analogy_db, max_comparison_count):
+@typechecked
+def _couple_remainders(couples, 
+                       subject_db, 
+                       nominal_db, 
+                       analogy_db: AnalogyDb | FrozenAnalogyDb | None, max_comparison_count):
     """RETURNS: [0] list of 'LinePair' objects.
                 [1] line numbers of unpaired subject lines
                 [2] line numbers of unpaired nominal lines
@@ -141,25 +145,6 @@ def _couple_uncoupled(couples, subject_db, nominal_db, analogy_db, max_compariso
     subject_db:    line number -> Line object 
     nominal_db:    line number -> Line object 
 
-    DOES NOT AFFECT: 'couples'
-
-    Pairs lines from subject and nominal which are not mentioned in 'couples'.
-    """
-    # Clone is NOT performed here because the user request is to 
-    # "develop the analogy_db along the way".
-    
-    line_pair_list,     \
-    subjects_remaining, \
-    nominals_remaining  = _couple_remainders(couples, subject_db, nominal_db, analogy_db, max_comparison_count)
-
-    # One remainder must be empty!
-    assert (not subjects_remaining) or (not nominals_remaining)
-
-    return line_pair_list, subjects_remaining, nominals_remaining
-
-@typechecked
-def _couple_remainders(couples, subject_db, nominal_db, analogy_db: AnalogyDb | FrozenAnalogyDb | None, max_comparison_count):
-    """RETURNS: list of LinePair objects.
 
     Find couples in the set of remainders according to a least cost
     function. The cost is the amount of difference between the line

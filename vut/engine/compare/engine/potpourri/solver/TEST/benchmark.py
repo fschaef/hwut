@@ -60,14 +60,20 @@ def run_benchmark(n_range:     list[int],
     return results
 
 if __name__ == "__main__":
-    # Define the variations you want to test
-    # Example: See how scaling N from 10 to 100 affects time
-    N_SAMPLES = [ 1000 * i for i in range(1, 7) ]
-   
-    # Example: See how 'ambiguity' (partners per entry) affects backtracking
-    K_SAMPLES = [2, 5, 10]
-    
-    # Example: See how constraint density affects speed
-    RATIO_SAMPLES = [0.1, 0.2, 0.5 ]
+    import sys
+    if "simple" in sys.argv:
+        N_SAMPLES = [ 10000 ] 
+        K_SAMPLES = [ 10 ]
+        RATIO_SAMPLES = [ 0.5 ]
+    else:
+        # Define the variations you want to test
+        # Example: See how scaling N from 10 to 100 affects time
+        N_SAMPLES = [ 1000 * i for i in range(1, 7) ]
+       
+        # Example: See how 'ambiguity' (partners per entry) affects backtracking
+        K_SAMPLES = [2, 5, 10]
+        
+        # Example: See how constraint density affects speed
+        RATIO_SAMPLES = [0.1, 0.2, 0.5 ]
 
     results = run_benchmark(N_SAMPLES, K_SAMPLES, RATIO_SAMPLES)

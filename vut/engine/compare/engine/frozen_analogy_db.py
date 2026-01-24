@@ -1,7 +1,6 @@
 from __future__  import annotations
 from functools   import lru_cache
 from typing      import Iterable
-from typeguard   import typechecked
 from typing      import Union
 
 import weakref
@@ -47,13 +46,15 @@ class FrozenAnalogyDb:
     'is_consistent' operation validates these rules using bitwise 
     intersections (if small) or Pair-ID set comparisons.
     """
-    # Use WeakValueDictionary to prevent memory leaks in backtracking search
-    _pool     = weakref.WeakValueDictionary() 
-    __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask', '__weakref__')
+    # Use WeakValueDictionary to prevent memory leaks in backtracking search.
+    _pool = weakref.WeakValueDictionary()
+    # Lazy-lookup cache slots: _s2n (subject-to-nominal), _n2s (nominal-to-subject)
+    __slots__ = ('_pair_ids', '_subj_mask', '_nom_mask', '_s2n', '_n2s', '__weakref__')
     
     # HYBRID THRESHOLD: If IDs exceed this, we skip bitmask generation.
     # 256 bits = 32 bytes (CPU word efficient)
     _MASK_LIMIT = 256
+    _EMPTY_INSTANCE = None # Singleton for empty databases
 
     @property
     def subj_mask(self) -> int: return self._subj_mask
@@ -95,28 +96,29 @@ class FrozenAnalogyDb:
             s_id, n_id = cls.pair_to_info[pair_id]
             return cls.symbols_inv[s_id], cls.symbols_inv[n_id]
 
-    @typechecked
+    # @typechecked -- way to expensive during CSP
     def __new__(cls, adb: AnalogyDb | FrozenAnalogyDb | dict | None = None, _pair_ids: tuple | None = None):
         """RETURNS: FrozenAnalogyDb that represents the AnalogyDb passed by 'adb'., AnalogyDb
 
         NOTE: AnalogyDb is a 'dict' -- it is accepted here.
         """
-        if isinstance(adb, FrozenAnalogyDb): return adb
+        if adb.__class__ is cls: return adb
         
         # Determine pair_ids (Key for the flyweight pool)
         if _pair_ids is not None:
             pair_ids = _pair_ids
-        elif adb is None:
+        elif not adb:
+            if cls._EMPTY_INSTANCE: return cls._EMPTY_INSTANCE
             pair_ids = tuple()
         else:
-            # no line number database or empty => quick absorbtion
-            pair_ids = tuple(sorted(
-                cls._Registry.get_pair_id(s, n) for s, n in adb.items()
-            ))
+            # Optimization: Localize registry lookup for speed in loop
+            get_pid = cls._Registry.get_pair_id
+            pair_ids = tuple(sorted(get_pid(s, n) for s, n in adb.items()))
+            
 
         # Flyweight lookup
-        if pair_ids in cls._pool:
-            return cls._pool[pair_ids]
+        if (instance := cls._pool.get(pair_ids)) is not None:
+            return instance
 
         # Initialize unique instance
         instance = super().__new__(cls)
@@ -124,33 +126,39 @@ class FrozenAnalogyDb:
         
         s_mask, n_mask = 0, 0
         limit = cls._MASK_LIMIT
+        _info = cls._Registry.pair_to_info
         
-        # --- REPAIR START: Optional Bitmask Generation ---
-        # If any ID exceeds the limit, we abort mask generation and set to -1 (All 1s).
-        # -1 ensures we fall through to the deep check in is_all_consistent.
-        use_masks = True
-        
-        # Pre-scan (or check during loop) to ensure we don't blow up memory
+        # Single-pass mask generation
         for pid in pair_ids:
-            s_id, n_id = cls._Registry.pair_to_info[pid]
+            s_id, n_id = _info[pid]
             if s_id >= limit or n_id >= limit:
-                use_masks = False
+                s_mask = n_mask = -1
                 break
-        
-        if use_masks:
-            for pid in pair_ids:
-                s_id, n_id = cls._Registry.pair_to_info[pid]
-                s_mask |= (1 << s_id)
-                n_mask |= (1 << n_id)
-        else:
-            # Disable optimization: -1 means "Assume overlap, check deeply"
-            s_mask, n_mask = -1, -1
+            s_mask |= (1 << s_id)
+            n_mask |= (1 << n_id)
 
         instance._subj_mask = s_mask
         instance._nom_mask  = n_mask
+        
+        if not pair_ids and not cls._EMPTY_INSTANCE:
+            cls._EMPTY_INSTANCE = instance
 
         cls._pool[pair_ids] = instance
         return instance
+
+    def _ensure_lookups(self):
+        """Lazy-initialize lookup tables for O(N) deep consistency checks."""
+        try:
+            return self._s2n
+        except AttributeError:
+            s2n, n2s = {}, {}
+            _info = self._Registry.pair_to_info
+            for pid in self._pair_ids:
+                sid, nid = _info[pid]
+                s2n[sid] = nid
+                n2s[nid] = sid
+            self._s2n, self._n2s = s2n, n2s
+            return s2n
 
     @staticmethod
     def if_consistent(analogy_list: Iterable) -> Union[FrozenAnalogyDb, None]:
@@ -172,18 +180,11 @@ class FrozenAnalogyDb:
         Reconstructs the full dictionary and line number metadata from the 
         internal integer IDs.
         """
-        result = AnalogyDb()
-        
-        # Cache registry lookups for speed
-        _str_pair = self._Registry.string_pair
-        for pid in self._pair_ids:
-            s, n = _str_pair(pid)
-            result[s] = n
-                
-        return result
+        _str_pair = self._Registry.string_pair # Cache registry lookups for speed
+        return AnalogyDb(_str_pair(pid) for pid in self._pair_ids)
 
     @classmethod
-    @typechecked
+    # @typechecked -- wait to expensive during CSP
     def merge_all(cls, adbs: Iterable[FrozenAnalogyDb|None]) -> FrozenAnalogyDb:
         """Bulk merges multiple databases bypassing intermediate steps."""
         active = [adb for adb in adbs if adb and adb._pair_ids]
@@ -205,8 +206,11 @@ class FrozenAnalogyDb:
         elif not other._pair_ids:            return self
         
         # Optimized: Merge integer IDs directly. 
-        merged = set(self._pair_ids) | set(other._pair_ids)
-        return FrozenAnalogyDb(_pair_ids=tuple(sorted(merged)))
+        s1, s2 = set(self._pair_ids), set(other._pair_ids)
+        if s1.issuperset(s2): return self
+        if s2.issuperset(s1): return other
+        
+        return FrozenAnalogyDb(_pair_ids=tuple(sorted(s1 | s2)))
 
     @lru_cache(maxsize=8196)
     def is_all_consistent(self, other: FrozenAnalogyDb) -> bool:
@@ -216,29 +220,24 @@ class FrozenAnalogyDb:
         # Only use bitmasks if they are enabled (not -1).
         # If disabled, we must fall through to deep ID validation.
         if self._subj_mask != -1 and other._subj_mask != -1:
-            if not (self._subj_mask & other._subj_mask | self._nom_mask & other._nom_mask):
-                # Both have complete different symbols for subjects and nominals
-                return True
-            elif self._subj_mask == other._subj_mask and self._nom_mask == other._nom_mask:
+            # If they involve the same symbols but are different Flyweights, they MUST conflict.
+            if self._subj_mask == other._subj_mask and self._nom_mask == other._nom_mask:
                 # They involve the same symbols but are different Flyweight instances.
                 # Therefore, the mappings MUST differ.
                 return False
+            # Disjointness check
+            elif not (self._subj_mask & other._subj_mask or self._nom_mask & other._nom_mask):
+                return True
 
-        self_pairs = {}
-        self_noms = set()
+        # Optimized Deep Check
+        self._ensure_lookups()
         _info = self._Registry.pair_to_info
         
-        for pid in self._pair_ids:
-            s_id, n_id = _info[pid]
-            self_pairs[s_id] = n_id
-            self_noms.add(n_id)
-
+        # Bi-directional O(1) check per pair in 'other'
         for pid in other._pair_ids:
             os_id, on_id = _info[pid]
-            if os_id in self_pairs:
-                if self_pairs[os_id] != on_id: return False
-            elif on_id in self_noms:
-                return False
+            if os_id in self._s2n and self._s2n[os_id] != on_id: return False
+            if on_id in self._n2s and self._n2s[on_id] != os_id: return False
         return True
 
     def clone(self):
