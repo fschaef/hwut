@@ -1,3 +1,4 @@
+from   vut.engine.compare.engine.frozen_analogy_db                         import FrozenAnalogyDb
 from   vut.engine.compare.engine.association.line_pair                     import LinePair
 import vut.engine.compare.engine.association.edit_operations.line_sequence as     edit_operations_line_sequence
 from   vut.engine.compare.engine.association.edit_operations.edit          import (E_EditId, 
@@ -10,10 +11,10 @@ def do(subject, nominal, analogy_db):
     """
     editions: EditSequence = edit_operations_line_sequence.do(subject.line_list,
                                                               nominal.line_list,
-                                                              analogy_db)
+                                                              FrozenAnalogyDb(analogy_db))
 
     if not editions.edit_list:
-        return [], editions.analogy_db
+        return [], editions.analogy_db.to_AnalogyDb()
 
     def iterable(edit_sequence):
         si, ni = 0, 0
@@ -44,5 +45,5 @@ def do(subject, nominal, analogy_db):
         LinePair(subject_seq, nominal_seq, edit_list, cost = cost)
         for subject_seq, nominal_seq, edit_list, cost in iterable(editions.edit_list)
     ]
-    return result, editions.analogy_db
+    return result, editions.analogy_db.to_AnalogyDb()
 

@@ -65,11 +65,11 @@ from  vut.engine.compare.engine.association.edit_operations.core  import (WorkLi
 from  vut.engine.compare.engine.association.edit_operations.separator_adaptor import SeparatorAdaptor
 from  vut.engine.compare.input.pattern_finder  import E_ToleranceId
 from  vut.engine.compare.input.line_element    import LineElement
-from  vut.engine.compare.engine.analogy_db     import AnalogyDb
 from  vut.engine.compare.engine.enums          import E_Verdict
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from  functools   import lru_cache
+from  typeguard   import typechecked
 
 # Shortcuts:
 TRANSPOSE       = E_EditId.TRANSPOSE
@@ -111,11 +111,13 @@ def cost_TRANSPOSE(si, transpose_ai):
     return 1.0 - (1.0 / (1 + abs(si - transpose_ai)))
 
 @lru_cache(maxsize=65536)
-## LATER @typechecked
-def do(subject_le_seq: tuple[LineElement], 
-       nominal_le_seq: tuple[LineElement], 
-       analogy_db:     FrozenAnalogyDb | None = None) -> EditSequence:
+@typechecked
+def do(subject_le_seq: tuple[LineElement,...] | list[LineElement], 
+       nominal_le_seq: tuple[LineElement,...] | list[LineElement], 
+       analogy_db:     FrozenAnalogyDb = FrozenAnalogyDb()) -> EditSequence:
     """RETURNS: EditSequence
+
+    NOTE: The empty 'FrozenAnalogyDb()' is a global immutable singleton.
 
     Compares the line elements of 'subject_le_seq' and 'nominal_le_seq' and
     determines the editions required to transform the former into the latter.
@@ -124,9 +126,6 @@ def do(subject_le_seq: tuple[LineElement],
           EditSequence.edit_list  = list of 'Edit'
           EditSequence.analogy_db = 'AnalogyDb' required for equivalences to hold.
     """
-    if analogy_db is None:
-        analogy_db = AnalogyDb()
-
     separator_db = LineSeparatorAdaptor(subject_le_seq, nominal_le_seq,
                                         cost_db[SUBSTITUTE_TYPE],
                                         cost_db[INSERT],
@@ -262,11 +261,15 @@ class WorkItem(WorkListBase):
                 assert False
 
         if good_id is None:
-            yield from (
-                self._step_transpose(candidate_ai, subject)
-                for candidate_ai in range(self.si+1, len(subject))
-                if subject[candidate_ai].is_equivalent(nominal_le, self.edit_list.analogy_db)
-            )
+            for candidate_ai in range(self.si + 1, len(subject)):
+                candidate_le = subject[candidate_ai]
+                # 1. Get the specific analogy required for this candidate to match the nominal
+                verdict_id, analogy = candidate_le.compare(nominal_le)
+                if verdict_id is not E_Verdict.EQUIVALENT: continue
+                # 2. Check consistency with CURRENT DB
+                elif not self.edit_list.analogy_db.is_consistent(analogy): continue
+                # 3. Pass the NEW analogy to the step function
+                yield self._step_transpose(candidate_ai, subject, new_analogy=analogy)
 
         yield self._step_standard(INSERT)
         yield self._step_standard(DELETE)
@@ -287,18 +290,23 @@ class WorkItem(WorkListBase):
                                                   self.edit_list.analogy_db), 
                         subject_modified = self.subject_modified)
 
-    def _step_transpose(self, transpose_ai, subject):
+    def _step_transpose(self, transpose_ai, subject, new_analogy=None):
         """Transition specifically for TRANSPOSE operations with distance scaling."""
         actual_cost = cost_TRANSPOSE(self.si, transpose_ai)
         new_subject = list(subject) # shallow copy
         new_subject[self.si], new_subject[transpose_ai] = new_subject[transpose_ai], new_subject[self.si]
+
+        if new_analogy:
+            new_analogy_db = self.edit_list.analogy_db.clone_and_add(new_analogy)
+        else:
+            new_analogy_db = self.edit_list.analogy_db
         
         increment_ai, increment_bi = position_increment_db[TRANSPOSE]
         return WorkItem(si         = self.si + increment_ai,
                         ni         = self.ni + increment_bi,
                         editions   = EditSequence(self.edit_list.cost + actual_cost,
                                                   self.edit_list.edit_list + [ Edit(TRANSPOSE, transpose_ai) ],
-                                                  self.edit_list.analogy_db), 
+                                                  new_analogy_db), 
                         subject_modified = tuple(new_subject))
 
     def _step_analogy(self, edit_id, new_analogy):

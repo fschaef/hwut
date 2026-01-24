@@ -46,7 +46,7 @@ def test_mseq(a, b):
             print("[%i] %s (%s)" % (i, edit.id.name, edit.transpose_ai))
         else:
             print("[%i] %s"      % (i, edit.id.name))
-    if len(analogy_db):
+    if len(analogy_db.to_AnalogyDb()):
         print("AnalogyDb:")
         print(repr(analogy_db))
     print()

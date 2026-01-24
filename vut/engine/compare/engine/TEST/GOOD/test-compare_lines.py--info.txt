@@ -5,7 +5,7 @@ Cost: 0.000000
 [1] GOOD
 [2] GOOD
 AnalogyDb:
-
+<empty>
 subject:  STRING:string, SEPERATOR: , NUMERIC:4711
 nominal:  STRING:string, SEPERATOR: , STRING:strong
 Cost: 0.500000
@@ -13,7 +13,7 @@ Cost: 0.500000
 [1] GOOD
 [2] SUBSTITUTE_TYPE
 AnalogyDb:
-
+<empty>
 subject:  STRING:string, SEPERATOR: , STRING:string
 nominal:  STRING:string, SEPERATOR: , STRING:strong
 Cost: 0.083333
@@ -21,7 +21,7 @@ Cost: 0.083333
 [1] GOOD
 [2] SUBSTITUTE
 AnalogyDb:
-
+<empty>
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((x))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 Cost: 0.500000
@@ -29,7 +29,7 @@ Cost: 0.500000
 [1] GOOD
 [2] SUBSTITUTE
 AnalogyDb:
-
+<empty>
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 Cost: 0.000000
@@ -37,7 +37,8 @@ Cost: 0.000000
 [1] GOOD
 [2] GOOD_TOLERATED
 AnalogyDb:
-: "((x))"="((y))", "((y))"="((z))"
+  "((x))"="((y))"
+  "((y))"="((z))"
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z)), SEPERATOR: , ANALOGY:((y))
 Cost: 0.333333
@@ -47,7 +48,7 @@ Cost: 0.333333
 [3] INSERT
 [4] INSERT
 AnalogyDb:
-
+<empty>
 subject:  ANALOGY:((x)), SEPERATOR: , ANALOGY:((y)), SEPERATOR: , ANALOGY:((x))
 nominal:  ANALOGY:((y)), SEPERATOR: , ANALOGY:((z))
 Cost: 0.333333
@@ -57,4 +58,4 @@ Cost: 0.333333
 [3] DELETE
 [4] DELETE
 AnalogyDb:
-
+<empty>

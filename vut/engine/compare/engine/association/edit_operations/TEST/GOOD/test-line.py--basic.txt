@@ -89,12 +89,20 @@ Cost: 0.388889
 [0] TRANSPOSE (2)
 [1] TRANSPOSE (2)
 [2] GOOD
+AnalogyDb:
+  "((x))"="((y))"
 
 subject:  STRING:string, STRING:, ANALOGY:((x))
 nominal:  ANALOGY:((y)), STRING:string, STRING:
+
 =>
 Cost: 0.388889
 [0] TRANSPOSE (2)
 [1] TRANSPOSE (2)
 [2] GOOD
+
+
+
+AnalogyDb:
+  "((x))"="((y))"
 

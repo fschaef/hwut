@@ -11,7 +11,6 @@ import vut.engine.compare.engine.association.edit_operations.line   as     edit_
 from   vut.engine.compare.input.pattern_finder     import PatternFinder
 from   vut.engine.compare.engine.enums             import (E_Verdict, 
                                                            E_ToleranceId)
-from   vut.engine.compare.engine.analogy_db        import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from   dataclasses import dataclass
@@ -178,12 +177,16 @@ class Line:
         EditSequence.edit_list  = list of 'Edit' objects
         EditSequence.analogy_db = 'AnalogyDb' required for equivalences to hold.
         """
-        result = edit_operations_line.do(self.sequence, nominal.sequence, analogy_db)
+        analogy_db = FrozenAnalogyDb(analogy_db)
+
+        result = edit_operations_line.do(self.sequence, 
+                                         nominal.sequence, 
+                                         analogy_db)
 
         if result.cost == 0:
-            result.analogy_db = result.analogy_db.update(analogy_db)
+            result.analogy_db = result.analogy_db.merge(analogy_db)
         else:
-            result.analogy_db = analogy_db.clone() if analogy_db else AnalogyDb()
+            result.analogy_db = FrozenAnalogyDb(analogy_db)
 
         # too slow for mios of operations
         # assert isinstance(result, edit_operations_line.EditSequence)

@@ -207,8 +207,8 @@ class FrozenAnalogyDb:
         
         # Optimized: Merge integer IDs directly. 
         s1, s2 = set(self._pair_ids), set(other._pair_ids)
-        if s1.issuperset(s2): return self
-        if s2.issuperset(s1): return other
+        if   s1.issuperset(s2): return self
+        elif s2.issuperset(s1): return other
         
         return FrozenAnalogyDb(_pair_ids=tuple(sorted(s1 | s2)))
 

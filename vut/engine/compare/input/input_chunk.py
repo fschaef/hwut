@@ -89,7 +89,7 @@ class EquivalenceRelatedInputChunk(InputChunk):
 
 class AssociationRelatedInputChunk(InputChunk):
     @typechecked
-    def associate_with_nominal(self, nominal, analogy_db: AnalogyDb) -> tuple[list[LinePair], AnalogyDb | FrozenAnalogyDb]:
+    def associate_with_nominal(self, nominal, analogy_db: AnalogyDb) -> tuple[list[LinePair], AnalogyDb]:
         """RETURNS: [0] True, if both sequences are equivalent. False, else.
                     [1] analogy_db required for equivalence to hold.
 

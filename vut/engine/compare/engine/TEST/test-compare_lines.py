@@ -66,6 +66,8 @@ if "judge" in sys.argv:
         verdict, analogy_db = subject.compare_and_provide_analogies(nominal)
         if analogy_db is None:
             analogy_db = AnalogyDb()
+        else:
+            analogy_db = analogy_db.to_AnalogyDb()
         print("=> %s, %s" % (verdict, analogy_db))
 
     test("sS", "sS")

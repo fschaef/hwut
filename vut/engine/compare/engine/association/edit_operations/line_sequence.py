@@ -28,10 +28,10 @@ from   vut.engine.compare.engine.association.edit_operations.core  import (WorkL
                                                                            position_increment_db)
 from   vut.engine.compare.engine.association.edit_operations.separator_adaptor import SeparatorAdaptor
 
-from   vut.engine.compare.engine.analogy_db import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 from   vut.engine.compare.input.pattern_finder     import E_ToleranceId
 
+from  typeguard   import typechecked
 
 # Shortcuts:
 GOOD            = E_EditId.GOOD
@@ -53,11 +53,13 @@ cost_GOOD          = cost_db[GOOD]
 cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
 cost_INSERT_DELETE = cost_db[INSERT]
 
-## LATER @typechecked
+@typechecked
 def do(subject_match_seq_list, 
        nominal_match_seq_list, 
-       analogy_db:  FrozenAnalogyDb | None = None) -> EditSequence:
+       analogy_db:  FrozenAnalogyDb = FrozenAnalogyDb()) -> EditSequence:
     """RETURNS: EditSequence
+
+    NOTE: The empty 'FrozenAnalogyDb()' is a global immutable singleton.
 
     Determine how the sequence of subject 'Line' objects can be transformed
     into the sequence of nominal 'Line' objects. It determines a 'cost' value
@@ -66,7 +68,6 @@ def do(subject_match_seq_list,
     of editions (see edit_operations/line.py) is provided that tells how the
     subject line is transformed into the nominal line.
     """
-    if analogy_db is None: analogy_db = AnalogyDb()
 
     separator_db = LineSequenceSeparatorAdaptor(subject_match_seq_list,
                                                 nominal_match_seq_list,

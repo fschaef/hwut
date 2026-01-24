@@ -146,6 +146,9 @@ class AnalogyDb(bidict):
             self.update(analogy_db)
             return True    # OK:   analogy is added without braking consistency.
 
+    def to_AnalogyDb(self):
+        return self
+
     def __hash__(self):
         return hash(frozenset(self.items()))
 
