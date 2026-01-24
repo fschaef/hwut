@@ -1,0 +1,24 @@
+
+================================================================================
+SCENARIO: Transposition Amnesia
+--------------------------------------------------------------------------------
+OBJECTIVE: Verify Transpose operation records the implied analogy.
+SCENARIO:  Transpose ((A)) to match ((1)). This implies A=1.
+           Later, ((A)) matches ((2)). This implies A=2.
+BUG:       If A=1 is not recorded during transpose, engine accepts A=2 (No Conflict).
+           This makes the invalid Transpose path look cheap.
+STIMULI:
+  Subject Text: 'X ((A)) ((A))'
+  Nominal Text: '((1)) Y ((2))'
+  Subject Seq:  (STRING 'X', ANALOGY '((A))', ANALOGY '((A))')
+  Nominal Seq:  (ANALOGY '((1))', STRING 'Y', ANALOGY '((2))')
+--------------------------------------------------------------------------------
+RESPONSE:
+  Operations: ['SUBSTITUTE_TYPE', 'SUBSTITUTE_TYPE', 'GOOD_TOLERATED']
+  Cost:       0.666667
+  Analogy DB:   "((A))"="((2))"
+--------------------------------------------------------------------------------
+VERDICT: PASS
+  Engine correctly avoided the Transpose path (due to Analogy Conflict).
+================================================================================
+

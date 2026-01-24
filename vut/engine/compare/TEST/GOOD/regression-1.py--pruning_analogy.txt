@@ -1,0 +1,23 @@
+
+================================================================================
+SCENARIO: State Pruning (Analogy Constraints)
+--------------------------------------------------------------------------------
+OBJECTIVE: Verify A* distinguishes states with different analogy constraints.
+BUG:       Greedy Delete(_) reaches index (2,2) cheaply with constraint {A:1}.
+           Optimal Insert(1) reaches (2,2) with constraint {A:2}.
+           If state does not include AnalogyDB, Optimal is pruned.
+STIMULI:
+  Subject Text: '_ ((A)) ((A))'
+  Nominal Text: '1 ((2)) ((2))'
+  Subject Seq:  (VISIBLE_NOTHING '_', ANALOGY '((A))', ANALOGY '((A))')
+  Nominal Seq:  (NUMERIC '1', ANALOGY '((2))', ANALOGY '((2))')
+--------------------------------------------------------------------------------
+RESPONSE:
+  Operations: ['GOOD_DELETE', 'INSERT', 'GOOD_TOLERATED', 'GOOD_TOLERATED']
+  Cost:       0.333333
+  Analogy DB:   "((A))"="((2))"
+--------------------------------------------------------------------------------
+VERDICT: PASS
+  Optimal analogy A=2 was found. State pruning respected constraints.
+================================================================================
+

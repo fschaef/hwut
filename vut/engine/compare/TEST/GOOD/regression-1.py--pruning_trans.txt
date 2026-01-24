@@ -1,0 +1,23 @@
+
+================================================================================
+SCENARIO: State Pruning (Subject Modification)
+--------------------------------------------------------------------------------
+OBJECTIVE: Verify A* distinguishes states where the subject tail has changed.
+BUG:       Greedy Transpose(X<->A) reaches index (2,2) cheaply but mangles the tail.
+           Optimal Subst(X->A) reaches (2,2) with higher cost but perfect tail.
+           If state=(si,ni), Optimal is pruned. If state=(si,ni,subj_mod), it survives.
+STIMULI:
+  Subject Text: 'X Z A'
+  Nominal Text: 'A Z A'
+  Subject Seq:  (STRING 'X', STRING 'Z', STRING 'A')
+  Nominal Seq:  (STRING 'A', STRING 'Z', STRING 'A')
+--------------------------------------------------------------------------------
+RESPONSE:
+  Operations: ['SUBSTITUTE', 'GOOD', 'GOOD']
+  Cost:       0.333333
+  Analogy DB: <empty>
+--------------------------------------------------------------------------------
+VERDICT: PASS
+  Engine avoided the local trap and found the global optimal (SUBSTITUTE).
+================================================================================
+
