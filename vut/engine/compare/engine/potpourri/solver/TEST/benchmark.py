@@ -10,7 +10,7 @@ sys.path.insert(0, this_directory)
 
 import vut.engine.compare.engine.potpourri.matching                                as m              #noqa E402
 from   vut.engine.compare.engine.analogy_db                                 import AnalogyDb  #noqa E402
-import vut.engine.compare.engine.potpourri.solver.BENCHMARK.scenario_creator as scn            #noqa E402
+import vut.engine.compare.engine.potpourri.solver.TEST.benchmark_scenario_generator as scn            #noqa E402
 
 def run_benchmark(n_range:     list[int], 
                   k_range:     list[float], 
@@ -22,7 +22,7 @@ def run_benchmark(n_range:     list[int],
     """
     results = []
 
-    print(f"{'N':>5} | {'K_AVG':>6} | {'RATIO':>6} | {'TIME (s)':>10} | {'STATUS'}")
+    print(f"{'N':>5} {'K_AVG':>6} {'RATIO':>6} {'TIME (s)':>10} {'STATUS'}")
     print("-" * 50)
 
     def iterable(n_range, k_range, ratio_range):
@@ -35,8 +35,6 @@ def run_benchmark(n_range:     list[int],
         # Generate the potential_pair_db using our deterministic generator
         # Note: ac_pp_n is kept constant for baseline, but could be swept too
         db = scn.scenario(n=n, c_vs_uc_ratio=ratio, k_avg=k, ac_pp_n=2)
-
-        lane_n = len(db)
 
         # Wrap the dictionary into the Result structure required by pairing()
         # Assuming 'PotentialPairDb' can be initialized from our dict
@@ -53,7 +51,7 @@ def run_benchmark(n_range:     list[int],
         avg_t  = end - start
 
         status = "ABORTED" if output.aborted_f else "SUCCESS"
-        print(f"{n:5d} | {lane_n} | {len(output.pair_db)} | {k:6.1f} | {ratio:6.2f} | {avg_t:10.5f} | {status}")
+        print(f"{n:5d} {k:6.1f} {ratio:6.2f} {avg_t:10.5f} {status}")
         if output.aborted_f:
             for ia, mate_list in db.items():
                 for ib, analogy_db in mate_list:
@@ -64,12 +62,12 @@ def run_benchmark(n_range:     list[int],
 if __name__ == "__main__":
     # Define the variations you want to test
     # Example: See how scaling N from 10 to 100 affects time
-    N_SAMPLES = [10000] # list(range(1, 10000, 50))
+    N_SAMPLES = [ 1000 * i for i in range(1, 10) ]
    
     # Example: See how 'ambiguity' (partners per entry) affects backtracking
-    K_SAMPLES = [10]
+    K_SAMPLES = [2, 5, 10]
     
     # Example: See how constraint density affects speed
-    RATIO_SAMPLES = [0.5 ]
+    RATIO_SAMPLES = [0.1, 0.2, 0.5 ]
 
     results = run_benchmark(N_SAMPLES, K_SAMPLES, RATIO_SAMPLES)

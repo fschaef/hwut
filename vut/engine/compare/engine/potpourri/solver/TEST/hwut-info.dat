@@ -5,6 +5,5 @@ coverage run --omit ./*.py -a *.py
 
 --not ON_HOLD-*.py
 --not common.py
---not benchmark_helper.py
---not benchmark-pairing.py
+--not benchmark*.py
 --not scenario_*.py

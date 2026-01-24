@@ -112,10 +112,12 @@ def constraint_db(n: int,
     
     def weird_constraints(): 
         # Sample chaotic subset to create conflicts/distractors
-        random_subset = [
-            (random_a(), random_b()) for _ in range(ac_pp_n)
-        ]
-        return AnalogyDb(random_subset)
+        result = {}
+        for _ in range(ac_pp_n):
+            a, b = random_a(), random_b()
+            if a not in result and b not in result.values():
+                result[a] = b
+        return AnalogyDb(result.items())
 
     return derive_from_backbone(stream, primary_partner_db, k_avg, 
                                 good_constraints, 
