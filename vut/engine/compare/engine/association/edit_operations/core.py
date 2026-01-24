@@ -183,7 +183,7 @@ class WorkListBase(list):
             # This ensures we don't prune a path with a different sequence permutation.
             subj_mod = getattr(new_item, 'subject_modified', None)
             
-            state_key = (new_item.si, new_item.ni, subj_mod)
+            state_key = (new_item.si, new_item.ni, subj_mod, new_item.edit_list.analogy_db)
 
             if self.best_cost_db[state_key] <= new_item.edit_list.cost:
                 continue
