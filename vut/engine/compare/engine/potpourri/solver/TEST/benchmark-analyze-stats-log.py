@@ -58,7 +58,7 @@ def analyze(stats_file):
 
     for func in sorted_nested:
         # p.stats[func] returns (cc, nc, tt, ct, callers)
-        cc, nc, tt, ct, callers = p.stats[func]
+        _, nc, tt, ct, _ = p.stats[func]
         func_desc = f"{func[0]}:{func[1]}({func[2]})"
         print(f"{nc:10} {tt:10.4f} {ct:10.4f}  {func_desc}")
 

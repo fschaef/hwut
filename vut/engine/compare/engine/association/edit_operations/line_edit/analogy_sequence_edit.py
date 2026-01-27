@@ -119,7 +119,6 @@ def assign_token_ids(subject_list, nominal_list, analogy_map):
     transformed_subject = [analogy_map.get(x, x) for x in subject_list]
 
     v = defaultdict()
-    v.default_factory = v.__len__
         
     # Fastest approach, faster than list comprehensions
     # (The whole thing operates in 'C' without list iteration)

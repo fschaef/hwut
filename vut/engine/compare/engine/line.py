@@ -13,12 +13,6 @@ from   vut.engine.compare.engine.enums             import (E_Verdict,
                                                            E_ToleranceId)
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
-from   dataclasses import dataclass
-
-@dataclass
-class LineRaw:
-    string: str
-    lexer:  PatternFinder
 
 class Line:
     """An interpretation of a text line in terms of a sequence of 'LineElement'

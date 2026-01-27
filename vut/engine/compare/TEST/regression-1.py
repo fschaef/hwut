@@ -156,13 +156,6 @@ def test_amnesia():
     else:
         print_verdict(True, "Engine correctly avoided the Transpose path (due to Analogy Conflict).")
 
-def test_all():
-    test_pruning_transpose()
-    test_pruning_analogy()
-    test_amnesia()
-
-# --- Main ---
-
 if __name__ == "__main__":
     choices = {
         "pruning_trans":   test_pruning_transpose,

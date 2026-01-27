@@ -21,8 +21,6 @@ class E_Verdict(Enum):
 
 class E_PotpourriBorder(Enum):
     NONE  = auto()
-    BEGIN = auto()
-    END   = auto()
 
 class E_Chunk(Enum):
     LINE_SEQUENCE = auto()
@@ -31,10 +29,6 @@ class E_Chunk(Enum):
     TERMINAL      = auto()
     VOID          = auto()
     NONE          = auto()
-
-class E_Mode:
-    EQUIVALENCE_CHECK = auto()
-    ASSOCIATION       = auto()
 
 class E_ToleranceId(int, Enum):
     STRING              = 1

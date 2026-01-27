@@ -29,7 +29,7 @@ class MutationProfile:
     insert: float     = 0.05
     delete: float     = 0.05
     transpose: float  = 0.05
-    good: float       = 0.75 
+    # good: float       = 0.75 
     analogy_ratio: float = 0.2  # Ratio of lines that may contain analogies
 
 class ScenarioGenerator:

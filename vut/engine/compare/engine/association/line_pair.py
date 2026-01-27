@@ -199,10 +199,6 @@ class LinePair:
     def potpourri_border(subject, nominal, border):
         return LinePair(subject, nominal, tuple(), border)
 
-    @staticmethod
-    def empty(initial_subject=None, edit_list=tuple()):
-        return LinePair(subject=initial_subject, nominal=None, edit_list=edit_list)
-
     def _ensure_expanded(self):
         if self._raw is not None:
             self._subject_cell_list, \
@@ -217,20 +213,6 @@ class LinePair:
     def nominal_list(self) -> list[NominalCell]:
         self._ensure_expanded()
         return self._nominal_cell_list
-
-    def is_empty(self):
-        return self.nominal_line_n == -1
-
-    def analogy_errors(self):
-        errors = set()
-        for s_c, n_c in zip(self.subject_cell_list(), self.nominal_list()):
-            if s_c.tolerance_id != E_ToleranceId.ANALOGY: 
-                continue
-            elif s_c.relation_id in (E_SubjectRelationId.OK_GOOD, E_SubjectRelationId.OK_TOLERATED):
-                continue
-            else:
-                errors.add((s_c.subject or "", n_c.nominal or ""))
-        return errors
 
     def __lt__(self, other):
         def adapt(x): 

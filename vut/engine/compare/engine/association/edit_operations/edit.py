@@ -28,8 +28,6 @@ class E_EditId(IntEnum):
     SUBSTITUTE_TYPE = 6
     NONE            = 7
 
-E_EditId.good = { E_EditId.GOOD, E_EditId.GOOD_TOLERATED, E_EditId.GOOD_INSERT, E_EditId.DELETE }
-
 class Edit:
     __slots__ = ('id', '_auxiliary', 'cost')
 
@@ -75,18 +73,6 @@ class EditSequence:
 
     def extend(self, edit_iterable):
         self.edit_list.extend(edit_iterable)
-
-    @staticmethod
-    def describe(raw_edit_tuple):
-        if not raw_edit_tuple:
-            return "[]"
-        def _iterable(raw_edit_tuple):
-            for i, edit in enumerate(raw_edit_tuple):
-                if edit.id != E_EditId.TRANSPOSE:
-                    yield edit.id.name 
-                else:
-                    yield "%s:%i<->%i" % (edit.id.name, i, edit._auxiliary)
-        return "[%s]" % ", ".join(_iterable(raw_edit_tuple))
 
     def prepare_as_best(self, separator_db=None, relative_f=False):
         if separator_db:

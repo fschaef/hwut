@@ -287,8 +287,5 @@ class FrozenAnalogyDb:
             # Key is LineNumberPair or None
             grouped.append(f'"{s}"="{n}"')
 
-        def annotation(lp):
-            return ""
-
         # Sort keys carefully handling None
         return "\n".join(f"  {line}" for line in sorted(grouped))

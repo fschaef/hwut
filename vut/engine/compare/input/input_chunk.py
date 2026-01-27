@@ -28,7 +28,7 @@ from   vut.engine.compare.engine.association.line_pair       import LinePair
 import vut.engine.compare.engine.association.line_sequence   as association_line_sequence
 import vut.engine.compare.engine.association.potpourri       as association_potpourri
 
-from   abc       import ABC, abstractmethod
+from   abc       import ABC
 from   typing    import Iterable
 from   typeguard import typechecked
 
@@ -56,10 +56,6 @@ class InputChunk(ABC):
     def line_list(self):
         return self.__line_list
 
-    @abstractmethod
-    def empty_clone(self):
-        pass
-
     def type(self): 
         return self._chunk_type
 
@@ -69,7 +65,6 @@ class InputChunk(ABC):
 
 class InputChunkVoid(InputChunk):
     def __init__(self):    self._chunk_type = E_Chunk.VOID
-    def empty_clone(self): return InputChunkVoid()
     def __repr__(self):    return "InputChunkVoid"
 
 class EquivalenceRelatedInputChunk(InputChunk):
@@ -107,9 +102,6 @@ class InputChunkLineSequence(AssociationRelatedInputChunk):
     def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
         super().__init__(E_Chunk.LINE_SEQUENCE, start_line_n, end_line_n, line_list, config)
 
-    def empty_clone(self):
-        return InputChunkLineSequence(None, None, [], self.configuration)
-
     def _associate_with_nominal(self, nominal, analogy_db):
         return association_line_sequence.do(self, nominal, analogy_db)
 
@@ -118,7 +110,6 @@ class InputChunkTerminal(EquivalenceRelatedInputChunk):
     """
     def __init__(self):    self._chunk_type = E_Chunk.TERMINAL
     def is_terminal(self): return True
-    def empty_clone(self): return InputChunkTerminal()
     def _is_equivalent_to_nominal(self, nominal, analogy_db):
         """called by super().is_equivalent_to_nominal()"""
         return True, analogy_db
@@ -135,9 +126,6 @@ class InputChunkPotpourri(AssociationRelatedInputChunk, EquivalenceRelatedInputC
             if line.has_analogy(): self.analogy_line_list.append(line)
             else:                  self.non_analogy_line_list.append(line)
 
-    def empty_clone(self):
-        return InputChunkPotpourri(None, None, [], self.configuration)
-
     def _is_equivalent_to_nominal(self, nominal, analogy_db):
         """called by super().is_equivalent_to_nominal()"""
         return equivalence_check_potpourri.do(self, nominal, analogy_db)
@@ -149,9 +137,6 @@ class InputChunkLine(EquivalenceRelatedInputChunk):
     # @typechecked -- too expensive
     def __init__(self, line_n, line: Line, config):
         super().__init__(E_Chunk.LINE, line_n, line_n, [line], config)
-
-    def empty_clone(self):
-        return InputChunkLine(None, None, self.configuration)
 
     def _is_equivalent_to_nominal(self, nominal, analogy_db):
         """called by super().is_equivalent_to_nominal()"""

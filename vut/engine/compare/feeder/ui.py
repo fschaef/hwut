@@ -35,7 +35,7 @@ from   vut.engine.compare.engine.association.chunk_pair import ChunkPair       #
 from   vut.engine.compare.input.line_element            import E_ToleranceId   #noqa: E402
 
 from   inspect     import isclass                   #noqa: E402
-from   typing      import List, Any, AsyncIterable  #noqa: E402
+from   typing      import List, AsyncIterable  #noqa: E402
 from   dataclasses import dataclass                 #noqa: E402
 import hashlib                                      #noqa: E402
 import base64                                       #noqa: E402
@@ -104,9 +104,6 @@ class LinePairInst(DisplayInst):
     cells_s:    List[SubjectCell]
     cells_n:    List[NominalCell]
     cost:       float
-    s_char_n:   int
-    n_char_n:   int
-    source_ref: Any
 
 @dataclass(frozen=True)
 class EndOfStreamInst(DisplayInst):
@@ -217,9 +214,6 @@ def bake_line_pair_inst(lp: LinePair, prov_db: AnalogyProvenanceDb) -> LinePairI
         cells_s    = baked_s,
         cells_n    = baked_n,
         cost       = lp.cost,
-        s_char_n   = lp.subject_char_n,
-        n_char_n   = lp.nominal_char_n,
-        source_ref = lp
     )
 
 def _get_protocol_hash() -> str:
