@@ -41,33 +41,40 @@
 
 \begin{abstract} 
 
-\noindent \textbf{Context:} Contemporary research in Temporal Logic (e.g.,
-    LTL, CTL) and Event Calculus typically operates under the assumption of an
-    objective, external timeline against which system behavior is verified.
-    However, in Cyber-Physical Systems (CPS) and autonomous agents, the
-    observer lacks access to this objective view, possessing access only to a
-    stream of localized, asynchronous sensors.
+%% TODO: total rewrite after finishing the text
 
-\noindent \textbf{Problem:} This disconnect leads to the ``Symbol Grounding
-    Problem'', where formal models diverge from physical reality, often
-    resulting in undefined behavior when contradictory inputs arise.
-
-\noindent \textbf{Proposal:} This paper presents a \textbf{Transcendental
-    Architecture} for a discrete temporal logic engine. We propose a shift from
-    modeling \textit{Objective Time} to modeling \textit{Synthesized Time}. We
-    define the \textbf{Synthetic Interstice} not as a unit of duration, but as an orthogonal
-    causal interstice---a logical workspace where inputs and implications must
-    reach a \textbf{Least Fixed Point (LFP)} before a moment is committed to
-    History.
-
-\noindent \textbf{Contribution:} By enforcing Monotonic Positive Logic, this
-    architecture eliminates logical oscillation and paradox during the
-    calculation of the ``Now.'' Furthermore, it redefines system errors not as
-    computational failures, but as \textbf{Teleological
-    Divergences}---measurable fractures between the system's recorded Will
-    (History) and its perceived Environment (State). This ontology provides a
-    rigorous foundation for building fault-tolerant agents that remain stable
-    even when confronting absurd or contradictory input manifolds.
+%% TODO: mention that this text may seem hyper hybris, not acknowledging the
+%% 'truth' of physics and remaining in meta-physical ground. However, it very
+%% well recognizes the stable frame that has been built on solid logic, and tries
+%% to follow it to its roots deep into meta-physics.
+%% 
+%% \noindent \textbf{Context:} Contemporary research in Temporal Logic (e.g.,
+%%     LTL, CTL) and Event Calculus typically operates under the assumption of an
+%%     objective, external timeline against which system behavior is verified.
+%%     However, in Cyber-Physical Systems (CPS) and autonomous agents, the
+%%     observer lacks access to this objective view, possessing access only to a
+%%     stream of localized, asynchronous sensors.
+%% 
+%% \noindent \textbf{Problem:} This disconnect leads to the ``Symbol Grounding
+%%     Problem'', where formal models diverge from physical reality, often
+%%     resulting in undefined behavior when contradictory inputs arise.
+%% 
+%% \noindent \textbf{Proposal:} This paper presents a \textbf{Transcendental
+%%     Architecture} for a discrete temporal logic engine. We propose a shift from
+%%     modeling \textit{Objective Time} to modeling \textit{Synthesized Time}. We
+%%     define the \textbf{Synthetic Interstice} not as a unit of duration, but as an orthogonal
+%%     causal interstice---a logical workspace where inputs and implications must
+%%     reach a \textbf{Least Fixed Point (LFP)} before a moment is committed to
+%%     History.
+%% 
+%% \noindent \textbf{Contribution:} By enforcing Monotonic Positive Logic, this
+%%     architecture eliminates logical oscillation and paradox during the
+%%     calculation of the ``Now.'' Furthermore, it redefines system errors not as
+%%     computational failures, but as \textbf{Teleological
+%%     Divergences}---measurable fractures between the system's recorded Will
+%%     (History) and its perceived Environment (State). This ontology provides a
+%%     rigorous foundation for building fault-tolerant agents that remain stable
+%%     even when confronting absurd or contradictory input manifolds.
 
 \end{abstract}
 
@@ -125,54 +132,57 @@ Cognitive Subject\/} and the {\it Noumena\/}~\cite{Kant1781} which is the
 Absolute Reality. As Kant rigorously demonstrated, the thing-in-itself, the
 Noumena, remains forever beyond the grasp of the cognitive subject. 
 
-The system possesses no faculty to intuit this Absolute directly; it has 
-the faculty of Receptivity by means of which it perceives {\it Phenomena\/}
-and the faculty of Spontaneity by which it causes {\it Determination}.
-
-In the terminology to follow, the Phenomena is called an {\it Event\/}
-$e\in\mathbb{E}$, where $\mathbb{E}$ is the Universe of Discourse.
-Determination is called {\it Petition\/} $\pi\mathbb{E}$ which is assumed to
-have the same nature as the event. Both event $e$ and petition $\pi$,
-therefore, exist in the domain of conceptions---they are in that sense
-`meta-physical'. This text rigorously avoids the discussion of physical
-modality. By following a rigorous meta-physical logic we embrace the possibility
-that reality might be meta-physical. Nonetheless, we assume that mathematics
-provides a stable frame of understanding.
-
-We posit a Subject that exercises determination, or
-\textit{Proairesis}~\cite{AristotleEthics},  i.e.\ deliberate choice ($\Pi$):
-it strives towards ends and avoids limits, but its ontological reach is limited
-to the \textit{Request}, never the \textit{Result}. It interacts with the
-Noumena, by events, i.e.\ petitions $\pi$. But the Determination of the
-cognitive subject has no power over the absolute Noumena. Its direct impact
-ends where the world of conceptions ends. It does not touch the Noumena, where
-the reality behind every conception resides.
+This paper describes a mathematical framework to describe the meta-physical
+process underlying a {\it Cognitive Subject\/}'s interaction with absolute
+reality. We discuss the concept of a gap in time, the {\it Synthetic
+Interstice\/} where reality manifests and a derive a structure for {\it
+History}, i.e.\ the past. Based on the fundamental faculties of {\it
+Equivalence\/} and {\it Distinction\/} as well as {\it Causing Existence\/} and
+{\it Fixation\/} (memorization), a stable mathematical frame is derived as a
+`host' for a conciousness to experience reality.
 
 \section{The Manifold}
 
-In the following, we assume the existence of a {\it meta-physical computational
-engine\/} $\mathcal{M}$, we call the {\it Manifold\/}~\cite{Kant1781}, that
-operates during a {\it Synthetic Interstice.\/} ($\sigma$), i.e.\ gap in time.
+In the following, we assume the existence of a {\it meta-physical engine\/}
+$\mathcal{M}$, we call the {\it Manifold\/}---adopting Kant's
+terminology~\cite{Kant1781}. The Manifold operates during a {\it Synthetic
+Interstice.\/} ($\sigma$), i.e.\ a gap in time. Its basic characteristic is
+purely dynamic, i.e.\ no fixation, no writing, happens in that interstice. Once
+a {\it fixed point\/} is reached, the result of the operations are
+fixated/written to an immutable `History'.
 
-The operations that take place in the synthetic interstice $\sigma_k$ operate
-on two types of entities. First, it operates ephemeral {\it Events\/} $e \in
-\mathbb{E}$, i.e.\ entities that pop into existence during the synthetic
-interstice and only exist during that particular synthetic interstice. Second,
-it operates on {\it History\/} $H_k$, i.e.\ an entity that maintains memory of
-the results of previous synthetic interstices. 
+In the Synthetic Interstice, ephemeral {\it Events\/} pop into existence. {\it
+Original Events\/} are `caused' by the Noumena and {\it Implied Events\/} are
+`caused' by the rules of nature~\footnote{Here `nature' shall designate the
+structure that exists without the creational intervention of the Cognitive
+Subject.}. Events are the smallest entity of information that allows for the
+perception of {\it Identity}, i.e.\ the smallest unit that allows to
+distinghuish an $a$ from a $b$. Events solely exist in gap in time, the
+Synthetic Interstice---thus have no temporal expansion. Causation and
+implication of events are an expression of an inherited property of existence
+for a newly existing event.\ 
 
-The '{\it write operation\/} to history, where the evolved set of events is
-written to history, marks the end of the synthetic interstice. During the
-synthetic interstice, no write operations happen. The operations during the
-synthetic interstice rely solely on `{\it Existence\/}'. The write operation
-marks the boundary between the dynamic present of the Synthetic Interstice and
-the immutable history. This has significant impact on the operational logic
-that may be applied during the interstice.
+The Synthetic Interstice, the gap in time, is where any dynamic perceived by
+the Cognitive Subject originates from. It is the closest interface to absolute
+reality. It is where reality manifests. When its atemporal operations reach a
+fixed point, the fixation/writing of the resulting Events marks the end of the
+Synthetic Interstice and the beginning of a new. The distinction between the
+purely dynamic, non-writing, nature of the Synthetic Interstice and the
+written, immutable, nature of History has a significant impact on the
+operational logic of the Manifold.
+
+The `{\it fixation\/} of events' into History marks the end of a Synthetic
+Interstice. During the purely dynamic Synthetic Interstice, no `write operations'
+happen. The operations during the Synthetic Interstice rely solely on the `{\it
+truth of being and becoming\/}'. In contrast, History expresses the truth if `{\it
+has-been\/}'. The fixation marks the boundary between the dynamic present of
+the Synthetic Interstice and the immutable History. This has significant impact
+on the operational logic that may be applied during the Synthetic Interstice.
 
 Notably, the {\tt NOT} operation cannot take place in the ephemeral instance of
 the Synthetic Interstice. For the {\tt NOT} $x$ does not rely on existence but
 on the absence of a (written) trace of $x$. Thus, while {\tt NOT} may be
-applied on predicates of history, it cannot be applied on the ephemeral,
+applied on predicates of History, it cannot be applied on the ephemeral,
 instantaneous, events that are currently processed by the Synthetic Interstice.
 
 The set $N_k$ is grounded in the set-theoretic foundations of
@@ -265,83 +275,172 @@ We list the formal definitions of the concepts we identified so far.
         \item \textbf{Positivity:} It applies constructive logic. The \texttt{NOT} 
            operation is impossible.
 
-        \item \textbf{Historic Construct:} It applies history as an immutable 
+        \item \textbf{Historic Construct:} It applies History as an immutable 
            antecedent in Implications.
 
         \item \textbf{Convergence:} The interstice persists until the application 
-           of $\mathcal{I}$ reaches a fixed point (saturation), at which moment the 
-           state is ``frozen'' and written to history $H_k$.
+           of $\mathcal{I}$ reaches a fixed point (saturation).
     \end{itemize}
+\end{formalism}
+
+When the set of $N^0_k$ events in the Synthetic Interstice converged to a fixed
+point, they are written to History and become {\it Atomic Facts}. Let
+$\mathbb{A}$ be the space of assertions---to be discussed later in detail.
+
+\begin{formalism}[Atomic Fact]
+
+    An \textbf{Atomic Fact} $f$ is the immutable record of an Event. The
+    `writing' of the event corresponds to replacing the event's property of
+    ``{\it Existence\/} is equivalent to its Truth'' by ``{\it Has-Existed\/} is
+    equivalent to its Truth''.
+
+    \begin{itemize}
+        \item The Universal Characteristic $\top$ (Being) is replaced by the 
+              characteristic of \textbf{Facticity} (Has-Been).
+        \item The Particular Characteristic $\delta$ (Non-Truth/Identity) is 
+              preserved as \textbf{Identity Provider} of the fact.
+    \end{itemize}
+
+    The {\it Atomic Fact\/} is the most primitive trace of an event in carrying
+    the potential to be perceived by a cognitive Subject beyond the gap in time---
+    beyond the Synthetic Interstice.
+
+    Let $\mathbb{A}^\top \subset \mathbb{A}$ be the space of fundamentally 
+    {\it true\/} assertions, i.e.\ the space of atomic facts.
+
+    Let $\mathit{F}$ denote the function that maps the saturated set of events 
+    $N^0_k \in \mathit{P}(\mathbb{E})$ to a set of atomic facts 
+    $N_k\in\mathit{P}(\mathbb{A}^\top)$.
+
 \end{formalism}
 
 \begin{formalism}[History]
 
     \textbf{History} $H_k$ is the immutable, totally ordered sequence of
-    saturated $N_k$ (Nows) recorded up to step $k$.
+    sets of {\it atomic facts\/} $N_k = \mathit{F}(N^0_k)$ recorded up 
+    to step $k$.
 
     \begin{equation}
         H_k := \langle N_0, N_1, \dots, N_{k-1} \rangle
     \end{equation}
 
     History is the result of `writing' upon then completion of the Synthetic
-    Interstice. It acts as the \textbf{Dual Interface} of the system:
-
-    \begin{enumerate}
-
-        \item \textbf{Ontological Reality (Noumenal):} In relation to the
-        Noumena, History is the anchor of Existence. Its events possess the
-        absolute characteristic of Truth ($\top$).
-
-        \item \textbf{Epistemic Truth (Subjective):} In relation to the
-        Subject, History is the sole source of knowing. It provides 
-        access to the world of conceptions by the `Non-Truth' element of
-        its recorded events.
-
-    \end{enumerate}
+    Interstice. Where the Synthetic Interstice is place of connection to {\it Ontological
+    Reality\/} (the Noumena), History in the place of relative (subjective) 
+    {\it Epistemic Truth\/}---the sole source of {\it True Knowing}.
     
-    Thus, History is the domain of the \textit{Completed}, whereas the
-    Synthetic Interstice is the domain of \textit{Completing}.
+    While being relative (subjective) History still is fundamentally true.
+    The Synthetic Interstice holds Truth in the sense of dynamically {\it
+    Being\/} by means of events that possess Truth by existence. History holds
+    Truth in the sense of immutably {\it Has-Been\/} by means of facts, which
+    are pure handles, i.e.\ traces of events.
 
 \end{formalism}
 
+Since, in our definition, History is immutable, it cannot be `forged'. It is
+different for every Subject, but nevertheless inherently true. Its differences
+in History is `factually' the sole potential for a Subject to perceive {\it
+Identity}. In physical terms, difference in History may express as differences
+in locality, or shape of the Subject's host.
+
 \begin{formalism}[The Manifold]
-    The \textbf{Manifold} $\mathcal{M}$ is the metaphysical workspace where 
-    events are constituted. It operates on a cycle of evaluation and memorization. 
-    That is during, evaluation, no `writing' takes place. Only when logical operations
-    converged, a `writing' appears as a freezing of the Now $N_k$ into the 
-    immutable history $H_k$.
 
-    It is where \textit{Implications} ($\mathcal{I}$) are executed based on
-    {\it Equivalence\/} of Truth in events $e\in\mathbb{E}$ and properties of 
-    History $H_k$. Once converged, the set of events $N_k$ is written to history.
+    The \textbf{Manifold} $\mathcal{M}$ is the metaphysical workspace operating
+    in the Synthetic Interstice on Events $e\in\mathbb{E}$ and History
+    $H_{k-1}$. The Synthetic Interstice is the place of purest dynamic
+    evaluation in a gap in time. No `writing' can takes place in this
+    interstice. 
 
-    Formally, $\mathcal{M}$ is the engine that executes the cycles of the Synthetic 
-    Interstice $\sigma$.
+    Once a fixed point $N^0_k$ of events is reached, it is transformed into a
+    set of atomic facts $N_k = \mathit{F}(N^0_k)$ and written to immutable
+    History $H_k$. The end of one interstice marks the beginning of the next.
+
+    Formally, $\mathcal{M}$ is the metaphysical engine that executes the cycles
+    of the Synthetic Interstice $\sigma$.
+
 \end{formalism}
 
 The Manifold operates universally the same. It corresponds to the faculty of
 logical processing in a single universal substance~\cite{AverroesDeAnima}. 
 
+\section{Inequality and Complementation}
+
+We posit that Negation not as a singular atomic operation. Instead we
+distinguish between two constituting faculties: \textbf{Inequality} and
+\textbf{Complementation}. 
+
+\begin{formalism}[Inequality (The Negation of Identity)]
+    Inequality is the characteristic of \textbf{Distinction} between two positively 
+    existing entities. It relies on the existence of a discerning attribute $delta$
+    of both. 
+    
+    \begin{equation}
+        A \neq B \iff \delta(A) \neq \delta(B)
+    \end{equation}
+\end{formalism}
+
+\begin{formalism}[Complementation (The Negation of Exclusion)]
+    Complementation is the logical construction of a ``Not-Concept''. 
+    Complementation is established through inequality of a candidate
+    with any other element in a completed \textbf{Universe} $U$.
+    (Notably, we do not use the term subtraction in at this point in time).
+    
+    \begin{equation}
+        \neg e := U \setminus \{e\}
+    \end{equation}
+    
+    Complementation can only be established if and only if $U$ 
+    is a defined/bounded \textbf{Set}. 
+\end{formalism}
+
+We posit that the set of potentially arising events $\mathbb{E}$, stemming
+directly from the Noumena, corresponds to what Cantor termed the
+\textbf{Absolute Infinite} ($\Omega$)~\cite{Cantor1899}. Because the Noumena is
+the `most potent source of reality', strictly un-modeled and un-limited, it
+cannot be encapsulated into a single, bounded container without losing its
+essential nature of \textit{becoming}. The set of possible events $\mathbb{E}$
+is a {\it Proper Class\/} according Von Neumann–Bernays–Gödel (NBG) set
+theory~\cite{VonNeumann1925}.
+
+As $\mathbb{E}$ is not bounded, it cannot establish a Universe as required for
+the complement. There cannot be a {\tt NOT} operation on events in the
+Synthetic Interstice. However, since History is by definition the {\it fixation\/}
+of evolved `Nows' $N_k$, the History $H_k$ is bounded. It can act as a Universe
+for Completion and any attribute of History can be processed in terms of its
+{\it negation}.
+
+In summary, we established the concept of {\it Negation\/} by means of {\it Identity}.
+Further, we constraint, that the Synthetic Interstice may not operate on negated
+events, but on negated attributes of History.
+
 \section{Operations at the Synthetic Interstice}
 
 Implications are instantaneous. The event ``A steals from B'' is
 instantaneously connected to the event ``B is defrauded'', even if in physical
-location of A is light-years away from B and the entanglement does not require
+location of A is light-years away from B. Also, the entanglement does not require
 energy. As mentioned, we assume physics to be a construct of the world of
 conceptions. Thus, there is no logical need to discuss any physical
 modality of metaphysical concepts. We focus on necessity and consistency. 
 
-It was mentioned before, that the operations of the Synthetic Interstice
-necessarily exclude the {\tt NOT} operation---because during the Interstice no
-write operation may take place. Logical operations that do not include
-writing to memory are {\tt AND} and {\tt OR}. When relating to the immutable
-history, every write operation is already done and the {\tt NOT} operation
-together with {\tt AND} and {\tt OR} may very well be applied.
+We concluded before, that the operations of the Synthetic Interstice
+necessarily exclude the {\tt NOT} operation on events in contrast to attributes
+of History. With {\tt AND} as the manifestation of co-existence. Co-existence
+of events is crucial for the Synthetic Interstice, otherwise there would simply
+be no dynamic at all. {\tt OR} can be established by alternative implications,
+i.e.
 
-We are able to define the grammar of rules in the Synthetic Interstice using
-the \textbf{Backus-Naur Form (BNF)}~\cite{Backus1959}.
+\begin{equation}
+    (A \lor B) \implies C \quad \iff \quad \{ (A \implies C), (B \implies C) \} \subseteq \mathcal{I},
+\end{equation}
 
-\begin{formalism}[Syntax of Implication]
+thus, avoiding a definition with the negation of the antecedent (impossible
+$A\lor B \iff \not A \hat B$). To this point we constructed a mathematical
+frame for the Synthetic Interstice, based on concepts of Equality, Inequality,
+and `causing existence' of events, i.e.\ implication, and fixation (in History).
+We are now able to define the grammar of rules in the Synthetic Interstice
+using the \textbf{Backus-Naur Form (BNF)}~\cite{Backus1959}.
+
+\begin{formalism}[Syntax of the Synthetic Interstice]
 
 Let $\mathcal{I}$ over the powerset of events $\mathcal{P}(\mathbb{E})$.
 Let the production rule symbol be $::=$ and alternative options be $|$. The operators
@@ -432,12 +531,11 @@ metaphysical logic engine iterates rules until they resolve into a completed
 configuration (\textbf{The Least Fixed Point}) $N_k$. 
 
 The Synthetic Interstice in time is an \textbf{Ontological Necessity} to
-separate the writing to history from the development of a fixed point. It
+separate the writing to History from the development of a fixed point. It
 separates the dynamic aspect of being (the Now) from the aspect of potential
-knowing (history). Without the logical operations during the interstice, no
+knowing (History). Without the logical operations during the interstice, no
 association of events could be established and perceived existence would
 be impossible. 
-
 
 \section{The world of Understanding}
 
@@ -447,18 +545,19 @@ with a dual nature consisting of Truth, related to the Noumena, and
 Non-Truth related to the conceptional world. The Understanding of the Subject,
 now takes place in the world of conceptions.
 
-The Synthetic Interstice with its infinite dynamic cannot possibly perceived by
-an observer of limited ability to handle complexity. History, to the contrary
-is immutable. However, it contains potentially in infinite amount of sets and
-an infinite amount of events. The observer, the Subject, necessarily requires a
-complexity reduced representation of history, something we call a ``State''. A
-state is a projection of history on a canvas that the Subject is able to
-reflect upon. It provides the required properties for an object of reflection, 
+The Synthetic Interstice with its infinite, pure dynamic cannot possibly be
+perceived by an observer of limited ability to handle complexity. History, to
+the contrary is immutable. However, it contains potentially in infinite amount
+of sets and an infinite amount of events. The observer, the Subject,
+necessarily requires a complexity reduced representation of History.
+
+A state is a projection of History on a canvas that the Subject is able to
+reflect upon. It provides the required properties for an object of reflection,
 namely {\it Immutability\/} and {\it Limited Complexity}.
 
 \begin{formalism}[The State and The Schema of Understanding]
 
-    Let $\mathbb{A}$ denote the \textbf{Universe of Assertions} (The Language
+    Let $\mathbb{A}$ denote the \textbf{Space of Assertions} (The Language
     of Understanding). The \textbf{State} $S_k$ represents the Subject's
     \textit{Constituted Reality} at step $k$. It is a finite subset of
     assertions derived from the immutable History $H_k$ via the \textbf{Schema
@@ -470,55 +569,201 @@ namely {\it Immutability\/} and {\it Limited Complexity}.
 
     The Schema $\Psi$ functions as the \textbf{Hermeneutic Interpreter}. It
     distills the potentially infinitely complex and dynamic History into a
-    finite, conceivable view. This transformation marks the ontological shift
-    from the \textit{Phenomenal Presence} of Events (in the Manifold) to the
-    \textit{Subjective Truths} of the Understanding.
+    finite, conceivable view. 
 
 \end{formalism}
 
-Events establish truth by their sheer existence. For assertions, not having
-the anchor of the `Truth' characteristic anymore, Truth can be established
-as shown below:
+The transformation $\Psi$ marks a third step from {\it Ontological Truth\/} in
+the Synthetic Interstice, through the subjective {\it Epistemic Truth\/} of
+History into the space of {\it Subjective Truth\/} of the Subject. Atomic facts
+act as a {\it Terminal Symbol\/}---elements of a base language of Truth,
+from which further assertions may be derived.
 
-\begin{formalism}[Assertoric Truth]
+The distinction between atomic facts and derived assertions, is not merely
+architectural but answers to a logical necessity described by Alfred
+Tarski~\cite{Tarski1933}. Tarski proved that for any consistent formal system,
+the definition of truth for its sentences cannot be formulated within the
+language of the system itself. 
 
-    Let an Assertion $\alpha \in \mathbb{A}$ be evaluated against the History
-    $H_k$ and the current State $S_k$. The \textbf{Validity} ($\mathcal{V}$) of
-    an assertion is determining by its \textit{Modality}:
+If the \textbf{Space of Assertions} $\mathbb{A}$ were to contain its own
+criteria for verification, the Subject would be trapped in a closed loop of
+circular reasoning. An assertion could be proven solely by other assertions,
+creating a coherent but potentially hallucinated reality---detached from the
+History. According to Tarski, the ``Proof'' (or the Truth-Condition) of a
+sentence in Language $L$ must reside in a \textit{Meta-Language} $M$ that
+is distinct from $L$.
 
-    \textbf{I.\@ Assertions of Existence (The Ontic)} An assertion
-    $\alpha_{exist}$ posits the occurrence of a specific event. It is
-    \textbf{Verifiable}.
+History serves as this Meta-System. The \textbf{Atomic Fact} becomes the prime
+assertion, the ``Outside'' to any formal language. It still holds absolute
+truth---not that an assertion is proof of itself, but as a proof for an event
+that has been. 
 
+\section{Time}
+
+The distinction between an \textbf{Event}---carrying in its presence the
+\textit{Truth of Being}---and an \textbf{Atomic Fact}---carrying the
+\textit{Truth of the Has-Been} (Facticity)---provides the basis for the
+perception of Time. In this section, we derive the experience of
+\textbf{Sequentiality} strictly from the interplay of three \textbf{Primordial
+Faculties}: \textbf{Equivalence}, \textbf{Differentiation} and
+\textbf{Writing}. 
+
+If one assumes that the cognitive Subject is able to perceive Events directly 
+(in the Synthetic Interstice) while simultaneously accessing History, the 
+experience of Time emerges as follows:
+
+\begin{enumerate}
+    \item \textbf{Writing (The Genesis of Past):} The transition from the 
+    Synthetic Interstice to History is the operation of \textit{Writing}. It transforms the 
+    ontological status of an object from \textit{Being} ($\top$) to 
+    \textit{Has-Been} (Facticity). This establishes the two distinct domains 
+    of experience: the Lived Event (Dynamic) and the Known Atomic Fact (Static).
+
+    \item \textbf{Equivalence (The Comparison of Content):} To relate an Event 
+    $A$ to a Fact $B$, the Subject must utilize the concept of 
+    \textbf{Equivalence}. It perceives the \textit{Non-Truth} (the distinct 
+    identity $\delta$) of both entities. It recognizes that $A$ and $B$ carry
+    the same $\delta$ despite their differing modes of existence.
+
+    \item \textbf{Differentiation (The Comparison of Mode):} The Subject 
+    applies the concept of \textbf{Differentiation} not to the content, but to 
+    the \textit{Truth-Characteristic}. It discerns the \textbf{Truth of Being} 
+    (Presence) versus the \textbf{Truth of the Has-Been} (Facticity).
+\end{enumerate}
+
+\begin{formalism}[The Constitution of Sequence]
+    The relation ``$A$ is after $B$'' is not a temporal measurement, but a 
+    logical deduction derived from the perception of Equivalence, Differentiation, 
+    and Writing:
+    
     \begin{equation}
-        \mathcal{V}(\alpha_{exist}) \iff \exists e \in H_k : \text{Corr}(\alpha, e)
+        (A \text{ after } B) \iff (\text{Mode}(A) = \top) \land (\text{Mode}(B) = \text{\itshape Has-Been})
     \end{equation}
+    
+    Sequentiality is the awareness that while $A$ and $B$ are distinguishable 
+    by content (Equivalence of $\delta$), they are ontologically separated by 
+    the act of Writing to History. $A$ is in the state of \textit{Being}, while 
+    $B$ is \textit{Has-Been}.
 
-    \textit{Status:} Once verified in History, it is anchored in Truth. 
-
-    \textbf{II.\@ Assertions of Causality (The Law)} An assertion
-    $\alpha_{causal}$ posits a rule $A \implies B$. It is strictly
-    \textbf{Falsifiable}, never Verifiable.
-
-    \begin{equation}
-        \mathcal{V}(\alpha_{causal}) \iff \nexists \langle e_a, e_b \rangle \in H_k : (e_a \equiv A) \land (e_b \equiv \neg B)
-    \end{equation}
-
-    \textit{Status:} Only considerable as `true' as long as no counter
-       examples occur in History. 
-
-    \textbf{III.\@ Assertions of Consistency (The Logic)}
-    An assertion $\alpha_{consist}$ posits a structural relationship between
-    other assertions. It is \textbf{Coherent}.
-
-    \begin{equation}
-        \mathcal{V}(\alpha_{consist}) \iff S_k \cup \{\alpha\} \nvdash \bot
-    \end{equation}
-
-    \textit{Status:} Independent of History, it maintains Truth based on 
-    logical combinations of the truths of other assertions.
+	Consequently, the assertion ``$A$ after $B$'' transcends the border of the
+    solitary set $N_k$. While the \textit{Act of Writing to History} fixates the
+    sheer existence of events within the instantaneous Synthetic Interstice, the
+    \textit{Assertion of Sequence} is a relational process that spans the gap
+    between the dynamic $N_k$ and the static $H_k$. This form of writing is
+    fundamentally different: it is not the instantaneous recording of a point, but
+    a bridging operation that spans over multiple steps of History. Writing, on the
+    level of Assertions, becomes a \textit{time-constituting} operation.
 
 \end{formalism}
+
+\begin{formalism}[Sequential Fact]
+
+	A \textbf{Sequential Fact} $s\in\mathbb{A}$ is an immutable assertion of
+    order between two distinct Atomic Facts (or an Event and a Fact). It is defined
+    as:
+    
+    \begin{equation}
+        s := (A \succ B) \in \mathbb{A}^\top
+    \end{equation}
+
+    While the Atomic Fact is the result of \textbf{Point-Writing} (fixating a 
+    singularity of existence), the Sequential Fact is the result of 
+    \textbf{Span-Writing}---bridging the gap between $N_k$ and $H_k$, respectively
+    two snapshots of History $H_k$ and $H_i$.
+
+    A Sequential Fact is \textbf{Indubitably True}. If the Subject 
+    perceives $A$ as \textit{Being} and $B$ as \textit{Has-Been}, the 
+    relation $A \succ B$ is a structural necessity of the Manifold, not a 
+    hypothesis of Understanding.
+        
+\end{formalism}
+
+The Sequential Facts establish the perceptibility of time in terms of History
+as a directed sequence. 
+
+\section{Understanding}
+
+The previous section explained how Sequentiality emerges from the faculty of
+perceiving Equivalence and Differentiation of events and facts. It introduced
+the faculty to express the first category of Non-Atomic assertion ``$A$ is
+after $B$''. In this section, we derive {\it Assertions of Causality\/} to
+establish a cognitive Subject's {\it Understanding}. Let the space of
+assertions first be separated into three sub-spaces:
+
+\begin{itemize}
+    \item $\mathbb{A}^\top$ the space of indubitable Truth, i.e.\ the space 
+       atomic facts $f$ and sequential facts $s$. It does not grow by means 
+       of the process of understanding. The very origin of facts $f$ and $s$ 
+       lie in the Noumena, through the Synthetic Interstice, through History.
+
+    \item $\mathbb{A}^\diamond$ the space of potential Truth. It may grow
+       and shrink during the process of understanding. 
+
+    \item $\mathbb{A}_\bot$ the space of proven Non-Truth. It only grows,
+       but never shrinks during the process of understanding.
+\end{itemize}
+
+With the faculty of perceiving Sequentiality, the cognitive Subject is enabled
+to establish the {\it Belief\/} in Causality as basis for understanding.
+
+\begin{formalism}[Causal Assertions]
+
+    \begin{description}
+        \item[Causality ($A \implies B$)] 
+
+		Posits that assertions $A$ and $B$ are tied stably in sequence. It 
+        further asserts a `Truth' that links both, namely a `reason'.
+        
+        \item[Mono-Causality ($A \iff B$)] 
+
+		Posits that the causality $A \implies B$ is the \textit{unique}
+        generative path for $B$. That is, if $B$ is true, then $A$ must necessarily be
+        true as well.
+        
+        \item[Co-Causality ($A_0 \implies B \land A_1 \implies B$)] 
+
+          Posits that $A_0$ and $A_1$ are distinct but \textit{equivalent} sufficient 
+          conditions for $B$. 
+        
+        \item[Mutually Exclusive]
+
+        \textit{Function:} \textbf{Ambiguous.} The truth of $B$ proves the disjunction $(A_0 \lor A_1)$, but is \textit{insufficient} to determine the specific cause.
+
+        \item[Exclusion ($A \implies \neg B$)] 
+        Posits that assertions $A$ and $B$ are mutually exclusive. They cannot coexist in the same valid State.
+        
+        \textit{Function:} \textbf{Regulatory.} This is the generator of \textbf{Logical Incoherence}. It allows the Subject to detect that its internal model ($\Psi$) contradicts the observed History ($H_k$).
+
+    \end{description}
+\end{formalism}
+
+Causal assertions can potentially be falsified. However, they cannot be
+verified---this would require to observe the complete History from the origin
+to its end. Causal assertions are a fundamental necessity for a Will to
+operate. The Will needs to know the necessary $B$ to achieve $A$.
+
+Let the term `understanding' represent an activity towards producing assertions
+of Truth, in contrast to the term `confabulation' as producing assertions
+unrelated to Truth. The space of assertions of a cognitive Subject divides into
+three subspaces namely:
+
+--- REVIEW --- many problems here
+
+
+Note, that for the definition of causal assertions, we relied upon a category
+of assertions, that has not been defined, namely {\it assertions of veracity. 
+
+\begin{formalism}[Veracity Assertions] 
+
+    An assertion about the veradicity of assertions based on their logical
+        coherence in terms of causality and mono-causality.
+
+    \textit{Verdict:} Inherently true based on the frame of logical 
+            conclusions.
+
+\end{formalism}
+
+Reason as the anchor in Truth.
 
 It maps the accumulated History $H_k$ to the current State---the Subjective
 Reality. This State acts as an immutable \textbf{Projection} on a canvas, taken
@@ -745,7 +990,7 @@ association. Objective Causality requires the existence of \textit{Primal
 Implications}---rules of consequence that are external to the subject's wantings.
 Without this external origin, logical consequence would be indistinguishable
 from hallucination; the Subject would effectively `dream' causal relationships
-onto the history. Therefore, to posit Causality is to posit that the logical
+onto the History. Therefore, to posit Causality is to posit that the logical
 structure of the Manifold ($\mathcal{I}$) reflects a necessity imposed by the
 Noumena.
 
@@ -787,7 +1032,7 @@ integers.
 
 We successfully deduced enumeration from \textit{Equivalence} and
 \textit{Separability} under the influence of perception of traces of events in
-history. Further, we can state that \textit{Numeric Properties} possess a
+History. Further, we can state that \textit{Numeric Properties} possess a
 \textit{Stability} that is inextricably bound to the \textit{existence} of the
 considered object. Any other property (shape, color, name, etc.) may suffer
 alteration, but the property of Number remains invariant until the cessation of
@@ -881,7 +1126,7 @@ This leads to the final ontological constraint: \textbf{No Event, No perceived T
 the Manifold is does not generate new Nows, or if the specific reference clock events
 $A$ and $B$ are absent, then the concept of duration collapses. The Subject
 does not exist \textit{in} time; time exists \textit{in} the Subject's perception
-of regularity in the flow of history.
+of regularity in the flow of History.
 
 With Enumeration we encounter a {\it stable structure}---as stable as time
 itself---which is not physical, it is strictly mathematical, and in its origin
@@ -1838,6 +2083,14 @@ of Consistency}. It allows a finite machine to weave a stable, actionable
 timeline out of the chaotic flux of perceptions, turning the ``frictions'' of
 understanding not into system crashes, but into knowledge.
 
+%% TODO: modes of existence:
+%%        -- absolute (Noumena)
+%%        -- true identity (Synthetic Interstice) (truth of 'being') --> event
+%%        -- truely happend (truth of 'has been') --> atomic fact
+%%        -- truely followed (truth of 'sequence') --> sequential fact
+%%        -- unfalsified assertion (truth of 'causality) --> assertion
+%%        -- petition (=> but why?) => pain and pleasure only signals to trigger actions?
+
 \begin{thebibliography}{9}
 
 \bibitem{Floridi2011}
@@ -1934,31 +2187,40 @@ Backus, J. W. (1959).
 ``The syntax and semantics of the proposed international algebraic language of the Zurich ACM-GAMM Conference''. 
 \textit{Proceedings of the International Conference on Information Processing}, UNESCO, 125--132.
 
-@article{Cantor1895,
-  author  = {Cantor, Georg},
-  title   = {{Beitr{\"a}ge zur Begr{\"u}ndung der transfiniten Mengenlehre}},
-  journal = {Mathematische Annalen},
-  volume  = {46},
-  number  = {4},
-  pages   = {481--512},
-  year    = {1895},
-  publisher = {Springer}
-}
+\bibitem{Cantor1899}
+Cantor, G. (1899). 
+\textit{Letter to Dedekind}, July 28, 1899. 
+In E. Zermelo (Ed.), \textit{Gesammelte Abhandlungen mathematischen und philosophischen Inhalts}, 1932. Springer.
 
-@book{LeibnizDiscourse,
-  author    = {Leibniz, Gottfried Wilhelm},
-  editor    = {Loemker, Leroy E.},
-  title     = {{Philosophical Papers and Letters}},
-  publisher = {D. Reidel Publishing Company},
-  year      = {1969},
-  note      = {Section 9, Discourse on Metaphysics (1686)}
-}
+\bibitem{VonNeumann1925}
+Von Neumann, J. (1925). 
+``Eine Axiomatisierung der Mengenlehre''. 
+\textit{Journal f{\"u}r die reine und angewandte Mathematik}, 154, 219--240.
+
 \end{thebibliography}
 
-\end{document}
-------
-Kant describes the ``Transcendental Unity of Apperception'' as the ``I think''
-that generates unity. In our engine, the \textbf{Step Function $\Phi$} embodies
-this act of unification. The result of this act—the \textbf{Least Fixed
-Point}—is the \textbf{Synthesized Object}.
+%% The system possesses no faculty to intuit this Absolute directly; it has 
+%% the faculty of Receptivity by means of which it perceives {\it Phenomena\/}
+%% and the faculty of Spontaneity by which it causes {\it Determination}.
+%% 
+%% In the terminology to follow, the Phenomena is called an {\it Event\/}
+%% $e\in\mathbb{E}$, where $\mathbb{E}$ is the Universe of Discourse.
+%% Determination is called {\it Petition\/} $\pi \in \mathbb{E}$ which is assumed to
+%% have the same nature as the event. Both event $e$ and petition $\pi$,
+%% therefore, exist in the domain of conceptions---they are in that sense
+%% `meta-physical'. This text rigorously avoids the discussion of physical
+%% modality. By following a rigorous meta-physical logic we embrace the possibility
+%% that reality might be meta-physical. Nonetheless, we assume that mathematics
+%% provides a stable frame of understanding.
+%% 
+%% We posit a Subject that exercises determination, or
+%% \textit{Proairesis}~\cite{AristotleEthics},  i.e.\ deliberate choice ($\Pi$):
+%% it strives towards ends and avoids limits, but its ontological reach is limited
+%% to the \textit{Request}, never the \textit{Result}. It interacts with the
+%% Noumena, by events, i.e.\ petitions $\pi$. But the Determination of the
+%% cognitive subject has no power over the absolute Noumena. Its direct impact
+%% ends where the world of conceptions ends. It does not touch the Noumena, where
+%% the reality behind every conception resides.
 
+
+\end{document}
