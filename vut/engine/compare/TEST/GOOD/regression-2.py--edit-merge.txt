@@ -1,0 +1,21 @@
+
+================================================================================
+SCENARIO: Line Sequence Edit Merging
+--------------------------------------------------------------------------------
+OBJECTIVE: Verify that Separator/Content mismatches merge into SUBSTITUTE.
+BUG:       Adaptor missing _pair_db entries for (GOOD_DELETE, INSERT) etc.
+CASE: Separator vs Content
+  Subject: ['']
+  Nominal: ['ContentA']
+  Ops:     ['SUBSTITUTE']
+  -> OK (Merged)
+----------------------------------------
+CASE: Content vs Separator
+  Subject: ['ContentA']
+  Nominal: ['']
+  Ops:     ['SUBSTITUTE']
+  -> OK (Merged)
+VERDICT: PASS
+  All combinations merged correctly.
+================================================================================
+

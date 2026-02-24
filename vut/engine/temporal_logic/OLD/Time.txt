@@ -1,0 +1,24 @@
+### 8.3 Time Evolvement in the Rule Space
+
+In this engine, the Rule Space is a dynamic system. Time does not merely "pass" as a sequence of timestamps; the system state evolves through a series of infinitesimal transformations.
+
+#### 1. The Differential of State (dx)
+Just as the evolution of a physical system is defined by its derivative, the evolvement of the Rule Space is defined by the Causal Chain. Each Jiffy (ε) represents the "dx" of the logic—the smallest possible step of change.
+* **State Evolution:** The state of the Rule Space at (t + ε) is a direct function of the state at (t) transformed by the events of the current Jiffy.
+* **Integrity:** This ensures that every reaction has a clear, ordered "before" and "after," even when occurring within a single physical timestamp.
+
+#### 2. The Persistence/Transience Duality
+The Rule Space manages two distinct categories of data during evolvement:
+* **Persistent State:** The Shadow Model (Lua) and the set of Active Guard Instances. These persist across physical time steps (T) and represent the "accumulated memory" of the test.
+* **Transient State:** The Current Event (E) and the Jiffy Index. These exist only to drive the transition from one stable state to the next. Once a Fixpoint is reached, the transient state is discarded.
+
+#### 3. The "Frozen Time" Relaxation
+During a Causal Chain, the Simulated Physical Time is "frozen." This is a critical invariant. It allows the Rule Space to perform multi-step reasoning (e.g., A triggers B, which triggers C) without the SUT's clock advancing. 
+* This provides a "Logical Sandbox" where the Reference Oracle (Lua) and the Watchdog (Guards) can reach a state of total synchronization before the next physical event is processed.
+
+#### 4. The Evolvement Cycle (Fixpoint Iteration)
+The engine moves the Rule Space through the following cycle for every external perturbation:
+1. **Perturbation:** A physical or logical event E arrives at time (t).
+2. **Relaxation (t + nε):** The engine processes a sequence of Jiffies. In each step, handlers (@new, @delete) execute, Lua state evolves, and meta-events are synthesized.
+3. **Stability (Fixpoint):** The cycle repeats until no further changes are detected (the "Stable State").
+4. **Advance:** Only after stability is reached is the engine permitted to evolve to the next Simulated Physical Timestamp (T+1).

@@ -1,0 +1,28 @@
+## 5. The Rule Evaluation Cycle (The Jiffy)
+*The authoritative execution loop.*
+
+The "Jiffy" is the atomic execution unit of the Rule Space. Every external event initiates a cycle that must reach a stable fixed point before the engine can accept the next physical time step.
+
+### 5.1 Step 1: Ingest
+* **Receive Event:** The engine consumes an Event `E` from the stream or the internal action queue.
+* **Timestamping:** The engine assigns a **Monotonic ID** and captures the physical time step.
+* **History Update:** `E` is appended to the immutable `OCCURRENCE_DB`. At this moment, `ever(E)` becomes TRUE, but `before(E)` remains FALSE.
+
+### 5.2 Step 2: Scope Management
+The engine updates the lifecycle of all active and potential Scope Instances.
+* **Reap (Deactivation):** The engine evaluates the `until` conditions of all currently active Scope Instances. If an `until` condition is met, the instance is marked as "Completed." Its `@on_exit` handler is queued for the Action phase.
+* **Spawn (Activation):** The engine evaluates the `on` conditions of all Scope Templates against `E`. For every match with a unique binding, a new **Scope Instance** is created. Its `@on_entry` handler is queued.
+* **Priority Rule:** If a scope is triggered to Reap and Spawn in the same Jiffy for the same anchor, the deactivation of the old instance is finalized before the new instance is birthed.
+
+### 5.3 Step 3: Evaluation
+The engine performs a parallel evaluation of the logic for the current state of the world.
+* **Instance Iteration:** The engine iterates through the set of all **Active** Scope Instances (excluding those reaped in Step 2).
+* **Local Logic:** Every rule defined within the scope is evaluated against the current Event `E`, the captured Scope Context (bindings), and the global History.
+* **Global Rules:** Rules defined outside of any scope (Global Rule Space) are evaluated.
+
+### 5.4 Step 4: Action
+This is the phase where the Engine impacts the state of the test or the SUT.
+* **Violation Recording:** Any rule evaluating to FALSE triggers a Violation. This includes "Completeness Violations" if a scope was forced to close by an `END` event without meeting its nominal `until` condition.
+* **Handler Execution:** The queued `@on_entry` and `@on_exit` handlers are executed.
+* **Causal Extension (Derived Events):** If an action emits a derived/internal event, the engine **loops back to Step 1**. This new internal event is processed in a new Jiffy. 
+* **Quiescence:** The cycle ends only when no further internal events are generated, ensuring the Rule Space reaches a logical fixed point.

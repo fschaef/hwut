@@ -1,0 +1,41 @@
+# 3. Temporal Logic Semantics
+
+This section defines the precise logic used to reason over the event stream. These semantics resolve the "Semantic Trap" (ambiguous coincidence) and the "Past Naming" (variable binding) issues.
+
+### 3.1 Simultaneity and the Jiffy Boundary
+The engine uses a strict interpretation of coincidence to avoid ambiguity in complex rule sets.
+
+* **Operator: `A and B`**
+    * **Definition:** Evaluates to TRUE if and only if both `A` and `B` occur within the same **Jiffy**.
+    * **Semantic Resolution:** This solves the "Semantic Trap" where users might assume `A and B` refers to their existence anywhere in history. In this engine, `A and B` is a check for **Simultaneity**. To check for independent historical occurrences, one must use `ever(A) and ever(B)`.
+
+### 3.2 Existential History Operators
+These operators allow the Rule Space to look backward through the immutable history buffer.
+
+* **Operator: `ever(A)`**
+    * **Definition:** Returns TRUE if predicate `A` has occurred at least once in the interval `[T_0, T_NOW]`. It is inclusive of the current Jiffy.
+* **Operator: `before(A)`**
+    * **Definition:** Returns TRUE if predicate `A` has occurred at least once in the interval `[T_0, T_NOW - 1]`. 
+    * **Purpose:** This allows a rule to distinguish between a state that was just reached and a state that was already established prior to the current event.
+
+### 3.3 Interval and Aggregate Logic
+Standard Linear Temporal Logic (LTL) constructs adapted for discrete event streams.
+
+* **Operator: `since(A, B)`**
+    * **Definition:** TRUE if there exists some Jiffy in the past where `B` was TRUE, and for every Jiffy from that point until NOW, `A` has remained TRUE.
+* **Operator: `count(A)`**
+    * **Definition:** Returns the integer sum of all Jiffies in the history where predicate `A` evaluated to TRUE.
+    * **Utility:** Essential for threshold-based rules (e.g., "Violate if `ErrorCount > 5`").
+
+### 3.4 Binding Restrictions and Computational Safety
+The engine distinguishes between **Matching** (evaluating a known value) and **Binding** (capturing an unknown value).
+
+* **Binding Operator (`=>`):**
+    * **Global Restriction:** Variable bindings (e.g., `Event(.id => X)`) are strictly forbidden inside pure history queries (`ever`, `never`, `since`) within the global rule space.
+    * **Reasoning:** Allowing bindings in history queries forces the engine to perform an $O(N^2)$ cross-product search of all past events against all possible variable permutations, leading to computational collapse on long traces.
+    * **The Scope Solution:** Bindings are permitted in **Scope Triggers** (see Section 4). By anchoring a binding to a specific start event (`on REQUEST(.id => ID)`), the engine creates a discrete index, allowing $O(1)$ lookups for subsequent matching.
+    * **Heavy Query Escape:** If a global historical search is computationally necessary, it must be explicitly flagged by the user, acknowledging the performance penalty.
+
+### 3.5 The "Off-by-One" Guard
+Because Scope Handlers (`@on_entry`, `@on_exit`) can trigger internal events, the engine enforces a **Causal Buffer**: 
+An event triggered by an action in Jiffy $T$ is not visible to `before()` until Jiffy $T+1$. This ensures that temporal queries always have a stable, non-shifting ground for evaluation.

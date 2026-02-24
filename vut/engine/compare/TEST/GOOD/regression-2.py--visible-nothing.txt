@@ -1,0 +1,13 @@
+
+================================================================================
+SCENARIO: Visible Nothing Alignment
+OBJECTIVE: Verify 'list_EditGOOD' correctly skips Subject Visible Nothing.
+STIMULI:   Subject='_ A' (where _ is nothing), Nominal='A'.
+BUG:       Engine uses GOOD_INSERT (Skip Nominal) instead of GOOD_DELETE (Skip Subject).
+           Result is misalignment: '_ A' vs 'A' becomes 3 ops instead of 2.
+--------------------------------------------------------------------------------
+Subject: [VISIBLE_NOTHING '_', STRING 'A']
+Nominal: (STRING 'A',)
+RESPONSE: ['GOOD_DELETE', 'GOOD']
+VERDICT: PASS
+  Sequence aligned correctly.

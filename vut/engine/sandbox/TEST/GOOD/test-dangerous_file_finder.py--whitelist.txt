@@ -1,0 +1,4 @@
+MOCK: High-risk binary '/usr/bin/sudo'
+ACTION: Adding 'sudo' to whitelist.
+RESULT: Forbidden list is empty.
+SUCCESS: Whitelist correctly bypassed risk detection.

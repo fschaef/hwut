@@ -1,0 +1,15 @@
+
+[SCENARIO] Mode: EQUIVALENCE
+--------------------------------------------------------------------------------
+  Action: Running Heavy Session (266 analogies)...
+  Action: Running Light Session (1 analogy: '((LIGHT_0))')...
+
+  STATE INSPECTION:
+    - Same Registry Instance: False
+    - Heavy symbols count:   532
+    - Light symbols count:   2
+    - Leakage detected:      False
+    - Light Symbol ID:       0 (Limit: 256)
+
+VERDICT: PASS
+DETAILS: Sessions are isolated. Symbol IDs reset to 0.
