@@ -25,7 +25,7 @@ import tempfile
 import shutil
 import re
 from   pathlib import Path
-from   unittest.mock import patch, AsyncMock
+from   unittest.mock import patch, AsyncMock, Mock
 
 sys.path.insert(0, "../" * 4)
 
@@ -113,22 +113,25 @@ async def test_file_watch():
     print_banner("Testing File Watching and Backup")
     
     test_dir = tempfile.mkdtemp(prefix="hwut_sandbox_")
+    print(f"## TEMPDIR: (({test_dir}))")
     try:
-        work_path = Path(test_dir)
+        work_path   = Path(test_dir)
         target_file = work_path / "result.txt"
         target_file.write_text("backup_this_data")
         
         print(f"INITIAL STATE: {target_file.name} created in temp dir.")
         
-        config = system_call.SandboxConfig()
-        sandbox = system_call.Sandbox(config, work_dir=test_dir)
+        config    = system_call.SandboxConfig()
+        sandbox   = system_call.Sandbox(config, work_dir=test_dir)
         mock_proc = AsyncMock()
-        mock_proc.wait.return_value = 0
+        mock_proc.wait.return_value          = 0
         mock_proc.stdout.at_eof.return_value = True
         mock_proc.stderr.at_eof.return_value = True
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            await sandbox.run("noop", AsyncMock(), AsyncMock(), ["result.txt"])
+            await sandbox.run("noop", AsyncMock(), AsyncMock(), 
+                              ["result.txt"], 
+                              backup_watched_files_f=True)
 
         print("FILESYSTEM PROOF:")
         found_backup = False
@@ -143,22 +146,23 @@ async def test_file_watch():
     finally:
         shutil.rmtree(test_dir)
         # Note: The path is masked in the HAPPY pattern to avoid diff issues
-        print(f"CLEANUP: Removed temporary directory: {test_dir}")
+        print(f"## CLEANUP: (({test_dir}))")
 
 async def test_stop_event():
     """Verify stop_event termination."""
     print_banner("Testing Stop Event Termination")
-    config = system_call.SandboxConfig()
-    sandbox = system_call.Sandbox(config, work_dir="/tmp")
-    stop_event = asyncio.Event()
-    mock_proc = AsyncMock()
+    config               = system_call.SandboxConfig()
+    sandbox              = system_call.Sandbox(config, work_dir="/tmp")
+    stop_event           = asyncio.Event()
+    mock_proc            = AsyncMock()
     mock_proc.returncode = None
     async def slow_wait():
         await asyncio.sleep(0.2)
         return -1
     mock_proc.wait = slow_wait
-    mock_proc.stdout.at_eof.return_value = True
-    mock_proc.stderr.at_eof.return_value = True
+    mock_proc.terminate     = Mock()
+    mock_proc.stdout.at_eof = lambda: True # NOT a coroutine 
+    mock_proc.stderr.at_eof = lambda: True # NOT ...
 
     with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
         async def trigger():
@@ -186,6 +190,8 @@ if __name__ == "__main__":
         argv       = sys.argv,
         title      = "Sandboxed System Call",
         choice_map = choice_map,
-        happy      = [r"  FILE: result\.txt-\d{4}y\d{2}m\d{2}d-\d{2}h\d{2}m\d{2}s\.BACKUP"]
+        happy      = [
+            r"result\.txt-\d{4}y\d{2}m\d{2}d-\d{2}h\d{2}m\d{2}s\.BACKUP"
+        ]
     )
     runner.run()

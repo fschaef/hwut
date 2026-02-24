@@ -7,6 +7,7 @@ import datetime
 from   dataclasses import dataclass, field
 from   typing      import List, Optional, Callable, Awaitable
 from   pathlib     import Path
+from   typeguard   import typechecked
 
 @dataclass
 class SandboxConfig:
@@ -64,6 +65,7 @@ class Sandbox:
                 backup_path = p.with_name(f"{p.name}-{timestamp}.BACKUP")
                 p.rename(backup_path)
 
+    @typechecked
     async def _handle_stream(self, stream: asyncio.StreamReader, handler: Callable[[bytes], Awaitable[None]]):
         """Asynchronously reads from a stream and passes data to the handler."""
         try:
@@ -74,6 +76,7 @@ class Sandbox:
         except Exception:
             pass
 
+    @typechecked
     async def _handle_stdin(self, writer: asyncio.StreamWriter, reader: Optional[asyncio.StreamReader]):
         """Feeds data from a reader to the process's stdin."""
         if not reader:
@@ -92,19 +95,22 @@ class Sandbox:
         except Exception:
             pass
 
+    @typechecked
     async def run(self,
-                  command_line: str,
+                  command_line:   str,
                   stdout_handler: Callable[[bytes], Awaitable[None]],
                   stderr_handler: Callable[[bytes], Awaitable[None]],
-                  watch_files: List[str],
-                  stdin_reader: Optional[asyncio.StreamReader] = None,
-                  file_handler: Optional[Callable[[str, bytes], Awaitable[None]]] = None,
-                  stop_event: Optional[asyncio.Event] = None) -> int:
+                  watch_files:    List[str],
+                  stdin_reader:   Optional[asyncio.StreamReader] = None,
+                  file_handler:   Optional[Callable[[str, bytes], Awaitable[None]]] = None,
+                  stop_event:     Optional[asyncio.Event] = None,
+                  backup_watched_files_f: bool = False) -> int:
         
-        # 1. Pre-execution: Backup existing files
-        self._backup_files(watch_files)
+        # Pre-execution: Backup existing files
+        if backup_watched_files_f:
+            self._backup_files(watch_files)
 
-        # 2. Start Process
+        # Start Process
         process = await asyncio.create_subprocess_exec(
             *self._build_nsjail_args(shlex.split(command_line)),
             stdin=asyncio.subprocess.PIPE,
@@ -112,7 +118,7 @@ class Sandbox:
             stderr=asyncio.subprocess.PIPE
         )
 
-        # 3. IO and Termination Monitoring
+        # IO and Termination Monitoring
         tasks = [
             asyncio.create_task(self._handle_stream(process.stdout, stdout_handler)),
             asyncio.create_task(self._handle_stream(process.stderr, stderr_handler)),
@@ -120,14 +126,14 @@ class Sandbox:
         ]
 
         async def monitor_stop():
-            if stop_event:
-                await stop_event.wait()
-                if process.returncode is None:
-                    process.terminate()
+            if not stop_event: return
+            await stop_event.wait()
+            if process.returncode is not None: return
+            process.terminate()
 
         stop_task = asyncio.create_task(monitor_stop())
         
-        # 4. Await Completion
+        # Await Completion
         exit_code = await process.wait()
         
         # Cleanup tasks
