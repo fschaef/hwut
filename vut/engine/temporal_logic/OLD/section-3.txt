@@ -1,0 +1,16 @@
+3. The Reactor
+
+The concrete and the abstract are driven by *Reactors*. A Reactor is the 
+fundamental unit of change in its world. It holds an internal state called 
+*Modality*.
+
+Reactors transduce the immutable events of history into "The Now" with initial
+events. They process this record against their Modality. This interaction
+causes new events to exist in the subsequent Jiffy.
+
+Without the Reactor, "The Now" remains empty. The Reactor transforms static 
+History into dynamic Existence. The question of reactors being deterministic
+or not is irrelevant to the structure of time and "The Now".
+
+In the domain of the Reactor (the Concrete), time advances physically 
+($dt > 0$).

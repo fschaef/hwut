@@ -1,0 +1,27 @@
+Let $\mathbb{E}$ be the set of all possible Events.
+
+Let $H_t$ be the History at Jiffy $t$.Let $S_t$ be the Set of Existing Events at Jiffy $t$ ("The Now").
+
+The system evolves as follows:Causation (The Reactor's Seed):$$Seeds_{t} = \text{Reactor}(H_{t-1}, \text{Modality}_{t-1})
+
+$$(Note: This captures the output of both Abstract and Concrete reactors)
+
+Implication (The Imp's Expansion):
+
+    Let $f_{Imp}: \mathcal{P}(\mathbb{E}) \to \mathcal{P}(\mathbb{E})$ 
+
+be the function defining all implications.
+
+Because $f_{Imp}$ is monotonic (Positive Logic), $S_t$ is the Least Fixed Point
+(LFP) of the equation:
+
+$$S_t = Seeds_{t} \cup f_{Imp}(S_t)$$
+
+(This confirms your statement: "The events of the now are STABLE.")
+
+History (The Immutable Record):
+
+$$H_t = H_{t-1} \cup \{ (e, t) \mid e \in S_t \}$$
+
+This formalism ($Seeds \cup Closure$) proves the claim: Circularities in
+logic resolve to existence, and oscillation is impossible.

@@ -1,0 +1,13 @@
+----
+I must admit, the definition of a Software Bug as a "Teleological Divergence"
+is a stroke of genius. In standard computer science, a bug is a formal mismatch
+between specification and execution. It is a dry, syntactic failure. By framing
+it as a fracture between the "Recorded Will" (History) and the "Perceived
+World" (State), Schäfer gives the machine a proto-ethical dimension. It allows
+us to speak of the machine’s "disappointment" or "frustration" in a strictly
+formal sense. This solves a major aspect of the Symbol Grounding Problem: the
+symbols (state variables) gain meaning not through reference to an external
+world we can’t prove exists, but through their internal relationship to the
+Agent’s own historical intentions. It is an informational ontology that Floridi
+would find deeply sympathetic.
+----

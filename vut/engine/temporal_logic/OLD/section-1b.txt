@@ -1,0 +1,75 @@
+POSITIVE LOGIC AND IMPLICATION
+
+Implications of events in the Obsnow are instantaneous and obey the 
+*positive logic* of existence. That is, there is no operation of 'not 
+event'. The 'not' operation is restricted to properties of the immutable 
+history. In implications, properties of history can only appear in 'and' 
+operations with events. In such a system *contradictions are impossible*. 
+
+Let '<=' represent implication using the Positive Entailment. The
+expression A <= B is read: 'The existence of A is implied by the existence
+of B.' This operator is strictly monotonic: the existence of $B$ forces $A$
+into existence, but the absence of $B$ exerts no force on $A$.
+Given two properties of history 'ever()' and 'never()' with their intuitive 
+meaning, consider the implications:
+
+    (1) A <= B and ever(C)
+    (2) A <= B and never(C)
+
+When C ever existed, (1) causes the existence of A, but (2) remains silent. If
+C never existed, then (2) causes the existence of A and (1) remains silent. In
+"The Now," contradictions are impossible because the absence of an event is not
+a conflicting state, such as 'False' vs. 'True'. Logical operations on history,
+however, may consist of 'and', 'or', and 'not'.
+
+STABILITY AND THE LEAST FIXED POINT
+
+This system prevents logical circularities through Idempotence. An implication
+can only be made based on the existence of its basis of events. Once an event
+is brought into existence within "The Now," no subsequent implication can
+remove it ("un-exist" it).
+
+Because the logic of the Obsnow forbids the negation of events, the set of
+existing events can only expand, never contract. This guarantees that the chain
+of implications inevitably reaches a Least Fixed Point: a stable state where
+all valid implications have been satisfied and the logical state comes to rest
+within the single Jiffy. 
+
+Consequently, circular dependencies (e.g., 'A <= B' and 'B <= A') do not cause
+an infinite loop or instability. Instead, they resolve into the instantaneous,
+stable existence of both A and B.
+
+Once stability is reached (actually in a Jiffy of no-time), time progresses
+and the set of events enters the record of immutable history.
+
+-------------------------
+
+POSITIVE LOGIC AND IMPLICATION
+
+Implications within the Obsnow operate under *positive logic*. Existence is
+strictly additive; there is no operation of 'not event' or 'anti-event'.
+Negation is explicitly barred from the Obsnow. The 'not' operation is
+restricted solely to queries against the immutable *history*. In implications,
+properties of history serve as predicates (gates), but the result of
+an implication is always the *addition* of an event. In such a
+system, *contradictions are structurally impossible*.
+
+Let $\Leftarrow$ represent Positive Entailment. The expression $A \Leftarrow B$
+is read: 'The existence of A is implied by the existence of B.' This operator
+is strictly monotonic: the presence of $B$ forces $A$ into existence, but the
+absence of $B$ exerts no force on $A$. It is silence, not negation.
+
+Given two properties of history, `ever()` and `never()`, consider
+the implications:
+
+    (1) A <= B and ever(C) 
+    (2) A <= B and never(C)
+
+If `C` exists in history, (1) causes the existence of `A`, while (2)
+remains silent. If `C` never existed, then (2) causes the existence of `A`
+and (1) remains silent.
+
+In the Obsnow, contradictions cannot arise because the absence of an event is
+not a logical value (False) that conflicts with presence (True); it is simply
+null. While logical operations on history may utilize 'and', 'or', and 'not' to
+form predicates, the Obsnow remains a pure vessel of epxistence.

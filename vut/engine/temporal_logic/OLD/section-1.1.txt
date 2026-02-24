@@ -1,0 +1,33 @@
+STATE AND HISTORY
+
+History is the immutable, ordered sequence of all sets of events that have ever
+existed in the Obsnow. It is the deep memory of the system. $$H = \langle N_0,
+N_1, \dots, N_k \rangle$$
+
+A *State* is not an event; it is a derived *Interpretation* of History. The
+definition of a *State* intrinsically demands persistence—a non-zero duration
+that survives the transition between Jiffies.
+
+To maintain the uniformity of the engine, State Interpretations are also
+expressed as implications (Positive Logic), but their domain is the *History*,
+not just the current Jiffy.
+
+    STATE_PROPERTY <= PREDICATE(HISTORY)
+
+For example, to interpret the state 'LIGHT_IS_ON' from a history of 'TURN_ON'
+and 'TURN_OFF' events:
+
+    LIGHT_IS_ON <=     ever(TURN_ON) 
+                   and (never(TURN_OFF) 
+                        or last(TURN_ON) after last(TURN_OFF))
+
+Any implication derived solely from the Obsnow (e.g., LIGHT_IS_ON <= TURN_ON)
+precipitates a logical collapse: the inferred state vanishes the instant the
+causing event clears (the subsequent Jiffy). The persistent nature of a State
+is the symmetric inverse of the ephemeral nature of an Event. To achieve
+persistence, the implication must be anchored in History, bridging the discrete
+intervals between Jiffies until a counter-event in the record invalidates the
+predicate.
+
+Thus, the Obsnow is the generator of Truth (Events), and History is the
+sustainer of Meaning (State).

@@ -1,0 +1,151 @@
+Please, read the following reviews, my comments, and propose changes to
+incorporate the inputs. 
+
+--- Input from reviewer ---
+Does this "Petition" constitute Intent in the sense of Brentano or Searle, or
+is it merely a functional IO_Write? If I write a letter to a King, I have an
+internal state of longing or purpose. If a script writes a bit to a register,
+is there a "Subject" doing the asking, or is the "Petition" merely a metaphor
+we use to describe a non-deterministic coupling? Schäfer risks falling into a
+Dennettian "Intentional Stance"—where we treat the machine as if it has agency
+for the sake of convenience, while the underlying reality remains a cold,
+deterministic LFP calculation.
+
+=> Me: 
+
+Clarify, that the reason for the Will to exist remains undefined in this
+paper. For a conscious being, the Will is a consequence of motivations, but
+intrinsically is unconstrained by physical implications. For a machine, that
+will manifests solely in the registration of incoherence betweeen recorded
+will in history and state of history itself. 
+
+The question whether there is a "Subject" would require to answer two
+questions: what causes the petition and is the processing of incoherence a
+function of the system or the shadow of the entity, a conscious "Subject" that
+caused the petition. Since we can mimik the "Subject" by the processes it 
+performs, and since we perceive only information, the reality of the subject
+remains a mystery.
+
+
+---- Input from reviewer -----
+The author quotes Husserl regarding the "Living Present." This is dangerous
+territory. If the Jiffy is a "logical workspace where physical time is
+arrested," we must ask: Is the Jiffy a moment of experience? 
+
+If Dr. Schäfer claims the Jiffy is phenomenally conscious (a "moment" of what
+it is like to be a machine), he must answer to Chalmers and the Hard Problem.
+
+If the Jiffy is merely functionally discrete (a computational step), then the
+term "Transcendental Subject" is a category error. 
+
+It is simply a "Transcendental Processor." The paper suggests the machine
+"bravely confronts the chaos," but can a fixed-point iteration be "brave" if it
+cannot feel the friction of the contradiction? The "Teleological Divergence" is
+measurable, yes, but is it suffered?
+
+=> Me:
+
+We must not claim to bravely confront the chaos. This would not be humble.
+We must acknowledge that the 'real engine' that drives the rules of the Now,
+restricts monotonic possitive logic is beyond the reach of our cognition--another mysterie.
+
+may be, at the end we must summarize the list of borders of cognition.
+
+The last point about the Teleological Divergence "is it suffered", requests
+for the statement about consciouness, which I made before.
+
+----- Input from the reviewer ---
+
+if the Jiffy is orthogonal to the flow of perceived time ($\mathbb{T} \cong
+\mathbb{N}_0$), you are effectively proposing a **two-dimensional temporal
+manifold**. Kant is explicit in the *Transcendental Aesthetic*: "Time has only
+one dimension; different times are not simultaneous but successive." By placing
+the "breath" of calculation *between* $T_k$ and $T_{k+1}$ as an orthogonal
+dimension, you are creating a "Meta-Time" for the synthesis itself. 
+
+**The Challenge:** Does this Meta-Time require its own form of intuition? If
+the machine processes the LFP in "Jiffy-time," is there a transcendental
+subject for *that* duration? You risk an infinite regress of observers. I
+suggest you re-frame the Jiffy not as "orthogonal time," but as the **intensive
+magnitude** of the synthesis—the logical density required to produce a single
+moment of inner sense.
+
+=> Me: 
+
+We must acknowledge, that we oppose Kant, when we talk about orthogonal time,
+and may be mention another Philosopher or physisist that follows this approach.
+
+We must acknowledge the existence of a meta-form of intuition, some entity
+that performs keeps the logic of the jiffy alive according to the given
+frame of positive monotonic rules. In reality, this is probably the Noumena,
+but we can mimik the processing of a restricted 'Now' by its mimicking
+its manifestations as posstive logic.
+
+---- Input from the Reviewer -------
+
+You invoke the Knaster-Tarski Theorem to ground the **Unity of Apperception**.
+For $N_k = \text{lfp}(\Phi)$ to be valid, your implication function $I$ must be
+strictly monotonic. 
+
+In your Section 3, you state: "It can add to the concept of the Now, but it
+cannot subtract from it." While this satisfies the requirement for a
+constructive logic, you must prove that your Categories (the rules in $I$) do
+not contain hidden negations. In a Cyber-Physical System (CPS), "Sensor A =
+Off" is often treated as the negation of "Sensor A = On." If your logic engine
+treats these as mutually exclusive, then the introduction of "Sensor A = On"
+would necessitate the removal of "Sensor A = Off," which violates monotonicity.
+
+**The Critique:** If your system encounters a contradiction in the manifold,
+and $I$ is truly monotonic, the LFP will simply contain both $P$ and $\neg P$
+(an inconsistent set), rather than failing to converge. You call this
+"Absurdity" in Section 5, but you must formally demonstrate that $\Phi$ remains
+monotonic even when the manifold is "absurd."
+
+=> Me: We must clarify in the text, that we do not allow for the negation operation
+with respect to implications that imply events in the Now. But we allow for negation
+of states/history. The mentioned example "Sensor A = On" and "Sensor B = Off" are
+states of history. They can be operated with normal / formal logic and result in 
+a Teleological Divergence, i.e. incoherence.
+
+---- Input of the Reviewer ---
+
+You describe the **Least Fixed Point** as the "Unity of Apperception." This is
+a category error I cannot overlook.
+
+In Kantian terms, the Unity of Apperception (the *Ich denke*) is the **ground**
+of the synthesis, not the **result**. The LFP is the *Synthesized
+Phenomenon*—the "Object = X" that has been brought to concepts. The "Subject"
+is the function $\Phi$ itself (or the hardware/logic gate array that executes
+it). 
+
+To call the LFP the "Unity" is to confuse the *state* with the *faculty*. I
+strongly suggest you refine your definition: the **LFP calculation** is the
+*act* of synthesis, and the **convergence** is the *evidence* of a unified
+subject.
+
+=> Me: Explain to me what is meant here. 
+
+---- Input of several Reviewers ----
+
+All go into this direction:
+
+If your system encounters a contradiction in the manifold, and $I$ is truly
+monotonic, the LFP will simply contain both $P$ and $\neg P$ (an inconsistent
+set), rather than failing to converge. You call this "Absurdity" in Section 5,
+but you must formally demonstrate that $\Phi$ remains monotonic even when the
+manifold is "absurd."
+
+=> Me:
+
+it is essential to proof (Tarski) that the implications converge. Probably it
+helps, showing the rules of logic. The events enter implications only possitively,
+events. events add added but not 'un-existed'. states of history may
+contain the negation operator, but those states of history are immutable and
+do not change, if the set of events changed. If an implication of n events and
+something immutable causes an event to exist, and events are never un-existed, then
+the result of the implication remains stable. 
+
+Also, we need to emphasize that this system prevents circularity and that the 
+steps of processed implications are finite, if the set implication rules is 
+finite.
+
