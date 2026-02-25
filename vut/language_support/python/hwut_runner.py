@@ -3,9 +3,11 @@ import sys
 import asyncio
 import re
 import threading
-from typing    import Callable
-from typeguard import typechecked
-
+from   typing    import Callable, Optional, ContextManager
+from   typeguard import typechecked
+import stat
+from   pathlib import Path
+import tempfile
 
 class HwutRunner:
     @staticmethod
@@ -246,3 +248,77 @@ def _levenshtein_distance(a: str, b: str) -> int:
         prev = cur
     return prev[-1]
 
+def make_script_application(file_name:       Optional[str], 
+                            shebang:         str, 
+                            script_txt_list: list[str],
+                            display_f:       bool = True) -> Optional[str]:
+    """RETURNS: filename (str) != "", if script is generated and executable
+                None,                 if not
+
+    'shebang'         tells what interpreter to use
+    'script_txt_list' defines the text of the script
+
+    This function generates a (temporary) test script that may be used for 
+    interaction with unit tests.
+    """ 
+    script_path = None
+
+    content = shebang if shebang.startswith("#!") else f"#!{shebang}"
+    content += "\n" + "\n".join(script_txt_list) + "\n"
+
+    try:
+        if file_name is None:
+            # delete=False is necessary so the file remains after the handle is closed
+            # allowing a sandbox process to find and execute it.
+            with tempfile.NamedTemporaryFile(prefix="test_app_", delete=False) as tmp:
+                script_path = Path(tmp.name)
+        else:
+            script_path = Path(file_name)
+
+        script_path.write_text(content)
+        script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC) # make 'executable'
+        
+    except Exception:
+        if script_path and script_path.exists():
+            try:
+                script_path.unlink()
+            except Exception:
+                pass
+        return None
+
+    if display_f:
+        if not file_name: file_name = "<temporary file>"
+        print(f"SCRIPT: '{file_name}' " + "{")
+        for line in content.splitlines():
+            print(f"    {line}")
+        print("}")
+      
+    return str(script_path)
+
+class ScriptApplication(ContextManager[str]):
+    """A context manager wrapper for make_script_application.
+    Ensures the generated script is deleted upon exiting the 'with' block.
+    """
+    def __init__(self, file_name, shebang, script_txt_list, display_f=True):
+        self.params = {
+            'file_name': file_name,
+            'shebang': shebang,
+            'script_txt_list': script_txt_list,
+            'display_f': display_f
+        }
+        self.path = None
+
+    def __enter__(self) -> str:
+        result = make_script_application(**self.params)
+        if result is None:
+            raise RuntimeError("make_script_application failed to generate a script.")
+        
+        self.path = result
+        return self.path
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.path and os.path.exists(self.path):
+            try:
+                os.unlink(self.path)
+            except Exception:
+                pass

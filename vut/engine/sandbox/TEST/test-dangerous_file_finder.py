@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-PURPOSE: Verify the security scanner's ability to identify high-risk binaries.
+PURPOSE: Verify the security scanner's to identify high-risk binaries.
 
 DESCRIPTION: 
+
 This test suite validates the logic of the `get` function. It focuses on 
 transparency by printing the specific file attributes (bits, paths, names) 
 being mocked and the resulting forbidden list. It covers keyword detection, 
@@ -10,13 +11,13 @@ SUID/SGID bit analysis, sbin directory execution rules, and whitelist
 filtering.
 
 CHOICES:
+
   keywords:  Detailed log of keyword-based flagging (e.g., ssh, sudo).
   suid_bits: Audit of how SUID (0o4000) and SGID (0o2000) trigger flags.
   sbin_exec: Validation of 'sbin' directory policy for any executable.
   whitelist: Verification of exclusion logic for whitelisted paths/names.
 
-AUTHOR: Gemini HWUT-Unit Test Writer
-        Frank-Rene Schaefer
+AUTHOR: Frank-Rene Schaefer
 """
 
 import sys

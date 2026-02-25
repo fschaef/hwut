@@ -11,12 +11,13 @@ from   typeguard   import typechecked
 
 @dataclass
 class SandboxConfig:
-    max_memory_mb: int     = 512
-    max_pids: int          = 32
-    max_cpu_time_sec: int  = 60
-    nsjail_path: str       = "/usr/bin/nsjail"
-    root_mount: str        = "/"
-    network_enabled: bool  = False
+    max_file_size_mb: int    = 10
+    max_memory_mb: int       = 512
+    max_pids: int            = 32
+    max_cpu_time_sec: int    = 60
+    nsjail_path: str         = "/usr/bin/nsjail"
+    root_mount: str          = "/"
+    network_enabled: bool    = False
 
     # Mask specific binaries by mounting /dev/null over them
     forbidden_binaries: List[str] = field(default_factory=dangerous_executables.get)
@@ -30,20 +31,23 @@ class Sandbox:
         curr_uid = os.getuid()
         curr_gid = os.getgid()
 
-        args = [self.config.nsjail_path,
-                "--quiet",
-                "--mode",             "o",
-                "--uid_mapping",      f"0:{curr_uid}:1",
-                "--gid_mapping",      f"0:{curr_gid}:1",
-                "--user",             "0",
-                "--group",            "0",
-                "--chroot",           "/",
-                "-R",                 self.config.root_mount,
-                "-M",                 f"{self.work_dir}:{self.work_dir}",
-                "--cwd",              str(self.work_dir),
-                "--cgroup_mem_max",   str(self.config.max_memory_mb * 1024 * 1024),
-                "--cgroup_pids_max",  str(self.config.max_pids),
-                "--time_limit",       str(self.config.max_cpu_time_sec)]
+        args = [
+            self.config.nsjail_path,
+            "--quiet",
+            "--mode",             "o",
+            "--uid_mapping",      f"0:{curr_uid}:1",
+            "--gid_mapping",      f"0:{curr_gid}:1",
+            "--rlimit_fsize",     str(self.config.max_file_size_mb),
+            "--user",             "0",
+            "--group",            "0",
+            "--chroot",           "/",
+            "-R",                 self.config.root_mount,
+            "-M",                 f"{self.work_dir}:{self.work_dir}",
+            "--cwd",              str(self.work_dir),
+            "--cgroup_mem_max",   str(self.config.max_memory_mb * 1024 * 1024),
+            "--cgroup_pids_max",  str(self.config.max_pids),
+            "--time_limit",       str(self.config.max_cpu_time_sec),
+        ]
 
         if not self.config.network_enabled:
             args.append("--disable_clone_newnet")
@@ -97,28 +101,22 @@ class Sandbox:
 
     @typechecked
     async def run(self,
-                  command_line:   str,
-                  stdout_handler: Callable[[bytes], Awaitable[None]],
-                  stderr_handler: Callable[[bytes], Awaitable[None]],
-                  watch_files:    List[str],
-                  stdin_reader:   Optional[asyncio.StreamReader] = None,
-                  file_handler:   Optional[Callable[[str, bytes], Awaitable[None]]] = None,
-                  stop_event:     Optional[asyncio.Event] = None,
+                  command_line:           str,
+                  stdout_handler:         Callable[[bytes], Awaitable[None]],
+                  stderr_handler:         Callable[[bytes], Awaitable[None]],
+                  stdin_reader:           Optional[asyncio.StreamReader] = None,
+                  file_handler:           Optional[Callable[[str, bytes], Awaitable[None]]] = None,
+                  stop_event:             Optional[asyncio.Event] = None,
                   backup_watched_files_f: bool = False) -> int:
         
-        # Pre-execution: Backup existing files
-        if backup_watched_files_f:
-            self._backup_files(watch_files)
-
-        # Start Process
         process = await asyncio.create_subprocess_exec(
             *self._build_nsjail_args(shlex.split(command_line)),
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stdin  = asyncio.subprocess.PIPE,
+            stdout = asyncio.subprocess.PIPE,
+            stderr = asyncio.subprocess.PIPE
         )
 
-        # IO and Termination Monitoring
+        # IO Monitoring
         tasks = [
             asyncio.create_task(self._handle_stream(process.stdout, stdout_handler)),
             asyncio.create_task(self._handle_stream(process.stderr, stderr_handler)),
@@ -133,22 +131,9 @@ class Sandbox:
 
         stop_task = asyncio.create_task(monitor_stop())
         
-        # Await Completion
         exit_code = await process.wait()
         
-        # Cleanup tasks
         stop_task.cancel()
-        for t in tasks:
-            t.cancel()
-
-        # 5. Post-execution: Process watched files
-        if file_handler:
-            for name in watch_files:
-                p = self.work_dir / name
-                if p.exists() and p.is_file():
-                    try:
-                        await file_handler(name, p.read_bytes())
-                    except Exception:
-                        pass
+        for t in tasks: t.cancel()
 
         return exit_code
