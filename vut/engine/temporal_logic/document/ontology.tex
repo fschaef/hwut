@@ -54,6 +54,10 @@
 %% exists in terms of conceptions for a cognitive subject in the presence of a Noumena
 %% i.e. an absolute reality that exists beyond any conceptuality.
 
+%% NOTE: The 'future' here does not exist in conceptual terms. That implies that 
+%% it would not make sense for physics, as a science based on concepts, to assert
+%% the co-existence of future and the past for a single Cognitive Subject.
+
 \begin{abstract} 
 TODO
 \end{abstract}
@@ -116,21 +120,25 @@ Noumena.
 
 \begin{formalism}[Event and Discernible]
 
-    An \textbf{Event} $e$ is the instantiation of a `concept', i.e.\ it is the
-    instantiation of information content. It is something that can be
-    experienced/perceived, that `informs'. It has no temporal expansion. 
+    An \textbf{Event} $e\in \mathbb{E}$ is the instantiation of a `concept',
+    i.e.\ it is the instantiation of information content. It is something that
+    can be experienced/perceived, that `informs'. It has no temporal expansion. 
 
-    An Event has two properties, namely the truth of its own existence $\top$
-    and a {\it discernible\/} $\delta \in \Delta$, the `information content' by
-    means of which it possesses identity.
+    An Event consists of two linked properties, namely the truth of its own
+    existence $\top$ and a {\it discernible\/} $\delta \in \mathbb{D}$, the
+    `information content' by means of which it possesses identity.
 
     \begin{equation}
         e := \langle \top, \delta \rangle
     \end{equation}
 
-    Where $\Delta$ is the space of possible discernibles $\delta$.
+    Let $\mathbb{E}$ be the space of Events and respectively,
+    let $\mathbb{D}$ is the space of possible discernibles $\delta$.
 
 \end{formalism}
+
+Notably, with this point, the faculty of a {\it Link}, a connection, between
+two discernibles is established.
 
 The discernible $\delta_\dot$ provides identity to the event---the Identity of
 being not the Noumena. It establishes the faculty of {\it Differentiation}. The
@@ -144,8 +152,8 @@ moment of \textbf{Fixation}. It becomes an {\it Atomic Fact}.
 
 \begin{formalism}[Atomic Fact]
 
-    An \textbf{Atomic Fact} $a \in \mathbb{A}$ is the immutable trace of
-    an Event. An atomic fact is the result of a fixation, where no 
+    An \textbf{Atomic Fact} $a \in \mathbb{F}$ is the immutable trace of
+    an Event. An atomic fact is the result of a fixation, where no logical
     implication leads to further events.
 
     An event $e = \langle \top, \delta \rangle$ transitions into an atomic fact:
@@ -163,6 +171,8 @@ moment of \textbf{Fixation}. It becomes an {\it Atomic Fact}.
         \langle \top, \delta \rangle \rightarrow \langle \bot, \delta \rangle
     \end{equation}
 
+    Let $\mathbb{F}$ be the Universe of Facts.
+
 \end{formalism}
 
 For the sake of clarity, $\top$ is the indubitable truth of an event that it is
@@ -173,19 +183,41 @@ With Events and Atomic Facts, we identify two domains, defined as follows:
 
     \begin{itemize}
         \item \textbf{Synthetic Interstice ($\sigma$):} A domain where there is
-        no time. Events instantiate and imply further events until they
-        converge under the rules of consistency. Anything that happens in the
-        Synthetic Interstice is indubitably true but possesses no temporal
+        no time. Events instantiate and imply further events instantaneously 
+        until they converge under the rules of consistency. Anything that happens 
+        in the Synthetic Interstice is indubitably true but possesses no temporal
         extent.
         \item \textbf{Immutable Past ($H$):} The domain of converged, fixated 
-        sets of events (History). 
+        sets of events. Content of the Immutable Past exists for ever.
     \end{itemize}
 
 \end{formalism}
 
 Still in a void of anything that may establish any concept of time, the fixated
-content $\delta_\dot$ of the Noumena's ``I exist'' becomes an immutable
-atomic fact, thus carrying the information of ``I exist permanently''.
+content $\delta_\dot$ of the Noumena's ``I exist'' becomes an immutable atomic
+fact, thus implying an event with the information of ``I exist permanently''.
+
+Notably, with the first logical convergence of $\delta_\dot$---with the first
+fixation---two modes of truth emerge: the ephemeral truth of $\top$, the
+\textit{Becoming}, and the immutable truth of $\bot$, the truth modality of
+\textit{Have-Become}. With logical implications mapping from the immutable past
+into the dynamic present ($\bot \rightarrow \top$), \textit{Sequentiality}
+is established. 
+
+\begin{formalism}[Sequentiality]
+    Sequentiality within the Immutable Past is established strictly through the 
+    logical implications that referenced the Immutable Past during the generative 
+    operation of the Synthetic Interstice. 
+    
+    That is, if an Atomic Fact $a_1$, produced in a Synthetic Interstice $\sigma_1$, 
+    was necessitated by an antecedent Atomic Fact $a_0$ from a prior interstice 
+    $\sigma_0$, they possess a strict structural order: $a_1 \succ a_0$ ($a_1$ after $a_0$).
+\end{formalism}
+
+Where the first Synthetic Interstice originated in a pure conceptual vacuum,
+any further Synthetic Interstice exists as a consequence, a successor,
+operating strictly independently of its predecessor. It operates solely on its
+current dynamic events and the formal implications of the Immutable Past.
 
 Information only exists if it informs. If an observer already possesses specific
 information content, any new arrival carrying this identical content cannot
@@ -359,183 +391,121 @@ physicalist model, for physics itself is a discipline entirely contained within
 the world of conceptions. Consequently, this inquiry constitutes the
 \textbf{Transcendental Condition} of the possibility of physics itself.
 
+\section{Basic Formalism}
 
-\section{The Synthetic Interstice}
+This section provides some formalism, which is required to provide a
+description of the Synthetic Interstice. We first, explore the notion of a {\it
+Set\/} and then discuss the concept of negation with respect to Events and
+Atomic Facts.
 
-At this point, we introduce a definition of the term {\it Set\/} which will
-behave robustly in the following discussion. It is grounded in the
-set-theoretic foundations of Cantor~\cite{Cantor1895} and the logical
-principles of Leibniz~\cite{Leibniz1714}. A set, in this sense, is not a
-`snapshot of a fenced number of elements'. Rather, its existence is bound to a
-generative logical process given by:
+\subsection{The Object and the Set}
+
+The following section establishes a rigorous ontological demarcation between an
+{\it Object\/}, defined as a static composition of co-existing discernibles,
+and a {\it Set\/}, defined as the dynamic, generative structure required for
+evolution across logical steps. Their fundamental dichotomy in nature is an
+absolute prerequisite for navigating the mechanics of the Manifold in the
+subsequent discussion.
+
+Let the term {\it Object\/} denote a redundancy free composition, i.e.\
+co-existing discernibles with a truth modality of $\top$ or $\bot$. An object
+is the result of a implication that multiple events co-exist.
+
+\begin{formalism}[Object]
+    An \textit{Object} is a configuration of discernibles that is instantiated
+    by the implication of their co-existence. 
+
+    A \textit{Nascent Object} is an object with a truth modality of $\top$
+    in the Synthetic Interstice. It has no temporal expansion. An \textit{Object}
+    (without the predicate nascent) is the fixation of a Nascent Object
+    in the Immutable Past.
+\end{formalism}
+
+Notably, the discernibles of an Nascent Object have no other condition that
+ties them together other than co-existence, their shared truth modality $\top$
+and $\bot$ at the logical moment when their events already exist. The
+primordial framework, at this point, can establish objects without restriction
+or contradiction. An object can be seen as a `snapshot of discernibles' that
+have been implied at a logical step of implications.
+
+For the Synthetic Interstice, though, we need a Set definition that behaves
+robust in the dynamic evolution of logical steps. Also, in general,
+the core characteristic of a \textit{Set} is not restricted to the truth modality.
+Our definition of a Set is based in the set-theoretic
+foundations of Cantor~\cite{Cantor1895} and the logical principles of
+Leibniz~\cite{Leibniz1714}. A set, in this sense, is not a `snapshot of a
+fenced number of elements'. Rather, its existence is bound to a generative
+logical process.
 
 \begin{enumerate}
 
-    \item A {\it Virtual Seed\/} $s_0$ possessing a specific 
-          {\it core characteristic\/}---and no other discernible $\delta$. 
-          It implements the essence of an {\it empty set\/} for a 
-          given core characteristic.
+    \item A \textit{Virtual Seed} $s_0$ possessing a specific $\delta_0$
+          \textit{core characteristic}---and no other discernible $\delta$. 
 
-          Since the virtual seed $s_0$ has no discernible $\delta$ it
-          intrinsically distinguishes itself from any possible `real' member
-          candidate with a `real' $\delta$.
-
-          {\it Ontological Precedence\/} dictates that the \textit{Virtual Seed} 
+          \textit{Ontological Precedence} dictates that the \textit{Virtual Seed} 
           cannot rely on predicates that are not yet established.
 
-    \item A {\it One-More\/} operation. This operation is established by 
-          {\it Equivalence\/} of a perceived object $s_i$ with respect 
-          to the core characteristic of $s_0$ and which is {\it Differentiation\/} 
-          in a secondary characteristic $\delta$ (discernible) from any other 
-          object $s_\omega \in \mathbb{S}$.
+    \item A \textit{One-More} operation. This operation is established by 
+          \textit{Equivalence} of a perceived object $s_i$ with respect 
+          to the core characteristic of $\delta_0$, and which exhibits 
+          \textit{Differentiation} via at least one secondary characteristic 
+          $\delta$ (discernible) from any other object $s_\omega$ already in 
+          the set.
 
     \item A set is defined as the fixed point where the number of eligible 
           objects is exhausted.  
 
 \end{enumerate}
 
-Notably, we established the concept of a {\it Set\/} in terms of {\it
-Equivalence}, {\it Distinction\/} and {\it Implication}. Further, this definition
-of a set does rely on purely dynamic generation rather than on a `fixation' (as a
-`snapshot of member elements'). This indepence of `fixation' is crucial for the
-operation of the Synthetic Interstice.
+The ontological faculty to of `convergence' was established by
+the very first instantiation from the Noumena---the Primordial Event
+$e_\bullet$. As an isolated entity in a conceptual void, its generative process
+lacked any valid antecedents for a `One-More' operation---nothing else exists
+about what one could inform. Therefore, its generative set exhausted
+instantaneously at a cardinality of one. That primordial exhaustion established
+the foundational faculty of \textbf{Fixation}. The convergence of any
+subsequent, complex set in the Synthetic Interstice is simply the application 
+of this original faculty.
 
-Furthermore, this generative definition structurally prevents Russell's
-antimony~\cite{Russell} of the ``set of sets that does not contain itself as an
-element''. This particular set would require the definition of a virtual seed $s_0$ as
-``does not contain itself''. This predicate, however, is a reference to
-something that is not yet ontologically established, namely the set itself. The
-antimony cannot arise, because Russel's set is not a set at all in the
-aforementioned sense.
+This generative definition structurally prevents Russell's
+\textbf{antinomy}~\cite{Russell} of the ``set of all sets that do not contain
+themselves as an element''. This particular set would require the definition of
+a virtual seed $s_0$ as ``does not contain itself''. This predicate, however,
+is a reference to something that is not yet ontologically established, namely
+the set itself. The antinomy cannot arise, because Russell's set is not a set
+at all in the aforementioned sense.
 
-The aforementioned set definition allows operations of the Synthetic Interstice to
-operate freely, without producing contradictions. With this introduction, we can
-setup a first formalism.
+We established the concept of a \textit{Set} in terms of \textit{Equivalence},
+\textit{Differentiation}, and \textit{Implication}--all present in the
+Synthetic Interstice. Further, this definition of a set relies on purely
+dynamic generation rather than on a `fixation' (as a `snapshot of member
+elements'). This independence from `fixation' is crucial for the operation of
+the Synthetic Interstice. With the already established concept of
+Sequentiality, we and the definition of a Set, we are now able to precisely
+define the Immutable Past.
 
-\begin{formalism}[The Synthetic Interstice]
+\begin{formalism}[Immutable Past]
 
-    The \textbf{Synthetic Interstice} $\sigma_k$ represents the operational
-    ``gap in time'' between recorded moments of Past. It is the domain of
-    \textit{Completing}.It is defined by the iterative, monotonic saturation of
-    the set $N^0_k$ via an Implication Set $\mathcal{I}$:
-
-    \begin{equation}
-        \sigma_k : N^{(i)} \xrightarrow{\mathcal{I}} N^{(i+1)} \quad \text{until} \quad N^{(i+1)} \equiv N^{(i)}
-    \end{equation}
-    Then, the $N^{(i)}$ defines the fixed point $N^0_k$.
-
-    It is defined by
-    \begin{itemize}
-
-        \item \textbf{Instantaneous Ephemerality:} It produces ephemeral 
-           events ($e \in \mathbb{E}$) that possess Existence but are not yet 
-           fixated into Past ($H_k$).
-
-        \item \textbf{Absence of Redundancy:} Information that would exists twice
-           instantaneously collapses into a single entity of information. That
-           is, $\delta \oplus \delta$ collapses in $\delta$.
-
-        \item \textbf{Historic Construct:} It applies Past as an immutable 
-           antecedent in Implications.
-
-        \item \textbf{Dynamic Construct:} It applies Events as non-negatable as
-           antecedent in Implications.
-
-        \item \textbf{Convergence:} The interstice persists until the application 
-           of $\mathcal{I}$ reaches a fixed point (saturation) $N^0_k$.
-    \end{itemize}
-\end{formalism}
-
-Equipped with a basic understanding of the Synthetic Intersice and Set, a
-formalism for {\it Event\/} can be provided as follows.
-
-Crucially, the elements populating this set are the \textbf{Events} established
-in the Genesis section. Each element $e \in N^{(i)}$ carries the tuple $\langle
-\top, \delta \rangle$. The \textit{Virtual Seed} of the Interstice is the
-predicate of \textbf{Current Validity} ($\top$). The \textit{One-More}
-operation is the instantiation of a new event that satisfies the implication
-rules derived from the Noumena or Past.
-
-Before the specific logical operations (AND, OR) of the Synthetic Interstice
-can be discussed, we must first examine the structure of the sediment it
-produces: \textbf{Past}.
-
-\section{Immutable Past and the Atomic Fact}
-
-When the set of events $N_k$ in the Synthetic Interstice converges to a fixed
-point $N^0_k$, the process of generation halts. The content of the set
-undergoes \textbf{Sedimentation}. The elements switch their mode of Truth from
-\textit{Becoming} ($\top$) to \textit{Have-Become} ($\bot$). We define these
-sedimented elements as \textbf{Atomic Facts}.
-
-To formalize this, we introduce the \textbf{Universe of Assertions} $\mathbb{A}$,
-representing the set of all possible constituted truths. Within this universe,
-let $\mathbb{A}^\top \subset \mathbb{A}$ be the subspace of \textbf{Evident
-Assertions}—truths that are undeniably given rather than speculated.
-
-\begin{formalism}[The Atomic Fact]
-
-    An \textbf{Atomic Fact} $a \in \mathbb{A}^\top$ is the immutable record of
-    an Event. It is defined as:
-
-    \begin{equation}
-        a := \langle \bot, \delta \rangle
-    \end{equation}
-
-    The formation of an Atomic Fact corresponds to the ontological shift from
-    the property of ``\textit{Existence} is equivalent to its Truth'' to
-    ``\textit{Has-Become} is equivalent to its Truth''.
-
-    The formal structure is defined by the \textbf{Fixation Operator} $\mathit{F}$:
-
-    \begin{equation}
-        \mathit{F}: \langle \top, \delta \rangle \rightarrow \langle \bot, \delta \rangle
-    \end{equation}
-
-    Here, the Universal Characteristic of Becoming ($\top$) is replaced by the
-    characteristic of \textbf{Fixed Truth} ($\bot$). Crucially, the Particular
-    Characteristic---the \textbf{Identity Provider} $\delta$---is preserved
-    intact.
-
-\end{formalism}
-
-The \textit{Atomic Fact} is the primitive trace of an event. It carries the
-potential to be referenced by the Cognitive Subject beyond the gap in time. The
-structural faculty of \textbf{Differentiation} between $\top$ and $\bot$ establishes
-the primary intuition of Time: distinguishing the \textit{Fluid Now} from the
-\textit{Solid Past}.
-
-\begin{formalism}[Past]
-
-    \textbf{Past} $H_k$ is the immutable, totally ordered sequence of sets
-    of Atomic Facts recorded up to logical step $k$.
+    \textbf{Immutable Past} $H_k$ is the immutable, totally ordered sequence 
+    of sets of Atomic Facts recorded up to logical step $k$.
 
     \begin{equation}
         H_k := \langle \mathit{F}(N^0_0), \mathit{F}(N^0_1), \dots, \mathit{F}(N^0_{k-1}) \rangle
     \end{equation}
 
-    Past is the cumulative result of fixation cycles upon the completion of
-    the Synthetic Interstice.
+    The Immutable Past is the cumulative result of fixation upon the completion
+    of the Synthetic Interstice.
 
 \end{formalism}
 
-This definition clarifies the dual nature of reality for the Subject. The
-Synthetic Interstice is the connection to \textbf{Ontological Reality} (the
-Noumena)—the source of pure Being and \textit{Ontological Truth}. Past,
-conversely, is the domain of \textbf{Epistemic Truth}—the sole source of
-\textit{True Knowing}.
+While Past is relative to the Cognitive Subject, it is not arbitrary. It
+constitutes the \textbf{Phenomenal Objectivity} of the world—tangible,
+unchangeable, and a basis for all implications of future Becoming.
 
-While Past is relative to the Subject (it is the Subject's specific path
-through the Noumena), it is not arbitrary. It constitutes the \textbf{Phenomenal
-Objectivity} of the world—tangible, unchangeable, and the necessary antecedent for
-all future Becoming.
+\subsection{Negation}
 
-\section{The Asymmetrie of Negation}
-
-A critical distinction must be made regarding the concept of ``Negation.'' In
-natural language, we conflate difference (``A is not B'') with absence (``There
-is no A''). In the logic of the Manifold, these are two distinct distinct
-faculties: \textbf{Inequality} and \textbf{Complementation}.
+A critical distinction must be made regarding the concept of ``Negation'', namely 
+the between the faculties of \textbf{Inequality} and \textbf{Complementation}.
 
 \begin{formalism}[Inequality (The Negation of Identity)]
     Inequality is the characteristic of \textbf{Differentiation} between two positively 
@@ -543,10 +513,11 @@ faculties: \textbf{Inequality} and \textbf{Complementation}.
     of both. 
     
     \begin{equation}
-        A \neq B \iff \delta(A) \neq \delta(B)
+        A \neq B \iff \Big( \exists \delta_{a,i} \in \delta(A) \mid \nexists \delta_{b,k} \in \delta(B) : \delta_{a,i} = \delta_{b,k} \Big) \lor \Big( \exists \delta_{b,k} \in \delta(B) \mid \nexists \delta_{a,i} \in \delta(A) : \delta_{b,k} = \delta_{a,i} \Big)
     \end{equation}
 
-    This operation is valid in both the Synthetic Interstice and Past.
+    That is, for $A$ to be unequal to $B$ there must be either a discernible 
+    in $A$ which is not in $B$ or vice versa.
 
 \end{formalism}
 
@@ -563,15 +534,15 @@ faculties: \textbf{Inequality} and \textbf{Complementation}.
     \textbf{Bounded Set}. One cannot subtract from an undefined totality.
 \end{formalism}
 
-We posit that the set of potentially arising events $\mathbb{E}$, stemming
+We posit that the set of potentially arising events $\mathbb{D}$, stemming
 directly from the Noumena, corresponds to what Cantor termed the
 \textbf{Absolute Infinite} ($\Omega$)~\cite{Cantor1899}. Because the Noumena is
 the `most potent source of reality', strictly un-modeled and un-limited, it
 cannot be encapsulated into a single, bounded container. The set of possible
-events $\mathbb{E}$ is a {\it Proper Class\/} according Von
+events $\mathbb{D}$ is a {\it Proper Class\/} according Von
 Neumann–Bernays–Gödel (NBG) set theory~\cite{VonNeumann1925}.
 
-Since $\mathbb{E}$ is unbounded, it cannot establish a Universe $U$ required
+Since $\mathbb{D}$ is unbounded, it cannot establish a Universe $U$ required
 for the complement operation. Consequently, we derive the following structural
 laws:
 
@@ -584,7 +555,7 @@ laws:
         \nexists (\neg e) \in \sigma
     \end{equation}
     
-    \textbf{Past ($H_k$):} 
+    \textbf{Immutable Past ($H_k$):} 
     Past is, by definition, the \textit{fixation} of a specific, saturated set 
     of events $N_k$. It is bounded and finite (or countable). Therefore, $H_k$ 
     forms a valid Universe, allowing for the operation of Complementation.
@@ -598,16 +569,75 @@ only experience ``what is not'' by looking backwards at what has already
 become. The Future and the Now are purely positive, only perceiving the past
 allows the experience of `negation'.
 
+\section{The Synthetic Interstice}
+
+The aforementioned set definition allows operations of the Synthetic Interstice
+to operate freely, without producing contradictions. With this introduction, we
+can formalize the operational domain.
+
+\begin{formalism}[The Synthetic Interstice]
+
+The \textbf{Synthetic Interstice} $\sigma_k$ is the entity that operates on
+logical rules on information between the un-conceptualizable Noumena and
+the Immutable Past, that is tangible for the Cognitive Subject. It is the
+domain of \textit{Completing}. A $sigma_k$ and a $\sigma_{k+1}$ can be
+ordered, by the sequence of their produced fixed points. However, each
+$\sigma_k$ operates in a domain with a zero temporal expand. A Synthetic
+Interstice ends  is defined by the iterative, monotonic saturation of the
+set $N_k$ via an Implication Set $\mathcal{I}$:
+
+\begin{equation}
+    \sigma_k : N^{(i)} \xrightarrow{\mathcal{I}} N^{(i+1)} \quad \text{until} \quad N^{(i+1)} \equiv N^{(i)}
+\end{equation}
+
+When this point is reached, the saturation $N^{(i)}$ defines the fixed point $N^0_k$.
+
+A Synthetic Interstice is characteristic by:
+\begin{itemize}
+
+    \item \textbf{Instantaneous Ephemerality:} It instantiates ephemeral 
+       events ($e \in \mathbb{E}$) that possess Existence ($\top$) but are
+       not yet fixated into the Immutable Past ($H_k$).
+
+    \item \textbf{Positivity:} In the Synthetic Interstice, events instantiate 
+        but never ``un-exist''. The generative logic strictly relies on the 
+        presence of Events ($\top$) and the potential absence of Atomic Facts ($\bot$).
+
+    \item \textbf{Absence of Redundancy:} Information that would exist twice
+       instantaneously collapses into a single entity of information. That
+       is, the co-existence $\delta \oplus \delta$ collapses into $\delta$.
+
+    \item \textbf{Dynamic Logical Construct:} It applies active Events as
+       non-negatable antecedents in Implications ($\top \rightarrow \top$).
+
+    \item \textbf{Historic Logical Construct:} It applies the Immutable Past ($H_k$)
+       as a valid antecedent in Implications ($\bot \rightarrow \top$).
+
+    \item \textbf{Convergence:} The interstice persists until the application
+       of $\mathcal{I}$ reaches a fixed point of saturation ($N^0_k$). This 
+       exhaustion of the generative set subsequently triggers Fixation ($\top \rightarrow \bot$).
+
+\end{itemize}
+\end{formalism}
+
+Crucially, the elements populating this generative set are the \textbf{Events}
+established in the Genesis section. Each element $e \in N^{(i)}$ carries the
+tuple $\langle \top, \delta \rangle$. The \textit{Virtual Seed} of the
+Interstice is the core predicate of current validity ($\top$). The \textit{One-More} 
+operation is the instantiation of a new event that satisfies the implication 
+rules consistent with the Immutable Past.
+
 \section{Operations at the Synthetic Interstice}
 
 The operations of the Synthetic Interstice necessarily exclude the \texttt{NOT}
-operator on events, unlike immutable Past, where Complementation is valid.
-We now, first show how {\tt AND} and {\tt OR} can be established with the given
-faculties.
+operator on events, unlike within the Immutable Past, where Complementation is
+valid. We first show how {\tt AND} and {\tt OR} can be established with the
+given faculties.
 
 The operator \texttt{AND} is established as the manifestation of
 \textbf{Co-existence}. It represents the faculty of \textbf{Composition}
-(Synthesis) and \textbf{Decomposition} (Analysis).
+(Synthesis) and \textbf{Decomposition} (Analysis). It actually established
+the concept of an Object, previously.
 
 If two events $A = \langle \top, \delta_a \rangle$ and $B = \langle \top,
 \delta_b \rangle$ co-exist in the Synthetic Interstice, they structurally imply
@@ -617,12 +647,12 @@ an event $C$ of a composite discernible $\delta_c$:
      C = \langle \top, \delta_c \rangle = \langle \top, \delta_A \oplus \delta_B \rangle
 \end{equation}
 
-Here, $\oplus$ denotes the \textbf{Fusion of Discernibles}. The Subject
+Here, $\oplus$ denotes the co-existence of discernibles. The Subject
 experiences $\delta_C$ as a unified complexity, while retaining the faculty to
 decompose it back into aspects $\delta_A$ and $\delta_B$. Notably, the
-co-existence of $C$ and $A$ does not require an instantiation from the Noumena.
-It introduces a {\it composite\/} discernible $\langle \delta_A \oplus \delta_B
-\rangle$ into $N^(i)$.
+co-existence of $C$ and $A$ does not require an direct instantiation from the
+Noumena. It introduces a {\it composite\/} discernible $\langle \delta_A \oplus
+\delta_B \rangle$ into $N^(i)$.
 
 The operator \texttt{OR} is established not by disjunction of events, but by
 \textbf{Alternative Implication} within the rule set. To say ``$A$ or $B$
@@ -634,18 +664,44 @@ implies $C$'' is to assert the existence of two distinct generative paths:
 
 This formulation avoids the necessity of negating an antecedent (i.e., $A \lor
 B \iff \neg(\neg A \land \neg B)$ is invalid here), preserving the strict
-positivity of the domain. We define the operational grammar of the Synthetic
-Interstice using the \textbf{Backus-Naur Form (BNF)}~\cite{Backus1959}.
+positivity of the domain. 
+
+To maintain set-theoretic validity and avoid operations over a Proper Class, the 
+rules of implication cannot be defined over the absolute infinite $\mathbb{E}$. 
+Instead, let $D_k \subset \mathbb{D}$ be the strict, bounded set of discernibles 
+that have already occurred (i.e., those present in the Immutable Past $H_k$ and 
+the current Interstice). Let $E_k$ be the set of all valid events that can be 
+constructed from the components of $D_k$. 
+
+\begin{formalism}[Set of Implications $\mathcal{I}$]
+
+    The set of implications $\mathcal{I}$ constitutes the \textbf{Laws of
+    Structural Implication}. $\mathcal{I}$ is a bounded set of generative rules
+    operating over the powerset $\mathcal{P}(E_k)$ of the set of constructible
+    events $E_k = \{ \langle \top, \delta \rangle \mid \delta \in D_{k-1} \}$,
+    where $D_{k-1}$ is the bounded set of discernibles already present in the
+    Immutable Past $H_{k-1}$. 
+    
+    An implication $i \in \mathcal{I}$ maps a specific configuration of Events
+    and Atomic Facts to the instantiation of a new dynamic event $e_{new} \in
+    E_k$.
+
+\end{formalism}
+
+Crucially, $\mathcal{I}$ governs only the logical completion (the internal
+structuring) within the Manifold. It does not and cannot constrain the Noumena,
+which strictly retains the absolute potency to instantiate entirely novel
+discernibles ($\delta_{novel} \notin D_{k-1}$) independent of these rules.
+We are now able to posit an operational grammar of the Synthetic Interstice
+using the \textbf{Backus-Naur Form (BNF)}~\cite{Backus1959}.
 
 \begin{formalism}[Syntax of the Synthetic Interstice]
 
-Let $\mathcal{I}$ be the set of rules over the powerset of events
-$\mathcal{P}(\mathbb{E})$. Let the production rule symbol be $::=$ and
-alternative options be $\mid$. The operator \texttt{WHERE} functions as a
-\textbf{Transcendental Gate}. As the Synthetic Interstice is a domain of
-pure Truth, the transcendental gate is established by consistency: it
-constrains the generation of a dynamic event based on the static truth of
-Past. It also gives rise to faculties of structure and inertia.
+Let the production rule symbol be $::=$ and alternative options be $\mid$. The
+operator \texttt{WHERE} functions as a \textbf{Transcendental Gate}
+established by by consistency: it constrains the generation of a dynamic
+event based on the truth of the Immutable Past. This gives rise to
+faculties of basic structure.
 
 \begin{displaymath}
 \renewcommand{\arraystretch}{1.3} 
@@ -667,12 +723,6 @@ Past. It also gives rise to faculties of structure and inertia.
 \end{array}
 \end{displaymath}
     The result of the \textit{Implication} is the instantiation of the event $e_{new}$ in the current Now $N_k$.
-\end{formalism}
-
-\begin{formalism}[Set of Implications $\mathcal{I}$]
-    The set of implications $\mathcal{I}$ constitutes the \textbf{Laws of Becoming}.
-    Any implication $i \in \mathcal{I}$ is a logical structure expressed in the 
-    \textit{Syntax of the Synthetic Interstice} defined above.
 \end{formalism}
 
 The grammar defined above enforces a critical structural property:
@@ -829,6 +879,8 @@ $\mathbb{A}^\top$. Due to ontological necessities, they are as stable as the
 underlying faculties of Equivalence, Differentiation, Fixation, and Implication
 upon which they are founded. They implement a stable structure in contrast to
 the `Caducity' of events in the Synthetic Interstice.
+
+%% TODO: mention rise of inertia
 
 \section{Causality}
 
@@ -1007,7 +1059,7 @@ Mathematically, this redundancy collapse operates via the principles of {\it
 Spectral Decomposition\/} or {\it Eigenvalue Analysis\/}~\cite{Euler}. 
 This is established by `translating' a composite discernible to an equivalent
 composite discernible such that the entirety of the differentiation is
-expressed by a single discernible $\Delta$ in the form $(\Delta,
+expressed by a single discernible $\mathbb{D}$ in the form $(\mathbb{D},
 0, \dots, 0)$---a `projection' of the difference to a single principal axis.
 The discernibles of $0$ are rendered structurally redundant and collapse into
 the shared core $C$.\footnote{It is of profound metaphysical significance that
@@ -1022,8 +1074,8 @@ transformational logic as a structural faculty of the Synthetic Interstice.
 \subsection{The Line Assertion}
 
 A Stretch Discernible, maintains the difference of two composite discernibles
-in a single discernible $\Delta$ while maintaining a redundant shared core $C$.
-With $C$ as a virtual seed and $\Delta$ as a element of identity, the conditions
+in a single discernible $\mathbb{D}$ while maintaining a redundant shared core $C$.
+With $C$ as a virtual seed and $\mathbb{D}$ as a element of identity, the conditions
 for a \textbf{Generative Set} are met. 
 
 While the direct experience of an infinite number of points with the same core
@@ -1042,13 +1094,13 @@ infinite number of points with a shared core $C$.
     That includes the assertion that there would exist an entity in the Noumena
     that governs the regularity.
 
-    Let $t = \langle \bot, \Delta \oplus C \rangle$ be a Stretch Fact and $m$ 
+    Let $t = \langle \bot, \mathbb{D} \oplus C \rangle$ be a Stretch Fact and $m$ 
     be the Metric Fact representing the finite recurrence of this equivalent 
     difference. The Line Assertion $l \in \mathbb{A}^\diamond$ is the speculative 
     fixation defined as:
 
     \begin{equation}
-        l := \langle \bot, (\varnothing, \infty(\Delta) \oplus C) \rangle \in \mathbb{A}^\diamond
+        l := \langle \bot, (\varnothing, \infty(\mathbb{D}) \oplus C) \rangle \in \mathbb{A}^\diamond
     \end{equation}
 
 \end{formalism}
@@ -1099,6 +1151,56 @@ consequently causal assertions. at this point it's will is born. also, the consc
 requires an engine for eigenvalue analysis in order to recognize the redundancy reduction
 that identifies, stretches, lines, and derived topological shapes. I.e. it cannot experience
 a location in space without this faculties. 
+
+%% ============================================================================
+%% TODO / NOTES FOR CONCLUSION
+%% Metaphysical Implications for Modern Physics
+%% ============================================================================
+
+\subsection*{Metaphysical Implications for Physical Frameworks}
+
+The cosmogony established herein imposes strict ontological boundaries on
+the interpretation of physical models. If the `Future' is ontologically
+vacuous and the universe is strictly generated at the active boundary of
+the `Now' ($\top \rightarrow \bot$), modern physical frameworks must be
+re-contextualized as derivative epistemic constructs rather than
+descriptions of absolute ground reality.
+
+\begin{itemize}
+    
+    \item \textbf{Physics as the Study of Sediment ($\bot$):}
+    Physics does not study the Noumena directly; it studies the
+    \textit{Immutable Past} ($H$). Physical laws are nothing more than highly
+    compressed, redundant patterns extracted from the sediment of fixated
+    truths ($\bot$). Because the Subject possesses no computational power of its
+    own, it relies on these sedimented patterns as predictive rules for future
+    implications. However, physical equations cannot dictate the Noumena. The
+    conceptual machine possesses the logic to structure the \textit{Given}, but
+    it lacks the power to mandate the \textit{Giving}.
+
+    \item \textbf{The Resolution of Quantum Indeterminacy:}
+    The probabilistic nature of Quantum Mechanics is not an epistemological
+    flaw (a lack of measurement precision), but an \textbf{Ontological Necessity}.
+    The `Wave Function' maps perfectly to the \textit{Synthetic Interstice}
+    ($\sigma$)---a domain of pure dynamic potential ($\top$) calculating
+    implications. `Wave Function Collapse' corresponds to the exact
+    metaphysical moment of \textbf{Fixation} ($\top \rightarrow \bot$). Hidden
+    variables determining the future cannot exist because the future literally
+    does not exist yet; the universe generates the outcome precisely as the
+    Interstice reaches its fixed point.
+
+    \item \textbf{The Illusion of the Block Universe:}
+    General Relativity models a 4-dimensional Minkowski spacetime where past,
+    present, and future co-exist as a static block. Within our framework, this
+    must be formally classified as a \textbf{Causal and Spatial Assertion}
+    ($c \in \mathbb{A}^\diamond$). While highly effective as a predictive
+    tool, it inherently carries the \textbf{Discernible of Wrongness}
+    ($\varnothing$) because it extrapolates infinity and assumes the
+    unexperienced future is already fixated. Determinism, therefore, is
+    identified as a cognitive illusion engineered by the \textbf{Will} ($\Pi$)
+    to manage uncertainty.
+
+\end{itemize}
 
 \begin{thebibliography}{9}
 
