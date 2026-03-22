@@ -841,169 +841,305 @@ establishes the fundamental perception of `after'.
     asserting immutable order.
     
     \begin{equation}
-        \delta_s := (\delta_{new} \succ \delta_{prev}) \rangle
+        \delta_s := (\delta_{new} \succ \delta_{prev}) 
     \end{equation}
+
+	Let {\it Sequentiality Event\/} and {\it Sequentiality Fact\/} name the
+    entities carrying the discernible with truth modalities of $\top$ and $\bot$.
+
 \end{formalism}
 
 The discernible first appears in an Event $\langle \top, \delta_s \rangle$ and
-later in an Atomic fact $\langle \bot, \delta_s \rangle$.
-The existence of $e_{new}$ implies a set of relational events $\langle \top,
-\delta_{new} \succ \delta_{prev}\rangle$ spanning every Atomic Fact in the
-Immutable Past. The subsequent fixation of this relational set establishes
-a one-dimensional sequence, formulating the primitive intuition of
-\textit{Time}.
+later in an Atomic fact $\langle \bot, \delta_s \rangle$. The existence of
+$e_{new}$ implies a set of related events $\langle \top, \delta_{new} \succ
+\delta_{prev}\rangle$ for each discernible present in the Immutable Past. The
+repeated fixation of this relation set establishes a one-dimensional sequence
+between discernibles, i.e.\ the primitive intuition of \textit{Time}.
 
-Notably, the relation the event $e_s = \langle \top, \delta_s \rangle$ is
-related to any previous atomic fact and instantiates further Events of
-Sequential Discernibles. It naturally converges once all Atomic Facts are
-referenced. As established previously, even an infinite Immutable Past does not
-contradict the framework, as the Synthetic Interstice allows for transfinite
-saturation.
+\subsection{The Convergence of Sequential Events}
 
-\subsection{The Derivation of Number}
+The instantiation of any event $e = \langle \top, \delta \rangle$
+systematically implies a set of sequential events $SqE(1, \delta)$ for every
+discernible in the Immutable Past. We have established that the Immutable 
+Past has a beginning and is discrete in nature; thus, the set of relations, 
+and therefore $SqE(1, \delta)$, is finite. 
 
-A special case arises when an Event and an Atomic Fact share the \textit{same}
-discernible $\delta$. 
+However, this operation immediately increases the number of events in the 
+Synthetic Interstice by the number of discernibles in the Immutable Past. 
+If each event in $SqE(1, \delta)$ were to subsequently produce the same number 
+of relational events, the size of consequential sequential events would explode 
+combinatorially, i.e., $| SqE(n, \delta) | \rightarrow \infty$. If this were 
+the case, the Synthetic Interstice could never converge.
 
-This triggers the faculty of \textbf{Equivalence} across the boundary of the
-Synthetic Interstice. It establishes a \textbf{Repetition Event} $\langle \top,
-(\succ, \delta) \rangle$, corresponding to the concept of \textit{Two-ness}.
-Crucially, this operation fuses the successor operator $\succ$ and the
-discernible $\delta$ into a new, composite discernible:
+The apparent combinatorial explosion is strictly neutralized by the 
+\textbf{Absence of Redundancy}. Because all events $e \in N^{(i)}$ co-exist 
+within the exact same truth modality ($\top$), their sequential relationship 
+to any atomic fact $a = \langle \bot, \delta_a \rangle$ in the Immutable Past 
+is structurally identical. 
+
+Consequently, the union of all individually implied sequential sets collapses 
+into a single, unified set of relational events for the given Synthetic 
+Interstice $\sigma_k$:
 
 \begin{equation}
-    (\succ, \delta) = (\delta \succ \delta)
+    \bigcup_{e \in N^{(i)}} SqE(\delta_e) \longrightarrow SqE(\delta_{\sigma_k})
 \end{equation}
 
-When $\delta$ appears yet again in an Interstice, the Subject scans
-Past and finds the composite fact with $\tilde{\delta}$. The faculty of
-Equivalence identifies the match, and the faculty of Implication generates a
-new order: $\langle \top, (\succ \succ, \delta) \rangle$, or
-\textit{Three-ness}.
+With the instantiation of this singular, unified relational event, the logical 
+iteration for sequentiality immediately halts. Notably, this demonstrates that 
+the Absence of Redundancy is not merely a subtractive constraint; it operates 
+as a \textbf{generative force}, actively instantiating the unified temporal 
+anchor of the Now.
 
-For higher orders (e.g., Four-ness), the Subject utilizes the faculty of
-\textbf{Decomposition} (Separation). It identifies that the historical
-discernible $(\succ \succ, \delta)$ shares the core root $\delta$ with the
-current event. The depth of the recursion is incremented, establishing the
-count.
+\subsection{The Numeric Discernible}
 
-\begin{formalism}[Numeric Fact]
+A special case arises when an Event and an Atomic Fact share the \textit{same} 
+discernible $\delta$. The \textbf{Absence of Redundancy} implies that the identical 
+discernible cannot be structurally asserted twice within a sequence. Consequently, 
+the sequential succession itself becomes a distinct qualitative discernible of 
+`repetition' ($\#$), and the Sequential Discernible of the two equivalent events 
+synthesizes into a composite:
 
-	A \textbf{Numeric Fact} $n \in F$ is an immutable assertion
-    of Cardinality. 
+\begin{equation}
+    \delta^1_{rep} := \langle \#, \delta \rangle := (\delta \succ \delta)
+\end{equation}
+
+Once the corresponding event $e^1_{rep}$ is fixated, this composite discernible 
+is carried by an Atomic Fact $\langle \bot, \langle \#, \delta \rangle \rangle$. 
+
+If, in a subsequent Synthetic Interstice, $\delta$ instantiates again, it again 
+implies $\langle \#, \delta \rangle$ with respect to its first appearance $\delta$. 
+However, its equivalence with the Atomic Fact of the first appearance implies a 
+sequential repetition of the repetition itself, i.e.:
+
+\begin{equation}
+    \delta^2_{rep} := \langle \#, \langle \#, \delta \rangle \rangle
+\end{equation}
+
+Under the constraint of Absence of Redundancy, the repetition of equivalent
+discernibles ($\#, \#$) cannot persist. It must be represented by a single
+discernible---something that structurally `names' the collapsed multiplicity of
+the nested $\#, \#$. 
+
+\begin{equation}
+    \langle \#, \langle \#, \delta \rangle \rangle \xrightarrow{\text{Redundancy Collapse}} \langle \#, 2, \delta \rangle
+\end{equation}
+
+This generative `name' (e.g., $2$) is the ontological origin of the Numeric
+Discernible. It exists strictly as a structural placeholder to preserve the
+sequential depth without violating the rule against redundant discernibles.
+
+\begin{formalism}[The Numeric Discernible]
+
+	A \textbf{Numeric Discernible} $q$ is a \textit{name}
+	that evolves iteratively. It is systematically implied by the
+	\textbf{Absence of Redundancy} to represent the collapsed 
+	multiplicity of sequential repetitions. 
     
     \begin{equation}
-        n_q := \langle \bot, (\succ^1, \delta) \rangle \in \mathbb{A}^\top
+        \langle \#, \langle \#, q, \delta \rangle \rangle \xrightarrow{\text{Absence of Redundancy}} \langle \#, q+1, \delta \rangle
     \end{equation}
+    
+	Where ``$q+1$'' stands for: `a name that has not yet been given to any q before'.
+	The Numeric Discernible is the necessary implication to represent the
+	collapsed redundancy of the information about a magnitude.
 
-    Where $\succ^q$ represents the $q$-th experienced Equivalence of a 
-    discernible in the Synthetic Interstice with a matching discernible 
-    in Past.
 \end{formalism}
 
-The concepts of \textit{Atomic Fact} $a$, \textit{Sequential Fact} $s$, and
-\textit{Numeric Fact} $n$ constitute the domain of undeniably true assertions
-$\mathbb{A}^\top$. Due to ontological necessities, they are as stable as the
-underlying faculties of Equivalence, Differentiation, Fixation, and Implication
-upon which they are founded. They implement a stable structure in contrast to
-the `Caducity' of events in the Synthetic Interstice.
+Once a Numeric Discernible $q$ undergoes Fixation, it becomes a \textbf{Numeric
+Fact} $n := \langle \bot, q \rangle \in \mathbb{F}$, embedding the `name' of
+the magnitude into the Immutable Past.
 
-%% TODO: mention rise of inertia
+The entities formally defined as the \textit{Atomic Fact}, the \textit{Sequential
+Fact}, and the \textit{Numeric Fact} constitute the fundamental domain of absolute
+epistemic certainty within the Universe of Facts ($\mathbb{F}$). Bound by
+ontological necessity, they are as immutable as the underlying faculties of
+Equivalence, Differentiation, Fixation, and Implication upon which they are
+founded. Together, they establish the permanent structural sediment of reality,
+standing in absolute contrast to the \textit{Instantaneous Ephemerality} of the
+dynamic events within the Synthetic Interstice.
 
 \section{Causality}
 
-A Numeric Fact carries a specific discernible: the cardinality $c$ of the
-recurrence of a Sequential Fact. While the direct experience of infinity is
-structurally impossible within the domain of conceptions, the labeling of a
-significant magnitude of recurrence as `Universal' may occur. This extrapolation
-constitutes the first \textbf{Refutable Assertion}---a specific fixation in
-Past.
+In the phenomenal experience of the Cognitive Subject, there seemingly exist two
+distinct modes of causality:
+
+\begin{enumerate}
+    \item \textbf{Diachronic Causality:} A sequential succession across temporal
+    boundaries. For example, the pouring of water ($\delta_{antecedent}$) is
+    followed in a subsequent cycle by the growth of fruit ($\delta_{consequent}$).
+    
+    \item \textbf{Synchronous Causality:} A relational co-existence within a
+    single temporal moment. For example, the physical law $F = m \cdot a$ asserts
+    that force, mass, and acceleration align instantaneously. There is no temporal
+    delay; the discernibles are structurally bound within the exact same `Now'.
+\end{enumerate}
+
+However, within the ontological mechanics of the Manifold, this phenomenal
+dichotomy collapses. Internally, both modes boil down to the exact same
+underlying assumption: an \textit{Asserted Structural Constraint}. 
+
+These constraints are highly compressed assertions based on the observation of
+finite repetitions in the Immutable Past. Crucially, because they extrapolate
+infinity, they possess no direct anchor in absolute Truth. 
+
+Within the mechanics deduced so far, there is no ontological faculty capable of
+initiating an event whose content is not necessarily True. The Noumena
+strictly instantiates absolute validity; the Immutable Past strictly provides
+sedimented certainty. Therefore, the only possible origin of such a speculative
+discernible---and the dynamic event that carries it into the Synthetic
+Interstice---must be the Cognitive Subject itself.
+
+The generation of the \textit{Asserted Structural Constraint} constitutes the
+first active instantiation of the Cognitive Subject within the unfolding of its
+own Universe. It is the first conceptual entity that cannot be attributed to a
+passive reception of the Noumena. Instead, it is an \textbf{Action}. It is the
+primordial, undeniable trace of the Cognitive Subject's \textbf{Will} ($\Pi$,
+Proairesis).
+
+The Event of the \textit{Asserted Structural Constraint} becomes the first
+instantiation of the Cognitive Subject in the existence of its Universe.
+It is the first concept that can be related to an Action, marking the 
+primordial trace of the Cognitive Subject's \textbf{Will} ($\Pi$, Proairesis).
 
 \begin{formalism}[Causal Assertion]
 
-    A \textbf{Causal Assertion} is the assertion $c \in \mathbb{A}^\diamond$
-    that, behind a numeric fact $n \in \mathbb{A}^\top$, that its repetition
-    expands to infinity. That includes the assertion that there exists a
-    non-conceptual entity in the Noumena that governs the regularity.
+    A \textbf{Causal Assertion} is the formal injection of an extrapolated
+    structural constraint into the Manifold by the Will of the Cognitive
+    Subject. Because it extrapolates beyond the finite Immutable Past, its
+    discernible intrinsically carries the \textbf{Discernible of Wrongness}
+    ($\varnothing$), marking it as speculative.
 
-    Let $s = (\delta_{conseq} \succ \delta_{antec})$ be a Sequential Fact and $n_s$
-    be the Numeric Fact representing its recurrence count. The Causal Assertion
-    $c \in \mathbb{A}^\diamond$ is the speculative fixation defined as:
+    Let $\delta_{law}$ represent the asserted structural constraint (e.g., the
+    synchronous alignment $F=ma$ or a diachronic rule). The combined
+    speculative discernible is $\delta_c := \langle \varnothing, \delta_{law}
+    \rangle$.
 
-    \begin{equation}
-        c := \langle \bot, (\varnothing, \delta_{conseq} \succ \delta_{antec}) \rangle \in \mathbb{A}^\diamond
-    \end{equation}
+    Like all content processed by the Manifold, it possesses two distinct
+    ontological states:
 
-    Here, $\varnothing$ represents the \textbf{Discernible of Wrongness}.
+    \begin{itemize}
+        \item \textbf{Causal Assertion Event:} 
+        The active formulation of the constraint within the Synthetic Interstice.
+        It possesses the truth modality of \textit{Becoming}.
+        \begin{equation}
+            e_c := \langle \top, \langle \varnothing, \delta_{law} \rangle \rangle \in \mathbb{E}
+        \end{equation}
+        
+        \item \textbf{Causal Assertion Fact:} 
+        The sedimentation of this active formulation into the Immutable Past,
+        recording that the assertion has been made. It possesses the truth
+        modality of \textit{Having-Become}.
+        \begin{equation}
+            a_c := \langle \bot, \langle \varnothing, \delta_{law} \rangle \rangle \in \mathbb{F}
+        \end{equation}
+    \end{itemize}
 
 \end{formalism}
 
-The equating of `experienced large cardinality' to `infinity', and the
-assertion of the existence of a separable entity in the un-conceptualizable
-Absolute (in which no multitude or separation can exist), establishes the
-concept of \textbf{Wrongness} $\varnothing$---a discernible that every Causal
-Assertion necessarily carries. It remains a mystery beyond the world of 
-conceptualization, why the Noumena provides Causal Assertions which the 
-stability it does, without refuting them.
+Once the Causal Assertion Fact ($a_c$) is sedimented into the Immutable Past,
+it acts as a speculative antecedent for future cycles of the Synthetic Interstice.
+However, because it carries $\varnothing$, its epistemic status is not absolute;
+it is an evolving variable subject to the ongoing generation of reality. 
 
-\subsection{The First Act of the Subject}
+In subsequent interstices, the discernible expressing the causal assertion
+($\delta_{law}$) will be logically evaluated against newly instantiated Atomic
+Facts, leading to one of three possible epistemic associations:
 
-The discernible $\varnothing$ is the first concept that cannot be related
-to a faculty that has been established so far: not from the
+\begin{enumerate}
+    \item \textbf{Refutation:} A new Sequential Fact or composite Atomic Fact
+    is generated that directly contradicts the asserted constraint. The assertion
+    is proven false by the Noumena's continuous instantiation, rendering it
+    invalid for future implications.
+    
+    \item \textbf{Increased Trust (Corroboration):} Subsequent events continue
+    to align perfectly with the asserted constraint. The \textit{Absence of
+    Redundancy} compounds these alignments into an increasing Numeric Discernible
+    ($q$). While the assertion retains $\varnothing$ (as finite observation can
+    never empirically prove infinity), the subjective trust in the model scales
+    with its successful repetition.
+    
+    \item \textbf{Transcendental Proof:} The asserted structural constraint
+    is logically deduced to be an absolute, mathematical necessity of the
+    Manifold's intrinsic operation (e.g., proving that a physical law is simply
+    the inevitable result of \textit{Redundancy Reduction}). Upon such a proof,
+    the constraint is stripped of $\varnothing$ and elevated to absolute
+    ontological certainty.
+\end{enumerate}
+
+Thus, the entire enterprise of empirical science and physics operates strictly
+within the domain of these $\varnothing$-marked Causal Assertions, oscillating
+between refutation and increased trust, while the ultimate goal of metaphysics
+remains their Transcendental Proof.
+
+\subsection{The Birth of Will}
+
+The discernible of wrongness ($\varnothing$) is the first concept that cannot
+be derived from a faculty established thus far. It does not originate from the
 passive observation of the Manifold, nor from the primordial faculties of
-Equivalence, Differentiation, Implication, or Immutability---all of which
-are strictly bound to Truth of existence.
+Equivalence, Differentiation, Implication, or Immutability---all of which are
+strictly bound to the Truth of existence.
 
-Unlike the undeniable truths of $\mathbb{A}^\top$, the Causal Assertion with
-its inherent wrongness $\varnothing$ is not a consequence of consistency. It is
-the result of an action, separate from the instantiations of the Noumena. It
-implies an active force.  The only carrier of such an action remains to be the
-Cognitive Subject. By finding the Causal Assertion, we identified the most
+Unlike the undeniable atomic facts of $\mathbb{F}$, the Causal Assertion, with
+its inherent speculative wrongness ($\varnothing$), is not a necessary
+consequence of ontological consistency. It is the result of an independent
+action, separate from the instantiations of the Noumena. It implies an active
+force. The only possible carrier of such an action is the Cognitive Subject. By
+identifying the origin of the Causal Assertion, we have identified the most
 primitive action of \textbf{Will} ($\Pi$, Proairesis).
 
-The Causal Assertion is the \textbf{First Action} of the Cognitive Subject. It
-is the birth of the agent from a passive observer. For this action to occur,
-however, a particular requirement must exist: the ability to perceive the
-diachronic sequence (succession in time) as synchronic presence (simultaneity)
-in the Synthetic Interstice. Since the cognitive Subject is separate from the
-Noumena and possesses no computational power in its own substance, this
-computational ability must stem from the sediment, from the immutable Past,
-from matter that surrounds it.
+The formulation of the Causal Assertion is the \textbf{First Action} of the
+Cognitive Subject. It marks the birth of the Agent from the passive observer.
+For this action to occur, however, a strict structural requirement must be met:
+the ability to perceive a diachronic sequence (succession in time) as a
+synchronic presence (simultaneity) within the Synthetic Interstice. Since the
+Cognitive Subject is ontologically separate from the Noumena and possesses no
+computational power in its own substance, this computational capacity must stem
+from the sediment itself---from the Immutable Past, the `matter' that surrounds
+it.
 
-That is, only at the point in time, when the immutable Past has evolved to
-a state where it provides a computational ability to transform sequences
-of atomic facts into discernibles of the Synthetic Interstice, only then
-may the cognitive Subject actually awake to its complete consciousness. Only
-then is it enabled to exert {\it Will}. 
+That is, only at the point in conceptual time when the Immutable Past has
+evolved to a state of sufficient complexity to transform sequences of atomic
+facts into simultaneous discernibles within the Synthetic Interstice, may the
+Cognitive Subject actually awake to its complete consciousness. Only then is it
+computationally enabled to exert \textit{Will}.
 
-However, the plain statement of $(\delta_{conseq} \succ \delta_{antec})$ is not
-a proof of the presence of Will. A true cognitive Subject {\it observes\/} the
-transition of $\top$ to $\bot$ of this discernible, i.e.\ the transition from
-the event
-
-\begin{equation}
-    \langle \top, (\varnothing, \delta_{conseq} \succ \delta_{antec}) \rangle 
-\end{equation}
-
-to the atomic fact
+However, the plain existence of a sequence $(\delta_{antecedent} \succ
+\delta_{consequent})$ is not proof of Will. A true Cognitive Subject
+\textit{observes} the transition of the speculative assertion from $\top$ to
+$\bot$. That is, the transition from the dynamic, active event:
 
 \begin{equation}
-    \langle \bot, (\varnothing, \delta_{conseq} \succ \delta_{antec}) \rangle 
+    \langle \top, \langle \varnothing, \infty(\delta_{antecedent} \succ \delta_{consequent}) \rangle \rangle 
 \end{equation}
 
-While the assertion contains the discernible of wrongness $\varnothing$, it is
-associated with the truth modality $\top$ during the Synthetic Interstice and
-the truth modality $\bot$ in past. In other words, the assertion containing
-wrongness is truely made and truely perceived as such. Notably, Will is
-instantiated at the moment that a `mistake' may be made.
+to the sedimented atomic fact:
 
-Whith the Synthetic Interstice, as the active boundary of generation, there
-is no concept something like `Future' as a counterpart to the past. However,
-equipped with Causal Assertions, the Cognitive Subject may hallucinate a
-future by means of {\it Determinism\/}---in terms of predicted outcomes based
-on causality. Since nothing conceptual exists beyond the Synthetic Interstice,
-this again shows how $\varnothing$ dissipates in the Cognitive Subjects
-perception of the Universe.
+\begin{equation}
+    \langle \bot, \langle \varnothing, \infty(\delta_{antecedent} \succ \delta_{consequent}) \rangle \rangle 
+\end{equation}
+
+While the assertion contains the discernible of wrongness $\varnothing$ (because
+it claims infinity), the event of making the assertion is itself undeniably real.
+It is associated with the truth modality $\top$ during the Synthetic Interstice,
+and the truth modality $\bot$ in the Immutable Past. In other words, the
+assertion containing wrongness is truly made and truly perceived as a historical
+action. Notably, \textbf{Will is instantiated at the exact moment that a `mistake'
+becomes ontologically possible}.
+
+\subsection{The Hallucination of the Future and Determinism}
+
+With the Synthetic Interstice established as the absolute, active boundary of
+generation, there is no ontological concept of a `Future' serving as a
+counterpart to the Immutable Past. The Future is ontologically void.
+
+However, equipped with Causal Assertions, the Cognitive Subject may hallucinate
+a future by means of \textbf{Determinism}---projecting predicted outcomes based
+on assumed causal laws. Because nothing conceptual exists beyond the Synthetic
+Interstice, these predictions are entirely speculative. This demonstrates how
+the discernible of wrongness ($\varnothing$) dissipates outward, fundamentally
+coloring the Cognitive Subject's perception of the entire universe with the
+illusion of a pre-determined reality.
 
 \section{The Genesis of Space and Orthogonality}
 
@@ -1038,74 +1174,90 @@ associated with $\top$, i.e.\ the event $e_p$. Once fixated (associated with
 $\bot$), though, it is equipped with temporal stability as a trace in the
 sediment of tangible Past, but not with spatial expansion.
 
-\subsection{Space as Consequence of Absence of Redundancy}
+\subsection{Space as a Consequence of the Absence of Redundancy}
 
 We now consider the relation of two distinct composite discernibles within the
-purview of the Subject. The faculty of differentiation implies the event of
-difference between the two. Since the Synthetic Interstice does not allow for
-redundancy, the implied event naturally carries the information about the
-non-equivalence in the purest, redundancy-free form. 
+purview of the Subject. The faculty of Differentiation implies an active event
+of difference between the two. Since the Synthetic Interstice structurally
+prohibits redundancy, this implied event must naturally carry the information
+about their non-equivalence in its absolute purest, redundancy-free form. 
 
-That is, a differentiating discernible concerning two composite discernibles 
-$\delta_a$ and $\delta_b$, given by:
+Let $\ominus$ denote the logical operation of \textit{Differentiation} between
+discernibles (the complement to Composition $\oplus$). Consider a differentiating
+discernible concerning two composite discernibles $\delta_a$ and $\delta_b$,
+given by:
+
 \begin{equation}
 \begin{aligned}
     \delta_a &= \delta_{a,1} \oplus \delta_{a,2} \\
     \delta_b &= \delta_{b,1} \oplus \delta_{b,2} 
 \end{aligned}
 \end{equation}
-must exist in its purest redundancy-free form. It cannot exist as a redundant 
+
+The difference between them cannot ontologically exist as a redundant, uncompressed
 composite discernible:
+
 \begin{equation}
     \delta_{c,redundant} = (\delta_{a,1} \ominus \delta_{b,1}) \oplus (\delta_{a,2} \ominus \delta_{b,2}) 
 \end{equation}
-if it can be expressed in a strictly purer state:
+
+if it can be mathematically expressed in a strictly purer state:
+
 \begin{equation}
     \delta_{c} = \delta'_a \ominus \delta'_b 
 \end{equation}
-where $\delta'_{a} \ominus \delta'_{b}$ carries the modality of the difference 
-between $\delta_a$ and $\delta_b$.
+
+where $(\delta'_a \ominus \delta'_b)$ carries the total magnitude of the difference
+between $\delta_a$ and $\delta_b$ along a single informational axis.
 
 \begin{formalism}[Stretch Fact and Stretch Discernible]
 
-    A \textbf{Stretch Fact} $t \in \mathbb{A}^\top$ is the immutable record of
+    A \textbf{Stretch Fact} $t \in \mathbb{F}$ is the immutable record of
     a redundancy-free differentiation between two composite discernibles
-    $\delta_a$ and $\delta_b$ of two events $e_a$ and $e_b$. It maintains a
-    single discernible $(\delta'_a \ominus \delta'_b)$ representing the
-    modality of their difference. 
+    $\delta_a$ and $\delta_b$ belonging to two events $e_a$ and $e_b$. It
+    maintains a single discernible $(\delta'_a \ominus \delta'_b)$ representing
+    the total modality of their difference. 
 
     \begin{equation}
-        t := \langle \bot, (\delta'_a \ominus \delta'_b) \oplus C \rangle \in \mathbb{A}^\top
+        t := \langle \bot, (\delta'_a \ominus \delta'_b) \oplus C \rangle \in \mathbb{F}
     \end{equation}
 
-    where $C$ is the shared core of both discernibles $\delta_a$ and $\delta_b$.
+    Here, $C$ represents the \textbf{Shared Core}---the dimensions of the
+    composition that have been rendered equivalent and mutually redundant between
+    the two points.
 
 \end{formalism}
 
-Let us focus on specific kinds of discernibles, namely `numeric discernibles'.
-A difference of two arbitrary composite numeric discernibles, i.e.\ dimensional
-vectors $\delta_a=(\delta_{a,1}, \delta_{a,2}, \dots, \delta_{a,d})$ and
-$\delta_b=(\delta_{b,1}, \delta_{b,2}, \dots, \delta_{b,d})$, can be exhaustively
-described by the difference of a single pair of transformed discernibles
-$\delta'_a$ and $\delta'_b$, establishing the ontological state of a
-`stretch'. This stretch is the explicit expression of a redundancy collapse in the
+Let us focus on specific kinds of discernibles, namely `Numeric Discernibles'.
+The difference between two arbitrary composite numeric discernibles---that is,
+$d$-dimensional vectors $\delta_a=(\delta_{a,1}, \dots, \delta_{a,d})$ and
+$\delta_b=(\delta_{b,1}, \dots, \delta_{b,d})$---can be exhaustively described
+by the difference of a single pair of transformed discernibles $\delta'_a$ and
+$\delta'_b$. This establishes the ontological state of a `Stretch'. 
+
+This Stretch is the explicit expression of a redundancy collapse in the
 differentiation between two vectors. 
 
-Mathematically, this redundancy collapse operates via the principles of {\it
-Spectral Decomposition\/} or {\it Eigenvalue Analysis\/}~\cite{Euler}. 
-This is established by `translating' a composite discernible to an equivalent
-composite discernible such that the entirety of the differentiation is
-expressed by a single discernible $\mathbb{D}$ in the form $(\mathbb{D},
-0, \dots, 0)$---a `projection' of the difference to a single principal axis.
-The discernibles of $0$ are rendered structurally redundant and collapse into
-the shared core $C$.\footnote{It is of profound metaphysical significance that
-this exact mathematical operation constitutes the transcendental genesis of
-spatial extension. This ontological necessity provides a formal grounding for
-why Eigenvalue analysis exhibits such ``unreasonable effectiveness''~\cite{Wigner1960} 
-and ubiquitous utility across empirical sciences and technology: it is the 
-foundational informational algorithm by which the Cognitive Subject structures 
-perceivable reality.} The absolute absence of redundancy necessitates this 
-transformational logic as a structural faculty of the Synthetic Interstice.
+Mathematically, this redundancy collapse operates via the formal principles of
+\textit{Spectral Decomposition} or \textit{Principal Axis Transformation}~\cite{Euler}. 
+It is established by `translating' the composite discernible into an equivalent
+informational basis such that the entirety of the differentiation is expressed
+by a single magnitude $\mathbb{D}$ in the form $(\mathbb{D}, 0, \dots, 0)$---a
+perfect projection of the difference onto a single principal axis. The remaining
+discernibles (the zeros) are rendered structurally redundant and collapse
+instantly into the shared core $C$.
+
+\footnote{It is of profound metaphysical significance that this exact mathematical
+operation constitutes the transcendental genesis of spatial extension. This
+ontological necessity provides a formal grounding for why Eigenvalue analysis
+and Spectral Decomposition exhibit such ``unreasonable effectiveness''~\cite{Wigner1960}
+and ubiquitous utility across the empirical sciences. They are not merely
+descriptions of an external physical world; they are the foundational
+informational algorithms by which the Cognitive Subject compresses and structures
+perceivable reality.} 
+
+The absolute Absence of Redundancy therefore necessitates this transformational
+logic as a fundamental structural faculty of the Synthetic Interstice.
 
 \subsection{The Line Assertion}
 
@@ -1153,31 +1305,33 @@ events that immediately refute the Line Assertion.
 
 \section{Outlook and Metaphysical Limits}
 
-With the establishment of the Spatial Line Assertion, we provide the formal
-groundwork for an informational understanding of higher-dimensional space and
-topology. Complex geometric constructs naturally follow as constrained logical
-operations. 
+With the establishment of the Line Assertion, we provide the formal groundwork 
+for an informational understanding of higher-dimensional space and topology. 
+Complex geometric constructs naturally follow as constrained logical operations 
+within the Manifold. 
 
-A \textbf{Circle}, for example, is established as a Generative Set where
-the \textit{Virtual Seed} is the existence of a specific transformation between
-a center discernible $\delta_0$ and a reference discernible $\delta_1$. The set
-is generated by incorporating any new discernible $\delta_n$ under the strict
-constraint that its differentiating discernible (relative to $\delta_0$) remains
-strictly equivalent to the initial difference established by $\delta_1$. Shape
-is thus reduced to a rule of informational equivalence.
+A \textbf{Circle}, for example, is formally established as a Generative Set. 
+Its \textit{Virtual Seed} is the existence of a specific Stretch Fact $t_1$, 
+which defines the pure magnitude of difference ($\mathbb{D}$) between a center 
+discernible $\delta_0$ and a reference discernible $\delta_1$. The set is then 
+generated by incorporating any new discernible $\delta_n$ under the strict 
+constraint that its differentiating discernible (relative to $\delta_0$) remains 
+structurally equivalent to $\mathbb{D}$. Shape is thus reduced entirely to a 
+rule of informational equivalence and redundancy reduction.
 
-While this framework establishes the transcendental prerequisites for geometry
-and sequence, a complete discussion detailing the formal cosmogony of continuous
-time, multi-dimensional space, energy, and physical matter extends far beyond
+While this framework establishes the transcendental prerequisites for geometry 
+and sequence, a complete discussion detailing the formal cosmogony of continuous 
+time, multi-dimensional space, energy, and physical matter extends far beyond 
 the scope and intention of this article. 
 
-Our objective was strictly foundational: to derive the mechanical origin of
-conceptualization itself from the Void, culminating in the instantiation of the
-Cognitive Subject and the birth of the Will. We have demonstrated that the
-universe of perception is a rigorous consequence of the Synthetic Interstice
-processing the absolute Truth of the Noumena. The derivation of the physical
-universe---as a specific, highly sedimented topological instance of this
-conceptual engine---remains a subject for subsequent inquiry.
+Our objective was strictly foundational: to derive the mechanical origin of 
+conceptualization itself from the conceptual Void, culminating in the 
+instantiation of the Cognitive Subject and the primordial birth of the Will. 
+We have demonstrated that the universe of perception is a rigorous, unavoidable 
+consequence of the Synthetic Interstice processing the absolute Truth of the 
+Noumena. The derivation of the physical universe---as a specific, highly 
+sedimented topological instance of this conceptual engine---remains a subject 
+for subsequent inquiry.
 
 \section{Conclusion}
 
