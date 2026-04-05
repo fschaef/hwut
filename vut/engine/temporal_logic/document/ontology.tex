@@ -424,51 +424,77 @@ metaphysical architecture: the \textbf{Ontic Engine} ($\mathcal{O}$).
 A crucial foundation for the following logical arguments is the strict demarcation
 between a \textit{Composition} and a \textit{Set}. First, the co-existence of
 multiple discernibles establishes an informational substance---a truth expressing
-their synchronous co-existence. The corresponding `Composition Event' is an
-immediate implication of this co-existence.
+their co-existence. The strict shared core characteristic that ties the elements
+of a composition together is solely that their events all carry the $\top$ truth
+modality at the exact same logical step. A composition can be considered a passive
+`snapshot' of discernibles at one particular logical step of implications. 
 
-\begin{equation}
-    e_{co} = \langle \top, (\oplus, \delta_0, \delta_1, \ldots) \rangle
-\end{equation}
+This purely extensional definition of aggregation directly mirrors the Axiom of
+Extensionality in Zermelo-Fraenkel set theory~\cite{Zermelo1908}, where the
+identity of a set is determined solely by its constituent elements. Let $N^{(i)}$
+be the maximal Composition carrying the informational substance of co-existence
+for \textit{all} events instantiated at step $i$. 
+
+Under the strict \textbf{Absence of Redundancy}, any isolated sub-composition
+asserting the mere co-existence of a specific subset (e.g., $\delta_p \oplus
+\delta_q$) instantaneously collapses, as its co-existence is already subsumed
+within the maximal composition $N^{(i)}$. Consequently, any strict
+sub-composition (where $\delta_{co} \neq N^{(i)}$) can only persist as a distinct
+information substance, if it acts as a mandatory antecedent to an implication. 
+
+To survive the pressure of the Absence of Redundancy, the sub-composition must
+inherently imply an event carrying the truth of `has a $\delta_{ha}$' for a
+specific discernible present within it. We therefore formally define the
+Composition under this strict existential condition:
 
 \begin{formalism}[Composition Discernible]
-    A \textbf{Composition Discernible}, or simply \textit{Composition}, is an
-    informational substance that expresses the co-existence of events related
-    to multiple distinct discernibles.
+
+    A \textbf{Composition Discernible} $\delta_{co,i}$, or simply
+    \textit{Composition}, is an informational substance expressing the
+    co-existence of multiple distinct discernibles at a particular step of
+    implications $i$.
 
     \begin{equation}
-        \delta_{co} = (\oplus, \delta_0, \delta_1, \ldots) 
+        \delta_{co,i} = (\oplus, \delta_0, \delta_1, \ldots, \delta_{\mathcal{I}}) 
     \end{equation}
+
+    where $\delta_{mathcal{I}}$ represents the implication for which it is
+    the antecedent.
+
+    $\delta_{co,i}$ is instantiated as the implied event $e_{co} = \langle
+    \top, \delta_{co,i} \rangle$ at the logical implication step $i$ when all
+    its constituent discernibles co-exist. 
 
 \end{formalism}
 
-The strict \textit{shared core characteristic} that ties the elements of a
-composition together is solely that their events all carry the $\top$ truth
-modality at the exact same logical step. A composition can be considered a
-passive `snapshot' of discernibles that have been implied at a specific step
-of implications.
+The $\delta_{\mathcal{I}}$ of the composition $N^{(i)}$ of all events
+existing at a logical step $i$, is that is the antecedent of the next logical 
+step.
 
-In an environment of evolving implications, however, a Composition is not the
-correct approach to handle dynamic aggregations. We \textit{cannot} associate
-an aggregation of discernibles with $\top$ if their constituent events have not
-yet been logically established via implication. To do so would allow the engine
-to reference the result of un-established implications \textit{before} they are
-actually logically generated. 
+
+A Composition, however, can only 
+In an environment of evolving implications, however, that static Composition, 
+however cannot e
+approach to handle dynamic aggregations. We cannot refer an
+aggregation of discernibles with $\top$ if their constituent events have not yet
+been logically established via implication. To do so would allow the engine to
+reference the result of un-established implications \textit{before} they are
+logically generated. 
 
 Russell's antinomy of the ``set of all sets that do not contain themselves''
-arises precisely from this \textit{Impredicativity}, this illicit
-pre-referencing of a set that is not yet logically established. In the frame of
-evolving implications, logical consistency enforces \textbf{Predicativity}.
-That is, an event carrying a truth modality $\top$ cannot reference something
-that has no truth modality of $\top$. In particular, the Event
+arises precisely from this \textit{Impredicativity}---the illicit
+pre-referencing of a totality that is not yet logically established. In the
+framework of evolving implications, logical consistency enforces absolute
+\textbf{Predicativity}. That is, an event carrying a truth modality $\top$
+cannot reference an entity that does not already possess a truth modality of
+$\top$ or $\bot$. 
 
-\begin{equation}
-    \langle \top, ((\text{constitute a}, \Delta), (\delta_0, \delta_1, \ldots)) \rangle
-\end{equation}
+We consider a set $S$ to be established if it can produce the truths about two
+elements $x$ and $y$ being equivalent with respect to the core characteristic
+of $S$. Further, the event that establishes a set $S$ must have Identity, that
+distinctly distinghuishes it from any other possible event.
 
-is impossible, as long as there is no event $\langle \top, \Delta \rangle$ that
-establishes the $\Delta$. Instead, we must track the chain of implications. The
-Composition Event implies new events carrying the truth of `has a
+The Composition Event implies new events carrying the truth of `has a
 $\delta_\wedge$' for each discernible $\delta_\wedge$ present in its
 composition. 
 
@@ -496,7 +522,7 @@ structurally implies a unified truth, an informational substance, namely:
 
 A set, in this sense, is the particular implication that applies Differentiation
 and Equivalence across multiple compositions to produce the $e_\wedge$ event at a
-particular logical step of implications. 
+particular logical step. 
 
 Only upon the exhaustion of implications---i.e., when no further events
 instantiate---would it logically be possible to instantiate an event
@@ -537,78 +563,16 @@ the set, it requires \textit{Identity}. That is, it must contain at least
 one discernible by which the faculty of Differentiation separates it from the
 others.
 
-In the Synthetic Interstice, we can only discuss \textit{Co-Existences} of 
-Events, not Sets of Events. The invocation of a Set in formal operations 
-is therefore an indicator of a fixation that has taken place between the 
-events that instantiated the elements of the set and the implication itself. 
-In other words, logical operations on sets necessitate the sequential 
-ontological transition of $\top \rightarrow \bot$, before a set can be 
-established upon the Immutable Past ($\bot$) to subsequently imply new 
-events ($\top$).
+Since the establishment of a set requires reference to the Immutable Past, an
+important observation must be made:
 
-\subsection{Memory}
-
-Crucially, the Synthetic Interstice is the \textit{sole} domain of actual
-presence ($\top$). Once an event fixates into the Immutable Past ($\bot$), it
-vanishes from the immediate Interstice. Thus, for the Cognitive Subject, in its
-nascent state as a `Lack of Knowledge', to actually exist, it must exist within
-the Synthetic Interstice. Furthermore, the Synthetic Interstice is the only
-domain of absolute novelty. Any event that fixates into the Immutable Past
-($\bot$) instantly vanishes from the Subject's immediate reality. As long as
-the Cognitive Subject is unable to perceive the Immutable Past, it remains
-strictly dormant within a continuous stream of ephemeral events---entirely
-unaware of this flow due to an absolute lack of referential anchors.
-
-The Synthetic Interstice operates on emanant implications, drawn from its own
-active state and the Immutable Past. For the Cognitive Subject to experience
-the Immutable Past as a sequence, these implications must perform a specific
-operation: a transformation that projects the ordered, discrete states of the
-Immutable Past into the synchronic actuality of the Synthetic Interstice. Once
-this transformational faculty is present, the Cognitive Subject emerges from
-dormancy, being able to associate, thus compare the sequential states of Atomic
-Facts and experiencing the Synthetic Interstice as the source of novelty and
-domain of true existence. It becomes aware of a continuous flow---in human
-phenomenology, it becomes `aware of immutability' and `aware of
-time'~\cite{Husserl1928}.
-
-When the Subject is equipped with these specific emanant implications that
-project the Immutable Past into the Synthetic interstice, it establishes
-the faculty of \textit{Memory}.
-
-\begin{formalism}[Memory]
-    \textbf{Memory} is the experiential manifestation of \textit{Emanant
-    Implications} ($\bot \rightarrow \top$). It is a specific set of implications
-    drawn from the Immutable Past that performs a transformation of sedimented
-    traces into dynamic events within the Synthetic Interstice. 
-    
-    By projecting a historical Atomic Fact $a$ into the synchronic presence of
-    the `Now', this set of implications instantiates a corresponding memory
-    event $e_{mem}$:
-    
-    \begin{equation}
-        \mathit{Mem}: \langle \bot, \delta \rangle \implies \langle \top, \delta_{mem} \rangle \in \mathbb{E}
-    \end{equation}
-    
-    This projection allows the Cognitive Subject to experience elements of
-    the Immutable Past simultaneously as a sequential phenomenon. It is the 
-    absolute prerequisite for the Subject to evaluate sequence, compare states, 
-    and experience continuity~\cite{Husserl1928}.
+\begin{formalism}[Theorem: The Delay of Totality]
+    Any Synthetic Interstice $\sigma_{ref}$ that references a
+    completed Set $S$ must be separated by at least one absolute fixation step
+    ($\top \to \bot$) from the Synthetic Interstice $\sigma_{est}$ that
+    instantiated the constituent elements of $S$. Totality cannot be evaluated
+    in the `Becoming'; it is strictly a property of the `Having-Become'.
 \end{formalism}
-
-Memory, therefore, marks the critical second stage in the ontological existence 
-of the Cognitive Subject---the transition from a primordial, dormant `lack of 
-knowledge' into an entity capable of sustained awareness and perception.
-
---------------- REVIEW THIS UNDER CONSIDERATION OF 'SET'
-We established the concept of a \textit{Set} in terms of \textit{Equivalence},
-\textit{Differentiation}, and \textit{Implication}--all present in the
-Synthetic Interstice. Further, this definition of a set relies on purely
-dynamic generation rather than on a `fixation' (as a `snapshot of member
-elements'). This independence from `fixation' is crucial for the operation of
-the Synthetic Interstice. With the already established concept of
-Sequentiality, we and the definition of a Set, we are now able to precisely
-define the Immutable Past.
-----------------
 
 \subsection{Formalism: Negation}
 
@@ -904,7 +868,70 @@ of generation.
     operations of the Synthetic Interstice is a proof of the Cognitive
     Subjects limitted perception.
 \end{formalism}
+
+\section{Memory}
+
+Crucially, the Synthetic Interstice is the \textit{sole} domain of actual
+presence ($\top$). Once an event fixates into the Immutable Past ($\bot$), it
+vanishes from the immediate Interstice. Thus, for the Cognitive Subject, in its
+nascent state as a `Lack of Knowledge', to actually exist, it must exist within
+the Synthetic Interstice. Furthermore, the Synthetic Interstice is the only
+domain of absolute novelty. Any event that fixates into the Immutable Past
+($\bot$) instantly vanishes from the Subject's immediate reality. As long as
+the Cognitive Subject is unable to perceive the Immutable Past, it remains
+strictly dormant within a continuous stream of ephemeral events---entirely
+unaware of this flow due to an absolute lack of referential anchors.
+
+The Synthetic Interstice operates on emanant implications, drawn from its own
+active state and the Immutable Past. For the Cognitive Subject to experience
+the Immutable Past as a sequence, these implications must perform a specific
+operation: a transformation that projects the ordered, discrete states of the
+Immutable Past into the synchronic actuality of the Synthetic Interstice. Once
+this transformational faculty is present, the Cognitive Subject emerges from
+dormancy, being able to associate, thus compare the sequential states of Atomic
+Facts and experiencing the Synthetic Interstice as the source of novelty and
+domain of true existence. It becomes aware of a continuous flow---in human
+phenomenology, it becomes `aware of immutability' and `aware of
+time'~\cite{Husserl1928}.
+
+When the Subject is equipped with these specific emanant implications that
+project the Immutable Past into the Synthetic interstice, it establishes
+the faculty of \textit{Memory}.
+
+\begin{formalism}[Memory]
+    \textbf{Memory} is the experiential manifestation of \textit{Emanant
+    Implications} ($\bot \rightarrow \top$). It is a specific set of implications
+    drawn from the Immutable Past that performs a transformation of sedimented
+    traces into dynamic events within the Synthetic Interstice. 
     
+    By projecting a historical Atomic Fact $a$ into the synchronic presence of
+    the `Now', this set of implications instantiates a corresponding memory
+    event $e_{mem}$:
+    
+    \begin{equation}
+        \mathit{Mem}: \langle \bot, \delta \rangle \implies \langle \top, \delta_{mem} \rangle \in \mathbb{E}
+    \end{equation}
+    
+    This projection allows the Cognitive Subject to experience elements of
+    the Immutable Past simultaneously as a sequential phenomenon. It is the 
+    absolute prerequisite for the Subject to evaluate sequence, compare states, 
+    and experience continuity~\cite{Husserl1928}.
+\end{formalism}
+
+Memory, therefore, marks the critical second stage in the ontological existence 
+of the Cognitive Subject---the transition from a primordial, dormant `lack of 
+knowledge' into an entity capable of sustained awareness and perception.
+
+--------------- REVIEW THIS UNDER CONSIDERATION OF 'SET'
+We established the concept of a \textit{Set} in terms of \textit{Equivalence},
+\textit{Differentiation}, and \textit{Implication}--all present in the
+Synthetic Interstice. Further, this definition of a set relies on purely
+dynamic generation rather than on a `fixation' (as a `snapshot of member
+elements'). This independence from `fixation' is crucial for the operation of
+the Synthetic Interstice. With the already established concept of
+Sequentiality, we and the definition of a Set, we are now able to precisely
+define the Immutable Past.
+----------------
 \section{The Discreteness of Time}
 
 The transition of a discernible $\delta$, existing as a component of an Event
@@ -1375,6 +1402,11 @@ Von Neumann, J. (1925).
 Wigner, E. P. (1960). 
 ``The unreasonable effectiveness of mathematics in the natural sciences''. 
 \textit{Communications on Pure and Applied Mathematics}, 13(1), 1--14.
+
+\bibitem{Zermelo1908}
+Zermelo, E. (1908). 
+``Untersuchungen {\"u}ber die Grundlagen der Mengenlehre I''. 
+\textit{Mathematische Annalen}, 65(2), 261--281.
 
 \end{thebibliography}
 \end{document}
