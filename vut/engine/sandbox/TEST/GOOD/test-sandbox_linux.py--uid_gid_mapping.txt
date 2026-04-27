@@ -1,0 +1,6 @@
+INSPECT: process uid=1000, gid=1000
+INSPECT: --uid_mapping 0:1000:1
+INSPECT: --gid_mapping 0:1000:1
+  OK  : uid mapping encodes current uid (1000)
+  OK  : gid mapping encodes current gid (1000)
+SUCCESS: UID/GID mapping is correct.

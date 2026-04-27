@@ -1,0 +1,5 @@
+  OK  : --rlimit_fsize = '5' (expected '5')  [file size cap (MB)]
+  OK  : --cgroup_mem_max = '268435456' (expected '268435456')  [memory cap (bytes = MB * 1024²)]
+  OK  : --cgroup_pids_max = '16' (expected '16')  [pid cap]
+  OK  : --time_limit = '30' (expected '30')  [cpu time cap (sec)]
+SUCCESS: Resource limits correctly translated.

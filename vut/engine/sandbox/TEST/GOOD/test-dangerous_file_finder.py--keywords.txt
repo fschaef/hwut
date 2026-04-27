@@ -1,8 +1,0 @@
-MOCK: File 'ssh' at /bin/ssh (Mode: 0o100755)
-MOCK: File 'ls' at /bin/ls (Mode: 0o100755)
-MOCK: File 'netcat' at /usr/bin/nc (Mode: 0o100755)
-RESULT: Forbidden binaries found:
-  - /bin/ls
-  - /bin/ssh
-  - /usr/bin/nc
-SUCCESS: Keywords correctly identified.

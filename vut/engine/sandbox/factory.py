@@ -1,4 +1,5 @@
-from .base                   import Sandbox, SandboxConfig
+from .base                   import (Sandbox,
+                                     SandboxConfig)
 from .sandbox_linux          import SandboxLinux
 from .sandbox_none           import SandboxNone
 ## from .sandbox_bsd            import SandboxBSD
@@ -12,16 +13,21 @@ from .sandbox_none           import SandboxNone
 
 import sys
 
-def create_sandbox(config: SandboxConfig, work_dir: str) -> Sandbox:
-    """Dispatches Sandbox instantiation via a functional lookup database."""
-    
+
+def get(config: SandboxConfig, work_dir: str) -> Sandbox:
+    """
+    RETURN: Sandbox, platform-appropriate isolation implementation.
+            SandboxNone, if no matching platform entry is found (e.g. Windows).
+
+    Dispatches Sandbox instantiation via a functional lookup database.
+    """
     platform_name = sys.platform.lower()
 
     # The Sandbox Registry Database
     # Format: (Predicate Lambda, Sandbox Class)
     sandbox_db = [
         (lambda p: p.startswith("linux"),                 SandboxLinux),
-        ## UNTESTED: 
+        ## UNTESTED:
         ## (lambda p: "darwin" in p,                         SandboxMacOs),
         ## (lambda p: "solaris" in p,                        SandboxIllumos),
         ## (lambda p: "freebsd" in p,                        SandboxFreeBSD),
@@ -35,4 +41,4 @@ def create_sandbox(config: SandboxConfig, work_dir: str) -> Sandbox:
 
     for check, cls in sandbox_db:
         if check(platform_name): return cls(config, work_dir)
-    return SandboxNone(config, work_dir) # Windows
+    return SandboxNone(config, work_dir)  # Windows

@@ -1,7 +1,10 @@
-from   .base import Sandbox, SandboxConfig
+from   .base import (Sandbox,
+                     SandboxConfig)
 
 import os
+from   typing    import List
 from   typeguard import typechecked
+
 
 class SandboxLinux(Sandbox):
     @typechecked
@@ -9,8 +12,14 @@ class SandboxLinux(Sandbox):
         super().__init__(config, work_dir)
         self.nsjail_path = "/usr/bin/nsjail"
 
-    def _build_cmd(self, command_line: list[str]) -> list[str]:
-        """Constructs nsjail CLI arguments."""
+    def _build_cmd(self, command_line: List[str]) -> List[str]:
+        """
+        RETURN: List[str], nsjail invocation with all isolation flags applied,
+                           ready to pass to asyncio.create_subprocess_exec.
+
+        Constructs the full nsjail CLI argument list from the current config,
+        masking each forbidden binary by bind-mounting /dev/null over it.
+        """
         curr_uid = os.getuid()
         curr_gid = os.getgid()
 
@@ -24,8 +33,8 @@ class SandboxLinux(Sandbox):
         # FILE SYSTEM:
         #    --chroot /          Sets the jail's apparent root directory.
         #    -R                  Bind-mounts base filesystem as read-only.
-        #    -R /dev/null{bin}:some_app  Masks forbidden binary 'some_app' by 
-        #                                bind-mounting '/dev/null' over it.
+        #    -R /dev/null:{bin}  Masks forbidden binary by bind-mounting
+        #                        '/dev/null' over it.
         #    -M                  Bind-mounts working directory as read-write.
         #    --cwd               Sets starting directory inside the jail.
         # RESOURCES:
@@ -57,8 +66,8 @@ class SandboxLinux(Sandbox):
             args.append("--disable_clone_newnet")
         else:
             if self.config.ntw_disable_loopback:
-                args.append("--iface_no_lo") 
-            
+                args.append("--iface_no_lo")
+
             if self.config.ntw_macvlan_iface:
                 args.extend(["--macvlan_iface", self.config.ntw_macvlan_iface])
                 if self.config.ntw_macvlan_ip:
@@ -70,6 +79,6 @@ class SandboxLinux(Sandbox):
             if os.path.exists(bin_path):
                 args.extend(["-R", f"/dev/null:{bin_path}"])
 
-        args.extend(["--"])
+        args.append("--")
         args.extend(command_line)
         return args
