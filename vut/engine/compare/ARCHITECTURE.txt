@@ -1,0 +1,336 @@
+================================================================================
+VUT-COMPARE: ARCHITECTURE
+================================================================================
+
+This document describes the internal organisation of the comparison engine. It
+is intended for contributors and maintainers. For an introduction to what the
+component does and how to call it from outside, see README.txt.
+
+
+OVERVIEW
+========
+
+The engine compares two text streams - 'subject' (test output) and 'nominal'
+(golden reference) - and produces either a boolean verdict ('is_equivalent')
+or a structured alignment of their content ('associate'). Both modes share
+the same front end, the same lexical interpretation, and the same notion of
+tolerance. They diverge only after the input has been carved into comparable
+chunks; from there, the equivalence path is fast-fail, and the association
+path is exhaustive.
+
+Conceptually the data flows through five stages:
+
+    raw text     PatternFinder       ChunkPipe         input_chunk_zip
+    -------- -> ---------------- -> -------------- -> ----------------- ->
+    .readline()  LineElement[]      InputChunk[]      (subject, nominal)
+                 per Line                             chunk pairs
+
+                              +---------- equivalence path ----------+
+                              |                                      |
+                              |  InputChunk.is_equivalent_to_nominal |
+                              |  -> bool                             |
+                              |                                      |
+                              +--------- association path -----------+
+                                                                     |
+                                                ChunkPair.from_input_chunks
+                                                -> ChunkPair (LinePair[])
+
+Subject and nominal flow through the first three stages independently and in
+parallel. They first meet in 'input_chunk_zip', which pairs them up by chunk
+position, and from there the path forks based on the requested mode.
+
+
+MODULE MAP
+==========
+
+    /input/                  Lexical and structural front end
+        line_element.py      Atomic units of comparison (one per token type)
+        pattern_finder.py    Regex master pattern; text -> LineElement[]
+        input_chunk.py       LineSequence / Potpourri / Line containers
+        chunk_pipe.py        async producer: line stream -> InputChunk stream
+        input_chunk_zip.py   async pairer: subject + nominal -> chunk pairs
+
+    /engine/                 Comparison logic
+        enums.py             E_Verdict, E_Chunk, E_ToleranceId
+        line.py              Line as a sequence of LineElements
+        analogy_db.py        Mutable bidirectional analogy mapping
+        frozen_analogy_db.py Flyweight immutable variant for hot paths
+
+        /equivalence_check/  Fast-fail equivalence (the Judge)
+            line.py          Line-level equivalence check
+            potpourri.py     Set-equivalence over unordered blocks
+
+        /association/        Exhaustive alignment (the Lawyer)
+            chunk_pair.py    ChunkPair: outer container of LinePairs
+            line_pair.py     LinePair: aligned (or one-sided) line pair
+            line_sequence.py Order-respecting alignment driver
+            potpourri.py     Order-free alignment driver
+            edit_operations/ Edit-distance machinery
+                core.py      A*-style work-list search base classes
+                line.py      Line-level edits over LineElement sequences
+                line_sequence.py  Sequence-level edits over Line lists
+                string.py    Levenshtein for raw character runs
+                edit.py      Edit primitives, EditSequence, cost model
+
+        /potpourri/          CSP / matching for unordered blocks
+            association.py   Top-level associate-the-best-we-can routine
+            matching.py      Maximum bipartite matching driver
+            pairing.py       Pre-pair generation
+            potential_pair_db.py    Pre-computed candidate pairs
+            solver/
+                maximum_bipartite_matching.py    Augmenting-path matcher
+                csp_backtracking_mrv.py          MRV-heuristic CSP solver
+
+    /feeder/                 Output adaptors
+        ui.py                ChunkPair stream -> DisplayInst protocol
+        html_feeder.py       Side-by-side HTML diff renderer
+
+    main.py                  Public API: is_equivalent(), associate()
+    configuration.py         Configuration dataclass
+
+
+DATA TYPES
+==========
+
+LineElement (input/line_element.py)
+    The atomic unit of comparison. Each LineElement carries a tolerance class
+    (STRING, NUMERIC, ANALOGY, VISIBLE_NOTHING, EQUIVALENCE_PATTERN, SEPARATOR)
+    and the matched content. Tolerance dictates how '.compare()' decides
+    equivalence:
+      STRING               byte-equal
+      NUMERIC              equal within configured epsilon
+      ANALOGY              consistent under the active analogy database
+      VISIBLE_NOTHING      always equivalent (transparent token)
+      EQUIVALENCE_PATTERN  same pattern set
+      SEPARATOR            structural marker, byte-equal
+    Strings are interned via 'sys.intern()'; '__slots__' is used throughout
+    for memory; this class is allocated millions of times in large runs.
+
+Line (engine/line.py)
+    Sequence of LineElements representing one source line, plus the line
+    number. Caches its lexical decomposition lazily. Exposes:
+      .is_literally_equivalent_to(other)    fast byte-level shortcut
+      .is_equivalent(other, analogy_db)     full equivalence under analogies
+      .edit_operations(other, analogy_db)   produces an EditSequence
+      .compare_quickly(other)               cheap structural similarity score
+
+InputChunk (input/input_chunk.py)
+    A region of one stream classified by structure:
+      InputChunkLine          single line (used in equivalence mode)
+      InputChunkLineSequence  ordered group of lines (used in association mode)
+      InputChunkPotpourri     unordered group, framed by '||||' delimiters
+      InputChunkTerminal      end-of-stream sentinel
+      InputChunkVoid          padding for the zip stage
+    Two role-tagged base classes split the contract:
+      EquivalenceRelatedInputChunk.is_equivalent_to_nominal()
+      AssociationRelatedInputChunk.associate_with_nominal()
+    Concrete chunks may inherit one or both depending on whether the chunk
+    type is meaningful in that mode (e.g. Potpourri inherits both, Line
+    inherits only equivalence).
+
+ChunkPair (engine/association/chunk_pair.py)
+    The output unit of association: a list of LinePairs plus a snapshot of
+    the analogy_db that holds for them. A ChunkPair carries the chunk-type
+    tags of both sides; if subject or nominal is missing, the corresponding
+    type is NONE. The 'feeder' subsystem consumes ChunkPair streams.
+
+LinePair (engine/association/line_pair.py)
+    One row of the alignment: a subject line, a nominal line, optionally
+    None on either side, plus the cell-level edit results showing how
+    individual LineElements were aligned.
+
+AnalogyDb / FrozenAnalogyDb (engine/analogy_db.py, frozen_analogy_db.py)
+    Bidirectional mapping between subject-side and nominal-side analogy
+    strings. AnalogyDb is mutable and used during top-level streaming;
+    FrozenAnalogyDb is immutable, interned, and used inside the inner
+    search loops where consistency checks happen millions of times.
+
+
+THE TWO PIPELINES
+=================
+
+Both modes share the lexer ('PatternFinder'), the line representation
+('Line'), and the chunking strategy. They differ in three places:
+
+   stage                  equivalence mode             association mode
+   --------------------   --------------------------   --------------------------
+   ChunkPipe              EquivalenceCheckChunkPipe    AssociationChunkPipe
+                          emits InputChunkLine per     emits InputChunkLineSequence
+                          line; ignores blank lines    blocks; preserves whitespace
+                          and ##-marked lines
+   chunk_zip              generate_chunk_pairs         generate_chunk_pairs_type_aligned
+                          one-shot pair-and-yield      look-ahead realignment when
+                                                       subject and nominal chunk
+                                                       types diverge
+   per-chunk operation    InputChunk.is_equivalent_    ChunkPair.from_input_chunks
+                          to_nominal -> bool           -> ChunkPair (full alignment)
+
+The async producer/consumer arrangement is identical in both: each ChunkPipe
+runs in its own asyncio task, pushing into a bounded queue; the zip
+coroutine pulls from both queues with 'asyncio.gather'. This means subject
+data can be consumed while the test process is still producing it.
+
+
+KEY ALGORITHMS
+==============
+
+Edit-distance search (engine/association/edit_operations/)
+    A work-list search over the (si, ni) index space, where si and ni are
+    indices into the subject and nominal LineElement sequences. From any
+    position, six-or-so edit operations are possible (GOOD, GOOD_TOLERATED,
+    GOOD_INSERT/DELETE, TRANSPOSE, SUBSTITUTE, SUBSTITUTE_TYPE, INSERT,
+    DELETE), each with a cost; the optimal edit sequence is the cheapest
+    path from (0, 0) to (len(subject), len(nominal)). The search uses
+    aggressive pruning: better-than-current-best work items are kept;
+    stale ones are dropped early. The same pattern is reused at the
+    line-sequence level - same machinery, different element type.
+
+    The 'string.py' Levenshtein implementation handles the leaf case where
+    two STRING-class elements need their character-level distance.
+
+    'do()' for line-level edits is wrapped in lru_cache: many Lines repeat
+    in large tests, and recomputing their edit sequence is wasteful.
+
+Bipartite matching (engine/potpourri/solver/maximum_bipartite_matching.py)
+    For Potpourri chunks the order is irrelevant; the question is whether
+    a complete subject-to-nominal pairing exists. The solver uses Berge's
+    augmenting-path algorithm (Ford-Fulkerson family) to find the maximum
+    matching ignoring analogy constraints. This is the structural upper
+    bound: if it cannot find a complete matching, no analogy-respecting
+    matching exists either.
+
+CSP backtracking with MRV (engine/potpourri/solver/csp_backtracking_mrv.py)
+    Once structural feasibility is confirmed, the actual matching that
+    satisfies analogy consistency is found by backtracking search ordered
+    by Minimum Remaining Values - the most-constrained subject is matched
+    first. This is the workhorse for Potpourri association in production;
+    other solvers (chronological backtracking, AC-3 / lilly-pad) are
+    retained in the source tree for benchmarking but are not active.
+
+Flyweight FrozenAnalogyDb (engine/frozen_analogy_db.py)
+    The hottest inner-loop operation is "given two analogy databases, are
+    they consistent with each other?". Naive implementations rebuild the
+    bidict and compare; FrozenAnalogyDb interns each (subject, nominal)
+    pair into a small integer ID via a per-context registry, and represents
+    the active pair set as a 256-bit mask when the ID range allows. Two
+    identical constraint sets land at the same memory address, reducing
+    consistency checks to identity comparisons. For larger sets the
+    bitmask is replaced by a tuple of pair IDs; correctness is preserved
+    at the cost of slower checks, hence the term "Hybrid".
+
+    The registry is held in a 'contextvars.ContextVar', which means that
+    concurrent 'is_equivalent' or 'associate' calls in different asyncio
+    tasks see independent registries. This avoids cross-test poisoning
+    and lets the comparison engine be used safely from multiple coroutines
+    in the same process.
+
+
+ASYNC AND CONCURRENCY MODEL
+===========================
+
+Every pipeline stage is async by design. The 'main' entry points
+('is_equivalent', 'associate') are coroutines that:
+
+  1. Set a fresh FrozenAnalogyRegistry on the contextvar (isolation).
+  2. Wrap each line provider in 'AsyncIterator_ensured' so that both
+     synchronous file objects and async readers work uniformly.
+  3. Construct the per-mode ChunkPipe for each side.
+  4. Iterate over the chunk-pair generator, applying the per-mode logic
+     to each pair.
+  5. Reset the contextvar in a 'finally' clause - mandatory for isolation.
+
+The chunk_zip layer enforces backpressure through bounded asyncio.Queues.
+Subject and nominal pipelines run concurrently; if the consumer is slow,
+the queues fill and the producers wait. If subject is being produced live
+by a test process, the comparison can run in parallel and abort the test
+as soon as 'is_equivalent' returns False.
+
+The cancellation pattern is standard: on exception or normal completion,
+the producer tasks are cancelled and gathered with 'return_exceptions=True'.
+There are no shared mutable structures across coroutines outside the
+contextvar registry.
+
+
+VERDICT MODEL
+=============
+
+The leaf comparison operation is 'LineElement.compare(other) -> E_Verdict'.
+The verdict carries five values:
+
+    MISFIT         the two elements are of incomparable kinds
+    DIFFERENT      same kind, content does not agree
+    EQUIVALENT     same kind, content agrees (possibly under analogies)
+    EQUIVALENT_SUBJECT_VISIBLE_NOTHING   subject is transparent
+    EQUIVALENT_NOMINAL_VISIBLE_NOTHING   nominal is transparent
+
+The two VISIBLE_NOTHING variants are propagated rather than collapsed to
+EQUIVALENT so that downstream stages can account for "noise lines" without
+losing the information that the lines were transparent. Higher levels
+(Line, InputChunk) reduce these to plain booleans only at the end.
+
+
+TESTING CONVENTIONS
+===================
+
+This component is itself tested under HWUT (the older generation), with
+test files at multiple levels:
+
+    TEST/                        whole-engine tests via main.py API
+    engine/TEST/                 engine-internal contract tests
+    engine/potpourri/TEST/       potpourri-specific scenarios
+    engine/potpourri/solver/TEST/  solver micro-benchmarks
+    feeder/TEST/                 output formatting tests
+    input/TEST/                  pattern_finder, chunk_pipe tests
+
+Each test directory has the standard HWUT layout: 'hwut-info.dat' lists
+test files and exclusions; each '<test>.py' responds to '--hwut-info' with
+its CHOICES; outputs go to 'OUT/' and are compared against 'GOOD/'.
+
+Notable test patterns:
+  - regression-1 / 2 / 3        scenario-based regression suites
+  - test-*-race.py              async timing scenarios with jitter injection
+  - benchmark.py                non-test performance probes
+
+Coverage is collected with 'coverage run' as configured in 'hwut-info.dat'.
+Helpers ('common.py', 'racing.py', 'tmp.py', 'benchmark*.py') are excluded
+from both test runs and coverage.
+
+
+EXTENSION POINTS
+================
+
+New tolerance class
+    Add an entry to E_ToleranceId, a LineElement subclass with its own
+    .compare() and .edit_distance_relative(), and a regex pattern in
+    PatternFinder. The new class participates automatically in the rest
+    of the pipeline.
+
+New chunk class
+    Define a subclass of either EquivalenceRelatedInputChunk or
+    AssociationRelatedInputChunk (or both). Implement the corresponding
+    private hook ('_is_equivalent_to_nominal' / '_associate_with_nominal').
+    Register a delimiter in PatternFinder.is_region_delimiter and
+    extend the ChunkPipe state machine if a new structural framing is
+    introduced.
+
+New solver
+    Place under engine/potpourri/solver/. Solvers consume a
+    'PotentialPairDb' and an 'AnalogyDb' and return either a
+    matching-or-None or a verdict-plus-couples pair, depending on the
+    expected interface. The active solver choice is wired in
+    engine/potpourri/association.py and matching.py.
+
+New output feeder
+    Subscribe to the 'associate' coroutine output (an async iterator of
+    ChunkPair). 'feeder/ui.py' is the canonical example - see the protocol
+    signature mechanism it uses to declare structural compatibility with
+    a UI consumer.
+
+
+SEE ALSO
+========
+
+    README.txt                            user-facing introduction
+    engine/potpourri/solver/README.txt    solver comparison & benchmarks
+    DOC/api.odp                           older API presentation slides
+    DOC/history.txt                       changelog and review checkpoints

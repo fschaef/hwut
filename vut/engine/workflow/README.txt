@@ -5,7 +5,7 @@ MOTIVATION
   This component provides general workflow management. The original motivation
   was to be able automatically coordinate and trace the generation and
   execution of HWUT unit tests. The goal was to make the complete process part
-  of the test, thus errors in the contruction and code generation are part of
+  of the test, thus errors in the construction and code generation are part of
   the failure. The result is a unit test framework that is stable under
   unstable test applications.
 
@@ -16,7 +16,7 @@ SYNOPSIS
   has been executed and its verdict, it may be a network connection being opened
   or any other testimony about something that might be useful (or not).
 
-  The worflow manager breaks down the overall task to bring about the artifact
+  The workflow manager breaks down the overall task to bring about the artifact
   into sub tasks and their intermediate dependencies, called 'resources'. Based
   on the knowledge of required resources of tasks and the products that they 
   produce, it may streamline the tasks that are necessary to accomplished the
@@ -79,9 +79,8 @@ Artifact:
 ---------
 
     E_Artifact: type
-    dict:       description
+    dict:       normalized_description  # canonical, by construction
     int:        artifact_id
-    dict:       environment
 
     An artifact may appear in the role of a 'resource' of a task that is required
     for operation. It may appear in the role of a 'product' that is produced by
@@ -92,27 +91,50 @@ Artifact:
     Instead it communicated with the factory via 'order' functions and receives
     updates about the processing and the final status.
 
-    Note:  artifact_id   <---> (type, environment, description) 
-
-    That is, file names etc. must be specified in a globally consistent 
-    manner. This consistency needs to be accomplished by the 'TaskGenerator'.
-
     An Artifact is the workflow's record of a milestone, never the milestone
     itself. The real thing - file, socket, event - lives outside the manager;
     the Artifact only tracks it.
 
-    The '.environment' helps in defining the meaning of the description. 
-    (may be this is dropped later). It may help to find globally unique
-    representations.
+    Based on the 'normalized_description', an artifact id is assigned by
+    the container of artifacts: the ArtifactDb.
+
+ArtifactHandling (per artifact type)
+------------------------------------
+
+An ArtifactHandling class translates descriptions of artifacts into
+normalized (globally distinct) descriptions. On the other hand it
+translates normalized descriptions back into descriptions which are
+meaningful for the local task execution.
+
+   .canonicalise(artifact_description, conventions) -> normalized_description
+
+   .resolve(normalized_description, local_context) -> local_handle
+       Used by Task launchers at execution time. Reads the canonical
+       form, applies the local execution context, returns a real
+       handle (pathlib.Path, socket, etc.).
+
+ArtifactHandling classes need to be registered in the WorkflowManager by
+artifact id. This way, they become available to the RecipeKnower and the Task
+launcher.
+
+RecipeKnower: takes the user's artifact description and translates it into a
+   normalized_description that helps to identify artifacts in the 'global' scope
+   of the workflow manager. For that it uses the 'canonicalise(...)' function.
+
+Task: translates the 'normalized_description' into a description
+   that is meaningful for the local executor task.
+
+Example: 'file path' being relative, absolute, etc.
 
 task_generator(function)
 ------------------------
 
 The user's order is handled immediately by the 'task_generator' function. That
 function interacts with the 'RecipeDb' in order to produce a set of tasks and
-their depedencies to accomplish the required order.
+their dependencies to accomplish the required order.
 
-     workload = RecipeDb.lookup(target, circumstances)
+     workload = RecipeDb.lookup(E_Artifact: target_type, 
+                                dict:       target_description)
      user_com = UserComHandle(user_report_queue, termination_signal)
      workload.bind_user(user_com)
      workflow_manager.register(workload)
@@ -123,11 +145,23 @@ directly after setting a workload. In case that a terminal artifact, i.e. the
 thing the user wants, is already available, the report queue may immediately
 respond with 'DONE'.
 
+WorkflowManager
+---------------
+
+    .register(workload)
+    .cancel(workload_id)            # invoked from user termination_signal
+    .handle_artifact_update(event)  # the central report loop body
+    .artifact_handling_db
+
 The 'workflow_manager.register(workload)' sets up the internal components:
 
     -- add artifacts to the internal ArtifactDb
     -- add task descriptions to the DependencyGraph
     -- initial dependency graph evaluation
+
+The artifact_handling_db provides ArtifactHandling classes for artifacts
+to synchronize the 'normalized_description' of artifacts and their localized
+descriptions.
 
 RecipeDb
 --------
@@ -138,9 +172,9 @@ a set of tasks together with their dependencies which are required to achieve
 the requested target.
 
    map: artifact type --> recipe knower of how to build it
-   .lookup(target, dict: circumstances)
+   .lookup(target_type, dict: target_description)
        get knower <-- by target artifact.type
-       recipe = knower(target, circumstances)
+       recipe = knower(target_type, target_description)
        return recipe # containing TaskDescriptions, resources, and products
    .register(artifact type, knower)
        register knower for artifact type
@@ -149,18 +183,29 @@ RecipeKnower
 ------------
 
 A recipe knower determines a set of tasks given a dictionary of
-'circumstances'. That is, the knower expresses a procedure to produce a
+'target_description'. That is, the knower expresses a procedure to produce a
 'target' in terms of operations (tasks) that rely on
-resources/dependencies/inputs and produce products/targets/outputs.
+resources/dependencies/inputs and produce products/targets/outputs. Notably,
+the 'RecipeKnower' is identified by the 'target_type', so it does not receive
+the type as an argument.
 
-   .get_tasks(target, dict: circumstances) --> list of list of TaskDescription
+   .get_tasks(dict: target_description) 
+    --> list of list of TaskDescription
    .documentation()
-      return string that tells what is done with 'dict circumstances'
-   .check(dict: circumstances)
+      return string that tells what is done with 'target_description'
+   .check(dict: target_description)
+   .canonicalize_description(dict: target_description)
 
 The '.get_tasks()' may report multiple alternative approaches to generate the
-target. Each list in the 'list of lists of TaskDescription' is on of those
+target. Each list in the 'list of lists of TaskDescription' is one of those
 solutions.
+
+The '.canonicalize_description()' takes the 'loose' description that the user
+provides and canonicalizes it. That is, it ensures that two artifacts which are
+the same with respect to the recipe have the same 'normalized_description'. It
+is the bases for identity detection. A simple example is the generation of a
+file that is accessible from different machines. 
+
 
 Workload(dataclass)
 -------------------
@@ -202,16 +247,15 @@ current information on artifacts is to be asked from here.
 
      artifact_id --> Artifact:                db
      artifact id --> E_ArtifactState:         state_db
-     artifact id --> set(Workload):           workload_concerned_db
      artifact id --> (time, E_ArtifactState): history_db
 
 Artifact states: ABSENT, IN_PRODUCTION, PRESENT, IMPOSSIBLE
 
-            .---------------<----------------------.
-            |                                      |
-          ABSENT --> IN_PRODUCTION --> PRESENT ----'
-            |             |
-            '------> IMPOSSIBLE
+            .------------------<-----------------------.
+            |                                          |
+         (ABSENT) --> (IN_PRODUCTION) --> (PRESENT) ---'
+            |               |
+            '--------> (IMPOSSIBLE)
 
      The goal is to have the Artifacts requested by user orders in
      state 'PRESENT'. Only, those tasks can start working where all
@@ -228,13 +272,13 @@ hand and the products that they may produce.
      artifact id --> set(DependencyExprLeaf):  dependency_leaf_db
      artifact id --> set(TaskDescription):     tasks_by_product_db
      task id --> set(artifact id):             product_by_task_db
-     task id --> E_Runnability:                 runability_db
+     task id --> E_Runnability:                runnability_db
 
      .register(workload)
          integrates tasks of workload into dependency, possibly merges
          and defines alternatives.
      .evaluate()
-         => runable tasks, impossible tasks
+         => runnable tasks, impossible tasks
 
 A task description is associated with one of three states:
 
@@ -243,11 +287,12 @@ A task description is associated with one of three states:
  E_Runnability.NEVER   -- dependencies can never be met by tasks at
                           hand, task may never operate
 
-When a status of an artifact changes, the leafs of booleand condition
+When a status of an artifact changes, the leafs of boolean condition
 expressions where those play a role are informed. If the correspondent boolean
 expression changes, it informs the parent node, etc. This way a change of
-conditions mitigates throught the condition expression until it the root where
-it determines whether the condition is met, not met, or can never be met.
+conditions propagates through the condition expression until it reaches the
+root where it determines whether the condition is met, not met, or can never be
+met.
 
 The condition expression work on a Kleene's strong three-valued logic, that
 includes 'unknown'. E.g. 'true and unknown = unknown', 'false and unknown =
@@ -257,32 +302,51 @@ TaskManager
 -----------
 
 The TaskManager runs and terminates tasks. It maintains internally a scheduler
-that decides what tasks to be run from the list of runable tasks. It is the
-only component that crosses the sync/async boundary: it accepts synchronous
-orders from the WorkflowManager and converts them into asyncio.Task lifecycles.
+that decides what tasks to be run from the list of runable tasks. The
+TaskManager is the interface between the synchronous workflow management and
+the asynchronous Task execution. For that it maintains a 'TaskState' object for
+each running task.
 
-State per registered task:
+Scheduler(base class)
+---------------------
 
-   task_id         -> TaskDescription
-   task_id         -> asyncio.Task         # the awaitable, "the running task"
-   task_id         -> asyncio.Event        # termination signal
-   task_id         -> E_TaskState
-   task_id         -> set(user_queue)      # subscribers
-   task_id         -> set(workload_id)     # interested workloads
-   task_type_name  -> launcher             # factory map
+The scheduler mainly takes the set of runnable tasks and determines which of
+them is to be launched. 
 
-Task lifecycle:
+   .pick(runnable_tasks: set) -> list[task_id]
 
-   PENDING -> RUNNING -- terminates by itself --> DONE
-                 '------ fails to operate ------> FAILED
-                 '------ cancellation ----------> ZOMBIE --.
-                 .-----------------------------------------'
-                 '------ terminates by itself --> CANCELLED   
+Upon construction of the scheduler object, it receives access to all components
+of the workflow manager in order to make informed decisions. The derived class
+implements a scheduling strategy such as FIFO, most-blocking first, fail-fast,
+or CRM.
+
+TaskState
+----------
+
+   E_TaskRunningState   running_state
+   TaskDescription      description
+   asyncio.Task         task
+   asyncio.Event        termination_signal
+   set(workload_id)     workloads_concerned   (-> user report queues)
+
+E_TaskRunningState:
+
+       (PENDING) 
+          | 
+       launched
+          |
+       (RUNNING) -- terminates by itself --> (DONE)
+          '------ fails to operate --------> (FAILED)
+          '------ cancellation ------------> (ZOMBIE)
+                                                |
+                                       terminates by itself 
+                                                |
+                                           (CANCELLED)
 
 Operations:
 
    .register_launcher(task_type_name, launcher)
-   .register_task(task_description, subscribers)
+   .register_task(task_description, subscribers: set[user_queue])
    .subscribe(task_id, user_queue)
    .unsubscribe(task_id, user_queue)
        if subscribers becomes empty and task is RUNNING -> abort_task
@@ -302,21 +366,38 @@ Operations:
 
 Launcher contract:
 
-   The TaskManager is agnostic of execution context that the launched 
-   task applied internally (sync, in-thread, subprocess, remote). However,
-   it must:
+The task launcher is identified by the task_type as given in the task
+description. The TaskManager is agnostic of execution context that the launched
+task applies internally (sync, in-thread, subprocess, remote). However, it
+must:
 
      - honor 'termination request signal': 
-       The task must initiate anything that terminates the the processing
+       The task must initiate anything that terminates the processing
        of the task and return to the 'await'-ing TaskManager (function return).
 
      - reports via report queue about events related to its operation 
        (success, failure, termination). 
 
-Reporting:
+User Interaction Handling
+-------------------------
 
-The WorkFlow manager receives reports from tasks and may decide if and how
-it informs the concerned user about the evolvement of the task.
+Report Queue
+
+The Workflow manager receives reports from tasks and may decide if and how
+it informs the concerned user about the evolution of the task.
+
+"termination_signal.set()"
+
+By setting the 'termination_signal' the user received in the handle as a
+response to his order, the following happens:
+
+   remove user_queue from (
+       subscribers of each task in workload.tasks
+   )
+   abort(
+       each task in workload.tasks where subscribers = empty
+   )
+   user_queue.put(TARGET_CANCELLED)
 
 Artifact Update
 ---------------
@@ -325,10 +406,10 @@ The report queue delivers information about the artifact production from the
 task to the WorkflowManager. An update of an artifact state is directly
 fed into the DependencyGraph. 
 
-   Artifact Update ---> DependencyGraph ---> Runable, Unrunable Tasks
+   Artifact Update ---> DependencyGraph ---> Runnable, Unrunnable Tasks
 
-The based on its knowledge of unrable tasks, the DependencyGraph may also
-determine the set of impossible artifacts. Then, the artifact db can be 
+Based on its knowledge of unrunnable tasks, the DependencyGraph may also
+determine the set of impossible artifacts. Then, the artifact db is
 updated
 
    Artifact Update + Impossible Artifacts ---> ArtifactDb
