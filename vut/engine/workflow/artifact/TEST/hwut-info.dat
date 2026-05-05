@@ -1,0 +1,7 @@
+Testing the artifact identity, factory, and per-type handling
+-------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py 
+
+--not common.py
+--not config.py

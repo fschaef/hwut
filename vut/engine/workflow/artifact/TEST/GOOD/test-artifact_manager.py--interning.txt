@@ -1,0 +1,15 @@
+
+--- same (type, description) twice -> same instance ---
+a1.id    == a2.id:    True
+a1 is a2:             True
+
+--- same description, different dict-key order -> same instance ---
+b1.id    == b2.id:    True
+b1 is b2:             True
+
+--- count is unaffected by repeated requests ---
+len(mgr) = 2  (expected 2)
+
+--- different description -> new artifact, fresh id ---
+c.id     = 2  (expected 2)
+len(mgr) = 3  (expected 3)

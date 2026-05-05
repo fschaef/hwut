@@ -1,0 +1,18 @@
+
+--- local handle on machine A ---
+canonical: {'path': 'build/main.o'}
+host_root: /home/alice/test
+local:     /home/alice/test/build/main.o
+
+--- local handle on machine B ---
+canonical: {'path': 'build/main.o'}
+host_root: /srv/runner3/test
+local:     /srv/runner3/test/build/main.o
+
+--- no host_root: canonical path returned as-is ---
+canonical: {'path': 'build/main.o'}
+local:     build/main.o
+
+--- the same canonical decanonicalises differently per host ---
+h_a == h_b: False
+h_a == h_c: False

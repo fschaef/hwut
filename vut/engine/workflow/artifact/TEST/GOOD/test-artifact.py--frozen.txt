@@ -1,0 +1,12 @@
+
+--- attempt to assign .type ---
+FrozenInstanceError raised (expected)
+
+--- attempt to assign .artifact_id ---
+FrozenInstanceError raised (expected)
+
+--- attempt to assign .normalized_description ---
+FrozenInstanceError raised (expected)
+
+--- attempt to delete a field ---
+FrozenInstanceError raised (expected)

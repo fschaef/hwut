@@ -1,0 +1,32 @@
+
+--- absolute path under test_root ---
+input:     {'path': '/home/user/test_42/build/main.o'}
+canonical: {'path': 'build/main.o'}
+
+--- absolute path NOT under test_root (kept as-is) ---
+input:     {'path': '/usr/lib/libc.so'}
+canonical: {'path': '/usr/lib/libc.so'}
+
+--- relative path ---
+input:     {'path': 'build/main.o'}
+canonical: {'path': 'build/main.o'}
+
+--- relative path with redundant '.' ---
+input:     {'path': './build/./main.o'}
+canonical: {'path': 'build/main.o'}
+
+--- relative path with '..' segments ---
+input:     {'path': 'build/sub/../main.o'}
+canonical: {'path': 'build/main.o'}
+
+--- relative path with trailing slash ---
+input:     {'path': 'build/sub/'}
+canonical: {'path': 'build/sub'}
+
+--- relative path with double separator ---
+input:     {'path': 'build//main.o'}
+canonical: {'path': 'build/main.o'}
+
+--- equivalent forms produce same canonical ---
+input:     {'path': 'build/sub/../main.o'}
+canonical: {'path': 'build/main.o'}

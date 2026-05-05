@@ -28,7 +28,7 @@ STRUCTURE:
                |--- RecipeDb
                '--- WorkflowManager
                      '--- DependencyGraph 
-                     '--- ArtifactDb      
+                     '--- ArtifactManager      
                      '--- TaskManager     
 
 USER:
@@ -63,7 +63,7 @@ FACTORY:
          .----------------------------------------------.
          |               WorkflowManager                |
          | .-----------------.           .------------. |
-         | | DependencyGraph |           | ArtifactDb | |
+         | | DependencyGraph |           | ArtifactManager | |
          | '-----------------'           '------------' |
          |         |:|                         |:|      |
          | .------------------------------------------. |
@@ -75,12 +75,12 @@ FACTORY:
                             report 
                      progress & termination
 
-Artifact:
----------
+Artifact(frozen dataclass)
+--------------------------
 
     E_Artifact: type
     dict:       normalized_description  # canonical, by construction
-    int:        artifact_id
+    int:        artifact_id             # assigned by ArtifactManager
 
     An artifact may appear in the role of a 'resource' of a task that is required
     for operation. It may appear in the role of a 'product' that is produced by
@@ -96,7 +96,7 @@ Artifact:
     the Artifact only tracks it.
 
     Based on the 'normalized_description', an artifact id is assigned by
-    the container of artifacts: the ArtifactDb.
+    the container of artifacts: the ArtifactManager.
 
 ArtifactHandling (per artifact type)
 ------------------------------------
@@ -125,6 +125,9 @@ Task: translates the 'normalized_description' into a description
    that is meaningful for the local executor task.
 
 Example: 'file path' being relative, absolute, etc.
+
+The 'normalized_description' is later passed to the ArtifactManager, which is
+then able to associate it with a unique artifact id.
 
 task_generator(function)
 ------------------------
@@ -155,7 +158,7 @@ WorkflowManager
 
 The 'workflow_manager.register(workload)' sets up the internal components:
 
-    -- add artifacts to the internal ArtifactDb
+    -- add artifacts to the internal ArtifactManager
     -- add task descriptions to the DependencyGraph
     -- initial dependency graph evaluation
 
@@ -219,6 +222,9 @@ the workflow manager.
      list(TaskDescription):   tasks
      UserComHandle:           user_com
 
+Notably, the 'Artifact' only describes the product. The fact that the
+associated 'reality' is present is accessible via the ArtifactManager.
+
 TaskDescription(dataclass)
 --------------------------
 
@@ -234,20 +240,26 @@ targets/products that the task-to-be-run is supposed to produce.
      bool_expr      .resource_dependency_expr # Artifact-s that must be present for operation
      list(Artifact) .product_list             # Artifact-s that are produced by task
 
-The Workload is then passed to the WorkflowManager, who fills the ArtifactDb
+The Workload is then passed to the WorkflowManager, who fills the ArtifactManager
 and the DependencyGraph.
 
      DependencyGraph <-- Task Descriptions (resources, products)
 
-ArtifactDb
-----------
+ArtifactManager
+---------------
 
-Maintains the state and relations of artifacts. Anything to be asked about
-current information on artifacts is to be asked from here.
+Mints, registers, and tracks the state of all artifacts in the workflow. It is
+the single point of artifact identity: every Artifact instance is created here,
+and every artifact_id originates here. Anything to be asked about current
+information on artifacts is to be asked from here.
 
      artifact_id --> Artifact:                db
      artifact id --> E_ArtifactState:         state_db
      artifact id --> (time, E_ArtifactState): history_db
+
+     .make(type, normalized_description) -> Artifact
+        excepts a 'normalized_description' and produces Artifact,
+        which is a new one, if Artifact did not exist before.
 
 Artifact states: ABSENT, IN_PRODUCTION, PRESENT, IMPOSSIBLE
 
@@ -412,6 +424,6 @@ Based on its knowledge of unrunnable tasks, the DependencyGraph may also
 determine the set of impossible artifacts. Then, the artifact db is
 updated
 
-   Artifact Update + Impossible Artifacts ---> ArtifactDb
+   Artifact Update + Impossible Artifacts ---> ArtifactManager
 
-Depending on the changes to the ArtifactDb the user may be also informed.
+Depending on the changes to the ArtifactManager the user may be also informed.

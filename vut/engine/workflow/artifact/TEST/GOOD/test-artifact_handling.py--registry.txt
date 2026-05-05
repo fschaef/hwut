@@ -1,0 +1,15 @@
+
+--- empty registry ---
+FILEPATH in reg: False
+
+--- register FilepathHandling for FILEPATH ---
+FILEPATH in reg: True
+get(FILEPATH) is FilepathHandling: True
+
+--- duplicate registration is rejected ---
+DuplicateRegistration raised (expected)
+message: ArtifactHandling already registered for FILEPATH (existing=FilepathHandling, new=_OtherHandler)
+
+--- lookup of unregistered type raises KeyError ---
+KeyError raised (expected)
+message: 'No ArtifactHandling registered for FILEPATH'
