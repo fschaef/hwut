@@ -3,7 +3,7 @@ ________________________________________________________________________________
 PURPOSE: Factory and registry for Artifact instances.
 
 The ArtifactManager is the single point of artifact identity in a workflow.
-Every Artifact comes from .make(); every artifact_id originates here.
+Every Artifact comes from .generate(); every artifact_id originates here.
 
 This first iteration of the manager handles minting and interning only. The
 artifact lifecycle state machine (ABSENT / IN_PRODUCTION / PRESENT /
@@ -12,7 +12,7 @@ component when it integrates this one.
 
 INVARIANTS:
 
-    -- Two .make() calls with the same (type, normalized_description)
+    -- Two .generate() calls with the same (type, normalized_description)
        return the very same Artifact instance.
     -- artifact_id values are non-negative integers, monotonically
        increasing in order of first registration.
@@ -49,20 +49,17 @@ class ArtifactManager:
         self._by_descr = {}
         self._next_id  = 0
 
-    def make(self, artifact_type: E_Artifact, description: dict) -> Artifact:
+    def generate(self, artifact_type: E_Artifact, description: dict) -> Artifact:
         """RETURN: Artifact, the unique instance for (type, description).
 
-        If (artifact_type, description) has been seen before, the previously
-        minted Artifact is returned unchanged. If it is new, a fresh
-        artifact_id is assigned, the Artifact is constructed and stored,
-        and the new instance is returned.
+        AGAIN: The 'Artifact' is only a placeholder for something useful. 
+        It is not the thing itself. '.generate()' does not generate anything,
+        it does not accomplish anything. It generates the placeholder, the 
+        reference.
 
-        Two calls with descriptions that differ only in dict-key order
-        produce the same Artifact: the description is normalised by sorting
-        before lookup.
+        Upon double registration, the same artifact is returned.
         """
-        frozen_descr = _freeze(description)
-        key          = (artifact_type, frozen_descr)
+        key = (artifact_type, _freeze(description))
 
         existing = self._by_descr.get(key)
         if existing is not None:
@@ -70,7 +67,7 @@ class ArtifactManager:
 
         artifact = Artifact(
             type                   = artifact_type,
-            normalized_description = frozen_descr,
+            normalized_description = dict(description),  # defensive copy
             artifact_id            = self._next_id,
         )
         self._by_descr[key]                  = artifact
@@ -79,12 +76,11 @@ class ArtifactManager:
 
         return artifact
 
-    def by_id(self, artifact_id: int) -> Artifact:
+    def by_id(self, artifact_id: int) -> Artifact | None:
         """RETURN: Artifact, the artifact with the given id.
-
-        Raises KeyError if the id has never been minted by this manager.
+                   None, if unknown.
         """
-        return self._by_id[artifact_id]
+        return self._by_id.get(artifact_id)
 
     def __contains__(self, artifact_id: int) -> bool:
         """RETURN: True if artifact_id has been minted by this manager.

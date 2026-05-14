@@ -41,16 +41,16 @@ def banner(label):
 def run_minting():
     """RETURN: None.
 
-    Demonstrates that .make() assigns artifact_ids monotonically from 0,
+    Demonstrates that .generate() assigns artifact_ids monotonically from 0,
     that distinct descriptions produce distinct ids, and that __len__
     reports the number of distinct artifacts seen.
     """
     mgr = ArtifactManager()
 
     banner("ids assigned monotonically from 0")
-    a = mgr.make(E_Artifact.FILEPATH, {"path": "a.o"})
-    b = mgr.make(E_Artifact.FILEPATH, {"path": "b.o"})
-    c = mgr.make(E_Artifact.FILEPATH, {"path": "c.o"})
+    a = mgr.generate(E_Artifact.FILEPATH, {"path": "a.o"})
+    b = mgr.generate(E_Artifact.FILEPATH, {"path": "b.o"})
+    c = mgr.generate(E_Artifact.FILEPATH, {"path": "c.o"})
     print("a.id = %d" % a.artifact_id)
     print("b.id = %d" % b.artifact_id)
     print("c.id = %d" % c.artifact_id)
@@ -67,21 +67,21 @@ def run_minting():
 def run_interning():
     """RETURN: None.
 
-    Demonstrates that .make() returns the very same Artifact instance for
+    Demonstrates that .generate() returns the very same Artifact instance for
     repeated requests with the same (type, description), and that this
     holds regardless of dict-key order in the description.
     """
     mgr = ArtifactManager()
 
     banner("same (type, description) twice -> same instance")
-    a1 = mgr.make(E_Artifact.FILEPATH, {"path": "main.o"})
-    a2 = mgr.make(E_Artifact.FILEPATH, {"path": "main.o"})
+    a1 = mgr.generate(E_Artifact.FILEPATH, {"path": "main.o"})
+    a2 = mgr.generate(E_Artifact.FILEPATH, {"path": "main.o"})
     print("a1.id    == a2.id:    %s" % (a1.artifact_id == a2.artifact_id))
     print("a1 is a2:             %s" % (a1 is a2))
 
     banner("same description, different dict-key order -> same instance")
-    b1 = mgr.make(E_Artifact.FILEPATH, {"path": "x.o", "variant": "debug"})
-    b2 = mgr.make(E_Artifact.FILEPATH, {"variant": "debug", "path": "x.o"})
+    b1 = mgr.generate(E_Artifact.FILEPATH, {"path": "x.o", "variant": "debug"})
+    b2 = mgr.generate(E_Artifact.FILEPATH, {"variant": "debug", "path": "x.o"})
     print("b1.id    == b2.id:    %s" % (b1.artifact_id == b2.artifact_id))
     print("b1 is b2:             %s" % (b1 is b2))
 
@@ -89,7 +89,7 @@ def run_interning():
     print("len(mgr) = %d  (expected 2)" % len(mgr))
 
     banner("different description -> new artifact, fresh id")
-    c = mgr.make(E_Artifact.FILEPATH, {"path": "y.o"})
+    c = mgr.generate(E_Artifact.FILEPATH, {"path": "y.o"})
     print("c.id     = %d  (expected 2)" % c.artifact_id)
     print("len(mgr) = %d  (expected 3)" % len(mgr))
 
@@ -98,27 +98,23 @@ def run_lookup():
     """RETURN: None.
 
     Demonstrates the reverse-lookup contract: by_id() recovers the Artifact
-    by its id; unknown ids raise KeyError; __contains__ behaves as expected;
+    by its id; unknown ids return None; __contains__ behaves as expected;
     a fresh manager has length 0 and contains no ids.
     """
     mgr = ArtifactManager()
 
     banner("by_id() recovers the same instance")
-    a   = mgr.make(E_Artifact.FILEPATH, {"path": "main.o"})
+    a   = mgr.generate(E_Artifact.FILEPATH, {"path": "main.o"})
     got = mgr.by_id(a.artifact_id)
     print("by_id(a.id) is a:     %s" % (got is a))
-    print("got.descr_dict():     %s" % got.description_dict())
+    print("got.description:      %s" % got.normalized_description)
 
     banner("__contains__")
     print("a.id in mgr:          %s" % (a.artifact_id in mgr))
     print("999  in mgr:          %s" % (999          in mgr))
 
-    banner("by_id() on unknown id -> KeyError")
-    try:
-        mgr.by_id(999)
-        print("UNEXPECTED: lookup succeeded")
-    except KeyError:
-        print("KeyError raised (expected)")
+    banner("by_id() on unknown id returns None")
+    print("mgr.by_id(999):       %s" % mgr.by_id(999))
 
     banner("empty manager")
     empty = ArtifactManager()

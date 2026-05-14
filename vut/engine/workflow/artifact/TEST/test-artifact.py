@@ -12,8 +12,7 @@ The Artifact class is a passive frozen record. Instances are minted by
 ArtifactManager (tested elsewhere); here we verify only the record's own
 contract:
 
-    -- the four fields are accessible
-    -- description_dict() rebuilds the original dict
+    -- the three fields are accessible
     -- __repr__ produces a stable, readable form
     -- the instance refuses mutation
 ______________________________________________________________________________
@@ -39,31 +38,29 @@ def banner(label):
 def run_fields():
     """RETURN: None.
 
-    Prints the four fields of constructed Artifacts and demonstrates that
-    description_dict() rebuilds the dict, __repr__ is stable, and dict-key
-    order in the input does not affect the result.
+    Prints the three fields of constructed Artifacts and demonstrates that
+    __repr__ is stable, and dict-key order in the input does not affect
+    the result.
     """
     mgr = ArtifactManager()
 
     banner("simple artifact: one key")
-    a = mgr.make(E_Artifact.FILEPATH, {"path": "build/main.o"})
+    a = mgr.generate(E_Artifact.FILEPATH, {"path": "build/main.o"})
     print("type:        %s" % a.type.name)
-    print("descr tuple: %s" % (a.normalized_description,))
-    print("descr dict:  %s" % a.description_dict())
+    print("description: %s" % a.normalized_description)
     print("artifact_id: %d" % a.artifact_id)
     print("repr:        %s" % repr(a))
 
-    banner("multi-key description: keys are sorted")
-    b = mgr.make(E_Artifact.FILEPATH, {"path": "lib.so", "variant": "debug"})
-    print("descr tuple: %s" % (b.normalized_description,))
-    print("descr dict:  %s" % b.description_dict())
+    banner("multi-key description")
+    b = mgr.generate(E_Artifact.FILEPATH, {"path": "lib.so", "variant": "debug"})
+    print("description: %s" % b.normalized_description)
     print("repr:        %s" % repr(b))
 
     banner("dict-key order does not matter")
-    c1 = mgr.make(E_Artifact.FILEPATH, {"path": "x.o", "variant": "rel"})
-    c2 = mgr.make(E_Artifact.FILEPATH, {"variant": "rel", "path": "x.o"})
-    print("c1 descr:    %s" % (c1.normalized_description,))
-    print("c2 descr:    %s" % (c2.normalized_description,))
+    c1 = mgr.generate(E_Artifact.FILEPATH, {"path": "x.o", "variant": "rel"})
+    c2 = mgr.generate(E_Artifact.FILEPATH, {"variant": "rel", "path": "x.o"})
+    print("c1 descr:    %s" % c1.normalized_description)
+    print("c2 descr:    %s" % c2.normalized_description)
     print("same id:     %s" % (c1.artifact_id == c2.artifact_id))
 
 
@@ -75,7 +72,7 @@ def run_frozen():
     must raise FrozenInstanceError.
     """
     mgr = ArtifactManager()
-    a   = mgr.make(E_Artifact.FILEPATH, {"path": "main.o"})
+    a   = mgr.generate(E_Artifact.FILEPATH, {"path": "main.o"})
 
     banner("attempt to assign .type")
     try:
@@ -93,7 +90,7 @@ def run_frozen():
 
     banner("attempt to assign .normalized_description")
     try:
-        a.normalized_description = ()
+        a.normalized_description = {}
         print("UNEXPECTED: assignment succeeded")
     except FrozenInstanceError:
         print("FrozenInstanceError raised (expected)")

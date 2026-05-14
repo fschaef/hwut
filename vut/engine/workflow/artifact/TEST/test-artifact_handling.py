@@ -48,22 +48,29 @@ def banner(label):
 def run_registry():
     """RETURN: None.
 
-    Demonstrates the registration contract: empty registry; register a
-    handler; look it up; reject duplicate registration with a clear
-    message; reject lookup of an unregistered type with a clear message.
+    Demonstrates the registration contract: empty registry; fresh
+    registration is accepted; duplicate registration is silently
+    refused via False return and does NOT overwrite the existing
+    handler; lookup of an unregistered type returns None.
+
+    The registry is mechanism only - it never raises and never
+    overwrites. The caller decides how to react to a False return
+    or a None lookup (typically: report a configuration error).
     """
     reg = ArtifactHandlingRegistry()
 
     banner("empty registry")
-    print("FILEPATH in reg: %s" % (E_Artifact.FILEPATH in reg))
+    print("FILEPATH in reg:    %s" % (E_Artifact.FILEPATH in reg))
+    print("get(FILEPATH):      %s" % reg.get(E_Artifact.FILEPATH))
 
-    banner("register FilepathHandling for FILEPATH")
-    reg.register(E_Artifact.FILEPATH, FilepathHandling)
-    print("FILEPATH in reg: %s" % (E_Artifact.FILEPATH in reg))
-    print("get(FILEPATH) is FilepathHandling: %s"
+    banner("first registration is accepted")
+    accepted = reg.register(E_Artifact.FILEPATH, FilepathHandling)
+    print("accepted:           %s" % accepted)
+    print("FILEPATH in reg:    %s" % (E_Artifact.FILEPATH in reg))
+    print("get is Filepath:    %s"
           % (reg.get(E_Artifact.FILEPATH) is FilepathHandling))
 
-    banner("duplicate registration is rejected")
+    banner("duplicate registration is refused; existing handler preserved")
 
     class _OtherHandler(ArtifactHandling):
         @classmethod
@@ -71,21 +78,16 @@ def run_registry():
         @classmethod
         def resolve     (cls, normalized_description, local_context): return None
 
-    try:
-        reg.register(E_Artifact.FILEPATH, _OtherHandler)
-        print("UNEXPECTED: duplicate registration succeeded")
-    except ArtifactHandlingRegistry.DuplicateRegistration as e:
-        print("DuplicateRegistration raised (expected)")
-        print("message: %s" % e)
+    accepted = reg.register(E_Artifact.FILEPATH, _OtherHandler)
+    print("accepted:           %s" % accepted)
+    print("get is Filepath:    %s  (still the original)"
+          % (reg.get(E_Artifact.FILEPATH) is FilepathHandling))
+    print("get is _Other:      %s"
+          % (reg.get(E_Artifact.FILEPATH) is _OtherHandler))
 
-    banner("lookup of unregistered type raises KeyError")
+    banner("lookup of unregistered type returns None")
     fresh_reg = ArtifactHandlingRegistry()
-    try:
-        fresh_reg.get(E_Artifact.FILEPATH)
-        print("UNEXPECTED: lookup succeeded")
-    except KeyError as e:
-        print("KeyError raised (expected)")
-        print("message: %s" % e)
+    print("get(FILEPATH):      %s" % fresh_reg.get(E_Artifact.FILEPATH))
 
 
 def run_canonicalise():

@@ -1,17 +1,15 @@
 
 --- simple artifact: one key ---
 type:        FILEPATH
-descr tuple: (('path', 'build/main.o'),)
-descr dict:  {'path': 'build/main.o'}
+description: {'path': 'build/main.o'}
 artifact_id: 0
-repr:        Artifact(FILEPATH, {path='build/main.o'}, id=0)
+repr:        Artifact(FILEPATH, {'path': 'build/main.o'}, id=0)
 
---- multi-key description: keys are sorted ---
-descr tuple: (('path', 'lib.so'), ('variant', 'debug'))
-descr dict:  {'path': 'lib.so', 'variant': 'debug'}
-repr:        Artifact(FILEPATH, {path='lib.so', variant='debug'}, id=1)
+--- multi-key description ---
+description: {'path': 'lib.so', 'variant': 'debug'}
+repr:        Artifact(FILEPATH, {'path': 'lib.so', 'variant': 'debug'}, id=1)
 
 --- dict-key order does not matter ---
-c1 descr:    (('path', 'x.o'), ('variant', 'rel'))
-c2 descr:    (('path', 'x.o'), ('variant', 'rel'))
+c1 descr:    {'path': 'x.o', 'variant': 'rel'}
+c2 descr:    {'path': 'x.o', 'variant': 'rel'}
 same id:     True

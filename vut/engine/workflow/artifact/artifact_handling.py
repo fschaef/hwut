@@ -49,7 +49,7 @@ class ArtifactHandling(ABC):
         consult (e.g. test_root for filesystem paths, dns_resolver for
         network endpoints). Keys not used by this handler are ignored.
 
-        The returned dict is the input to ArtifactManager.make().
+        The returned dict is the input to ArtifactManager.generate().
         """
         ...
 
@@ -71,58 +71,53 @@ class ArtifactHandling(ABC):
         ...
 
 
-class _DuplicateRegistration(Exception):
-    pass
-
-
 class ArtifactHandlingRegistry:
     """Type-keyed registry of ArtifactHandling classes.
 
     The workflow manager owns one instance. Recipes and task launchers
     look up the appropriate handler via .get(artifact_type).
 
-    Registration is one-shot: re-registering a handler for a type that
-    is already mapped raises an error rather than silently overwriting.
-    This catches accidental double-registration when several modules
-    independently configure the registry at startup.
+    Registration is one-shot: once a handler is registered for a type,
+    further registration attempts for that type are refused. The caller
+    is informed via the return value of .register() and decides how to
+    react. The registry itself never raises and never overwrites: it is
+    pure mechanism, no policy.
     """
-
-    DuplicateRegistration = _DuplicateRegistration
 
     def __init__(self):
         self._db: dict[E_Artifact, type[ArtifactHandling]] = {}
 
     def register(self,
                  artifact_type: E_Artifact,
-                 handling:      type[ArtifactHandling]) -> None:
-        """RETURN: None.
+                 handling:      type[ArtifactHandling]) -> bool:
+        """RETURN: True,  if accepted.
+                   False, if refused due to previous registration.
 
-        Associates a handler class with an artifact type. Raises
-        DuplicateRegistration if `artifact_type` is already mapped.
+        Associates a handler class with an artifact type if and only
+        if no handler was previously registered for that type.
+        Refusal is silent at the registry level - the caller decides
+        how to react to a False return.
 
         The handling argument is the class itself, not an instance;
         ArtifactHandling carries no instance state.
         """
         if artifact_type in self._db:
-            raise self.DuplicateRegistration(
-                "ArtifactHandling already registered for %s (existing=%s, new=%s)"
-                % (artifact_type.name, self._db[artifact_type].__name__,
-                   handling.__name__)
-            )
-        self._db[artifact_type] = handling
+            return False
+        else:
+            self._db[artifact_type] = handling
+            return True
 
-    def get(self, artifact_type: E_Artifact) -> type[ArtifactHandling]:
+    def get(self, artifact_type: E_Artifact) -> type[ArtifactHandling] | None:
         """RETURN: ArtifactHandling subclass registered for `artifact_type`.
+                   None,                 if no handler is registered.
 
-        Raises KeyError with a clear message if no handler has been
-        registered for this type.
+        The caller is responsible for handling the None case
+        (typically: report it as a configuration error).
         """
         try:
             return self._db[artifact_type]
         except KeyError:
-            raise KeyError(
-                "No ArtifactHandling registered for %s" % artifact_type.name
-            )
+            return None
 
     def __contains__(self, artifact_type: E_Artifact) -> bool:
         """RETURN: True if a handler is registered for `artifact_type`.
