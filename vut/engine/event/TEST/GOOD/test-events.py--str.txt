@@ -1,0 +1,36 @@
+
+--- TaskStartedEvent ---
+task 1 started
+
+--- TaskDoneEvent ---
+task 1 done in 2.000s
+
+--- TaskFailedEvent ---
+task 1 failed: exit code 1
+
+--- TaskProgressEvent without note ---
+task 1 progress: 25%
+
+--- TaskProgressEvent with note ---
+task 1 progress: 50%  (linking)
+
+--- TaskCancelledEvent ---
+task 1 cancelled
+
+--- CompilerNoSourceEvent ---
+task 2: no source: x.c
+
+--- CompilerDoneEvent ---
+task 2 compiled x.c -> x.o in 0.500s
+
+--- ArtifactAvailableEvent ---
+artifact 7 available (by task 3)
+
+--- ArtifactImpossibleEvent without reason ---
+artifact 8 impossible (by task 3)
+
+--- ArtifactImpossibleEvent with reason ---
+artifact 8 impossible (by task 3): cycle
+
+--- WorkflowTaskCancelledEvent ---
+task 4 cancelled by workflow

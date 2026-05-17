@@ -1,0 +1,12 @@
+
+--- construction of every concrete event class ---
+TaskStartedEvent               id=TaskStartedEvent              
+TaskDoneEvent                  id=TaskDoneEvent                 
+TaskFailedEvent                id=TaskFailedEvent               
+TaskProgressEvent              id=TaskProgressEvent             
+TaskCancelledEvent             id=TaskCancelledEvent            
+CompilerNoSourceEvent          id=CompilerNoSourceEvent         
+CompilerDoneEvent              id=CompilerDoneEvent             
+ArtifactAvailableEvent         id=ArtifactAvailableEvent        
+ArtifactImpossibleEvent        id=ArtifactImpossibleEvent       
+WorkflowTaskCancelledEvent     id=WorkflowTaskCancelledEvent    

@@ -21,11 +21,11 @@ WORKED EXAMPLE:
     FilepathHandling          canonicalise/resolve for filesystem paths
 ________________________________________________________________________________
 """
-from .enums             import E_Artifact
-from .artifact          import Artifact
-from .artifact_manager  import ArtifactManager
-from .artifact_handling import ArtifactHandling, ArtifactHandlingRegistry
-from .filepath          import Filepath, FilepathHandling
+from .enums                      import E_Artifact
+from .artifact                   import Artifact
+from .artifact_manager           import ArtifactManager
+from .artifact_handling          import ArtifactHandling, ArtifactHandlingRegistry
+from .artifact_handling_filepath import Filepath, FilepathHandling
 
 __all__ = [
     "E_Artifact",

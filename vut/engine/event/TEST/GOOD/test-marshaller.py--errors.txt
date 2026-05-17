@@ -1,0 +1,15 @@
+
+--- unknown id ---
+result: None
+
+--- missing id in envelope ---
+result: None
+
+--- envelope is not a dict ---
+result: None
+
+--- payload validation failure (wrong type) ---
+result: None
+
+--- payload validation failure (missing required field) ---
+result: None

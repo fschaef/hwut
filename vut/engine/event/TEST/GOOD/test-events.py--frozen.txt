@@ -1,0 +1,9 @@
+
+--- attempt to assign .task_id ---
+FrozenInstanceError raised (expected)
+
+--- attempt to assign .duration_s ---
+FrozenInstanceError raised (expected)
+
+--- attempt to assign .timestamp ---
+FrozenInstanceError raised (expected)

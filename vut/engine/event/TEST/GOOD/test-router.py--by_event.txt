@@ -1,0 +1,10 @@
+
+--- two subscriptions on the same id, both fire ---
+seen_a: ['TaskDoneEvent', 'TaskFailedEvent']
+seen_b: ['TaskDoneEvent']
+
+--- subscribing on CompilerDoneEvent delivers only Compiler events, not generic TaskDoneEvent ---
+seen_c: ['CompilerDoneEvent']
+
+--- subscribing by string id ("TaskDoneEvent") works the same as by class ---
+seen_s: ['TaskDoneEvent']

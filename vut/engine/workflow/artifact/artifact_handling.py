@@ -70,7 +70,6 @@ class ArtifactHandling(ABC):
         """
         ...
 
-
 class ArtifactHandlingRegistry:
     """Type-keyed registry of ArtifactHandling classes.
 
@@ -95,8 +94,6 @@ class ArtifactHandlingRegistry:
 
         Associates a handler class with an artifact type if and only
         if no handler was previously registered for that type.
-        Refusal is silent at the registry level - the caller decides
-        how to react to a False return.
 
         The handling argument is the class itself, not an instance;
         ArtifactHandling carries no instance state.
@@ -109,7 +106,7 @@ class ArtifactHandlingRegistry:
 
     def get(self, artifact_type: E_Artifact) -> type[ArtifactHandling] | None:
         """RETURN: ArtifactHandling subclass registered for `artifact_type`.
-                   None,                 if no handler is registered.
+                   None, if no handler is registered.
 
         The caller is responsible for handling the None case
         (typically: report it as a configuration error).

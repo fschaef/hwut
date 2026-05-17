@@ -1,0 +1,8 @@
+Testing the Event component: ids, categories, payloads,
+EventKind flyweights, Event construction, and the registry
+----------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py 
+
+--not common.py
+--not config.py

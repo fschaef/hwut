@@ -1,0 +1,12 @@
+
+--- collision with TaskDoneEvent (already registered in events.py) ---
+EventIdCollision raised: Event subclass name 'TaskDoneEvent' is already registered to vut.engine.event.events.TaskDoneEvent
+
+--- collision with CompilerDoneEvent ---
+EventIdCollision raised: Event subclass name 'CompilerDoneEvent' is already registered to vut.engine.event.events.CompilerDoneEvent
+
+--- non-colliding definition works ---
+class defined OK: _OneShotTestEvent
+
+--- redefining the same novel name DOES collide ---
+EventIdCollision raised: Event subclass name '_OneShotTestEvent' is already registered to __main__.run_collision.<locals>._OneShotTestEvent

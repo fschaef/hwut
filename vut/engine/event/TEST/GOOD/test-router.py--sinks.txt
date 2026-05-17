@@ -1,0 +1,31 @@
+
+--- async callable is accepted as a sink (is_async=True) ---
+handle:   0
+is_queue: False
+is_async: True
+
+--- sync callable is accepted as a sink (is_async=False, is_queue=False) ---
+handle:   1
+is_queue: False
+is_async: False
+
+--- lambda (sync) is accepted ---
+handle:   2
+is_async: False
+
+--- asyncio.Queue is accepted (has put_nowait) ---
+handle:   3
+is_queue: True
+is_async: False
+
+--- plain int is rejected ---
+TypeError: Router subscription sink must be a callable or an object with put_nowait(); got int
+
+--- plain dict is rejected (no put_nowait, not callable) ---
+TypeError: Router subscription sink must be a callable or an object with put_nowait(); got dict
+
+--- queue with bounded size + full -> diagnostic to stderr, event dropped ---
+publish on full queue returned cleanly
+
+--- sync callable runs in a worker thread, not the main thread ---
+ran off main thread: [True]

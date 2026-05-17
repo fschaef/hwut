@@ -1,0 +1,8 @@
+
+--- category=WORKFLOW gets task lifecycle events; category=COMPILATION gets compiler events ---
+WORKFLOW queue contents:
+  TaskDoneEvent
+  ArtifactAvailableEvent
+COMPILATION queue contents:
+  CompilerDoneEvent
+  CompilerNoSourceEvent

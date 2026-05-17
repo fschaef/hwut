@@ -10,13 +10,19 @@ artifact lifecycle state machine (ABSENT / IN_PRODUCTION / PRESENT /
 IMPOSSIBLE), workload tracking, and history are added by the workflow-manager
 component when it integrates this one.
 
+            .------------------<-----------------------.
+            |                                          |
+         (ABSENT) --> (IN_PRODUCTION) --> (PRESENT) ---'
+            |               |
+            '--------> (IMPOSSIBLE)
+
 INVARIANTS:
 
     -- Two .generate() calls with the same (type, normalized_description)
        return the very same Artifact instance.
     -- artifact_id values are non-negative integers, monotonically
        increasing in order of first registration.
-    -- Once minted, an Artifact is never replaced or removed.
+    -- An Artifact is NEVER REPLACED/REMOVED!
 ________________________________________________________________________________
 """
 from vut.engine.workflow.artifact.artifact import Artifact

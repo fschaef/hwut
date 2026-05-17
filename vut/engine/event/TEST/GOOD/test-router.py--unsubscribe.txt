@@ -1,0 +1,17 @@
+
+--- unsubscribe stops further delivery ---
+subs after subscribe: 1
+handle in router:     True
+seen before unsub:    ['TaskDoneEvent']
+unsubscribe returns:  True
+subs after unsub:     0
+handle in router:     False
+seen after unsub:     ['TaskDoneEvent']
+
+--- unsubscribing a stale handle returns False ---
+repeat unsubscribe:   False
+
+--- safe to subscribe during dispatch (snapshot iteration) ---
+first publish fired:  ['first']
+subs after first:     2
+second publish fired: ['first', 'first', 'late']

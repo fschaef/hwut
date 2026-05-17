@@ -1,0 +1,22 @@
+
+--- CompilerDoneEvent via event.serialize() ---
+id   = CompilerDoneEvent
+data = {'timestamp': 100.0, 'task_id': 42, 'duration_s': 1.5, 'source': 'x.c', 'output': 'x.o'}
+
+--- identical via Marshaller.serialize(event) ---
+identical: True
+
+--- deserialise via Event.deserialize(wire) ---
+type:           CompilerDoneEvent
+is Compiler:    True
+is TaskDone:    True
+fields equal:   True
+timestamp:      100.0
+str(back):      task 42 compiled x.c -> x.o in 1.500s
+
+--- deserialise via Marshaller.deserialize(wire) ---
+identical type: True
+
+--- event with optional field (TaskProgressEvent) ---
+wire = {'id': 'TaskProgressEvent', 'data': {'timestamp': 200.0, 'task_id': 7, 'fraction': 0.33, 'note': 'hi'}}
+note preserved: True

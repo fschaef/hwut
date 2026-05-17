@@ -1,0 +1,20 @@
+
+--- CompilerDoneEvent IS-A TaskDoneEvent ---
+isinstance Event:             True
+isinstance TaskDoneEvent:     True
+isinstance CompilerDoneEvent: True
+
+--- inherits parent's fields ---
+ev.task_id:    42
+ev.duration_s: 1.5
+ev.source:     a.c
+ev.output:     a.o
+
+--- each gets its own id (NOT inherited) ---
+TaskDoneEvent.id:     TaskDoneEvent
+CompilerDoneEvent.id: CompilerDoneEvent
+distinct:             True
+
+--- Compiler overrides .category ---
+TaskDoneEvent.category:     WORKFLOW
+CompilerDoneEvent.category: COMPILATION

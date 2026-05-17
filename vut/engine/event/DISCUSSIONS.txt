@@ -1,0 +1,492 @@
+================================================================================
+VUT Event Component - Discussion Record
+================================================================================
+
+This file records the design decisions reached during the design
+conversation, with rationale for each. The intent is that someone
+reading this later understands WHY the code looks the way it does,
+not just WHAT it does.
+
+Decisions are listed roughly in the order they were settled.
+
+
+--------------------------------------------------------------------------------
+DECISION 1 - Event identity is system-wide and unique
+--------------------------------------------------------------------------------
+
+DECISION:    Every event has a single identity, drawn from a system-
+             wide namespace where names must be unique. This is
+             realised today via the class-name-as-id mechanism
+             (see Decision 10); historically it was realised via a
+             central E_EventId enum.
+
+RATIONALE:   One identity space matters for dispatch (the Marshaller
+             needs to map "what kind is this?" to a single class)
+             and for log/wire interpretability (a name on the wire
+             must unambiguously identify a kind). Federated id
+             spaces (per-subsystem enums, tuple ids) fragment this
+             story without solving a problem we have.
+
+             The system-wide-uniqueness requirement is enforced
+             today by Event.__init_subclass__ raising
+             EventIdCollision when two Event subclasses share a
+             __name__.
+
+             The tuple-composite idea (E_Entity, E_Event) was
+             raised and remains deferred. It would offer better
+             federation properties but at the cost of more complex
+             wire form. We do not yet have evidence the simple
+             flat scheme bites.
+
+
+--------------------------------------------------------------------------------
+DECISION 2 - Pydantic for payload validation (initially)
+--------------------------------------------------------------------------------
+
+DECISION:    Use Pydantic v2 to validate event data, but via
+             TypeAdapter on plain dataclasses, NOT by making every
+             Event class a BaseModel subclass.
+
+HISTORY:     Earlier iterations had separate Pydantic-BaseModel
+             "Payload" classes alongside dataclass "EventKind"
+             metadata classes. Frank pointed out (rightly) that
+             this duplicated the type hierarchy: every event had
+             both a "kind" object and a "payload" class, mirroring
+             each other.
+
+             The simplification: one class per event. The class IS
+             the kind (carries id/category as ClassVar) AND defines
+             the data (instance fields).
+
+             Pydantic still earns its place at one specific role:
+             validating incoming wire data. The TypeAdapter approach
+             gives us full Pydantic validation power on dataclass
+             subclasses without making them BaseModels.
+
+RATIONALE:   Hand-written validation would be ~30 lines of
+             isinstance checks per Event - workable but easy to get
+             wrong, and the error messages would be poor. Pydantic
+             produces clear ValidationError reports identifying
+             field and type. Worth the dependency.
+
+             The TypeAdapter is created lazily on first use of
+             as_dict()/from_dict(), NOT in __init_subclass__. The
+             reason: __init_subclass__ runs BEFORE @dataclass
+             finishes processing the subclass's fields, so an
+             eager adapter would not see the subclass's data fields.
+
+
+--------------------------------------------------------------------------------
+DECISION 3 - Router with subscribe-on-{event,category,predicate}
+--------------------------------------------------------------------------------
+
+DECISION:    The Router is a small in-process publish-subscribe class
+             with three subscribe methods (subscribe_on_event,
+             subscribe_on_category, subscribe_on_predicate) and a
+             non-blocking publish(event). Sinks are detected by type:
+             async callables OR queue-like objects (.put_nowait).
+             Subscription returns an opaque handle; unsubscribe takes
+             the handle and returns bool (False if stale).
+
+HISTORY:     Earlier the routing layer was deferred to "when the WFM
+             needs it". It turned out we could build a clean general-
+             purpose Router now, in this package, that many subsystems
+             will share (WFM report loop, diagnostic aggregator, test
+             fixtures). Building it once here avoids re-inventing it
+             in every subsystem.
+
+API SHAPE (Shape D, "by filter dimension"):
+
+             Three subscribe methods, one per natural filter:
+
+                 subscribe_on_event(id, sink)        - typed, common
+                 subscribe_on_category(cat, sink)    - typed, common
+                 subscribe_on_predicate(fn, sink)    - general escape hatch
+
+             Rationale: the first two are by far the most frequent
+             subscription shapes. Forcing them through a lambda
+             ("subscribe(lambda ev: ev.id == E_EventId.X, sink)") is
+             noisy and invites typo bugs. The three-method form reads
+             well at the call site and leaves room for future O(1)
+             dispatch optimisation (id-keyed subs in a dict,
+             category-keyed likewise, predicate subs scanned linearly).
+
+             Alternative shapes considered:
+                 - subscribe_callback / subscribe_queue (only sink-typed,
+                   no filter-typing); rejected because filter typing is
+                   what consumers actually need to encode.
+                 - subscribe(predicate, sink) (single method, sink-type
+                   discriminated); rejected for the same reason.
+                 - subscribe_on_event(id, callback=fn) vs queue= ;
+                   verbose for no benefit over type-detection.
+
+SINK TYPE DETECTION:
+
+             callable(sink) -> async callback path
+             hasattr(sink, 'put_nowait') -> queue path
+             neither -> TypeError raised at SUBSCRIBE time
+
+             Type detection at subscribe time means mistakes surface
+             at the registration call (with a clear error), not later
+             during a publish() that silently drops events.
+
+PUBLISH IS NON-BLOCKING:
+
+             Callbacks are scheduled via asyncio.create_task(); publish
+             does NOT await them. Queues receive put_nowait(). The
+             natural expectation for events is asynchronous handling.
+             A consequence: callback exceptions are NOT visible to the
+             publisher; they surface via asyncio's task-exception
+             handling. Consumers needing tighter control should use
+             queue sinks and process them in their own task.
+
+SNAPSHOT ITERATION:
+
+             publish() iterates over a snapshot of the subscription
+             list, taken at the top of the call. Subscribing or
+             unsubscribing during dispatch does NOT affect the current
+             event; new subs fire on the next publish.
+
+UNSUBSCRIBE RETURNS BOOL:
+
+             False on a stale or unknown handle, consistent with the
+             rest of the VUT design's policy of status returns over
+             exceptions.
+
+OPEN QUESTIONS NOT YET ANSWERED:
+
+             - Should sync callables be REJECTED at subscribe time
+               (only 'async def' callbacks allowed)?
+             - Should there be a way to subscribe to "any of these
+               event ids" or "any of these categories" without
+               multiple subscriptions? Current answer: no - use
+               multiple subscriptions, or a predicate. We have not
+               yet hit a case where this is awkward.
+
+NOT IN SCOPE:
+
+             - Cross-process routing. The Router is purely in-process.
+               Bridging events between processes will use the
+               Marshaller for transport plus a future bridging
+               component; the Router does not serialise.
+             - Synchronous (in-line) callback dispatch.
+             - Priority ordering between subscribers.
+
+
+--------------------------------------------------------------------------------
+DECISION 4 - Categories are subsystems, not event shapes
+--------------------------------------------------------------------------------
+
+DECISION:    E_EventCategory members are subsystem names:
+                 TEST_RESULT, WORKFLOW, NETWORK, COMPILATION, DIAGNOSTIC
+
+ALTERNATIVE: Shape-based names with tree structure
+             (TASK__LIFECYCLE__TERMINAL, ARTIFACT__STATE__POSITIVE, ...)
+
+RATIONALE:   The earlier shape-based design was wrong. The
+             tree-structured names answered "what shape of state-
+             change is this?" but consumers don't filter that way.
+             Consumers filter by subsystem interest. A test-result
+             dashboard wants TEST_RESULT events. A debugger wants
+             DIAGNOSTIC events. "All terminal lifecycle events
+             regardless of subsystem" is a predicate, not a
+             category.
+
+             The flat list also avoids hierarchy maintenance: no
+             ambiguity about which level of the tree to use, no
+             "should I add a new subcategory?" debates.
+
+             The generic Task events (STARTED, DONE, FAILED,
+             PROGRESS, CANCELLED) are categorised as WORKFLOW
+             because they are the WFM's interest: the WFM is the
+             primary consumer of task lifecycle. A compiler task
+             specialises Done via CompilerDoneEvent, which re-
+             categorises to COMPILATION.
+
+
+--------------------------------------------------------------------------------
+DECISION 5 - Marshaller is a class-as-singleton, no instances
+--------------------------------------------------------------------------------
+
+DECISION:    The Marshaller is a class with classmethods only and
+             a class-level _SPECIALISTS attribute (a
+             MappingProxyType, frozen). No constructor, no
+             instances. Adding a specialist means editing
+             marshaller.py.
+
+HISTORY:     Earlier iterations had instances (Marshaller()),
+             then a builder pattern (Marshaller.builder(...)),
+             then a global singleton with a register_specialist
+             method. Each iteration tried to balance two
+             concerns:
+
+                 (a) Configurability - subsystems might want
+                     different transport policies.
+                 (b) Synchronisation - producer and consumer must
+                     agree on the transport format.
+
+             For VUT's deployment shape (one matched build per
+             process), (b) outweighs (a). A class-as-singleton
+             gets synchronisation for free: same build, same
+             class, same _SPECIALISTS. No registration handshake,
+             no startup-phase coordination.
+
+RATIONALE:   The cost (editing marshaller.py to add a specialist)
+             is small. The benefit (no runtime registration
+             plumbing, no "wait for Marshaller to be ready"
+             race, no "are both sides configured the same"
+             question) is large.
+
+             The door for dynamic registration is left structurally
+             open: a future startup-phase mechanism can add an
+             add_specialist() classmethod that mutates the dict
+             during a designated startup window, then freezes it.
+             We don't need it yet.
+
+
+--------------------------------------------------------------------------------
+DECISION 6 - serialize/deserialize live on Event AND on Marshaller
+--------------------------------------------------------------------------------
+
+DECISION:    Event has a .serialize() instance method and a
+             .deserialize() classmethod, both of which delegate
+             to Marshaller. Marshaller also exposes them as
+             classmethods directly.
+
+ALTERNATIVE: Only on Marshaller (forces consumers to know about
+             the Marshaller class) or only on Event (the
+             deserialise direction is awkward because there's no
+             Event instance before decoding).
+
+RATIONALE:   Discoverability. A developer with an Event in hand
+             types 'event.' and the IDE shows .serialize(). They
+             don't need to know about a separate transport class
+             until they want to.
+
+             The asymmetry of deserialise (no instance) is
+             resolved by making it a classmethod on Event. Same
+             call site as serialise; visually consistent.
+
+             The duplicate API surface (Event.serialize and
+             Marshaller.serialize do the same thing) is acceptable
+             because Marshaller is a class-as-singleton: there is
+             no configuration to disagree on. Both paths produce
+             identical output.
+
+
+--------------------------------------------------------------------------------
+DECISION 7 - Routing addresses live in payloads, not on Event
+--------------------------------------------------------------------------------
+
+DECISION:    Event has only three fields: timestamp (inherited),
+             plus whatever the subclass declares. No 'source_id'
+             or 'target_id' fields on the base.
+
+             Events that need addressing (e.g.
+             WorkflowTaskCancelledEvent) carry it as named fields
+             on themselves: task_id is the target.
+
+ALTERNATIVE: Always-present source_id/target_id fields on Event.
+
+RATIONALE:   Most events are broadcast facts about state changes.
+             They have no target; calling something the "source"
+             is bookkeeping, not content. Adding routing fields
+             to every event would be overhead for the broadcast
+             case AND would flatten distinct routing semantics
+             into a single anonymous pair.
+
+             Events with real addressing carry it with semantically
+             named fields (task_id, artifact_id), which is more
+             honest about what each field means.
+
+
+--------------------------------------------------------------------------------
+DECISION 8 - Versioning is deferred but acknowledged
+--------------------------------------------------------------------------------
+
+DECISION:    No per-event version number, no schema-evolution
+             machinery. The operating contract is:
+
+                 - Events are produced and consumed within ONE
+                   matched build.
+                 - Cross-build replay is UNDEFINED.
+                 - At the wire boundary, E_EventId.name (stable
+                   string) is used, NOT .value (per-build int).
+
+             This is documented in code (event.py header) and
+             will need to be revisited if persistent storage,
+             remote replay, or cross-build inspection becomes
+             a real requirement.
+
+ALTERNATIVE: Build versioning machinery now (per-kind version,
+             forward-compatible payloads, migration tables).
+
+RATIONALE:   Events evolve with the code; versioning is a real
+             concern. But we don't know yet what kinds of
+             changes will actually happen. Building versioning
+             pre-emptively means choosing defaults without
+             evidence; we would likely guess wrong.
+
+             The .name-as-wire-key discipline buys us
+             cross-build stability for the most common case
+             (kinds are added but not renamed) for free. It's
+             the cheap part of the versioning solution.
+
+             When schema evolution becomes a real requirement,
+             we will have a concrete migration in front of us
+             to design against. Until then, we acknowledge the
+             problem and move on.
+
+
+--------------------------------------------------------------------------------
+DECISION 9 - File consolidation: one file per concept
+--------------------------------------------------------------------------------
+
+DECISION:    The package has four source files:
+
+                 enums.py        the two enums
+                 event.py        the base class
+                 events.py       the concrete subclasses and CLASS_BY_ID
+                 marshaller.py   the Marshaller
+
+ALTERNATIVE: One file per class (10+ files), or one file for everything.
+
+RATIONALE:   Things that are read together live together. The
+             reader looking up "what is a TaskDoneEvent?" wants to
+             see the class definition, its fields, and its
+             __str__ all at once - that's why events.py groups
+             all concrete subclasses.
+
+             Things that have different rates of change live
+             apart. event.py (the base class) is structural; it
+             changes when the type system changes. events.py
+             (the catalogue) is data; it changes when a new
+             event is added. Keeping them separate means
+             "adding a new event" doesn't require scrolling past
+             type machinery to find the catalogue.
+
+             marshaller.py is separate because transport is a
+             different concern from event semantics. Mixing them
+             would re-introduce the coupling we deliberately
+             removed (the earlier serialize/deserialize-on-
+             EventKind iteration).
+
+
+--------------------------------------------------------------------------------
+DECISION 10 - Event id is derived from the class name; E_EventId removed
+--------------------------------------------------------------------------------
+
+DECISION:    The E_EventId enum is gone. Each concrete Event subclass
+             has its .id automatically set in __init_subclass__ to
+             its own __name__ (e.g. TaskDoneEvent.id ==
+             "TaskDoneEvent"). The class is auto-registered in the
+             module-level CLASS_BY_ID dict. Two subclasses with the
+             same name raise EventIdCollision at class definition
+             time.
+
+HISTORY:     The earlier design had a central E_EventId enum that
+             every event class referenced via a ClassVar. Adding an
+             event was a two-step operation: edit enums.py, then
+             edit events.py. The two places had to agree, and
+             drift between them was a real bug class.
+
+             Removing the enum collapses the two steps into one:
+             define the class, done. The class name IS the
+             identity.
+
+RATIONALE:   - Adding an event is one step, not two. Less ceremony,
+               less drift.
+
+             - Identity is self-describing. "TaskDoneEvent" IS the
+               identity; no mapping table between enum and class.
+
+             - Cross-build robustness improves. With the enum, the
+               wire identity was decoupled from the class name and
+               renames could go silently wrong. With class-name-
+               as-id, renaming requires changing source code in
+               every consumer - a code change that gets reviewed.
+
+             - Uniqueness is enforced at import time. Two events
+               called "DoneEvent" would silently misroute under
+               the enum model (with a bit of work to arrange);
+               here it raises immediately.
+
+ID DERIVATION:
+
+             cls.id = cls.__name__ verbatim. No stripping of an
+             "Event" suffix, no snake_case conversion, no munging.
+             The most honest mapping; debuggable by eye ("see this
+             string on the wire, find the class with that name").
+
+UNIQUENESS BEHAVIOUR:
+
+             Collision is a programmer error and is reported as
+             one: EventIdCollision is raised inside __init_subclass__
+             at class-definition time. The module that triggered
+             the collision will not finish importing. This is one
+             of the few cases in VUT where an exception is the
+             right answer instead of a status return - because
+             __init_subclass__ has no return value path, and a
+             partially-built event registry is not a viable
+             runtime state.
+
+TRADE-OFFS ACKNOWLEDGED:
+
+             - Renames cost wire compatibility. With the enum,
+               TaskDoneEvent the class and E_EventId.TASK_DONE the
+               wire id were separable; one could be renamed
+               without the other. Without the enum, renaming
+               either is the same change. This is acceptable
+               because VUT does not persist events across builds
+               and does not promise wire compatibility across
+               renames; "do not rename event types lightly"
+               becomes a hard rule rather than a soft convention.
+
+             - The CLASS_BY_ID namespace is FLAT and SHARED. Two
+               subsystems that both want a "DoneEvent" must
+               disambiguate via prefix or suffix
+               (CompilerDoneEvent vs TaskDoneEvent). This matches
+               the existing naming convention; it is documented in
+               the README.
+
+1. Cross-process event bridging. The Router is in-process only;
+   a bridging component using the Marshaller for transport is
+   future work.
+
+2. Whether the Router should REJECT sync callables at subscribe
+   time (only 'async def' allowed). Currently accepted; would
+   only manifest if someone subscribed a sync callable and then
+   tried to publish (asyncio.create_task on a non-coroutine).
+
+3. Tuple-composite event ids (E_Entity, E_Event). Worth revisiting
+   if/when federation problems bite.
+
+4. Versioning machinery. Worth revisiting if/when persistent storage
+   or cross-build replay becomes required.
+
+5. Workload-id field on Event. Will be added when workloads exist
+   and predicates need them.
+
+6. Dynamic startup-phase specialist registration on Marshaller.
+   The classmethod structure is ready for it; no machinery built.
+
+
+--------------------------------------------------------------------------------
+THINGS LEFT OPEN
+--------------------------------------------------------------------------------
+
+1. Cross-process event bridging. The Router is in-process only;
+   a bridging component using the Marshaller for transport is
+   future work.
+
+2. Tuple-composite event ids (E_Entity, E_Event). Worth revisiting
+   if/when federation problems bite.
+
+3. Versioning machinery. Worth revisiting if/when persistent storage
+   or cross-build replay becomes required.
+
+4. Workload-id field on Event. Will be added when workloads exist
+   and predicates need them.
+
+5. Dynamic startup-phase specialist registration on Marshaller.
+   The classmethod structure is ready for it; no machinery built.

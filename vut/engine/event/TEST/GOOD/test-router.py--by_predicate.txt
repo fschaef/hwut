@@ -1,0 +1,9 @@
+
+--- predicate: task_id is in {1, 3} ---
+seen: ['TaskDoneEvent/1', 'TaskDoneEvent/3']
+
+--- predicate over derived attribute: only events with .reason ---
+seen2: ['TaskFailedEvent']
+
+--- predicate that raises is skipped, not propagated ---
+seen3: ['hit']

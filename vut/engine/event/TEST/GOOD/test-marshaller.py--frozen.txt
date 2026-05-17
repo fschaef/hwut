@@ -1,0 +1,9 @@
+
+--- _SPECIALISTS is empty by default ---
+len(_SPECIALISTS): 0
+
+--- item assignment is refused ---
+TypeError (expected): 'mappingproxy' object does not support item assignment
+
+--- deletion is refused ---
+TypeError (expected): 'mappingproxy' object does not support item deletion
