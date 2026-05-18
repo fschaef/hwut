@@ -1,0 +1,4 @@
+
+--- send WORKFLOW and COMPILATION events; each fires the right handler ---
+workflow_seen:    ['TaskDoneEvent', 'TaskStartedEvent']
+compilation_seen: ['CompilerDoneEvent']

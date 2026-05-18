@@ -1,0 +1,17 @@
+
+--- async callable sink (kind=async) ---
+kind: async
+
+--- sync callable sink (kind=sync) ---
+kind: sync
+
+--- object-with-.send sink (kind=send) ---
+kind: send
+
+--- dispatch fires all three ---
+async_seen : ['TaskDoneEvent']
+sync_seen  : ['TaskDoneEvent']
+bucket.items: ['TaskDoneEvent']
+
+--- non-callable, non-send object is rejected ---
+TypeError: EventDispatcher: sink must be a callable or an object with a .send(event) method; got int

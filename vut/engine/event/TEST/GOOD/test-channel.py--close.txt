@@ -1,0 +1,6 @@
+
+--- AsyncQueueChannel: close() -> receive() returns None ---
+result: None
+
+--- send on closed channel raises RuntimeError ---
+RuntimeError raised (expected)

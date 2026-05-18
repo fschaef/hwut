@@ -1,0 +1,8 @@
+
+--- router has 3 entries ---
+len(router): 3
+
+--- publish three events; each lands on the matching Terminals ---
+seen1 (WORKFLOW)   : [('TaskDoneEvent', 1), ('TaskStartedEvent', 42)]
+seen2 (COMPILATION): [('CompilerDoneEvent', 42)]
+seen3 (task_id=42) : [('CompilerDoneEvent', 42), ('TaskStartedEvent', 42)]

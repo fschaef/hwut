@@ -1,0 +1,10 @@
+
+--- A sends, B receives ---
+type:        TaskDoneEvent
+task_id:     1
+duration_s:  1.0
+timestamp:   10.0
+
+--- B sends, A receives (bidirectional) ---
+type:        CompilerDoneEvent
+source:      a.c

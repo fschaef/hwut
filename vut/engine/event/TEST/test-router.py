@@ -2,39 +2,29 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: Test the Router.
+PURPOSE: Test the EventRouter.
 
-CHOICES: by_event, by_category, by_predicate, unsubscribe, sinks;
+CHOICES: predicate_routing, source_filter, remove;
 
 DESCRIPTION:
 
-The Router holds (predicate, sink) subscriptions and publishes events
-to matching subscribers. Each test choice exercises one axis:
+The Router holds N Terminals and uses an internal Dispatcher to route
+each published Event to those Terminals whose predicate matches. The
+optional source_terminal_list restricts routing based on the
+originating Terminal.
 
-    by_event       subscribe_on_event delivers ONLY events whose .id
-                   matches; multiple subscriptions for the same id
-                   all fire (exact-match-all-subscribers).
+    predicate_routing    multiple Terminals each with a different
+                         predicate; publish() sends each event to
+                         only the matching destinations.
 
-    by_category    subscribe_on_category delivers ONLY events whose
-                   .category matches.
+    source_filter        Events tagged with a source Terminal are
+                         only delivered to destinations whose
+                         source_terminal_list permits that source.
+                         This prevents loops when forwarding.
 
-    by_predicate   subscribe_on_predicate accepts arbitrary filters;
-                   the same event may match several predicate
-                   subscriptions.
-
-    unsubscribe    handle removal stops further delivery; removing
-                   a stale handle returns False (no exception);
-                   removing during dispatch is safe (snapshot
-                   iteration).
-
-    sinks          three sink kinds (queue, async callable, sync
-                   callable); validation of bad sinks (TypeError at
-                   subscribe time); sync sinks run in worker threads.
-
-The test scripts use asyncio.run() because publish() requires a
-running event loop to schedule callback tasks. Queue sinks (using
-asyncio.Queue.put_nowait) also require a running loop for the queue
-to be useful.
+    remove               remove_terminal() detaches a Terminal;
+                         subsequent publish() does not deliver to it.
+                         remove_terminal of a stale handle returns False.
 ______________________________________________________________________________
 """
 import asyncio
@@ -45,289 +35,160 @@ from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (E_EventCategory,
                                                         TaskStartedEvent,
                                                         TaskDoneEvent,
-                                                        TaskFailedEvent,
                                                         CompilerDoneEvent,
-                                                        CompilerNoSourceEvent,
-                                                        ArtifactAvailableEvent,
-                                                        Router)
+                                                        EventChannelParameter,
+                                                        EventTerminal,
+                                                        EventRouter)
 
 
 def banner(label):
-    """RETURN: None.  Prints a section heading."""
+    """RETURN: None. Section heading."""
     print()
     print("--- %s ---" % label)
 
 
-# ----------------------------------------------------------------------------
-# Each choice's async body. The HwutRunner driver call is sync; we wrap.
-# ----------------------------------------------------------------------------
+async def _setup_destination_terminal():
+    """RETURN: (router_side_terminal, peer_terminal, seen_list).
 
-async def _by_event():
-    router = Router()
-    seen_a = []
-    seen_b = []
+    Builds an async-pair, starts both sides, returns the
+    router-facing terminal (the one we add to the router) and the
+    peer terminal (the one we observe receives at). seen_list
+    collects (event_type, task_id) tuples as events arrive at peer.
+    """
+    a_ecp, b_ecp = EventChannelParameter.for_async()
+    router_side = EventTerminal(a_ecp)
+    peer        = EventTerminal(b_ecp)
 
-    async def cb_a(ev):
-        seen_a.append(ev.id)
-
-    async def cb_b(ev):
-        seen_b.append(ev.id)
-
-    banner("two subscriptions on the same id, both fire")
-    router.subscribe_on_event(TaskDoneEvent, cb_a)
-    router.subscribe_on_event(TaskDoneEvent, cb_b)
-    router.subscribe_on_event(TaskFailedEvent, cb_a)
-
-    router.publish(TaskDoneEvent  (task_id=1, duration_s=1.0))
-    router.publish(TaskFailedEvent(task_id=2, reason="boom"))
-    router.publish(TaskStartedEvent(task_id=3))  # not subscribed to
-    await asyncio.sleep(0.01)
-
-    print("seen_a: %s" % seen_a)
-    print("seen_b: %s" % seen_b)
-
-    banner("subscribing on CompilerDoneEvent delivers only Compiler events, not generic TaskDoneEvent")
-    seen_c = []
-
-    async def cb_c(ev):
-        seen_c.append(type(ev).__name__)
-
-    router2 = Router()
-    router2.subscribe_on_event(CompilerDoneEvent, cb_c)
-    router2.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
-    router2.publish(CompilerDoneEvent(task_id=2, source="a.c",
-                                      output="a.o", duration_s=0.5))
-    await asyncio.sleep(0.01)
-    print("seen_c: %s" % seen_c)
-
-    banner("subscribing by string id (\"TaskDoneEvent\") works the same as by class")
-    seen_s = []
-    async def cb_s(ev):
-        seen_s.append(ev.id)
-
-    router3 = Router()
-    router3.subscribe_on_event("TaskDoneEvent", cb_s)
-    router3.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
-    router3.publish(TaskFailedEvent(task_id=2, reason="boom"))
-    await asyncio.sleep(0.01)
-    print("seen_s: %s" % seen_s)
-
-
-async def _by_category():
-    router = Router()
-    workflow_q   = asyncio.Queue()
-    compilation_q = asyncio.Queue()
-
-    banner("category=WORKFLOW gets task lifecycle events; category=COMPILATION gets compiler events")
-    router.subscribe_on_category(E_EventCategory.WORKFLOW,    workflow_q)
-    router.subscribe_on_category(E_EventCategory.COMPILATION, compilation_q)
-
-    router.publish(TaskDoneEvent(task_id=1, duration_s=1.0))                  # WORKFLOW
-    router.publish(CompilerDoneEvent(task_id=2, source="x.c",                 # COMPILATION
-                                     output="x.o", duration_s=0.5))
-    router.publish(CompilerNoSourceEvent(task_id=3, expected="y.c"))          # COMPILATION
-    router.publish(ArtifactAvailableEvent(task_id=4, artifact_id=42))         # WORKFLOW
-
-    # Queues are filled synchronously by put_nowait; no sleep needed.
-    print("WORKFLOW queue contents:")
-    while not workflow_q.empty():
-        print("  %s" % type(workflow_q.get_nowait()).__name__)
-    print("COMPILATION queue contents:")
-    while not compilation_q.empty():
-        print("  %s" % type(compilation_q.get_nowait()).__name__)
-
-
-async def _by_predicate():
-    router = Router()
     seen = []
+    async def handler(ev):
+        seen.append((type(ev).__name__, ev.task_id))
+    peer.dispatcher.subscribe_on_predicate(lambda ev: True, handler)
 
-    async def cb(ev):
-        seen.append("%s/%s" % (type(ev).__name__, getattr(ev, "task_id", "?")))
+    await router_side.start()
+    await peer.start()
+    return router_side, peer, seen
 
-    banner("predicate: task_id is in {1, 3}")
-    router.subscribe_on_predicate(
-        predicate = lambda ev: getattr(ev, "task_id", None) in {1, 3},
-        sink      = cb,
+
+async def _predicate_routing():
+    """RETURN: None. Multiple Terminals, each with a different predicate."""
+    router = EventRouter()
+
+    t1, p1, seen1 = await _setup_destination_terminal()
+    t2, p2, seen2 = await _setup_destination_terminal()
+    t3, p3, seen3 = await _setup_destination_terminal()
+
+    router.add_terminal(lambda ev: ev.category == E_EventCategory.WORKFLOW,    t1)
+    router.add_terminal(lambda ev: ev.category == E_EventCategory.COMPILATION, t2)
+    router.add_terminal(lambda ev: ev.task_id == 42,                            t3)
+
+    banner("router has 3 entries")
+    print("len(router): %d" % len(router))
+
+    banner("publish three events; each lands on the matching Terminals")
+    router.publish(TaskDoneEvent(task_id=1, duration_s=1.0))   # WORKFLOW only -> t1
+    router.publish(CompilerDoneEvent(task_id=42, source="x",   # COMPILATION + task_id=42 -> t2, t3
+                                     output="y", duration_s=1.0))
+    router.publish(TaskStartedEvent(task_id=42))               # WORKFLOW + task_id=42 -> t1, t3
+
+    await asyncio.sleep(0.1)
+    print("seen1 (WORKFLOW)   : %s" % seen1)
+    print("seen2 (COMPILATION): %s" % seen2)
+    print("seen3 (task_id=42) : %s" % seen3)
+
+    for t in (t1, p1, t2, p2, t3, p3):
+        await t.stop()
+
+
+async def _source_filter():
+    """RETURN: None. source_terminal_list restricts deliveries by origin."""
+    router = EventRouter()
+
+    t_out_x, p_x, seen_x = await _setup_destination_terminal()
+    t_out_y, p_y, seen_y = await _setup_destination_terminal()
+
+    # A "fake" source terminal: just a sentinel reference. The router
+    # doesn't actually receive from it here; we use publish_from() to
+    # simulate originating from it.
+    class FakeSource: pass
+    source_alpha = FakeSource()
+    source_beta  = FakeSource()
+
+    # t_out_x receives events from source_alpha OR locally; never from beta.
+    router.add_terminal(
+        predicate            = lambda ev: True,
+        terminal             = t_out_x,
+        source_terminal_list = [source_alpha, None],
+    )
+    # t_out_y receives only events from source_beta.
+    router.add_terminal(
+        predicate            = lambda ev: True,
+        terminal             = t_out_y,
+        source_terminal_list = [source_beta],
     )
 
-    router.publish(TaskDoneEvent(task_id=1, duration_s=1.0))    # match
-    router.publish(TaskDoneEvent(task_id=2, duration_s=2.0))    # no
-    router.publish(TaskDoneEvent(task_id=3, duration_s=3.0))    # match
-    router.publish(TaskDoneEvent(task_id=4, duration_s=4.0))    # no
-    await asyncio.sleep(0.01)
-    print("seen: %s" % seen)
-
-    banner("predicate over derived attribute: only events with .reason")
-    router2 = Router()
-    seen2 = []
-
-    async def cb2(ev):
-        seen2.append(type(ev).__name__)
-
-    router2.subscribe_on_predicate(
-        predicate = lambda ev: hasattr(ev, "reason"),
-        sink      = cb2,
-    )
-    router2.publish(TaskDoneEvent(task_id=1, duration_s=1.0))           # no
-    router2.publish(TaskFailedEvent(task_id=2, reason="boom"))          # match
-    router2.publish(TaskStartedEvent(task_id=3))                        # no
-    await asyncio.sleep(0.01)
-    print("seen2: %s" % seen2)
-
-    banner("predicate that raises is skipped, not propagated")
-    router3 = Router()
-    seen3 = []
-    async def cb3(ev):
-        seen3.append("hit")
-
-    def bad_pred(ev):
-        raise RuntimeError("predicate boom")
-
-    router3.subscribe_on_predicate(bad_pred, cb3)
-    # Add another subscription that DOES match, to verify it still fires.
-    router3.subscribe_on_event(TaskDoneEvent, cb3)
-    router3.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
-    await asyncio.sleep(0.01)
-    print("seen3: %s" % seen3)
-
-
-async def _unsubscribe():
-    router = Router()
-    seen = []
-
-    async def cb(ev):
-        seen.append(ev.id)
-
-    banner("unsubscribe stops further delivery")
-    sub = router.subscribe_on_event(TaskDoneEvent, cb)
-    print("subs after subscribe: %d" % len(router))
-    print("handle in router:     %s" % (sub in router))
-
-    router.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
-    await asyncio.sleep(0.01)
-    print("seen before unsub:    %s" % seen)
-
-    print("unsubscribe returns:  %s" % router.unsubscribe(sub))
-    print("subs after unsub:     %d" % len(router))
-    print("handle in router:     %s" % (sub in router))
-
-    router.publish(TaskDoneEvent(task_id=2, duration_s=2.0))
-    await asyncio.sleep(0.01)
-    print("seen after unsub:     %s" % seen)
-
-    banner("unsubscribing a stale handle returns False")
-    print("repeat unsubscribe:   %s" % router.unsubscribe(sub))
-
-    banner("safe to subscribe during dispatch (snapshot iteration)")
-    router2 = Router()
-    fired = []
-
-    async def late_cb(ev):
-        fired.append("late")
-
-    async def cb_mutator(ev):
-        # Subscribe a NEW callback during dispatch. The new one should
-        # NOT fire on the current event (snapshot was taken before).
-        router2.subscribe_on_event(TaskDoneEvent, late_cb)
-        fired.append("first")
-
-    router2.subscribe_on_event(TaskDoneEvent, cb_mutator)
-    router2.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
-    await asyncio.sleep(0.01)
-    print("first publish fired:  %s" % fired)
-    print("subs after first:     %d" % len(router2))
-
-    # Second publish: the late_cb (added during the first dispatch) now fires.
-    router2.publish(TaskDoneEvent(task_id=2, duration_s=2.0))
-    await asyncio.sleep(0.01)
-    print("second publish fired: %s" % fired)
-
-
-async def _sinks():
-    router = Router()
-
-    banner("async callable is accepted as a sink (is_async=True)")
-    async def async_cb(ev): pass
-    sub_async = router.subscribe_on_event(TaskDoneEvent, async_cb)
-    print("handle:   %d" % sub_async.handle)
-    print("is_queue: %s" % sub_async.is_queue)
-    print("is_async: %s" % sub_async.is_async)
-
-    banner("sync callable is accepted as a sink (is_async=False, is_queue=False)")
-    def sync_cb(ev): pass
-    sub_sync = router.subscribe_on_event(TaskDoneEvent, sync_cb)
-    print("handle:   %d" % sub_sync.handle)
-    print("is_queue: %s" % sub_sync.is_queue)
-    print("is_async: %s" % sub_sync.is_async)
-
-    banner("lambda (sync) is accepted")
-    sub_lam = router.subscribe_on_event(TaskDoneEvent, lambda ev: None)
-    print("handle:   %d" % sub_lam.handle)
-    print("is_async: %s" % sub_lam.is_async)
-
-    banner("asyncio.Queue is accepted (has put_nowait)")
-    q = asyncio.Queue()
-    sub_q = router.subscribe_on_event(TaskDoneEvent, q)
-    print("handle:   %d" % sub_q.handle)
-    print("is_queue: %s" % sub_q.is_queue)
-    print("is_async: %s" % sub_q.is_async)
-
-    banner("plain int is rejected")
-    try:
-        router.subscribe_on_event(TaskDoneEvent, 42)
-        print("UNEXPECTED: accepted")
-    except TypeError as e:
-        print("TypeError: %s" % e)
-
-    banner("plain dict is rejected (no put_nowait, not callable)")
-    try:
-        router.subscribe_on_event(TaskDoneEvent, {})
-        print("UNEXPECTED: accepted")
-    except TypeError as e:
-        print("TypeError: %s" % e)
-
-    banner("queue with bounded size + full -> diagnostic to stderr, event dropped")
-    bounded = asyncio.Queue(maxsize=1)
-    bounded.put_nowait("filler")              # now full
-    router2 = Router()
-    router2.subscribe_on_event(TaskDoneEvent, bounded)
-    # publish should NOT raise; the failure is logged to stderr (not captured).
-    router2.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
-    print("publish on full queue returned cleanly")
-
-    banner("sync callable runs in a worker thread, not the main thread")
-    import threading
-    router3 = Router()
-    seen_threads = []
-    def sync_observer(ev):
-        seen_threads.append(threading.current_thread().name != main_thread)
-
-    main_thread = threading.current_thread().name
-    router3.subscribe_on_event(TaskDoneEvent, sync_observer)
-    router3.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
+    banner("publish from source_alpha: lands on t_out_x only")
+    router.publish_from(source_alpha, TaskDoneEvent(task_id=1, duration_s=1.0))
     await asyncio.sleep(0.05)
-    print("ran off main thread: %s" % seen_threads)
+    print("seen_x: %s" % seen_x)
+    print("seen_y: %s" % seen_y)
+
+    banner("publish from source_beta: lands on t_out_y only")
+    router.publish_from(source_beta, TaskStartedEvent(task_id=2))
+    await asyncio.sleep(0.05)
+    print("seen_x: %s" % seen_x)
+    print("seen_y: %s" % seen_y)
+
+    banner("local publish (source=None): lands on t_out_x only (None in its list)")
+    router.publish(TaskDoneEvent(task_id=3, duration_s=3.0))
+    await asyncio.sleep(0.05)
+    print("seen_x: %s" % seen_x)
+    print("seen_y: %s" % seen_y)
+
+    for t in (t_out_x, p_x, t_out_y, p_y):
+        await t.stop()
 
 
-# ----------------------------------------------------------------------------
-# Sync wrappers (HwutRunner calls these)
-# ----------------------------------------------------------------------------
+async def _remove():
+    """RETURN: None. remove_terminal() detaches; stale handle returns False."""
+    router = EventRouter()
 
-def run_by_event():     asyncio.run(_by_event())
-def run_by_category():  asyncio.run(_by_category())
-def run_by_predicate(): asyncio.run(_by_predicate())
-def run_unsubscribe():  asyncio.run(_unsubscribe())
-def run_sinks():        asyncio.run(_sinks())
+    t1, p1, seen1 = await _setup_destination_terminal()
+
+    handle = router.add_terminal(lambda ev: True, t1)
+    print("len after add: %d" % len(router))
+
+    banner("publish before remove")
+    router.publish(TaskDoneEvent(task_id=1, duration_s=1.0))
+    await asyncio.sleep(0.05)
+    print("seen1: %s" % seen1)
+
+    banner("remove_terminal returns True")
+    print("removed: %s" % router.remove_terminal(handle))
+    print("len after remove: %d" % len(router))
+
+    banner("publish after remove: nothing delivered")
+    router.publish(TaskDoneEvent(task_id=2, duration_s=2.0))
+    await asyncio.sleep(0.05)
+    print("seen1: %s" % seen1)
+
+    banner("remove of stale handle returns False")
+    print("removed again: %s" % router.remove_terminal(handle))
+
+    await t1.stop()
+    await p1.stop()
+
+
+def run_predicate_routing():  asyncio.run(_predicate_routing())
+def run_source_filter():      asyncio.run(_source_filter())
+def run_remove():             asyncio.run(_remove())
 
 
 HwutRunner(
     argv       = sys.argv,
-    title      = "Router: subscribe by event / category / predicate, unsubscribe, sinks",
+    title      = "EventRouter",
     choice_map = {
-        "by_event":     run_by_event,
-        "by_category":  run_by_category,
-        "by_predicate": run_by_predicate,
-        "unsubscribe":  run_unsubscribe,
-        "sinks":        run_sinks,
+        "predicate_routing": run_predicate_routing,
+        "source_filter":     run_source_filter,
+        "remove":             run_remove,
     },
 ).run()

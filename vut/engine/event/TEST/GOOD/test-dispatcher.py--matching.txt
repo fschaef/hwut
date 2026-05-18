@@ -1,0 +1,8 @@
+
+--- len after three subscribes ---
+len: 3
+
+--- dispatch three events ---
+by_event   : ['TaskDoneEvent']
+by_category: ['CompilerDoneEvent']
+by_pred    : ['CompilerDoneEvent']

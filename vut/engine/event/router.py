@@ -1,199 +1,137 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: In-process event router.
+PURPOSE: EventRouter - one-to-many outgoing dispatch over Terminals.
 
-The Router holds (filter, sink) subscriptions and pushes events to
-matching subscribers. It is a small, general-purpose component that
-many subsystems will share: the WFM's report loop, diagnostic
-aggregators, test fixtures, etc.
+The Router holds a set of Terminals (each a one-to-one peer connection)
+and uses an internal Dispatcher to decide which Terminal(s) receive
+each published Event.
 
-DESIGN: SUBSCRIBE BY FILTER DIMENSION
+A Router is NOT a Terminal. A Terminal is a single peer connection; a
+Router is a hub that knows about many. Both use an EventDispatcher
+internally, for different ends of the same matching problem:
 
-The natural shape of a subscription is "I am interested in events
-matching X". X is almost always one of three things:
-
-    - a specific event id        (subscribe_on_event)
-    - an entire category         (subscribe_on_category)
-    - an arbitrary predicate     (subscribe_on_predicate)
-
-The first two are by far the most common; the third covers the
-general case. The API encodes this directly, with one method per
-dimension. This avoids forcing every subscription through a lambda
-("subscribe_on_event(E_EventId.X, sink)" reads better than
-"subscribe(lambda ev: ev.id == E_EventId.X, sink)") AND leaves
-room for future O(1) dispatch optimisation (id-keyed subscriptions
-can be indexed; category-keyed likewise).
+    Terminal's Dispatcher    -- incoming Events fan out to local handlers
+    Router's Dispatcher      -- outgoing Events fan out to peer Terminals
 
 
-SINK KINDS
+PUBLIC SHAPE
 
-Each subscribe_on_* method takes a 'sink' that is one of three things:
+    router = EventRouter()
 
-    - QUEUE-LIKE OBJECT         any object with a .put_nowait method
-                                Delivered immediately via put_nowait.
+    handle = router.add_terminal(predicate, terminal)
+    handle = router.add_terminal(predicate, terminal,
+                                 source_terminal_list=[t1, t2])
+    router.remove_terminal(handle)              # -> bool
 
-    - ASYNC CALLABLE            async def handler(event): ...
-                                Scheduled via asyncio.create_task();
-                                runs on the event loop, non-blocking.
-
-    - SYNC CALLABLE             def handler(event): ...   (or lambda)
-                                Dispatched via loop.run_in_executor()
-                                to the default thread pool. Runs in a
-                                worker thread, in the same Python
-                                namespace as the publisher, but OFF
-                                the event loop - so it does not block
-                                other dispatches.
-
-Anything else (an int, a dict, a non-callable non-queue) raises
-TypeError at the SUBSCRIBE call, not later at publish time, so
-mistakes surface immediately.
-
-Sync callables share the Python namespace with the publisher and
-the event loop, but they run in worker threads. Thread-safety of
-any state touched by a sync callback is the callback's responsibility.
+    router.publish(event)                       # synchronous; non-blocking
 
 
-PUBLISH IS NON-BLOCKING
+SOURCE FILTERING
 
-publish(event) dispatches to every matching subscription:
+add_terminal accepts an optional source_terminal_list. When set, the
+target Terminal only receives Events that came from one of the named
+source Terminals (or from local publish() calls if 'None' appears in
+the list).
 
-    queue sink           sink.put_nowait(event)
-    async callable       asyncio.create_task(sink(event))
-    sync callable        loop.run_in_executor(None, sink, event)
+When source_terminal_list is None (the default), the target Terminal
+receives matching Events regardless of source.
 
-In all three cases, publish returns as fast as possible. Async
-callables run on the event loop; sync callables run in worker
-threads; queue puts are immediate.
-
-A consequence: any exception raised inside a callback (async or
-sync) is NOT visible to the publisher. Async callback exceptions
-surface via asyncio's default task-exception handling. Sync
-callback exceptions are captured by the future returned from
-run_in_executor; if no one awaits that future, the exception is
-swallowed silently. Callers who need stronger guarantees should
-use queue sinks and process them in their own task.
+This supports asymmetric topologies: e.g. "forward Compiler events
+from the network-incoming Terminal to the WFM-internal handlers, but
+NOT to the network-outgoing Terminals" - which would otherwise loop.
 
 
-UNSUBSCRIBE BY HANDLE
+PREDICATE-FIRST ORDERING
 
-Each subscribe_on_* call returns a Subscription handle. Pass it
-to unsubscribe(handle) to remove the subscription. Unsubscribing
-a handle that no longer exists returns False rather than raising;
-this is consistent with the rest of the VUT design (status returns,
-not exceptions, for "not found" cases).
+add_terminal(predicate, terminal, ...) puts the predicate first so the
+call site reads as "what to route" then "where to". This matches the
+mental model of a router: a rule plus a destination.
+
+
+CALL FROM TERMINAL'S RECEIVE SIDE
+
+A Terminal that wants to forward incoming Events into the Router can
+subscribe the Router's .publish_from() method on its receive
+Dispatcher:
+
+    terminal.dispatcher.subscribe_on_predicate(
+        lambda ev: True,
+        lambda ev: router.publish_from(terminal, ev),
+    )
+
+Or pass source-aware publish for use in such forwards.
 ________________________________________________________________________________
 """
-import asyncio
-import inspect
 import sys
 
-from dataclasses import dataclass, field
-from typing      import Any, Callable
+from typing  import Callable, Optional
 
-from vut.engine.event.enums import E_EventCategory
-from vut.engine.event.event import Event
-
-
-# A Subscription handle. Returned from each subscribe_on_*, accepted
-# by unsubscribe. Opaque to the caller; internally it carries the
-# filter, the sink, and dispatch hints.
-@dataclass(frozen=True)
-class Subscription:
-    handle:    int
-    predicate: Callable[[Event], bool]      # always normalised to a predicate
-    sink:      Any                          # async callable, sync callable, or queue-like
-    is_queue:  bool                         # True if sink has put_nowait
-    is_async:  bool                         # True if sink is a coroutine function
-                                            # (mutually exclusive with is_queue)
+from vut.engine.event.dispatcher import EventDispatcher
+from vut.engine.event.event      import Event
+from vut.engine.event.terminal   import EventTerminal
 
 
-class Router:
-    """In-process publish-subscribe for Events.
+class EventRouter:
+    """Hub of Terminals; routes outgoing Events to those whose predicate matches.
 
-    See module header for design rationale. Public API:
-
-        subscribe_on_event(event_id, sink)    -> Subscription
-        subscribe_on_category(category, sink) -> Subscription
-        subscribe_on_predicate(pred, sink)    -> Subscription
-        unsubscribe(subscription)             -> bool
-        publish(event)                        -> None  (non-blocking)
+    See module header for the contract. Internally a Dispatcher whose
+    sinks are wrappers around Terminals (carrying source filter, etc).
     """
 
     def __init__(self):
-        self._subscriptions: dict[int, Subscription] = {}
-        self._next_handle:   int                     = 0
+        self._dispatcher = EventDispatcher(enforce_async_callbacks_f=False)
+        self._entries:   dict[int, "RouterEntry"] = {}
+        self._next_id:   int                       = 0
 
     # ----------------------------------------------------------------
-    # Subscription
+    # Registration
     # ----------------------------------------------------------------
 
-    def subscribe_on_event(self,
-                           event_id,
-                           sink:     Any) -> Subscription:
-        """RETURN: Subscription, the handle for this subscription.
+    def add_terminal(self,
+                     predicate:            Callable[[Event], bool],
+                     terminal:             EventTerminal,
+                     source_terminal_list: Optional[list] = None) -> int:
+        """RETURN: int, handle for later remove_terminal().
 
-        Subscribes 'sink' to receive every Event whose .id equals
-        event_id. The event_id may be given as:
+        Registers 'terminal' as a destination for Events matching
+        'predicate'. If source_terminal_list is given, the Event is
+        only routed to 'terminal' when it ORIGINATED from one of the
+        listed source Terminals (or from a local publish() call when
+        None appears in the list).
 
-            - the class itself:   subscribe_on_event(TaskDoneEvent, sink)
-            - the id string:      subscribe_on_event("TaskDoneEvent", sink)
-
-        The class form is recommended at the call site - it is type-
-        checked at import (typos surface immediately) and refactor-
-        friendly (renaming a class is one IDE operation). The string
-        form is available for dynamic dispatch from configuration or
-        from wire data.
-
-        'sink' may be an async callable, a sync callable, or a queue-
-        like object (anything with put_nowait); TypeError is raised
-        here if it is none of those.
+        The 'predicate' is a callable Event -> bool; same form as on
+        the Dispatcher.
         """
-        # Normalise: a class -> its .id string. Anything else, accept
-        # as-is (and let the predicate fail to match if it's garbage).
-        if isinstance(event_id, type) and issubclass(event_id, Event):
-            id_str = event_id.id
-        else:
-            id_str = event_id
+        handle = self._next_id
+        self._next_id += 1
 
-        return self._add(
-            predicate = lambda ev, eid=id_str: ev.id == eid,
-            sink      = sink,
+        entry = RouterEntry(
+            handle               = handle,
+            terminal             = terminal,
+            predicate            = predicate,
+            source_terminal_list = source_terminal_list,
         )
+        entry._router_dispatcher = self._dispatcher
+        self._entries[handle] = entry
 
-    def subscribe_on_category(self,
-                              category: E_EventCategory,
-                              sink:     Any) -> Subscription:
-        """RETURN: Subscription, the handle for this subscription.
-
-        Subscribes 'sink' to receive every Event whose .category
-        equals 'category'. See subscribe_on_event for sink rules.
-        """
-        return self._add(
-            predicate = lambda ev, cat=category: ev.category is cat,
-            sink      = sink,
+        # Register the entry's __call__ as a SINK in the dispatcher.
+        # The entry is callable (sync) and forwards to terminal.send.
+        sub = self._dispatcher.subscribe_on_predicate(
+            predicate = lambda ev, e=entry: e._matches(ev),
+            sink      = entry,
         )
+        entry.subscription = sub
+        return handle
 
-    def subscribe_on_predicate(self,
-                               predicate: Callable[[Event], bool],
-                               sink:      Any) -> Subscription:
-        """RETURN: Subscription, the handle for this subscription.
-
-        Subscribes 'sink' to receive every Event for which
-        predicate(event) returns True. Use this for filters that
-        don't fit subscribe_on_event or subscribe_on_category
-        (multi-field filters, source-id filters, workload-membership
-        filters, etc.).
+    def remove_terminal(self, handle: int) -> bool:
+        """RETURN: True,  if the entry was removed.
+                   False, if the handle is unknown.
         """
-        return self._add(predicate=predicate, sink=sink)
-
-    def unsubscribe(self, subscription: Subscription) -> bool:
-        """RETURN: True,  if the subscription was removed.
-                   False, if the handle was unknown (already removed,
-                          or never registered with this Router).
-        """
-        if subscription.handle not in self._subscriptions:
+        entry = self._entries.pop(handle, None)
+        if entry is None:
             return False
-        del self._subscriptions[subscription.handle]
+        if entry.subscription is not None:
+            self._dispatcher.unsubscribe(entry.subscription)
         return True
 
     # ----------------------------------------------------------------
@@ -203,121 +141,82 @@ class Router:
     def publish(self, event: Event) -> None:
         """RETURN: None.
 
-        Dispatches event to every matching subscriber. NON-BLOCKING:
-
-            - Queue sinks receive the event via put_nowait().
-            - Callback sinks are scheduled via asyncio.create_task();
-              publish does NOT await them.
-
-        Exceptions from a predicate are caught and logged to stderr;
-        the offending subscription is skipped for this event but
-        remains in the table. Exceptions from a queue's put_nowait
-        (e.g. QueueFull) are caught and logged; the event is dropped
-        for that subscriber.
-
-        Exceptions inside scheduled callbacks are NOT visible here;
-        they surface via asyncio's default task-exception handling.
+        Dispatches event from a LOCAL source (no source Terminal).
+        For source-aware routing (when an Event came from an incoming
+        Terminal that should not loop back), use publish_from().
         """
-        # Snapshot the subscriptions so that handlers that
-        # subscribe/unsubscribe during dispatch do not mutate the
-        # collection we are iterating.
-        for sub in tuple(self._subscriptions.values()):
-            try:
-                matched = sub.predicate(event)
-            except Exception as e:
-                print("Router.publish: predicate raised on subscription %d: %s"
-                      % (sub.handle, e), file=sys.stderr)
-                continue
+        self.publish_from(None, event)
 
-            if not matched:
-                continue
+    def publish_from(self, source_terminal, event: Event) -> None:
+        """RETURN: None.
 
-            if sub.is_queue:
-                try:
-                    sub.sink.put_nowait(event)
-                except Exception as e:
-                    print("Router.publish: queue put_nowait failed on "
-                          "subscription %d: %s" % (sub.handle, e),
-                          file=sys.stderr)
-            elif sub.is_async:
-                try:
-                    asyncio.create_task(sub.sink(event))
-                except RuntimeError as e:
-                    # No running event loop. Programming error at the
-                    # caller's side (publish called outside an async
-                    # context).
-                    print("Router.publish: cannot schedule async callback "
-                          "for subscription %d (no running loop): %s"
-                          % (sub.handle, e), file=sys.stderr)
-            else:
-                # Sync callable: run in the default thread pool executor.
-                # Same Python namespace (no IPC), but runs off the event
-                # loop thread so it does NOT block other dispatches or
-                # the rest of the event loop. Thread-safety of any state
-                # touched by the callback is the callback's own concern.
-                try:
-                    loop = asyncio.get_running_loop()
-                    loop.run_in_executor(None, sub.sink, event)
-                except RuntimeError as e:
-                    print("Router.publish: cannot dispatch sync callback "
-                          "for subscription %d (no running loop): %s"
-                          % (sub.handle, e), file=sys.stderr)
+        Dispatches 'event' as if it originated from 'source_terminal'.
+        Terminals whose source_terminal_list excludes 'source_terminal'
+        will NOT receive it. Use source_terminal=None for events
+        produced locally (not received from any Terminal).
+        """
+        # Tag the event with a transient source marker. We attach via
+        # a thread-unsafe attribute on the dispatcher itself, since the
+        # dispatcher iterates synchronously - the marker is read by
+        # _matches() while iterating.
+        self._dispatcher._current_source = source_terminal      # type: ignore
+        try:
+            self._dispatcher.dispatch(event)
+        finally:
+            self._dispatcher._current_source = None             # type: ignore
 
     # ----------------------------------------------------------------
-    # Introspection (mainly for tests and diagnostics)
+    # Introspection
     # ----------------------------------------------------------------
 
     def __len__(self) -> int:
-        """RETURN: int, number of active subscriptions."""
-        return len(self._subscriptions)
+        """RETURN: int, number of registered Terminals."""
+        return len(self._entries)
 
-    def __contains__(self, subscription: Subscription) -> bool:
-        """RETURN: True,  if subscription is active in this Router.
-                   False, otherwise.
+
+class RouterEntry:
+    """Internal: one (predicate, terminal, source_filter) row.
+
+    Callable as a sync sink: when invoked with an Event, it schedules
+    the terminal.send(event) coroutine.
+    """
+
+    def __init__(self, handle, terminal, predicate, source_terminal_list):
+        """RETURN: a new RouterEntry."""
+        self.handle               = handle
+        self.terminal             = terminal
+        self.predicate            = predicate
+        self.source_terminal_list = source_terminal_list
+        self.subscription         = None
+        # Will be patched at registration time. The router sets
+        # _current_source on its dispatcher before each dispatch.
+        self._router_dispatcher   = None
+
+    def _matches(self, event: Event) -> bool:
+        """RETURN: True if this entry should fire on 'event'.
+
+        Combines the user-supplied predicate with the source-Terminal
+        filter (if any).
         """
-        return subscription.handle in self._subscriptions
+        if not self.predicate(event):
+            return False
+        if self.source_terminal_list is None:
+            return True
+        # We need the source. It is stamped on the dispatcher by the
+        # Router just before dispatch.
+        source = getattr(self._router_dispatcher, "_current_source", None)
+        return source in self.source_terminal_list
 
-    # ----------------------------------------------------------------
-    # Internals
-    # ----------------------------------------------------------------
+    def __call__(self, event: Event) -> None:
+        """RETURN: None.
 
-    def _add(self, predicate, sink) -> Subscription:
-        """RETURN: Subscription, the handle for the new entry.
-
-        Validates the sink kind (queue-like / async-callable / sync-
-        callable / none-of-the-above) and assigns a unique handle.
-        TypeError on an unrecognised sink so mistakes are caught at
-        subscribe time, not at first publish.
+        Forwards 'event' to the bound Terminal asynchronously.
+        Called by the Dispatcher when this entry matches.
         """
-        is_queue = self._is_queue_like(sink)
-        is_async = False
-
-        if not is_queue:
-            if not callable(sink):
-                raise TypeError(
-                    "Router subscription sink must be a callable or an "
-                    "object with put_nowait(); got %s" % type(sink).__name__
-                )
-            is_async = inspect.iscoroutinefunction(sink)
-            # Sync callables ARE accepted: they will be dispatched via
-            # run_in_executor at publish time, so they run in a worker
-            # thread and do not block the event loop.
-
-        handle = self._next_handle
-        self._next_handle += 1
-
-        sub = Subscription(handle=handle, predicate=predicate,
-                           sink=sink, is_queue=is_queue,
-                           is_async=is_async)
-        self._subscriptions[handle] = sub
-        return sub
-
-    @staticmethod
-    def _is_queue_like(obj) -> bool:
-        """RETURN: True, if obj has a put_nowait method (asyncio.Queue,
-                        multiprocessing.Queue, queue.Queue, etc.).
-                  False, otherwise.
-
-        Duck-typed; we do NOT check for a specific class.
-        """
-        return callable(getattr(obj, "put_nowait", None))
+        # The Terminal's send is async; schedule it.
+        import asyncio
+        try:
+            asyncio.create_task(self.terminal.send(event))
+        except RuntimeError as e:
+            print("RouterEntry.__call__: cannot forward to terminal "
+                  "(no running loop): %s" % e, file=sys.stderr)

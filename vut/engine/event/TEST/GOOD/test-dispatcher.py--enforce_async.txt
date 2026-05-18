@@ -1,0 +1,12 @@
+
+--- async callable accepted ---
+kind: async
+
+--- object-with-.send accepted ---
+kind: send
+
+--- sync callable rejected ---
+TypeError raised (expected)
+
+--- lambda (sync) rejected ---
+TypeError raised (expected)

@@ -1,0 +1,12 @@
+
+--- send before stop works ---
+
+--- stop both terminals ---
+a stopped: True
+b stopped: True
+
+--- send after stop raises ---
+RuntimeError raised (expected)
+
+--- stop is idempotent ---
+second stop returned cleanly

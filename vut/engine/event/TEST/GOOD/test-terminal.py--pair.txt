@@ -1,0 +1,4 @@
+
+--- send a few events both directions ---
+a_seen: [('a', 'TaskStartedEvent', 2)]
+b_seen: [('b', 'TaskDoneEvent', 1), ('b', 'CompilerDoneEvent', 3)]

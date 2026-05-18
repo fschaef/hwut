@@ -1,0 +1,12 @@
+
+--- publish from source_alpha: lands on t_out_x only ---
+seen_x: [('TaskDoneEvent', 1)]
+seen_y: []
+
+--- publish from source_beta: lands on t_out_y only ---
+seen_x: [('TaskDoneEvent', 1)]
+seen_y: [('TaskStartedEvent', 2)]
+
+--- local publish (source=None): lands on t_out_x only (None in its list) ---
+seen_x: [('TaskDoneEvent', 1), ('TaskDoneEvent', 3)]
+seen_y: [('TaskStartedEvent', 2)]
