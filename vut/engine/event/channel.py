@@ -10,10 +10,10 @@ queue, network socket) behind a uniform async interface.
 
 ABC SHAPE
 
-    async send(event)        -- ship an Event to the peer
-    async receive()          -- await one Event from the peer
-                               returns None if the Channel has closed
-    async close()            -- close this end; peer detects via receive()
+    async send(event) -- ship an Event to the peer
+    async receive()   -- await one Event from the peer
+                         returns None if the Channel has closed
+    async close()     -- close this end; peer detects via receive()
 
 Channels are BIDIRECTIONAL. The same Channel object supports both
 .send() and .receive(); the two directions are independent.
@@ -55,7 +55,6 @@ ________________________________________________________________________________
 """
 import asyncio
 import queue as _queue                                  # threading queue
-import socket
 import struct
 import sys
 
@@ -159,7 +158,6 @@ class AsyncQueueChannel(EventChannel):
 # ============================================================================
 # Across-thread: queue.Queue with run_in_executor for the blocking get
 # ============================================================================
-
 class ThreadQueueChannel(EventChannel):
     """In-process Channel over a pair of thread-safe queue.Queue objects.
 
@@ -168,7 +166,6 @@ class ThreadQueueChannel(EventChannel):
     to wrap the blocking queue.Queue.get() so the asyncio loop is not
     blocked.
     """
-
     _CLOSE_SENTINEL = object()
 
     def __init__(self, in_q: _queue.Queue, out_q: _queue.Queue):
@@ -206,11 +203,9 @@ class ThreadQueueChannel(EventChannel):
         except _queue.Full:
             pass
 
-
 # ============================================================================
 # Across-process: multiprocessing.Queue + Marshaller
 # ============================================================================
-
 class ProcessQueueChannel(EventChannel):
     """Across-process Channel over a pair of multiprocessing.Queue.
 
@@ -262,7 +257,6 @@ class ProcessQueueChannel(EventChannel):
 # ============================================================================
 # Across-machine: socket + Marshaller
 # ============================================================================
-
 class RemoteChannel(EventChannel):
     """Across-machine Channel over an asyncio stream socket.
 

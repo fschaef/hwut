@@ -206,7 +206,7 @@ ENFORCE_ASYNC_CALLBACKS_F:
              can push to a thread Queue and process there).
 
 SOURCE FILTERING:
-             EventRouter.add_terminal accepts an optional
+             EventRouter.add_entry accepts an optional
              source_terminal_list. Used to prevent forwarding loops
              ("don't send Network events back out the Network
              Terminal they came from"). publish_from(src, ev) tags

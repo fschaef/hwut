@@ -3,7 +3,7 @@ len after add: 1
 --- publish before remove ---
 seen1: [('TaskDoneEvent', 1)]
 
---- remove_terminal returns True ---
+--- remove_entry returns True ---
 removed: True
 len after remove: 0
 

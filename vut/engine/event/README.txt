@@ -60,9 +60,9 @@ DESIGN AT A GLANCE
               v  (all owned by)                         v
         +----------------------------------------------------------+
         |  EventRouter  (hub of Terminals)                         |
-        |    .add_terminal(predicate, terminal,                    |
-        |                  source_terminal_list=None) -> handle    |
-        |    .remove_terminal(handle) -> bool                      |
+        |    .add_entry(predicate, terminal,                       |
+        |               source_terminal_list=None) -> handle       |
+        |    .remove_entry(handle) -> bool                         |
         |    .publish(event)                                       |
         |    .publish_from(source, event)                          |
         |  Internally an EventDispatcher whose sinks are Terminals.|
@@ -224,14 +224,14 @@ KEY CONCEPTS
 8. EVENTROUTER: HUB OF TERMINALS
 
        router = EventRouter()
-       handle = router.add_terminal(
+       handle = router.add_entry(
                     predicate            = lambda ev: ...,
                     terminal             = some_terminal,
                     source_terminal_list = [t1, t2, None],   # optional
                 )
        router.publish(event)              # source=None
        router.publish_from(src, event)    # tagged with origin
-       router.remove_terminal(handle)     # -> bool
+       router.remove_entry(handle)        # -> bool
 
    Internally an EventDispatcher whose sinks are RouterEntry wrappers
    around Terminals. Predicate matching is the same as Dispatcher's;
@@ -329,7 +329,7 @@ WFM as a router (sketch):
     user_a_ecp, user_b_ecp = EventChannelParameter.for_async()
     user_terminal = EventTerminal(user_b_ecp)
     await user_terminal.start()
-    router.add_terminal(
+    router.add_entry(
         predicate = lambda ev: getattr(ev, "task_id", None) in workload_tasks,
         terminal  = EventTerminal(user_a_ecp),
     )

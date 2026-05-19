@@ -22,9 +22,9 @@ originating Terminal.
                          source_terminal_list permits that source.
                          This prevents loops when forwarding.
 
-    remove               remove_terminal() detaches a Terminal;
+    remove               remove_entry() detaches a Terminal;
                          subsequent publish() does not deliver to it.
-                         remove_terminal of a stale handle returns False.
+                         remove_entry of a stale handle returns False.
 ______________________________________________________________________________
 """
 import asyncio
@@ -77,9 +77,9 @@ async def _predicate_routing():
     t2, p2, seen2 = await _setup_destination_terminal()
     t3, p3, seen3 = await _setup_destination_terminal()
 
-    router.add_terminal(lambda ev: ev.category == E_EventCategory.WORKFLOW,    t1)
-    router.add_terminal(lambda ev: ev.category == E_EventCategory.COMPILATION, t2)
-    router.add_terminal(lambda ev: ev.task_id == 42,                            t3)
+    router.add_entry(lambda ev: ev.category == E_EventCategory.WORKFLOW,    t1)
+    router.add_entry(lambda ev: ev.category == E_EventCategory.COMPILATION, t2)
+    router.add_entry(lambda ev: ev.task_id  == 42,                          t3)
 
     banner("router has 3 entries")
     print("len(router): %d" % len(router))
@@ -114,17 +114,13 @@ async def _source_filter():
     source_beta  = FakeSource()
 
     # t_out_x receives events from source_alpha OR locally; never from beta.
-    router.add_terminal(
-        predicate            = lambda ev: True,
-        terminal             = t_out_x,
-        source_terminal_list = [source_alpha, None],
-    )
+    router.add_entry(predicate            = lambda ev: True,
+                     terminal             = t_out_x,
+                     source_terminal_list = [source_alpha, None])
     # t_out_y receives only events from source_beta.
-    router.add_terminal(
-        predicate            = lambda ev: True,
-        terminal             = t_out_y,
-        source_terminal_list = [source_beta],
-    )
+    router.add_entry(predicate            = lambda ev: True,
+                     terminal             = t_out_y,
+                     source_terminal_list = [source_beta])
 
     banner("publish from source_alpha: lands on t_out_x only")
     router.publish_from(source_alpha, TaskDoneEvent(task_id=1, duration_s=1.0))
@@ -149,12 +145,12 @@ async def _source_filter():
 
 
 async def _remove():
-    """RETURN: None. remove_terminal() detaches; stale handle returns False."""
+    """RETURN: None. remove_entry() detaches; stale handle returns False."""
     router = EventRouter()
 
     t1, p1, seen1 = await _setup_destination_terminal()
 
-    handle = router.add_terminal(lambda ev: True, t1)
+    handle = router.add_entry(lambda ev: True, t1)
     print("len after add: %d" % len(router))
 
     banner("publish before remove")
@@ -162,8 +158,8 @@ async def _remove():
     await asyncio.sleep(0.05)
     print("seen1: %s" % seen1)
 
-    banner("remove_terminal returns True")
-    print("removed: %s" % router.remove_terminal(handle))
+    banner("remove_entry returns True")
+    print("removed: %s" % router.remove_entry(handle))
     print("len after remove: %d" % len(router))
 
     banner("publish after remove: nothing delivered")
@@ -172,7 +168,7 @@ async def _remove():
     print("seen1: %s" % seen1)
 
     banner("remove of stale handle returns False")
-    print("removed again: %s" % router.remove_terminal(handle))
+    print("removed again: %s" % router.remove_entry(handle))
 
     await t1.stop()
     await p1.stop()

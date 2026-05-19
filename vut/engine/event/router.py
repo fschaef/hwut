@@ -18,17 +18,17 @@ PUBLIC SHAPE
 
     router = EventRouter()
 
-    handle = router.add_terminal(predicate, terminal)
-    handle = router.add_terminal(predicate, terminal,
-                                 source_terminal_list=[t1, t2])
-    router.remove_terminal(handle)              # -> bool
+    handle = router.add_entry(predicate, terminal)
+    handle = router.add_entry(predicate, terminal,
+                              source_terminal_list=[t1, t2])
+    router.remove_entry(handle)    # -> bool
 
-    router.publish(event)                       # synchronous; non-blocking
+    router.publish(event)          # synchronous; non-blocking
 
 
 SOURCE FILTERING
 
-add_terminal accepts an optional source_terminal_list. When set, the
+add_entry accepts an optional source_terminal_list. When set, the
 target Terminal only receives Events that came from one of the named
 source Terminals (or from local publish() calls if 'None' appears in
 the list).
@@ -43,7 +43,7 @@ NOT to the network-outgoing Terminals" - which would otherwise loop.
 
 PREDICATE-FIRST ORDERING
 
-add_terminal(predicate, terminal, ...) puts the predicate first so the
+add_entry(predicate, terminal, ...) puts the predicate first so the
 call site reads as "what to route" then "where to". This matches the
 mental model of a router: a rule plus a destination.
 
@@ -80,18 +80,17 @@ class EventRouter:
 
     def __init__(self):
         self._dispatcher = EventDispatcher(enforce_async_callbacks_f=False)
-        self._entries:   dict[int, "RouterEntry"] = {}
-        self._next_id:   int                       = 0
+        self._entries:     dict[int, "EventRouterEntry"] = {}
+        self._next_id:     int                       = 0
 
     # ----------------------------------------------------------------
     # Registration
     # ----------------------------------------------------------------
-
-    def add_terminal(self,
-                     predicate:            Callable[[Event], bool],
-                     terminal:             EventTerminal,
-                     source_terminal_list: Optional[list] = None) -> int:
-        """RETURN: int, handle for later remove_terminal().
+    def add_entry(self,
+                  predicate:            Callable[[Event], bool],
+                  terminal:             EventTerminal,
+                  source_terminal_list: Optional[list] = None) -> int:
+        """RETURN: int, entry handle for later remove_entry().
 
         Registers 'terminal' as a destination for Events matching
         'predicate'. If source_terminal_list is given, the Event is
@@ -105,12 +104,10 @@ class EventRouter:
         handle = self._next_id
         self._next_id += 1
 
-        entry = RouterEntry(
-            handle               = handle,
-            terminal             = terminal,
-            predicate            = predicate,
-            source_terminal_list = source_terminal_list,
-        )
+        entry = EventRouterEntry(handle               = handle,
+                                 terminal             = terminal,
+                                 predicate            = predicate,
+                                 source_terminal_list = source_terminal_list)
         entry._router_dispatcher = self._dispatcher
         self._entries[handle] = entry
 
@@ -123,7 +120,7 @@ class EventRouter:
         entry.subscription = sub
         return handle
 
-    def remove_terminal(self, handle: int) -> bool:
+    def remove_entry(self, handle: int) -> bool:
         """RETURN: True,  if the entry was removed.
                    False, if the handle is unknown.
         """
@@ -137,7 +134,6 @@ class EventRouter:
     # ----------------------------------------------------------------
     # Publish
     # ----------------------------------------------------------------
-
     def publish(self, event: Event) -> None:
         """RETURN: None.
 
@@ -174,7 +170,7 @@ class EventRouter:
         return len(self._entries)
 
 
-class RouterEntry:
+class EventRouterEntry:
     """Internal: one (predicate, terminal, source_filter) row.
 
     Callable as a sync sink: when invoked with an Event, it schedules
@@ -182,7 +178,7 @@ class RouterEntry:
     """
 
     def __init__(self, handle, terminal, predicate, source_terminal_list):
-        """RETURN: a new RouterEntry."""
+        """RETURN: a new EventRouterEntry."""
         self.handle               = handle
         self.terminal             = terminal
         self.predicate            = predicate
@@ -218,5 +214,5 @@ class RouterEntry:
         try:
             asyncio.create_task(self.terminal.send(event))
         except RuntimeError as e:
-            print("RouterEntry.__call__: cannot forward to terminal "
+            print("EventRouterEntry.__call__: cannot forward to terminal "
                   "(no running loop): %s" % e, file=sys.stderr)
