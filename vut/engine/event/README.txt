@@ -20,8 +20,9 @@ DESIGN AT A GLANCE
         +----------------------------------------------------------+
         |  Event   (identity + data)                               |
         |    Frozen dataclass per concrete event kind.             |
-        |    .id (== cls.__name__, auto-set)                       |
-        |    .category (E_EventCategory)                           |
+        |    .category   (str, set by surrounding category() block)|
+        |    .id         (composite "<category>.<__name__>",       |
+        |                 auto-set at registration)                |
         +----------------------------------------------------------+
                               |
                               v  (carried in)
@@ -78,9 +79,12 @@ DESIGN AT A GLANCE
 FILE LAYOUT
 --------------------------------------------------------------------------------
 
-    enums.py              E_EventCategory
-    event.py              Event base class, CLASS_BY_ID, EventIdCollision
-    events.py             Concrete Event subclasses
+    event.py              Event base class, category() context manager,
+                          CLASS_BY_ID, lookup_event_class, all_event_classes,
+                          all_categories, EventIdCollision,
+                          EventDefinitionOutsideCategoryContext,
+                          EventRegistrationLocked
+    events.py             Concrete Event subclasses, organised by category
     marshaller.py         Marshaller (wire serialisation; used internally
                           by ProcessQueueChannel and RemoteChannel)
 
@@ -98,52 +102,90 @@ FILE LAYOUT
     DISCUSSIONS.txt       Decision history and rationale
 
     TEST/
-      test-categories.py    1 choice
-      test-events.py        6 choices
+      test-category.py      5 choices (context manager behaviour)
+      test-events.py        5 choices (shipped events + lock)
       test-marshaller.py    3 choices
       test-dispatcher.py    4 choices
       test-channel.py       4 choices
-      test-terminal.py      3 choices
-      test-router.py        3 choices
-      GOOD/                 24 expected-output files
+      test-terminal.py      5 choices (incl. handshake, context_manager)
+      test-router.py        4 choices (incl. peer_down_removes)
+      GOOD/                 30 expected-output files
 
 
 --------------------------------------------------------------------------------
 KEY CONCEPTS
 --------------------------------------------------------------------------------
 
-1. EVENT IDENTITY = CLASS NAME
+1. EVENTS LIVE INSIDE CATEGORY CONTEXTS
 
-   Each event kind is one Python class. The class auto-registers in
-   CLASS_BY_ID under its __name__ at class-definition time, and its
-   .id class attribute is set to that name. Defining a new event
-   is ONE step: define the class. EventIdCollision is raised if the
-   name is already in use.
+   A category is a user-defined string. Event classes are defined
+   inside a `with category("NAME"):` block; every class in the
+   block joins that category:
 
-   Inheritance carries field/behaviour sharing:
+       from vut.engine.event import Event, category
 
-       class CompilerDoneEvent(TaskDoneEvent):
-           category = E_EventCategory.COMPILATION
-           source: str
-           output: str
+       with category("MY_SUBSYSTEM"):
+           class EventThingHappened(Event):
+               subject: str
 
-   Each concrete class gets its OWN .id; the parent's id is NOT
-   inherited.
+   On class creation:
+       -- .category    is stamped from the open block
+       -- .id          is composite ("MY_SUBSYSTEM.EventThingHappened")
+       -- The class is registered in CLASS_BY_ID under its composite id
+       -- A duplicate name in the SAME category raises EventIdCollision
+       -- The SAME name in a DIFFERENT category is fine
+
+   Defining an Event subclass outside any open category raises
+   EventDefinitionOutsideCategoryContext.
+
+   Adding a new event is ONE step: declare the class inside the
+   appropriate `with category(...)` block.
+
+   Inheritance carries fields and behaviour. The child's category
+   comes from its OWN `with category(...)` block, not from its
+   parent:
+
+       with category("PARENT_CAT"):
+           class EventBase(Event):
+               task_id: int
+       with category("CHILD_CAT"):
+           class EventDerived(EventBase):            # parent in PARENT_CAT
+               extra: str
+       # EventBase.id    == "PARENT_CAT.EventBase"
+       # EventDerived.id == "CHILD_CAT.EventDerived"
 
 
-2. CATEGORIES ARE SUBSYSTEMS
+2. CATEGORIES ARE USER-DEFINED STRINGS
 
-   E_EventCategory names the VUT subsystem each event belongs to:
+   Categories carve the event namespace by subsystem (or any other
+   grouping the user finds natural). The event package itself does
+   not ship a closed set; subsystems declare their own.
 
-       TEST_RESULT      outcomes of test execution
-       WORKFLOW         WFM control, artifact lifecycle, task generics
-       NETWORK          connection state, transport-level events
-       COMPILATION      compiler / codegen events
-       DIAGNOSTIC       logging, observability
+   Example categories a project might use:
 
-   Consumers filter naturally by subsystem ("give me all WORKFLOW
-   events"). Other filter axes (by id, by source, by workload) are
-   expressed as predicates.
+       "WORKFLOW"      task lifecycle, artifact production
+       "COMPILATION"   compiler / codegen events
+       "NETWORK"       connection state, transport-level events
+       "TEST_RESULT"   outcomes of test execution
+       "DIAGNOSTIC"    logging, observability
+
+   Consumers filter naturally by category ("subscribe to everything
+   in WORKFLOW"); other filter axes (by id, by source, by workload)
+   are expressed as predicates.
+
+   The wire id is the composite "<category>.<class_name>". Categories
+   may not contain a '.' (reserved as the separator).
+
+   Categories may span files. Multiple `with category("WORKFLOW"):`
+   blocks in different modules each contribute events to the WORKFLOW
+   category. Same-name collisions within the category still raise.
+
+   THE EVENT PACKAGE SHIPS ONE CATEGORY: "EVENT_INFRA"
+
+   The package itself defines only EventTerminalUp and
+   EventTerminalDown (in category EVENT_INFRA) - the wire-level
+   lifecycle messages a Terminal uses to talk about itself to its
+   peer. All application events live in user code.
 
 
 3. PYDANTIC VIA TypeAdapter
@@ -211,14 +253,48 @@ KEY CONCEPTS
 
        term = EventTerminal(ecp)
        term.dispatcher.subscribe_on_*(...)    # local handlers
-       await term.start()                     # build channel + recv loop
+       await term.start()                     # build, recv loop, HANDSHAKE
        await term.send(event)                 # ship to peer
-       await term.stop()                      # tear down
+       await term.stop()                      # send Down, tear down
+
+   Or as an async context manager (start/stop run on enter/exit, also
+   on exception):
+
+       async with EventTerminal(ecp) as term:
+           term.dispatcher.subscribe_on_event(SomeEvent, handler)
+           await term.send(some_event)
+
+   HANDSHAKE (Up / Down lifecycle)
+
+   start() does not return until the peer has confirmed it is up. On
+   entry of the receive loop, each side sends EventTerminalUp on the
+   wire. start() blocks in state UP_PENDING until the peer's Up
+   arrives, then transitions to UP and returns.
+
+   The protocol is symmetric: both sides send Up; both sides wait for
+   the other's Up. There is no client/server role. Because both sides
+   block, both starts must run concurrently (use asyncio.gather):
+
+       await asyncio.gather(a.start(), b.start())   # correct
+       await a.start(); await b.start()             # deadlock
+
+   stop() sends EventTerminalDown on the wire (best-effort), cancels
+   the receive loop, and closes the channel. The peer's receive loop
+   sees the Down and exits cleanly. Down receives no reply: the side
+   that sent it is gone.
 
    The receive-side dispatcher uses enforce_async_callbacks_f=True;
    sync callbacks would block the receive loop. For sync work, use
    an object-with-.send sink that pushes to a thread Queue for
    separate processing.
+
+   EVENT_INFRA events received from the peer are handled internally
+   (state transitions). They are NOT forwarded to the user's
+   .dispatcher; subscribing to EventTerminalUp / EventTerminalDown
+   on .dispatcher will never fire. To learn that a peer has gone
+   down, register a callback via set_peer_down_callback(). The
+   EventRouter uses this hook to auto-remove entries when peers
+   close.
 
 
 8. EVENTROUTER: HUB OF TERMINALS
@@ -238,6 +314,14 @@ KEY CONCEPTS
    source_terminal_list adds an origin filter (None means "matches
    local publish() calls").
 
+   PEER-DOWN AUTO-REMOVAL
+
+   add_entry() wires a peer-down callback on the Terminal. When the
+   peer of that Terminal sends EventTerminalDown, the Router
+   automatically removes the entry. The dispatch table stays clean
+   as peers disconnect; the caller does not need to track which
+   entries are stale.
+
    The Router is NOT a Terminal. A Terminal is one peer; a Router is a
    hub of peers. The two solve different problems with a shared
    matching primitive.
@@ -251,60 +335,77 @@ The Marshaller's default envelope (used by ProcessQueueChannel,
 RemoteChannel) is:
 
     {
-        "id":   "TaskDoneEvent",                      # class __name__
-        "data": {"task_id": 42, "duration_s": 1.5,    # all fields
-                 "timestamp": 100.0},
+        "id":   "EVENT_INFRA.EventTerminalUp",   # composite "<category>.<class>"
+        "data": {"timestamp": 100.0},            # all fields
     }
 
-"id" is the Event subclass's __name__ verbatim. "data" is the result
-of the class's TypeAdapter.dump_python(); deserialisation looks up the
-class via CLASS_BY_ID[id] and validates via the same TypeAdapter.
+"id" is the Event subclass's composite identity ("<category>.<__name__>")
+as stamped by Event.__init_subclass__. "data" is the result of the
+class's TypeAdapter.dump_python(); deserialisation looks up the class
+via CLASS_BY_ID[wire_id] (one flat-dict access) and validates via the
+same TypeAdapter.
 
-Renaming an event class breaks every consumer producing or consuming
-that class on the wire - "do not rename event types lightly" is a hard
+Renaming an event class OR changing its category breaks every
+consumer producing or consuming that class on the wire - "do not
+rename event types or move their categories lightly" is a hard
 rule, not a soft convention.
+
+For specialist serialisation, see marshaller.py's _SPECIALISTS hook
+and the Construct future-direction note in its module header.
 
 
 --------------------------------------------------------------------------------
 ADDING A NEW EVENT
 --------------------------------------------------------------------------------
 
-One step: declare a subclass.
+Wrap the subclass declaration in a `with category(...)` block:
 
-    @dataclass(frozen=True, kw_only=True)
-    class MyNewEvent(Event):
-        category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
+    from vut.engine.event import Event, category
 
-        subject: str
-        count:   int = 0
+    with category("WORKFLOW"):
 
-        def __str__(self) -> str:
-            return "my new thing happened to %s (%d times)" % (
-                self.subject, self.count
-            )
+        @dataclass(frozen=True, kw_only=True)
+        class EventThingHappened(Event):
+            subject: str
+            count:   int = 0
 
-That's it. MyNewEvent.id is automatically "MyNewEvent". The class is
-registered in CLASS_BY_ID; the Marshaller, Dispatcher, Terminal, and
-Router pick it up automatically.
+            def __str__(self) -> str:
+                return "thing happened to %s (%d times)" % (
+                    self.subject, self.count
+                )
 
-The only requirement is name uniqueness across the system. Subsystem-
-specific prefixes (NetworkConnectEvent, CompilerDoneEvent) keep the
-namespace honest.
+That's it. EventThingHappened.id is automatically
+"WORKFLOW.EventThingHappened". The class is registered in
+CLASS_BY_ID; the Marshaller, Dispatcher, Terminal, and Router pick it
+up automatically.
+
+Multiple files may contribute to the same category; just open a
+`with category("WORKFLOW"):` block at the top of each module.
+Name uniqueness is required within a category; the same name in
+different categories has different wire ids and is fine.
 
 
 --------------------------------------------------------------------------------
 TYPICAL USAGE
 --------------------------------------------------------------------------------
 
-In-process two coroutines on one loop:
+In-process two coroutines on one loop. The example declares its own
+event type since the package itself ships only EVENT_INFRA events:
+
+    from vut.engine.event import Event, category, EventTerminal, EventChannelParameter
+
+    with category("DEMO"):
+        @dataclass(frozen=True, kw_only=True)
+        class EventGreeting(Event):
+            text: str
 
     a_ecp, b_ecp = EventChannelParameter.for_async()
     a = EventTerminal(a_ecp)
     b = EventTerminal(b_ecp)
-    b.dispatcher.subscribe_on_event(TaskDoneEvent, async_handler)
-    await a.start()
-    await b.start()
-    await a.send(TaskDoneEvent(task_id=42, duration_s=1.5))
+    b.dispatcher.subscribe_on_event(EventGreeting, async_handler)
+    # Both starts run concurrently; each blocks on peer Up.
+    await asyncio.gather(a.start(), b.start())
+    await a.send(EventGreeting(text="hello"))
 
 Cross-process (parent spawns child):
 
@@ -312,13 +413,13 @@ Cross-process (parent spawns child):
     proc = multiprocessing.Process(target=child_main, args=(b_ecp,))
     proc.start()
     parent_terminal = EventTerminal(a_ecp)
-    await parent_terminal.start()
+    await parent_terminal.start()       # blocks until child terminal also up
 
     def child_main(ecp):
         async def go():
             term = EventTerminal(ecp)
             term.dispatcher.subscribe_on_event(...)
-            await term.start()
+            await term.start()          # blocks until parent terminal up
             # ... use term ...
         asyncio.run(go())
 
@@ -327,13 +428,16 @@ WFM as a router (sketch):
     router = EventRouter()
     # Per active user order, one Terminal pair:
     user_a_ecp, user_b_ecp = EventChannelParameter.for_async()
-    user_terminal = EventTerminal(user_b_ecp)
-    await user_terminal.start()
+    user_terminal       = EventTerminal(user_b_ecp)
+    router_side         = EventTerminal(user_a_ecp)
+    # Both sides start concurrently (each blocks on peer Up).
+    await asyncio.gather(user_terminal.start(), router_side.start())
     router.add_entry(
         predicate = lambda ev: getattr(ev, "task_id", None) in workload_tasks,
-        terminal  = EventTerminal(user_a_ecp),
+        terminal  = router_side,
     )
     # User code holds user_terminal; subscribes its dispatcher to whatever.
+    # When user_terminal stops, the Router auto-removes router_side.
     return user_terminal
 
 

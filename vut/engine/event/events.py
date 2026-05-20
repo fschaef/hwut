@@ -1,176 +1,71 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: Concrete Event subclasses.
+PURPOSE: Events that the event component emits about itself.
 
-Each concrete event in the system is one class here:
+The event package itself ships no application-level events. Subsystems
+(workflow, compile, network, tests) declare their own events in their
+own modules using the `with category("..."):` context manager.
 
-    class TaskDoneEvent(Event):
-        category = E_EventCategory.WORKFLOW
-        task_id:    int
-        duration_s: float
-        def __str__(self): ...
+The only events shipped here are LIFECYCLE events that an EventTerminal
+emits on the wire to inform its peer of its own state:
 
-The .id class attribute is auto-derived from the class name in
-Event.__init_subclass__; the class is auto-registered in CLASS_BY_ID
-(see event.py). Defining a new event is ONE step: define the class.
+    EventTerminalUp     sent by a Terminal when its receive loop has
+                        started and the Terminal is ready to send and
+                        receive application events. The peer responds
+                        with its own EventTerminalUp; once each side has
+                        received the other's Up, the handshake is
+                        complete and start() returns.
 
-Inheritance carries specialisation: CompilerDoneEvent inherits from
-TaskDoneEvent and overrides .category. Each concrete subclass gets
-its own .id (its own __name__), so CompilerDoneEvent.id is
-"CompilerDoneEvent" - distinct from "TaskDoneEvent".
+    EventTerminalDown   sent by a Terminal when it is shutting down
+                        deliberately (stop() was called locally). The
+                        peer's receive loop sees this and exits cleanly.
+                        Down does NOT require a reply: the side that
+                        sent Down is gone.
 
-Adding a new event is a one-step operation:
+Neither event is dispatched to the Terminal's own local subscribers
+when generated locally. Both ARE dispatched to local subscribers when
+received from the peer - so a Router (or any other local consumer)
+may subscribe to EventTerminalDown to learn that a peer is no longer
+available.
 
-    1. Declare an Event subclass here (or in the owning subsystem's
-       module - subsystems may host their own event classes; they
-       just need to be IMPORTED somewhere to trigger registration).
+These are wire-level lifecycle signals, not connection-error
+indicators. A channel that fails mid-flight is a separate concern.
 ________________________________________________________________________________
 """
 from dataclasses import dataclass
-from typing      import ClassVar
 
-from vut.engine.event.enums import E_EventCategory
-from vut.engine.event.event import Event
+from vut.engine.event.event import Event, category
 
 
 # ============================================================================
-# Generic Task lifecycle events
+# EVENT_INFRA category - events that describe the event infrastructure
+# itself (Terminals, and later other components if useful).
 # ============================================================================
 
-@dataclass(frozen=True, kw_only=True)
-class TaskStartedEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
+with category("EVENT_INFRA"):
 
-    task_id: int
+    @dataclass(frozen=True, kw_only=True)
+    class EventTerminalUp(Event):
+        """Lifecycle: a Terminal's receive loop has entered.
 
-    def __str__(self) -> str:
-        return "task %d started" % self.task_id
+        Emitted on the wire on receive-loop entry. The receiving Terminal
+        uses this to complete the symmetric Up-handshake; once both sides
+        have received the other's Up, start() returns on both sides.
+        """
 
-
-@dataclass(frozen=True, kw_only=True)
-class TaskDoneEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
-
-    task_id:    int
-    duration_s: float
-
-    def __str__(self) -> str:
-        return "task %d done in %.3fs" % (self.task_id, self.duration_s)
+        def __str__(self) -> str:
+            return "EventTerminalUp"
 
 
-@dataclass(frozen=True, kw_only=True)
-class TaskFailedEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
+    @dataclass(frozen=True, kw_only=True)
+    class EventTerminalDown(Event):
+        """Lifecycle: a Terminal is shutting down deliberately.
 
-    task_id: int
-    reason:  str
+        Emitted on the wire just before the channel is closed from this
+        side. The peer's receive loop dispatches it locally (so local
+        subscribers may react), and then exits cleanly when the channel
+        signals closed.
+        """
 
-    def __str__(self) -> str:
-        return "task %d failed: %s" % (self.task_id, self.reason)
-
-
-@dataclass(frozen=True, kw_only=True)
-class TaskProgressEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
-
-    task_id:  int
-    fraction: float                     # 0.0 to 1.0
-    note:     str = ""
-
-    def __str__(self) -> str:
-        if self.note:
-            return "task %d progress: %.0f%%  (%s)" % (
-                self.task_id, self.fraction * 100.0, self.note
-            )
-        return "task %d progress: %.0f%%" % (
-            self.task_id, self.fraction * 100.0
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class TaskCancelledEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
-
-    task_id: int
-
-    def __str__(self) -> str:
-        return "task %d cancelled" % self.task_id
-
-
-# ============================================================================
-# Compilation subsystem events
-# ============================================================================
-
-@dataclass(frozen=True, kw_only=True)
-class CompilerNoSourceEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.COMPILATION
-
-    task_id:  int
-    expected: str                       # path the compiler was looking for
-
-    def __str__(self) -> str:
-        return "task %d: no source: %s" % (self.task_id, self.expected)
-
-
-@dataclass(frozen=True, kw_only=True)
-class CompilerDoneEvent(TaskDoneEvent):
-    """Specialises TaskDoneEvent with compiler-specific outputs.
-
-    Inherits task_id and duration_s from TaskDoneEvent; adds source
-    and output. The compiler emits THIS class instead of the generic
-    TaskDoneEvent - .id and .category differ.
-    """
-    category: ClassVar[E_EventCategory] = E_EventCategory.COMPILATION
-
-    source:  str
-    output:  str
-
-    def __str__(self) -> str:
-        return "task %d compiled %s -> %s in %.3fs" % (
-            self.task_id, self.source, self.output, self.duration_s
-        )
-
-
-# ============================================================================
-# Workflow subsystem events (emitted by the WFM itself, not Tasks)
-# ============================================================================
-
-@dataclass(frozen=True, kw_only=True)
-class ArtifactAvailableEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
-
-    task_id:     int                    # task that produced the artifact
-    artifact_id: int
-
-    def __str__(self) -> str:
-        return "artifact %d available (by task %d)" % (
-            self.artifact_id, self.task_id
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class ArtifactImpossibleEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
-
-    task_id:     int                    # task that determined impossibility
-    artifact_id: int
-    reason:      str = ""
-
-    def __str__(self) -> str:
-        if self.reason:
-            return "artifact %d impossible (by task %d): %s" % (
-                self.artifact_id, self.task_id, self.reason
-            )
-        return "artifact %d impossible (by task %d)" % (
-            self.artifact_id, self.task_id
-        )
-
-
-@dataclass(frozen=True, kw_only=True)
-class WorkflowTaskCancelledEvent(Event):
-    category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
-
-    task_id: int                        # task that is being cancelled
-
-    def __str__(self) -> str:
-        return "task %d cancelled by workflow" % self.task_id
+        def __str__(self) -> str:
+            return "EventTerminalDown"

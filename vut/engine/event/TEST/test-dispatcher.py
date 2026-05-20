@@ -30,13 +30,38 @@ import asyncio
 import sys
 import config                                                       # noqa: F401
 
+from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.event                           import (E_EventCategory,
-                                                        TaskStartedEvent,
-                                                        TaskDoneEvent,
-                                                        TaskFailedEvent,
-                                                        CompilerDoneEvent,
+from vut.engine.event                           import (Event,
+                                                        category,
                                                         EventDispatcher)
+
+
+# Test-local event vocabulary. Split into two categories so that
+# subscribe_on_category("...COMPILE") discriminates from "...TASK".
+with category("TEST_LOCAL_DISP_TASK"):
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventTaskStarted(Event):
+        task_id: int
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventTaskDone(Event):
+        task_id:    int
+        duration_s: float
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventTaskFailed(Event):
+        task_id: int
+        reason:  str
+
+
+with category("TEST_LOCAL_DISP_COMPILE"):
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventCompilerDone(EventTaskDone):
+        source: str
+        output: str
 
 
 def banner(label):
@@ -56,18 +81,18 @@ async def _matching():
     async def cb_category(ev): by_category.append(ev.id)
     async def cb_pred(ev):     by_pred.append(ev.id)
 
-    d.subscribe_on_event(TaskDoneEvent,                   cb_event)
-    d.subscribe_on_category(E_EventCategory.COMPILATION,  cb_category)
+    d.subscribe_on_event(EventTaskDone,                   cb_event)
+    d.subscribe_on_category("TEST_LOCAL_DISP_COMPILE",  cb_category)
     d.subscribe_on_predicate(lambda ev: ev.task_id == 7,  cb_pred)
 
     banner("len after three subscribes")
     print("len: %d" % len(d))
 
     banner("dispatch three events")
-    d.dispatch(TaskDoneEvent(task_id=1, duration_s=1.0))   # event match
-    d.dispatch(CompilerDoneEvent(task_id=7, source="x",
+    d.dispatch(EventTaskDone(task_id=1, duration_s=1.0))   # event match
+    d.dispatch(EventCompilerDone(task_id=7, source="x",
                                  output="y", duration_s=0.1))   # category AND pred
-    d.dispatch(TaskStartedEvent(task_id=99))                # no match anywhere
+    d.dispatch(EventTaskStarted(task_id=99))                # no match anywhere
     await asyncio.sleep(0.01)
 
     print("by_event   : %s" % by_event)
@@ -83,14 +108,14 @@ async def _sink_kinds():
     async_seen = []
     async def async_cb(ev):
         async_seen.append(ev.id)
-    s_async = d.subscribe_on_event(TaskDoneEvent, async_cb)
+    s_async = d.subscribe_on_event(EventTaskDone, async_cb)
     print("kind: %s" % s_async.kind)
 
     banner("sync callable sink (kind=sync)")
     sync_seen = []
     def sync_cb(ev):
         sync_seen.append(ev.id)
-    s_sync = d.subscribe_on_event(TaskDoneEvent, sync_cb)
+    s_sync = d.subscribe_on_event(EventTaskDone, sync_cb)
     print("kind: %s" % s_sync.kind)
 
     banner("object-with-.send sink (kind=send)")
@@ -100,11 +125,11 @@ async def _sink_kinds():
         def send(self, ev):
             self.items.append(ev.id)
     bucket = Bucket()
-    s_send = d.subscribe_on_event(TaskDoneEvent, bucket)
+    s_send = d.subscribe_on_event(EventTaskDone, bucket)
     print("kind: %s" % s_send.kind)
 
     banner("dispatch fires all three")
-    d.dispatch(TaskDoneEvent(task_id=1, duration_s=1.0))
+    d.dispatch(EventTaskDone(task_id=1, duration_s=1.0))
     await asyncio.sleep(0.01)
     print("async_seen : %s" % async_seen)
     print("sync_seen  : %s" % sync_seen)
@@ -112,7 +137,7 @@ async def _sink_kinds():
 
     banner("non-callable, non-send object is rejected")
     try:
-        d.subscribe_on_event(TaskDoneEvent, 42)
+        d.subscribe_on_event(EventTaskDone, 42)
         print("UNEXPECTED: accepted")
     except TypeError as e:
         print("TypeError: %s" % e)
@@ -124,26 +149,26 @@ async def _enforce_async():
 
     banner("async callable accepted")
     async def cb(ev): pass
-    s = d.subscribe_on_event(TaskDoneEvent, cb)
+    s = d.subscribe_on_event(EventTaskDone, cb)
     print("kind: %s" % s.kind)
 
     banner("object-with-.send accepted")
     class Bucket:
         def send(self, ev): pass
-    s = d.subscribe_on_event(TaskDoneEvent, Bucket())
+    s = d.subscribe_on_event(EventTaskDone, Bucket())
     print("kind: %s" % s.kind)
 
     banner("sync callable rejected")
     def sync_cb(ev): pass
     try:
-        d.subscribe_on_event(TaskDoneEvent, sync_cb)
+        d.subscribe_on_event(EventTaskDone, sync_cb)
         print("UNEXPECTED: accepted")
     except TypeError as e:
         print("TypeError raised (expected)")
 
     banner("lambda (sync) rejected")
     try:
-        d.subscribe_on_event(TaskDoneEvent, lambda ev: None)
+        d.subscribe_on_event(EventTaskDone, lambda ev: None)
         print("UNEXPECTED: accepted")
     except TypeError as e:
         print("TypeError raised (expected)")
@@ -161,19 +186,19 @@ async def _snapshot():
     async def mutator(ev):
         # Subscribe a new callback during dispatch. It must NOT fire on
         # the current event.
-        d.subscribe_on_event(TaskDoneEvent, late_cb)
+        d.subscribe_on_event(EventTaskDone, late_cb)
         fired.append("first")
 
-    d.subscribe_on_event(TaskDoneEvent, mutator)
+    d.subscribe_on_event(EventTaskDone, mutator)
 
     banner("first dispatch: only 'first' fires; 'late_cb' added but not yet active")
-    d.dispatch(TaskDoneEvent(task_id=1, duration_s=1.0))
+    d.dispatch(EventTaskDone(task_id=1, duration_s=1.0))
     await asyncio.sleep(0.01)
     print("fired: %s" % fired)
     print("len(d): %d" % len(d))
 
     banner("second dispatch: now both fire (and mutator adds yet another)")
-    d.dispatch(TaskDoneEvent(task_id=2, duration_s=2.0))
+    d.dispatch(EventTaskDone(task_id=2, duration_s=2.0))
     await asyncio.sleep(0.01)
     print("fired: %s" % fired)
 
@@ -185,8 +210,8 @@ async def _snapshot():
     async def good_cb(ev):
         fired2.append("good")
     d2.subscribe_on_predicate(bad_pred, good_cb)
-    d2.subscribe_on_event(TaskDoneEvent, good_cb)
-    d2.dispatch(TaskDoneEvent(task_id=1, duration_s=1.0))
+    d2.subscribe_on_event(EventTaskDone, good_cb)
+    d2.dispatch(EventTaskDone(task_id=1, duration_s=1.0))
     await asyncio.sleep(0.01)
     print("fired2: %s" % fired2)
 

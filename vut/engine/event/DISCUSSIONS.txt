@@ -206,7 +206,7 @@ ENFORCE_ASYNC_CALLBACKS_F:
              can push to a thread Queue and process there).
 
 SOURCE FILTERING:
-             EventRouter.add_entry accepts an optional
+             EventRouter.add_terminal accepts an optional
              source_terminal_list. Used to prevent forwarding loops
              ("don't send Network events back out the Network
              Terminal they came from"). publish_from(src, ev) tags
@@ -229,6 +229,164 @@ RATIONALE:   End-to-end clarity. Avoids the complexity of a "transport
              that survives Channel close" abstraction that would have
              no clear consumer. If a peer wants to reconnect, it
              constructs a new ECP/Channel/Terminal triple.
+
+
+--------------------------------------------------------------------------------
+DECISION 13 - Event registration is gated by an explicit category context
+--------------------------------------------------------------------------------
+
+DECISION:    Event subclasses must be declared inside a
+             `with category("NAME"):` block. The block stamps each
+             enclosed class with its .category and composite .id
+             ("<category>.<__name__>"). Declaring outside any open
+             block raises EventDefinitionOutsideCategoryContext.
+
+             E_EventCategory (the closed enum) is gone. Categories
+             are user-defined strings. Multiple files may contribute
+             to the same category. The dispatch table CLASS_BY_ID is
+             a flat dict keyed by composite id.
+
+             Event.lock_registration() seals the registry; after
+             lock, opening a category or defining an Event raises
+             EventRegistrationLocked. The lock is one-way (no
+             unlock).
+
+RATIONALE:   The previous model had .category as a ClassVar declared
+             on every subclass. This made categories closed (one
+             enum, system-wide) and forced every subsystem's events
+             into a central enum file. The category context manager
+             flips this: categories are an open vocabulary, and the
+             file declaring an event is also the file that says
+             which category it belongs to.
+
+             The lock catches a real failure mode: a late import
+             registering an event after the event vocabulary should
+             be sealed. Without a lock, this is silent and detectable
+             only by mysterious "unknown id" errors during
+             deserialisation. With the lock, the late import fails
+             at the point of definition.
+
+             CLASS_BY_ID is FLAT (not nested by category). The
+             Marshaller has the composite id in hand from the wire
+             envelope; one dict access is enough. A nested structure
+             would need parse-and-walk on every deserialise. The
+             per-category enumeration use case is rare and served
+             by events_in_category() which walks the flat dict once.
+
+NAMING:      The context manager is plain `category("NAME")`. The
+             flag method is `lock_registration()`. The exception is
+             `EventDefinitionOutsideCategoryContext` (verbose but
+             unambiguous - this exception names a specific
+             programmer error).
+
+WIRE IMPACT: The wire id becomes composite ("WORKFLOW.EventTaskDone"
+             rather than "EventTaskDone"). Slightly longer; the
+             readability is worth it, and string comparison in
+             CPython is fast enough that the extra bytes do not
+             matter at the speeds we expect.
+
+
+--------------------------------------------------------------------------------
+DECISION 14 - The event package ships no application events
+--------------------------------------------------------------------------------
+
+DECISION:    events.py contains only EventTerminalUp and
+             EventTerminalDown, both in category EVENT_INFRA. These
+             are wire-level lifecycle messages used by the Terminal
+             handshake. All application events (workflow, compile,
+             network, test, diagnostic) are declared by their owning
+             subsystems in their own modules.
+
+             The event package is a TOOLKIT, not a registry of
+             application events.
+
+HISTORY:     Earlier iterations of events.py shipped 10 events for
+             the WORKFLOW and COMPILATION categories. These were
+             placeholders; they belonged to subsystems that did not
+             yet exist. Carrying them in the event package coupled
+             the package's evolution to subsystems it should not
+             know about.
+
+RATIONALE:   The event package owns IDENTITY, DISPATCH, and
+             TRANSPORT. It does not own the catalog of what events
+             exist in any particular VUT build. Subsystems own their
+             event vocabularies; the event package provides the
+             mechanism to declare and route them.
+
+             The only exception is EVENT_INFRA - events the event
+             package itself produces, ABOUT ITSELF. These cannot
+             live anywhere else without making the event package
+             depend on something downstream.
+
+TEST IMPACT: Tests that previously imported the shipped application
+             events now declare their own under test-local category
+             names (TEST_LOCAL_DISPATCHER, TEST_LOCAL_TERM_TASK,
+             etc.). Tests are now self-contained: each declares
+             the event vocabulary it needs.
+
+
+--------------------------------------------------------------------------------
+DECISION 15 - Terminals exchange a symmetric Up / Down handshake on the wire
+--------------------------------------------------------------------------------
+
+DECISION:    Each EventTerminal participates in a wire-level
+             lifecycle protocol with its peer using two EVENT_INFRA
+             events:
+
+                 EventTerminalUp    sent on receive-loop entry
+                 EventTerminalDown  sent on deliberate stop()
+
+             start() blocks in state UP_PENDING until the peer's Up
+             arrives, then transitions to UP. The protocol is
+             symmetric: each side sends Up on receive-loop entry and
+             waits for the other side's Up. No client/server role.
+             Both sides must `start()` concurrently (use
+             asyncio.gather); sequential `await a.start(); await
+             b.start()` deadlocks.
+
+             stop() sends Down to the peer before closing the
+             channel. Down receives NO reply; the side that sent it
+             is gone. The peer's receive loop sees the Down and
+             exits cleanly.
+
+             EVENT_INFRA events received from the peer are handled
+             INTERNALLY by the Terminal and are NOT forwarded to the
+             user's .dispatcher. To learn about a peer going down,
+             register set_peer_down_callback(). The EventRouter
+             uses this callback to auto-remove an entry when its
+             peer disconnects.
+
+RATIONALE:   A Terminal that connects without confirming the peer
+             exists is unsafe; sends may go into a queue with no
+             reader. The blocking handshake catches the "peer never
+             arrived" case at start time rather than at first send.
+
+             The symmetric protocol is the simplest version that
+             actually works. Asymmetric "client connects, server
+             accepts" protocols add complexity for no real benefit -
+             both sides need each other equally, and both sides
+             know to call start().
+
+             Down is best-effort. If the channel is already broken
+             when stop() tries to send Down, the failure is logged
+             and ignored. The peer detecting "channel.receive()
+             returned None" is the fallback signal.
+
+             EVENT_INFRA events not reaching .dispatcher is a
+             deliberate choice. Lifecycle is the Terminal's own
+             state machine; passing infra events to user handlers
+             would invite users to write their own lifecycle logic
+             that fights with the Terminal's. The peer-Down callback
+             is the one exposed hook, and only because the Router
+             needs it.
+
+CONTEXT MANAGER:
+
+             The Terminal supports `async with EventTerminal(ecp)
+             as t:`. start() runs on enter; stop() runs on exit,
+             whether normal or via exception. Both forms (explicit
+             start/stop and context manager) are supported because
+             different call sites prefer different shapes.
 
 
 --------------------------------------------------------------------------------
@@ -257,3 +415,9 @@ THINGS LEFT OPEN
    tested but no actual subsystem uses it yet. The mechanism is
    there for when a network-incoming Terminal feeds the Router that
    also feeds network-outgoing Terminals.
+
+7. Construct (https://construct.readthedocs.io) is flagged in the
+   Marshaller module header as a natural fit for binary specialist
+   serialisation, complementing Pydantic's structured-data
+   validation. Not built; revisit when an event type's wire size
+   shows up in profiling.

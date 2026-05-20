@@ -20,10 +20,10 @@ PUBLIC SHAPE
 
     handle = router.add_entry(predicate, terminal)
     handle = router.add_entry(predicate, terminal,
-                              source_terminal_list=[t1, t2])
-    router.remove_entry(handle)    # -> bool
+                                 source_terminal_list=[t1, t2])
+    router.remove_entry(handle)              # -> bool
 
-    router.publish(event)          # synchronous; non-blocking
+    router.publish(event)                       # synchronous; non-blocking
 
 
 SOURCE FILTERING
@@ -80,17 +80,18 @@ class EventRouter:
 
     def __init__(self):
         self._dispatcher = EventDispatcher(enforce_async_callbacks_f=False)
-        self._entries:     dict[int, "EventRouterEntry"] = {}
-        self._next_id:     int                       = 0
+        self._entries:   dict[int, "RouterEntry"] = {}
+        self._next_id:   int                       = 0
 
     # ----------------------------------------------------------------
     # Registration
     # ----------------------------------------------------------------
+
     def add_entry(self,
-                  predicate:            Callable[[Event], bool],
-                  terminal:             EventTerminal,
-                  source_terminal_list: Optional[list] = None) -> int:
-        """RETURN: int, entry handle for later remove_entry().
+                     predicate:            Callable[[Event], bool],
+                     terminal:             EventTerminal,
+                     source_terminal_list: Optional[list] = None) -> int:
+        """RETURN: int, handle for later remove_entry().
 
         Registers 'terminal' as a destination for Events matching
         'predicate'. If source_terminal_list is given, the Event is
@@ -100,14 +101,24 @@ class EventRouter:
 
         The 'predicate' is a callable Event -> bool; same form as on
         the Dispatcher.
+
+        PEER-DOWN HANDLING:
+
+        When the peer of 'terminal' sends EventTerminalDown, the
+        Router automatically removes this entry. This keeps the
+        dispatch table clean as peers disconnect. The handle becomes
+        invalid; remove_entry() on a removed-by-peer-down handle
+        returns False.
         """
         handle = self._next_id
         self._next_id += 1
 
-        entry = EventRouterEntry(handle               = handle,
-                                 terminal             = terminal,
-                                 predicate            = predicate,
-                                 source_terminal_list = source_terminal_list)
+        entry = RouterEntry(
+            handle               = handle,
+            terminal             = terminal,
+            predicate            = predicate,
+            source_terminal_list = source_terminal_list,
+        )
         entry._router_dispatcher = self._dispatcher
         self._entries[handle] = entry
 
@@ -118,6 +129,22 @@ class EventRouter:
             sink      = entry,
         )
         entry.subscription = sub
+
+        # Wire peer-down: when this terminal's peer goes away, drop
+        # the entry. Each terminal supports a single peer-down callback;
+        # if the caller had already set one, we chain it.
+        prior = getattr(terminal, "_peer_down_callback", None)
+        def _on_peer_down(h=handle, p=prior):
+            # Best-effort: ignore the result; this Router cleans up its
+            # own table. If a prior callback existed, invoke it after.
+            self.remove_entry(h)
+            if p is not None:
+                try:
+                    return p()
+                except Exception:
+                    return None
+        terminal.set_peer_down_callback(_on_peer_down)
+
         return handle
 
     def remove_entry(self, handle: int) -> bool:
@@ -134,6 +161,7 @@ class EventRouter:
     # ----------------------------------------------------------------
     # Publish
     # ----------------------------------------------------------------
+
     def publish(self, event: Event) -> None:
         """RETURN: None.
 
@@ -170,7 +198,7 @@ class EventRouter:
         return len(self._entries)
 
 
-class EventRouterEntry:
+class RouterEntry:
     """Internal: one (predicate, terminal, source_filter) row.
 
     Callable as a sync sink: when invoked with an Event, it schedules
@@ -178,7 +206,7 @@ class EventRouterEntry:
     """
 
     def __init__(self, handle, terminal, predicate, source_terminal_list):
-        """RETURN: a new EventRouterEntry."""
+        """RETURN: a new RouterEntry."""
         self.handle               = handle
         self.terminal             = terminal
         self.predicate            = predicate
@@ -214,5 +242,5 @@ class EventRouterEntry:
         try:
             asyncio.create_task(self.terminal.send(event))
         except RuntimeError as e:
-            print("EventRouterEntry.__call__: cannot forward to terminal "
+            print("RouterEntry.__call__: cannot forward to terminal "
                   "(no running loop): %s" % e, file=sys.stderr)

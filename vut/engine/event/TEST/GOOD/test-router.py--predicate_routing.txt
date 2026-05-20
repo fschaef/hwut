@@ -3,6 +3,6 @@
 len(router): 3
 
 --- publish three events; each lands on the matching Terminals ---
-seen1 (WORKFLOW)   : [('TaskDoneEvent', 1), ('TaskStartedEvent', 42)]
-seen2 (COMPILATION): [('CompilerDoneEvent', 42)]
-seen3 (task_id=42) : [('CompilerDoneEvent', 42), ('TaskStartedEvent', 42)]
+seen1 (TASK)   : [('EventTaskDone', 1), ('EventTaskStarted', 42)]
+seen2 (COMPILE): [('EventCompilerDone', 42)]
+seen3 (id=42)  : [('EventCompilerDone', 42), ('EventTaskStarted', 42)]

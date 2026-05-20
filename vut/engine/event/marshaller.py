@@ -9,35 +9,42 @@ classmethods/staticmethods, no instances exist.
     Marshaller.serialize(event)    -> wire    (dict)
     Marshaller.deserialize(wire)   -> Event   (or None on failure)
 
-DESIGN: GLOBAL CLASS-AS-SINGLETON
 
-There is no Marshaller() constructor. Specialists are declared at
-module load time in the _SPECIALISTS class attribute (currently
-empty). Producer and consumer in any pair of communicating contexts
-share the same Marshaller configuration AUTOMATICALLY, because they
-share the same build (same VUT version). No registration handshake,
-no synchronisation plumbing.
-
-Adding a specialist for a new event requires editing this file.
-The benefit is that nothing else requires editing - and
-synchronisation comes for free.
-
-
-DEFAULT WIRE FORMAT (Pattern A: external tag / envelope)
+WIRE FORMAT (Pattern A: external tag / envelope)
 
     {
-        "id":   "TaskDoneEvent",                       # class name verbatim
-        "data": {"task_id": 42, "duration_s": 1.5,     # all fields
-                 "timestamp": 100.0},                  # from the class
+        "id":   "EVENT_INFRA.EventTerminalUp",         # composite id
+        "data": {"timestamp": 100.0},                  # all fields
     }
 
-The "id" carries the Event subclass's __name__ verbatim. The Event
-base class (see event.py) sets each subclass's .id to its __name__
-in __init_subclass__ and registers it in CLASS_BY_ID.
+The "id" is the Event subclass's composite identity
+("<category>.<class_name>"). Deserialise looks the class up via
+event.lookup_event_class() (one flat-dict access).
 
-The "data" is the result of the Event class's TypeAdapter.dump_python();
-deserialisation looks up the class via CLASS_BY_ID[id] and calls its
-TypeAdapter.validate_python() through Event.from_dict().
+
+SPECIALISTS
+
+Per-event-id overrides live in _SPECIALISTS, keyed by the full wire
+id ("CATEGORY.ClassName"). Currently empty. Adding a specialist
+requires editing this file.
+
+Producer and consumer in a pair of communicating contexts share the
+same Marshaller configuration AUTOMATICALLY because they share the
+same build.
+
+
+FUTURE DIRECTION: Construct
+
+Specialists are a natural place to plug in `construct`
+(https://construct.readthedocs.io) for compact binary wire formats.
+Construct and Pydantic compose cleanly across a wire boundary:
+Pydantic handles structured-data validation (per-field types,
+constraints, JSON round-trip) while Construct handles binary layout
+(bit-packing, endianness, alignment, length prefixes). For events
+where every byte matters - high-frequency events on a fast network,
+say - a Construct-based specialist can replace the default JSON
+envelope without touching anything else in the package. Left as a
+note for whoever profiles the wire and finds it worth doing.
 ________________________________________________________________________________
 """
 import sys
@@ -45,7 +52,7 @@ import sys
 from types   import MappingProxyType
 from typing  import Callable
 
-from vut.engine.event.event   import Event, CLASS_BY_ID
+from vut.engine.event.event import Event, lookup_event_class
 
 
 SerializeFn   = Callable[[Event], dict]
@@ -64,8 +71,8 @@ class Marshaller:
         event = Event.deserialize(wire)
     """
 
-    # Specialists override the default per event id (the class name).
-    # Currently empty. Add an entry here when an event needs custom
+    # Specialists override the default per composite event id. Empty
+    # by default. Add an entry here when an event needs custom
     # transport (compression, schema bridging, etc.).
     _SPECIALISTS: MappingProxyType = MappingProxyType({})
 
@@ -94,7 +101,9 @@ class Marshaller:
                   file=sys.stderr)
             return None
 
-        if event_id not in CLASS_BY_ID:
+        # Composite id "<category>.<class_name>"; look up the class.
+        event_cls = lookup_event_class(event_id)
+        if event_cls is None:
             print("Marshaller.deserialize: unknown id %r" % event_id,
                   file=sys.stderr)
             return None
@@ -102,7 +111,7 @@ class Marshaller:
         specialist = cls._SPECIALISTS.get(event_id)
         if specialist is not None:
             return specialist[1](wire)
-        return cls._deserialize_default(wire, event_id)
+        return cls._deserialize_default(wire, event_cls)
 
     # ------------------------------------------------------------------
     # Default scheme
@@ -112,7 +121,7 @@ class Marshaller:
     def _serialize_default(event: Event) -> dict:
         """RETURN: dict, the default envelope form of event.
 
-        Two-key envelope: id (class name verbatim) + data (all fields).
+        Two-key envelope: id (composite "<category>.<name>") + data.
         """
         return {
             "id":   event.id,
@@ -120,21 +129,15 @@ class Marshaller:
         }
 
     @staticmethod
-    def _deserialize_default(wire: dict, event_id: str) -> "Event | None":
-        """RETURN: Event,  if the data validates against the right Event subclass.
-                   None,   on validation failure, missing data, or unknown class.
+    def _deserialize_default(wire: dict, event_cls: type) -> "Event | None":
+        """RETURN: Event,  if the data validates against the resolved class.
+                   None,   on malformed envelope or validation failure.
         """
-        event_cls = CLASS_BY_ID.get(event_id)
-        if event_cls is None:
-            print("Marshaller.deserialize: no Event class for %r" % event_id,
-                  file=sys.stderr)
-            return None
-
         try:
             data = wire["data"]
         except (KeyError, TypeError) as e:
-            print("Marshaller.deserialize: malformed envelope for %r (%s)"
-                  % (event_id, e), file=sys.stderr)
+            print("Marshaller.deserialize: malformed envelope (%s)" % e,
+                  file=sys.stderr)
             return None
 
         # Delegate to the class's from_dict, which uses its TypeAdapter

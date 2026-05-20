@@ -1,9 +1,10 @@
 
 --- send before stop works ---
 
---- stop both terminals ---
-a stopped: True
-b stopped: True
+--- stop A; B's peer-down callback fires ---
+a.state: DOWN
+b.state after peer Down: DOWN
+peer_down_seen: ['b saw peer Down']
 
 --- send after stop raises ---
 RuntimeError raised (expected)

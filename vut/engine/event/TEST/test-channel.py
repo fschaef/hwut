@@ -32,10 +32,25 @@ import asyncio
 import sys
 import config                                                       # noqa: F401
 
+from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.event                           import (TaskDoneEvent,
-                                                        CompilerDoneEvent,
+from vut.engine.event                           import (Event,
+                                                        category,
                                                         EventChannelParameter)
+
+
+# Test-local event vocabulary.
+with category("TEST_LOCAL_CHANNEL"):
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventTaskDone(Event):
+        task_id:    int
+        duration_s: float
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventCompilerDone(EventTaskDone):
+        source: str
+        output: str
 
 
 def banner(label):
@@ -51,7 +66,7 @@ async def _async():
     b_ch = await b_ecp.make_channel()
 
     banner("A sends, B receives")
-    await a_ch.send(TaskDoneEvent(task_id=1, duration_s=1.0, timestamp=10.0))
+    await a_ch.send(EventTaskDone(task_id=1, duration_s=1.0, timestamp=10.0))
     ev = await b_ch.receive()
     print("type:        %s" % type(ev).__name__)
     print("task_id:     %d" % ev.task_id)
@@ -59,7 +74,7 @@ async def _async():
     print("timestamp:   %s" % ev.timestamp)
 
     banner("B sends, A receives (bidirectional)")
-    await b_ch.send(CompilerDoneEvent(task_id=2, source="a.c",
+    await b_ch.send(EventCompilerDone(task_id=2, source="a.c",
                                       output="a.o", duration_s=0.5,
                                       timestamp=20.0))
     ev = await a_ch.receive()
@@ -79,7 +94,7 @@ async def _thread():
     b_ch = await b_ecp.make_channel()
 
     banner("A sends, B receives via thread queue")
-    await a_ch.send(TaskDoneEvent(task_id=42, duration_s=2.0, timestamp=10.0))
+    await a_ch.send(EventTaskDone(task_id=42, duration_s=2.0, timestamp=10.0))
     ev = await b_ch.receive()
     print("type:        %s" % type(ev).__name__)
     print("task_id:     %d" % ev.task_id)
@@ -96,13 +111,13 @@ async def _process():
     b_ch = await b_ecp.make_channel()
 
     banner("A sends, B receives via mp.Queue with Marshaller wire format")
-    sent = TaskDoneEvent(task_id=99, duration_s=3.5, timestamp=10.0)
+    sent = EventTaskDone(task_id=99, duration_s=3.5, timestamp=10.0)
     await a_ch.send(sent)
     ev = await b_ch.receive()
     print("type:        %s" % type(ev).__name__)
     print("task_id:     %d" % ev.task_id)
     print("duration_s:  %s" % ev.duration_s)
-    print("type matches: %s" % (type(ev) is TaskDoneEvent))
+    print("type matches: %s" % (type(ev) is EventTaskDone))
 
     await a_ch.close()
     await b_ch.close()
@@ -125,7 +140,7 @@ async def _close():
 
     banner("send on closed channel raises RuntimeError")
     try:
-        await b_ch.send(TaskDoneEvent(task_id=1, duration_s=1.0))
+        await b_ch.send(EventTaskDone(task_id=1, duration_s=1.0))
         print("UNEXPECTED: send succeeded")
     except RuntimeError as e:
         print("RuntimeError raised (expected)")

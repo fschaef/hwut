@@ -1,0 +1,8 @@
+
+--- normal context-manager use ---
+a got: ['EventTaskDone']
+a.state inside with: UP
+b.state inside with: UP
+
+--- exit on exception still calls stop() ---
+ValueError propagated out of async-with (expected): test-induced failure

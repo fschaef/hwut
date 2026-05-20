@@ -2,56 +2,44 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: Test the concrete Event subclasses.
+PURPOSE: Test the shipped EVENT_INFRA events and the registration lock.
 
-CHOICES: construction, str, inheritance, frozen, metadata, collision;
+CHOICES: shipped, frozen, collision, inheritance, lock;
 
 DESCRIPTION:
 
-In the class-name-as-id design, each concrete Event subclass IS the
-event kind. The class auto-registers in CLASS_BY_ID under its
-__name__ at class-definition time; the .id class attribute is set
-to that name.
+The event package itself ships only two events: EventTerminalUp and
+EventTerminalDown, both in the EVENT_INFRA category. Other events
+are declared by users in their own modules.
 
-    construction    -- subclasses construct via keyword arguments;
-                       fields are accessible.
+    shipped     -- EventTerminalUp and EventTerminalDown construct,
+                   have the expected .id and .category, and serialise
+                   round-trip.
 
-    str             -- __str__ produces the human-readable form;
-                       optional fields are handled.
+    frozen      -- instances are immutable.
 
-    inheritance     -- CompilerDoneEvent IS-A TaskDoneEvent;
-                       inherits parent fields; each gets its own .id
-                       (not inherited).
+    collision   -- two Event classes with the same name in the same
+                   category raise EventIdCollision; the same name in
+                   DIFFERENT categories is fine.
 
-    frozen          -- instances cannot be mutated.
+    inheritance -- a user-defined event can inherit fields from another
+                   event in a different category and gets its own .id.
 
-    metadata        -- class-level .id (== __name__) and .category
-                       are correct for each concrete subclass.
-
-    collision       -- defining two Event subclasses with the same
-                       class name raises EventIdCollision.
+    lock        -- after Event.lock_registration(), opening a category
+                   or defining an Event raises EventRegistrationLocked.
 ______________________________________________________________________________
 """
 import sys
 import config                                                       # noqa: F401
 
 from dataclasses                                import FrozenInstanceError, dataclass
-from typing                                     import ClassVar
 from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.event                           import (E_EventCategory,
-                                                        Event,
+from vut.engine.event                           import (Event,
+                                                        category,
                                                         EventIdCollision,
-                                                        TaskStartedEvent,
-                                                        TaskDoneEvent,
-                                                        TaskFailedEvent,
-                                                        TaskProgressEvent,
-                                                        TaskCancelledEvent,
-                                                        CompilerNoSourceEvent,
-                                                        CompilerDoneEvent,
-                                                        ArtifactAvailableEvent,
-                                                        ArtifactImpossibleEvent,
-                                                        WorkflowTaskCancelledEvent,
-                                                        all_event_classes)
+                                                        EventRegistrationLocked,
+                                                        EventTerminalUp,
+                                                        EventTerminalDown)
 
 
 def banner(label):
@@ -60,227 +48,159 @@ def banner(label):
     print("--- %s ---" % label)
 
 
-def run_construction():
+def run_shipped():
     """RETURN: None.
 
-    Builds one instance of each concrete event subclass and prints
-    type and id. Uses explicit timestamp for stable output.
+    Constructs each shipped event, prints metadata, and round-trips
+    through the wire format.
     """
-    cases = [
-        TaskStartedEvent  (task_id=1, timestamp=10.0),
-        TaskDoneEvent     (task_id=1, duration_s=1.5, timestamp=10.0),
-        TaskFailedEvent   (task_id=1, reason="boom", timestamp=10.0),
-        TaskProgressEvent (task_id=1, fraction=0.5,  timestamp=10.0),
-        TaskCancelledEvent(task_id=1, timestamp=10.0),
+    banner("EventTerminalUp")
+    up = EventTerminalUp(timestamp=10.0)
+    print("type:      %s" % type(up).__name__)
+    print("category:  %s" % up.category)
+    print("id:        %s" % up.id)
+    print("str:       %s" % str(up))
+    wire = up.serialize()
+    print("wire:      %s" % wire)
+    back = Event.deserialize(wire)
+    print("back type: %s" % type(back).__name__)
 
-        CompilerNoSourceEvent(task_id=2, expected="main.c", timestamp=10.0),
-        CompilerDoneEvent    (task_id=2, source="main.c", output="main.o",
-                              duration_s=0.3, timestamp=10.0),
-
-        ArtifactAvailableEvent (task_id=3, artifact_id=7,
-                                timestamp=10.0),
-        ArtifactImpossibleEvent(task_id=3, artifact_id=8,
-                                reason="cycle", timestamp=10.0),
-        WorkflowTaskCancelledEvent(task_id=4, timestamp=10.0),
-    ]
-    banner("construction of every concrete event class")
-    for ev in cases:
-        print("%-30s id=%-30s" % (type(ev).__name__, ev.id))
-
-
-def run_str():
-    """RETURN: None.
-
-    Demonstrates __str__ for each class.
-    """
-    banner("TaskStartedEvent")
-    print(str(TaskStartedEvent(task_id=1, timestamp=0)))
-
-    banner("TaskDoneEvent")
-    print(str(TaskDoneEvent(task_id=1, duration_s=2.0, timestamp=0)))
-
-    banner("TaskFailedEvent")
-    print(str(TaskFailedEvent(task_id=1, reason="exit code 1", timestamp=0)))
-
-    banner("TaskProgressEvent without note")
-    print(str(TaskProgressEvent(task_id=1, fraction=0.25, timestamp=0)))
-
-    banner("TaskProgressEvent with note")
-    print(str(TaskProgressEvent(task_id=1, fraction=0.50,
-                                note="linking", timestamp=0)))
-
-    banner("TaskCancelledEvent")
-    print(str(TaskCancelledEvent(task_id=1, timestamp=0)))
-
-    banner("CompilerNoSourceEvent")
-    print(str(CompilerNoSourceEvent(task_id=2, expected="x.c", timestamp=0)))
-
-    banner("CompilerDoneEvent")
-    print(str(CompilerDoneEvent(task_id=2, source="x.c", output="x.o",
-                                duration_s=0.5, timestamp=0)))
-
-    banner("ArtifactAvailableEvent")
-    print(str(ArtifactAvailableEvent(task_id=3, artifact_id=7, timestamp=0)))
-
-    banner("ArtifactImpossibleEvent without reason")
-    print(str(ArtifactImpossibleEvent(task_id=3, artifact_id=8, timestamp=0)))
-
-    banner("ArtifactImpossibleEvent with reason")
-    print(str(ArtifactImpossibleEvent(task_id=3, artifact_id=8,
-                                      reason="cycle", timestamp=0)))
-
-    banner("WorkflowTaskCancelledEvent")
-    print(str(WorkflowTaskCancelledEvent(task_id=4, timestamp=0)))
-
-
-def run_inheritance():
-    """RETURN: None.
-
-    CompilerDoneEvent inherits from TaskDoneEvent. The relationship
-    is checked via isinstance and via field inheritance. Each concrete
-    class gets its own .id (its own __name__), NOT the parent's.
-    """
-    banner("CompilerDoneEvent IS-A TaskDoneEvent")
-    ev = CompilerDoneEvent(task_id=42, source="a.c", output="a.o",
-                           duration_s=1.5, timestamp=0)
-    print("isinstance Event:             %s" % isinstance(ev, Event))
-    print("isinstance TaskDoneEvent:     %s" % isinstance(ev, TaskDoneEvent))
-    print("isinstance CompilerDoneEvent: %s" % isinstance(ev, CompilerDoneEvent))
-
-    banner("inherits parent's fields")
-    print("ev.task_id:    %d" % ev.task_id)         # from TaskDoneEvent
-    print("ev.duration_s: %s" % ev.duration_s)      # from TaskDoneEvent
-    print("ev.source:     %s" % ev.source)          # own
-    print("ev.output:     %s" % ev.output)          # own
-
-    banner("each gets its own id (NOT inherited)")
-    print("TaskDoneEvent.id:     %s" % TaskDoneEvent.id)
-    print("CompilerDoneEvent.id: %s" % CompilerDoneEvent.id)
-    print("distinct:             %s" % (TaskDoneEvent.id != CompilerDoneEvent.id))
-
-    banner("Compiler overrides .category")
-    print("TaskDoneEvent.category:     %s" % TaskDoneEvent.category.name)
-    print("CompilerDoneEvent.category: %s" % CompilerDoneEvent.category.name)
+    banner("EventTerminalDown")
+    down = EventTerminalDown(timestamp=20.0)
+    print("type:      %s" % type(down).__name__)
+    print("category:  %s" % down.category)
+    print("id:        %s" % down.id)
+    print("str:       %s" % str(down))
 
 
 def run_frozen():
     """RETURN: None.
 
-    Demonstrates that instances are immutable (frozen=True).
+    Both shipped events are frozen dataclasses; assignment is refused.
     """
-    ev = TaskDoneEvent(task_id=1, duration_s=1.0, timestamp=0)
-
-    banner("attempt to assign .task_id")
+    up = EventTerminalUp(timestamp=10.0)
+    banner("EventTerminalUp .timestamp = ...")
     try:
-        ev.task_id = 99
-        print("UNEXPECTED: assignment succeeded")
+        up.timestamp = 99.0
+        print("UNEXPECTED: assignment accepted")
     except FrozenInstanceError:
         print("FrozenInstanceError raised (expected)")
 
-    banner("attempt to assign .duration_s")
+    down = EventTerminalDown(timestamp=20.0)
+    banner("EventTerminalDown .timestamp = ...")
     try:
-        ev.duration_s = 99.0
-        print("UNEXPECTED: assignment succeeded")
+        down.timestamp = 99.0
+        print("UNEXPECTED: assignment accepted")
     except FrozenInstanceError:
         print("FrozenInstanceError raised (expected)")
-
-    banner("attempt to assign .timestamp")
-    try:
-        ev.timestamp = 99.0
-        print("UNEXPECTED: assignment succeeded")
-    except FrozenInstanceError:
-        print("FrozenInstanceError raised (expected)")
-
-
-def run_metadata():
-    """RETURN: None.
-
-    For every concrete Event subclass, checks that .id equals
-    __name__ and .category is the right enum value.
-    """
-    expected = [
-        (TaskStartedEvent,           "TaskStartedEvent",           E_EventCategory.WORKFLOW),
-        (TaskDoneEvent,              "TaskDoneEvent",              E_EventCategory.WORKFLOW),
-        (TaskFailedEvent,            "TaskFailedEvent",            E_EventCategory.WORKFLOW),
-        (TaskProgressEvent,          "TaskProgressEvent",          E_EventCategory.WORKFLOW),
-        (TaskCancelledEvent,         "TaskCancelledEvent",         E_EventCategory.WORKFLOW),
-        (CompilerNoSourceEvent,      "CompilerNoSourceEvent",      E_EventCategory.COMPILATION),
-        (CompilerDoneEvent,          "CompilerDoneEvent",          E_EventCategory.COMPILATION),
-        (ArtifactAvailableEvent,     "ArtifactAvailableEvent",     E_EventCategory.WORKFLOW),
-        (ArtifactImpossibleEvent,    "ArtifactImpossibleEvent",    E_EventCategory.WORKFLOW),
-        (WorkflowTaskCancelledEvent, "WorkflowTaskCancelledEvent", E_EventCategory.WORKFLOW),
-    ]
-    banner("class metadata: .id equals __name__, .category as declared")
-    for cls, exp_id, exp_cat in expected:
-        print("%-30s id=%-28s cat=%-12s ok=%s" % (
-            cls.__name__, cls.id, cls.category.name,
-            cls.id == exp_id and cls.category is exp_cat
-        ))
-
-    banner("all_event_classes() count")
-    print("count: %d" % len(all_event_classes()))
 
 
 def run_collision():
     """RETURN: None.
 
-    Defining a new Event subclass with a name that already exists
-    raises EventIdCollision at class-creation time. We attempt three
-    collisions and confirm each raises.
+    Same name in same category raises; same name in different categories
+    is fine.
     """
-    banner("collision with TaskDoneEvent (already registered in events.py)")
-    try:
+    banner("define EventThing in TEST_EV_COL_A")
+    with category("TEST_EV_COL_A"):
         @dataclass(frozen=True, kw_only=True)
-        class TaskDoneEvent(Event):     # noqa: F811  intentional collision
-            category: ClassVar[E_EventCategory] = E_EventCategory.WORKFLOW
-            task_id: int
-        print("UNEXPECTED: collision accepted")
-    except EventIdCollision as e:
-        msg = str(e)
-        # Print only the leading identifying portion to keep output
-        # stable across modules with varying __module__ strings.
-        head = msg.split(";")[0]
-        print("EventIdCollision raised: %s" % head)
+        class EventThing(Event):
+            x: int
+    print("EventThing.id: %s" % EventThing.id)
 
-    banner("collision with CompilerDoneEvent")
+    banner("define EventThing again in TEST_EV_COL_A -- collision")
     try:
-        @dataclass(frozen=True, kw_only=True)
-        class CompilerDoneEvent(Event):    # noqa: F811
-            category: ClassVar[E_EventCategory] = E_EventCategory.COMPILATION
-            task_id: int
-        print("UNEXPECTED: collision accepted")
+        with category("TEST_EV_COL_A"):
+            @dataclass(frozen=True, kw_only=True)
+            class EventThing(Event):                # noqa: F811
+                x: int
+        print("UNEXPECTED: accepted")
     except EventIdCollision as e:
         head = str(e).split(";")[0]
         print("EventIdCollision raised: %s" % head)
 
-    banner("non-colliding definition works")
-    @dataclass(frozen=True, kw_only=True)
-    class _OneShotTestEvent(Event):
-        category: ClassVar[E_EventCategory] = E_EventCategory.DIAGNOSTIC
-        token: str
-    print("class defined OK: %s" % _OneShotTestEvent.id)
-
-    banner("redefining the same novel name DOES collide")
-    try:
+    banner("define EventThing in TEST_EV_COL_B -- different category, OK")
+    with category("TEST_EV_COL_B"):
         @dataclass(frozen=True, kw_only=True)
-        class _OneShotTestEvent(Event):    # noqa: F811
-            category: ClassVar[E_EventCategory] = E_EventCategory.DIAGNOSTIC
-            token: str
-        print("UNEXPECTED: re-registration accepted")
-    except EventIdCollision as e:
-        head = str(e).split(";")[0]
-        print("EventIdCollision raised: %s" % head)
+        class EventThing(Event):                    # noqa: F811
+            x: int
+    print("new class registered: id=%s" % EventThing.id)
+
+
+def run_inheritance():
+    """RETURN: None.
+
+    A user-defined event may inherit fields from another event in a
+    DIFFERENT category. The child gets its own .category and .id.
+    """
+    banner("define EventBase in TEST_EV_INH_A")
+    with category("TEST_EV_INH_A"):
+        @dataclass(frozen=True, kw_only=True)
+        class EventBase(Event):
+            task_id:    int
+            duration_s: float
+
+            def __str__(self) -> str:
+                return "base id=%d t=%.1f" % (self.task_id, self.duration_s)
+
+    banner("define EventDerived(EventBase) in TEST_EV_INH_B")
+    with category("TEST_EV_INH_B"):
+        @dataclass(frozen=True, kw_only=True)
+        class EventDerived(EventBase):
+            source: str
+
+            def __str__(self) -> str:
+                return "derived %s id=%d" % (self.source, self.task_id)
+
+    ev = EventDerived(task_id=42, duration_s=1.5, source="x.c")
+    print("EventBase.id:        %s" % EventBase.id)
+    print("EventDerived.id:     %s" % EventDerived.id)
+    print("ids distinct:        %s" % (EventBase.id != EventDerived.id))
+    print("isinstance EventBase: %s" % isinstance(ev, EventBase))
+    print("derived inherits task_id: %d" % ev.task_id)
+    print("derived adds source:      %s" % ev.source)
+    print("str: %s" % str(ev))
+
+
+def run_lock():
+    """RETURN: None.
+
+    After Event.lock_registration(), opening a category raises. Each
+    HwutRunner choice runs in its own subprocess so module-level state
+    does not leak between choices.
+    """
+    banner("pre-lock: registration works")
+    with category("TEST_EV_LOCK_PRE"):
+        @dataclass(frozen=True, kw_only=True)
+        class EventBefore(Event):
+            x: int
+    print("pre-lock id: %s" % EventBefore.id)
+
+    banner("lock_registration()")
+    Event.lock_registration()
+    print("is_registration_locked: %s" % Event.is_registration_locked())
+
+    banner("post-lock: opening a category raises")
+    try:
+        with category("TEST_EV_LOCK_POST"):
+            pass
+        print("UNEXPECTED: accepted")
+    except EventRegistrationLocked as e:
+        print("EventRegistrationLocked raised: %s" % str(e))
+
+    banner("lock is idempotent")
+    Event.lock_registration()
+    print("still locked: %s" % Event.is_registration_locked())
 
 
 HwutRunner(
     argv       = sys.argv,
-    title      = "Concrete Event subclasses",
+    title      = "Shipped events and registration lock",
     choice_map = {
-        "construction": run_construction,
-        "str":          run_str,
-        "inheritance":  run_inheritance,
-        "frozen":       run_frozen,
-        "metadata":     run_metadata,
-        "collision":    run_collision,
+        "shipped":     run_shipped,
+        "frozen":      run_frozen,
+        "collision":   run_collision,
+        "inheritance": run_inheritance,
+        "lock":        run_lock,
     },
 ).run()

@@ -1,83 +1,101 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: Event base class.
+PURPOSE: Event base class, registration, category context, lock.
 
 An Event is a frozen dataclass holding the data for one occurrence of
-one event kind. Every concrete event in the system is a subclass of
-Event with:
+one event kind. Concrete event classes are registered into a category
+via a context manager:
 
-    -- a category class attribute (E_EventCategory)
-    -- instance-level fields (the data)
-    -- a __str__ override that renders the event human-readably
+    with category("WORKFLOW"):
+        class EventTaskStarted(Event):
+            test_name: str
+            ...
+        class EventTaskDone(Event):
+            ...
 
-IDENTITY IS DERIVED FROM THE CLASS NAME.
+IDENTITY:
 
-Each concrete subclass automatically gets an .id class attribute
-equal to its own __name__ (e.g. TaskDoneEvent.id == "TaskDoneEvent").
-There is NO separate E_EventId enum to maintain in parallel.
+Each concrete subclass gets:
+    .category       set from the open category context
+    .id             composite string "<category>.<__name__>"
 
-Adding a new event is ONE step: define the subclass. The id, the
-TypeAdapter, and the CLASS_BY_ID registration all happen
-automatically in __init_subclass__.
+CLASS_BY_ID maps (category, class_name) -> Event subclass, nested:
+    CLASS_BY_ID["WORKFLOW"]["EventTaskDone"]   ==   EventTaskDone
 
-UNIQUENESS IS ENFORCED AT CLASS CREATION.
+WIRE ID:
 
-All concrete Event subclasses share a single namespace via the
-module-level CLASS_BY_ID dict. Two subclasses with the same name
-collide; this is a programmer error (it would silently misroute
-events) so it raises EventIdCollision at class-definition time.
-The collision cannot be handled at runtime - the module would not
-finish importing.
+The .id attribute is the wire identifier. E.g.:
+    EventTaskDone.id         == "WORKFLOW.EventTaskDone"
+    event.id                 == "WORKFLOW.EventTaskDone"
 
-Note: SUBCLASSES sharing a name with their PARENT do not collide
-because the parent is already registered under that name. Inheriting
-without renaming is unusual; if it happens, the subclass will collide
-with itself and raise. Concrete subclasses should always have unique
-class names.
+The "." separator is reserved; category strings cannot contain it.
 
 
-WIRE INTERFACE
+CATEGORY CONTEXT
 
-Two methods are the bridge to/from the wire:
+Categories are user-defined strings. A category is opened with the
+`category(name)` context manager; every Event subclass created
+inside the `with` block joins that category. Outside any open
+category, defining an Event subclass raises
+EventDefinitionOutsideCategoryContext.
 
-    event.as_dict()                 -> dict   (just the data fields)
-    SomeEventClass.from_dict(d)     -> Event  (or None on validation error)
-
-The Marshaller wraps these with an envelope carrying the id; see
-marshaller.py.
+Multiple files may contribute to the same category (re-opening is
+permitted). Nesting is disallowed - one category open at a time.
 
 
-VERSIONING (deferred design)
+REGISTRATION LOCK
 
-Event identity is now the class name itself; renaming a class
-breaks every consumer producing or consuming that class on the
-wire. This makes "do not rename event types lightly" a hard
-discipline rather than a soft convention.
+Once `Event.lock_registration()` has been called, opening a category
+or defining an Event subclass raises EventRegistrationLocked. This is
+a one-way switch: there is no unlock. The intended usage is for a
+system's startup sequence to lock after all required modules have
+been imported.
 
-Cross-build replay is UNDEFINED. See DISCUSSIONS.txt for the full
-versioning conversation.
+
+PYDANTIC
+
+Each concrete class has a per-class TypeAdapter, created lazily on
+first use of .as_dict() / .from_dict(). The adapter validates and
+serialises the dataclass.
 ________________________________________________________________________________
 """
 import sys
 import time
 
+from contextlib  import contextmanager
 from dataclasses import dataclass, field
 from typing      import ClassVar
 
 from pydantic    import TypeAdapter, ValidationError
 
-from vut.engine.event.enums import E_EventCategory
-
 
 # ============================================================================
-# Module-level registry of all concrete Event subclasses, keyed by class name.
-# Populated by Event.__init_subclass__ as each subclass is defined.
+# Module-level registry of all concrete Event subclasses, keyed by the
+# composite wire id "<category>.<class_name>".
+#
+# Flat dict by design: this is exactly what the Marshaller has in hand
+# when it parses an incoming wire envelope ("WORKFLOW.EventTaskDone"
+# comes in as one string), so lookup is one dict access. Per-category
+# enumeration is a helper (events_in_category()), not the primary shape.
 # ============================================================================
 CLASS_BY_ID: dict[str, type] = {}
 
 
+# ----------------------------------------------------------------------------
+# Internal state:
+#   _current_category    name of the currently-open category, or None.
+#   _registration_locked True once lock_registration() has been called.
+# ----------------------------------------------------------------------------
+_current_category:    "str | None" = None
+_registration_locked: bool         = False
+
+
+# ============================================================================
+# Exceptions
+# ============================================================================
+
 class EventIdCollision(Exception):
-    """Raised when two Event subclasses share a class name.
+    """Raised when two Event subclasses in the same category share a class name.
 
     A programmer error caught at class-definition time. It cannot be
     handled at runtime - the module that defined the offending second
@@ -86,24 +104,110 @@ class EventIdCollision(Exception):
     pass
 
 
+class EventDefinitionOutsideCategoryContext(Exception):
+    """Raised when an Event subclass is defined outside any open category.
+
+    The fix is to wrap the class definition in a `with category("X"):`
+    block.
+    """
+    pass
+
+
+class EventRegistrationLocked(Exception):
+    """Raised when registration is attempted after Event.lock_registration().
+
+    Once locked, no new categories may be opened and no new Event
+    subclasses may be created. This is a one-way switch.
+    """
+    pass
+
+
+# ============================================================================
+# Category context
+# ============================================================================
+
+@contextmanager
+def category(name: str):
+    """Open a category for the duration of the `with` block.
+
+    Every Event subclass defined inside the block joins this category.
+
+    Constraints:
+        -- the name must not contain '.' (reserved as wire-id separator)
+        -- nesting is not allowed; opening while a category is open raises
+        -- once Event.lock_registration() has been called, opening raises
+
+    Re-opening a category (same name, separate `with` block, possibly
+    in a different module) is permitted: the new block adds events to
+    the existing category. Same-name collisions inside the category
+    still raise EventIdCollision.
+    """
+    global _current_category
+
+    if _registration_locked:
+        raise EventRegistrationLocked(
+            "Cannot open category %r: registration is locked." % name
+        )
+
+    if not isinstance(name, str) or not name:
+        raise ValueError(
+            "Category name must be a non-empty string; got %r" % (name,)
+        )
+
+    if "." in name:
+        raise ValueError(
+            "Category name %r must not contain '.' "
+            "(the '.' is reserved as the wire-id separator)." % name
+        )
+
+    if _current_category is not None:
+        raise RuntimeError(
+            "Cannot open category %r: category %r is already open. "
+            "Nesting of category() blocks is not allowed." % (
+                name, _current_category,
+            )
+        )
+
+    _current_category = name
+
+    try:
+        yield name
+    finally:
+        # Always clear, even if the with-block raised. This is the whole
+        # point of using a context manager instead of paired open/close
+        # function calls.
+        _current_category = None
+
+
+# ============================================================================
+# Event base class
+# ============================================================================
+
 @dataclass(frozen=True, kw_only=True)
 class Event:
     """Base class for all events.
 
-    Subclasses declare:
-        -- a category class attribute (E_EventCategory)
-        -- instance fields (the data)
-        -- a __str__ override
+    Subclasses are defined inside `with category("X"):` blocks:
 
-    The .id class attribute is auto-derived from the class name in
-    __init_subclass__. See module header for design rationale.
+        with category("WORKFLOW"):
+            class EventTaskDone(Event):
+                task_id:    int
+                duration_s: float
+                def __str__(self): ...
+
+    On class creation, Event.__init_subclass__:
+        -- reads the currently-open category (raises if none)
+        -- sets cls.category and cls.id
+        -- registers cls in CLASS_BY_ID[category][__name__]
+        -- raises EventIdCollision on duplicate name within the category
+
+    .id is the composite wire id, e.g. "WORKFLOW.EventTaskDone".
     """
 
-    # Class-level metadata. .id is set automatically in __init_subclass__
-    # to the subclass's __name__. .category MUST be overridden by each
-    # concrete subclass.
-    id:       ClassVar[str]             = None     # auto-set
-    category: ClassVar[E_EventCategory] = None     # set by subclasses
+    # Class-level metadata. Set by __init_subclass__; never declared
+    # explicitly on subclasses.
+    category: ClassVar[str] = None     # set by __init_subclass__
+    id:       ClassVar[str] = None     # set by __init_subclass__, e.g. "WORKFLOW.EventTaskDone"
 
     # Pydantic adapter cache. Created lazily on first use; see
     # _get_adapter().
@@ -125,35 +229,75 @@ class Event:
         processing the subclass's fields; an eager adapter would miss
         those fields.
         """
-        # Use __dict__ lookup (not attribute lookup) so that we do NOT
-        # inherit a parent class's adapter - each subclass gets its own.
-        if '_adapter' not in cls.__dict__ or cls.__dict__['_adapter'] is None:
+        # Use __dict__ lookup (not attribute lookup) so each subclass
+        # gets its own adapter rather than inheriting the parent's.
+        if "_adapter" not in cls.__dict__ or cls.__dict__["_adapter"] is None:
             cls._adapter = TypeAdapter(cls)
         return cls._adapter
 
     def __init_subclass__(cls, **kwargs):
-        """Auto-derive .id from class name, enforce uniqueness, register.
+        """RETURN: None.
 
-        Sets cls.id = cls.__name__ and registers cls in CLASS_BY_ID.
-        Raises EventIdCollision if the name is already taken.
+        Stamps cls.category and cls.id, then registers cls in
+        CLASS_BY_ID. Raises EventRegistrationLocked if locked,
+        EventDefinitionOutsideCategoryContext if no category is open,
+        EventIdCollision if the name is already taken in this category.
         """
         super().__init_subclass__(**kwargs)
 
-        name = cls.__name__
-        if name in CLASS_BY_ID:
-            existing = CLASS_BY_ID[name]
+        if _registration_locked:
+            raise EventRegistrationLocked(
+                "Cannot define Event subclass %s.%s: registration is locked." % (
+                    cls.__module__, cls.__qualname__,
+                )
+            )
+
+        if _current_category is None:
+            raise EventDefinitionOutsideCategoryContext(
+                "Event subclass %s.%s defined outside any category context. "
+                "Wrap the class definition in `with category(\"NAME\"):`." % (
+                    cls.__module__, cls.__qualname__,
+                )
+            )
+
+        name      = cls.__name__
+        composite = "%s.%s" % (_current_category, name)
+
+        if composite in CLASS_BY_ID:
+            existing = CLASS_BY_ID[composite]
             raise EventIdCollision(
-                "Event subclass name %r is already registered to %s.%s; "
-                "cannot also register %s.%s. All Event subclasses must "
-                "have unique class names across the whole system." % (
-                    name,
+                "Event subclass name %r is already registered in category %r "
+                "to %s.%s; cannot also register %s.%s. Event names must be "
+                "unique within a category." % (
+                    name, _current_category,
                     existing.__module__, existing.__qualname__,
                     cls.__module__,      cls.__qualname__,
                 )
             )
 
-        cls.id = name
-        CLASS_BY_ID[name] = cls
+        cls.category         = _current_category
+        cls.id               = composite
+        CLASS_BY_ID[composite] = cls
+
+    @classmethod
+    def lock_registration(cls):
+        """RETURN: None.
+
+        Permanently disable further category openings and Event-subclass
+        creations. One-way switch; there is no unlock. Calling more than
+        once is a no-op.
+
+        Intended use: after a system's startup sequence has imported
+        every module whose events should exist in this run, the system
+        calls Event.lock_registration() to seal the registry.
+        """
+        global _registration_locked
+        _registration_locked = True
+
+    @classmethod
+    def is_registration_locked(cls) -> bool:
+        """RETURN: bool, True if lock_registration() has been called."""
+        return _registration_locked
 
     def __str__(self) -> str:
         """RETURN: str, human-readable rendering.
@@ -180,12 +324,12 @@ class Event:
 
     @classmethod
     def from_dict(cls, d: dict) -> "Event | None":
-        """RETURN: cls instance, if d validates against cls's schema.
-                   None,         on validation failure (stderr diagnostic).
+        """RETURN: cls instance,   if d validates against cls's schema.
+                   None,            on validation failure (stderr diagnostic).
 
         This is called on a CONCRETE subclass, e.g.
-        TaskDoneEvent.from_dict({...}). The Marshaller dispatches to
-        the right subclass via CLASS_BY_ID before calling this.
+        EventTaskDone.from_dict({...}). The Marshaller dispatches to
+        the right subclass via lookup_event_class before calling this.
         """
         try:
             return cls._get_adapter().validate_python(d)
@@ -203,15 +347,15 @@ class Event:
         is a global class-as-singleton; no configuration is needed
         at the call site.
         """
-        # Local import to break the event <-> marshaller cycle at module
-        # load. The Marshaller imports Event, CLASS_BY_ID, etc.
+        # Local import to break the event <-> marshaller cycle at
+        # module load.
         from vut.engine.event.marshaller import Marshaller
         return Marshaller.serialize(self)
 
     @classmethod
     def deserialize(cls, wire: dict) -> "Event | None":
-        """RETURN: Event, if wire decodes to a valid event of a known kind.
-                   None,  on any failure (stderr diagnostic).
+        """RETURN: Event,   if wire decodes to a valid event of a known kind.
+                   None,    on any failure (stderr diagnostic).
 
         Classmethod because there is no Event instance before decoding.
         Delegates to Marshaller.deserialize(wire), which dispatches on
@@ -221,10 +365,55 @@ class Event:
         return Marshaller.deserialize(wire)
 
 
-def all_event_classes() -> list:
-    """RETURN: list[type[Event]], every concrete Event subclass.
+# ============================================================================
+# Lookup helpers
+# ============================================================================
 
-    Convenience for tests and introspection. Order is registration
-    order (insertion order in CLASS_BY_ID).
+def lookup_event_class(wire_id: str) -> "type | None":
+    """RETURN: type[Event],  the Event subclass whose .id equals wire_id.
+               None,          if no such class is registered, or if
+                             wire_id is not a string.
+
+    With the flat CLASS_BY_ID, lookup is one dict access. wire_id is
+    the composite "<category>.<class_name>" as it appears on the wire.
+    """
+    if not isinstance(wire_id, str):
+        return None
+    return CLASS_BY_ID.get(wire_id)
+
+
+def all_event_classes() -> list:
+    """RETURN: list[type[Event]],  every concrete Event subclass in
+                                   registration order.
+
+    Convenience for tests and introspection.
     """
     return list(CLASS_BY_ID.values())
+
+
+def all_categories() -> list:
+    """RETURN: list[str],  every category that has at least one event
+                           registered, in first-registration order.
+
+    Walks CLASS_BY_ID once and collects unique category prefixes.
+    """
+    seen = []
+    seen_set = set()
+    for wire_id in CLASS_BY_ID:
+        cat = wire_id.split(".", 1)[0]
+        if cat not in seen_set:
+            seen_set.add(cat)
+            seen.append(cat)
+    return seen
+
+
+def events_in_category(category_name: str) -> list:
+    """RETURN: list[type[Event]],  every Event subclass registered in the
+                                   given category, in registration order.
+
+    Convenience for tests and introspection. Walks CLASS_BY_ID once
+    and filters on prefix.
+    """
+    prefix = category_name + "."
+    return [cls for wire_id, cls in CLASS_BY_ID.items()
+            if wire_id.startswith(prefix)]

@@ -1,9 +1,6 @@
 
---- attempt to assign .task_id ---
+--- EventTerminalUp .timestamp = ... ---
 FrozenInstanceError raised (expected)
 
---- attempt to assign .duration_s ---
-FrozenInstanceError raised (expected)
-
---- attempt to assign .timestamp ---
+--- EventTerminalDown .timestamp = ... ---
 FrozenInstanceError raised (expected)

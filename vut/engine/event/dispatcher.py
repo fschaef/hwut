@@ -70,7 +70,6 @@ import sys
 from dataclasses import dataclass
 from typing      import Any, Callable
 
-from vut.engine.event.enums import E_EventCategory
 from vut.engine.event.event import Event
 
 
@@ -116,8 +115,8 @@ class EventDispatcher:
         Subscribes 'sink' to receive every Event whose .id equals
         event_id_or_class. Argument may be:
 
-            - the class itself:   subscribe_on_event(TaskDoneEvent, sink)
-            - the id string:      subscribe_on_event("TaskDoneEvent", sink)
+            - the class itself:   subscribe_on_event(EventTaskDone, sink)
+            - the id string:      subscribe_on_event("WORKFLOW.EventTaskDone", sink)
 
         Class form is recommended (type-checked, refactor-friendly).
         """
@@ -130,14 +129,14 @@ class EventDispatcher:
             sink      = sink,
         )
 
-    def subscribe_on_category(self, category: E_EventCategory, sink) -> Subscription:
+    def subscribe_on_category(self, category: str, sink) -> Subscription:
         """RETURN: Subscription, handle for the new subscription.
 
         Subscribes 'sink' to receive every Event whose .category equals
-        the given category.
+        the given category (e.g. "WORKFLOW", "COMPILATION").
         """
         return self._add(
-            predicate = lambda ev, cat=category: ev.category is cat,
+            predicate = lambda ev, cat=category: ev.category == cat,
             sink      = sink,
         )
 

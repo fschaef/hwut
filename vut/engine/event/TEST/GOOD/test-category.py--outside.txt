@@ -1,0 +1,4 @@
+
+--- Event defined outside any open category ---
+EventDefinitionOutsideCategoryContext raised (expected)
+message contains class name: True

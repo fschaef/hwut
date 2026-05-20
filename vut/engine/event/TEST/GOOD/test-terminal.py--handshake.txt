@@ -1,0 +1,12 @@
+
+--- initial state ---
+a.state: NEW   b.state: NEW
+a.is_up: False   b.is_up: False
+
+--- subscribe to EVENT_INFRA events on local dispatcher ---
+
+--- start both terminals concurrently; both block until peer Up ---
+a.state: UP   b.state: UP
+
+--- local dispatcher saw infra events? ---
+infra_seen: []   (expected empty)

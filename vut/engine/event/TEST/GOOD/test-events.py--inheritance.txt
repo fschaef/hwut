@@ -1,20 +1,11 @@
 
---- CompilerDoneEvent IS-A TaskDoneEvent ---
-isinstance Event:             True
-isinstance TaskDoneEvent:     True
-isinstance CompilerDoneEvent: True
+--- define EventBase in TEST_EV_INH_A ---
 
---- inherits parent's fields ---
-ev.task_id:    42
-ev.duration_s: 1.5
-ev.source:     a.c
-ev.output:     a.o
-
---- each gets its own id (NOT inherited) ---
-TaskDoneEvent.id:     TaskDoneEvent
-CompilerDoneEvent.id: CompilerDoneEvent
-distinct:             True
-
---- Compiler overrides .category ---
-TaskDoneEvent.category:     WORKFLOW
-CompilerDoneEvent.category: COMPILATION
+--- define EventDerived(EventBase) in TEST_EV_INH_B ---
+EventBase.id:        TEST_EV_INH_A.EventBase
+EventDerived.id:     TEST_EV_INH_B.EventDerived
+ids distinct:        True
+isinstance EventBase: True
+derived inherits task_id: 42
+derived adds source:      x.c
+str: derived x.c id=42

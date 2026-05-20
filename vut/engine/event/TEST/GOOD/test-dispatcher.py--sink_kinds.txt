@@ -9,9 +9,9 @@ kind: sync
 kind: send
 
 --- dispatch fires all three ---
-async_seen : ['TaskDoneEvent']
-sync_seen  : ['TaskDoneEvent']
-bucket.items: ['TaskDoneEvent']
+async_seen : ['TEST_LOCAL_DISP_TASK.EventTaskDone']
+sync_seen  : ['TEST_LOCAL_DISP_TASK.EventTaskDone']
+bucket.items: ['TEST_LOCAL_DISP_TASK.EventTaskDone']
 
 --- non-callable, non-send object is rejected ---
 TypeError: EventDispatcher: sink must be a callable or an object with a .send(event) method; got int

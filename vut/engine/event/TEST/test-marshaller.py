@@ -14,7 +14,7 @@ frozen _SPECIALISTS class attribute, no constructor. Event has thin
 
 The wire envelope is:
 
-    {"id": "<ClassName>", "data": {<all fields>}}
+    {"id": "TEST_LOCAL_MARSHALLER.EventTaskDone", "data": {<all fields>}}
 
 The id is the Event subclass's __name__ verbatim.
 
@@ -31,12 +31,33 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
+from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
-                                                        TaskDoneEvent,
-                                                        CompilerDoneEvent,
-                                                        TaskProgressEvent,
+                                                        category,
                                                         Marshaller)
+
+
+# Test-local event vocabulary. Declared here so this test file is
+# self-contained: the event package no longer ships application
+# events.
+with category("TEST_LOCAL_MARSHALLER"):
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventTaskDone(Event):
+        task_id:    int
+        duration_s: float
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventCompilerDone(EventTaskDone):
+        source: str
+        output: str
+
+    @dataclass(frozen=True, kw_only=True)
+    class EventTaskProgress(Event):
+        task_id:  int
+        fraction: float
+        note:     str = ""
 
 
 def banner(label):
@@ -51,8 +72,8 @@ def run_roundtrip():
     Round-trips two events (one direct, one inheriting via Compiler)
     via both entry points. Confirms class identity is preserved.
     """
-    banner("CompilerDoneEvent via event.serialize()")
-    ev = CompilerDoneEvent(task_id=42, source="x.c", output="x.o",
+    banner("EventCompilerDone via event.serialize()")
+    ev = EventCompilerDone(task_id=42, source="x.c", output="x.o",
                            duration_s=1.5, timestamp=100.0)
     wire_a = ev.serialize()
     print("id   = %s" % wire_a["id"])
@@ -65,8 +86,8 @@ def run_roundtrip():
     banner("deserialise via Event.deserialize(wire)")
     back = Event.deserialize(wire_a)
     print("type:           %s" % type(back).__name__)
-    print("is Compiler:    %s" % isinstance(back, CompilerDoneEvent))
-    print("is TaskDone:    %s" % isinstance(back, TaskDoneEvent))
+    print("is Compiler:    %s" % isinstance(back, EventCompilerDone))
+    print("is TaskDone:    %s" % isinstance(back, EventTaskDone))
     print("fields equal:   %s" % (back.task_id == 42
                                   and back.source == "x.c"
                                   and back.output == "x.o"
@@ -78,8 +99,8 @@ def run_roundtrip():
     back2 = Marshaller.deserialize(wire_a)
     print("identical type: %s" % (type(back2) is type(back)))
 
-    banner("event with optional field (TaskProgressEvent)")
-    ev2 = TaskProgressEvent(task_id=7, fraction=0.33, note="hi",
+    banner("event with optional field (EventTaskProgress)")
+    ev2 = EventTaskProgress(task_id=7, fraction=0.33, note="hi",
                             timestamp=200.0)
     wire2 = ev2.serialize()
     print("wire = %s" % wire2)
@@ -97,14 +118,14 @@ def run_frozen():
 
     banner("item assignment is refused")
     try:
-        Marshaller._SPECIALISTS["TaskDoneEvent"] = ("a", "b")
+        Marshaller._SPECIALISTS["TEST_LOCAL_MARSHALLER.EventTaskDone"] = ("a", "b")
         print("UNEXPECTED: assignment succeeded")
     except TypeError as e:
         print("TypeError (expected): %s" % e)
 
     banner("deletion is refused")
     try:
-        del Marshaller._SPECIALISTS["TaskDoneEvent"]
+        del Marshaller._SPECIALISTS["TEST_LOCAL_MARSHALLER.EventTaskDone"]
         print("UNEXPECTED: deletion succeeded")
     except TypeError as e:
         print("TypeError (expected): %s" % e)
@@ -128,13 +149,13 @@ def run_errors():
 
     banner("payload validation failure (wrong type)")
     print("result: %s" % Event.deserialize({
-        "id":   "TaskDoneEvent",
+        "id":   "TEST_LOCAL_MARSHALLER.EventTaskDone",
         "data": {"task_id": 1, "duration_s": "two seconds", "timestamp": 0.0},
     }))
 
     banner("payload validation failure (missing required field)")
     print("result: %s" % Event.deserialize({
-        "id":   "TaskDoneEvent",
+        "id":   "TEST_LOCAL_MARSHALLER.EventTaskDone",
         "data": {"task_id": 1, "timestamp": 0.0},   # missing duration_s
     }))
 

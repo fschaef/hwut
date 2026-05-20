@@ -1,63 +1,86 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: Event identity, data, dispatch, transport, and routing.
+PURPOSE: Event identity, data, dispatch, and transport for VUT.
+
+This package is a TOOLKIT, not a registry of application events.
+Subsystems (workflow, compile, network, tests) define their own
+events in their own modules using the `with category("..."):`
+context manager.
+
+The only events shipped here are LIFECYCLE events that an
+EventTerminal emits on the wire about itself:
+
+    EventTerminalUp     emitted on receive-loop entry; the symmetric
+                        Up/Up handshake at start() uses this.
+    EventTerminalDown   emitted on deliberate shutdown.
+
+Both live in the EVENT_INFRA category.
 
 This package provides:
 
-    Events:
-      -- E_EventCategory             subsystem categorisation
-      -- Event                       base class
-      -- TaskStartedEvent, ...       concrete events
-      -- CLASS_BY_ID                 module-level id -> class table
-      -- EventIdCollision            raised on duplicate event class name
+    -- Event                 base class for all events (frozen dataclass)
+    -- category              context manager for declaring a category
 
-    Transport (single peer):
-      -- E_TransportKind             enum of transport flavours
-      -- EventChannelParameter       single-class ECP with for_* factories
-      -- EventChannel                ABC + concrete subclasses:
-                                       AsyncQueueChannel, ThreadQueueChannel,
-                                       ProcessQueueChannel, RemoteChannel
-      -- EventTerminal               one Channel + receive Dispatcher
+    -- EventTerminalUp       transport lifecycle event
+    -- EventTerminalDown     transport lifecycle event
 
-    Dispatch and routing:
-      -- EventDispatcher             predicate-to-sink matching
-      -- Subscription                opaque handle from EventDispatcher
-      -- EventRouter                 hub of Terminals; predicate-driven
-                                     outgoing routing
+    -- CLASS_BY_ID           flat registry (composite wire id -> class)
+    -- lookup_event_class    resolve composite wire id to class
+    -- all_event_classes     list every registered subclass
+    -- all_categories        list every category with registrations
+    -- events_in_category    list events in one category
 
-    Wire transport (used internally by ProcessQueueChannel, RemoteChannel):
-      -- Marshaller                  serialise/deserialise
+    -- EventIdCollision                       raised on duplicate name within a category
+    -- EventDefinitionOutsideCategoryContext  raised on Event defined outside any category
+    -- EventRegistrationLocked                raised on registration after lock
 
-ORGANISATION:
+    -- Marshaller            transport: serialise / deserialise events
+    -- EventDispatcher       predicate-to-sink matching
+    -- EventChannel          ABC for bidirectional transport
+    -- EventChannelParameter handle to construct Channels from spawning context
+    -- EventTerminal         one end of a Channel + receive-side Dispatcher
+                            (supports `with EventTerminal(ecp) as t:`)
+    -- EventRouter           Dispatcher of Terminals (predicate routing)
 
-    enums.py                E_EventCategory
-    event.py                Event base class, CLASS_BY_ID, EventIdCollision
-    events.py               Concrete Event subclasses
-    marshaller.py           Marshaller
-    dispatcher.py           EventDispatcher, Subscription
-    channel.py              EventChannel ABC + concrete subclasses
-    channel_parameter.py    EventChannelParameter, E_TransportKind
-    terminal.py             EventTerminal
-    router.py               EventRouter
+CATEGORIES ARE USER-DEFINED STRINGS:
+
+    with category("MY_SUBSYSTEM"):
+        class EventSomething(Event):
+            ...
+
+Categories are not an enum. Multiple files may contribute to the
+same category. Two events with the same class name in the same
+category raise EventIdCollision. Two events with the same class
+name in different categories are fine (their wire ids differ).
+
+The wire id is "<category>.<class_name>", e.g. "EVENT_INFRA.EventTerminalUp".
+
+REGISTRATION LOCK:
+
+After a system's startup sequence has imported every module whose
+events should exist in this run, call Event.lock_registration() to
+seal the registry. After lock, opening a category or defining an
+Event raises EventRegistrationLocked.
 
 For design rationale see README.txt.
 For discussion history see DISCUSSIONS.txt.
 
-PYDANTIC V2 IS REQUIRED for TypeAdapter-based validation on Events.
+PYDANTIC V2 IS REQUIRED for TypeAdapter-based validation and
+serialisation on the Event dataclasses.
 ________________________________________________________________________________
 """
-from .enums              import E_EventCategory
-from .event              import Event, CLASS_BY_ID, EventIdCollision, all_event_classes
-from .events             import (TaskStartedEvent,
-                                 TaskDoneEvent,
-                                 TaskFailedEvent,
-                                 TaskProgressEvent,
-                                 TaskCancelledEvent,
-                                 CompilerNoSourceEvent,
-                                 CompilerDoneEvent,
-                                 ArtifactAvailableEvent,
-                                 ArtifactImpossibleEvent,
-                                 WorkflowTaskCancelledEvent)
+from .event              import (Event,
+                                 category,
+                                 CLASS_BY_ID,
+                                 lookup_event_class,
+                                 all_event_classes,
+                                 all_categories,
+                                 events_in_category,
+                                 EventIdCollision,
+                                 EventDefinitionOutsideCategoryContext,
+                                 EventRegistrationLocked)
+from .events             import (EventTerminalUp,
+                                 EventTerminalDown)
 from .marshaller         import Marshaller
 from .dispatcher         import EventDispatcher, Subscription
 from .channel            import (EventChannel,
@@ -65,40 +88,35 @@ from .channel            import (EventChannel,
                                  ThreadQueueChannel,
                                  ProcessQueueChannel,
                                  RemoteChannel)
-from .channel_parameter  import EventChannelParameter, E_TransportKind
+from .channel_parameter  import EventChannelParameter
 from .terminal           import EventTerminal
 from .router             import EventRouter
 
 __all__ = [
-    # Events
-    "E_EventCategory",
+    # Core
     "Event",
-    "EventIdCollision",
-    "TaskStartedEvent",
-    "TaskDoneEvent",
-    "TaskFailedEvent",
-    "TaskProgressEvent",
-    "TaskCancelledEvent",
-    "CompilerNoSourceEvent",
-    "CompilerDoneEvent",
-    "ArtifactAvailableEvent",
-    "ArtifactImpossibleEvent",
-    "WorkflowTaskCancelledEvent",
+    "category",
     "CLASS_BY_ID",
+    "lookup_event_class",
     "all_event_classes",
+    "all_categories",
+    "events_in_category",
+    "EventIdCollision",
+    "EventDefinitionOutsideCategoryContext",
+    "EventRegistrationLocked",
+    # Lifecycle events
+    "EventTerminalUp",
+    "EventTerminalDown",
     # Transport
-    "E_TransportKind",
-    "EventChannelParameter",
+    "Marshaller",
+    "EventDispatcher",
+    "Subscription",
     "EventChannel",
     "AsyncQueueChannel",
     "ThreadQueueChannel",
     "ProcessQueueChannel",
     "RemoteChannel",
+    "EventChannelParameter",
     "EventTerminal",
-    # Dispatch / routing
-    "EventDispatcher",
-    "Subscription",
     "EventRouter",
-    # Marshaller
-    "Marshaller",
 ]
