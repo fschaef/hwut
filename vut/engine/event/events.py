@@ -32,7 +32,6 @@ These are wire-level lifecycle signals, not connection-error
 indicators. A channel that fails mid-flight is a separate concern.
 ________________________________________________________________________________
 """
-from dataclasses import dataclass
 
 from vut.engine.event.event import Event, category
 
@@ -44,7 +43,6 @@ from vut.engine.event.event import Event, category
 
 with category("EVENT_INFRA"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTerminalUp(Event):
         """Lifecycle: a Terminal's receive loop has entered.
 
@@ -57,7 +55,6 @@ with category("EVENT_INFRA"):
             return "EventTerminalUp"
 
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTerminalDown(Event):
         """Lifecycle: a Terminal is shutting down deliberately.
 

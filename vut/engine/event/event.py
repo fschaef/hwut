@@ -13,6 +13,9 @@ via a context manager:
         class EventTaskDone(Event):
             ...
 
+Note: concrete subclasses are written WITHOUT a @dataclass decorator.
+See "DATACLASS TRANSFORM" below.
+
 IDENTITY:
 
 Each concrete subclass gets:
@@ -57,11 +60,44 @@ system's startup sequence to lock after all required modules have
 been imported.
 
 
+DATACLASS TRANSFORM
+
+Concrete Event subclasses are NOT decorated with @dataclass by their
+authors. The metaclass EventMeta applies
+
+    dataclass(frozen=True, kw_only=True)
+
+to every subclass automatically, at class-creation time. This is a
+deliberate choice with a specific rationale:
+
+  -- A validator (here: Pydantic, see below) can only see fields that
+     dataclass processing has turned into real dataclass fields, i.e.
+     entries in cls.__dataclass_fields__. A subclass whose author
+     forgot the decorator would have its annotations sit unprocessed
+     in __annotations__; the generated __init__ would be the BASE
+     class's, and validation/serialisation would SILENTLY drop the
+     subclass's own fields at the wire boundary.
+
+  -- Auto-applying the transform in the metaclass removes that
+     footgun without forcing the hierarchy onto a heavier base such
+     as Pydantic's BaseModel. The decorator still runs - it must, the
+     fields depend on it - but the author never writes it and cannot
+     forget it.
+
+  -- The transform is applied in EventMeta.__new__ AFTER the class
+     body is built, so by the time __dataclass_fields__ is read
+     (lazily, by the Pydantic adapter) it is complete.
+
+Consequence for subclass authors: declare fields as plain annotations;
+do not add @dataclass; do not pass frozen=/kw_only= yourself.
+
+
 PYDANTIC
 
 Each concrete class has a per-class TypeAdapter, created lazily on
 first use of .as_dict() / .from_dict(). The adapter validates and
-serialises the dataclass.
+serialises the dataclass. It is built lazily (not eagerly) so that
+the EventMeta dataclass transform has certainly completed first.
 ________________________________________________________________________________
 """
 import sys
@@ -187,32 +223,13 @@ CLASS_BY_ID: Registry = Registry()
 _current_category:    "str | None" = None
 _registration_locked: bool         = False
 
-# ============================================================================
-# Exceptions
-# ============================================================================
 class EventIdCollision(Exception):
-    """Raised when two Event subclasses in the same category share a class name.
-
-    A programmer error caught at class-definition time. It cannot be
-    handled at runtime - the module that defined the offending second
-    class will not finish importing.
-    """
     pass
 
 class EventDefinitionOutsideCategoryContext(Exception):
-    """Raised when an Event subclass is defined outside any open category.
-
-    The fix is to wrap the class definition in a `with category("X"):`
-    block.
-    """
     pass
 
 class EventRegistrationLocked(Exception):
-    """Raised when registration is attempted after Event.lock_registration().
-
-    Once locked, no new categories may be opened and no new Event
-    subclasses may be created. This is a one-way switch.
-    """
     pass
 
 
@@ -273,13 +290,42 @@ def category(name: str):
 
 
 # ============================================================================
+# Metaclass: applies the dataclass transform to every Event subclass.
+# ============================================================================
+class EventMeta(type):
+    """Metaclass that auto-applies dataclass(frozen=True, kw_only=True).
+
+    Subclass authors write plain classes with field annotations and no
+    @dataclass decorator; EventMeta.__new__ runs the transform for them.
+    See the module header section "DATACLASS TRANSFORM" for the
+    rationale.
+
+    The transform is applied to every class in the hierarchy, the Event
+    base included, so the base's own fields (timestamp) are processed
+    too.
+    """
+
+    def __new__(mcs, name, bases, namespace, **kwargs):
+        """RETURN: type, the freshly created class with dataclass processing
+                         applied.
+
+        Builds the class normally, then runs
+        dataclass(frozen=True, kw_only=True) on it before returning, so
+        that __dataclass_fields__ is complete by the time any caller
+        (including the lazy Pydantic adapter) reads it.
+        """
+        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
+        return dataclass(frozen=True, kw_only=True)(cls)
+
+
+# ============================================================================
 # Event base class
 # ============================================================================
-@dataclass(frozen=True, kw_only=True)
-class Event:
+class Event(metaclass=EventMeta):
     """Base class for all events.
 
-    Subclasses are defined inside `with category("X"):` blocks:
+    Subclasses are defined inside `with category("X"):` blocks, with NO
+    @dataclass decorator (EventMeta applies it):
 
         with category("WORKFLOW"):
             class EventTaskDone(Event):
@@ -290,7 +336,7 @@ class Event:
     On class creation, Event.__init_subclass__:
         -- reads the currently-open category (raises if none)
         -- sets cls.category and cls.id
-        -- registers cls in CLASS_BY_ID[category][__name__]
+        -- registers cls in CLASS_BY_ID
         -- raises EventIdCollision on duplicate name within the category
 
     .id is the composite wire id, e.g. "WORKFLOW.EventTaskDone".
@@ -316,10 +362,10 @@ class Event:
         flyweight: every instance of one Event subclass shares the
         same adapter object.
 
-        Created lazily (NOT in __init_subclass__) because
-        __init_subclass__ runs before @dataclass has finished
-        processing the subclass's fields; an eager adapter would miss
-        those fields.
+        Created lazily (NOT in __init_subclass__) because the EventMeta
+        dataclass transform runs in the metaclass's __new__; building
+        the adapter on first .as_dict()/.from_dict() use guarantees the
+        transform has completed and __dataclass_fields__ is complete.
         """
         # Use __dict__ lookup (not attribute lookup) so each subclass
         # gets its own adapter rather than inheriting the parent's.
@@ -443,26 +489,3 @@ class Event:
         from vut.engine.event.channel.marshaller import Marshaller
         return Marshaller.deserialize(wire)
 
-if False:
-# ============================================================================
-# Backward-compatible free-function shims.
-#
-# The lookup/enumeration behaviour now lives on Registry. These thin
-# wrappers preserve the old call sites; prefer the CLASS_BY_ID.* methods
-# in new code, and delete these once no caller depends on them.
-# ============================================================================
-    def lookup_event_class(wire_id: str) -> "type | None":
-        """RETURN: type[Event] | None.  Shim for CLASS_BY_ID.lookup(wire_id)."""
-        return CLASS_BY_ID.lookup(wire_id)
-
-    def all_event_classes() -> list:
-        """RETURN: list[type[Event]].  Shim for CLASS_BY_ID.all_classes()."""
-        return CLASS_BY_ID.all_classes()
-
-    def all_categories() -> list:
-        """RETURN: list[str].  Shim for CLASS_BY_ID.categories()."""
-        return CLASS_BY_ID.categories()
-
-    def events_in_category(category_name: str) -> list:
-        """RETURN: list[type[Event]].  Shim for CLASS_BY_ID.in_category(name)."""
-        return CLASS_BY_ID.in_category(category_name)

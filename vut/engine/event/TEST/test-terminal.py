@@ -40,7 +40,6 @@ import asyncio
 import sys
 import config                                                       # noqa: F401
 
-from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
                                                         category,
@@ -54,11 +53,9 @@ from vut.engine.event                           import (Event,
 # discriminates between them.
 with category("TEST_LOCAL_TERM_TASK"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskStarted(Event):
         task_id: int
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskDone(Event):
         task_id:    int
         duration_s: float
@@ -66,7 +63,6 @@ with category("TEST_LOCAL_TERM_TASK"):
 
 with category("TEST_LOCAL_TERM_COMPILE"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventCompilerDone(EventTaskDone):
         source: str
         output: str

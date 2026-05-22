@@ -26,7 +26,6 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
-from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
                                                         category,
@@ -49,10 +48,8 @@ def run_basic():
     """
     banner("open category 'BASIC_TEST'")
     with category("BASIC_TEST"):
-        @dataclass(frozen=True, kw_only=True)
         class EventOne(Event):
             x: int
-        @dataclass(frozen=True, kw_only=True)
         class EventTwo(Event):
             y: str
 
@@ -72,7 +69,6 @@ def run_outside():
     """
     banner("Event defined outside any open category")
     try:
-        @dataclass(frozen=True, kw_only=True)
         class EventStray(Event):
             x: int
         print("UNEXPECTED: accepted")
@@ -147,13 +143,11 @@ def run_reopen():
     """
     banner("open 'REOPEN_TEST' first time")
     with category("REOPEN_TEST"):
-        @dataclass(frozen=True, kw_only=True)
         class EventFirst(Event):
             a: int
 
     banner("open 'REOPEN_TEST' again, add another class")
     with category("REOPEN_TEST"):
-        @dataclass(frozen=True, kw_only=True)
         class EventSecond(Event):
             b: int
 
@@ -162,7 +156,6 @@ def run_reopen():
     banner("re-open and re-register same name: collision")
     try:
         with category("REOPEN_TEST"):
-            @dataclass(frozen=True, kw_only=True)
             class EventFirst(Event):       # noqa: F811
                 a: int
         print("UNEXPECTED: accepted")

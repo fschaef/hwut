@@ -52,7 +52,6 @@ import os
 import sys
 import config                                                       # noqa: F401
 
-from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import Event, category
 from vut.engine.event.channel.parameter         import (EventChannelParameter,
@@ -65,7 +64,6 @@ from vut.engine.event.channel.cipher            import (IdentityCipher,
 # Test-local event vocabulary.
 with category("TEST_LOCAL_CIPHER"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventSecret(Event):
         payload: str
 

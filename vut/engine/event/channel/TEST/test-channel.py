@@ -32,7 +32,6 @@ import asyncio
 import sys
 import config                                                       # noqa: F401
 
-from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
                                                         category,
@@ -42,12 +41,10 @@ from vut.engine.event                           import (Event,
 # Test-local event vocabulary.
 with category("TEST_LOCAL_CHANNEL"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskDone(Event):
         task_id:    int
         duration_s: float
 
-    @dataclass(frozen=True, kw_only=True)
     class EventCompilerDone(EventTaskDone):
         source: str
         output: str
@@ -142,7 +139,7 @@ async def _close():
     try:
         await b_ch.send(EventTaskDone(task_id=1, duration_s=1.0))
         print("UNEXPECTED: send succeeded")
-    except RuntimeError as e:
+    except RuntimeError:
         print("RuntimeError raised (expected)")
     await a_ch.close()
 

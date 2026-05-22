@@ -30,7 +30,6 @@ import asyncio
 import sys
 import config                                                       # noqa: F401
 
-from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
                                                         category,
@@ -41,16 +40,13 @@ from vut.engine.event                           import (Event,
 # subscribe_on_category("...COMPILE") discriminates from "...TASK".
 with category("TEST_LOCAL_DISP_TASK"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskStarted(Event):
         task_id: int
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskDone(Event):
         task_id:    int
         duration_s: float
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskFailed(Event):
         task_id: int
         reason:  str
@@ -58,7 +54,6 @@ with category("TEST_LOCAL_DISP_TASK"):
 
 with category("TEST_LOCAL_DISP_COMPILE"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventCompilerDone(EventTaskDone):
         source: str
         output: str
@@ -163,14 +158,14 @@ async def _enforce_async():
     try:
         d.subscribe_on_event(EventTaskDone, sync_cb)
         print("UNEXPECTED: accepted")
-    except TypeError as e:
+    except TypeError:
         print("TypeError raised (expected)")
 
     banner("lambda (sync) rejected")
     try:
         d.subscribe_on_event(EventTaskDone, lambda ev: None)
         print("UNEXPECTED: accepted")
-    except TypeError as e:
+    except TypeError:
         print("TypeError raised (expected)")
 
 

@@ -32,7 +32,7 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
-from dataclasses                                import FrozenInstanceError, dataclass
+from dataclasses                                import FrozenInstanceError
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
                                                         category,
@@ -103,7 +103,6 @@ def run_collision():
     """
     banner("define EventThing in TEST_EV_COL_A")
     with category("TEST_EV_COL_A"):
-        @dataclass(frozen=True, kw_only=True)
         class EventThing(Event):
             x: int
     print("EventThing.id: %s" % EventThing.id)
@@ -111,7 +110,6 @@ def run_collision():
     banner("define EventThing again in TEST_EV_COL_A -- collision")
     try:
         with category("TEST_EV_COL_A"):
-            @dataclass(frozen=True, kw_only=True)
             class EventThing(Event):                # noqa: F811
                 x: int
         print("UNEXPECTED: accepted")
@@ -121,7 +119,6 @@ def run_collision():
 
     banner("define EventThing in TEST_EV_COL_B -- different category, OK")
     with category("TEST_EV_COL_B"):
-        @dataclass(frozen=True, kw_only=True)
         class EventThing(Event):                    # noqa: F811
             x: int
     print("new class registered: id=%s" % EventThing.id)
@@ -135,7 +132,6 @@ def run_inheritance():
     """
     banner("define EventBase in TEST_EV_INH_A")
     with category("TEST_EV_INH_A"):
-        @dataclass(frozen=True, kw_only=True)
         class EventBase(Event):
             task_id:    int
             duration_s: float
@@ -145,7 +141,6 @@ def run_inheritance():
 
     banner("define EventDerived(EventBase) in TEST_EV_INH_B")
     with category("TEST_EV_INH_B"):
-        @dataclass(frozen=True, kw_only=True)
         class EventDerived(EventBase):
             source: str
 
@@ -171,7 +166,6 @@ def run_lock():
     """
     banner("pre-lock: registration works")
     with category("TEST_EV_LOCK_PRE"):
-        @dataclass(frozen=True, kw_only=True)
         class EventBefore(Event):
             x: int
     print("pre-lock id: %s" % EventBefore.id)

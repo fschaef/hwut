@@ -31,7 +31,6 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
-from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
                                                         category,
@@ -43,17 +42,14 @@ from vut.engine.event                           import (Event,
 # events.
 with category("TEST_LOCAL_MARSHALLER"):
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskDone(Event):
         task_id:    int
         duration_s: float
 
-    @dataclass(frozen=True, kw_only=True)
     class EventCompilerDone(EventTaskDone):
         source: str
         output: str
 
-    @dataclass(frozen=True, kw_only=True)
     class EventTaskProgress(Event):
         task_id:  int
         fraction: float
