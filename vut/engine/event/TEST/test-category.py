@@ -30,7 +30,7 @@ from dataclasses                                import dataclass
 from vut.language_support.python.hwut_runner    import HwutRunner
 from vut.engine.event                           import (Event,
                                                         category,
-                                                        events_in_category,
+                                                        CLASS_BY_ID,
                                                         EventIdCollision,
                                                         EventDefinitionOutsideCategoryContext)
 
@@ -62,7 +62,7 @@ def run_basic():
     print("EventTwo.id:        %s" % EventTwo.id)
 
     banner("events_in_category('BASIC_TEST')")
-    print([c.__name__ for c in events_in_category("BASIC_TEST")])
+    print([c.__name__ for c in CLASS_BY_ID.in_category("BASIC_TEST")])
 
 
 def run_outside():
@@ -157,7 +157,7 @@ def run_reopen():
         class EventSecond(Event):
             b: int
 
-    print("classes accumulated: %s" % [c.__name__ for c in events_in_category("REOPEN_TEST")])
+    print("classes accumulated: %s" % [c.__name__ for c in CLASS_BY_ID.in_category("REOPEN_TEST")])
 
     banner("re-open and re-register same name: collision")
     try:

@@ -1,191 +1,222 @@
 ================================================================================
-VUT Event Component
+HWUT 2.0 Event Component
+
+Event definition and communication system.
 ================================================================================
 
-PURPOSE
-
-    This package provides the Event system for VUT: identity, structured
-    data, in-process dispatch, point-to-point transport across processes
-    or machines, and one-to-many routing. Every interaction between
-    subsystems that needs to cross a queue or process boundary travels
-    as an Event.
-
-
 --------------------------------------------------------------------------------
-DESIGN AT A GLANCE
+ABSTRACT
 --------------------------------------------------------------------------------
 
-    Three layers, each with one concern:
+This component provides a way for defining, sending, and receiving events
+between async tasks, threads, processes, and remote processes homogenously.
 
-        +----------------------------------------------------------+
-        |  Event   (identity + data)                               |
-        |    Frozen dataclass per concrete event kind.             |
-        |    .category   (str, set by surrounding category() block)|
-        |    .id         (composite "<category>.<__name__>",       |
-        |                 auto-set at registration)                |
-        +----------------------------------------------------------+
-                              |
-                              v  (carried in)
-        +----------------------------------------------------------+
-        |  EventChannel  (point-to-point transport)                |
-        |    Async send / receive / close.                         |
-        |    Subclasses per transport flavour:                     |
-        |      AsyncQueueChannel    in-process, asyncio.Queue      |
-        |      ThreadQueueChannel   in-process, thread queue       |
-        |      ProcessQueueChannel  cross-process, mp.Queue +      |
-        |                           Marshaller                     |
-        |      RemoteChannel        cross-machine, socket +        |
-        |                           Marshaller                     |
-        |  EventChannelParameter (ECP)                             |
-        |    Single class. for_async / for_thread / for_process /  |
-        |    for_remote factories each return a PAIR of ECPs.      |
-        |    EventTerminal(ecp) is the protocol-agnostic           |
-        |    constructor.                                          |
-        +----------------------------------------------------------+
-                              |
-                              v  (owned by)
-        +----------------------------------------------------------+
-        |  EventTerminal  (one end of a Channel)                   |
-        |    .send(event)        ship to peer                      |
-        |    .dispatcher         receive-side EventDispatcher      |
-        |    .start() / .stop()  manage receive loop               |
-        +----------------------------------------------------------+
-                                   |
-              +--------------------+--------------------+
-              |                                         |
-              v  (one peer per Terminal)                v
-        +----------+                              +----------+
-        |  peer A  |  ...  many Terminals, one    |  peer B  |
-        +----------+       Channel each           +----------+
-              |                                         |
-              v  (all owned by)                         v
-        +----------------------------------------------------------+
-        |  EventRouter  (hub of Terminals)                         |
-        |    .add_entry(predicate, terminal,                       |
-        |               source_terminal_list=None) -> handle       |
-        |    .remove_entry(handle) -> bool                         |
-        |    .publish(event)                                       |
-        |    .publish_from(source, event)                          |
-        |  Internally an EventDispatcher whose sinks are Terminals.|
-        +----------------------------------------------------------+
+(*) Terminal:
+
+  Users interact, i.e. send and receive, events via a 'Terminal'. The modality
+  of the event transport are completely hidden from the user in a 'Channel'.
+   
+                                  .-------.
+      User A o----o Terminal o---[ Channel ]----o Terminal o---o User B
+                                  '-------' 
+
+  The core API of the Terminal consists of two functions:
+
+     .send(event)
+     .dispatcher.subscribe_on_*(*, handler_func)
+
+  The dispatcher (class Dispatcher) allows for subscription on events, event
+  categories, or arbitrarily defined predicates. It is the heart of the 
+  Event infrastructure:
+
+                         Dispatcher
+                       .-------------.
+                       | condition 1 ----> executer
+         Event ------->| condition 2 ----> executer
+                       |     :       ----> executer
+                       | condition N ----> executer
+                       '-------------'
+
+(*) Router, Channel, Marshaller:
+
+  Connections between terminals are solely implemented using general
+  'EventChannels', that establish connections between different kinds of
+  process execution contexts, such as threads, processes, remote processes, and
+  async tasks.
+                               .-------.
+                Terminal o----[ Channel ]----o Terminal
+                               '-------'
+
+  A Marshaller handles the streaming and reception of events in 'byte streams'
+  required for the communication channels. 
+
+                            Terminal
+               .---------------------------------.
+      Event ---+-> Marshaller ---> byte stream --+->--.      .---------
+               |                                 |     >----[  Channel 
+      Event <--+-- Marshaller <--- byte stream --+-<--'      '---------
+               '---------------------------------'
+
+
+  An EventRouter can fan events from multiple Terminals to multiple Terminals
+  based on predicates (events, categories, general predicates) relying on the
+  same dispatcher as the Terminal.
+
+                  .-------------------------.                      .-----
+    Terminal o----o Terminal 1   Terminal K o-----o Terminal o----[ Channel
+                  |    :             :      |                      '-----
+    Terminal o----o Terminal I   Terminal N o-----o Terminal
+                  '-------------------------'
+
+(*) Topology
+
+   While the main 'occurence' of Events evolves around event dispatching,
+   the given set of classes allows for an easy implementation of communication
+   network topologies like the following, locally and remotely with
+   and without encryption.
+
+           T = Terminal  [C] = Channel  dashed box = Router
+
+                .---------.                     .---------.
+      T o--[C]--o T     T o---[C]---o T o--[C]--o T     T o--[C]--o T
+                |       T o---[C]---o T         |         |
+      T o--[C]--o T     T o                     |       T o--[C]--o T
+                |    T    |                     |    T    |
+                '----o----'                     '----o----'
+                     |                               |
+                    [C]                             [C]
+                     |                               |
+                .----o----.                          o
+      T o--[C]--o T  T  T o--[C]--o T                T
+                |         |                        
+      T o--[C]--o T     T o--[C]--o T              
+                |    T    |                        
+                '----o----'                       
+                     |                             
+                    [C]                            
+                     |
+                     o
+                     T
+
+--------------------------------------------------------------------------------
+CLASS HIERARCHIE
+--------------------------------------------------------------------------------
+
+        .-------------.
+        | Event       |
+        |  .category  |
+        |  .id        |
+        '------+------'
+               |
+               +----- EventCompilerFailed(.path, .error_msg)
+               +----- EventTestExecuted(.verdict)
+
+        .---------------.
+        | EventChannel  |
+        |  .send        |
+        |  .receive     |
+        |  .close       |
+        '-------+-------'
+                |
+                +----- AsyncChannel       in-process, async tasks
+                +----- ThreadChannel      in-process, threads
+                +----- ProcessChannel     cross-process
+                +----- RemoteChannel      cross-machine
+
+        .---------------------------.
+        | EventChannelParameter     |
+        |  .for_async               |
+        |  .for_thread              |
+        |  .for_process             |
+        |  .for_remote              |
+        '---------------------------'
+
+        .-----------------.
+        | EventTerminal   |
+        |  .send          |
+        |  .dispatcher    |
+        |  .start         |
+        |  .stop          |
+        '-----------------'
+
+        .---------------------.
+        | EventRouter         |
+        |  .add_entry         |
+        |  .remove_entry      |
+        |  .publish           |
+        |  .publish_from      |
+        '---------------------'
 
     The EventDispatcher (predicate-to-sink matcher) is the shared
     matching primitive, used both INSIDE a Terminal (for its
     receive-side fan-out) and INSIDE a Router (for its outgoing
     selection). One filter API; two contexts.
 
-
 --------------------------------------------------------------------------------
 FILE LAYOUT
 --------------------------------------------------------------------------------
 
-    event.py              Event base class, category() context manager,
-                          CLASS_BY_ID, lookup_event_class, all_event_classes,
-                          all_categories, EventIdCollision,
-                          EventDefinitionOutsideCategoryContext,
-                          EventRegistrationLocked
-    events.py             Concrete Event subclasses, organised by category
-    marshaller.py         Marshaller (wire serialisation; used internally
-                          by ProcessQueueChannel and RemoteChannel)
+    __init__.py      Public surface
+    README.txt       This file
+    DISCUSSIONS.txt  Decision history and rationale
+    event.py         Event base class, category() context manager,
+                     CLASS_BY_ID, lookup_event_class, all_event_classes,
+                     all_categories, EventIdCollision,
+                     EventDefinitionOutsideCategoryContext,
+                     EventRegistrationLocked
+    events.py        Concrete Event subclasses, organised by category
+    dispatcher.py    EventDispatcher, Subscription
+    terminal.py      EventTerminal
 
-    dispatcher.py         EventDispatcher, Subscription
-    channel.py            EventChannel ABC, AsyncQueueChannel,
-                          ThreadQueueChannel, ProcessQueueChannel,
-                          RemoteChannel
-    channel_parameter.py  EventChannelParameter, E_TransportKind
-    terminal.py           EventTerminal
-    router.py             EventRouter
+    ./channel/
 
-    __init__.py           Public surface
-
-    README.txt            This file
-    DISCUSSIONS.txt       Decision history and rationale
-
-    TEST/
-      test-category.py      5 choices (context manager behaviour)
-      test-events.py        5 choices (shipped events + lock)
-      test-marshaller.py    3 choices
-      test-dispatcher.py    4 choices
-      test-channel.py       4 choices
-      test-terminal.py      5 choices (incl. handshake, context_manager)
-      test-router.py        4 choices (incl. peer_down_removes)
-      GOOD/                 30 expected-output files
-
+       router.py     EventRouter
+       channel.py    EventChannel ABC, AsyncChannel,
+                     ThreadChannel, ProcessChannel,
+                     RemoteChannel
+       parameter.py  EventChannelParameter
+                     => generate appropriate connection and Terminal
+                        on 'the other side'. 
+       cipher.py     Cipher base class for:
+                     IdentityCipher, FernetCipher, NaClBoxCipher, TLSCipher. 
+       marshaller.py Marshaller serialization, deserialization
 
 --------------------------------------------------------------------------------
 KEY CONCEPTS
 --------------------------------------------------------------------------------
 
-1. EVENTS LIVE INSIDE CATEGORY CONTEXTS
+Events:
 
-   A category is a user-defined string. Event classes are defined
-   inside a `with category("NAME"):` block; every class in the
-   block joins that category:
+An event is something that informs. A base class implements the minimum
+elements of an event, namely its identifier (.id) and its category (.category).
+These are elements based on which we can route the information to its
+appropriate executor or other 'customers'.
 
-       from vut.engine.event import Event, category
+Every concrete event in the system must be derived from the base class while
+possibly carrying more detailed information about an event by in further class
+members.
 
-       with category("MY_SUBSYSTEM"):
-           class EventThingHappened(Event):
-               subject: str
+Events are defined in category context, thus setting the category member
+automatically.
 
-   On class creation:
-       -- .category    is stamped from the open block
-       -- .id          is composite ("MY_SUBSYSTEM.EventThingHappened")
-       -- The class is registered in CLASS_BY_ID under its composite id
-       -- A duplicate name in the SAME category raises EventIdCollision
-       -- The SAME name in a DIFFERENT category is fine
+       with category("TASK"):
 
-   Defining an Event subclass outside any open category raises
-   EventDefinitionOutsideCategoryContext.
+           class EventAborted(Event):
+               message: str
 
-   Adding a new event is ONE step: declare the class inside the
-   appropriate `with category(...)` block.
+           class EventProgress(Event):
+               progress_percent:   float
+               execution_time:     float
+               estimated_end_time: float
 
-   Inheritance carries fields and behaviour. The child's category
-   comes from its OWN `with category(...)` block, not from its
-   parent:
+           class EventTerminated(Event):
+               ...
 
-       with category("PARENT_CAT"):
-           class EventBase(Event):
-               task_id: int
-       with category("CHILD_CAT"):
-           class EventDerived(EventBase):            # parent in PARENT_CAT
-               extra: str
-       # EventBase.id    == "PARENT_CAT.EventBase"
-       # EventDerived.id == "CHILD_CAT.EventDerived"
+Instances of events are then ready to be passed to dispatchers, terminals,
+received by terminals and routed through routers.
 
-
-2. CATEGORIES ARE USER-DEFINED STRINGS
-
-   Categories carve the event namespace by subsystem (or any other
-   grouping the user finds natural). The event package itself does
-   not ship a closed set; subsystems declare their own.
-
-   Example categories a project might use:
-
-       "WORKFLOW"      task lifecycle, artifact production
-       "COMPILATION"   compiler / codegen events
-       "NETWORK"       connection state, transport-level events
-       "TEST_RESULT"   outcomes of test execution
-       "DIAGNOSTIC"    logging, observability
-
-   Consumers filter naturally by category ("subscribe to everything
-   in WORKFLOW"); other filter axes (by id, by source, by workload)
-   are expressed as predicates.
-
-   The wire id is the composite "<category>.<class_name>". Categories
-   may not contain a '.' (reserved as the separator).
-
-   Categories may span files. Multiple `with category("WORKFLOW"):`
-   blocks in different modules each contribute events to the WORKFLOW
-   category. Same-name collisions within the category still raise.
-
-   THE EVENT PACKAGE SHIPS ONE CATEGORY: "EVENT_INFRA"
-
-   The package itself defines only EventTerminalUp and
-   EventTerminalDown (in category EVENT_INFRA) - the wire-level
-   lifecycle messages a Terminal uses to talk about itself to its
-   peer. All application events live in user code.
+NOTE: Category "EVENT_INFRA" is only used by the event infrastructure
+      and not by users.
 
 
 3. PYDANTIC VIA TypeAdapter
@@ -331,7 +362,7 @@ KEY CONCEPTS
 WIRE FORMAT
 --------------------------------------------------------------------------------
 
-The Marshaller's default envelope (used by ProcessQueueChannel,
+The Marshaller's default envelope (used by ProcessChannel,
 RemoteChannel) is:
 
     {
@@ -352,6 +383,70 @@ rule, not a soft convention.
 
 For specialist serialisation, see marshaller.py's _SPECIALISTS hook
 and the Construct future-direction note in its module header.
+
+
+--------------------------------------------------------------------------------
+ENCRYPTION
+--------------------------------------------------------------------------------
+
+The serialising channels (ProcessChannel, RemoteChannel) can
+encrypt their wire payload. Encryption is a pluggable Cipher inside
+the Channel; it transforms the serialised bytes on send (encrypt)
+and receive (decrypt). The default is no encryption.
+
+Cipher is a CHANNEL-INTERNAL concept. It is NOT exported from this
+package - most users never name it. Encryption is configured
+indirectly: pass a CipherSpec to a channel-parameter factory.
+
+    from vut.engine.event.channel_parameter import (
+        EventChannelParameter, CipherSpec,
+    )
+
+    # No encryption (the default) - plaintext on the wire:
+    a_ecp, b_ecp = EventChannelParameter.for_process()
+
+    # Symmetric encryption, key read locally from an env var:
+    spec = CipherSpec.fernet_env("VUT_FERNET_KEY")
+    a_ecp, b_ecp = EventChannelParameter.for_process(cipher_spec=spec)
+
+The CipherSpec is a picklable, SECRET-FREE recipe: it names the
+cipher kind and a key REFERENCE (env-var name or file path), never
+the key bytes. The key is resolved locally - on whichever side
+builds the channel - inside make_channel(). A secret carried in a
+pickled or transmitted ECP would leak; for a remote channel it would
+mean sending the key over the channel it is meant to secure.
+
+CipherSpec factories:
+
+    CipherSpec.identity()                  no encryption (default)
+    CipherSpec.fernet_ephemeral()          symmetric, ephemeral key
+                                           exchange - encrypted but
+                                           NOT authenticated
+    CipherSpec.fernet_env(env_var)         symmetric, key from an
+                                           environment variable
+    CipherSpec.fernet_file(key_path)       symmetric, key from a file
+    CipherSpec.nacl_box_env(priv, peer)    public-key (PyNaCl Box);
+                                           pin the peer key for
+                                           authentication
+    CipherSpec.tls(certfile, keyfile,      TLS via ssl
+                   cafile, server_side,
+                   verify)
+
+The crypto handshake runs inside the channel before make_channel()
+returns - the channel is fully secured before the Terminal sees it.
+The Terminal is entirely unaware of the Cipher.
+
+In-process channels (for_async, for_thread) never serialise and
+ignore any CipherSpec; they are always plaintext-in-memory, which
+is correct - there is no wire to protect.
+
+SECRECY IS NOT IDENTITY. An ephemeral key exchange with no
+pre-shared anchor encrypts the channel but does NOT verify who the
+peer is - a man-in-the-middle can handshake with each side
+separately. Authentication needs a pre-shared anchor: a shared
+Fernet key, a pinned NaCl peer key, or a verified TLS certificate.
+For local transports identity does not matter; for RemoteChannel it
+does. See cipher.py's module header for the full discussion.
 
 
 --------------------------------------------------------------------------------

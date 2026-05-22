@@ -72,35 +72,27 @@ ________________________________________________________________________________
 from .event              import (Event,
                                  category,
                                  CLASS_BY_ID,
-                                 lookup_event_class,
-                                 all_event_classes,
-                                 all_categories,
-                                 events_in_category,
                                  EventIdCollision,
                                  EventDefinitionOutsideCategoryContext,
                                  EventRegistrationLocked)
 from .events             import (EventTerminalUp,
                                  EventTerminalDown)
-from .marshaller         import Marshaller
 from .dispatcher         import EventDispatcher, Subscription
-from .channel            import (EventChannel,
-                                 AsyncQueueChannel,
-                                 ThreadQueueChannel,
-                                 ProcessQueueChannel,
-                                 RemoteChannel)
-from .channel_parameter  import EventChannelParameter
 from .terminal           import EventTerminal
 from .router             import EventRouter
+from .channel.marshaller import Marshaller
+from .channel.channel    import (EventChannel,
+                                 AsyncChannel,
+                                 ThreadChannel,
+                                 ProcessChannel,
+                                 RemoteChannel)
+from .channel.parameter  import EventChannelParameter
 
 __all__ = [
     # Core
     "Event",
     "category",
     "CLASS_BY_ID",
-    "lookup_event_class",
-    "all_event_classes",
-    "all_categories",
-    "events_in_category",
     "EventIdCollision",
     "EventDefinitionOutsideCategoryContext",
     "EventRegistrationLocked",
@@ -112,9 +104,9 @@ __all__ = [
     "EventDispatcher",
     "Subscription",
     "EventChannel",
-    "AsyncQueueChannel",
-    "ThreadQueueChannel",
-    "ProcessQueueChannel",
+    "AsyncChannel",
+    "ThreadChannel",
+    "ProcessChannel",
     "RemoteChannel",
     "EventChannelParameter",
     "EventTerminal",

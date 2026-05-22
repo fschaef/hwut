@@ -19,8 +19,13 @@ Each concrete subclass gets:
     .category       set from the open category context
     .id             composite string "<category>.<__name__>"
 
-CLASS_BY_ID maps (category, class_name) -> Event subclass, nested:
-    CLASS_BY_ID["WORKFLOW"]["EventTaskDone"]   ==   EventTaskDone
+CLASS_BY_ID is a Registry (a dict subclass) mapping the composite wire
+id "<category>.<class_name>" -> Event subclass:
+    CLASS_BY_ID["WORKFLOW.EventTaskDone"]   ==   EventTaskDone
+
+The Registry carries the lookup/enumeration behaviour as member
+functions (lookup, all_classes, categories, in_category) rather than
+as free functions operating on a bare dict.
 
 WIRE ID:
 
@@ -70,15 +75,108 @@ from pydantic    import TypeAdapter, ValidationError
 
 
 # ============================================================================
-# Module-level registry of all concrete Event subclasses, keyed by the
-# composite wire id "<category>.<class_name>".
-#
-# Flat dict by design: this is exactly what the Marshaller has in hand
-# when it parses an incoming wire envelope ("WORKFLOW.EventTaskDone"
-# comes in as one string), so lookup is one dict access. Per-category
-# enumeration is a helper (events_in_category()), not the primary shape.
+# Registry
 # ============================================================================
-CLASS_BY_ID: dict[str, type] = {}
+class Registry(dict):
+    """Registry of all concrete Event subclasses, keyed by composite wire id.
+
+    A dict subclass: keys are the composite wire id strings
+    "<category>.<class_name>", values are the Event subclasses. Being a
+    dict, it supports the plain mapping operations the registration path
+    relies on:
+
+        composite in registry            membership test
+        registry[composite] = cls        insertion
+        for wire_id in registry: ...      iteration in registration order
+
+    Flat by design: this is exactly what the Marshaller has in hand when
+    it parses an incoming wire envelope ("WORKFLOW.EventTaskDone" arrives
+    as one string), so .lookup() is a single dict access. Per-category
+    enumeration is a derived helper (.in_category()), not the primary
+    shape.
+
+    The lookup/enumeration behaviour lives here as member functions
+    rather than as free functions operating on a bare dict.
+    """
+
+    def register(self, cls) -> None:
+        """RETURN: None.
+
+        Insert a concrete Event subclass under its .id. Raises
+        EventIdCollision if .id is already taken; the colliding class
+        is named in the message.
+
+        Called by Event.__init_subclass__ once .category and .id have
+        been stamped on the class.
+        """
+        composite = cls.id
+        if composite in self:
+            existing = self[composite]
+            raise EventIdCollision(
+                "Event subclass name %r is already registered in category %r "
+                "to %s.%s; cannot also register %s.%s. Event names must be "
+                "unique within a category." % (
+                    cls.__name__, cls.category,
+                    existing.__module__, existing.__qualname__,
+                    cls.__module__,      cls.__qualname__,
+                )
+            )
+        self[composite] = cls
+
+    def lookup(self, wire_id: str) -> "type | None":
+        """RETURN: type[Event],  the Event subclass whose .id equals wire_id.
+                   None,          if no such class is registered, or if
+                                  wire_id is not a string.
+
+        One dict access; wire_id is the composite "<category>.<class_name>"
+        exactly as it appears on the wire.
+        """
+        if not isinstance(wire_id, str):
+            return None
+        return self.get(wire_id)
+
+    def all_classes(self) -> list:
+        """RETURN: list[type[Event]],  every concrete Event subclass in
+                                       registration order.
+
+        Convenience for tests and introspection.
+        """
+        return list(self.values())
+
+    def categories(self) -> list:
+        """RETURN: list[str],  every category that has at least one event
+                               registered, in first-registration order.
+
+        Walks the registry once and collects unique category prefixes.
+        """
+        seen     = []
+        seen_set = set()
+        for wire_id in self:
+            cat = wire_id.split(".", 1)[0]
+            if cat not in seen_set:
+                seen_set.add(cat)
+                seen.append(cat)
+        return seen
+
+    def in_category(self, category_name: str) -> list:
+        """RETURN: list[type[Event]],  every Event subclass registered in the
+                                       given category, in registration order.
+
+        Convenience for tests and introspection. Walks the registry once
+        and filters on prefix.
+        """
+        prefix = category_name + "."
+        return [cls for wire_id, cls in self.items()
+                if wire_id.startswith(prefix)]
+
+
+# ============================================================================
+# Module-level registry instance.
+#
+# A single Registry shared by the whole process. Event.__init_subclass__
+# registers into it; the Marshaller looks classes up out of it.
+# ============================================================================
+CLASS_BY_ID: Registry = Registry()
 
 
 # ----------------------------------------------------------------------------
@@ -89,11 +187,9 @@ CLASS_BY_ID: dict[str, type] = {}
 _current_category:    "str | None" = None
 _registration_locked: bool         = False
 
-
 # ============================================================================
 # Exceptions
 # ============================================================================
-
 class EventIdCollision(Exception):
     """Raised when two Event subclasses in the same category share a class name.
 
@@ -103,7 +199,6 @@ class EventIdCollision(Exception):
     """
     pass
 
-
 class EventDefinitionOutsideCategoryContext(Exception):
     """Raised when an Event subclass is defined outside any open category.
 
@@ -111,7 +206,6 @@ class EventDefinitionOutsideCategoryContext(Exception):
     block.
     """
     pass
-
 
 class EventRegistrationLocked(Exception):
     """Raised when registration is attempted after Event.lock_registration().
@@ -125,7 +219,6 @@ class EventRegistrationLocked(Exception):
 # ============================================================================
 # Category context
 # ============================================================================
-
 @contextmanager
 def category(name: str):
     """Open a category for the duration of the `with` block.
@@ -182,7 +275,6 @@ def category(name: str):
 # ============================================================================
 # Event base class
 # ============================================================================
-
 @dataclass(frozen=True, kw_only=True)
 class Event:
     """Base class for all events.
@@ -260,24 +352,11 @@ class Event:
                 )
             )
 
-        name      = cls.__name__
-        composite = "%s.%s" % (_current_category, name)
+        cls.category = _current_category
+        cls.id       = "%s.%s" % (_current_category, cls.__name__)
 
-        if composite in CLASS_BY_ID:
-            existing = CLASS_BY_ID[composite]
-            raise EventIdCollision(
-                "Event subclass name %r is already registered in category %r "
-                "to %s.%s; cannot also register %s.%s. Event names must be "
-                "unique within a category." % (
-                    name, _current_category,
-                    existing.__module__, existing.__qualname__,
-                    cls.__module__,      cls.__qualname__,
-                )
-            )
-
-        cls.category         = _current_category
-        cls.id               = composite
-        CLASS_BY_ID[composite] = cls
+        # Registry.register() owns the collision check and the insertion.
+        CLASS_BY_ID.register(cls)
 
     @classmethod
     def lock_registration(cls):
@@ -329,7 +408,7 @@ class Event:
 
         This is called on a CONCRETE subclass, e.g.
         EventTaskDone.from_dict({...}). The Marshaller dispatches to
-        the right subclass via lookup_event_class before calling this.
+        the right subclass via CLASS_BY_ID.lookup before calling this.
         """
         try:
             return cls._get_adapter().validate_python(d)
@@ -349,7 +428,7 @@ class Event:
         """
         # Local import to break the event <-> marshaller cycle at
         # module load.
-        from vut.engine.event.marshaller import Marshaller
+        from vut.engine.event.channel.marshaller import Marshaller
         return Marshaller.serialize(self)
 
     @classmethod
@@ -361,59 +440,29 @@ class Event:
         Delegates to Marshaller.deserialize(wire), which dispatches on
         the wire's id to the right Event subclass.
         """
-        from vut.engine.event.marshaller import Marshaller
+        from vut.engine.event.channel.marshaller import Marshaller
         return Marshaller.deserialize(wire)
 
-
+if False:
 # ============================================================================
-# Lookup helpers
+# Backward-compatible free-function shims.
+#
+# The lookup/enumeration behaviour now lives on Registry. These thin
+# wrappers preserve the old call sites; prefer the CLASS_BY_ID.* methods
+# in new code, and delete these once no caller depends on them.
 # ============================================================================
+    def lookup_event_class(wire_id: str) -> "type | None":
+        """RETURN: type[Event] | None.  Shim for CLASS_BY_ID.lookup(wire_id)."""
+        return CLASS_BY_ID.lookup(wire_id)
 
-def lookup_event_class(wire_id: str) -> "type | None":
-    """RETURN: type[Event],  the Event subclass whose .id equals wire_id.
-               None,          if no such class is registered, or if
-                             wire_id is not a string.
+    def all_event_classes() -> list:
+        """RETURN: list[type[Event]].  Shim for CLASS_BY_ID.all_classes()."""
+        return CLASS_BY_ID.all_classes()
 
-    With the flat CLASS_BY_ID, lookup is one dict access. wire_id is
-    the composite "<category>.<class_name>" as it appears on the wire.
-    """
-    if not isinstance(wire_id, str):
-        return None
-    return CLASS_BY_ID.get(wire_id)
+    def all_categories() -> list:
+        """RETURN: list[str].  Shim for CLASS_BY_ID.categories()."""
+        return CLASS_BY_ID.categories()
 
-
-def all_event_classes() -> list:
-    """RETURN: list[type[Event]],  every concrete Event subclass in
-                                   registration order.
-
-    Convenience for tests and introspection.
-    """
-    return list(CLASS_BY_ID.values())
-
-
-def all_categories() -> list:
-    """RETURN: list[str],  every category that has at least one event
-                           registered, in first-registration order.
-
-    Walks CLASS_BY_ID once and collects unique category prefixes.
-    """
-    seen = []
-    seen_set = set()
-    for wire_id in CLASS_BY_ID:
-        cat = wire_id.split(".", 1)[0]
-        if cat not in seen_set:
-            seen_set.add(cat)
-            seen.append(cat)
-    return seen
-
-
-def events_in_category(category_name: str) -> list:
-    """RETURN: list[type[Event]],  every Event subclass registered in the
-                                   given category, in registration order.
-
-    Convenience for tests and introspection. Walks CLASS_BY_ID once
-    and filters on prefix.
-    """
-    prefix = category_name + "."
-    return [cls for wire_id, cls in CLASS_BY_ID.items()
-            if wire_id.startswith(prefix)]
+    def events_in_category(category_name: str) -> list:
+        """RETURN: list[type[Event]].  Shim for CLASS_BY_ID.in_category(name)."""
+        return CLASS_BY_ID.in_category(category_name)

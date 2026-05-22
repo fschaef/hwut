@@ -7,7 +7,7 @@ b.state after peer Down: DOWN
 peer_down_seen: ['b saw peer Down']
 
 --- send after stop raises ---
-RuntimeError raised (expected)
+Send failed (expected)
 
 --- stop is idempotent ---
 second stop returned cleanly

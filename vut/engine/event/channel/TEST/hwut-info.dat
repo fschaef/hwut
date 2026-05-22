@@ -1,4 +1,4 @@
-Event Component: Basics
+Event Component: Transport Layer (Channel, Marshalling, ...)
 ----------------------------------------------------------
 
 coverage run --omit ./*.py -a *.py 

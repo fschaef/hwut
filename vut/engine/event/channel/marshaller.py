@@ -19,7 +19,7 @@ WIRE FORMAT (Pattern A: external tag / envelope)
 
 The "id" is the Event subclass's composite identity
 ("<category>.<class_name>"). Deserialise looks the class up via
-event.lookup_event_class() (one flat-dict access).
+event.CLASS_BY_ID.lookup() (one flat-dict access).
 
 
 SPECIALISTS
@@ -52,12 +52,10 @@ import sys
 from types   import MappingProxyType
 from typing  import Callable
 
-from vut.engine.event.event import Event, lookup_event_class
-
+from vut.engine.event.event import Event, CLASS_BY_ID
 
 SerializeFn   = Callable[[Event], dict]
 DeserializeFn = Callable[[dict],  "Event | None"]
-
 
 class Marshaller:
     """Global transport for Events.
@@ -102,7 +100,7 @@ class Marshaller:
             return None
 
         # Composite id "<category>.<class_name>"; look up the class.
-        event_cls = lookup_event_class(event_id)
+        event_cls = CLASS_BY_ID.lookup(event_id)
         if event_cls is None:
             print("Marshaller.deserialize: unknown id %r" % event_id,
                   file=sys.stderr)

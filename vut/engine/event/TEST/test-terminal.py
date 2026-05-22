@@ -195,11 +195,11 @@ async def _stop():
     print("peer_down_seen: %s" % peer_down_seen)
 
     banner("send after stop raises")
-    try:
-        await a.send(EventTaskDone(task_id=2, duration_s=2.0))
+    verdict = await a.send(EventTaskDone(task_id=2, duration_s=2.0))
+    if verdict:
         print("UNEXPECTED: send succeeded")
-    except RuntimeError as e:
-        print("RuntimeError raised (expected)")
+    else:
+        print("Send failed (expected)")
 
     banner("stop is idempotent")
     await a.stop()

@@ -1,0 +1,9 @@
+
+--- run the ephemeral handshake ---
+handshake completed
+
+--- round-trip A -> B ---
+B decrypts A's message: True
+
+--- round-trip B -> A ---
+A decrypts B's message: True

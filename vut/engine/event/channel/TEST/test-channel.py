@@ -13,10 +13,10 @@ basic send/receive round-trip between two ends of a pair. Then verify
 that close() properly signals end-of-stream to the peer (receive returns
 None).
 
-    async           AsyncQueueChannel pair, both sides on the same loop.
-    thread          ThreadQueueChannel pair, blocking get wrapped via
+    async           AsyncChannel pair, both sides on the same loop.
+    thread          ThreadChannel pair, blocking get wrapped via
                     run_in_executor.
-    process         ProcessQueueChannel pair WITHOUT spawning a process
+    process         ProcessChannel pair WITHOUT spawning a process
                     (we exercise the channel from two coroutines that
                     share the same multiprocessing.Queue pair; this
                     tests the serialise/deserialise path).
@@ -60,7 +60,7 @@ def banner(label):
 
 
 async def _async():
-    """RETURN: None. AsyncQueueChannel pair, basic round-trip."""
+    """RETURN: None. AsyncChannel pair, basic round-trip."""
     a_ecp, b_ecp = EventChannelParameter.for_async()
     a_ch = await a_ecp.make_channel()
     b_ch = await b_ecp.make_channel()
@@ -86,7 +86,7 @@ async def _async():
 
 
 async def _thread():
-    """RETURN: None. ThreadQueueChannel pair, used between two coroutines
+    """RETURN: None. ThreadChannel pair, used between two coroutines
     on the same loop (since we don't actually spawn a thread here -
     that's what the Terminal test does)."""
     a_ecp, b_ecp = EventChannelParameter.for_thread()
@@ -104,7 +104,7 @@ async def _thread():
 
 
 async def _process():
-    """RETURN: None. ProcessQueueChannel pair WITHOUT spawning a child
+    """RETURN: None. ProcessChannel pair WITHOUT spawning a child
     process. The serialise/deserialise path goes through Marshaller."""
     a_ecp, b_ecp = EventChannelParameter.for_process()
     a_ch = await a_ecp.make_channel()
@@ -126,7 +126,7 @@ async def _process():
 async def _close():
     """RETURN: None. close() on one end -> receive() returns None on
     the same end (close signals end of receive)."""
-    banner("AsyncQueueChannel: close() -> receive() returns None")
+    banner("AsyncChannel: close() -> receive() returns None")
     a_ecp, b_ecp = EventChannelParameter.for_async()
     a_ch = await a_ecp.make_channel()
     b_ch = await b_ecp.make_channel()

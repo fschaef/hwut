@@ -101,7 +101,7 @@ class EventDispatcher:
         REFUSED at subscribe time (TypeError). Object sinks (with
         .send()) and async callable sinks are still accepted.
         """
-        self._enforce_async    = enforce_async_callbacks_f
+        self._enforce_async = enforce_async_callbacks_f
         self._subscriptions:   dict[int, Subscription] = {}
         self._next_handle:     int                     = 0
 
@@ -160,7 +160,6 @@ class EventDispatcher:
     # ----------------------------------------------------------------
     # Dispatch
     # ----------------------------------------------------------------
-
     def dispatch(self, event: Event) -> None:
         """RETURN: None.
 

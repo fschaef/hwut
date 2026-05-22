@@ -1,0 +1,9 @@
+
+--- encrypt is identity ---
+encrypt(b'hello world') == b'hello world': True
+
+--- decrypt is identity ---
+decrypt(b'hello world') == b'hello world': True
+
+--- handshake is a no-op ---
+two IdentityCiphers handshook without error

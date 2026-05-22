@@ -390,6 +390,129 @@ CONTEXT MANAGER:
 
 
 --------------------------------------------------------------------------------
+DECISION 16 - Encryption is a pluggable Cipher inside the Channel
+--------------------------------------------------------------------------------
+
+DECISION:    Encryption for serialising channels is a pluggable
+             strategy object, the Cipher (cipher.py). The Channel
+             delegates the per-message transform to it:
+
+                 async handshake(raw_send, raw_recv)
+                 encrypt(blob: bytes) -> bytes
+                 decrypt(blob: bytes) -> bytes
+
+             The default IdentityCipher is a pass-through (no
+             encryption, no-op handshake). Four implementations ship:
+             IdentityCipher, FernetCipher (symmetric,
+             cryptography.fernet), NaClBoxCipher (public-key, PyNaCl
+             Box), TLSCipher (ssl.SSLObject in memory-BIO mode).
+
+             A Cipher operates on BYTES, between serialisation and
+             transport. It is meaningful only for the serialising
+             channels - ProcessQueueChannel and RemoteChannel.
+             In-process channels (Async, Thread) move live Event
+             objects, never serialise, and always use IdentityCipher.
+
+             The crypto handshake runs INSIDE the channel's connect(),
+             which make_channel() calls before returning. The channel
+             is fully secured before the Terminal ever sees it; the
+             Terminal is entirely unaware of the Cipher.
+
+             Cipher is NOT exported from the event package's
+             __init__. It is a channel-internal concern. Users
+             configure encryption indirectly, by passing a CipherSpec
+             to a channel-parameter factory.
+
+WHY THE CHANNEL, NOT THE MARSHALLER:
+
+             The Marshaller's job is Event <-> wire-dict. Encryption
+             is a property of the TRANSPORT - it belongs with the
+             thing that moves bytes between endpoints. Putting crypto
+             in the Marshaller would force every channel, including
+             the in-process ones, to carry machinery they cannot use.
+
+WHY A STRATEGY OBJECT, NOT A WRAPPER CHANNEL:
+
+             A wrapper Channel would have to re-implement the full
+             EventChannel ABC (send, receive, close) just to insert
+             two byte transforms. The Cipher member inserts exactly
+             those two transforms (plus a handshake) and nothing
+             else - less surface, less to get wrong.
+
+THE ECP CARRIES A RECIPE, NEVER A SECRET:
+
+             A Cipher must reach spawned channels (Process, Remote)
+             via the EventChannelParameter. The ECP carries a
+             CipherSpec - kind plus a key REFERENCE (env-var name,
+             file path), never key bytes. CipherSpec.build() resolves
+             the reference LOCALLY, on whichever side constructs the
+             channel.
+
+             Rationale: a secret inside a pickled ECP leaks (pipe
+             buffers, swap, logs); for for_remote() a key carried in
+             the ECP would be transmitted over the very channel it
+             secures. The ECP only NAMES the key; deployment
+             provisions it. Key distribution to remote machines is
+             out of scope for the event component.
+
+SECRECY IS NOT IDENTITY:
+
+             An ephemeral key exchange with no pre-shared anchor
+             gives a CONFIDENTIAL channel with an ANONYMOUS peer: an
+             attacker in the middle can handshake with each side
+             separately and read everything, and both sides still
+             see "encrypted". Authentication requires a pre-shared
+             anchor - a shared key, a pinned peer public key, or a
+             verified certificate.
+
+                 FernetCipher pre-shared key      -> authenticated
+                 FernetCipher ephemeral only      -> encrypted, NOT
+                                                     authenticated
+                 NaClBoxCipher pinned peer key    -> authenticated
+                 NaClBoxCipher unpinned           -> encrypted, NOT
+                                                     authenticated
+                 TLSCipher with cert verification -> authenticated
+
+             For local transports (Process, Thread) identity does
+             not matter - there is no wire to sit on. For
+             RemoteChannel it does. cipher.py's module header states
+             this so a future reader does not pick an unauthenticated
+             configuration thinking it is merely the weakest option
+             rather than a qualitatively different one.
+
+HANDSHAKE IS BELOW THE EVENT LAYER:
+
+             The Cipher handshake exchanges raw bytes, NOT Events,
+             over raw_send / raw_recv primitives the Channel supplies.
+             It must be below the Event layer: an Event cannot be
+             sent securely until the Cipher is up, so the handshake
+             that establishes the Cipher cannot itself be Event-based.
+
+TLS NOTES:
+
+             TLSCipher stores its ssl.SSLContext and runs the TLS
+             handshake in memory-BIO mode (ssl.SSLObject), so it fits
+             the bytes-in/bytes-out shape like any other Cipher. Two
+             caveats, documented in code: (a) the TLS listen end
+             needs server_side=True and the connect end
+             server_side=False, so a TLS for_remote() pair generally
+             needs different specs per end - symmetric ciphers
+             (Fernet, NaCl) do not have this asymmetry; (b) TLS
+             records do not map one-to-one onto application messages,
+             so a production TLSCipher would buffer - the shipped
+             implementation targets the common case where a message
+             fits the record machinery.
+
+TESTING:     test-cipher.py exercises all four ciphers (round-trips,
+             handshakes, the NaCl pinned-key mismatch) and the
+             channel-level integration through make_channel().
+             TLSCipher is not in the suite - it needs a certificate
+             pair on disk, the same reason RemoteChannel is not
+             exercised. Add an integration test when a real
+             remote+TLS deployment exists.
+
+
+--------------------------------------------------------------------------------
 THINGS LEFT OPEN
 --------------------------------------------------------------------------------
 
@@ -421,3 +544,26 @@ THINGS LEFT OPEN
    serialisation, complementing Pydantic's structured-data
    validation. Not built; revisit when an event type's wire size
    shows up in profiling.
+
+8. Peer authentication during the Terminal handshake. The Up/Down
+   handshake currently confirms a peer is THERE, not WHO it is.
+   When a Cipher provides authentication (pre-shared key, pinned
+   peer key, verified certificate) the peer is authenticated at the
+   Cipher layer below. Without such a Cipher, RemoteChannel has no
+   peer-identity check. A token exchanged in EventTerminalUp, or a
+   challenge-response, would add identity at the Terminal layer -
+   not built.
+
+9. TLSCipher record buffering. The shipped implementation assumes
+   each application message fits the TLS record machinery in one
+   pass. A production version would buffer partial records across
+   encrypt/decrypt calls. Revisit if TLSCipher moves past
+   integration-test use.
+
+10. String interning / token-substitution for repeated long strings
+    (file paths, identifiers) on the wire. Simplest form: a
+    build-time-constant shared table, no negotiation. Dynamic
+    interning needs a token-assignment protocol and defined
+    behaviour for unknown tokens. Deferred until a wire-size
+    profile justifies it; grouped with the Construct note as a
+    wire-size optimisation.

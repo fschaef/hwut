@@ -1,0 +1,9 @@
+
+--- process channel, identity cipher (default) ---
+identity round-trip payload: 'plain'
+
+--- process channel, Fernet cipher via CipherSpec.fernet_env ---
+fernet round-trip payload:   'encrypted'
+
+--- in-process channels ignore cipher_spec (always identity) ---
+for_async cipher_spec kind: IDENTITY

@@ -26,9 +26,9 @@ be used in an asyncio receive loop uniformly.
 
 CONCRETE CHANNELS
 
-    AsyncQueueChannel       in-process; pair of asyncio.Queue
-    ThreadQueueChannel      in-process; pair of queue.Queue
-    ProcessQueueChannel     across-process; pair of multiprocessing.Queue;
+    AsyncChannel       in-process; pair of asyncio.Queue
+    ThreadChannel      in-process; pair of queue.Queue
+    ProcessChannel     across-process; pair of multiprocessing.Queue;
                             uses Marshaller for serialisation
     RemoteChannel           across-machine; socket; uses Marshaller
 
@@ -43,6 +43,20 @@ This is invisible at the Channel interface. Callers send and receive
 Event instances regardless of channel type.
 
 
+ENCRYPTION
+
+The serialising channels (Process, Remote) carry a Cipher (see
+cipher.py). The Cipher transforms the serialised byte payload on send
+(encrypt) and receive (decrypt). The default is IdentityCipher - a
+pass-through, no encryption. A non-identity Cipher is configured via
+the EventChannelParameter; the Channel runs cipher.handshake() during
+its own connect, BEFORE it is handed up to the Terminal, so the
+Cipher is fully established before any Event crosses the wire.
+
+In-process channels (AsyncQueue, ThreadQueue) never serialise and
+have no bytes to encrypt; they do not carry a Cipher.
+
+
 LIFECYCLE
 
 A Channel exists for the duration of one Terminal-to-Terminal
@@ -55,14 +69,14 @@ ________________________________________________________________________________
 """
 import asyncio
 import queue as _queue                                  # threading queue
-import socket
 import struct
 import sys
 
 from abc      import ABC, abstractmethod
 
-from vut.engine.event.event      import Event
-from vut.engine.event.marshaller import Marshaller
+from vut.engine.event.event              import Event
+from vut.engine.event.channel.marshaller import Marshaller
+from vut.engine.event.channel.cipher     import Cipher, IdentityCipher
 
 
 # ============================================================================
@@ -109,7 +123,7 @@ class EventChannel(ABC):
 # In-process: asyncio.Queue
 # ============================================================================
 
-class AsyncQueueChannel(EventChannel):
+class AsyncChannel(EventChannel):
     """In-process Channel over a pair of asyncio.Queues.
 
     Sends and receives in the same event loop. No serialisation;
@@ -123,14 +137,14 @@ class AsyncQueueChannel(EventChannel):
     _CLOSE_SENTINEL = object()                          # placed on in_q on close
 
     def __init__(self, in_q: asyncio.Queue, out_q: asyncio.Queue):
-        """RETURN: a new AsyncQueueChannel."""
+        """RETURN: a new AsyncChannel."""
         self._in_q   = in_q
         self._out_q  = out_q
         self._closed = False
 
     async def send(self, event: Event) -> None:
         if self._closed:
-            raise RuntimeError("AsyncQueueChannel.send: channel is closed")
+            raise RuntimeError("AsyncChannel.send: channel is closed")
         await self._out_q.put(event)
 
     async def receive(self) -> "Event | None":
@@ -160,7 +174,7 @@ class AsyncQueueChannel(EventChannel):
 # Across-thread: queue.Queue with run_in_executor for the blocking get
 # ============================================================================
 
-class ThreadQueueChannel(EventChannel):
+class ThreadChannel(EventChannel):
     """In-process Channel over a pair of thread-safe queue.Queue objects.
 
     Used when the peer is on a worker thread (not on the asyncio loop).
@@ -172,14 +186,14 @@ class ThreadQueueChannel(EventChannel):
     _CLOSE_SENTINEL = object()
 
     def __init__(self, in_q: _queue.Queue, out_q: _queue.Queue):
-        """RETURN: a new ThreadQueueChannel."""
+        """RETURN: a new ThreadChannel."""
         self._in_q   = in_q
         self._out_q  = out_q
         self._closed = False
 
     async def send(self, event: Event) -> None:
         if self._closed:
-            raise RuntimeError("ThreadQueueChannel.send: channel is closed")
+            raise RuntimeError("ThreadChannel.send: channel is closed")
         # queue.Queue.put is blocking-by-default but typically very fast
         # for unbounded queues; we offload to the executor to keep the
         # asyncio loop responsive even with bounded queues.
@@ -211,42 +225,87 @@ class ThreadQueueChannel(EventChannel):
 # Across-process: multiprocessing.Queue + Marshaller
 # ============================================================================
 
-class ProcessQueueChannel(EventChannel):
+class ProcessChannel(EventChannel):
     """Across-process Channel over a pair of multiprocessing.Queue.
 
     Events are serialised via Marshaller before send and deserialised
-    after receive. The wire is a dict (Marshaller's wire form) rather
-    than the raw Event - this is what crosses the pickle boundary.
+    after receive. The wire form depends on whether a Cipher is
+    active:
+
+      -- IdentityCipher (default): the Marshaller wire dict is put on
+         the queue directly (picklable dict, as before).
+      -- a real Cipher: the wire dict is JSON-encoded to bytes,
+         encrypted, and the resulting bytes are put on the queue.
+
+    The Cipher, if any, is established via connect() before the
+    channel is used.
     """
 
     _CLOSE_SENTINEL = {"_close": True}                  # picklable dict
 
-    def __init__(self, in_q, out_q):
-        """RETURN: a new ProcessQueueChannel.
+    def __init__(self, in_q, out_q, cipher: "Cipher | None" = None):
+        """RETURN: a new ProcessChannel.
 
         in_q and out_q must be multiprocessing.Queue (or compatible
-        picklable queue objects).
+        picklable queue objects). cipher defaults to IdentityCipher.
         """
         self._in_q   = in_q
         self._out_q  = out_q
         self._closed = False
+        self._cipher = cipher if cipher is not None else IdentityCipher()
+
+    async def connect(self) -> None:
+        """RETURN: None,  once the Cipher handshake (if any) has completed.
+
+        Runs cipher.handshake() over raw queue primitives. For
+        IdentityCipher this is a no-op. Called by the ECP's
+        make_channel() before the channel is handed to the Terminal.
+        """
+        await self._cipher.handshake(self._raw_send, self._raw_recv)
+
+    async def _raw_send(self, b: bytes) -> None:
+        """RETURN: None.  Put raw handshake bytes on the out queue."""
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self._out_q.put, b)
+
+    async def _raw_recv(self) -> bytes:
+        """RETURN: bytes,  raw handshake bytes from the in queue."""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self._in_q.get)
 
     async def send(self, event: Event) -> None:
         if self._closed:
-            raise RuntimeError("ProcessQueueChannel.send: channel is closed")
+            raise RuntimeError("ProcessChannel.send: channel is closed")
         wire = Marshaller.serialize(event)
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, self._out_q.put, wire)
+        if isinstance(self._cipher, IdentityCipher):
+            # Fast path: put the picklable dict directly.
+            await loop.run_in_executor(None, self._out_q.put, wire)
+        else:
+            import json
+            payload = self._cipher.encrypt(json.dumps(wire).encode("utf-8"))
+            await loop.run_in_executor(None, self._out_q.put, payload)
 
     async def receive(self) -> "Event | None":
         if self._closed:
             return None
         loop = asyncio.get_running_loop()
-        wire = await loop.run_in_executor(None, self._in_q.get)
-        if isinstance(wire, dict) and wire.get("_close"):
+        item = await loop.run_in_executor(None, self._in_q.get)
+        if isinstance(item, dict) and item.get("_close"):
             self._closed = True
             return None
-        return Marshaller.deserialize(wire)             # may return None on validation fail
+        if isinstance(item, dict):
+            # Identity-cipher fast path: item IS the wire dict.
+            return Marshaller.deserialize(item)
+        # Encrypted path: item is bytes.
+        try:
+            import json
+            wire = json.loads(self._cipher.decrypt(item).decode("utf-8"))
+        except Exception as e:
+            print("ProcessChannel.receive: decrypt/decode failed: %s" % e,
+                  file=sys.stderr)
+            return None
+        return Marshaller.deserialize(wire)
 
     async def close(self) -> None:
         if self._closed:
@@ -255,7 +314,7 @@ class ProcessQueueChannel(EventChannel):
         try:
             self._in_q.put_nowait(self._CLOSE_SENTINEL)
         except Exception as e:
-            print("ProcessQueueChannel.close: put_nowait failed: %s" % e,
+            print("ProcessChannel.close: put_nowait failed: %s" % e,
                   file=sys.stderr)
 
 
@@ -269,7 +328,11 @@ class RemoteChannel(EventChannel):
     Wire format per message:
 
         4 bytes (network-order uint32) : payload length N
-        N bytes                        : JSON of Marshaller.serialize(event)
+        N bytes                        : payload
+
+    The payload is JSON of Marshaller.serialize(event), optionally
+    encrypted by the Cipher. With IdentityCipher the payload is the
+    JSON bytes directly; with a real Cipher it is the encrypted form.
 
     Two ends: one constructed in 'listen' mode (server accept), one in
     'connect' mode (client connect). The EventChannelParameter factory
@@ -283,18 +346,45 @@ class RemoteChannel(EventChannel):
     _CLOSE_HEADER = struct.pack("!I", 0)                # zero-length = close
 
     def __init__(self, reader: asyncio.StreamReader,
-                       writer: asyncio.StreamWriter):
-        """RETURN: a new RemoteChannel."""
+                       writer: asyncio.StreamWriter,
+                       cipher: "Cipher | None" = None):
+        """RETURN: a new RemoteChannel.
+
+        cipher defaults to IdentityCipher (no encryption).
+        """
         self._reader = reader
         self._writer = writer
         self._closed = False
+        self._cipher = cipher if cipher is not None else IdentityCipher()
+
+    async def connect(self) -> None:
+        """RETURN: None,  once the Cipher handshake (if any) has completed.
+
+        Runs cipher.handshake() over length-prefixed raw frames. For
+        IdentityCipher this is a no-op. Called by the ECP's
+        make_channel() before the channel is handed to the Terminal.
+        """
+        await self._cipher.handshake(self._raw_send, self._raw_recv)
+
+    async def _raw_send(self, b: bytes) -> None:
+        """RETURN: None.  Send one length-prefixed raw frame."""
+        self._writer.write(struct.pack(self._LEN_FMT, len(b)) + b)
+        await self._writer.drain()
+
+    async def _raw_recv(self) -> bytes:
+        """RETURN: bytes,  one length-prefixed raw frame."""
+        header = await self._reader.readexactly(4)
+        n      = struct.unpack(self._LEN_FMT, header)[0]
+        if n == 0:
+            return b""
+        return await self._reader.readexactly(n)
 
     async def send(self, event: Event) -> None:
         if self._closed:
             raise RuntimeError("RemoteChannel.send: channel is closed")
         import json
         wire    = Marshaller.serialize(event)
-        payload = json.dumps(wire).encode("utf-8")
+        payload = self._cipher.encrypt(json.dumps(wire).encode("utf-8"))
         header  = struct.pack(self._LEN_FMT, len(payload))
         self._writer.write(header + payload)
         await self._writer.drain()
@@ -318,9 +408,10 @@ class RemoteChannel(EventChannel):
             self._closed = True
             return None
         try:
-            wire = json.loads(payload.decode("utf-8"))
+            plaintext = self._cipher.decrypt(payload)
+            wire      = json.loads(plaintext.decode("utf-8"))
         except Exception as e:
-            print("RemoteChannel.receive: decode failed: %s" % e,
+            print("RemoteChannel.receive: decrypt/decode failed: %s" % e,
                   file=sys.stderr)
             return None
         return Marshaller.deserialize(wire)
