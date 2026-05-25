@@ -285,8 +285,13 @@ class EventChannelParameter:
 
         ASYNC    -> { in_q:  asyncio.Queue, out_q:  asyncio.Queue }
         THREAD   -> { in_q:  queue.Queue,   out_q:  queue.Queue   }
-        PROCESS  -> { in_q:  mp.Queue,      out_q:  mp.Queue      }
+        PROCESS  -> { in_q:  mp.Queue,      out_q:  mp.Queue,
+                      start_method: str | None }
         REMOTE   -> { host:  str, port: int, mode:  "listen" | "connect" }
+
+    For PROCESS, 'start_method' records the multiprocessing start
+    method the queues were built under; the launcher of the child
+    process must start it under the same context (see for_process).
 
     .cipher_spec is a CipherSpec (default: identity). It is meaningful
     only for PROCESS and REMOTE; ASYNC and THREAD ignore it.
@@ -338,7 +343,8 @@ class EventChannelParameter:
 
     @classmethod
     def for_process(cls,
-                    cipher_spec: "CipherSpec | None" = None) \
+                    cipher_spec:  "CipherSpec | None" = None,
+                    start_method: "str | None"        = None) \
             -> "tuple[EventChannelParameter, EventChannelParameter]":
         """RETURN: (a_ecp, b_ecp), a pair connected by multiprocessing.Queue.
 
@@ -349,12 +355,19 @@ class EventChannelParameter:
         cipher_spec defaults to identity (no encryption). A non-identity
         spec is carried on BOTH ECPs so both sides build the same
         Cipher.
+
+        'start_method': multiprocessing.Queue is bound to start method 
+        ('spawn' / 'fork' / 'forkserver', or None for the platform 
+        default).
         """
-        q_ab = multiprocessing.Queue()
-        q_ba = multiprocessing.Queue()
-        a = cls(E_TransportKind.PROCESS, {"in_q": q_ba, "out_q": q_ab},
+        ctx  = multiprocessing.get_context(start_method)
+        q_ab = ctx.Queue()
+        q_ba = ctx.Queue()
+        a = cls(E_TransportKind.PROCESS,
+                {"in_q": q_ba, "out_q": q_ab, "start_method": start_method},
                 cipher_spec=cipher_spec)
-        b = cls(E_TransportKind.PROCESS, {"in_q": q_ab, "out_q": q_ba},
+        b = cls(E_TransportKind.PROCESS,
+                {"in_q": q_ab, "out_q": q_ba, "start_method": start_method},
                 cipher_spec=cipher_spec)
         return a, b
 

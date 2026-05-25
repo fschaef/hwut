@@ -20,7 +20,7 @@ SURFACE:
     .terminate(wait_to_kill_ms)  -> bool
     .suspend()                   -> bool
     .resume()                    -> bool
-    .child_state()               -> E_ChildState
+    .child_state()               -> ChildState
 
 .terminate() IS A REQUEST, NOT AN ACTION (DISCUSSION.txt D3)
 
@@ -52,7 +52,7 @@ import sys
 from vut.engine.event.channel.parameter import EventChannelParameter
 from vut.engine.event.terminal          import EventTerminal
 
-from vut.engine.spawner.enums  import E_ChildState
+from vut.engine.spawner.enums  import ChildState
 from vut.engine.spawner.events import (EventChildTerminationReq,
                                        EventChildTermination,
                                        E_TerminationReason)
@@ -136,10 +136,16 @@ class SpawnerParentEventTerminal(EventTerminal):
         MANDATORY - infinite wait must be the deliberate value None,
         never a forgotten argument.
 
-        On acceptance this method only EMITS EventChildTerminationReq
-        toward the Spawner (DISCUSSION.txt D3); the Spawner performs the
-        actual shutdown sequence. Returning True means "the request is
-        on its way", not "the child has stopped".
+        On acceptance this method dispatches EventChildTerminationReq to
+        the Spawner (DISCUSSION.txt D3: "through the router"). In the
+        co-located case the router hop is a local dispatch onto this
+        terminal's own dispatcher, where the Spawner's supervision
+        handler is subscribed; should the Spawner later move off this
+        context, the same event simply crosses a real boundary instead.
+        The Spawner then performs the shutdown sequence AND relays the
+        request to the child for its cooperative wind-down. Returning
+        True means "the request is on its way", not "the child has
+        stopped".
         """
         if self._spawner is None or self._state_machine is None:
             print("SpawnerParentEventTerminal.terminate: terminal is not "
@@ -164,9 +170,12 @@ class SpawnerParentEventTerminal(EventTerminal):
                   file=sys.stderr)
             return False
 
-        # Thin request: emit the event, let the Spawner act.
-        return await self.send(EventChildTerminationReq(
+        # Thin request: dispatch the event to the Spawner (the router
+        # hop), let the Spawner act. NOT a channel send - the Spawner is
+        # the audience, and it is co-located on this dispatcher.
+        self.dispatcher.dispatch(EventChildTerminationReq(
             wait_to_kill_ms=wait_to_kill_ms))
+        return True
 
     async def suspend(self) -> bool:
         """RETURN: True,  the child was suspended via its OS handle.
@@ -211,20 +220,20 @@ class SpawnerParentEventTerminal(EventTerminal):
             return False
         return await self._spawner.resume_child()
 
-    def child_state(self) -> E_ChildState:
-        """RETURN: E_ChildState, the child-state machine's current state.
+    def child_state(self) -> ChildState:
+        """RETURN: ChildState, the child-state machine's current state.
 
         A snapshot read, never blocking. To AWAIT a transition instead
         of polling, subscribe to EventChildStateChanged on .dispatcher
         or use dispatcher.expect_event(EventChildStateChanged).
 
         If the terminal is not attached to a Spawner this returns
-        E_ChildState.LAUNCHED - the pre-supervision default - rather than
+        ChildState.LAUNCHED - the pre-supervision default - rather than
         raising; an unattached terminal is an internal transient the
         user never sees.
         """
         if self._state_machine is None:
-            return E_ChildState.LAUNCHED
+            return ChildState.LAUNCHED
         return self._state_machine.state
 
 

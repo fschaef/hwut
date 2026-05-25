@@ -50,13 +50,16 @@ import sys
 import threading
 
 from vut.engine.event.router   import EventRouter
+from vut.engine.event.terminal import EventTerminal
 
 from vut.engine.spawner.config        import (SpawnerConfig,
                                               AsyncConfig,
                                               ThreadConfig,
                                               ProcessConfig,
                                               RemoteProcessConfig)
-from vut.engine.spawner.events        import EventChildTerminationReq
+from vut.engine.spawner.enums         import ChildState
+from vut.engine.spawner.events        import (EventChildTerminationReq,
+                                              EventChildTermination)
 from vut.engine.spawner.handles       import (AsyncChildHandle,
                                               ThreadChildHandle,
                                               ProcessChildHandle,
@@ -69,6 +72,7 @@ from vut.engine.spawner.trampoline    import run_trampoline, run_trampoline_entr
 # ============================================================================
 # The Spawner hub
 # ============================================================================
+
 class Spawner:
     """One launched child, supervised: router + handle + state machine.
 
@@ -84,7 +88,7 @@ class Spawner:
       -- the ChildHandle - the OS handle (PID / Task / Process), kept
          here and never surfaced to the user (DISCUSSION.txt D2).
       -- the ChildStateMachine - the FSM that turns observed events into
-         E_ChildState transitions.
+         ChildState transitions.
 
     Per DISCUSSION.txt D3, the parent's .terminate() does NOT call a
     Spawner method directly; it emits EventChildTerminationReq, and the
@@ -96,19 +100,22 @@ class Spawner:
         """RETURN: a new, unwired Spawner for the given config.
 
         Construction only stores the config and creates the router.
-        Wiring (handle, state machine, subscriptions) is done by
-        _spawn via _wire(), once the child has been launched and the
-        parent terminal exists.
+        Wiring (handle, state machine, subscriptions, watchdog) is done
+        by _spawn via _wire() and _start_watchdog(), once the child has
+        been launched and the parent terminal exists.
         """
-        self.config         = config
-        self._router        = EventRouter()
-        self._handle        = None      # ChildHandle, set by _wire()
-        self._state_machine = None      # ChildStateMachine, set by _wire()
-        self._parent        = None      # parent terminal, set by _wire()
+        self.config          = config
+        self._router         = EventRouter()
+        self._handle         = None      # ChildHandle, set by _wire()
+        self._state_machine  = None      # ChildStateMachine, set by _wire()
+        self._parent         = None      # parent terminal, set by _wire()
+        self._watchdog_task  = None      # asyncio.Task, set by _start_watchdog()
+        self._watchdog_ms    = 250       # poll period; see _watchdog_loop()
 
     # ----------------------------------------------------------------
     # Wiring
     # ----------------------------------------------------------------
+
     def _wire(self, parent_terminal: SpawnerParentEventTerminal,
                     handle) -> ChildStateMachine:
         """RETURN: ChildStateMachine, the freshly built and wired FSM.
@@ -135,36 +142,99 @@ class Spawner:
             suspend_resume  = suspend_resume,
         )
 
+        # D3: .terminate() emits EventChildTerminationReq; the Spawner
+        # acts on it here, picked up off the parent terminal's receive
+        # dispatcher.
         parent_terminal.dispatcher.subscribe_on_event(
             EventChildTerminationReq,
             self._on_termination_req,
         )
+
+        # A child may also end on its OWN initiative - work done, no
+        # .terminate() ever issued. It still emits EventChildTermination;
+        # this always-on subscription drives RUNNING -> TERM_OK for that
+        # case (DISCUSSION.txt D7). It stands down while a .terminate()
+        # is in progress; see ChildStateMachine.notify_self_completion.
+        parent_terminal.dispatcher.subscribe_on_event(
+            EventChildTermination,
+            self._on_child_termination,
+        )
+
+        # When the FSM reaches any terminal state, stop the watchdog -
+        # a verdict exists, there is nothing left to supervise.
+        self._state_machine.set_on_terminal(self._stop_watchdog)
 
         return self._state_machine
 
     # ----------------------------------------------------------------
     # Supervision handler (router delivers EventChildTerminationReq here)
     # ----------------------------------------------------------------
+
     async def _on_termination_req(self,
                                   event: EventChildTerminationReq) -> None:
         """RETURN: None.
 
-        Handler for the parent's termination request. Hands the
-        wait_to_kill_ms grace period to the state machine's
-        begin_termination(), which runs the shutdown sequence
-        (TERMINATING, then the confirmation-vs-deadline race).
+        Handler for the parent's termination request, delivered via the
+        router (DISCUSSION.txt D3). It does two things, in order:
+
+          1. RELAYS the request to the child over the channel, so the
+             child's SpawnerChildEventTerminal sees EventChildTermination
+             Req and can begin a cooperative wind-down. The parent's
+             .terminate() dispatched the event only locally (to this
+             Spawner); reaching the child is the Spawner's job, since
+             the Spawner is the supervisor that "acts".
+          2. Hands the wait_to_kill_ms grace period to the state
+             machine's begin_termination(), which runs the shutdown
+             sequence (TERMINATING, then the confirmation-vs-deadline
+             race).
 
         The request's admissibility (e.g. a numeric deadline on a
         'thread') was already checked by
         SpawnerParentEventTerminal.terminate() before the event was
-        ever emitted (DISCUSSION.txt D9); by the time it arrives here
+        ever dispatched (DISCUSSION.txt D9); by the time it arrives here
         it is known-honourable, so this handler does not re-check.
+
+        If the relay send fails (channel already down) the shutdown
+        sequence still runs: a child that cannot be reached will simply
+        not confirm, and begin_termination()'s deadline path handles
+        that.
         """
+        # 1. Relay to the child. Best-effort: a failed relay is logged,
+        #    not fatal - begin_termination()'s deadline covers it.
+        try:
+            sent = await self._parent.send(event)
+            if not sent:
+                print("Spawner._on_termination_req: could not relay the "
+                      "request to the child (channel not up); the deadline "
+                      "path will handle a missing confirmation.",
+                      file=sys.stderr)
+        except Exception as e:
+            print("Spawner._on_termination_req: relay to child raised: %s"
+                  % e, file=sys.stderr)
+
+        # 2. Run the shutdown sequence.
         await self._state_machine.begin_termination(event.wait_to_kill_ms)
+
+    async def _on_child_termination(self,
+                                    event: EventChildTermination) -> None:
+        """RETURN: None.
+
+        Handler for the child's own EventChildTermination. Forwards it
+        to the state machine's notify_self_completion(), which drives
+        RUNNING -> TERM_OK for a child that ended on its own initiative
+        (DISCUSSION.txt D7).
+
+        When a .terminate() is in progress this is harmless: the FSM is
+        in TERMINATING, where notify_self_completion() deliberately
+        stands down and lets begin_termination()'s one-shot expect_event
+        own the verdict. The two watchers do not collide.
+        """
+        await self._state_machine.notify_self_completion(event)
 
     # ----------------------------------------------------------------
     # Suspend / resume (parent terminal delegates here)
     # ----------------------------------------------------------------
+
     async def suspend_child(self) -> bool:
         """RETURN: True,  the child was suspended; FSM now SUSPENDED.
                    False, suspend failed or was not admissible.
@@ -185,30 +255,135 @@ class Spawner:
         return await self._state_machine.resume_child()
 
     # ----------------------------------------------------------------
-    # Connection-loss wiring
+    # Watchdog - liveness supervision
     # ----------------------------------------------------------------
-    def _arm_connection_loss(self) -> None:
+
+    def _start_watchdog(self) -> None:
         """RETURN: None.
 
-        Registers a peer-down callback on the parent terminal so that a
-        broken channel drives the FSM to TERM_LOST_CONNECTION
-        (DISCUSSION.txt D8).
+        Starts the liveness watchdog and also wires peer-down. Two
+        triggers feed the same resolver:
 
-        A DELIBERATE peer Down that follows a confirmed TERM_OK is
-        harmless: notify_connection_lost() is a no-op once the FSM is
-        already terminal, so a normal post-confirmation close does not
-        get mis-reported as a lost connection.
+          -- a periodic poll (every _watchdog_ms) - catches a child
+             that has gone SILENT without the channel ever signalling:
+             a wedged process, or an abnormally-killed one whose queue
+             never closes. A purely reactive scheme would miss these.
+          -- the parent terminal's peer-down callback - catches a
+             channel that DID signal, without waiting for the next poll
+             tick.
+
+        Both call _resolve_silence(), which consults the child handle's
+        liveness and hands an E_Liveness to the FSM. The watchdog is the
+        only place process/remote abnormal death becomes a verdict; the
+        in-process kinds (async/thread) also benefit, since a Task or
+        thread that ends without a clean confirmation is caught here too.
         """
+        # Reactive trigger: peer-down resolves immediately.
         def _on_peer_down():
-            # Schedule on the loop; the callback itself may be sync.
-            return asyncio.create_task(
-                self._state_machine.notify_connection_lost())
+            return asyncio.create_task(self._resolve_silence())
         self._parent.set_peer_down_callback(_on_peer_down)
+
+        # Proactive trigger: the periodic poll.
+        self._watchdog_task = asyncio.create_task(self._watchdog_loop())
+
+    async def _watchdog_loop(self) -> None:
+        """RETURN: None, when the FSM has reached a terminal state.
+
+        The periodic half of the watchdog. Every _watchdog_ms it
+        consults the child handle's liveness directly - it does NOT gate
+        on the terminal's is_up flag, because a peer killed abnormally
+        leaves is_up True indefinitely (the channel queue never closes);
+        gating on it would reproduce exactly that blind spot. The
+        handle's liveness IS the signal.
+
+        Per tick:
+
+          handle ALIVE    healthy; nothing to do.
+          handle DEAD     the child's OS context is gone. A clean
+                          completion ALSO reads DEAD, and its
+                          EventChildTermination may still be in flight
+                          on the receive loop. So a DEAD reading is not
+                          acted on immediately: the loop waits one more
+                          tick as a grace period for the confirmation
+                          to be processed. If the FSM has by then
+                          reached a terminal state (TERM_OK), the clean
+                          completion won the race and the loop simply
+                          exits. If the FSM is STILL live after the
+                          grace tick, no confirmation is coming ->
+                          _resolve_silence() turns the DEAD reading into
+                          TERM_FAILURE.
+          handle UNKNOWN  the handle could not be consulted -> resolve
+                          immediately (TERM_LOST_CONNECTION); there is
+                          no confirmation race to wait out.
+
+        The loop exits as soon as the FSM is terminal - by then a
+        verdict exists and there is nothing left to supervise.
+        """
+        from vut.engine.spawner.handles import E_Liveness
+        try:
+            while not self._state_machine.state.is_terminal():
+                await asyncio.sleep(self._watchdog_ms / 1000.0)
+                if self._state_machine.state.is_terminal():
+                    break
+
+                liveness = await self._handle.is_alive()
+
+                if liveness is E_Liveness.ALIVE:
+                    continue                        # healthy; keep watching
+
+                if liveness is E_Liveness.UNKNOWN:
+                    # No information, no race to wait out - resolve now.
+                    await self._resolve_silence()
+                    break
+
+                # liveness is DEAD: grant one grace tick for an
+                # in-flight EventChildTermination to be processed.
+                await asyncio.sleep(self._watchdog_ms / 1000.0)
+                if self._state_machine.state.is_terminal():
+                    break                           # clean completion won
+                # Still live after the grace tick - no confirmation is
+                # coming. Resolve the DEAD reading into a verdict.
+                await self._resolve_silence()
+                break
+        except asyncio.CancelledError:
+            return
+        except Exception as e:
+            print("Spawner._watchdog_loop: watchdog raised: %s" % e,
+                  file=sys.stderr)
+
+    async def _resolve_silence(self) -> None:
+        """RETURN: None.
+
+        Consults the child handle's liveness and hands the result to the
+        FSM's notify_channel_silent(), which turns it into a terminal
+        verdict (TERM_FAILURE for a DEAD child, TERM_LOST_CONNECTION for
+        ALIVE / UNKNOWN - see ChildStateMachine.notify_channel_silent).
+
+        A no-op once the FSM is terminal: the verdict is already in.
+        Idempotent, so it is safe for both watchdog triggers (poll and
+        peer-down) to call it, possibly more than once.
+        """
+        if self._state_machine.state.is_terminal():
+            return
+        liveness = await self._handle.is_alive()
+        await self._state_machine.notify_channel_silent(liveness)
+
+    def _stop_watchdog(self) -> None:
+        """RETURN: None.
+
+        Cancels the periodic watchdog task, if running. Called when the
+        FSM reaches a terminal state - there is nothing left to watch.
+        Safe to call more than once.
+        """
+        if self._watchdog_task is not None \
+           and not self._watchdog_task.done():
+            self._watchdog_task.cancel()
 
 
 # ============================================================================
 # The startup race
 # ============================================================================
+
 async def _spawn(launch_child,
                  parent_ecp,
                  config: SpawnerConfig,
@@ -234,11 +409,18 @@ async def _spawn(launch_child,
     Sequence:
       1. build the parent terminal from parent_ecp.
       2. launch the child (it boots into the trampoline).
-      3. RACE: parent_terminal.start() (the Up handshake) against the
+      3. wire supervision - the FSM and its subscriptions - BEFORE the
+         handshake is awaited. The subscriptions to EventChildTermination
+         and EventChildTerminationReq must exist before the parent's
+         receive loop can deliver anything, or an instant-completing
+         child's confirmation is dispatched to an empty subscriber set
+         and lost. terminal.py explicitly permits subscribing between
+         construction and start().
+      4. RACE: parent_terminal.start() (the Up handshake) against the
          child dying. Because the trampoline runs start() on the child
          side BEFORE the user callable, a completed handshake proves the
          channel is live.
-      4. handshake won  -> wire supervision, attach, return the terminal.
+      5. handshake won  -> attach, drive LAUNCHED -> RUNNING, return.
          child died first -> stop the half-open terminal, return None.
 
     No exception escapes for an ordinary startup failure: the failure
@@ -253,8 +435,18 @@ async def _spawn(launch_child,
         print("_spawn: launching the child failed: %s" % e, file=sys.stderr)
         return None
 
-    # 3. Race the handshake against child-death.
-    handshake = asyncio.ensure_future(parent_terminal.start())
+    # 3. Wire supervision BEFORE awaiting the handshake. The FSM's
+    # subscriptions must be live before the receive loop runs, so that
+    # a child which completes during the handshake still has its
+    # EventChildTermination observed (the dispatcher is forward-looking;
+    # a subscription added later would miss it).
+    handle        = make_handle(launch_result)
+    spawner       = Spawner(config)
+    state_machine = spawner._wire(parent_terminal, handle)
+    parent_terminal.attach_supervision(spawner, state_machine)
+
+    # 4. Race the handshake against child-death.
+    handshake  = asyncio.ensure_future(parent_terminal.start())
     child_gone = asyncio.ensure_future(_await_child_gone(launch_result))
 
     done, pending = await asyncio.wait(
@@ -264,18 +456,19 @@ async def _spawn(launch_child,
 
     if handshake in done and not handshake.cancelled() \
        and handshake.exception() is None:
-        # 4a. Handshake won - the channel is live. Cancel the death
-        # watch and wire up supervision.
+        # 5a. Handshake won - the channel is live. Cancel the death
+        # watch, start the liveness watchdog (only now, with a proven
+        # channel, is there a live child worth supervising), and drive
+        # LAUNCHED -> RUNNING. If the child already completed during the
+        # handshake, its confirmation was caught by the wired-up
+        # subscription and the FSM has already advanced past LAUNCHED;
+        # notify_running() is then a no-op.
         child_gone.cancel()
-        handle  = make_handle(launch_result)
-        spawner = Spawner(config)
-        state_machine = spawner._wire(parent_terminal, handle)
-        spawner._arm_connection_loss()
-        parent_terminal.attach_supervision(spawner, state_machine)
-        await state_machine.notify_running()        # LAUNCHED -> RUNNING
+        spawner._start_watchdog()
+        await state_machine.notify_running()
         return parent_terminal
 
-    # 4b. The child died first (or start() raised) - startup failed.
+    # 5b. The child died first (or start() raised) - startup failed.
     handshake.cancel()
     try:
         await handshake
@@ -298,17 +491,35 @@ async def _await_child_gone(launch_result) -> None:
     The death-watch side of the _spawn race. 'launch_result' is the
     kind's raw object:
 
-        asyncio.Task        -> await it directly.
+        asyncio.Task        -> await it (SHIELDED - see below).
         threading.Thread    -> poll is_alive() in the executor.
         multiprocessing.Process -> poll is_alive() / join in the executor.
 
     The function returns when the child is no longer alive; if the child
     is healthy it simply never returns and is cancelled by _spawn once
     the handshake wins.
+
+    SHIELDING (async kind): _spawn cancels this death-watch the moment
+    the handshake wins. For a thread/process the watch only polls, so a
+    cancel is harmless. For an async child, however, 'launch_result' IS
+    the child Task; a bare 'await launch_result' would make this
+    coroutine the Task's awaiter, and cancelling an awaiter propagates
+    the cancellation DOWN into the awaited Task - the death-watch would
+    kill the very child it was only meant to observe. asyncio.shield
+    breaks that downward propagation: the cancel stops here, the child
+    Task runs on untouched.
     """
     if isinstance(launch_result, asyncio.Task):
         try:
-            await launch_result
+            await asyncio.shield(launch_result)
+        except asyncio.CancelledError:
+            # Either this death-watch was cancelled (handshake won) - in
+            # which case the shield kept the child alive, exactly as
+            # intended - or the child Task itself was cancelled, which
+            # IS child-death and should fall through as the signal.
+            if launch_result.cancelled():
+                return
+            raise
         except Exception:
             pass                                    # death is the signal
         return
@@ -441,7 +652,11 @@ async def spawn_process(callable_thing,
 
     def _launch():
         import multiprocessing
-        ctx = multiprocessing.get_context(config.start_method)
+        # The start method is read back from the ECP the queues were
+        # built under - the ECP is the single source of truth, so the
+        # Process context cannot drift from the queue context.
+        start_method = child_ecp.params.get("start_method")
+        ctx = multiprocessing.get_context(start_method)
         process = ctx.Process(
             target = run_trampoline_entry,
             args   = (child_ecp, callable_thing, args),

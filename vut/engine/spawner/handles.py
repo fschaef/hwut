@@ -18,11 +18,24 @@ exposing the same small surface:
     await handle.kill()       force-terminate the OS context
     await handle.suspend()    -> bool
     await handle.resume()     -> bool
+    await handle.is_alive()   -> E_Liveness
     handle.can_force_kill     -> bool   (property)
     handle.can_suspend        -> bool   (property)
 
 The OS handle (PID, Task, Process object) is held HERE, inside the
 Spawner's reach, and is NEVER surfaced to the user (DISCUSSION.txt D2).
+
+LIVENESS HAS THREE ANSWERS, NOT TWO
+
+is_alive() returns E_Liveness - ALIVE / DEAD / UNKNOWN - not a bool.
+The third value matters: a REMOTE handle answers by asking a remote
+agent, and that question can itself fail. "I asked and could not get
+an answer" is genuinely different from "alive" and from "dead", and the
+Spawner's watchdog needs it: per DISCUSSION.txt D8, both ALIVE and
+UNKNOWN mean "no usable information about the child" and resolve to
+TERM_LOST_CONNECTION, whereas DEAD - the process is gone - resolves to
+TERM_FAILURE if no confirmation preceded it (D7). A two-valued bool
+could not carry that.
 
 WHY .kill() ON A THREAD HANDLE EXISTS BUT REFUSES
 
@@ -35,6 +48,35 @@ ________________________________________________________________________________
 import asyncio
 import signal
 import sys
+
+from enum import Enum, auto
+
+
+# ============================================================================
+# Liveness
+# ============================================================================
+
+class E_Liveness(Enum):
+    """The three possible answers to ChildHandle.is_alive().
+
+        ALIVE    the child's OS context is confirmed running.
+        DEAD     the child's OS context is confirmed gone.
+        UNKNOWN  the handle could not be consulted - e.g. a remote
+                 agent did not answer. NOT a synonym for either of the
+                 above: it means the spawner has no information.
+
+    The Spawner's watchdog maps these onto FSM verdicts: DEAD -> the
+    child terminated (TERM_FAILURE if unconfirmed), ALIVE or UNKNOWN ->
+    TERM_LOST_CONNECTION (DISCUSSION.txt D8 - "no information").
+    """
+
+    ALIVE   = auto()
+    DEAD    = auto()
+    UNKNOWN = auto()
+
+    def __str__(self) -> str:
+        """RETURN: str, the bare member name (e.g. 'ALIVE')."""
+        return self.name
 
 
 # ============================================================================
@@ -86,6 +128,20 @@ class ChildHandle:
         Base returns False. process / remote override.
         """
         return False
+
+    async def is_alive(self) -> E_Liveness:
+        """RETURN: E_Liveness, the liveness of the child's OS context:
+                   ALIVE   - confirmed running,
+                   DEAD    - confirmed gone,
+                   UNKNOWN - the handle could not be consulted.
+
+        Consulted by the Spawner's watchdog when the channel has gone
+        quiet, to decide between TERM_FAILURE (DEAD) and
+        TERM_LOST_CONNECTION (ALIVE / UNKNOWN). The base returns UNKNOWN
+        - a handle that exposes no liveness query carries no
+        information; every concrete subclass overrides this.
+        """
+        return E_Liveness.UNKNOWN
 
     @property
     def can_force_kill(self) -> bool:
@@ -149,6 +205,15 @@ class AsyncChildHandle(ChildHandle):
             print("AsyncChildHandle.kill: task raised during cancellation: "
                   "%s" % e, file=sys.stderr)
 
+    async def is_alive(self) -> E_Liveness:
+        """RETURN: E_Liveness, ALIVE if the child Task is still running,
+                               DEAD if it has finished or been cancelled.
+
+        Never UNKNOWN: a local asyncio.Task is always consultable via
+        Task.done().
+        """
+        return E_Liveness.DEAD if self._task.done() else E_Liveness.ALIVE
+
 
 # ============================================================================
 # thread - no force path
@@ -176,6 +241,16 @@ class ThreadChildHandle(ChildHandle):
         join() at Spawner teardown, never for termination.
         """
         self._thread = thread
+
+    async def is_alive(self) -> E_Liveness:
+        """RETURN: E_Liveness, ALIVE if the worker thread is still running,
+                               DEAD if it has finished.
+
+        Never UNKNOWN: a local threading.Thread is always consultable
+        via Thread.is_alive().
+        """
+        return E_Liveness.ALIVE if self._thread.is_alive() \
+               else E_Liveness.DEAD
 
 
 # ============================================================================
@@ -218,6 +293,16 @@ class ProcessChildHandle(ChildHandle):
         loop = asyncio.get_running_loop()
         self._process.kill()
         await loop.run_in_executor(None, self._process.join)
+
+    async def is_alive(self) -> E_Liveness:
+        """RETURN: E_Liveness, ALIVE if the child process is still running,
+                               DEAD if it has exited.
+
+        Never UNKNOWN: a local multiprocessing.Process is always
+        consultable via Process.is_alive().
+        """
+        return E_Liveness.ALIVE if self._process.is_alive() \
+               else E_Liveness.DEAD
 
     async def suspend(self) -> bool:
         """RETURN: True,  SIGSTOP was delivered to the child process.
@@ -283,18 +368,26 @@ class RemoteChildHandle(ChildHandle):
     _CAN_FORCE_KILL = True
     _CAN_SUSPEND    = True
 
-    def __init__(self, control_send, remote_id):
+    def __init__(self, control_send, remote_id, liveness_query=None):
         """RETURN: a new RemoteChildHandle.
 
-        control_send -- async callable(action_str) -> bool; ships a
-                        control action ('kill' / 'suspend' / 'resume')
-                        to the remote agent and reports whether the
-                        agent acknowledged.
-        remote_id    -- opaque identifier of the remote process, for
-                        diagnostics; not interpreted locally.
+        control_send   -- async callable(action_str) -> bool; ships a
+                          control action ('kill' / 'suspend' / 'resume')
+                          to the remote agent and reports whether the
+                          agent acknowledged.
+        remote_id      -- opaque identifier of the remote process, for
+                          diagnostics; not interpreted locally.
+        liveness_query -- optional async callable() -> bool; asks the
+                          remote agent whether the remote process is
+                          still running (True) or gone (False). If it
+                          is None, or if a call raises, is_alive()
+                          answers UNKNOWN - the spawner then has no
+                          information, which is itself meaningful
+                          (DISCUSSION.txt D8).
         """
-        self._control_send = control_send
-        self._remote_id    = remote_id
+        self._control_send   = control_send
+        self._remote_id      = remote_id
+        self._liveness_query = liveness_query
 
     async def kill(self) -> None:
         """RETURN: None,  once the remote agent has acknowledged the kill.
@@ -339,3 +432,25 @@ class RemoteChildHandle(ChildHandle):
             print("RemoteChildHandle.resume: control send failed for %r: "
                   "%s" % (self._remote_id, e), file=sys.stderr)
             return False
+
+    async def is_alive(self) -> E_Liveness:
+        """RETURN: E_Liveness, ALIVE / DEAD if the remote agent answered,
+                               UNKNOWN if it could not be reached.
+
+        Unlike the local handles, a remote handle's answer depends on a
+        round-trip to a remote agent. This is the one handle that
+        genuinely returns UNKNOWN: if no liveness_query was supplied, or
+        the query raises (network down, agent gone), the spawner has NO
+        information about the remote process - which the watchdog reads,
+        per DISCUSSION.txt D8, as TERM_LOST_CONNECTION rather than a
+        verdict of death.
+        """
+        if self._liveness_query is None:
+            return E_Liveness.UNKNOWN
+        try:
+            alive = await self._liveness_query()
+        except Exception as e:
+            print("RemoteChildHandle.is_alive: liveness query failed for "
+                  "%r: %s" % (self._remote_id, e), file=sys.stderr)
+            return E_Liveness.UNKNOWN
+        return E_Liveness.ALIVE if alive else E_Liveness.DEAD
