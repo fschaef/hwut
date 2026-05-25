@@ -1,0 +1,5 @@
+--- E_TerminationReason members ---
+  COMPLETED
+  TERMINATED
+  FAILED
+  exactly COMPLETED / TERMINATED / FAILED: OK

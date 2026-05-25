@@ -1,0 +1,3 @@
+--- spawn_thread: self-completing child ---
+  spawn returned a terminal: True
+  terminal state: TERM_OK

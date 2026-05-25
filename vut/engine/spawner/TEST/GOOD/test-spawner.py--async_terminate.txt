@@ -1,0 +1,4 @@
+--- spawn_async: cooperative child + terminate(None) ---
+  state before terminate: RUNNING
+  terminate(None) returned: True
+  terminal state: TERM_OK

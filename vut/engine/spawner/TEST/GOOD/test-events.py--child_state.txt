@@ -1,0 +1,12 @@
+--- ChildState members ---
+  LAUNCHED               terminal=False live=True 
+  RUNNING                terminal=False live=True 
+  SUSPENDED              terminal=False live=True 
+  TERMINATING            terminal=False live=True 
+  TERM_OK                terminal=True  live=False
+  TERM_FAILURE           terminal=True  live=False
+  TERM_LOST_CONNECTION   terminal=True  live=False
+--- invariants ---
+  terminal states: TERM_OK, TERM_FAILURE, TERM_LOST_CONNECTION
+  is_terminal/is_live are exact complements: OK
+  exactly 3 terminal states: OK

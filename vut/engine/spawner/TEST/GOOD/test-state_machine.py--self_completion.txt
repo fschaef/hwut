@@ -1,0 +1,4 @@
+--- child confirms completion on its own ---
+  state: TERM_OK
+--- edges emitted ---
+  LAUNCHED->RUNNING , RUNNING->TERM_OK

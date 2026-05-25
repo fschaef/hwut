@@ -1,0 +1,10 @@
+--- no OS handle: suspend/resume refuse (return False) ---
+  suspend_child(): False   resume_child(): False
+  state unchanged: RUNNING
+--- with OS handle: suspend/resume move RUNNING<->SUSPENDED ---
+  suspend_child(): True
+  state: SUSPENDED
+  resume_child():  True
+  state: RUNNING
+--- edges emitted ---
+  LAUNCHED->RUNNING , RUNNING->SUSPENDED , SUSPENDED->RUNNING

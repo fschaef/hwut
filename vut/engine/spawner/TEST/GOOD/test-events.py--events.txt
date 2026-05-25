@@ -1,0 +1,19 @@
+--- EventChildTerminationReq ---
+  str        : EventChildTerminationReq(wait_to_kill_ms=500)
+  field      : wait_to_kill_ms=500
+  str (None) : EventChildTerminationReq(wait_to_kill_ms=None)
+--- EventChildTermination ---
+  str        : EventChildTermination(reason=COMPLETED)
+  str        : EventChildTermination(reason=TERMINATED)
+  str        : EventChildTermination(reason=FAILED)
+--- EventChildKilled ---
+  str        : EventChildKilled(last_state=TERMINATING, killed_at=1000.000, grace_ms=250)
+  fields     : last_state=TERMINATING grace_ms=250
+--- EventChildStateChanged ---
+  str        : EventChildStateChanged(RUNNING -> TERMINATING)
+--- event identity (category derives from class) ---
+  EventChildTerminationReq   -> id=SPAWNER.EventChildTerminationReq
+  EventChildTermination      -> id=SPAWNER.EventChildTermination
+  EventChildKilled           -> id=SPAWNER.EventChildKilled
+  EventChildStateChanged     -> id=SPAWNER.EventChildStateChanged
+  every id is 'SPAWNER.<ClassName>': OK

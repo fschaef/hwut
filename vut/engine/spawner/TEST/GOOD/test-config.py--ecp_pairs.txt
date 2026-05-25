@@ -1,0 +1,12 @@
+--- AsyncConfig.make_ecp_pair ---
+  pair is 2 ECPs       : True
+  a.kind / b.kind      : ASYNC / ASYNC
+  mirror wired         : True
+--- ThreadConfig.make_ecp_pair ---
+  a.kind / b.kind      : THREAD / THREAD
+  mirror wired         : True
+--- ProcessConfig.make_ecp_pair (start_method threaded through) ---
+  a.kind / b.kind      : PROCESS / PROCESS
+  start_method in params: spawn
+  mirror wired         : True
+  start_method carried on BOTH ECPs: OK

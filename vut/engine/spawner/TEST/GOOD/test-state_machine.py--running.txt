@@ -1,0 +1,8 @@
+--- initial state ---
+  state: LAUNCHED
+--- notify_running() ---
+  state: RUNNING
+--- notify_running() again (idempotent) ---
+  state: RUNNING
+--- edges emitted ---
+  LAUNCHED->RUNNING

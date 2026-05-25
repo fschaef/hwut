@@ -1,0 +1,6 @@
+--- handle DEAD -> TERM_FAILURE ---
+  state: TERM_FAILURE
+--- handle ALIVE -> TERM_LOST_CONNECTION ---
+  state: TERM_LOST_CONNECTION
+--- handle UNKNOWN -> TERM_LOST_CONNECTION ---
+  state: TERM_LOST_CONNECTION
