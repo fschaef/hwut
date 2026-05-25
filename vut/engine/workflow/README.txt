@@ -29,7 +29,19 @@ STRUCTURE:
                '--- WorkflowManager
                      '--- DependencyGraph 
                      '--- ArtifactManager      
-                     '--- TaskManager     
+                     '--- TaskSelector          # decides what to run
+                     '--- TaskSupervisor        # supervises running tasks
+                     '--- EventRouter           # user-facing fan-out
+
+Sibling Components: 
+
+     event     - EventTerminal, EventDispatcher, EventRouter,
+                 EventChannelParameter (user- and task-facing
+                 communication).
+
+     spawner   - CallableThing, spawn_async / spawn_thread /
+                 spawn_process (turns a task reference into a running
+                 child with an EventTerminal to it).
 
 USER:
 
@@ -40,17 +52,30 @@ USER:
                 .-----------
       User: --->| .order_<name>(dict: description)
                 |
-            <---| report queue yields (event id, dict: description)
+            <---| EventTerminal delivers Event-s
                 '-------------
 
-    Immediately, as a return value the user receives a 'handle' that contains
-    a 'termination_signal' that he can set in order to cancel the order. Also,
-    the handle contains a 'report_queue' by means of which he receives
-    information about the progress and the termination of the order.
+    Immediately, as a return value the user receives a plain 'EventTerminal'.
+    It is the single object through which the user observes and controls the
+    order:
+
+       -- it delivers Event-s about progress and termination. The user
+          subscribes handlers on its '.dispatcher' (subscribe_on_event,
+          subscribe_on_category, subscribe_on_predicate).
+
+       -- it cancels the order. Calling '.stop()' tears the terminal down;
+          the workflow manager sees the peer go down and unsubscribes the
+          user from the order's tasks (see "Cancellation" below).
+
+    There is no separate report queue and no separate termination signal.
+    The terminal is the report channel and the control handle in one.
 
 FACTORY:
 
-    The following diagram shows the internal workings of the factory. 
+    The following diagram shows the internal workings of the factory.
+    User- and task-facing communication is built entirely on the event
+    component (EventTerminal, EventDispatcher, EventRouter); running
+    children are produced by the spawner component. 
 
                    artifact to be produced
                                |
@@ -66,14 +91,24 @@ FACTORY:
          | | DependencyGraph |      | ArtifactManager | |
          | '-----------------'      '-----------------' |
          |         |:|                    |:|           |
+         | .--------------------.  .-----------------.  |
+         | |   TaskSelector     |->|  TaskSupervisor |<====> Running Tasks
+         | | (decides what runs)|  | (runs/supervises|  |  (one EventTerminal
+         | '--------------------'  '-----------------'  |   pair per task,
+         |                      |                       |   via the spawner)
          | .------------------------------------------. |
-         | |               TaskManager                |<====> Running Tasks
-         | '------------------------------------------' |  
-         |                                              |
-         '----------------------------------------------'       
-                               |   
-                            report 
-                     progress & termination
+         | |               EventRouter                | |
+         | '------------------------------------------' |
+         '---------------------|------------------------'
+                               |
+                       EventTerminal (one per order)
+                               |
+                              User
+
+    The EventRouter is the single fan-out hub. Task-side Terminals (peer of a
+    running Task) are its event SOURCES; user-side EventTerminal-s are its
+    DESTINATIONS. A router entry's predicate selects which user receives which
+    event - typically by workload id or task id. 
 
 Artifact(frozen dataclass)
 --------------------------
@@ -138,28 +173,40 @@ their dependencies to accomplish the required order.
 
      workload = RecipeDb.lookup(E_Artifact: target_type, 
                                 dict:       target_description)
-     user_com = UserComHandle(user_report_queue, termination_signal)
-     workload.bind_user(user_com)
+
+     # One EventTerminal pair: the user end and the WFM (router) end.
+     user_ecp, wfm_ecp = EventChannelParameter.for_async()
+     user_terminal = WorkflowEventTerminal(user_ecp)
+     wfm_terminal  = EventTerminal(wfm_ecp)
+
+     workload.bind_user(wfm_terminal)
      workflow_manager.register(workload)
-     return user_com
+     return user_terminal
+
+The 'wfm_terminal' is added as an entry to the WorkflowManager's EventRouter,
+under a predicate that matches the events of this workload's tasks. The
+'user_terminal' (a WorkflowEventTerminal) is what the user receives.
 
 Note, that the workflow manager initiates a 'task launch decision making'
 directly after setting a workload. In case that a terminal artifact, i.e. the
-thing the user wants, is already available, the report queue may immediately
-respond with 'DONE'.
+thing the user wants, is already available, the user_terminal may immediately
+receive an 'EventTargetAvailable'.
 
 WorkflowManager
 ---------------
 
     .register(workload)
-    .cancel(workload_id)            # invoked from user termination_signal
+    .cancel(workload_id)            # invoked when a user terminal stops
     .handle_artifact_update(event)  # the central report loop body
     .artifact_handling_db
+    .router                         # the EventRouter (user-facing fan-out)
 
 The 'workflow_manager.register(workload)' sets up the internal components:
 
     -- add artifacts to the internal ArtifactManager
     -- add task descriptions to the DependencyGraph
+    -- add the workload's 'wfm_terminal' as an entry on the EventRouter,
+       under a predicate matching this workload's events
     -- initial dependency graph evaluation
 
 The artifact_handling_db provides ArtifactHandling classes for artifacts
@@ -220,10 +267,32 @@ the workflow manager.
 
      Artifact:                final_product 
      list(TaskDescription):   tasks
-     UserComHandle:           user_com
+     EventTerminal:           wfm_terminal   # WFM end of the user channel
 
 Notably, the 'Artifact' only describes the product. The fact that the
 associated 'reality' is present is accessible via the ArtifactManager.
+
+The 'wfm_terminal' is the workflow-manager end of the EventTerminal pair whose
+other end - a plain EventTerminal - was returned to the user. It is registered
+on the WorkflowManager's EventRouter; 'bind_user(wfm_terminal)' records it on
+the workload.
+
+The User Terminal
+-----------------
+
+The object the user receives in return for an order is a plain EventTerminal.
+There is no workflow-specific terminal subclass and no separate UserComHandle.
+The earlier design had a handle carrying a report queue plus a termination
+signal; the bare terminal subsumes both:
+
+   -- report channel  -> the terminal delivers Event-s; the user
+                          subscribes handlers on '.dispatcher'
+                          (subscribe_on_event / _category / _predicate).
+
+   -- cancellation     -> '.stop()'. It tears the user terminal down.
+                          See "Cancellation" - the WorkflowManager reacts
+                          to the peer going down; the user side needs no
+                          extra method, hence no subclass.
 
 TaskDescription(dataclass)
 --------------------------
@@ -310,27 +379,50 @@ The condition expression work on a Kleene's strong three-valued logic, that
 includes 'unknown'. E.g. 'true and unknown = unknown', 'false and unknown =
 false'.
 
-TaskManager
------------
+Task Handling: TaskSelector and TaskSupervisor
+----------------------------------------------
 
-The TaskManager runs and terminates tasks. It maintains internally a scheduler
-that decides what tasks to be run from the list of runable tasks. The
-TaskManager is the interface between the synchronous workflow management and
-the asynchronous Task execution. For that it maintains a 'TaskState' object for
-each running task.
+Running tasks is split into two responsibilities, deliberately kept in
+separate components:
 
-Scheduler(base class)
----------------------
+   TaskSelector   - DECIDES. Given the set of runnable tasks (from the
+                    DependencyGraph), it picks which ones to run.
+   TaskSupervisor - SUPERVISES. It runs the picked tasks, holds a
+                    'TaskState' per running task, owns the task-side
+                    EventTerminal peers, relays their events, and
+                    aborts tasks on request.
 
-The scheduler mainly takes the set of runnable tasks and determines which of
-them is to be launched. 
+The TaskSelector decides; it does not run anything. The TaskSupervisor
+runs and watches; it does not decide what to run. The Selector hands
+picked task ids to the Supervisor.
+
+TaskSelector(base class)
+------------------------
+
+Takes the set of runnable tasks and determines which of them is to be
+launched.
 
    .pick(runnable_tasks: set) -> list[task_id]
 
-Upon construction of the scheduler object, it receives access to all components
-of the workflow manager in order to make informed decisions. The derived class
-implements a scheduling strategy such as FIFO, most-blocking first, fail-fast,
-or CRM.
+Upon construction, the TaskSelector receives access to all components of
+the workflow manager in order to make informed decisions. The derived
+class implements a selection strategy such as FIFO, most-blocking first,
+fail-fast, or CRM.
+
+TaskSupervisor
+--------------
+
+The TaskSupervisor is the interface between the synchronous workflow
+management and the asynchronous Task execution. It maintains a 'TaskState'
+object for each running task.
+
+Each running task communicates with the TaskSupervisor over an
+EventTerminal pair: the task holds one end, the TaskSupervisor the peer.
+Task progress and result Event-s arrive on the peer terminal's
+'.dispatcher'. The TaskSupervisor obtains a running task plus its peer
+terminal from the spawner component - one of 'spawn_async',
+'spawn_thread', 'spawn_process' - so the transport flavour is the
+spawner's concern, not the Supervisor's. There is no task report queue.
 
 TaskState
 ----------
@@ -339,7 +431,14 @@ TaskState
    TaskDescription      description
    asyncio.Task         task
    asyncio.Event        termination_signal
-   set(workload_id)     workloads_concerned   (-> user report queues)
+   EventTerminal        task_terminal         (TaskManager-side peer)
+   set(workload_id)     workloads_concerned   (-> user terminals)
+
+The 'termination_signal' is the task-abort mechanism and is distinct from
+EventTerminal lifecycle: '.stop()' on a terminal tears down a communication
+channel, whereas 'termination_signal.set()' asks a running task to cease
+work. A task is aborted via the signal; its terminal is closed afterwards
+when the TaskState is retired.
 
 E_TaskRunningState:
 
@@ -358,20 +457,24 @@ E_TaskRunningState:
 Operations:
 
    .register_launcher(task_type_name, launcher)
-   .register_task(task_description, subscribers: set[user_queue])
-   .subscribe(task_id, user_queue)
-   .unsubscribe(task_id, user_queue)
+   .register_task(task_description, subscribers: set[workload_id])
+   .subscribe(task_id, workload_id)
+   .unsubscribe(task_id, workload_id)
        if subscribers becomes empty and task is RUNNING -> abort_task
 
    .launch(task_id)
        evt = asyncio.Event()
+       # one EventTerminal pair: task end and TaskManager end
+       task_ecp, mgr_ecp = EventChannelParameter.for_async()
        awaitable = launcher_for(td.task_type_name)(
-                       td.parameters, evt, self.report_queue)
+                       td.parameters, evt, task_ecp)
        atask = asyncio.create_task(awaitable)
-       store evt, atask, set state RUNNING
+       mgr_terminal = EventTerminal(mgr_ecp)
+       # mgr_terminal feeds the WorkflowManager's report loop
+       store evt, atask, mgr_terminal, set state RUNNING
 
    .abort_task(task_id)
-       term_event[task_id].set()
+       termination_signal[task_id].set()
        state -> ZOMBIE
        # confirmation arrives via the report loop noticing the
        # asyncio.Task has completed
@@ -383,40 +486,67 @@ description. The TaskManager is agnostic of execution context that the launched
 task applies internally (sync, in-thread, subprocess, remote). However, it
 must:
 
-     - honor 'termination request signal': 
+     - honor the 'termination_signal' (asyncio.Event):
        The task must initiate anything that terminates the processing
        of the task and return to the 'await'-ing TaskManager (function return).
 
-     - reports via report queue about events related to its operation 
-       (success, failure, termination). 
+     - report via its EventTerminal about events related to its operation.
+       The launcher builds an EventTerminal from the EventChannelParameter
+       handed to it and sends Event-s of category WORKFLOW - typically
+       EventTaskProgress, EventTaskDone, EventTaskFailed - over it.
+
+The choice of EventChannelParameter factory (for_async, for_thread,
+for_process, for_remote) is what makes a launcher in-thread, subprocess, or
+remote. The TaskManager and the WorkflowManager see only EventTerminal-s and
+Event-s; the transport is invisible above the launcher.
 
 User Interaction Handling
 -------------------------
 
-Report Queue
+Report path
 
-The Workflow manager receives reports from tasks and may decide if and how
-it informs the concerned user about the evolution of the task.
+The WorkflowManager receives Event-s from running tasks on the
+TaskSupervisor-side EventTerminal-s, and decides if and how to inform the
+concerned users. Informing a user means routing an Event to that user's
+WorkflowEventTerminal through the EventRouter: a router entry's predicate
+matches the events of the workloads the user subscribed to.
 
-"termination_signal.set()"
+   task ev. --> TaskSupervisor terminal --> EventRouter --> user terminal(s)
 
-By setting the 'termination_signal' the user received in the handle as a
-response to his order, the following happens:
+The WorkflowManager itself also originates Event-s about the order as a
+whole - EventTargetAvailable, EventTargetImpossible, EventTargetCancelled -
+and publishes them through the same EventRouter.
 
-   remove user_queue from (
+Cancellation
+
+The user cancels an order by calling '.stop()' on the user EventTerminal.
+There is no separate termination signal at the user boundary. The
+WorkflowManager registered a peer-down callback on the WFM-side terminal
+when the workload was registered; '.stop()' makes that callback fire, and
+the WorkflowManager then:
+
+   remove the workload's user terminal from (
        subscribers of each task in workload.tasks
    )
-   abort(
+   abort_task(
        each task in workload.tasks where subscribers = empty
    )
-   user_queue.put(TARGET_CANCELLED)
+
+The EventRouter removes the now-dead entry automatically (its own peer-down
+auto-removal). Because the user terminal is already gone, no closing Event
+is sent to it; '.stop()' was the user's own action and needs no echo.
+
+Note - 'termination_signal' on TaskState is a different mechanism: it aborts
+one running task. User cancellation may, via the empty-subscriber rule
+above, lead to 'termination_signal.set()' on some tasks, but the two are not
+the same signal.
 
 Artifact Update
 ---------------
 
-The report queue delivers information about the artifact production from the
-task to the WorkflowManager. An update of an artifact state is directly
-fed into the DependencyGraph. 
+Task Event-s carry information about artifact production. An EventTaskDone /
+EventTaskFailed delivered to the WorkflowManager's report loop is turned
+into an artifact-state update and fed directly into the DependencyGraph.
 
    Artifact Update ---> DependencyGraph ---> Runnable, Unrunnable Tasks
 
@@ -426,4 +556,6 @@ updated
 
    Artifact Update + Impossible Artifacts ---> ArtifactManager
 
-Depending on the changes to the ArtifactManager the user may be also informed.
+Depending on the changes to the ArtifactManager the user may be also
+informed - by publishing the corresponding WORKFLOW Event through the
+EventRouter.

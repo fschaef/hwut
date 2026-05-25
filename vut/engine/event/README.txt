@@ -221,11 +221,24 @@ NOTE: Category "EVENT_INFRA" is only used by the event infrastructure
 
 3. PYDANTIC VIA TypeAdapter
 
-   Event subclasses are plain @dataclass(frozen=True, kw_only=True)
-   classes, NOT BaseModel. Each subclass lazily gets a Pydantic
-   TypeAdapter on first as_dict() / from_dict() use. This buys real
-   Pydantic validation at wire boundaries without forcing every Event
-   class into the BaseModel hierarchy.
+   Event subclasses are frozen, kw-only dataclasses, NOT BaseModel.
+   Authors do NOT write the @dataclass decorator themselves: the
+   metaclass EventMeta applies dataclass(frozen=True, kw_only=True) to
+   every subclass automatically. A subclass is therefore just
+
+       class EventThingHappened(Event):
+           subject: str
+
+   with plain field annotations and no decorator. (The transform is
+   not optional - a validator only sees fields that dataclass
+   processing has turned into real dataclass fields; auto-applying it
+   removes the footgun of a forgotten decorator silently dropping a
+   subclass's fields at the wire boundary.)
+
+   Each subclass lazily gets a Pydantic TypeAdapter on first as_dict()
+   / from_dict() use. This buys real Pydantic validation at wire
+   boundaries without forcing every Event class into the BaseModel
+   hierarchy.
 
 
 4. EVENTDISPATCHER: PREDICATE-TO-SINK MATCHING
@@ -244,6 +257,10 @@ NOTE: Category "EVENT_INFRA" is only used by the event infrastructure
    At construction, enforce_async_callbacks_f=True rejects sync
    callables - intended for low-latency contexts (Terminal receive
    loops).
+
+   The Dispatcher also offers the awaitable counterpart of subscribe -
+   the expect_* methods - so a coroutine can 'await' the next matching
+   event instead of registering a handler. See the EXPECT section.
 
 
 5. EVENTCHANNEL: BIDIRECTIONAL POINT-TO-POINT
@@ -359,6 +376,65 @@ NOTE: Category "EVENT_INFRA" is only used by the event infrastructure
 
 
 --------------------------------------------------------------------------------
+EXPECT - AWAITING THE NEXT EVENT
+--------------------------------------------------------------------------------
+
+subscribe_on_* registers a handler that the Dispatcher PUSHES events
+into. The expect_* methods are the awaitable counterpart: each returns
+an awaitable that a coroutine PULLS - 'await' it and the coroutine
+suspends until the next matching Event arrives, then resumes with that
+Event as the value.
+
+This lets an event sequence be written as straight-line coroutine
+code, instead of being scattered across handler callbacks joined by a
+state enum. The 'await' suspension point is the program counter - held
+by the language, visible in a traceback - so there is no hand-rolled
+step integer to keep.
+
+    async def terminate_task(x):
+        task[x].terminate(wait_to_kill_ms=5000)
+        event = await dispatcher.expect_any([EventTaskCancelled,
+                                             EventChannelDown])
+        match event:
+            case EventTaskCancelled(): remove_task(x)
+            case EventChannelDown():   mark_failed(x)
+
+Four methods, mirroring the three subscribe_on_* filter dimensions:
+
+    expect_event(class_or_name)     next Event of that id
+    expect_category(category)       next Event in that category
+    expect_predicate(fn)            next Event for which fn(event) is true
+    expect_any([ClassA, ClassB])    next Event of ANY listed class;
+                                    the caller branches on the result
+
+Each matching rule IS the corresponding subscribe_on_*'s rule. An
+expect_* is internally an ordinary subscription whose sink resolves a
+future and then unsubscribes itself; the matching logic is not
+duplicated.
+
+Three properties follow from that:
+
+    one-shot         Satisfied by the FIRST match after it was
+                     created; yields that Event and is done. Does not
+                     fire twice, and leaves no subscription behind.
+
+    forward-looking  Matches only Events dispatched AFTER it was
+                     created. Events already delivered are not
+                     retro-matched.
+
+    non-consuming    Observes the event stream; does not take the
+                     Event away from normal delivery. subscribe_on_*
+                     handlers, and any other outstanding expect_*,
+                     still receive the same Event. One Event satisfies
+                     every outstanding expect_* that matches it.
+
+expect_* builds a future and so is used from async code only. It works
+on any Dispatcher, including a Terminal's receive-side dispatcher (the
+one with enforce_async_callbacks_f=True): the internal sink is a
+.send-object, which that dispatcher accepts.
+
+
+--------------------------------------------------------------------------------
 WIRE FORMAT
 --------------------------------------------------------------------------------
 
@@ -459,7 +535,6 @@ Wrap the subclass declaration in a `with category(...)` block:
 
     with category("WORKFLOW"):
 
-        @dataclass(frozen=True, kw_only=True)
         class EventThingHappened(Event):
             subject: str
             count:   int = 0
@@ -469,10 +544,11 @@ Wrap the subclass declaration in a `with category(...)` block:
                     self.subject, self.count
                 )
 
-That's it. EventThingHappened.id is automatically
-"WORKFLOW.EventThingHappened". The class is registered in
-CLASS_BY_ID; the Marshaller, Dispatcher, Terminal, and Router pick it
-up automatically.
+That's it. No @dataclass decorator - the EventMeta metaclass applies
+dataclass(frozen=True, kw_only=True) for you; declare fields as plain
+annotations. EventThingHappened.id is automatically
+"WORKFLOW.EventThingHappened". The class is registered in CLASS_BY_ID; the
+Marshaller, Dispatcher, Terminal, and Router pick it up automatically.
 
 Multiple files may contribute to the same category; just open a
 `with category("WORKFLOW"):` block at the top of each module.
@@ -490,7 +566,6 @@ event type since the package itself ships only EVENT_INFRA events:
     from vut.engine.event import Event, category, EventTerminal, EventChannelParameter
 
     with category("DEMO"):
-        @dataclass(frozen=True, kw_only=True)
         class EventGreeting(Event):
             text: str
 
@@ -534,6 +609,13 @@ WFM as a router (sketch):
     # User code holds user_terminal; subscribes its dispatcher to whatever.
     # When user_terminal stops, the Router auto-removes router_side.
     return user_terminal
+
+Awaiting an event instead of subscribing a handler:
+
+    # Straight-line: do, await confirmation, continue.
+    await terminal.send(EventTaskAbort(task_id=x))
+    done = await terminal.dispatcher.expect_event(EventTaskCancelled)
+    remove_task(done.task_id)
 
 
 --------------------------------------------------------------------------------

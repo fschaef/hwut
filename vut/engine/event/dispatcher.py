@@ -61,6 +61,31 @@ keep them fast.
 
 Async callables, when present, are scheduled via asyncio.create_task
 and NOT awaited. The dispatch() method does not block on them.
+
+EXPECT: AWAITABLE 
+
+expect_* methods are the awaitable counterpart to subscribe_*: each returns an
+awaitable that a coroutine can 'await' to suspend until the next matching
+event, then resume with that event as the value.
+
+    expect_event(event_class_or_id)   next event of that id
+    expect_category(category)         next event in that category
+    expect_predicate(callable)        next event satisfying callable
+    match expect_any([ClassA, ClassB, ...]): 
+        ..
+
+This lets an event sequence be written as straight-line coroutine
+code instead of being scattered across handler callbacks.
+
+EXPECT vs. SUBSCRIPTION:
+
+Each expect_* is one-shot (satisfied by the first match, then done),
+forward-looking (matches only events dispatched after it was created),
+and non-consuming (it observes; ordinary subscribers and other
+outstanding expect_* still receive the same event). Internally an
+expect_* is just an ordinary subscription whose sink resolves a
+future and unsubscribes itself - so the matching rule is exactly the
+corresponding subscribe_on_*'s rule, never re-implemented.
 ________________________________________________________________________________
 """
 import asyncio
@@ -80,6 +105,51 @@ class Subscription:
     predicate: Callable[[Event], bool]
     sink:      Any
     kind:      str                              # "send", "async", "sync"
+
+
+class _ExpectSink:
+    """One-shot .send-object sink behind the expect_* methods.
+
+    Registered as the sink of an ordinary subscription. On the first
+    matching event it unsubscribes EVERY subscription it was told to
+    clear and resolves the future with that event. Being a .send-object
+    (not a plain callable), it is accepted even by a Dispatcher built
+    with enforce_async_callbacks_f=True - which is what lets expect_*
+    work on a Terminal's receive dispatcher.
+
+    The 'subs_func' indirection exists because a sink must be able to
+    unsubscribe its own Subscription, yet that Subscription does not
+    exist until subscribe_on_* has returned. subs_func is a zero-arg
+    callable returning the list of Subscriptions to remove; it is
+    called only when the event fires, by which time the list is filled.
+    For expect_any, subs_func returns all the per-class subscriptions,
+    so the losing alternatives are cleaned up too.
+    """
+
+    def __init__(self, dispatcher, future, subs_func):
+        """RETURN: a new _ExpectSink.
+
+        dispatcher -- the EventDispatcher to unsubscribe from on match.
+        future     -- the asyncio.Future to resolve on first match.
+        subs_func  -- zero-arg callable yielding the list of
+                      Subscriptions to unsubscribe on first match.
+        """
+        self._dispatcher = dispatcher
+        self._future     = future
+        self._subs_func  = subs_func
+
+    def send(self, event: Event) -> None:
+        """RETURN: None.
+
+        First call: unsubscribe all associated subscriptions (one-shot,
+        no leak) and resolve the future with 'event'. Later calls are
+        ignored - the future is already settled.
+        """
+        if self._future.done():
+            return
+        for sub in self._subs_func():
+            self._dispatcher.unsubscribe(sub)
+        self._future.set_result(event)
 
 
 class EventDispatcher:
@@ -156,6 +226,110 @@ class EventDispatcher:
             return False
         del self._subscriptions[subscription.handle]
         return True
+
+    # ----------------------------------------------------------------
+    # Expect: awaitable counterpart of subscribe_on_*
+    # ----------------------------------------------------------------
+
+    def expect_event(self, event_id_or_class):
+        """RETURN: awaitable, yielding the next Event whose .id equals
+                              event_id_or_class.
+
+        The awaitable counterpart of subscribe_on_event: instead of
+        registering a handler, it lets a coroutine 'await' the next
+        matching event. Awaiting suspends the caller until that event
+        is dispatched, then resumes with the event as the awaited
+        value.
+
+        One-shot and forward-looking: it matches the first event
+        dispatched AFTER this call and then is done. Argument forms are
+        the same as subscribe_on_event (class or id string).
+        """
+        return self._expect(self.subscribe_on_event, event_id_or_class)
+
+    def expect_category(self, category: str):
+        """RETURN: awaitable, yielding the next Event whose .category
+                              equals the given category.
+
+        The awaitable counterpart of subscribe_on_category. See
+        expect_event for the suspend/resume and one-shot semantics.
+        """
+        return self._expect(self.subscribe_on_category, category)
+
+    def expect_predicate(self, predicate):
+        """RETURN: awaitable, yielding the next Event for which
+                              predicate(event) is true.
+
+        The awaitable counterpart of subscribe_on_predicate. See
+        expect_event for the suspend/resume and one-shot semantics.
+        """
+        return self._expect(self.subscribe_on_predicate, predicate)
+
+    def expect_any(self, event_class_list):
+        """RETURN: awaitable, yielding the next Event that is an instance
+                              of ANY class in event_class_list.
+
+        Resolves on the FIRST matching event and yields that one event
+        (it does not collect several). The caller branches on the
+        result, e.g.:
+
+            event = await dispatcher.expect_any([EventA, EventB])
+            match event:
+                case EventA(): ...
+                case EventB(): ...
+
+        Matching reuses subscribe_on_event's id rule, one subscription
+        per class; whichever fires first wins. See expect_event for the
+        one-shot and forward-looking semantics.
+        """
+        if not event_class_list:
+            raise ValueError(
+                "expect_any: event_class_list must not be empty."
+            )
+
+        loop   = asyncio.get_event_loop()
+        future = loop.create_future()
+
+        # One subscription per class. Each carries a one-shot sink that
+        # resolves the SHARED future, so the first event of any listed
+        # class wins. The sink's subs_func returns the whole list, so
+        # the losing subscriptions are unsubscribed too - no leak.
+        subscriptions = []
+        for event_class in event_class_list:
+            sub = self.subscribe_on_event(
+                event_class,
+                _ExpectSink(self, future, lambda: subscriptions),
+            )
+            subscriptions.append(sub)
+
+        return future
+
+    def _expect(self, subscribe_method, *subscribe_args):
+        """RETURN: awaitable (asyncio.Future), resolved with the next event
+                                               matching the subscription.
+
+        Shared implementation of expect_event / expect_category /
+        expect_predicate. Subscribes a one-shot _ExpectSink via the
+        given subscribe_on_* method - so the matching rule is exactly
+        that method's rule, never re-implemented - and returns the
+        future the sink will resolve.
+
+        The sink unsubscribes itself on first match, so the
+        subscription does not leak once the awaitable completes.
+        """
+        loop   = asyncio.get_event_loop()
+        future = loop.create_future()
+
+        # The sink needs its own Subscription handle to unsubscribe
+        # itself, but that handle does not exist until subscribe_*
+        # returns. A one-element list is the forward reference: the
+        # sink reads box[0], which is filled in immediately below.
+        box = []
+        sub = subscribe_method(*subscribe_args,
+                               _ExpectSink(self, future, lambda: box))
+        box.append(sub)
+
+        return future
 
     # ----------------------------------------------------------------
     # Dispatch

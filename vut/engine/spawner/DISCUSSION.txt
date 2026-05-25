@@ -1,0 +1,173 @@
+================================================================================
+HWUT 2.0 Spawner Component - DISCUSSION
+
+Decision history and rationale. Records WHY the design is as it is, so a
+later reader does not re-derive - or accidentally undo - a settled choice.
+The README states the design; this file states the reasoning behind it.
+================================================================================
+
+D1  THE SPAWNER IS A ROUTER, NOT A TERMINAL
+-------------------------------------------
+An early sketch had spawn_*() return a Terminal subclass with termination
+methods bolted on. Rejected: a Terminal is ONE peer of ONE channel;
+supervision is not a peer-level operation. The spawner sits BETWEEN the
+user side and the child side - that is a hub of peers, i.e. a Router. It
+owns an EventRouter; the router's dispatcher is the single point where
+all traffic in both directions is observed, and that observation point is
+what drives child-state tracking and termination.
+
+The component invents no transport. Channel, terminal, handshake, and
+dispatcher all belong to the 'event' subsystem. The spawner is a
+LAUNCH-and-SUPERVISE device only.
+
+
+D2  WHAT THE CALLER GETS BACK
+-----------------------------
+A spawn_*() call returns ONE object: a SpawnerParentEventTerminal, a real
+EventTerminal (send/dispatcher/start/stop inherited unchanged) plus the
+supervision surface (.terminate, .suspend/.resume, .child_state). On
+startup failure it returns None instead.
+
+The subclass is justified not by grafting kill-machinery onto a peer, but
+because .terminate() is a thin REQUEST: it emits EventChildTerminationReq
+toward the spawner; the spawner acts. The terminal stays a terminal.
+
+The OS handle is never surfaced to the caller. It is held inside the
+spawner, where it backs the force-kill path.
+
+
+D3  .terminate() IS EVENT-BASED, NOT A LOCAL METHOD CALL
+--------------------------------------------------------
+.terminate() works by emitting EventChildTerminationReq through the
+router, NOT by calling a method on a co-located spawner object. While the
+spawner happens to be co-located today, a future spawner may also do
+resource allocation - one spawner serving many children, with no
+guaranteed shared context with any given parent terminal. The moment that
+is true, "call a local method" stops working; only an event crosses an
+arbitrary boundary. Designing it event-based now costs nothing and means
+that refactor does not rewrite the parent terminal's contract. The event
+is the abstraction boundary that survives the spawner moving.
+
+
+D4  CALLABLE: FUNCTION + ARGS, BUILTINS ONLY
+--------------------------------------------
+The "what to run" is an ordinary Python callable plus its arguments - no
+wrapper type, no central registry. spawn_async/thread/process take a live
+callable. spawn_remote_process takes a STRING name (an importable path),
+because a live function object cannot travel to another machine; the
+remote side resolves it by ordinary import - the import system IS the
+registry.
+
+Arguments are passed as ONE object (tuple or dict), never mixed into the
+spawn call as loose parameters. Channel-setup and launch parameters are
+carried by a separate, per-kind 'config' object. Rationale: function and
+args stay positional and obvious; everything else is one typed object
+that never offers a parameter irrelevant to its kind.
+
+
+D5  THE TRAMPOLINE AND THE STARTUP RACE
+---------------------------------------
+The child does not start at the user callable directly; it starts at a
+framework trampoline that builds the child terminal, start()s it (which
+emits the Up handshake), and only then invokes the callable. Therefore
+"launch succeeded" provably means "the channel is live", not merely "a
+process exists".
+
+Inside _spawn the parent-side handshake is raced against child-death. The
+two outcomes share no path: the spawn function either returns a live
+SpawnerParentEventTerminal, or returns None on startup failure.
+
+
+D6  THE CHILD-STATE MACHINE
+---------------------------
+States: LAUNCHED (internal startup), RUNNING, SUSPENDED, TERMINATING, and
+the three terminal states TERM_OK / TERM_FAILURE / TERM_LOST_CONNECTION.
+Every transition emits EventChildStateChanged(old,new) to the parent, so
+a caller may poll .child_state() or await the change via expect_*.
+
+The state machine is implemented over event's dispatcher 'expect'
+functionality plus asyncio coroutines: each await is a suspension point
+that IS the program counter, so the shutdown sequence linearises without
+a hand-rolled timer or step variable.
+
+
+D7  TERM_OK vs TERM_FAILURE - THE DECISIVE DISTINCTION
+------------------------------------------------------
+The split is NOT "exited cleanly" vs "killed". Both terminal states
+normally involve an OS-level kill that frees the child's resources. The
+distinction is ORDERING relative to the child's own confirmation:
+
+  TERM_OK       the child CONFIRMED proper termination (EventChild
+                Termination) - it ended in harmony at its own functional
+                level - and resources were then freed.
+  TERM_FAILURE  resources were freed BEFORE, or without, any confirmation.
+                The OS context is gone; the functional level is unknown.
+
+A cancelled asyncio.Task is TERM_FAILURE: its resources are freed
+forcefully, not by the task's voluntary return - no confirmation
+preceded it. Killing the child after a TERM_OK confirmation is not a
+contradiction: the child already reported functional completion; the
+kill is pure reclamation of the OS context.
+
+Earlier drafts explored many names for a separate "unkillable" state
+(GHOST, ZOMBIE, HANGING, MORITURUS, TERMINATION_FAILED). All retired:
+death-words (GHOST, ZOMBIE) wrongly imply the child is dead when it is
+the most-alive problem case; and once .terminate() refuses the
+unsupported case up front (see D9), no separate state is needed at all.
+
+
+D8  TERM_LOST_CONNECTION
+------------------------
+A broken channel is its own terminal state, reachable from ANY live
+state (except the already-terminal ones). Its meaning: the spawner has
+NO information about the child - cannot tell whether it died, is wedged,
+or still runs, and cannot account for its resources. Distinct from
+TERM_FAILURE, which still had a working channel and a definite verdict.
+
+
+D9  THE KILL ASYMMETRY AND THE REFUSAL CONVENTION
+-------------------------------------------------
+Contexts differ in their power to STOP a child:
+  process / remote  - OS handle; hard, unconditional kill; suspendable.
+  async             - Task.cancel(); real but cooperative - the
+                      CancelledError lands only at the next await.
+  thread            - no force path at all; a thread cannot be stopped
+                      from outside.
+
+wait_to_kill_ms is MANDATORY - infinite wait must be a deliberate choice
+(value None), never the accident of a forgotten argument. For 'thread'
+it must be None; a numeric value is harmless (behaviour is unchanged -
+infinite wait) but signals a mistaken expectation.
+
+The three supervision methods (.terminate, .suspend, .resume) report
+success or refusal by RETURN VALUE (bool), never by exception. A refusal
+is a normal, expected outcome: .terminate() returns False for a numeric
+deadline on a 'thread'; .suspend()/.resume() return False on async or
+thread. Rationale: an unsupported request is ordinary, not exceptional;
+raising would force every call site into try/except for a foreseeable
+case. (This reversed an earlier "fail loud / raise" decision for
+.suspend, in favour of one uniform convention across all three.)
+
+
+D10 EVENTS UNDER category "SPAWNER"
+-----------------------------------
+The category already says "spawner", so class names do not repeat the
+prefix. Renaming a class or moving its category breaks every wire
+consumer - the 'event' component's hard rule applies.
+
+  EventChildTerminationReq  parent  -> spawner   the .terminate() request
+  EventChildTermination     child   -> parent    the child's exit report
+  EventChildKilled          spawner -> parent    deadline reached, killed
+  EventChildStateChanged    spawner -> parent    every FSM edge
+
+
+OPEN POINTS
+-----------
+  - spawn_sandbox (a sandboxed system call via the 'sandbox' subsystem)
+    was discussed and explicitly DEFERRED - too complex for now.
+  - Component naming (spawn / launch / fork) left provisional; 'spawn'
+    chosen for now, aligning with multiprocessing vocabulary.
+  - Resource allocation in the spawner - foreseen (it motivates D3),
+    not yet designed.
+  - The implementation sketch is held until the concrete 'event'
+    component API signatures (expect_*, peer-down) are bound.
