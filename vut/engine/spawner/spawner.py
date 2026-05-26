@@ -1,48 +1,26 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: The Spawner - launch a task into parallel execution and supervise it.
+PURPOSE: Launch a task into parallel execution and supervise it.
 
-This module is the component's front door. It provides the four spawn
-functions and the Spawner hub that backs them:
+    spawn_async(callable, args, config)            
+    spawn_thread(callable, args, config)            
+    spawn_process(callable, args, config)           
+    spawn_remote_process(name_of_callable_str, args, config)    
 
-    spawn_async (callable, args, config)            -> parent terminal | None
-    spawn_thread(callable, args, config)            -> parent terminal | None
-    spawn_process(callable, args, config)           -> parent terminal | None
-    spawn_remote_process(name_str, args, config)    -> parent terminal | None
+The Spawner sits BETWEEN the user side and the child side. It owns an
+EventRouter. It observes traffic between user and child throught the
+EventRouter's dispatcher. This observation drives the child's state
+tracking.
 
-THE SPAWNER IS A ROUTER, NOT A TERMINAL (DISCUSSION.txt D1)
+Upon spawning, the user receives a 'SpawnerParentEventTerminal' by means of
+which it communicates with the child. Further, the user can access information
+about the child' state and control it via this terminal. The child, on the
+other hand receives a 'SpawnerChildEventTerminal'. On the other context's 
+side a 'trampoline' initiates the child's terminal, initiates a handshake,
+and calls the child's function (passing the child terminal).
 
-The Spawner sits BETWEEN the user side and the child side - a hub of
-peers, i.e. a Router. It owns an EventRouter; the router's dispatcher is
-the single point where traffic in both directions is observed, and that
-observation drives child-state tracking and termination. The Spawner
-invents NO transport - Channel, Terminal, handshake all belong to the
-'event' subsystem; the Spawner is a LAUNCH-and-SUPERVISE device only.
-
-WHAT A spawn_* CALL RETURNS (DISCUSSION.txt D2)
-
-ONE object: a SpawnerParentEventTerminal (a real EventTerminal plus the
-supervision surface), or None on startup failure. The two outcomes share
-no path - the caller gets a live, fully-attached terminal, or nothing.
-
-THE STARTUP RACE (DISCUSSION.txt D5)
-
-_spawn launches the child at the trampoline (NOT at the user callable
-directly), then RACES the parent-side Up handshake against child-death:
-
-    handshake completes first  -> a live channel; return the terminal.
-    child dies first           -> startup failed; return None.
-
-Because the trampoline completes the handshake before the user callable
-runs, "handshake completed" provably means "the channel is live".
-
-THE CALLABLE AND ITS ARGS (DISCUSSION.txt D4)
-
-spawn_async/thread/process take a live Python callable; spawn_remote_
-process takes a STRING import path (a live function cannot travel to
-another machine). Args are ONE object - tuple or dict - never loose
-parameters. Channel-and-launch knobs are the separate per-kind 'config'
-object (see config.py).
+NOTE: 'callable' must receive the child's terminal 'SpawnerChildEventTerminal'
+      as first argument.
 ________________________________________________________________________________
 """
 import asyncio
@@ -65,67 +43,46 @@ from vut.engine.spawner.handles       import (AsyncChildHandle,
 from vut.engine.spawner.state_machine import ChildStateMachine
 from vut.engine.spawner.terminals     import SpawnerParentEventTerminal
 from vut.engine.spawner.trampoline    import run_trampoline, run_trampoline_entry
+from vut.engine.spawner.watchdog      import Watchdog
 
-
-# ============================================================================
-# The Spawner hub
-# ============================================================================
 
 class Spawner:
     """One launched child, supervised: router + handle + state machine.
 
-    A Spawner instance backs ONE spawn. It is created inside _spawn,
-    wired up, and bound into the parent terminal via
-    attach_supervision(); the user holds the terminal and never names
-    the Spawner directly.
+      has: EventRouter - the hub through which the parent terminal's
+           EventChildTerminationReq reaches the supervision logic, and
+           through which the Spawner observes both directions of traffic.
 
-    The Spawner owns:
-      -- an EventRouter - the hub through which the parent terminal's
-         EventChildTerminationReq reaches the supervision logic, and
-         through which the Spawner observes both directions of traffic.
-      -- the ChildHandle - the OS handle (PID / Task / Process), kept
-         here and never surfaced to the user (DISCUSSION.txt D2).
-      -- the ChildStateMachine - the FSM that turns observed events into
-         E_ChildState transitions.
+      has: ChildHandle - the OS handle (PID / Task / Process), kept
+           here and never surfaced to the user (DISCUSSION.txt D2).
 
-    Per DISCUSSION.txt D3, the parent's .terminate() does NOT call a
-    Spawner method directly; it emits EventChildTerminationReq, and the
-    Spawner picks it up through the router. The handler below is what
-    the router delivers that event to.
+      has: ChildStateMachine - the FSM that turns observed events into
+           E_ChildState transitions.
     """
 
     def __init__(self, config: SpawnerConfig):
         """RETURN: a new, unwired Spawner for the given config.
 
-        Construction only stores the config and creates the router.
-        Wiring (handle, state machine, subscriptions, watchdog) is done
-        by _spawn via _wire() and _start_watchdog(), once the child has
-        been launched and the parent terminal exists.
+        Construction only stores the config and creates the router. Wiring
+        (handle, state machine, subscriptions, watchdog) is done by _spawn via
+        _wire() and _start_watchdog(), once the child has been launched and the
+        parent terminal exists.
         """
         self.config          = config
         self._router         = EventRouter()
         self._handle         = None      # ChildHandle, set by _wire()
         self._state_machine  = None      # ChildStateMachine, set by _wire()
         self._parent         = None      # parent terminal, set by _wire()
-        self._watchdog_task  = None      # asyncio.Task, set by _start_watchdog()
-        self._watchdog_ms    = 250       # poll period; see _watchdog_loop()
-
-    # ----------------------------------------------------------------
-    # Wiring
-    # ----------------------------------------------------------------
+        self._watchdog       = None      # Watchdog, set by _wire()
 
     def _wire(self, parent_terminal: SpawnerParentEventTerminal,
                     handle) -> ChildStateMachine:
         """RETURN: ChildStateMachine, the freshly built and wired FSM.
 
-        Binds the launched child's OS handle and the parent terminal
-        into a ChildStateMachine, then subscribes the Spawner's
-        supervision handler to EventChildTerminationReq on the parent
-        terminal's dispatcher - so a parent .terminate() reaches the
-        FSM (DISCUSSION.txt D3).
-
-        Called once by _spawn after the child is launched and the
-        parent handshake has completed.
+        -- binds the child's OS handle and the parent terminal into a
+           ChildStateMachine.
+        -- subscribes EventChildTerminationReq on the parent terminal's 
+           dispatcher.
         """
         self._parent = parent_terminal
         self._handle = handle
@@ -140,65 +97,42 @@ class Spawner:
             suspend_resume  = suspend_resume,
         )
 
-        # D3: .terminate() emits EventChildTerminationReq; the Spawner
-        # acts on it here, picked up off the parent terminal's receive
-        # dispatcher.
+        # Setup 'parent-child' evesdropping:
+        #
+        # User calls '.terminate()' on his terminal, and the terminal sends
+        # 'EventChildTerminationReq' => spawner initiates shutdown.
         parent_terminal.dispatcher.subscribe_on_event(
             EventChildTerminationReq,
             self._on_termination_req,
         )
 
-        # A child may also end on its OWN initiative - work done, no
-        # .terminate() ever issued. It still emits EventChildTermination;
-        # this always-on subscription drives RUNNING -> TERM_OK for that
-        # case (DISCUSSION.txt D7). It stands down while a .terminate()
-        # is in progress; see ChildStateMachine.notify_self_completion.
+        # Child may also notify about 'work done'.
         parent_terminal.dispatcher.subscribe_on_event(
             EventChildTermination,
             self._on_child_termination,
         )
 
-        # When the FSM reaches any terminal state, stop the watchdog -
-        # a verdict exists, there is nothing left to supervise.
-        self._state_machine.set_on_terminal(self._stop_watchdog)
+        # Liveness supervision lives in its own object. It is built here
+        # (it needs the handle, the FSM and the parent terminal) but only
+        # started later, by _start_watchdog(), once the handshake proves
+        # the channel live.
+        self._watchdog = Watchdog(handle          = handle,
+                                  state_machine   = self._state_machine,
+                                  parent_terminal = parent_terminal)
+
+        # Ensure that the state machine stops the watchdog, once done.
+        self._state_machine.set_on_terminal(self._watchdog.stop)
 
         return self._state_machine
-
-    # ----------------------------------------------------------------
-    # Supervision handler (router delivers EventChildTerminationReq here)
-    # ----------------------------------------------------------------
 
     async def _on_termination_req(self,
                                   event: EventChildTerminationReq) -> None:
         """RETURN: None.
 
-        Handler for the parent's termination request, delivered via the
-        router (DISCUSSION.txt D3). It does two things, in order:
+        1. forwards 'EventChildTerminationReq' to child's terminal.
+        2. starts the 'wait_to_kill_ms' waiting period.
 
-          1. RELAYS the request to the child over the channel, so the
-             child's SpawnerChildEventTerminal sees EventChildTermination
-             Req and can begin a cooperative wind-down. The parent's
-             .terminate() dispatched the event only locally (to this
-             Spawner); reaching the child is the Spawner's job, since
-             the Spawner is the supervisor that "acts".
-          2. Hands the wait_to_kill_ms grace period to the state
-             machine's begin_termination(), which runs the shutdown
-             sequence (TERMINATING, then the confirmation-vs-deadline
-             race).
-
-        The request's admissibility (e.g. a numeric deadline on a
-        'thread') was already checked by
-        SpawnerParentEventTerminal.terminate() before the event was
-        ever dispatched (DISCUSSION.txt D9); by the time it arrives here
-        it is known-honourable, so this handler does not re-check.
-
-        If the relay send fails (channel already down) the shutdown
-        sequence still runs: a child that cannot be reached will simply
-        not confirm, and begin_termination()'s deadline path handles
-        that.
         """
-        # 1. Relay to the child. Best-effort: a failed relay is logged,
-        #    not fatal - begin_termination()'s deadline covers it.
         try:
             sent = await self._parent.send(event)
             if not sent:
@@ -210,45 +144,24 @@ class Spawner:
             print("Spawner._on_termination_req: relay to child raised: %s"
                   % e, file=sys.stderr)
 
-        # 2. Run the shutdown sequence.
         await self._state_machine.begin_termination(event.wait_to_kill_ms)
 
     async def _on_child_termination(self,
                                     event: EventChildTermination) -> None:
-        """RETURN: None.
-
-        Handler for the child's own EventChildTermination. Forwards it
-        to the state machine's notify_self_completion(), which drives
-        RUNNING -> TERM_OK for a child that ended on its own initiative
-        (DISCUSSION.txt D7).
-
-        When a .terminate() is in progress this is harmless: the FSM is
-        in TERMINATING, where notify_self_completion() deliberately
-        stands down and lets begin_termination()'s one-shot expect_event
-        own the verdict. The two watchers do not collide.
+        """
+        Forwards it to the child's monitoring state machine.
         """
         await self._state_machine.notify_self_completion(event)
-
-    # ----------------------------------------------------------------
-    # Suspend / resume (parent terminal delegates here)
-    # ----------------------------------------------------------------
 
     async def suspend_child(self) -> bool:
         """RETURN: True,  the child was suspended; FSM now SUSPENDED.
                    False, suspend failed or was not admissible.
-
-        Thin delegation to the state machine, which checks the child is
-        RUNNING and drives the OS handle. Refusal by return value
-        (DISCUSSION.txt D9).
         """
         return await self._state_machine.suspend_child()
 
     async def resume_child(self) -> bool:
         """RETURN: True,  the child was resumed; FSM now RUNNING.
                    False, resume failed or was not admissible.
-
-        Thin delegation to the state machine. Refusal by return value
-        (DISCUSSION.txt D9).
         """
         return await self._state_machine.resume_child()
 
@@ -259,123 +172,18 @@ class Spawner:
     def _start_watchdog(self) -> None:
         """RETURN: None.
 
-        Starts the liveness watchdog and also wires peer-down. Two
-        triggers feed the same resolver:
+        Starts the liveness Watchdog. Thin delegation: the Watchdog (see
+        watchdog.py) owns the poll loop, the peer-down trigger and the
+        silence resolver. The Spawner only decides WHEN supervision
+        begins - _spawn calls this once the startup handshake has proven
+        the channel live, since before that there is no live child worth
+        watching.
 
-          -- a periodic poll (every _watchdog_ms) - catches a child
-             that has gone SILENT without the channel ever signalling:
-             a wedged process, or an abnormally-killed one whose queue
-             never closes. A purely reactive scheme would miss these.
-          -- the parent terminal's peer-down callback - catches a
-             channel that DID signal, without waiting for the next poll
-             tick.
-
-        Both call _resolve_silence(), which consults the child handle's
-        liveness and hands an E_Liveness to the FSM. The watchdog is the
-        only place process/remote abnormal death becomes a verdict; the
-        in-process kinds (async/thread) also benefit, since a Task or
-        thread that ends without a clean confirmation is caught here too.
+        The matching stop is not a Spawner method: _wire() registered
+        the Watchdog's own stop() as the FSM's on-terminal callback, so
+        supervision ends automatically when a verdict is reached.
         """
-        # Reactive trigger: peer-down resolves immediately.
-        def _on_peer_down():
-            return asyncio.create_task(self._resolve_silence())
-        self._parent.set_peer_down_callback(_on_peer_down)
-
-        # Proactive trigger: the periodic poll.
-        self._watchdog_task = asyncio.create_task(self._watchdog_loop())
-
-    async def _watchdog_loop(self) -> None:
-        """RETURN: None, when the FSM has reached a terminal state.
-
-        The periodic half of the watchdog. Every _watchdog_ms it
-        consults the child handle's liveness directly - it does NOT gate
-        on the terminal's is_up flag, because a peer killed abnormally
-        leaves is_up True indefinitely (the channel queue never closes);
-        gating on it would reproduce exactly that blind spot. The
-        handle's liveness IS the signal.
-
-        Per tick:
-
-          handle ALIVE    healthy; nothing to do.
-          handle DEAD     the child's OS context is gone. A clean
-                          completion ALSO reads DEAD, and its
-                          EventChildTermination may still be in flight
-                          on the receive loop. So a DEAD reading is not
-                          acted on immediately: the loop waits one more
-                          tick as a grace period for the confirmation
-                          to be processed. If the FSM has by then
-                          reached a terminal state (TERM_OK), the clean
-                          completion won the race and the loop simply
-                          exits. If the FSM is STILL live after the
-                          grace tick, no confirmation is coming ->
-                          _resolve_silence() turns the DEAD reading into
-                          TERM_FAILURE.
-          handle UNKNOWN  the handle could not be consulted -> resolve
-                          immediately (TERM_LOST_CONNECTION); there is
-                          no confirmation race to wait out.
-
-        The loop exits as soon as the FSM is terminal - by then a
-        verdict exists and there is nothing left to supervise.
-        """
-        from vut.engine.spawner.enums import E_Liveness
-        try:
-            while not self._state_machine.state.is_terminal():
-                await asyncio.sleep(self._watchdog_ms / 1000.0)
-                if self._state_machine.state.is_terminal():
-                    break
-
-                liveness = await self._handle.liveness()
-
-                if liveness is E_Liveness.ALIVE:
-                    continue                        # healthy; keep watching
-
-                if liveness is E_Liveness.UNKNOWN:
-                    # No information, no race to wait out - resolve now.
-                    await self._resolve_silence()
-                    break
-
-                # liveness is DEAD: grant one grace tick for an
-                # in-flight EventChildTermination to be processed.
-                await asyncio.sleep(self._watchdog_ms / 1000.0)
-                if self._state_machine.state.is_terminal():
-                    break                           # clean completion won
-                # Still live after the grace tick - no confirmation is
-                # coming. Resolve the DEAD reading into a verdict.
-                await self._resolve_silence()
-                break
-        except asyncio.CancelledError:
-            return
-        except Exception as e:
-            print("Spawner._watchdog_loop: watchdog raised: %s" % e,
-                  file=sys.stderr)
-
-    async def _resolve_silence(self) -> None:
-        """RETURN: None.
-
-        Consults the child handle's liveness and hands the result to the
-        FSM's notify_channel_silent(), which turns it into a terminal
-        verdict (TERM_FAILURE for a DEAD child, TERM_LOST_CONNECTION for
-        ALIVE / UNKNOWN - see ChildStateMachine.notify_channel_silent).
-
-        A no-op once the FSM is terminal: the verdict is already in.
-        Idempotent, so it is safe for both watchdog triggers (poll and
-        peer-down) to call it, possibly more than once.
-        """
-        if self._state_machine.state.is_terminal():
-            return
-        liveness = await self._handle.liveness()
-        await self._state_machine.notify_channel_silent(liveness)
-
-    def _stop_watchdog(self) -> None:
-        """RETURN: None.
-
-        Cancels the periodic watchdog task, if running. Called when the
-        FSM reaches a terminal state - there is nothing left to watch.
-        Safe to call more than once.
-        """
-        if self._watchdog_task is not None \
-           and not self._watchdog_task.done():
-            self._watchdog_task.cancel()
+        self._watchdog.start()
 
 
 # ============================================================================

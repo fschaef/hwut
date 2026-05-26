@@ -37,12 +37,13 @@ class ChildHandle(ABC):
     _CAN_SUSPEND    = False
 
     async def kill(self) -> bool:
-        """Force-terminate the child's execution context, i.e. free any
-        system resources related to the child's execution. 
-
+        """
         RETURNS: True, if context type can 'kill' the child process and 
                        such a kill has been initiated.
                  False, if not -- nothing happend.
+
+        Force-terminate the child's execution context, i.e. free any system
+        resources related to the child's execution. 
 
         Idempotent: killing an already-dead context is harmless.
         """
@@ -103,12 +104,7 @@ class ChildHandle(ABC):
 class AsyncChildHandle(ChildHandle):
     """Handle wrapping the asyncio.Task that runs an async child.
 
-    kill() cancels the Task. Cancellation is REAL but COOPERATIVE: the
-    CancelledError is raised into the Task only when it next hits an
-    await. So kill() schedules the cancel and returns; the child may
-    take until its next suspension point to actually stop. A child
-    ended this way lands in TERM_FAILURE - the cancel is a forced free,
-    no confirmation preceded it (DISCUSSION.txt D7).
+    kill() is supported only cooperatively.
 
     suspend()/resume() are NOT supported: a Task has no OS-level
     suspend. They inherit the base's False.
@@ -125,13 +121,6 @@ class AsyncChildHandle(ChildHandle):
         """RETURNS: True, if context type can 'kill' the child process and 
                           such a kill has been initiated.
                     False, if not -- nothing happend.
-
-        Calls Task.cancel() and then awaits the Task so this coroutine
-        does not return before the cancellation has actually unwound -
-        the CancelledError (and the trampoline's __aexit__) have run by
-        the time kill() returns.
-
-        A no-op if the Task is already done.
         """
         if self._task.done():
             return True
@@ -155,20 +144,11 @@ class AsyncChildHandle(ChildHandle):
         return E_Liveness.DEAD if self._task.done() else E_Liveness.ALIVE
 
 
-# ============================================================================
-# thread - no force path
-# ============================================================================
-
 class ThreadChildHandle(ChildHandle):
     """Handle for a thread child - no force path at all.
 
-    A thread cannot be stopped from outside (DISCUSSION.txt D9). kill(),
-    suspend() and resume() all inherit the base's refusing behaviour.
-    The handle still exists so the Spawner can hand the FSM a uniform
-    'killer'; it simply never does anything.
-
-    The thread object is held only so the Spawner may join() it during
-    its own teardown - that is a wait, not a kill.
+    .kill()               -- not supported.
+    .suspend(), .resume() -- not supported
     """
 
     _CAN_FORCE_KILL = False
@@ -192,20 +172,8 @@ class ThreadChildHandle(ChildHandle):
         return E_Liveness.ALIVE if self._thread.is_alive() \
                else E_Liveness.DEAD
 
-
-# ============================================================================
-# process - multiprocessing.Process
-# ============================================================================
-
 class ProcessChildHandle(ChildHandle):
     """Handle wrapping the multiprocessing.Process of a process child.
-
-    kill() issues a hard, unconditional OS kill (Process.kill(), i.e.
-    SIGKILL) and joins the process so kill() does not return before the
-    OS context is gone.
-
-    suspend()/resume() send SIGSTOP / SIGCONT to the process, which is
-    a genuine OS-level pause - the basis for the SUSPENDED state.
     """
 
     _CAN_FORCE_KILL = True
@@ -224,9 +192,9 @@ class ProcessChildHandle(ChildHandle):
                           such a kill has been initiated.
                     False, if not -- nothing happend.
 
-        Issues Process.kill() (SIGKILL) and then joins the process in
-        the executor so the asyncio loop is not blocked. After this
-        returns the OS context is gone and reaped - no zombie.
+        Issues Process.kill() (SIGKILL) and then joins the process in the
+        executor so the asyncio loop is not blocked. After this returns the OS
+        context is gone and reaped - no zombie.
 
         A no-op if the process is already not alive.
         """
@@ -287,27 +255,12 @@ class ProcessChildHandle(ChildHandle):
             return False
 
 
-# ============================================================================
-# remote process
-# ============================================================================
-
 class RemoteChildHandle(ChildHandle):
     """Handle for a child process on another machine.
 
-    A remote child's OS context is not reachable by a local signal.
-    Force-kill and suspend/resume are therefore mediated by the remote
-    side: the Spawner sends a control event, and a remote agent applies
-    the actual SIGKILL / SIGSTOP / SIGCONT to the local process there.
-
-    This class holds the SENDER of those control events (an async
-    callable supplied by the Spawner) plus an opaque remote-process
-    identifier. It exposes the same surface as ProcessChildHandle so the
-    FSM treats remote and process kinds identically.
-
-    The capability flags are True: a remote process CAN be force-killed
-    and suspended - just not by a local syscall.
+    Contains sender of remote control events, and a remote agent applies the
+    actual SIGKILL / SIGSTOP / SIGCONT to the local process there.
     """
-
     _CAN_FORCE_KILL = True
     _CAN_SUSPEND    = True
 
@@ -383,13 +336,7 @@ class RemoteChildHandle(ChildHandle):
         """RETURN: E_Liveness, ALIVE / DEAD if the remote agent answered,
                                UNKNOWN if it could not be reached.
 
-        Unlike the local handles, a remote handle's answer depends on a
-        round-trip to a remote agent. This is the one handle that
-        genuinely returns UNKNOWN: if no liveness_query was supplied, or
-        the query raises (network down, agent gone), the spawner has NO
-        information about the remote process - which the watchdog reads,
-        per DISCUSSION.txt D8, as TERM_LOST_CONNECTION rather than a
-        verdict of death.
+        Initiates round-trip query about the child's liveness.
         """
         if self._liveness_query is None:
             return E_Liveness.UNKNOWN
