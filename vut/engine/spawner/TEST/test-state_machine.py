@@ -28,7 +28,7 @@ deterministic: the FSM emits EventChildStateChanged whose __str__ is
 old->new only (no timestamp); the test never prints killed_at.
 ________________________________________________________________________________
 """
-import config  # noqa: F401  (path bootstrap; must precede vut.* imports)
+import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 import asyncio
 
@@ -36,14 +36,13 @@ from vut.language_support.python.hwut_runner import HwutRunner
 
 from vut.engine.event.channel.parameter import EventChannelParameter
 
-from vut.engine.spawner.enums         import E_ChildState
+from vut.engine.spawner.enums         import E_ChildState, E_Liveness
 from vut.engine.spawner.events        import (EventChildTermination,
                                               EventChildStateChanged,
                                               E_TerminationReason)
 from vut.engine.spawner.state_machine import ChildStateMachine
 from vut.engine.spawner.terminals     import (SpawnerParentEventTerminal,
                                               SpawnerChildEventTerminal)
-from vut.engine.spawner.handles       import E_Liveness
 
 
 # ----------------------------------------------------------------------

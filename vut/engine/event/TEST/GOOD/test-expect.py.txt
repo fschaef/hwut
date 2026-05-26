@@ -1,0 +1,39 @@
+
+[test_A1_expect_event]
+  ok  A1 expect_event resumes with the event
+
+[test_A2_category_and_predicate]
+  ok  A2 expect_category ignores other-category event
+  ok  A2 expect_category resumes on category match
+  ok  A2 expect_predicate resumes on predicate match
+
+[test_A3_expect_any]
+  ok  A3 expect_any resumes and 'match' branches on the type
+  ok  A3 expect_any leaves no subscription behind
+
+[test_A4_B2_one_shot]
+  ok  B2 expect_* fires exactly once
+  ok  B2 one-shot leaves no subscription
+
+[test_A4_B3_forward_looking]
+  ok  B3 earlier event not retro-matched
+  ok  B3 expect_* matches the next event after creation
+
+[test_A4_B4_non_consuming]
+  ok  B4 ordinary handler still receives the event
+  ok  B4 expect_* also receives the event
+
+[test_A4_B5_concurrent]
+  ok  B5 one event satisfies all matching expects
+  ok  B5 all three resumed with the same event
+  ok  B5 no subscriptions leak after all resolve
+
+[test_B6_expect_any_first_only]
+  ok  B6 expect_any yields exactly the first match
+
+[test_enforce_async_dispatcher]
+  ok  expect_* works under enforce_async_callbacks_f (sink is a .send-object)
+
+============================================================
+PASSED 17   FAILED 0
+all acceptance checks passed

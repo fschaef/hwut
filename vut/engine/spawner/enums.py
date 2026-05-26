@@ -2,9 +2,21 @@
 ________________________________________________________________________________
 PURPOSE: Spawner enumerations.
 
-ONE enum lives here: E_ChildState - the states of the child-state machine
-that the Spawner runs to track a launched child.
+Two enums live here:
 
+    E_ChildState   the states of the child-state machine the Spawner
+                   runs to track a launched child.
+    E_Liveness     the three-valued answer to "is the child's OS
+                   context still alive?" - consulted by the Spawner's
+                   watchdog to choose a terminal verdict.
+
+Both are plain leaf enums with no dependency on the rest of the
+component, which is why they share this module: handles.py,
+state_machine.py and spawner.py all import from here, so neither enum
+can live in any of those without risking an import cycle.
+
+E_CHILDSTATE
+------------
 The state set and its transitions are specified in README.txt (section
 "CHILD STATE MACHINE") and motivated in DISCUSSION.txt (D6, D7, D8). The
 short version:
@@ -23,9 +35,6 @@ short version:
     TERM_LOST_CONNECTION  terminal; the channel broke - the Spawner has NO
                           information about the child at all.
 
-The TERM_OK / TERM_FAILURE split is about ORDERING relative to the
-child's own confirmation, NOT about "exited cleanly vs killed" - see
-DISCUSSION.txt D7.
 ________________________________________________________________________________
 """
 from enum import Enum, auto
@@ -48,7 +57,7 @@ class E_ChildState(Enum):
     SUSPENDED            = auto()   # stopped via OS handle (process/remote)
     TERMINATING          = auto()   # .terminate() issued; awaiting confirmation
     TERM_OK              = auto()   # terminal; child confirmed termination
-    TERM_FAILURE         = auto()   # terminal; process/task freed without confirmation
+    TERM_FAILURE         = auto()   # terminal; freed without confirmation
     TERM_LOST_CONNECTION = auto()   # terminal; channel broke, no information
 
     def is_terminal(self) -> bool:
@@ -60,8 +69,8 @@ class E_ChildState(Enum):
         repeating the terminal-member set at the call site.
         """
         return self in (E_ChildState.TERM_OK,
-                        E_ChildState.TERM_FAILURE,
-                        E_ChildState.TERM_LOST_CONNECTION)
+                         E_ChildState.TERM_FAILURE,
+                         E_ChildState.TERM_LOST_CONNECTION)
 
     def is_live(self) -> bool:
         """RETURN: True,  if this state is live (the child may still be
@@ -75,4 +84,36 @@ class E_ChildState(Enum):
 
     def __str__(self) -> str:
         """RETURN: str, the bare member name (e.g. 'RUNNING')."""
+        return self.name
+
+
+# ============================================================================
+# E_Liveness - the three-valued liveness answer
+# ============================================================================
+
+class E_Liveness(Enum):
+    """The three possible answers to ChildHandle.is_alive().
+
+        ALIVE    the child's OS context is confirmed running.
+        DEAD     the child's OS context is confirmed gone.
+        UNKNOWN  the handle could not be consulted - e.g. a remote
+                 agent did not answer. NOT a synonym for either of the
+                 above: it means the spawner has no information.
+
+    The Spawner's watchdog maps these onto FSM verdicts: DEAD -> the
+    child terminated (TERM_FAILURE if unconfirmed), ALIVE or UNKNOWN ->
+    TERM_LOST_CONNECTION (DISCUSSION.txt D8 - "no information").
+
+    Lives here, beside E_ChildState, because it is a plain leaf enum
+    with no dependency on the rest of the component: handles.py,
+    state_machine.py and spawner.py all import it, so it cannot live in
+    any of them without risking an import cycle.
+    """
+
+    ALIVE   = auto()
+    DEAD    = auto()
+    UNKNOWN = auto()
+
+    def __str__(self) -> str:
+        """RETURN: str, the bare member name (e.g. 'ALIVE')."""
         return self.name

@@ -1,8 +1,6 @@
-Testing the Spawner component: ChildState and SPAWNER events,
-per-kind config objects, the child-state machine, and the four
-spawn_* entry points end-to-end (async / thread / process).
+Testing the Spawner component
 --------------------------------------------------------------
 
 coverage run --omit ./*.py -a *.py
 
---not config.py
+--not test_env.py

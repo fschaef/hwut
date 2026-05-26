@@ -20,7 +20,7 @@ ________________________________________________________________________________
 """
 from enum import Enum, auto
 
-from vut.engine.event.event   import Event, category
+from vut.engine.event.event import Event, category
 from vut.engine.spawner.enums import E_ChildState
 
 

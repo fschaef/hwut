@@ -72,7 +72,7 @@ import queue as _queue                                  # threading queue
 import struct
 import sys
 
-from abc      import ABC, abstractmethod
+from abc                import ABC, abstractmethod
 
 from vut.engine.event.event              import Event
 from vut.engine.event.channel.marshaller import Marshaller
@@ -242,6 +242,7 @@ class ProcessChannel(EventChannel):
     """
 
     _CLOSE_SENTINEL = {"_close": True}                  # picklable dict
+    _POLL_TIMEOUT_S = 0.3                               # receive() wake period
 
     def __init__(self, in_q, out_q, cipher: "Cipher | None" = None):
         """RETURN: a new ProcessChannel.
@@ -269,7 +270,12 @@ class ProcessChannel(EventChannel):
         await loop.run_in_executor(None, self._out_q.put, b)
 
     async def _raw_recv(self) -> bytes:
-        """RETURN: bytes,  raw handshake bytes from the in queue."""
+        """RETURN: bytes,  raw handshake bytes from the in queue.
+
+        Used only during the pre-channel cipher handshake; a blocking
+        get() is acceptable here because the handshake either completes
+        or the spawn fails outright.
+        """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._in_q.get)
 
@@ -286,28 +292,74 @@ class ProcessChannel(EventChannel):
             payload = self._cipher.encrypt(json.dumps(wire).encode("utf-8"))
             await loop.run_in_executor(None, self._out_q.put, payload)
 
-    async def receive(self) -> "Event | None":
-        if self._closed:
-            return None
-        loop = asyncio.get_running_loop()
-        item = await loop.run_in_executor(None, self._in_q.get)
-        if isinstance(item, dict) and item.get("_close"):
-            self._closed = True
-            return None
-        if isinstance(item, dict):
-            # Identity-cipher fast path: item IS the wire dict.
-            return Marshaller.deserialize(item)
-        # Encrypted path: item is bytes.
+    def _get_one(self):
+        """RETURN: a queue item, or the _CLOSE_SENTINEL if none arrived.
+
+        A SINGLE bounded get() on the in queue. Runs on an executor
+        thread. The timeout is the key to clean shutdown: a blocking,
+        unbounded get() would park the executor thread forever if the
+        peer process died abnormally (closing a multiprocessing.Queue
+        does NOT wake a thread blocked in get()), and that parked
+        non-daemon thread would hang interpreter exit. A bounded get()
+        instead returns control every _POLL_TIMEOUT_S so receive() can
+        observe a closed channel and stop.
+
+        On timeout it returns _CLOSE_SENTINEL-shaped emptiness: the
+        caller re-checks _closed and either loops or stops.
+        """
         try:
-            import json
-            wire = json.loads(self._cipher.decrypt(item).decode("utf-8"))
-        except Exception as e:
-            print("ProcessChannel.receive: decrypt/decode failed: %s" % e,
-                  file=sys.stderr)
-            return None
-        return Marshaller.deserialize(wire)
+            return self._in_q.get(timeout=self._POLL_TIMEOUT_S)
+        except _queue.Empty:
+            return None                                 # nothing this tick
+        except (OSError, ValueError, EOFError):
+            # Queue closed / broken - peer is gone. Treat as channel end.
+            return self._CLOSE_SENTINEL
+
+    async def receive(self) -> "Event | None":
+        """RETURN: Event,  the next event from the peer, or
+                   None,   once the channel has closed (locally via
+                           close(), by a peer _CLOSE_SENTINEL, or
+                           because the peer's queue broke).
+
+        Polls the in queue in bounded get() ticks (see _get_one) so the
+        executor thread cannot be left parked on a dead peer. Between
+        ticks it re-checks _closed, so a local close() ends the loop
+        promptly without needing the sentinel to race the poll.
+        """
+        loop = asyncio.get_running_loop()
+        while not self._closed:
+            item = await loop.run_in_executor(None, self._get_one)
+            if item is None:
+                continue                                # empty tick; re-check
+            if isinstance(item, dict) and item.get("_close"):
+                self._closed = True
+                return None
+            if isinstance(item, dict):
+                # Identity-cipher fast path: item IS the wire dict.
+                return Marshaller.deserialize(item)
+            # Encrypted path: item is bytes.
+            try:
+                import json
+                wire = json.loads(
+                    self._cipher.decrypt(item).decode("utf-8"))
+            except Exception as e:
+                print("ProcessChannel.receive: decrypt/decode failed: %s"
+                      % e, file=sys.stderr)
+                return None
+            return Marshaller.deserialize(wire)
+        return None                                     # channel closed
 
     async def close(self) -> None:
+        """RETURN: None.
+
+        Closes this end. Sets _closed (so an in-flight receive() poll
+        loop exits at its next tick - at most _POLL_TIMEOUT_S away),
+        puts a _CLOSE_SENTINEL on the in queue to wake the peer
+        promptly, and cancel_join_thread()s both queues so their feeder
+        threads cannot hold interpreter exit open.
+
+        Idempotent: a second call returns at once.
+        """
         if self._closed:
             return
         self._closed = True
@@ -316,6 +368,14 @@ class ProcessChannel(EventChannel):
         except Exception as e:
             print("ProcessChannel.close: put_nowait failed: %s" % e,
                   file=sys.stderr)
+        # Release the queues' feeder threads so they cannot block exit.
+        for q in (self._in_q, self._out_q):
+            cancel = getattr(q, "cancel_join_thread", None)
+            if cancel is not None:
+                try:
+                    cancel()
+                except Exception:
+                    pass
 
 
 # ============================================================================

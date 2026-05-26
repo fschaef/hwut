@@ -49,34 +49,7 @@ import asyncio
 import signal
 import sys
 
-from enum import Enum, auto
-
-
-# ============================================================================
-# Liveness
-# ============================================================================
-
-class E_Liveness(Enum):
-    """The three possible answers to ChildHandle.is_alive().
-
-        ALIVE    the child's OS context is confirmed running.
-        DEAD     the child's OS context is confirmed gone.
-        UNKNOWN  the handle could not be consulted - e.g. a remote
-                 agent did not answer. NOT a synonym for either of the
-                 above: it means the spawner has no information.
-
-    The Spawner's watchdog maps these onto FSM verdicts: DEAD -> the
-    child terminated (TERM_FAILURE if unconfirmed), ALIVE or UNKNOWN ->
-    TERM_LOST_CONNECTION (DISCUSSION.txt D8 - "no information").
-    """
-
-    ALIVE   = auto()
-    DEAD    = auto()
-    UNKNOWN = auto()
-
-    def __str__(self) -> str:
-        """RETURN: str, the bare member name (e.g. 'ALIVE')."""
-        return self.name
+from vut.engine.spawner.enums import E_Liveness
 
 
 # ============================================================================

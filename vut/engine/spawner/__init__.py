@@ -32,7 +32,7 @@ subscribe to them (e.g. awaiting EventChildStateChanged); they are not
 constructed directly by users either.
 ________________________________________________________________________________
 """
-from vut.engine.spawner.enums      import E_ChildState
+from vut.engine.spawner.enums      import E_ChildState, E_Liveness
 from vut.engine.spawner.events     import (EventChildTerminationReq,
                                            EventChildTermination,
                                            EventChildKilled,
@@ -58,7 +58,7 @@ __all__ = [
     "SpawnerConfig", "AsyncConfig", "ThreadConfig", "ProcessConfig",
     "RemoteProcessConfig",
     # state
-    "E_ChildState",
+    "E_ChildState", "E_Liveness",
     # events
     "EventChildTerminationReq", "EventChildTermination",
     "EventChildKilled", "EventChildStateChanged", "E_TerminationReason",

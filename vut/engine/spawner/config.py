@@ -1,45 +1,29 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: SpawnerConfig - the per-kind 'config' object of a spawn_* call.
 
-DISCUSSION.txt D4 splits a spawn call into three parts:
+PURPOSE: SpawnerConfig -- parameters for the execution infrastructure
 
-    function + args      WHAT to run        (positional, obvious)
-    config               everything else    (one typed object)
+When spawning a parallel execution two things were specified, namely:
 
-This module is the 'config' part. There is one config class per
-execution kind, and a config object carries exactly two things:
+    (1) function + args  =>  WHAT to run        
 
-  1. a CHANNEL recipe - which EventChannelParameter factory to call to
-     get the (parent_ecp, child_ecp) mirror pair. The Spawner never
-     invents transport (D1); it asks the config for the ECP pair.
+    (2) config => event communication channel setup
+               => process/task context setup
 
-  2. the EXECUTION-CONTEXT launch parameters - the knobs specific to
-     that kind: a process start-method, a remote host/port, etc.
+This module implements the classes to be used for 'config':
 
-Each config offers exactly the knobs its kind can honour and NOT the
-ones it cannot (D4: "one typed object that never offers a parameter
-irrelevant to its kind"). That is why this is four small classes rather
-than one class with a kind discriminator and a grab-bag of optionals.
+    SpawnerConfig -- base class
+    AsyncConfig   -- for asyncio.Task execution + channel
+    ThreadConfig  -- for Thread based execution + channel
+    ProcessConfig -- for Process based execution + channel
 
-THE KILL ASYMMETRY (D9)
+    RemoteProcessConfig -- for remote process execution + channel
 
-wait_to_kill_ms is NOT carried here - it is an argument of .terminate(),
-decided per termination, not per spawn. But the config's KIND determines
-what values .terminate() will accept: a ThreadConfig child can never be
-force-killed, so for it the only sensible wait_to_kill_ms is None. The
-config exposes this as the read-only property .supports_force_kill, and
-.terminate() consults the live FSM's knowledge of the kind. The config
-is the single source of truth for "what can this kind do".
+Main function:
 
-make_ecp_pair()
-
-The Spawner calls config.make_ecp_pair() exactly once per spawn to get
-the mirror pair. The PARENT ecp stays local and backs the
-SpawnerParentEventTerminal; the CHILD ecp travels (in memory for
-async/thread, pickled for process, hand-carried for remote) to the
-child side, where the trampoline builds the SpawnerChildEventTerminal
-from it.
+    .make_ecp_pair() --> produce the event channel parameter pair for 
+                         user and host (parent and child) connection
+                         terminal.s
 ________________________________________________________________________________
 """
 from vut.engine.event.channel.parameter import (EventChannelParameter,
@@ -227,8 +211,17 @@ class ProcessConfig(SpawnerConfig):
 
         The cipher_spec (if any) is carried on BOTH ECPs so each side
         builds the identical Cipher at make_channel() time.
+
+        start_method is passed to for_process() so the queues are built
+        under the SAME multiprocessing context the child process will be
+        started under - a queue and a process from mismatched contexts
+        are rejected by Python. spawn_process reads the method back from
+        the ECP params to start the child consistently.
         """
-        return EventChannelParameter.for_process(cipher_spec=self.cipher_spec)
+        return EventChannelParameter.for_process(
+            cipher_spec  = self.cipher_spec,
+            start_method = self.start_method,
+        )
 
 
 # ============================================================================

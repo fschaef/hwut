@@ -20,7 +20,7 @@ SURFACE:
     .terminate(wait_to_kill_ms)  -> bool
     .suspend()                   -> bool
     .resume()                    -> bool
-    .child_state()               -> ChildState
+    .child_state()               -> E_ChildState
 
 .terminate() IS A REQUEST, NOT AN ACTION (DISCUSSION.txt D3)
 
@@ -52,7 +52,7 @@ import sys
 from vut.engine.event.channel.parameter import EventChannelParameter
 from vut.engine.event.terminal          import EventTerminal
 
-from vut.engine.spawner.enums  import ChildState
+from vut.engine.spawner.enums  import E_ChildState
 from vut.engine.spawner.events import (EventChildTerminationReq,
                                        EventChildTermination,
                                        E_TerminationReason)
@@ -220,20 +220,20 @@ class SpawnerParentEventTerminal(EventTerminal):
             return False
         return await self._spawner.resume_child()
 
-    def child_state(self) -> ChildState:
-        """RETURN: ChildState, the child-state machine's current state.
+    def child_state(self) -> E_ChildState:
+        """RETURN: E_ChildState, the child-state machine's current state.
 
         A snapshot read, never blocking. To AWAIT a transition instead
         of polling, subscribe to EventChildStateChanged on .dispatcher
         or use dispatcher.expect_event(EventChildStateChanged).
 
         If the terminal is not attached to a Spawner this returns
-        ChildState.LAUNCHED - the pre-supervision default - rather than
+        E_ChildState.LAUNCHED - the pre-supervision default - rather than
         raising; an unattached terminal is an internal transient the
         user never sees.
         """
         if self._state_machine is None:
-            return ChildState.LAUNCHED
+            return E_ChildState.LAUNCHED
         return self._state_machine.state
 
 

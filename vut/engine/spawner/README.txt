@@ -97,16 +97,16 @@ of the following state machine:
             │  TERMINATING  │◄────────────────────┘
             └──┬─────────┬──┘
                │ confirm │ unconfirmed (=> kill)
-               │         ├────────────────┐
+               │         └────────────────┐
                │                          │ 
                ▼                          ▼
             ┌───────────────┐   ┌──────────────────────┐
             │    TERM_OK    │   │     TERM_FAILURE     │
             └───────────────┘   └──────────────────────┘
 
-            any state ──lost──►┌───────────────────────┐
-                               │  TERM_LOST_CONNECTION │
-                               └───────────────────────┘
+                lost   ┌───────────────────────┐
+    any state ────────►│  TERM_LOST_CONNECTION │
+                       └───────────────────────┘
 
 The above state machine specifies the states and transitions that make up the
 lifecycle of a parallel-operating child launched by the 'spawner'. It is

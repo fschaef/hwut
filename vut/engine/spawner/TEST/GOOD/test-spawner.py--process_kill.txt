@@ -1,5 +1,5 @@
 --- spawn_process: external kill -> TERM_FAILURE ---
-  child pid: 864
+  child pid: 889
   state before kill: RUNNING
   child process killed externally
   terminal state: TERM_FAILURE

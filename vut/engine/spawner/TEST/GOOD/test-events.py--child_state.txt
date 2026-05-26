@@ -1,4 +1,4 @@
---- ChildState members ---
+--- E_ChildState members ---
   LAUNCHED               terminal=False live=True 
   RUNNING                terminal=False live=True 
   SUSPENDED              terminal=False live=True 

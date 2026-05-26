@@ -1,5 +1,0 @@
-DRAFT
-
-JIFFY:
-
-- **Duration:** "The Now" lasts for exactly one Jiffy (ε). It is the smallest possible unit of logical existence.

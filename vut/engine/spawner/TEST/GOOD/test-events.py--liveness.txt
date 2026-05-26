@@ -1,0 +1,5 @@
+--- E_Liveness members ---
+  ALIVE
+  DEAD
+  UNKNOWN
+  exactly ALIVE / DEAD / UNKNOWN: OK

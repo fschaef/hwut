@@ -35,7 +35,7 @@ THE __main__ GUARD
     re-run the test - without that guard the child would recurse.
 ________________________________________________________________________________
 """
-import config  # noqa: F401  (path bootstrap; must precede vut.* imports)
+import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 import asyncio
 
@@ -121,13 +121,19 @@ async def _teardown(parent):
     """RETURN: None.
 
     Releases everything a spawn_* call created, so the test process can
-    exit promptly. Stops the parent terminal (closing the channel) and,
-    for a process child, joins the OS process to reap it.
+    exit promptly. Three steps:
 
-    This matters especially after an EXTERNAL kill: the child's
-    multiprocessing.Queue feeder threads outlive the dead child and
-    would otherwise keep the interpreter alive past the test. A test
-    that does not exit is a failed test, so every choice ends here.
+      1. stop the parent terminal (closes the channel),
+      2. for a process child, join the OS process to reap it,
+      3. for a process child, abandon the multiprocessing.Queue feeder
+         threads.
+
+    Step 3 matters after an EXTERNAL kill. A multiprocessing.Queue runs
+    a background QueueFeederThread; when the consumer process is killed,
+    that thread blocks forever trying to flush, and - being non-daemon -
+    holds the interpreter open at exit even after asyncio.run() returns.
+    cancel_join_thread() on each queue releases it. Without this the
+    test can hang at shutdown.
     """
     try:
         await asyncio.wait_for(parent.stop(), timeout=3.0)
@@ -135,7 +141,7 @@ async def _teardown(parent):
         print("  (teardown: parent.stop() timed out)")
     except Exception:
         pass
-    # Reap a process child if there is one.
+
     spawner = getattr(parent, "_spawner", None)
     handle  = getattr(spawner, "_handle", None) if spawner else None
     proc    = getattr(handle, "_process", None) if handle else None
@@ -144,6 +150,19 @@ async def _teardown(parent):
             proc.join(timeout=3.0)
         except Exception:
             pass
+
+    # Abandon the process channel's queue feeder threads, if any. The
+    # ECP params carry the multiprocessing.Queue objects.
+    ecp = getattr(parent, "_ecp", None)
+    if ecp is not None and getattr(ecp, "params", None):
+        for key in ("in_q", "out_q"):
+            q = ecp.params.get(key)
+            cancel = getattr(q, "cancel_join_thread", None)
+            if cancel is not None:
+                try:
+                    cancel()
+                except Exception:
+                    pass
 
 
 # ----------------------------------------------------------------------

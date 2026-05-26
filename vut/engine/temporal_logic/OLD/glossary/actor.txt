@@ -1,5 +1,0 @@
-ACTOR:
-------
-
-on EXPR: 
-   | lua code --> no implications, but reactions

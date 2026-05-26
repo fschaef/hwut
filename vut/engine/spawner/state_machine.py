@@ -60,7 +60,7 @@ import asyncio
 import sys
 import time
 
-from vut.engine.spawner.enums  import ChildState
+from vut.engine.spawner.enums  import E_ChildState
 from vut.engine.spawner.events import (EventChildTermination,
                                        EventChildKilled,
                                        EventChildStateChanged,
@@ -70,7 +70,7 @@ from vut.engine.spawner.events import (EventChildTermination,
 class ChildStateMachine:
     """Runs the child-state machine for ONE Spawner-launched child.
 
-    Owns the current ChildState and the transition logic. It does NOT
+    Owns the current E_ChildState and the transition logic. It does NOT
     own the OS handle or the channel - the handle lives in the Spawner
     behind an injected 'killer' coroutine; the channel is the parent
     terminal's. The machine only OBSERVES (via events) and DECIDES (the
@@ -90,7 +90,7 @@ class ChildStateMachine:
                             (None, None) for kinds without an OS handle.
 
     The machine starts in LAUNCHED. Its terminal states are the three
-    ChildState.TERM_* members; once reached, no further transition
+    E_ChildState.TERM_* members; once reached, no further transition
     occurs.
     """
 
@@ -109,7 +109,7 @@ class ChildStateMachine:
         self._killer      = killer
         self._suspend     = suspend_resume[0]
         self._resume      = suspend_resume[1]
-        self._state       = ChildState.LAUNCHED
+        self._state       = E_ChildState.LAUNCHED
         self._terminating = False     # guards against re-entrant shutdown
         self._on_terminal = None      # optional callback, set by set_on_terminal()
 
@@ -128,11 +128,11 @@ class ChildStateMachine:
     # ----------------------------------------------------------------
 
     @property
-    def state(self) -> ChildState:
-        """RETURN: ChildState, the current state. Snapshot read, non-blocking."""
+    def state(self) -> E_ChildState:
+        """RETURN: E_ChildState, the current state. Snapshot read, non-blocking."""
         return self._state
 
-    async def _transition(self, new_state: ChildState) -> None:
+    async def _transition(self, new_state: E_ChildState) -> None:
         """RETURN: None.
 
         Performs one FSM edge: records new_state and dispatches
@@ -192,8 +192,8 @@ class ChildStateMachine:
 
         A no-op if the machine has already left LAUNCHED.
         """
-        if self._state is ChildState.LAUNCHED:
-            await self._transition(ChildState.RUNNING)
+        if self._state is E_ChildState.LAUNCHED:
+            await self._transition(E_ChildState.RUNNING)
 
     async def notify_self_completion(self,
                                      event: EventChildTermination) -> None:
@@ -229,11 +229,11 @@ class ChildStateMachine:
              racing for the same transition.
           -- terminal    -- nothing left to transition.
         """
-        if self._state in (ChildState.LAUNCHED,
-                            ChildState.RUNNING,
-                            ChildState.SUSPENDED):
-            await self._transition(ChildState.TERM_OK)
-        elif self._state is ChildState.TERMINATING:
+        if self._state in (E_ChildState.LAUNCHED,
+                            E_ChildState.RUNNING,
+                            E_ChildState.SUSPENDED):
+            await self._transition(E_ChildState.TERM_OK)
+        elif self._state is E_ChildState.TERMINATING:
             # begin_termination()'s expect_event handles this one.
             return
         else:
@@ -288,10 +288,10 @@ class ChildStateMachine:
         if liveness is E_Liveness.DEAD:
             # Child gone, no confirmation seen -> freed without
             # confirmation -> TERM_FAILURE.
-            await self._transition(ChildState.TERM_FAILURE)
+            await self._transition(E_ChildState.TERM_FAILURE)
         else:
             # ALIVE or UNKNOWN: no information about the child.
-            await self._transition(ChildState.TERM_LOST_CONNECTION)
+            await self._transition(E_ChildState.TERM_LOST_CONNECTION)
 
     async def suspend_child(self) -> bool:
         """RETURN: True,  the child was suspended; state is now SUSPENDED.
@@ -304,13 +304,13 @@ class ChildStateMachine:
         """
         if self._suspend is None:
             return False
-        if self._state is not ChildState.RUNNING:
+        if self._state is not E_ChildState.RUNNING:
             print("ChildStateMachine.suspend_child: child is %s, not "
                   "RUNNING; cannot suspend." % self._state, file=sys.stderr)
             return False
         ok = await self._suspend()
         if ok:
-            await self._transition(ChildState.SUSPENDED)
+            await self._transition(E_ChildState.SUSPENDED)
         return ok
 
     async def resume_child(self) -> bool:
@@ -323,13 +323,13 @@ class ChildStateMachine:
         """
         if self._resume is None:
             return False
-        if self._state is not ChildState.SUSPENDED:
+        if self._state is not E_ChildState.SUSPENDED:
             print("ChildStateMachine.resume_child: child is %s, not "
                   "SUSPENDED; cannot resume." % self._state, file=sys.stderr)
             return False
         ok = await self._resume()
         if ok:
-            await self._transition(ChildState.RUNNING)
+            await self._transition(E_ChildState.RUNNING)
         return ok
 
     # ----------------------------------------------------------------
@@ -370,7 +370,7 @@ class ChildStateMachine:
             return
         self._terminating = True
 
-        await self._transition(ChildState.TERMINATING)
+        await self._transition(E_ChildState.TERMINATING)
 
         # The await below IS the TERMINATING state. expect_event gives a
         # one-shot awaitable resolved by the next EventChildTermination.
@@ -406,14 +406,14 @@ class ChildStateMachine:
         reclamation and emits EventChildKilled for the record; it does
         NOT change the TERM_OK verdict, because confirmation came first.
         """
-        await self._transition(ChildState.TERM_OK)
+        await self._transition(E_ChildState.TERM_OK)
         # Reclaim the OS context if there is one. The child confirmed;
         # this kill is bookkeeping, not the verdict.
         if self._killer is not None:
             try:
                 await self._killer()
                 self._parent.dispatcher.dispatch(EventChildKilled(
-                    last_state = ChildState.TERM_OK,
+                    last_state = E_ChildState.TERM_OK,
                     killed_at  = time.time(),
                     grace_ms   = 0,
                 ))
@@ -455,4 +455,4 @@ class ChildStateMachine:
             killed_at  = time.time(),
             grace_ms   = grace_ms,
         ))
-        await self._transition(ChildState.TERM_FAILURE)
+        await self._transition(E_ChildState.TERM_FAILURE)

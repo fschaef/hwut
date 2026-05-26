@@ -5,7 +5,7 @@ PURPOSE: Test bootstrap - puts the 'vut' package on sys.path.
 Every test file in this directory imports this module FIRST, before any
 'vut.*' import:
 
-    import config  # noqa: F401
+    import test_env  # noqa: F401
 
 The import has a side effect and no surface: it walks upward from this
 file until it finds the directory named 'vut' and inserts that

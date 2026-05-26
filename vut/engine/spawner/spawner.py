@@ -57,7 +57,7 @@ from vut.engine.spawner.config        import (SpawnerConfig,
                                               ThreadConfig,
                                               ProcessConfig,
                                               RemoteProcessConfig)
-from vut.engine.spawner.enums         import ChildState
+from vut.engine.spawner.enums         import E_ChildState
 from vut.engine.spawner.events        import (EventChildTerminationReq,
                                               EventChildTermination)
 from vut.engine.spawner.handles       import (AsyncChildHandle,
@@ -88,7 +88,7 @@ class Spawner:
       -- the ChildHandle - the OS handle (PID / Task / Process), kept
          here and never surfaced to the user (DISCUSSION.txt D2).
       -- the ChildStateMachine - the FSM that turns observed events into
-         ChildState transitions.
+         E_ChildState transitions.
 
     Per DISCUSSION.txt D3, the parent's .terminate() does NOT call a
     Spawner method directly; it emits EventChildTerminationReq, and the
@@ -319,7 +319,7 @@ class Spawner:
         The loop exits as soon as the FSM is terminal - by then a
         verdict exists and there is nothing left to supervise.
         """
-        from vut.engine.spawner.handles import E_Liveness
+        from vut.engine.spawner.enums import E_Liveness
         try:
             while not self._state_machine.state.is_terminal():
                 await asyncio.sleep(self._watchdog_ms / 1000.0)

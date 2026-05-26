@@ -20,12 +20,12 @@ each event's __str__, which omits timestamp), so no HAPPY pattern is
 needed.
 ________________________________________________________________________________
 """
-import config  # noqa: F401  (path bootstrap; must precede vut.* imports)
+import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 
 from vut.language_support.python.hwut_runner import HwutRunner
 
-from vut.engine.spawner.enums  import E_ChildState
+from vut.engine.spawner.enums  import E_ChildState, E_Liveness
 from vut.engine.spawner.events import (EventChildTerminationReq,
                                        EventChildTermination,
                                        EventChildKilled,
@@ -122,6 +122,20 @@ def run_reason():
     print("  exactly COMPLETED / TERMINATED / FAILED: OK")
 
 
+def run_liveness():
+    """RETURN: None.
+
+    Walks E_Liveness and reports each member. The enum is three-valued
+    on purpose: UNKNOWN ("could not consult the handle") is distinct
+    from both ALIVE and DEAD - see DISCUSSION.txt D8.
+    """
+    print("--- E_Liveness members ---")
+    for v in E_Liveness:
+        print("  %s" % v)
+    assert {str(v) for v in E_Liveness} == {"ALIVE", "DEAD", "UNKNOWN"}
+    print("  exactly ALIVE / DEAD / UNKNOWN: OK")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -130,5 +144,6 @@ if __name__ == "__main__":
             "child_state": run_child_state,
             "events":      run_events,
             "reason":      run_reason,
+            "liveness":    run_liveness,
         },
     ).run()

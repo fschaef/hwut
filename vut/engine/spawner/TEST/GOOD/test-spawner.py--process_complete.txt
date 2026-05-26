@@ -1,4 +1,4 @@
 --- spawn_process: self-completing child process ---
   spawn returned a terminal: True
-  child pid: 850
+  child pid: 876
   terminal state: TERM_OK
