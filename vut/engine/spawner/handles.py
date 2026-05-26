@@ -1,89 +1,54 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ________________________________________________________________________________
-PURPOSE: ChildHandle - the kind-specific OS-handle wrapper.
+PURPOSE: ChildHandle - Abstract the OS handle for execution context:
 
-DISCUSSION.txt D9, "THE KILL ASYMMETRY": contexts differ in their power
-to STOP a child.
-
-    process / remote   OS handle; hard, unconditional kill; suspendable.
-    async              Task.cancel(); real but cooperative - the
-                       CancelledError lands at the next await.
-    thread             no force path at all.
-
-The ChildStateMachine must stay kind-agnostic: it knows only "await a
-killer" and "await a suspend/resume". This module is where that
-asymmetry actually lives - one ChildHandle subclass per kind, each
-exposing the same small surface:
+The ChildStateMachine must stay context-agnostic: it knows only "await a
+killer" and "await a suspend/resume". The specifics of handles related 
+to context are hidden behind a 'ChildHandle' object, exposing a 
+homogenous API: 
 
     await handle.kill()       force-terminate the OS context
     await handle.suspend()    -> bool
     await handle.resume()     -> bool
-    await handle.is_alive()   -> E_Liveness
+    await handle.liveness()   -> E_Liveness (ALIVE, DEAD, UNKNOWN)
     handle.can_force_kill     -> bool   (property)
     handle.can_suspend        -> bool   (property)
 
-The OS handle (PID, Task, Process object) is held HERE, inside the
-Spawner's reach, and is NEVER surfaced to the user (DISCUSSION.txt D2).
+NOTES: 
 
-LIVENESS HAS THREE ANSWERS, NOT TWO
+    'E_Liveness.UNKNOWN': could not get an answer whether the child is alive.
 
-is_alive() returns E_Liveness - ALIVE / DEAD / UNKNOWN - not a bool.
-The third value matters: a REMOTE handle answers by asking a remote
-agent, and that question can itself fail. "I asked and could not get
-an answer" is genuinely different from "alive" and from "dead", and the
-Spawner's watchdog needs it: per DISCUSSION.txt D8, both ALIVE and
-UNKNOWN mean "no usable information about the child" and resolve to
-TERM_LOST_CONNECTION, whereas DEAD - the process is gone - resolves to
-TERM_FAILURE if no confirmation preceded it (D7). A two-valued bool
-could not carry that.
-
-WHY .kill() ON A THREAD HANDLE EXISTS BUT REFUSES
-
-A 'thread' has no kill. ThreadChildHandle.kill() is still present so the
-FSM need not special-case the kind - but it is a logged no-op, and
-.terminate() refuses a numeric deadline for a thread up front (D9), so
-the FSM's deadline path is never actually reached for a thread.
+    .kill(), .suspend(), .resume(): do not work in all contexts. 
+        If they don't, they return 'False' upon call -- not an exception.
 ________________________________________________________________________________
 """
 import asyncio
 import signal
 import sys
+from   abc import ABC
 
 from vut.engine.spawner.enums import E_Liveness
 
 
-# ============================================================================
-# Base
-# ============================================================================
-
-class ChildHandle:
-    """Kind-specific wrapper around a child's OS handle.
-
-    One subclass per execution kind. The Spawner constructs the matching
-    subclass at launch and hands it to the ChildStateMachine as the
-    'killer' (and, where applicable, the suspend/resume pair). The base
-    fixes the surface; subclasses override what their kind can honour.
-
-    Capability properties (can_force_kill, can_suspend) mirror the
-    SpawnerConfig properties of the same meaning; they exist on the
-    handle too so the FSM can introspect the live handle without
-    reaching back to the config.
+class ChildHandle(ABC):
+    """Kind-specific wrapper around a child's execution context handle.
     """
-
     _CAN_FORCE_KILL = False
     _CAN_SUSPEND    = False
 
-    async def kill(self) -> None:
-        """RETURN: None.
+    async def kill(self) -> bool:
+        """Force-terminate the child's execution context, i.e. free any
+        system resources related to the child's execution. 
 
-        Force-terminate the child's OS context. The base implementation
-        is a logged no-op (the 'thread' kind has no force path); kinds
-        that CAN kill override this with the real operation.
+        RETURNS: True, if context type can 'kill' the child process and 
+                       such a kill has been initiated.
+                 False, if not -- nothing happend.
 
         Idempotent: killing an already-dead context is harmless.
         """
-        print("ChildHandle.kill: this kind has no force-kill path; "
+        print("ChildHandle.kill(): this kind has no force-kill path; "
               "kill() is a no-op.", file=sys.stderr)
+        return False
 
     async def suspend(self) -> bool:
         """RETURN: True,  the child was suspended.
@@ -102,7 +67,7 @@ class ChildHandle:
         """
         return False
 
-    async def is_alive(self) -> E_Liveness:
+    async def liveness(self) -> E_Liveness:
         """RETURN: E_Liveness, the liveness of the child's OS context:
                    ALIVE   - confirmed running,
                    DEAD    - confirmed gone,
@@ -156,9 +121,10 @@ class AsyncChildHandle(ChildHandle):
         """RETURN: a new AsyncChildHandle wrapping 'task'."""
         self._task = task
 
-    async def kill(self) -> None:
-        """RETURN: None,  once the Task's cancellation has been requested
-                          and awaited to completion.
+    async def kill(self) -> bool:
+        """RETURNS: True, if context type can 'kill' the child process and 
+                          such a kill has been initiated.
+                    False, if not -- nothing happend.
 
         Calls Task.cancel() and then awaits the Task so this coroutine
         does not return before the cancellation has actually unwound -
@@ -168,7 +134,7 @@ class AsyncChildHandle(ChildHandle):
         A no-op if the Task is already done.
         """
         if self._task.done():
-            return
+            return True
         self._task.cancel()
         try:
             await self._task
@@ -177,8 +143,9 @@ class AsyncChildHandle(ChildHandle):
         except Exception as e:
             print("AsyncChildHandle.kill: task raised during cancellation: "
                   "%s" % e, file=sys.stderr)
+        return True
 
-    async def is_alive(self) -> E_Liveness:
+    async def liveness(self) -> E_Liveness:
         """RETURN: E_Liveness, ALIVE if the child Task is still running,
                                DEAD if it has finished or been cancelled.
 
@@ -215,7 +182,7 @@ class ThreadChildHandle(ChildHandle):
         """
         self._thread = thread
 
-    async def is_alive(self) -> E_Liveness:
+    async def liveness(self) -> E_Liveness:
         """RETURN: E_Liveness, ALIVE if the worker thread is still running,
                                DEAD if it has finished.
 
@@ -252,8 +219,10 @@ class ProcessChildHandle(ChildHandle):
         """
         self._process = process
 
-    async def kill(self) -> None:
-        """RETURN: None,  once the process has been killed and reaped.
+    async def kill(self) -> bool:
+        """RETURNS: True, if context type can 'kill' the child process and 
+                          such a kill has been initiated.
+                    False, if not -- nothing happend.
 
         Issues Process.kill() (SIGKILL) and then joins the process in
         the executor so the asyncio loop is not blocked. After this
@@ -262,12 +231,13 @@ class ProcessChildHandle(ChildHandle):
         A no-op if the process is already not alive.
         """
         if not self._process.is_alive():
-            return
+            return True
         loop = asyncio.get_running_loop()
         self._process.kill()
         await loop.run_in_executor(None, self._process.join)
+        return True
 
-    async def is_alive(self) -> E_Liveness:
+    async def liveness(self) -> E_Liveness:
         """RETURN: E_Liveness, ALIVE if the child process is still running,
                                DEAD if it has exited.
 
@@ -353,7 +323,7 @@ class RemoteChildHandle(ChildHandle):
         liveness_query -- optional async callable() -> bool; asks the
                           remote agent whether the remote process is
                           still running (True) or gone (False). If it
-                          is None, or if a call raises, is_alive()
+                          is None, or if a call raises, liveness()
                           answers UNKNOWN - the spawner then has no
                           information, which is itself meaningful
                           (DISCUSSION.txt D8).
@@ -363,7 +333,9 @@ class RemoteChildHandle(ChildHandle):
         self._liveness_query = liveness_query
 
     async def kill(self) -> None:
-        """RETURN: None,  once the remote agent has acknowledged the kill.
+        """RETURNS: True, if context type can 'kill' the child process and 
+                          such a kill has been initiated.
+                    False, if not -- nothing happend.
 
         Ships a 'kill' control action to the remote agent. If the agent
         does not acknowledge, the failure is logged - from the local
@@ -379,6 +351,7 @@ class RemoteChildHandle(ChildHandle):
         except Exception as e:
             print("RemoteChildHandle.kill: control send failed for %r: %s"
                   % (self._remote_id, e), file=sys.stderr)
+        return True
 
     async def suspend(self) -> bool:
         """RETURN: True,  the remote agent acknowledged the suspend.
@@ -406,7 +379,7 @@ class RemoteChildHandle(ChildHandle):
                   "%s" % (self._remote_id, e), file=sys.stderr)
             return False
 
-    async def is_alive(self) -> E_Liveness:
+    async def liveness(self) -> E_Liveness:
         """RETURN: E_Liveness, ALIVE / DEAD if the remote agent answered,
                                UNKNOWN if it could not be reached.
 
@@ -423,7 +396,7 @@ class RemoteChildHandle(ChildHandle):
         try:
             alive = await self._liveness_query()
         except Exception as e:
-            print("RemoteChildHandle.is_alive: liveness query failed for "
+            print("RemoteChildHandle.liveness: liveness query failed for "
                   "%r: %s" % (self._remote_id, e), file=sys.stderr)
             return E_Liveness.UNKNOWN
         return E_Liveness.ALIVE if alive else E_Liveness.DEAD

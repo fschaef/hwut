@@ -50,14 +50,12 @@ import sys
 import threading
 
 from vut.engine.event.router   import EventRouter
-from vut.engine.event.terminal import EventTerminal
 
 from vut.engine.spawner.config        import (SpawnerConfig,
                                               AsyncConfig,
                                               ThreadConfig,
                                               ProcessConfig,
                                               RemoteProcessConfig)
-from vut.engine.spawner.enums         import E_ChildState
 from vut.engine.spawner.events        import (EventChildTerminationReq,
                                               EventChildTermination)
 from vut.engine.spawner.handles       import (AsyncChildHandle,
@@ -326,7 +324,7 @@ class Spawner:
                 if self._state_machine.state.is_terminal():
                     break
 
-                liveness = await self._handle.is_alive()
+                liveness = await self._handle.liveness()
 
                 if liveness is E_Liveness.ALIVE:
                     continue                        # healthy; keep watching
@@ -365,7 +363,7 @@ class Spawner:
         """
         if self._state_machine.state.is_terminal():
             return
-        liveness = await self._handle.is_alive()
+        liveness = await self._handle.liveness()
         await self._state_machine.notify_channel_silent(liveness)
 
     def _stop_watchdog(self) -> None:
@@ -492,8 +490,8 @@ async def _await_child_gone(launch_result) -> None:
     kind's raw object:
 
         asyncio.Task        -> await it (SHIELDED - see below).
-        threading.Thread    -> poll is_alive() in the executor.
-        multiprocessing.Process -> poll is_alive() / join in the executor.
+        threading.Thread    -> poll liveness() in the executor.
+        multiprocessing.Process -> poll liveness() / join in the executor.
 
     The function returns when the child is no longer alive; if the child
     is healthy it simply never returns and is cancelled by _spawn once

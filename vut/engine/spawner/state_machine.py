@@ -63,8 +63,7 @@ import time
 from vut.engine.spawner.enums  import E_ChildState
 from vut.engine.spawner.events import (EventChildTermination,
                                        EventChildKilled,
-                                       EventChildStateChanged,
-                                       E_TerminationReason)
+                                       EventChildStateChanged)
 
 
 class ChildStateMachine:
@@ -248,7 +247,7 @@ class ChildStateMachine:
         child handle's liveness reading. Called by the Spawner's
         watchdog when the channel has gone quiet (a peer-down, or a
         watchdog poll that found no traffic), with 'liveness' the result
-        of handle.is_alive() (an E_Liveness).
+        of handle.liveness() (an E_Liveness).
 
         The channel going quiet is NOT itself a verdict (DISCUSSION.txt
         D8 as clarified): the spawner must first ask whether it still
