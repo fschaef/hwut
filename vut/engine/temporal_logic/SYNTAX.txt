@@ -1,0 +1,280 @@
+===============================================================================
+TEMPORAL LOGIC ENGINE  --  HWUT 2.0
+SYNTAX  --  concrete syntax of rule files
+===============================================================================
+
+STATUS  --  WORKING DRAFT
+  The ARCHITECTURE that constrains this syntax is settled (see README.txt).
+  The surface spelling below is a FIRST PROPOSAL and is expected to change.
+  Every point still genuinely undecided is marked  <<OPEN>>  and is also
+  tracked as L-1 in DISCUSSIONS.txt. Do not treat any spelling here as final.
+
+WHAT THE ARCHITECTURE ALREADY FIXES  (not open -- see README sections 4, 6):
+  - The DSL parser (hand-written recursive descent) parses the CONTROL PLANE:
+    struct declarations, rule headers, 'on .. AND .. :', and the body verbs
+    emit / arm / unarm with STATICALLY LITERAL type and unit names.
+  - The DATA PLANE -- member-function bodies, '{ }' state-changing blocks, and
+    guard expressions -- is opaque Lua, captured as text and run by the
+    embedded Lua VM. The DSL parser does not parse inside it.
+  - Objects and event instances live in the one Lua object space.
+  So: the syntax below is a thin declarative shell wrapped around Lua spans.
+
+
+-------------------------------------------------------------------------------
+1. FILE STRUCTURE
+-------------------------------------------------------------------------------
+
+  A rule file is a sequence of top-level declarations in any order:
+    - event declarations      (event <Name> { ... })
+    - object declarations     (object <Name> { ... })
+    - consequence rules       (on <trigger> ... : ...)
+    - armable-unit rules      (unit <Name> : on <trigger> ... : ...)
+
+  There is NO 'BAD { }' production in a rule file. Badness lives in the HWUT
+  test definition, never in the model (README section 7).
+
+  Comments:  '#' to end of line.        <<OPEN: '#' vs '--'; note '--' is Lua's
+                                          comment marker and the file mixes in
+                                          Lua spans -- '#' avoids the clash.>>
+
+
+-------------------------------------------------------------------------------
+2. EVENT DECLARATIONS
+-------------------------------------------------------------------------------
+
+  An event is an ephemeral struct: typed fields, optional member functions.
+  'time' and 'dt' are intrinsic -- they are NOT declared; every event has them.
+
+  PROPOSED:
+
+      event STOP_SIGN_PASSED {
+          lane    : int
+          heading : float
+      }
+
+      event WRECK {
+          severity : float
+          # member function: body is opaque Lua, evaluated in the object space
+          is_total : fn() lua{ return self.severity > 0.8 }
+      }
+
+  - 'field : type'  one per line.       <<OPEN: line-break separated vs ';'>>
+  - field types: int, float, bool, string, and declared object/event names.
+    <<OPEN: exact primitive-type vocabulary; whether user enums are allowed.>>
+  - a member function is  'name : fn(<params>) lua{ <opaque lua> }'  -- the
+    'lua{ ... }' span is handed verbatim to the Lua VM; 'self' is the event.
+    <<OPEN: the 'lua{ }' delimiter -- see section 6.>>
+
+
+-------------------------------------------------------------------------------
+3. OBJECT DECLARATIONS
+-------------------------------------------------------------------------------
+
+  An object is a stateful struct persisting across time. Same shape as an
+  event declaration; the keyword differs.
+
+  PROPOSED:
+
+      object vehicle {
+          speed    : float
+          position : float
+          mass     : float
+          kinetic_energy : fn() lua{ return 0.5 * self.mass * self.speed^2 }
+      }
+
+  <<OPEN: whether objects need an initial-value syntax ('speed : float = 0'),
+   or whether initialisation is the harness's job. Leaning: harness's job, to
+   keep declarations purely structural -- but unconfirmed.>>
+
+
+-------------------------------------------------------------------------------
+4. CONSEQUENCE RULES
+-------------------------------------------------------------------------------
+
+  An ordinary consequence -- always live.
+
+  GENERAL FORM (proposed):
+
+      on <TRIGGER> [ AND <guard> ] :
+          <body-item>
+          <body-item>
+          ...
+
+  - <TRIGGER> is an event type name, or the keyword ANY.
+  - <guard> is an opaque Lua boolean expression, evaluated in the object space.
+    It may reference the trigger event by type name and any object.
+  - the body is a flat, newline-separated list of body items (section 7).
+
+  EXAMPLE:
+
+      on STOP_SIGN_PASSED AND lua{ vehicle.speed > 0 } :
+          emit APPROACH(time = STOP_SIGN_PASSED.time, lane = STOP_SIGN_PASSED.lane)
+
+      on ANY AND lua{ car.gas == 0 } :
+          emit FRUSTRATION(time = ANY.time)
+
+  <<OPEN: referring to the triggering event when the trigger is ANY. Writing
+   'ANY.time' is proposed -- 'ANY' binds to the actual event that matched. An
+   alternative is an explicit bind: 'on e:ANY AND ... : emit X(time=e.time)'.
+   The explicit bind also helps when the trigger event type name would
+   otherwise be repeated verbatim throughout the body. Unconfirmed.>>
+
+  <<OPEN: whether the guard is wholly opaque Lua ('lua{ ... }') or whether the
+   DSL parses the AND/OR/NOT/XOR skeleton and only the leaves are Lua. README
+   section 4 settles it as wholly-opaque-Lua for v1; this draft follows that.
+   Revisit only if tooling later needs the connective structure exposed.>>
+
+
+-------------------------------------------------------------------------------
+5. ARMABLE-UNIT RULES
+-------------------------------------------------------------------------------
+
+  An armable unit has the same internal shape as a consequence but is DORMANT
+  by default; it fires only while armed. It also carries an UNARM trigger.
+
+  PROPOSED FORM:
+
+      unit LOOK_FOR_CAR_SPEED :
+          on TICK AND lua{ vehicle.speed > 0 } :
+              emit VIOLATION(time = TICK.time)
+          unarm on TICK AND lua{ TICK.time >= self.armed_at + 10 }
+
+  - 'unit <Name> :' declares the dormant unit.
+  - the inner 'on ... :' block is the unit's trigger, guard and body -- active
+    only while armed.
+  - 'unarm on <event> AND <guard>' is the unit's own unarm trigger; when it
+    fires, the unit returns to dormant.
+  - the unit exposes a readable boolean member  '<Name>.armed'.
+
+  <<OPEN: the keyword. 'unit' is a placeholder. Candidates: 'unit', 'armable',
+   'watch', 'monitor', 'guarded'. The word should make a reader expect a
+   dormant-until-armed thing.>>
+
+  <<OPEN: 'self.armed_at' above assumes the engine stamps the arming time onto
+   the unit as a readable member when it is armed. This is convenient (it makes
+   the +10s window expressible without a separate object field) and is
+   recommended -- but it must be confirmed and then recorded in README section
+   6 alongside '.armed'. If rejected, the arming time must be written into an
+   object by the arming consequence's body instead.>>
+
+  <<OPEN: whether a unit may have MORE THAN ONE unarm trigger (e.g. unarm on a
+   deadline OR on a success event). Leaning yes -- 'unarm on ...' may appear
+   more than once -- since DEBOUNCE/UNLESS-CANCELLED patterns want exactly
+   that. Unconfirmed.>>
+
+  ARMING a unit is done from an ordinary consequence body (section 7):
+
+      on STOP_SIGN_PASSED :
+          arm LOOK_FOR_CAR_SPEED
+
+
+-------------------------------------------------------------------------------
+6. OPAQUE LUA SPANS  --  THE DELIMITER QUESTION
+-------------------------------------------------------------------------------
+
+  Three places hand text verbatim to the Lua VM: member-function bodies, guard
+  expressions, and '{ }' state-changing blocks. The DSL parser must find where
+  each span ENDS without parsing Lua.
+
+  This draft uses  lua{ ... }  for the span. PROBLEM: Lua code itself contains
+  '{' and '}' (table constructors), so the parser cannot end the span on the
+  first '}'. Options under consideration  <<OPEN>>:
+
+    (a) BALANCED BRACES. The parser counts '{' and '}' and ends the span when
+        balance returns to zero. Simple, but a brace inside a Lua string or
+        comment ('"}"') would miscount unless the scanner is string/comment
+        aware -- which means partially lexing Lua after all.
+
+    (b) UNIQUE FENCE. A delimiter Lua never uses, e.g.
+            lua<<< ... >>>
+        or a heredoc-style  lua[[ ... ]]  (but '[[' is a Lua long-string
+        marker, so that collides too).
+
+    (c) EXPLICIT LENGTH-INDEPENDENT TERMINATOR chosen per span, like a here-doc
+        tag:  lua@END ... @END.
+
+  Recommendation pending decision: option (b) with a fence Lua has no meaning
+  for, because it lets the parser find the span end by pure text scan with no
+  Lua awareness at all -- consistent with "the DSL parser does not parse Lua".
+
+
+-------------------------------------------------------------------------------
+7. BODY ITEMS
+-------------------------------------------------------------------------------
+
+  A body is a flat, newline-separated list. Each item is one of:
+
+    emit  <EventType>( <field> = <expr> , ... )
+        <EventType> is a STATICALLY LITERAL event-type name (the static-name
+        line, README section 6). Each <expr> is a Lua expression evaluated in
+        the object space -- so field values may be computed, the type may not.
+
+    arm   <UnitName>
+        <UnitName> is a statically literal armable-unit name.
+
+    unarm <UnitName>
+        Likewise literal.
+
+    lua{ <opaque lua> }
+        A state-changing block. Mutates objects in the object space. Contains
+        no emit / arm / unarm. Runs under the instruction-budget watchdog.
+
+  emit / arm / unarm NEVER appear inside a 'lua{ }' block. The body interleaves
+  control-plane verbs and Lua blocks at the top level only.
+
+  EXAMPLE  (interleaving):
+
+      on COLLISION :
+          lua{ vehicle.damaged = true
+               vehicle.repair_cost = estimate(vehicle) }
+          emit WRECK(time = COLLISION.time, severity = vehicle.repair_cost)
+
+
+-------------------------------------------------------------------------------
+8. A COMPLETE SMALL EXAMPLE  (illustrative -- spelling not final)
+-------------------------------------------------------------------------------
+
+  # the stop-sign obligation: a vehicle must stop within 10s of a stop sign.
+
+  object vehicle {
+      speed : float
+  }
+
+  event STOP_SIGN_PASSED { lane : int }
+  event TICK             { }
+  event VIOLATION        { }
+
+  # passing a stop sign arms the watch
+  on STOP_SIGN_PASSED :
+      arm LOOK_FOR_CAR_SPEED
+
+  # while armed, any TICK with the car still moving is a violation;
+  # the watch disarms itself 10s after it was armed
+  unit LOOK_FOR_CAR_SPEED :
+      on TICK AND lua{ vehicle.speed > 0 } :
+          emit VIOLATION(time = TICK.time)
+      unarm on TICK AND lua{ TICK.time >= self.armed_at + 10 }
+
+  # (in the HWUT test definition, NOT here:  BAD { VIOLATION; } )
+
+
+-------------------------------------------------------------------------------
+9. OPEN POINTS  --  collected  (mirrors L-1 in DISCUSSIONS.txt)
+-------------------------------------------------------------------------------
+
+  S-1  Comment marker: '#' vs '--' (clash with Lua). Draft uses '#'.
+  S-2  Field separator in struct declarations: newline vs ';'.
+  S-3  Primitive type vocabulary; whether user-defined enums exist.
+  S-4  Object initial-value syntax, or initialisation left to the harness.
+  S-5  The opaque-Lua-span delimiter (section 6) -- the most important open
+       point; affects every Lua span in the grammar.
+  S-6  Keyword for an armable unit ('unit' is a placeholder).
+  S-7  Whether the engine stamps '.armed_at' onto a unit at arm time.
+  S-8  Whether a unit may declare more than one unarm trigger.
+  S-9  Triggering-event reference under ANY: 'ANY.time' vs an explicit bind
+       'on e:ANY ...'. The explicit bind may be worth adopting for ALL
+       triggers, not just ANY, to avoid repeating the event type name.
+
+===============================================================================
+END OF SYNTAX WORKING DRAFT
+===============================================================================

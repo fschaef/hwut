@@ -1,0 +1,192 @@
+===============================================================================
+TEMPORAL LOGIC ENGINE  --  HWUT 2.0
+DISCUSSIONS  --  running design log
+===============================================================================
+
+PURPOSE OF THIS FILE
+  This file records design DISCUSSION: resolved decisions with the reasoning
+  behind them, alternatives considered and rejected, and questions still open.
+  The settled architecture itself is stated as fact in README.txt; concrete
+  syntax is drafted in SYNTAX.txt. When a discussion item is resolved it is
+  moved to the RESOLVED section below with a pointer to the README/SYNTAX
+  section it fed into.
+
+  Convention: newest activity at the top of each section.
+
+
+-------------------------------------------------------------------------------
+LIVE QUESTIONS  --  not yet resolved
+-------------------------------------------------------------------------------
+
+  L-1  CONCRETE RULE-FILE SYNTAX.
+       Status: in progress, drafted in SYNTAX.txt as a WORKING DRAFT.
+       The architecture fixes everything ABOUT the syntax except its surface
+       spelling: the DSL parser covers declarations, 'on .. AND .. :', and the
+       body verbs emit/arm/unarm with literal names; member-function bodies,
+       '{ }' state blocks and guard expressions are opaque Lua spans. What
+       remains genuinely open is surface form -- keywords, punctuation, how an
+       opaque Lua span is delimited, how an armable unit is declared as
+       distinct from an ordinary consequence. Iterate in SYNTAX.txt; promote a
+       summary to README section 6 only once firm.
+       Open sub-points currently flagged in SYNTAX.txt:
+         - delimiter for opaque Lua spans (braces collide with Lua's own).
+         - keyword for declaring an armable unit vs. an ordinary consequence.
+         - how the unarm trigger is attached syntactically to a unit.
+         - field-type vocabulary for struct declarations.
+
+  L-2  OVERLAPPING ARM-WINDOWS  (formerly O-2).
+       Resolved FOR v1 (single boolean, no overlap -- see RESOLVED R-9), but
+       kept live as a watch-item: if a real test domain needs overlapping
+       windows of the same unit, the armed state becomes a counter. Revisit
+       only if such a domain appears.
+
+  L-3  HWUT INTEGRATION DETAIL  (formerly O-9).
+       Diff format and error reporting. Owned by the HWUT integration work,
+       deliberately out of scope for the engine design. Listed so it is not
+       forgotten; not to be designed here.
+
+
+-------------------------------------------------------------------------------
+RESOLVED  --  decisions and the reasoning behind them
+-------------------------------------------------------------------------------
+
+  R-12  THREE-FILE DOCUMENT SPLIT.
+        Decision: README.txt = settled design, stated as fact, no negotiation
+        history. DISCUSSIONS.txt (this file) = running log. SYNTAX.txt =
+        concrete rule/event syntax. Rationale: the README had grown as a
+        turn-by-turn negotiation log; an implementer needs the architecture in
+        dependency order, not its discovery order. Rationale for non-obvious
+        calls is kept in the README as brief sub-notes so settled decisions
+        (e.g. "no clock") are not silently reopened later.
+        -> README.txt (whole), structure.
+
+  R-11  OBSERVED-TRACE ASSERTIONS ARE NOT A SEPARATE FEATURE  (killed O-10).
+        Earlier an "observed-trace temporal assertion" mode was flagged as a
+        possible separate feature. Resolved: a streamed event source and a
+        recorded file are indistinguishable to the engine -- both are a
+        sequence of events in time order. Any ordering/timing property is
+        expressed as an ordinary rule that emits a violation event. There is
+        no second mode and nothing the engine lacks. O-10 deleted, not
+        deferred. This confirms the "one engine, one mode" claim is total.
+        -> README section 1.
+
+  R-10  PERIODIC CLOCK SIGNAL  --  REJECTED.
+        Considered: an engine feature emitting TICK events at periodic
+        intervals. Rejected: an engine that emits its own events is generating
+        a time line, not validating a given one -- it would need to advance
+        time on its own initiative and own a wakeup queue, contradicting the
+        central validation principle and the "no pure time triggers" premise.
+        Periodicity belongs to whoever produces the INPUT time line; a
+        convenience helper that pre-fills periodic TICKs lives in the HWUT
+        harness layer, outside the engine core.
+        -> README sections 3, 9, 10.
+
+  R-9   ARMABLE UNITS: SINGLE-BOOLEAN ARMED STATE  (resolves O-2 for v1).
+        The armed state is a single readable boolean member ('unit.armed'),
+        usable in guards. Arming an armed unit is idempotent. Consequence,
+        stated as an accepted limitation: two overlapping arm-windows of the
+        SAME unit cannot be represented; the first unarm closes the window for
+        both. v1 accepts this. Known upgrade path: a counter (arm++/unarm--,
+        live while > 0). Deferred because a counter changes what '.armed'
+        means to a guard. Kept as watch-item L-2.
+        -> README section 6.
+
+  R-8   THE 'ANY' TRIGGER.
+        Added: a consequence may trigger on 'ANY', matching every event type.
+        Purpose: check purely state-dependent conditions after every event
+        ('on ANY AND (car.gas==0) : emit FRUSTRATION'). Safe for the cascade
+        graph: 'ANY' is an edge from every node to whatever it emits -- it fans
+        in-edges wide but adds no cycle the once-per-T rule cannot break.
+        'ANY' matches cascade-emitted events and TERMINATION.
+        -> README sections 3, 5.
+
+  R-7   TIME-LINE TERMINATION  (resolves O-6, truncation).
+        The "no future" principle had one sharp edge: if the anchoring event
+        stream stopped, a pending obligation never reached its deadline and a
+        real violation went unreported. Resolved: every input time line MUST
+        end with a TERMINATION event, and the engine REJECTS input that does
+        not. Note: the fix is not merely that the event exists -- it is that
+        the engine VALIDATES the precondition. TERMINATION is then the
+        guaranteed final instant for backstop rules ('on TERMINATION AND
+        unit.armed : emit VIOLATION').
+        -> README sections 3, 7, 10.
+
+  R-6   EVENT STRUCTS LIVE IN LUA; EMISSION DOES NOT.
+        Clarified the seam: event structs/instances and their member functions
+        live in the one Lua object space, like objects. But 'emit' is a
+        control-plane DSL verb taking a statically literal type name; it is not
+        a Lua call. The emitted event's field VALUES are Lua-evaluated, the
+        type NAME is a static literal. The DSL parser parses the emit
+        expression itself; the objects it operates on live in Lua. Same for
+        arm/unarm.
+        -> README section 4.
+
+  R-5   THE ONE-OBJECT-SPACE INVARIANT.
+        Decision: exactly one object space, the Lua table space. The DSL parser
+        builds no parallel object model and holds no simulation data; it owns
+        FORM (structure, cascade graph), Lua owns SUBSTANCE (objects, state,
+        all data computation). Eliminates marshalling and any DSL-object vs
+        Lua-object sync problem.
+        -> README section 4.
+
+  R-4   PARSING STRATEGY: OPTION B (SPLIT PARSER)  (resolves O-7).
+        Decision: a small hand-written pure-Python recursive-descent parser for
+        the control plane; embedded sandboxed Lua for the data plane. Option A
+        (whole rule file is Lua) rejected: it would surrender the static
+        cascade check, domain error messages, and grammar-as-enforcement to
+        save a few hundred lines of parser. Lua chosen for the data plane:
+        tiny, dependency-free ANSI C (portable), sandboxable by construction
+        (the embedding builds the environment table; omit os/io/etc. and they
+        are unreachable).
+        -> README section 4.
+
+  R-3   WATCHDOG: INSTRUCTION BUDGET, NOT WALL-CLOCK  (resolves O-3).
+        Lua execution is bounded by a maximum instruction count via the VM
+        count hook, not by wall-clock seconds. Rationale: an instruction budget
+        interrupts at the same point on any hardware, so test verdicts are
+        deterministic across machines; a wall-clock timeout would make the same
+        test pass on a fast host and fail on a slow one. The config parameter
+        is a count; docs may give a rough wall-clock calibration for
+        orientation only.
+        -> README section 4.
+
+  R-2   STATE-CHANGING BODIES ARE TURING-COMPLETE LUA; THE STATIC-NAME LINE.
+        State-changing body blocks have the full power of Lua, sandboxed and
+        watchdogged. But emit/arm/unarm must take STATICALLY LITERAL type/unit
+        names -- a body may not compute which type it emits or which unit it
+        arms -- because those names are the edges of the cascade graph and the
+        static termination check (O-5/R-1) depends on them being visible
+        without execution. Bodies are a flat list of control-plane verbs and
+        '{ lua }' blocks; the two never nest.
+        -> README sections 5, 6.
+
+  R-1   CASCADE TERMINATION IS STATICALLY CHECKABLE  (resolves O-5).
+        The "no event type twice at T" rule makes a cascade at T finite. With
+        the static-name line (R-2) every emittable type is a literal, so the
+        cascade graph is built by static inspection. Cycles in the graph are
+        not errors: the once-per-T rule traverses any cycle at most once.
+        Arming only gates existing edges, never adds one, so arming cannot
+        break termination -- the static graph is a sound over-approximation.
+        -> README section 5.
+
+  R-0   NO CHECK MODE; VERIFICATION IS A PROPERTY OF THE OUTPUT.
+        The engine has one mode. It runs rules over a time line and produces a
+        time line. "Bad" is a separate trivial layer (BAD set of event-type
+        names) reading the output. Badness is in the eye of the viewer; rule
+        files emit events without judgement; the BAD set lives in the HWUT test
+        definition, not the rule files.
+        -> README sections 1, 7.
+
+
+-------------------------------------------------------------------------------
+NOTE ON SETTLED PREMISES  (not under discussion)
+-------------------------------------------------------------------------------
+
+  The conceptual model -- events as ephemeral structs with intrinsic time/dt,
+  objects as stateful aggregates, consequences as 'on trigger AND guard : body',
+  cascades, no pure time triggers -- was settled before this log began and is
+  recorded in README section 3. It is not relitigated here.
+
+===============================================================================
+END OF DISCUSSIONS LOG
+===============================================================================
