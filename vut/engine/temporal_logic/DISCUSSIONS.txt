@@ -14,17 +14,22 @@ PURPOSE
 LIVE QUESTIONS
 -------------------------------------------------------------------------------
 
-  L-1  (CLOSED) Struct-declaration syntax. The rule-file grammar is now
-       complete. Only cosmetic points remain: S-10 (leading '.' in arm-specs)
-       and S-11 (aggregate lurker parameters -- lean: allow as references).
-       See SYNTAX.txt.
+  L-1  (CLOSED) Struct-declaration syntax / rule-file grammar -- ALL
+       SETTLED. Per R-28, the grammar is consolidated with consistent
+       bindings ('event', 'lurker'), uniform '=>' on every consequence,
+       'off' as universal terminator, TERMINATION as backstop, 'tracer'
+       as the history-recording object, OBJECT structures removed
+       (objects defined in SETUP via 'Class.create'), and the helper's
+       guard read-only check added. S-10 deleted, S-11 resolved (allow
+       aggregate parameters by reference, no 'ref' keyword).
 
-  L-3  HWUT INTEGRATION DETAIL. Diff format, error reporting. Owned by the
-       HWUT integration work; out of scope for the engine design.
+  L-3  HWUT INTEGRATION DETAIL. Diff format, error reporting. Owned by
+       the HWUT integration work; out of scope for the engine design.
 
-  L-4  GUARD/BODY CONVENIENCE LIBRARY. Helper functions injected into the Luau
-       sandbox -- e.g. 'time_since(Event)', vector math -- alongside the
-       'armed()' builtin. Deferred; design later. Engine-provided, not a
+  L-4  GUARD/BODY CONVENIENCE LIBRARY. Helper functions injected into
+       the Luau sandbox alongside the 'armed', 'last', 'since' builtins
+       and the new 'filter' helper (R-28). Further additions deferred --
+       e.g. 'time_since(Event)', vector math. Engine-provided, not a
        third-party dependency (portability).
 
 
@@ -62,7 +67,87 @@ DEFERRED IDEAS  --  not in v1, reasoning recorded so it is not lost
 RESOLVED  --  decisions and the reasoning behind them
 -------------------------------------------------------------------------------
 
-  R-27  TWO LUA HELPERS, lua/ LAYOUT, BIMODAL FAILURE MODES.
+  R-28  GRAMMAR CONSOLIDATION  --  bindings, OBJECT removal, '=>' on every
+        consequence, 'off' as uniform terminator, TERMINATION as backstop
+        keyword, GLOBS, '/=' '!=' '~=', 'historian' -> 'tracer',
+        'Class.create' and 'filter' as bootstrap helpers, guard read-only
+        check.
+        Several decisions arrived together as the grammar settled. Each
+        was driven by the same principle: a rule's shape and the names it
+        uses should not depend on context.
+          - BINDINGS.  The triggering event is named 'event' (not 'self'
+            -- 'self' carries OO baggage). The lurker instance is named
+            'lurker'. Two distinct nouns for two distinct things; both
+            can be in scope at once inside a lurker's inner rule. The
+            'as <bind-name>' form on triggers is removed (redundant once
+            'event' is always available). Engine-stamped fields move to
+            'lurker.armed_at' / 'lurker.armed_index' -- they belong to
+            the lurker instance, not to whatever event is firing.
+          - OBJECT REMOVED from the rule-file language. The transpiler
+            reflects on events (cascade graph) and lurkers (arming); it
+            never reflects on objects. Objects are defined in SETUP via
+            ordinary Luau using the 'Class.create' factory; they are not
+            in the helper's vocabulary; the helper does not check field
+            accesses on them; Luau reports any bad access at run time.
+          - '=>' before EVERY CONSEQUENCE, no exception, including
+            state-mutation blocks: '=> { ... }'. '=>' is the universal
+            marker of causality; the parser branches per-line on the
+            first token after '=>'.
+          - 'off' closes EVERY 'on' block, top level and inside lurkers
+            alike. A rule has the same shape wherever it appears -- no
+            context-dependent termination. Considered and rejected:
+            making 'off' optional inside lurkers (where 'on' or 'until'
+            would terminate the previous rule). The rule "next-keyword
+            terminates the previous" worked for the parser but failed
+            the human reader: a rule's well-formedness should not depend
+            on what comes after it.
+          - 'TERMINATION' is the truncation-backstop keyword, replacing
+            an earlier 'NEVER' / 'THE_BITTER_END' proposal. Collapsed
+            with the trace-terminating event: same instant, two
+            audiences (one global 'on TERMINATION', plus per-instance
+            'on TERMINATION' inside lurkers).
+          - 'GLOBS' for asymmetric glob matching in <field-cond>:
+            'member GLOBS "pattern"'. A deliberately foreign-looking
+            keyword to signal "this is a glob, parsed by glob rules" --
+            register matters because the right-hand side has different
+            syntax (Unix globs) than ordinary strings. Translated to
+            Luau patterns at transpile time; no glob library at run
+            time.
+          - '!=' AND '~=' both legal as not-equal: the former matches
+            authors thinking in C-family, the latter matches Luau's own
+            spelling; no semantic difference.
+          - 'historian' renamed to 'tracer'. The tracer records, it does
+            not judge; the new name is more honest about its job and
+            matches the engine's broader "report, do not judge"
+            philosophy.
+          - 'Class.create' (strict-typed Luau factory) provided in the
+            bootstrap for defining object classes in SETUP. Replaces an
+            earlier dependence on the 'middleclass' library, which was
+            never necessary -- the engine's object model has no
+            inheritance, so a minimal factory suffices and keeps the
+            dependency list empty.
+          - 'filter(array, key, value)' (strict-typed Luau helper)
+            provided in the bootstrap as the list-comprehension-flavored
+            convenience for guards and bodies. The rule-file language
+            has no list-comprehension syntax; rather than asking every
+            test to reinvent the same explicit Luau loop, the bootstrap
+            covers the most common shape.
+          - GUARD READ-ONLY CHECK in 'analyze.lua': a sound *syntactic*
+            check on every guard span. Any assignment statement and any
+            call to a recognised mutating builtin ('table.insert',
+            'table.remove', 'table.sort', and similar) is fatal at
+            transpile time. The check is sound but not complete:
+            mutation through a user-defined function call is not
+            statically detected. Catches the obvious mistakes;
+            '=> { ... }' state-mutation blocks are exempt -- they are
+            the place to write changes.
+        -> README sections 3, 4, 5, 6, 7, 9, 10; SYNTAX.txt throughout.
+        Closes earlier open points S-10 (deleted, no remaining referent)
+        and S-11 (aggregate lurker parameters allowed, by reference, no
+        'ref' keyword -- ordinary Luau semantics for tables / class
+        instances).
+
+
         The rule-file parser must find the end of every opaque Luau span
         (guard, '{ }' block, member function, SETUP body). Naive
         brace-counting is wrong: Luau strings, long-bracket strings, line
@@ -143,26 +228,26 @@ RESOLVED  --  decisions and the reasoning behind them
         non-obvious way.
         -> README section 10.
 
-  R-25  THE HISTORIAN; HISTORY QUERIES; STATIC HISTORIAN CHECKS.
+  R-25  THE TRACER; HISTORY QUERIES; STATIC TRACER CHECKS.
         Past events are queried via three builtins available in guards and
         bodies: 'last(EVENT, attrs)', 'since(EVENT, attrs)', and the
         shorthand 'EVENT(attrs)'. The engine maintains history only for
-        event types the author DECLARES historised in SETUP --
-        'historian.track(EVENT, by=ATTR, last=N)'. No implicit always-on
+        event types the author DECLARES traced in SETUP --
+        'tracer.track(EVENT, by=ATTR, last=N)'. No implicit always-on
         history; the author pays only for what is declared.
-        Static checks (Check 2 extended): a query against an unhistorised
-        type is FATAL; query attributes incompatible with the historian's
+        Static checks (Check 2 extended): a query against an untraced
+        type is FATAL; query attributes incompatible with the tracer's
         'by=' keying is FATAL. Both prevent the silent-nil class of error
-        (a forgotten historian declaration making queries always return
+        (a forgotten tracer declaration making queries always return
         nil, which would look like absence of behaviour).
         Earlier design considered an implicit "every event registered" model,
         rejected for unbounded memory; then a single-slot-per-type model,
         rejected for not handling per-instance histories (different network
-        hosts etc.). The historian model resolves both: explicit declaration
+        hosts etc.). The tracer model resolves both: explicit declaration
         gives bounded, author-chosen coverage.
         First argument of every history builtin must be a STATICALLY LITERAL
         event-type name (the static-name line, extended).
-        -> README sections 4, 5, 6; SYNTAX.txt historian section.
+        -> README sections 4, 5, 6; SYNTAX.txt tracer section.
 
   R-24  TRANSPILER-HELPER  --  a small Luau companion to the Python transpiler.
         (Refined by R-27: the single helper became TWO helpers --
@@ -209,11 +294,11 @@ RESOLVED  --  decisions and the reasoning behind them
         deliberate first prototype; a Luau rewrite remains a known later
         option once the transpiler's actual obligations are clear from use.
         STATIC-NAME LINE FOR BUILTINS: the first argument of 'last(EVENT)',
-        'since(EVENT)', 'armed(LURKER)', 'historian.track(EVENT)' must be a
+        'since(EVENT)', 'armed(LURKER)', 'tracer.track(EVENT)' must be a
         LITERAL vocabulary name. The helper reports literal vs non-literal;
         Python emits FATAL on non-literal. Computation defeats the static
         check.
-        -> README section 4; SYNTAX.txt historian section.
+        -> README section 4; SYNTAX.txt tracer section.
 
 
         The earlier architecture made Python the engine and embedded a

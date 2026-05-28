@@ -128,19 +128,26 @@ VOCABULARY
     Stateful aggregates persisting across time spans.
 
   RULES
-    Declared in rule files: event structures, object structures, the SETUP
-    section, ordinary CONSEQUENCES, and LURKERS.
+    Declared in rule files: event structures, the SETUP section, ordinary
+    CONSEQUENCES, and LURKERS. Objects (long-lived stateful aggregates the
+    rules manipulate) are NOT declared in the rule-file language; they are
+    defined in SETUP using ordinary Luau via the 'Class.create' factory
+    (see SYNTAX.txt section 4).
 
   SETUP  --  OBJECT-SPACE INITIALISATION
     A rule file contains a SETUP section: Luau code, run ONCE when the engine
-    starts, before any event, that constructs the singleton objects and their
-    initial state. Object declarations give structure; SETUP gives initial
-    state.
+    starts, before any event, that defines the object classes, constructs
+    the singleton instances and sets their initial state, and declares
+    tracer coverage. Event declarations give event structure; SETUP defines
+    and initialises everything that lives in the object space.
 
   CONSEQUENCE
-    'on <trigger> [ & <guard> ] : <body>'. The trigger event fires the
-    consequence; the guard is a boolean expression over state; the body
-    produces results (section 6). An ordinary consequence is ALWAYS LIVE.
+    'on <trigger> [ & <guard> ] => <consequence>+ off'. The trigger event
+    fires the consequence list; the guard is a Luau boolean expression
+    that must be side-effect-free; each consequence begins with '=>' and
+    is one of: an event emission, a lurker arming '=> + ...', a report
+    line '=> "..."', or a state-mutation block '=> { ... }'. An ordinary
+    consequence is ALWAYS LIVE. (See SYNTAX.txt.)
 
   THE 'ANY' TRIGGER
     A trigger may be the keyword ANY, matching every event type -- including
@@ -286,9 +293,10 @@ VOCABULARY
           aux.lua          -- shared Luau lexer / parser utilities
           find_end.lua     -- transpile-time DAEMON: FIND_END requests
           analyze.lua     -- transpile-time batch tool: ANALYZE requests
-          bootstrap.lua    -- run-time: the sandbox environment, injected
-                              builtins (armed, last, since, format, ...),
-                              event/object/lurker table+metatable helpers,
+          bootstrap.lua    -- run-time: the sandbox environment, the
+                              'Class.create' factory used in SETUP, the
+                              'tracer' object, engine-provided helpers
+                              ('armed', 'last', 'since', 'filter', ...),
                               capture of print() for the '##' debug stream
           run.lua          -- run-time: the engine harness that loads the
                               bootstrap and the generated rule code, parses
@@ -422,7 +430,7 @@ VOCABULARY
         "field"   -- vocabulary name used as a field-access receiver.
                      Fields: name (receiver), field, line, col.
         "builtin" -- a recognised name-bearing builtin call: 'last',
-                     'since', 'armed', 'historian.track'. Fields: name (the
+                     'since', 'armed', 'tracer.track'. Fields: name (the
                      builtin), first_arg = {literal: bool, value?},
                      extra_args = [{name, literal, value?}], line, col.
         "filter"  -- 'EVENT(attrs)' as a query (the last-matching-event form).
@@ -440,7 +448,7 @@ VOCABULARY
     (local variables, Luau builtins, noise). It does NOT categorize beyond
     the five kinds. Schema extends only if Python's needs extend -- and
     Python's needs are pinned by Check 2 (section 5), the static-name line
-    extended to builtins, and historian coverage (section 6).
+    extended to builtins, and tracer coverage (section 6).
 
     INTERPOLATED STRINGS  --  references inside holes are reported
       Luau interpolated strings (backtick-delimited, with '{...}' holes
@@ -456,7 +464,7 @@ VOCABULARY
 
     THE STATIC-NAME LINE FOR BUILTINS
       The first argument of 'last(EVENT, ...)', 'since(EVENT, ...)',
-      'armed(LURKER, ...)', and 'historian.track(EVENT, ...)' MUST be a
+      'armed(LURKER, ...)', and 'tracer.track(EVENT, ...)' MUST be a
       LITERAL vocabulary name. The helper reports literal vs non-literal;
       Python emits a FATAL diagnostic on non-literal, exactly as it does for
       a computed '=>' target. Computation of these names would defeat the
@@ -532,22 +540,32 @@ VOCABULARY
       because it usually signals a modelling mistake.
 
     CHECK 2 -- NAME RESOLUTION (FATAL).
-      Every event-type name (in a trigger, an emit, an 'as' bind), every
-      lurker name (in '=> +'), and every field name (in an event-spec or an
-      arm-spec parameter block) must resolve against the declared sets. An
+      Every event-type name (in a trigger or an emit), every lurker name
+      (in '=> +'), and every field name (in an event-spec or an arm-spec
+      argument list) must resolve against the declared sets. An
       unresolved name is a FATAL error: transpilation fails, no engine is
       emitted.
       The transpiler also resolves names referenced INSIDE Luau spans
-      (guards, '{ }' blocks, the SETUP body) using the 'analyze.lua'
+      (guards, '=> { }' blocks, the SETUP body) using the 'analyze.lua'
       helper (section 4). Specifically: first-argument names of recognised
-      builtins ('last', 'since', 'armed', 'historian.track') -- which must
+      builtins ('last', 'since', 'armed', 'tracer.track') -- which must
       be LITERAL vocabulary names (the static-name line, extended);
-      event-as-filter references 'EVENT(attrs)'; and historian coverage and
-      keying compatibility (section 6, historian compile-time checks).
+      event-as-filter references 'EVENT(attrs)'; and tracer coverage and
+      keying compatibility (section 6, tracer compile-time checks).
       Object field accesses are NOT checked by the transpiler -- objects
       are not in the helper's vocabulary (section 4); Luau reports any bad
       access at run time. Each transpiler-side failure is FATAL with a
       'rules.tl:line' diagnostic.
+      The helper also runs a GUARD READ-ONLY CHECK on every '{ }' span
+      declared as a guard: any assignment statement, and any call to a
+      recognised mutating builtin ('table.insert', 'table.remove',
+      'table.sort', and similar), is reported as fatal at transpile
+      time. The check is SOUND but not complete: a guard that calls a
+      user-defined function that itself mutates state cannot be detected
+      by static syntactic inspection. Authors are responsible for what
+      their function calls do; the helper catches the obvious mistakes
+      ('=> { ... }' state blocks are exempt -- they are the place to
+      write changes to the object space).
       Rationale: in a validation suite a tolerated unknown name is a silent
       false pass -- a misspelled '=> VIOLATTION(...)' would emit a phantom
       event type, the intended event would never occur, and the divergence
@@ -590,6 +608,18 @@ VOCABULARY
     armed into existence as an INSTANCE; the instance lurks (is live) until
     one of the lurker's 'until' conditions ends it.
 
+  BINDINGS  --  'event' and 'lurker'
+    Inside any Luau span attached to a fired rule -- guards, '=> { ... }'
+    state blocks, '=> { ... }' rvalues -- two engine-provided bindings are
+    available: 'event' names the triggering event of the current firing;
+    'lurker' names the lurker instance, when the firing rule lives inside
+    a lurker. The two are independent and both can be in scope at once
+    inside a lurker's inner rule: 'event' is the event that just fired,
+    'lurker' is the instance being driven by it. Outside a lurker the
+    'lurker' binding is not bound; referring to it is a transpile-time
+    error. (See SYNTAX.txt for full grammar and examples.)
+
+
     Lifecycle of one instance:
 
         '=> +' arms an instance          one 'until' condition becomes
@@ -599,7 +629,7 @@ VOCABULARY
         +-----------+   instance lurks:      +-----------+
         |  ARMED /  |   its rules fire        |  no longer |
         |  LURKING  |   for this instance,    |  lurking   |
-        |           |   'self' bound to it    | (not live) |
+        |           |   'lurker' bound to it  | (not live) |
         +-----------+                         +-----------+
 
     - '=> +' is the constructor. Each '=> +' creates a FRESH, distinct
@@ -607,8 +637,8 @@ VOCABULARY
       share an arm time (the same rule cannot fire twice at one T). There is
       no "re-arm" case.
     - An instance is a plain data aggregate: declared parameters bound onto
-      'self', plus engine-stamped 'self.armed_at' (arm time) and
-      'self.armed_index' (sequence index of the arming event). No member
+      'lurker', plus engine-stamped 'lurker.armed_at' (arm time) and
+      'lurker.armed_index' (sequence index of the arming event). No member
       functions, no constructor body -- arming only binds data.
     - Parameters: primitives bound by value; object-typed parameters bound as
       REFERENCES into the one object space, never copies.
@@ -628,24 +658,24 @@ VOCABULARY
     TRUNCATION BACKSTOP
       Because every trace ends with a validated TERMINATION event, an
       obligation whose deadline never arrived is caught by a lurker rule
-      'on TERMINATION & { ... } : => "..."', which fires for each still-live
+      'on TERMINATION => "..." off', which fires for each still-live
       instance.
 
     TEARDOWN
       There is no teardown pass. At end of the trace the engine's object
       space is discarded; all lurker instances are released with it.
 
-  THE HISTORIAN  --  configured event-history queries
+  THE TRACER  --  configured event-history queries
     Guards and bodies may need to consult past events: "did this PING come
     from an IP that successfully logged in?", "how long since the last
-    HEARTBEAT?". The engine provides this through a HISTORIAN: a Luau object,
+    HEARTBEAT?". The engine provides this through a TRACER: a Luau object,
     configured in SETUP, that records past events of declared types according
     to a declared keying.
 
     DECLARATION  (in SETUP):
-        historian.track(PING, by=ip)            -- keep the last PING per ip
-        historian.track(HEARTBEAT)              -- keep the last HEARTBEAT
-        historian.track(LOGIN, by=user, last=5) -- keep last 5 LOGINs per user
+        tracer.track(PING, by=ip)            -- keep the last PING per ip
+        tracer.track(HEARTBEAT)              -- keep the last HEARTBEAT
+        tracer.track(LOGIN, by=user, last=5) -- keep last 5 LOGINs per user
 
     The 'by=' clause names the attribute(s) that key the per-instance history;
     'last=' bounds how many entries to retain per key (default 1). The author
@@ -664,32 +694,36 @@ VOCABULARY
     COMPILE-TIME CHECKS
       For every query 'last(EVENT, ...)' / 'since(EVENT, ...)' /
       'EVENT(attrs)' the transpiler verifies, via the helper's report:
-      1. EVENT is declared as historised in SETUP. Otherwise FATAL:
-         "rules.tl:120: last(PING) used but PING is not historised --
-          add historian.track(PING) in SETUP."
-      2. The query's match attributes are compatible with the historian's
-         keying. 'last(PING, ip=x)' against a historian without 'by=ip' is
-         FATAL: "PING is historised, but not keyed by ip -- the historian's
+      1. EVENT is declared as traced in SETUP. Otherwise FATAL:
+         "rules.tl:120: last(PING) used but PING is not traced --
+          add tracer.track(PING) in SETUP."
+      2. The query's match attributes are compatible with the tracer's
+         keying. 'last(PING, ip=x)' against a tracer without 'by=ip' is
+         FATAL: "PING is traced, but not keyed by ip -- the tracer's
          by=... must include the attributes you query against."
       Both diagnostics are author-fixable and prevent the silent-false-pass
       class of error: a query that always returns nil produces test results
       that look like absence of behaviour when the real cause is missing
       historisation. (Same rationale as Check 2, section 5.)
 
-  BODIES
-    A body is a single body item, or a flat list in '[ ]'. Each item:
+  CONSEQUENCES
+    A rule's effect is a sequence of '=>'-prefixed consequences, the
+    whole sequence closed by 'off'. Each '=>' is one of:
         => <event-spec>      emit an event
         => + <arm-spec>      arm a lurker instance
         => "<luau-string>"   report a line of text (section 7)
-        { <luau-code> }      mutate objects (Luau state-changing block)
-    '=>' / '=> +' never appear inside a '{ }' block.
+        => { <luau-code> }   mutate the object space (Luau state block)
+    Consequences may be interleaved freely; the parser branches on the
+    first token after '=>'. 'off' closes the consequence list. The
+    grammar is uniform inside lurkers: each inner rule is an ordinary
+    'on ... => ... off' block. (See SYNTAX.txt.)
 
     THE STATIC-NAME LINE
       The event-type name in '=>' and the lurker name in '=> +' are
-      statically literal -- never computed by Luau. They are the edges of the
-      cascade graph (section 5). Field VALUES may be Luau-evaluated; only the
-      names are literal. If this line is broken, the static cascade check is
-      lost.
+      statically literal -- never computed by Luau. They are the edges of
+      the cascade graph (section 5). Argument VALUES may be Luau-evaluated;
+      only the names are literal. If this line is broken, the static
+      cascade check is lost.
 
 
 -------------------------------------------------------------------------------
@@ -774,14 +808,16 @@ VOCABULARY
   CONSEQUENCE at the first event at or after its deadline.
 
   Canonical patterns (concrete spelling in SYNTAX.txt):
-    - BOUNDED RESPONSE   arm a lurker at X; it reports a violation on a TICK
-                         past X.armed_at + N; an 'until' on Y ends it early.
-    - DEADLINE           as above, bound a constant rather than armed_at + N.
+    - BOUNDED RESPONSE   arm a lurker at X; it reports a violation on a
+                         TICK past lurker.armed_at + N; an 'until' on Y
+                         ends it early.
+    - DEADLINE           as above, bound a constant rather than
+                         lurker.armed_at + N.
     - ABSENCE            a deadline with a flag; the non-event becomes a
                          report line at the bounding instant.
-    - DEBOUNCE /         arm at X; one 'until' on a deadline, one 'until' on
-      UNLESS-CANCELLED   the success event.
-    - MUTUAL EXCLUSION   on ANY & { A and B } : => "both A and B hold".
+    - DEBOUNCE /         arm at X; one 'until' on a deadline, one 'until'
+      UNLESS-CANCELLED   on the success event.
+    - MUTUAL EXCLUSION   on ANY & { A and B } => "both A and B hold" off.
 
   EXPRESSIVENESS
     The engine expresses exactly the bounded, falsifiable obligations. An
@@ -875,9 +911,9 @@ VOCABULARY
     died, garbled response) is reported as an internal error not pointing
     at the rule file.
 
-  - The historian (section 6) is configured in SETUP. History queries
+  - The tracer (section 6) is configured in SETUP. History queries
     'last' / 'since' / 'EVENT(attrs)' are statically checked against
-    historian coverage at transpile time -- a query against an unhistorised
+    tracer coverage at transpile time -- a query against an untraced
     type is FATAL, not a silent nil.
 
   - The engine maintains a bounded diagnostic LOG (circular buffer; size is
