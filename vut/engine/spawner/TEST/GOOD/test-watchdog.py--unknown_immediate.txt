@@ -1,0 +1,3 @@
+--- handle UNKNOWN ---
+  final state : TERM_LOST_CONNECTION
+  expected    : TERM_LOST_CONNECTION

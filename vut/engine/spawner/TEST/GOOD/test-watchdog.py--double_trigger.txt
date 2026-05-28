@@ -1,0 +1,4 @@
+--- two concurrent resolve_silence() calls ---
+  edges emitted : RUNNING->TERM_FAILURE
+  final state   : TERM_FAILURE
+  transitioned exactly once : OK

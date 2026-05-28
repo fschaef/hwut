@@ -1,0 +1,4 @@
+--- liveness() raises on every call ---
+  watchdog task done : True
+  FSM state          : RUNNING
+  expected           : task ended, FSM still RUNNING

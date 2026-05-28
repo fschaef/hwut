@@ -3,178 +3,471 @@ TEMPORAL LOGIC ENGINE  --  HWUT 2.0
 DISCUSSIONS  --  running design log
 ===============================================================================
 
-PURPOSE OF THIS FILE
-  This file records design DISCUSSION: resolved decisions with the reasoning
-  behind them, alternatives considered and rejected, and questions still open.
-  The settled architecture itself is stated as fact in README.txt; concrete
-  syntax is drafted in SYNTAX.txt. When a discussion item is resolved it is
-  moved to the RESOLVED section below with a pointer to the README/SYNTAX
-  section it fed into.
-
-  Convention: newest activity at the top of each section.
+PURPOSE
+  Records design DISCUSSION: resolved decisions with reasoning, rejected
+  alternatives, deferred ideas, and open questions. The settled architecture
+  is stated as fact in README.txt; concrete syntax in SYNTAX.txt. Newest
+  activity at the top of each section.
 
 
 -------------------------------------------------------------------------------
-LIVE QUESTIONS  --  not yet resolved
+LIVE QUESTIONS
 -------------------------------------------------------------------------------
 
-  L-1  CONCRETE RULE-FILE SYNTAX.
-       Status: in progress, drafted in SYNTAX.txt as a WORKING DRAFT.
-       The architecture fixes everything ABOUT the syntax except its surface
-       spelling: the DSL parser covers declarations, 'on .. AND .. :', and the
-       body verbs emit/arm/unarm with literal names; member-function bodies,
-       '{ }' state blocks and guard expressions are opaque Lua spans. What
-       remains genuinely open is surface form -- keywords, punctuation, how an
-       opaque Lua span is delimited, how an armable unit is declared as
-       distinct from an ordinary consequence. Iterate in SYNTAX.txt; promote a
-       summary to README section 6 only once firm.
-       Open sub-points currently flagged in SYNTAX.txt:
-         - delimiter for opaque Lua spans (braces collide with Lua's own).
-         - keyword for declaring an armable unit vs. an ordinary consequence.
-         - how the unarm trigger is attached syntactically to a unit.
-         - field-type vocabulary for struct declarations.
+  L-1  (CLOSED) Struct-declaration syntax. The rule-file grammar is now
+       complete. Only cosmetic points remain: S-10 (leading '.' in arm-specs)
+       and S-11 (aggregate lurker parameters -- lean: allow as references).
+       See SYNTAX.txt.
 
-  L-2  OVERLAPPING ARM-WINDOWS  (formerly O-2).
-       Resolved FOR v1 (single boolean, no overlap -- see RESOLVED R-9), but
-       kept live as a watch-item: if a real test domain needs overlapping
-       windows of the same unit, the armed state becomes a counter. Revisit
-       only if such a domain appears.
+  L-3  HWUT INTEGRATION DETAIL. Diff format, error reporting. Owned by the
+       HWUT integration work; out of scope for the engine design.
 
-  L-3  HWUT INTEGRATION DETAIL  (formerly O-9).
-       Diff format and error reporting. Owned by the HWUT integration work,
-       deliberately out of scope for the engine design. Listed so it is not
-       forgotten; not to be designed here.
+  L-4  GUARD/BODY CONVENIENCE LIBRARY. Helper functions injected into the Luau
+       sandbox -- e.g. 'time_since(Event)', vector math -- alongside the
+       'armed()' builtin. Deferred; design later. Engine-provided, not a
+       third-party dependency (portability).
+
+
+-------------------------------------------------------------------------------
+DEFERRED IDEAS  --  not in v1, reasoning recorded so it is not lost
+-------------------------------------------------------------------------------
+
+  D-1  INDIRECT / COMPUTED ARMING  --  e.g. 'arm[expr]'.
+       A '=> +' whose lurker name is computed rather than literal. NOT in v1.
+       Note on safety: unlike a computed EMIT target (which would make the
+       cascade graph unknowable and break termination), a computed ARM target
+       does NOT threaten termination -- arming only gates edges a lurker's
+       rules already contribute, it never adds an edge. Computed arming would
+       degrade only the Check-3 static warnings (reachability, never-armed),
+       never the termination guarantee. If revisited, this asymmetry is the
+       justification.
+       PREFERRED ALTERNATIVE for data-defined fan-out: parameterized lurkers
+       (now settled, R-15) -- the lurker NAME stays literal, only the instance
+       identity is data. This covers the use case without computed names.
+
+  D-2  CONDITIONAL ARMING SUGAR  --  'if not armed yet'.
+       Superseded by the 'armed()' guard builtin (R-17): conditional arming is
+       expressed as an ordinary guard, e.g.
+       'on E & { not armed(L, ...) } : => + L {...}'. No dedicated syntax
+       needed; kept here only to record that the explicit-syntax idea was
+       considered and dropped in favour of the builtin.
+
+  D-3  OVERLAPPING-WINDOW COUNTER.  Subsumed: parameterized lurkers (R-15)
+       maintain a live-instance population, so multiple concurrent instances
+       are now the normal case, not a deferred feature. The old "single
+       boolean armed state, no overlap" v1 limitation is GONE.
 
 
 -------------------------------------------------------------------------------
 RESOLVED  --  decisions and the reasoning behind them
 -------------------------------------------------------------------------------
 
-  R-12  THREE-FILE DOCUMENT SPLIT.
-        Decision: README.txt = settled design, stated as fact, no negotiation
-        history. DISCUSSIONS.txt (this file) = running log. SYNTAX.txt =
-        concrete rule/event syntax. Rationale: the README had grown as a
-        turn-by-turn negotiation log; an implementer needs the architecture in
-        dependency order, not its discovery order. Rationale for non-obvious
-        calls is kept in the README as brief sub-notes so settled decisions
-        (e.g. "no clock") are not silently reopened later.
-        -> README.txt (whole), structure.
+  R-27  TWO LUA HELPERS, lua/ LAYOUT, BIMODAL FAILURE MODES.
+        The rule-file parser must find the end of every opaque Luau span
+        (guard, '{ }' block, member function, SETUP body). Naive
+        brace-counting is wrong: Luau strings, long-bracket strings, line
+        and long-bracket comments can all contain '{' / '}' that are not
+        structural. Correct counting requires a partial Luau lexer in the
+        rule-file parser -- which violates "the rule-file parser does not
+        parse Luau" (R-4).
+        Considered and rejected for the surface: a fence delimiter
+        ('lua<<< ... >>>') around opaque Luau spans, which would let the
+        parser find the end by pure text scan. Rejected on visual-noise /
+        cognitive-load grounds for the test author, who reads guards
+        constantly. The cost belongs on the tool, not the human.
+        Resolution: delegate brace-finding to a Luau helper. Two distinct
+        helpers, not one fused daemon, because they answer different
+        questions with different protocols and invocation patterns; one
+        fused daemon would conflate two roles. They share infrastructure
+        in 'aux.lua', not roles.
 
-  R-11  OBSERVED-TRACE ASSERTIONS ARE NOT A SEPARATE FEATURE  (killed O-10).
-        Earlier an "observed-trace temporal assertion" mode was flagged as a
-        possible separate feature. Resolved: a streamed event source and a
-        recorded file are indistinguishable to the engine -- both are a
-        sequence of events in time order. Any ordering/timing property is
-        expressed as an ordinary rule that emits a violation event. There is
-        no second mode and nothing the engine lacks. O-10 deleted, not
-        deferred. This confirms the "one engine, one mode" claim is total.
+        LAYOUT  'lua/':
+          aux.lua        -- shared Luau lexer / parser utilities
+          find_end.lua   -- transpile-time DAEMON: FIND_END requests
+                            (position in, position-of-matching-'}' out)
+          analyze.lua    -- transpile-time batch tool: ANALYZE requests
+                            (the R-24 role, narrowed)
+          bootstrap.lua  -- run-time: sandbox environment, injected
+                            builtins, event/object/lurker table+metatable
+                            helpers, print() capture for '##'
+          run.lua        -- run-time: engine harness loading bootstrap +
+                            generated rule code, parsing the trace,
+                            driving the firing loop
+
+        Both helpers launch LAZILY: 'find_end.lua' on the first opaque '{'
+        the rule-file parser encounters (then persists for the
+        transpiler's lifetime so per-query cost is one pipe round-trip,
+        not process startup); 'analyze.lua' on the post-parse analysis
+        pass (typically one invocation).
+
+        FAILURE CLASSIFICATION  --  bimodal, kept distinct in diagnostics:
+          INPUT-SIDE: the helper ran correctly but the Luau given to it
+            is malformed (real syntax error in the author's guard or
+            block). The helper returns a structured SYNTAX_ERROR with
+            line/col/message; the transpiler surfaces this as an ORDINARY
+            rule-file syntax error pointing at 'rules.tl:<line>'. The
+            author fixes their code.
+          INFRASTRUCTURE: the helper process crashed, failed to start,
+            its pipe broke, or its response was malformed. Software
+            problem unrelated to the parsed code. Reported as an internal
+            error NOT pointing at 'rules.tl'. The author cannot fix this
+            by editing rules.
+        Muddling these is itself a defect: a "fix your code" message when
+        the code is fine is the worst diagnostic experience. Each
+        helper's implementation is OBLIGATED to fail gracefully on bad
+        Luau input (return SYNTAX_ERROR, not throw); throwing on bad
+        input would turn an input-side failure into a spurious
+        infrastructure failure.
+
+        INTERPOLATED STRINGS  --  first-class for both helpers
+          Luau interpolated strings (backtick-delimited with '{...}' holes
+          containing arbitrary Luau expressions) are first-class syntax
+          and BOTH helpers must handle them. 'find_end.lua' must correctly
+          skip past interpolated strings while scanning for the outer
+          matching '}' -- a hole's '{' is not a structural brace, a
+          hole-closing '}' is not the answer to FIND_END, and missing this
+          is a silent wrong-answer bug. 'analyze.lua' must descend into
+          interpolation holes and report any vocabulary references found
+          inside them (a reference inside '=> `t={EVENT.time} ...`'
+          counts). The recognition lives once in 'aux.lua' and both
+          helpers benefit from one correct implementation.
+        -> README section 4; R-24 annotated as refined.
+
+
+        The engine maintains a bounded circular buffer recording each event
+        (with timestamp) and the rules that fired (with rule-file file:line
+        from the transpiler's source-mapping table). Size is a configuration
+        parameter, default generous. The log is DIAGNOSTIC: it does not
+        affect the deterministic report (it is not test-significant). Useful
+        for post-hoc inspection when a test diverges from nominal in a
+        non-obvious way.
+        -> README section 10.
+
+  R-25  THE HISTORIAN; HISTORY QUERIES; STATIC HISTORIAN CHECKS.
+        Past events are queried via three builtins available in guards and
+        bodies: 'last(EVENT, attrs)', 'since(EVENT, attrs)', and the
+        shorthand 'EVENT(attrs)'. The engine maintains history only for
+        event types the author DECLARES historised in SETUP --
+        'historian.track(EVENT, by=ATTR, last=N)'. No implicit always-on
+        history; the author pays only for what is declared.
+        Static checks (Check 2 extended): a query against an unhistorised
+        type is FATAL; query attributes incompatible with the historian's
+        'by=' keying is FATAL. Both prevent the silent-nil class of error
+        (a forgotten historian declaration making queries always return
+        nil, which would look like absence of behaviour).
+        Earlier design considered an implicit "every event registered" model,
+        rejected for unbounded memory; then a single-slot-per-type model,
+        rejected for not handling per-instance histories (different network
+        hosts etc.). The historian model resolves both: explicit declaration
+        gives bounded, author-chosen coverage.
+        First argument of every history builtin must be a STATICALLY LITERAL
+        event-type name (the static-name line, extended).
+        -> README sections 4, 5, 6; SYNTAX.txt historian section.
+
+  R-24  TRANSPILER-HELPER  --  a small Luau companion to the Python transpiler.
+        (Refined by R-27: the single helper became TWO helpers --
+        'find_end.lua' and 'analyze.lua' -- sharing 'aux.lua', after the
+        rule-file parser's brace-finding obligation was recognised as a
+        distinct second job. The batch role described below remains
+        accurate for 'analyze.lua'.)
+        Python cannot statically check names referenced inside Luau spans
+        (guards, '{ }' blocks, SETUP) without a Luau parser dependency. The
+        transpiler-helper resolves this: a small standalone Luau script the
+        transpiler invokes as a subprocess at transpile time only. Native
+        Luau AST access. Restricted to one job: given a flat vocabulary of
+        names and a batch of Luau fragments, report every reference to a
+        vocabulary name. The helper carries NO rule-language model knowledge
+        -- it does not know what an event or lurker is; it knows Luau syntax
+        and a name list. Python owns all semantic policy.
+        WIRE FORMAT, asymmetric on purpose:
+          Request (Python -> helper, plain text):
+            Typed VOCABULARY header listing each declared EVENT and LURKER
+            name (with members), terminated by END_VOCABULARY. OBJECT is
+            NOT a vocabulary kind: Python reflects on event types (cascade
+            graph) and lurker names (arming) but never on objects; object
+            field accesses are ordinary Luau, reported by Luau at run time,
+            with no Python-side check to support. Then a batch of fragments
+            in CODE[<int>] <N> { ... } framing -- line count is load-bearing
+            (parser reads exactly N lines without scanning content), the
+            closing '}' terminates the fragment. Plain text is escape-free,
+            debuggable, content-blind -- the right shape for opaque user
+            code.
+          Response (helper -> Python, JSON):
+            One entry per fragment id; status "ok" or "syntax_error" with
+            line/col/message; for ok, a flat list of references. Five closed
+            reference kinds: "field", "builtin", "filter", "bare",
+            (syntax_error replaces references at the entry level). No
+            nesting, no source excerpts. JSON suits structured analysis
+            output; the helper's vocabulary is bounded.
+        Considered and rejected: writing the transpiler entirely in Luau
+        (monolingual). Argued for, but the Python ecosystem for graph
+        algorithms, name resolution, source-mapping bookkeeping and
+        transpiler testing is materially richer. Splitting the work --
+        Python for analysis, helper for Luau parsing -- gives each language
+        the task it suits without committing the design to a fifth
+        wholesale architectural rewrite. The Python transpiler is a
+        deliberate first prototype; a Luau rewrite remains a known later
+        option once the transpiler's actual obligations are clear from use.
+        STATIC-NAME LINE FOR BUILTINS: the first argument of 'last(EVENT)',
+        'since(EVENT)', 'armed(LURKER)', 'historian.track(EVENT)' must be a
+        LITERAL vocabulary name. The helper reports literal vs non-literal;
+        Python emits FATAL on non-literal. Computation defeats the static
+        check.
+        -> README section 4; SYNTAX.txt historian section.
+
+
+        The earlier architecture made Python the engine and embedded a
+        pure-Python Luau ("pluau") as a sandbox Python called into per event.
+        Two problems: it placed a language boundary on the per-event hot
+        path, and it rested the entire portability and watchdog story on an
+        immature dependency. Both removed by inverting the architecture:
+          - Python becomes a TRANSPILER: it parses the rule files, runs the
+            static analysis (cascade graph, name resolution -- unchanged, and
+            still the right place for it), and EMITS a standalone Luau
+            application.
+          - That Luau application is the ENGINE. It runs on a mature, standard
+            Luau runtime. It reads the TRACE at run time, parses it in Luau,
+            runs the rules, and prints the report.
+        The Python<->Luau boundary is crossed exactly twice in a test's life:
+        launch and exit. No per-event crossing, no embedded interpreter on the
+        hot path.
+        The TRACE is runtime input and is NOT compiled into the engine -- one
+        transpiled engine runs against many traces; trace parsing happens
+        inside the Luau engine.
+        Consequences: the three-environment embedding model is replaced by
+        GENERATION-TIME sandboxing -- the transpiler emits Luau restricted to
+        the permitted capabilities. Events become Luau tables with a
+        type-carrying metatable; no third-party class library (middleclass) is
+        needed. Type checking across the seam is available at run time via
+        Luau metatable identity, with a bootstrap adapter.
+        NEW LOAD-BEARING RISK (replacing the pluau risk): the engine is
+        generated code, so faults can surface in Luau the author never wrote;
+        the transpiler MUST emit source mapping back to rule-file file:line.
+        Considered and set aside: a spawner / router / event-terminal /
+        trampoline runtime for Python<->Luau process communication -- not
+        needed once the model is "Python prepares the Luau application, then
+        runs it; the app prints what it does".
+        -> README sections 1, 2, 4, 5, 9, 10.
+
+
+        The 'BAD' model (a set of event-type names designated failures) is
+        REMOVED. It violated HWUT's core philosophy: HWUT does not judge -- it
+        compares observed behaviour against a nominal recording and reports
+        DIVERGENCE. A 'BAD' section embedded judgement ("this outcome is a
+        failure") into the test; HWUT's core never does that.
+        Replacement: a report facility. A consequence body item '=> "..."'
+        produces a line of text -- an interpolated Luau string -- reporting
+        what happened. Report lines are collected and, after the run, sorted
+        alphabetically and deduplicated into a deterministic block. HWUT
+        compares that block to a nominal recording, tolerantly (numeric
+        tolerance, pattern matching). The engine reports; HWUT compares;
+        neither judges.
+        Two streams: '=> "..."' report lines (significant, sorted+deduped,
+        compared) and '##' lines (captured Luau print(), emission-order, not
+        sorted, not deduped, not compared -- a developer trace). They are
+        temporally separated by construction: '##' lines are emitted during
+        the run, the report block is assembled after it.
+        Sort+dedup is deterministic but lossy (order, multiplicity). Authoring
+        pattern: encode order via a fixed-width timestamp/index prefix, encode
+        multiplicity via a state-held counter in the string.
+        This is strictly more expressive than 'BAD' (it can report any
+        behaviour, not only designated-bad event types) and removes judgement
+        from the engine entirely.
+        -> README sections 1, 2, 7, 9, 10; SYNTAX.txt body items.
+
+
+        All Luau runs in a Python-built, frozen (read-only / sandboxed)
+        environment table; code cannot widen its own environment. Three of
+        them, strict capability ordering SETUP superset RULE superset
+        REPORT: SETUP constructs objects (privileged); RULE (guards, body
+        blocks) mutates existing objects only; REPORT (report assembly)
+        collects, sorts and deduplicates report lines. The sandbox permission set is configured from the
+        Python side and is part of the public engine configuration -- "may
+        this test touch the network" is a per-test HWUT decision. Python is
+        the trust boundary.
+        -> README sections 4, 9.
+
+  R-20  SETUP SECTION  --  OBJECT-SPACE INITIALISATION.
+        A rule file contains a SETUP section: plain Luau, run once at load,
+        before any event, constructing the singleton objects and their
+        initial state. Runs in the privileged SETUP environment (R-21) -- the
+        only environment able to construct objects. Python injects the
+        bootstrap (middleclass, generated constructors, permitted
+        capabilities) before SETUP runs. This also closes S-4: object
+        declarations are purely structural; SETUP sets initial state.
+        -> README section 3; SYNTAX.txt SETUP section.
+
+  R-19  EVENT-TRACE SYNTAX; TWO TIMING MODES.
+        A trace is '<node>+ <termination-node>', each node an optional
+        timestamp plus an event-spec with literal-valued members (a trace is
+        data, not code). Tokens separated by any whitespace. A trace must end
+        with TERMINATION. Timing is one of two modes, never mixed in one
+        trace: EXPLICITLY-TIMED (every node states its time) or CLOCK-TIMED (a
+        live-capture mode, time from the system clock). A SAVED trace is
+        always explicitly-timed -- saving a clock-timed capture freezes the
+        clock-derived values into real timestamps. The engine never consults
+        a clock; only the live-capture path does, ensuring every stored trace
+        replays deterministically. 'dt' is engine-derived, never written.
+        Rejected en route: filling an omitted timestamp from the system clock
+        at RUN time -- it would make the same stored trace replay with
+        different event times, breaking verdict determinism (cf. R-3).
+        -> README section 3; SYNTAX.txt event-trace syntax.
+
+  R-18  'armed()' WILDCARD '*'  --  REJECTED.
+        A '*' positional placeholder for "this parameter, any value" was
+        considered. Rejected: omission of a parameter is already a wildcard
+        (armed() is a partial match), and a positional caller needing to skip
+        a middle parameter can use a named argument instead. No second
+        mechanism for one effect.
+        -> SYNTAX.txt, armed() / open points.
+
+  R-17  'armed()' QUERY BUILTIN.
+        'armed(LURKER, ...)' is an engine-provided builtin usable in guards: an
+        existence test over the live-instance population. Matches positional
+        args first (in lurker-declaration order), then named; no parameter
+        bound twice; engine-enforced. Unsupplied parameters are wildcards
+        (partial match). Engine-stamped fields (armed_at, armed_index) are not
+        matchable -- being unique they would make every query false. Enables
+        conditional arming as an ordinary guard.
+        -> README section 6; SYNTAX.txt lurkers.
+
+  R-16  KEYWORD 'lurk' (rename from 'upon').
+        The armable-unit declaration keyword is 'lurk', not 'upon'. 'lurk'
+        names the behaviour exactly (dormant, waiting, activated by arming),
+        pairs cleanly with 'until', and -- unlike 'upon' -- has no visual
+        clash with the trigger keyword 'on'. Deliberate rename of a previously
+        settled keyword; SYNTAX.txt updated accordingly.
+        -> README sections 5-6; SYNTAX.txt.
+
+  R-15  PARAMETERIZED LURKERS; INSTANCE LIFECYCLE.
+        A 'lurk' declaration is a CLASS with a declared parameter list. '=> +'
+        is its constructor, arming one INSTANCE into existence. Key decisions:
+          - Identity = declared parameters + arm time. Two armings cannot
+            share an arm time (a rule cannot fire twice at one T), so every
+            '=> +' yields a fresh distinct instance. No re-arm case; no
+            identity-key declaration needed.
+          - An instance is a plain data aggregate ("dataclass"): parameters
+            bound onto 'self' + engine-stamped armed_at / armed_index. No
+            member functions, no constructor body.
+          - Primitive parameters bound by value; object-typed parameters bound
+            as references into the one object space (S-11 still confirms
+            whether aggregates are allowed at all).
+          - 'until' is a CONDITION, not a destructor -- nothing executes when
+            an instance stops lurking. Multiple 'until' clauses allowed; the
+            instance ends when any fires.
+          - The engine maintains a live-instance population per lurker class.
+          - No teardown pass: instances are released when the Luau object
+            space is discarded at end of run.
+        This supersedes the old single-boolean armed state and its "no
+        overlapping windows" limitation.
+        -> README sections 5-6; SYNTAX.txt lurkers.
+
+  R-14  '=> -' (EXPLICIT DISARM) DROPPED.
+        A lurker is never explicitly disarmed; its own 'until' clauses end its
+        instances. Removing '=> -' avoids two syntactic means for one effect.
+        Body verbs are now '=>' (emit) and '=> +' (arm) only.
+        -> README section 6; SYNTAX.txt.
+
+  R-13  STATIC ANALYSIS IN PYTHON; ALL-LUAU HOT PATH.  (Refined by R-23.)
+        The runtime hot path (time line, object space, guard evaluation, body
+        execution) is entirely Luau; no per-event data crosses to Python.
+        Python runs ONCE at load: parse, build the cascade graph, run static
+        analysis, generate Luau-side constructors. Python retains compile-time
+        structure only (type set, graph, source locations). The three static
+        checks: Check 1 cascade depth (warning), Check 2 name resolution
+        (FATAL), Check 3 reachability incl. never-armed lurkers (warning).
+        Rationale for fatal name resolution: in a validation suite a tolerated
+        unknown name is a silent false pass. Rationale for keeping analysis in
+        Python: Luau is an evaluation substrate, poor for static analysis; and
+        the static cascade check is a load-time question, unrelated to hot-
+        path speed. "No data in Python" was rejected -- the cascade graph is a
+        compile-time artifact that must exist for the termination check, and
+        the post-run reasoning string ("rules.tl:120 ...") is itself made of
+        parser-held source locations.
+        -> README sections 2, 4, 5.
+
+  R-12  THREE-FILE DOCUMENT SPLIT.
+        README.txt = settled design as fact. DISCUSSIONS.txt = this log.
+        SYNTAX.txt = concrete rule/event syntax. Rationale kept in the README
+        as brief sub-notes so settled decisions are not silently reopened.
+
+  R-11  OBSERVED-TRACE ASSERTIONS ARE NOT A SEPARATE FEATURE (killed O-10).
+        A streamed source and a recorded file are indistinguishable to the
+        engine. Any ordering/timing property is an ordinary rule that emits a
+        violation event. One engine, one mode.
         -> README section 1.
 
   R-10  PERIODIC CLOCK SIGNAL  --  REJECTED.
-        Considered: an engine feature emitting TICK events at periodic
-        intervals. Rejected: an engine that emits its own events is generating
-        a time line, not validating a given one -- it would need to advance
-        time on its own initiative and own a wakeup queue, contradicting the
-        central validation principle and the "no pure time triggers" premise.
+        An engine that emits its own TICKs would be generating a time line,
+        not validating a given one, and would need a wakeup queue --
+        contradicting the validation principle and "no pure time triggers".
         Periodicity belongs to whoever produces the INPUT time line; a
-        convenience helper that pre-fills periodic TICKs lives in the HWUT
-        harness layer, outside the engine core.
+        pre-fill helper lives in the HWUT harness layer.
         -> README sections 3, 9, 10.
 
-  R-9   ARMABLE UNITS: SINGLE-BOOLEAN ARMED STATE  (resolves O-2 for v1).
-        The armed state is a single readable boolean member ('unit.armed'),
-        usable in guards. Arming an armed unit is idempotent. Consequence,
-        stated as an accepted limitation: two overlapping arm-windows of the
-        SAME unit cannot be represented; the first unarm closes the window for
-        both. v1 accepts this. Known upgrade path: a counter (arm++/unarm--,
-        live while > 0). Deferred because a counter changes what '.armed'
-        means to a guard. Kept as watch-item L-2.
-        -> README section 6.
+  R-9   (superseded by R-15) Single-boolean armed state / no overlapping
+        windows. The parameterized-lurker model replaced this entirely.
 
   R-8   THE 'ANY' TRIGGER.
-        Added: a consequence may trigger on 'ANY', matching every event type.
-        Purpose: check purely state-dependent conditions after every event
-        ('on ANY AND (car.gas==0) : emit FRUSTRATION'). Safe for the cascade
-        graph: 'ANY' is an edge from every node to whatever it emits -- it fans
-        in-edges wide but adds no cycle the once-per-T rule cannot break.
-        'ANY' matches cascade-emitted events and TERMINATION.
+        A trigger may be 'ANY', matching every event type including
+        cascade-emitted events and TERMINATION. Safe for the cascade graph:
+        an edge from every node, fanning in-edges wide, adding no cycle the
+        once-per-T rule cannot break.
         -> README sections 3, 5.
 
-  R-7   TIME-LINE TERMINATION  (resolves O-6, truncation).
-        The "no future" principle had one sharp edge: if the anchoring event
-        stream stopped, a pending obligation never reached its deadline and a
-        real violation went unreported. Resolved: every input time line MUST
-        end with a TERMINATION event, and the engine REJECTS input that does
-        not. Note: the fix is not merely that the event exists -- it is that
-        the engine VALIDATES the precondition. TERMINATION is then the
-        guaranteed final instant for backstop rules ('on TERMINATION AND
-        unit.armed : emit VIOLATION').
-        -> README sections 3, 7, 10.
+  R-7   TIME-LINE TERMINATION (resolves O-6, truncation).
+        Every input time line MUST end with a TERMINATION event; the engine
+        REJECTS input that does not. TERMINATION is the guaranteed final
+        instant for backstop rules. The fix is the engine VALIDATING the
+        precondition, not merely the event existing.
+        -> README sections 3, 6, 10.
 
-  R-6   EVENT STRUCTS LIVE IN LUA; EMISSION DOES NOT.
-        Clarified the seam: event structs/instances and their member functions
-        live in the one Lua object space, like objects. But 'emit' is a
-        control-plane DSL verb taking a statically literal type name; it is not
-        a Lua call. The emitted event's field VALUES are Lua-evaluated, the
-        type NAME is a static literal. The DSL parser parses the emit
-        expression itself; the objects it operates on live in Lua. Same for
-        arm/unarm.
+  R-6   EVENT STRUCTS LIVE IN LUAU; EMISSION DOES NOT.
+        Event structs/instances and member functions live in the one object
+        space. But '=>' (emit) is a control-plane verb with a statically
+        literal type name; field VALUES are Luau-evaluated, the type NAME is
+        not. Same for '=> +' arm.
         -> README section 4.
 
   R-5   THE ONE-OBJECT-SPACE INVARIANT.
-        Decision: exactly one object space, the Lua table space. The DSL parser
-        builds no parallel object model and holds no simulation data; it owns
-        FORM (structure, cascade graph), Lua owns SUBSTANCE (objects, state,
-        all data computation). Eliminates marshalling and any DSL-object vs
-        Lua-object sync problem.
+        Exactly one object space, the Luau table space. The control-plane
+        parser builds no parallel object model; it owns FORM, Luau owns
+        SUBSTANCE.
         -> README section 4.
 
-  R-4   PARSING STRATEGY: OPTION B (SPLIT PARSER)  (resolves O-7).
-        Decision: a small hand-written pure-Python recursive-descent parser for
-        the control plane; embedded sandboxed Lua for the data plane. Option A
-        (whole rule file is Lua) rejected: it would surrender the static
-        cascade check, domain error messages, and grammar-as-enforcement to
-        save a few hundred lines of parser. Lua chosen for the data plane:
-        tiny, dependency-free ANSI C (portable), sandboxable by construction
-        (the embedding builds the environment table; omit os/io/etc. and they
-        are unreachable).
+  R-4   PARSING STRATEGY: SPLIT PARSER.
+        Hand-written pure-Python recursive-descent for the control plane;
+        embedded sandboxed Luau for the data plane. (Superseded by R-23:
+        the data plane is now Luau the transpiler emits, run by a standard
+        Luau runtime -- not an embedded pure-Python Luau.) "Whole rule
+        file in Luau" rejected: it would surrender the static cascade check,
+        domain error messages, and grammar-as-enforcement.
         -> README section 4.
 
-  R-3   WATCHDOG: INSTRUCTION BUDGET, NOT WALL-CLOCK  (resolves O-3).
-        Lua execution is bounded by a maximum instruction count via the VM
-        count hook, not by wall-clock seconds. Rationale: an instruction budget
-        interrupts at the same point on any hardware, so test verdicts are
-        deterministic across machines; a wall-clock timeout would make the same
-        test pass on a fast host and fail on a slow one. The config parameter
-        is a count; docs may give a rough wall-clock calibration for
-        orientation only.
+  R-3   WATCHDOG: INSTRUCTION BUDGET, NOT WALL-CLOCK.
+        Luau execution is bounded by an instruction count via the VM count
+        hook. An instruction budget interrupts at the same point on any
+        hardware; a wall-clock timeout would make verdicts hardware-dependent.
         -> README section 4.
 
-  R-2   STATE-CHANGING BODIES ARE TURING-COMPLETE LUA; THE STATIC-NAME LINE.
-        State-changing body blocks have the full power of Lua, sandboxed and
-        watchdogged. But emit/arm/unarm must take STATICALLY LITERAL type/unit
-        names -- a body may not compute which type it emits or which unit it
-        arms -- because those names are the edges of the cascade graph and the
-        static termination check (O-5/R-1) depends on them being visible
-        without execution. Bodies are a flat list of control-plane verbs and
-        '{ lua }' blocks; the two never nest.
+  R-2   TURING-COMPLETE LUAU BODIES; THE STATIC-NAME LINE.
+        State-changing body blocks have full Luau power, sandboxed and
+        watchdogged. But '=>' / '=> +' take statically literal names -- a body
+        may not compute which type it emits or which lurker it arms -- because
+        those names are the cascade-graph edges.
         -> README sections 5, 6.
 
-  R-1   CASCADE TERMINATION IS STATICALLY CHECKABLE  (resolves O-5).
-        The "no event type twice at T" rule makes a cascade at T finite. With
-        the static-name line (R-2) every emittable type is a literal, so the
-        cascade graph is built by static inspection. Cycles in the graph are
-        not errors: the once-per-T rule traverses any cycle at most once.
-        Arming only gates existing edges, never adds one, so arming cannot
-        break termination -- the static graph is a sound over-approximation.
+  R-1   CASCADE TERMINATION IS STATICALLY CHECKABLE.
+        "No event type twice at T" makes a cascade finite for any rule set.
+        With the static-name line every emittable type is literal, so the
+        cascade graph is built by static inspection. Cycles are not errors.
         -> README section 5.
 
-  R-0   NO CHECK MODE; VERIFICATION IS A PROPERTY OF THE OUTPUT.
-        The engine has one mode. It runs rules over a time line and produces a
-        time line. "Bad" is a separate trivial layer (BAD set of event-type
-        names) reading the output. Badness is in the eye of the viewer; rule
-        files emit events without judgement; the BAD set lives in the HWUT test
-        definition, not the rule files.
+  R-0   NO CHECK MODE; ONE ENGINE.  (BAD-layer part superseded by R-22.)
+        One engine, one mode: it runs rules over a time line and produces a
+        time line. The original "BAD set" verification layer is superseded --
+        see R-22; verification is now HWUT comparing the deterministic report
+        against a nominal recording. The one-engine-one-mode decision stands.
         -> README sections 1, 7.
 
 
@@ -183,9 +476,9 @@ NOTE ON SETTLED PREMISES  (not under discussion)
 -------------------------------------------------------------------------------
 
   The conceptual model -- events as ephemeral structs with intrinsic time/dt,
-  objects as stateful aggregates, consequences as 'on trigger AND guard : body',
+  objects as stateful aggregates, consequences as 'on trigger & guard : body',
   cascades, no pure time triggers -- was settled before this log began and is
-  recorded in README section 3. It is not relitigated here.
+  recorded in README section 3.
 
 ===============================================================================
 END OF DISCUSSIONS LOG

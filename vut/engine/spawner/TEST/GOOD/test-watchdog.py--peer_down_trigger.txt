@@ -1,0 +1,3 @@
+--- peer-down callback registered : True ---
+  final state : TERM_FAILURE
+  expected    : TERM_FAILURE (resolved without a poll tick)

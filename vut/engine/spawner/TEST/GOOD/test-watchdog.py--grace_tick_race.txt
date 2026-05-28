@@ -1,0 +1,3 @@
+--- DEAD reading, but confirmation arrives in the grace tick ---
+  final state : TERM_OK
+  expected    : TERM_OK (confirmation won the race)

@@ -1,0 +1,3 @@
+--- ALIVE, ALIVE, then DEAD (no confirmation) ---
+  final state : TERM_FAILURE
+  expected    : TERM_FAILURE
