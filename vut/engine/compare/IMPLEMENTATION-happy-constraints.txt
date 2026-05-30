@@ -1,0 +1,364 @@
+================================================================================
+IMPLEMENTATION GUIDE: Happy Constraints
+================================================================================
+Project: VUT / hwut -- compare component
+Scope:   Changes required to add the "happy constraint" tolerance.
+Status:  Design direction. Not final code. Verify every signature against the
+         live tree before editing.
+
+Companion: FEATURE-happy-constraints.md (the specification this realizes).
+
+--------------------------------------------------------------------------------
+0. ONE-PARAGRAPH ORIENTATION
+--------------------------------------------------------------------------------
+A happy constraint is a new per-element tolerance. A text element of the form
+"(name: value)" is lexed into a new LineElement subtype. Its equivalence is
+decided locally: the element's own value is fed to the predicate registered
+for "name"; predicate true => EQUIVALENT, false => DIFFERENT. The element is
+self-contained -- no other element's value is read -- so the change is
+stateless and lands entirely on the existing per-element compare() path. No
+analogy_db-style threading is introduced. No namespace object exists.
+
+The mental model is LineElementNumber: a number element holds a value and an
+epsilon and answers compare() by itself. A constraint element holds a value
+and a predicate and answers compare() by itself.
+
+
+--------------------------------------------------------------------------------
+1. DATA FLOW (mechanics)
+--------------------------------------------------------------------------------
+Text "(integration_steps: 212341)" travels:
+
+   configuration.py
+      HAPPY-CONSTRAINTS definitions ---> {name: compiled_predicate}
+                                              |
+                                              v
+   pattern_finder.py  (master regex gains a CONSTRAINT alternative;
+                       holds the {name: predicate} table)
+      line text ---> regex match ---> LineElement.from_match(CONSTRAINT,...)
+                                              |
+                                              v
+   line_element.py
+      LineElementConstraint(name, value, raw_value, predicate)
+         .compare(nominal_element):
+            same name?            no  -> MISFIT/DIFFERENT
+            self.value sat. pred? no  -> DIFFERENT
+            nominal.value sat.?   no  -> DIFFERENT   (defensive; see sec.7)
+            otherwise                 -> EQUIVALENT, None   (no analogy)
+                                              |
+                                              v
+   engine/line.py __compare_core()  (unchanged: walks elements, calls compare())
+                                              |
+                                              v
+   equivalence_check/line.py, equivalence_check/potpourri.py  (UNCHANGED)
+
+
+--------------------------------------------------------------------------------
+2. NEW TOLERANCE ID  (engine/enums.py)
+--------------------------------------------------------------------------------
+Add one member to E_ToleranceId:
+
+      CONSTRAINT = 7
+
+E_ToleranceId is (int, Enum); next free value is 7. No other enum touched.
+structural_hash() in line_element.py treats CONSTRAINT as a variable element
+(type only, no content) -- it already does this for everything that is not
+STRING, so no change there.
+
+
+--------------------------------------------------------------------------------
+3. PREDICATE COMPILER  (new file: engine/happy_constraint.py)
+--------------------------------------------------------------------------------
+Owns parsing + validation + evaluation of one predicate. Stateless.
+
+API:
+
+   compile_predicate(name: str, expr: str) -> Predicate
+      """RETURN: Predicate, a validated callable for one constraint.
+
+      Raises HappyConstraintError on syntax error, on a disallowed AST node,
+      or on any free name other than 'name'.
+
+      Parses 'expr' (mode="eval"), walks the AST against the allow-list,
+      verifies the only Name used is 'name', and wraps a compiled code object
+      so it can be evaluated against a one-entry namespace.
+      """
+
+   Predicate.holds(value) -> bool
+      """RETURN: True,  value satisfies the predicate.
+                 False, it does not, OR evaluation raised, OR result not bool.
+
+      Binds the constraint's single variable to 'value' and evaluates. Any
+      exception or non-bool result yields False (see error policy, sec.7).
+      """
+
+   class HappyConstraintError(Exception)
+      """Raised for malformed/illegal predicate definitions, and reused for
+      'nominal violates its own constraint' (sec.6)."""
+
+ALLOW-LIST (ast node types):
+   Expression, BoolOp(And,Or), UnaryOp(Not,USub,UAdd), BinOp(Add,Sub,Mult,
+   Div,FloorDiv,Mod,Pow), Compare(Lt,LtE,Gt,GtE,Eq,NotEq), Name(Load only),
+   Constant, Subscript, Slice, Call.
+   Call.func MUST be a bare Name in _SAFE_BUILTINS (no Attribute -> blocks
+   "().__class__..." and os.system style escapes).
+
+_SAFE_BUILTINS (decide final set; suggested):
+   len, abs, min, max, int, float, str, round, ord, all, any
+   ('odd' is NOT here -> use "x % 2 == 1"; Mod is allow-listed.)
+
+EVAL SANDBOX:
+   eval(code, {"__builtins__": {}}, {name: value, **_SAFE_BUILTINS})
+   -- empty real builtins; only the curated names reachable.
+
+bool-ness: checked on the RESULT inside .holds():  isinstance(r, bool) and r.
+
+
+--------------------------------------------------------------------------------
+4. CONFIGURATION  (configuration.py)
+--------------------------------------------------------------------------------
+ConfigurationPatternFinder gains:
+
+      constraint_f:            bool = False
+      happy_constraint_list:   list = field(default_factory=list)
+         # raw "name: expr" strings as written under HAPPY-CONSTRAINTS:
+
+The "name: expr" splitting happens where HAPPY-CONSTRAINTS lines are read
+(same reader that fills equivalent_pattern_list). Split on the FIRST ':'
+only -- the name is left of it, the predicate text is everything to the right
+(predicates contain ':' only inside string literals, never structurally; but
+splitting on first ':' and trusting the name to be an identifier is safe).
+
+No compilation in configuration.py -- raw strings only. Compilation is the
+PatternFinder's job (sec.5) so a malformed predicate fails at finder setup,
+i.e. once, early, with the offending line in hand.
+
+
+--------------------------------------------------------------------------------
+5. LEXER  (input/pattern_finder.py)
+--------------------------------------------------------------------------------
+5.1 SETUP (__init__)
+   When config.constraint_f and config.happy_constraint_list:
+     a) Build the predicate table:
+           self._constraint_table = {
+               name: happy_constraint.compile_predicate(name, expr)
+               for (name, expr) in parsed_definitions
+           }
+        compile_predicate may raise HappyConstraintError here -> surfaces at
+        finder construction (acceptable, early, deterministic).
+     b) Register ONE master-regex alternative for the element shape:
+
+           NAME  = r"[A-Za-z_]\w*"
+           STR   = r'"(?:[^"\\]|\\.)*"' + r"|'(?:[^'\\]|\\.)*'"
+           NUM   = r"-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+           VALUE = f"(?:{STR}|{NUM})"
+           CONSTRAINT_RE = rf"\(\s*{NAME}\s*:\s*{VALUE}\s*\)"
+
+        Register via the existing _register() so it joins the master regex
+        and gets a Gn group + TolerancePattern(CONSTRAINT, ...). Use named
+        SUBGROUPS for name and value, OR re-match a small dedicated regex on
+        m.group() in do() to split name/value (named subgroups inside the
+        master alternation are simpler; verify the regex module allows the
+        duplicate-group-name situation across alternatives -- if not, split
+        by re-matching in do()).
+
+   ORDERING: register CONSTRAINT before NUMERIC. A bare "212341" must not be
+   eaten by NUMERIC when it sits inside "(name: 212341)". Because the
+   constraint alternative consumes the whole "(...)" span including the
+   number, finditer's left-to-right longest-at-position behavior keeps them
+   apart -- but place CONSTRAINT early in re_parts to be safe and document it.
+
+5.2 do()  -- emit the element
+   In the match loop, when tolerance.id is CONSTRAINT:
+     - extract name_str and raw_value_str (named groups or re-match)
+     - look up predicate = self._constraint_table.get(name_str)
+         predicate is None  -> the element names an UNDECLARED constraint.
+                               Treat as plain text: append LineElementString(
+                               m.group()) and continue. (A "(x: 5)" with no
+                               declared constraint is just literal text.)
+     - else build the element:
+           LineElement.from_match(CONSTRAINT, m.group(),
+                                  self.numeric_tolerance_ratio,
+                                  constraint=(name_str, raw_value_str, predicate))
+   DO NOT route CONSTRAINT through _get_matching_pattern_indices (that cache
+   and the pattern_i_set argument are EQUIVALENCE_PATTERN-only).
+
+   from_match signature: add an optional keyword (e.g. constraint=None) rather
+   than overloading pattern_i_set. Keep the hot NUMERIC/EQUIVALENCE paths
+   untouched.
+
+
+--------------------------------------------------------------------------------
+6. LINE ELEMENT  (input/line_element.py)
+--------------------------------------------------------------------------------
+New subtype. Model on LineElementNumber (value carried, local compare()).
+
+   class LineElementConstraint(LineElement):
+       __slots__ = ('name', 'value', 'raw_value', '_predicate')
+
+       def __init__(self, name, raw_value, predicate):
+           LineElement.__init__(self, E_ToleranceId.CONSTRAINT, raw_value)
+           self.name       = name
+           self.raw_value  = raw_value
+           self.value      = _literal(raw_value)   # ast.literal_eval; int/float/str only
+           self._predicate = predicate
+
+       def compare(self, nominal):
+           """RETURN: [0] MISFIT,     nominal is not a constraint element
+                          DIFFERENT,  same kind but name differs OR a value
+                                      fails the predicate
+                          EQUIVALENT, names agree and both values satisfy
+                      [1] None, no analogy is ever produced
+           """
+           if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+               return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+           if self.tolerance_id != nominal.tolerance_id:
+               return E_Verdict.MISFIT, None
+           if self.name != nominal.name:
+               return E_Verdict.DIFFERENT, None
+           if not self._predicate.holds(self.value):
+               return E_Verdict.DIFFERENT, None
+           if not nominal._predicate.holds(nominal.value):
+               return E_Verdict.DIFFERENT, None        # see sec.7 note
+           return E_Verdict.EQUIVALENT, None
+
+       def edit_distance_relative(self, nominal):
+           # 0 when equivalent, else fall back to string distance for display cost
+           v, _ = self.compare(nominal)
+           return 0 if E_Verdict.is_equivalent(v) else \
+                  LineElement.edit_distance_relative(self, nominal)
+
+   from_match(): add  case E_ToleranceId.CONSTRAINT:
+                          name, raw, pred = constraint
+                          return LineElementConstraint(name, raw, pred)
+
+   _literal(raw): ast.literal_eval(raw); assert type in (int, float, str);
+                  on failure raise HappyConstraintError (malformed value text).
+
+   __hash__: like LineElementNumber, DO NOT override -- equivalence is
+   predicate-derived, not content-identity. structural_hash already keys
+   CONSTRAINT on type only.
+
+
+--------------------------------------------------------------------------------
+7. ERROR / VERDICT POLICY  (the two-outcome rule)
+--------------------------------------------------------------------------------
+Predicate.holds() swallows runtime errors -> False. So during comparison a
+constraint can only resolve to satisfied / not-satisfied; never an exception
+escaping into the engine. This realizes "execution error on actual ==
+not equivalent".
+
+NOMINAL VALIDATION (the parse-time refusal):
+   A nominal element whose OWN value fails its predicate must abort the run.
+   Two equivalent placement options:
+
+   (a) At lex time, when constraint_f is set AND the finder is lexing the
+       nominal stream: after building LineElementConstraint, if
+       predicate.holds(value) is False -> raise HappyConstraintError.
+       Requires the finder to know it is lexing nominal vs subject.
+
+   (b) Symmetric, engine-side: the "nominal._predicate.holds(...)" line in
+       compare() (sec.6) returns DIFFERENT for a bad nominal. To make it FATAL
+       rather than a silent mismatch, the nominal-side check is better done
+       once up front (option a), and the compare()-time nominal check can then
+       be dropped as redundant.
+
+   RECOMMENDATION: do option (a). It gives the exact "unacceptable as nominal"
+   exception, keeps compare() to a single value test (self only), and matches
+   the spec's "rejected at parse time". The nominal-side test inside compare()
+   (sec.6) then becomes unnecessary -- remove it once (a) is in place.
+
+   Which stream is nominal? The two EquivalenceCheckChunkPipe / Line instances
+   are built separately in main.py (subject vs nominal). Thread a boolean
+   "nominal_f" from the pipe into PatternFinder.do(), or give the finder a
+   "raise_on_constraint_violation" flag set only for the nominal finder. Keep
+   it off the hot path: a single attribute check.
+
+
+--------------------------------------------------------------------------------
+8. WHAT DOES NOT CHANGE  (important -- guards against over-engineering)
+--------------------------------------------------------------------------------
+   main.py                         : UNCHANGED. No namespace, no new threaded
+                                     return value, no context-local registry.
+   analogy_db.py / frozen_analogy_db: UNCHANGED. Constraints never emit an
+                                     analogy (compare() returns None for [1]).
+   engine/line.py __compare_core   : UNCHANGED. It already zips sequence_v and
+                                     calls element.compare(); a constraint
+                                     element answers like any other.
+   equivalence_check/line.py       : UNCHANGED.
+   equivalence_check/potpourri.py  : UNCHANGED. Self-contained predicates are
+                                     order-independent, so potpourri pairing
+                                     and the CSP/bipartite matching need no
+                                     awareness of constraints -- a constraint
+                                     element compares locally inside whatever
+                                     pairing the solver proposes.
+   input_chunk.py / chunk_pipe.py  : UNCHANGED (lines still flow through the
+                                     PatternFinder; the new element rides along).
+   input_chunk_zip.py              : UNCHANGED.
+
+
+--------------------------------------------------------------------------------
+9. UI / PROTOCOL  (feeder/ui.py)  -- only if constraint cells are displayed
+--------------------------------------------------------------------------------
+   - ConfigInst: add constraint_f if the receiver needs to know constraints
+     are active (mirrors the existing flag-mirroring block in feed()).
+   - tolerance_id flows through cells already; CONSTRAINT passes through
+     bake_line_pair_inst like NUMERIC (no analogy provenance to bake).
+   - Adding any field to a protocol dataclass changes _get_protocol_hash(),
+     so the receiver's SIGNATURE check will flag a version bump. Expected.
+     Regenerate SIGNATURE_UI_PROTOCOL.txt (python ui.py -w).
+   - The diff rendering "(name NEQ value)" vs "(name: value)" is a RECEIVER
+     concern: the engine emits a non-equivalent constraint cell carrying name
+     + raw_value; the display layer formats the NEQ form. Do not bake the NEQ
+     string into the engine.
+
+
+--------------------------------------------------------------------------------
+10. RATIONALE LEDGER  (why, separated from the mechanics above)
+--------------------------------------------------------------------------------
+   * Self-contained constraints (no cross-reference):
+       PROBLEM:  cross-element references make equivalence depend on binding
+                 order; inside a potpourri (order irrelevant) this becomes a
+                 constraint-satisfaction search over line permutations.
+       COST of avoiding: a test author wanting two values related must compute
+                 the relation in the application and emit a single derived
+                 value/flag. Near-zero practical loss.
+       PAYOFF:   constraint = stateless local tolerance; ZERO changes to
+                 main.py, analogy_db, the equivalence-check layer, and the
+                 potpourri solver (sec.8).
+
+   * Modeling on LineElementNumber rather than LineElementAnalogy:
+       Analogy carries cross-line state (the analogy_db) and returns an
+       analogy pair from compare(). A constraint carries none and returns
+       None. Number is the right structural twin: local value + local verdict.
+
+   * Built-ins only, predicate must return bool:
+       COST:    no domain helpers (odd/even); author rewrites as arithmetic.
+       PAYOFF:  no helper registry to maintain or secure; the AST allow-list
+                plus empty __builtins__ is the entire sandbox surface.
+
+   * Nominal validation up front (option a, sec.7):
+       A reference output that cannot satisfy its own predicate is meaningless
+       as a reference. Failing fast at lex time gives a precise error and lets
+       compare() stay single-sided.
+
+   * INVARIANTS future changes must not break:
+       - compare() for a constraint reads ONLY self (and, transitionally,
+         nominal for the to-be-removed nominal check); never any other element.
+       - A constraint NEVER produces an analogy.
+       - Predicate evaluation NEVER raises into the engine (holds() traps).
+       - Removing constraint_f / happy_constraint_list returns the engine to
+         byte-identical prior behavior (CONSTRAINT alternative absent from the
+         master regex; from_match never sees the id).
+
+
+--------------------------------------------------------------------------------
+11. OPEN DECISIONS
+--------------------------------------------------------------------------------
+   * Final _SAFE_BUILTINS set (sec.3).
+   * Undeclared "(x: 5)" in output: treated as plain text (sec.5.2). Confirm
+     this is desired vs. an error.
+   * Quote style for string values: allow both ' and " (regex in 5.1 does),
+     or restrict to one.
+   * Whether display ever needs constraint cells (sec.9) or the feature is
+     equivalence-only for now.

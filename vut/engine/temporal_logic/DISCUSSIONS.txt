@@ -67,11 +67,145 @@ DEFERRED IDEAS  --  not in v1, reasoning recorded so it is not lost
 RESOLVED  --  decisions and the reasoning behind them
 -------------------------------------------------------------------------------
 
+  R-29  LIFECYCLE & QUERY CONSOLIDATION  --  BEGIN/END frame, CLOCK feature,
+        construct/destruct lifecycle, idempotent re-arm, polymorphic
+        comparators, LURKER(args) collapse with :any/:all/:none/:empty,
+        GLOBAL_LURKER, tracer.track -> tracer.watch, begin_* rename.
+        Several connected refinements arrived in one editing pass on
+        SYNTAX.txt. Each tightens a place the previous design had drift.
+
+          BEGIN / END as the two intrinsic implicit events.  Earlier
+          drafts had TERMINATION as the trace-terminating event and
+          'on TERMINATION' as the truncation backstop. Renaming the
+          event to END and introducing BEGIN as the zero-time-ahead
+          partner makes the trace explicitly framed: BEGIN before the
+          first real event, END after the last. The framing is symmetric
+          and gives rules a clean place to attach test-startup and
+          test-teardown logic without contorting SETUP. The trace must
+          still end with END (engine validates); BEGIN is implicit.
+
+          CLOCK feature.  Synthetic-time event emitter: declared in
+          SETUP with 'CLOCK <event-name> <interval>'. Between two real
+          events the clock catches up by emitting its event at every
+          synthetic-time tick. Mechanism: 'for t = last_sent + interval;
+          t <= event.time; t += interval: emit <event-name>(time=t)'.
+          Distinct from the rejected "internal clock" of R-10: the
+          engine still never consults a system clock, and clock events
+          fire only between real events, in synthetic-time. The use
+          case is differential-equation integration in a test trace, or
+          any other process that needs a regular cadence between
+          authored events. Earlier rejection (R-10) was of an internal
+          wakeup queue with side-effecting behavior; the CLOCK feature
+          is data-plane only, emits events the same way any other
+          mechanism emits events, and respects the cascade rules.
+
+          construct { ... } and destruct { ... } in lurker bodies.
+          Earlier R-15 said "no constructor body, no destructor; arming
+          binds data and nothing runs." That was too austere. Lurkers
+          carry state and have a lifecycle; giving authors a one-time
+          construction hook and a one-time teardown hook (run when the
+          instance ceases, whether via 'until' or via END) lets per-
+          instance setup and cleanup happen at the right time. Each
+          runs exactly once per instance.
+
+          Idempotent re-arm.  Earlier R-15 said "every '=> +' creates a
+          fresh, distinct instance; identity = parameters + arm time."
+          The new rule: identity = parameters only; arming with the same
+          parameters as a currently live instance is a SILENT NO-OP.
+          'construct' is not re-run, 'begin_time' is not updated, the
+          first instance wins. This makes arming idempotent — authors
+          can write '=> + WATCHER(...)' without first checking ":any(...)"
+          and get the right behavior. Reverses the "fresh instance per
+          arming" part of R-15. The "parameter list is identity"
+          principle stays.
+
+          "When one until fires, no further untils are checked."  Crucial
+          for safety: an 'until' clause may inspect the still-existing
+          instance ('lurker.<field>') or other instances ('OTHER:any(...)').
+          If two 'until' clauses could both fire and run their
+          consequences at the same instant, the second would be operating
+          on an instance that may already have been destructed (or on
+          object-space state the first 'destruct' cleaned up). The first
+          'until' in declaration order wins; 'destruct' runs at one
+          well-defined moment. Order is deterministic without further
+          author thought.
+
+          Polymorphic comparator value classes.  A small family of value
+          objects -- Glob, Approx, Less, LessEq, Greater, GreaterEq, Eq,
+          UnEq, Pattern -- each with '__className' on its metatable and
+          a ':match(actual)' method. The engine emits a '_match(actual,
+          expected)' dispatcher into every lurker class and every
+          event-query method; the dispatcher reads '__className' and
+          routes to the right ':match' (or falls back to '==' for
+          literals). Authors write 'LURKER(limit = Greater(50))'; the
+          engine does the dispatch. In free Luau guards (not routed
+          through a query method) the author calls ':match' directly:
+          'Glob("..."):match(event.user)'. New comparators plug in by
+          following the convention; no engine change.
+          This supersedes the earlier 'GLOBS' keyword (R-28), which was
+          inventing rule-language syntax for a job a class-with-method
+          solves more uniformly and extensibly.
+
+          LURKER(args) as the primary query form.  Earlier had
+          LURKER:has(...), LURKER:match(...), LURKER:count(),
+          LURKER:armed() as four separate named methods, plus a global
+          'armed(LURKER, ...)' builtin (R-17). All collapsed into:
+          'LURKER(args)' returns a list-like match-result over live
+          instances, supports '#' for count and iteration; plus four
+          boolean reductions ':any', ':all', ':none', ':empty'. One
+          mental model, one call surface. The global 'armed(...)'
+          builtin (R-17) is gone; same for free 'last' / 'since'
+          functions -- those become 'EVENT(args):last()' and ':since()'
+          on the event-query side.
+
+          GLOBAL_LURKER -- engine-internal singleton always-armed
+          lurker. The engine treats every causality as living inside
+          some lurker; top-level rules belong to a singleton GLOBAL_
+          LURKER. Not author-facing: authors don't query it, don't
+          write 'construct'/'destruct' for it, and don't see its name.
+          SETUP remains the only author-facing initialisation hook.
+          Internal consolidation: one mechanism (the lurker) instead of
+          two (top-level rules vs. lurker rules).
+
+          tracer.track -> tracer.watch.  Aesthetic. 'watch' reads
+          better with 'tracer' and pairs with the watcher mental model.
+
+          begin_time / begin_event_index replace armed_at / armed_index.
+          Renamed for consistency with the BEGIN/END framing: a lurker
+          instance has its own BEGIN, named with the same prefix as the
+          trace event.
+
+        Status of earlier entries:
+          - R-15  PARAMETERIZED LURKERS; INSTANCE LIFECYCLE.  Refined.
+                  Identity-by-parameters-only (was parameters + arm time);
+                  idempotent re-arm; construct/destruct now exist;
+                  begin_time / begin_event_index names.
+          - R-17  'armed()' QUERY BUILTIN.  Superseded.  The global
+                  builtin is gone; LURKER:any(args) (and the LURKER(args)
+                  call form) covers the same need with cleaner ergonomics.
+          - R-25  THE TRACER; HISTORY QUERIES.  Refined.  tracer.track
+                  -> tracer.watch; query form 'EVENT(args):last()' /
+                  ':since()' replaces free 'last' / 'since'.
+          - R-28  GRAMMAR CONSOLIDATION.  Refined.  The GLOBS keyword is
+                  superseded by the comparator value classes; the global
+                  'armed(LURKER, ...)' builtin (a part of R-28's
+                  inventory) is gone, replaced by the LURKER call form.
+                  Other R-28 decisions (event/lurker bindings, =>-on-
+                  every-consequence, off, guard read-only check, etc.)
+                  stand unchanged.
+
+        -> SYNTAX.txt throughout; README sections 3, 4, 5, 6, 7, 9, 10.
+
   R-28  GRAMMAR CONSOLIDATION  --  bindings, OBJECT removal, '=>' on every
         consequence, 'off' as uniform terminator, TERMINATION as backstop
         keyword, GLOBS, '/=' '!=' '~=', 'historian' -> 'tracer',
         'Class.create' and 'filter' as bootstrap helpers, guard read-only
         check.
+        (Refined by R-29: TERMINATION renamed END, BEGIN added as the
+        symmetric partner; the GLOBS keyword superseded by comparator
+        value classes; the global armed() builtin and free last/since
+        functions gone, replaced by the LURKER(args) and EVENT(...):...
+        call surfaces. Other R-28 decisions stand.)
         Several decisions arrived together as the grammar settled. Each
         was driven by the same principle: a rule's shape and the names it
         uses should not depend on context.
@@ -229,6 +363,9 @@ RESOLVED  --  decisions and the reasoning behind them
         -> README section 10.
 
   R-25  THE TRACER; HISTORY QUERIES; STATIC TRACER CHECKS.
+        (Refined by R-29: tracer.track -> tracer.watch; query form is
+        'EVENT(args):last()' / ':since()' rather than free 'last'/'since'
+        functions.)
         Past events are queried via three builtins available in guards and
         bodies: 'last(EVENT, attrs)', 'since(EVENT, attrs)', and the
         shorthand 'EVENT(attrs)'. The engine maintains history only for
@@ -407,6 +544,11 @@ RESOLVED  --  decisions and the reasoning behind them
         -> SYNTAX.txt, armed() / open points.
 
   R-17  'armed()' QUERY BUILTIN.
+        (Superseded by R-29: the global 'armed(LURKER, ...)' builtin is
+        gone; LURKER:any(args) -- and the LURKER(args) call form returning
+        a list-like match-result -- cover the same need with cleaner
+        ergonomics. The reasoning below explains why the QUERY mechanism
+        exists; only its spelling changed.)
         'armed(LURKER, ...)' is an engine-provided builtin usable in guards: an
         existence test over the live-instance population. Matches positional
         args first (in lurker-declaration order), then named; no parameter
@@ -425,6 +567,11 @@ RESOLVED  --  decisions and the reasoning behind them
         -> README sections 5-6; SYNTAX.txt.
 
   R-15  PARAMETERIZED LURKERS; INSTANCE LIFECYCLE.
+        (Refined by R-29: identity is now parameters only -- not
+        parameters + arm time -- and arming with the same parameters as
+        a live instance is a silent no-op; construct/destruct blocks
+        added; engine-stamped fields renamed begin_time /
+        begin_event_index.)
         A 'lurk' declaration is a CLASS with a declared parameter list. '=> +'
         is its constructor, arming one INSTANCE into existence. Key decisions:
           - Identity = declared parameters + arm time. Two armings cannot

@@ -16,9 +16,24 @@ ARCHITECTURE:
     of the setup file into Luau code. Luau code to be embedded in the generated
     code is consistently bracketed by '{' ... '}'.
 
+    The setup file is parsed beforehand and transpiled into Luau code. The Luau
+    code is supported by a bootstrap defining 'Class' definition and other
+    helpers.
+
+NOTE:
+
+    '##' starts a comment at any point in the setup file and the event sequence.
+
+    '--', '--[[', ']]--' are the usual comment delimiters inside Lua code sections.
+
+    'print' commands inside the Luau code appear on stdout as '##' prefixed.
+
+
 -------------------------------------------------------------------------------
-(1) GRAMMAR: RULE DEFINITION
+(A) TRANSPILATION -- generating the reactive engine
 -------------------------------------------------------------------------------
+
+(A.1) GRAMMAR:
 
     <rule>:        <causality> | <lurker>
 
@@ -27,26 +42,37 @@ ARCHITECTURE:
     <cause>:       <trigger> [ '&' <guard> ]
 
     <effect>:      <event-spec>             # emit an event
-                   '+' <lurker-arming>      # arm a lurker instance
-                   <report-string>          # report a formatted line of text
-                   '{' <luau-code> '}'      # mutate the object space
+                 | '+' <lurker-arming>      # arm a lurker instance
+                 | <report-string>          # report a formatted line of text
+                 | '{' <luau-code> '}'      # mutate the object space
 
     <lurker>:      'lurk' <lurker-name> [ '(' <arg-decl-list> ')' ] ':'
-                       <causality>+
-                       ( 'until' <cause> )+
+                   <lurker-elm>+
+                   ( 'until' <cause> )+
+
+    <lurker-elm>: <causality>
+                | 'init'   '{' <luau-code> '}'  # only allowed once per <lurker-elm>+
+                | 'deinit' '{' <luau-code> '}'  # only allowed once per <lurker-elm>+
+
+    <focus>:     'focus' <focus-name> [ '(' <arg-decl-list> ')' ] ':'
+                 <focus-elm>+
+                 ( 'until' <cause> )+
+
+    <focus-elm>:  'default' '=' <focus-lurker>  # only allowed once per <focus-elm>+
+                | 'init'   '{' <luau-code> '}'  # only allowed once per <focus-elm>+
+                | 'deinit' '{' <luau-code> '}'  # only allowed once per <focus-elm>+
+
+    <focus-lurker-ref>: <focus-name> '.' <lurker-name>
+                        <focus-name> '.' 'VOID'
+
+    <lurker-name>: <focus-name> . <identifier>
+                   <identifier>
 
     <trigger>:     <event-name>
-                   <event-cond>
                    'ANY'
                    'END'
                    'BEGIN'
-
-    <event-cond>:  <event-name> '(' <field-cond> (',' <field-cond>)* ')'
-
-    <field-cond>:  <member> <comp-op> <rvalue>
-                   <member> 'GLOBS' <istring>
-
-    <comp-op>:     '<' | '>' | '>=' | '<=' | '==' | '!=' | '~='
+                   'switched'   # legal only in 'until switched' in closing focus lurker.
 
     <guard>:       '{' <luau-condition> '}'
 
@@ -62,6 +88,8 @@ ARCHITECTURE:
                      <istring>
                      '{' <luau-expr> '}'
 
+   'clock'           <event-name> <number>
+
     <arg-decl-list>: <arg-decl> (';' <arg-decl>)*
     <arg-decl>:      <member> ':' <type>
 
@@ -69,8 +97,13 @@ ARCHITECTURE:
 
     <istring>:       '"' <luau-string-expr> '"'   # interpolated Luau string
 
+    <event-def>:     <event-name> <arg-decl-list>
 
-BINDINGS:
+(A.2) EXPLANATION
+
+(A.2.1) General 
+
+BINDINGS: Names that bind nesting entities:
 
     'event'   event of the current rule firing. Always available inside any 
               '{ }' span attached to a fired trigger: guards, '=> { ... }' 
@@ -79,6 +112,10 @@ BINDINGS:
     'lurker'  lurker instance in which the referencing code fragment resides. 
               Not bound inside top-level rules; referring to it
               there is a transpile-time error.
+
+    'focus'   focus where the code fragments reside in. This may be the
+              'init' and 'deinit' handlers of the focus or any code fragment
+              in a related focus lurker.
 
 IMPLICIT EVENTS:
 
@@ -90,7 +127,10 @@ IMPLICIT EVENTS:
     'END'   immediately (zero-time ahead) after last event of the event 
             sequence.
 
-EXPLANATION:
+    'switched' is a non-functional marker for 'until switched' in focus
+               lurkers.
+
+(A.2.2) Grammar Productions
 
 <rule>   defines a relation between things that happens and things that 
          happen as a effect.
@@ -106,7 +146,12 @@ EXPLANATION:
    Examples:
 
       on TICK & { event.time > 0 } => LOG(time = event.time) off
-      on ANY  & { car.gas == 0 } => FRUSTRATION(time = event.time) off
+
+      on ANY  & { car.gas == 0 } => FRUSTRATION(gravity = 0.1) off
+
+      on PING & { Glob("tester_?_intruder"):match(event.user) and event.ip ~= "127.0.0.1" }
+      => INTRUSION(intruder=event.user)
+      off
 
    'ANY' matches every event, including cascade-emitted events and the
    terminating event. 
@@ -122,42 +167,8 @@ EXPLANATION:
           off
       until ACK & { event.req == lurker.req }
 
-<event-cond> 
- 
-      is a filtering trigger: it matches only events whose member values
-      satisfy the listed conditions. Conditions are joined implicitly by 'and'.
-      The comparison operators are the usual ones; '!=' and '~=' both mean
-      not-equal (the latter is Luau's spelling, both are accepted).
-
-      Example: 
-          on STOP_SIGN_PASSED(lane == 2)
-          => "stop sign in left lane at t={event.time}"
-          off
-
-      A trigger may also be paired with a '&' guard. The event-cond narrows
-      which events match; the guard narrows further based on arbitrary object
-      state.
-
-      on PING(port == 80) & { vehicle.alarmed }
-      => "ping while alarmed: {event.ip}"
-      off
-
-<field-cond> 
-     compares an event member against an rvalue. Two forms: an ordinary
-     comparison via <comp-op>, or a glob match via 'GLOBS'. The latter is
-     asymmetric: the member is on the left, the glob pattern is on the right,
-     written as an interpolated string with Unix-style globs ('*', '?',
-     '[...]'):
-
-      Example:
-
-          on LOGIN(user GLOBS "[fF]red")
-          => "fred logged in at t={event.time}"
-          off
-
-      Glob patterns are translated to Luau patterns at transpile time; no glob
-      library at run time. Interpolation in the pattern works as in any
-      <istring>: 'name GLOBS "{config.prefix}_*"'.
+    'switched' is a reserved keyword usable only as the final 'until'
+    clause of a focus member-lurker; it is not a general trigger.
 
 <guard> 
 
@@ -206,126 +217,178 @@ EXPLANATION:
     <rvalue> pairs, or positional <rvalue>s. The 'time' field is intrinsic and
     not written in the emit; the engine sets it to the current instant.
 
-<lurker-arming> constructs and arms a lurker instance. Its argument syntax
-                is the same as for event-spec -- 'NAME(arg = value, ...)',
-                no leading dots, no braces around the argument list. The
-                same shape because the operation is conceptually the same:
-                construct a new instance, pass arguments by name or
-                position. Every '=> +' creates a fresh, distinct instance
-                -- two armings cannot share an arm time (the same rule
-                cannot fire twice at one instant), so there is no re-arm
-                case to consider.
+<lurker-arming> 
+
+    constructs and arms a lurker instance. Its argument syntax is the same as
+    for event-spec -- 'NAME(arg = value, ...)'.
+
+    An arming with identical parameters to a currently live instance is a
+    silent no-op: 'init' is not re-run, 'begin_time' is not updated, the
+    first instance remains. 'init' runs exactly once per instance, at
+    the moment it comes into existence. 'deinit' runs exactly once per
+    instance, at the moment it ceases -- whether that is the firing of an
+    'until' clause or the trace's END event finding the instance still live.
+    When one 'until' clause fires for an instance, no further 'until' clauses
+    for that instance are checked: this guarantees 'deinit' runs at a
+    single well-defined moment, and lets an 'until' clause safely reference
+    the still-existing instance.
+
 
 <arg> binds an argument by name or by position. Named arguments may follow
       positional ones; the parser allows both forms in the same call.
 
-<rvalue> is one of three things: a literal number, an interpolated string,
-         or a Luau expression in '{ }'. The Luau form is for everything
-         that needs computation -- arithmetic, member access, function
-         calls, conditional values. The literal forms exist so that simple
-         cases (a constant lane number, a fixed message) need no '{ }'
-         noise.
+<rvalue> 
+      is something that can be assigned to an event member or a lurker
+      paremeter in the <arg-list>. 
 
-<arg-decl-list> declares a lurker's parameters. Each parameter has a name
-                and a type. Parameter order matters: positional arguments
-                bind in declaration order. A parameter's type is either a
-                Luau primitive ('number', 'string', 'boolean') or the name
-                of a class created in SETUP. Class-typed parameters are
-                bound by reference into the one object space -- this is
-                ordinary Luau semantics for tables / class instances and
-                requires no marker keyword.
+<arg-decl-list> 
+      declares a lurker's parameters specifying a member by its name and its
+      type. Parameter order matters: positional arguments bind in declaration
+      order. A parameter's type is either a Luau primitive ('number', 'string',
+      'boolean') or the name of a class created in 'on BEGIN'. 
 
-<report-string> is an interpolated string emitted as a report line. Report
-                lines are the test's output. They are not printed during
-                the run -- they are collected, and after the trace
-                completes they are sorted alphabetically and uniqueness-
-                filtered into a deterministic block. HWUT compares that
-                block against a nominal recording. The engine does not
-                judge; it reports. Sort+dedup discards order and
-                multiplicity; the author recovers what the test needs by
-                putting it INTO the string (a zero-padded timestamp prefix
-                for order, a state-held counter for multiplicity).
+      Class-typed parameters are bound by reference into the one object space.
 
-<istring> is an interpolated Luau string in double quotes. Holes use
-          braces, as in Luau's backtick-string form, but adapted to the
-          rule-file delimiters: '"hello, {user.name}"'.
+<report-string> 
+      is an interpolated string emitted as a report line. Report lines are the
+      test's output. They are not printed during the run -- they are collected,
+      and after the trace completes they are sorted alphabetically and
+      uniqueness-filtered into a single text block. 
 
-'off' closes every 'on' block, both at top level and inside a lurker. The
-      keyword is uniform: a rule is the same shape wherever it appears. A
-      reader knows from the keywords alone where a rule starts and ends;
-      no indentation rules, no lookahead, no context-dependent
-      termination.
+      HWUT compares that block against a nominal recording. The engine does not
+      judge; it reports. Sort+dedup discards order and multiplicity; the author
+      recovers what the test needs by putting it INTO the string (a zero-padded
+      timestamp prefix for order, a state-held counter for multiplicity).
 
-'until' closes a lurker. A lurker may have several 'until' clauses; the
-        instance stops being armed the moment any one of them fires. This
-        serves the unless-cancelled pattern naturally: end on a deadline
-        or end on a success event, whichever comes first.
+<istring> 
+      is an interpolated Luau string in double quotes. Holes use braces, as in
+      Luau's backtick-string form, but adapted to the rule-file delimiters:
+      '"hello, {user.name}"'.
+
+DELIMITERS:
+
+'off'              closes every 'on' block.
+('until' <cause>)+ closes a lurker. 
+                   closes a focus.
+
+A lurker or focus may have several 'until' clauses; the instance stops being
+armed the moment any one of them fires. This serves the unless-cancelled
+pattern naturally: end on a deadline or end on a success event, whichever comes
+first.
 
       lurk AWAIT_ACK(req : number) :
           on END
           => "timeout on request {lurker.req}"
           off
-      until TICK & { event.time >= lurker.armed_at + 5 }
+      until TICK & { event.time >= lurker.begin_time + 5 }
       until ACK  & { event.req == lurker.req }
 
 
--------------------------------------------------------------------------------
-(2) LURKERS  --  LIFECYCLE AND SEMANTICS
--------------------------------------------------------------------------------
+(A.2.3) Details on Lurkers
 
 LIFECYCLE
 
   '=>' '+' <lurker-arming> instantiates a lurker and activates a lurker block.
+
   'until' <cause>          removes the lurker from existence.
 
   A lurker block is only executed, if an according lurker exists.
 
 PARAMETERS
 
-A lurker may declare a parameter list. Parameters are plain data, bound
-onto the instance as members of 'lurker'. A primitive parameter is bound
-by value; a class-typed parameter is bound as a reference into the one
-object space, never a copy. The instance carries no member functions and
-no constructor body -- arming binds data to 'lurker' and nothing else
-runs at creation.
+Parameters specified in a lurker's definition and passed during instantiation
+are bound to the instance of  the lurker, referred to by the name of 'lurker'. 
+Primitive parameters are bound by value, class-type parameters are passed
+by reference--as enforced by the Luau engine.
 
-INSTANCE IDENTITY
-
-The engine stamps every instance with two readable members:
+The engine stamps every instance with two readable members additionally
+to all other parameters defined in 'lurk' definition:
 
     lurker.begin_time        'time' at which it was instantiated.
     lurker.begin_event_index index of the event that caused the instantiation.
 
-Identity is the declared parameters plus the arm time. Because the arm
-time of two armings can only coincide if they happen at the same instant
-T, and the same arming rule cannot fire twice at one T (no event type
-twice at T), every '=> +' produces a fresh, distinct instance. There is
-no re-arm case.
+This implies, that the parameter list is checked agains those parameters
+not be specified by the user. The parameter list provides identity. That is
+no two lurkers exist with identical parameter lists.
 
-THE 'armed' QUERY
+QUERY:
 
-'armed(LURKER, ...)' is an engine-provided builtin available inside
-guards. It is an existence test over the live population: "does a live
-instance of LURKER exist whose parameters match the supplied arguments?"
-Positional arguments first (binding in declaration order), then named
-arguments; unsupplied parameters are wildcards (partial match); only
-declared parameters are matchable. The natural pattern is conditional
-arming:
+Live instances of a lurker class are queried in the Luau world using the
+lurker's type name as the access point. There is one primary call form and
+four boolean reduction methods.
 
-    on NW_EVENT & { not armed(NETWORK_WATCHER, event.ip, event.port) }
-    => + NETWORK_WATCHER(ip = event.ip, port = event.port, firewall = global_fw)
+   <lurker-name>:list(<member-condition>*)
+       Provides a list of lurkers of the given name where the member 
+       conditions are fulfilled. If no condition is provided all lurkers
+       of the given kind are returned.
+
+   <lurker-name>:has(<member-condition>+)
+       True if a lurker with the given conditions exist.
+
+   <lurker-name>:any(<member-condition>*)
+       True if at least one live instance matches the conditions.
+       With no conditions, true if any live instance exists at all.
+
+   <lurker-name>:all(<member-condition>+)
+       True if every live instance matches the conditions.
+       Conditions are required (a conditionless 'all' is vacuous).
+
+   <lurker-name>:none(<member-condition>+)
+       True if no live instance matches the conditions.
+       Conditions are required (use ':empty' for the conditionless case).
+
+   <lurker-name>:empty()
+       True if no live instance of <lurker-name> exists at all.
+       Takes no conditions.
+
+    <lurker-name>:last(<member-condition>+)  
+        last lurker that triggered with condition.
+
+    <lurker-name>:since(<member-condition>+)
+        time since last lurker with condition occurred.
+
+Member conditions accept either a literal value (matched by equality) or
+a comparator object: Glob, Approx, Less, LessEq, Greater, GreaterEq,
+Eq, UnEq, Pattern (see section C). The engine's generated _match()
+dispatcher routes each condition through the comparator's :match method
+or falls back to '==' for literals; the author writes the comparator,
+the engine does the dispatch.
+
+Examples:
+
+    if STOP_SIGN_LURKER:any() then
+        -- at least one stop-sign watcher is live
+    end
+
+    if #PING_WATCHER:list(port = 80) > 5 then
+        -- more than five live port-80 watchers
+    end
+
+    for lurker in PING_WATCHER:list(ip = Glob("192.168.162.*"), port = 80) do
+        -- iterate over matching live instances
+    end
+
+    on ANY & { vehicle.speed < 50 and not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
+    => { driver.mode = "relax" }
     off
 
-END AND TEARDOWN
+The last example reads: "for any event, if the vehicle is going under 50
+and no live speed-limit watcher is monitoring a limit greater than 50,
+set the driver to relax mode." ':any' is the natural choice here because
+Luau does not coerce tables to boolean (an empty list is truthy); ':any'
+gives an honest yes/no without surprises.
 
-'on END' inside a lurker fires once per still-live instance at
-the terminating event of the trace. This is the truncation backstop: an
-obligation whose deadline never arrived is caught here, per instance.
-There is no teardown pass and no destructor -- at end of the trace the
-entire Luau object space is discarded and all lurker instances are
-released with it.
+Based on the lurker block definitions, the transpiler generates a specific
+class for each lurker kind, carrying the query methods (':list', ':has',
+':any', ':all', ':none', ':empty', ':last', ':since') and the polymorphic
+_match dispatch.
 
-WORKED EXAMPLE  --  vehicle must stop within 10 s of a stop sign
+'init' and 'deinit' define Luau code to be executed upon construction
+and desctruction of a lurker. It is called 'init' since, the members 
+of a lurker are already paired as members to the 'lurker'. No
+constructor arguments are passed.
+
+Example: vehicle must stop within 10 s of a stop sign
 
     on STOP_SIGN_PASSED
     => + LOOK_FOR_CAR_SPEED(at = event.time)
@@ -337,9 +400,11 @@ WORKED EXAMPLE  --  vehicle must stop within 10 s of a stop sign
         off
     until TICK & { event.time >= lurker.at + 10 }
 
-WORKED EXAMPLE  --  parameterized, with conditional arming
+Example: parameterized, with conditional arming
 
-    on NW_EVENT & { not armed(NETWORK_WATCHER, event.ip, event.port) }
+    ## arm one watcher per (ip, port); the ':has' guard is illustrative --
+    ## under idempotent re-arm a duplicate arming would be a silent no-op
+    on NW_EVENT & { not NETWORK_WATCHER:has(ip = event.ip, port = event.port) }
     => + NETWORK_WATCHER(ip = event.ip, port = event.port, firewall = global_fw)
     off
 
@@ -350,65 +415,144 @@ WORKED EXAMPLE  --  parameterized, with conditional arming
         on END
         => "watcher for {lurker.ip} expired unresolved"
         off
-    until TICK & { event.time >= lurker.armed_at + 30 }
+    until TICK & { event.time >= lurker.begin_time + 30 }
     until ACK  & { event.ip == lurker.ip }
 
+There is one special lurker, the GLOBAL_LURKER which is active all the time and
+all causalities which are not bound to an explicit lurker belong to the
+GLOBAL_LURKER.
 
--------------------------------------------------------------------------------
-(3) EVENT DECLARATIONS
--------------------------------------------------------------------------------
+(A.2.4) Details on Event Definitions
 
 Event structures are declared in the rule-file language. 'time' and 'dt'
 are intrinsic to every event, are not declared, and are of type 'number'.
 
-    event STOP_SIGN_PASSED {
-        lane : number
-    }
+    event STOP_SIGN_PASSED(
+        lane : number;
+    )
 
-    event WRECK {
-        severity : number
-    }
+    event NETWORK_PINGED (
+        n           : number;
+        incoming_ip : string;
+    )
 
 A field is 'name : type'. Fields are separated by any whitespace -- newline
 or otherwise. The types are Luau's: 'number', 'string', 'boolean', plus
-the name of any declared event type or any class created in SETUP (a
+the name of any declared event type or any class created in 'on BEGIN' (a
 reference-typed field). There is no int/float split; the engine presents
 a Luau facade to the user.
 
-A '#' starts a comment to the end of the line.
+Event signatures correspond 1:1 to lurker signatures in the way that they
+specify the argument list.
 
-EVENTS USE REAL METATABLES, NOT 'Class.create'
+(A.2.5) Details on Focus Definitions
 
-The transpiler generates a metatable per declared event type. Each
-metatable carries the type identity, queryable by Luau's standard
-introspection ('typeof', 'getmetatable'). This is *deliberately
-different* from how objects are constructed: events are transpiler-
-generated structures the static checks need to identify at compile time;
-objects are user-defined classes constructed at SETUP time via the
-'Class.create' factory (section 4). Two mechanisms, two jobs.
+A focus is a habitat for lurkers in which at most one member-lurker is active
+at a time. Arming one member-lurker deactivates whichever member-lurker was
+active before. A focus is the means to express a state machine: each member-
+lurker is a state, arming a new one is a transition, and the mutual-exclusion
+is automatic.
 
-NO 'object' DECLARATION IN THE RULE FILE
+A focus member-lurker is an ordinary lurker whose name is prefixed with the
+focus name and a dot:
 
-Objects -- the long-lived stateful aggregates the rules manipulate -- are
-NOT declared in the rule-file language. They are created in SETUP using
-ordinary Luau and the 'Class.create' factory. The transpiler does not
-reflect on objects: they are not in the cascade graph, they have no
-static-name role, and the Luau helper does not check field accesses on
-them. The author defines them in SETUP, the engine instantiates them
-there, and the rules use them via globals as ordinary Luau values.
+    lurk <focus-name> '.' <identifier> [ '(' <arg-decl-list> ')' ] ':'
+        <lurker-elm>+
+        ( 'until' <cause> )+
+    'until' 'switched'
+
+Inside the lua-code sections of the focus itself and its related lurkers, the
+currently nesting focus is referred to by 'focus' and all members specified in
+the focus signature can be accessed as read-available members.
+
+<focus> declares the habitat. It has three parts:
+
+   'default' specifies the default active lurker, if no lurker remains 
+             active. That is, if no initial lurker is setup, or if a lurker
+             terminates with an 'until' condition and no other lurker
+             is present. 
+
+             If default is not specified an empty lurker is activated:
+             lurker 'VOID'.
+
+   'init'  runs once when the focus comes into being. Arguments to the focus
+           are already bound to the 'focus' variable--same as 'event' in 
+           <causality> and 'lurker' in <lurker> environments.
+
+           The typical body emits the event that arms the first lurker.
+
+   'deinit'  runs once when the focus ceases. Takes no arguments.
+
+Member-lurkers are declared exactly like ordinary lurkers, except:
+
+   - their name is '<focus-name>.<lurker-name>';
+   - their 'until' list MUST end with 'until switched'.
+
+'switched' is a transpiler keyword. 'until switched' fires when another
+member-lurker of the same focus is armed -- the event that deactivates the
+current member. It is REQUIRED as the last 'until' clause of every focus
+member-lurker. 
+
+The 'until switched' is a non-functional, but mandatory, syntax. It's function
+is solely to signal to the code writer the particular nature of the focus
+lurker. That is, a focus lurker may be terminated through another reason than
+the explicitly specified 'until' events, namely the arming of a concurring
+focusr lurker.
+
+When a member-lurker ceases via 'switched', its 'deinit' (if any) runs,
+exactly as for any other way a lurker ceases. The "first until wins, no
+further untils checked" rule (section 2) applies: if a member's own 'until'
+and the 'switched' transition coincide, the first in declaration order wins,
+and since 'switched' is required to be last, an explicit 'until' always wins
+a tie against it.
+
+Example: a task state machine
+
+    focus TASK_STATE :
+        default : TASK_STATE.VOID
+        init {
+            ...
+        }
+        deinit {
+        }
+    until END # this focus never stops
+
+    lurk TASK_STATE.SLEEP :
+        on WAKE => + TASK_STATE.RUN off
+    until EVENT_TASK_TERMINATED
+    until switched
+
+    lurk TASK_STATE.RUN :
+        on TICK & { event.time >= lurker.begin_time + quantum }
+        => + TASK_STATE.SLEEP
+        off
+    until EVENT_TASK_TERMINATED
+    until switched
+
+Arming 'TASK_STATE.RUN' from within 'TASK_STATE.SLEEP' deactivates SLEEP (its
+'until switched' fires) and activates RUN. The two states alternate; 'until
+EVENT_TASK_TERMINATED' lets either state leave the cycle on a
+EVENT_TASK_TERMINATED event.
 
 
--------------------------------------------------------------------------------
-(4) SETUP  --  OBJECT-SPACE INITIALISATION
--------------------------------------------------------------------------------
+(A.3) OBJECT SPACE INIT and DEINIT
 
-A rule file contains a SETUP section: plain Luau code, run once at engine
-start, before any event is processed. It defines the classes whose
-instances populate the object space, constructs the singleton instances,
-sets their initial state, and declares tracer coverage for the events
-that need it.
+The object space of the Luau engine is initialized and de-initialized with the
+'on BEGIN' and 'on END' handlers. The 'on BEGIN' causality is handled before
+any event in the event trace. The 'on END' causality is handled after the last
+event in the event trace. 
 
-    SETUP {
+'on BEGIN' and 'on END' handlers have are special in that they:
+
+  -- do not allow for a <guard>
+  -- cannot trigger events (no '=>' allowed)
+  -- only accepts Luau code as <effect>
+
+The 'on BEGIN' handler defines the classes whose instances populate the object
+space, constructs the singleton instances, sets their initial state, and
+declares tracer coverage for the events that need it.
+
+    on BEGIN => {
         -- Define a class
         local Vehicle = Class.create("Vehicle", {}, function(self)
             self.speed = 0
@@ -419,57 +563,82 @@ that need it.
         vehicle = Vehicle()
 
         -- Declare tracer coverage
-        tracer.track(PING, by=ip)
-        tracer.track(LOGIN, by=user, last=5)
+        tracer.watch(PING, by=ip)
+        tracer.watch(LOGIN, by=user, last=5)
     }
 
-SETUP runs in the privileged SETUP environment -- the only environment
-with an object-construction capability. Rule-body '=> { ... }' blocks
-(the RULE environment) may mutate existing objects but cannot construct
-new ones. Before SETUP runs, the generated bootstrap injects 'Class',
-'tracer', the generated event-type metatables, and whatever capabilities
-the sandbox configuration permits. SETUP cannot widen its own
-environment. SETUP runs under the instruction-budget watchdog like all
-Luau.
+The counterpart is the 'on END' handler, that is executed after the last event
+of the event trace.
 
-THE 'Class' FACTORY
-
-The bootstrap provides a single class factory for defining object types
-in SETUP. Strict-typed Luau:
-
-    --!strict
-    type ClassFactory = {
-        create: <T, Args...>(name: string, prototype: any, initMethod: (self: T, Args...) -> ()) -> ((Args...) -> T)
+    on END => {
+        release.file_handle()
+        disconnect_uart()
+        ...
     }
-    local Class: ClassFactory = {} :: any
 
-    function Class.create<T, Args...>(name: string, prototype: any, initMethod: (self: T, Args...) -> ())
-        prototype.__index = prototype
-        prototype.__className = name
-        return function(...: Args...): T
-            local instance = setmetatable({}, prototype)
-            initMethod(instance, ...)
-            return (instance :: any) :: T
-        end
-    end
 
-'Class.create' takes three arguments: a class name (used as
-'__className' on the prototype for introspection), a prototype table
-(carrying any methods the class needs), and an init method that runs
-once per instance and binds the initial field values onto 'self'. It
-returns a strictly typed constructor function; calling that function
-constructs and initializes an instance.
 
-The deliberate omissions: no inheritance, no automatic field declaration,
-no member-function syntax separate from the prototype. Object instances
-are simple stateful aggregates whose methods (if any) live on the
-prototype and whose state lives on 'self'. This matches the engine's
-actual needs -- objects are state containers the rules read and mutate,
-not an OO hierarchy.
+The initialization procedure can rely on the bootstrap environment being
+setup. Also, it is restricted to the permissions defined by the Luaua
+environment about network access, file access and the like. It runs 
+under the instruction-budget watchdog. 
+
+No code fragment can access objects of the engine itself. Except through
+dedicated read-only functions. 
+
+No luau code fragment can emit events.
+
+(A.4) CLOCKS
+
+A clock operates on synthetic time and emits periodic events of a user-defined
+name. A clock is defined by the name of the event it emits and the time
+interval in which it emits that event. The definition syntax is
+
+   'clock' <event-name> <number>
+
+where <number> is a floating point number giving the extend of the time
+interval between two clock events. The clock stores internally the last time it
+has sent an event. Every clock is activated upon the first event in the event
+sequence, where it sends its first event and sets the 'last sent time'.
+
+Whenever an event arrives, it considers the timestamp of that event. It
+determines the difference 
+
+    delta_t = event.time - clock.last_time_event_sent
+
+It then sends events based on 'synthetic time' 
+
+    for t = clock.last_time_event_sent; t <= event.time ;  t += delta_t:
+        emit <event-name>(time=t)
+
+This allows for integration of differential equations, or other simulation
+processes that require some linear timeline.
+    
+(A.5) NOTES
+
+(A.5.1) IDENTITY AND CONSTRUCTION
+
+EVENTS, LURKERS, and FOCI USE REAL METATABLES, NOT 'Class.create'
+
+The transpiler generates a metatable per declared event type. Each
+metatable carries the type identity, queryable by Luau's standard
+introspection ('typeof', 'getmetatable'). This is *deliberately
+different* from how objects are constructed: events are transpiler-
+generated structures the static checks need to identify at compile time;
+objects are user-defined classes constructed in 'on BEGIN' via the
+'Class.create' factory. Two mechanisms, two jobs.
+
+EVENTS HAVE NO 'init' / 'deinit'
+
+Only lurkers and foci have 'init' / 'deinit' hooks. Events are primitive:
+ephemeral, non-reactive, carrying no state across time. They come into being at
+their instant and vanish; there is nothing for a construction or destruction
+hook to do. The hooks belong to the stateful, lifecycle-bearing constructs
+(lurkers, foci), not to events.
 
 
 -------------------------------------------------------------------------------
-(5) EVENT TRACE
+(B) EVENT TRACE
 -------------------------------------------------------------------------------
 
 A trace is the input time line: a sequence of event occurrences fed to
@@ -478,8 +647,8 @@ literals, never Luau expressions.
 
     <trace>:            <node>+ <termination-node>
     <node>:             [ <timestamp> ] <trace-event>
-    <termination-node>: [ <timestamp> ] 'END' '(' ')'
-    <trace-event>:      <event-name> '(' [ <member-spec> (',' <member-spec>)* ] ')'
+    <termination-node>: [ <timestamp> ] 'END' [ '(' ')' ]
+    <trace-event>:      <event-name> [ '(' [ <member-spec> (',' <member-spec>)* ] ')' ]
     <member-spec>:      <member-name> '=' <literal>
     <timestamp>:        <number>
     <literal>:          <number> | <string> | <boolean>
@@ -501,32 +670,23 @@ real timestamps. The engine itself never consults a clock.
 EXAMPLE (explicitly-timed)
 
     0.0    STOP_SIGN_PASSED( lane = 2 )
-    0.1    TICK( )
-    0.2    TICK( )
-    10.5   TICK( )
-    10.5   END( )
-
+    0.1    PING(ip="8.8.8.8", port = 80)
+    10.5   END
 
 -------------------------------------------------------------------------------
-(6) TRACER AND HISTORY QUERIES
+(B.1) EVENT QUERIES
 -------------------------------------------------------------------------------
 
-The tracer is a Luau object configured in SETUP that records past events
-of declared types. Guards and bodies query it via three builtins:
+Event queries follow the syntax and semantics of LURKER queuries. 
 
-    last(EVENT [, attrs])    -- the most recent matching EVENT, or nil
-    since(EVENT [, attrs])   -- time delta since last(EVENT, attrs), or nil
-    EVENT(attrs)             -- shorthand for last(EVENT, attrs)
+An EVENT that is not traced by the tracer, cannot respond to these queries.
+The tracer may restrict the number of events held in time backwards.
 
-History is paid for only when declared. An event type for which no
-'tracer.track' is written is not recorded; querying it is a transpile-
-time error, not a silent nil.
-
-    SETUP {
-        tracer.track(PING, by=ip)
-        tracer.track(HEARTBEAT)
-        tracer.track(LOGIN, by=user, last=5)
-    }
+    on BEGIN => {
+        tracer.watch(PING, by=ip)
+        tracer.watch(HEARTBEAT)
+        tracer.watch(LOGIN, by=user, last=5)
+    } off
 
 'by=<attr>' (or 'by=<attr1>,<attr2>') keys the per-instance history.
 'last=N' bounds entries retained per key; default 1. The first argument
@@ -534,8 +694,8 @@ is always a literal event-type name -- the static-name line, extended to
 history builtins.
 
 The transpiler statically checks history queries through the Luau
-helper. A query against an untraced type is fatal: "last(PING) used but
-PING is not traced -- add tracer.track(PING) in SETUP." A query whose
+helper. A query against an untraced type is fatal: "PING:last() used but
+PING is not traced -- add tracer.watch(PING) in 'on BEGIN'." A query whose
 match attributes are not covered by the tracer's 'by=' keying is fatal:
 "PING is traced, but not keyed by ip -- the tracer's by=... must
 include the attributes you query against." Both prevent the silent-nil
@@ -543,116 +703,61 @@ class of error.
 
 EXAMPLE
 
-    SETUP {
-        tracer.track(LOGIN, by=ip)
-    }
+    on BEGIN => {
+        tracer.watch(LOGIN, by=ip)
+    } off
 
     on PING & { LOGIN(ip=event.ip) ~= nil }
     => "ping from logged-in ip {event.ip}"
     off
 
-
 -------------------------------------------------------------------------------
-(7) BOOTSTRAP HELPERS  --  available inside guards and Luau spans
--------------------------------------------------------------------------------
-
-A small fixed set of helpers is injected into the Luau environments by
-the bootstrap. They cover patterns the rule-file language does not have
-syntax for, sparing the author from writing the same Luau scaffolding in
-every test.
-
-'armed(LURKER, ...)'  --  the live-instance existence test, section 2.
-'last' / 'since' / 'EVENT(attrs)'  --  the tracer query builtins, section 6.
-
-'filter(array, key, value)'  --  list-comprehension-style filtering.
-
-    --!strict
-    -- T is the object type (e.g., Student)
-    -- K is the specific key of that object (e.g., "nick_name")
-    local function filter<T, K>(array: {T}, key: K, value: any): {T}
-        local result = {}
-
-        for _, item in array do
-            -- Cast item to 'any' internally to allow dynamic string indexing
-            local itemData = item :: any
-            if itemData[key] == value then
-                table.insert(result, item)
-            end
-        end
-
-        return result
-    end
-
-The rule-file language has no list-comprehension syntax. Guards and
-bodies that need to operate on subsets of an array -- "the network
-hosts whose subnet matches", "the students whose grade exceeds the
-threshold" -- end up writing the same explicit Luau loop. 'filter'
-captures the most common shape (matching one key against a value) so the
-guard reads as one expression:
-
-    on QUERY & { #filter(students, "grade", "A") > 0 }
-    => "at least one A-grade student"
-    off
-
-More complex predicates still require an explicit loop or a more
-elaborate helper; 'filter' is the small win, not the general solution.
-
-The set of bootstrap helpers is small, fixed, and engine-provided -- no
-third-party Luau libraries. Each helper is justified by recurring need;
-the bar for adding one is "would every nontrivial test reinvent this?"
-
-
--------------------------------------------------------------------------------
-OPEN POINTS
+(C) BOOTSTRAP HELPERS  --  available inside guards and Luau spans
 -------------------------------------------------------------------------------
 
-  (none currently open; the grammar is settled.)
+The bootstrap injects a small fixed set of helpers into the Luau
+environments. They cover patterns the rule-file language does not have
+syntax for, sparing the author from rewriting the same Luau scaffolding
+in every test.
 
-  RESOLVED:
-    S-1   Comment marker -> '#'.
-    S-2   Struct-declaration field separator -> any whitespace (same as
-          traces).
-    S-3   Type vocabulary -> Luau types: number / string / boolean, plus
-          declared event-type names and SETUP-defined class names. No
-          int/float split.
-    S-4   Object initial values -> set in SETUP by the class' initMethod;
-          no inline initialisation in any declaration.
-    S-5   Luau-span delimiter -> '{ }' everywhere; one meaning.
-    S-6   Armable-unit keyword -> 'lurk' (paired with 'until').
-    S-7   '.armed_at' / '.armed_index' -> engine-stamped instance members
-          on 'lurker'.
-    S-8   Multiple disarm conditions -> 'until' may repeat.
-    S-9   Triggering-event reference -> 'event' binding, always available
-          in Luau spans; the 'as <bind-name>' form was removed as
-          redundant.
-    S-10  Leading '.' in lurker-arming field-inits -> deleted; lurker-
-          arming and event-spec use identical 'NAME(arg = value, ...)'
-          syntax.
-    S-11  Aggregate (class-typed) lurker parameters -> allowed, bound by
-          reference per ordinary Luau semantics for tables / class
-          instances; no 'ref' marker keyword needed.
-    --    'object' declaration -> removed from the rule-file language;
-          objects are user-defined in SETUP via 'Class.create'.
-    --    armed() wildcard '*' -> rejected; omission is the only
-          wildcard.
-    --    Causality marker -> '=>' before every effect, no
-          exception.
-    --    On-block terminator -> 'off', uniform at top level and inside
-          lurkers.
-    --    Truncation backstop keyword -> END (collapsed with the
-          trace-terminating event; same instant, two audiences).
-    --    Glob matching -> 'GLOBS' keyword in <field-cond>, asymmetric
-          (member left, pattern right, interpolated string), Unix glob
-          syntax, translated to Luau patterns at transpile time.
-    --    Historian -> renamed 'tracer'; the keyword is more honest
-          about what it does (records, doesn't judge).
-    --    'self' -> not used; the triggering event is 'event', the
-          lurker instance is 'lurker'.
-    --    Guard read-only check -> sound syntactic check in the Luau
-          helper: assignments and recognised mutating-builtin calls are
-          fatal at transpile time; mutation through user-defined
-          function calls is not detected.
+COMPARATOR CLASSES
 
-===============================================================================
-END OF SYNTAX
-===============================================================================
+Comparator objects are value classes whose only purpose is to participate
+in a query's '<member-condition>'. Each carries a '__className' on its
+metatable and a ':match(actual)' method. The engine's generated
+'_match(actual, expected)' dispatcher (emitted into every lurker class
+and every event-query method by the transpiler) reads the '__className',
+routes to the comparator's ':match', and falls back to '==' for literals.
+
+   Glob(<pattern>)       Unix glob: '*', '?', '[...]'.
+   Approx(v, eps)        |actual - v| < eps.
+   Less(v)               actual <  v.
+   LessEq(v)             actual <= v.
+   Greater(v)            actual >  v.
+   GreaterEq(v)          actual >= v.
+   Eq(v)                 actual == v   (mostly redundant with bare literals).
+   UnEq(v)               actual ~= v.
+   Pattern(<pattern>)    Luau native string pattern ('%w', '%d', '^', '$', ...).
+
+A new comparator plugs in by setting '__className' and providing
+':match(actual)'. The engine dispatcher recognises it automatically;
+authors do not write the dispatch.
+
+   Example:
+       on TICK & { not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
+       => { driver.mode = "relax" }
+       off
+
+In a free Luau guard (one not routed through a query method), the author
+calls the comparator's ':match' directly:
+
+       on PING & { Glob("tester_?_intruder"):match(event.user) }
+       => INTRUSION(intruder = event.user)
+       off
+
+THE BAR FOR ADDING A HELPER
+
+The set of bootstrap helpers is small, fixed, engine-provided -- no
+third-party Luau libraries. The bar for adding one is "would every
+nontrivial test reinvent this?" 
+
