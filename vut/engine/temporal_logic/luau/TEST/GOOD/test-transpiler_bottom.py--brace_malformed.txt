@@ -1,0 +1,5 @@
+
+--- malformed ---
+source : '& { event.speed > ( } =>'
+FragmentSyntaxError raised (expected)
+at off : 2

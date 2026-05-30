@@ -1,0 +1,11 @@
+
+--- program ---
+--!strict
+local function add(a: number, b: number): number
+  return a + b
+end
+local _ = add(1, 2)
+
+
+--- diagnostics ---
+count: 0

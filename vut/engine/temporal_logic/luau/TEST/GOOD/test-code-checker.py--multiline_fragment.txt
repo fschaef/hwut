@@ -1,0 +1,13 @@
+
+--- program ---
+--!strict
+local function f(x: number) end
+local a = 1
+f("wrong")
+local b = 2
+
+
+--- diagnostics ---
+rules.tl:20:4: LocalUnused: Variable 'a' is never used; prefix with '_' to silence
+rules.tl:21:0: TypeError: Expected this to be 'number', but got 'string'
+rules.tl:22:4: LocalUnused: Variable 'b' is never used; prefix with '_' to silence

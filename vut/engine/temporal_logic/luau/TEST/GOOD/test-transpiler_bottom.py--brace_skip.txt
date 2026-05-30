@@ -1,0 +1,10 @@
+
+--- brace in string ---
+source : '=> { x = "a } b" } off'
+closer : 17 char '}'
+after  : ' off'
+
+--- brace in interp ---
+source : '=> { log(`t={x}`) } off'
+closer : 18 char '}'
+after  : ' off'

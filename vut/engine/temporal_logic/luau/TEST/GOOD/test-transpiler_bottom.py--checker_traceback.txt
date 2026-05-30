@@ -1,0 +1,12 @@
+
+--- fragment diagnostic ---
+rules.tl:30:1: TypeError: bad assignment
+
+--- boilerplate diagnostic ---
+[generated code: likely transpiler bug] TypeError at generated line 0 col 0: scaffolding fault
+
+--- other-file line ignored ---
+parsed: None
+
+--- echoed ./ path still matches ---
+matched: True

@@ -1,0 +1,247 @@
+===============================================================================
+REACTIVE RULE ENGINE  --  HWUT 2.0 Behavioural Trace Validator
+DESIGN DOCUMENT
+===============================================================================
+
+NAME
+  REACTIVE RULE ENGINE. Temporal properties are expressed as event-triggered, 
+  guarded reactions.
+
+COMPANION FILES
+  SYNTAX.txt        Concrete syntax of rule files and event traces.
+  DISCUSSIONS.txt   Running design log: resolved decisions, rationales, 
+                    and rejected alternatives.
+
+VOCABULARY
+  TIME LINE     The sequence of runtime input events (TRACE) and the engine's 
+                internal product.
+  TRACE         Concrete input time line parsed at run time.
+  RULE FILES    Plain-text rules authored by a human.
+  TRANSPILER    Python tool that parses rule files, executes static analysis, 
+                and emits the Luau ENGINE.
+  ENGINE        The generated standalone Luau application that processes a trace 
+                and prints a report.
+  OBJECT SPACE  The Luau table space containing all event, object, and lurker 
+                instances at run time.
+  LURKER        A declared, parameterized, dormant-until-armed rule unit.
+  FOCUS         An environment where only one lurker can be active at a time; 
+                activating a new one disables the current.
+  REPORT        The deterministic block of text printed by the engine for HWUT 
+                nominal recording comparison.
+
+-------------------------------------------------------------------------------
+1. PURPOSE AND SHAPE
+-------------------------------------------------------------------------------
+  The component produces a deterministic textual report of observed behavior 
+  for validation against a nominal recording via the HWUT harness.
+
+  THE TWO STAGES:
+    1. TRANSPILE: Python parses the rule files, runs static analysis, and emits 
+       a complete, self-contained Luau application.
+    2. RUN: The generated Luau engine reads a trace from a stream or file, 
+       evaluates the rules, and writes its output to stdout. 
+       The trace is purely runtime input and is never compiled into the 
+       application.
+
+  CORE CONSTRAINT
+    Portability. The transpiler is pure Python. The engine is generated 
+    Luau executing on a standard Luau interpreter. Per-event 
+    processing never crosses a language or process boundary.
+
+-------------------------------------------------------------------------------
+2. PIPELINE
+-------------------------------------------------------------------------------
+    RULE FILES (authored by a human)
+        |
+        |  STAGE 1 -- TRANSPILE (Python, once)
+        ├── parse rule files
+        ├── static analysis (cascade graph, name resolution)
+        └── emit standalone Luau application
+        v
+    ENGINE (generated Luau application)
+        |
+        |  STAGE 2 -- RUN (Luau, once per trace)
+        ├── TRACE input (ends with explicit END event)
+        ├── evaluate each event in temporal order:
+        │     ├── advance synthetic CLOCKs and emit pending events
+        │     ├── fire matching consequence rules
+        │     ├── fire live lurker instances
+        │     └── expand cascades at T and mutate objects
+        └── collect and process output streams
+        v
+    OUTPUT
+        ├── '##' debug stream: printed live during run (emission order)
+        └── REPORT block: printed after completion (sorted and deduplicated)
+
+-------------------------------------------------------------------------------
+3. THE MODEL
+-------------------------------------------------------------------------------
+  EVENTS
+    Ephemeral struct-like aggregates with typed fields. They exist only 
+    at the instant they occur. 'time' and 'dt' (delta since the previous 
+    event) are intrinsic fields of type 'number'. The pair (type, time) 
+    uniquely identifies an occurrence.
+
+  OBJECTS
+    Stateful aggregates persisting across time spans. Defined in the 
+    SETUP block using Luau via the 'Class.create' factory.
+
+  TIME LINE BOUNDS -- BEGIN AND END
+    Traces are framed by two implicit events: BEGIN fires immediately before the 
+    first trace event; END fires immediately after the last. 
+    An input trace must end with an explicit END event, otherwise the engine 
+    rejects the trace. ANY matches both boundary events.
+
+  TRACE TIMING
+    A trace must be uniformly EXPLICITLY-TIMED or CLOCK-TIMED; modes cannot 
+    be mixed. The engine never consults a system clock; 'dt' 
+    is always derived as the delta to the previous event's 'time'.
+
+  CLOCKS (Synthetic Time Generation)
+    The engine supports internal periodic event generation via CLOCKs. 
+    A CLOCK emits a specific event at a defined interval of synthetic time. 
+    It is evaluated whenever an external trace event arrives, calculating 
+    `delta_t` and emitting all pending clock events linearly up to the current 
+    trace event timestamp.
+
+-------------------------------------------------------------------------------
+4. ARCHITECTURE -- TRANSPILER AND ENGINE
+-------------------------------------------------------------------------------
+  CONTROL PLANE (Parsed by Transpiler)
+    Declarations, rule headers, triggers, and body verbs (=>, => +, => "...") 
+    utilizing statically literal event-type and lurker names.
+
+  DATA PLANE (Verbatim Luau text carried into Engine)
+    Member-function bodies, state-changing mutation blocks '{ }', guard 
+    expressions, and the SETUP body.
+
+  THE ONE-OBJECT-SPACE INVARIANT
+    There is exactly one object model: the Luau table space of the running 
+    engine process. Every event, object, and lurker instance exists 
+    exclusively there. 
+
+  IDENTITY & METATABLES
+    Events, Lurkers, and Foci are identified by transpiler-generated real 
+    metatables. Objects are constructed at SETUP time via the 'Class.create' 
+    factory. 
+
+  SANDBOXING & CAPABILITIES
+    The transpiler emits only the specific capabilities granted by the test 
+    configuration. The generated bootstrap injects 'Class', 'tracer', 
+    the metatables, and the predefined Comparator classes (Glob, Approx, 
+    Less, Eq, Pattern, etc.) for query matching.
+
+  WATCHDOG LIMITS
+    Luau execution arising from rule logic is bounded by a maximum instruction 
+    count configuration parameter enforced via the Luau VM count hook.
+
+  SOURCE MAPPING
+    The transpiler must emit Luau code carrying line directives or comments 
+    mapping back to the originating rule-file 'file:line'.
+
+  LUA HELPERS (Transpile-time companions to Python)
+
+    Located in the 'lua/' subdirectory:
+      find_end.lua  -- Persistent daemon resolving opaque Luau spans.
+      analyze.lua   -- One-shot batch tool executing reference analysis.
+      bootstrap.lua -- Runtime sandbox, factories, and value classes.
+      run.lua       -- Runtime engine harness and trace firing loop.
+      aux.lua       -- Shared Luau lexer / parser utilities.
+
+    See also: lua/README.txt
+
+-------------------------------------------------------------------------------
+5. CASCADES, TERMINATION, AND STATIC ANALYSIS
+-------------------------------------------------------------------------------
+  THE TERMINATION GUARANTEE
+    Within a single instant T, a given event type may occur at most once. 
+    Cascades monotonically consume the finite set of declared event types, 
+    guaranteeing termination even in cyclic graphs.
+
+  STATIC ANALYSIS CHECKS (Executed in Python via analyze.lua data)
+    - CHECK 1: CASCADE DEPTH (Warning). Computes the longest simple path in 
+      the cascade graph.
+    - CHECK 2: NAME RESOLUTION (Fatal). Verifies all event, lurker, and field 
+      names against declarations. Executes a sound guard read-only check 
+      (rejecting assignments or mutating builtins like table.insert). Unresolved 
+      names halt compilation.
+    - CHECK 3: REACHABILITY (Warning). Flags any rule whose trigger event type 
+      is unreachable, or any lurker that is never armed.
+
+-------------------------------------------------------------------------------
+6. RULES -- CONSEQUENCES, LURKERS, AND THE TRACER
+-------------------------------------------------------------------------------
+  CONSEQUENCES
+    Syntax: 'on <trigger> [ & <guard> ] => <consequence>+ off'. 
+    Body items include event emissions (`=>`), lurker arming (`=> +`), 
+    report strings (`=> "..."`), or state mutations (`=> { ... }`). 
+
+  LURKER LIFECYCLE
+    - Arming: `=> + LURKER(params)` instantiates a class. Identity is defined 
+      by the parameter list. Duplicate armings of an existing identity are 
+      silent no-ops.
+    - Stamped State: The engine intrinsically stamps every instance with 
+      `lurker.begin_time` and `lurker.begin_event_index`.
+    - Execution Bindings: Fired rules inside a lurker expose `event` and 
+      `lurker` bindings.
+    - Hooks: Optional `construct { ... }` runs once on creation. 
+      Optional `destruct { ... }` runs once when an 'until' condition triggers 
+      or trace completes.
+    - Global Lurker: An internal singleton processes top-level rules.
+
+  POLYMORPHIC QUERIES (Lurkers and Events)
+    Both Lurker instances and traced Event histories share a unified query 
+    interface routed through a generated `_match` dispatcher:
+    - Lists: `:list(conditions)`
+    - Booleans: `:has()`, `:any()`, `:all()`, `:none()`, `:empty()`
+    - Temporal: `:last()`, `:since()`
+    Conditions accept literal values or injected Comparator classes (`Glob()`, 
+    `Approx()`, etc.).
+
+  THE TRACER
+    Events can only be queried if configured in the SETUP block:
+      `tracer.watch(EVENT, [by=key], [last=count])`
+    Querying an untraced event type, or using incompatible key attributes, 
+    triggers a transpile-time FATAL error.
+
+-------------------------------------------------------------------------------
+7. THE REPORT AND LOGGING
+-------------------------------------------------------------------------------
+  REPORT ASSEMBLY (`=> "..."`)
+    Report strings are evaluated using Luau string interpolation. Lines are 
+    buffered during the execution path. Upon trace completion, the entire 
+    block is alphabetically sorted and uniqueness-filtered (deduplicated) to 
+    ensure absolute output determinism.
+
+  THE '##' DEBUG STREAM
+    Standard Luau `print()` statements are intercepted live during execution, 
+    automatically prefixed with '##', and pushed immediately to stdout. They 
+    are ignored during HWUT nominal comparison.
+
+  THE DIAGNOSTIC LOG
+    The engine maintains an internal, bounded circular buffer log recording every 
+    fired rule with its corresponding 'file:line' mapping and timestamp. 
+
+-------------------------------------------------------------------------------
+8. ENCODING PATTERNS
+-------------------------------------------------------------------------------
+  Temporal operators are replaced by evaluation arithmetic over the intrinsic 
+  `time` and `dt` fields within standard boolean guards:
+    - BOUNDED RESPONSE: Arm a lurker on event X; evaluate violations against 
+      `lurker.begin_time + N`; clear early via `until Y`.
+    - ABSENCE: Evaluate a deadline with a boolean flag state.
+    - DEBOUNCE: Resolve via conflicting `until` clauses tracking the success 
+      condition and the timeout boundary.
+    - MUTUAL EXCLUSION: Guarded check on `ANY` event type.
+
+-------------------------------------------------------------------------------
+9. INTEGRATION SURFACE
+-------------------------------------------------------------------------------
+  TRANSPILER INTERFACE (Python)
+    `transpile(rule_files, capability_config) -> luau_application | errors`
+
+  ENGINE INTERFACE (Luau)
+    Executed via system call feeding a trace stream. Output maps chronological 
+    `##` debug lines first, followed by the finalized deterministic REPORT block.
+
+===============================================================================

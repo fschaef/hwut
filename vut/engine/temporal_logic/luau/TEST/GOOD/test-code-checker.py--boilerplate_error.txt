@@ -1,0 +1,13 @@
+
+--- program ---
+--!strict
+local function f(x: number) end
+f("in scaffolding")
+local x = 1
+
+
+--- diagnostics ---
+is_generated: True
+[generated code: likely transpiler bug] TypeError at generated line 2 col 2: Expected this to be 'number', but got 'string'
+is_generated: False
+rules.tl:99:6: LocalUnused: Variable 'x' is never used; prefix with '_' to silence

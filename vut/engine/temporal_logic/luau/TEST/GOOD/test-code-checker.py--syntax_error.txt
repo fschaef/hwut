@@ -1,0 +1,10 @@
+
+--- program ---
+--!strict
+do
+  local x = 1
+
+
+--- diagnostics ---
+rules.tl:8:8: LocalUnused: Variable 'x' is never used; prefix with '_' to silence
+[generated code: likely transpiler bug] SyntaxError at generated line 3 col 0: Expected 'end' (to close 'do' at line 2), got <eof>
