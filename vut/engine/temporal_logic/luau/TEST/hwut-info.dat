@@ -1,6 +1,10 @@
-Transpiler Bottom Layer
+Luau Bottom Layer
 ---------------------------------------------------------------
 
 coverage run --omit ./*.py -a *.py
+./call_luau.sh *.lua 
 
 --not config.py
+--not test_support.lua
+--not bootstrap.lua
+--not hwut_runner_mini.lua

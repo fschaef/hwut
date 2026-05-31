@@ -1,0 +1,7 @@
+
+--- Pattern(pattern) matched against actual ---
+^%d+$    vs 123    -> yes
+^%d+$    vs 12a    -> no
+%w+      vs word   -> yes
+^%u      vs Abc    -> yes
+^%u      vs abc    -> no

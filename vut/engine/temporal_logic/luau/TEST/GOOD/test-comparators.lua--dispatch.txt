@@ -1,0 +1,9 @@
+
+--- literal expected -> equality ---
+_match(5, 5)          = yes
+_match(5, 6)          = no
+_match('a', 'a')      = yes
+
+--- comparator expected -> :match ---
+_match(5, Greater(3)) = yes
+_match(5, Greater(9)) = no

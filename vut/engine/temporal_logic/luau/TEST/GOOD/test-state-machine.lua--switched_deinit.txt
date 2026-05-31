@@ -1,0 +1,4 @@
+
+--- switch SLEEP out by arming RUN ---
+SLEEP deinit, switched=yes
+SLEEP empty       = yes

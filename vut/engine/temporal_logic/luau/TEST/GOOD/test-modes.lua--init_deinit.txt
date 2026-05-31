@@ -1,0 +1,7 @@
+
+--- arm -> init ---
+init req=7
+
+--- until fires -> deinit ---
+deinit req=7
+empty after cease = yes

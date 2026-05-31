@@ -1,0 +1,5 @@
+
+--- engine-stamped members ---
+req               = 42
+begin_time        = 12.5
+begin_event_index = 3

@@ -1,0 +1,8 @@
+
+--- signal returns the stamped instance ---
+returned time = 3
+returned ip   = 1.1.1.1
+
+--- signalled occurrence is now in history ---
+count    = 1
+has(ip=1.1.1.1) = yes

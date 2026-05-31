@@ -1,0 +1,9 @@
+
+--- Glob(pattern) matched against actual ---
+tester_?_intruder    vs tester_4_intruder    -> yes
+tester_?_intruder    vs tester_44_intruder   -> no
+192.168.*            vs 192.168.0.1          -> yes
+192.168.*            vs 10.0.0.1             -> no
+file[0-9]            vs file7                -> yes
+file[0-9]            vs fileX                -> no
+abc                  vs abcd                 -> no

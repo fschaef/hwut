@@ -1,0 +1,7 @@
+
+--- arm SLEEP, then switch to RUN ---
+active is SLEEP   = yes
+SLEEP live        = yes
+active is RUN     = yes
+SLEEP live        = no
+RUN live          = yes

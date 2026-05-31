@@ -1,0 +1,5 @@
+
+--- event matches the first until ---
+until fired       = yes
+checked until #1
+second consulted  = no
