@@ -1,0 +1,6 @@
+
+--- missing 'off' before next top-level keyword ---
+items recovered:
+   EventDef
+diagnostics:
+  PARSER   fatal=False off=15  expected KW_OFF, found KW_EVENT

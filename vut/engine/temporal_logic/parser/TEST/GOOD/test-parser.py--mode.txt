@@ -1,0 +1,8 @@
+
+--- mode with init, member rule, and until ---
+Mode Blink params=0 init=Y deinit=Y causalities=1 untils=1
+  Causality
+    Cause event=Tick no-guard
+    EventSpec Toggle(0 arg)
+  Cause keyword=ANY no-guard
+diagnostics: (none)

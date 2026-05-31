@@ -1,0 +1,9 @@
+
+--- all four effect kinds in one rule ---
+Causality
+  Cause event=Tick no-guard
+  EventSpec Beep(1 arg)
+  ModeArming +Blink(0 arg)
+  ReportString '"tick {event.n}"'
+  Mutation role=STATEMENT_BLOCK '{ sm.n = sm.n + 1 }'
+diagnostics: (none)

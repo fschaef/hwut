@@ -8,3 +8,7 @@ after  : ' off'
 source : '=> { log(`t={x}`) } off'
 closer : 18 char '}'
 after  : ' off'
+
+--- brace in single-quote ---
+source : "=> { if (a == '}') { print('nested') } }"
+caught:  FragmentSyntaxError

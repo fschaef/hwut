@@ -131,6 +131,8 @@ class PatternFinder:
         self.potpourri_begin_end_marker = config.potpourri_begin_end_marker
 
         # Master Regex Compilation
+        # <= One master regular expression where particular
+        #    expressions are identified by group name: "(?P<{group_name}>{re_str})"
         master_str = "|".join(re_parts) if re_parts else r"$.^"
         self.master_re = re.compile(master_str)
 

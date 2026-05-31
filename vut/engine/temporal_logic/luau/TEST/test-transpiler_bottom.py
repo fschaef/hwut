@@ -69,13 +69,18 @@ def run_brace_skip():
     """RETURN: None. Braces inside strings and interpolation holes are skipped."""
     for label, source in [
             ("brace in string", '=> { x = "a } b" } off'),
-            ("brace in interp", "=> { log(`t={x}`) } off")]:
+            ("brace in interp", "=> { log(`t={x}`) } off"),
+            ("brace in single-quote", "=> { if (a == '}') { print('nested') } }") 
+        ]:
         banner(label)
         print("source :", repr(source))
-        end = find_matching_brace(source, source.index("{"),
-                                  Role.STATEMENT_BLOCK, ORACLE)
-        print("closer :", end, "char", repr(source[end]))
-        print("after  :", repr(source[end + 1:]))
+        try:
+            end = find_matching_brace(source, source.index("{"),
+                                      Role.STATEMENT_BLOCK, ORACLE)
+            print("closer :", end, "char", repr(source[end]))
+            print("after  :", repr(source[end + 1:]))
+        except Exception as e:
+            print("caught: ", e.__class__.__name__)
 
 
 def run_brace_malformed():

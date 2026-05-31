@@ -1,0 +1,6 @@
+
+--- guard=CONDITION, rvalue=EXPRESSION, body=STATEMENT_BLOCK ---
+guard role:    CONDITION
+rvalue is_luau: True role: EXPRESSION
+mutation role: STATEMENT_BLOCK
+diagnostics: (none)

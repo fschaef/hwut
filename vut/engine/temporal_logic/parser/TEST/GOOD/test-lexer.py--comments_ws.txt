@@ -1,0 +1,6 @@
+
+--- comment lines and blank lines are skipped ---
+KW_ON        [ 21:23 ] 'on'
+ID           [ 24:28 ] 'Tick'
+KW_OFF       [ 51:54 ] 'off'
+END_OF_FILE  [ 55:55 ] ''

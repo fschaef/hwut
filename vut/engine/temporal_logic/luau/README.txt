@@ -1,188 +1,192 @@
+===============================================================================
 LUAU SUPPORT MODULES
-====================
+===============================================================================
 
-Three modules in 'luau/' provide the Luau-language boundary for the
-transpiler: span termination, source-to-target location mapping, and
-generated-code type checking. Together they form a pipeline:
+Three modules under 'luau/' provide the compilation boundary for the 
+transpiler: span termination, source-to-target location mapping, and 
+generated-code type checking. Together they form an integrated pipeline:
 
     rule-file text
-         |
-         | find_matching_brace()          [luau_fragment.py]
-         v
+         │
+         ├── find_matching_brace()              [luau_fragment.py]
+         ▼
     (open_offset, end_offset)
-         |
-         | register_fragment()            [location_mapper.py]
-         v
+         │
+         ├── register_fragment()                [location_mapper.py]
+         ▼
     Source2TargetLocationMapper
-         |
-         | analyze_text() / analyze_path() [generated_code_checker.py]
-         v
-    [Diagnostic, ...]  --  format_diagnostic()  -->  error message
+         │
+         ├── analyze_text() / analyze_path()    [generated_code_checker.py]
+         ▼
+    [Diagnostic, ...] ── format_diagnostic() ──> error message
 
 
-0. Luau bootstrap
+===============================================================================
+QUICK START & PUBLIC ENTRY POINTS
+===============================================================================
 
-    bootstrap.lua
-    │
-    ├── _match(actual, expected)                    -- the one core comparator router
-    │
-    ├── Comparators (Glob…Pattern)                  -- each: __className + :match(actual)
-    │
-    ├── Queryable                                   -- 8 methods; needs only _instances()
-    │      ├── Event class      (per event kind)    -- _instances() = its Tracer ring
-    │      └── Mode registry     (per mode kind)    -- _instances() = live instances
-    │
-    ├── Space : owns the Tracer; factory for event classes bound to it
-    │      ├── Space.new()                          -- instantiates its own Tracer
-    │      └── Space:new_event_class(name)          -- Queryable event class, time/dt;
-    │                                                  bound to this Space; NO init/deinit
-    │
-    ├── ModeBase : Queryable-backed registry + Lifecycle
-    │      │            (begin_time/begin_event_index, idempotent identity,
-    │      │             until-list iteration w/ first-wins, init/deinit dispatch)
-    │      └── StateMachineBase : owns member modes, single-active + 'switched',
-    │                             default/VOID, own init/deinit, 'sm' binding
-    │
-    └── Tracer : watch(kind, last); record() pushes into one flat ring per type
-                 (no attribute keying); an event class queries this ring
+1. SCANNING OPAQUE SPANS (luau/luau_fragment.py)
 
--------------------------------------------------------------------------------
+Isolate verbatim Luau snippets inside a rule-file by identifying the exact 
+closing '}' relative to an opening '{'. Braces inside Luau strings, long-bracket 
+comments, or template blocks are cleanly bypassed using a parser oracle loop.
+
+SIGNATURE:
+  find_matching_brace(source: str, open_offset: int, role: Role, oracle: object) -> int
+
+USAGE:
+  from luau.luau_fragment import find_matching_brace, Role, LuauOracle
+  
+  oracle = LuauOracle(binary="luau-ast")
+  closing_idx = find_matching_brace(
+      source=rule_file_content, 
+      open_offset=left_brace_index, 
+      role=Role.CONDITION, 
+      oracle=oracle
+  )
+
+
+2. PROVENANCE & LOCATION TRACKING (luau/location_mapper.py)
+
+Track the relationship between the target generated file lines and the original 
+rule-file locations out-of-band (since Luau lacks a '#line' pragma).
+
+SIGNATURES:
+  .advance(line_count: int) -> None
+  .register_fragment(source_file: str, source_line: int, length: int, 
+                     indent: int = 0, first_line_prefix: int = 0) -> int
+  .source_line_of(target_line: int, target_column: int = 0) -> SourceLocation | None
+
+USAGE:
+  from luau.location_mapper import Source2TargetLocationMapper
+  
+  mapper = Source2TargetLocationMapper()
+  
+  # For transpiler-generated boilerplate lines:
+  mapper.advance(line_count=5)
+  
+  # For a verbatim copied fragment block:
+  placed_at = mapper.register_fragment(
+      source_file="rules.vut", source_line=12, length=3, indent=4
+  )
+
+
+3. STATIC TYPE-CHECKING & ERROR ATTRIBUTION (luau/generated_code_checker.py)
+
+Execute 'luau-analyze' over the full generated code context and accurately map 
+any returned compiler error lines back to either the rule-file author or the 
+transpiler infrastructure itself.
+
+SIGNATURES:
+  .analyze_text(target_text: str) -> list[Diagnostic]
+  .analyze_path(target_path: str) -> list[Diagnostic]
+  format_diagnostic(diag: Diagnostic) -> str
+
+USAGE:
+  from luau.generated_code_checker import GeneratedCodeChecker, format_diagnostic
+  
+  checker = GeneratedCodeChecker(mapper=mapper, binary="luau-analyze")
+  diagnostics = checker.analyze_text(target_text=assembled_output)
+  
+  for diag in diagnostics:
+      print(format_diagnostic(diag))
+
+
+===============================================================================
+0. SUBSTRATE DESIGN MAP ("bootstrap.lua")
+===============================================================================
+
+    │
+    ├── (1) COMPARISON CORE -- _match and comparator value classes
+    │      ├── _match(actual, expected)             -- Routing core: checks for metatable '__className'
+    │      │                                           and ':match', falls back to Luau '=='
+    │      ├── _comparator(class_name, match_fn)    -- Value class factory returning a callable
+    │      └── Built-in Comparators                 -- Glob, Pattern, Approx, Less, LessEq,
+    │                                                  Greater, GreaterEq, Eq, UnEq
+    │
+    ├── (2) QUERYABLE -- the eight-method query interface
+    │      │            (Requires subclass to override :_instances())
+    │      ├── _instance_matches(inst, conditions)  -- Multi-field checker routing through _match
+    │      ├── :list / :has / :any / :all           -- Evaluates match sets (empty tables are truthy)
+    │      ├── :none / :empty                       -- Logical inverses and emptiness validation
+    │      ├── :last                                -- Newest-to-oldest scan (last element of array)
+    │      └── :since(now, conditions)              -- Measures elapsed time from :_moment()
+    │
+    ├── (3a) SPACE + EVENT BASE -- runtime context boundary
+    │      ├── Space.new()                          -- Context boundary; instantiates its own Tracer
+    │      ├── Space:new_event_class(name)          -- Factory for Queryable event classes:
+    │      │     │                                     overrides :_instances() to resolve the tracer ring,
+    │      │     │                                     overrides :_moment() to return event 'time'
+    │      │     ├── .new(fields, time, dt)         -- Stamping constructor
+    │      │     └── .signal(fields, time, dt)      -- Pushes directly into the Space's Tracer
+    │      └── EventBase                            -- Shared base without init/deinit lifecycles
+    │
+    ├── (3b) MODE BASE -- lifecycle + registry
+    │      └── .new_mode_class(name)                -- Base container with a live set and until-causes
+    │            ├── :_instances()                  -- Queryable contract; yields the live set
+    │            ├── ._identity(params, order)      -- Param-joining null-separated key identity
+    │            ├── .arm(params, ...)              -- Idempotent arming; runs 'init' once per unique key
+    │            ├── .cease(self)                   -- Removes from live set, runs 'deinit' hook
+    │            ├── :check_until(event)            -- Runs declarative until-checkers (first-wins)
+    │            └── :add_until(checker)            -- Appends until-cause functions
+    │
+    ├── (3c) STATE-MACHINE BASE -- single-active habitat
+    │      └── .new_state_machine_class(name)       -- Extends Mode Base; guarantees mutual exclusion
+    │            ├── .set_default(arm_fn)           -- Sets implicit fallback arming (or VOID)
+    │            ├── .switch_to(incoming)           -- Marks outgoing as switched and triggers .cease()
+    │            └── .ensure_active()               -- Enforces single-active invariant post-cessation
+    │
+    └── (4) TRACER -- opt-in event history
+           ├── Tracer.new()                         -- History ring container (default size = 1)
+           ├── Tracer:watch(kind, last)             -- Registers coverage to close silent-nil bugs
+           └── Tracer:record(event)                 -- Pushes occurrence and trims front to fit size bound
+
+
+===============================================================================
+COMPONENT MODULE REFERENCE
+===============================================================================
+
 1. luau/luau_fragment.py
 -------------------------------------------------------------------------------
+* Mechanism: Bypasses character-by-character string/comment parsing by iteratively 
+  extracting potential code snippets between '{' and sequentially discovered '}' characters. 
+  The text gets safely wrapped in role-specific framing structures and parsed via a 
+  headless 'luau-ast' process execution loop. The first structural match that compiles 
+  successfully cleanly exposes the true target span boundary.
 
-A rule-file span is an opaque Luau fragment delimited by '{' and a matching
-'}'. The matching '}' is located by 'find_matching_brace'.
+* Role Classification:
+    - CONDITION: Framing prefix/suffix handles conditional rule guards.
+    - EXPRESSION: Evaluates decoupled single rvalues smoothly.
+    - STATEMENT_BLOCK: Isolates large function body procedures seamlessly.
 
-  find_matching_brace(source, open_offset, role, oracle) -> int
-
-    'source'       -- the full rule-file text as a string.
-    'open_offset'  -- index in 'source' of the opening '{'.
-    'role'         -- Role.CONDITION, Role.EXPRESSION, or Role.STATEMENT_BLOCK.
-                     Selects the wrapper applied to each candidate span.
-    'oracle'       -- object with a 'parse(text) -> ParseResult' method.
-                     The standard oracle is LuauOracle().
-
-    Returns the index in 'source' of the matching '}'.
-
-    Raises FragmentSyntaxError(message, open_offset) when no candidate '}'
-    produces a parseable fragment. 'open_offset' on the exception locates the
-    opening brace in 'source'.
-
-    Raises OracleError(message) on an infrastructure failure of the oracle
-    subprocess.
-
-  Role (enum)
-
-    CONDITION       -- guard expression: '& { <expr> }'
-    EXPRESSION      -- rvalue:           '{ <luau-expr> }'
-    STATEMENT_BLOCK -- body:             '=> { <stmts> }', init, deinit,
-                                         on BEGIN, on END
-
-  LuauOracle(binary="luau-ast")
-
-    Standard oracle. Instantiate once; pass to every call of
-    'find_matching_brace'. 'binary' is the path to the 'luau-ast' executable.
-
-  ParseResult
-
-    Returned by an oracle's 'parse' method. Fields: 'ok' (bool), 'error' (str
-    or None). Custom oracles must return this type.
+* Exceptional Handling Paths:
+    - FragmentSyntaxError: Dispatched on invalid source blocks with clear 
+      left brace file boundaries.
+    - OracleError: System-level execution or timeout failure exceptions.
 
 
--------------------------------------------------------------------------------
 2. luau/location_mapper.py
 -------------------------------------------------------------------------------
+* Mechanism: Line counts remain directly equivalent between source fragments and 
+  destination documents, allowing linear translation shifts. Emitted content pieces 
+  sequentially register explicit block intervals to handle precise column shifts caused 
+  by arbitrary block alignment indentation.
 
-The transpiler emits a generated Luau file composed of boilerplate lines and
-verbatim-copied fragment lines. 'Source2TargetLocationMapper' records the
-mapping from target line numbers back to origin locations in the rule file.
-The mapper is driven in emission order: one call per emitted piece.
-
-  Source2TargetLocationMapper()
-
-    Construct once at the start of emission. Drive it as each line is emitted.
-
-  .advance(line_count)
-
-    Account for 'line_count' generated lines (boilerplate, blank lines,
-    provenance comments). These lines have no source origin and resolve to None
-    on lookup.
-
-  .register_fragment(source_file, source_line, length,
-                     indent=0, first_line_prefix=0) -> int
-
-    Register a verbatim fragment of 'length' lines at the current cursor.
-    Returns the target line number at which the fragment was placed.
-
-    'source_file'       -- rule-file path, used in Diagnostic.source.file.
-    'source_line'       -- zero-based line in 'source_file' of the fragment's
-                          first line.
-    'length'            -- number of lines in the fragment. Must equal the
-                          number of lines emitted for this fragment.
-    'indent'            -- column at which every emitted fragment line begins.
-    'first_line_prefix' -- extra width emitted before the fragment on its first
-                          line only (e.g. 3 for an 'if ' prefix). Zero when the
-                          fragment begins its own line.
-
-  .source_line_of(target_line, target_column=0) -> SourceLocation | None
-
-    Resolve a target location to its origin. Returns None when 'target_line'
-    falls on a boilerplate line registered via 'advance'.
-
-  .target_line_count -> int
-
-    Total number of target lines accounted for so far (advanced + registered).
-
-  SourceLocation
-
-    Returned by 'source_line_of'. Fields: 'file' (str), 'line' (int),
-    'column' (int). All values are zero-based.
+* Functional Protocols:
+    - .advance(): Advances cursor parameters across generated compiler boilerplate lines.
+    - .register_fragment(): Records physical boundaries for source files and 
+      returns target offsets.
+    - .source_line_of(): Looks up line targets, mapping compiler boilerplate errors to None.
 
 
--------------------------------------------------------------------------------
 3. luau/generated_code_checker.py
 -------------------------------------------------------------------------------
+* Mechanism: Processes complete text or saved paths with raw 'luau-analyze' process calls 
+  to execute deep structural verification. Errors landing inside verified intervals 
+  are output with an explicit origin prefix; any errors landing outside intervals 
+  flag internal transpiler bugs.
 
-'GeneratedCodeChecker' runs 'luau-analyze' on the assembled target text and
-maps every diagnostic back to its origin via a 'Source2TargetLocationMapper'.
-
-  GeneratedCodeChecker(mapper, binary="luau-analyze")
-
-    'mapper' -- the 'Source2TargetLocationMapper' built during emission. It
-               must describe the same text that is passed to 'analyze_text' or
-               'analyze_path'.
-    'binary' -- path to the 'luau-analyze' executable.
-
-  .analyze_text(target_text) -> [Diagnostic]
-
-    Write 'target_text' to a temporary file, run 'luau-analyze', and return
-    the mapped diagnostics. 'target_text' must be exactly the text described
-    by 'mapper', including any '--!strict' or other directives as their own
-    emitted lines.
-
-  .analyze_path(target_path) -> [Diagnostic]
-
-    Run 'luau-analyze' on an existing file. The file must be exactly the text
-    described by 'mapper'.
-
-    Both methods return an empty list on a clean run. Both raise
-    'AnalyzerError(message)' on an infrastructure failure.
-
-  Diagnostic
-
-    Fields:
-      'kind'            -- analyzer category string ('TypeError',
-                          'SyntaxError', 'LocalUnused', ...).
-      'message'         -- analyzer diagnostic text.
-      'source'          -- SourceLocation in the rule file, or None when the
-                          diagnostic falls on a boilerplate line.
-      'target_line'     -- zero-based line in the generated file.
-      'target_column'   -- zero-based column in the generated file.
-      'is_in_generated_code' -- True when 'source' is None.
-
-  format_diagnostic(diag) -> str
-
-    Render 'diag' as a single human-readable line.
-    Author diagnostics: '<file>:<line>:<col>: <kind>: <message>'.
-    Generated-code diagnostics: '[generated code: likely transpiler bug]
-    <kind> at generated line <n> col <n>: <message>'.
+* Diagnostic Outputs:
+    - Author Error Formatting: '<file>:<line>:<col>: <kind>: <message>'.
+    - Transpiler Error Formatting: '[generated code: likely transpiler bug] 
+      <kind> at generated line <n> col <n>: <message>'.

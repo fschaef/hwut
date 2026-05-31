@@ -1,0 +1,12 @@
+Testing the rule-file Lexer and Parser for the reactive rule engine.
+Lexer: tokenizing, oracle handoff, error recovery, source positions.
+Parser: AST construction for every construct, Luau role assignment,
+resync-based error recovery.
+---------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not common.py
+--not config.py
+--not hwut_runner_shim.py
+--not fake_luau_oracle.py

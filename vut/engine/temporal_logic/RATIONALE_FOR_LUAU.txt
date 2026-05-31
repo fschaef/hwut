@@ -1,0 +1,64 @@
+===========================================================================
+RATIONALE: LUAU AS THE BACKBONE FOR A TEMPORAL LOGIC / REACTIVE ENGINE
+===========================================================================
+
+1. WHY A DOMAIN-SPECIFIC LANGUAGE (DSL) TRANSPILES TO LUAU
+---------------------------------------------------------------------------
+* Abstraction of Temporal Logic: Raw temporal and reactive expressions 
+  are complex to implement manually in imperative code. A DSL provides 
+  declarative syntax for events, modes, and state machines.
+* Decoupling from Target Syntax: The DSL abstracts state-machine semantics 
+  and first-wins 'until' logic, leaving the transpiler to generate the precise, 
+  low-level operational code.
+* Static Verification Guard: The DSL compiler validates syntax, checks types, 
+  and enforces constraints (e.g., rejecting queries on unwatched events) 
+  before code execution, eliminating a large class of runtime bugs.
+
+
+2. STRICT SANDBOXING & SYSTEM SECURITY
+---------------------------------------------------------------------------
+* Total I/O Isolation: Complete removal of the 'io' library, 'dofile', 
+  and 'loadfile' guarantees that executed unit tests cannot corrupt the 
+  host system, access unauthorized files, or execute rogue system binaries.
+* Controlled Environment: Stripped-down 'os' and 'debug' libraries prevent 
+  memory-unsafe operations, runtime escapes, or environment manipulation 
+  during automated simulation runs.
+* Read-Only Globals: Protection against global 'monkey-patching' prevents 
+  tests from cross-contaminating shared libraries or changing runtime 
+  behavior mid-suite.
+
+
+3. HIGH-PERFORMANCE EXECUTION SPEED
+---------------------------------------------------------------------------
+* Fast Interp/JIT Architecture: Luau's heavily optimized interpreter and 
+  Just-In-Time (JIT) compilation provide massive throughput, essential 
+  for handling tight, repetitive execution loops in heavy test frameworks.
+* Efficient Value Types: Lightweight table construction and efficient 
+  metatable routing ensure that continuous data injection (like event logging 
+  into flat rings) incurs minimal overhead.
+* Predictable Memory Footprint: Avoidance of heavy runtime machinery or 
+  complex object allocation paths keeps garbage collection pauses tight 
+  and predictable during long-running testing cycles.
+
+
+4. GRADUAL TYPE SYSTEM
+---------------------------------------------------------------------------
+* Stricter Code Generation: The transpiler targets Luau's type-checking 
+  layer to ensure that generated events and mode attributes conform to 
+  fixed, structured type constraints.
+* Early Bug Detection: Catching structural or type mismatches during the 
+  static analysis phase saves costly debugging time during large-scale 
+  automated simulation runs.
+* Zero Runtime Overhead: Type annotations serve as data for safety during 
+  compilation but dissolve during execution, maintaining raw performance.
+
+
+5. ALIGNMENT WITH REACTIVE/TEMPORAL PARADIGMS
+---------------------------------------------------------------------------
+* Lightweight Object Model: Luau's clean metatable structure enables an 
+  efficient implementation of '_match' operators and Queryable inheritance 
+  (:list, :any, :since) without heavy class systems.
+* Deterministic Behavior: Single-threaded execution models mirror 
+  synchronous hardware simulation clocks and predictable state transitions 
+  perfectly, without the race-condition risks of standard multithreaded 
+  runtimes.

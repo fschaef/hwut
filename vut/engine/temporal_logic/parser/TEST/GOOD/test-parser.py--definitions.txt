@@ -1,0 +1,8 @@
+
+--- event declaration with two parameters ---
+EventDef Move(dx:int, dy:int)
+diagnostics: (none)
+
+--- clock declaration ---
+ClockDef Tick period=100
+diagnostics: (none)

@@ -107,7 +107,6 @@ def _wrapper_for(role):
 # ---------------------------------------------------------------------------
 # The oracle boundary.
 # ---------------------------------------------------------------------------
-
 class LuauOracle:
     """Parses Luau text via the 'luau-ast [file]' subprocess.
 

@@ -1,0 +1,9 @@
+
+--- unbalanced parenthesis in a guard fragment ---
+AND          [  0:1  ] '&'
+LUAU_BLOCK   [  2:11 ] '{ ( foo }'
+ARROW        [ 12:14 ] '=>'
+KW_OFF       [ 15:18 ] 'off'
+END_OF_FILE  [ 18:18 ] ''
+error_f: True
+LEXER    fatal=False off=2   malformed Luau fragment: unclosed '('
