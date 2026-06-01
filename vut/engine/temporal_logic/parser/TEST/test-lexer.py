@@ -13,7 +13,7 @@ The Lexer is pull-driven: the parser calls next() per control-plane token and
 read_luau_block(role) at each '{'. These choices pin its observable behaviour.
 
     tokens              Every keyword, operator, literal, and identifier maps
-                        to the expected E_Token, with correct source spans.
+                        to the expected E_TokenId, with correct source spans.
     dotted_names        '.' is its own DOT token; a dotted name lexes as
                         ID DOT ID, and a trailing 'VOID' surfaces as KW_VOID
                         rather than being swallowed into an identifier.
@@ -36,11 +36,11 @@ ______________________________________________________________________________
 import sys
 import config                                                       # noqa: F401
 
-from vut.engine.temporal_logic.luau.luau_fragment    import Role
-from vut.language_support.python.hwut_runner         import HwutRunner
-from vut.engine.temporal_logic.parser.lexer          import Lexer, SourceMap, E_Token
-from vut.engine.temporal_logic.parser.diagnostic     import DiagnosticReporter
-from vut.engine.temporal_logic.parser.TEST.fake_luau_oracle import FakeLuauOracle
+from vut.language_support.python.hwut_runner      import HwutRunner
+from vut.engine.temporal_logic.parser.lexer       import Lexer, SourceMap, E_TokenId
+from vut.engine.temporal_logic.parser.diagnostic  import DiagnosticReporter
+from vut.engine.temporal_logic.luau.luau_fragment import Role
+from fake_luau_oracle import FakeLuauOracle
 
 
 def banner(label):
@@ -63,14 +63,14 @@ def drive(text, role=Role.STATEMENT_BLOCK, record=False):
     tokens   = []
     while True:
         tok = lexer.next()
-        if tok.kind == E_Token.LUAU_OPEN:
+        if tok.kind == E_TokenId.LUAU_OPEN:
             block = lexer.read_luau_block(tok, role)
             if block is None:
                 break
             tokens.append(block)
             continue
         tokens.append(tok)
-        if tok.kind == E_Token.END_OF_FILE:
+        if tok.kind == E_TokenId.END_OF_FILE:
             break
     return tokens, reporter, lexer
 
@@ -94,13 +94,13 @@ def show_diagnostics(reporter):
 def run_tokens():
     """RETURN: None. Each token kind maps as expected, with correct spans."""
     banner("keywords and structure")
-    src = ("on mode state_machine until event clock off "
-           "ANY BEGIN END switched default init deinit VOID")
+    src = ("on mode mode_group state_machine state has as until end "
+           "event clock ANY BEGIN END switched default init deinit VOID")
     tokens, _, _ = drive(src)
     show_tokens(tokens)
 
     banner("operators and symbols")
-    tokens, _, _ = drive("=> & = : , + ; . ( )")
+    tokens, _, _ = drive("=> & = : , +! -! ! ; . ( )")
     show_tokens(tokens)
 
     banner("literals and identifiers")
@@ -128,7 +128,7 @@ def run_comments_ws():
     banner("comment lines and blank lines are skipped")
     src = ("## a leading comment\n"
            "on Tick   ## trailing comment\n"
-           "off\n")
+           "=> Beep()\n")
     tokens, _, _ = drive(src)
     show_tokens(tokens)
 
@@ -160,7 +160,7 @@ def run_oracle_handoff():
 def run_mismatch():
     """RETURN: None. Illegal char is reported non-fatal and returned as MISMATCH."""
     banner("stray '?' between valid tokens")
-    tokens, reporter, lexer = drive("on ? off")
+    tokens, reporter, lexer = drive("on ? end")
     show_tokens(tokens)
     print("error_f:", lexer.error_f)
     show_diagnostics(reporter)
@@ -171,7 +171,7 @@ def run_malformed_fragment():
     banner("unbalanced parenthesis in a guard fragment")
     # '( foo' never balances for any candidate '}', so the oracle rejects all;
     # find_matching_brace raises FragmentSyntaxError and the lexer recovers.
-    tokens, reporter, lexer = drive("& { ( foo } => off", role=Role.CONDITION)
+    tokens, reporter, lexer = drive("& { ( foo } => end", role=Role.CONDITION)
     show_tokens(tokens)
     print("error_f:", lexer.error_f)
     show_diagnostics(reporter)
@@ -180,7 +180,7 @@ def run_malformed_fragment():
 def run_source_map():
     """RETURN: None. Offsets resolve to 1-based line/column, across Luau spans."""
     banner("line/column of selected offsets")
-    text = "on Tick\n  => { a =\n       1 }\noff\n"
+    text = "on Tick\n  => { a =\n       1 }\nend\n"
     smap = SourceMap(text)
     #            offset : what is there
     points = [
@@ -196,7 +196,7 @@ def run_source_map():
 
     banner("the Luau block the lexer skipped still resolves")
     tokens, _, _ = drive(text)
-    block = [t for t in tokens if t.kind == E_Token.LUAU_BLOCK][0]
+    block = [t for t in tokens if t.kind == E_TokenId.LUAU_BLOCK][0]
     bl, bc = smap.line_column(block.begin)
     el, ec = smap.line_column(block.end - 1)
     print("block opens at line %d col %d, closes at line %d col %d"

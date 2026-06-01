@@ -1,0 +1,12 @@
+=== <decl-parens> ===
+
+-- absent --
+   input: ( )
+[]
+
+-- present --
+   input: ( X : X )
+ArgDecl
+  member = 'X'
+  type = 'X'
+  begin = 0

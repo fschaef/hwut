@@ -1,0 +1,8 @@
+=== <arg-decl> ===
+
+-- default --
+   input: X : X
+ArgDecl
+  member = 'X'
+  type = 'X'
+  begin = 0

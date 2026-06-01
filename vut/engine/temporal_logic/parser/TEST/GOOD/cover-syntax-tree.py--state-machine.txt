@@ -1,0 +1,130 @@
+=== <state-machine> ===
+
+-- 0x --
+   input: state_machine X : state X : on X => { luau } until switched end
+StateMachine
+  name = 'X'
+  params:
+    []
+  states:
+    State
+      name = 'X'
+      params:
+        []
+      init = None
+      deinit = None
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            Mutation
+              body:
+                Luau
+                  text = '{ luau }'
+                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+              begin = 0
+          begin = 0
+      untils:
+        []
+      begin = 0
+  has_refs:
+    []
+  default = None
+  init = None
+  deinit = None
+  begin = 0
+
+-- 1x --
+   input: state_machine X . X : state X : on X => { luau } until switched end
+StateMachine
+  name = 'X.X'
+  params:
+    []
+  states:
+    State
+      name = 'X'
+      params:
+        []
+      init = None
+      deinit = None
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            Mutation
+              body:
+                Luau
+                  text = '{ luau }'
+                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+              begin = 0
+          begin = 0
+      untils:
+        []
+      begin = 0
+  has_refs:
+    []
+  default = None
+  init = None
+  deinit = None
+  begin = 0
+
+-- 2x --
+   input: state_machine X . X . X : state X : on X => { luau } until switched end
+StateMachine
+  name = 'X.X.X'
+  params:
+    []
+  states:
+    State
+      name = 'X'
+      params:
+        []
+      init = None
+      deinit = None
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            Mutation
+              body:
+                Luau
+                  text = '{ luau }'
+                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+              begin = 0
+          begin = 0
+      untils:
+        []
+      begin = 0
+  has_refs:
+    []
+  default = None
+  init = None
+  deinit = None
+  begin = 0

@@ -1,0 +1,36 @@
+
+--- literal -> token id (derived from the lexer) ---
+'!'              -> BANG
+'&'              -> AND
+'('              -> LPAREN
+')'              -> RPAREN
+'+!'             -> PLUSBANG
+','              -> COMMA
+'-!'             -> MINUSBANG
+'.'              -> DOT
+':'              -> COLON
+';'              -> SEMI
+'='              -> EQUAL
+'=>'             -> ARROW
+'ANY'            -> KW_ANY
+'BEGIN'          -> KW_BEGIN
+'END'            -> KW_END
+'VOID'           -> KW_VOID
+'as'             -> KW_AS
+'clock'          -> KW_CLOCK
+'default'        -> KW_DEFAULT
+'deinit'         -> KW_DEINIT
+'end'            -> KW_END_BLK
+'event'          -> KW_EVENT
+'has'            -> KW_HAS
+'init'           -> KW_INIT
+'mode'           -> KW_MODE
+'mode_group'     -> KW_MGROUP
+'on'             -> KW_ON
+'state'          -> KW_STATE
+'state_machine'  -> KW_SM
+'switched'       -> KW_SWITCHED
+'until'          -> KW_UNTIL
+
+--- every fixed-spelling terminal in the grammar resolves ---
+unresolved: (none)

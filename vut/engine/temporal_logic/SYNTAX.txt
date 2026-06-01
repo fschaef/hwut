@@ -10,7 +10,7 @@ ARCHITECTURE:
       - Events and their member structure
       - Rules that match from <cause> to <effect>
       - Modes and their member structure
-      - State machines and their member structure
+      - Mode groups and state machines, aggregating their member reactors
       - Setup of the object space
 
     The object space lives entirely in Luau, python code acts as a transpiler
@@ -36,58 +36,93 @@ NOTE:
 
 (A.1) GRAMMAR:
 
-    <rule-file>:   (   <causality> 
-                     | <mode> 
-                     | <state-machine>
-                     | <event-def> 
-                     | <clock-def> )*
+    <rule-file>:   <top-level>*
 
-    <causality>:   'on' <cause> ( '=>' <effect> )+ 'off'
+    <top-level>:   (   <namespace>
+                     | <causality>
+                     | <mode>
+                     | <mode-group>
+                     | <state-machine>
+                     | <event-def>
+                     | <clock-def> )
+
+    <namespace>:   'open' <dotted-name>
+                       <top-level>+
+                   'close'
+
+    <causality>:   'on' <cause> ( '=>' <effect> )+
 
     <cause>:       <trigger> [ '&' <guard> ]
 
     <effect>:      <event-spec>               # emit an event
-                 | '+' <mode-arming>          # arm a mode instance
+                 | '!'  <mode-arming>         # arm a single mode instance
+                 | '+!' <spawn>               # spawn a named aggregate instance
+                 | '-!' <unspawn>             # unspawn a named aggregate instance
                  | <report-string>            # report a formatted line of text
                  | '{' <luau-code> '}'        # mutate the object space
 
-    <mode>:        'mode' <mode-name> [ '(' <arg-decl-list> ')' ] ':'
-                       <mode-elm>+
-                       ( 'until' <cause> )+
+    <signature>:    <name> [ '(' <arg-decl-list> ')' ] ':'
+    <invocation>:   <name> '(' [ <arg-list> ] ')'
 
-    <mode-elm>:    <causality>
-                 | 'init'   '{' <luau-code> '}'  # only allowed once per <mode-elm>+
-                 | 'deinit' '{' <luau-code> '}'  # only allowed once per <mode-elm>+
+
+    <reactor-spec>: <signature>
+                    <reactor-elm>+
+
+    <mode>:        'mode' <reactor-spec>
+                   ( 'until' <cause> )+
+
+    <state>:       'state' <reactor-spec>
+                   ( 'until' <cause> )*
+                   'until' 'switched'
+
+    <reactor-elm>: <causality>
+                 | 'init'   '{' <luau-code> '}'  # only allowed once per <reactor-elm>+
+                 | 'deinit' '{' <luau-code> '}'  # only allowed once per <reactor-elm>+
+
+    <mode-group>:
+                   'mode_group' <signature>
+                       <mode-group-elm>+
+                   'end'
+
+    <mode-group-elm>:
+                   <mode>                                    # member defined inline
+                 | 'has' ':' <member-ref>                    # member defined elsewhere
+                 | 'init'   '{' <luau-code> '}'              # only allowed once
+                 | 'deinit' '{' <luau-code> '}'              # only allowed once
 
     <state-machine>:
-                   'state_machine' <state-machine-name> [ '(' <arg-decl-list> ')' ] ':'
-                       <state-machine-elm>+
-                       ( 'until' <cause> )+
+                   'state_machine' <signature>
+                   <state-machine-elm>+
+                   'end'
 
     <state-machine-elm>:
-                   'default' '=' <state-machine-mode-ref>  # only allowed once
-                 | 'init'   '{' <luau-code> '}'            # only allowed once
-                 | 'deinit' '{' <luau-code> '}'            # only allowed once
+                   <state>                                   # member defined inline
+                 | 'has' ':' <member-ref>                    # member defined elsewhere
+                 | 'default' '=' <member-ref>                # only allowed once
+                 | 'init'   '{' <luau-code> '}'              # only allowed once
+                 | 'deinit' '{' <luau-code> '}'              # only allowed once
 
-    <state-machine-mode-ref>:
-                   <state-machine-name> '.' <mode-name>
-                 | <state-machine-name> '.' 'VOID'
+    <member-ref>:  <reactor-name>                            # resolved against the aggregate
+                 | <aggregate-name> '.' <reactor-name>       # qualified (good practice)
+                 | <aggregate-name> '.' 'VOID'
 
-    <mode-name>:   <state-machine-name> '.' <identifier>
-                 | <identifier>
+    <reactor-name>:    <identifier>
+    <aggregate-name>:  <identifier>
 
     <trigger>:     <event-name>
                  | 'ANY'
                  | 'END'
                  | 'BEGIN'
-                 | 'switched'   # legal only in 'until switched' closing
-                                # a state-machine member-mode
 
     <guard>:       '{' <luau-condition> '}'
 
-    <event-spec>:  <event-name> '(' [ <arg-list> ] ')'
+    <event-spec>:  <invocation>
 
-    <mode-arming>: <mode-name> '(' [ <arg-list> ] ')'
+    <mode-arming>: <invocation>
+
+    <spawn>:       <invocation> [ 'as' <identifier> ]
+
+    <unspawn>:     <name>                     # bare or dotted; a named instance
 
     <arg-list>:    <arg> (',' <arg>)*
 
@@ -101,6 +136,8 @@ NOTE:
 
     <arg-decl-list>: <arg-decl> (';' <arg-decl>)*
     <arg-decl>:      <member> ':' <type>
+
+    <member>:        <identifier>
 
     <report-string>: <istring>
 
@@ -124,7 +161,7 @@ BINDINGS: Names that bind nesting entities:
 
     'sm'      state machine where the code fragment resides. This may be the
               'init' and 'deinit' handlers of the state machine or any code
-              fragment in a related state-machine member-mode.
+              fragment in a member state of the state machine.
 
 IMPLICIT EVENTS:
 
@@ -136,18 +173,31 @@ IMPLICIT EVENTS:
     'END'   immediately (zero-time ahead) after last event of the event
             sequence.
 
-    'switched' is a non-functional marker for 'until switched' in state-machine
-               modes.
+'switched' is not an ordinary event. It is a non-functional keyword usable only
+as the final 'until switched' clause closing a <state> block (A.2.5). It never
+appears as a general <trigger>.
 
 (A.2.2) Grammar Productions
 
 <rule-file>
          is the top-level container of all setup-file constructs: causalities,
-         modes, state machines, event definitions, and clock definitions.
+         modes, mode groups, state machines, event definitions, and clock
+         definitions.
+
+<reactor> is the umbrella term for a <mode> and a <state>: a named,
+         parameterized block of rules with optional 'init'/'deinit' hooks and
+         closing 'until' causes. A <mode> overlaps freely with sibling reactors;
+         a <state> is mutually exclusive with its siblings (A.2.5). Both share
+         the <reactor-elm> body.
 
 <mode> defines a block of rules that operate conditionally. The block
          operates only when it is 'armed', i.e. there is a mode
-         instantiated as an effect of some <cause>.
+         instantiated as an effect of some <cause>. A mode is closed by its
+         'until' causes ( one or more ).
+
+<state> is a <mode> living inside a <state-machine>. Its block is closed by a
+         mandatory final 'until switched' clause; further explicit 'until'
+         causes are optional ( zero or more ) and precede it (A.2.5).
 
 <trigger> is an event, optionally narrowed by member conditions. The
           triggering event is always accessible as 'event' inside the
@@ -155,13 +205,12 @@ IMPLICIT EVENTS:
 
    Examples:
 
-      on TICK & { event.time > 0 } => LOG(time = event.time) off
+      on TICK & { event.time > 0 } => LOG(time = event.time)
 
-      on ANY  & { car.gas == 0 } => FRUSTRATION(gravity = 0.1) off
+      on ANY  & { car.gas == 0 } => FRUSTRATION(gravity = 0.1)
 
       on PING & { Glob("tester_?_intruder"):match(event.user) and event.ip ~= "127.0.0.1" }
       => INTRUSION(intruder=event.user)
-      off
 
    'ANY' matches every event, including cascade-emitted events and the
    terminating event.
@@ -171,14 +220,12 @@ IMPLICIT EVENTS:
       mode WAITING_FOR_ACK(req : number) :
           on ACK & { event.req == mode.req }
           => "ack received for {mode.req}"
-          off
           on END
           => "no ack received for {mode.req}"
-          off
       until ACK & { event.req == mode.req }
 
-    'switched' is a reserved keyword usable only as the final 'until'
-    clause of a state-machine member-mode; it is not a general trigger.
+    'switched' is a reserved keyword usable only as the final 'until switched'
+    clause closing a state-machine member state; it is not a general trigger.
 
 <guard>
 
@@ -198,21 +245,31 @@ IMPLICIT EVENTS:
 
 <effect>
     is what happens as a result of a cause. Every effect is prefixed by '=>',
-    which is the marker of causality. There are four kinds:
+    which is the marker of causality. There are five kinds:
 
          emit an event:      => EVENT(arg = ...)
-         arm a mode:         => + MODE(arg = ...)
+         arm a mode:         => !  MODE(arg = ...)
+         spawn an aggregate: => +! STATE_MACHINE(arg = ...) as inst
+         unspawn a named one:=> -! inst
          report a line:      => "text {with} interpolation"
          mutate state:       => { vehicle.speed = 0 }
 
      The state-mutation form is opaque Luau, the same as a guard, but without
      the read-only restriction: a '=> { ... }' span is the place to write
      changes to the object space. Each effect is on its own line, and the
-     effect list ends with 'off'. The event-type name in an emit, and the
-     mode name in an arm, are always literal -- never computed by Luau. The
-     arguments may be computed (see <rvalue>); only the names are fixed.
+     effect list ends at the first line that is not an '=>' effect (no closing
+     keyword). The event-type name in an emit, the mode name
+     in a '!' arm, and the aggregate-type name in a '+!' spawn are always
+     literal -- never computed by Luau. The arguments may be computed (see
+     <rvalue>); only the names are fixed.
 
-     The four kinds may be interleaved freely in any order within one rule,
+     '!' arms a single mode (<mode-arming>). '+!' spawns a named aggregate
+     instance -- a <mode-group> or a <state-machine> (<spawn>) -- and '-!'
+     unspawns one (<unspawn>). The verbs are distinct: '!' targets a reactor,
+     '+!'/'-!' target an aggregate. Only a named (spawned) entity may be
+     unspawned, so '-!' takes a reference by name, not a fresh invocation.
+
+     The six kinds may be interleaved freely in any order within one rule,
      each starting with its own '=>'.
 
      Example:
@@ -220,7 +277,6 @@ IMPLICIT EVENTS:
          => { vehicle.damaged = true }
          => WRECK(severity = event.severity)
          => "wreck at t={event.time} severity={event.severity}"
-         off
 
 <event-spec>
     constructs an event. The event-name is literal; arguments are <member> '='
@@ -241,6 +297,38 @@ IMPLICIT EVENTS:
     for that instance are checked: this guarantees 'deinit' runs at a
     single well-defined moment, and lets an 'until' clause safely reference
     the still-existing instance.
+
+<spawn>
+    constructs and arms an aggregate instance -- a <mode-group> or a
+    <state-machine>. Its argument syntax is the same as for <mode-arming>;
+    the leading verb is '+!', not '!'. The aggregate-type name is literal.
+
+    'as <name>' binds the instance to <name>, making it an addressable entity.
+    When 'as' is omitted, the instance folds into the global singleton for that
+    aggregate type: there is exactly one unnamed instance per type, and a
+    second unnamed arming of the same type with identical parameters is the
+    same silent no-op as a duplicate <mode-arming>.
+
+      => +! SM_TRAFFIC()              # folds into the SM_TRAFFIC singleton
+      => +! SM_TRAFFIC() as north     # a distinct, named instance 'north'
+      => +! SM_TRAFFIC() as south     # a second named instance 'south'
+
+    Named instances let several aggregates of the same type run concurrently,
+    each supervised independently.
+
+<unspawn>
+    removes a spawned aggregate instance with the verb '-!'. Only a named
+    (spawned) entity can be unspawned, so the operand is a reference by name,
+    not an invocation: the instance bound by an earlier '+! ... as <name>', or
+    a dotted reference to one. There are no arguments and no 'as'.
+
+      => +! SM_TRAFFIC() as north     # spawn
+      => -! north                     # unspawn that instance
+      => -! LIGHTS.GLOW               # dotted reference to a named instance
+
+    Unspawning runs the instance's 'deinit' once, exactly as a firing 'until'
+    or the trace END would. Unspawning an unknown or unnamed target is a
+    validation error (pass 2), not a parse error.
 
 
 <arg> binds an argument by name or by position. Named arguments may follow
@@ -276,19 +364,24 @@ IMPLICIT EVENTS:
 
 DELIMITERS:
 
-'off'              closes every 'on' block.
+(no terminator)    closes an 'on' block. Each effect is introduced by '=>',
+                   so the effect list ends at the first line that is not an
+                   '=>' effect. An 'on' block needs no closing keyword.
+'end'              closes a mode group and a state machine.
 ('until' <cause>)+ closes a mode.
-                   closes a state machine.
+'until' 'switched' closes a state ( preceding explicit 'until' causes optional ).
 
-A mode or state machine may have several 'until' clauses; the instance stops
-being armed the moment any one of them fires. This serves the unless-cancelled
-pattern naturally: end on a deadline or end on a success event, whichever comes
-first.
+A mode may have several 'until' clauses; the instance stops being armed the
+moment any one of them fires. This serves the unless-cancelled pattern
+naturally: end on a deadline or end on a success event, whichever comes first.
+A state stops being armed on 'until switched' (a sibling state being armed) or
+on any of its own preceding 'until' causes, whichever fires first. A mode group
+and a state machine have no closing 'until' causes of their own; they are
+aggregates and are closed by 'end'.
 
       mode AWAIT_ACK(req : number) :
           on END
           => "timeout on request {mode.req}"
-          off
       until TICK & { event.time >= mode.begin_time + 5 }
       until ACK  & { event.req == mode.req }
 
@@ -297,7 +390,7 @@ first.
 
 LIFECYCLE
 
-  '=>' '+' <mode-arming> instantiates a mode and activates a mode block.
+  '=>' '!' <mode-arming> instantiates a mode and activates a mode block.
 
   'until' <cause>          removes the mode from existence.
 
@@ -321,38 +414,38 @@ list provides identity: no two modes exist with identical parameter lists.
 
 QUERY:
 
-Live instances of a mode class are queried in the Luau world using the
-mode's type name as the access point. There is one primary call form and
-four boolean reduction methods.
+Live instances of a reactor class -- a mode or a state -- are queried in the
+Luau world using the reactor's type name as the access point. There is one
+primary call form and four boolean reduction methods.
 
-   <mode-name>:list(<member-condition>*)
+   <reactor-name>:list(<member-condition>*)
        Provides a list of modes of the given name where the member
        conditions are fulfilled. If no condition is provided all modes
        of the given kind are returned.
 
-   <mode-name>:has(<member-condition>+)
+   <reactor-name>:has(<member-condition>+)
        True if a mode with the given conditions exists.
 
-   <mode-name>:any(<member-condition>*)
+   <reactor-name>:any(<member-condition>*)
        True if at least one live instance matches the conditions.
        With no conditions, true if any live instance exists at all.
 
-   <mode-name>:all(<member-condition>+)
+   <reactor-name>:all(<member-condition>+)
        True if every live instance matches the conditions.
        Conditions are required (a conditionless 'all' is vacuous).
 
-   <mode-name>:none(<member-condition>+)
+   <reactor-name>:none(<member-condition>+)
        True if no live instance matches the conditions.
        Conditions are required (use ':empty' for the conditionless case).
 
-   <mode-name>:empty()
-       True if no live instance of <mode-name> exists at all.
+   <reactor-name>:empty()
+       True if no live instance of <reactor-name> exists at all.
        Takes no conditions.
 
-    <mode-name>:last(<member-condition>+)
+    <reactor-name>:last(<member-condition>+)
         last mode that triggered with condition.
 
-    <mode-name>:since(<member-condition>+)
+    <reactor-name>:since(<member-condition>+)
         time since last mode with condition occurred.
 
 Member conditions accept either a literal value (matched by equality) or
@@ -378,7 +471,6 @@ Examples:
 
     on ANY & { vehicle.speed < 50 and not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
     => { driver.mode = "relax" }
-    off
 
 The last example reads: "for any event, if the vehicle is going under 50
 and no live speed-limit watcher is monitoring a limit greater than 50,
@@ -399,13 +491,11 @@ constructor arguments are passed.
 Example: vehicle must stop within 10 s of a stop sign
 
     on STOP_SIGN_PASSED
-    => + LOOK_FOR_CAR_SPEED(at = event.time)
-    off
+    => ! LOOK_FOR_CAR_SPEED(at = event.time)
 
     mode LOOK_FOR_CAR_SPEED(at : number) :
         on TICK & { vehicle.speed > 0 }
         => "t={format(event.time)} vehicle moving at stop sign"
-        off
     until TICK & { event.time >= mode.at + 10 }
 
 Example: parameterized, with conditional arming
@@ -413,16 +503,13 @@ Example: parameterized, with conditional arming
     ## arm one watcher per (ip, port); the ':has' guard is illustrative --
     ## under idempotent re-arm a duplicate arming would be a silent no-op
     on NW_EVENT & { not NETWORK_WATCHER:has(ip = event.ip, port = event.port) }
-    => + NETWORK_WATCHER(ip = event.ip, port = event.port, firewall = global_fw)
-    off
+    => ! NETWORK_WATCHER(ip = event.ip, port = event.port, firewall = global_fw)
 
     mode NETWORK_WATCHER(ip : string; port : number; firewall : Firewall) :
         on PING & { event.ip == mode.ip and event.port == mode.port }
         => INTRUSION(ip = mode.ip)
-        off
         on END
         => "watcher for {mode.ip} expired unresolved"
-        off
     until TICK & { event.time >= mode.begin_time + 30 }
     until ACK  & { event.ip == mode.ip }
 
@@ -455,93 +542,179 @@ specify the argument list.
 
 (A.2.5) Details on State-Machine Definitions
 
-A state machine is a habitat for modes in which at most one member-mode is
-active at a time. Arming one member-mode deactivates whichever member-mode
-was active before. A state machine is the means to express a state machine:
-each member-mode is a state, arming a new one is a transition, and the
-mutual-exclusion is automatic.
+A state machine is an aggregate of states in which at most one member-state is
+active at a time. Arming one member-state deactivates whichever member-state
+was active before. Each member-state is a state, arming a new one is a
+transition, and the mutual-exclusion is automatic.
 
-A state-machine member-mode is an ordinary mode whose name is prefixed with
-the state-machine name and a dot:
+A member-state is declared inline in the state-machine body with the 'state'
+keyword and an unqualified name:
 
-    mode <state-machine-name> '.' <identifier> [ '(' <arg-decl-list> ')' ] ':'
-        <mode-elm>+
-        ( 'until' <cause> )+
-    'until' 'switched'
+    state <reactor-name> [ '(' <arg-decl-list> ')' ] ':'
+        <reactor-elm>+
+        ( 'until' <cause> )*
+        'until' 'switched'
 
-Inside the Luau code sections of the state machine itself and its related
-modes, the currently nesting state machine is referred to by the binding 'sm'
-and all members specified in the state-machine signature can be accessed as
-read-available members.
+A state defined elsewhere is pulled in with 'has:':
 
-<state-machine> declares the habitat. It has three parts:
+    has: <member-ref>
 
-   'default' specifies the default active mode, if no mode remains
-             active. That is, if no initial mode is set up, or if a mode
-             terminates with an 'until' condition and no other mode
-             is present.
+Inside the Luau code sections of the state machine itself and its member
+states, the nesting state machine is referred to by the binding 'sm', and all
+members declared in the state-machine signature are read-available.
 
-             If default is not specified an empty mode is activated:
-             mode 'VOID'.
+<state-machine> declares the aggregate. Beyond its member states it has:
+
+   'default' specifies the active state when no state otherwise remains
+             active -- before any state is armed, or after a state terminates
+             via its own 'until' with no successor armed. The target is a
+             <member-ref>. If 'default' is not specified, an empty VOID state
+             is activated.
 
    'init'  runs once when the state machine comes into being. Arguments to
            the state machine are already bound to the 'sm' binding -- same
            as 'event' in <causality> and 'mode' in <mode> environments.
 
-           The typical body emits the event that arms the first mode.
+           The typical body arms the first state.
 
    'deinit'  runs once when the state machine ceases. Takes no arguments.
 
-Member-modes are declared exactly like ordinary modes, except:
+A <member-ref> is resolved against the enclosing aggregate, so a member is
+named by its bare <reactor-name>. The qualified form
+'<aggregate-name>.<reactor-name>' is also accepted and is GOOD PRACTICE where
+it aids the reader; the bare form and the qualified form denote the same
+member. 'VOID' names the implicit empty state.
 
-   - their name is '<state-machine-name>.<mode-name>';
-   - their 'until' list MUST end with 'until switched'.
+'until switched' is the mandatory final clause of every state. 'switched'
+fires when another member-state of the same state machine is armed -- the
+event that deactivates the current member. It is a non-functional keyword: it
+carries no runtime behaviour and exists solely to mark, at the closing line,
+that a state may also be terminated by a sibling being armed, not only by its
+own 'until' causes. A state's own preceding 'until' causes are optional ( zero
+or more ); 'until switched' closes the block in either case.
 
-'switched' is a transpiler keyword. 'until switched' fires when another
-member-mode of the same state machine is armed -- the event that deactivates
-the current member. It is REQUIRED as the last 'until' clause of every
-state-machine member-mode.
-
-The 'until switched' is a non-functional, but mandatory, syntax. Its function
-is solely to signal to the code writer the particular nature of the
-state-machine mode. That is, a state-machine mode may be terminated through
-another reason than the explicitly specified 'until' events, namely the
-arming of a concurring state-machine mode.
-
-When a member-mode ceases via 'switched', its 'deinit' (if any) runs,
-exactly as for any other way a mode ceases. The "first until wins, no
-further untils checked" rule (section 2) applies: if a member's own 'until'
-and the 'switched' transition coincide, the first in declaration order wins,
-and since 'switched' is required to be last, an explicit 'until' always wins
-a tie against it.
+When a member-state ceases via 'until switched', its 'deinit' (if any) runs,
+exactly as for any other way a state ceases. The "first until wins, no further
+untils checked" rule (section 2) applies: a preceding explicit 'until' that
+coincides with the 'switched' transition is the cause of cessation if it is
+reached first, and since 'until switched' is required to be last, an explicit
+'until' always wins a tie against it.
 
 Example: a task state machine
 
     state_machine SM_TASK :
-        default = SM_TASK.VOID
+        default = VOID
         init {
             ...
         }
         deinit {
         }
-    until END # this state machine never stops
 
-    mode SM_TASK.SLEEP :
-        on WAKE => + SM_TASK.RUN off
-    until EVENT_TASK_TERMINATED
-    until switched
+        state SLEEP :
+            on WAKE => ! RUN
+        until EVENT_TASK_TERMINATED
+        until switched
 
-    mode SM_TASK.RUN :
-        on TICK & { event.time >= mode.begin_time + quantum }
-        => + SM_TASK.SLEEP
-        off
-    until EVENT_TASK_TERMINATED
-    until switched
+        state RUN :
+            on TICK & { event.time >= mode.begin_time + quantum }
+            => ! SLEEP
+        until EVENT_TASK_TERMINATED
+        until switched
+    end   # a state machine is closed by 'end'; it has no 'until' of its own
 
-Arming 'SM_TASK.RUN' from within 'SM_TASK.SLEEP' deactivates SLEEP (its
-'until switched' fires) and activates RUN. The two states alternate; 'until
+Arming 'RUN' from within 'SLEEP' deactivates SLEEP (its 'until switched'
+fires) and activates RUN. The two states alternate; 'until
 EVENT_TASK_TERMINATED' lets either state leave the cycle on a
 EVENT_TASK_TERMINATED event.
+
+(A.2.6) Details on Mode-Group Definitions
+
+A mode group is an aggregate of modes WITHOUT single-active semantics: its
+member modes overlap freely, any number live at once, and arming one does not
+deactivate another. It is the non-exclusive counterpart of the state machine.
+
+A member mode is declared inline in the mode-group body with the 'mode'
+keyword, or pulled in with 'has:':
+
+    mode <reactor-name> [ '(' <arg-decl-list> ')' ] ':'
+        <reactor-elm>+
+        ( 'until' <cause> )+
+
+    has: <member-ref>
+
+A mode group has 'init' and 'deinit', exactly as a state machine does, and is
+closed by 'end'. It has NO closing 'until' causes of its own, and NO 'default':
+with overlapping members there is no single active member to fall back to, so
+no fallback exists. A <member-ref> inside a mode group resolves against the
+group by bare <reactor-name>, with the qualified form accepted as good
+practice.
+
+The 'end' terminator is what makes an inline member mode unambiguous: a member
+mode carries its own ( 'until' <cause> )+, and 'end' (not another 'until')
+marks where the last member -- and the group -- closes.
+
+    mode_group MG_ALERTS :
+        init { sm.count = 0 }
+
+        mode BLINK :
+            on TICK => { sm.count = sm.count + 1 }
+        until ANY
+
+        mode BEEP :
+            on TICK => SOUND()
+        until EVENT_SILENCED
+
+        has: GLOW
+    end
+
+Both aggregates are spawned as an effect with '+!' and may be named with 'as'
+(see <spawn>); a named instance is removed with '-!' (see <unspawn>). An
+unnamed arming folds into the aggregate type's global singleton.
+
+
+(A.2.7) Details on Namespaces
+
+A namespace brackets a group of declarations into a named scope:
+
+    open <dotted-name>
+        <top-level>+
+    close
+
+The body is any run of top-level constructs -- causalities, modes, aggregates,
+event and clock definitions, and further namespaces. Nesting is unrestricted in
+depth. There are several independent namespaces (no single global flat space);
+names declared inside a namespace are restricted to the scope in which they are
+defined. The 'as'-names of spawned instances are likewise scoped to their
+defining namespace.
+
+The dotted name opens several levels at once, so a deep scope needs one 'open',
+not one per level. This:
+
+    open world.europe.germany.berlin
+        ...
+    close
+
+opens the single nested scope 'world.europe.germany.berlin' directly, rather
+than:
+
+    open world  open europe  open germany  open berlin
+        ...
+    close close close close
+
+A 'close' takes no name; the matching 'open' is unambiguous from the nesting.
+A namespace may contain a nested 'open'/'close':
+
+    open world.europe
+        on TICK => ! WATCH()
+        open germany.berlin
+            mode GUARD :
+                on ALERT => SIREN()
+            until ANY
+        close
+    close
+
+(The binding rules -- how a reference resolves across namespaces, and how
+'as'-name visibility works -- are a semantic-pass concern, not a parsing one.)
 
 
 (A.3) OBJECT SPACE INIT and DEINIT
@@ -699,7 +872,7 @@ The tracer may restrict the number of events held in time backwards.
         tracer.watch(PING)
         tracer.watch(HEARTBEAT)
         tracer.watch(LOGIN, 5)
-    } off
+    }
 
 A watched type holds one flat history stream -- every occurrence of the type
 lands in a single ring. 'last=N' bounds the entries retained for the type;
@@ -716,11 +889,10 @@ EXAMPLE
 
     on BEGIN => {
         tracer.watch(LOGIN)
-    } off
+    }
 
     on PING & { LOGIN:has(ip = event.ip) }
     => "ping from logged-in ip {event.ip}"
-    off
 
 -------------------------------------------------------------------------------
 (C) BOOTSTRAP HELPERS  --  available inside guards and Luau spans
@@ -757,14 +929,12 @@ authors do not write the dispatch.
    Example:
        on TICK & { not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
        => { driver.mode = "relax" }
-       off
 
 In a free Luau guard (one not routed through a query method), the author
 calls the comparator's ':match' directly:
 
        on PING & { Glob("tester_?_intruder"):match(event.user) }
        => INTRUSION(intruder = event.user)
-       off
 
 THE BAR FOR ADDING A HELPER
 

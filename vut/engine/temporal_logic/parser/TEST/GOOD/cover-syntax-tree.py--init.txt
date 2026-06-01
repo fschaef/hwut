@@ -1,0 +1,11 @@
+=== <init> ===
+
+-- default --
+   input: init { luau }
+InitBlock
+  body:
+    Luau
+      text = '{ luau }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  begin = 0

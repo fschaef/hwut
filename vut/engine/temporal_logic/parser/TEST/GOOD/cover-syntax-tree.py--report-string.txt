@@ -1,0 +1,7 @@
+=== <report-string> ===
+
+-- default --
+   input: "s"
+ReportString
+  text = '"s"'
+  begin = 0

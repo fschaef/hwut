@@ -1,0 +1,13 @@
+=== <dotted-name> ===
+
+-- 0x --
+   input: X
+'X'
+
+-- 1x --
+   input: X . X
+'X.X'
+
+-- 2x --
+   input: X . X . X
+'X.X.X'

@@ -1,0 +1,28 @@
+=== <spawn> ===
+
+-- 0x --
+   input: +! X ( )
+Spawn
+  name = 'X'
+  args:
+    []
+  inst = None
+  begin = 0
+
+-- 1x --
+   input: +! X . X ( )
+Spawn
+  name = 'X.X'
+  args:
+    []
+  inst = None
+  begin = 0
+
+-- 2x --
+   input: +! X . X . X ( )
+Spawn
+  name = 'X.X.X'
+  args:
+    []
+  inst = None
+  begin = 0

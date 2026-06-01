@@ -3,123 +3,158 @@ REACTIVE RULE ENGINE  --  HWUT 2.0
 PARSER ARCHITECTURE
 ===============================================================================
 
-MODULES AND RESPONSIBILITIES:
+The parser turns a rule-file into an Abstract Syntax Tree. It is a table-driven
+LL(1) engine: the grammar is declared once as data, compiled into FIRST sets,
+and executed by a single generic driver. There is no hand-written descent
+function per construct; adding or changing a rule is an edit to the grammar
+data, not to the driver.
 
-    parser.py
-        Entry point. Orchestrates file reading, AST construction, and triggers 
-        the semantic validation pass.
+-------------------------------------------------------------------------------
+MODULES AND RESPONSIBILITIES
+-------------------------------------------------------------------------------
 
     lexer.py
-        The Regex-based tokenizer. Yields standard tokens on demand and handles 
-        the oracle boundary to extract opaque Luau blocks.
+        Regex tokenizer. One compiled alternation of named patterns yields
+        tokens on demand. Holds the oracle boundary: on a Luau open brace it
+        hands off to the fragment oracle to slice out an opaque '{ ... }' block
+        and resumes past the closing brace. Illegal characters are reported
+        non-fatally and returned as MISMATCH so the parser can resync.
+
+    grammar.py
+        The language as data. GRAMMAR maps each non-terminal to a pattern built
+        from the combinators SEQ, ALT, OPT, STAR, PLUS, plus terminal literals
+        and the '{luau:ROLE}' fragment marker. CAPTURED_LITERALS lists the
+        keyword literals whose token value is kept (ANY, BEGIN, END, VOID). For
+        each rule a reduce action ('_build_*') turns the matched frame into an
+        AST node; a 'None' action passes the child value through unchanged.
+
+    parser_engine.py
+        The engine. 'Grammar' compiles the pattern table: it resolves literals
+        against the lexer (via the literal table), computes FIRST sets, and
+        rejects any ALT whose branches share a FIRST token (LL1ConflictError),
+        so ambiguity is caught at compile time, not at parse time.
+        'EngineParser' walks the compiled patterns with one token of lookahead,
+        building a 'Frame' of child values per rule and calling the rule's
+        reduce action. 'compiled_grammar()' memoizes the compiled grammar;
+        'parse()' is the entry point returning a RuleFile plus diagnostics.
 
     ast_nodes.py
-        Pure data structures defining the Abstract Syntax Tree. Every node 
-        stores source file coordinates for provenance.
+        Frozen dataclasses for the tree. Every node stores 'begin' (a source
+        offset) for provenance and error reporting. TopLevel is the abstract
+        base for the items a rule-file may contain: Causality, Mode, ModeGroup,
+        StateMachine, EventDef, ClockDef.
 
-    state_machine.py
-        The stackless, iterative descent logic. Consumes the token stream 
-        from the lexer and constructs the AST nodes based on current state.
-
-    validator.py
-        Pass 2 semantic validation. Enforces domain logic constraints (e.g. 
-        single init/deinit, state machine invariants) before transpilation.
-
--------------------------------------------------------------------------------
-(A) ARCHITECTURAL OVERVIEW
--------------------------------------------------------------------------------
-
-OBJECTIVE:
-    Parse the rule-file language into an Abstract Syntax Tree (AST) while 
-    seamlessly handling opaque Luau code blocks ('{ ... }') via the 'luau-ast' 
-    oracle.
-
-The parser is a single-pass, stackless state machine. It does not use 
-recursive function calls (e.g., 'parse_mode()' calling 'parse_causality()'), 
-eliminating Python call stack limits. Instead, it relies on a 
-heap-allocated 'state_stack' and an on-demand Regex Lexer. 
-
-The architecture consists of three distinct layers:
-
-    1. The Lexer (Regex Generator): Tokenizes the input string on demand.
-    2. The Oracle Boundary: Halts lexing to allow the external 
-       'luau_fragment.py' module to extract verbatim Luau code blocks.
-    3. The Iterative State Machine: Consumes tokens, validates grammar 
-       sequences, and builds the AST nodes.
+    diagnostic.py
+        Phase-tagged diagnostics (LEXER, PARSER, ...) collected by a
+        DiagnosticReporter. Non-fatal diagnostics accumulate so one run can
+        report several problems; FatalDiagnostics stops the pass.
 
 -------------------------------------------------------------------------------
-(B) THE LEXER (TOKENIZER)
+(A) THE LEXER AND THE ORACLE HANDOFF
 -------------------------------------------------------------------------------
 
-The lexer uses a single compiled regular expression with named capture groups
-('(?P<NAME>pattern)'). This allows Python's C-backend to rapidly 
-identify token boundaries.
+The lexer matches a single compiled regular expression of named patterns; the
+C regex backend finds token boundaries quickly. Keyword patterns are ordered so
+longer keywords win where prefixes overlap ('mode_group' before 'mode',
+'state_machine' before 'state', '+!'/'-!' before '!').
 
-THE ORACLE HANDOFF:
-
-    When the Lexer yields a 'LUAU_OPEN' token, the parser pauses the token 
-    stream. It invokes 'find_matching_brace(source_text, offset, 
-    role, oracle)'. The returned 'closing_idx' is used to slice 
-    the raw Luau string, create a 'LUAU_BLOCK' token, and forcefully advance 
-    the Lexer's internal cursor past the closing brace.
-
--------------------------------------------------------------------------------
-(C) THE ABSTRACT SYNTAX TREE (AST) NODES
--------------------------------------------------------------------------------
-
-The AST is built using Python dataclasses. Every node must store 
-its 'source_line' and 'source_column' to enable accurate error reporting and 
-feed the 'Source2TargetLocationMapper' during code generation.
+When the lexer yields a Luau open brace it pauses and the fragment oracle finds
+the matching close for the current role (e.g. a guard CONDITION, a mutation
+STATEMENT_BLOCK, an rvalue EXPRESSION). The raw span becomes one LUAU_BLOCK
+token and the lexer cursor is advanced past the close. An unbalanced fragment
+is recovered: the error flag is set and a block token is still produced so
+parsing can continue.
 
 -------------------------------------------------------------------------------
-(D) THE ITERATIVE STATE MACHINE (THE PARSER)
+(B) THE GRAMMAR TABLE AND LL(1) GUARANTEE
 -------------------------------------------------------------------------------
 
-The parser loops over the token stream, applying logic based on the top value
-of the 'state_stack'.
+A pattern is a nested tuple of combinators. For example a causality:
 
-STATE STACK DYNAMICS:
+    "<causality>": (SEQ, "on", "<cause>", (PLUS, (SEQ, "=>", "<effect>")))
 
-    'EXPECT_TOP_LEVEL'
-        Routes to 'IN_MODE', 'IN_STATE_MACHINE', 'IN_CAUSALITY', 
-        'IN_EVENT_DEF', or 'IN_CLOCK_DEF' based on the starting keyword.
+At compile time 'Grammar' computes FIRST(rule) for every rule and, for each ALT
+and each repetition, checks that the continuation is decidable from one
+lookahead token. If two ALT branches can start with the same token the grammar
+is rejected with a located LL1ConflictError. This is why the test-engine
+'ll1_ok' choice can assert the real grammar is conflict-free, and 'll1_conflict'
+can show a toy grammar being rejected.
 
-    'IN_CAUSALITY'
-        Expects a trigger ID. If '&' is encountered, pushes 
-        'EXPECT_GUARD'. If '=>' is encountered, pushes 
-        'EXPECT_EFFECT'. If 'off' is encountered, pops back to 
-        the previous state.
+DELIMITER DESIGN (so every rule is decidable with one token):
 
-    'EXPECT_GUARD'
-        Sets the Oracle role to 'Role.CONDITION'. Expects a 
-        'LUAU_BLOCK'. Pops upon receipt.
+    'on' block        no terminator. Each effect is led by '=>', so the effect
+                      loop ends at the first token that is not '=>'. The
+                      follower of a rule -- a top-level keyword, a member
+                      keyword, 'until', 'end', or EOF -- is never '=>'.
+    <mode>            closed by ( 'until' <cause> )+.
+    <state>           closed by 'until switched'. Modeled as <state-untils>, a
+                      right-recursive tail left-factored on 'until': after
+                      'until', one token chooses 'switched' (terminate) or a
+                      <cause> (continue). This stops the run exactly at
+                      'until switched' and never swallows the enclosing
+                      machine's tokens.
+    <mode-group>      closed by 'end'.
+    <state-machine>   closed by 'end'.
 
-    'EXPECT_EFFECT'
-        Reads the token following '=>'. Determines if it is an 
-        event emit, mode arm (prefixed by '+'), report string, or a 
-        'LUAU_BLOCK' (mutation).
+The 'end' closer on the two aggregates is what makes an inline member
+parseable: a member mode carries its own ( 'until' <cause> )+, and because the
+aggregate ends with 'end' rather than its own 'until', the boundary between the
+last member's untils and the aggregate's close is decidable with one token.
+'switched' is parsed only as the state closer; it is not a general <trigger>.
 
-    'IN_MODE'
-        Parses the signature. Loops over elements (causalities, 
-        'init', 'deinit'). When 'until' is encountered, parses the 
-        cause and appends to the 'untils' list. Pops when the mode 
-        block ends (which is implicitly when a new top-level keyword is 
-        encountered).
+-------------------------------------------------------------------------------
+(C) THE ENGINE (DRIVER) AND REDUCE ACTIONS
+-------------------------------------------------------------------------------
+
+'EngineParser' holds the token, the current 'Frame' (the list of child values
+matched so far for the rule in progress), and the reporter. For each combinator
+it either matches a terminal (advancing the token and, for captured literals
+and Luau blocks, appending the value to the frame) or descends into a
+sub-rule. When a rule's pattern is satisfied, its reduce action runs on the
+frame and returns one AST node, which becomes a child value in the parent
+frame. A 'None' action forwards the single child unchanged (used for pure
+alternations like '<effect>' and '<rvalue>').
+
+ERROR RECOVERY:
+
+    On a token that no alternative accepts, the engine emits a PARSER
+    diagnostic and resyncs: it skips to the next safe boundary -- it stops AT a
+    top-level keyword (a new item starts there) or CONSUMES an aggregate 'end'
+    and stops after it. Because causalities have no terminator, a top-level
+    keyword is the boundary for a malformed rule; 'end' is the boundary inside
+    an aggregate. Recovery is non-fatal, so one run can surface several errors.
+
+-------------------------------------------------------------------------------
+(D) THE ABSTRACT SYNTAX TREE
+-------------------------------------------------------------------------------
+
+Nodes are frozen dataclasses; the tree is immutable once built. Each carries
+'begin' for provenance, feeding error reporting and the source-to-target
+location mapper during code generation. The aggregate nodes hold their members
+by kind:
+
+    Mode           causalities, init, deinit, untils
+    State          causalities, init, deinit, untils  (closed by 'until switched')
+    ModeGroup      modes, has_refs, init, deinit       (closed by 'end')
+    StateMachine   states, has_refs, default, init, deinit  (closed by 'end')
+    HasRef         a 'has:' member pulled in by bare or qualified name
+    Spawn          a '+! name(args) [as inst]' aggregate spawn
+    Unspawn        a '-! name' removal of a named aggregate
 
 -------------------------------------------------------------------------------
 (E) SEMANTIC VALIDATION (PASS 2)
 -------------------------------------------------------------------------------
 
-After the AST is constructed, a validation pass ensures domain logic
-constraints are met before Code Generation begins:
+The parser accepts the LL(1) surface syntax; constraints that are not
+context-free are deferred to a validation pass over the finished AST, kept
+separate so the parser stays a pure recognizer:
 
-    1. Mode Validation: Ensure a Mode contains no more than one 'init' and 
-       one 'deinit'.
-       
-    2. State Machine Validation:
-       - Ensure exactly one 'default' assignment exists.
-       - Ensure all member-modes (Modes prefixed with 'SM_NAME.') terminate 
-         their 'untils' list strictly with 'until switched'.
-         
-    3. Reference Checks: Verify that every '+ MODE()' arming effect 
-       references a Mode that is actually defined in the AST.
+    1. At most one 'init' and one 'deinit' per reactor or aggregate.
+    2. State machine: at most one 'default'; every member state's until-run
+       ends with 'until switched'; 'default' references a defined member or
+       VOID.
+    3. Reference checks: every '! MODE()' / '+! AGG()' arming, every '-! name'
+       unspawn, and every 'has:' and 'default' target resolves to a defined
+       entity (an unspawn target must be a named, spawned instance). Modes and
+       state machines share one namespace; no mode may share a state machine's
+       name.

@@ -2,5 +2,8 @@
 --- comment lines and blank lines are skipped ---
 KW_ON        [ 21:23 ] 'on'
 ID           [ 24:28 ] 'Tick'
-KW_OFF       [ 51:54 ] 'off'
-END_OF_FILE  [ 55:55 ] ''
+ARROW        [ 51:53 ] '=>'
+ID           [ 54:58 ] 'Beep'
+LPAREN       [ 58:59 ] '('
+RPAREN       [ 59:60 ] ')'
+END_OF_FILE  [ 61:61 ] ''

@@ -26,10 +26,22 @@ VOCABULARY
   ENGINE        The generated standalone Luau application that processes a
                 trace and prints a report.
   OBJECT SPACE  The single Luau table space holding every runtime instance:
-                events, objects, modes, and state machines.
-  MODE          A declared, parameterized, dormant-until-armed rule unit.
-  STATE MACHINE A habitat for modes in which at most one member-mode is active
-                at a time; arming a member deactivates the previous one.
+                events, objects, reactors, and aggregates.
+  REACTOR       A declared, parameterized, dormant-until-armed rule unit with
+                optional init/deinit hooks and closing 'until' causes. MODE and
+                STATE are its two forms.
+  MODE          A reactor that overlaps freely with its siblings; closed by its
+                own 'until' causes. Lives at GROUND level or in a MODE GROUP.
+  STATE         A reactor inside a STATE MACHINE; mutually exclusive with its
+                siblings; closed by a mandatory 'until switched' clause.
+  MODE GROUP    An aggregate of modes with no exclusion: any number of member
+                modes are active at once.
+  STATE MACHINE An aggregate of states in which at most one member-state is
+                active at a time; arming a member deactivates the previous one.
+  AGGREGATE     A MODE GROUP or a STATE MACHINE. Spawned by '+!' (named with
+                'as', else a global singleton); a named one removed by '-!'.
+  NAMESPACE     A named scope, 'open <dotted-name> ... close', bracketing nested
+                declarations. Nests to any depth; names are scoped to it.
   REPORT        The deterministic block of text the engine prints for HWUT
                 nominal-recording comparison.
 
@@ -58,8 +70,8 @@ VOCABULARY
     tester as a real failure (nonzero status plus a diagnostic), never as plain
     report text the author might silently diff away. Error classes: lex, parse,
     name, guard (read-only violation), cascade (cyclic causality), state-machine
-    (e.g. missing 'until switched'), trace (e.g. not ending in END), and
-    internal (tool/infrastructure).
+    (e.g. a state missing its 'until switched' clause), trace (e.g. not ending in
+    END), and internal (tool/infrastructure).
 
 -------------------------------------------------------------------------------
 2. PIPELINE
@@ -79,8 +91,8 @@ VOCABULARY
         |-- read TRACE (must end with an explicit END event)
         |-- for each event in temporal order:
         |     |-- advance synthetic CLOCKs, emit their pending events
-        |     |-- fire matching rules (GROUND_MODE + live modes + the active
-        |     |     state-machine member)
+        |     |-- fire matching rules (GROUND + live modes + the active state
+        |     |     of each live state machine)
         |     +-- expand cascades at instant T and mutate objects
         |-- 'on END' object-space teardown
         +-- collect and process output streams
@@ -109,23 +121,53 @@ VOCABULARY
     the transpiler never reflects on them, and bad field accesses surface as
     ordinary Luau runtime errors.
 
+  REACTORS
+    A reactor is a declared, parameterized, dormant rule unit, armed as an
+    effect of a cause. Identity is the parameter list, so a duplicate arming is
+    a silent no-op. A live reactor's inner rules fire with the 'mode' binding
+    set to the instance; optional 'init'/'deinit' hooks run once at arming and
+    once at cessation. MODE and STATE are its two forms; they share one body
+    shape and differ only in how they close and whether they exclude siblings.
+
   MODES
-    Declared, parameterized, dormant rule units, armed as an effect of a cause.
-    Identity is the parameter list, so a duplicate arming is a silent no-op.
-    A live mode's inner rules fire with the 'mode' binding set to the instance;
-    optional 'init'/'deinit' hooks run once at arming and once at cessation. A
+    A mode overlaps freely with its siblings: any number are live at once. A
     mode ends when one of its 'until' clauses fires (first-wins; no further
-    'until' is then checked) or at END if still live.
+    'until' is then checked) or at END if still live. A mode lives at GROUND
+    level or as a member of a mode group.
     (Lifecycle, parameters, and queries: SYNTAX.txt A.2.3.)
 
+  STATES
+    A state is a mode living in a state machine. Its block is closed by a
+    mandatory final 'until switched' clause -- which fires when a sibling state
+    is armed -- preceded by any of its own optional 'until' clauses, first-wins.
+    (Declaration and 'until switched': SYNTAX.txt A.2.5.)
+
+  MODE GROUPS
+    An aggregate of modes with no exclusion: arming one member does not
+    deactivate another, and any number of members are live at once. A mode
+    group has its own 'init'/'deinit', may carry parameters, has no 'default',
+    and is closed by 'end' (it has no closing 'until' clauses of its own).
+    (Declaration: SYNTAX.txt A.2.6.)
+
   STATE MACHINES
-    A habitat for modes with single-active semantics: arming one member-mode
-    deactivates the previous one (its mandatory 'until switched' fires). This
-    expresses a state machine directly -- each member is a state, arming is a
-    transition, mutual exclusion is automatic. A state machine has its own
-    'init'/'deinit', an optional 'default' member (an implicit do-nothing
-    'VOID' mode when unspecified), and may carry parameters.
-    (Declaration, the 'switched' rule, and the 'sm' binding: SYNTAX.txt A.2.5.)
+    An aggregate of states with single-active semantics: arming one member
+    state deactivates the previously active one (its 'until switched' fires).
+    Each member is a state, arming is a transition, mutual exclusion is
+    automatic. A state machine has its own 'init'/'deinit', an optional
+    'default' member (an implicit do-nothing 'VOID' state when unspecified),
+    may carry parameters, and is closed by 'end'.
+    (Declaration, 'until switched', and the 'sm' binding: SYNTAX.txt
+    A.2.5.)
+
+  AGGREGATE ARMING AND NAMING
+    A mode group or state machine is spawned with the '+!' effect verb,
+    paralleling the '!' that arms a single mode. An 'as <name>' clause binds
+    the instance as an addressable entity; without it the instance folds into
+    one global singleton per aggregate type. Named instances let several
+    aggregates of the same type run concurrently, each supervised separately. A
+    named instance is removed with the '-!' verb, which takes a reference by
+    name (bare or dotted) -- only a named entity can be unspawned.
+    (Effect forms: SYNTAX.txt <spawn> and <unspawn>.)
 
   BINDINGS
     Engine-supplied names in scope inside a fired rule's Luau spans: 'event'
@@ -177,7 +219,7 @@ VOCABULARY
     event class bound to it; two Spaces never share history.
 
   IDENTITY & METATABLES
-    Events, modes, and state machines carry transpiler-generated metatables, so
+    Events, reactors, and aggregates carry transpiler-generated metatables, so
     the static checks can identify their types at compile time (queryable via
     'typeof'/'getmetatable'). Objects, by contrast, are user-defined classes
     built at run time via 'Class.create'. Two mechanisms for two jobs.
@@ -219,11 +261,12 @@ VOCABULARY
     fatal operational error on a repeat.
 
   STATIC ANALYSIS CHECKS (Python, transpile time)
-    - NAME RESOLUTION (fatal). Every event, mode, field, and state-machine
-      member name must resolve; each state-machine member's 'until' list must
-      end with 'switched'; a state-machine 'default' must reference a valid
-      member or VOID. (A tolerated unknown name in a validation suite would be
-      a silent false pass -- hence fatal.)
+    - NAME RESOLUTION (fatal). Every event, reactor, field, and aggregate
+      member name must resolve; each state's 'until' list must end with 'until switched';
+      a state-machine 'default' must reference a valid member or VOID; a 'has:'
+      and a member reference must resolve against the enclosing aggregate. (A
+      tolerated unknown name in a validation suite would be a silent false pass
+      -- hence fatal.)
     - GUARD READ-ONLY (fatal). A sound syntactic check rejects assignments and
       recognised mutating builtins inside guards. Sound but not complete:
       mutation via a user-defined call is not detected. (Rationale and exempt
@@ -235,33 +278,46 @@ VOCABULARY
       transpile-time counterpart of the runtime 'emit' guard above.
 
 -------------------------------------------------------------------------------
-6. RULES, MODES, STATE MACHINES, AND THE TRACER
+6. RULES, REACTORS, AGGREGATES, AND THE TRACER
 -------------------------------------------------------------------------------
   Concrete forms for everything below are in SYNTAX.txt A.2 and B.1; this
   section records only the design choices behind them.
 
   UNIFORM RULE SHAPE
-    A rule has the same shape -- 'on ... => ... off' -- wherever it appears:
-    top level, inside a mode, or inside a state machine. Every effect carries
-    its own '=>', and 'off' closes every block. The shape never depends on
-    context (in particular, 'off' is never optional), so a rule's
-    well-formedness never depends on what follows it.
+    A rule has the same shape -- 'on <cause> ( => <effect> )+' -- wherever it
+    appears: top level, inside a mode, inside a state, inside a mode group, or
+    inside a state machine. Every effect carries its own '=>', so the effect
+    list is self-delimiting: it ends at the first line that is not an '=>'
+    effect, and a rule needs no closing keyword. Because the follower of a rule
+    (a top-level keyword, a member keyword, 'until', 'end', or end-of-file) is
+    never '=>', a rule's well-formedness never depends on what follows it. The
+    enclosing aggregate -- a mode group or a state machine -- is itself closed
+    by 'end'; a mode by its 'until' causes; a state by 'until switched'.
 
   MODE LIFECYCLE
     Identity is the parameter list, making arming idempotent: an author writes
-    '=> + MODE(...)' without first checking whether it is already live. 'init'
+    '=> ! MODE(...)' without first checking whether it is already live. 'init'
     runs once on creation, 'deinit' once on cessation. The first 'until' to
     fire wins and no further 'until' is checked, so 'deinit' has a single
     well-defined moment and an 'until' clause may safely inspect the
     still-living instance. Top-level rules belong to an internal singleton,
-    GROUND_MODE, so the engine has one mechanism (the mode) rather than two.
+    GROUND_MODE, so the engine has one mechanism (the reactor) rather than two.
+
+  AGGREGATE ARMING
+    A single mode is armed with '!'; an aggregate -- a mode group or a state
+    machine -- is spawned with '+!' and a named instance removed with '-!'. An
+    'as <name>' clause names the instance; without it the instance is the
+    aggregate type's global singleton. The verbs keep the targets distinct: '!'
+    takes a reactor, '+!'/'-!' take an aggregate. Because only a named entity
+    can be removed, '-!' takes a reference by name, not a fresh invocation.
 
   STATE-MACHINE LIFECYCLE
-    Members are mutually exclusive; arming one fires the previous member's
-    implicit 'until switched'. 'switched' is a mandatory, non-functional
-    closing 'until' on every member: it has no runtime effect but forces the
-    author to acknowledge that a member can also end by a sibling being armed,
-    not only by its own events.
+    Member states are mutually exclusive; arming one fires the previously
+    active state's 'until switched' clause. 'switched' is a non-functional
+    keyword on every state: it has no runtime effect but marks, at the closing
+    line, that a state can also end by a sibling being armed, not only by its
+    own events. A mode group runs no exclusion: arming a member leaves its
+    siblings live.
 
   POLYMORPHIC QUERIES
     Mode classes and traced-event histories share one query interface (lists,
@@ -314,7 +370,7 @@ VOCABULARY
     - DEBOUNCE / UNLESS-CANCELLED: one 'until' on a deadline, one on the
       success event.
     - MUTUAL EXCLUSION: a guarded check on the 'ANY' trigger.
-    - STATE MACHINE: one state machine, one member-mode per state.
+    - STATE MACHINE: one state machine, one member state per state.
 
 -------------------------------------------------------------------------------
 9. INTEGRATION SURFACE

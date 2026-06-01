@@ -1,0 +1,9 @@
+=== <state-untils> ===
+
+-- absent --
+   input: until switched
+[]
+
+-- present --
+   input: until switched
+[]

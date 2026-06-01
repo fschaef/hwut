@@ -1,0 +1,17 @@
+=== <has-ref> ===
+
+-- absent --
+   input: has : X
+HasRef
+  aggregate = None
+  member = 'X'
+  is_void = False
+  begin = 0
+
+-- present --
+   input: has : X . VOID
+HasRef
+  aggregate = 'X'
+  member = 'VOID'
+  is_void = True
+  begin = 0

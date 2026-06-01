@@ -1,7 +1,0 @@
-
---- malformed middle rule recovered at 'off' ---
-recovered rules:
-  on A
-  on C
-diagnostics:
-  PARSER   fatal=False off=27  expected an effect (event, '+' mode-arming, string, or '{ }' mutation), found ARROW

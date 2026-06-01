@@ -1,0 +1,13 @@
+=== <arg-parens> ===
+
+-- absent --
+   input: ( )
+[]
+
+-- present --
+   input: ( 1 )
+Arg
+  member = None
+  value = '1'
+  is_luau = False
+  begin = 0

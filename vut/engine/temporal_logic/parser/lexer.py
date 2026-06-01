@@ -14,7 +14,7 @@ guesses a role; only the parser knows the context.
 ERROR MODEL (see diagnostic.py):
 
     A MISMATCH (illegal control-plane character) is reported non-fatal and
-    returned as a token so the parser may resync at the next 'off' or
+    returned as a token so the parser may resync at the next 'end' or
     top-level keyword.
 
     A malformed Luau fragment (FragmentSyntaxError from the oracle) is reported
@@ -37,21 +37,27 @@ from enum         import Enum, auto
 from dataclasses  import dataclass
 from typing       import Optional
 
-from vut.engine.temporal_logic.luau.luau_fragment import (find_matching_brace, Role,
+from ..luau.luau_fragment import (find_matching_brace, Role,
                                  FragmentSyntaxError, OracleError)
 
 from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 
 
-class E_Token(Enum):
+class E_TokenId(Enum):
     """Enumeration of all valid rule-file tokens."""
     KW_ON       = auto()
-    KW_OFF      = auto()
     KW_MODE     = auto()
+    KW_MGROUP   = auto()
     KW_SM       = auto()
+    KW_STATE    = auto()
+    KW_HAS      = auto()
+    KW_AS       = auto()
+    KW_END_BLK  = auto()
     KW_UNTIL    = auto()
     KW_EVENT    = auto()
     KW_CLOCK    = auto()
+    KW_OPEN     = auto()
+    KW_CLOSE    = auto()
 
     KW_ANY      = auto()
     KW_BEGIN    = auto()
@@ -67,7 +73,9 @@ class E_Token(Enum):
     EQUAL       = auto()
     COLON       = auto()
     COMMA       = auto()
-    PLUS        = auto()
+    PLUSBANG    = auto()   # '+!'  spawn an aggregate
+    MINUSBANG   = auto()   # '-!'  unspawn a named aggregate
+    BANG        = auto()   # '!'   arm a single mode
     SEMI        = auto()
     DOT         = auto()
     LPAREN      = auto()
@@ -89,47 +97,55 @@ _TOKEN_SPEC = [
     ("COMMENT",          r'##[^\n]*'),
     ("WS",               r'\s+'),
 
-    (E_Token.KW_ON,       r'\bon\b'),
-    (E_Token.KW_OFF,      r'\boff\b'),
-    (E_Token.KW_MODE,     r'\bmode\b'),
-    (E_Token.KW_SM,       r'\bstate_machine\b'),
-    (E_Token.KW_UNTIL,    r'\buntil\b'),
-    (E_Token.KW_EVENT,    r'\bevent\b'),
-    (E_Token.KW_CLOCK,    r'\bclock\b'),
+    (E_TokenId.KW_ON,       r'\bon\b'),
+    (E_TokenId.KW_MGROUP,   r'\bmode_group\b'),
+    (E_TokenId.KW_MODE,     r'\bmode\b'),
+    (E_TokenId.KW_SM,       r'\bstate_machine\b'),
+    (E_TokenId.KW_STATE,    r'\bstate\b'),
+    (E_TokenId.KW_HAS,      r'\bhas\b'),
+    (E_TokenId.KW_AS,       r'\bas\b'),
+    (E_TokenId.KW_END_BLK,  r'\bend\b'),
+    (E_TokenId.KW_UNTIL,    r'\buntil\b'),
+    (E_TokenId.KW_EVENT,    r'\bevent\b'),
+    (E_TokenId.KW_CLOCK,    r'\bclock\b'),
+    (E_TokenId.KW_OPEN,     r'\bopen\b'),
+    (E_TokenId.KW_CLOSE,    r'\bclose\b'),
 
-    (E_Token.KW_ANY,      r'\bANY\b'),
-    (E_Token.KW_BEGIN,    r'\bBEGIN\b'),
-    (E_Token.KW_END,      r'\bEND\b'),
-    (E_Token.KW_SWITCHED, r'\bswitched\b'),
-    (E_Token.KW_DEFAULT,  r'\bdefault\b'),
-    (E_Token.KW_INIT,     r'\binit\b'),
-    (E_Token.KW_DEINIT,   r'\bdeinit\b'),
-    (E_Token.KW_VOID,     r'\bVOID\b'),
+    (E_TokenId.KW_ANY,      r'\bANY\b'),
+    (E_TokenId.KW_BEGIN,    r'\bBEGIN\b'),
+    (E_TokenId.KW_END,      r'\bEND\b'),
+    (E_TokenId.KW_SWITCHED, r'\bswitched\b'),
+    (E_TokenId.KW_DEFAULT,  r'\bdefault\b'),
+    (E_TokenId.KW_INIT,     r'\binit\b'),
+    (E_TokenId.KW_DEINIT,   r'\bdeinit\b'),
+    (E_TokenId.KW_VOID,     r'\bVOID\b'),
 
-    (E_Token.ARROW,       r'=>'),
-    (E_Token.AND,         r'&'),
-    (E_Token.EQUAL,       r'='),
-    (E_Token.COLON,       r':'),
-    (E_Token.COMMA,       r','),
-    (E_Token.PLUS,        r'\+'),
-    (E_Token.SEMI,        r';'),
-    (E_Token.DOT,         r'\.'),
-    (E_Token.LPAREN,      r'\('),
-    (E_Token.RPAREN,      r'\)'),
-    (E_Token.LUAU_OPEN,   r'\{'),
+    (E_TokenId.ARROW,       r'=>'),
+    (E_TokenId.AND,         r'&'),
+    (E_TokenId.EQUAL,       r'='),
+    (E_TokenId.COLON,       r':'),
+    (E_TokenId.COMMA,       r','),
+    (E_TokenId.PLUSBANG,    r'\+!'),
+    (E_TokenId.MINUSBANG,   r'-!'),
+    (E_TokenId.BANG,        r'!'),
+    (E_TokenId.SEMI,        r';'),
+    (E_TokenId.DOT,         r'\.'),
+    (E_TokenId.LPAREN,      r'\('),
+    (E_TokenId.RPAREN,      r'\)'),
+    (E_TokenId.LUAU_OPEN,   r'\{'),
 
-    (E_Token.NUMBER,      r'[+-]?\d+(?:\.\d+)?'),
-    (E_Token.STRING,      r'"[^"]*"'),
-    (E_Token.ID,          r'[a-zA-Z_]\w*'),
+    (E_TokenId.NUMBER,      r'[+-]?\d+(?:\.\d+)?'),
+    (E_TokenId.STRING,      r'"[^"]*"'),
+    (E_TokenId.ID,          r'[a-zA-Z_]\w*'),
 
-    (E_Token.MISMATCH,    r'.'),
+    (E_TokenId.MISMATCH,    r'.'),
 ]
 
 
 def _group_name(kind):
     """RETURN: str, the regex group name for a spec entry's kind.
 
-    Skip-kinds are plain strings ('COMMENT', 'WS'); token-kinds are E_Token
+    Skip-kinds are plain strings ('COMMENT', 'WS'); token-kinds are E_TokenId
     members whose '.name' is used. Keeps the two namespaces from colliding.
     """
     return kind if isinstance(kind, str) else kind.name
@@ -152,7 +168,7 @@ class Token:
     the closing '}' inclusive. Line/column are not stored -- a SourceMap
     resolves 'begin' on demand. END_OF_FILE has 'begin == end' at text length.
     """
-    kind:  E_Token
+    kind:  E_TokenId
     text:  str
     begin: int
     end:   int
@@ -230,17 +246,17 @@ class Lexer:
             if group in _SKIP_GROUPS:
                 continue
 
-            kind  = E_Token[group]
+            kind  = E_TokenId[group]
             value = match.group()
 
-            if kind == E_Token.MISMATCH:
+            if kind == E_TokenId.MISMATCH:
                 self._report(begin, f"unexpected character {value!r}",
                              fatal=False)
-                return Token(E_Token.MISMATCH, value, begin, end)
+                return Token(E_TokenId.MISMATCH, value, begin, end)
 
             return Token(kind, value, begin, end)
 
-        return Token(E_Token.END_OF_FILE, "", self.length, self.length)
+        return Token(E_TokenId.END_OF_FILE, "", self.length, self.length)
 
     def read_luau_block(self, open_token: Token, role: Role) -> Optional[Token]:
         """
@@ -265,7 +281,7 @@ class Lexer:
 
         end = closing_idx + 1
         self.cursor = end
-        return Token(E_Token.LUAU_BLOCK, self.source[begin:end], begin, end)
+        return Token(E_TokenId.LUAU_BLOCK, self.source[begin:end], begin, end)
 
     def _recover_fragment(self, begin: int, exc: FragmentSyntaxError) -> Token:
         """
@@ -281,7 +297,7 @@ class Lexer:
         candidate = self.source.find("}", begin + 1)
         end = (candidate + 1) if candidate != -1 else self.length
         self.cursor = end
-        return Token(E_Token.LUAU_BLOCK, self.source[begin:end], begin, end)
+        return Token(E_TokenId.LUAU_BLOCK, self.source[begin:end], begin, end)
 
     def _report(self, offset: int, message: str, fatal: bool):
         """RETURN: None. Appends a LEXER-phase Diagnostic and updates error_f.

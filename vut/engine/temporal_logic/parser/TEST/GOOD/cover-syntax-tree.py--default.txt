@@ -1,0 +1,9 @@
+=== <default> ===
+
+-- default --
+   input: default = X . VOID
+StateMachineModeRef
+  sm_name = 'X'
+  mode_name = 'VOID'
+  is_void = True
+  begin = 0

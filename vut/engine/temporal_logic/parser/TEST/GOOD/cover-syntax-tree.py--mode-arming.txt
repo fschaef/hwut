@@ -1,0 +1,25 @@
+=== <mode-arming> ===
+
+-- 0x --
+   input: ! X ( )
+ModeArming
+  name = 'X'
+  args:
+    []
+  begin = 0
+
+-- 1x --
+   input: ! X . X ( )
+ModeArming
+  name = 'X.X'
+  args:
+    []
+  begin = 0
+
+-- 2x --
+   input: ! X . X . X ( )
+ModeArming
+  name = 'X.X.X'
+  args:
+    []
+  begin = 0
