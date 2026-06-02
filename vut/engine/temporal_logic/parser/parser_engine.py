@@ -25,9 +25,8 @@ not the rule-file language. Swapping GRAMMAR/ACTIONS reuses it unchanged.
 ______________________________________________________________________________
 """
 from dataclasses import dataclass
-from typing      import Optional
 
-from .lexer       import Lexer, E_TokenId, Token, _TOKEN_SPEC
+from .lexer       import Lexer, E_TokenId, _TOKEN_SPEC
 from .diagnostic  import Diagnostic, Phase, DiagnosticReporter
 from ..luau.luau_fragment import Role
 from . import grammar   as G
@@ -187,7 +186,10 @@ class Grammar:
         if element in self.literals:
             captured = element in G.CAPTURED_LITERALS
             return Terminal(self.literals[element], silent=not captured)
-        raise ValueError("unresolved grammar literal %r" % element)
+        raise ValueError(
+            "unresolved grammar literal %r: no token in the lexer's "
+            "_TOKEN_SPEC spells it. The grammar references %r but lexer.py "
+            "defines no matching keyword/symbol pattern." % (element, element))
 
     # -- analysis: FIRST sets + LL(1) validation ------------------------
     def _analyse(self):
@@ -312,9 +314,11 @@ class _ResyncError(Exception):
 class EngineParser:
     """Parses a rule file by interpreting a compiled Grammar with LL(1) lookahead.
 
-    Drives the pull-Lexer, picks ALT branches by FIRST set, runs reduce actions
-    to build the AST, and resyncs at 'end'/top-level keywords on error -- the
-    same recovery contract as the hand-written parser.
+    Drives the pull-Lexer with one token of lookahead, picks ALT branches by
+    FIRST set, and runs reduce actions to build the AST. The walk is stackless:
+    an explicit work stack and frame stack replace recursion, so deeply nested
+    constructs (notably namespaces) cannot overflow the interpreter. Resyncs at
+    'end'/top-level keywords on error.
     """
     _TOP_LEVEL = None       # filled after Grammar is known
 
@@ -378,23 +382,109 @@ class EngineParser:
                 self._resync()
         return rule_file
 
-    # -- the interpreter ------------------------------------------------
+    # -- the interpreter (stackless) ------------------------------------
+    #
+    # The walk is driven by an explicit work stack instead of Python recursion,
+    # so parse depth is bounded by the heap, not the C stack: deeply nested
+    # namespaces (open ... open ... close ... close) can no longer overflow.
+    #
+    # Two stacks cooperate:
+    #   work   -- instructions still to perform, processed LIFO.
+    #   frames -- one Frame per NonTerminal currently being assembled; child
+    #             values append to frames[-1]; a REDUCE pops it, runs the
+    #             rule's action, and appends the result to the new top frame.
+    #
+    # Work instructions (tuples, tagged by [0]):
+    #   (ELEM,  element)  -- expand 'element', appending values to frames[-1]
+    #   (REDUCE, nt)      -- finish NonTerminal 'nt': pop its frame, act, append
+    #   (LOOP, body, plus_done) -- a PLUS/STAR iteration point (see below)
+    #
+    # A SEQ pushes its parts in reverse so they run left-to-right. An ALT
+    # chooses its branch from one-token lookahead and pushes it. OPT pushes its
+    # body iff the lookahead starts it. PLUS/STAR push a LOOP marker that, each
+    # time it surfaces, re-checks the lookahead and -- while the body still
+    # starts -- pushes the body and another LOOP beneath it, turning the
+    # repetition into stack iteration.
+    _ELEM   = 0
+    _REDUCE = 1
+    _LOOP   = 2
+
     def _match(self, element):
         """
         RETURN: value, the result of matching 'element' against the stream.
 
-        A Terminal yields its Token (or None if silent). A LuauRef drives the
-        oracle and yields a Luau node. A NonTerminal collects a Frame and runs
-        its action. A combinator tuple recurses per its PO tag. Mismatches raise
-        _ResyncError after reporting.
+        Drives 'element' to completion on an explicit work stack and returns the
+        value it produced (a NonTerminal's action result, a Terminal's token, a
+        Luau node, or None for silent/empty). Mismatches raise _ResyncError,
+        which abandons the whole walk for the caller (parse) to recover.
+
+        Uses a sentinel root frame to collect the single top-level value so the
+        same value-append discipline applies uniformly at every level.
         """
+        root = Frame(values=[], begin=self.tok.begin)
+        frames = [root]
+        work = [(self._ELEM, element)]
+        while work:
+            item = work.pop()
+            tag = item[0]
+            if tag == self._ELEM:
+                self._step_elem(item[1], frames, work)
+            elif tag == self._REDUCE:
+                self._step_reduce(item[1], frames)
+            else:  # _LOOP
+                self._step_loop(item[1], frames, work)
+        return root.values[0] if root.values else None
+
+    def _step_elem(self, element, frames, work):
+        """RETURN: None. Expands one element, mutating 'frames'/'work' in place."""
         if isinstance(element, Terminal):
-            return self._match_terminal(element)
+            value = self._match_terminal(element)
+            if value is not None:
+                frames[-1].values.append(value)
+            return
         if isinstance(element, LuauRef):
-            return self._match_luau(element)
+            frames[-1].values.append(self._match_luau(element))
+            return
         if isinstance(element, NonTerminal):
-            return self._match_nonterminal(element)
-        return self._match_combinator(element)
+            # Open a new frame; schedule its reduce, then expand its pattern
+            # (pushed last so it runs first).
+            frames.append(Frame(values=[], begin=self.tok.begin))
+            work.append((self._REDUCE, element))
+            work.append((self._ELEM, element.pattern))
+            return
+        op = element[0]
+        if op == SEQ:
+            for sub in reversed(element[1:]):
+                work.append((self._ELEM, sub))
+        elif op == ALT:
+            work.append((self._ELEM, self._choose_alt(element)))
+        elif op == OPT:
+            if self._starts(element[1]):
+                work.append((self._ELEM, element[1]))
+        elif op == PLUS:
+            # One mandatory body, then a loop for the rest.
+            work.append((self._LOOP, element[1]))
+            work.append((self._ELEM, element[1]))
+        elif op == STAR:
+            work.append((self._LOOP, element[1]))
+        else:
+            raise ValueError("unknown op %r" % (op,))
+
+    def _step_loop(self, body, frames, work):
+        """RETURN: None. One repetition check: if the body starts, take it again."""
+        if self._starts(body):
+            work.append((self._LOOP, body))
+            work.append((self._ELEM, body))
+
+    def _step_reduce(self, nt, frames):
+        """RETURN: None. Pops nt's frame, runs its action, appends to parent."""
+        frame = frames.pop()
+        if nt.action is None:
+            value = frame.values[0] if frame.values else None
+        else:
+            value = nt.action(frame)
+        if value is not None:
+            frames[-1].values.append(value)
 
     def _match_terminal(self, term):
         """RETURN: Token or None. Consumes the expected token; None if silent."""
@@ -418,62 +508,6 @@ class EngineParser:
             raise _ResyncError()
         self.tok = self.lexer.next()
         return ast.Luau(text=block.text, role=luau_ref.role, begin=block.begin)
-
-    def _match_nonterminal(self, nt):
-        """
-        RETURN: value, the action's result, or the single child if pass-through.
-
-        Collects non-silent child values into a Frame whose 'begin' is the
-        lookahead offset at entry, then runs the rule's action.
-        """
-        begin  = self.tok.begin
-        values = []
-        self._collect(nt.pattern, values)
-        if nt.action is None:
-            # Pass-through: forward the single meaningful value (or None).
-            return values[0] if values else None
-        return nt.action(Frame(values=values, begin=begin))
-
-    def _collect(self, element, values):
-        """RETURN: None. Matches 'element', appending non-None values to 'values'."""
-        if isinstance(element, tuple):
-            self._collect_combinator(element, values)
-            return
-        value = self._match(element)
-        if value is not None:
-            values.append(value)
-
-    def _collect_combinator(self, element, values):
-        """RETURN: None. Expands a combinator, appending matched values."""
-        op = element[0]
-        if op == SEQ:
-            for sub in element[1:]:
-                self._collect(sub, values)
-        elif op == ALT:
-            branch = self._choose_alt(element)
-            self._collect(branch, values)
-        elif op == OPT:
-            if self._starts(element[1]):
-                self._collect(element[1], values)
-        elif op == PLUS:
-            self._collect(element[1], values)
-            while self._starts(element[1]):
-                self._collect(element[1], values)
-        elif op == STAR:
-            while self._starts(element[1]):
-                self._collect(element[1], values)
-        else:
-            raise ValueError("unknown op %r" % (op,))
-
-    def _match_combinator(self, element):
-        """RETURN: value, for a bare combinator used where a value is expected.
-
-        Only reached for a non-terminal whose whole pattern is a combinator with
-        a single meaningful value (rare); collects into a scratch list.
-        """
-        scratch = []
-        self._collect_combinator(element, scratch)
-        return scratch[0] if scratch else None
 
     def _choose_alt(self, alt_element):
         """

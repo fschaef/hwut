@@ -1,0 +1,91 @@
+=== negative: <state-machine> ===
+
+-- junk-head --
+   input: ? X : state X : on X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 13
+   diag: PARSER off=0 expected KW_SM, found MISMATCH
+
+-- truncate --
+   input: state_machine X : state X : on X => { luau } until switched
+   built:   no (rule abandoned)
+   consumed: 12 token(s); leftover: 0
+   diag: PARSER off=0 expected KW_END_BLK, found END_OF_FILE
+
+-- omit-required-1 --
+   input: X : state X : on X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 12
+   diag: PARSER off=0 expected KW_SM, found ID
+
+-- omit-required-2 --
+   input: state_machine : state X : on X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 11
+   diag: PARSER off=0 expected ID, found COLON
+
+-- omit-required-3 --
+   input: state_machine X state X : on X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 10
+   diag: PARSER off=0 expected COLON, found KW_STATE
+
+-- omit-required-4 --
+   input: state_machine X : X : on X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 9
+   diag: PARSER off=0 no alternative matches ID
+
+-- omit-required-5 --
+   input: state_machine X : state : on X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 8
+   diag: PARSER off=0 expected ID, found COLON
+
+-- omit-required-6 --
+   input: state_machine X : state X on X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 5 token(s); leftover: 7
+   diag: PARSER off=0 expected COLON, found KW_ON
+
+-- omit-required-7 --
+   input: state_machine X : state X : X => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches ID
+
+-- omit-required-8 --
+   input: state_machine X : state X : on => { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 7 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches ARROW
+
+-- omit-required-9 --
+   input: state_machine X : state X : on X { luau } until switched end
+   built:   no (rule abandoned)
+   consumed: 8 token(s); leftover: 4
+   diag: PARSER off=0 expected ARROW, found LUAU_OPEN
+
+-- omit-required-10 --
+   input: state_machine X : state X : on X => until switched end
+   built:   no (rule abandoned)
+   consumed: 9 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches KW_UNTIL
+
+-- omit-required-11 --
+   input: state_machine X : state X : on X => { luau } switched end
+   built:   no (rule abandoned)
+   consumed: 10 token(s); leftover: 2
+   diag: PARSER off=0 expected KW_UNTIL, found KW_SWITCHED
+
+-- omit-required-12 --
+   input: state_machine X : state X : on X => { luau } until end
+   built:   no (rule abandoned)
+   consumed: 11 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches KW_END_BLK
+
+-- omit-required-13 --
+   input: state_machine X : state X : on X => { luau } until switched
+   built:   no (rule abandoned)
+   consumed: 12 token(s); leftover: 0
+   diag: PARSER off=0 expected KW_END_BLK, found END_OF_FILE

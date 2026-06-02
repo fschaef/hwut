@@ -1,0 +1,152 @@
+=== monkey: luau ===
+tokens synthesized: 111
+top-level items:    6
+diagnostics:        none
+rules visited:      28 / 38
+node types built:   16 / 22
+
+-- AST --
+StateMachine
+  name = 'X2.X4.X6'
+  params:
+    []
+  states:
+    State
+      name = 'X9.X11'
+      params:
+        []
+      init = None
+      deinit:
+        Luau
+          text = '{ x{ y }{ y }{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X14'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            Spawn
+              name = 'X17.X19'
+              args:
+                []
+              inst = None
+              begin = 0
+          begin = 0
+      untils:
+        Cause
+          trigger:
+            Trigger
+              name = 'X24'
+              is_keyword = False
+              begin = 0
+          guard = None
+          begin = 0
+      begin = 0
+  has_refs:
+    []
+  default = None
+  init = None
+  deinit = None
+  begin = 0
+ClockDef
+  name = 'X29'
+  period = '1'
+  begin = 0
+Namespace
+  name = 'X32.X34.X36'
+  items:
+    Namespace
+      name = 'X38.X40.X42'
+      items:
+        Mode
+          name = 'X44.X46'
+          params:
+            []
+          init = None
+          deinit:
+            Luau
+              text = '{ x{ y }{ y }{ y }{ y } }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          causalities:
+            []
+          untils:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X50'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          begin = 0
+      begin = 0
+    Include
+      filename = 's'
+      mount = 'X55.X57.X59'
+      begin = 0
+  begin = 0
+ClockDef
+  name = 'X62'
+  period = '1'
+  begin = 0
+EventDef
+  name = 'X65'
+  params:
+    []
+  begin = 0
+Namespace
+  name = 'X69.X71.X73'
+  items:
+    ModeGroup
+      name = 'X75.X77.X79'
+      params:
+        []
+      modes:
+        []
+      has_refs:
+        HasRef
+          aggregate = None
+          member = 'X83'
+          is_void = False
+          begin = 0
+      init = None
+      deinit = None
+      begin = 0
+    StateMachine
+      name = 'X86.X88.X90'
+      params:
+        ArgDecl
+          member = 'X92'
+          type = 'X94'
+          begin = 0
+        ArgDecl
+          member = 'X96'
+          type = 'X98'
+          begin = 0
+      states:
+        []
+      has_refs:
+        []
+      default:
+        StateMachineModeRef
+          sm_name = 'X103'
+          mode_name = 'X105'
+          is_void = False
+          begin = 0
+      init = None
+      deinit:
+        Luau
+          text = '{ x{ y }{ y }{ y }{ y }{ y }{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0

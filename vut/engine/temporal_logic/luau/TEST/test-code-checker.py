@@ -41,9 +41,7 @@ DESCRIPTION:
 ______________________________________________________________________________
 """
 import sys
-import config                                                       # noqa: F401
-
-from vut.language_support.python.hwut_runner import HwutRunner
+from   config import HwutRunner
 
 from vut.engine.temporal_logic.luau.location_mapper      import Source2TargetLocationMapper
 from vut.engine.temporal_logic.luau.generated_code_checker import GeneratedCodeChecker, format_diagnostic

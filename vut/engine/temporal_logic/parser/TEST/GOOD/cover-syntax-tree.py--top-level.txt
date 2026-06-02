@@ -1,6 +1,24 @@
 === <top-level> ===
 
 -- alternative 0 --
+   input: open X . X include "s" as X close
+Namespace
+  name = 'X.X'
+  items:
+    Include
+      filename = 's'
+      mount = 'X'
+      begin = 0
+  begin = 0
+
+-- alternative 1 --
+   input: include "s" as X . X
+Include
+  filename = 's'
+  mount = 'X.X'
+  begin = 0
+
+-- alternative 2 --
    input: on X & { luau } => { luau }
 Causality
   cause:
@@ -26,7 +44,7 @@ Causality
       begin = 0
   begin = 0
 
--- alternative 1 --
+-- alternative 3 --
    input: mode X . X : on X => { luau } until X
 Mode
   name = 'X.X'
@@ -65,7 +83,7 @@ Mode
       begin = 0
   begin = 0
 
--- alternative 2 --
+-- alternative 4 --
    input: mode_group X . X : mode X : on X => { luau } until X end
 ModeGroup
   name = 'X.X'
@@ -114,7 +132,7 @@ ModeGroup
   deinit = None
   begin = 0
 
--- alternative 3 --
+-- alternative 5 --
    input: state_machine X . X : state X : on X => { luau } until switched end
 StateMachine
   name = 'X.X'
@@ -157,7 +175,7 @@ StateMachine
   deinit = None
   begin = 0
 
--- alternative 4 --
+-- alternative 6 --
    input: event X ( X : X )
 EventDef
   name = 'X'
@@ -168,7 +186,7 @@ EventDef
       begin = 0
   begin = 0
 
--- alternative 5 --
+-- alternative 7 --
    input: clock X 1
 ClockDef
   name = 'X'

@@ -54,8 +54,19 @@ GRAMMAR = {
     # <rule-file> is driven by the engine loop, not a rule; it repeats the
     # top-level alternation until end-of-file.
     "<top-level>":
-        (ALT, "<namespace>", "<causality>", "<mode>", "<mode-group>",
-                 "<state-machine>", "<event-def>", "<clock-def>"),
+        (ALT, "<namespace>", "<include>", "<causality>", "<mode>",
+                 "<mode-group>", "<state-machine>", "<event-def>",
+                 "<clock-def>"),
+
+    # <include>: 'include' <string> 'as' <dotted-name>
+    # Mounts another file's namespace at <dotted-name> in THIS file. The
+    # including file decides placement (Python-style); the included file is
+    # placement-agnostic and lexically self-contained. The parser only RECORDS
+    # the mount (filename + target path); resolving and mounting the file's
+    # symbol table is a semantic-pass concern. FIRST(<include>) = {include},
+    # disjoint from the other top-level starters.
+    "<include>":
+        (SEQ, "include", TOK_STRING, "as", "<dotted-name>"),
 
     # <namespace>: 'open' <dotted-name> <top-level>+ 'close'
     # Brackets the declarations it contains into a named scope. The dotted name
@@ -636,9 +647,24 @@ def _build_namespace(frame):
     return ast.Namespace(name=name, items=items, begin=frame.begin)
 
 
+def _build_include(frame):
+    """RETURN: Include, the mounted file name and its target path.
+
+    frame.values = [string_tok, dotted_name]. 'include' and 'as' are silent.
+    Surrounding quotes are stripped from the filename lexeme.
+    """
+    string_tok = frame.values[0]
+    mount       = frame.values[1]
+    filename    = string_tok.text
+    if len(filename) >= 2 and filename[0] in "\"'" and filename[-1] == filename[0]:
+        filename = filename[1:-1]
+    return ast.Include(filename=filename, mount=mount, begin=frame.begin)
+
+
 ACTIONS = {
     "<top-level>":         None,
     "<namespace>":         _build_namespace,
+    "<include>":           _build_include,
     "<causality>":         _build_causality,
     "<cause>":             _build_cause,
     "<trigger>":           _build_trigger,

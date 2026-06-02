@@ -39,6 +39,7 @@ NOTE:
     <rule-file>:   <top-level>*
 
     <top-level>:   (   <namespace>
+                     | <include>
                      | <causality>
                      | <mode>
                      | <mode-group>
@@ -49,6 +50,8 @@ NOTE:
     <namespace>:   'open' <dotted-name>
                        <top-level>+
                    'close'
+
+    <include>:     'include' <string> 'as' <dotted-name>
 
     <causality>:   'on' <cause> ( '=>' <effect> )+
 
@@ -715,6 +718,37 @@ A namespace may contain a nested 'open'/'close':
 
 (The binding rules -- how a reference resolves across namespaces, and how
 'as'-name visibility works -- are a semantic-pass concern, not a parsing one.)
+
+
+(A.2.8) Including Other Files
+
+Another file's namespace is mounted into this one with:
+
+    include "<file>" as <dotted-name>
+
+The INCLUDING file decides the mount point (the 'as' path); the included file
+is placement-agnostic and does not name its own location -- the same file may
+be mounted at different paths in different files, and there is no self-naming
+collision. This mirrors how a module system separates a unit's internal,
+self-relative names from its external, caller-chosen placement.
+
+    include "city_rules"  as earth.europe.berlin
+    include "sensor_pack" as sensors
+
+    open world.zone
+        include "diagnostics" as diag      # mount inside a scope
+        on TICK => HEARTBEAT()
+    close
+
+An include may appear at the top level or inside an 'open' scope; the mount
+path is relative to where the include sits. The included file is parsed once on
+its own and is lexically self-contained: its internal references resolve within
+itself, not against the mounting file's surrounding scope.
+
+The parser only RECORDS each include (the file name and the mount path).
+Resolving the file, parsing it, and mounting its symbol table -- and the
+visibility and caching rules that govern that -- are semantic-pass concerns,
+not parsing ones.
 
 
 (A.3) OBJECT SPACE INIT and DEINIT

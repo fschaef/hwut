@@ -9,6 +9,13 @@ and executed by a single generic driver. There is no hand-written descent
 function per construct; adding or changing a rule is an edit to the grammar
 data, not to the driver.
 
+The driver is STACKLESS: it walks the grammar on an explicit heap work-stack
+rather than the Python call stack, so parse depth is bounded by memory, not by
+the interpreter's recursion limit. This matters because namespaces nest to
+unrestricted depth ('open ... open ... close ... close'); a recursive walker
+would overflow after a few dozen levels, whereas the engine parses tens of
+thousands of levels (see the monkey 'depth_bomb' acceptance test).
+
 -------------------------------------------------------------------------------
 MODULES AND RESPONSIBILITIES
 -------------------------------------------------------------------------------
@@ -106,14 +113,30 @@ last member's untils and the aggregate's close is decidable with one token.
 (C) THE ENGINE (DRIVER) AND REDUCE ACTIONS
 -------------------------------------------------------------------------------
 
-'EngineParser' holds the token, the current 'Frame' (the list of child values
-matched so far for the rule in progress), and the reporter. For each combinator
-it either matches a terminal (advancing the token and, for captured literals
-and Luau blocks, appending the value to the frame) or descends into a
-sub-rule. When a rule's pattern is satisfied, its reduce action runs on the
-frame and returns one AST node, which becomes a child value in the parent
-frame. A 'None' action forwards the single child unchanged (used for pure
-alternations like '<effect>' and '<rvalue>').
+'EngineParser._match' drives one element to completion on two explicit stacks,
+never recursing into itself:
+
+    work    -- instructions still to perform (LIFO). An instruction is one of:
+               ELEM(element)  expand element, appending values to the top frame
+               REDUCE(nt)     finish a NonTerminal: pop its frame, run its
+                              action, append the result to the new top frame
+               LOOP(body)     a PLUS/STAR iteration point
+    frames  -- one 'Frame' (collected child values + start offset) per
+               NonTerminal currently being assembled; child values append to
+               frames[-1].
+
+Expansion is direct: a SEQ pushes its parts in reverse (so they run left to
+right); an ALT chooses its branch from one-token lookahead and pushes it; an
+OPT pushes its body iff the lookahead starts it; a PLUS pushes one mandatory
+body plus a LOOP; a STAR pushes a LOOP. Each time a LOOP surfaces it re-checks
+the lookahead and, while the body still starts, pushes the body and another
+LOOP beneath it -- turning repetition into stack iteration. A terminal matches
+and advances; a captured literal or Luau block appends its value. When a
+NonTerminal's pattern is fully consumed its REDUCE fires: the frame's values go
+to the rule's action, which returns one AST node appended to the parent frame.
+A 'None' action forwards the single child unchanged (pure alternations like
+'<effect>' and '<rvalue>'). Because the recursion lives on the heap stacks, not
+the C stack, nesting depth is bounded only by memory.
 
 ERROR RECOVERY:
 
@@ -122,7 +145,9 @@ ERROR RECOVERY:
     top-level keyword (a new item starts there) or CONSUMES an aggregate 'end'
     and stops after it. Because causalities have no terminator, a top-level
     keyword is the boundary for a malformed rule; 'end' is the boundary inside
-    an aggregate. Recovery is non-fatal, so one run can surface several errors.
+    an aggregate. A mismatch raises _ResyncError, which unwinds the work and
+    frame stacks back to 'parse', which resyncs and continues; recovery is
+    non-fatal, so one run can surface several errors.
 
 -------------------------------------------------------------------------------
 (D) THE ABSTRACT SYNTAX TREE
@@ -140,6 +165,9 @@ by kind:
     HasRef         a 'has:' member pulled in by bare or qualified name
     Spawn          a '+! name(args) [as inst]' aggregate spawn
     Unspawn        a '-! name' removal of a named aggregate
+    Namespace      an 'open <dotted-name> ... close' scope of nested items
+    Include        an 'include "<file>" as <dotted-name>' file mount (recorded;
+                   resolved and mounted by the semantic pass)
 
 -------------------------------------------------------------------------------
 (E) SEMANTIC VALIDATION (PASS 2)
@@ -158,3 +186,61 @@ separate so the parser stays a pure recognizer:
        entity (an unspawn target must be a named, spawned instance). Modes and
        state machines share one namespace; no mode may share a state machine's
        name.
+    4. Include resolution: each 'include "<file>" as <path>' resolves the file,
+       parses it once, and mounts its namespace at <path>; the included file is
+       lexically self-contained (its names do not see the mounting scope).
+
+-------------------------------------------------------------------------------
+(F) THE TEST SUITE (TEST/)
+-------------------------------------------------------------------------------
+
+Each test is an HWUT driver: '--hwut-info' lists its choices, and running a
+choice prints to stdout, compared byte-for-byte against a GOOD/ recording. All
+four derive their choices from the compiled grammar, so a new rule is exercised
+automatically with no test edit.
+
+    test-lexer.py        Tokenizer coverage: keywords, operators, comments,
+                         dotted names, the Luau oracle handoff, and lexer error
+                         cases (mismatch, malformed fragment, source mapping).
+
+    test-engine.py       Grammar-level properties: FIRST sets, the real grammar
+                         is LL(1) (ll1_ok), a toy grammar is rejected
+                         (ll1_conflict), and the literal table.
+
+    cover-syntax-tree.py POSITIVE coverage: one choice per rule, synthesizing a
+                         minimal valid input for each shape (PLUS -> 1,2;
+                         STAR -> 0,1,2; OPT -> absent,present; one variadic
+                         point varied at a time, no cross-product) and printing
+                         the resulting AST with the input fragment that produced
+                         it. 'node_coverage' asserts every AST node type is built
+                         by some rule.
+
+    cover-negative.py    NEGATIVE coverage: one choice per rule, feeding
+                         mechanically malformed inputs (truncation, required-
+                         element omission, junk head) to the rule in isolation
+                         and recording the diagnostics and recovery, so error
+                         behaviour is pinned, not just the accepted language.
+
+    monkey-fuzz.py       Deterministic grammar-walk fuzzing. Profiles (deep,
+                         wide, luau, balanced, states) each pair a seed with
+                         weights (recursion bias, repetition cap, OPT chance,
+                         Luau nesting, item count); the walk is depth-budgeted
+                         so it always terminates and the printed AST stays
+                         reviewable. Because the walk is deterministic the AST
+                         is stable and its recording is the assertion.
+                         'depth_bomb' nests namespaces to 2000 levels as the
+                         stackless-engine acceptance test (all PASS only with
+                         the heap-stack driver; a recursive walker fails past a
+                         few dozen). 'coverage' unions the rules entered and AST
+                         node types produced across all profiles and asserts the
+                         suite collectively reaches every rule (38/38) and every
+                         tree node type (22/22; the transient InitBlock/
+                         DeinitBlock are excluded, as they never persist).
+
+                         Passing '--debug' after a profile name additionally
+                         renders the SAME synthesized walk as real source text,
+                         re-parses it through the REAL lexer, and confirms the
+                         AST matches structurally -- a lightweight round-trip
+                         that also prints the source for eyeballing text vs.
+                         tree, plus the per-profile rule/node gaps. '--debug'
+                         output is never recorded.

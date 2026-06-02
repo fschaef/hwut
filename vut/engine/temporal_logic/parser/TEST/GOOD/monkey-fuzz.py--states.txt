@@ -1,0 +1,302 @@
+=== monkey: states ===
+tokens synthesized: 212
+top-level items:    6
+diagnostics:        none
+rules visited:      34 / 38
+node types built:   19 / 22
+
+-- AST --
+ClockDef
+  name = 'X2'
+  period = '1'
+  begin = 0
+Causality
+  cause:
+    Cause
+      trigger:
+        Trigger
+          name = 'ANY'
+          is_keyword = True
+          begin = 0
+      guard = None
+      begin = 0
+  effects:
+    Spawn
+      name = 'X8.X10.X12.X14'
+      args:
+        []
+      inst = None
+      begin = 0
+    Spawn
+      name = 'X19.X21'
+      args:
+        Arg
+          member = None
+          value = '"s"'
+          is_luau = False
+          begin = 0
+        Arg
+          member = None
+          value = '"s"'
+          is_luau = False
+          begin = 0
+        Arg
+          member = None
+          value:
+            Luau
+              text = '{ x }'
+              role = <Role.EXPRESSION: 'expression'>
+              begin = 0
+          is_luau = True
+          begin = 0
+        Arg
+          member = 'X28'
+          value:
+            Luau
+              text = '{ x }'
+              role = <Role.EXPRESSION: 'expression'>
+              begin = 0
+          is_luau = True
+          begin = 0
+      inst = None
+      begin = 0
+  begin = 0
+Namespace
+  name = 'X32.X34'
+  items:
+    EventDef
+      name = 'X36'
+      params:
+        []
+      begin = 0
+    StateMachine
+      name = 'X40.X42.X44'
+      params:
+        ArgDecl
+          member = 'X46'
+          type = 'X48'
+          begin = 0
+        ArgDecl
+          member = 'X50'
+          type = 'X52'
+          begin = 0
+        ArgDecl
+          member = 'X54'
+          type = 'X56'
+          begin = 0
+        ArgDecl
+          member = 'X58'
+          type = 'X60'
+          begin = 0
+        ArgDecl
+          member = 'X62'
+          type = 'X64'
+          begin = 0
+      states:
+        []
+      has_refs:
+        HasRef
+          aggregate = None
+          member = 'X74'
+          is_void = False
+          begin = 0
+      default:
+        StateMachineModeRef
+          sm_name = 'X69'
+          mode_name = 'X71'
+          is_void = False
+          begin = 0
+      init = None
+      deinit = None
+      begin = 0
+    StateMachine
+      name = 'X77.X79.X81'
+      params:
+        []
+      states:
+        State
+          name = 'X84.X86.X88.X90'
+          params:
+            []
+          init:
+            Luau
+              text = '{ x }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          deinit:
+            Luau
+              text = '{ x }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          causalities:
+            Causality
+              cause:
+                Cause
+                  trigger:
+                    Trigger
+                      name = 'END'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+              effects:
+                Spawn
+                  name = 'X99.X101'
+                  args:
+                    []
+                  inst = None
+                  begin = 0
+              begin = 0
+          untils:
+            Cause
+              trigger:
+                Trigger
+                  name = 'ANY'
+                  is_keyword = True
+                  begin = 0
+              guard = None
+              begin = 0
+          begin = 0
+        State
+          name = 'X109.X111.X113.X115.X117'
+          params:
+            []
+          init:
+            Luau
+              text = '{ x }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          deinit:
+            Luau
+              text = '{ x }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          causalities:
+            []
+          untils:
+            Cause
+              trigger:
+                Trigger
+                  name = 'ANY'
+                  is_keyword = True
+                  begin = 0
+              guard = None
+              begin = 0
+          begin = 0
+      has_refs:
+        []
+      default = None
+      init = None
+      deinit:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0
+Causality
+  cause:
+    Cause
+      trigger:
+        Trigger
+          name = 'X129'
+          is_keyword = False
+          begin = 0
+      guard:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+  effects:
+    Unspawn
+      name = 'X133.X135.X137.X139'
+      begin = 0
+  begin = 0
+Mode
+  name = 'X141.X143'
+  params:
+    []
+  init:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit:
+    Luau
+      text = '{ x{ y } }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  causalities:
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'END'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      effects:
+        Spawn
+          name = 'X152.X154.X156.X158.X160'
+          args:
+            []
+          inst = 'X164'
+          begin = 0
+        ReportString
+          text = '"s"'
+          begin = 0
+        EventSpec
+          name = 'X168.X170.X172.X174'
+          args:
+            Arg
+              member = None
+              value = '"s"'
+              is_luau = False
+              begin = 0
+            Arg
+              member = None
+              value = '"s"'
+              is_luau = False
+              begin = 0
+          begin = 0
+      begin = 0
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'X183'
+              is_keyword = False
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      effects:
+        Unspawn
+          name = 'X187.X189.X191'
+          begin = 0
+      begin = 0
+  untils:
+    Cause
+      trigger:
+        Trigger
+          name = 'END'
+          is_keyword = True
+          begin = 0
+      guard = None
+      begin = 0
+  begin = 0
+Include
+  filename = 's'
+  mount = 'X197.X199'
+  begin = 0

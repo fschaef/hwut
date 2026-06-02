@@ -9,12 +9,14 @@ SUCCESS: DeinitBlock is produced by a grammar rule
 SUCCESS: EventDef is produced by a grammar rule
 SUCCESS: EventSpec is produced by a grammar rule
 SUCCESS: HasRef is produced by a grammar rule
+SUCCESS: Include is produced by a grammar rule
 SUCCESS: InitBlock is produced by a grammar rule
 SUCCESS: Luau is produced by a grammar rule
 SUCCESS: Mode is produced by a grammar rule
 SUCCESS: ModeArming is produced by a grammar rule
 SUCCESS: ModeGroup is produced by a grammar rule
 SUCCESS: Mutation is produced by a grammar rule
+SUCCESS: Namespace is produced by a grammar rule
 SUCCESS: ReportString is produced by a grammar rule
 SUCCESS: Spawn is produced by a grammar rule
 SUCCESS: State is produced by a grammar rule

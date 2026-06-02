@@ -1,0 +1,65 @@
+=== monkey: aggregate coverage ===
+
+-- rules (38/38) --
+SUCCESS: <arg-decl-list>
+SUCCESS: <arg-decl>
+SUCCESS: <arg-list>
+SUCCESS: <arg-parens>
+SUCCESS: <arg>
+SUCCESS: <causality>
+SUCCESS: <cause>
+SUCCESS: <clock-def>
+SUCCESS: <decl-parens>
+SUCCESS: <default>
+SUCCESS: <deinit>
+SUCCESS: <dotted-name>
+SUCCESS: <effect>
+SUCCESS: <event-def>
+SUCCESS: <event-spec>
+SUCCESS: <guard>
+SUCCESS: <has-ref>
+SUCCESS: <include>
+SUCCESS: <init>
+SUCCESS: <member-ref>
+SUCCESS: <mode-arming>
+SUCCESS: <mode-elm>
+SUCCESS: <mode-group-elm>
+SUCCESS: <mode-group>
+SUCCESS: <mode>
+SUCCESS: <mutation>
+SUCCESS: <namespace>
+SUCCESS: <report-string>
+SUCCESS: <rvalue>
+SUCCESS: <sm-mode-ref>
+SUCCESS: <spawn>
+SUCCESS: <state-machine-elm>
+SUCCESS: <state-machine>
+SUCCESS: <state-untils>
+SUCCESS: <state>
+SUCCESS: <top-level>
+SUCCESS: <trigger>
+SUCCESS: <unspawn>
+
+-- node types (22/22) --
+SUCCESS: Arg
+SUCCESS: ArgDecl
+SUCCESS: Causality
+SUCCESS: Cause
+SUCCESS: ClockDef
+SUCCESS: EventDef
+SUCCESS: EventSpec
+SUCCESS: HasRef
+SUCCESS: Include
+SUCCESS: Luau
+SUCCESS: Mode
+SUCCESS: ModeArming
+SUCCESS: ModeGroup
+SUCCESS: Mutation
+SUCCESS: Namespace
+SUCCESS: ReportString
+SUCCESS: Spawn
+SUCCESS: State
+SUCCESS: StateMachine
+SUCCESS: StateMachineModeRef
+SUCCESS: Trigger
+SUCCESS: Unspawn

@@ -31,11 +31,10 @@ retained only as a hook for future cross-checks.
 ______________________________________________________________________________
 """
 import sys
-import config                                                       # noqa: F401
+from config import HwutRunner
 
 from dataclasses import is_dataclass, fields
 
-from vut.language_support.python.hwut_runner         import HwutRunner
 from vut.engine.temporal_logic.parser.diagnostic     import DiagnosticReporter
 from vut.engine.temporal_logic.parser.parser_engine  import (compiled_grammar, 
                                                              Terminal, 

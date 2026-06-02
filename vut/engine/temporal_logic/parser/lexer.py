@@ -58,6 +58,7 @@ class E_TokenId(Enum):
     KW_CLOCK    = auto()
     KW_OPEN     = auto()
     KW_CLOSE    = auto()
+    KW_INCLUDE  = auto()
 
     KW_ANY      = auto()
     KW_BEGIN    = auto()
@@ -110,6 +111,7 @@ _TOKEN_SPEC = [
     (E_TokenId.KW_CLOCK,    r'\bclock\b'),
     (E_TokenId.KW_OPEN,     r'\bopen\b'),
     (E_TokenId.KW_CLOSE,    r'\bclose\b'),
+    (E_TokenId.KW_INCLUDE,  r'\binclude\b'),
 
     (E_TokenId.KW_ANY,      r'\bANY\b'),
     (E_TokenId.KW_BEGIN,    r'\bBEGIN\b'),

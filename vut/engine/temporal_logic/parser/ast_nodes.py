@@ -26,10 +26,10 @@ from abc import ABC
 class TopLevel(ABC):
     """Abstract base for the constructs that may appear at rule-file top level.
 
-    Namespace, Causality, Mode, ModeGroup, StateMachine, EventDef and ClockDef
-    derive from it, so 'RuleFile.items' is typed as list[TopLevel] and only these
-    node kinds are admissible there. A Namespace nests further TopLevel items.
-    Carries no fields; the concrete nodes hold their own.
+    Namespace, Include, Causality, Mode, ModeGroup, StateMachine, EventDef and
+    ClockDef derive from it, so 'RuleFile.items' is typed as list[TopLevel] and
+    only these node kinds are admissible there. A Namespace nests further
+    TopLevel items. Carries no fields; the concrete nodes hold their own.
     """
     pass
 
@@ -289,6 +289,21 @@ class ClockDef(TopLevel):
 
 
 @dataclass(frozen=True)
+class Include(TopLevel):
+    """A file mount: 'include "<file>" as <dotted-name>'.
+
+    'filename' is the included file's name (the string lexeme, quotes stripped).
+    'mount' is the dotted path at which the file's namespace is mounted in THIS
+    file. The included file is placement-agnostic; the including file chooses
+    the mount point. Resolving and mounting the file is a semantic-pass concern;
+    the parser only records the request.
+    """
+    filename: str
+    mount:    str
+    begin:    int
+
+
+@dataclass(frozen=True)
 class Namespace(TopLevel):
     """A named scope: 'open <dotted-name> ... close' bracketing nested items.
 
@@ -307,8 +322,8 @@ class Namespace(TopLevel):
 class RuleFile:
     """The whole parsed rule file: an ordered list of top-level constructs.
 
-    'items' holds Namespace, Causality, Mode, ModeGroup, StateMachine, EventDef
-    and ClockDef nodes in source order. A mutable container so the parser can
-    append as it goes.
+    'items' holds Namespace, Include, Causality, Mode, ModeGroup, StateMachine,
+    EventDef and ClockDef nodes in source order. A mutable container so the
+    parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)
