@@ -1,0 +1,154 @@
+===============================================================================
+REACTIVE RULE ENGINE  --  HWUT 2.0
+SEMANTIC LAYER  --  DISCUSSIONS LOG
+===============================================================================
+
+Rationale, costs, and rejected alternatives for the semantic layer. README =
+settled mechanics; this = why. Entries newest-first, 'L-N'. Parser ledger
+('R-N') named this layer's open items L-5 (correctness round-trip) and L-7
+(name/target validity); this log opens at L-7 and works the design forward.
+
+-------------------------------------------------------------------------------
+RESOLVED
+-------------------------------------------------------------------------------
+
+  L-13  TEST = MEANINGFUL OUTPUT, NOT SELF-GRADED ASSERT. Each driver prints the
+        thing produced -- resolved FQN, scope tree, diagnostic text -- and the
+        GOOD recording judges it. Printing 'SUCCESS:'/'FAIL:' self-reports
+        REJECTED: a test that grades its own homework hides the actual output
+        behind a verdict the author asserted; the reader can no longer see what
+        the resolver did, only that the author claims it passed. HWUT's contract
+        is output vs. recording; the verdict is the diff, not a printed line.
+        (A 'SUCCESS:.*' happy-pattern convention from a sibling project does NOT
+        apply here.)
+        -> README (F).
+
+  L-12  UNSPAWN VALIDITY = STATIC RESOLVE + KIND CHECK; LIVENESS = RUNTIME.
+        '-! north' checks that 'north' resolves to an instance symbol from a
+        reachable Spawn 'as'. Whether the instance is live on the path reaching
+        the unspawn is NOT checked. Cost: a file can pass the static check yet
+        unspawn a not-yet-spawned instance at run time. Mitigation: that is a
+        data-plane fact -- it depends on guards and event order (R-6, R-2:
+        substance lives in Luau), which this layer cannot evaluate without
+        becoming an interpreter. Flow-aware unspawn checking REJECTED for this
+        layer: wrong plane. The static check still catches the real authoring
+        error -- a name that was never an instance anywhere.
+        -> README (E.3); SYNTAX A.2 ('-!'); cf. R-31 (target validity = here).
+
+  L-11  INSTANCES RESOLVE BY THE ORDINARY RULE -- NO SPECIAL CASE. An 'as'
+        instance is a name in its defining scope (R-37); '-! north' and
+        '-! world.europe.north' resolve by the same innermost-out search and
+        descent as any other reference. A separate instance lookup path was
+        considered and dropped: one resolution algorithm, parameterized only by
+        the expected KIND at the site. Cost: none beyond the kind tag already
+        carried.
+        -> README (C), (E.3).
+
+  L-10  INCLUDE CYCLE = ORDERED CHAIN DIAGNOSTIC. A re-entered file is not a
+        bare 'cycle detected'. The mount stack -- the explicit set tracking
+        in-progress files -- is printed in order: first file, what it mounted,
+        onward to the mount that re-enters. Cost: the detector must retain mount
+        sites, not just a visited flag. Mitigation: the flag alone names the
+        closing edge only; the author then hunts the route by hand. The set is
+        cheap; the route is the diagnostic's whole value.
+        -> README (D).
+
+  L-9   INCLUDE = PARSE-ONCE CACHED, BUILD A FRESH TREE PER MOUNT. 'Parse once'
+        (R-38) honored by caching the lex+parse, keyed by resolved file path.
+        The cheap table-build runs PER MOUNT. REJECTED: grafting one shared
+        Scope object at two mount points -- a node would then have two parents,
+        two paths, two FQNs, breaking FQN = path + name as a single-valued
+        identity. Cost of per-mount build: the same file mounted twice builds
+        its tree twice. Mitigation: building is a linear walk over an
+        already-parsed AST; the expensive stage (lex+parse) is the cached one.
+        Shared-identity aliasing REJECTED on the identity ground, not the cost
+        ground.
+        -> README (D).
+
+  L-8   INCLUDE VISIBILITY = ASYMMETRIC BY STRUCTURE. The mounted unit's root
+        carries no parent across the graft, so outward lexical search physically
+        stops at it -- the mounted unit cannot see the mounting scope -- while
+        descent from the mounter still walks in. The Python-style direction
+        (R-36, R-38) is thus enforced by the tree shape, not by a runtime guard
+        the resolver must remember to apply. Cost: the graft is a special edge
+        (crossed one way, not the other). Mitigation: it is the ONLY such edge;
+        every other parent link is symmetric, and the asymmetry is exactly the
+        module-boundary semantics wanted.
+        -> README (A), (D).
+
+  L-7b  RESOLUTION = INNERMOST-OUT LEXICAL, HEAD-SEARCHED-THEN-DESCEND. A bare
+        name searches the site scope, then outward to the unit root. A dotted
+        ref searches only its HEAD outward, then descends strictly for the tail.
+        REJECTED: searching every dotted segment outward -- 'Traffic.RED' would
+        let 'RED' escape 'Traffic' and match some outer RED, defeating the
+        qualification the author wrote. Fully-qualified-from-root accepted as the
+        FQN identity (L-7d) but not required at a reference site; bare/partial
+        cover the natural cases.
+        -> README (A), (C).
+
+  L-7c  SEPARATOR STAYS THE DOT. Matches Luau's qualification operator
+        ('Colors.RED', 'player.name', 'Color.New()' all dot). REJECTED: a colon
+        'colonned-name'. In Luau a colon is method-call-with-self sugar
+        ('o:m(x)' == 'o.m(o, x)') AND the type-annotation separator; a third,
+        namespace meaning collides with both the moment the reader crosses into
+        a guard or body. Dotted 'Traffic.RED' reads identically in a VUT
+        reference and in the emitted Luau field access. The colon's one
+        legitimate VUT use -- ArgDecl 'member : type' -- already mirrors Luau's
+        annotation colon; no second meaning loaded onto it.
+        -> README (A); SYNTAX (dotted-name).
+
+  L-7d  ONE UNDIVIDED NAME SHELL PER SCOPE -- NOT PER-KIND SUB-MAPS. Modes, mode
+        groups, state machines, instances, AND events compete in one map; any
+        in-scope name clash is an error. REJECTED: three sub-spaces (types /
+        events / instances) keyed so a type and an instance could share a
+        spelling. Ground: a name meaning 'the event RED' in one breath and 'the
+        mode RED' in another is the confusion to forbid; an event is action --
+        reacted to, reasoned about -- not configuration, and must not alias a
+        configuration name. Creative freedom from shared spellings is not worth
+        the interference. Cost: an author cannot reuse a spelling across kinds in
+        one scope. Mitigation: distinct scopes (or qualified names) still let the
+        same spelling recur where it cannot be confused. The KIND tag survives
+        for the REFERENCE side only (L-12, README C), never to partition
+        definitions.
+        -> README (A); cf. R-37 (mode (+) state-machine share one namespace --
+        generalized here to all kinds).
+
+  L-7a  AGGREGATES OPEN SCOPES; MEMBERS ARE DOTTED NAMES. A mode group and a
+        state machine each open a child scope; their inline members are symbols
+        there, reached as 'Agg.member' by ordinary tree descent (A.2: a
+        member-ref resolves against its enclosing aggregate; the qualified form
+        is the same referent). REJECTED: a per-aggregate 'members' dict hung off
+        the type symbol -- a second, parallel lookup mechanism beside the scope
+        tree. One mechanism: membership IS scope containment, so 'Traffic.RED'
+        and 'world.europe.berlin' resolve by the identical descent. A global
+        'mode RED' and a member 'Traffic.RED' cannot collide -- different scopes.
+        -> README (A), (C); cf. R-37.
+
+  L-7   SCOPE TREE + STACKLESS BUILD. The table is a TREE of scopes mirroring
+        the nesting (open, mode group, state machine), each scope a single
+        name->symbol map; not a flat FQN map (loses lexical search) and not a
+        tree-without-maps (forces a walk per lookup). FQN falls out as the
+        root-to-symbol path. The builder walks the AST on an explicit
+        (scope, item) stack, NOT Python recursion -- the same motivation that
+        made the parser stackless (R-34): namespace nesting is unbounded, a
+        recursive build would overflow where the parser does not. Cost: an
+        explicit stack is more code than a recursive descent. Mitigation: the
+        parser already paid and proved this (depth_bomb FAIL->PASS); the build
+        reuses the discipline.
+        -> README (A), (B); cf. R-34, R-37, R-38.
+
+-------------------------------------------------------------------------------
+NOTE ON INHERITED PREMISES  (settled upstream, not reopened here)
+-------------------------------------------------------------------------------
+
+  R-37  namespaces, balanced open/close, names scoped to defining namespace,
+        modes (+) state machines share one namespace.
+  R-38  include = caller-decides-placement, included file self-contained,
+        load-time mount, parser records only.
+  R-34  stackless engine motivated by unbounded nesting.
+  R-6 / R-2  substance (field values, body logic) lives in Luau; the static
+        line carries only literal names. Bounds what this layer can check.
+
+===============================================================================
+END OF DISCUSSIONS LOG
+===============================================================================
