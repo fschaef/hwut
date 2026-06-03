@@ -1,6 +1,6 @@
 ================================================================================
-                            VUT  --  Versatile Unit Test
-                          (the road to HWUT 2.0)
+VUT  --  Versatile Unit Test
+(the road to a new HWUT 2.0)
 ================================================================================
 
 EARLY STAGE -- WORK IN PROGRESS
