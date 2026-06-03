@@ -38,7 +38,7 @@ VOCABULARY
                 modes are active at once.
   STATE MACHINE An aggregate of states in which at most one member-state is
                 active at a time; arming a member deactivates the previous one.
-  AGGREGATE     A MODE GROUP or a STATE MACHINE. Spawned by '+!' into a
+  AGGREGATE     A MODE GROUP or a STATE MACHINE (both are reactors). Spawned by '+!' into a
                 container (default or named); its existence ended by '-!'. A
                 'singleton :' declaration fixes one instance re-init by name.
   CONTAINER     A structure that holds aggregate instances -- one (a
@@ -165,7 +165,7 @@ VOCABULARY
     A.2.5.)
 
   AGGREGATE SPAWNING AND CONTAINERS
-    A mode group or state machine is spawned with the '+!' effect verb,
+    A mode group or state machine (an AGGREGATE) is spawned with the '+!' effect verb,
     paralleling the '!' that arms a single mode. '+!' has three forms: the
     bracketless re-init of a 'singleton :'-declared type; the parenthesised
     default-container spawn (admitted unless an instance of identical type and
