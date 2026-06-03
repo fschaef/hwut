@@ -54,7 +54,7 @@ The GOOD file holds the NOMINAL behaviour of a test. You do not write it by
 hand from scratch -- you run the test, confirm the behaviour is right, and let
 HWUT record it:
 
-    hwut accept        [[ TODO: confirm exact command + flags ]]
+    hwut accept   <test-app-name> <choice>
 
 GOOD files live under GOOD/ :
 
@@ -80,7 +80,7 @@ vary:
                         required to have its counterpart
   - reactive engine  -- sequence-independent checks
   - constraints      -- e.g. x < 1000 instead of a fixed value
-                        [[ TODO: marked as not-yet-implemented -- keep or drop? ]]
+                        <<not-yet-implemented>>
 
 Tolerance is not only about robustness. It keeps the GOOD files REVIEWABLE: a
 field that changes for an irrelevant reason on every commit trains the reviewer
@@ -89,24 +89,7 @@ reflexive "accept". Tolerance silences the noise so that a diff, when it
 appears, carries signal.
 
 
-GETTING STARTED
---------------------------------------------------------------------------------
-[[ TODO -- needs the practical surface I do not want to invent:
-   - installation steps / dependencies
-   - how to run a single test and a test suite
-   - the directory layout of a test tree
-   - a minimal worked example (smallest possible test + its GOOD file)
-   - supported platforms
-]]
 
-
-PROJECT STATUS, LICENSE, CONTRIBUTING
 --------------------------------------------------------------------------------
 License: MIT.
-
-[[ TODO:
-   - contribution guidelines / contact
-   - relationship to the first-generation HWUT (drop-in? migration? separate?)
-]]
-
 ================================================================================
