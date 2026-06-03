@@ -29,7 +29,9 @@ class TopLevel(ABC):
     Namespace, Include, Causality, Mode, ModeGroup, StateMachine, EventDef and
     ClockDef derive from it, so 'RuleFile.items' is typed as list[TopLevel] and
     only these node kinds are admissible there. A Namespace nests further
-    TopLevel items. Carries no fields; the concrete nodes hold their own.
+    TopLevel items (Causality, Mode, ModeGroup, StateMachine, Singleton,
+    EventDef, ClockDef, Include, Namespace). Carries no fields; the concrete
+    nodes hold their own.
     """
     pass
 
@@ -102,24 +104,36 @@ class ModeArming:
 
 @dataclass(frozen=True)
 class Spawn:
-    """An aggregate-arming effect: '+! name(args) [as inst]'.
+    """An aggregate-spawning effect: '+! name [ (args) ] [ in {lvalue} ]'.
 
-    Targets a <mode-group> or <state-machine> type. 'inst' is the 'as' name or
-    None, in which case the arming folds into the type's global singleton.
+    Targets a <mode-group> or <state-machine> type. Three shapes, distinguished
+    by which fields are set:
+      - singleton re-init: 'has_parens' False, 'container' None -- the bare type
+        name, admissible only for a 'singleton :'-declared type; re-inits the
+        one declared instance with its declaration-fixed arguments.
+      - default-container spawn: 'has_parens' True, 'container' None -- offers a
+        fresh instance to the per-kind default container.
+      - container spawn: 'container' is the opaque Luau lvalue span -- offers a
+        fresh instance to that container.
+    'args' is empty for the singleton form (parentheses are a syntax error
+    there). 'container' is a Luau node (opaque lvalue) or None; the parser does
+    not resolve it.
     """
-    name:  str
-    args:  List[Arg]
-    inst:  Optional[str]
-    begin: int
+    name:       str
+    args:       List[Arg]
+    has_parens: bool
+    container:  Optional["Luau"]
+    begin:      int
 
 
 @dataclass(frozen=True)
 class Unspawn:
-    """An aggregate-removing effect: '-! name'.
+    """An existence-ending effect: '-! name'.
 
-    'name' references a spawned aggregate by bare or dotted name. Only a named
-    (spawned) entity may be unspawned; pass-2 validation enforces that the
-    target resolves to one. The grammar accepts any dotted name.
+    'name' references a spawned aggregate by bare or dotted name. Ending an
+    existence runs the instance's 'deinit' and releases it from its container.
+    Pass-2 validation enforces that the target resolves to an existing
+    instance; the grammar accepts any dotted name.
     """
     name:  str
     begin: int
@@ -273,6 +287,20 @@ class ModeGroup(TopLevel):
 
 
 @dataclass(frozen=True)
+class Singleton(TopLevel):
+    """A singleton declaration: 'singleton : name [ (arg-decls-as-args) ]'.
+
+    Declares an aggregate type to have exactly one instance, identified by
+    'name', with the argument list fixed here. The type is thereafter spawned
+    only by the bracketless '+! name' re-init form. 'args' carries the fixed
+    arguments (an empty list when none were given).
+    """
+    name:  str
+    args:  List[Arg]
+    begin: int
+
+
+@dataclass(frozen=True)
 class EventDef(TopLevel):
     """An event declaration: 'event name(arg-decls)'."""
     name:   str
@@ -323,7 +351,7 @@ class RuleFile:
     """The whole parsed rule file: an ordered list of top-level constructs.
 
     'items' holds Namespace, Include, Causality, Mode, ModeGroup, StateMachine,
-    EventDef and ClockDef nodes in source order. A mutable container so the
-    parser can append as it goes.
+    Singleton, EventDef and ClockDef nodes in source order. A mutable container
+    so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)

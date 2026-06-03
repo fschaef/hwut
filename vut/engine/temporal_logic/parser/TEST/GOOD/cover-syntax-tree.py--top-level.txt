@@ -176,6 +176,14 @@ StateMachine
   begin = 0
 
 -- alternative 6 --
+   input: singleton : X . X
+Singleton
+  name = 'X.X'
+  args:
+    []
+  begin = 0
+
+-- alternative 7 --
    input: event X ( X : X )
 EventDef
   name = 'X'
@@ -186,7 +194,7 @@ EventDef
       begin = 0
   begin = 0
 
--- alternative 7 --
+-- alternative 8 --
    input: clock X 1
 ClockDef
   name = 'X'

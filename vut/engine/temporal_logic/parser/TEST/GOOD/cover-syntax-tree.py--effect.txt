@@ -11,12 +11,13 @@ Mutation
   begin = 0
 
 -- alternative 1 --
-   input: +! X . X ( )
+   input: +! X . X
 Spawn
   name = 'X.X'
   args:
     []
-  inst = None
+  has_parens = False
+  container = None
   begin = 0
 
 -- alternative 2 --

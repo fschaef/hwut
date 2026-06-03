@@ -44,6 +44,7 @@ NOTE:
                      | <mode>
                      | <mode-group>
                      | <state-machine>
+                     | <singleton-def>
                      | <event-def>
                      | <clock-def> )
 
@@ -123,9 +124,16 @@ NOTE:
 
     <mode-arming>: <invocation>
 
-    <spawn>:       <invocation> [ 'as' <identifier> ]
+    <spawn>:       <name> [ '(' [ <arg-list> ] ')' ] [ 'in' <luau-lvalue> ]
+                   #  bare <name>, no parens  -> re-init a declared singleton
+                   #  <name> '(' ... ')'      -> spawn into the default container
+                   #  ... 'in' <luau-lvalue>  -> spawn into the named container
 
-    <unspawn>:     <name>                     # bare or dotted; a named instance
+    <unspawn>:     <name>                     # bare or dotted; ends existence
+
+    <singleton-def>:  'singleton' ':' <name> [ '(' [ <arg-list> ] ')' ]
+
+    <luau-lvalue>:    '{' <luau-expr> '}'      # opaque Luau lvalue (a container)
 
     <arg-list>:    <arg> (',' <arg>)*
 
@@ -165,6 +173,12 @@ BINDINGS: Names that bind nesting entities:
     'sm'      state machine where the code fragment resides. This may be the
               'init' and 'deinit' handlers of the state machine or any code
               fragment in a member state of the state machine.
+
+    'mg'      mode group where the code fragment resides. The mode-group
+              counterpart of 'sm': bound inside the 'init'/'deinit' handlers of
+              the mode group and any code fragment in a member mode. 'sm' and
+              'mg' are the two aggregate self-bindings; exactly one is in
+              scope, decided by the enclosing aggregate kind.
 
 IMPLICIT EVENTS:
 
@@ -252,8 +266,10 @@ appears as a general <trigger>.
 
          emit an event:      => EVENT(arg = ...)
          arm a mode:         => !  MODE(arg = ...)
-         spawn an aggregate: => +! STATE_MACHINE(arg = ...) as inst
-         unspawn a named one:=> -! inst
+         spawn (default):    => +! STATE_MACHINE(arg = ...)
+         spawn into container:=> +! STATE_MACHINE(arg = ...) in { sprite.bin }
+         re-init a singleton: => +! THE_ONLY_SM
+         end existence:       => -! STATE_MACHINE
          report a line:      => "text {with} interpolation"
          mutate state:       => { vehicle.speed = 0 }
 
@@ -302,36 +318,69 @@ appears as a general <trigger>.
     the still-existing instance.
 
 <spawn>
-    constructs and arms an aggregate instance -- a <mode-group> or a
-    <state-machine>. Its argument syntax is the same as for <mode-arming>;
-    the leading verb is '+!', not '!'. The aggregate-type name is literal.
+    constructs an aggregate instance -- a <mode-group> or a <state-machine> --
+    with the verb '+!'. The aggregate-type name is literal. Three forms,
+    distinguished by shape:
 
-    'as <name>' binds the instance to <name>, making it an addressable entity.
-    When 'as' is omitted, the instance folds into the global singleton for that
-    aggregate type: there is exactly one unnamed instance per type, and a
-    second unnamed arming of the same type with identical parameters is the
-    same silent no-op as a duplicate <mode-arming>.
+    1. SINGLETON RE-INIT -- the bare type name, NO parentheses:
 
-      => +! SM_TRAFFIC()              # folds into the SM_TRAFFIC singleton
-      => +! SM_TRAFFIC() as north     # a distinct, named instance 'north'
-      => +! SM_TRAFFIC() as south     # a second named instance 'south'
+         => +! THE_ONLY_SM
 
-    Named instances let several aggregates of the same type run concurrently,
-    each supervised independently.
+       Admissible only for a type declared with 'singleton :' (see
+       <singleton-def>). It re-initialises the one declared instance with the
+       argument list fixed at the declaration site. Parentheses here are a
+       SYNTAX ERROR: a singleton carries no per-spawn arguments.
+
+    2. DEFAULT-CONTAINER SPAWN -- the type name WITH parentheses:
+
+         => +! SM_TRAFFIC(lane = 2)
+
+       Constructs an instance and offers it to the per-kind DEFAULT container.
+       The default container accepts the instance unless one of identical type
+       and identical parameterisation is already present, in which case the
+       spawn is the same silent no-op as a duplicate <mode-arming> (identity =
+       parameters, as for modes).
+
+    3. CONTAINER SPAWN -- 'in <luau-lvalue>':
+
+         => +! SM_TRAFFIC(lane = 2) in { vehicle.sprite_bin }
+
+       Constructs an instance and offers it to the container denoted by the
+       Luau lvalue in '{ }'. The lvalue is opaque Luau: the rule-file parser
+       does not resolve it, and whether it denotes a container is a run-time
+       fact. A container holds zero, one, or many instances depending on its
+       kind (README, container protocol).
+
+    Whether an offered instance is admitted is the CONTAINER's decision, taken
+    under a mutex; a rejected offer leaves no instance and runs no 'init'. The
+    type name and any parenthesised argument names are literal; only argument
+    values and the '{ }' lvalue may be Luau.
+
+<singleton-def>
+    declares an aggregate type to be a singleton: one instance, identity by
+    declared name, arguments fixed at the declaration:
+
+      singleton : THE_ONLY_SM(quantum = 5)
+
+    Referred to thereafter only by the bracketless '+! THE_ONLY_SM' re-init
+    form (form 1 of <spawn>). The declaration binds the argument list once; the
+    spawn site carries none.
 
 <unspawn>
-    removes a spawned aggregate instance with the verb '-!'. Only a named
-    (spawned) entity can be unspawned, so the operand is a reference by name,
-    not an invocation: the instance bound by an earlier '+! ... as <name>', or
-    a dotted reference to one. There are no arguments and no 'as'.
+    ends the existence of an instance with the verb '-!'. The operand is a
+    reference by name (bare or dotted), not an invocation: no arguments. Ending
+    existence runs the instance's 'deinit' once, exactly as a firing 'until' or
+    the trace END would, and releases the instance from whatever container
+    holds it.
 
-      => +! SM_TRAFFIC() as north     # spawn
-      => -! north                     # unspawn that instance
-      => -! LIGHTS.GLOW               # dotted reference to a named instance
+      => +! SM_TRAFFIC(lane = 2) in { bin }   # spawn into a container
+      => -! SM_TRAFFIC                          # end existence
+      => -! LIGHTS.GLOW                          # dotted reference
 
-    Unspawning runs the instance's 'deinit' once, exactly as a firing 'until'
-    or the trace END would. Unspawning an unknown or unnamed target is a
-    validation error (pass 2), not a parse error.
+    Resolving the operand to an existing instance is a semantic-pass concern;
+    an operand resolving to no instance is a validation error (pass 2), not a
+    parse error. Whether the instance is live at that moment is a run-time fact
+    the static pass does not decide.
 
 
 <arg> binds an argument by name or by position. Named arguments may follow
@@ -575,8 +624,9 @@ members declared in the state-machine signature are read-available.
              is activated.
 
    'init'  runs once when the state machine comes into being. Arguments to
-           the state machine are already bound to the 'sm' binding -- same
-           as 'event' in <causality> and 'mode' in <mode> environments.
+           the state machine are already bound to the 'sm' binding -- same as
+           'event' in <causality>, 'mode' in <mode>, and the mode-group
+           counterpart 'mg'.
 
            The typical body arms the first state.
 
@@ -645,8 +695,11 @@ keyword, or pulled in with 'has:':
 
     has: <member-ref>
 
-A mode group has 'init' and 'deinit', exactly as a state machine does, and is
-closed by 'end'. It has NO closing 'until' causes of its own, and NO 'default':
+Inside the Luau code sections of the mode group itself and its member modes,
+the nesting mode group is referred to by the binding 'mg' -- the counterpart of
+'sm' for a state machine. A mode group has 'init' and 'deinit', exactly as a
+state machine does, and is closed by 'end'. It has NO closing 'until' causes of
+its own, and NO 'default':
 with overlapping members there is no single active member to fall back to, so
 no fallback exists. A <member-ref> inside a mode group resolves against the
 group by bare <reactor-name>, with the qualified form accepted as good
@@ -670,9 +723,10 @@ marks where the last member -- and the group -- closes.
         has: GLOW
     end
 
-Both aggregates are spawned as an effect with '+!' and may be named with 'as'
-(see <spawn>); a named instance is removed with '-!' (see <unspawn>). An
-unnamed arming folds into the aggregate type's global singleton.
+Both aggregates are spawned as an effect with '+!' (see <spawn>): the
+bracketless singleton re-init, the default-container form, or the
+'in <luau-lvalue>' container form. An instance's existence is ended with '-!'
+(see <unspawn>).
 
 
 (A.2.7) Details on Namespaces
@@ -687,8 +741,8 @@ The body is any run of top-level constructs -- causalities, modes, aggregates,
 event and clock definitions, and further namespaces. Nesting is unrestricted in
 depth. There are several independent namespaces (no single global flat space);
 names declared inside a namespace are restricted to the scope in which they are
-defined. The 'as'-names of spawned instances are likewise scoped to their
-defining namespace.
+defined. The names of declared singletons are likewise scoped to the namespace
+in which they are defined.
 
 The dotted name opens several levels at once, so a deep scope needs one 'open',
 not one per level. This:
@@ -717,7 +771,8 @@ A namespace may contain a nested 'open'/'close':
     close
 
 (The binding rules -- how a reference resolves across namespaces, and how
-'as'-name visibility works -- are a semantic-pass concern, not a parsing one.)
+instance-name visibility works -- are a semantic-pass concern, not a parsing
+one.)
 
 
 (A.2.8) Including Other Files

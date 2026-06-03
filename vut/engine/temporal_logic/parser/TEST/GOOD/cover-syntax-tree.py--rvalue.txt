@@ -3,7 +3,7 @@
 -- alternative 0 --
    input: 1
 Token
-  kind = <E_TokenId.NUMBER: 37>
+  kind = <E_TokenId.NUMBER: 39>
   text = '1'
   begin = 0
   end = 0
@@ -11,7 +11,7 @@ Token
 -- alternative 1 --
    input: "s"
 Token
-  kind = <E_TokenId.STRING: 38>
+  kind = <E_TokenId.STRING: 40>
   text = '"s"'
   begin = 0
   end = 0

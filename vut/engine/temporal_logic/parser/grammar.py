@@ -55,8 +55,8 @@ GRAMMAR = {
     # top-level alternation until end-of-file.
     "<top-level>":
         (ALT, "<namespace>", "<include>", "<causality>", "<mode>",
-                 "<mode-group>", "<state-machine>", "<event-def>",
-                 "<clock-def>"),
+                 "<mode-group>", "<state-machine>", "<singleton-def>",
+                 "<event-def>", "<clock-def>"),
 
     # <include>: 'include' <string> 'as' <dotted-name>
     # Mounts another file's namespace at <dotted-name> in THIS file. The
@@ -114,15 +114,29 @@ GRAMMAR = {
     "<mutation>":
         "{luau:STATEMENT_BLOCK}",
 
-    # <spawn>: '+!' <name> '(' [ <arg-list> ] ')' [ 'as' <identifier> ]
+    # <spawn>: '+!' <name> [ '(' [ <arg-list> ] ')' ] [ 'in' {luau:EXPRESSION} ]
+    # Three forms, decided by shape (LL(1): '(' , 'in', and the effect-follower
+    # are pairwise-distinct lookaheads):
+    #   bare <name>            -> singleton re-init (no parens, no container)
+    #   <name> '(' ... ')'     -> default-container spawn
+    #   ... 'in' {luau-lvalue} -> container spawn (lvalue is opaque Luau)
+    # Whether the parentheses are legal (singleton => forbidden) is a pass-2
+    # check, not a grammar one; the grammar accepts both shapes.
     "<spawn>":
-        (SEQ, "+!", "<dotted-name>", "<arg-parens>",
-                 (OPT, (SEQ, "as", TOK_ID))),
+        (SEQ, "+!", "<dotted-name>", (OPT, "<arg-parens>"),
+                 (OPT, (SEQ, "in", "{luau:EXPRESSION}"))),
+
+    # <singleton-def>: 'singleton' ':' <name> [ '(' [ <arg-list> ] ')' ]
+    # A top-level declaration fixing one instance of an aggregate type, named
+    # and argument-bound here; spawned thereafter only by '+! <name>'.
+    # FIRST = {singleton}, disjoint from the other top-level starters.
+    "<singleton-def>":
+        (SEQ, "singleton", ":", "<dotted-name>", (OPT, "<arg-parens>")),
 
     # <unspawn>: '-!' <name>
-    # Removes a spawned aggregate. The operand is any reference-by-name (bare or
-    # dotted); only a named/spawned entity may be unspawned, which pass-2
-    # validation enforces -- the grammar accepts any <dotted-name>.
+    # Ends an instance's existence. The operand is any reference-by-name (bare
+    # or dotted); that it resolves to an existing instance is a pass-2 check --
+    # the grammar accepts any <dotted-name>.
     "<unspawn>":
         (SEQ, "-!", "<dotted-name>"),
 
@@ -597,15 +611,32 @@ def _build_mode_group(frame):
 
 
 def _build_spawn(frame):
-    """RETURN: Spawn, an aggregate arming '+! name(args) [as inst]'.
+    """RETURN: Spawn, an aggregate spawn '+! name [ (args) ] [ in {lvalue} ]'.
 
-    frame.values = [name, [Arg, ...]] or [name, [Arg, ...], inst_tok] when 'as'
-    matched. The '+!' and 'as' are punctuation.
+    frame.values is the dotted name, then 0..2 trailing values with silent
+    punctuation ('+!', 'in') dropped: an arg list (a Python list) when the
+    parentheses matched, and a Luau node when the 'in' container matched. The
+    two are told apart by type, so either may be absent independently.
+    """
+    name       = frame.values[0]
+    rest       = frame.values[1:]
+    args       = next((v for v in rest if isinstance(v, list)), [])
+    has_parens = any(isinstance(v, list) for v in rest)
+    container  = next((v for v in rest if isinstance(v, ast.Luau)), None)
+    return ast.Spawn(name=name, args=args, has_parens=has_parens,
+                     container=container, begin=frame.begin)
+
+
+def _build_singleton(frame):
+    """RETURN: Singleton, a declaration 'singleton : name [ (args) ]'.
+
+    frame.values = [name] or [name, [Arg, ...]] when the parentheses matched.
+    The 'singleton' keyword and ':' are punctuation.
     """
     name = frame.values[0]
-    args = frame.values[1]
-    inst = frame.values[2].text if len(frame.values) > 2 else None
-    return ast.Spawn(name=name, args=args, inst=inst, begin=frame.begin)
+    args = frame.values[1] if (len(frame.values) > 1
+                               and isinstance(frame.values[1], list)) else []
+    return ast.Singleton(name=name, args=args, begin=frame.begin)
 
 
 def _build_unspawn(frame):
@@ -672,6 +703,7 @@ ACTIONS = {
     "<effect>":            None,
     "<mutation>":          _build_mutation,
     "<spawn>":             _build_spawn,
+    "<singleton-def>":     _build_singleton,
     "<unspawn>":           _build_unspawn,
     "<event-spec>":        _build_event_spec,
     "<mode-arming>":       _build_mode_arming,

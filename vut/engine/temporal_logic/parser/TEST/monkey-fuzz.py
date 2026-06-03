@@ -453,9 +453,9 @@ def _make_choice(profile_name):
         _collect_node_types(rule_file.items, node_types)
         all_rules = set(g.rules)
         all_nodes = _all_node_types()
-        print("rules visited:      %d / %d" % (len(walker.visited),
-                                               len(all_rules)))
-        print("node types built:   %d / %d" % (len(node_types),
+        print("## rules visited:      ((%d)) / ((%d))" % (len(walker.visited),
+                                                       len(all_rules)))
+        print("## node types built:   ((%d)) / ((%d))" % (len(node_types),
                                                len(all_nodes)))
 
         if debug:
@@ -540,11 +540,11 @@ def _run_coverage():
         _collect_node_types(rule_file.items, seen_nodes)
 
     print("=== monkey: aggregate coverage ===")
-    print("\n-- rules (%d/%d) --" % (len(seen_rules & all_rules),
+    print("\n##-- rules ((%d)) / ((%d)) --" % (len(seen_rules & all_rules),
                                      len(all_rules)))
     for r in sorted(all_rules):
         print("%s: %s" % ("SUCCESS" if r in seen_rules else "FAIL", r))
-    print("\n-- node types (%d/%d) --" % (len(seen_nodes & all_nodes),
+    print("\n##-- node types (%d/%d) --" % (len(seen_nodes & all_nodes),
                                           len(all_nodes)))
     for n in sorted(all_nodes):
         print("%s: %s" % ("SUCCESS" if n in seen_nodes else "FAIL", n))

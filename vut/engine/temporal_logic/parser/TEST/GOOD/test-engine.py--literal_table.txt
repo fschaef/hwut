@@ -24,12 +24,14 @@
 'end'            -> KW_END_BLK
 'event'          -> KW_EVENT
 'has'            -> KW_HAS
+'in'             -> KW_IN
 'include'        -> KW_INCLUDE
 'init'           -> KW_INIT
 'mode'           -> KW_MODE
 'mode_group'     -> KW_MGROUP
 'on'             -> KW_ON
 'open'           -> KW_OPEN
+'singleton'      -> KW_SINGLETON
 'state'          -> KW_STATE
 'state_machine'  -> KW_SM
 'switched'       -> KW_SWITCHED

@@ -14,23 +14,29 @@ PURPOSE
 LIVE QUESTIONS
 -------------------------------------------------------------------------------
 
-  L-7  SEMANTIC LAYER -- symbol table, name resolution, validation. NOT YET
-       BUILT; next work item. Parser frozen, produces name-bearing AST only.
-       Open sub-questions:
-         - symbol-table shape: scope-tree mirroring namespaces vs flat
-           fully-qualified map vs both.
-         - how many namespaces coexist: modes+state-machines share one (R-37);
-           events, clocks, aggregate TYPES, spawned INSTANCES -- undecided.
-         - resolution algo: innermost-out lexical vs fully-qualified; how dotted
-           refs ('Traffic.RED') resolve relative vs absolute.
-         - include mounting: attach mounted file's table at 'as' path; included
-           file sees only itself (R-36); caching when same file included twice.
-         - unspawn target rule: static check (was 'as <name>' ever written?) vs
-           flow-aware. Lean static here, flow at runtime.
+  L-7  SEMANTIC LAYER -- symbol table, name resolution, validation. DESIGNED,
+       NOT YET BUILT. Parser produces name-bearing AST only. The sub-questions
+       below are now settled; design recorded in semantic/DISCUSSIONS.txt
+       (L-7..L-17) and semantic/README.txt. Build is the next code step.
+         - symbol-table shape: scope tree mirroring all nesting; one undivided
+           name->symbol map per scope (semantic L-7, L-7d).
+         - coexisting names: ONE shell -- modes, mode groups, state machines,
+           instances, AND events compete in it; any clash is an error
+           (semantic L-7d, generalizing R-37).
+         - resolution: innermost-out lexical search on the head segment, then
+           strict descent for the tail; dot separator, matching Luau
+           (semantic L-7b, L-7c).
+         - include mounting: parse-once cached, fresh scope tree per mount,
+           asymmetric visibility by the parent=None graft, ordered cycle chain
+           (semantic L-8, L-9, L-10).
+         - unspawn target: static resolve + INSTANCE-kind check; liveness is
+           runtime (semantic L-11, L-12).
        Constraints to enforce: <=1 init / <=1 deinit per reactor/aggregate;
        <=1 default per state machine; every state until-run ends 'until
-       switched'; default -> defined member or VOID; every arm/unspawn/has:/
-       default target resolves; modes vs state-machine name clash forbidden.
+       switched'; default -> defined member or VOID; every spawn/unspawn/has:/
+       default target resolves; one undivided name shell forbids all in-scope
+       clashes. Spawn-form checks added by R-39: singleton ref carries no
+       parentheses; 'in {lvalue}' container is opaque (not resolved).
 
   L-6  CODE GENERATION -- AST -> target (Lua) emitter. NOT YET BUILT; after
        L-7. Tree-walk over the (validated) AST. Open: what "pure Lua" output
@@ -89,6 +95,60 @@ DEFERRED / REJECTED  --  reasoning recorded so it is not lost
 -------------------------------------------------------------------------------
 RESOLVED  --  decisions and the reasoning behind them
 -------------------------------------------------------------------------------
+
+  R-39  SPAWN MODEL REWORK -- binding-form axis, containers, singletons.
+        Supersedes the 'as <name>' / unnamed-singleton surface of R-29/R-31
+        (the verbs '!','+!','-!' stand; only the '+!' operand shape changes).
+        '+!' now has three forms, decided by shape:
+          - bare type name        -> re-init a 'singleton :'-declared instance;
+                                      parentheses here are a SYNTAX ERROR.
+          - type name '(' args ')' -> spawn into the per-kind DEFAULT container.
+          - ... 'in' '{' lvalue '}' -> spawn into the named container.
+        '-!' = END EXISTENCE (runs 'deinit', releases from the container), not
+        merely "remove a named instance".
+        Rationale:
+          - 'as <name>' conflated CREATE with BIND-TO-SLOT; on a singleton that
+            is contradictory. Identity now comes from how a type is DECLARED
+            (singleton => by name) or from the CONTAINER (else), not from a
+            name pinned at the spawn site. 'as' dropped.
+          - double-creation handled WHERE IT BELONGS, the container: the
+            default container is a MultiReactorContainer whose accept rule
+            rejects a parameterisation already present (identity = parameters,
+            R-29) -- so an anonymous '+! R(args)' stays idempotent exactly as a
+            mode re-arm. A singleton is the named ScalarReactorContainer case.
+          - container = "a structure that holds instances"; one
+            (ScalarReactorContainer) or many (MultiReactorContainer). Accept is
+            a mutexed three-call slot protocol slot_reserve/slot_set/slot_free
+            (reserve returns an int key or NO_SLOT; construct runs after a
+            successful reserve, OUTSIDE the lock; a rejected reserve constructs
+            nothing; slot_free is idempotent). Mutex on the reserve alone
+            suffices (no global lock through construct). Two base classes added
+            to bootstrap.lua (3e).
+          - 'in {lvalue}' is OPAQUE Luau (R-6, R-23): the parser does not
+            resolve it, the semantic layer does not check it is a container;
+            container-ness is a run-time fact. Cost: a typo'd container is a
+            run-time error, not static -- the same opacity every Luau span
+            already carries, not a new hole. REJECTED: requiring 'box' to be a
+            declared, kind-known container -- would drag the static line into
+            Luau lvalue space.
+          - construct-inside-vs-outside-the-mutex: OUTSIDE. Holding the lock
+            through a possibly-blocking construct (sprite, socket) would
+            serialize all spawns; the reserve marks the slot taken, construct
+            then runs unlocked, slot_set commits.
+        Binding 'mg' ADDED: the mode-group self-binding, symmetric to 'sm'
+        (state machine). Was missing -- a mode group's init/deinit had no name
+        for itself while a state machine's did. Exactly one of 'sm'/'mg' is in
+        scope, decided by the enclosing aggregate kind.
+        AST: Spawn loses 'inst', gains 'has_parens' + opaque 'container';
+        Singleton TopLevel node added. Grammar: '<spawn>' rewritten (parens
+        optional, optional 'in {luau}'), '<singleton-def>' added; lexer gains
+        KW_SINGLETON, KW_IN. Container protocol is a RUNTIME contract (bootstrap
+        + codegen), not a static-layer type.
+        -> SYNTAX A.1, A.2.1, <spawn>/<singleton-def>/<unspawn>; README
+           (glossary, BINDINGS, AGGREGATE SPAWNING); luau/README runtime
+           substrate; luau/bootstrap (3d, 3e); parser ast_nodes/grammar/lexer;
+           cf. R-29 (identity = parameters, retained as the default container's
+           accept rule), R-31 (verb set retained), R-6/R-23 (Luau opacity).
 
   R-38  INCLUDE -- 'include "<file>" as <dotted-name>'. Mounts another file's
         namespace at a path the INCLUDING file chooses. Python-model:

@@ -45,20 +45,22 @@ from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 
 class E_TokenId(Enum):
     """Enumeration of all valid rule-file tokens."""
-    KW_ON       = auto()
-    KW_MODE     = auto()
-    KW_MGROUP   = auto()
-    KW_SM       = auto()
-    KW_STATE    = auto()
-    KW_HAS      = auto()
-    KW_AS       = auto()
-    KW_END_BLK  = auto()
-    KW_UNTIL    = auto()
-    KW_EVENT    = auto()
-    KW_CLOCK    = auto()
-    KW_OPEN     = auto()
-    KW_CLOSE    = auto()
-    KW_INCLUDE  = auto()
+    KW_ON        = auto()
+    KW_MODE      = auto()
+    KW_MGROUP    = auto()
+    KW_SM        = auto()
+    KW_STATE     = auto()
+    KW_HAS       = auto()
+    KW_AS        = auto()
+    KW_END_BLK   = auto()
+    KW_UNTIL     = auto()
+    KW_EVENT     = auto()
+    KW_CLOCK     = auto()
+    KW_OPEN      = auto()
+    KW_CLOSE     = auto()
+    KW_INCLUDE   = auto()
+    KW_SINGLETON = auto()
+    KW_IN        = auto()
 
     KW_ANY      = auto()
     KW_BEGIN    = auto()
@@ -95,23 +97,25 @@ class E_TokenId(Enum):
 # Tokens skipped silently in the control plane. NOTE: '##' comments only.
 # Inside a '{ ... }' span the bytes are opaque Luau and never seen here.
 _TOKEN_SPEC = [
-    ("COMMENT",          r'##[^\n]*'),
-    ("WS",               r'\s+'),
+    ("COMMENT", r'##[^\n]*'),
+    ("WS",      r'\s+'),
 
-    (E_TokenId.KW_ON,       r'\bon\b'),
-    (E_TokenId.KW_MGROUP,   r'\bmode_group\b'),
-    (E_TokenId.KW_MODE,     r'\bmode\b'),
-    (E_TokenId.KW_SM,       r'\bstate_machine\b'),
-    (E_TokenId.KW_STATE,    r'\bstate\b'),
-    (E_TokenId.KW_HAS,      r'\bhas\b'),
-    (E_TokenId.KW_AS,       r'\bas\b'),
-    (E_TokenId.KW_END_BLK,  r'\bend\b'),
-    (E_TokenId.KW_UNTIL,    r'\buntil\b'),
-    (E_TokenId.KW_EVENT,    r'\bevent\b'),
-    (E_TokenId.KW_CLOCK,    r'\bclock\b'),
-    (E_TokenId.KW_OPEN,     r'\bopen\b'),
-    (E_TokenId.KW_CLOSE,    r'\bclose\b'),
-    (E_TokenId.KW_INCLUDE,  r'\binclude\b'),
+    (E_TokenId.KW_ON,        r'\bon\b'),
+    (E_TokenId.KW_MGROUP,    r'\bmode_group\b'),
+    (E_TokenId.KW_MODE,      r'\bmode\b'),
+    (E_TokenId.KW_SM,        r'\bstate_machine\b'),
+    (E_TokenId.KW_STATE,     r'\bstate\b'),
+    (E_TokenId.KW_HAS,       r'\bhas\b'),
+    (E_TokenId.KW_AS,        r'\bas\b'),
+    (E_TokenId.KW_END_BLK,   r'\bend\b'),
+    (E_TokenId.KW_UNTIL,     r'\buntil\b'),
+    (E_TokenId.KW_EVENT,     r'\bevent\b'),
+    (E_TokenId.KW_CLOCK,     r'\bclock\b'),
+    (E_TokenId.KW_OPEN,      r'\bopen\b'),
+    (E_TokenId.KW_CLOSE,     r'\bclose\b'),
+    (E_TokenId.KW_INCLUDE,   r'\binclude\b'),
+    (E_TokenId.KW_SINGLETON, r'\bsingleton\b'),
+    (E_TokenId.KW_IN,        r'\bin\b'),
 
     (E_TokenId.KW_ANY,      r'\bANY\b'),
     (E_TokenId.KW_BEGIN,    r'\bBEGIN\b'),

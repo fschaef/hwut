@@ -471,7 +471,7 @@ member modes and adds only the habitat semantics: at most one member active,
 arming a member fires the outgoing member's 'switched', and an optional
 'default' member (an implicit do-nothing VOID when unspecified) becomes active
 whenever no member remains. The state machine has its own 'init'/'deinit' and
-binds 'sm' inside its members.
+binds 'sm' inside its members (the mode-group counterpart binds 'mg').
 ]]
 function bootstrap.new_state_machine_class(name)
     local sm = bootstrap.new_mode_class(name)
@@ -521,6 +521,135 @@ function bootstrap.new_state_machine_class(name)
 
     return sm
 end
+
+-- ===========================================================================
+-- (3d) MODE-GROUP BASE -- non-exclusive habitat over member modes
+-- ===========================================================================
+
+--[[ RETURN: mode-group class, a habitat whose member modes overlap freely.
+
+Builds the per-kind mode-group class. Reuses the mode lifecycle for its member
+modes and adds no exclusion: any number of members live at once, arming one
+does not cease another. The mode group has its own 'init'/'deinit' and binds
+'mg' inside its members -- the non-exclusive counterpart of the state machine's
+'sm'. The two aggregate self-bindings, 'sm' and 'mg', are symmetric; the
+transpiler emits whichever the enclosing aggregate kind dictates.
+]]
+function bootstrap.new_mode_group_class(name)
+    local mg = bootstrap.new_mode_class(name)
+    return mg
+end
+
+-- ===========================================================================
+-- (3e) REACTOR CONTAINERS -- where a spawned aggregate lives
+-- ===========================================================================
+--
+-- A spawned aggregate instance is offered to a CONTAINER. A container admits
+-- or rejects the offer under a mutexed three-call slot protocol so concurrent
+-- spawns cannot both claim one slot:
+--
+--     key = container:slot_reserve()      -- MUTEXED; 0 (NO_SLOT) on reject
+--     -- construct the instance on the reserved key, outside the lock --
+--     container:slot_set(key, instance)   -- commit the instance into the slot
+--     ...
+--     container:slot_free(key)            -- release on '-!' / end of existence
+--
+-- 'slot_free' on an unknown or already-freed key is a no-op, so ending an
+-- existence is safe to call once even after a host has already released it.
+-- Two base classes differ only in how 'slot_reserve' decides:
+--   ScalarReactorContainer  holds 0..1; reserve fails when occupied.
+--   MultiReactorContainer   holds 0..N; reserve mints a fresh key unless a
+--                           kind-specific rule (capacity, or the default
+--                           container's identity-by-parameters) rejects.
+
+local NO_SLOT = 0
+
+--[[ RETURN: scalar-container class, a container holding at most one instance.
+
+ScalarReactorContainer reserves its single slot iff empty; a second reserve
+while occupied returns NO_SLOT, so a duplicate spawn constructs nothing.
+]]
+function bootstrap.new_scalar_container()
+    local c = { _slot = nil, _taken = false }
+
+    --[[ RETURN: int key,  the reserved slot
+                 NO_SLOT,   when already occupied
+
+    The reserve half of the slot protocol; the caller treats this as the
+    mutexed critical section. ]]
+    function c:slot_reserve()
+        if self._taken then return NO_SLOT end
+        self._taken = true
+        return 1
+    end
+
+    --[[ RETURN: nil. Commits 'instance' into the reserved slot 'key'. ]]
+    function c:slot_set(key, instance)
+        if key == 1 then self._slot = instance end
+    end
+
+    --[[ RETURN: nil. Releases the slot; an unknown/freed key is a no-op. ]]
+    function c:slot_free(key)
+        if key == 1 then self._slot = nil; self._taken = false end
+    end
+
+    --[[ RETURN: array, the held instance as a one- or zero-element list. ]]
+    function c:_instances()
+        if self._slot ~= nil then return { self._slot } end
+        return {}
+    end
+
+    return c
+end
+
+--[[ RETURN: multi-container class, a container holding any number of instances.
+
+MultiReactorContainer mints a fresh key per reserve unless an 'admit(self,
+params)' predicate rejects the offer. The default per-kind container passes an
+'admit' that rejects a parameterisation already present (identity = parameters,
+as for modes), giving the silent-no-op duplicate-spawn semantics.
+]]
+function bootstrap.new_multi_container(admit)
+    local c = { _slots = {}, _next = 1, _admit = admit }
+
+    --[[ RETURN: int key,  a fresh reserved slot
+                 NO_SLOT,  when the 'admit' predicate rejects
+
+    The reserve half of the slot protocol (mutexed critical section). ]]
+    function c:slot_reserve(params)
+        if self._admit ~= nil and not self._admit(self, params) then
+            return NO_SLOT
+        end
+        local key = self._next
+        self._next = self._next + 1
+        self._slots[key] = false        -- reserved, not yet committed
+        return key
+    end
+
+    --[[ RETURN: nil. Commits 'instance' into the reserved slot 'key'. ]]
+    function c:slot_set(key, instance)
+        if self._slots[key] ~= nil then self._slots[key] = instance end
+    end
+
+    --[[ RETURN: nil. Releases the slot; an unknown/freed key is a no-op. ]]
+    function c:slot_free(key)
+        self._slots[key] = nil
+    end
+
+    --[[ RETURN: array, every committed instance, in key order. ]]
+    function c:_instances()
+        local out = {}
+        for key = 1, self._next - 1 do
+            local v = self._slots[key]
+            if v ~= nil and v ~= false then out[#out + 1] = v end
+        end
+        return out
+    end
+
+    return c
+end
+
+bootstrap.NO_SLOT = NO_SLOT
 
 -- ===========================================================================
 -- (4) TRACER -- opt-in event history; each key is a Queryable

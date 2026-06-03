@@ -67,6 +67,36 @@ transpiler emission quality issue. The correct fix is in the emitter, not via
 global suppression of LocalUnused, which would also silence author warnings.
 
 -------------------------------------------------------------------------------
+D-9.  Reactor containers + slot protocol (bootstrap.lua 3e)
+-------------------------------------------------------------------------------
+Mechanism: a spawned aggregate is offered to a CONTAINER, admitted under a
+three-call slot protocol -- slot_reserve() -> int key | NO_SLOT(0);
+slot_set(key, instance); slot_free(key).
+Why a key, not a bool 'can_add': the returned key IS the reservation, so the
+check and the hold are one atomic act -- closes the time-of-check/time-of-use
+gap a bool query would leave open between "may add" and "added".
+Mutex scope: the RESERVE alone is the critical section. construct() runs after
+a successful reserve and OUTSIDE the lock, so a possibly-blocking construct
+(sprite, socket) does not serialize all spawns. The slot is marked taken at
+reserve and committed at slot_set.
+slot_free idempotent: free on an unknown/already-freed key is a no-op, so
+ending an existence is safe to call once even after a host already released.
+Two base classes, differing only in slot_reserve:
+  ScalarReactorContainer  0..1; reserve fails when occupied.
+  MultiReactorContainer   0..N; reserve mints a fresh key unless an admit
+                          predicate rejects. The DEFAULT per-kind container is
+                          a Multi whose admit rejects a parameterisation
+                          already present (identity = parameters, R-29).
+Static/runtime line: the protocol is a RUNTIME contract honoured in Luau; the
+rule-file parser and the semantic layer never see the container -- 'in {lvalue}'
+is opaque Luau. Container-ness is a run-time fact. (Design rationale: top-level
+R-39; semantic L-11/L-12 for the static unspawn check that pairs with this.)
+Cost: a custom container author must implement all three calls correctly; a
+half-implemented container fails at run time, not at transpile time.
+Mitigation: the two base classes cover scalar and multi; a custom container is
+the exception, and the contract is three short methods.
+
+-------------------------------------------------------------------------------
 D-8.  Graveyard
 -------------------------------------------------------------------------------
 luau-ast --json: binary version available here has no flags; rejected.

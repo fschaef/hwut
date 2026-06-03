@@ -1,6 +1,6 @@
 === monkey: aggregate coverage ===
 
--- rules (38/38) --
+##-- rules ((37)) / ((39)) --
 SUCCESS: <arg-decl-list>
 SUCCESS: <arg-decl>
 SUCCESS: <arg-list>
@@ -30,6 +30,7 @@ SUCCESS: <mutation>
 SUCCESS: <namespace>
 SUCCESS: <report-string>
 SUCCESS: <rvalue>
+SUCCESS: <singleton-def>
 SUCCESS: <sm-mode-ref>
 SUCCESS: <spawn>
 SUCCESS: <state-machine-elm>
@@ -38,9 +39,9 @@ SUCCESS: <state-untils>
 SUCCESS: <state>
 SUCCESS: <top-level>
 SUCCESS: <trigger>
-SUCCESS: <unspawn>
 
--- node types (22/22) --
+##-- node types (22/23) --
+SUCCESS: <unspawn>
 SUCCESS: Arg
 SUCCESS: ArgDecl
 SUCCESS: Causality
@@ -57,6 +58,7 @@ SUCCESS: ModeGroup
 SUCCESS: Mutation
 SUCCESS: Namespace
 SUCCESS: ReportString
+SUCCESS: Singleton
 SUCCESS: Spawn
 SUCCESS: State
 SUCCESS: StateMachine

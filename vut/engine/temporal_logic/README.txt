@@ -38,8 +38,12 @@ VOCABULARY
                 modes are active at once.
   STATE MACHINE An aggregate of states in which at most one member-state is
                 active at a time; arming a member deactivates the previous one.
-  AGGREGATE     A MODE GROUP or a STATE MACHINE. Spawned by '+!' (named with
-                'as', else a global singleton); a named one removed by '-!'.
+  AGGREGATE     A MODE GROUP or a STATE MACHINE. Spawned by '+!' into a
+                container (default or named); its existence ended by '-!'. A
+                'singleton :' declaration fixes one instance re-init by name.
+  CONTAINER     A structure that holds aggregate instances -- one (a
+                ScalarReactorContainer) or many (a MultiReactorContainer). It
+                admits an offered instance under a mutexed slot protocol.
   NAMESPACE     A named scope, 'open <dotted-name> ... close', bracketing nested
                 declarations. Nests to any depth; names are scoped to it.
   REPORT        The deterministic block of text the engine prints for HWUT
@@ -155,25 +159,32 @@ VOCABULARY
     Each member is a state, arming is a transition, mutual exclusion is
     automatic. A state machine has its own 'init'/'deinit', an optional
     'default' member (an implicit do-nothing 'VOID' state when unspecified),
-    may carry parameters, and is closed by 'end'.
+    may carry parameters, and is closed by 'end'. Its Luau spans bind the
+    state machine as 'sm'.
     (Declaration, 'until switched', and the 'sm' binding: SYNTAX.txt
     A.2.5.)
 
-  AGGREGATE ARMING AND NAMING
+  AGGREGATE SPAWNING AND CONTAINERS
     A mode group or state machine is spawned with the '+!' effect verb,
-    paralleling the '!' that arms a single mode. An 'as <name>' clause binds
-    the instance as an addressable entity; without it the instance folds into
-    one global singleton per aggregate type. Named instances let several
-    aggregates of the same type run concurrently, each supervised separately. A
-    named instance is removed with the '-!' verb, which takes a reference by
-    name (bare or dotted) -- only a named entity can be unspawned.
-    (Effect forms: SYNTAX.txt <spawn> and <unspawn>.)
+    paralleling the '!' that arms a single mode. '+!' has three forms: the
+    bracketless re-init of a 'singleton :'-declared type; the parenthesised
+    default-container spawn (admitted unless an instance of identical type and
+    parameters is already present); and the 'in { lvalue }' form that offers
+    the instance to a named container. The container admits or rejects the
+    instance under a mutexed slot protocol; a rejected offer constructs
+    nothing. Several aggregates of one type run concurrently when their
+    container holds many. An instance's existence is ended with the '-!' verb,
+    which takes a reference by name (bare or dotted).
+    (Effect forms: SYNTAX.txt <spawn>, <singleton-def>, <unspawn>; the
+    container protocol: section on the runtime substrate.)
 
   BINDINGS
     Engine-supplied names in scope inside a fired rule's Luau spans: 'event'
-    (the triggering event), 'mode' (the enclosing mode instance), and 'sm'
-    (the enclosing state machine). 'mode' and 'sm' are unbound at top level;
-    referring to them there is a transpile-time error.
+    (the triggering event), 'mode' (the enclosing mode instance), 'sm' (the
+    enclosing state machine), and 'mg' (the enclosing mode group). 'mode',
+    'sm', and 'mg' are unbound at top level; referring to them there is a
+    transpile-time error. 'sm' and 'mg' are the two aggregate self-bindings,
+    one in scope at a time per the enclosing aggregate kind.
     (Full rules: SYNTAX.txt A.2.1.)
 
   TIME-LINE BOUNDS -- BEGIN AND END
@@ -303,13 +314,14 @@ VOCABULARY
     still-living instance. Top-level rules belong to an internal singleton,
     GROUND_MODE, so the engine has one mechanism (the reactor) rather than two.
 
-  AGGREGATE ARMING
+  AGGREGATE SPAWNING
     A single mode is armed with '!'; an aggregate -- a mode group or a state
-    machine -- is spawned with '+!' and a named instance removed with '-!'. An
-    'as <name>' clause names the instance; without it the instance is the
-    aggregate type's global singleton. The verbs keep the targets distinct: '!'
-    takes a reactor, '+!'/'-!' take an aggregate. Because only a named entity
-    can be removed, '-!' takes a reference by name, not a fresh invocation.
+    machine -- is spawned with '+!' and its existence ended with '-!'. '+!'
+    spawns into a container: the per-kind default, or a named one via
+    'in { lvalue }'; a 'singleton :' type is instead re-initialised by its
+    bare name. The verbs keep the targets distinct: '!' takes a reactor,
+    '+!'/'-!' take an aggregate. '-!' takes a reference by name, not a fresh
+    invocation.
 
   STATE-MACHINE LIFECYCLE
     Member states are mutually exclusive; arming one fires the previously

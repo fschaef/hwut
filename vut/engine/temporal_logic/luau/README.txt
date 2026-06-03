@@ -134,7 +134,21 @@ USAGE:
     │      └── .new_state_machine_class(name)       -- Extends Mode Base; guarantees mutual exclusion
     │            ├── .set_default(arm_fn)           -- Sets implicit fallback arming (or VOID)
     │            ├── .switch_to(incoming)           -- Marks outgoing as switched and triggers .cease()
-    │            └── .ensure_active()               -- Enforces single-active invariant post-cessation
+    │            ├── .ensure_active()               -- Enforces single-active invariant post-cessation
+    │            └── binds 'sm' in members          -- Aggregate self-binding (counterpart: 'mg')
+    │
+    ├── (3d) MODE-GROUP BASE -- non-exclusive habitat
+    │      └── .new_mode_group_class(name)          -- Extends Mode Base; no exclusion, members overlap
+    │            └── binds 'mg' in members          -- Aggregate self-binding (counterpart: 'sm')
+    │
+    ├── (3e) REACTOR CONTAINERS -- where a spawned aggregate lives
+    │      │   Slot protocol (mutexed reserve; construct runs after, unlocked):
+    │      │     key = :slot_reserve()              -- int key, or NO_SLOT(0) on reject
+    │      │     :slot_set(key, instance)           -- commit into the reserved slot
+    │      │     :slot_free(key)                    -- release; idempotent on unknown key
+    │      ├── .new_scalar_container()              -- ScalarReactorContainer: holds 0..1
+    │      └── .new_multi_container(admit)          -- MultiReactorContainer: holds 0..N; 'admit'
+    │                                                  rejects (default container: dup parameters)
     │
     └── (4) TRACER -- opt-in event history
            ├── Tracer.new()                         -- History ring container (default size = 1)
