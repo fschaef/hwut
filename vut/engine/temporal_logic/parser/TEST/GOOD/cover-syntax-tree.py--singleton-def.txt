@@ -1,0 +1,25 @@
+=== <singleton-def> ===
+
+-- 0x --
+   input: singleton : X
+Singleton
+  name = 'X'
+  args:
+    []
+  begin = 0
+
+-- 1x --
+   input: singleton : X . X
+Singleton
+  name = 'X.X'
+  args:
+    []
+  begin = 0
+
+-- 2x --
+   input: singleton : X . X . X
+Singleton
+  name = 'X.X.X'
+  args:
+    []
+  begin = 0
