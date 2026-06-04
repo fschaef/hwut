@@ -5,8 +5,8 @@
 []
 
 -- present --
-   input: ( X : X )
+   input: ( NAME_COLON X )
 ArgDecl
-  member = 'X'
+  member = 'NAME_COLO'
   type = 'X'
   begin = 0

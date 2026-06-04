@@ -1,7 +1,7 @@
 === <default> ===
 
 -- default --
-   input: default = X . VOID
+   input: default: X . VOID
 StateMachineModeRef
   sm_name = 'X'
   mode_name = 'VOID'

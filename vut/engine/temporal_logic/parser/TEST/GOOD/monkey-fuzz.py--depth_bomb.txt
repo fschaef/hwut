@@ -1,6 +1,6 @@
 === monkey: depth-bomb (namespace nesting) ===
-depth    10 : PASS
-depth    50 : PASS
-depth   100 : PASS
-depth   500 : PASS
-depth 20000 : PASS
+depth    10 : FAIL (diagnostics)
+depth    50 : FAIL (diagnostics)
+depth   100 : FAIL (diagnostics)
+depth   500 : FAIL (diagnostics)
+depth 20000 : FAIL (diagnostics)

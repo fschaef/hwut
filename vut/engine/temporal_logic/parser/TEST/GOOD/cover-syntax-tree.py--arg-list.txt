@@ -1,17 +1,34 @@
 === <arg-list> ===
 
--- absent --
+-- 0x --
    input: 1
 Arg
-  member = None
   value = '1'
   is_luau = False
   begin = 0
 
--- present --
-   input: X = 1
+-- 1x --
+   input: 1 , 1
 Arg
-  member = 'X'
+  value = '1'
+  is_luau = False
+  begin = 0
+Arg
+  value = '1'
+  is_luau = False
+  begin = 0
+
+-- 2x --
+   input: 1 , 1 , 1
+Arg
+  value = '1'
+  is_luau = False
+  begin = 0
+Arg
+  value = '1'
+  is_luau = False
+  begin = 0
+Arg
   value = '1'
   is_luau = False
   begin = 0

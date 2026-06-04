@@ -26,11 +26,11 @@ from abc import ABC
 class TopLevel(ABC):
     """Abstract base for the constructs that may appear at rule-file top level.
 
-    Namespace, Include, Causality, Mode, ModeGroup, StateMachine, EventDef and
-    ClockDef derive from it, so 'RuleFile.items' is typed as list[TopLevel] and
+    Namespace, Include, Causality, Mode, ModeGroup, StateMachine, ForwardDecl,
+    EventDef and ClockDef derive from it, so 'RuleFile.items' is typed as list[TopLevel] and
     only these node kinds are admissible there. A Namespace nests further
-    TopLevel items (Causality, Mode, ModeGroup, StateMachine, Singleton,
-    EventDef, ClockDef, Include, Namespace). Carries no fields; the concrete
+    TopLevel items (Causality, Mode, ModeGroup, StateMachine, ForwardDecl,
+    Singleton, EventDef, ClockDef, Include, Namespace). Carries no fields; the concrete
     nodes hold their own.
     """
     pass
@@ -76,11 +76,11 @@ class Cause:
 class Arg:
     """One argument of an event-spec or mode-arming: optional member, rvalue.
 
-    'member' is the 'name=' target or None for positional. 'value' is the
-    rvalue: a NUMBER/STRING lexeme carried as text, or an EXPRESSION Luau span.
-    'is_luau' True iff 'value' is a Luau span rather than a literal lexeme.
+    Args are positional ('=' naming is retired from the rule-file plane; any
+    keying lives inside the Luau '{ ... }' value). 'value' is the rvalue: a
+    NUMBER/STRING lexeme carried as text, or an EXPRESSION Luau span. 'is_luau'
+    True iff 'value' is a Luau span rather than a literal lexeme.
     """
-    member:  Optional[str]
     value:   object          # str (number/string literal) | Luau
     is_luau: bool
     begin:   int
@@ -113,17 +113,20 @@ class Spawn:
         one declared instance with its declaration-fixed arguments.
       - default-container spawn: 'has_parens' True, 'container' None -- offers a
         fresh instance to the per-kind default container.
-      - container spawn: 'container' is the opaque Luau lvalue span -- offers a
-        fresh instance to that container.
+      - container spawn: 'in_container' names a declared container ('+! x in: C')
+        the fresh instance is caught by; resolved in pass 2 to an 'is: container'
+        declaration.
     'args' is empty for the singleton form (parentheses are a syntax error
-    there). 'container' is a Luau node (opaque lvalue) or None; the parser does
-    not resolve it.
+    there). 'in_container' is the container's rule-file name (str) or None.
+    'luau_handle' is the optional 'as: { ... }' lvalue span (a Luau node) that
+    names the spawned instance in the script world, or None.
     """
-    name:       str
-    args:       List[Arg]
-    has_parens: bool
-    container:  Optional["Luau"]
-    begin:      int
+    name:        str
+    args:        List[Arg]
+    has_parens:  bool
+    in_container: Optional[str]
+    luau_handle: Optional["Luau"]
+    begin:       int
 
 
 @dataclass(frozen=True)
@@ -240,6 +243,28 @@ class HasRef:
 
 
 @dataclass(frozen=True)
+class ForwardDecl(TopLevel):
+    """A '<name> is: <kind>' forward declaration: name and kind, no body.
+
+    Satisfies the (B.1) declare-by-name-and-type gate of the (A)/(B) forward-
+    reference rule; the matching definition follows later in the same scope
+    (B.2). 'kind' is one of 'mode', 'mode_group', 'state_machine', 'container'.
+    The static kinds carry no parameters and no body -- the definition site
+    carries those. 'container' is the kind that reaches into Luau: 'cargs' holds
+    its configuration arguments (shape/size/access, opaque to the static layer)
+    and 'luau_handle' is the optional 'as: { ... }' lvalue span naming where the
+    container lives in the script world (a Luau node, or None). The scope-level
+    counterpart of HasRef ('has:'), which declares an aggregate member and lets
+    the enclosing aggregate imply the kind.
+    """
+    kind:        str
+    name:        str
+    cargs:       List["Arg"]
+    luau_handle: Optional["Luau"]
+    begin:       int
+
+
+@dataclass(frozen=True)
 class StateMachineModeRef:
     """A reference 'SM.member' or 'SM.VOID' used by 'default ='."""
     sm_name:   str
@@ -351,7 +376,7 @@ class RuleFile:
     """The whole parsed rule file: an ordered list of top-level constructs.
 
     'items' holds Namespace, Include, Causality, Mode, ModeGroup, StateMachine,
-    Singleton, EventDef and ClockDef nodes in source order. A mutable container
+    ForwardDecl, Singleton, EventDef and ClockDef nodes in source order. A mutable container
     so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)

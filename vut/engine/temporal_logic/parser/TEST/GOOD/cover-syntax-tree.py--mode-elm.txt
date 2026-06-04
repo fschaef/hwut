@@ -1,7 +1,7 @@
 === <mode-elm> ===
 
 -- alternative 0 --
-   input: on X & { luau } => { luau }
+   input: on: X & { luau } => { luau }
 Causality
   cause:
     Cause
@@ -27,7 +27,7 @@ Causality
   begin = 0
 
 -- alternative 1 --
-   input: init { luau }
+   input: init: { luau }
 InitBlock
   body:
     Luau
@@ -37,7 +37,7 @@ InitBlock
   begin = 0
 
 -- alternative 2 --
-   input: deinit { luau }
+   input: deinit: { luau }
 DeinitBlock
   body:
     Luau

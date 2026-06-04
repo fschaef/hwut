@@ -1,7 +1,7 @@
 === <state> ===
 
 -- 0x --
-   input: state X : on X => { luau } until switched
+   input: state: X on: X => { luau } until: switched
 State
   name = 'X'
   params:
@@ -33,7 +33,7 @@ State
   begin = 0
 
 -- 1x --
-   input: state X . X : on X => { luau } until switched
+   input: state: X . X on: X => { luau } until: switched
 State
   name = 'X.X'
   params:
@@ -65,7 +65,7 @@ State
   begin = 0
 
 -- 2x --
-   input: state X . X . X : on X => { luau } until switched
+   input: state: X . X . X on: X => { luau } until: switched
 State
   name = 'X.X.X'
   params:

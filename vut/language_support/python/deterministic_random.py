@@ -1,6 +1,28 @@
 import math
 # from   typeguard import typechecked -- too costly in most applications
 
+
+class SelectionMarker:
+    """Remembers which candidate OBJECTS have been chosen at one selection site.
+
+    Keyed by object identity (id), never equality: two structurally equal
+    candidates are still distinct alternatives. The marker is caller-owned, so
+    'prefer unchosen' is reproducible regardless of container address reuse --
+    the marker, not id(container), is the memory. One marker per logical site
+    (e.g. one per grammar ALT node) gives coverage-style spread across a walk.
+
+    Safe to key on id() because the caller holds the candidate objects alive
+    for the marker's lifetime (e.g. grammar branches are long-lived nodes).
+    """
+    def __init__(self):
+        """RETURN: None. Starts with an empty chosen-set."""
+        self.chosen = set()      # set of id(candidate)
+
+    def reset(self):
+        """RETURN: None. Forgets all chosen candidates; the next cycle restarts."""
+        self.chosen.clear()
+
+
 class DeterministicStream:
     """
     A platform-independent random number generator using a 
@@ -10,10 +32,40 @@ class DeterministicStream:
         # Using parameters from glibc/POSIX
         self.state = seed & 0x7FFFFFFF
 
+    def coin(self, probability_of_true) -> bool:
+        return bool(self.next_float() < probability_of_true)
+
     # @typechecked -- too costly
     def select(self, candidates: list|tuple|str):
-        L = len(candidates)
-        return candidates[self.next_int(0, L-1)]
+        """RETURN: object, a uniformly random candidate from 'candidates'.
+
+        Stateless: the same stream state and the same 'candidates' always yield
+        the same element. For spread that prefers not-yet-chosen candidates, use
+        'select_unchosen' with a caller-owned SelectionMarker.
+        """
+        return candidates[self.next_int(0, len(candidates) - 1)]
+
+    # @typechecked -- too costly
+    def select_unchosen(self, candidates: list|tuple|str, marker: "SelectionMarker"):
+        """RETURN: object, a random candidate whose identity 'marker' has not seen.
+
+        Draws uniformly among the candidates absent from 'marker' (by object
+        identity), records the choice, and returns it. When every candidate has
+        been seen, resets 'marker' and draws from the full pool.
+
+        Identity-keyed, so the result is independent of pool composition: a
+        candidate counts as 'the same' across differing sub-pools of one site
+        (e.g. a branch seen via a 'recursive' sub-list is remembered when the
+        full branch list is offered next). Determinism does not depend on the
+        container's address -- only on the stream state and the marker.
+        """
+        unchosen = [c for c in candidates if id(c) not in marker.chosen]
+        if not unchosen:
+            marker.reset()
+            unchosen = list(candidates)
+        choice = unchosen[self.next_int(0, len(unchosen) - 1)]
+        marker.chosen.add(id(choice))
+        return choice
 
     # @typechecked -- too costly
     def next_int(self, v_min: int, v_max: int) -> int:

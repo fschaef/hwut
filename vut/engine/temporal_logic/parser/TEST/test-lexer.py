@@ -94,13 +94,14 @@ def show_diagnostics(reporter):
 def run_tokens():
     """RETURN: None. Each token kind maps as expected, with correct spans."""
     banner("keywords and structure")
-    src = ("on mode mode_group state_machine state has as until end "
-           "event clock ANY BEGIN END switched default init deinit VOID")
+    src = ("on: mode: mode_group: state_machine: state: has: as: until: :end "
+           "event: clock: into: in: open: :close container is: singleton: "
+           "default: init: deinit: ANY BEGIN END switched VOID")
     tokens, _, _ = drive(src)
     show_tokens(tokens)
 
     banner("operators and symbols")
-    tokens, _, _ = drive("=> & = : , +! -! ! ; . ( )")
+    tokens, _, _ = drive("=> & , +! -! ! ; . ( ) n:")
     show_tokens(tokens)
 
     banner("literals and identifiers")
@@ -119,7 +120,7 @@ def run_dotted_names():
     show_tokens(tokens)
 
     banner("three-part dotted name")
-    tokens, _, _ = drive("default = SM.MEMBER")
+    tokens, _, _ = drive("default: SM.MEMBER")
     show_tokens(tokens)
 
 
@@ -160,7 +161,7 @@ def run_oracle_handoff():
 def run_mismatch():
     """RETURN: None. Illegal char is reported non-fatal and returned as MISMATCH."""
     banner("stray '?' between valid tokens")
-    tokens, reporter, lexer = drive("on ? end")
+    tokens, reporter, lexer = drive("on: ? :end")
     show_tokens(tokens)
     print("error_f:", lexer.error_f)
     show_diagnostics(reporter)

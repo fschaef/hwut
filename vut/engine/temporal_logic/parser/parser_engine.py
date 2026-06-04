@@ -114,14 +114,19 @@ def _literal_of(pattern):
     """
     RETURN: str, the fixed spelling a pattern matches, or None if not fixed.
 
-    A keyword pattern is '\\bword\\b'; a symbol pattern is the (possibly
-    escaped) literal. An escaped char ('\\+') is literal regardless of being a
-    metacharacter; an UNescaped metacharacter means the pattern is a class or
-    quantifier, not a fixed spelling, so None is returned.
+    A keyword pattern carries a word boundary on the side that abuts an
+    identifier char: '\\bword\\b' (bare keyword), '\\bword:' (trailing-colon
+    keyword, e.g. 'mode:'), or ':word\\b' (leading-colon terminator, e.g.
+    ':end'). Each '\\b' is stripped independently. A symbol pattern is the
+    (possibly escaped) literal. An escaped char ('\\+') is literal regardless of
+    being a metacharacter; an UNescaped metacharacter means the pattern is a
+    class or quantifier, not a fixed spelling, so None is returned.
     """
     p = pattern
-    if p.startswith(r'\b') and p.endswith(r'\b'):
-        p = p[2:-2]
+    if p.startswith(r'\b'):
+        p = p[2:]
+    if p.endswith(r'\b'):
+        p = p[:-2]
     META = set('[](){}?*+|.^$')
     out = []
     i = 0
@@ -138,9 +143,10 @@ def _literal_of(pattern):
 
 
 _CLASS_TOKEN = {
-    "#ID":     E_TokenId.ID,
-    "#NUMBER": E_TokenId.NUMBER,
-    "#STRING": E_TokenId.STRING,
+    "#ID":         E_TokenId.ID,
+    "#NUMBER":     E_TokenId.NUMBER,
+    "#STRING":     E_TokenId.STRING,
+    "#NAME_COLON": E_TokenId.NAME_COLON,
 }
 
 
@@ -171,25 +177,26 @@ class Grammar:
         """
         if isinstance(element, tuple):
             return (element[0],) + tuple(self._compile(e) for e in element[1:])
-        if not isinstance(element, str):
+        elif not isinstance(element, str):
             raise ValueError("grammar element not a str/tuple: %r" % (element,))
-        if element.startswith("<"):
+        elif element.startswith("<"):
             if element not in self.rules:
                 raise ValueError("undefined non-terminal %r" % element)
             return self.rules[element]
-        if element.startswith("{luau:"):
+        elif element.startswith("{luau:"):
             role_name = element[len("{luau:"):-1]
             return LuauRef(Role[role_name])
-        if element in _CLASS_TOKEN:
+        elif element in _CLASS_TOKEN:
             tid = _CLASS_TOKEN[element]
             return Terminal(tid, silent=False)
-        if element in self.literals:
+        elif element in self.literals:
             captured = element in G.CAPTURED_LITERALS
             return Terminal(self.literals[element], silent=not captured)
-        raise ValueError(
-            "unresolved grammar literal %r: no token in the lexer's "
-            "_TOKEN_SPEC spells it. The grammar references %r but lexer.py "
-            "defines no matching keyword/symbol pattern." % (element, element))
+        else:
+            raise ValueError(
+                "unresolved grammar literal %r: no token in the lexer's "
+                "_TOKEN_SPEC spells it. The grammar references %r but lexer.py "
+                "defines no matching keyword/symbol pattern." % (element, element))
 
     # -- analysis: FIRST sets + LL(1) validation ------------------------
     def _analyse(self):
@@ -213,12 +220,10 @@ class Grammar:
         contribute their body's FIRST but are themselves nullable; SEQ stops at
         the first non-nullable element.
         """
-        if isinstance(element, Terminal):
-            return {element.token_id}
-        if isinstance(element, LuauRef):
-            return {E_TokenId.LUAU_OPEN}
-        if isinstance(element, NonTerminal):
-            return set(element.first)
+        if   isinstance(element, Terminal):    return {element.token_id}
+        elif isinstance(element, LuauRef):     return {E_TokenId.LUAU_OPEN}
+        elif isinstance(element, NonTerminal): return set(element.first)
+
         op = element[0]
         if op == SEQ:
             result = set()
@@ -227,14 +232,16 @@ class Grammar:
                 if not self._nullable(sub):
                     break
             return result
+
         if op == ALT:
             result = set()
             for sub in element[1:]:
                 result |= self._first_of(sub)
             return result
-        if op in (OPT, PLUS, STAR):
+        elif op in (OPT, PLUS, STAR):
             return self._first_of(element[1])
-        raise ValueError("unknown op %r" % (op,))
+        else:
+            raise ValueError("unknown op %r" % (op,))
 
     def _nullable(self, element):
         """
@@ -251,11 +258,11 @@ class Grammar:
         op = element[0]
         if op in (OPT, STAR):
             return True
-        if op == PLUS:
+        elif op == PLUS:
             return False
-        if op == SEQ:
+        elif op == SEQ:
             return all(self._nullable(s) for s in element[1:])
-        if op == ALT:
+        elif op == ALT:
             return any(self._nullable(s) for s in element[1:])
         return False
 

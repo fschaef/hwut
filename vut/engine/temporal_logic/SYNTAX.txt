@@ -36,6 +36,17 @@ NOTE:
 
 (A.1) GRAMMAR:
 
+    ## THE COLON PRINCIPLE. On the rule-file plane we are concerned with being,
+    ## having, triggering, and relating -- never with algorithms, algebra, or
+    ## container internals (those live in Luau, behind '{ ... }'). The colon is
+    ## the mark of a rule-file connective, and it ABUTS ITS FILLER: to the
+    ## keyword's right when an operand follows ('on: T', 'mode: X', 'has: X', 'is: K',
+    ## 'in: C', 'as: {lv}', 'into: NS', 'until: C', 'default: R'), and to a
+    ## terminator's left when it closes a block (':end', ':close'). A leading
+    ## colon finishes something; a trailing colon starts something whose filler
+    ## is next. ':' is always a connective and never stands alone; '{ ... }' is
+    ## always Luau. These two marks carry every rule-file relation.
+
     <rule-file>:   <top-level>*
 
     <top-level>:   (   <namespace>
@@ -46,15 +57,16 @@ NOTE:
                      | <state-machine>
                      | <singleton-def>
                      | <event-def>
-                     | <clock-def> )
+                     | <clock-def>
+                     | <forward-decl> )
 
-    <namespace>:   'open' <dotted-name>
+    <namespace>:   'open:' <dotted-name>
                        <top-level>+
-                   'close'
+                   ':close'
 
-    <include>:     'include' <string> 'as' <dotted-name>
+    <include>:     'include:' <string> 'into:' <dotted-name>
 
-    <causality>:   'on' <cause> ( '=>' <effect> )+
+    <causality>:   'on:' <cause> ( '=>' <effect> )+
 
     <cause>:       <trigger> [ '&' <guard> ]
 
@@ -65,46 +77,44 @@ NOTE:
                  | <report-string>            # report a formatted line of text
                  | '{' <luau-code> '}'        # mutate the object space
 
-    <signature>:    <name> [ '(' <arg-decl-list> ')' ] ':'
-    <invocation>:   <name> '(' [ <arg-list> ] ')'
-
+    <signature>:    <name> [ '(' <arg-decl-list> ')' ]
 
     <reactor-spec>: <signature>
                     <reactor-elm>+
 
-    <mode>:        'mode' <reactor-spec>
-                   ( 'until' <cause> )+
+    <mode>:        'mode:' <reactor-spec>
+                   ( 'until:' <cause> )+
 
-    <state>:       'state' <reactor-spec>
-                   ( 'until' <cause> )*
-                   'until' 'switched'
+    <state>:       'state:' <reactor-spec>
+                   ( 'until:' <cause> )*
+                   'until:' 'switched'
 
     <reactor-elm>: <causality>
-                 | 'init'   '{' <luau-code> '}'  # only allowed once per <reactor-elm>+
-                 | 'deinit' '{' <luau-code> '}'  # only allowed once per <reactor-elm>+
+                 | 'init:'   '{' <luau-code> '}'  # only allowed once per <reactor-elm>+
+                 | 'deinit:' '{' <luau-code> '}'  # only allowed once per <reactor-elm>+
 
     <mode-group>:
-                   'mode_group' <signature>
+                   'mode_group:' <signature>
                        <mode-group-elm>+
-                   'end'
+                   ':end'
 
     <mode-group-elm>:
                    <mode>                                    # member defined inline
-                 | 'has' ':' <member-ref>                    # member defined elsewhere
-                 | 'init'   '{' <luau-code> '}'              # only allowed once
-                 | 'deinit' '{' <luau-code> '}'              # only allowed once
+                 | 'has:' <member-ref>                       # member defined elsewhere
+                 | 'init:'   '{' <luau-code> '}'             # only allowed once
+                 | 'deinit:' '{' <luau-code> '}'             # only allowed once
 
     <state-machine>:
-                   'state_machine' <signature>
+                   'state_machine:' <signature>
                    <state-machine-elm>+
-                   'end'
+                   ':end'
 
     <state-machine-elm>:
                    <state>                                   # member defined inline
-                 | 'has' ':' <member-ref>                    # member defined elsewhere
-                 | 'default' '=' <member-ref>                # only allowed once
-                 | 'init'   '{' <luau-code> '}'              # only allowed once
-                 | 'deinit' '{' <luau-code> '}'              # only allowed once
+                 | 'has:' <member-ref>                       # member defined elsewhere
+                 | 'default:' <member-ref>                   # only allowed once
+                 | 'init:'   '{' <luau-code> '}'             # only allowed once
+                 | 'deinit:' '{' <luau-code> '}'             # only allowed once
 
     <member-ref>:  <reactor-name>                            # resolved against the aggregate
                  | <aggregate-name> '.' <reactor-name>       # qualified (good practice)
@@ -121,32 +131,53 @@ NOTE:
     <guard>:       '{' <luau-condition> '}'
 
     <event-spec>:  <invocation>
+    <invocation>:  <name> '(' [ <arg-list> ] ')'
 
     <mode-arming>: <invocation>
 
-    <spawn>:       <name> [ '(' [ <arg-list> ] ')' ] [ 'in' <luau-lvalue> ]
+    <spawn>:       <name> [ '(' [ <arg-list> ] ')' ]
+                          [ 'in:' <container-name> ] [ 'as:' <luau-lvalue> ]
                    #  bare <name>, no parens  -> re-init a declared singleton
-                   #  <name> '(' ... ')'      -> spawn into the default container
-                   #  ... 'in' <luau-lvalue>  -> spawn into the named container
+                   #  <name> '(' ... ')'      -> spawn (fresh instance)
+                   #  ... 'in:' <container>   -> caught by a declared container
+                   #  ... 'as:' <luau-lvalue> -> bound to a script-world handle
 
     <unspawn>:     <name>                     # bare or dotted; ends existence
 
-    <singleton-def>:  'singleton' ':' <name> [ '(' [ <arg-list> ] ')' ]
+    <singleton-def>:  'singleton: ' <name> [ '(' [ <arg-list> ] ')' ]
 
-    <luau-lvalue>:    '{' <luau-expr> '}'      # opaque Luau lvalue (a container)
+    ## A name may be DECLARED with its kind before its definition (the (B.1)
+    ## gate of the (A)/(B) forward-reference rule). 'has:' does this inside an
+    ## aggregate (kind implied by the frame); 'is:' does it at scope level (kind
+    ## stated). The static kinds name a body defined later in the same scope;
+    ## 'container' is the kind that reaches into Luau -- its args configure the
+    ## container (shape/size/access, opaque here) and an optional 'as:' binds it
+    ## to a script-world lvalue.
+    <forward-decl>:   <name> 'is:' <fwd-kind>
+
+    <fwd-kind>:    <kind-name>                               # mode | mode_group | state_machine
+                 | 'container' '(' [ <c-arg> (',' <c-arg>)* ] ')'
+                                  [ 'as:' <luau-lvalue> ]
+
+    <kind-name>:   <identifier>                              # validated in pass 2
+    <c-arg>:       <identifier> | <number>                   # shape / size / access; opaque
+
+    <container-name>: <name>                                 # a declared container (resolved)
+
+    <luau-lvalue>:    '{' <luau-lvalue-expr> '}'  # opaque Luau lvalue (LVALUE role)
 
     <arg-list>:    <arg> (',' <arg>)*
 
-    <arg>:         [<member> '='] <rvalue>
+    <arg>:         <rvalue>                       # positional
 
     <rvalue>:      <number>
                  | <istring>
                  | '{' <luau-expr> '}'
 
-    <clock-def>:   'clock' <event-name> <number>
+    <clock-def>:   'clock:' <event-name> <number>
 
     <arg-decl-list>: <arg-decl> (';' <arg-decl>)*
-    <arg-decl>:      <member> ':' <type>
+    <arg-decl>:      <member> ':' <type>          # 'n: int' -- the ':' glues to the member
 
     <member>:        <identifier>
 
@@ -154,7 +185,7 @@ NOTE:
 
     <istring>:     '"' <luau-string-expr> '"'   # interpolated Luau string
 
-    <event-def>:   'event' <event-name> '(' <arg-decl-list> ')'
+    <event-def>:   'event:' <event-name> '(' <arg-decl-list> ')'
 
 (A.2) EXPLANATION
 
@@ -191,7 +222,7 @@ IMPLICIT EVENTS:
             sequence.
 
 'switched' is not an ordinary event. It is a non-functional keyword usable only
-as the final 'until switched' clause closing a <state> block (A.2.5). It never
+as the final 'until: switched' clause closing a <state> block (A.2.5). It never
 appears as a general <trigger>.
 
 (A.2.2) Grammar Productions
@@ -213,7 +244,7 @@ appears as a general <trigger>.
          'until' causes ( one or more ).
 
 <state> is a <mode> living inside a <state-machine>. Its block is closed by a
-         mandatory final 'until switched' clause; further explicit 'until'
+         mandatory final 'until: switched' clause; further explicit 'until'
          causes are optional ( zero or more ) and precede it (A.2.5).
 
 <trigger> is an event, optionally narrowed by member conditions. The
@@ -222,11 +253,11 @@ appears as a general <trigger>.
 
    Examples:
 
-      on TICK & { event.time > 0 } => LOG(time = event.time)
+      on: TICK & { event.time > 0 } => LOG(time = event.time)
 
-      on ANY  & { car.gas == 0 } => FRUSTRATION(gravity = 0.1)
+      on: ANY  & { car.gas == 0 } => FRUSTRATION(gravity = 0.1)
 
-      on PING & { Glob("tester_?_intruder"):match(event.user) and event.ip ~= "127.0.0.1" }
+      on: PING & { Glob("tester_?_intruder"):match(event.user) and event.ip ~= "127.0.0.1" }
       => INTRUSION(intruder=event.user)
 
    'ANY' matches every event, including cascade-emitted events and the
@@ -234,14 +265,14 @@ appears as a general <trigger>.
 
    Example:
 
-      mode WAITING_FOR_ACK(req : number) :
-          on ACK & { event.req == mode.req }
+      mode: WAITING_FOR_ACK(req: number)
+          on: ACK & { event.req == mode.req }
           => "ack received for {mode.req}"
-          on END
+          on: END
           => "no ack received for {mode.req}"
-      until ACK & { event.req == mode.req }
+      until: ACK & { event.req == mode.req }
 
-    'switched' is a reserved keyword usable only as the final 'until switched'
+    'switched' is a reserved keyword usable only as the final 'until: switched'
     clause closing a state-machine member state; it is not a general trigger.
 
 <guard>
@@ -265,13 +296,13 @@ appears as a general <trigger>.
     which is the marker of causality. There are five kinds:
 
          emit an event:      => EVENT(arg = ...)
-         arm a mode:         => !  MODE(arg = ...)
+         arm a mode         => !  MODE(arg = ...)
          spawn (default):    => +! STATE_MACHINE(arg = ...)
          spawn into container:=> +! STATE_MACHINE(arg = ...) in { sprite.bin }
-         re-init a singleton: => +! THE_ONLY_SM
+         re-init a singleton => +! THE_ONLY_SM
          end existence:       => -! STATE_MACHINE
          report a line:      => "text {with} interpolation"
-         mutate state:       => { vehicle.speed = 0 }
+         mutate state       => { vehicle.speed = 0 }
 
      The state-mutation form is opaque Luau, the same as a guard, but without
      the read-only restriction: a '=> { ... }' span is the place to write
@@ -292,7 +323,7 @@ appears as a general <trigger>.
      each starting with its own '=>'.
 
      Example:
-         on COLLISION
+         on: COLLISION
          => { vehicle.damaged = true }
          => WRECK(severity = event.severity)
          => "wreck at t={event.time} severity={event.severity}"
@@ -326,7 +357,7 @@ appears as a general <trigger>.
 
          => +! THE_ONLY_SM
 
-       Admissible only for a type declared with 'singleton :' (see
+       Admissible only for a type declared with 'singleton: ' (see
        <singleton-def>). It re-initialises the one declared instance with the
        argument list fixed at the declaration site. Parentheses here are a
        SYNTAX ERROR: a singleton carries no per-spawn arguments.
@@ -360,7 +391,7 @@ appears as a general <trigger>.
     declares an aggregate type to be a singleton: one instance, identity by
     declared name, arguments fixed at the declaration:
 
-      singleton : THE_ONLY_SM(quantum = 5)
+      singleton: THE_ONLY_SM(quantum = 5)
 
     Referred to thereafter only by the bracketless '+! THE_ONLY_SM' re-init
     form (form 1 of <spawn>). The declaration binds the argument list once; the
@@ -394,7 +425,7 @@ appears as a general <trigger>.
       declares a mode's parameters specifying a member by its name and its
       type. Parameter order matters: positional arguments bind in declaration
       order. A parameter's type is either a Luau primitive ('number', 'string',
-      'boolean') or the name of a class created in 'on BEGIN'.
+      'boolean') or the name of a class created in 'on: BEGIN'.
 
       Class-typed parameters are bound by reference into the one object space.
 
@@ -426,16 +457,16 @@ DELIMITERS:
 A mode may have several 'until' clauses; the instance stops being armed the
 moment any one of them fires. This serves the unless-cancelled pattern
 naturally: end on a deadline or end on a success event, whichever comes first.
-A state stops being armed on 'until switched' (a sibling state being armed) or
+A state stops being armed on 'until: switched' (a sibling state being armed) or
 on any of its own preceding 'until' causes, whichever fires first. A mode group
 and a state machine have no closing 'until' causes of their own; they are
 aggregates and are closed by 'end'.
 
-      mode AWAIT_ACK(req : number) :
-          on END
+      mode: AWAIT_ACK(req: number)
+          on: END
           => "timeout on request {mode.req}"
-      until TICK & { event.time >= mode.begin_time + 5 }
-      until ACK  & { event.req == mode.req }
+      until: TICK & { event.time >= mode.begin_time + 5 }
+      until: ACK  & { event.req == mode.req }
 
 
 (A.2.3) Details on Modes
@@ -511,17 +542,17 @@ Examples:
 
     if STOP_SIGN_MODE:any() then
         -- at least one stop-sign watcher is live
-    end
+    :end
 
     if #PING_WATCHER:list(port = 80) > 5 then
         -- more than five live port-80 watchers
-    end
+    :end
 
     for m in PING_WATCHER:list(ip = Glob("192.168.162.*"), port = 80) do
         -- iterate over matching live instances
-    end
+    :end
 
-    on ANY & { vehicle.speed < 50 and not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
+    on: ANY & { vehicle.speed < 50 and not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
     => { driver.mode = "relax" }
 
 The last example reads: "for any event, if the vehicle is going under 50
@@ -542,28 +573,28 @@ constructor arguments are passed.
 
 Example: vehicle must stop within 10 s of a stop sign
 
-    on STOP_SIGN_PASSED
+    on: STOP_SIGN_PASSED
     => ! LOOK_FOR_CAR_SPEED(at = event.time)
 
-    mode LOOK_FOR_CAR_SPEED(at : number) :
-        on TICK & { vehicle.speed > 0 }
+    mode: LOOK_FOR_CAR_SPEED(at: number)
+        on: TICK & { vehicle.speed > 0 }
         => "t={format(event.time)} vehicle moving at stop sign"
-    until TICK & { event.time >= mode.at + 10 }
+    until: TICK & { event.time >= mode.at + 10 }
 
 Example: parameterized, with conditional arming
 
     ## arm one watcher per (ip, port); the ':has' guard is illustrative --
     ## under idempotent re-arm a duplicate arming would be a silent no-op
-    on NW_EVENT & { not NETWORK_WATCHER:has(ip = event.ip, port = event.port) }
+    on: NW_EVENT & { not NETWORK_WATCHER:has(ip = event.ip, port = event.port) }
     => ! NETWORK_WATCHER(ip = event.ip, port = event.port, firewall = global_fw)
 
-    mode NETWORK_WATCHER(ip : string; port : number; firewall : Firewall) :
-        on PING & { event.ip == mode.ip and event.port == mode.port }
+    mode: NETWORK_WATCHER(ip: string; port: number; firewall: Firewall)
+        on: PING & { event.ip == mode.ip and event.port == mode.port }
         => INTRUSION(ip = mode.ip)
-        on END
+        on: END
         => "watcher for {mode.ip} expired unresolved"
-    until TICK & { event.time >= mode.begin_time + 30 }
-    until ACK  & { event.ip == mode.ip }
+    until: TICK & { event.time >= mode.begin_time + 30 }
+    until: ACK  & { event.ip == mode.ip }
 
 There is one special mode, the GROUND_MODE, which is active all the time.
 All causalities which are not bound to an explicit mode belong to the
@@ -574,18 +605,18 @@ GROUND_MODE.
 Event structures are declared in the rule-file language. 'time' and 'dt'
 are intrinsic to every event, are not declared, and are of type 'number'.
 
-    event STOP_SIGN_PASSED(
-        lane : number;
+    event: STOP_SIGN_PASSED(
+        lane: number;
     )
 
-    event NETWORK_PINGED (
-        n           : number;
-        incoming_ip : string;
+    event: NETWORK_PINGED(
+        n: number;
+        incoming_ip: string;
     )
 
-A field is 'name : type'. Fields are separated by any whitespace -- newline
+A field is 'name: type'. Fields are separated by any whitespace -- newline
 or otherwise. The types are Luau's: 'number', 'string', 'boolean', plus
-the name of any declared event type or any class created in 'on BEGIN' (a
+the name of any declared event type or any class created in 'on: BEGIN' (a
 reference-typed field). There is no int/float split; the engine presents
 a Luau facade to the user.
 
@@ -610,6 +641,45 @@ keyword and an unqualified name:
 A state defined elsewhere is pulled in with 'has:':
 
     has: <member-ref>
+
+A name may also be DECLARED at scope level before its definition, with its kind
+stated, using 'is:':
+
+    <name> 'is:' ( 'mode' | 'mode_group' | 'state_machine'
+                 | 'container' '(' <c-arg>* ')' [ 'as:' '{' <luau-lvalue> '}' ] )
+
+'is:' is the scope-level counterpart of the aggregate-body 'has:'. Both declare
+a name together with its kind -- the (B.1) gate of the forward-reference rule.
+'has:' lets the enclosing aggregate imply the kind (a mode group / state machine
+holds only member modes / states, so 'has: NAME' already says "NAME is a
+mode/state"); 'is:' states the kind outright, because a scope holds names of
+several kinds and the frame fixes nothing. The name is bare: declaration and
+definition share one scope, so nothing is qualified across a boundary. For the
+three static kinds a forward declaration opens no Luau and carries no parameters
+or body -- exactly a name and a kind. Having and being: 'has:' / 'is:'.
+
+The 'container' kind is the one that reaches into the script world. A container
+is a place spawned instances are caught into; 'X is: container(...)' declares
+that X may be used wherever a container is expected. Its argument list is the
+container's CONFIGURATION -- a shape word ('dict', 'list', 'fifo'), an optional
+size, and (extensibly) access flags such as 'r' / 'w' / 'x' -- bare identifiers
+and numbers, opaque to the rule-file plane and interpreted by the resolver:
+
+    Sprites is: container(dict)
+    Ghosts  is: container(fifo, 64) as: { db.ghosts }
+
+The optional 'as:' clause binds the container to a script-world lvalue: an
+opaque Luau path inside '{ ... }', carried in the LVALUE role (assignability is
+the runtime's concern, not the parser's). It is the same tampering-with-Luau
+act as a spawn's own 'as:' handle -- '{ ... }' always means "script world here",
+never anything else. A spawn reaches a declared container by name with 'in:'
+and may name its caught instance in Luau with 'as:':
+
+    on: Hatch => +! ghost(seed) in: Ghosts as: { db.ghosts[id] }
+
+Here 'in: Ghosts' is an ordinary (B.1) forward reference to a container declared
+with 'is: container(...)'; the container declaration is exactly what lets the
+spawn name it before the container's full setup appears in scope.
 
 Inside the Luau code sections of the state machine itself and its member
 states, the nesting state machine is referred to by the binding 'sm', and all
@@ -638,44 +708,44 @@ named by its bare <reactor-name>. The qualified form
 it aids the reader; the bare form and the qualified form denote the same
 member. 'VOID' names the implicit empty state.
 
-'until switched' is the mandatory final clause of every state. 'switched'
+'until: switched' is the mandatory final clause of every state. 'switched'
 fires when another member-state of the same state machine is armed -- the
 event that deactivates the current member. It is a non-functional keyword: it
 carries no runtime behaviour and exists solely to mark, at the closing line,
 that a state may also be terminated by a sibling being armed, not only by its
 own 'until' causes. A state's own preceding 'until' causes are optional ( zero
-or more ); 'until switched' closes the block in either case.
+or more ); 'until: switched' closes the block in either case.
 
-When a member-state ceases via 'until switched', its 'deinit' (if any) runs,
+When a member-state ceases via 'until: switched', its 'deinit' (if any) runs,
 exactly as for any other way a state ceases. The "first until wins, no further
 untils checked" rule (section 2) applies: a preceding explicit 'until' that
 coincides with the 'switched' transition is the cause of cessation if it is
-reached first, and since 'until switched' is required to be last, an explicit
+reached first, and since 'until: switched' is required to be last, an explicit
 'until' always wins a tie against it.
 
 Example: a task state machine
 
-    state_machine SM_TASK :
-        default = VOID
-        init {
+    state_machine: SM_TASK
+        default: VOID
+        init: {
             ...
         }
-        deinit {
+        deinit: {
         }
 
-        state SLEEP :
-            on WAKE => ! RUN
-        until EVENT_TASK_TERMINATED
-        until switched
+        state: SLEEP
+            on: WAKE => ! RUN
+        until: EVENT_TASK_TERMINATED
+        until: switched
 
-        state RUN :
-            on TICK & { event.time >= mode.begin_time + quantum }
+        state: RUN
+            on: TICK & { event.time >= mode.begin_time + quantum }
             => ! SLEEP
-        until EVENT_TASK_TERMINATED
-        until switched
+        until: EVENT_TASK_TERMINATED
+        until: switched
     end   # a state machine is closed by 'end'; it has no 'until' of its own
 
-Arming 'RUN' from within 'SLEEP' deactivates SLEEP (its 'until switched'
+Arming 'RUN' from within 'SLEEP' deactivates SLEEP (its 'until: switched'
 fires) and activates RUN. The two states alternate; 'until
 EVENT_TASK_TERMINATED' lets either state leave the cycle on a
 EVENT_TASK_TERMINATED event.
@@ -709,19 +779,19 @@ The 'end' terminator is what makes an inline member mode unambiguous: a member
 mode carries its own ( 'until' <cause> )+, and 'end' (not another 'until')
 marks where the last member -- and the group -- closes.
 
-    mode_group MG_ALERTS :
-        init { sm.count = 0 }
+    mode_group: MG_ALERTS
+        init: { sm.count = 0 }
 
-        mode BLINK :
-            on TICK => { sm.count = sm.count + 1 }
-        until ANY
+        mode: BLINK
+            on: TICK => { sm.count = sm.count + 1 }
+        until: ANY
 
-        mode BEEP :
-            on TICK => SOUND()
-        until EVENT_SILENCED
+        mode: BEEP
+            on: TICK => SOUND()
+        until: EVENT_SILENCED
 
         has: GLOW
-    end
+    :end
 
 Both aggregates are spawned as an effect with '+!' (see <spawn>): the
 bracketless singleton re-init, the default-container form, or the
@@ -735,7 +805,7 @@ A namespace brackets a group of declarations into a named scope:
 
     open <dotted-name>
         <top-level>+
-    close
+    :close
 
 The body is any run of top-level constructs -- causalities, modes, aggregates,
 event and clock definitions, and further namespaces. Nesting is unrestricted in
@@ -747,28 +817,28 @@ in which they are defined.
 The dotted name opens several levels at once, so a deep scope needs one 'open',
 not one per level. This:
 
-    open world.europe.germany.berlin
+    open: world.europe.germany.berlin
         ...
-    close
+    :close
 
 opens the single nested scope 'world.europe.germany.berlin' directly, rather
 than:
 
-    open world  open europe  open germany  open berlin
+    open: world  open europe  open germany  open berlin
         ...
     close close close close
 
 A 'close' takes no name; the matching 'open' is unambiguous from the nesting.
 A namespace may contain a nested 'open'/'close':
 
-    open world.europe
-        on TICK => ! WATCH()
-        open germany.berlin
-            mode GUARD :
-                on ALERT => SIREN()
-            until ANY
-        close
-    close
+    open: world.europe
+        on: TICK => ! WATCH()
+        open: germany.berlin
+            mode: GUARD
+                on: ALERT => SIREN()
+            until: ANY
+        :close
+    :close
 
 (The binding rules -- how a reference resolves across namespaces, and how
 instance-name visibility works -- are a semantic-pass concern, not a parsing
@@ -779,7 +849,7 @@ one.)
 
 Another file's namespace is mounted into this one with:
 
-    include "<file>" as <dotted-name>
+    include: "<file>" into: <dotted-name>
 
 The INCLUDING file decides the mount point (the 'as' path); the included file
 is placement-agnostic and does not name its own location -- the same file may
@@ -787,13 +857,13 @@ be mounted at different paths in different files, and there is no self-naming
 collision. This mirrors how a module system separates a unit's internal,
 self-relative names from its external, caller-chosen placement.
 
-    include "city_rules"  as earth.europe.berlin
-    include "sensor_pack" as sensors
+    include: "city_rules" into: earth.europe.berlin
+    include: "sensor_pack" into: sensors
 
-    open world.zone
-        include "diagnostics" as diag      # mount inside a scope
-        on TICK => HEARTBEAT()
-    close
+    open: world.zone
+        include: "diagnostics" into: diag      # mount inside a scope
+        on: TICK => HEARTBEAT()
+    :close
 
 An include may appear at the top level or inside an 'open' scope; the mount
 path is relative to where the include sits. The included file is parsed once on
@@ -809,21 +879,21 @@ not parsing ones.
 (A.3) OBJECT SPACE INIT and DEINIT
 
 The object space of the Luau engine is initialized and de-initialized with the
-'on BEGIN' and 'on END' handlers. The 'on BEGIN' causality is handled before
-any event in the event trace. The 'on END' causality is handled after the last
+'on: BEGIN' and 'on: END' handlers. The 'on: BEGIN' causality is handled before
+any event in the event trace. The 'on: END' causality is handled after the last
 event in the event trace.
 
-'on BEGIN' and 'on END' handlers are special in that they:
+'on: BEGIN' and 'on: END' handlers are special in that they:
 
   -- do not allow for a <guard>
   -- cannot trigger events (no '=>' allowed)
   -- only accept Luau code as <effect>
 
-The 'on BEGIN' handler defines the classes whose instances populate the object
+The 'on: BEGIN' handler defines the classes whose instances populate the object
 space, constructs the singleton instances, sets their initial state, and
 declares tracer coverage for the events that need it.
 
-    on BEGIN => {
+    on: BEGIN => {
         -- Define a class
         local Vehicle = Class.create("Vehicle", {}, function(self)
             self.speed = 0
@@ -838,10 +908,10 @@ declares tracer coverage for the events that need it.
         tracer.watch(LOGIN, 5)
     }
 
-The counterpart is the 'on END' handler, that is executed after the last event
+The counterpart is the 'on: END' handler, that is executed after the last event
 of the event trace.
 
-    on END => {
+    on: END => {
         release.file_handle()
         disconnect_uart()
         ...
@@ -860,15 +930,15 @@ No Luau code fragment can emit events.
 
 (A.4) CLOCKS
 
-A clock operates on synthetic time and emits periodic events of a user-defined
-name. A clock is defined by the name of the event it emits and the time
+A clock: operates on synthetic time and emits periodic events of a user-defined
+name. A clock: is defined by the name of the event it emits and the time
 interval in which it emits that event. The definition syntax is
 
    'clock' <event-name> <number>
 
 where <number> is a floating point number giving the extent of the time
-interval between two clock events. The clock stores internally the last time it
-has sent an event. Every clock is activated upon the first event in the event
+interval between two clock events. The clock: stores internally the last time it
+has sent an event. Every clock: is activated upon the first event in the event
 sequence, where it sends its first event and sets the 'last sent time'.
 
 Whenever an event arrives, it considers the timestamp of that event. It
@@ -895,7 +965,7 @@ metatable carries the type identity, queryable by Luau's standard
 introspection ('typeof', 'getmetatable'). This is *deliberately
 different* from how objects are constructed: events are transpiler-
 generated structures the static checks need to identify at compile time;
-objects are user-defined classes constructed in 'on BEGIN' via the
+objects are user-defined classes constructed in 'on: BEGIN' via the
 'Class.create' factory. Two mechanisms, two jobs.
 
 Each event class is produced by the runtime 'Space' and bound to it. The
@@ -957,7 +1027,7 @@ Event queries follow the syntax and semantics of mode queries.
 An EVENT that is not traced by the tracer cannot respond to these queries.
 The tracer may restrict the number of events held in time backwards.
 
-    on BEGIN => {
+    on: BEGIN => {
         tracer.watch(PING)
         tracer.watch(HEARTBEAT)
         tracer.watch(LOGIN, 5)
@@ -971,16 +1041,16 @@ at query time against the stream; the tracer is not keyed by attribute.
 
 The transpiler statically checks history queries through the Luau
 helper. A query against an untraced type is fatal: "PING:last() used but
-PING is not traced -- add tracer.watch(PING) in 'on BEGIN'." This prevents
+PING is not traced -- add tracer.watch(PING) in 'on: BEGIN'." This prevents
 the silent-nil class of error.
 
 EXAMPLE
 
-    on BEGIN => {
+    on: BEGIN => {
         tracer.watch(LOGIN)
     }
 
-    on PING & { LOGIN:has(ip = event.ip) }
+    on: PING & { LOGIN:has(ip = event.ip) }
     => "ping from logged-in ip {event.ip}"
 
 -------------------------------------------------------------------------------
@@ -1016,13 +1086,13 @@ A new comparator plugs in by setting '__className' and providing
 authors do not write the dispatch.
 
    Example:
-       on TICK & { not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
+       on: TICK & { not SPEED_LIMIT_WATCHER:any(limit = Greater(50)) }
        => { driver.mode = "relax" }
 
 In a free Luau guard (one not routed through a query method), the author
 calls the comparator's ':match' directly:
 
-       on PING & { Glob("tester_?_intruder"):match(event.user) }
+       on: PING & { Glob("tester_?_intruder"):match(event.user) }
        => INTRUSION(intruder = event.user)
 
 THE BAR FOR ADDING A HELPER

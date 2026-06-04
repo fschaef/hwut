@@ -119,6 +119,13 @@ VOCABULARY
     the property the termination guarantee rests on (section 5).
     (Declaration syntax: SYNTAX.txt A.2.4.)
 
+    DELIVERY is implicit. There is no subscription construct: an event reaches a
+    reactor precisely when that reactor names it in an 'on:' cause, and the
+    cause's guard ('& { ... }') is the only filter. The engine derives the
+    publisher/subscriber wiring from the set of event types named across the
+    live 'on:' causes; the author expresses reaction, and routing follows.
+    (Cause and guard syntax: SYNTAX.txt A.2.2.)
+
   OBJECTS
     Stateful aggregates persisting across time, defined in 'on BEGIN' via the
     'Class.create' factory. They are user data, not a rule-language construct:

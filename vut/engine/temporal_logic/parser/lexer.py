@@ -45,36 +45,44 @@ from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 
 class E_TokenId(Enum):
     """Enumeration of all valid rule-file tokens."""
-    KW_ON        = auto()
-    KW_MODE      = auto()
-    KW_MGROUP    = auto()
-    KW_SM        = auto()
-    KW_STATE     = auto()
-    KW_HAS       = auto()
-    KW_AS        = auto()
-    KW_END_BLK   = auto()
-    KW_UNTIL     = auto()
-    KW_EVENT     = auto()
-    KW_CLOCK     = auto()
-    KW_OPEN      = auto()
-    KW_CLOSE     = auto()
-    KW_INCLUDE   = auto()
-    KW_SINGLETON = auto()
-    KW_IN        = auto()
+    # Commencing / connective keywords -- each GLUED to a trailing ':' (the colon
+    # abuts its filler on the right: "keyword: <what fills it>").
+    KW_ON        = auto()   # 'on:'
+    KW_MODE      = auto()   # 'mode:'
+    KW_MGROUP    = auto()   # 'mode_group:'
+    KW_SM        = auto()   # 'state_machine:'
+    KW_STATE     = auto()   # 'state:'
+    KW_HAS       = auto()   # 'has:'
+    KW_IS        = auto()   # 'is:'
+    KW_AS        = auto()   # 'as:'
+    KW_UNTIL     = auto()   # 'until:'
+    KW_EVENT     = auto()   # 'event:'
+    KW_CLOCK     = auto()   # 'clock:'
+    KW_OPEN      = auto()   # 'open:'
+    KW_INCLUDE   = auto()   # 'include:'
+    KW_INTO      = auto()   # 'into:'
+    KW_SINGLETON = auto()   # 'singleton:'
+    KW_IN        = auto()   # 'in:'
+    KW_DEFAULT   = auto()   # 'default:'
+    KW_INIT      = auto()   # 'init:'
+    KW_DEINIT    = auto()   # 'deinit:'
+    KW_CONTAINER = auto()   # 'container'  (kind word after 'is:'; no own colon)
+    NAME_COLON   = auto()   # an identifier glued to ':'  ('n:' in 'n: int')
 
+    # Block terminators -- GLUED to a LEADING ':' (the colon abuts its filler on
+    # the left: "what preceded is closed by -> :terminator").
+    KW_END_BLK   = auto()   # ':end'
+    KW_CLOSE     = auto()   # ':close'
+
+    # Bare keywords (operands / markers; not connectives, no colon).
     KW_ANY      = auto()
     KW_BEGIN    = auto()
     KW_END      = auto()
     KW_SWITCHED = auto()
-    KW_DEFAULT  = auto()
-    KW_INIT     = auto()
-    KW_DEINIT   = auto()
     KW_VOID     = auto()
 
     ARROW       = auto()
     AND         = auto()
-    EQUAL       = auto()
-    COLON       = auto()
     COMMA       = auto()
     PLUSBANG    = auto()   # '+!'  spawn an aggregate
     MINUSBANG   = auto()   # '-!'  unspawn a named aggregate
@@ -100,36 +108,47 @@ _TOKEN_SPEC = [
     ("COMMENT", r'##[^\n]*'),
     ("WS",      r'\s+'),
 
-    (E_TokenId.KW_ON,        r'\bon\b'),
-    (E_TokenId.KW_MGROUP,    r'\bmode_group\b'),
-    (E_TokenId.KW_MODE,      r'\bmode\b'),
-    (E_TokenId.KW_SM,        r'\bstate_machine\b'),
-    (E_TokenId.KW_STATE,     r'\bstate\b'),
-    (E_TokenId.KW_HAS,       r'\bhas\b'),
-    (E_TokenId.KW_AS,        r'\bas\b'),
-    (E_TokenId.KW_END_BLK,   r'\bend\b'),
-    (E_TokenId.KW_UNTIL,     r'\buntil\b'),
-    (E_TokenId.KW_EVENT,     r'\bevent\b'),
-    (E_TokenId.KW_CLOCK,     r'\bclock\b'),
-    (E_TokenId.KW_OPEN,      r'\bopen\b'),
-    (E_TokenId.KW_CLOSE,     r'\bclose\b'),
-    (E_TokenId.KW_INCLUDE,   r'\binclude\b'),
-    (E_TokenId.KW_SINGLETON, r'\bsingleton\b'),
-    (E_TokenId.KW_IN,        r'\bin\b'),
+    # Leading-colon terminators FIRST (a ':' that begins ':end'/':close' must not
+    # be seen as a bare colon -- there is no bare colon any more).
+    (E_TokenId.KW_END_BLK,   r':end\b'),
+    (E_TokenId.KW_CLOSE,     r':close\b'),
 
+    # Trailing-colon keywords. Longest spellings first where prefixes overlap
+    # ('mode_group:' before 'mode:', 'state_machine:' before 'state:'). The ':'
+    # is part of the lexeme; '\b' guards the left edge.
+    (E_TokenId.KW_MGROUP,    r'\bmode_group:'),
+    (E_TokenId.KW_MODE,      r'\bmode:'),
+    (E_TokenId.KW_SM,        r'\bstate_machine:'),
+    (E_TokenId.KW_STATE,     r'\bstate:'),
+    (E_TokenId.KW_HAS,       r'\bhas:'),
+    (E_TokenId.KW_IS,        r'\bis:'),
+    (E_TokenId.KW_AS,        r'\bas:'),
+    (E_TokenId.KW_UNTIL,     r'\buntil:'),
+    (E_TokenId.KW_EVENT,     r'\bevent:'),
+    (E_TokenId.KW_CLOCK,     r'\bclock:'),
+    (E_TokenId.KW_OPEN,      r'\bopen:'),
+    (E_TokenId.KW_INCLUDE,   r'\binclude:'),
+    (E_TokenId.KW_INTO,      r'\binto:'),
+    (E_TokenId.KW_SINGLETON, r'\bsingleton:'),
+    (E_TokenId.KW_IN,        r'\bin:'),
+    (E_TokenId.KW_DEFAULT,   r'\bdefault:'),
+    (E_TokenId.KW_INIT,      r'\binit:'),
+    (E_TokenId.KW_DEINIT,    r'\bdeinit:'),
+
+    (E_TokenId.KW_ON,        r'\bon:'),
+
+    # 'container' is a kind word following 'is:'; it carries no colon of its own.
+    (E_TokenId.KW_CONTAINER, r'\bcontainer\b'),
+
+    # Bare operand / marker keywords.
     (E_TokenId.KW_ANY,      r'\bANY\b'),
     (E_TokenId.KW_BEGIN,    r'\bBEGIN\b'),
     (E_TokenId.KW_END,      r'\bEND\b'),
     (E_TokenId.KW_SWITCHED, r'\bswitched\b'),
-    (E_TokenId.KW_DEFAULT,  r'\bdefault\b'),
-    (E_TokenId.KW_INIT,     r'\binit\b'),
-    (E_TokenId.KW_DEINIT,   r'\bdeinit\b'),
     (E_TokenId.KW_VOID,     r'\bVOID\b'),
 
     (E_TokenId.ARROW,       r'=>'),
     (E_TokenId.AND,         r'&'),
-    (E_TokenId.EQUAL,       r'='),
-    (E_TokenId.COLON,       r':'),
     (E_TokenId.COMMA,       r','),
     (E_TokenId.PLUSBANG,    r'\+!'),
     (E_TokenId.MINUSBANG,   r'-!'),
@@ -139,6 +158,10 @@ _TOKEN_SPEC = [
     (E_TokenId.LPAREN,      r'\('),
     (E_TokenId.RPAREN,      r'\)'),
     (E_TokenId.LUAU_OPEN,   r'\{'),
+
+    # An arbitrary identifier glued to ':' (member annotation 'n: int'). Comes
+    # after every fixed keyword-colon so those win, before the bare ID class.
+    (E_TokenId.NAME_COLON,  r'[a-zA-Z_]\w*:'),
 
     (E_TokenId.NUMBER,      r'[+-]?\d+(?:\.\d+)?'),
     (E_TokenId.STRING,      r'"[^"]*"'),

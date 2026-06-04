@@ -1,7 +1,7 @@
 === <namespace> ===
 
 -- 0x --
-   input: open X include "s" as X close
+   input: open: X include: "s" into: X :close
 Namespace
   name = 'X'
   items:
@@ -12,7 +12,7 @@ Namespace
   begin = 0
 
 -- 1x --
-   input: open X . X include "s" as X close
+   input: open: X . X include: "s" into: X :close
 Namespace
   name = 'X.X'
   items:
@@ -23,7 +23,7 @@ Namespace
   begin = 0
 
 -- 2x --
-   input: open X . X . X include "s" as X close
+   input: open: X . X . X include: "s" into: X :close
 Namespace
   name = 'X.X.X'
   items:

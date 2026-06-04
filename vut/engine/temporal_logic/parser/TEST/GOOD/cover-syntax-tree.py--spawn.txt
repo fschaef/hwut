@@ -7,7 +7,8 @@ Spawn
   args:
     []
   has_parens = False
-  container = None
+  in_container = None
+  luau_handle = None
   begin = 0
 
 -- 1x --
@@ -17,7 +18,8 @@ Spawn
   args:
     []
   has_parens = False
-  container = None
+  in_container = None
+  luau_handle = None
   begin = 0
 
 -- 2x --
@@ -27,5 +29,6 @@ Spawn
   args:
     []
   has_parens = False
-  container = None
+  in_container = None
+  luau_handle = None
   begin = 0

@@ -7,7 +7,7 @@
    diag: PARSER off=0 expected KW_UNTIL, found MISMATCH
 
 -- truncate --
-   input: until
+   input: until:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 no alternative matches END_OF_FILE
@@ -19,7 +19,7 @@
    diag: PARSER off=0 expected KW_UNTIL, found KW_SWITCHED
 
 -- omit-required-2 --
-   input: until
+   input: until:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 no alternative matches END_OF_FILE

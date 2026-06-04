@@ -1,14 +1,16 @@
 === monkey: aggregate coverage ===
 
-##-- rules ((37)) / ((39)) --
+##-- rules ((43)) / ((43)) --
 SUCCESS: <arg-decl-list>
 SUCCESS: <arg-decl>
 SUCCESS: <arg-list>
 SUCCESS: <arg-parens>
 SUCCESS: <arg>
+SUCCESS: <c-arg>
 SUCCESS: <causality>
 SUCCESS: <cause>
 SUCCESS: <clock-def>
+SUCCESS: <container-args>
 SUCCESS: <decl-parens>
 SUCCESS: <default>
 SUCCESS: <deinit>
@@ -16,6 +18,8 @@ SUCCESS: <dotted-name>
 SUCCESS: <effect>
 SUCCESS: <event-def>
 SUCCESS: <event-spec>
+SUCCESS: <forward-decl>
+SUCCESS: <fwd-kind>
 SUCCESS: <guard>
 SUCCESS: <has-ref>
 SUCCESS: <include>
@@ -39,9 +43,9 @@ SUCCESS: <state-untils>
 SUCCESS: <state>
 SUCCESS: <top-level>
 SUCCESS: <trigger>
-
-##-- node types (22/23) --
 SUCCESS: <unspawn>
+
+##-- node types (24/24) --
 SUCCESS: Arg
 SUCCESS: ArgDecl
 SUCCESS: Causality
@@ -49,6 +53,7 @@ SUCCESS: Cause
 SUCCESS: ClockDef
 SUCCESS: EventDef
 SUCCESS: EventSpec
+SUCCESS: ForwardDecl
 SUCCESS: HasRef
 SUCCESS: Include
 SUCCESS: Luau

@@ -1,34 +1,34 @@
 === <arg-decl-list> ===
 
 -- 0x --
-   input: X : X
+   input: NAME_COLON X
 ArgDecl
-  member = 'X'
+  member = 'NAME_COLO'
   type = 'X'
   begin = 0
 
 -- 1x --
-   input: X : X ; X : X
+   input: NAME_COLON X ; NAME_COLON X
 ArgDecl
-  member = 'X'
+  member = 'NAME_COLO'
   type = 'X'
   begin = 0
 ArgDecl
-  member = 'X'
+  member = 'NAME_COLO'
   type = 'X'
   begin = 0
 
 -- 2x --
-   input: X : X ; X : X ; X : X
+   input: NAME_COLON X ; NAME_COLON X ; NAME_COLON X
 ArgDecl
-  member = 'X'
+  member = 'NAME_COLO'
   type = 'X'
   begin = 0
 ArgDecl
-  member = 'X'
+  member = 'NAME_COLO'
   type = 'X'
   begin = 0
 ArgDecl
-  member = 'X'
+  member = 'NAME_COLO'
   type = 'X'
   begin = 0

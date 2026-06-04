@@ -1,7 +1,7 @@
 === <causality> ===
 
 -- absent --
-   input: on X => { luau }
+   input: on: X => { luau }
 Causality
   cause:
     Cause
@@ -23,7 +23,7 @@ Causality
   begin = 0
 
 -- present --
-   input: on X & { luau } => { luau }
+   input: on: X & { luau } => { luau }
 Causality
   cause:
     Cause

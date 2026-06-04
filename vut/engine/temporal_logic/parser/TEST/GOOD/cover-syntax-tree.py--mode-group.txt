@@ -1,7 +1,7 @@
 === <mode-group> ===
 
 -- 0x --
-   input: mode_group X : mode X : on X => { luau } until X end
+   input: mode_group: X mode: X on: X => { luau } until: X :end
 ModeGroup
   name = 'X'
   params:
@@ -50,7 +50,7 @@ ModeGroup
   begin = 0
 
 -- 1x --
-   input: mode_group X . X : mode X : on X => { luau } until X end
+   input: mode_group: X . X mode: X on: X => { luau } until: X :end
 ModeGroup
   name = 'X.X'
   params:
@@ -99,7 +99,7 @@ ModeGroup
   begin = 0
 
 -- 2x --
-   input: mode_group X . X . X : mode X : on X => { luau } until X end
+   input: mode_group: X . X . X mode: X on: X => { luau } until: X :end
 ModeGroup
   name = 'X.X.X'
   params:

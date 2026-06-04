@@ -1,6 +1,6 @@
 
 --- comment lines and blank lines are skipped ---
-KW_ON        [ 21:23 ] 'on'
+ID           [ 21:23 ] 'on'
 ID           [ 24:28 ] 'Tick'
 ARROW        [ 51:53 ] '=>'
 ID           [ 54:58 ] 'Beep'

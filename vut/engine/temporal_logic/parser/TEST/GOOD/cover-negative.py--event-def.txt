@@ -7,7 +7,7 @@
    diag: PARSER off=0 expected KW_EVENT, found MISMATCH
 
 -- truncate --
-   input: event X (
+   input: event: X (
    built:   no (rule abandoned)
    consumed: 3 token(s); leftover: 0
    diag: PARSER off=0 expected RPAREN, found END_OF_FILE
@@ -19,19 +19,19 @@
    diag: PARSER off=0 expected KW_EVENT, found ID
 
 -- omit-required-2 --
-   input: event ( )
+   input: event: ( )
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 2
    diag: PARSER off=0 expected ID, found LPAREN
 
 -- omit-required-3 --
-   input: event X )
+   input: event: X )
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 1
    diag: PARSER off=0 expected LPAREN, found RPAREN
 
 -- omit-required-4 --
-   input: event X (
+   input: event: X (
    built:   no (rule abandoned)
    consumed: 3 token(s); leftover: 0
    diag: PARSER off=0 expected RPAREN, found END_OF_FILE

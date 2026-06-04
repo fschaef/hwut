@@ -1,7 +1,7 @@
 === <clock-def> ===
 
 -- default --
-   input: clock X 1
+   input: clock: X 1
 ClockDef
   name = 'X'
   period = '1'

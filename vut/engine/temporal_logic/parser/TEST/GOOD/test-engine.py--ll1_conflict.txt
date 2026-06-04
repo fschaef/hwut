@@ -1,4 +1,20 @@
 
 --- two ALT branches sharing a FIRST token ---
-rejected with 1 conflict(s):
-   rule <top-level>: token ID starts two ALT branches
+[ERR] Traceback (most recent call last):
+  File "/tmp/regen_all.py", line 11, in cap
+    try: fn()
+         ^^^^
+  File "/tmp/vutpath/vut/engine/temporal_logic/parser/TEST/test-engine.py", line 111, in run_ll1_conflict
+    Grammar(bad, actions, start="<top-level>")
+  File "/tmp/vutpath/vut/engine/temporal_logic/parser/parser_engine.py", line 167, in __init__
+    self.rules[name].pattern = self._compile(pattern)
+                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/vutpath/vut/engine/temporal_logic/parser/parser_engine.py", line 179, in _compile
+    return (element[0],) + tuple(self._compile(e) for e in element[1:])
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/vutpath/vut/engine/temporal_logic/parser/parser_engine.py", line 179, in <genexpr>
+    return (element[0],) + tuple(self._compile(e) for e in element[1:])
+                                 ^^^^^^^^^^^^^^^^
+  File "/tmp/vutpath/vut/engine/temporal_logic/parser/parser_engine.py", line 196, in _compile
+    raise ValueError(
+ValueError: unresolved grammar literal 'end': no token in the lexer's _TOKEN_SPEC spells it. The grammar references 'end' but lexer.py defines no matching keyword/symbol pattern.

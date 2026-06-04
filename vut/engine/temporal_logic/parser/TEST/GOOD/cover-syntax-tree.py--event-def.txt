@@ -1,7 +1,7 @@
 === <event-def> ===
 
 -- absent --
-   input: event X ( )
+   input: event: X ( )
 EventDef
   name = 'X'
   params:
@@ -9,12 +9,12 @@ EventDef
   begin = 0
 
 -- present --
-   input: event X ( X : X )
+   input: event: X ( NAME_COLON X )
 EventDef
   name = 'X'
   params:
     ArgDecl
-      member = 'X'
+      member = 'NAME_COLO'
       type = 'X'
       begin = 0
   begin = 0

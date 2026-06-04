@@ -40,7 +40,8 @@ from dataclasses  import dataclass
 class Role(Enum):
     """Syntactic role of an opaque Luau span. Selects the wrapper frame."""
     CONDITION       = "condition"        # guard:  '& { <expr> }'
-    EXPRESSION      = "expression"       # rvalue: '{ <luau-expr> }'
+    EXPRESSION      = "expression"       # rvalue: '{ <luau-expr> }'  (r-value)
+    LVALUE          = "lvalue"           # access: 'as: { <luau-lvalue> }'
     STATEMENT_BLOCK = "statement_block"  # '=> { }', init, deinit, BEGIN, END
 
 
@@ -95,11 +96,16 @@ class _Wrapper:
 def _wrapper_for(role):
     """RETURN: _Wrapper, the frame for 'role'.
 
-    CONDITION / EXPRESSION are framed as a parenthesised rvalue. STATEMENT_BLOCK
-    is framed as a function body.
+    CONDITION / EXPRESSION are framed as a parenthesised rvalue. LVALUE is
+    framed as the left-hand side of an assignment, so only an assignable path
+    parses (an expression like 'a + b' fails -- it is not an lvalue, which is
+    exactly the distinction the access-spec must enforce). STATEMENT_BLOCK is
+    framed as a function body.
     """
     if role in (Role.CONDITION, Role.EXPRESSION):
         return _Wrapper(prefix="local __guard__ = (", suffix=")")
+    elif role is Role.LVALUE:
+        return _Wrapper(prefix="", suffix=" = nil")
     else:
         return _Wrapper(prefix="function __frag__()\n", suffix="\nend")
 

@@ -1,7 +1,7 @@
 === <init> ===
 
 -- default --
-   input: init { luau }
+   input: init: { luau }
 InitBlock
   body:
     Luau

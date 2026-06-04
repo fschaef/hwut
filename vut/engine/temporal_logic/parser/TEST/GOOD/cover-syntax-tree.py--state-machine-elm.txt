@@ -1,7 +1,7 @@
 === <state-machine-elm> ===
 
 -- alternative 0 --
-   input: state X . X : on X => { luau } until switched
+   input: state: X . X on: X => { luau } until: switched
 State
   name = 'X.X'
   params:
@@ -33,7 +33,7 @@ State
   begin = 0
 
 -- alternative 1 --
-   input: has : X . VOID
+   input: has: X . VOID
 HasRef
   aggregate = 'X'
   member = 'VOID'
@@ -41,7 +41,7 @@ HasRef
   begin = 0
 
 -- alternative 2 --
-   input: default = X . VOID
+   input: default: X . VOID
 StateMachineModeRef
   sm_name = 'X'
   mode_name = 'VOID'
@@ -49,7 +49,7 @@ StateMachineModeRef
   begin = 0
 
 -- alternative 3 --
-   input: init { luau }
+   input: init: { luau }
 InitBlock
   body:
     Luau
@@ -59,7 +59,7 @@ InitBlock
   begin = 0
 
 -- alternative 4 --
-   input: deinit { luau }
+   input: deinit: { luau }
 DeinitBlock
   body:
     Luau

@@ -1,9 +1,9 @@
 === <state-untils> ===
 
 -- absent --
-   input: until switched
+   input: until: switched
 []
 
 -- present --
-   input: until switched
+   input: until: switched
 []

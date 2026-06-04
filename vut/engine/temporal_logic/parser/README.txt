@@ -2,6 +2,10 @@
 REACTIVE RULE ENGINE  --  HWUT 2.0
 PARSER ARCHITECTURE
 ===============================================================================
+                               
+                               .--------.
+      rule file source code -->| Parser |---> AST (abstract syntax tree)
+                               '--------'
 
 The parser turns a rule-file into an Abstract Syntax Tree. It is a table-driven
 LL(1) engine: the grammar is declared once as data, compiled into FIRST sets,
@@ -49,7 +53,7 @@ MODULES AND RESPONSIBILITIES
         Frozen dataclasses for the tree. Every node stores 'begin' (a source
         offset) for provenance and error reporting. TopLevel is the abstract
         base for the items a rule-file may contain: Causality, Mode, ModeGroup,
-        StateMachine, EventDef, ClockDef.
+        StateMachine, ForwardDecl, EventDef, ClockDef.
 
     diagnostic.py
         Phase-tagged diagnostics (LEXER, PARSER, ...) collected by a
@@ -62,8 +66,12 @@ MODULES AND RESPONSIBILITIES
 
 The lexer matches a single compiled regular expression of named patterns; the
 C regex backend finds token boundaries quickly. Keyword patterns are ordered so
-longer keywords win where prefixes overlap ('mode_group' before 'mode',
-'state_machine' before 'state', '+!'/'-!' before '!').
+longer keywords win where prefixes overlap ('mode_group:' before 'mode:',
+'state_machine:' before 'state:', '+!'/'-!' before '!'). Keywords are colon-
+glued (the colon abuts its filler: 'mode:' opens, ':end' closes); leading-colon
+terminators (':end', ':close') are matched before the trailing-colon keywords,
+and a NAME_COLON ('n:') is matched after all fixed keyword-colons but before
+the bare identifier class. There is no free-standing colon and no '='.
 
 When the lexer yields a Luau open brace it pauses and the fragment oracle finds
 the matching close for the current role (e.g. a guard CONDITION, a mutation
@@ -89,23 +97,23 @@ can show a toy grammar being rejected.
 
 DELIMITER DESIGN (so every rule is decidable with one token):
 
-    'on' block        no terminator. Each effect is led by '=>', so the effect
+    'on:' block       no terminator. Each effect is led by '=>', so the effect
                       loop ends at the first token that is not '=>'. The
                       follower of a rule -- a top-level keyword, a member
-                      keyword, 'until', 'end', or EOF -- is never '=>'.
+                      keyword, 'until:', ':end', or EOF -- is never '=>'.
     <mode>            closed by ( 'until' <cause> )+.
-    <state>           closed by 'until switched'. Modeled as <state-untils>, a
+    <state>           closed by 'until: switched'. Modeled as <state-untils>, a
                       right-recursive tail left-factored on 'until': after
                       'until', one token chooses 'switched' (terminate) or a
                       <cause> (continue). This stops the run exactly at
-                      'until switched' and never swallows the enclosing
+                      'until: switched' and never swallows the enclosing
                       machine's tokens.
-    <mode-group>      closed by 'end'.
-    <state-machine>   closed by 'end'.
+    <mode-group>      closed by ':end'.
+    <state-machine>   closed by ':end'.
 
-The 'end' closer on the two aggregates is what makes an inline member
+The ':end' closer on the two aggregates is what makes an inline member
 parseable: a member mode carries its own ( 'until' <cause> )+, and because the
-aggregate ends with 'end' rather than its own 'until', the boundary between the
+aggregate ends with ':end' rather than its own 'until:', the boundary between the
 last member's untils and the aggregate's close is decidable with one token.
 'switched' is parsed only as the state closer; it is not a general <trigger>.
 
@@ -142,9 +150,9 @@ ERROR RECOVERY:
 
     On a token that no alternative accepts, the engine emits a PARSER
     diagnostic and resyncs: it skips to the next safe boundary -- it stops AT a
-    top-level keyword (a new item starts there) or CONSUMES an aggregate 'end'
+    top-level keyword (a new item starts there) or CONSUMES an aggregate ':end'
     and stops after it. Because causalities have no terminator, a top-level
-    keyword is the boundary for a malformed rule; 'end' is the boundary inside
+    keyword is the boundary for a malformed rule; ':end' is the boundary inside
     an aggregate. A mismatch raises _ResyncError, which unwinds the work and
     frame stacks back to 'parse', which resyncs and continues; recovery is
     non-fatal, so one run can surface several errors.
@@ -159,10 +167,14 @@ location mapper during code generation. The aggregate nodes hold their members
 by kind:
 
     Mode           causalities, init, deinit, untils
-    State          causalities, init, deinit, untils  (closed by 'until switched')
-    ModeGroup      modes, has_refs, init, deinit       (closed by 'end')
-    StateMachine   states, has_refs, default, init, deinit  (closed by 'end')
+    State          causalities, init, deinit, untils  (closed by 'until: switched')
+    ModeGroup      modes, has_refs, init, deinit       (closed by ':end')
+    StateMachine   states, has_refs, default, init, deinit  (closed by ':end')
     HasRef         a 'has:' member pulled in by bare or qualified name
+    ForwardDecl    a '<name> is: <kind>' scope-level forward declaration; for
+                   kind 'container' carries config args + an optional Luau
+                   'as:' lvalue handle
+                   (name + kind, no body; definition follows in the scope)
     Spawn          a '+! name(args) [as inst]' aggregate spawn
     Unspawn        a '-! name' removal of a named aggregate
     Namespace      an 'open <dotted-name> ... close' scope of nested items
@@ -179,13 +191,17 @@ separate so the parser stays a pure recognizer:
 
     1. At most one 'init' and one 'deinit' per reactor or aggregate.
     2. State machine: at most one 'default'; every member state's until-run
-       ends with 'until switched'; 'default' references a defined member or
+       ends with 'until: switched'; 'default:' references a defined member or
        VOID.
     3. Reference checks: every '! MODE()' / '+! AGG()' arming, every '-! name'
-       unspawn, and every 'has:' and 'default' target resolves to a defined
+       unspawn, every '+! ... in: C' container reference (C resolves to an
+       'is: container' declaration), and every 'has:' and 'default:' target
+       resolves to a defined
        entity (an unspawn target must be a named, spawned instance). Modes and
        state machines share one namespace; no mode may share a state machine's
-       name.
+       name. Every '<name> is: <kind>' forward declaration is matched by a
+       definition of <name> of that kind later in the same scope; a declaration
+       with no following definition, or a kind mismatch, is a validation error.
     4. Include resolution: each 'include "<file>" as <path>' resolves the file,
        parses it once, and mounts its namespace at <path>; the included file is
        lexically self-contained (its names do not see the mounting scope).

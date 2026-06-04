@@ -47,7 +47,7 @@ TOK_STRING = "#STRING"
 # them as punctuation: the trigger keywords (their identity is the trigger) and
 # VOID (distinguishes a void state-machine mode-ref). Every other keyword and
 # symbol is structural punctuation and is dropped from a frame's values.
-CAPTURED_LITERALS = {"ANY", "BEGIN", "END", "VOID"}
+CAPTURED_LITERALS = {"ANY", "BEGIN", "END", "VOID", "container"}
 
 
 GRAMMAR = {
@@ -56,7 +56,7 @@ GRAMMAR = {
     "<top-level>":
         (ALT, "<namespace>", "<include>", "<causality>", "<mode>",
                  "<mode-group>", "<state-machine>", "<singleton-def>",
-                 "<event-def>", "<clock-def>"),
+                 "<event-def>", "<clock-def>", "<forward-decl>"),
 
     # <include>: 'include' <string> 'as' <dotted-name>
     # Mounts another file's namespace at <dotted-name> in THIS file. The
@@ -66,7 +66,7 @@ GRAMMAR = {
     # symbol table is a semantic-pass concern. FIRST(<include>) = {include},
     # disjoint from the other top-level starters.
     "<include>":
-        (SEQ, "include", TOK_STRING, "as", "<dotted-name>"),
+        (SEQ, "include:", TOK_STRING, "into:", "<dotted-name>"),
 
     # <namespace>: 'open' <dotted-name> <top-level>+ 'close'
     # Brackets the declarations it contains into a named scope. The dotted name
@@ -77,7 +77,7 @@ GRAMMAR = {
     # and 'close' is never a <top-level> starter, so the run terminates
     # unambiguously at its matching 'close' (LL(1)).
     "<namespace>":
-        (SEQ, "open", "<dotted-name>", (PLUS, "<top-level>"), "close"),
+        (SEQ, "open:", "<dotted-name>", (PLUS, "<top-level>"), ":close"),
 
     # <causality>: 'on' <cause> ( '=>' <effect> )+
     # No closing token: each effect is introduced by '=>', so the effect loop
@@ -85,7 +85,7 @@ GRAMMAR = {
     # keyword, a mode/state element keyword, 'until', 'end', or EOF) is never
     # '=>', so the list is unambiguously self-delimiting (LL(1)).
     "<causality>":
-        (SEQ, "on", "<cause>",
+        (SEQ, "on:", "<cause>",
                  (PLUS, (SEQ, "=>", "<effect>"))),
 
     # <cause>: <trigger> [ '&' <guard> ]
@@ -124,14 +124,15 @@ GRAMMAR = {
     # check, not a grammar one; the grammar accepts both shapes.
     "<spawn>":
         (SEQ, "+!", "<dotted-name>", (OPT, "<arg-parens>"),
-                 (OPT, (SEQ, "in", "{luau:EXPRESSION}"))),
+                 (OPT, (SEQ, "in:", "<dotted-name>")),
+                 (OPT, (SEQ, "as:", "{luau:LVALUE}"))),
 
     # <singleton-def>: 'singleton' ':' <name> [ '(' [ <arg-list> ] ')' ]
     # A top-level declaration fixing one instance of an aggregate type, named
     # and argument-bound here; spawned thereafter only by '+! <name>'.
     # FIRST = {singleton}, disjoint from the other top-level starters.
     "<singleton-def>":
-        (SEQ, "singleton", ":", "<dotted-name>", (OPT, "<arg-parens>")),
+        (SEQ, "singleton:", "<dotted-name>", (OPT, "<arg-parens>")),
 
     # <unspawn>: '-!' <name>
     # Ends an instance's existence. The operand is any reference-by-name (bare
@@ -159,9 +160,10 @@ GRAMMAR = {
     "<arg-list>":
         (SEQ, "<arg>", (STAR, (SEQ, ",", "<arg>"))),
 
-    # <arg>: [<member> '='] <rvalue>
+    # <arg>: <rvalue>   ('=' retired: rule-file args are positional rvalues;
+    # any keying lives inside the Luau '{ ... }' value, not the static layer)
     "<arg>":
-        (SEQ, (OPT, (SEQ, TOK_ID, "=")), "<rvalue>"),
+        "<rvalue>",
 
     # <rvalue>: <number> | <istring> | '{' <luau-expr> '}'
     "<rvalue>":
@@ -170,19 +172,19 @@ GRAMMAR = {
     # <mode>: 'mode' <name> [ '(' <arg-decl-list> ')' ] ':'
     #             <mode-elm>+ ( 'until' <cause> )+
     "<mode>":
-        (SEQ, "mode", "<dotted-name>", (OPT, "<decl-parens>"), ":",
+        (SEQ, "mode:", "<dotted-name>", (OPT, "<decl-parens>"),
                  (PLUS, "<mode-elm>"),
-                 (PLUS, (SEQ, "until", "<cause>"))),
+                 (PLUS, (SEQ, "until:", "<cause>"))),
 
     # <mode-elm>: <causality> | 'init' '{...}' | 'deinit' '{...}'
     "<mode-elm>":
         (ALT, "<causality>", "<init>", "<deinit>"),
 
     "<init>":
-        (SEQ, "init", "{luau:STATEMENT_BLOCK}"),
+        (SEQ, "init:", "{luau:STATEMENT_BLOCK}"),
 
     "<deinit>":
-        (SEQ, "deinit", "{luau:STATEMENT_BLOCK}"),
+        (SEQ, "deinit:", "{luau:STATEMENT_BLOCK}"),
 
     # <state>: 'state' <name> [ '(' <arg-decl-list> ')' ] ':'
     #              <mode-elm>+ <state-untils>
@@ -195,17 +197,50 @@ GRAMMAR = {
     # is LL(1) and stops exactly at 'until switched', leaving the machine's
     # closing untils for the machine.
     "<state>":
-        (SEQ, "state", "<dotted-name>", (OPT, "<decl-parens>"), ":",
+        (SEQ, "state:", "<dotted-name>", (OPT, "<decl-parens>"),
                  (PLUS, "<mode-elm>"),
                  "<state-untils>"),
 
     # <state-untils>: 'until' ( 'switched' | <cause> <state-untils> )
     "<state-untils>":
-        (SEQ, "until", (ALT, "switched", (SEQ, "<cause>", "<state-untils>"))),
+        (SEQ, "until:", (ALT, "switched", (SEQ, "<cause>", "<state-untils>"))),
 
-    # <has-ref>: 'has' ':' <member-ref>   (pull in a member defined elsewhere)
+    # <has-ref>: 'has:' <member-ref>   (pull in a member defined elsewhere)
     "<has-ref>":
-        (SEQ, "has", ":", "<member-ref>"),
+        (SEQ, "has:", "<member-ref>"),
+
+    # <forward-decl>: <name> 'is:' <fwd-kind>
+    # A scope-level forward declaration: NAME is of the named kind. The static
+    # kinds (mode / mode_group / state_machine) arrive as a bare ID -- they are
+    # no longer keywords, the keyword now being the colon-glued opener 'mode:'
+    # etc. -- so the kind name is validated downstream, not in the grammar.
+    # 'container' is a keyword and carries an arg-list (shape/size/access, all
+    # opaque to the static layer) plus an optional 'as:' Luau-lvalue handle that
+    # names where the container lives in the script world. FIRST(<forward-decl>)
+    # = {ID}, disjoint from every keyword-led top-level branch, so LL(1) holds.
+    "<forward-decl>":
+        (SEQ, "#ID", "is:", "<fwd-kind>"),
+
+    # <fwd-kind>: <static-kind-name> | 'container' <arg-parens> [ 'as:' {luau} ]
+    # A bare ID names a static kind (mode/mode_group/state_machine, checked in
+    # pass 2). 'container' is the one kind that reaches into Luau: its args
+    # configure the container and 'as:' binds it to a script-world lvalue.
+    "<fwd-kind>":
+        (ALT, TOK_ID,
+              (SEQ, "container", "<container-args>",
+                    (OPT, (SEQ, "as:", "{luau:LVALUE}")))),
+
+    # <container-args>: '(' [ <c-arg> (',' <c-arg>)* ] ')'
+    # The container's configuration (shape word, size, access flags) -- bare
+    # identifiers and numbers, opaque to the static layer, interpreted by the
+    # resolver. Distinct from <arg-parens> (rvalues): a shape like 'dict' is a
+    # config word, not a value.
+    "<container-args>":
+        (SEQ, "(", (OPT, (SEQ, "<c-arg>", (STAR, (SEQ, ",", "<c-arg>")))), ")"),
+
+    # <c-arg>: <identifier> | <number>
+    "<c-arg>":
+        (ALT, TOK_ID, TOK_NUMBER),
 
     # <member-ref>: <reactor-name> | <aggregate-name> '.' <reactor-name>
     #             | <aggregate-name> '.' 'VOID'   (a bare or qualified name)
@@ -219,9 +254,9 @@ GRAMMAR = {
     # member keyword -- never by another 'until' that could belong to the group
     # -- so the inline-member boundary is decidable with one token (LL(1)).
     "<mode-group>":
-        (SEQ, "mode_group", "<dotted-name>", (OPT, "<decl-parens>"), ":",
+        (SEQ, "mode_group:", "<dotted-name>", (OPT, "<decl-parens>"),
                  (PLUS, "<mode-group-elm>"),
-                 "end"),
+                 ":end"),
 
     # <mode-group-elm>: <mode> | <has-ref> | 'init' '{}' | 'deinit' '{}'
     "<mode-group-elm>":
@@ -232,10 +267,9 @@ GRAMMAR = {
     # Closed by 'end', not by 'until' causes. Each member state is self-
     # terminated by 'until switched', and the machine by 'end'.
     "<state-machine>":
-        (SEQ, "state_machine", "<dotted-name>", (OPT, "<decl-parens>"),
-                 ":",
+        (SEQ, "state_machine:", "<dotted-name>", (OPT, "<decl-parens>"),
                  (PLUS, "<state-machine-elm>"),
-                 "end"),
+                 ":end"),
 
     # <state-machine-elm>: <state> | <has-ref> | 'default' '=' <ref>
     #                    | 'init' '{}' | 'deinit' '{}'
@@ -243,7 +277,7 @@ GRAMMAR = {
         (ALT, "<state>", "<has-ref>", "<default>", "<init>", "<deinit>"),
 
     "<default>":
-        (SEQ, "default", "=", "<sm-mode-ref>"),
+        (SEQ, "default:", "<sm-mode-ref>"),
 
     # <sm-mode-ref>: <name> '.' <mode-name> | <name> '.' 'VOID'
     "<sm-mode-ref>":
@@ -251,11 +285,11 @@ GRAMMAR = {
 
     # <event-def>: 'event' <event-name> '(' <arg-decl-list> ')'
     "<event-def>":
-        (SEQ, "event", TOK_ID, "<decl-parens>"),
+        (SEQ, "event:", TOK_ID, "<decl-parens>"),
 
     # <clock-def>: 'clock' <event-name> <number>
     "<clock-def>":
-        (SEQ, "clock", TOK_ID, TOK_NUMBER),
+        (SEQ, "clock:", TOK_ID, TOK_NUMBER),
 
     # '(' <arg-decl-list> ')'
     "<decl-parens>":
@@ -265,9 +299,12 @@ GRAMMAR = {
     "<arg-decl-list>":
         (SEQ, "<arg-decl>", (STAR, (SEQ, ";", "<arg-decl>"))),
 
-    # <arg-decl>: <member> ':' <type>
+    # <arg-decl>: <member-colon> <type>   e.g. 'n: int'
+    # The member name is glued to its ':' as a NAME_COLON token (an identifier
+    # immediately followed by ':'), keeping the monosemic colon rule: ':' only
+    # ever appears glued, never free. The type is a bare ID.
     "<arg-decl>":
-        (SEQ, TOK_ID, ":", TOK_ID),
+        (SEQ, "#NAME_COLON", TOK_ID),
 
     # <mode-name>: <name> '.' <identifier> | <identifier>   (dotted name)
     "<dotted-name>":
@@ -361,20 +398,16 @@ def _build_arg_list(frame):
 
 
 def _build_arg(frame):
-    """RETURN: Arg, one '[member =] rvalue'.
+    """RETURN: Arg, one positional rvalue.
 
-    frame.values = [rvalue] or [member_tok, rvalue]. 'rvalue' is a Token
-    (number/string literal) or a Luau node.
+    frame.values = [rvalue]; 'rvalue' is a Token (number/string literal) or a
+    Luau node. ('=' naming is retired -- args are positional on the rule-file
+    plane; keyed values live inside the Luau span.)
     """
-    if len(frame.values) == 2:
-        member_tok, rvalue = frame.values
-        member = member_tok.text
-    else:
-        member = None
-        rvalue = frame.values[0]
+    rvalue  = frame.values[0]
     is_luau = isinstance(rvalue, ast.Luau)
     value   = rvalue if is_luau else rvalue.text
-    return ast.Arg(member=member, value=value, is_luau=is_luau, begin=frame.begin)
+    return ast.Arg(value=value, is_luau=is_luau, begin=frame.begin)
 
 
 def _build_dotted_name(frame):
@@ -383,9 +416,14 @@ def _build_dotted_name(frame):
 
 
 def _build_arg_decl(frame):
-    """RETURN: ArgDecl, one 'member : type'."""
+    """RETURN: ArgDecl, one 'member: type'.
+
+    frame.values = [name_colon_tok, type_tok]; the member name carries a glued
+    trailing ':' (NAME_COLON), stripped here to recover the bare member name.
+    """
     member_tok, type_tok = frame.values
-    return ast.ArgDecl(member=member_tok.text, type=type_tok.text,
+    member = member_tok.text[:-1]          # strip the glued ':'
+    return ast.ArgDecl(member=member, type=type_tok.text,
                        begin=member_tok.begin)
 
 
@@ -414,10 +452,10 @@ def _build_deinit(frame):
 
 
 def _build_default(frame):
-    """RETURN: StateMachineModeRef, the 'default =' target.
+    """RETURN: StateMachineModeRef, the 'default:' target.
 
-    Rebinds the ref's begin to the 'default' keyword offset so it matches the
-    construct start rather than the inner SM-name token.
+    Rebinds the ref's begin to the construct start rather than the inner SM-name
+    token. ('=' is retired; 'default:' is the connective.)
     """
     ref = frame.values[0]
     return ast.StateMachineModeRef(sm_name=ref.sm_name, mode_name=ref.mode_name,
@@ -557,6 +595,49 @@ def _build_has_ref(frame):
                       is_void=ref.is_void, begin=frame.begin)
 
 
+def _build_forward_decl(frame):
+    """RETURN: ForwardDecl, a '<name> is: <kind>' scope-level declaration.
+
+    frame.values = [name_tok, kind_dict]; 'is:' is silent. 'kind_dict' is the
+    dict produced by <fwd-kind>: {'kind', 'cargs', 'luau_handle'}. 'begin' is
+    the name offset (the construct starts at the name).
+    """
+    name_tok, kind = frame.values
+    return ast.ForwardDecl(kind=kind["kind"], name=name_tok.text,
+                           cargs=kind["cargs"], luau_handle=kind["luau_handle"],
+                           begin=name_tok.begin)
+
+
+def _build_container_args(frame):
+    """RETURN: list, the container config args as strings (shape/size/flags)."""
+    return list(frame.values)
+
+
+def _build_c_arg(frame):
+    """RETURN: str, one container config token (identifier or number lexeme)."""
+    return frame.values[0].text
+
+
+def _build_fwd_kind(frame):
+    """RETURN: dict, the kind of a forward declaration: keys 'kind', 'cargs',
+            'luau_handle'.
+
+    Two shapes reach here. A lone ID token is a static kind (mode / mode_group /
+    state_machine -- validated downstream), with no container args and no Luau
+    handle. The 'container' form (KW_CONTAINER captured) carries an arg list and
+    an optional 'as:' LVALUE Luau span: frame.values = ['container', [Arg,...],
+    maybe Luau].
+    """
+    head = frame.values[0]
+    if getattr(head, "kind", None) is not None and head.kind.name == "KW_CONTAINER":
+        cargs       = next((v for v in frame.values[1:] if isinstance(v, list)), [])
+        luau_handle = next((v for v in frame.values[1:] if isinstance(v, ast.Luau)),
+                           None)
+        return {"kind": "container", "cargs": cargs, "luau_handle": luau_handle}
+    # static kind: a bare ID token whose text names the kind
+    return {"kind": head.text, "cargs": [], "luau_handle": None}
+
+
 def _build_state_machine(frame):
     """RETURN: StateMachine, assembled from its member elements.
 
@@ -611,27 +692,30 @@ def _build_mode_group(frame):
 
 
 def _build_spawn(frame):
-    """RETURN: Spawn, an aggregate spawn '+! name [ (args) ] [ in {lvalue} ]'.
+    """RETURN: Spawn, an aggregate spawn '+! name [ (args) ] [ in: C ] [ as: {lv} ]'.
 
-    frame.values is the dotted name, then 0..2 trailing values with silent
-    punctuation ('+!', 'in') dropped: an arg list (a Python list) when the
-    parentheses matched, and a Luau node when the 'in' container matched. The
-    two are told apart by type, so either may be absent independently.
+    frame.values is the dotted name, then up to three trailing values with
+    silent punctuation ('+!', 'in:', 'as:') dropped: an arg list (a Python list)
+    when the parentheses matched; a str (a dotted-name) when 'in:' named a
+    container; a Luau node when 'as:' gave an lvalue handle. Each is told apart
+    by type, so any may be absent independently.
     """
-    name       = frame.values[0]
-    rest       = frame.values[1:]
-    args       = next((v for v in rest if isinstance(v, list)), [])
-    has_parens = any(isinstance(v, list) for v in rest)
-    container  = next((v for v in rest if isinstance(v, ast.Luau)), None)
+    name        = frame.values[0]
+    rest        = frame.values[1:]
+    args        = next((v for v in rest if isinstance(v, list)), [])
+    has_parens  = any(isinstance(v, list) for v in rest)
+    in_container = next((v for v in rest if isinstance(v, str)), None)
+    luau_handle = next((v for v in rest if isinstance(v, ast.Luau)), None)
     return ast.Spawn(name=name, args=args, has_parens=has_parens,
-                     container=container, begin=frame.begin)
+                     in_container=in_container, luau_handle=luau_handle,
+                     begin=frame.begin)
 
 
 def _build_singleton(frame):
     """RETURN: Singleton, a declaration 'singleton : name [ (args) ]'.
 
     frame.values = [name] or [name, [Arg, ...]] when the parentheses matched.
-    The 'singleton' keyword and ':' are punctuation.
+    The 'singleton:' keyword is punctuation.
     """
     name = frame.values[0]
     args = frame.values[1] if (len(frame.values) > 1
@@ -681,7 +765,7 @@ def _build_namespace(frame):
 def _build_include(frame):
     """RETURN: Include, the mounted file name and its target path.
 
-    frame.values = [string_tok, dotted_name]. 'include' and 'as' are silent.
+    frame.values = [string_tok, dotted_name]. 'include:' and 'into:' are silent.
     Surrounding quotes are stripped from the filename lexeme.
     """
     string_tok = frame.values[0]
@@ -719,6 +803,10 @@ ACTIONS = {
     "<state>":             _build_state,
     "<state-untils>":      _build_state_untils,
     "<has-ref>":           _build_has_ref,
+    "<forward-decl>":      _build_forward_decl,
+    "<fwd-kind>":          _build_fwd_kind,
+    "<container-args>":    _build_container_args,
+    "<c-arg>":             _build_c_arg,
     "<member-ref>":        _build_member_ref,
     "<mode-group>":        _build_mode_group,
     "<mode-group-elm>":    None,

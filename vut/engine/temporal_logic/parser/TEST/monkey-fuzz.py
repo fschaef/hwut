@@ -46,7 +46,8 @@ import config                                                       # noqa: F401
 from dataclasses import is_dataclass, fields
 
 from vut.language_support.python.hwut_runner            import HwutRunner
-from vut.language_support.python.deterministic_random   import DeterministicStream
+from vut.language_support.python.deterministic_random   import (DeterministicStream,
+                                                               SelectionMarker)
 from vut.engine.temporal_logic.parser.diagnostic        import DiagnosticReporter
 from vut.engine.temporal_logic.parser.parser_engine     import (compiled_grammar,
                                                                Terminal,
@@ -124,6 +125,7 @@ class Walker:
         self.luau    = []
         self._active = []
         self.visited = set()      # rule names entered during the walk
+        self._markers = {}        # id(ALT element) -> SelectionMarker
 
     def walk_file(self, n_items):
         """RETURN: (tokens, luau_texts) for 'n_items' top-level constructs."""
@@ -159,9 +161,9 @@ class Walker:
             for sub in element[1:]:
                 self._emit(sub, budget)
         elif op == ALT:
-            self._emit(self._pick_alt(element[1:], budget), budget)
+            self._emit(self._pick_alt(element, budget), budget)
         elif op == OPT:
-            if budget > 0 and self._coin(self.p["opt"]):
+            if budget > 0 and self.s.coin(self.p["opt"] * 0.01):
                 self._emit(element[1], budget)
         elif op == PLUS:
             for _ in range(self._rep_count(1, budget)):
@@ -172,38 +174,53 @@ class Walker:
         else:
             raise ValueError("unknown op %r" % (op,))
 
-    def _pick_alt(self, branches, budget):
+    def _marker_for(self, element):
+        """RETURN: SelectionMarker, the spread memory for one grammar ALT node.
+
+        Keyed by the ALT element's identity, so one marker serves every entry
+        into that alternation across the whole walk -- coverage-style spread.
+        The element is a long-lived grammar node, so id() is a stable key
+        (unlike id() of the transient safe/recursive sub-pools).
+        """
+        m = self._markers.get(id(element))
+        if m is None:
+            m = SelectionMarker()
+            self._markers[id(element)] = m
+        return m
+
+    def _pick_alt(self, element, budget):
         """
         RETURN: element, a chosen ALT branch.
 
         When the budget is spent, restricts the choice to branches that do NOT
         re-enter the rule being expanded so the walk terminates. While budget
         remains, with probability 'recurse'% prefers a branch that re-enters an
-        active rule (deep nesting); otherwise picks uniformly.
+        active rule (deep nesting); otherwise spreads across branches, preferring
+        ones not yet chosen at this ALT so every alternative is exercised.
+
+        Spread memory is one SelectionMarker per ALT node (held by the walker),
+        shared across this site's safe/recursive/full sub-pools by BRANCH
+        identity. So the spread is reproducible regardless of container address
+        reuse -- the marker, not id(container), is the memory.
         """
+        branches = element[1:]
+        marker   = self._marker_for(element)
+        active   = set(self._active)
         if budget <= 0:
-            active = set(self._active)
             safe = [b for b in branches if not _branch_reenters(b, active)]
             pool = safe if safe else _shallowest(branches)
-            return pool[self.s.next_int(0, len(pool) - 1)]
-        active = set(self._active)
+            return self.s.select_unchosen(pool, marker)
         recursive = [b for b in branches if _branch_reenters(b, active)]
-        if recursive and self._coin(self.p["recurse"]):
-            pool = recursive
-        else:
-            pool = list(branches)
-        return pool[self.s.next_int(0, len(pool) - 1)]
+        if recursive and self.s.coin(self.p["recurse"] * 0.01):
+            return self.s.select_unchosen(recursive, marker)
+        # Spread across ALL branches, preferring unchosen ones at this ALT.
+        return self.s.select_unchosen(branches, marker)
 
     def _rep_count(self, minimum, budget):
         """RETURN: int, a repetition count drawn from the profile and capped."""
         if budget <= 0:
             return max(minimum, 1) if minimum == 0 else minimum
-        hi = self.p["reps"]
-        return self.s.next_int(max(minimum, 1), hi)
-
-    def _coin(self, pct):
-        """RETURN: True with probability pct/100 (deterministic)."""
-        return self.s.next_int(1, 100) <= pct
+        return self.s.next_int(max(minimum, 1), self.p["reps"])
 
     def _emit_luau(self, budget):
         """RETURN: None. Emits a LUAU_OPEN and queues a balanced block body.
@@ -304,16 +321,12 @@ def _count_nt(element):
 #   items : number of top-level constructs in the file
 # --------------------------------------------------------------------------
 _PROFILES = {
-    "deep":     {"seed": 0x0DEE,  "depth": 30, "reps": 1, "opt": 20,
-                 "luau": 0, "items": 3, "recurse": 80},
-    "wide":     {"seed": 0x031D,  "depth": 6,  "reps": 5, "opt": 60,
-                 "luau": 1, "items": 6, "recurse": 10},
-    "luau":     {"seed": 0x1A41,  "depth": 6,  "reps": 2, "opt": 50,
-                 "luau": 6, "items": 6, "recurse": 15},
-    "balanced": {"seed": 0xBA1,   "depth": 8,  "reps": 2, "opt": 45,
-                 "luau": 2, "items": 5, "recurse": 25},
-    "states":   {"seed": 0x101,   "depth": 8,  "reps": 4, "opt": 40,
-                 "luau": 1, "items": 6, "recurse": 20},
+    "deep":     {"seed": 0x0DEE,  "depth": 30, "reps": 1, "opt": 20, "luau": 0, "items": 3, "recurse": 80},
+    "wide":     {"seed": 0x031D,  "depth": 6,  "reps": 5, "opt": 60, "luau": 1, "items": 6, "recurse": 10},
+    "luau":     {"seed": 0x1A41,  "depth": 6,  "reps": 2, "opt": 50, "luau": 6, "items": 6, "recurse": 15},
+    "balanced": {"seed": 0xBA1,   "depth": 8,  "reps": 2, "opt": 45, "luau": 2, "items": 5, "recurse": 25},
+    "states":   {"seed": 0x101,   "depth": 8,  "reps": 4, "opt": 40, "luau": 1, "items": 6, "recurse": 20},
+    "spread":   {"seed": 0xC0FFEE, "depth": 10, "reps": 4, "opt": 100, "luau": 1, "items": 12, "recurse": 10},
 }
 
 

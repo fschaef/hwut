@@ -7,7 +7,7 @@
    diag: PARSER off=0 expected KW_INIT, found MISMATCH
 
 -- truncate --
-   input: init
+   input: init:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 expected '{' Luau block, found END_OF_FILE
@@ -19,7 +19,7 @@
    diag: PARSER off=0 expected KW_INIT, found LUAU_OPEN
 
 -- omit-required-2 --
-   input: init
+   input: init:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 expected '{' Luau block, found END_OF_FILE

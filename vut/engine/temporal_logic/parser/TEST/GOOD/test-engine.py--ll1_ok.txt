@@ -1,5 +1,5 @@
 
 --- compile and validate the rule-file grammar ---
-rules compiled: 39
+rules compiled: 43
 start symbol:   <top-level>
 LL(1):          yes (no conflict raised)

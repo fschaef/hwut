@@ -60,21 +60,22 @@ def norm(node):
 
 # Inputs used by parity choices: one per construct plus mixed cases.
 _SPREAD = [
-    'on Tick & { event.n > 0 } => Beep()',
-    'on ANY => Log()',
-    ('on Tick => Beep(volume = 3) => ! Blink() '
+    'on: Tick & { event.n > 0 } => Beep()',
+    'on: ANY => Log()',
+    ('on: Tick => Beep(3) => ! Blink() '
      '=> "tick {event.n}" => { sm.n = sm.n + 1 }'),
-    'mode Blink :\n on Tick => Toggle()\n init { sm.x = 0 }\n until ANY\n',
-    ('state_machine Traffic :\n default = Traffic.RED\n'
-     ' state RED :\n  on Tick => Switch()\n until switched\n end\n'),
-    'state_machine Idle :\n default = Idle.VOID\n has: Other.VOID\n end\n',
-    ('mode_group Lights :\n init { sm.x = 0 }\n'
-     ' mode Blink :\n  on Tick => Toggle()\n until ANY\n has: Glow\n end\n'),
-    'event Move(dx : int ; dy : int)',
-    'clock Tick 100',
-    'on X => Honk(pitch = { event.hz * 2 }, 5)',
-    'on Boom => +! SmTraffic() as north => ! Blink()',
-    'on Clear => -! north',
+    'mode: Blink\n on Tick => Toggle()\n init: { sm.x = 0 }\n until: ANY\n',
+    ('state_machine: Traffic\n default: Traffic.RED\n'
+     ' state: RED\n  on Tick => Switch()\n until: switched\n :end\n'),
+    'state_machine: Idle\n default: Idle.VOID\n has: Other.VOID\n :end\n',
+    ('mode_group: Lights\n init: { sm.x = 0 }\n'
+     ' mode: Blink\n  on Tick => Toggle()\n until: ANY\n has: Glow\n :end\n'),
+    'event: Move(dx: int ; dy: int)',
+    'clock: Tick 100',
+    'on: X => Honk({ event.hz * 2 }, 5)',
+    'on: Boom => +! SmTraffic() in: north => ! Blink()',
+    'on: Clear => -! north',
+    'Ghosts is: container(fifo, 64) as: { db.ghosts }',
 ]
 
 

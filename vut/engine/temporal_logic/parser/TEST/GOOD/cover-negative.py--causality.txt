@@ -7,7 +7,7 @@
    diag: PARSER off=0 expected KW_ON, found MISMATCH
 
 -- truncate --
-   input: on X =>
+   input: on: X =>
    built:   no (rule abandoned)
    consumed: 3 token(s); leftover: 0
    diag: PARSER off=0 no alternative matches END_OF_FILE
@@ -19,19 +19,19 @@
    diag: PARSER off=0 expected KW_ON, found ID
 
 -- omit-required-2 --
-   input: on => { luau }
+   input: on: => { luau }
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 2
    diag: PARSER off=0 no alternative matches ARROW
 
 -- omit-required-3 --
-   input: on X { luau }
+   input: on: X { luau }
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 1
    diag: PARSER off=0 expected ARROW, found LUAU_OPEN
 
 -- omit-required-4 --
-   input: on X =>
+   input: on: X =>
    built:   no (rule abandoned)
    consumed: 3 token(s); leftover: 0
    diag: PARSER off=0 no alternative matches END_OF_FILE

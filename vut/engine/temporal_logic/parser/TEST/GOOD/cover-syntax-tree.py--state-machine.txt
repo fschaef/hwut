@@ -1,7 +1,7 @@
 === <state-machine> ===
 
 -- 0x --
-   input: state_machine X : state X : on X => { luau } until switched end
+   input: state_machine: X state: X on: X => { luau } until: switched :end
 StateMachine
   name = 'X'
   params:
@@ -44,7 +44,7 @@ StateMachine
   begin = 0
 
 -- 1x --
-   input: state_machine X . X : state X : on X => { luau } until switched end
+   input: state_machine: X . X state: X on: X => { luau } until: switched :end
 StateMachine
   name = 'X.X'
   params:
@@ -87,7 +87,7 @@ StateMachine
   begin = 0
 
 -- 2x --
-   input: state_machine X . X . X : state X : on X => { luau } until switched end
+   input: state_machine: X . X . X state: X on: X => { luau } until: switched :end
 StateMachine
   name = 'X.X.X'
   params:

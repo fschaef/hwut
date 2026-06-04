@@ -1,7 +1,7 @@
 === <top-level> ===
 
 -- alternative 0 --
-   input: open X . X include "s" as X close
+   input: open: X . X include: "s" into: X :close
 Namespace
   name = 'X.X'
   items:
@@ -12,14 +12,14 @@ Namespace
   begin = 0
 
 -- alternative 1 --
-   input: include "s" as X . X
+   input: include: "s" into: X . X
 Include
   filename = 's'
   mount = 'X.X'
   begin = 0
 
 -- alternative 2 --
-   input: on X & { luau } => { luau }
+   input: on: X & { luau } => { luau }
 Causality
   cause:
     Cause
@@ -45,7 +45,7 @@ Causality
   begin = 0
 
 -- alternative 3 --
-   input: mode X . X : on X => { luau } until X
+   input: mode: X . X on: X => { luau } until: X
 Mode
   name = 'X.X'
   params:
@@ -84,7 +84,7 @@ Mode
   begin = 0
 
 -- alternative 4 --
-   input: mode_group X . X : mode X : on X => { luau } until X end
+   input: mode_group: X . X mode: X on: X => { luau } until: X :end
 ModeGroup
   name = 'X.X'
   params:
@@ -133,7 +133,7 @@ ModeGroup
   begin = 0
 
 -- alternative 5 --
-   input: state_machine X . X : state X : on X => { luau } until switched end
+   input: state_machine: X . X state: X on: X => { luau } until: switched :end
 StateMachine
   name = 'X.X'
   params:
@@ -176,7 +176,7 @@ StateMachine
   begin = 0
 
 -- alternative 6 --
-   input: singleton : X . X
+   input: singleton: X . X
 Singleton
   name = 'X.X'
   args:
@@ -184,19 +184,29 @@ Singleton
   begin = 0
 
 -- alternative 7 --
-   input: event X ( X : X )
+   input: event: X ( NAME_COLON X )
 EventDef
   name = 'X'
   params:
     ArgDecl
-      member = 'X'
+      member = 'NAME_COLO'
       type = 'X'
       begin = 0
   begin = 0
 
 -- alternative 8 --
-   input: clock X 1
+   input: clock: X 1
 ClockDef
   name = 'X'
   period = '1'
+  begin = 0
+
+-- alternative 9 --
+   input: X is: X
+ForwardDecl
+  kind = 'X'
+  name = 'X'
+  cargs:
+    []
+  luau_handle = None
   begin = 0

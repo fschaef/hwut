@@ -1,31 +1,25 @@
 === negative: <has-ref> ===
 
 -- junk-head --
-   input: ? : X
+   input: ? X
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 3
+   consumed: 0 token(s); leftover: 2
    diag: PARSER off=0 expected KW_HAS, found MISMATCH
 
 -- truncate --
-   input: has :
+   input: has:
    built:   no (rule abandoned)
-   consumed: 2 token(s); leftover: 0
+   consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 expected ID, found END_OF_FILE
 
 -- omit-required-1 --
-   input: : X
+   input: X
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 2
-   diag: PARSER off=0 expected KW_HAS, found COLON
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 expected KW_HAS, found ID
 
 -- omit-required-2 --
-   input: has X
+   input: has:
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 1
-   diag: PARSER off=0 expected COLON, found ID
-
--- omit-required-3 --
-   input: has :
-   built:   no (rule abandoned)
-   consumed: 2 token(s); leftover: 0
+   consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 expected ID, found END_OF_FILE

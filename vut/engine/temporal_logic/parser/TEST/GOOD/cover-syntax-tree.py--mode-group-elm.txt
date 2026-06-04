@@ -1,7 +1,7 @@
 === <mode-group-elm> ===
 
 -- alternative 0 --
-   input: mode X . X : on X => { luau } until X
+   input: mode: X . X on: X => { luau } until: X
 Mode
   name = 'X.X'
   params:
@@ -40,7 +40,7 @@ Mode
   begin = 0
 
 -- alternative 1 --
-   input: has : X . VOID
+   input: has: X . VOID
 HasRef
   aggregate = 'X'
   member = 'VOID'
@@ -48,7 +48,7 @@ HasRef
   begin = 0
 
 -- alternative 2 --
-   input: init { luau }
+   input: init: { luau }
 InitBlock
   body:
     Luau
@@ -58,7 +58,7 @@ InitBlock
   begin = 0
 
 -- alternative 3 --
-   input: deinit { luau }
+   input: deinit: { luau }
 DeinitBlock
   body:
     Luau

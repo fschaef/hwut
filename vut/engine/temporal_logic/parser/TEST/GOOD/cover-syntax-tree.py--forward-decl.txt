@@ -1,0 +1,21 @@
+=== <forward-decl> ===
+
+-- absent --
+   input: X is: X
+ForwardDecl
+  kind = 'X'
+  name = 'X'
+  cargs:
+    []
+  luau_handle = None
+  begin = 0
+
+-- present --
+   input: X is: X
+ForwardDecl
+  kind = 'X'
+  name = 'X'
+  cargs:
+    []
+  luau_handle = None
+  begin = 0

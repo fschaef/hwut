@@ -8,6 +8,7 @@ SUCCESS: ClockDef is produced by a grammar rule
 SUCCESS: DeinitBlock is produced by a grammar rule
 SUCCESS: EventDef is produced by a grammar rule
 SUCCESS: EventSpec is produced by a grammar rule
+SUCCESS: ForwardDecl is produced by a grammar rule
 SUCCESS: HasRef is produced by a grammar rule
 SUCCESS: Include is produced by a grammar rule
 SUCCESS: InitBlock is produced by a grammar rule

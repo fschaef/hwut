@@ -1,7 +1,7 @@
 === <mode> ===
 
 -- 0x --
-   input: mode X : on X => { luau } until X
+   input: mode: X on: X => { luau } until: X
 Mode
   name = 'X'
   params:
@@ -40,7 +40,7 @@ Mode
   begin = 0
 
 -- 1x --
-   input: mode X . X : on X => { luau } until X
+   input: mode: X . X on: X => { luau } until: X
 Mode
   name = 'X.X'
   params:
@@ -79,7 +79,7 @@ Mode
   begin = 0
 
 -- 2x --
-   input: mode X . X . X : on X => { luau } until X
+   input: mode: X . X . X on: X => { luau } until: X
 Mode
   name = 'X.X.X'
   params:

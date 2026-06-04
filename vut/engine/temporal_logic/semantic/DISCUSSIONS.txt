@@ -9,10 +9,208 @@ settled mechanics; this = why. Entries newest-first, 'L-N'. Parser ledger
 (name/target validity); this log opens at L-7 and works the design forward.
 
 -------------------------------------------------------------------------------
+LIVE QUESTIONS (open; resolve before the resolver is built)
+-------------------------------------------------------------------------------
+
+  S-Q1  ENCLOSING-OPEN-SCOPE VISIBILITY. When an inner scope references a name
+        in a still-OPEN enclosing scope (e.g. Traffic uses SIREN declared in the
+        still-open 'outer' that contains it): is the enclosing scope visible by
+        virtue of lexical nesting, or must it be mounted too?
+          (1) nesting IS the explicit dependency -- visible, no mount. (leaning)
+          (2) even the encloser must be explicit.
+        Lean (1): the author wrote the inner scope INSIDE the outer; that is on
+        the page, structural, not implicit. Requiring a mount to one's own
+        enclosing scope is redundant with visible nesting.
+
+  S-Q2  SPAWN-TARGET TOLERANCE -- the lone open item after S-6. A '+! Type'
+        references an aggregate TYPE. Under the S-6 general rule it is (B): the
+        type must be declared by name and kind above the spawn (B.1), body may
+        follow (B.2). Open ruling: keep (B), or hold spawn targets to (A) (type
+        FULLY defined before any spawn of it, the event-like strict treatment)?
+        Flagged "functional / a problem to think about". Singleton references
+        ('+! THE_ONLY') follow whatever spawn targets get. Everything else in
+        S-6 is settled. Note: the declaration syntax (S-Q3 / parser R-40) admits
+        'is: mode_group' and 'is: state_machine' regardless of how S-Q2
+        resolves, so settling S-Q2 needs no syntax change -- only a resolver
+        ruling on whether a forward-declared aggregate type may back a forward
+        '+!' spawn.
+
+  S-Q3  DECLARATION SYNTAX -- (B.1) needs a way to DECLARE a name+kind without
+        (yet) defining it. RESOLVED in the parser layer (R-40): 'has:' is
+        already a declaration inside an aggregate (kind implied by the frame);
+        'is:' ('<name> is: <kind>') is its scope-level sibling (kind stated). No
+        new resolver work beyond matching each declaration to a same-scope
+        definition (the (B.2) check). -> parser R-40; SYNTAX <forward-decl>. 'has: HUNGER' already does this for aggregate
+        members; but for the general (B) case (a mode declared by name+type
+        above, body later; a type declared before a forward spawn) the grammar
+        may need explicit DECLARATION elements distinct from DEFINITION. To be
+        designed against the parser/SYNTAX in a separate pass (see the prompt
+        accompanying this work). Until then the resolver assumes (B.1) is
+        satisfiable by whatever declares-and-types a name (membership, has:,
+        and any future forward-declaration form).
+
+-------------------------------------------------------------------------------
+RESOLVED  --  resolution discipline (S-series)
+-------------------------------------------------------------------------------
+
+  S-6   THE (A)/(B) REFERENCE RULE -- declared-and-typed is the gate; the scope
+        is the deadline. Supersedes the definitional/operational framing tried
+        in the first draft of S-5 (kept below as REJECTED). One general rule,
+        then per-entity application.
+
+        GENERAL RULE. A reference target:
+          (A) must either be defined before the reference location; or
+          (B) if it profits from or requires loose referencing, it
+              (B.1) must be declared by name and type -- present in the same
+                    scope above the reference; and
+              (B.2) its full definition (body, members' bodies, transitions)
+                    must follow later in the same scope (the nesting scope of an
+                    aggregate).
+        === border: general rule above / per-use-case application below ===
+        Events / clocks: (A). Degenerate case: being LEAVES, they have no later-
+            definition need -- an event references nothing (not another event,
+            not a mode), so it carries no relationship of explanation that could
+            be painful or circular to order. Nothing about it profits from loose
+            referencing, so (B) never applies. Strict; one place to declare,
+            one place to find.
+        Modes: (B). A mode's effect block may transit into another mode
+            ('=> ! OTHER'). Restricting transit to already-defined modes would
+            make DAG state machines impossible -- no forward or cyclic edge.
+            Target declared by name+type above (B.1); body and transitions
+            follow (B.2).
+        Aggregate members under 'has:': (B). 'has: HUNGER' declares HUNGER by
+            name and links it to type HOMEOSTASIS (B.1); HUNGER's definition may
+            follow later in the scope where HOMEOSTASIS lives (B.2). Profits from
+            loose referencing -- naming the parts of a whole before detailing
+            each is how one describes the whole; the (B.2) scope may be the
+            aggregate's nesting scope, not strictly the aggregate body.
+        Arming targets ('! MODE', '=> ! MODE'): (B). An arming target IS a mode
+            target, inheriting the mode rule -- the DAG-transition need seen from
+            the effect side.
+        Spawn targets ('+! Type'): (B) by default -- type declared by name+kind
+            above (B.1), body may follow (B.2) -- but UNDER REVIEW (S-Q2): may be
+            held to (A) instead. Singleton refs follow the spawn-target ruling.
+
+        Two scope facts this rule rides on:
+          - (B.2) is BOUNDED: a (B.1)-declared name with no (B.2) definition by
+            the scope's close is an error reported AT the close. The closing-
+            scope principle (S-2) survives as the DEADLINE on (B.2); it is no
+            longer the rule by itself -- declared-and-typed (B.1) is the gate.
+          - (A)/(B) is the INTRA-scope discipline. Reaching ANOTHER scope still
+            requires an explicit mount (S-4); a closed-sibling or nonexistent
+            target is still a hard error (S-3). Inter-scope discipline sits above
+            (A)/(B), unchanged.
+
+        REJECTED (first-draft framing): "DEFINITIONAL (forgiving) vs OPERATIONAL
+        (strict)" as the governing cut. Replaced because the real gate is
+        "declared and linked to a type at the reference site," with events as
+        the leaf-degenerate case where declared-and-typed coincides with fully-
+        defined. The definitional/operational labels described the symptom
+        (members forgiving, events strict) but not the cause (declared-and-typed
+        vs not), and mis-predicted modes (operational yet forgiving, because
+        DAGs demand it).
+        -> README (C), rewritten around (A)/(B); declaration syntax -> S-Q3.
+
+  S-4   DEPENDENCIES MUST BE EXPLICIT -- MOUNT TO USE ANOTHER SCOPE. A scope
+        cannot reach another scope's names by lexical proximity or ambient
+        global visibility. It must DECLARE reliance ('include ... as ...') and
+        only then name what it mounted. Reading a scope's mounts then tells you
+        the COMPLETE, finite, auditable set of other scopes it can depend on.
+        REJECTED: ambient innermost-out lexical search ACROSS scope boundaries
+        (the README's original (C)) -- that is implicit dependency, the
+        "definitions elsewhere" chaos the completeness principle (S-3) exists to
+        prevent. Implicit cross-scope edges end in chaos; explicit mounts keep
+        the dependency surface on the page. (Open: whether a still-OPEN encloser
+        counts as already-explicit via nesting -- S-Q1.)
+        -> README (C), (D); supersedes the cross-scope part of the old (C).
+
+  S-3   A CLOSED SCOPE IS COMPLETE AND FINAL -- NEVER REOPENED. Once 'close' is
+        seen the scope is sealed: its name set is fixed forever, never extended.
+        Payoff: to comprehend a scope the reader looks in EXACTLY ONE place
+        (open..close); having read it, they have everything -- no "might also be
+        defined elsewhere" residue. The seal holds BOTH ways: outsiders may not
+        forward-reference INTO a closed scope either, or reading the scope would
+        no longer reveal all uses of its names. Deep reason behind balanced
+        open/close (R-37): the brackets bound the total KNOWABLE extent of the
+        entity, not just its syntax.
+        Consequences, hard errors at the reference site:
+          - reference into an ALREADY-CLOSED sibling scope -> error (sealed).
+          - reference into a NONEXISTENT scope -> error (reader has nowhere to
+            look; no deferral, no "maybe later").
+        -> README (C); cf. R-37.
+
+  S-2   THE BOUND IS A CLOSING SCOPE, NOT TEXTUAL ORDER. A forward reference is
+        coherent IFF a closing delimiter caps the wait -- a marked endpoint in
+        the input stream by which the referent MUST be resolved. 'default RED'
+        before RED appears is fine: RED must be a member of this machine, whose
+        scope closes; the reader holds the unresolved name only to 'close', and
+        the close guarantees the wait terminates. The decisive property is not
+        "defined before used" but "is the question mark guaranteed to expire."
+        Serves a real authoring need: sometimes A must be explained via B before
+        B is fully given, because giving B first would be exhaustive or backwards
+        (the default is part of HOW you describe the machine). Strict define-
+        before-use WITHIN a scope is the hostile over-correction; the scope
+        boundary makes the bounded-forward safe.
+        Mechanics: two regimes joined at the closing delimiter -- bounded-forward
+        WITHIN an open scope (obligation drained at 'close'; a name still
+        dangling at close is an error reported AT the close, where the reader
+        also expected resolution), and resolve-against-already-established ACROSS
+        scope boundaries. No whole-file second pass: the "second pass" is just
+        draining each scope's pending list at its matching close -- close to a
+        single descent carrying a small bounded per-open-scope obligation.
+        -> README (C).
+
+  S-1   FORWARD REFERENCE != CIRCULARITY; FEEDBACK LOOPS NEED NO FORWARD REF.
+        (a) Two-pass resolution does not risk name cycles: pass one records
+            names, consulting no other name, so it cannot loop. The only genuine
+            cycle risk is in INCLUDES (A mounts B mounts A), which exists
+            regardless of one-pass/two-pass and is handled by the ordered-chain
+            cycle diagnostic (L-10).
+        (b) REJECTED (a wrong claim made mid-discussion): "reactive feedback
+            loops require use-before-definition." False. A loop A->B->C->A lives
+            in the CAUSAL WIRING, not in text order. Declare every entity first,
+            then write the causal rules wiring them; the cycle is in the wiring,
+            which references only already-declared names. Allowing use-before-
+            definition buys NO expressiveness that declare-then-wire lacks; its
+            only effect is to PERMIT documents that do not make sense read
+            linearly and then quietly repair them. The objection that settled
+            it: "if I reference something before I define it, I do not know what
+            I am talking about" -- correct and decisive, EXCEPT where a closing
+            scope bounds the wait (S-2).
+        -> motivates S-2..S-5.
+
+-------------------------------------------------------------------------------
 RESOLVED
 -------------------------------------------------------------------------------
 
-  L-13  TEST = MEANINGFUL OUTPUT, NOT SELF-GRADED ASSERT. Each driver prints the
+  L-14  EVENT DELIVERY IS IMPLICIT -- DERIVED FROM 'on:', NO SUBSCRIBE CONSTRUCT.
+        An event reaches a reactor exactly when the reactor names it in an 'on:'
+        cause; the cause's guard ('& { ... }') is the filter. The engine derives
+        the publisher/subscriber wiring from the event types named across the
+        live 'on:' causes. The author writes reaction; routing follows.
+
+        REJECTED -- an explicit 'subscribe: <event> [filter: { <cond> }]' element
+        on aggregates. It carries no information the causality does not already
+        hold: 'subscribe: E filter: { p }' and 'on: E & { p } => ...' name the
+        same event and the same predicate. 'filter:' and a cause guard are the
+        same predicate; offering both is two surface forms for one meaning -- the
+        redundancy the colon work exists to remove. Worse, it leaks plumbing
+        (who-routes-what) into the rule-file plane, which speaks intent, not
+        transport.
+
+        NO SUBSCRIBE-WITHOUT-REACT CASE. "See an event only to observe/filter,
+        without reacting" is not a real exception: observing-to-maintain-state
+        IS a reaction ('on: E & { p } => { sm.seen = sm.seen + 1 }'); and with no
+        effect there is nothing to deliver. So delivery-derived-from-'on:' loses
+        no expressible behaviour.
+
+        CONSEQUENCE: this feature needs NO syntax -- no grammar, lexer, or
+        recording change. It is a model note only: delivery is a consequence of
+        reaction being declared. (-> README EVENTS; SYNTAX A.2.2 cause+guard.
+        The prefix on a qualified event name may still inform default routing as
+        a convenience, but explicit naming in 'on:' is the contract.)
+
+
         thing produced -- resolved FQN, scope tree, diagnostic text -- and the
         GOOD recording judges it. Printing 'SUCCESS:'/'FAIL:' self-reports
         REJECTED: a test that grades its own homework hides the actual output

@@ -1,17 +1,26 @@
 === <arg> ===
 
--- absent --
+-- alternative 0 --
    input: 1
 Arg
-  member = None
   value = '1'
   is_luau = False
   begin = 0
 
--- present --
-   input: X = 1
+-- alternative 1 --
+   input: "s"
 Arg
-  member = 'X'
-  value = '1'
+  value = '"s"'
   is_luau = False
+  begin = 0
+
+-- alternative 2 --
+   input: { luau }
+Arg
+  value:
+    Luau
+      text = '{ luau }'
+      role = <Role.EXPRESSION: 'expression'>
+      begin = 0
+  is_luau = True
   begin = 0
