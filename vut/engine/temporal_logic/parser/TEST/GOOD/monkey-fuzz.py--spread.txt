@@ -1,36 +1,114 @@
 === monkey: spread ===
-tokens synthesized: 330
+tokens synthesized: 456
 top-level items:    12
 diagnostics:        none
-## rules visited:      ((41)) / ((43))
-## node types built:   ((23)) / ((24))
+## rules visited:      ((42)) / ((42))
+## node types built:   ((23)) / ((23))
 
 -- AST --
 Namespace
   name = 'X2.X4.X6.X8'
   items:
+    ForwardDecl
+      kind = 'container'
+      name = 'X9'
+      cargs:
+        'X13'
+        '1'
+        'X17'
+        '1'
+        '1'
+      luau_handle:
+        Luau
+          text = '{ x }'
+          role = <Role.LVALUE: 'lvalue'>
+          begin = 0
+      begin = 0
+  begin = 0
+ClockDef
+  name = 'X26'
+  period = '1'
+  begin = 0
+Include
+  filename = 's'
+  mount = 'X31.X33.X35'
+  begin = 0
+EventDef
+  name = 'X37'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X40'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X43'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X46'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X49'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X52'
+      begin = 0
+  begin = 0
+Causality
+  cause:
+    Cause
+      trigger:
+        Trigger
+          name = 'X55'
+          is_keyword = False
+          begin = 0
+      guard:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+  effects:
+    Mutation
+      body:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+    ReportString
+      text = '"s"'
+      begin = 0
+  begin = 0
+ModeGroup
+  name = 'X61.X63'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X66'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X69'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X72'
+      begin = 0
+  modes:
     Mode
-      name = 'X10.X12.X14'
+      name = 'X75.X77.X79.X81.X83'
       params:
         ArgDecl
           member = 'NAME_COLO'
-          type = 'X17'
+          type = 'X86'
           begin = 0
         ArgDecl
           member = 'NAME_COLO'
-          type = 'X20'
-          begin = 0
-        ArgDecl
-          member = 'NAME_COLO'
-          type = 'X23'
-          begin = 0
-        ArgDecl
-          member = 'NAME_COLO'
-          type = 'X26'
-          begin = 0
-        ArgDecl
-          member = 'NAME_COLO'
-          type = 'X29'
+          type = 'X89'
           begin = 0
       init = None
       deinit:
@@ -44,7 +122,520 @@ Namespace
         Cause
           trigger:
             Trigger
+              name = 'BEGIN'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+        Cause
+          trigger:
+            Trigger
               name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+        Cause
+          trigger:
+            Trigger
+              name = 'END'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      begin = 0
+  has_refs:
+    HasRef
+      aggregate = 'X102'
+      member = 'X104'
+      is_void = False
+      begin = 0
+  init:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit:
+    Luau
+      text = '{ x{ y } }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  begin = 0
+Mode
+  name = 'X109.X111'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X114'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X117'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X120'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X123'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X126'
+      begin = 0
+  init:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit = None
+  causalities:
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'BEGIN'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      effects:
+        Spawn
+          name = 'X134.X136.X138.X140'
+          args:
+            Arg
+              value = '"s"'
+              is_luau = False
+              begin = 0
+            Arg
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              is_luau = True
+              begin = 0
+          has_parens = True
+          in_container = 'X146.X148.X150.X152'
+          luau_handle:
+            Luau
+              text = '{ x }'
+              role = <Role.LVALUE: 'lvalue'>
+              begin = 0
+          begin = 0
+        ModeArming
+          name = 'X156.X158.X160.X162.X164'
+          args:
+            Arg
+              value = '1'
+              is_luau = False
+              begin = 0
+            Arg
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              is_luau = True
+              begin = 0
+          begin = 0
+      begin = 0
+  untils:
+    Cause
+      trigger:
+        Trigger
+          name = 'END'
+          is_keyword = True
+          begin = 0
+      guard:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+    Cause
+      trigger:
+        Trigger
+          name = 'ANY'
+          is_keyword = True
+          begin = 0
+      guard:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+  begin = 0
+StateMachine
+  name = 'X176.X178'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X181'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X184'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X187'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X190'
+      begin = 0
+  states:
+    []
+  has_refs:
+    []
+  default:
+    StateMachineModeRef
+      sm_name = 'X194'
+      mode_name = 'X196'
+      is_void = False
+      begin = 0
+  init = None
+  deinit:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  begin = 0
+Include
+  filename = 's'
+  mount = 'X201.X203'
+  begin = 0
+StateMachine
+  name = 'X205.X207.X209.X211.X213'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X216'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X219'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X222'
+      begin = 0
+  states:
+    State
+      name = 'X226.X228'
+      params:
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X231'
+          begin = 0
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X234'
+          begin = 0
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X237'
+          begin = 0
+      init = None
+      deinit:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      causalities:
+        []
+      untils:
+        []
+      begin = 0
+  has_refs:
+    HasRef
+      aggregate = 'X243'
+      member = 'VOID'
+      is_void = True
+      begin = 0
+  default = None
+  init:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit = None
+  begin = 0
+Mode
+  name = 'X249.X251.X253.X255.X257'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X260'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X263'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X266'
+      begin = 0
+  init:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit = None
+  causalities:
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'X269'
+              is_keyword = False
+              begin = 0
+          guard:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      effects:
+        EventSpec
+          name = 'X272.X274'
+          args:
+            Arg
+              value = '1'
+              is_luau = False
+              begin = 0
+            Arg
+              value = '"s"'
+              is_luau = False
+              begin = 0
+            Arg
+              value = '"s"'
+              is_luau = False
+              begin = 0
+            Arg
+              value:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              is_luau = True
+              begin = 0
+            Arg
+              value = '1'
+              is_luau = False
+              begin = 0
+          begin = 0
+        Unspawn
+          name = 'X287.X289.X291.X293.X295'
+          begin = 0
+        EventSpec
+          name = 'X297.X299'
+          args:
+            Arg
+              value = '"s"'
+              is_luau = False
+              begin = 0
+            Arg
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              is_luau = True
+              begin = 0
+            Arg
+              value = '1'
+              is_luau = False
+              begin = 0
+            Arg
+              value = '"s"'
+              is_luau = False
+              begin = 0
+          begin = 0
+        ModeArming
+          name = 'X310.X312'
+          args:
+            Arg
+              value = '1'
+              is_luau = False
+              begin = 0
+            Arg
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              is_luau = True
+              begin = 0
+          begin = 0
+      begin = 0
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      effects:
+        Spawn
+          name = 'X323.X325.X327.X329'
+          args:
+            Arg
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              is_luau = True
+              begin = 0
+            Arg
+              value = '"s"'
+              is_luau = False
+              begin = 0
+          has_parens = True
+          in_container = 'X335.X337.X339.X341'
+          luau_handle:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.LVALUE: 'lvalue'>
+              begin = 0
+          begin = 0
+        Mutation
+          body:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          begin = 0
+        Unspawn
+          name = 'X346.X348'
+          begin = 0
+      begin = 0
+  untils:
+    Cause
+      trigger:
+        Trigger
+          name = 'X350'
+          is_keyword = False
+          begin = 0
+      guard:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+  begin = 0
+ModeGroup
+  name = 'X353.X355'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X358'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X361'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X364'
+      begin = 0
+  modes:
+    Mode
+      name = 'X368.X370.X372'
+      params:
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X375'
+          begin = 0
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X378'
+          begin = 0
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X381'
+          begin = 0
+      init:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      deinit:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'END'
+                  is_keyword = True
+                  begin = 0
+              guard:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.CONDITION: 'condition'>
+                  begin = 0
+              begin = 0
+          effects:
+            ReportString
+              text = '"s"'
+              begin = 0
+            EventSpec
+              name = 'X391.X393.X395.X397'
+              args:
+                Arg
+                  value = '1'
+                  is_luau = False
+                  begin = 0
+                Arg
+                  value = '1'
+                  is_luau = False
+                  begin = 0
+              begin = 0
+            ReportString
+              text = '"s"'
+              begin = 0
+            Unspawn
+              name = 'X407.X409.X411.X413'
+              begin = 0
+          begin = 0
+      untils:
+        Cause
+          trigger:
+            Trigger
+              name = 'BEGIN'
               is_keyword = True
               begin = 0
           guard:
@@ -61,447 +652,14 @@ Namespace
               begin = 0
           guard:
             Luau
-              text = '{ x }'
+              text = '{ x{ y } }'
               role = <Role.CONDITION: 'condition'>
               begin = 0
           begin = 0
       begin = 0
-  begin = 0
-Include
-  filename = 's'
-  mount = 'X42.X44.X46'
-  begin = 0
-Singleton
-  name = 'X48.X50'
-  args:
-    Arg
-      value = '"s"'
-      is_luau = False
-      begin = 0
-    Arg
-      value:
-        Luau
-          text = '{ x }'
-          role = <Role.EXPRESSION: 'expression'>
-          begin = 0
-      is_luau = True
-      begin = 0
-    Arg
-      value = '1'
-      is_luau = False
-      begin = 0
-    Arg
-      value = '1'
-      is_luau = False
-      begin = 0
-    Arg
-      value:
-        Luau
-          text = '{ x }'
-          role = <Role.EXPRESSION: 'expression'>
-          begin = 0
-      is_luau = True
-      begin = 0
-  begin = 0
-Namespace
-  name = 'X61.X63'
-  items:
-    ForwardDecl
-      kind = 'container'
-      name = 'X64'
-      cargs:
-        '1'
-        'X70'
-      luau_handle:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.LVALUE: 'lvalue'>
-          begin = 0
-      begin = 0
-    ModeGroup
-      name = 'X74.X76.X78.X80'
-      params:
-        ArgDecl
-          member = 'NAME_COLO'
-          type = 'X83'
-          begin = 0
-        ArgDecl
-          member = 'NAME_COLO'
-          type = 'X86'
-          begin = 0
-      modes:
-        Mode
-          name = 'X89.X91'
-          params:
-            ArgDecl
-              member = 'NAME_COLO'
-              type = 'X94'
-              begin = 0
-            ArgDecl
-              member = 'NAME_COLO'
-              type = 'X97'
-              begin = 0
-          init:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.STATEMENT_BLOCK: 'statement_block'>
-              begin = 0
-          deinit:
-            Luau
-              text = '{ x }'
-              role = <Role.STATEMENT_BLOCK: 'statement_block'>
-              begin = 0
-          causalities:
-            Causality
-              cause:
-                Cause
-                  trigger:
-                    Trigger
-                      name = 'X101'
-                      is_keyword = False
-                      begin = 0
-                  guard:
-                    Luau
-                      text = '{ x }'
-                      role = <Role.CONDITION: 'condition'>
-                      begin = 0
-                  begin = 0
-              effects:
-                ModeArming
-                  name = 'X105.X107'
-                  args:
-                    []
-                  begin = 0
-              begin = 0
-            Causality
-              cause:
-                Cause
-                  trigger:
-                    Trigger
-                      name = 'END'
-                      is_keyword = True
-                      begin = 0
-                  guard:
-                    Luau
-                      text = '{ x{ y } }'
-                      role = <Role.CONDITION: 'condition'>
-                      begin = 0
-                  begin = 0
-              effects:
-                ReportString
-                  text = '"s"'
-                  begin = 0
-                EventSpec
-                  name = 'X116.X118'
-                  args:
-                    []
-                  begin = 0
-                Mutation
-                  body:
-                    Luau
-                      text = '{ x{ y } }'
-                      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-                      begin = 0
-                  begin = 0
-              begin = 0
-          untils:
-            Cause
-              trigger:
-                Trigger
-                  name = 'END'
-                  is_keyword = True
-                  begin = 0
-              guard:
-                Luau
-                  text = '{ x }'
-                  role = <Role.CONDITION: 'condition'>
-                  begin = 0
-              begin = 0
-            Cause
-              trigger:
-                Trigger
-                  name = 'ANY'
-                  is_keyword = True
-                  begin = 0
-              guard:
-                Luau
-                  text = '{ x }'
-                  role = <Role.CONDITION: 'condition'>
-                  begin = 0
-              begin = 0
-            Cause
-              trigger:
-                Trigger
-                  name = 'X130'
-                  is_keyword = False
-                  begin = 0
-              guard:
-                Luau
-                  text = '{ x }'
-                  role = <Role.CONDITION: 'condition'>
-                  begin = 0
-              begin = 0
-          begin = 0
-      has_refs:
-        HasRef
-          aggregate = 'X135'
-          member = 'VOID'
-          is_void = True
-          begin = 0
-      init:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      deinit:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      begin = 0
-  begin = 0
-Namespace
-  name = 'X141.X143'
-  items:
-    Singleton
-      name = 'X145.X147.X149.X151.X153'
-      args:
-        Arg
-          value = '"s"'
-          is_luau = False
-          begin = 0
-        Arg
-          value = '1'
-          is_luau = False
-          begin = 0
-        Arg
-          value = '"s"'
-          is_luau = False
-          begin = 0
-        Arg
-          value:
-            Luau
-              text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          is_luau = True
-          begin = 0
-        Arg
-          value = '1'
-          is_luau = False
-          begin = 0
-      begin = 0
-    EventDef
-      name = 'X165'
-      params:
-        ArgDecl
-          member = 'NAME_COLO'
-          type = 'X168'
-          begin = 0
-        ArgDecl
-          member = 'NAME_COLO'
-          type = 'X171'
-          begin = 0
-      begin = 0
-  begin = 0
-Mode
-  name = 'X175.X177'
-  params:
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X180'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X183'
-      begin = 0
-  init:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  deinit = None
-  causalities:
-    []
-  untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'BEGIN'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-  begin = 0
-ForwardDecl
-  kind = 'X192'
-  name = 'X190'
-  cargs:
-    []
-  luau_handle = None
-  begin = 0
-ModeGroup
-  name = 'X194.X196.X198.X200.X202'
-  params:
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X205'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X208'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X211'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X214'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X217'
-      begin = 0
-  modes:
-    []
   has_refs:
     []
   init = None
-  deinit:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  begin = 0
-Causality
-  cause:
-    Cause
-      trigger:
-        Trigger
-          name = 'BEGIN'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-  effects:
-    Spawn
-      name = 'X226.X228'
-      args:
-        Arg
-          value:
-            Luau
-              text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          is_luau = True
-          begin = 0
-        Arg
-          value = '"s"'
-          is_luau = False
-          begin = 0
-        Arg
-          value:
-            Luau
-              text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          is_luau = True
-          begin = 0
-        Arg
-          value = '1'
-          is_luau = False
-          begin = 0
-        Arg
-          value = '"s"'
-          is_luau = False
-          begin = 0
-      has_parens = True
-      in_container = 'X239.X241.X243.X245'
-      luau_handle:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.LVALUE: 'lvalue'>
-          begin = 0
-      begin = 0
-    Unspawn
-      name = 'X249.X251'
-      begin = 0
-    ModeArming
-      name = 'X254.X256.X258.X260'
-      args:
-        Arg
-          value:
-            Luau
-              text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          is_luau = True
-          begin = 0
-        Arg
-          value = '"s"'
-          is_luau = False
-          begin = 0
-        Arg
-          value = '1'
-          is_luau = False
-          begin = 0
-      begin = 0
-  begin = 0
-Include
-  filename = 's'
-  mount = 'X270.X272'
-  begin = 0
-ClockDef
-  name = 'X274'
-  period = '1'
-  begin = 0
-StateMachine
-  name = 'X277.X279'
-  params:
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X282'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X285'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X288'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X291'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X294'
-      begin = 0
-  states:
-    []
-  has_refs:
-    []
-  default:
-    StateMachineModeRef
-      sm_name = 'X298'
-      mode_name = 'VOID'
-      is_void = True
-      begin = 0
-  init:
-    Luau
-      text = '{ x{ y } }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
   deinit:
     Luau
       text = '{ x }'

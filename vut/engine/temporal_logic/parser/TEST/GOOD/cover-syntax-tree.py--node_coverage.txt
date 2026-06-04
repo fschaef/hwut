@@ -19,7 +19,6 @@ SUCCESS: ModeGroup is produced by a grammar rule
 SUCCESS: Mutation is produced by a grammar rule
 SUCCESS: Namespace is produced by a grammar rule
 SUCCESS: ReportString is produced by a grammar rule
-SUCCESS: Singleton is produced by a grammar rule
 SUCCESS: Spawn is produced by a grammar rule
 SUCCESS: State is produced by a grammar rule
 SUCCESS: StateMachine is produced by a grammar rule

@@ -32,7 +32,6 @@
 'mode_group:'    -> KW_MGROUP
 'on:'            -> KW_ON
 'open:'          -> KW_OPEN
-'singleton:'     -> KW_SINGLETON
 'state:'         -> KW_STATE
 'state_machine:' -> KW_SM
 'switched'       -> KW_SWITCHED

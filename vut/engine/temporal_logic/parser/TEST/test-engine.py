@@ -103,8 +103,8 @@ def run_ll1_conflict():
     banner("two ALT branches sharing a FIRST token")
     bad = {
         "<top-level>": (ALT, "<a>", "<b>"),
-        "<a>":         (SEQ, "#ID", "end"),
-        "<b>":         (SEQ, "#ID", "on"),
+        "<a>":         (SEQ, "#ID", ":end"),
+        "<b>":         (SEQ, "#ID", "on:"),
     }
     actions = {"<top-level>": None, "<a>": None, "<b>": None}
     try:

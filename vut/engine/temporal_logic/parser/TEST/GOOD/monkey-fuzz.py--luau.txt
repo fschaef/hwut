@@ -1,64 +1,13 @@
 === monkey: luau ===
-tokens synthesized: 42
+tokens synthesized: 111
 top-level items:    6
 diagnostics:        none
-## rules visited:      ((17)) / ((43))
-## node types built:   ((11)) / ((24))
+## rules visited:      ((30)) / ((42))
+## node types built:   ((16)) / ((23))
 
 -- AST --
-EventDef
-  name = 'X2'
-  params:
-    []
-  begin = 0
-Singleton
-  name = 'X6.X8.X10'
-  args:
-    []
-  begin = 0
-Include
-  filename = 's'
-  mount = 'X14.X16'
-  begin = 0
-Mode
-  name = 'X18.X20'
-  params:
-    []
-  init = None
-  deinit = None
-  causalities:
-    Causality
-      cause:
-        Cause
-          trigger:
-            Trigger
-              name = 'ANY'
-              is_keyword = True
-              begin = 0
-          guard:
-            Luau
-              text = '{ x{ y }{ y } }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
-          begin = 0
-      effects:
-        ReportString
-          text = '"s"'
-          begin = 0
-      begin = 0
-  untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'X29'
-          is_keyword = False
-          begin = 0
-      guard:
-        Luau
-          text = '{ x{ y }{ y } }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
+Causality
+  cause:
     Cause
       trigger:
         Trigger
@@ -67,19 +16,185 @@ Mode
           begin = 0
       guard:
         Luau
-          text = '{ x{ y }{ y }{ y }{ y }{ y } }'
+          text = '{ x{ y }{ y }{ y }{ y }{ y }{ y } }'
           role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+  effects:
+    Mutation
+      body:
+        Luau
+          text = '{ x{ y }{ y }{ y }{ y }{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+    EventSpec
+      name = 'X6.X8'
+      args:
+        []
+      begin = 0
+  begin = 0
+StateMachine
+  name = 'X12.X14'
+  params:
+    []
+  states:
+    []
+  has_refs:
+    []
+  default:
+    StateMachineModeRef
+      sm_name = 'X16'
+      mode_name = 'X18'
+      is_void = False
+      begin = 0
+  init = None
+  deinit = None
+  begin = 0
+Mode
+  name = 'X21.X23'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X26'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X29'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X32'
+      begin = 0
+  init:
+    Luau
+      text = '{ x{ y }{ y }{ y }{ y }{ y }{ y } }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit = None
+  causalities:
+    []
+  untils:
+    Cause
+      trigger:
+        Trigger
+          name = 'END'
+          is_keyword = True
+          begin = 0
+      guard = None
+      begin = 0
+  begin = 0
+Namespace
+  name = 'X38.X40'
+  items:
+    ModeGroup
+      name = 'X42.X44.X46'
+      params:
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X49'
+          begin = 0
+        ArgDecl
+          member = 'NAME_COLO'
+          type = 'X52'
+          begin = 0
+      modes:
+        []
+      has_refs:
+        []
+      init:
+        Luau
+          text = '{ x{ y }{ y }{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      deinit = None
+      begin = 0
+  begin = 0
+Namespace
+  name = 'X58.X60.X62'
+  items:
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard = None
+          begin = 0
+      effects:
+        ModeArming
+          name = 'X67.X69'
+          args:
+            []
+          begin = 0
+        Unspawn
+          name = 'X74.X76'
+          begin = 0
+      begin = 0
+    Mode
+      name = 'X78.X80'
+      params:
+        []
+      init = None
+      deinit:
+        Luau
+          text = '{ x{ y }{ y }{ y }{ y }{ y }{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X84'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            Spawn
+              name = 'X87.X89'
+              args:
+                []
+              has_parens = True
+              in_container = None
+              luau_handle = None
+              begin = 0
+          begin = 0
+      untils:
+        Cause
+          trigger:
+            Trigger
+              name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard = None
+          begin = 0
+        Cause
+          trigger:
+            Trigger
+              name = 'END'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
           begin = 0
       begin = 0
   begin = 0
 ForwardDecl
-  kind = 'X36'
-  name = 'X34'
+  kind = 'container'
+  name = 'X99'
   cargs:
     []
-  luau_handle = None
-  begin = 0
-ClockDef
-  name = 'X38'
-  period = '1'
+  luau_handle:
+    Luau
+      text = '{ x{ y } }'
+      role = <Role.LVALUE: 'lvalue'>
+      begin = 0
   begin = 0

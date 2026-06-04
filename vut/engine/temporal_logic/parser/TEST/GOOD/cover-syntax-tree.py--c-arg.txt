@@ -1,0 +1,9 @@
+=== <c-arg> ===
+
+-- alternative 0 --
+   input: X
+'X'
+
+-- alternative 1 --
+   input: 1
+'1'

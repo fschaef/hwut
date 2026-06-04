@@ -1,55 +1,13 @@
 === monkey: balanced ===
-tokens synthesized: 43
+tokens synthesized: 58
 top-level items:    5
 diagnostics:        none
-## rules visited:      ((18)) / ((43))
-## node types built:   ((9)) / ((24))
+## rules visited:      ((20)) / ((42))
+## node types built:   ((10)) / ((23))
 
 -- AST --
-EventDef
-  name = 'X2'
-  params:
-    []
-  begin = 0
-Mode
-  name = 'X6.X8.X10'
-  params:
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X13'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X16'
-      begin = 0
-    ArgDecl
-      member = 'NAME_COLO'
-      type = 'X19'
-      begin = 0
-  init = None
-  deinit:
-    Luau
-      text = '{ x{ y }{ y } }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  causalities:
-    []
-  untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'BEGIN'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-  begin = 0
 StateMachine
-  name = 'X26.X28'
+  name = 'X2.X4'
   params:
     []
   states:
@@ -57,20 +15,20 @@ StateMachine
   has_refs:
     []
   default = None
-  init = None
-  deinit:
+  init:
     Luau
-      text = '{ x{ y } }'
+      text = '{ x{ y }{ y } }'
       role = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
+  deinit = None
   begin = 0
-ModeGroup
-  name = 'X32.X34'
+Include
+  filename = 's'
+  mount = 'X10.X12'
+  begin = 0
+Mode
+  name = 'X14.X16'
   params:
-    []
-  modes:
-    []
-  has_refs:
     []
   init:
     Luau
@@ -78,8 +36,83 @@ ModeGroup
       role = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   deinit = None
+  causalities:
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'X19'
+              is_keyword = False
+              begin = 0
+          guard = None
+          begin = 0
+      effects:
+        ModeArming
+          name = 'X22.X24.X26'
+          args:
+            []
+          begin = 0
+      begin = 0
+  untils:
+    Cause
+      trigger:
+        Trigger
+          name = 'END'
+          is_keyword = True
+          begin = 0
+      guard = None
+      begin = 0
   begin = 0
 ClockDef
-  name = 'X38'
+  name = 'X32'
   period = '1'
+  begin = 0
+ModeGroup
+  name = 'X35.X37'
+  params:
+    []
+  modes:
+    Mode
+      name = 'X42.X44'
+      params:
+        []
+      init = None
+      deinit:
+        Luau
+          text = '{ x{ y }{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      causalities:
+        []
+      untils:
+        Cause
+          trigger:
+            Trigger
+              name = 'BEGIN'
+              is_keyword = True
+              begin = 0
+          guard = None
+          begin = 0
+        Cause
+          trigger:
+            Trigger
+              name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      begin = 0
+  has_refs:
+    []
+  init:
+    Luau
+      text = '{ x{ y }{ y } }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit = None
   begin = 0

@@ -30,7 +30,7 @@ class TopLevel(ABC):
     EventDef and ClockDef derive from it, so 'RuleFile.items' is typed as list[TopLevel] and
     only these node kinds are admissible there. A Namespace nests further
     TopLevel items (Causality, Mode, ModeGroup, StateMachine, ForwardDecl,
-    Singleton, EventDef, ClockDef, Include, Namespace). Carries no fields; the concrete
+    EventDef, ClockDef, Include, Namespace). Carries no fields; the concrete
     nodes hold their own.
     """
     pass
@@ -104,22 +104,22 @@ class ModeArming:
 
 @dataclass(frozen=True)
 class Spawn:
-    """An aggregate-spawning effect: '+! name [ (args) ] [ in {lvalue} ]'.
+    """An aggregate-spawning effect: '+! name (args) [ in: C ] [ as: {lvalue} ]'.
 
-    Targets a <mode-group> or <state-machine> type. Three shapes, distinguished
-    by which fields are set:
-      - singleton re-init: 'has_parens' False, 'container' None -- the bare type
-        name, admissible only for a 'singleton :'-declared type; re-inits the
-        one declared instance with its declaration-fixed arguments.
-      - default-container spawn: 'has_parens' True, 'container' None -- offers a
-        fresh instance to the per-kind default container.
-      - container spawn: 'in_container' names a declared container ('+! x in: C')
-        the fresh instance is caught by; resolved in pass 2 to an 'is: container'
-        declaration.
-    'args' is empty for the singleton form (parentheses are a syntax error
-    there). 'in_container' is the container's rule-file name (str) or None.
-    'luau_handle' is the optional 'as: { ... }' lvalue span (a Luau node) that
-    names the spawned instance in the script world, or None.
+    Targets a <mode-group> or <state-machine> type. One shape with two
+    independent optional modifiers:
+      - 'args' is the instantiation argument list; the parentheses are MANDATORY
+        (a bare '+! name' is rejected by the grammar). 'args' is empty when the
+        type takes none ('+! name()').
+      - 'in_container' names a declared container ('+! x in: C') the fresh
+        instance is caught by, or None for the per-kind default container;
+        resolved in pass 2 to an 'is: container' declaration.
+      - 'luau_handle' is the optional 'as: { ... }' lvalue span (a Luau node):
+        the key/handle the container holds the instance under (a dict
+        container's key), or None.
+    'has_parens' is now always True for a parsed node (the parens are mandatory);
+    it is retained for the builder and downstream and no longer discriminates a
+    shape.
     """
     name:        str
     args:        List[Arg]
@@ -312,20 +312,6 @@ class ModeGroup(TopLevel):
 
 
 @dataclass(frozen=True)
-class Singleton(TopLevel):
-    """A singleton declaration: 'singleton : name [ (arg-decls-as-args) ]'.
-
-    Declares an aggregate type to have exactly one instance, identified by
-    'name', with the argument list fixed here. The type is thereafter spawned
-    only by the bracketless '+! name' re-init form. 'args' carries the fixed
-    arguments (an empty list when none were given).
-    """
-    name:  str
-    args:  List[Arg]
-    begin: int
-
-
-@dataclass(frozen=True)
 class EventDef(TopLevel):
     """An event declaration: 'event name(arg-decls)'."""
     name:   str
@@ -376,7 +362,7 @@ class RuleFile:
     """The whole parsed rule file: an ordered list of top-level constructs.
 
     'items' holds Namespace, Include, Causality, Mode, ModeGroup, StateMachine,
-    ForwardDecl, Singleton, EventDef and ClockDef nodes in source order. A mutable container
+    ForwardDecl, EventDef and ClockDef nodes in source order. A mutable container
     so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)

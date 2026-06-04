@@ -55,7 +55,7 @@ GRAMMAR = {
     # top-level alternation until end-of-file.
     "<top-level>":
         (ALT, "<namespace>", "<include>", "<causality>", "<mode>",
-                 "<mode-group>", "<state-machine>", "<singleton-def>",
+                 "<mode-group>", "<state-machine>",
                  "<event-def>", "<clock-def>", "<forward-decl>"),
 
     # <include>: 'include' <string> 'as' <dotted-name>
@@ -114,25 +114,20 @@ GRAMMAR = {
     "<mutation>":
         "{luau:STATEMENT_BLOCK}",
 
-    # <spawn>: '+!' <name> [ '(' [ <arg-list> ] ')' ] [ 'in' {luau:EXPRESSION} ]
-    # Three forms, decided by shape (LL(1): '(' , 'in', and the effect-follower
-    # are pairwise-distinct lookaheads):
-    #   bare <name>            -> singleton re-init (no parens, no container)
-    #   <name> '(' ... ')'     -> default-container spawn
-    #   ... 'in' {luau-lvalue} -> container spawn (lvalue is opaque Luau)
-    # Whether the parentheses are legal (singleton => forbidden) is a pass-2
-    # check, not a grammar one; the grammar accepts both shapes.
+    # <spawn>: '+!' <name> '(' [ <arg-list> ] ')' [ 'in:' <name> ]
+    #                                              [ 'as:' {luau:LVALUE} ]
+    # One shape with two independent optional modifiers. The arg-parens are
+    # MANDATORY -- the arg-list is how the instance is instantiated; a bare
+    # '+! <name>' with no parens is a SYNTAX ERROR (no parameterless spawn form;
+    # the former singleton re-init is gone). After the mandatory arg-parens the
+    # lookaheads 'in:', 'as:', and the effect-follower are pairwise-distinct, so
+    # the two optional modifiers stay LL(1).
+    #   'in:' <name>          -> which container catches it (absent: default)
+    #   'as:' {luau-lvalue}   -> the key/handle it is held under (opaque Luau)
     "<spawn>":
-        (SEQ, "+!", "<dotted-name>", (OPT, "<arg-parens>"),
+        (SEQ, "+!", "<dotted-name>", "<arg-parens>",
                  (OPT, (SEQ, "in:", "<dotted-name>")),
                  (OPT, (SEQ, "as:", "{luau:LVALUE}"))),
-
-    # <singleton-def>: 'singleton' ':' <name> [ '(' [ <arg-list> ] ')' ]
-    # A top-level declaration fixing one instance of an aggregate type, named
-    # and argument-bound here; spawned thereafter only by '+! <name>'.
-    # FIRST = {singleton}, disjoint from the other top-level starters.
-    "<singleton-def>":
-        (SEQ, "singleton:", "<dotted-name>", (OPT, "<arg-parens>")),
 
     # <unspawn>: '-!' <name>
     # Ends an instance's existence. The operand is any reference-by-name (bare
@@ -319,7 +314,6 @@ GRAMMAR = {
 # is the construct's start offset. See parser_engine for the Frame contract.
 # ---------------------------------------------------------------------------
 from . import ast_nodes as ast
-from ..luau.luau_fragment import Role
 
 
 def _build_trigger(frame):
@@ -692,13 +686,14 @@ def _build_mode_group(frame):
 
 
 def _build_spawn(frame):
-    """RETURN: Spawn, an aggregate spawn '+! name [ (args) ] [ in: C ] [ as: {lv} ]'.
+    """RETURN: Spawn, an aggregate spawn '+! name (args) [ in: C ] [ as: {lv} ]'.
 
-    frame.values is the dotted name, then up to three trailing values with
-    silent punctuation ('+!', 'in:', 'as:') dropped: an arg list (a Python list)
-    when the parentheses matched; a str (a dotted-name) when 'in:' named a
-    container; a Luau node when 'as:' gave an lvalue handle. Each is told apart
-    by type, so any may be absent independently.
+    frame.values is the dotted name, then the arg list (a Python list, always
+    present since the parens are mandatory), then up to two trailing values with
+    silent punctuation ('+!', 'in:', 'as:') dropped: a str (a dotted-name) when
+    'in:' named a container; a Luau node when 'as:' gave an lvalue handle. Each
+    trailing value is told apart by type, so either modifier may be absent
+    independently.
     """
     name        = frame.values[0]
     rest        = frame.values[1:]
@@ -709,18 +704,6 @@ def _build_spawn(frame):
     return ast.Spawn(name=name, args=args, has_parens=has_parens,
                      in_container=in_container, luau_handle=luau_handle,
                      begin=frame.begin)
-
-
-def _build_singleton(frame):
-    """RETURN: Singleton, a declaration 'singleton : name [ (args) ]'.
-
-    frame.values = [name] or [name, [Arg, ...]] when the parentheses matched.
-    The 'singleton:' keyword is punctuation.
-    """
-    name = frame.values[0]
-    args = frame.values[1] if (len(frame.values) > 1
-                               and isinstance(frame.values[1], list)) else []
-    return ast.Singleton(name=name, args=args, begin=frame.begin)
 
 
 def _build_unspawn(frame):
@@ -787,7 +770,6 @@ ACTIONS = {
     "<effect>":            None,
     "<mutation>":          _build_mutation,
     "<spawn>":             _build_spawn,
-    "<singleton-def>":     _build_singleton,
     "<unspawn>":           _build_unspawn,
     "<event-spec>":        _build_event_spec,
     "<mode-arming>":       _build_mode_arming,

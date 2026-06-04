@@ -61,7 +61,6 @@ class E_TokenId(Enum):
     KW_OPEN      = auto()   # 'open:'
     KW_INCLUDE   = auto()   # 'include:'
     KW_INTO      = auto()   # 'into:'
-    KW_SINGLETON = auto()   # 'singleton:'
     KW_IN        = auto()   # 'in:'
     KW_DEFAULT   = auto()   # 'default:'
     KW_INIT      = auto()   # 'init:'
@@ -129,7 +128,6 @@ _TOKEN_SPEC = [
     (E_TokenId.KW_OPEN,      r'\bopen:'),
     (E_TokenId.KW_INCLUDE,   r'\binclude:'),
     (E_TokenId.KW_INTO,      r'\binto:'),
-    (E_TokenId.KW_SINGLETON, r'\bsingleton:'),
     (E_TokenId.KW_IN,        r'\bin:'),
     (E_TokenId.KW_DEFAULT,   r'\bdefault:'),
     (E_TokenId.KW_INIT,      r'\binit:'),

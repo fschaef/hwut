@@ -11,12 +11,12 @@ Mutation
   begin = 0
 
 -- alternative 1 --
-   input: +! X . X
+   input: +! X . X ( )
 Spawn
   name = 'X.X'
   args:
     []
-  has_parens = False
+  has_parens = True
   in_container = None
   luau_handle = None
   begin = 0

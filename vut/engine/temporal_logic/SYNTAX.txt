@@ -55,7 +55,6 @@ NOTE:
                      | <mode>
                      | <mode-group>
                      | <state-machine>
-                     | <singleton-def>
                      | <event-def>
                      | <clock-def>
                      | <forward-decl> )
@@ -137,14 +136,12 @@ NOTE:
 
     <spawn>:       <name> [ '(' [ <arg-list> ] ')' ]
                           [ 'in:' <container-name> ] [ 'as:' <luau-lvalue> ]
-                   #  bare <name>, no parens  -> re-init a declared singleton
                    #  <name> '(' ... ')'      -> spawn (fresh instance)
                    #  ... 'in:' <container>   -> caught by a declared container
-                   #  ... 'as:' <luau-lvalue> -> bound to a script-world handle
+                   #  ... 'as:' <luau-lvalue> -> the key/handle it is held under
+                   #                             (a dict container's key => req. container to be dict)
 
     <unspawn>:     <name>                     # bare or dotted; ends existence
-
-    <singleton-def>:  'singleton: ' <name> [ '(' [ <arg-list> ] ')' ]
 
     ## A name may be DECLARED with its kind before its definition (the (B.1)
     ## gate of the (A)/(B) forward-reference rule). 'has:' does this inside an
@@ -298,8 +295,7 @@ appears as a general <trigger>.
          emit an event:      => EVENT(arg = ...)
          arm a mode         => !  MODE(arg = ...)
          spawn (default):    => +! STATE_MACHINE(arg = ...)
-         spawn into container:=> +! STATE_MACHINE(arg = ...) in { sprite.bin }
-         re-init a singleton => +! THE_ONLY_SM
+         spawn into container:=> +! STATE_MACHINE(arg = ...) in { sprite_db } as: {"ghost"}
          end existence:       => -! STATE_MACHINE
          report a line:      => "text {with} interpolation"
          mutate state       => { vehicle.speed = 0 }
@@ -350,52 +346,39 @@ appears as a general <trigger>.
 
 <spawn>
     constructs an aggregate instance -- a <mode-group> or a <state-machine> --
-    with the verb '+!'. The aggregate-type name is literal. Three forms,
-    distinguished by shape:
+    with the verb '+!'. The aggregate-type name is literal. One shape, with two
+    independent optional modifiers:
 
-    1. SINGLETON RE-INIT -- the bare type name, NO parentheses:
+         => +! SM_TRAFFIC(lane = 2) [ in: <container> ] [ as: { <lvalue> } ]
 
-         => +! THE_ONLY_SM
+    THE ARGUMENT LIST IS MANDATORY -- it is how the instance is instantiated.
+    The parentheses are required; the list inside may be empty for a type that
+    takes no arguments ('+! SM_TRAFFIC()'). A bare type name with no parentheses
+    is a SYNTAX ERROR -- there is no parameterless spawn form.
 
-       Admissible only for a type declared with 'singleton: ' (see
-       <singleton-def>). It re-initialises the one declared instance with the
-       argument list fixed at the declaration site. Parentheses here are a
-       SYNTAX ERROR: a singleton carries no per-spawn arguments.
+    'in:' -- WHICH CONTAINER catches the instance. Absent, the instance is
+       offered to the per-kind DEFAULT container, which accepts it unless one of
+       identical type and identical parameterisation is already present, in
+       which case the spawn is the same silent no-op as a duplicate
+       <mode-arming> (identity = parameters, as for modes). Present, the
+       instance is offered to the named container instead.
 
-    2. DEFAULT-CONTAINER SPAWN -- the type name WITH parentheses:
+    'as:' -- THE KEY / HANDLE the container holds the instance under. For a dict
+       container this is the key; generally it is the script-world handle naming
+       the instance. The lvalue is opaque Luau: the rule-file parser does not
+       resolve it.
 
-         => +! SM_TRAFFIC(lane = 2)
-
-       Constructs an instance and offers it to the per-kind DEFAULT container.
-       The default container accepts the instance unless one of identical type
-       and identical parameterisation is already present, in which case the
-       spawn is the same silent no-op as a duplicate <mode-arming> (identity =
-       parameters, as for modes).
-
-    3. CONTAINER SPAWN -- 'in <luau-lvalue>':
-
-         => +! SM_TRAFFIC(lane = 2) in { vehicle.sprite_bin }
-
-       Constructs an instance and offers it to the container denoted by the
-       Luau lvalue in '{ }'. The lvalue is opaque Luau: the rule-file parser
-       does not resolve it, and whether it denotes a container is a run-time
-       fact. A container holds zero, one, or many instances depending on its
-       kind (README, container protocol).
+         => +! SM_TRAFFIC(lane = 2) in: sprite_bin as: { vehicle.lead }
 
     Whether an offered instance is admitted is the CONTAINER's decision, taken
     under a mutex; a rejected offer leaves no instance and runs no 'init'. The
     type name and any parenthesised argument names are literal; only argument
-    values and the '{ }' lvalue may be Luau.
+    values and the 'as:' lvalue may be Luau.
 
-<singleton-def>
-    declares an aggregate type to be a singleton: one instance, identity by
-    declared name, arguments fixed at the declaration:
+    SINGLE-INSTANCE there is no dedicated construct. Spawn the type once, 
+    at BEGIN, and bind it to a fixed handle:
 
-      singleton: THE_ONLY_SM(quantum = 5)
-
-    Referred to thereafter only by the bracketless '+! THE_ONLY_SM' re-init
-    form (form 1 of <spawn>). The declaration binds the argument list once; the
-    spawn site carries none.
+         on: BEGIN => +! SM_TRAFFIC(lane = 2) as: { the_only_traffic }
 
 <unspawn>
     ends the existence of an instance with the verb '-!'. The operand is a
@@ -793,10 +776,10 @@ marks where the last member -- and the group -- closes.
         has: GLOW
     :end
 
-Both aggregates are spawned as an effect with '+!' (see <spawn>): the
-bracketless singleton re-init, the default-container form, or the
-'in <luau-lvalue>' container form. An instance's existence is ended with '-!'
-(see <unspawn>).
+Both aggregates are spawned as an effect with '+!' (see <spawn>): the type name
+with its mandatory argument list, optionally directed to a named container with
+'in:' and keyed with 'as:'. An instance's existence is ended with '-!' (see
+<unspawn>).
 
 
 (A.2.7) Details on Namespaces
@@ -811,8 +794,7 @@ The body is any run of top-level constructs -- causalities, modes, aggregates,
 event and clock definitions, and further namespaces. Nesting is unrestricted in
 depth. There are several independent namespaces (no single global flat space);
 names declared inside a namespace are restricted to the scope in which they are
-defined. The names of declared singletons are likewise scoped to the namespace
-in which they are defined.
+defined.
 
 The dotted name opens several levels at once, so a deep scope needs one 'open',
 not one per level. This:
@@ -886,11 +868,13 @@ event in the event trace.
 'on: BEGIN' and 'on: END' handlers are special in that they:
 
   -- do not allow for a <guard>
-  -- cannot trigger events (no '=>' allowed)
-  -- only accept Luau code as <effect>
+  -- cannot EMIT events (no <event-spec> effect): they sit before the first and
+     after the last trace event, so emitting one would inject an event outside
+     the trace's own timeline. Other effects are fine -- spawn ('+!'), unspawn
+     ('-!'), mode-arming, mutation, and Luau setup/teardown.
 
 The 'on: BEGIN' handler defines the classes whose instances populate the object
-space, constructs the singleton instances, sets their initial state, and
+space, brings up the single-instance aggregates, sets their initial state, and
 declares tracer coverage for the events that need it.
 
     on: BEGIN => {
@@ -900,7 +884,7 @@ declares tracer coverage for the events that need it.
             self.damaged = false
         end)
 
-        -- Construct the singleton
+        -- Construct a one-off Luau object
         vehicle = Vehicle()
 
         -- Declare tracer coverage

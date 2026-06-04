@@ -1,50 +1,131 @@
 === monkey: states ===
-tokens synthesized: 115
+tokens synthesized: 132
 top-level items:    6
 diagnostics:        none
-## rules visited:      ((33)) / ((43))
-## node types built:   ((18)) / ((24))
+## rules visited:      ((32)) / ((42))
+## node types built:   ((19)) / ((23))
 
 -- AST --
-Include
-  filename = 's'
-  mount = 'X4.X6'
+Namespace
+  name = 'X2.X4'
+  items:
+    ModeGroup
+      name = 'X6.X8.X10'
+      params:
+        []
+      modes:
+        []
+      has_refs:
+        HasRef
+          aggregate = None
+          member = 'X13'
+          is_void = False
+          begin = 0
+      init:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      deinit:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard = None
+          begin = 0
+      effects:
+        Unspawn
+          name = 'X20.X22.X24.X26'
+          begin = 0
+        ReportString
+          text = '"s"'
+          begin = 0
+        ModeArming
+          name = 'X31.X33'
+          args:
+            []
+          begin = 0
+        Mutation
+          body:
+            Luau
+              text = '{ x }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          begin = 0
+      begin = 0
+    ClockDef
+      name = 'X38'
+      period = '1'
+      begin = 0
   begin = 0
-ModeGroup
-  name = 'X8.X10.X12.X14.X16'
+StateMachine
+  name = 'X42.X44.X46.X48'
   params:
-    []
-  modes:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X51'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X54'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X57'
+      begin = 0
+  states:
     []
   has_refs:
     HasRef
-      aggregate = None
-      member = 'X21'
+      aggregate = 'X61'
+      member = 'X63'
       is_void = False
       begin = 0
-  init:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
+  default = None
+  init = None
   deinit:
     Luau
       text = '{ x{ y } }'
       role = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
+EventDef
+  name = 'X66'
+  params:
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X69'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X72'
+      begin = 0
+    ArgDecl
+      member = 'NAME_COLO'
+      type = 'X75'
+      begin = 0
+  begin = 0
 Mode
-  name = 'X25.X27.X29'
+  name = 'X78.X80.X82.X84'
   params:
     []
   init:
     Luau
-      text = '{ x }'
+      text = '{ x{ y } }'
       role = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   deinit:
     Luau
-      text = '{ x }'
+      text = '{ x{ y } }'
       role = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   causalities:
@@ -53,86 +134,34 @@ Mode
         Cause
           trigger:
             Trigger
-              name = 'BEGIN'
+              name = 'END'
               is_keyword = True
               begin = 0
-          guard:
-            Luau
-              text = '{ x }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
+          guard = None
           begin = 0
       effects:
-        ReportString
-          text = '"s"'
-          begin = 0
-      begin = 0
-    Causality
-      cause:
-        Cause
-          trigger:
-            Trigger
-              name = 'X38'
-              is_keyword = False
-              begin = 0
-          guard:
-            Luau
-              text = '{ x }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
-          begin = 0
-      effects:
-        Mutation
-          body:
+        Spawn
+          name = 'X92.X94'
+          args:
+            []
+          has_parens = True
+          in_container = 'X98.X100.X102.X104'
+          luau_handle:
             Luau
               text = '{ x{ y } }'
-              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              role = <Role.LVALUE: 'lvalue'>
               begin = 0
-          begin = 0
-        Spawn
-          name = 'X43.X45.X47.X49.X51'
-          args:
-            Arg
-              value = '"s"'
-              is_luau = False
-              begin = 0
-            Arg
-              value:
-                Luau
-                  text = '{ x }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              is_luau = True
-              begin = 0
-          has_parens = True
-          in_container = 'X57.X59.X61'
-          luau_handle = None
           begin = 0
       begin = 0
   untils:
     Cause
       trigger:
         Trigger
-          name = 'ANY'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-    Cause
-      trigger:
-        Trigger
-          name = 'END'
-          is_keyword = True
+          name = 'X108'
+          is_keyword = False
           begin = 0
       guard = None
       begin = 0
-  begin = 0
-Causality
-  cause:
     Cause
       trigger:
         Trigger
@@ -141,46 +170,34 @@ Causality
           begin = 0
       guard = None
       begin = 0
-  effects:
-    ModeArming
-      name = 'X71.X73'
-      args:
-        []
+    Cause
+      trigger:
+        Trigger
+          name = 'END'
+          is_keyword = True
+          begin = 0
+      guard:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+    Cause
+      trigger:
+        Trigger
+          name = 'ANY'
+          is_keyword = True
+          begin = 0
+      guard = None
       begin = 0
   begin = 0
-Namespace
-  name = 'X77.X79.X81'
-  items:
-    StateMachine
-      name = 'X83.X85.X87.X89.X91'
-      params:
-        []
-      states:
-        []
-      has_refs:
-        []
-      default:
-        StateMachineModeRef
-          sm_name = 'X94'
-          mode_name = 'VOID'
-          is_void = True
-          begin = 0
-      init = None
-      deinit:
-        Luau
-          text = '{ x }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      begin = 0
-    EventDef
-      name = 'X99'
-      params:
-        []
-      begin = 0
+Include
+  filename = 's'
+  mount = 'X119.X121'
   begin = 0
 ForwardDecl
-  kind = 'X105'
-  name = 'X103'
+  kind = 'X124'
+  name = 'X122'
   cargs:
     []
   luau_handle = None

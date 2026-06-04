@@ -1,34 +1,34 @@
 === <spawn> ===
 
 -- 0x --
-   input: +! X
+   input: +! X ( )
 Spawn
   name = 'X'
   args:
     []
-  has_parens = False
+  has_parens = True
   in_container = None
   luau_handle = None
   begin = 0
 
 -- 1x --
-   input: +! X . X
+   input: +! X . X ( )
 Spawn
   name = 'X.X'
   args:
     []
-  has_parens = False
+  has_parens = True
   in_container = None
   luau_handle = None
   begin = 0
 
 -- 2x --
-   input: +! X . X . X
+   input: +! X . X . X ( )
 Spawn
   name = 'X.X.X'
   args:
     []
-  has_parens = False
+  has_parens = True
   in_container = None
   luau_handle = None
   begin = 0
