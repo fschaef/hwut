@@ -78,8 +78,11 @@ class Arg:
 
     Args are positional ('=' naming is retired from the rule-file plane; any
     keying lives inside the Luau '{ ... }' value). 'value' is the rvalue: a
-    NUMBER/STRING lexeme carried as text, or an EXPRESSION Luau span. 'is_luau'
-    True iff 'value' is a Luau span rather than a literal lexeme.
+    NUMBER/STRING/bare-identifier lexeme carried as text, or an EXPRESSION Luau
+    span. 'is_luau' True iff 'value' is a Luau span rather than a literal lexeme.
+    A bare identifier (e.g. a container type-parameter 'dict') carries as text
+    like a literal, indistinguishable here from a stringy value; its meaning is
+    a pass-2 concern.
     """
     value:   object          # str (number/string literal) | Luau
     is_luau: bool
@@ -244,21 +247,37 @@ class HasRef:
 
 @dataclass(frozen=True)
 class ForwardDecl(TopLevel):
-    """A '<name> is: <kind>' forward declaration: name and kind, no body.
+    """A '<name> [signature] is: <kind>' forward declaration: name, kind, body.
 
     Satisfies the (B.1) declare-by-name-and-type gate of the (A)/(B) forward-
     reference rule; the matching definition follows later in the same scope
     (B.2). 'kind' is one of 'mode', 'mode_group', 'state_machine', 'container'.
-    The static kinds carry no parameters and no body -- the definition site
-    carries those. 'container' is the kind that reaches into Luau: 'cargs' holds
-    its configuration arguments (shape/size/access, opaque to the static layer)
-    and 'luau_handle' is the optional 'as: { ... }' lvalue span naming where the
-    container lives in the script world (a Luau node, or None). The scope-level
-    counterpart of HasRef ('has:'), which declares an aggregate member and lets
-    the enclosing aggregate imply the kind.
+
+    Two bracket shapes are kept strictly apart, by type and by meaning:
+
+      'signature' -- the ROUND-bracket instantiation signature, a list of
+        ArgDecl (the same 'member : type ; ...' an aggregate definition
+        declares). It says HOW a later '+!' instantiates the type, and is what
+        the engine needs to instantiate when only the declaration is in scope.
+        MANDATORY on the spawnable kinds (mode_group, state_machine), absent on
+        'mode' (armed, not instantiated) and 'container' (parameterised, not
+        instantiated) -- a kind-vs-signature rule checked in pass 2. Empty list
+        when the name carried no parentheses.
+
+      'cargs' -- the ANGLE-bracket TYPE PARAMETERS of a 'container' kind, a list
+        of Arg (shape/size/access words, opaque to the static layer). It says
+        WHAT KIND of container, never how to instantiate one; a container has no
+        constructor signature. Empty for the static kinds.
+
+    Round = how to instantiate; angle = what kind. 'luau_handle' is the optional
+    'as: { ... }' lvalue span naming where a container lives in the script world
+    (a Luau node, or None). The scope-level counterpart of HasRef ('has:'),
+    which declares an aggregate member and lets the enclosing aggregate imply
+    the kind.
     """
     kind:        str
     name:        str
+    signature:   List["ArgDecl"]
     cargs:       List["Arg"]
     luau_handle: Optional["Luau"]
     begin:       int

@@ -160,9 +160,11 @@ GRAMMAR = {
     "<arg>":
         "<rvalue>",
 
-    # <rvalue>: <number> | <istring> | '{' <luau-expr> '}'
+    # <rvalue>: <number> | <istring> | <identifier> | '{' <luau-expr> '}'
+    # Bare #ID admitted (container type-param etc.); LL(1) safe -- every
+    # <arg-list> is bracket-introduced. See SYNTAX.txt <rvalue>.
     "<rvalue>":
-        (ALT, TOK_NUMBER, TOK_STRING, "{luau:EXPRESSION}"),
+        (ALT, TOK_NUMBER, TOK_STRING, TOK_ID, "{luau:EXPRESSION}"),
 
     # <mode>: 'mode' <name> [ '(' <arg-decl-list> ')' ] ':'
     #             <mode-elm>+ ( 'until' <cause> )+
@@ -204,38 +206,20 @@ GRAMMAR = {
     "<has-ref>":
         (SEQ, "has:", "<member-ref>"),
 
-    # <forward-decl>: <name> 'is:' <fwd-kind>
-    # A scope-level forward declaration: NAME is of the named kind. The static
-    # kinds (mode / mode_group / state_machine) arrive as a bare ID -- they are
-    # no longer keywords, the keyword now being the colon-glued opener 'mode:'
-    # etc. -- so the kind name is validated downstream, not in the grammar.
-    # 'container' is a keyword and carries an arg-list (shape/size/access, all
-    # opaque to the static layer) plus an optional 'as:' Luau-lvalue handle that
-    # names where the container lives in the script world. FIRST(<forward-decl>)
-    # = {ID}, disjoint from every keyword-led top-level branch, so LL(1) holds.
+    # <forward-decl>: <name> [ '(' <arg-decl-list> ')' ] 'is:' <fwd-kind>
+    # Signature reuses <decl-parens>; mandatory-on-spawnable-kinds is a pass-2
+    # check. FIRST = {ID}, disjoint from keyword-led top-level branches.
+    # See SYNTAX.txt <forward-decl>.
     "<forward-decl>":
-        (SEQ, "#ID", "is:", "<fwd-kind>"),
+        (SEQ, "#ID", (OPT, "<decl-parens>"), "is:", "<fwd-kind>"),
 
-    # <fwd-kind>: <static-kind-name> | 'container' <arg-parens> [ 'as:' {luau} ]
-    # A bare ID names a static kind (mode/mode_group/state_machine, checked in
-    # pass 2). 'container' is the one kind that reaches into Luau: its args
-    # configure the container and 'as:' binds it to a script-world lvalue.
+    # <fwd-kind>: <kind-name> | 'container' '<' [<arg-list>] '>' [ 'as:' {luau} ]
+    # Round signature (how to instantiate) vs angle type-params (what kind);
+    # see SYNTAX.txt <fwd-kind>.
     "<fwd-kind>":
         (ALT, TOK_ID,
-              (SEQ, "container", "<container-args>",
+              (SEQ, "container", "<", (OPT, "<arg-list>"), ">",
                     (OPT, (SEQ, "as:", "{luau:LVALUE}")))),
-
-    # <container-args>: '(' [ <c-arg> (',' <c-arg>)* ] ')'
-    # The container's configuration (shape word, size, access flags) -- bare
-    # identifiers and numbers, opaque to the static layer, interpreted by the
-    # resolver. Distinct from <arg-parens> (rvalues): a shape like 'dict' is a
-    # config word, not a value.
-    "<container-args>":
-        (SEQ, "(", (OPT, (SEQ, "<c-arg>", (STAR, (SEQ, ",", "<c-arg>")))), ")"),
-
-    # <c-arg>: <identifier> | <number>
-    "<c-arg>":
-        (ALT, TOK_ID, TOK_NUMBER),
 
     # <member-ref>: <reactor-name> | <aggregate-name> '.' <reactor-name>
     #             | <aggregate-name> '.' 'VOID'   (a bare or qualified name)
@@ -590,37 +574,33 @@ def _build_has_ref(frame):
 
 
 def _build_forward_decl(frame):
-    """RETURN: ForwardDecl, a '<name> is: <kind>' scope-level declaration.
+    """RETURN: ForwardDecl, a '<name> [signature] is: <kind>' scope-level decl.
 
-    frame.values = [name_tok, kind_dict]; 'is:' is silent. 'kind_dict' is the
-    dict produced by <fwd-kind>: {'kind', 'cargs', 'luau_handle'}. 'begin' is
-    the name offset (the construct starts at the name).
+    frame.values = [name_tok, (signature?), kind_dict]; 'is:' is silent and the
+    round-bracket signature is optional. 'signature' is the <decl-parens> list
+    of ArgDecls when present, else []. 'kind_dict' comes from <fwd-kind>: keys
+    'kind', 'cargs', 'luau_handle'. 'begin' is the name offset. Signature vs
+    type-params, and the mandatory-on-spawnable-kinds rule: see SYNTAX.txt.
     """
-    name_tok, kind = frame.values
+    name_tok  = frame.values[0]
+    kind      = frame.values[-1]
+    middle    = frame.values[1:-1]
+    signature = middle[0] if (middle and isinstance(middle[0], list)) else []
     return ast.ForwardDecl(kind=kind["kind"], name=name_tok.text,
+                           signature=signature,
                            cargs=kind["cargs"], luau_handle=kind["luau_handle"],
                            begin=name_tok.begin)
-
-
-def _build_container_args(frame):
-    """RETURN: list, the container config args as strings (shape/size/flags)."""
-    return list(frame.values)
-
-
-def _build_c_arg(frame):
-    """RETURN: str, one container config token (identifier or number lexeme)."""
-    return frame.values[0].text
 
 
 def _build_fwd_kind(frame):
     """RETURN: dict, the kind of a forward declaration: keys 'kind', 'cargs',
             'luau_handle'.
 
-    Two shapes reach here. A lone ID token is a static kind (mode / mode_group /
-    state_machine -- validated downstream), with no container args and no Luau
-    handle. The 'container' form (KW_CONTAINER captured) carries an arg list and
-    an optional 'as:' LVALUE Luau span: frame.values = ['container', [Arg,...],
-    maybe Luau].
+    A lone ID token is a static kind ('kind' = its text, no cargs, no handle).
+    The 'container' form (KW_CONTAINER captured) gives frame.values =
+    ['container', [Arg,...], maybe Luau]: 'cargs' the angle-bracket type-params
+    (ordinary <arg>s), 'luau_handle' the optional 'as:' LVALUE span. See
+    SYNTAX.txt <fwd-kind>.
     """
     head = frame.values[0]
     if getattr(head, "kind", None) is not None and head.kind.name == "KW_CONTAINER":
@@ -787,8 +767,6 @@ ACTIONS = {
     "<has-ref>":           _build_has_ref,
     "<forward-decl>":      _build_forward_decl,
     "<fwd-kind>":          _build_fwd_kind,
-    "<container-args>":    _build_container_args,
-    "<c-arg>":             _build_c_arg,
     "<member-ref>":        _build_member_ref,
     "<mode-group>":        _build_mode_group,
     "<mode-group-elm>":    None,

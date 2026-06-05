@@ -101,7 +101,7 @@ def run_tokens():
     show_tokens(tokens)
 
     banner("operators and symbols")
-    tokens, _, _ = drive("=> & , +! -! ! ; . ( ) n:")
+    tokens, _, _ = drive("=> & , +! -! ! ; . ( ) < > n:")
     show_tokens(tokens)
 
     banner("literals and identifiers")

@@ -75,7 +75,7 @@ _SPREAD = [
     'on: X => Honk({ event.hz * 2 }, 5)',
     'on: Boom => +! SmTraffic() in: north => ! Blink()',
     'on: Clear => -! north',
-    'Ghosts is: container(fifo, 64) as: { db.ghosts }',
+    'Ghosts is: container<fifo, 64> as: { db.ghosts }',
 ]
 
 

@@ -37,7 +37,7 @@ OUTPUTS:
   (2) Reporter with accumulated messages from this component.
       
 A name-bearing AST node is one of two kinds. A DEFINITION introduces a name:
-Mode, ModeGroup, StateMachine, Singleton, EventDef, ClockDef, and the member
+Mode, ModeGroup, StateMachine, EventDef, ClockDef, and the member
 State and Mode inside an aggregate. A REFERENCE names an entity defined
 elsewhere: a Trigger names an event, a ModeArming and a Spawn name a type, an
 Unspawn names an instance-or-type, a HasRef and a default name a member. The
@@ -47,60 +47,60 @@ layer collects definitions into the table, then resolves references against it.
 (A) THE SCOPE TREE
 -------------------------------------------------------------------------------
 
-A SCOPE is a named region that owns a set of local names. Scopes nest, so each
-scope except one has a parent; the one without a parent is the ROOT, the
-implicit file-scope region that contains a rule file's top-level items. Every
-construct that brackets declarations opens a child scope: an 'open ... close'
-namespace, a mode group, and a state machine each open one. A mode group and a
-state machine therefore are scopes as well as definitions -- the aggregate is a
-name in its parent scope, and its members are names in the child scope it opens.
-
-A SYMBOL is one definition recorded in a scope. It holds the defined name, the
-AST node that defined it, that node's source offset, and a KIND tag (mode, mode
-group, state machine, event, member, singleton). A scope owns a single map from
-name to symbol. All kinds share that one map, so two definitions of the same
-name in one scope collide regardless of their kinds. The KIND tag is read only
-when a reference is resolved, never when a definition is recorded.
-
-The scope tree mirrors the AST's nesting:
+A SCOPE TREE mirrors the AST's nesting:
 
     ROOT (file scope)
       |
-      |-- world ............... opened by 'open world.europe'
+      |-- world                       ... opened by 'open world.europe'
       |     |
       |     +-- europe
-      |           |-- Traffic ..... a state machine; also a scope
-      |           |     |-- RED ......... member state (symbol in Traffic)
-      |           |     +-- GREEN ....... member state (symbol in Traffic)
-      |           +-- LIGHTS ...... a mode group; also a scope (symbol in europe)
+      |           |-- Traffic         ... a state machine; also a scope
+      |           |     |-- RED       ... member state (symbol in Traffic)
+      |           |     +-- GREEN     ... member state (symbol in Traffic)
+      |           +-- LIGHTS          ... a mode group; also a scope (symbol in europe)
       |
-      +-- SIREN ............... an event (symbol in ROOT)
-      +-- THE_CLOCK ........... a singleton (symbol in ROOT)
+      +-- SIREN                       ... an event (symbol in ROOT)
 
-'open world.europe' nests two levels in one statement; it materializes the
+A SYMBOL: 
+  -- is a definition recorded in a scope
+  -- accessible through 'path of nested scopes' by dotted expressions:
+     such as "world.europe.Traffic.RED"
+  -- contains (name, AST node of definition, type-info, source offset)
+  -- types/kinds are for example 'mode', 'mode_group', 'event', ...
+
+A SCOPE: 
+  -- brackets SYMBOL definitions by 'open:' and ':close' => child scope
+  -- MAINTAINS 1:1 RELATION BETWEEN LOCAL NAMES AND SYMBOLS
+  -- can act as a symbol => ability to nest
+  -- each scope has one parent, except ROOT which has none.
+  -- ROOT is the implicit file scope.
+  -- 'mode_group' and 'state_machine' have one scope implicitly.
+
+TODO - PLACE SOMEWHERE:
+
+The KIND tag is read only when a reference is resolved, never when a definition
+is recorded.
+
+"open: world.europe" nests two levels in one statement; it materializes the
 chain world -> europe and places the namespace's items in europe, the deepest
 link. The path from the root to a symbol, with the symbol's name appended,
-spells the symbol's FULLY-QUALIFIED NAME: 'world.europe.Traffic.RED' names the
-member state RED with nothing left implicit. A name written without that full
-path is a BARE or PARTIALLY-QUALIFIED reference, meaningful only against a
-current scope.
+spells the symbol's FULLY-QUALIFIED NAME: "world.europe.Traffic.RED".
+
+A name written without that full path is a BARE or PARTIALLY-QUALIFIED
+reference, meaningful only against a current scope or its parents.
 
 A spawned aggregate is NOT a definition recorded here. A '+!' spawn names a
 TYPE (resolved as a reference) and, at run time, an instance lives in a
-container; the static layer sees only the type reference and, for a
-'singleton :' declaration, the singleton name as a symbol. Container membership
+container; the static layer sees only the type reference. Container membership
 is a run-time fact (the Luau lvalue of an 'in { ... }' form is opaque), so no
 instance symbol exists in the scope tree.
 
 -------------------------------------------------------------------------------
-(B) BUILDING THE TABLE  --  STACKLESS WALK
+(B) BUILDING THE TABLE  --  WALK THE AST
 -------------------------------------------------------------------------------
 
-The builder turns a RuleFile into a scope tree by one walk over the AST. The
-walk is STACKLESS: it carries its pending work on an explicit heap stack of
-(scope, item) pairs, not on the Python call stack, so build depth is bounded by
-memory, not by the interpreter's recursion limit. The seed is the root scope
-paired with each top-level item.
+The builder turns a RuleFile into a scope tree by one walk over the AST.  The
+seed is the root scope paired with each top-level item.
 
 Each popped pair is dispatched on item kind:
 
@@ -110,19 +110,18 @@ Each popped pair is dispatched on item kind:
     ModeGroup        record the aggregate symbol in the current scope; open its
                      child scope; push (child, member) for each inline member
                      and each has-ref.
-    StateMachine     as ModeGroup; the default ref is held for pass (C).
+    StateMachine     same as ModeGroup; the default ref is held for pass (C).
     Mode (top-level) record the symbol in the current scope; open its child
                      scope for nested members.
     State, Mode      (members) record the member symbol in the aggregate's
                      child scope.
     EventDef         record the event symbol in the current scope.
     ClockDef         record the event symbol in the current scope, kind event.
-    Singleton        record the singleton symbol in the current scope.
     Spawn            defines nothing; the type reference is collected for (C).
     Unspawn          defines nothing; the reference is collected for (C).
     Include          record a pending mount (mount path, file name, offset) on
                      the current scope for pass (D).
-    Causality, ...   reference-only items; collected for pass (C), define
+    Causality        reference-only items; collected for pass (C), define
                      nothing.
 
 Recording a symbol whose name already maps in the target scope is a COLLISION:
@@ -130,24 +129,63 @@ the diagnostic names the entity, the scope, and both source offsets. Unbounded
 namespace nesting builds the way the parser parses it -- the depth that
 overflows a recursive walker passes here.
 
+SIDE NOTE:
+
+The walk is STACKLESS: it carries its pending work on an explicit heap stack of
+(scope, item) pairs, not on the Python call stack, so build depth is bounded by
+memory, not by the interpreter's recursion limit.
+
 -------------------------------------------------------------------------------
 (C) RESOLVING A REFERENCE
 -------------------------------------------------------------------------------
 
-Resolution has two disciplines: WITHIN a scope, the (A)/(B) rule decides whether
-a reference may point at a name not yet fully defined; ACROSS scopes, mounting
-and the closed-scope seal decide what is reachable at all. The within-scope rule
-comes first because it is where most references live.
+The following options hold for the use of names at a location 'LOC':
 
-  THE WITHIN-SCOPE RULE.  A reference target:
-    (A) must either be defined before the reference location; or
-    (B) if it profits from or requires loose referencing, it
-        (B.1) must be declared by name and type -- present in the same scope
-              above the reference; and
-        (B.2) its full definition (body, members' bodies, transitions) must
-              follow later in the same scope (the nesting scope of an
-              aggregate).
+    (NTSD) Name, type, signature and definition established before 'LOC'.
 
+    (N)    Name declared before 'LOC';
+           type must be implicated from context; 
+           signature and definition follows in the exact same scope as 'LOC'.
+           => 'HasRef' AST node (keyword 'has:' in state machine or mode group)
+
+    (NTS)  Name, type and signature declared before 'LOC'; 
+           definition follows in the scope where it is declared.
+           => 'ForwardDecl' AST node
+
+(N)/'HasRef'/'has:':
+
+The only place, where a naked 'N' forward declaration is allowed is in a state
+machine or mode group after the 'has:' keyword. The 'has:' implies that the
+name is of kind 'mode' and the signature and definition follow closely *inside*
+the state machine/mode group scope.
+
+(NTS)/'ForwardDecl'/'is:':
+
+-- mode            "X is: mode"
+
+Declares a mode whose body (its transitions, until-runs) follows in this scope.
+Carries no signature: a mode is armed ('! X'), not instantiated, so there is
+nothing to parametrise at the declaration.
+
+-- mode_group      "X(arglist) is: mode_group"
+-- state_machine   "X(arglist) is: state_machine"
+
+Declares a spawnable aggregate type. Because a spawn ('+! X') is the
+begin-of-life of an instance, the SIGNATURE (the argument list) must be present
+already at the declaration -- it is how the engine knows to instantiate. The
+body (members, transitions, init/deinit) follows in this scope. The signature
+sits on the NAME, left of 'is:'; the kind word stands alone on the right.
+
+-- container       "X is: container<config-parameter-list> [ as: { lvalue } ]"
+				
+Declares a container and awaits NO later body. A container has only a Luau
+materialisation. The '<' '>' brackets indicates the parameters of the type that
+is is associated with (shape, size, access). The optional 'as:' binds the
+container to a script-world lvalue (an opaque Luau span). A '+! ... in: X'
+resolves its container against this declaration; a spawn 'in:' a name that is
+not a declared container is an error.
+
+###########
 The gate for (B) is DECLARED-AND-TYPED: at the reference site the name must
 exist with a known kind, even if its body is still pending. The scope is the
 DEADLINE: a (B.1)-declared name with no (B.2) definition by the scope's close is
@@ -183,13 +221,12 @@ Which entities take (A) and which take (B):
                            state machines impossible. Target declared above
                            (B.1), body and transitions follow (B.2).
     aggregate members      (B). 'has: HUNGER' declares-and-types HUNGER (B.1);
-    (has:, member          its definition may follow in the aggregate's nesting
-    states/modes)          scope (B.2).
+    ('has: state/mode')    its definition may follow in the aggregate's nesting
+                           scope (B.2).
     arming targets         (B). An arming target is a mode target; it inherits
     ('! M', '=> ! M')      the mode rule.
-    spawn targets          (B) by default (type declared by name+kind above,
-    ('+! Type'),           body may follow) -- UNDER REVIEW; may instead be held
-    singleton refs         to (A). See DISCUSSIONS S-Q2.
+    spawn targets          (B) by default (type declared by name+signature+kind)
+    ('+! Target()')
 
   THE ACROSS-SCOPE RULE.  A reference reaches names in its own scope and, by
 lexical nesting, in its still-OPEN enclosing scopes. It does NOT reach into a
@@ -212,9 +249,7 @@ into a search.
 a kind: a Trigger expects an event, a ModeArming and a Spawn target expect a
 type, a HasRef and a default expect a member, an Unspawn expects a type. A name
 that resolves to a symbol of another kind is a KIND-MISMATCH diagnostic, distinct
-from unresolved -- the name exists, but not as the site requires. A Spawn whose
-target is a 'singleton :' symbol must carry no parentheses; parentheses there are
-a kind/shape diagnostic.
+from unresolved -- the name exists, but not as the site requires. 
 
   THE RESULT.  Resolving one reference yields a RESOLUTION (section F): the
 resolved symbol, its fully-qualified name, and its kind -- or an unresolved
@@ -262,11 +297,7 @@ constraints the parser deferred:
        every has-ref and default target resolves to a member; every unspawn
        target resolves to a type. VOID is the implicit member every aggregate
        owns; a reference to VOID resolves without a defining symbol.
-    4. A spawn of a 'singleton :' type carries no arguments; a spawn of a
-       non-singleton type into the default container or an 'in { ... }'
-       container carries its argument list. The container lvalue is opaque and
-       is not resolved here.
-    5. Each include resolves, parses once, builds a fresh tree, and mounts it;
+    4. Each include resolves, parses once, builds a fresh tree, and mounts it;
        cycles are diagnosed (D).
 
 Every check that fails emits a diagnostic (section G) and continues; a failed
@@ -336,7 +367,7 @@ parser. A resolution failure thus produces two coordinated outputs: a
 diagnostic in the reporter and a None-symbol Resolution in the frame.
 
 The diagnostic categories this layer raises: COLLISION (B), UNRESOLVED (C),
-KIND-MISMATCH (C), SINGLETON-SHAPE (C/E), CONSTRAINT failures (E.1, E.2),
+KIND-MISMATCH (C), CONSTRAINT failures (E.1, E.2),
 INCLUDE-UNRESOLVED and INCLUDE-CYCLE (D). Each is a phase-SEMANTIC diagnostic;
 none halts the pass.
 

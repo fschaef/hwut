@@ -90,6 +90,8 @@ class E_TokenId(Enum):
     DOT         = auto()
     LPAREN      = auto()
     RPAREN      = auto()
+    LANGLE      = auto()   # '<'  opens a container's type-parameter list
+    RANGLE      = auto()   # '>'  closes a container's type-parameter list
     LUAU_OPEN   = auto()   # a bare '{'; parser converts via read_luau_block()
     LUAU_BLOCK  = auto()   # synthesized: a whole '{ ... }' span after handoff
 
@@ -155,6 +157,11 @@ _TOKEN_SPEC = [
     (E_TokenId.DOT,         r'\.'),
     (E_TokenId.LPAREN,      r'\('),
     (E_TokenId.RPAREN,      r'\)'),
+    # '<' / '>' bracket a container's type-parameter list. After ARROW ('=>')
+    # so the two-char '=>' is never split, and before the bare-ID class so a
+    # '<' is never glued into an identifier.
+    (E_TokenId.LANGLE,      r'<'),
+    (E_TokenId.RANGLE,      r'>'),
     (E_TokenId.LUAU_OPEN,   r'\{'),
 
     # An arbitrary identifier glued to ':' (member annotation 'n: int'). Comes

@@ -173,13 +173,16 @@ class Grammar:
         RETURN: compiled element (Terminal, LuauRef, NonTerminal, or tuple).
 
         Resolves a grammar string to its symbol; recurses into combinator
-        tuples, leaving the PO tag in place.
+        tuples, leaving the PO tag in place. A non-terminal is '<name>' -- it
+        both opens '<' and closes '>' around a name; the bare single-character
+        literals '<' and '>' (the container type-parameter brackets) are NOT
+        non-terminals and route on to the literal table.
         """
         if isinstance(element, tuple):
             return (element[0],) + tuple(self._compile(e) for e in element[1:])
         elif not isinstance(element, str):
             raise ValueError("grammar element not a str/tuple: %r" % (element,))
-        elif element.startswith("<"):
+        elif element.startswith("<") and element.endswith(">") and len(element) > 2:
             if element not in self.rules:
                 raise ValueError("undefined non-terminal %r" % element)
             return self.rules[element]

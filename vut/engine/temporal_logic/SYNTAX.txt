@@ -60,7 +60,7 @@ NOTE:
                      | <forward-decl> )
 
     <namespace>:   'open:' <dotted-name>
-                       <top-level>+
+                   <top-level>+
                    ':close'
 
     <include>:     'include:' <string> 'into:' <dotted-name>
@@ -143,21 +143,13 @@ NOTE:
 
     <unspawn>:     <name>                     # bare or dotted; ends existence
 
-    ## A name may be DECLARED with its kind before its definition (the (B.1)
-    ## gate of the (A)/(B) forward-reference rule). 'has:' does this inside an
-    ## aggregate (kind implied by the frame); 'is:' does it at scope level (kind
-    ## stated). The static kinds name a body defined later in the same scope;
-    ## 'container' is the kind that reaches into Luau -- its args configure the
-    ## container (shape/size/access, opaque here) and an optional 'as:' binds it
-    ## to a script-world lvalue.
-    <forward-decl>:   <name> 'is:' <fwd-kind>
+    <forward-decl>:   <signature> 'is:' <fwd-kind>             # see prose: round signature vs angle type-params
 
     <fwd-kind>:    <kind-name>                               # mode | mode_group | state_machine
-                 | 'container' '(' [ <c-arg> (',' <c-arg>)* ] ')'
+                 | 'container' '<' [ <arg-list> ] '>'         # type parameters (opaque)
                                   [ 'as:' <luau-lvalue> ]
 
     <kind-name>:   <identifier>                              # validated in pass 2
-    <c-arg>:       <identifier> | <number>                   # shape / size / access; opaque
 
     <container-name>: <name>                                 # a declared container (resolved)
 
@@ -169,6 +161,7 @@ NOTE:
 
     <rvalue>:      <number>
                  | <istring>
+                 | <identifier>                   # bare word (e.g. container type-param 'dict')
                  | '{' <luau-expr> '}'
 
     <clock-def>:   'clock:' <event-name> <number>
@@ -397,12 +390,49 @@ appears as a general <trigger>.
     the static pass does not decide.
 
 
+<forward-decl>
+      declares a name with its kind before its definition -- the (B.1) gate of
+      the (A)/(B) forward-reference rule, the scope-level counterpart of an
+      aggregate's 'has:' ('is:' states the kind outright; 'has:' lets the frame
+      imply it). The matching definition follows later in the same scope.
+
+      The name side is a <signature>: a bare name optionally followed by a
+      ROUND-bracket '(' <arg-decl-list> ')' instantiation signature -- the same
+      '(member: type ; ...)' form an aggregate definition declares (reused, not
+      reinvented). It says HOW a later '+!' instantiates the type, which the
+      engine needs even when only the declaration is in scope. Since a '+!' is
+      the begin-of-life of an instance and we cannot tell at declaration time
+      whether one will target the name, the signature is MANDATORY on the
+      spawnable kinds -- 'mode_group' and 'state_machine'. 'mode' takes NO
+      signature (a mode is armed, not instantiated); 'container' takes none
+      either. This kind-vs-signature rule is a pass-2 check; the grammar accepts
+      the parens on any kind.
+
+<fwd-kind>
+      is the declared kind. A bare <kind-name> is a static kind (mode /
+      mode_group / state_machine, validated in pass 2). 'container' is the one
+      kind that reaches into Luau: its ANGLE brackets carry TYPE PARAMETERS --
+      ordinary <arg>s (a shape word 'dict' / 'list' / 'fifo', an optional size,
+      access flags), opaque to the rule-file plane and read by the resolver --
+      and an optional 'as:' binds it to a script-world lvalue. Angle, not round:
+      a container is parameterised by type, never instantiated by a constructor
+      signature, and the bracket shape keeps the two apart on sight. Round =
+      HOW TO INSTANTIATE; angle = WHAT KIND.
+
+        Sprites is: container<dict>
+        Ghosts  is: container<fifo, 64> as: { db.ghosts }
+
+
 <arg> binds an argument by name or by position. Named arguments may follow
       positional ones; the parser allows both forms in the same call.
 
 <rvalue>
       is something that can be assigned to an event member or a mode
-      parameter in the <arg-list>.
+      parameter in the <arg-list>. A bare <identifier> is also an rvalue: it
+      carries a word whose meaning the static layer does not fix (a container
+      type-parameter such as 'dict' / 'fifo', for instance). The parser admits
+      it everywhere an <arg> is admitted; whether a given site accepts a bare
+      word is a pass-2 concern, not a parse error.
 
 <arg-decl-list>
       declares a mode's parameters specifying a member by its name and its
@@ -628,8 +658,8 @@ A state defined elsewhere is pulled in with 'has:':
 A name may also be DECLARED at scope level before its definition, with its kind
 stated, using 'is:':
 
-    <name> 'is:' ( 'mode' | 'mode_group' | 'state_machine'
-                 | 'container' '(' <c-arg>* ')' [ 'as:' '{' <luau-lvalue> '}' ] )
+    <signature> 'is:' ( 'mode' | 'mode_group' | 'state_machine'
+                      | 'container' '<' <arg>* '>' [ 'as:' '{' <luau-lvalue> '}' ] )
 
 'is:' is the scope-level counterpart of the aggregate-body 'has:'. Both declare
 a name together with its kind -- the (B.1) gate of the forward-reference rule.
@@ -637,19 +667,34 @@ a name together with its kind -- the (B.1) gate of the forward-reference rule.
 holds only member modes / states, so 'has: NAME' already says "NAME is a
 mode/state"); 'is:' states the kind outright, because a scope holds names of
 several kinds and the frame fixes nothing. The name is bare: declaration and
-definition share one scope, so nothing is qualified across a boundary. For the
-three static kinds a forward declaration opens no Luau and carries no parameters
-or body -- exactly a name and a kind. Having and being: 'has:' / 'is:'.
+definition share one scope, so nothing is qualified across a boundary.
+
+The name side is a <signature> -- a bare name optionally followed by a
+round-bracket '(' <arg-decl-list> ')' instantiation signature, the same
+'(member: type ; ...)' form an aggregate definition declares. A '+!' spawn is
+the begin-of-life of an instance, so the engine needs the signature to
+instantiate even when the body follows the declaration; since at declaration
+time we cannot tell whether a '+!' will target the name, the signature is
+MANDATORY on the spawnable aggregate kinds -- 'mode_group' and 'state_machine'.
+'mode' takes NO signature (a mode is armed, not instantiated), and 'container'
+takes none either: its angle brackets are TYPE PARAMETERS, not a constructor
+signature. The round brackets say HOW TO INSTANTIATE; the angle brackets say
+WHAT KIND. Beyond that signature a static-kind forward declaration opens no
+Luau and carries no body -- the definition site carries the body. Having and
+being: 'has:' / 'is:'.
 
 The 'container' kind is the one that reaches into the script world. A container
-is a place spawned instances are caught into; 'X is: container(...)' declares
-that X may be used wherever a container is expected. Its argument list is the
-container's CONFIGURATION -- a shape word ('dict', 'list', 'fifo'), an optional
-size, and (extensibly) access flags such as 'r' / 'w' / 'x' -- bare identifiers
-and numbers, opaque to the rule-file plane and interpreted by the resolver:
+is a place spawned instances are caught into; 'X is: container<...>' declares
+that X may be used wherever a container is expected. Its angle-bracket contents
+are TYPE PARAMETERS -- a shape word ('dict', 'list', 'fifo'), an optional size,
+and (extensibly) access flags such as 'r' / 'w' / 'x'. They are ordinary <arg>s
+(bare words, numbers, or '{ ... }' Luau), opaque to the rule-file plane and
+interpreted by the resolver. Angle brackets, not round: a container is
+parameterised by type, never instantiated by a constructor signature, and the
+bracket shape keeps the two apart on sight:
 
-    Sprites is: container(dict)
-    Ghosts  is: container(fifo, 64) as: { db.ghosts }
+    Sprites is: container<dict>
+    Ghosts  is: container<fifo, 64> as: { db.ghosts }
 
 The optional 'as:' clause binds the container to a script-world lvalue: an
 opaque Luau path inside '{ ... }', carried in the LVALUE role (assignability is
@@ -661,7 +706,7 @@ and may name its caught instance in Luau with 'as:':
     on: Hatch => +! ghost(seed) in: Ghosts as: { db.ghosts[id] }
 
 Here 'in: Ghosts' is an ordinary (B.1) forward reference to a container declared
-with 'is: container(...)'; the container declaration is exactly what lets the
+with 'is: container<...>'; the container declaration is exactly what lets the
 spawn name it before the container's full setup appears in scope.
 
 Inside the Luau code sections of the state machine itself and its member
