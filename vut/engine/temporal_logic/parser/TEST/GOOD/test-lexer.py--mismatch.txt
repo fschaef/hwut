@@ -1,8 +1,8 @@
 
 --- stray '?' between valid tokens ---
-KW_ON        [  0:3  ] 'on:'
-MISMATCH     [  4:5  ] '?'
-KW_END_BLK   [  6:10 ] ':end'
-END_OF_FILE  [ 10:10 ] ''
+string:on:   [  0:3  ] 'on:'
+framing:mismatch [  4:5  ] '?'
+string::end  [  6:10 ] ':end'
+framing:end-of-file [ 10:10 ] ''
 error_f: True
 LEXER    fatal=False off=4   unexpected character '?'

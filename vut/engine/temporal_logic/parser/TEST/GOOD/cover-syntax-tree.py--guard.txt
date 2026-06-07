@@ -1,8 +1,0 @@
-=== <guard> ===
-
--- default --
-   input: { luau }
-Luau
-  text = '{ luau }'
-  role = <Role.CONDITION: 'condition'>
-  begin = 0

@@ -33,7 +33,6 @@ ______________________________________________________________________________
 """
 import re
 import bisect
-from enum         import Enum, auto
 from dataclasses  import dataclass
 from typing       import Optional
 
@@ -43,153 +42,208 @@ from ..luau.luau_fragment import (find_matching_brace, Role,
 from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 
 
-class E_TokenId(Enum):
-    """Enumeration of all valid rule-file tokens."""
-    # Commencing / connective keywords -- each GLUED to a trailing ':' (the colon
-    # abuts its filler on the right: "keyword: <what fills it>").
-    KW_ON        = auto()   # 'on:'
-    KW_MODE      = auto()   # 'mode:'
-    KW_MGROUP    = auto()   # 'mode_group:'
-    KW_SM        = auto()   # 'state_machine:'
-    KW_STATE     = auto()   # 'state:'
-    KW_HAS       = auto()   # 'has:'
-    KW_IS        = auto()   # 'is:'
-    KW_AS        = auto()   # 'as:'
-    KW_UNTIL     = auto()   # 'until:'
-    KW_EVENT     = auto()   # 'event:'
-    KW_CLOCK     = auto()   # 'clock:'
-    KW_OPEN      = auto()   # 'open:'
-    KW_INCLUDE   = auto()   # 'include:'
-    KW_INTO      = auto()   # 'into:'
-    KW_IN        = auto()   # 'in:'
-    KW_DEFAULT   = auto()   # 'default:'
-    KW_INIT      = auto()   # 'init:'
-    KW_DEINIT    = auto()   # 'deinit:'
-    KW_CONTAINER = auto()   # 'container'  (kind word after 'is:'; no own colon)
-    NAME_COLON   = auto()   # an identifier glued to ':'  ('n:' in 'n: int')
-
-    # Block terminators -- GLUED to a LEADING ':' (the colon abuts its filler on
-    # the left: "what preceded is closed by -> :terminator").
-    KW_END_BLK   = auto()   # ':end'
-    KW_CLOSE     = auto()   # ':close'
-
-    # Bare keywords (operands / markers; not connectives, no colon).
-    KW_ANY      = auto()
-    KW_BEGIN    = auto()
-    KW_END      = auto()
-    KW_SWITCHED = auto()
-    KW_VOID     = auto()
-
-    ARROW       = auto()
-    AND         = auto()
-    COMMA       = auto()
-    PLUSBANG    = auto()   # '+!'  spawn an aggregate
-    MINUSBANG   = auto()   # '-!'  unspawn a named aggregate
-    BANG        = auto()   # '!'   arm a single mode
-    SEMI        = auto()
-    DOT         = auto()
-    LPAREN      = auto()
-    RPAREN      = auto()
-    LANGLE      = auto()   # '<'  opens a container's type-parameter list
-    RANGLE      = auto()   # '>'  closes a container's type-parameter list
-    LUAU_OPEN   = auto()   # a bare '{'; parser converts via read_luau_block()
-    LUAU_BLOCK  = auto()   # synthesized: a whole '{ ... }' span after handoff
-
-    NUMBER      = auto()
-    STRING      = auto()
-    ID          = auto()
-
-    MISMATCH    = auto()   # illegal character; parser resyncs
-    END_OF_FILE = auto()   # sentinel returned by next() at EOF
+# ---------------------------------------------------------------------------
+# Lexer-spec generation.
+#
+# A token's IDENTITY is the Terminal object that produced it (terminals.py); the
+# lexer is written against those objects, never against a hand-maintained id
+# enum. _TOKEN_SPEC is GENERATED from two sources, the SINGLE source being the
+# parser engine's terminal database:
+#
+#   1. terminals.TERMINAL_DB -- the T.regex / T.string / T.captured / T.opaque
+#      terminals (declared in syntax.py's preamble or minted from bare-string
+#      keywords at grammar-compile time) plus the framing terminals.
+#   2. the bare-string keywords walked out of every GRAMMAR rule body, each
+#      routed through T.string so it becomes a Terminal like any other.
+#
+# The author supplies no token id and no precedence number. Ordering is a
+# deterministic function of each terminal's SHAPE (the seven tiers below) and,
+# within a tier, of length (longest-first where overlap matters) and declaration
+# order. A token's debug name is Terminal._name(); a friendly map for tracing is
+# token_debug_names().
+#
+# Generation runs lazily on first use (see _scanner / token_spec): it imports
+# syntax and terminals INSIDE the builder, after the import graph has settled, so
+# lexer.py carries no module-level dependency on the authoring layer and the
+# graph stays acyclic (parser_nodes -> lexer -> diagnostic only).
+# ---------------------------------------------------------------------------
 
 
-# Tokens skipped silently in the control plane. NOTE: '##' comments only.
-# Inside a '{ ... }' span the bytes are opaque Luau and never seen here.
-_TOKEN_SPEC = [
-    ("COMMENT", r'##[^\n]*'),
-    ("WS",      r'\s+'),
-
-    # Leading-colon terminators FIRST (a ':' that begins ':end'/':close' must not
-    # be seen as a bare colon -- there is no bare colon any more).
-    (E_TokenId.KW_END_BLK,   r':end\b'),
-    (E_TokenId.KW_CLOSE,     r':close\b'),
-
-    # Trailing-colon keywords. Longest spellings first where prefixes overlap
-    # ('mode_group:' before 'mode:', 'state_machine:' before 'state:'). The ':'
-    # is part of the lexeme; '\b' guards the left edge.
-    (E_TokenId.KW_MGROUP,    r'\bmode_group:'),
-    (E_TokenId.KW_MODE,      r'\bmode:'),
-    (E_TokenId.KW_SM,        r'\bstate_machine:'),
-    (E_TokenId.KW_STATE,     r'\bstate:'),
-    (E_TokenId.KW_HAS,       r'\bhas:'),
-    (E_TokenId.KW_IS,        r'\bis:'),
-    (E_TokenId.KW_AS,        r'\bas:'),
-    (E_TokenId.KW_UNTIL,     r'\buntil:'),
-    (E_TokenId.KW_EVENT,     r'\bevent:'),
-    (E_TokenId.KW_CLOCK,     r'\bclock:'),
-    (E_TokenId.KW_OPEN,      r'\bopen:'),
-    (E_TokenId.KW_INCLUDE,   r'\binclude:'),
-    (E_TokenId.KW_INTO,      r'\binto:'),
-    (E_TokenId.KW_IN,        r'\bin:'),
-    (E_TokenId.KW_DEFAULT,   r'\bdefault:'),
-    (E_TokenId.KW_INIT,      r'\binit:'),
-    (E_TokenId.KW_DEINIT,    r'\bdeinit:'),
-
-    (E_TokenId.KW_ON,        r'\bon:'),
-
-    # 'container' is a kind word following 'is:'; it carries no colon of its own.
-    (E_TokenId.KW_CONTAINER, r'\bcontainer\b'),
-
-    # Bare operand / marker keywords.
-    (E_TokenId.KW_ANY,      r'\bANY\b'),
-    (E_TokenId.KW_BEGIN,    r'\bBEGIN\b'),
-    (E_TokenId.KW_END,      r'\bEND\b'),
-    (E_TokenId.KW_SWITCHED, r'\bswitched\b'),
-    (E_TokenId.KW_VOID,     r'\bVOID\b'),
-
-    (E_TokenId.ARROW,       r'=>'),
-    (E_TokenId.AND,         r'&'),
-    (E_TokenId.COMMA,       r','),
-    (E_TokenId.PLUSBANG,    r'\+!'),
-    (E_TokenId.MINUSBANG,   r'-!'),
-    (E_TokenId.BANG,        r'!'),
-    (E_TokenId.SEMI,        r';'),
-    (E_TokenId.DOT,         r'\.'),
-    (E_TokenId.LPAREN,      r'\('),
-    (E_TokenId.RPAREN,      r'\)'),
-    # '<' / '>' bracket a container's type-parameter list. After ARROW ('=>')
-    # so the two-char '=>' is never split, and before the bare-ID class so a
-    # '<' is never glued into an identifier.
-    (E_TokenId.LANGLE,      r'<'),
-    (E_TokenId.RANGLE,      r'>'),
-    (E_TokenId.LUAU_OPEN,   r'\{'),
-
-    # An arbitrary identifier glued to ':' (member annotation 'n: int'). Comes
-    # after every fixed keyword-colon so those win, before the bare ID class.
-    (E_TokenId.NAME_COLON,  r'[a-zA-Z_]\w*:'),
-
-    (E_TokenId.NUMBER,      r'[+-]?\d+(?:\.\d+)?'),
-    (E_TokenId.STRING,      r'"[^"]*"'),
-    (E_TokenId.ID,          r'[a-zA-Z_]\w*'),
-
-    (E_TokenId.MISMATCH,    r'.'),
-]
+def _is_identifier(spelling):
+    """RETURN: True, if 'spelling' is a pure identifier; False, else."""
+    return spelling.isidentifier()
 
 
-def _group_name(kind):
-    """RETURN: str, the regex group name for a spec entry's kind.
-
-    Skip-kinds are plain strings ('COMMENT', 'WS'); token-kinds are E_TokenId
-    members whose '.name' is used. Keeps the two namespaces from colliding.
+def _keyword_pattern(spelling):
     """
-    return kind if isinstance(kind, str) else kind.name
+    RETURN: str, the lexer regex for a string keyword 'spelling'.
+
+    A leading-colon terminator (':end') becomes ':word\\b'. A trailing-colon
+    keyword ('mode:') becomes '\\bword'. A pure identifier keyword ('ANY')
+    becomes '\\bword\\b'. A symbol ('=>') becomes re.escape(spelling). Each '\\b'
+    sits only on the side that abuts an identifier character.
+    """
+    if spelling.startswith(":"):
+        return r':' + spelling[1:] + r'\b'
+    if spelling.endswith(":"):
+        return r'\b' + spelling
+    if _is_identifier(spelling):
+        return r'\b' + spelling + r'\b'
+    return re.escape(spelling)
 
 
-_SCANNER = re.compile(
-    '|'.join(f'(?P<{_group_name(k)}>{p})' for k, p in _TOKEN_SPEC)
-)
+def _walk_string_keywords(element, out):
+    """RETURN: None. Routes every bare-string leaf under 'element' through T.string.
 
-_SKIP_GROUPS = {"COMMENT", "WS"}
+    A bare string in GRAMMAR is sugar for a silent string keyword; walking the
+    rule bodies and calling T.string on each makes it a real Terminal recorded in
+    the database (reused if several rules share the spelling). 'out' is a dict
+    used as an ordered set of the resulting terminals (first-appearance order),
+    the deterministic tiebreak for equal-length spellings within a tier.
+    """
+    from .syntax_support import _Combinator
+    from .terminals import Terminal, Ref, T
+    if isinstance(element, _Combinator):
+        for child in element.children:
+            _walk_string_keywords(child, out)
+    elif isinstance(element, tuple):
+        for child in element:
+            _walk_string_keywords(child, out)
+    elif isinstance(element, str):
+        out[T.string(element)] = None
+    # Terminal and Ref contribute no string keyword.
+
+
+def _generate_token_spec():
+    """
+    RETURN: list, the generated _TOKEN_SPEC: (Terminal, pattern) entries, ordered
+            by the seven tiers.
+
+    Built from terminals.TERMINAL_DB (every Terminal, including framing and the
+    string keywords minted while walking GRAMMAR). The tiers, in emission order:
+
+        1. skip groups (comment, whitespace framing) -- fixed framing.
+        2. leading-colon string keywords  (':end')  -> ':word\\b'.
+        3. trailing-colon string keywords ('mode:') -> '\\bword', LONGEST-FIRST.
+        4. bare keywords -- captured (ANY) and bare-identifier strings -> '\\bword\\b'.
+        5. symbols (string keywords that are not identifiers, '=>') -> re.escape,
+           LONGEST-FIRST; the Luau open framing token ('{') sits here.
+        6. regex class terminals (T.regex) in DECLARATION order.
+        7. mismatch framing ('.') -- fixed framing, last.
+
+    The end-of-file and luau-block framing terminals carry no scanner pattern
+    (they are synthesized, not matched) and are omitted from the spec.
+    """
+    from .syntax import GRAMMAR
+    from .terminals import (TERMINAL_DB, T,
+                            t_fr_luau_open, t_fr_comment, t_fr_ws,
+                            t_fr_mismatch)
+
+    # Route every bare-string keyword through T.string so it is in the DB.
+    string_terms = {}
+    for body in GRAMMAR.values():
+        _walk_string_keywords(body, string_terms)
+    decl_index = {t: i for i, t in enumerate(TERMINAL_DB)}
+
+    def order(t):
+        return decl_index[t]
+
+    leading, trailing, bare, symbols, regexes = [], [], [], [], []
+    for t in TERMINAL_DB:
+        if t.shape == "regex":
+            regexes.append(t)
+        elif t.shape == "captured":
+            bare.append(t)
+        elif t.shape == "string":
+            s = t.spelling
+            if s.startswith(":"):
+                leading.append(t)
+            elif s.endswith(":"):
+                trailing.append(t)
+            elif _is_identifier(s):
+                bare.append(t)
+            else:
+                symbols.append(t)
+        # framing handled explicitly below
+
+    spec = []
+    spec.append((t_fr_comment, r'##[^\n]*'))                          # tier 1
+    spec.append((t_fr_ws,      r'\s+'))
+
+    for t in sorted(leading, key=order):                             # tier 2
+        spec.append((t, _keyword_pattern(t.spelling)))
+
+    trailing.sort(key=lambda t: (-len(t.spelling), order(t)))        # tier 3
+    for t in trailing:
+        spec.append((t, _keyword_pattern(t.spelling)))
+
+    bare.sort(key=order)                                             # tier 4
+    for t in bare:
+        spelling = t.spelling
+        spec.append((t, _keyword_pattern(spelling)))
+
+    symbols.sort(key=lambda t: (-len(t.spelling), order(t)))         # tier 5
+    for t in symbols:
+        spec.append((t, re.escape(t.spelling)))
+    spec.append((t_fr_luau_open, re.escape("{")))                    # opaque open
+
+    for t in regexes:                                                # tier 6
+        spec.append((t, t.pattern))
+
+    spec.append((t_fr_mismatch, r'.'))                               # tier 7
+    return spec
+
+
+def _luau_block_term():
+    """RETURN: Terminal, the framing terminal for a synthesized '{ ... }' span."""
+    from .terminals import t_fr_luau_block
+    return t_fr_luau_block
+
+
+def token_debug_names():
+    """RETURN: dict, Terminal -> friendly name, for parser debug tracing only.
+
+    Token identity is the Terminal object; this map renders it readable when
+    tracing the parse. Framing tokens show their friendly tag; others show
+    _name(). Token ids are never shown to the user -- only used for debugging.
+    """
+    return {t: t._name() for t, _ in token_spec()}
+
+
+# Generated lazily and cached. _TOKEN_SPEC / _SCANNER / _GROUP_OF stay None until
+# first use, at which point syntax and terminals are importable. _GROUP_OF maps a
+# synthetic regex group name (g0, g1, ...) back to the Terminal it matched, since
+# a Terminal._name() is not a valid regex group identifier.
+_TOKEN_SPEC = None
+_SCANNER    = None
+_GROUP_OF   = None
+
+
+def token_spec():
+    """RETURN: list, the generated _TOKEN_SPEC (built and cached on first call)."""
+    global _TOKEN_SPEC
+    if _TOKEN_SPEC is None:
+        _TOKEN_SPEC = _generate_token_spec()
+    return _TOKEN_SPEC
+
+
+def _scanner():
+    """RETURN: re.Pattern, the compiled scanner over the generated _TOKEN_SPEC.
+
+    Each spec entry gets a synthetic group name 'gN'; _GROUP_OF maps it back to
+    the Terminal, so a match's lastgroup yields the Terminal directly.
+    """
+    global _SCANNER, _GROUP_OF
+    if _SCANNER is None:
+        spec = token_spec()
+        _GROUP_OF = {}
+        parts = []
+        for i, (term, pat) in enumerate(spec):
+            g = "g%d" % i
+            _GROUP_OF[g] = term
+            parts.append("(?P<%s>%s)" % (g, pat))
+        _SCANNER = re.compile("|".join(parts))
+    return _SCANNER
 
 
 @dataclass(frozen=True, slots=True)
@@ -202,7 +256,7 @@ class Token:
     the closing '}' inclusive. Line/column are not stored -- a SourceMap
     resolves 'begin' on demand. END_OF_FILE has 'begin == end' at text length.
     """
-    kind:  E_TokenId
+    kind:  "Terminal"
     text:  str
     begin: int
     end:   int
@@ -266,31 +320,34 @@ class Lexer:
         'read_luau_block(role)'. A MISMATCH is reported non-fatal and returned
         so the parser can resync. WS and '##' comments are consumed silently.
         """
+        scanner = _scanner()
+        from .terminals import t_fr_luau_open, t_fr_comment, t_fr_ws, \
+            t_fr_mismatch, t_fr_eof
+        skip = {t_fr_comment, t_fr_ws}
         while self.cursor < self.length:
-            match = _SCANNER.match(self.source, self.cursor)
-            # MISMATCH ('.') matches any non-newline; WS ('\\s+') matches
+            match = scanner.match(self.source, self.cursor)
+            # mismatch ('.') matches any non-newline; whitespace ('\\s+') matches
             # newlines. A None match cannot occur while cursor < length.
             assert match is not None
 
-            group = match.lastgroup
+            term  = _GROUP_OF[match.lastgroup]
             begin = self.cursor
             end   = match.end()
             self.cursor = end
 
-            if group in _SKIP_GROUPS:
+            if term in skip:
                 continue
 
-            kind  = E_TokenId[group]
             value = match.group()
 
-            if kind == E_TokenId.MISMATCH:
+            if term is t_fr_mismatch:
                 self._report(begin, f"unexpected character {value!r}",
                              fatal=False)
-                return Token(E_TokenId.MISMATCH, value, begin, end)
+                return Token(t_fr_mismatch, value, begin, end)
 
-            return Token(kind, value, begin, end)
+            return Token(term, value, begin, end)
 
-        return Token(E_TokenId.END_OF_FILE, "", self.length, self.length)
+        return Token(t_fr_eof, "", self.length, self.length)
 
     def read_luau_block(self, open_token: Token, role: Role) -> Optional[Token]:
         """
@@ -315,7 +372,7 @@ class Lexer:
 
         end = closing_idx + 1
         self.cursor = end
-        return Token(E_TokenId.LUAU_BLOCK, self.source[begin:end], begin, end)
+        return Token(_luau_block_term(), self.source[begin:end], begin, end)
 
     def _recover_fragment(self, begin: int, exc: FragmentSyntaxError) -> Token:
         """
@@ -331,7 +388,7 @@ class Lexer:
         candidate = self.source.find("}", begin + 1)
         end = (candidate + 1) if candidate != -1 else self.length
         self.cursor = end
-        return Token(E_TokenId.LUAU_BLOCK, self.source[begin:end], begin, end)
+        return Token(_luau_block_term(), self.source[begin:end], begin, end)
 
     def _report(self, offset: int, message: str, fatal: bool):
         """RETURN: None. Appends a LEXER-phase Diagnostic and updates error_f.

@@ -1,19 +1,19 @@
 
 --- state-machine mode reference ---
-ID           [  0:7  ] 'SM_TASK'
-DOT          [  7:8  ] '.'
-ID           [  8:11 ] 'RUN'
-END_OF_FILE  [ 11:11 ] ''
+regex:[a-zA-Z_]\w* [  0:7  ] 'SM_TASK'
+string:.     [  7:8  ] '.'
+regex:[a-zA-Z_]\w* [  8:11 ] 'RUN'
+framing:end-of-file [ 11:11 ] ''
 
 --- reference ending in VOID keyword ---
-ID           [  0:7  ] 'SM_TASK'
-DOT          [  7:8  ] '.'
-KW_VOID      [  8:12 ] 'VOID'
-END_OF_FILE  [ 12:12 ] ''
+regex:[a-zA-Z_]\w* [  0:7  ] 'SM_TASK'
+string:.     [  7:8  ] '.'
+captured:VOID [  8:12 ] 'VOID'
+framing:end-of-file [ 12:12 ] ''
 
 --- three-part dotted name ---
-KW_DEFAULT   [  0:8  ] 'default:'
-ID           [  9:11 ] 'SM'
-DOT          [ 11:12 ] '.'
-ID           [ 12:18 ] 'MEMBER'
-END_OF_FILE  [ 18:18 ] ''
+string:default: [  0:8  ] 'default:'
+regex:[a-zA-Z_]\w* [  9:11 ] 'SM'
+string:.     [ 11:12 ] '.'
+regex:[a-zA-Z_]\w* [ 12:18 ] 'MEMBER'
+framing:end-of-file [ 18:18 ] ''

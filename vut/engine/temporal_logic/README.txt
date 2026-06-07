@@ -9,10 +9,12 @@ NAME
   behind it; it does NOT restate concrete syntax.
 
 COMPANION FILES
-  SYNTAX.txt        The dominating reference: concrete syntax of rule files and
-                    event traces. Where this document needs a syntactic detail
-                    it cites a SYNTAX.txt section rather than repeating it; on
-                    any discrepancy, SYNTAX.txt wins.
+  SYNTAX_DOC         The dominating reference: concrete syntax of rule files and
+  (parser/syntax.py) event traces, carried as the module docstring of
+                     parser/syntax.py. Where this document needs a syntactic
+                     detail it cites a SYNTAX_DOC section rather than repeating
+                     it; on any discrepancy, SYNTAX_DOC wins.
+
   DISCUSSIONS.txt   Running design log: resolved decisions, rationales, and
                     rejected alternatives.
 
@@ -33,7 +35,9 @@ VOCABULARY
   MODE          A reactor that overlaps freely with its siblings; closed by its
                 own 'until' causes. Lives at GROUND level or in a MODE GROUP.
   STATE         A reactor inside a STATE MACHINE; mutually exclusive with its
-                siblings; closed by a mandatory 'until switched' clause.
+                siblings; its block ends structurally (next element or 'end').
+                Optional trailing 'until' causes; it also ceases when a sibling
+                is armed.
   MODE GROUP    An aggregate of modes with no exclusion: any number of member
                 modes are active at once.
   STATE MACHINE An aggregate of states in which at most one member-state is
@@ -74,7 +78,7 @@ VOCABULARY
     tester as a real failure (nonzero status plus a diagnostic), never as plain
     report text the author might silently diff away. Error classes: lex, parse,
     name, guard (read-only violation), cascade (cyclic causality), state-machine
-    (e.g. a state missing its 'until switched' clause), trace (e.g. not ending in
+    (e.g. an ill-formed state machine), trace (e.g. not ending in
     END), and internal (tool/infrastructure).
 
 -------------------------------------------------------------------------------
@@ -109,7 +113,7 @@ VOCABULARY
 3. THE MODEL
 -------------------------------------------------------------------------------
   This section gives the conceptual model. Concrete declaration and rule syntax
-  is in SYNTAX.txt; the cross-references below point to it.
+  is in SYNTAX_DOC (parser/syntax.py); the cross-references below point to it.
 
   EVENTS
     Ephemeral, struct-like aggregates with typed fields. They exist only at the
@@ -117,14 +121,14 @@ VOCABULARY
     intrinsic number fields. The pair (type, time) uniquely identifies an
     occurrence; within one instant T a given event kind occurs at most once --
     the property the termination guarantee rests on (section 5).
-    (Declaration syntax: SYNTAX.txt A.2.4.)
+    (Declaration syntax: SYNTAX_DOC (parser/syntax.py) A.2.4.)
 
     DELIVERY is implicit. There is no subscription construct: an event reaches a
     reactor precisely when that reactor names it in an 'on:' cause, and the
     cause's guard ('& { ... }') is the only filter. The engine derives the
     publisher/subscriber wiring from the set of event types named across the
     live 'on:' causes; the author expresses reaction, and routing follows.
-    (Cause and guard syntax: SYNTAX.txt A.2.2.)
+    (Cause and guard syntax: SYNTAX_DOC (parser/syntax.py) A.2.2.)
 
   OBJECTS
     Stateful aggregates persisting across time, defined in 'on BEGIN' via the
@@ -145,30 +149,31 @@ VOCABULARY
     mode ends when one of its 'until' clauses fires (first-wins; no further
     'until' is then checked) or at END if still live. A mode lives at GROUND
     level or as a member of a mode group.
-    (Lifecycle, parameters, and queries: SYNTAX.txt A.2.3.)
+    (Lifecycle, parameters, and queries: SYNTAX_DOC (parser/syntax.py) A.2.3.)
 
   STATES
-    A state is a mode living in a state machine. Its block is closed by a
-    mandatory final 'until switched' clause -- which fires when a sibling state
-    is armed -- preceded by any of its own optional 'until' clauses, first-wins.
-    (Declaration and 'until switched': SYNTAX.txt A.2.5.)
+    A state is a mode living in a state machine. Its block is terminated
+    structurally (by the next state-machine element or 'end'); its own trailing
+    'until' causes are optional (first-wins), and it also ceases when a sibling
+    state is armed.
+    (Declaration: SYNTAX_DOC (parser/syntax.py) A.2.5.)
 
   MODE GROUPS
     An aggregate of modes with no exclusion: arming one member does not
     deactivate another, and any number of members are live at once. A mode
     group has its own 'init'/'deinit', may carry parameters, has no 'default',
     and is closed by 'end' (it has no closing 'until' clauses of its own).
-    (Declaration: SYNTAX.txt A.2.6.)
+    (Declaration: SYNTAX_DOC (parser/syntax.py) A.2.6.)
 
   STATE MACHINES
     An aggregate of states with single-active semantics: arming one member
-    state deactivates the previously active one (its 'until switched' fires).
+    state deactivates the previously active one (automatic mutual exclusion).
     Each member is a state, arming is a transition, mutual exclusion is
     automatic. A state machine has its own 'init'/'deinit', an optional
     'default' member (an implicit do-nothing 'VOID' state when unspecified),
     may carry parameters, and is closed by 'end'. Its Luau spans bind the
     state machine as 'sm'.
-    (Declaration, 'until switched', and the 'sm' binding: SYNTAX.txt
+    (Declaration and the 'sm' binding: SYNTAX_DOC (parser/syntax.py)
     A.2.5.)
 
   AGGREGATE SPAWNING AND CONTAINERS
@@ -182,7 +187,7 @@ VOCABULARY
     nothing. Several aggregates of one type run concurrently when their
     container holds many. An instance's existence is ended with the '-!' verb,
     which takes a reference by name (bare or dotted).
-    (Effect forms: SYNTAX.txt <spawn>, <singleton-def>, <unspawn>; the
+    (Effect forms: SYNTAX_DOC (parser/syntax.py) <spawn>, <singleton-def>, <unspawn>; the
     container protocol: section on the runtime substrate.)
 
   BINDINGS
@@ -192,26 +197,26 @@ VOCABULARY
     'sm', and 'mg' are unbound at top level; referring to them there is a
     transpile-time error. 'sm' and 'mg' are the two aggregate self-bindings,
     one in scope at a time per the enclosing aggregate kind.
-    (Full rules: SYNTAX.txt A.2.1.)
+    (Full rules: SYNTAX_DOC (parser/syntax.py) A.2.1.)
 
   TIME-LINE BOUNDS -- BEGIN AND END
     Two implicit events frame every trace: BEGIN fires zero-time-ahead before
     the first trace event, END zero-time-ahead after the last. A trace must end
     with an explicit END or the engine rejects it. 'on BEGIN' / 'on END' are
     where object-space init and teardown live; they are restricted handlers
-    (no guard, no emission), detailed in SYNTAX.txt A.3.
+    (no guard, no emission), detailed in SYNTAX_DOC (parser/syntax.py) A.3.
 
   TRACE TIMING
     A trace is uniformly EXPLICITLY-TIMED or CLOCK-TIMED, never mixed. The
     engine never consults a system clock, so a saved trace always replays
     deterministically; 'dt' is always derived from the previous event's time.
-    (SYNTAX.txt B.)
+    (SYNTAX_DOC (parser/syntax.py) B.)
 
   CLOCKS
     A 'clock' declaration is a periodic emitter on synthetic time, used to give
     a regular cadence (e.g. differential-equation integration) between authored
     events. It generates ordinary events and respects the cascade rules; it is
-    not a system-time source. (Mechanism and syntax: SYNTAX.txt A.4.)
+    not a system-time source. (Mechanism and syntax: SYNTAX_DOC (parser/syntax.py) A.4.)
 
 -------------------------------------------------------------------------------
 4. ARCHITECTURE -- TRANSPILER AND ENGINE
@@ -254,7 +259,7 @@ VOCABULARY
   SANDBOXING & CAPABILITIES
     The generated bootstrap injects only the capabilities the test
     configuration grants (network, filesystem, etc. denied unless explicitly
-    permitted) plus the fixed helper set (SYNTAX.txt C). Rule-file Luau cannot
+    permitted) plus the fixed helper set (SYNTAX_DOC (parser/syntax.py) C). Rule-file Luau cannot
     widen its own environment; Python is the trust boundary.
 
   WATCHDOG
@@ -280,7 +285,7 @@ VOCABULARY
 
   STATIC ANALYSIS CHECKS (Python, transpile time)
     - NAME RESOLUTION (fatal). Every event, reactor, field, and aggregate
-      member name must resolve; each state's 'until' list must end with 'until switched';
+      member name must resolve;
       a state-machine 'default' must reference a valid member or VOID; a 'has:'
       and a member reference must resolve against the enclosing aggregate. (A
       tolerated unknown name in a validation suite would be a silent false pass
@@ -288,7 +293,7 @@ VOCABULARY
     - GUARD READ-ONLY (fatal). A sound syntactic check rejects assignments and
       recognised mutating builtins inside guards. Sound but not complete:
       mutation via a user-defined call is not detected. (Rationale and exempt
-      forms: SYNTAX.txt <guard>.)
+      forms: SYNTAX_DOC (parser/syntax.py) <guard>.)
     - CASCADE CYCLE (fatal). A depth-first search of the cascade graph
       (nodes = event kinds; edge X->Y iff an X-triggered rule emits Y) reports
       any cycle and the offending chain. The search is bounded by a node-visit
@@ -298,7 +303,7 @@ VOCABULARY
 -------------------------------------------------------------------------------
 6. RULES, REACTORS, AGGREGATES, AND THE TRACER
 -------------------------------------------------------------------------------
-  Concrete forms for everything below are in SYNTAX.txt A.2 and B.1; this
+  Concrete forms for everything below are in SYNTAX_DOC (parser/syntax.py) A.2 and B.1; this
   section records only the design choices behind them.
 
   UNIFORM RULE SHAPE
@@ -310,7 +315,8 @@ VOCABULARY
     (a top-level keyword, a member keyword, 'until', 'end', or end-of-file) is
     never '=>', a rule's well-formedness never depends on what follows it. The
     enclosing aggregate -- a mode group or a state machine -- is itself closed
-    by 'end'; a mode by its 'until' causes; a state by 'until switched'.
+    by 'end'; a mode by its 'until' causes; a state structurally (by the next
+    element or 'end').
 
   MODE LIFECYCLE
     Identity is the parameter list, making arming idempotent: an author writes
@@ -331,12 +337,11 @@ VOCABULARY
     invocation.
 
   STATE-MACHINE LIFECYCLE
-    Member states are mutually exclusive; arming one fires the previously
-    active state's 'until switched' clause. 'switched' is a non-functional
-    keyword on every state: it has no runtime effect but marks, at the closing
-    line, that a state can also end by a sibling being armed, not only by its
-    own events. A mode group runs no exclusion: arming a member leaves its
-    siblings live.
+    Member states are mutually exclusive; arming one deactivates the
+    previously active state (automatic mutual exclusion). A state can therefore
+    end either by a sibling being armed or by one of its own 'until' causes,
+    whichever fires first. A mode group runs no exclusion: arming a member
+    leaves its siblings live.
 
   POLYMORPHIC QUERIES
     Mode classes and traced-event histories share one query interface (lists,
@@ -344,7 +349,7 @@ VOCABULARY
     '_match' dispatcher that accepts literals or comparator value objects. The
     author writes the comparator; the engine does the dispatch. This replaced
     an earlier family of separately named query methods with one call surface.
-    (Method names and comparators: SYNTAX.txt A.2.3 and C.)
+    (Method names and comparators: SYNTAX_DOC (parser/syntax.py) A.2.3 and C.)
 
   THE TRACER
     History is opt-in: an event is queryable only if registered with
@@ -354,7 +359,7 @@ VOCABULARY
     unregistered event is a fatal transpile error -- this closes the silent-nil
     class of bug, where a forgotten registration would make every query return
     nil and look like an absence of behaviour. The author pays memory only for
-    what is declared. (Call form and checks: SYNTAX.txt B.1.)
+    what is declared. (Call form and checks: SYNTAX_DOC (parser/syntax.py) B.1.)
 
 -------------------------------------------------------------------------------
 7. THE REPORT AND LOGGING

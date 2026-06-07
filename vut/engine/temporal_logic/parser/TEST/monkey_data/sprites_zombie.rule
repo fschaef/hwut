@@ -1,0 +1,19 @@
+## Zombie -- a state machine. Shambling vs lunging vs dormant are exclusive.
+state_machine: Zombie
+    default: Zombie.Dormant
+
+    state: Dormant
+        on: NoiseHeard & { event.volume > 3 } => ! Shamble()
+    until: NoiseHeard
+
+    state: Shamble
+        on: SeesPrey & { event.distance < 4 } => ! Lunge()
+        on: Tick => { zombie.pos = zombie.pos:drift() }
+    until: SeesPrey
+
+    state: Lunge
+        init: { zombie.groan() }
+        on: Tick => { zombie.pos = zombie.pos:leap_toward("prey") }
+        on: PreyEscaped => ! Shamble()
+    until: PreyEscaped
+:end

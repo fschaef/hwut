@@ -1,0 +1,18 @@
+on: BEGIN & { x{ y }{ y }{ y }{ y }{ y }{ y } }
+=> { x{ y }{ y }{ y }{ y }{ y } }
+=> X6 . X8 ( )
+state_machine: X12 . X14
+default: X16 . X18
+:end
+mode: X21 . X23 ( n25: X26 ; n28: X29 ; n31: X32 )
+init: { x{ y }{ y }{ y }{ y }{ y }{ y } }
+until: END
+open: X38 . X40
+mode_group: X42 . X44
+mode: X46 . X48
+on: X50
+=> "s"
+until: ANY
+init: { x }
+:end
+:close include: "s" into: X61 . X63 . X65 X66 is: X68

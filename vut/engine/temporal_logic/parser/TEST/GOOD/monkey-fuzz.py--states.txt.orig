@@ -1,0 +1,270 @@
+=== monkey: states ===
+tokens parsed:      167
+top-level items:    6
+diagnostics:        none
+
+-- AST --
+Namespace
+  name = 'X2.X4.X6.X8'
+  items:
+    Namespace
+      name = 'X10.X12'
+      items:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'END'
+                  is_keyword = True
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            EventSpec
+              name = 'X16.X18'
+              args:
+                []
+              begin = 0
+            Mutation
+              body:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+              begin = 0
+          begin = 0
+      begin = 0
+  begin = 0
+ModeGroup
+  name = 'X25.X27.X29.X31'
+  params:
+    []
+  modes:
+    Mode
+      name = 'X37.X39.X41.X43'
+      params:
+        []
+      init:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      deinit:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X46'
+                  is_keyword = False
+                  begin = 0
+              guard:
+                Luau
+                  text = '{ x }'
+                  role = <Role.CONDITION: 'condition'>
+                  begin = 0
+              begin = 0
+          effects:
+            Spawn
+              name = 'X50.X52'
+              args:
+                []
+              has_parens = True
+              in_container = None
+              luau_handle = None
+              begin = 0
+            ReportString
+              text = '"s"'
+              begin = 0
+            Unspawn
+              name = 'X59.X61'
+              begin = 0
+            ModeArming
+              name = 'X64.X66'
+              args:
+                []
+              begin = 0
+          begin = 0
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name = 'BEGIN'
+                  is_keyword = True
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            Spawn
+              name = 'X74.X76'
+              args:
+                []
+              has_parens = True
+              in_container = None
+              luau_handle = None
+              begin = 0
+          begin = 0
+      untils:
+        Cause
+          trigger:
+            Trigger
+              name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard = None
+          begin = 0
+        Cause
+          trigger:
+            Trigger
+              name = 'BEGIN'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+      begin = 0
+  has_refs:
+    HasRef
+      aggregate = None
+      member = 'X35'
+      is_void = False
+      begin = 0
+  init:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit = None
+  begin = 0
+ForwardDecl
+  kind = 'container'
+  name = 'X86'
+  signature:
+    []
+  cargs:
+    []
+  luau_handle:
+    Luau
+      text = '{ x{ y } }'
+      role = <Role.LVALUE: 'lvalue'>
+      begin = 0
+  begin = 0
+EventDef
+  name = 'X93'
+  params:
+    ArgDecl
+      member = 'n'
+      type = 'X96'
+      begin = 0
+    ArgDecl
+      member = 'n'
+      type = 'X99'
+      begin = 0
+    ArgDecl
+      member = 'n'
+      type = 'X102'
+      begin = 0
+    ArgDecl
+      member = 'n'
+      type = 'X105'
+      begin = 0
+    ArgDecl
+      member = 'n'
+      type = 'X108'
+      begin = 0
+  begin = 0
+ClockDef
+  name = 'X111'
+  period = '1'
+  begin = 0
+Namespace
+  name = 'X114.X116.X118.X120'
+  items:
+    Include
+      filename = 's'
+      mount = 'X124.X126'
+      begin = 0
+    StateMachine
+      name = 'X128.X130.X132'
+      params:
+        []
+      states:
+        State
+          name = 'X138.X140.X142.X144'
+          params:
+            []
+          init:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          deinit:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          causalities:
+            []
+          untils:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X148'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+            Cause
+              trigger:
+                Trigger
+                  name = 'ANY'
+                  is_keyword = True
+                  begin = 0
+              guard = None
+              begin = 0
+            Cause
+              trigger:
+                Trigger
+                  name = 'END'
+                  is_keyword = True
+                  begin = 0
+              guard = None
+              begin = 0
+            Cause
+              trigger:
+                Trigger
+                  name = 'ANY'
+                  is_keyword = True
+                  begin = 0
+              guard = None
+              begin = 0
+          begin = 0
+      has_refs:
+        HasRef
+          aggregate = None
+          member = 'X134'
+          is_void = False
+          begin = 0
+      default = None
+      init:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      deinit:
+        Luau
+          text = '{ x }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0

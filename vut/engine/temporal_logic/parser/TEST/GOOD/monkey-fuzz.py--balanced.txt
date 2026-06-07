@@ -1,9 +1,7 @@
 === monkey: balanced ===
-tokens synthesized: 58
+tokens parsed:      58
 top-level items:    5
 diagnostics:        none
-## rules visited:      ((20)) / ((42))
-## node types built:   ((10)) / ((23))
 
 -- AST --
 StateMachine

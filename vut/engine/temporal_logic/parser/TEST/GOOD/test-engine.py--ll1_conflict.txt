@@ -1,4 +1,4 @@
 
 --- two ALT branches sharing a FIRST token ---
 rejected with 1 conflict(s):
-   rule <top-level>: token ID starts two ALT branches
+   rule top-level: token regex:[a-zA-Z_]\w* starts two ALT branches

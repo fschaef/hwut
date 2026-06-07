@@ -1,0 +1,23 @@
+## Prince -- a mode group: several behaviours run CONCURRENTLY, not exclusively.
+## A mode group has no single-active rule, so independent simultaneous habits
+## (greeting, questing, dancing) are each their own mode, all live at once.
+mode_group: Prince
+    init: { prince.enter_court() }
+
+    mode: Greet
+        on: GuestArrives => "the prince bows to {event.guest}"
+    until: CourtClosed
+
+    mode: Quest(goal: string)
+        init: { prince.objective = goal }
+        on: ClueFound => { prince.journal:add(event.clue) }
+        on: GoalReached => "{goal} achieved"
+    until: GoalReached
+
+    mode: Dance
+        on: MusicStarts => ! StepInTime(tempo)
+        on: MusicStops => "the prince rests"
+    until: BallEnds
+
+    has: RoyalEtiquette
+:end

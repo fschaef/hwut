@@ -21,44 +21,124 @@ would overflow after a few dozen levels, whereas the engine parses tens of
 thousands of levels (see the monkey 'depth_bomb' acceptance test).
 
 -------------------------------------------------------------------------------
+RUNNING A PARSE
+-------------------------------------------------------------------------------
+
+One call turns rule-file source into an AST:
+
+    from vut.engine.temporal_logic.parser.parser_engine import parse
+    from vut.engine.temporal_logic.parser.diagnostic    import DiagnosticReporter
+
+    reporter = DiagnosticReporter()
+    rule_file = parse(source_text, oracle, reporter)
+
+The three arguments:
+
+    source_text   the rule-file text, one str.
+    oracle        the Luau fragment oracle: any object with
+                  'parse(text) -> result'. The lexer hands it each '{ ... }'
+                  span to find the matching brace under the role the grammar
+                  context demands. It is the ONE external dependency; a source
+                  with no Luau spans never calls it.
+    reporter      a DiagnosticReporter. Diagnostics (lexer and parser phases)
+                  accumulate here; 'parse' does not raise on an author error.
+
+What comes back:
+
+    rule_file     a RuleFile whose '.items' are the top-level constructs
+                  (Namespace, Causality, Mode, ModeGroup, StateMachine,
+                  EventDef, ClockDef, ForwardDecl, Include). On a recovered
+                  error the tree is PARTIAL -- the offending item is dropped,
+                  the rest are present -- so always consult the reporter:
+
+    if reporter.has_fatal():
+        ...                         # infrastructure failure (e.g. oracle down)
+    for d in reporter.errors:
+        ...                         # d.phase, d.message, d.source_offset
+
+'parse' is the public seam. Under it, 'compiled_grammar()' compiles and
+memoizes GRAMMAR/ACTIONS once (raising LL1ConflictError if a grammar edit
+breaks LL(1)); 'EngineParser(source, oracle, reporter, grammar).parse()' is the
+loop that drives the 'top-level' start rule to EOF, recovering past each error.
+Call 'parse' unless you are testing the engine itself.
+
+-------------------------------------------------------------------------------
 MODULES AND RESPONSIBILITIES
 -------------------------------------------------------------------------------
 
-    lexer.py
-        Regex tokenizer. One compiled alternation of named patterns yields
-        tokens on demand. Holds the oracle boundary: on a Luau open brace it
-        hands off to the fragment oracle to slice out an opaque '{ ... }' block
-        and resumes past the closing brace. Illegal characters are reported
-        non-fatally and returned as MISMATCH so the parser can resync.
+    terminals.py
+        The named-terminal authoring surface. The 'T' factory mints Terminal
+        objects (T.regex character classes, T.string keywords, T.captured
+        keywords kept for the builder, T.opaque Luau spans carrying a Role) and
+        records each into TERMINAL_DB in declaration order. A terminal's
+        IDENTITY is its _name(); the engine compares terminals by object
+        identity, never by a hand-written id. 'R(name)' wraps a reference to
+        another grammar rule. The framing terminals (Luau open/block, comment,
+        whitespace, mismatch, EOF) live here too.
+
+    syntax.py
+        The language as data, and its prose spec in one place. A preamble binds
+        the regex/opaque/captured terminals to 't_re_'/'t_opq_'/'t_kw_'
+        variables; GRAMMAR then maps each non-terminal to a pattern built from
+        the combinators ALT/OPT/PLUS/STAR (syntax_support), plain tuples for
+        sequence, bare strings for silent keywords, terminal objects, and R()
+        references. SYNTAX_DOC, the module docstring, is the DOMINATING prose
+        reference for the concrete syntax; this README cites it and defers to it
+        on any discrepancy.
+
+    syntax_support.py
+        The combinator classes (Seq/Alt/Opt/Plus/Star) the grammar author
+        writes, and 'compile_element', which turns an authored pattern into the
+        parser_nodes tree. The only authoring-time dependency the grammar data
+        needs; it knows nothing of the engine.
 
     grammar.py
-        The language as data. GRAMMAR maps each non-terminal to a pattern built
-        from the combinators SEQ, ALT, OPT, STAR, PLUS, plus terminal literals
-        and the '{luau:ROLE}' fragment marker. CAPTURED_LITERALS lists the
-        keyword literals whose token value is kept (ANY, BEGIN, END, VOID). For
-        each rule a reduce action ('_build_*') turns the matched frame into an
-        AST node; a 'None' action passes the child value through unchanged.
+        The reduce actions. ACTIONS maps each GRAMMAR rule name to a builder
+        '_build_*(frame) -> node' that turns a matched frame into an AST node,
+        or 'None' for a pass-through rule that forwards its single child value
+        (the ALT dispatch rules). It imports GRAMMAR from syntax.py and supplies
+        the actions; the engine zips the two by key.
+
+    parser_nodes.py
+        The compiled grammar as a uniform polymorphic node tree -- combinators
+        (Seq/Alt/Opt/Plus/Star) and leaves (TerminalNode/LuauNode/
+        NonTerminalNode) alike. Every node answers first_set / nullable /
+        check_alts / expand, so the engine never switches on a node kind: it
+        calls a method and the node does the right thing. The work-instruction
+        tags (ELEM/REDUCE/LOOP) are defined here and shared with the engine.
+
+    lexer.py
+        Regex tokenizer. It GENERATES its scanner spec lazily from TERMINAL_DB
+        plus the bare-string keywords walked out of GRAMMAR -- no hand-kept
+        token table. One compiled alternation of named patterns yields tokens
+        on demand. Holds the oracle boundary: on a Luau open brace it hands off
+        to the fragment oracle to slice out an opaque '{ ... }' block under the
+        role the parser supplies, and resumes past the closing brace. Illegal
+        characters are reported non-fatally and returned as MISMATCH so the
+        parser can resync.
 
     parser_engine.py
-        The engine. 'Grammar' compiles the pattern table: it resolves literals
-        against the lexer (via the literal table), computes FIRST sets, and
-        rejects any ALT whose branches share a FIRST token (LL1ConflictError),
-        so ambiguity is caught at compile time, not at parse time.
-        'EngineParser' walks the compiled patterns with one token of lookahead,
-        building a 'Frame' of child values per rule and calling the rule's
-        reduce action. 'compiled_grammar()' memoizes the compiled grammar;
-        'parse()' is the entry point returning a RuleFile plus diagnostics.
+        The engine. 'Grammar' compiles GRAMMAR/ACTIONS into the parser_nodes
+        tree (resolving each leaf to its Terminal/Luau/NonTerminal node),
+        computes FIRST sets, and rejects any ALT whose branches share a FIRST
+        token (LL1ConflictError), so ambiguity is caught at compile time, not at
+        parse time. 'EngineParser' walks the compiled patterns with one token of
+        lookahead on the explicit work/frame stacks, building a 'Frame' of child
+        values per rule and calling the rule's reduce action.
+        'compiled_grammar()' memoizes the compiled grammar; 'parse()' is the
+        entry point returning a RuleFile.
 
     ast_nodes.py
         Frozen dataclasses for the tree. Every node stores 'begin' (a source
         offset) for provenance and error reporting. TopLevel is the abstract
-        base for the items a rule-file may contain: Causality, Mode, ModeGroup,
-        StateMachine, ForwardDecl, EventDef, ClockDef.
+        base for the items a rule-file may contain: Namespace, Include,
+        Causality, Mode, ModeGroup, StateMachine, ForwardDecl, EventDef,
+        ClockDef.
 
     diagnostic.py
         Phase-tagged diagnostics (LEXER, PARSER, ...) collected by a
         DiagnosticReporter. Non-fatal diagnostics accumulate so one run can
-        report several problems; FatalDiagnostics stops the pass.
+        report several problems; a fatal diagnostic stops the pass.
 
 -------------------------------------------------------------------------------
 (A) THE LEXER AND THE ORACLE HANDOFF
@@ -84,9 +164,13 @@ parsing can continue.
 (B) THE GRAMMAR TABLE AND LL(1) GUARANTEE
 -------------------------------------------------------------------------------
 
-A pattern is a nested tuple of combinators. For example a causality:
+A pattern is a plain tuple for sequence, with the combinator classes ALT / OPT
+/ PLUS / STAR for the rest. For example a causality:
 
-    "<causality>": (SEQ, "on", "<cause>", (PLUS, (SEQ, "=>", "<effect>")))
+    "causality": ("on:", R("cause"), PLUS(("=>", R("effect"))))
+
+A bare string ('on:', '=>') is a silent keyword terminal; R("name") references
+another rule; a 't_opq_...' terminal marks an opaque Luau span under its Role.
 
 At compile time 'Grammar' computes FIRST(rule) for every rule and, for each ALT
 and each repetition, checks that the continuation is decidable from one
@@ -101,28 +185,28 @@ DELIMITER DESIGN (so every rule is decidable with one token):
                       loop ends at the first token that is not '=>'. The
                       follower of a rule -- a top-level keyword, a member
                       keyword, 'until:', ':end', or EOF -- is never '=>'.
-    <mode>            closed by ( 'until' <cause> )+.
-    <state>           closed by 'until: switched'. Modeled as <state-untils>, a
-                      right-recursive tail left-factored on 'until': after
-                      'until', one token chooses 'switched' (terminate) or a
-                      <cause> (continue). This stops the run exactly at
-                      'until: switched' and never swallows the enclosing
-                      machine's tokens.
+    <mode>            closed by ( 'until:' <cause> )+.
+    <state>           has an optional body and optional 'until:' causes; both
+                      may be empty. It is terminated STRUCTURALLY -- by the next
+                      state-machine element ('state:', 'has:', 'default:',
+                      'init:', 'deinit:') or by the aggregate's ':end'. A state
+                      carries no closing keyword of its own.
     <mode-group>      closed by ':end'.
     <state-machine>   closed by ':end'.
 
 The ':end' closer on the two aggregates is what makes an inline member
-parseable: a member mode carries its own ( 'until' <cause> )+, and because the
+parseable: a member mode carries its own ( 'until:' <cause> )+, and because the
 aggregate ends with ':end' rather than its own 'until:', the boundary between the
-last member's untils and the aggregate's close is decidable with one token.
-'switched' is parsed only as the state closer; it is not a general <trigger>.
+last member's untils and the aggregate's close is decidable with one token. A
+state's untils are a STAR, so a member state runs up to the first token that
+neither continues an until nor starts a new member -- which is exactly the next
+member keyword or ':end'.
 
 -------------------------------------------------------------------------------
 (C) THE ENGINE (DRIVER) AND REDUCE ACTIONS
 -------------------------------------------------------------------------------
 
-'EngineParser._match' drives one element to completion on two explicit stacks,
-never recursing into itself:
+'EngineParser._match' drives one element to completion on two explicit stacks:
 
     work    -- instructions still to perform (LIFO). An instruction is one of:
                ELEM(element)  expand element, appending values to the top frame
@@ -133,18 +217,18 @@ never recursing into itself:
                NonTerminal currently being assembled; child values append to
                frames[-1].
 
-Expansion is direct: a SEQ pushes its parts in reverse (so they run left to
-right); an ALT chooses its branch from one-token lookahead and pushes it; an
-OPT pushes its body iff the lookahead starts it; a PLUS pushes one mandatory
-body plus a LOOP; a STAR pushes a LOOP. Each time a LOOP surfaces it re-checks
+Expansion is direct: a Seq pushes its parts in reverse (so they run left to
+right); an Alt chooses its branch from one-token lookahead and pushes it; an
+Opt pushes its body iff the lookahead starts it; a Plus pushes one mandatory
+body plus a LOOP; a Star pushes a LOOP. Each time a LOOP surfaces it re-checks
 the lookahead and, while the body still starts, pushes the body and another
 LOOP beneath it -- turning repetition into stack iteration. A terminal matches
 and advances; a captured literal or Luau block appends its value. When a
 NonTerminal's pattern is fully consumed its REDUCE fires: the frame's values go
 to the rule's action, which returns one AST node appended to the parent frame.
 A 'None' action forwards the single child unchanged (pure alternations like
-'<effect>' and '<rvalue>'). Because the recursion lives on the heap stacks, not
-the C stack, nesting depth is bounded only by memory.
+'<effect>' and '<rvalue>'). Because the walk runs on the heap work and frame
+stacks, not the C stack, nesting depth is bounded only by memory.
 
 ERROR RECOVERY:
 
@@ -167,7 +251,8 @@ location mapper during code generation. The aggregate nodes hold their members
 by kind:
 
     Mode           causalities, init, deinit, untils
-    State          causalities, init, deinit, untils  (closed by 'until: switched')
+    State          causalities, init, deinit, untils  (body and untils optional;
+                                                        terminated structurally)
     ModeGroup      modes, has_refs, init, deinit       (closed by ':end')
     StateMachine   states, has_refs, default, init, deinit  (closed by ':end')
     HasRef         a 'has:' member pulled in by bare or qualified name
@@ -190,9 +275,9 @@ context-free are deferred to a validation pass over the finished AST, kept
 separate so the parser stays a pure recognizer:
 
     1. At most one 'init' and one 'deinit' per reactor or aggregate.
-    2. State machine: at most one 'default'; every member state's until-run
-       ends with 'until: switched'; 'default:' references a defined member or
-       VOID.
+    2. State machine: at most one 'default'; 'default:' references a defined
+       member or VOID. A state needs no closing 'until'; its untils are
+       optional and it terminates structurally.
     3. Reference checks: every '! MODE()' / '+! AGG()' arming, every '-! name'
        unspawn, every '+! ... in: C' container reference (C resolves to an
        'is: container' declaration), and every 'has:' and 'default:' target
@@ -202,6 +287,13 @@ separate so the parser stays a pure recognizer:
        name. Every '<name> is: <kind>' forward declaration is matched by a
        definition of <name> of that kind later in the same scope; a declaration
        with no following definition, or a kind mismatch, is a validation error.
+       A <trigger> names an event: because events are STRICT define-before-use
+       (no forward referencing -- an event is a leaf that references nothing),
+       an event name is resolvable the moment it is used, so an unknown trigger
+       is a "no such event" diagnostic. The check is cheap for that reason, but
+       it is still a SEMANTIC-pass concern -- the parser stays a pure recognizer
+       and does not track a declared-event set; one resolver, parameterized by
+       the kind expected at each site, owns all name resolution.
     4. Include resolution: each 'include "<file>" as <path>' resolves the file,
        parses it once, and mounts its namespace at <path>; the included file is
        lexically self-contained (its names do not see the mounting scope).
@@ -221,7 +313,9 @@ automatically with no test edit.
 
     test-engine.py       Grammar-level properties: FIRST sets, the real grammar
                          is LL(1) (ll1_ok), a toy grammar is rejected
-                         (ll1_conflict), and the literal table.
+                         (ll1_conflict), and the token inventory derived from
+                         the terminal database covers every fixed-spelling
+                         terminal the grammar refers to.
 
     cover-syntax-tree.py POSITIVE coverage: one choice per rule, synthesizing a
                          minimal valid input for each shape (PLUS -> 1,2;

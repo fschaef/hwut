@@ -1,0 +1,233 @@
+=== monkey: balanced ===
+tokens parsed:      153
+top-level items:    5
+diagnostics:        none
+
+-- AST --
+Namespace
+  name = 'X2.X4.X6'
+  items:
+    Namespace
+      name = 'X8.X10.X12'
+      items:
+        Mode
+          name = 'X14.X16'
+          params:
+            []
+          init = None
+          deinit:
+            Luau
+              text = '{ x }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          causalities:
+            []
+          untils:
+            Cause
+              trigger:
+                Trigger
+                  name = 'X21'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          begin = 0
+        StateMachine
+          name = 'X23.X25.X27'
+          params:
+            []
+          states:
+            []
+          has_refs:
+            []
+          default:
+            StateMachineModeRef
+              sm_name = 'X29'
+              mode_name = 'X31'
+              is_void = False
+              begin = 0
+          init = None
+          deinit = None
+          begin = 0
+      begin = 0
+    Namespace
+      name = 'X35.X37.X39'
+      items:
+        StateMachine
+          name = 'X41.X43'
+          params:
+            ArgDecl
+              member = 'n'
+              type = 'X46'
+              begin = 0
+            ArgDecl
+              member = 'n'
+              type = 'X49'
+              begin = 0
+          states:
+            State
+              name = 'X53.X55'
+              params:
+                []
+              init:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+              deinit = None
+              causalities:
+                []
+              untils:
+                Cause
+                  trigger:
+                    Trigger
+                      name = 'ANY'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+              begin = 0
+          has_refs:
+            []
+          default = None
+          init:
+            Luau
+              text = '{ x }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          deinit = None
+          begin = 0
+        Mode
+          name = 'X61.X63'
+          params:
+            []
+          init = None
+          deinit:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          causalities:
+            Causality
+              cause:
+                Cause
+                  trigger:
+                    Trigger
+                      name = 'END'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+              effects:
+                Unspawn
+                  name = 'X68.X70'
+                  begin = 0
+              begin = 0
+          untils:
+            Cause
+              trigger:
+                Trigger
+                  name = 'BEGIN'
+                  is_keyword = True
+                  begin = 0
+              guard:
+                Luau
+                  text = '{ x }'
+                  role = <Role.CONDITION: 'condition'>
+                  begin = 0
+              begin = 0
+          begin = 0
+      begin = 0
+  begin = 0
+ForwardDecl
+  kind = 'X79'
+  name = 'X77'
+  signature:
+    []
+  cargs:
+    []
+  luau_handle = None
+  begin = 0
+Causality
+  cause:
+    Cause
+      trigger:
+        Trigger
+          name = 'X81'
+          is_keyword = False
+          begin = 0
+      guard = None
+      begin = 0
+  effects:
+    Spawn
+      name = 'X84.X86'
+      args:
+        []
+      has_parens = True
+      in_container = 'X90.X92.X94'
+      luau_handle = None
+      begin = 0
+    Mutation
+      body:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0
+Namespace
+  name = 'X97.X99.X101'
+  items:
+    Namespace
+      name = 'X103.X105.X107'
+      items:
+        Namespace
+          name = 'X109.X111.X113'
+          items:
+            ClockDef
+              name = 'X115'
+              period = '1'
+              begin = 0
+          begin = 0
+      begin = 0
+    ForwardDecl
+      kind = 'container'
+      name = 'X119'
+      signature:
+        []
+      cargs:
+        []
+      luau_handle = None
+      begin = 0
+  begin = 0
+StateMachine
+  name = 'X128.X130.X132'
+  params:
+    ArgDecl
+      member = 'n'
+      type = 'X135'
+      begin = 0
+    ArgDecl
+      member = 'n'
+      type = 'X138'
+      begin = 0
+    ArgDecl
+      member = 'n'
+      type = 'X141'
+      begin = 0
+  states:
+    []
+  has_refs:
+    HasRef
+      aggregate = None
+      member = 'X145'
+      is_void = False
+      begin = 0
+  default = None
+  init = None
+  deinit:
+    Luau
+      text = '{ x }'
+      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  begin = 0

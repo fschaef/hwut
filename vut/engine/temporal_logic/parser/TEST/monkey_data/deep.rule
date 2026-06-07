@@ -1,0 +1,20 @@
+open: X2 . X4
+open: X6 . X8
+event: X10 ( )
+:close
+:close
+open: X16 . X18
+open: X20 . X22
+open: X24 . X26
+open: X28 . X30
+open: X32 . X34
+event: X36 ( n38: X39 ; n41: X42 )
+:close
+:close
+:close
+:close
+:close
+open: X50 . X52
+on: ANY & { x }
+=> ! X58 . X60 ( )
+:close

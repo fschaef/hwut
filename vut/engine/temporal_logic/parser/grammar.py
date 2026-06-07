@@ -1,294 +1,25 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-RULE-FILE GRAMMAR  --  declarative, mirrors SYNTAX section (A.1)
+RULE-FILE ACTIONS  --  reduce builders, paired with the grammar in syntax.py.
 
-GRAMMAR maps each non-terminal name (in the SYNTAX file's '<...>' spelling) to
-a pattern built from these elements:
+The grammar itself (the GRAMMAR dict, the ALT/PLUS/STAR combinators, the bare
+tuple for sequence, and the bare list for optional) is defined in syntax.py, the
+single source of truth for both the productions and their prose specification.
+This module imports GRAMMAR from
+there and supplies ACTIONS: the reduce builders that turn parse frames into AST
+nodes.
 
-    "literal"        a terminal, spelled exactly as in a rule file ('on', '=>',
-                     '&'); resolved to its E_TokenId by the preprocessor.
-    "<non-terminal>" a reference to another GRAMMAR rule.
-    "#CLASS"         a character-class terminal that has no fixed spelling:
-                     "#ID", "#NUMBER", "#STRING"; resolved to E_TokenId too.
-    "{luau:ROLE}"    an opaque Luau span parsed under Role.ROLE.
-    (OP, ...)        a combinator: SEQ, ALT, OPT, PLUS, STAR (this module).
-
-ACTIONS maps the same names to a reduce function 'fn(frame) -> node', or None
+ACTIONS maps each GRAMMAR rule name to a builder 'fn(frame) -> node', or None
 for a pass-through rule (one that simply forwards its single matched value, as
-the ALT dispatch rules do). The grammar block stays pure structure; the actions
-live beside it under the same keys. The preprocessor zips the two.
-
-The block reads line-for-line against SYNTAX (A.1). Keeping it perceivable in
-one place is the point: this is the grammar, as data.
+the ALT dispatch rules do). The parser engine zips GRAMMAR and ACTIONS by key.
 ______________________________________________________________________________
 """
-# Parse operators as plain identifiers (no enum). A grammar element is either a
-# string (terminal literal, '#CLASS', '<non-terminal>', '{luau:ROLE}') or a
-# tuple whose head is one of these. Distinct sentinel objects keep tuples
-# self-describing in tracebacks.
-class _Op:
-    """A named grammar combinator marker. Identity-compared; prints its name."""
-    def __init__(self, name): self.name = name
-    def __repr__(self):       return self.name
+from .syntax import GRAMMAR, t_kw_void, t_kw_container, t_re_id
 
-SEQ  = _Op("SEQ")    # (SEQ, a, b, ...)   match a then b ...
-ALT  = _Op("ALT")    # (ALT, a, b, ...)   match one branch, by FIRST set
-OPT  = _Op("OPT")    # (OPT, x)           x zero or one time
-PLUS = _Op("PLUS")   # (PLUS, x)          x one or more times
-STAR = _Op("STAR")   # (STAR, x)          x zero or more times
-
-# Character-class terminals (no fixed spelling) and the Luau-span marker prefix.
-TOK_ID     = "#ID"
-TOK_NUMBER = "#NUMBER"
-TOK_STRING = "#STRING"
-
-# Keywords whose matched Token an action inspects, so the engine must NOT drop
-# them as punctuation: the trigger keywords (their identity is the trigger) and
-# VOID (distinguishes a void state-machine mode-ref). Every other keyword and
-# symbol is structural punctuation and is dropped from a frame's values.
-CAPTURED_LITERALS = {"ANY", "BEGIN", "END", "VOID", "container"}
-
-
-GRAMMAR = {
-    # <rule-file> is driven by the engine loop, not a rule; it repeats the
-    # top-level alternation until end-of-file.
-    "<top-level>":
-        (ALT, "<namespace>", "<include>", "<causality>", "<mode>",
-                 "<mode-group>", "<state-machine>",
-                 "<event-def>", "<clock-def>", "<forward-decl>"),
-
-    # <include>: 'include' <string> 'as' <dotted-name>
-    # Mounts another file's namespace at <dotted-name> in THIS file. The
-    # including file decides placement (Python-style); the included file is
-    # placement-agnostic and lexically self-contained. The parser only RECORDS
-    # the mount (filename + target path); resolving and mounting the file's
-    # symbol table is a semantic-pass concern. FIRST(<include>) = {include},
-    # disjoint from the other top-level starters.
-    "<include>":
-        (SEQ, "include:", TOK_STRING, "into:", "<dotted-name>"),
-
-    # <namespace>: 'open' <dotted-name> <top-level>+ 'close'
-    # Brackets the declarations it contains into a named scope. The dotted name
-    # nests several levels at once ('open world.europe.berlin' rather than three
-    # separate 'open's). The body is a recursive run of <top-level> items, so a
-    # namespace may contain any declaration, including a nested 'open'/'close'.
-    # FIRST(<namespace>) = {open}, disjoint from the other top-level starters,
-    # and 'close' is never a <top-level> starter, so the run terminates
-    # unambiguously at its matching 'close' (LL(1)).
-    "<namespace>":
-        (SEQ, "open:", "<dotted-name>", (PLUS, "<top-level>"), ":close"),
-
-    # <causality>: 'on' <cause> ( '=>' <effect> )+
-    # No closing token: each effect is introduced by '=>', so the effect loop
-    # ends the moment the lookahead is not '=>'. The follower (a top-level
-    # keyword, a mode/state element keyword, 'until', 'end', or EOF) is never
-    # '=>', so the list is unambiguously self-delimiting (LL(1)).
-    "<causality>":
-        (SEQ, "on:", "<cause>",
-                 (PLUS, (SEQ, "=>", "<effect>"))),
-
-    # <cause>: <trigger> [ '&' <guard> ]
-    "<cause>":
-        (SEQ, "<trigger>", (OPT, (SEQ, "&", "<guard>"))),
-
-    # <trigger>: <event-name> | 'ANY' | 'END' | 'BEGIN'
-    # 'switched' is NOT a general trigger; it appears only as the mandatory
-    # 'until switched' closer of a <state> (see <state>).
-    "<trigger>":
-        (ALT, TOK_ID, "ANY", "END", "BEGIN"),
-
-    # <guard>: '{' <luau-condition> '}'
-    "<guard>":
-        "{luau:CONDITION}",
-
-    # <effect>: mutation | '+!' <spawn> | '-!' <unspawn> | '!' <mode-arming>
-    #         | <report-string> | <event-spec>
-    # Arming verbs: '!' arms a single mode, '+!' spawns an aggregate, '-!'
-    # unspawns a named aggregate. All three are distinct single tokens, and
-    # <event-spec> starts with an identifier, so the alternation is LL(1).
-    "<effect>":
-        (ALT, "<mutation>", "<spawn>", "<unspawn>", "<mode-arming>",
-                 "<report-string>", "<event-spec>"),
-
-    "<mutation>":
-        "{luau:STATEMENT_BLOCK}",
-
-    # <spawn>: '+!' <name> '(' [ <arg-list> ] ')' [ 'in:' <name> ]
-    #                                              [ 'as:' {luau:LVALUE} ]
-    # One shape with two independent optional modifiers. The arg-parens are
-    # MANDATORY -- the arg-list is how the instance is instantiated; a bare
-    # '+! <name>' with no parens is a SYNTAX ERROR (no parameterless spawn form;
-    # the former singleton re-init is gone). After the mandatory arg-parens the
-    # lookaheads 'in:', 'as:', and the effect-follower are pairwise-distinct, so
-    # the two optional modifiers stay LL(1).
-    #   'in:' <name>          -> which container catches it (absent: default)
-    #   'as:' {luau-lvalue}   -> the key/handle it is held under (opaque Luau)
-    "<spawn>":
-        (SEQ, "+!", "<dotted-name>", "<arg-parens>",
-                 (OPT, (SEQ, "in:", "<dotted-name>")),
-                 (OPT, (SEQ, "as:", "{luau:LVALUE}"))),
-
-    # <unspawn>: '-!' <name>
-    # Ends an instance's existence. The operand is any reference-by-name (bare
-    # or dotted); that it resolves to an existing instance is a pass-2 check --
-    # the grammar accepts any <dotted-name>.
-    "<unspawn>":
-        (SEQ, "-!", "<dotted-name>"),
-
-    # <event-spec>: <event-name> '(' [ <arg-list> ] ')'
-    "<event-spec>":
-        (SEQ, "<dotted-name>", "<arg-parens>"),
-
-    # <mode-arming>: '!' <mode-name> '(' [ <arg-list> ] ')'
-    "<mode-arming>":
-        (SEQ, "!", "<dotted-name>", "<arg-parens>"),
-
-    "<report-string>":
-        TOK_STRING,
-
-    # '(' [ <arg-list> ] ')'
-    "<arg-parens>":
-        (SEQ, "(", (OPT, "<arg-list>"), ")"),
-
-    # <arg-list>: <arg> (',' <arg>)*
-    "<arg-list>":
-        (SEQ, "<arg>", (STAR, (SEQ, ",", "<arg>"))),
-
-    # <arg>: <rvalue>   ('=' retired: rule-file args are positional rvalues;
-    # any keying lives inside the Luau '{ ... }' value, not the static layer)
-    "<arg>":
-        "<rvalue>",
-
-    # <rvalue>: <number> | <istring> | <identifier> | '{' <luau-expr> '}'
-    # Bare #ID admitted (container type-param etc.); LL(1) safe -- every
-    # <arg-list> is bracket-introduced. See SYNTAX.txt <rvalue>.
-    "<rvalue>":
-        (ALT, TOK_NUMBER, TOK_STRING, TOK_ID, "{luau:EXPRESSION}"),
-
-    # <mode>: 'mode' <name> [ '(' <arg-decl-list> ')' ] ':'
-    #             <mode-elm>+ ( 'until' <cause> )+
-    "<mode>":
-        (SEQ, "mode:", "<dotted-name>", (OPT, "<decl-parens>"),
-                 (PLUS, "<mode-elm>"),
-                 (PLUS, (SEQ, "until:", "<cause>"))),
-
-    # <mode-elm>: <causality> | 'init' '{...}' | 'deinit' '{...}'
-    "<mode-elm>":
-        (ALT, "<causality>", "<init>", "<deinit>"),
-
-    "<init>":
-        (SEQ, "init:", "{luau:STATEMENT_BLOCK}"),
-
-    "<deinit>":
-        (SEQ, "deinit:", "{luau:STATEMENT_BLOCK}"),
-
-    # <state>: 'state' <name> [ '(' <arg-decl-list> ')' ] ':'
-    #              <mode-elm>+ <state-untils>
-    # SYNTAX A.1 writes the closer as '( until <cause> )* until switched'. Both
-    # alternatives start with 'until', so a flat repetition is not LL(1) and
-    # would also greedily swallow the enclosing state-machine's own 'until'
-    # closer. <state-untils> left-factors on 'until' and recurses on the right:
-    # after 'until', one lookahead token chooses 'switched' (the terminator,
-    # ending the run) or a <cause> (an explicit until, followed by more). This
-    # is LL(1) and stops exactly at 'until switched', leaving the machine's
-    # closing untils for the machine.
-    "<state>":
-        (SEQ, "state:", "<dotted-name>", (OPT, "<decl-parens>"),
-                 (PLUS, "<mode-elm>"),
-                 "<state-untils>"),
-
-    # <state-untils>: 'until' ( 'switched' | <cause> <state-untils> )
-    "<state-untils>":
-        (SEQ, "until:", (ALT, "switched", (SEQ, "<cause>", "<state-untils>"))),
-
-    # <has-ref>: 'has:' <member-ref>   (pull in a member defined elsewhere)
-    "<has-ref>":
-        (SEQ, "has:", "<member-ref>"),
-
-    # <forward-decl>: <name> [ '(' <arg-decl-list> ')' ] 'is:' <fwd-kind>
-    # Signature reuses <decl-parens>; mandatory-on-spawnable-kinds is a pass-2
-    # check. FIRST = {ID}, disjoint from keyword-led top-level branches.
-    # See SYNTAX.txt <forward-decl>.
-    "<forward-decl>":
-        (SEQ, "#ID", (OPT, "<decl-parens>"), "is:", "<fwd-kind>"),
-
-    # <fwd-kind>: <kind-name> | 'container' '<' [<arg-list>] '>' [ 'as:' {luau} ]
-    # Round signature (how to instantiate) vs angle type-params (what kind);
-    # see SYNTAX.txt <fwd-kind>.
-    "<fwd-kind>":
-        (ALT, TOK_ID,
-              (SEQ, "container", "<", (OPT, "<arg-list>"), ">",
-                    (OPT, (SEQ, "as:", "{luau:LVALUE}")))),
-
-    # <member-ref>: <reactor-name> | <aggregate-name> '.' <reactor-name>
-    #             | <aggregate-name> '.' 'VOID'   (a bare or qualified name)
-    "<member-ref>":
-        (SEQ, TOK_ID, (OPT, (SEQ, ".", (ALT, "VOID", TOK_ID)))),
-
-    # <mode-group>: 'mode_group' <name> [ '(' <arg-decl-list> ')' ] ':'
-    #                   <mode-group-elm>+ 'end'
-    # Closed by 'end', not by its own 'until' causes. A member mode's own
-    # ( 'until' <cause> )+ run is therefore followed by 'end' or the next
-    # member keyword -- never by another 'until' that could belong to the group
-    # -- so the inline-member boundary is decidable with one token (LL(1)).
-    "<mode-group>":
-        (SEQ, "mode_group:", "<dotted-name>", (OPT, "<decl-parens>"),
-                 (PLUS, "<mode-group-elm>"),
-                 ":end"),
-
-    # <mode-group-elm>: <mode> | <has-ref> | 'init' '{}' | 'deinit' '{}'
-    "<mode-group-elm>":
-        (ALT, "<mode>", "<has-ref>", "<init>", "<deinit>"),
-
-    # <state-machine>: 'state_machine' <name> [ '(' <arg-decl-list> ')' ] ':'
-    #                      <state-machine-elm>+ 'end'
-    # Closed by 'end', not by 'until' causes. Each member state is self-
-    # terminated by 'until switched', and the machine by 'end'.
-    "<state-machine>":
-        (SEQ, "state_machine:", "<dotted-name>", (OPT, "<decl-parens>"),
-                 (PLUS, "<state-machine-elm>"),
-                 ":end"),
-
-    # <state-machine-elm>: <state> | <has-ref> | 'default' '=' <ref>
-    #                    | 'init' '{}' | 'deinit' '{}'
-    "<state-machine-elm>":
-        (ALT, "<state>", "<has-ref>", "<default>", "<init>", "<deinit>"),
-
-    "<default>":
-        (SEQ, "default:", "<sm-mode-ref>"),
-
-    # <sm-mode-ref>: <name> '.' <mode-name> | <name> '.' 'VOID'
-    "<sm-mode-ref>":
-        (SEQ, TOK_ID, ".", (ALT, "VOID", TOK_ID)),
-
-    # <event-def>: 'event' <event-name> '(' <arg-decl-list> ')'
-    "<event-def>":
-        (SEQ, "event:", TOK_ID, "<decl-parens>"),
-
-    # <clock-def>: 'clock' <event-name> <number>
-    "<clock-def>":
-        (SEQ, "clock:", TOK_ID, TOK_NUMBER),
-
-    # '(' <arg-decl-list> ')'
-    "<decl-parens>":
-        (SEQ, "(", (OPT, "<arg-decl-list>"), ")"),
-
-    # <arg-decl-list>: <arg-decl> (';' <arg-decl>)*
-    "<arg-decl-list>":
-        (SEQ, "<arg-decl>", (STAR, (SEQ, ";", "<arg-decl>"))),
-
-    # <arg-decl>: <member-colon> <type>   e.g. 'n: int'
-    # The member name is glued to its ':' as a NAME_COLON token (an identifier
-    # immediately followed by ':'), keeping the monosemic colon rule: ':' only
-    # ever appears glued, never free. The type is a bare ID.
-    "<arg-decl>":
-        (SEQ, "#NAME_COLON", TOK_ID),
-
-    # <mode-name>: <name> '.' <identifier> | <identifier>   (dotted name)
-    "<dotted-name>":
-        (SEQ, TOK_ID, (STAR, (SEQ, ".", TOK_ID))),
-}
+# Keywords whose matched Token an action inspects (so the engine keeps them in
+# the frame rather than dropping them as punctuation) are marked in the GRAMMAR
+# dict itself, as '<captured:"X">' elements -- there is no separate set here.
 
 
 # ---------------------------------------------------------------------------
@@ -303,7 +34,7 @@ from . import ast_nodes as ast
 def _build_trigger(frame):
     """RETURN: Trigger, from the single matched token of <trigger>."""
     tok = frame.values[0]
-    is_kw = tok.kind.name != "ID"
+    is_kw = tok.kind is not t_re_id
     return ast.Trigger(name=tok.text, is_keyword=is_kw, begin=tok.begin)
 
 
@@ -446,7 +177,7 @@ def _build_sm_mode_ref(frame):
     frame.values = [sm_tok, member_tok]; member is the VOID keyword or an ID.
     """
     sm_tok, member_tok = frame.values
-    is_void = member_tok.kind.name == "KW_VOID"
+    is_void = member_tok.kind is t_kw_void
     return ast.StateMachineModeRef(sm_name=sm_tok.text, mode_name=member_tok.text,
                                    is_void=is_void, begin=sm_tok.begin)
 
@@ -469,22 +200,31 @@ def _split_members_and_untils(values):
 
 def _members_slice(values):
     """
-    RETURN: list, the member/until values after the name and optional params.
+    RETURN: list, the member/until values after the <signature>.
 
-    values[0] is the dotted name. values[1] is the params list iff a
-    decl-parens matched (a list); otherwise members start at index 1.
+    values[0] is the <signature> -- a (name, params) tuple, one slot -- so the
+    members start at index 1 unconditionally (no params type-spotting needed).
     """
-    if len(values) > 1 and isinstance(values[1], list):
-        return values[2:]
     return values[1:]
 
 
 def _name_and_params(frame):
-    """RETURN: (name, params), the dotted name and its parameter list (or [])."""
+    """RETURN: (name, params), unpacked from the <signature> at frame.values[0]."""
+    return frame.values[0]
+
+
+def _build_signature(frame):
+    """RETURN: (name, params), a reactor/aggregate signature.
+
+    frame.values = [dotted_name] or [dotted_name, [ArgDecl, ...]]; the
+    round-bracket parameter list is optional ('()' or absent both give []).
+    The single value a <signature> contributes to its parent frame, so a
+    reactor/aggregate rule carries one signature slot, not a name plus a
+    type-spotted optional params slot.
+    """
     name   = frame.values[0]
-    params = frame.values[1] if (len(frame.values) > 1
-                                 and isinstance(frame.values[1], list)) else []
-    return name, params
+    params = frame.values[1] if len(frame.values) > 1 else []
+    return (name, params)
 
 
 def _build_mode(frame):
@@ -509,33 +249,16 @@ def _build_mode(frame):
                     causalities=causalities, untils=untils, begin=frame.begin)
 
 
-def _build_state_untils(frame):
-    """
-    RETURN: list, the explicit 'until' <cause> nodes of a state, in order.
-
-    <state-untils> is 'until' ( 'switched' | <cause> <state-untils> ). The
-    'switched' terminator is silent, so a frame either holds [] (just
-    'until switched') or [Cause, [more causes...]] from the recursive tail.
-    Flattens the head Cause and the tail list into one list.
-    """
-    if not frame.values:
-        return []
-    head = frame.values[0]
-    tail = frame.values[1] if len(frame.values) > 1 else []
-    return [head] + tail
-
-
 def _build_state(frame):
-    """RETURN: State, a state-machine member closed by 'until switched'.
+    """RETURN: State, a state-machine member with its trailing until causes.
 
-    Same member sorting as a mode. The trailing value is the <state-untils>
-    list: the optional preceding explicit 'until' causes (possibly empty); the
-    mandatory 'until switched' closer is punctuation and carries no field.
+    Same shape as a mode: members ('<mode-elm>+') sorted by kind, then the
+    trailing run of 'until' Causes (now optional -- possibly empty). The state's
+    block is terminated structurally by the next state-machine element or 'end',
+    not by a closer keyword.
     """
     name, params = _name_and_params(frame)
-    rest = _members_slice(frame.values)
-    untils = rest[-1] if rest and isinstance(rest[-1], list) else []
-    members = rest[:-1] if rest and isinstance(rest[-1], list) else rest
+    members, untils = _split_members_and_untils(_members_slice(frame.values))
     init = deinit = None
     causalities = []
     for m in members:
@@ -557,11 +280,11 @@ def _build_member_ref(frame):
     """
     if len(frame.values) == 1:
         member_tok = frame.values[0]
-        is_void = member_tok.kind.name == "KW_VOID"
+        is_void = member_tok.kind is t_kw_void
         return ast.HasRef(aggregate=None, member=member_tok.text,
                           is_void=is_void, begin=member_tok.begin)
     agg_tok, member_tok = frame.values
-    is_void = member_tok.kind.name == "KW_VOID"
+    is_void = member_tok.kind is t_kw_void
     return ast.HasRef(aggregate=agg_tok.text, member=member_tok.text,
                       is_void=is_void, begin=agg_tok.begin)
 
@@ -580,7 +303,7 @@ def _build_forward_decl(frame):
     round-bracket signature is optional. 'signature' is the <decl-parens> list
     of ArgDecls when present, else []. 'kind_dict' comes from <fwd-kind>: keys
     'kind', 'cargs', 'luau_handle'. 'begin' is the name offset. Signature vs
-    type-params, and the mandatory-on-spawnable-kinds rule: see SYNTAX.txt.
+    type-params, and the mandatory-on-spawnable-kinds rule: see SYNTAX_DOC in syntax.py.
     """
     name_tok  = frame.values[0]
     kind      = frame.values[-1]
@@ -600,10 +323,10 @@ def _build_fwd_kind(frame):
     The 'container' form (KW_CONTAINER captured) gives frame.values =
     ['container', [Arg,...], maybe Luau]: 'cargs' the angle-bracket type-params
     (ordinary <arg>s), 'luau_handle' the optional 'as:' LVALUE span. See
-    SYNTAX.txt <fwd-kind>.
+    SYNTAX_DOC in syntax.py, <fwd-kind>.
     """
     head = frame.values[0]
-    if getattr(head, "kind", None) is not None and head.kind.name == "KW_CONTAINER":
+    if getattr(head, "kind", None) is t_kw_container:
         cargs       = next((v for v in frame.values[1:] if isinstance(v, list)), [])
         luau_handle = next((v for v in frame.values[1:] if isinstance(v, ast.Luau)),
                            None)
@@ -740,44 +463,44 @@ def _build_include(frame):
 
 
 ACTIONS = {
-    "<top-level>":         None,
-    "<namespace>":         _build_namespace,
-    "<include>":           _build_include,
-    "<causality>":         _build_causality,
-    "<cause>":             _build_cause,
-    "<trigger>":           _build_trigger,
-    "<guard>":             _build_guard,
-    "<effect>":            None,
-    "<mutation>":          _build_mutation,
-    "<spawn>":             _build_spawn,
-    "<unspawn>":           _build_unspawn,
-    "<event-spec>":        _build_event_spec,
-    "<mode-arming>":       _build_mode_arming,
-    "<report-string>":     _build_report_string,
-    "<arg-parens>":        _build_arg_parens,
-    "<arg-list>":          _build_arg_list,
-    "<arg>":               _build_arg,
-    "<rvalue>":            None,
-    "<mode>":              _build_mode,
-    "<mode-elm>":          None,
-    "<init>":              _build_init,
-    "<deinit>":            _build_deinit,
-    "<state>":             _build_state,
-    "<state-untils>":      _build_state_untils,
-    "<has-ref>":           _build_has_ref,
-    "<forward-decl>":      _build_forward_decl,
-    "<fwd-kind>":          _build_fwd_kind,
-    "<member-ref>":        _build_member_ref,
-    "<mode-group>":        _build_mode_group,
-    "<mode-group-elm>":    None,
-    "<state-machine>":     _build_state_machine,
-    "<state-machine-elm>": None,
-    "<default>":           _build_default,
-    "<sm-mode-ref>":       _build_sm_mode_ref,
-    "<event-def>":         _build_event_def,
-    "<clock-def>":         _build_clock_def,
-    "<decl-parens>":       _build_decl_parens,
-    "<arg-decl-list>":     _build_arg_decl_list,
-    "<arg-decl>":          _build_arg_decl,
-    "<dotted-name>":       _build_dotted_name,
+    "top-level":         None,
+    "namespace":         _build_namespace,
+    "include":           _build_include,
+    "causality":         _build_causality,
+    "cause":             _build_cause,
+    "trigger":           _build_trigger,
+    "guard":             _build_guard,
+    "effect":            None,
+    "mutation":          _build_mutation,
+    "spawn":             _build_spawn,
+    "unspawn":           _build_unspawn,
+    "event-spec":        _build_event_spec,
+    "mode-arming":       _build_mode_arming,
+    "report-string":     _build_report_string,
+    "arg-parens":        _build_arg_parens,
+    "arg-list":          _build_arg_list,
+    "arg":               _build_arg,
+    "rvalue":            None,
+    "mode":              _build_mode,
+    "mode-elm":          None,
+    "init":              _build_init,
+    "deinit":            _build_deinit,
+    "state":             _build_state,
+    "has-ref":           _build_has_ref,
+    "forward-decl":      _build_forward_decl,
+    "fwd-kind":          _build_fwd_kind,
+    "member-ref":        _build_member_ref,
+    "mode-group":        _build_mode_group,
+    "mode-group-elm":    None,
+    "state-machine":     _build_state_machine,
+    "state-machine-elm": None,
+    "default":           _build_default,
+    "sm-mode-ref":       _build_sm_mode_ref,
+    "event-def":         _build_event_def,
+    "clock-def":         _build_clock_def,
+    "decl-parens":       _build_decl_parens,
+    "arg-decl-list":     _build_arg_decl_list,
+    "arg-decl":          _build_arg_decl,
+    "dotted-name":       _build_dotted_name,
+    "signature":         _build_signature,
 }

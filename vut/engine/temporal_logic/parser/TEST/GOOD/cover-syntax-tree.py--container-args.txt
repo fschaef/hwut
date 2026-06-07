@@ -1,9 +1,0 @@
-=== <container-args> ===
-
--- absent --
-   input: ( )
-[]
-
--- present --
-   input: ( X )
-'X'

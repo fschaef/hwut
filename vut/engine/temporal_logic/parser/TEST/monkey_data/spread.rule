@@ -1,0 +1,44 @@
+open: X2 . X4 . X6 . X8 X9 ( n11: X12 ; n14: X15 ) is: container < X20 , 1 , { x } > as: { x{ y } }
+:close
+on: ANY & { x{ y } }
+=> +! X32 . X34 ( "s" , { x{ y } } , 1 , X41 ) in: X44 . X46 . X48 as: { x }
+=> "s"
+=> { x{ y } }
+mode_group: X54 . X56 . X58 . X60 . X62 ( n64: X65 ; n67: X68 )
+init: { x{ y } }
+:end
+clock: X73 1
+state_machine: X76 . X78 ( n80: X81 ; n83: X84 )
+init: { x }
+:end
+mode: X89 . X91 . X93 . X95 . X97 ( n99: X100 ; n102: X103 ; n105: X106 ; n108: X109 )
+deinit: { x }
+init: { x }
+on: END & { x }
+=> ! X118 . X120 ( "s" , X124 )
+=> -! X128 . X130 . X132 . X134
+=> X136 . X138 . X140 . X142 . X144 ( 1 , { x } , "s" , { x{ y } } )
+=> X153 . X155 ( "s" , 1 , X161 )
+init: { x{ y } }
+until: BEGIN & { x{ y } }
+until: X168 & { x }
+until: END & { x } include: "s" into: X176 . X178 . X180
+event: X182 ( n184: X185 ; n187: X188 ) X190 ( n192: X193 ; n195: X196 ; n198: X199 ) is: X202
+open: X204 . X206
+state_machine: X208 . X210 . X212 ( n214: X215 ; n217: X218 ; n220: X221 )
+state: X224 . X226 . X228 . X230 . X232 ( n234: X235 ; n237: X238 ; n240: X241 ; n243: X244 ; n246: X247 )
+deinit: { x }
+until: BEGIN & { x{ y } }
+until: X254 & { x }
+until: ANY & { x{ y } }
+until: ANY & { x{ y } }
+deinit: { x{ y } }
+has: X264 . X266
+default: X268 . VOID
+:end
+:close
+on: BEGIN & { x{ y } }
+=> -! X278 . X280 . X282
+=> ! X285 . X287 . X289 ( "s" , 1 )
+=> "s"
+clock: X298 1

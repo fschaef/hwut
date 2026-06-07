@@ -5,5 +5,6 @@ coverage run --omit ./*.py -a *.py
 
 --not common.py
 --not config.py
---not hwut_runner_shim.py
+--not aux_*.py
+--not monkey-file-creator.py
 --not fake_luau_oracle.py

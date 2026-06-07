@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 ABSTRACT SYNTAX TREE NODES
 
-Pure data structures for the rule-file grammar (SYNTAX section A.1). Every node
+Pure data structures for the rule-file grammar (see GRAMMAR in syntax.py). Every node
 carries 'begin', the absolute source offset where the construct starts, so a
 SourceMap can resolve a 1-based (line, column) for error reporting and for the
 Source2TargetLocationMapper during code generation. Nodes hold no behaviour;
@@ -49,8 +49,7 @@ class Luau:
 
 @dataclass(frozen=True)
 class Trigger:
-    """A cause trigger: an event name or an implicit keyword (ANY/BEGIN/END/
-    switched).
+    """A cause trigger: an event name or an implicit keyword (ANY/BEGIN/END).
 
     'name' is the identifier or keyword lexeme. 'is_keyword' True marks the
     implicit triggers, distinguishing 'END' the system event from a user event
@@ -215,12 +214,12 @@ class Mode(TopLevel):
 
 @dataclass(frozen=True)
 class State:
-    """A state: a mode living in a state machine, closed by 'until switched'.
+    """A state: a mode living in a state machine.
 
-    Same body shape as Mode. 'untils' are the optional preceding explicit
-    'until' causes (possibly empty); the mandatory 'until switched' closer is
-    implied by the node kind and carries no field. Not a TopLevel: a state
-    appears only inside a <state-machine>.
+    Same body shape as Mode. 'untils' are the trailing 'until' causes (now
+    optional -- possibly empty); the block is terminated structurally by the
+    next state-machine element or 'end', not by a closer keyword. Not a
+    TopLevel: a state appears only inside a state-machine.
     """
     name:        str
     params:      List[ArgDecl]

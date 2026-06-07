@@ -1,9 +1,9 @@
 
 --- comment lines and blank lines are skipped ---
-ID           [ 21:23 ] 'on'
-ID           [ 24:28 ] 'Tick'
-ARROW        [ 51:53 ] '=>'
-ID           [ 54:58 ] 'Beep'
-LPAREN       [ 58:59 ] '('
-RPAREN       [ 59:60 ] ')'
-END_OF_FILE  [ 61:61 ] ''
+regex:[a-zA-Z_]\w* [ 21:23 ] 'on'
+regex:[a-zA-Z_]\w* [ 24:28 ] 'Tick'
+string:=>    [ 51:53 ] '=>'
+regex:[a-zA-Z_]\w* [ 54:58 ] 'Beep'
+string:(     [ 58:59 ] '('
+string:)     [ 59:60 ] ')'
+framing:end-of-file [ 61:61 ] ''

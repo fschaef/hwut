@@ -1,0 +1,10 @@
+
+--- line/column of selected offsets ---
+offset  0 -> line 1 col  1   ('o' of on, line 1 col 1)
+offset  3 -> line 1 col  4   ('T' of Tick, line 1 col 4)
+offset  8 -> line 2 col  1   (first space of line 2)
+offset 10 -> line 2 col  3   ('=' of =>, line 2)
+offset 24 -> line 3 col  6   ('1' inside the Luau block, line 3)
+
+--- the Luau block the lexer skipped still resolves ---
+block opens at line 2 col 6, closes at line 3 col 10

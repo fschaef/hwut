@@ -37,7 +37,8 @@ import sys
 import config                                                       # noqa: F401
 
 from vut.language_support.python.hwut_runner      import HwutRunner
-from vut.engine.temporal_logic.parser.lexer       import Lexer, SourceMap, E_TokenId
+from vut.engine.temporal_logic.parser.lexer       import Lexer, SourceMap
+from vut.engine.temporal_logic.parser.terminals   import t_fr_luau_open, t_fr_luau_block, t_fr_eof
 from vut.engine.temporal_logic.parser.diagnostic  import DiagnosticReporter
 from vut.engine.temporal_logic.luau.luau_fragment import Role
 from fake_luau_oracle import FakeLuauOracle
@@ -63,14 +64,14 @@ def drive(text, role=Role.STATEMENT_BLOCK, record=False):
     tokens   = []
     while True:
         tok = lexer.next()
-        if tok.kind == E_TokenId.LUAU_OPEN:
+        if tok.kind is t_fr_luau_open:
             block = lexer.read_luau_block(tok, role)
             if block is None:
                 break
             tokens.append(block)
             continue
         tokens.append(tok)
-        if tok.kind == E_TokenId.END_OF_FILE:
+        if tok.kind is t_fr_eof:
             break
     return tokens, reporter, lexer
 
@@ -78,7 +79,7 @@ def drive(text, role=Role.STATEMENT_BLOCK, record=False):
 def show_tokens(tokens):
     """RETURN: None. Prints each token's kind, span, and lexeme, one per line."""
     for t in tokens:
-        print("%-12s [%3d:%-3d] %r" % (t.kind.name, t.begin, t.end, t.text))
+        print("%-12s [%3d:%-3d] %r" % (t.kind._name(), t.begin, t.end, t.text))
 
 
 def show_diagnostics(reporter):
@@ -95,8 +96,8 @@ def run_tokens():
     """RETURN: None. Each token kind maps as expected, with correct spans."""
     banner("keywords and structure")
     src = ("on: mode: mode_group: state_machine: state: has: as: until: :end "
-           "event: clock: into: in: open: :close container is: singleton: "
-           "default: init: deinit: ANY BEGIN END switched VOID")
+           "event: clock: into: in: open: :close container is: "
+           "default: init: deinit: ANY BEGIN END VOID")
     tokens, _, _ = drive(src)
     show_tokens(tokens)
 
@@ -197,7 +198,7 @@ def run_source_map():
 
     banner("the Luau block the lexer skipped still resolves")
     tokens, _, _ = drive(text)
-    block = [t for t in tokens if t.kind == E_TokenId.LUAU_BLOCK][0]
+    block = [t for t in tokens if t.kind is t_fr_luau_block][0]
     bl, bc = smap.line_column(block.begin)
     el, ec = smap.line_column(block.end - 1)
     print("block opens at line %d col %d, closes at line %d col %d"

@@ -1,9 +1,9 @@
 
 --- FIRST sets of key rules ---
-<top-level>            ID, KW_CLOCK, KW_EVENT, KW_INCLUDE, KW_MGROUP, KW_MODE, KW_ON, KW_OPEN, KW_SM
-<trigger>              ID, KW_ANY, KW_BEGIN, KW_END
-<effect>               BANG, ID, LUAU_OPEN, MINUSBANG, PLUSBANG, STRING
-<rvalue>               LUAU_OPEN, NUMBER, STRING
-<mode-elm>             KW_DEINIT, KW_INIT, KW_ON
-<state-machine-elm>    KW_DEFAULT, KW_DEINIT, KW_HAS, KW_INIT, KW_STATE
-<mode-group-elm>       KW_DEINIT, KW_HAS, KW_INIT, KW_MODE
+top-level              regex:[a-zA-Z_]\w*, string:clock:, string:event:, string:include:, string:mode:, string:mode_group:, string:on:, string:open:, string:state_machine:
+trigger                captured:ANY, captured:BEGIN, captured:END, regex:[a-zA-Z_]\w*
+effect                 framing:luau-open, regex:"[^"]*", regex:[a-zA-Z_]\w*, string:!, string:+!, string:-!
+rvalue                 framing:luau-open, regex:"[^"]*", regex:[+-]?\d+(?:\.\d+)?, regex:[a-zA-Z_]\w*
+mode-elm               string:deinit:, string:init:, string:on:
+state-machine-elm      string:default:, string:deinit:, string:has:, string:init:, string:state:
+mode-group-elm         string:deinit:, string:has:, string:init:, string:mode:

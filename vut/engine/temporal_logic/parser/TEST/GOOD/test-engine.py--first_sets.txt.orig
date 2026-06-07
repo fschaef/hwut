@@ -1,0 +1,9 @@
+
+--- FIRST sets of key rules ---
+<top-level>            ID, KW_CLOCK, KW_EVENT, KW_INCLUDE, KW_MGROUP, KW_MODE, KW_ON, KW_OPEN, KW_SM
+<trigger>              ID, KW_ANY, KW_BEGIN, KW_END
+<effect>               BANG, ID, LUAU_OPEN, MINUSBANG, PLUSBANG, STRING
+<rvalue>               LUAU_OPEN, NUMBER, STRING
+<mode-elm>             KW_DEINIT, KW_INIT, KW_ON
+<state-machine-elm>    KW_DEFAULT, KW_DEINIT, KW_HAS, KW_INIT, KW_STATE
+<mode-group-elm>       KW_DEINIT, KW_HAS, KW_INIT, KW_MODE

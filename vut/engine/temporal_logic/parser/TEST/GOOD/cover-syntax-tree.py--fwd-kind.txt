@@ -1,9 +1,0 @@
-=== <fwd-kind> ===
-
--- alternative 0 --
-   input: X
-{'kind': 'X', 'cargs': [], 'luau_handle': None}
-
--- alternative 1 --
-   input: container ( X )
-{'kind': 'container', 'cargs': ['X'], 'luau_handle': None}

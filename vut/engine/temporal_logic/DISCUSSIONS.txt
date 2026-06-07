@@ -1,337 +1,233 @@
 ===============================================================================
-TEMPORAL LOGIC ENGINE  --  HWUT 2.0
-DISCUSSIONS  --  running design log
+REACTIVE RULE ENGINE  --  HWUT 2.0
+PARSER  --  DISCUSSIONS LOG
 ===============================================================================
 
-PURPOSE
-  Design log. Resolved decisions + reasoning, rejected alternatives, deferred
-  ideas, open questions. Settled architecture stated as fact in README.txt;
-  concrete syntax in SYNTAX.txt. Newest at top of each section.
-  Style: telegraphic. Full sentences only where reasoning needs them.
+Resolved decisions, rationale, and rejected alternatives. README = settled
+mechanics; SYNTAX_DOC = concrete syntax (dominates); this = why. Append-only:
+entries are never retroactively rewritten. The semantic log (semantic/
+DISCUSSIONS.txt, 'L-N') and the luau log (luau/DISCUSSIONS.txt, 'D-N') cite
+entries here by their R-number.
 
-
--------------------------------------------------------------------------------
-LIVE QUESTIONS
--------------------------------------------------------------------------------
-
-  L-7  SEMANTIC LAYER -- symbol table, name resolution, validation. DESIGNED,
-       NOT YET BUILT. Parser produces name-bearing AST only. The sub-questions
-       below are now settled; design recorded in semantic/DISCUSSIONS.txt
-       (L-7..L-17) and semantic/README.txt. Build is the next code step.
-         - symbol-table shape: scope tree mirroring all nesting; one undivided
-           name->symbol map per scope (semantic L-7, L-7d).
-         - coexisting names: ONE shell -- modes, mode groups, state machines,
-           instances, AND events compete in it; any clash is an error
-           (semantic L-7d, generalizing R-37).
-         - resolution: innermost-out lexical search on the head segment, then
-           strict descent for the tail; dot separator, matching Luau
-           (semantic L-7b, L-7c).
-         - include mounting: parse-once cached, fresh scope tree per mount,
-           asymmetric visibility by the parent=None graft, ordered cycle chain
-           (semantic L-8, L-9, L-10).
-         - unspawn target: static resolve + INSTANCE-kind check; liveness is
-           runtime (semantic L-11, L-12).
-       Constraints to enforce: <=1 init / <=1 deinit per reactor/aggregate;
-       <=1 default per state machine; every state until-run ends 'until
-       switched'; default -> defined member or VOID; every spawn/unspawn/has:/
-       default target resolves; one undivided name shell forbids all in-scope
-       clashes. Spawn-form checks added by R-39: singleton ref carries no
-       parentheses; 'in {lvalue}' container is opaque (not resolved).
-
-  L-6  CODE GENERATION -- AST -> target (Lua) emitter. NOT YET BUILT; after
-       L-7. Tree-walk over the (validated) AST. Open: what "pure Lua" output
-       strips (trace/report harness? sm/mode/event bindings?). Provides the
-       serializer that L-5 needs.
-
-  L-5  ROUND-TRIP MONKEY TEST -- parse -> serialize -> re-parse -> compare.
-       Upgrades the fuzz suite from liveness/stability to correctness. Blocked
-       on the L-6 serializer. (A lightweight form already exists: monkey
-       '--debug' renders the walk to real source, re-lexes it, confirms the AST
-       matches structurally.)
-
-  L-4  GUARD/BODY CONVENIENCE LIBRARY. Helpers injected into the Luau sandbox.
-       Further additions deferred (time_since(Event), vector math). Engine-
-       provided, not third-party (portability).
-
-  L-3  HWUT INTEGRATION DETAIL. Diff format, error reporting. Owned by HWUT
-       integration; out of engine-design scope.
-
+NOTE ON NUMBERING: the entries below were authored in a session where the
+prior R-N ledger was not in hand; they are numbered from R-50 to leave room
+and avoid collision with existing entries (R-2 .. R-40+ are referenced by the
+semantic log). Renumber into sequence on merge if the live ledger has advanced
+past R-50.
 
 -------------------------------------------------------------------------------
-DEFERRED / REJECTED  --  reasoning recorded so it is not lost
+R-50.  Authoring vocabulary: tuple = sequence, list = optional, ALT = sentinel
 -------------------------------------------------------------------------------
-
-  D-7  FILE SELF-NAMING ('namespace earth.europe' header in the included
-       file). REJECTED. Python's lesson: the included unit is placement-
-       agnostic; the INCLUDING side chooses the mount point. Self-naming
-       couples a file to one location, collides when two files claim the same
-       path, and blocks mounting one file at two places. See R-36.
-
-  D-6  PARTIAL / REVERSE-ORDER NAMESPACE CLOSE ('close berlin.germany',
-       'open ... in europe', dangling-at-EOF). CONSIDERED, then DROPPED in
-       favour of strict balanced open/close. Partial close turns open/close
-       from brackets into a cursor over a path -- breaks the recursive
-       containment tree and the stackless walk that assumes balance. Strict
-       bracketing is sound and already correct. See R-35.
-
-  D-5  CROSS-PRODUCT POSITIVE COVERAGE. When a rule has several variadic
-       points, vary them one at a time, NOT the cross-product. No value add;
-       cross-product explodes case count for no extra defect class. See R-33.
-
-  D-1  INDIRECT / COMPUTED ARMING ('arm[expr]'). NOT in v1. A computed ARM
-       target does not threaten termination (arming only gates edges a
-       reactor's rules already contribute, never adds an edge) -- so if
-       revisited, that asymmetry vs computed EMIT is the justification.
-       Preferred alternative for data fan-out: parameterized reactors (R-15)
-       -- name literal, instance identity is data.
-
-  D-2  CONDITIONAL ARMING SUGAR ('if not armed yet'). Superseded by the
-       'armed()' guard builtin (R-17). No dedicated syntax.
-
-  D-3  OVERLAPPING-WINDOW COUNTER. Subsumed by parameterized reactors (R-15):
-       concurrent instances are the normal case now.
-
+Decision: a GRAMMAR rule body is built from plain Python literals plus three
+named operators, chosen so the dict reads like a grammar table.
+  (a, b, ...)        SEQUENCE      -- a bare tuple
+  [a, b, ...]        OPTIONAL      -- a bare list (one element [x] = x optional;
+                                     more = optional sequence)
+  (a, ALT, b, ...)   ALTERNATION   -- the ALT sentinel placed BETWEEN branches
+  PLUS(x) STAR(x)    one/zero-or-more
+  "<name>"           a reference to GRAMMAR rule 'name'
+  "literal"          a silent bare-string keyword
+Rejected: OPT(x) as a wrapping call (retired). A wrapping call doubles the
+visual nesting on the common case ([in: ... [as: ...]] vs OPT((..OPT((..))))),
+and the bracket already means 'optional' everywhere in SYNTAX_DOC prose.
+Rejected: ALT(a, b, ...) as a variadic call. The between-branches sentinel
+reads as BNF's 'a | b | c' with no wrapping parens; an overloaded '|' operator
+was rejected because it needs real combinator objects on both sides, which
+reintroduces the visual noise the change was meant to remove.
+Mechanism: _compile_child lowers a tuple to SeqNode unless it holds the ALT
+sentinel (then split into an Alt); a list to OptNode (one-element list lowers
+to Opt(elem) directly, identical to the old OPT(x); multi to Opt(Seq(...))).
+Invariant: a single-element optional produces NO list wrapper in the AST -- see
+R-52.
 
 -------------------------------------------------------------------------------
-RESOLVED  --  decisions and the reasoning behind them
+R-51.  Rule references written as "<name>", not R("name")
 -------------------------------------------------------------------------------
-
-  R-39  SPAWN MODEL REWORK -- binding-form axis, containers, singletons.
-        Supersedes the 'as <name>' / unnamed-singleton surface of R-29/R-31
-        (the verbs '!','+!','-!' stand; only the '+!' operand shape changes).
-        '+!' now has three forms, decided by shape:
-          - bare type name        -> re-init a 'singleton :'-declared instance;
-                                      parentheses here are a SYNTAX ERROR.
-          - type name '(' args ')' -> spawn into the per-kind DEFAULT container.
-          - ... 'in' '{' lvalue '}' -> spawn into the named container.
-        '-!' = END EXISTENCE (runs 'deinit', releases from the container), not
-        merely "remove a named instance".
-        Rationale:
-          - 'as <name>' conflated CREATE with BIND-TO-SLOT; on a singleton that
-            is contradictory. Identity now comes from how a type is DECLARED
-            (singleton => by name) or from the CONTAINER (else), not from a
-            name pinned at the spawn site. 'as' dropped.
-          - double-creation handled WHERE IT BELONGS, the container: the
-            default container is a MultiReactorContainer whose accept rule
-            rejects a parameterisation already present (identity = parameters,
-            R-29) -- so an anonymous '+! R(args)' stays idempotent exactly as a
-            mode re-arm. A singleton is the named ScalarReactorContainer case.
-          - container = "a structure that holds instances"; one
-            (ScalarReactorContainer) or many (MultiReactorContainer). Accept is
-            a mutexed three-call slot protocol slot_reserve/slot_set/slot_free
-            (reserve returns an int key or NO_SLOT; construct runs after a
-            successful reserve, OUTSIDE the lock; a rejected reserve constructs
-            nothing; slot_free is idempotent). Mutex on the reserve alone
-            suffices (no global lock through construct). Two base classes added
-            to bootstrap.lua (3e).
-          - 'in {lvalue}' is OPAQUE Luau (R-6, R-23): the parser does not
-            resolve it, the semantic layer does not check it is a container;
-            container-ness is a run-time fact. Cost: a typo'd container is a
-            run-time error, not static -- the same opacity every Luau span
-            already carries, not a new hole. REJECTED: requiring 'box' to be a
-            declared, kind-known container -- would drag the static line into
-            Luau lvalue space.
-          - construct-inside-vs-outside-the-mutex: OUTSIDE. Holding the lock
-            through a possibly-blocking construct (sprite, socket) would
-            serialize all spawns; the reserve marks the slot taken, construct
-            then runs unlocked, slot_set commits.
-        Binding 'mg' ADDED: the mode-group self-binding, symmetric to 'sm'
-        (state machine). Was missing -- a mode group's init/deinit had no name
-        for itself while a state machine's did. Exactly one of 'sm'/'mg' is in
-        scope, decided by the enclosing aggregate kind.
-        AST: Spawn loses 'inst', gains 'has_parens' + opaque 'container';
-        Singleton TopLevel node added. Grammar: '<spawn>' rewritten (parens
-        optional, optional 'in {luau}'), '<singleton-def>' added; lexer gains
-        KW_SINGLETON, KW_IN. Container protocol is a RUNTIME contract (bootstrap
-        + codegen), not a static-layer type.
-        -> SYNTAX A.1, A.2.1, <spawn>/<singleton-def>/<unspawn>; README
-           (glossary, BINDINGS, AGGREGATE SPAWNING); luau/README runtime
-           substrate; luau/bootstrap (3d, 3e); parser ast_nodes/grammar/lexer;
-           cf. R-29 (identity = parameters, retained as the default container's
-           accept rule), R-31 (verb set retained), R-6/R-23 (Luau opacity).
-
-  R-38  INCLUDE -- 'include "<file>" as <dotted-name>'. Mounts another file's
-        namespace at a path the INCLUDING file chooses. Python-model:
-          - included file placement-agnostic, does not name its own home;
-          - same file mountable at different paths, no self-naming collision;
-          - internal refs self-relative (resolve within the file, then
-            outward to its own scopes), NOT against the mounting scope;
-          - load-time mount (parse file once to its own table, mount the
-            unit), not textual splice.
-        Parser RECORDS only (filename + mount path) as an Include node; resolve
-        / parse / mount is L-7's job. Grammar: one keyword, one rule, one
-        node; LL(1) holds (FIRST {include} disjoint). 'as' mandatory (explicit
-        placement). 38 grammar rules.
-        -> SYNTAX A.1, A.2.8; README glossary.
-
-  R-37  NAMESPACES -- 'open <dotted-name> ... close', strictly balanced.
-        Several independent namespaces, unrestricted nesting. Dotted name nests
-        many levels in one 'open' ('open world.europe.berlin', not four
-        'open's); bare 'close' (matching open unambiguous from nesting). Body
-        is recursive <top-level>+, so a namespace contains any declaration incl.
-        nested open/close. Names scoped to the namespace they are defined in;
-        'as'-instance names likewise. Modes and state machines share ONE
-        namespace; no mode may share a state-machine name (rest of the
-        namespace question is L-7). The file itself is the implicit root
-        namespace.
-        -> SYNTAX A.1, A.2.7; README.
-
-  R-36  INCLUDE DIRECTION fixed before building: caller-decides-placement,
-        included file lexically self-contained. See R-38 for the mechanism and
-        D-7 for the rejected self-naming alternative.
-
-  R-35  STRICT BALANCED OPEN/CLOSE. Reaffirmed after considering partial close
-        (D-6). open/close are brackets; close closes exactly what its matching
-        open opened. Keeps the containment tree and the stackless walk valid.
-
-  R-34  STACKLESS ENGINE. The LL(1) interpreter walks the grammar on an
-        explicit work-stack + frame-stack, not Python recursion. Motivated by
-        unrestricted namespace nesting: the recursive walker overflowed at ~100
-        nested 'open's (depth_bomb FAIL 100); stackless parses 20000 in <1s.
-        Rewrite preserved behaviour exactly -- of 91 recordings, only depth_bomb
-        changed (FAIL->PASS); the other 90 (incl. all error-path and fuzz
-        trees) reproduced bit-for-bit, proving no drift. Chose full-interpreter
-        conversion (Scope 2) over patching only the namespace loop (Scope 1) to
-        avoid an inhomogeneous engine that would complicate later additions.
-        -> parser/README (A), (C).
-
-  R-33  TEST ARCHITECTURE -- four HWUT drivers, choices derived from the
-        compiled grammar so new rules are covered automatically:
-          - cover-syntax-tree: POSITIVE, one valid case per rule shape
-            (PLUS->1,2; STAR->0,1,2; OPT->absent,present; one variadic point
-            at a time, no cross-product per D-5); prints the input fragment +
-            AST; node_coverage asserts every node type is built.
-          - cover-negative: NEGATIVE, one rule in isolation fed truncation /
-            required-omission / junk-head; records diagnostics + recovery.
-          - monkey-fuzz: deterministic grammar walk (DeterministicStream),
-            profiles deep/wide/luau/balanced/states (seed + weights), depth-
-            budgeted to terminate, capped for reviewable trees; recording is
-            the assertion (deterministic AST). depth_bomb = stackless
-            acceptance test. coverage = aggregate, asserts 38/38 rules and
-            22/22 tree node types reached (transient InitBlock/DeinitBlock
-            excluded -- sorted into parent init/deinit, never persist).
-            '--debug' renders walk to real source + re-lexes (lightweight
-            round-trip, ahead of L-5).
-        Monkey is a stack-safety + determinism + breadth net, NOT a
-        correctness oracle (a wrong tree records as "wrong but stable"); full
-        correctness waits on L-5.
-        -> parser/README (F).
-
-  R-32  TABLE-DRIVEN LL(1) PARSER replaces hand-written recursive descent
-        (supersedes R-4's control-plane parser). Grammar declared once as data
-        (combinators SEQ/ALT/OPT/PLUS/STAR + terminals + '{luau:ROLE}'); a
-        generic driver interprets it; per-rule reduce actions build the AST.
-        LL(1) checked at compile time (shared-FIRST ALT branches = fatal
-        LL1ConflictError), so a grammar edit that breaks LL(1) fails loud.
-        Adding a construct = a grammar edit, not new driver code.
-        -> parser/README (B), (C).
-
-  R-31  AGGREGATE-ARMING VERBS -- '!' arm a single mode, '+!' spawn a named
-        aggregate, '-!' unspawn one. Symmetric sigil family, all Lua-safe (no
-        clash with comments '##', '-7' negative numbers, or operators).
-        Replaced earlier '+'/'++'. '-!' (unspawn) added: removes a spawned
-        aggregate; operand is a reference by name (bare/dotted) -- only a named
-        entity can be unspawned (target validity = L-7). Earlier '--' for
-        unspawn REJECTED: clashes visually with the Lua line comment.
-        -> SYNTAX A.1, A.2; README.
-
-  R-30  TERMINATORS -- 'end' closes mode_group and state_machine; causalities
-        are SELF-DELIMITING (no terminator). Supersedes R-28's 'off'.
-          - 'off' removed. A causality is 'on <cause> (=> <effect>)+'; each
-            effect is '=>'-led, so the loop ends at the first non-'=>' token.
-            The follower (top-level keyword / member keyword / 'until' / 'end'
-            / EOF) is never '=>', so the rule is unambiguously self-delimiting
-            (proven: effect-loop continuation token is ARROW). No closing
-            keyword needed.
-          - aggregates close with 'end', NOT their own 'until' causes. This is
-            what makes an inline member mode in a mode_group LL(1)-parseable:
-            a member mode's '(until <cause>)+' run is then followed by 'end'
-            (or a member keyword), never by another 'until' that could belong
-            to the group -- the boundary is decidable with one token. Modes
-            still close with '(until <cause>)+'; states with 'until switched'
-            (a recursive tail left-factored on 'until' so 'switched' terminates
-            the run without two-token lookahead).
-          - missing inline-member-in-group support, the four SYNTAX-vs-parser
-            divergences, and the trigger fix ('switched' is the state closer
-            only, not a general trigger) all resolved in the same pass.
-        -> SYNTAX throughout; README; parser/README (B).
-
-  R-29  LIFECYCLE & QUERY CONSOLIDATION. BEGIN/END trace frame (END mandatory,
-        engine-validated; BEGIN implicit). CLOCK: synthetic-time emitter, data-
-        plane only, fires between real events (distinct from rejected R-10
-        wakeup queue). construct/destruct per-instance hooks (one-time).
-        Idempotent re-arm: identity = parameters only; arming a live instance
-        is a silent no-op. Polymorphic comparators; LURKER(args) with
-        :any/:all/:none/:empty; GLOBAL_LURKER; tracer.watch.
-        (Some surface here later superseded -- 'off' by R-30, the reactor verb
-        set by R-31 -- but the lifecycle/query semantics stand.)
-        -> README 3,4,5,6,7,9,10.
-
-  R-28  GRAMMAR CONSOLIDATION (historical; surface partly superseded). Uniform
-        bindings 'event'/'lurker', '=>' on every consequence, read-only guard
-        check, 'Class.create' + 'filter' bootstrap helpers, '!=' and '~='. The
-        'off' universal terminator from here is superseded by R-30; the rest
-        stands. Enduring principle: a rule's shape and names must not depend on
-        context.
-        -> README 3-7,9,10; SYNTAX.
-
-  R-23  DATA PLANE = TRANSPILED LUAU run by a standard Luau runtime (supersedes
-        the embedded pure-Python Luau of R-4). Rule-file parser still does not
-        parse Luau (R-4 line holds); opaque spans delegated to a Luau brace-
-        finder helper rather than a fence delimiter (rejected: visual noise on
-        the author who reads guards constantly -- cost belongs on the tool).
-
-  R-12  THREE-FILE DOCUMENT SPLIT. README = settled fact. DISCUSSIONS = this
-        log. SYNTAX = concrete syntax. Rationale kept in README as brief notes
-        so settled decisions are not silently reopened.
-
-  R-11  OBSERVED-TRACE ASSERTIONS NOT A SEPARATE FEATURE. Stream and recorded
-        file are indistinguishable to the engine; any ordering/timing property
-        is an ordinary rule emitting a violation event. One engine, one mode.
-
-  R-10  PERIODIC CLOCK SIGNAL -- REJECTED. An engine emitting its own TICKs
-        would generate a time line, not validate one, and need a wakeup queue.
-        Periodicity belongs to whoever produces the input. (Cf. R-29 CLOCK,
-        which is data-plane synthetic-time only.)
-
-  R-6   EVENT STRUCTS LIVE IN LUAU; EMISSION DOES NOT. Field values Luau-
-        evaluated; the type NAME is static (a cascade-graph edge). Same for arm.
-
-  R-5   ONE-OBJECT-SPACE INVARIANT. One Luau table space; the control-plane
-        parser builds no parallel object model. Parser owns FORM, Luau owns
-        SUBSTANCE.
-
-  R-4   SPLIT PARSER (control plane vs data plane). Control-plane parser is now
-        the table-driven LL(1) engine (R-32), not hand-written descent; data
-        plane is transpiled Luau (R-23). "Whole rule file in Luau" rejected: it
-        surrenders the static cascade check, domain errors, grammar-as-
-        enforcement.
-
-  R-3   WATCHDOG: INSTRUCTION BUDGET, NOT WALL-CLOCK. Same interrupt point on
-        any hardware; wall-clock would make verdicts hardware-dependent.
-
-  R-2   TURING-COMPLETE LUAU BODIES; STATIC-NAME LINE. Bodies have full
-        sandboxed Luau, but '=>' / arm take statically literal names -- those
-        names are cascade-graph edges.
-
-  R-1   CASCADE TERMINATION STATICALLY CHECKABLE. "No event type twice at T"
-        makes a cascade finite. With the static-name line every emittable type
-        is literal, so the cascade graph is built by static inspection. Cycles
-        are not errors.
-
-  R-0   NO CHECK MODE; ONE ENGINE. It runs rules over a time line and produces
-        a time line. Verification = HWUT comparing the deterministic report
-        against a nominal recording (R-22). One-engine-one-mode stands.
-
+Decision: a rule reference is a bare string in angle brackets, "<cause>", so
+the GRAMMAR source is character-for-character aligned with the <name> spelling
+SYNTAX_DOC already uses for every nonterminal. compile_leaf resolves a bare
+string that starts '<', ends '>', length > 2 to the interned NonTerminalNode.
+Rejected alternative spelling '~name': its only advantage is that no keyword
+could ever collide with the sigil, but the collision it guards against is
+hypothetical (no '<...>'-spelled keyword exists or is planned; all keywords are
+colon-suffixed words or punctuation), and '~name' reintroduces a translation
+step between code and prose -- the opposite of the goal.
+Escape hatch (for the hypothetical future keyword literally spelled '<...>'):
+write it explicitly as T.string("<...>"). A string-shape Terminal is now
+accepted as a leaf (silent keyword), so the '<...>'-means-reference convention
+applies ONLY to bare strings; an explicit T.string bypasses it. The single-char
+keywords '<' and '>' (container brackets in <fwd-kind>) are unaffected: too
+short to be read as references.
 
 -------------------------------------------------------------------------------
-NOTE ON SETTLED PREMISES  (not under discussion)
+R-52.  A list (optional) leaves no 'list-ness' in the value stream
+-------------------------------------------------------------------------------
+Question asked: does a single-element optional ['<decl-parens>'] produce a list
+in the AST, or the bare element?
+Answer: NEITHER a list nor a synthesized wrapper. OptNode.expand pushes its body
+directly into the current frame when the lookahead starts it, and pushes nothing
+when absent. So optionality is expressed only by PRESENCE or ABSENCE of the
+element among frame.values; whatever the inner element builds to flows up
+unwrapped. ['<decl-parens>'] present => the decl-parens value (itself a list of
+ArgDecls, from _build_decl_parens) appended as one frame value; absent => no
+value, and the rule's builder defaults the field (e.g. _build_mode sets
+params=[]).
+Consequence (load-bearing): builders that type-spot frame.values rely on this
+flattening. _build_spawn distinguishes its optional modifiers by Python type
+(a str = the 'in:' container, an ast.Luau = the 'as:' handle); were a
+single-element optional to wrap its value in a [value] container, that
+type-spotting would break. The design is internally consistent on this point.
+
+-------------------------------------------------------------------------------
+R-53.  When a rule collapses to a bare role-bearing terminal (and when not)
+-------------------------------------------------------------------------------
+Question asked: <mutation> and <report-string> are one-terminal rules -- could
+they be terminals with a role instead? And: does the terminal's 'role' member
+give the builder a sufficient hint?
+Finding: the role identifies a span's CONTENT KIND (how the oracle parses and
+validates it), but NOT its AST type, because role is not unique per node. The
+opaque terminal t_opq_stmts (Role.STATEMENT_BLOCK) is used in three rules --
+<mutation> (-> Mutation), <init> (-> InitBlock), <deinit> (-> DeinitBlock).
+Same terminal, same role, three AST node types, separated only by grammatical
+position (a bare span in effect position; a span after 'init:'; a span after
+'deinit:'). The role cannot carry that distinction; the rule (or its keyword
+prefix) does.
+Rule of thumb: a rule collapses to a bare role-bearing terminal ONLY when the
+role is unique to one grammatical position AND the action merely forwards (no
+distinct AST type). <guard> already IS this: a bare t_opq_cond (Role.CONDITION,
+used nowhere else), and _build_guard returns frame.values[0] unwrapped -- a raw
+Luau node, no wrapper. <report-string> does NOT qualify: its terminal is the
+plain, role-less t_re_string, shared with <rvalue> and <include>; the rule
+exists precisely to assign meaning by position (a quoted string in effect
+position is a ReportString, not an Arg). <mutation> does NOT qualify either:
+STATEMENT_BLOCK is shared three ways and Mutation is a distinct node the
+effect-walker expects.
+Decision: leave <mutation> and <report-string> as rules. They are load-bearing,
+not degenerate. AST type is a function of grammatical position, not of a
+terminal's intrinsic properties -- the same principle that keeps <dotted-name>
+a rule.
+
+-------------------------------------------------------------------------------
+R-54.  'as:' on a spawn is reachable only inside 'in:'
+-------------------------------------------------------------------------------
+Decision: <spawn> nests the optional 'as:' handle INSIDE the optional 'in:'
+clause -- ("+!", <dotted-name>, <arg-parens>, ["in:", <dotted-name>,
+["as:", t_opq_lvalue]]) -- so 'as:' without a preceding 'in:' is a syntax error.
+Rationale: the 'as: { lvalue }' handle is the name by which the named container
+holds the spawned instance; a handle with no container to hold it is meaningless.
+Earlier the two optionals were siblings (in: and as: independently optional),
+which admitted the nonsensical 'as:' without 'in:'.
+Build impact: none. _build_spawn type-spots frame.values (see R-52), so the
+structural move of 'as:' under 'in:' leaves both the container str and the Luau
+handle reachable in the flattened frame; the action is unchanged.
+Rationale, costs, and rejected alternatives for the parser layer. README =
+settled mechanics; SYNTAX_DOC (parser/syntax.py) = the concrete syntax; this =
+why. Entries newest-first, 'R-N'.
+
+-------------------------------------------------------------------------------
+R-4  TOKEN IDENTITY IS THE TERMINAL OBJECT (SINGLE SOURCE)
 -------------------------------------------------------------------------------
 
-  Conceptual model -- events as ephemeral structs with intrinsic time/dt,
-  objects as stateful aggregates, consequences as 'on trigger & guard => body',
-  cascades, no pure time triggers -- settled before this log began; recorded in
-  README section 3.
+The hand-maintained E_TokenId enum and the spelling->id tables (_NAME_OF,
+_REGEX_CLASS_NAME) are gone. A token's identity is now the Terminal object that
+produced it (terminals.py); the lexer attaches that object as Token.kind, and
+the engine compares tokens by object identity ('is'), never by a name. There is
+one source -- the parser engine's terminal database -- and no second copy of
+"what tokens exist" to drift.
 
-===============================================================================
-END OF DISCUSSIONS LOG
+  - Every token is a Terminal: T.regex / T.string / T.captured / T.opaque, plus
+    T.framing for lexer/engine machinery (luau-open, luau-block, comment,
+    whitespace, mismatch, end-of-file). Framing tokens are tokens like any other
+    -- referenced by identity, named by the same scheme -- and are special only
+    in carrying a friendly tag and in being declared in terminals.py rather than
+    minted from a rule (they have no GRAMMAR spelling).
+
+  - A bare string in GRAMMAR is sugar: the engine routes a plain-string leaf
+    through T.string, which mints (or reuses) the Terminal. Several rules using
+    the same spelling share one Terminal -- reuse keyed by _name() -- so '(' is
+    one token however many rules write it.
+
+  - Terminal._name() (engine-internal, hence the underscore) is the identity:
+    factory plus every distinguishing field (regex:<pattern>, string:<spelling>,
+    captured:<spelling>, opaque:luau:<role>, framing:<tag>). _register keys on
+    _name(): the first terminal of a name is recorded in declaration order, a
+    repeat returns the existing one. Two terminals that are NOT identical can
+    never share a _name(), so a clash is by construction the same terminal --
+    duplicate definition is reuse, never silent divergence.
+
+  - Token ids are not a communication surface. They surface only in parser
+    debug tracing, for which token_debug_names() renders {Terminal: _name()}.
+    The lexer-spec generator and the FIRST/LL(1) machinery work on Terminal
+    objects directly.
+
+  REJECTED: positional/minted id NAMES with no readable form. The names are
+  derived by _name() from the factory and fields, so they stay legible in debug
+  traces and the test inventory without any authored table. Builders that once
+  compared kind.name == "KW_VOID" / "KW_CONTAINER" / "ID" now compare against the
+  terminal objects (t_kw_void, t_kw_container, t_re_id) by identity.
+
+-------------------------------------------------------------------------------
+R-3  TERMINAL DATABASE + GENERATED LEXER SPEC
+-------------------------------------------------------------------------------
+
+The grammar's terminal and authoring vocabulary was regularized:
+
+  - Angle-bracket spellings retired. A rule reference is R("name"); GRAMMAR dict
+    keys lost their brackets ("spawn", not "<spawn>"). With '<'/'>' now only the
+    literal container brackets, a bare string in GRAMMAR is unambiguously a
+    silent keyword, so the engine's leaf dispatch simplified to a type switch
+    (Terminal / Ref / bare string) with no string-prefix parsing.
+
+  - Terminals are named objects in a preamble (terminals.py defines the T
+    factory and the terminal database; parser/syntax.py makes the T.* calls).
+    Three shapes, grouped by name: t_re_... (regex classes id/number/string/
+    name_colon), t_opq_... (opaque Luau spans carrying their Role), t_kw_...
+    (captured keywords kept in the parse frame). The role lives on the opaque
+    terminal object, so a position's role is fixed by which t_opq_ it names,
+    checkable at authoring time. Plain silent keywords (on:, =>, :end, ... )
+    stay bare strings -- a deliberate slight inconsistency for visual sweetness;
+    they get no terminal definition and are extracted from the grammar.
+
+  - Combinators are the classes Alt/Opt/Plus/Star, exposed to GRAMMAR under the
+    capitalized aliases ALT/OPT/PLUS/STAR so a rule body reads as grammar
+    operators. The alias IS the class (no wrapper functions). No SEQ alias: a
+    sequence is a bare tuple.
+
+  - The lexer's _TOKEN_SPEC is GENERATED from the terminal database plus the
+    bare keywords walked out of GRAMMAR, ordered by a deterministic seven-tier
+    shape sort (skip groups; leading-colon; trailing-colon longest-first;
+    bare/captured; symbols longest-first; regex classes in declaration order;
+    MISMATCH). The author supplies no token id and no precedence number; the
+    only lever is the declaration order of the regex-class lines (t_re_name_colon
+    before t_re_id, or 'name:' would lex as a bare id and a stray ':'). Token
+    ids (E_TokenId) stay a fixed naming convention keyed by spelling/shape --
+    the names the engine and builders are written against -- generated, not
+    authored. Generation is lazy (imports syntax/terminals inside the builder)
+    so the import graph stays acyclic: parser_nodes -> lexer -> diagnostic only.
+
+  REJECTED: an equivalence assert of the generated spec against the old
+  hand-written spec. SYNTAX_DOC is now the only reference; the deterministic
+  tier sort IS the spec. A TEST instead freezes the generated spec as a GOOD
+  file, comparing as a (name, pattern) SET modulo re.escape normalization and
+  asserting the overlap-ordering constraints -- not list-identity, since tier 3
+  is now strict longest-first by design.
+
+-------------------------------------------------------------------------------
+R-2  'until switched' REMOVED
+-------------------------------------------------------------------------------
+
+The 'until switched' state-closer is gone, and 'switched' is no longer a
+keyword. A <state> block now ends structurally -- at the next state-machine
+element or 'end' -- and its trailing 'until' causes are optional (STAR, not
+PLUS). The <state-untils> rule (a parser-only left-factoring artifact) and its
+builder were deleted; _build_state now mirrors _build_mode (members, then the
+trailing run of Cause nodes). This stays LL(1): 'until:' is not in FOLLOW(state),
+so the optional until-run is unambiguous against the next element.
+
+The sibling-armed transition that 'switched' used to spell is now implicit in
+the state machine's mutual-exclusion semantics; it was never a runtime event.
+
+  MIGRATION CAVEAT (not special-cased): with 'switched' no longer a keyword, an
+  old 'until: switched' lexes 'switched' as an ordinary identifier and parses as
+  "until an event named switched" -- silently, not an error. There is no
+  rejection for this; authors updating old rule files must remove the clause.

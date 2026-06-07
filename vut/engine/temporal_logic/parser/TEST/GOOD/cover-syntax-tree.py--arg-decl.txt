@@ -1,8 +1,0 @@
-=== <arg-decl> ===
-
--- default --
-   input: NAME_COLON X
-ArgDecl
-  member = 'NAME_COLO'
-  type = 'X'
-  begin = 0

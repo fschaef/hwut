@@ -1,9 +1,10 @@
 
 --- unbalanced parenthesis in a guard fragment ---
-AND          [  0:1  ] '&'
-LUAU_BLOCK   [  2:11 ] '{ ( foo }'
-ARROW        [ 12:14 ] '=>'
-ID           [ 15:18 ] 'end'
-END_OF_FILE  [ 18:18 ] ''
+framing:mismatch [  0:1  ] '&'
+framing:luau-block [  2:11 ] '{ ( foo }'
+string:=>    [ 12:14 ] '=>'
+regex:[a-zA-Z_]\w* [ 15:18 ] 'end'
+framing:end-of-file [ 18:18 ] ''
 error_f: True
+LEXER    fatal=False off=0   unexpected character '&'
 LEXER    fatal=False off=2   malformed Luau fragment: unclosed '('

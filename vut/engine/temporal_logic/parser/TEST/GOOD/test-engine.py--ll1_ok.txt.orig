@@ -1,0 +1,5 @@
+
+--- compile and validate the rule-file grammar ---
+rules compiled: 42
+start symbol:   <top-level>
+LL(1):          yes (no conflict raised)
