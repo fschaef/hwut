@@ -37,9 +37,9 @@ import sys
 import config                                                       # noqa: F401
 
 from vut.language_support.python.hwut_runner      import HwutRunner
-from vut.engine.temporal_logic.parser.lexer       import Lexer, SourceMap
-from vut.engine.temporal_logic.parser.terminals   import t_fr_luau_open, t_fr_luau_block, t_fr_eof
-from vut.engine.temporal_logic.parser.diagnostic  import DiagnosticReporter
+from vut.engine.temporal_logic.parser.core.lexer import Lexer, SourceMap
+from vut.engine.temporal_logic.parser.core.terminals import t_fr_luau_open, t_fr_luau_block, t_fr_eof
+from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 from vut.engine.temporal_logic.luau.luau_fragment import Role
 from fake_luau_oracle import FakeLuauOracle
 

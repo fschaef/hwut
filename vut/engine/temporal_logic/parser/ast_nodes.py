@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 ABSTRACT SYNTAX TREE NODES
 
-Pure data structures for the rule-file grammar (see GRAMMAR in syntax.py). Every node
+Pure data structures for the rule-file grammar (see GRAMMAR in grammar.py). Every node
 carries 'begin', the absolute source offset where the construct starts, so a
 SourceMap can resolve a 1-based (line, column) for error reporting and for the
 Source2TargetLocationMapper during code generation. Nodes hold no behaviour;

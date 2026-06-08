@@ -46,18 +46,17 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
 
-from vut.engine.temporal_logic.parser.parser_engine import (compiled_grammar,
-                                                            EngineParser,
-                                                            _ResyncError)
-from vut.engine.temporal_logic.parser.parser_nodes import (
+from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
+from vut.engine.temporal_logic.parser.core.ll1_engine import EngineParser, _ResyncError
+from vut.engine.temporal_logic.parser.core.grammar_ast import (
         TerminalNode, LuauNode, NonTerminalNode,
         SeqNode, AltNode, OptNode, PlusNode, StarNode)
-from vut.engine.temporal_logic.parser.lexer       import Token
-from vut.engine.temporal_logic.parser.terminals   import (t_fr_luau_open,
+from vut.engine.temporal_logic.parser.core.lexer import Token
+from vut.engine.temporal_logic.parser.core.terminals import (t_fr_luau_open,
                                                           t_fr_luau_block,
                                                           t_fr_eof,
                                                           t_fr_mismatch)
-from vut.engine.temporal_logic.parser.syntax import (
+from vut.engine.temporal_logic.parser.grammar import (
         t_re_id, t_re_number, t_re_string, t_re_name_colon)
 
 
@@ -177,7 +176,7 @@ def drive(grammar, rule, tokens, luau_texts=()):
 
 # DiagnosticReporter is imported lazily to keep this module's import graph flat
 # at definition time; it is the reporter EngineParser writes into.
-from vut.engine.temporal_logic.parser.diagnostic import DiagnosticReporter  # noqa: E402
+from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter  # noqa: E402
 
 
 # ==========================================================================

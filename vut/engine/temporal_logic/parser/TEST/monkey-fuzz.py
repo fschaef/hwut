@@ -36,11 +36,11 @@ from config import HwutRunner
 
 import aux_renderer as R
 
-from vut.engine.temporal_logic.parser.parser_engine import (compiled_grammar,
-                                                            EngineParser, parse)
-from vut.engine.temporal_logic.parser.lexer        import Token
-from vut.engine.temporal_logic.parser.terminals    import terminal_by_name
-from vut.engine.temporal_logic.parser.diagnostic   import DiagnosticReporter
+from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
+from vut.engine.temporal_logic.parser.core.ll1_engine import EngineParser
+from vut.engine.temporal_logic.parser.core.lexer import Token
+from vut.engine.temporal_logic.parser.core.terminals import terminal_by_name
+from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 
 from aux_walker import ListLexer
 
@@ -128,27 +128,48 @@ def run_depth_bomb():
 
 
 def run_sprites():
-    """RETURN: None. Parses each hand-written sprite example and prints its AST.
+    """RETURN: None. Parses the massive sprites.rule and prints an AST census.
 
-    ghost / zombie / knight are state machines (mutually-exclusive behaviour);
-    prince / princess are mode groups (concurrent behaviour). Authored by hand,
-    not generated, so they double as documentation.
+    sprites.rule exercises the full grammar surface in one file: include
+    statements (recorded as AST nodes, NOT resolved -- resolution is a semantic
+    concern), event/clock definitions, forward declarations, state machines
+    (exclusive behaviour), mode groups (concurrent behaviour), and top-level
+    causality rules. This is a pure parse; rather than dump the whole AST
+    (thousands of nodes), it prints a recursive census -- how many of each node
+    type the tree contains -- which pins the parse result compactly.
     """
-    print("=== monkey: sprites (hand-written examples) ===")
-    names = ["sprites_ghost", "sprites_zombie", "sprites_knight",
-             "sprites_prince", "sprites_princess"]
-    for name in names:
-        path = os.path.join(_DATA_DIR, name + ".rule")
-        rep  = DiagnosticReporter()
-        rule_file = parse(open(path).read(), FakeLuauOracle(), rep)
-        kinds = [type(i).__name__ for i in rule_file.items]
-        status = "ok" if (rule_file.items and not rep.errors) else "DIAGNOSTICS"
-        print("\n-- %s : %s %s --" % (name, status, kinds))
-        if rep.errors:
-            for d in rep.errors:
-                print("   %s off=%d %s"
-                      % (d.phase.name, d.source_offset, d.message))
-        print(R.fmt(rule_file.items))
+    from dataclasses import is_dataclass, fields
+    from collections import Counter
+
+    rep = DiagnosticReporter()
+    rule_file = parse(open(os.path.join(_DATA_DIR, "sprites.rule")).read(),
+                      FakeLuauOracle(), rep)
+
+    census = Counter()
+
+    def walk(n):
+        if isinstance(n, list):
+            for x in n:
+                walk(x)
+        elif is_dataclass(n):
+            census[type(n).__name__] += 1
+            for fld in fields(n):
+                walk(getattr(n, fld.name))
+
+    walk(rule_file.items)
+
+    print("=== monkey: sprites (massive example -- AST census) ===")
+    status = "ok" if (rule_file.items and not rep.errors) else "DIAGNOSTICS"
+    print("top-level items: %d (%s)" % (len(rule_file.items), status))
+    print("total AST nodes: %d" % sum(census.values()))
+    if rep.errors:
+        for d in rep.errors:
+            print("   %s off=%d %s"
+                  % (d.phase.name, d.source_offset, d.message))
+    print()
+    # sorted by name for a stable, diffable census
+    for name in sorted(census):
+        print("  %-22s %5d" % (name, census[name]))
 
 
 _CHOICES = {name: _make_choice(name) for name in _PROFILE_NAMES}

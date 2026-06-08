@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 TABLE-DRIVEN PARSE ENGINE  --  LL(1) over the declarative grammar
 
-Three stages turn the declarative GRAMMAR (syntax.py) into an AST:
+Three stages turn the declarative GRAMMAR (grammar.py) into an AST:
 
     1. PREPROCESS  Resolve each grammar leaf to a node carrying its Terminal
                    identity: a bare-string keyword ('on:', '=>') routes through
@@ -30,18 +30,17 @@ from dataclasses import dataclass
 
 from .lexer       import Lexer
 from .diagnostic  import Diagnostic, Phase, DiagnosticReporter
-from ..luau.luau_fragment import Role
+from ...luau.luau_fragment import Role
 from .terminals   import t_fr_luau_open, t_fr_eof
-from . import grammar   as G
 
 
 # ---------------------------------------------------------------------------
-# Compiled grammar is a tree of parser_nodes.Node objects (combinators AND
+# Compiled grammar is a tree of grammar_ast.Node objects (combinators AND
 # leaves alike), so this engine never switches on an element kind -- it calls a
 # node method. NonTerminalNode carries the per-rule pattern, action, and FIRST.
 # ---------------------------------------------------------------------------
-from . import parser_nodes as nodes
-from .parser_nodes import (Node, TerminalNode, LuauNode, NonTerminalNode,
+from . import grammar_ast as nodes
+from .grammar_ast import (Node, TerminalNode, LuauNode, NonTerminalNode,
                            ELEM, REDUCE, LOOP)
 
 
@@ -74,7 +73,7 @@ class Grammar:
     """
     def __init__(self, grammar_dict, actions, start):
         """RETURN: None. Compiles, analyses, and validates the grammar."""
-        from . import syntax_support as support
+        from . import combinators as support
         self.rules    = {name: NonTerminalNode(name, actions.get(name))
                          for name in grammar_dict}
         self.start    = start
@@ -228,7 +227,7 @@ class EngineParser:
         Repeats the start rule until end-of-file, recovering past each error so
         every top-level item is attempted in one pass.
         """
-        from . import ast_nodes as ast
+        from .. import ast_nodes as ast
         rule_file = ast.RuleFile()
         start = self.grammar.rules[self.grammar.start]
         while self.tok.kind is not t_fr_eof:
@@ -252,7 +251,7 @@ class EngineParser:
     #             values append to frames[-1]; a REDUCE pops it, runs the
     #             rule's action, and appends the result to the new top frame.
     #
-    # Work instructions (tuples, tagged by [0], tags from parser_nodes):
+    # Work instructions (tuples, tagged by [0], tags from grammar_ast):
     #   (ELEM,  node)  -- expand 'node' (node.expand decides what to push/consume)
     #   (REDUCE, nt)   -- finish NonTerminalNode 'nt': pop its frame, act, append
     #   (LOOP,  body)  -- a PLUS/STAR iteration point
@@ -318,7 +317,7 @@ class EngineParser:
 
     def consume_luau(self, luau_node):
         """RETURN: Luau, the span read under the node's role; resyncs on failure."""
-        from . import ast_nodes as ast
+        from .. import ast_nodes as ast
         if self.tok.kind is not t_fr_luau_open:
             self._error("expected '{' Luau block, found %s" % self.tok.kind._name())
             raise _ResyncError()
@@ -345,31 +344,3 @@ class EngineParser:
     def starts(self, element):
         """RETURN: True, if the lookahead is in FIRST(element); else False."""
         return self.tok.kind in element.first_set(self.grammar)
-
-
-# ---------------------------------------------------------------------------
-# Public entry.
-# ---------------------------------------------------------------------------
-_COMPILED = None
-
-
-def compiled_grammar():
-    """RETURN: Grammar, the compiled+validated rule-file grammar (cached).
-
-    Builds once on first use. Raises LL1ConflictError if the grammar block is
-    not LL(1) -- surfaced eagerly so a grammar edit that breaks LL(1) fails loud.
-    """
-    global _COMPILED
-    if _COMPILED is None:
-        _COMPILED = Grammar(G.GRAMMAR, G.ACTIONS, start="top-level")
-    return _COMPILED
-
-
-def parse(source_text, oracle, reporter: DiagnosticReporter):
-    """
-    RETURN: RuleFile, the AST for 'source_text' via the table-driven engine.
-
-    Same observable contract as parser.parse: diagnostics accumulate in
-    'reporter'; the AST may be partial when errors were recovered.
-    """
-    return EngineParser(source_text, oracle, reporter, compiled_grammar()).parse()

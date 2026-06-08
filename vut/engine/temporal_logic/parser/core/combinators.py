@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-SYNTAX SUPPORT  --  the authoring combinators for the GRAMMAR in syntax.py.
+SYNTAX SUPPORT  --  the authoring combinators for the GRAMMAR in grammar.py.
 
 A grammar rule is written with these combinators plus bare tuples and the
 terminal/reference objects from terminals.py:
@@ -27,16 +27,16 @@ The remaining combinator classes are exposed under capitalized aliases
 bare tuple), no OPT alias (an optional is a bare list), and ALT is not a call
 but a between-branches sentinel (the Alt CLASS it lowers to is internal). These
 authoring objects are lightweight: each carries its children
-and names the runtime node class it becomes (its 'node_class' in parser_nodes).
+and names the runtime node class it becomes (its 'node_class' in grammar_ast).
 'compile(ctx)' lowers the authored structure into that uniform Node tree,
 deferring LEAF resolution -- a terminal object, an '<name>' rule reference, or a
 bare-string keyword -> TerminalNode / LuauNode / NonTerminalNode -- to 'ctx', the engine,
 which owns the token-id table and the rule map. Thus this module depends only on
-parser_nodes -- never on the parser engine -- and syntax.py depends only on this
+grammar_ast -- never on the parser engine -- and grammar.py depends only on this
 vocabulary plus terminals.py.
 ______________________________________________________________________________
 """
-from . import parser_nodes as nodes
+from . import grammar_ast as nodes
 
 
 # A bare tuple is a sequence; a bare list is an optional; ALL alternation is
@@ -91,9 +91,9 @@ def _compile_child(child, ctx):
 class _Combinator:
     """Base for the authoring combinators. Holds children; names a node class.
 
-    Called directly in syntax.py: Alt and Seq take their children variadically
+    Called directly in grammar.py: Alt and Seq take their children variadically
     (Alt(a, b, ...)), Opt/Plus/Star take a single body (Opt(x)). A subclass sets
-    'node_class' (the parser_nodes type it lowers into) and 'compile(ctx)' builds
+    'node_class' (the grammar_ast type it lowers into) and 'compile(ctx)' builds
     that node from its compiled children.
     """
     __slots__ = ("children",)
@@ -110,7 +110,7 @@ class _Combinator:
 class Seq(_Combinator):
     """An implicit/explicit sequence; lowers to SeqNode.
 
-    Written as a bare tuple in syntax.py (the implicit form); constructed
+    Written as a bare tuple in grammar.py (the implicit form); constructed
     variadically (Seq(a, b, ...)) where an explicit instance is needed.
     """
     node_class = nodes.SeqNode
@@ -155,7 +155,7 @@ class Star(_Unary):
     node_class = nodes.StarNode
 
 
-# -- the authoring surface used in syntax.py ---------------------------------
+# -- the authoring surface used in grammar.py ---------------------------------
 # PLUS(x) and STAR(x) are exposed under CAPITALIZED aliases of their classes, to
 # read as grammar operators called on one body. There is no SEQ alias (a sequence
 # is a bare tuple), no OPT alias (an optional is a bare list, e.g. [x] or [a, b];
@@ -163,7 +163,7 @@ class Star(_Unary):
 # sentinel defined at the top of this module -- written BETWEEN branches inside a
 # tuple, not as a call (the Alt CLASS it lowers to stays internal). The terminal
 # factories (T) live in terminals.py; a rule reference is the bare string
-# '<name>' resolved by the engine. syntax.py imports ALT/PLUS/STAR and T.
+# '<name>' resolved by the engine. grammar.py imports ALT/PLUS/STAR and T.
 PLUS = Plus
 STAR = Star
 

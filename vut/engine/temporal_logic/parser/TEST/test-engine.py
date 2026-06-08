@@ -28,14 +28,14 @@ from   config import HwutRunner
 
 from   dataclasses import is_dataclass, fields
 
-from   vut.engine.temporal_logic.parser.syntax_support import ALT
-from   vut.engine.temporal_logic.parser.terminals      import T
+from vut.engine.temporal_logic.parser.core.combinators import ALT
+from vut.engine.temporal_logic.parser.core.terminals import T
 
-from   vut.engine.temporal_logic.parser.parser_engine import (Grammar, 
-                                                              LL1ConflictError, 
-                                                              compiled_grammar)
-from   vut.engine.temporal_logic.parser.lexer import token_spec, token_debug_names
-from   vut.engine.temporal_logic.parser import parser_nodes as N
+from vut.engine.temporal_logic.parser.core.ll1_engine import (Grammar,
+                                                              LL1ConflictError)
+from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
+from vut.engine.temporal_logic.parser.core.lexer import token_spec, token_debug_names
+from   vut.engine.temporal_logic.parser.core import grammar_ast as N
 import vut.engine.temporal_logic.parser.grammar as G
 
 

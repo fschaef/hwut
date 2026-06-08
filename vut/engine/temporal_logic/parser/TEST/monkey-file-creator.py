@@ -24,21 +24,20 @@ import os
 import sys
 import json
 
-import config # noqa E401
-
 from dataclasses import is_dataclass, fields
 
 from vut.language_support.python.deterministic_random import (DeterministicStream,
                                                              SelectionMarker)
-from vut.engine.temporal_logic.parser.parser_engine import (compiled_grammar,
-                                                            EngineParser, parse)
-from vut.engine.temporal_logic.parser.parser_nodes import (
+from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
+from vut.engine.temporal_logic.parser.core.ll1_engine import EngineParser
+from vut.engine.temporal_logic.parser.core.grammar_ast import (
         TerminalNode, LuauNode, NonTerminalNode,
         SeqNode, AltNode, OptNode, PlusNode, StarNode)
-from vut.engine.temporal_logic.parser.lexer   import Token
-from vut.engine.temporal_logic.parser.terminals import T, t_fr_luau_open, t_fr_eof
-from vut.engine.temporal_logic.parser.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.parser.core.lexer import Token
+from vut.engine.temporal_logic.parser.core.terminals import T, t_fr_luau_open, t_fr_eof
+from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 
+import config  # noqa: F401
 from fake_luau_oracle import FakeLuauOracle
 
 from aux_walker import (tok as _tok, ListLexer as _ListLexer,

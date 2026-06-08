@@ -1,7 +1,7 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-TERMINALS  --  the named-terminal authoring surface for the GRAMMAR in syntax.py.
+TERMINALS  --  the named-terminal authoring surface for the GRAMMAR in grammar.py.
 
 A rule references a richer terminal -- a character class, a kept keyword, or an
 opaque Luau span -- by a 't_...' object defined once in a preamble above GRAMMAR
@@ -36,10 +36,10 @@ the name against the rule map at compile time.
 
 This module imports Role from the Luau layer (the role is genuinely a Luau-span
 property) and depends on nothing in the parser engine, so the authoring layer
-stays engine-free: syntax.py -> {terminals, syntax_support} -> parser_nodes.
+stays engine-free: grammar.py -> {terminals, combinators} -> grammar_ast.
 ______________________________________________________________________________
 """
-from ..luau.luau_fragment import Role
+from ...luau.luau_fragment import Role
 
 
 # Every T.…() call registers its terminal here, in declaration order. The lexer
@@ -74,7 +74,7 @@ def _register(term):
 
 
 class Terminal:
-    """A named terminal authored in syntax.py and recorded in TERMINAL_DB.
+    """A named terminal authored in grammar.py and recorded in TERMINAL_DB.
 
     'shape' is one of 'regex' / 'string' / 'captured' / 'opaque' / 'framing' --
     the discriminant the lexer generator and the engine's leaf compiler switch
@@ -119,7 +119,7 @@ class Terminal:
 
 
 class _T:
-    """The terminal factory namespace exposed to syntax.py as 'T'.
+    """The terminal factory namespace exposed to grammar.py as 'T'.
 
     Each method builds a Terminal and registers it (recording declaration order
     on first sight, reusing on a repeat _name()). The factory only records; it
@@ -192,7 +192,7 @@ T = _T()
 
 
 # Framing terminals: lexer/engine machinery with no place in GRAMMAR. Declared
-# here (not in syntax.py) because both the grammar-authoring side and the engine
+# here (not in grammar.py) because both the grammar-authoring side and the engine
 # import them, and terminals.py sits below both with no cycle. They are tokens
 # like any other -- referenced by identity, named by the same scheme -- and are
 # special only in their friendly tags and in being created here rather than from

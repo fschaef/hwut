@@ -36,7 +36,7 @@ import bisect
 from dataclasses  import dataclass
 from typing       import Optional
 
-from ..luau.luau_fragment import (find_matching_brace, Role,
+from ...luau.luau_fragment import (find_matching_brace, Role,
                                  FragmentSyntaxError, OracleError)
 
 from .diagnostic import Diagnostic, Phase, DiagnosticReporter
@@ -51,7 +51,7 @@ from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 # parser engine's terminal database:
 #
 #   1. terminals.TERMINAL_DB -- the T.regex / T.string / T.captured / T.opaque
-#      terminals (declared in syntax.py's preamble or minted from bare-string
+#      terminals (declared in grammar.py's preamble or minted from bare-string
 #      keywords at grammar-compile time) plus the framing terminals.
 #   2. the bare-string keywords walked out of every GRAMMAR rule body, each
 #      routed through T.string so it becomes a Terminal like any other.
@@ -65,7 +65,7 @@ from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 # Generation runs lazily on first use (see _scanner / token_spec): it imports
 # syntax and terminals INSIDE the builder, after the import graph has settled, so
 # lexer.py carries no module-level dependency on the authoring layer and the
-# graph stays acyclic (parser_nodes -> lexer -> diagnostic only).
+# graph stays acyclic (grammar_ast -> lexer -> diagnostic only).
 # ---------------------------------------------------------------------------
 
 
@@ -101,7 +101,7 @@ def _walk_string_keywords(element, out):
     used as an ordered set of the resulting terminals (first-appearance order),
     the deterministic tiebreak for equal-length spellings within a tier.
     """
-    from .syntax_support import _Combinator
+    from .combinators import _Combinator
     from .terminals import Terminal, Ref, T
     if isinstance(element, _Combinator):
         for child in element.children:
@@ -134,14 +134,18 @@ def _generate_token_spec():
     The end-of-file and luau-block framing terminals carry no scanner pattern
     (they are synthesized, not matched) and are omitted from the spec.
     """
-    from .syntax import GRAMMAR
     from .terminals import (TERMINAL_DB, T,
                             t_fr_luau_open, t_fr_comment, t_fr_ws,
                             t_fr_mismatch)
 
+    if _GRAMMAR is None:
+        raise RuntimeError(
+            "lexer: no grammar registered; the parser facade must call "
+            "register_grammar(GRAMMAR) before lexing")
+
     # Route every bare-string keyword through T.string so it is in the DB.
     string_terms = {}
-    for body in GRAMMAR.values():
+    for body in _GRAMMAR.values():
         _walk_string_keywords(body, string_terms)
     decl_index = {t: i for i, t in enumerate(TERMINAL_DB)}
 
@@ -208,6 +212,28 @@ def token_debug_names():
     _name(). Token ids are never shown to the user -- only used for debugging.
     """
     return {t: t._name() for t, _ in token_spec()}
+
+
+# The grammar whose string-keywords seed the token spec. The lexer is otherwise
+# grammar-agnostic; the outer facade injects the specific grammar here once via
+# register_grammar() before the first lex, inverting what was a direct import of
+# the specific GRAMMAR (which would couple this core module to one language).
+_GRAMMAR = None
+
+
+def register_grammar(grammar_dict):
+    """RETURN: None. Registers the GRAMMAR whose string keywords seed the token spec.
+
+    Called once by the outer parser facade before lexing. Resets the lazily-built
+    token-spec/scanner caches so a re-registration (e.g. a different grammar in a
+    test) regenerates them. The lexer reads no specific grammar by import; this is
+    the single injection point that keeps core independent of the rule language.
+    """
+    global _GRAMMAR, _TOKEN_SPEC, _SCANNER, _GROUP_OF
+    _GRAMMAR    = grammar_dict
+    _TOKEN_SPEC = None
+    _SCANNER    = None
+    _GROUP_OF   = None
 
 
 # Generated lazily and cached. _TOKEN_SPEC / _SCANNER / _GROUP_OF stay None until

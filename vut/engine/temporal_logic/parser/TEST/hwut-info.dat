@@ -1,10 +1,11 @@
-Testing the rule-file Lexer and Parser for the reactive rule engine.
----------------------------------------------------------------
+Testing the reactive-engine grammar parser: positive and negative rule
+coverage, the lexer, the LL(1) engine, and the monkey fuzz fixtures.
+--------------------------------------------------------------------------
 
 coverage run --omit ./*.py -a *.py
 
---not common.py
 --not config.py
---not aux_*.py
---not monkey-file-creator.py
+--not aux_walker.py
+--not aux_renderer.py
 --not fake_luau_oracle.py
+--not monkey-file-creator.py

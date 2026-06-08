@@ -29,7 +29,7 @@ from config import HwutRunner
 import aux_walker   as W
 import aux_renderer as R
 
-from vut.engine.temporal_logic.parser.parser_engine import compiled_grammar
+from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
 
 
 def _print_diags(reporter):
