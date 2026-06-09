@@ -1,0 +1,15 @@
+
+--- cause definition ---
+  CauseDef name=['NETWORK_UP'] params=1 body=Cause
+
+--- effect definition ---
+  EffectDef name=['SUPER_POWER'] effects=[EventSpec, EffectRef, EffectRef]
+
+--- cause-ref and effect-ref ---
+  Causality cause=CauseRef effects=[EffectRef]
+
+--- mixed effect list ---
+  Causality cause=CauseRef effects=[EffectRef, EventSpec]
+
+--- inline still works ---
+  Causality cause=Cause effects=[EventSpec]

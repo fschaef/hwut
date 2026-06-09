@@ -1,20 +1,50 @@
 open: X2 . X4
-open: X6 . X8
-event: X10 ( )
+open: X6 . X8 X9 is: mode
 :close
 :close
-open: X16 . X18
-open: X20 . X22
-open: X24 . X26
-open: X28 . X30
-open: X32 . X34
-event: X36 ( n38: X39 ; n41: X42 )
+open: X15 . X17
+open: X19 . X21
+open: X23 . X25
+open: X27 . X29
+open: X31 . X33
+open: X35 . X37
+clock: X39 1
 :close
 :close
 :close
 :close
 :close
-open: X50 . X52
-on: ANY & { x }
-=> ! X58 . X60 ( )
+:close
+open: X48 . X50
+open: X52 . X54
+open: X56 . X58
+open: X60 . X62
+open: X64 . X66
+open: X68 . X70
+open: X72 . X74
+open: X76 . X78
+open: X80 . X82
+open: X84 . X86
+open: X88 . X90
+open: X92 . X94
+open: X96 . X98
+open: X100 . X102
+open: X104 . X106
+mode_group: X108 . X110 is: X112 . X114
+init: { x }
+:end
+:close
+:close
+:close
+:close
+:close
+:close
+:close
+:close
+:close
+:close
+:close
+:close
+:close
+:close
 :close

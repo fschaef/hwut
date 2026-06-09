@@ -1,0 +1,16 @@
+
+--- accepted argument forms (name | kind | value) ---
+  -        LITERAL  target
+  lane     LITERAL  2
+  -        MEMBER   event.target
+  -        MEMBER   sm.count
+  -        MEMBER   mg.index
+  -        MEMBER   mode.req
+  time     MEMBER   event.time
+  -        LUAU     { event.x + 1 }
+
+--- rejected forms (shallow is one '.', head must be a binding) ---
+  Chase(event.a.b)             rejected
+  Chase(event)                 rejected
+  Chase(event.)                rejected
+  Chase(foo.bar)               rejected

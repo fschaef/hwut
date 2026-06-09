@@ -1,0 +1,4 @@
+
+--- drive _match over an injected token list ---
+well-formed [@a @b]: ('built', 0)
+truncated   [@a]   : ('abandoned', 1)

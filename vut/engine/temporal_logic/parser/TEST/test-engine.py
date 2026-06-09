@@ -2,41 +2,37 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: Test the table-driven parse engine and the declarative grammar.
+PURPOSE: Test the RULE-FILE LANGUAGE against the engine -- that the real GRAMMAR
+         (grammar.py) compiles, is LL(2), generates the expected token inventory,
+         and parses its distinctive argument forms correctly. The engine
+         MACHINERY itself (FIRST_2, conflict detection, two-pass branch
+         selection, the stackless scan) is tested grammar-agnostically in
+         core/TEST/test-engine.py; this module is about the language.
 
-CHOICES: first_sets, ll1_ok, ll1_conflict, token_inventory, deep_alt, shallow_member_access;
+CHOICES: first_sets, ll2_ok, token_inventory, shallow_member_access;
 
 DESCRIPTION:
 
-The engine compiles the declarative GRAMMAR (syntax.py) to a node tree, computes
-FIRST sets, validates LL(1), and interprets the result to build the AST.
-
-    first_sets       Computed FIRST sets for representative rules match the
-                     tokens that can actually begin each construct.
-    ll1_ok           The real rule-file grammar compiles and passes LL(1)
-                     validation without conflict.
-    ll1_conflict     A deliberately ambiguous grammar (two ALT branches sharing
-                     a FIRST token) is rejected with a located conflict report.
+    first_sets       FIRST_2 sets of representative real rules -- the tokens (or
+                     token pairs) that can begin each construct.
+    ll2_ok           The real rule-file grammar compiles and passes LL(2)
+                     validation; exactly one rule (<arg>) needs the second token.
     token_inventory  The generated token inventory, derived from the terminal
-                     database (no literal table -- a token's identity is its
-                     Terminal object), covers every fixed-spelling terminal the
-                     grammar refers to.
+                     database (a token's identity is its Terminal object), covers
+                     every fixed-spelling terminal the grammar refers to.
+    shallow_member_access  Argument forms: a bare-rvalue positional, a named
+                     'id = rvalue', and a shallow 'binding.member' for each of the
+                     four bindings; plus forms that MUST be rejected.
 ______________________________________________________________________________
 """
 import sys
-from   config import HwutRunner 
+from   config import HwutRunner
 
-from   dataclasses import is_dataclass, fields
-
-from vut.engine.temporal_logic.parser.core.combinators import ALT
-from vut.engine.temporal_logic.parser.core.terminals import T
-
-from vut.engine.temporal_logic.parser.core.ll1_engine import (Grammar,
-                                                              LL1ConflictError)
+from vut.engine.temporal_logic.parser.core.ll2_engine import LL2ConflictError
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
-from vut.engine.temporal_logic.parser.core.lexer import token_spec, token_debug_names
-from   vut.engine.temporal_logic.parser.core import grammar_ast as N
-import vut.engine.temporal_logic.parser.grammar as G
+from vut.engine.temporal_logic.parser.core.lexer import (token_spec,
+                                                         token_debug_names)
+from vut.engine.temporal_logic.parser.core import ll2_grammar_ast as N
 
 
 def banner(label):
@@ -45,79 +41,32 @@ def banner(label):
     print("--- %s ---" % label)
 
 
-def norm(node):
-    """
-    RETURN: a hashable nested structure mirroring 'node' for comparison.
-
-    Dataclass nodes become (type-name, field-dict); lists recurse; leaves pass
-    through. Two ASTs are equal iff their norms are equal.
-    """
-    if isinstance(node, list):
-        return [norm(x) for x in node]
-    if is_dataclass(node):
-        return (type(node).__name__,
-                tuple((f.name, norm(getattr(node, f.name)))
-                      for f in fields(node)))
-    return node
-
-
-# Inputs exercising one per construct plus mixed cases (kept for ad-hoc use).
-_SPREAD = [
-    'on: Tick & { event.n > 0 } => Beep()',
-    'on: ANY => Log()',
-    ('on: Tick => Beep(3) => ! Blink() '
-     '=> "tick {event.n}" => { sm.n = sm.n + 1 }'),
-    'mode: Blink\n on Tick => Toggle()\n init: { sm.x = 0 }\n until: ANY\n',
-    ('state_machine: Traffic\n default: Traffic.RED\n'
-     ' state: RED\n  on Tick => Switch()\n until: ANY\n :end\n'),
-    'state_machine: Idle\n default: Idle.VOID\n has: Other.VOID\n :end\n',
-    ('mode_group: Lights\n init: { sm.x = 0 }\n'
-     ' mode: Blink\n  on Tick => Toggle()\n until: ANY\n has: Glow\n :end\n'),
-    'event: Move(dx: int ; dy: int)',
-    'clock: Tick 100',
-    'on: X => Honk({ event.hz * 2 }, 5)',
-    'on: Boom => +! SmTraffic() in: north => ! Blink()',
-    'on: Clear => -! north',
-    'Ghosts is: container<fifo, 64> as: { db.ghosts }',
-]
+def _fmt_set(s):
+    """RETURN: str, a FIRST_2 set rendered stably (sorted by token debug names)."""
+    def key(tup):
+        return tuple(t._name() for t in tup)
+    def show(tup):
+        return "(" + ", ".join(t._name() for t in tup) + ")"
+    return "{" + ", ".join(show(t) for t in sorted(s, key=key)) + "}"
 
 
 def run_first_sets():
-    """RETURN: None. FIRST sets of representative rules."""
+    """RETURN: None. FIRST_2 sets of representative real rules."""
     g = compiled_grammar()
-    banner("FIRST sets of key rules")
-    for name in ("top-level", "trigger", "effect", "rvalue",
+    banner("FIRST_2 sets of key rules")
+    for name in ("top-level", "trigger", "effect", "rvalue", "arg",
                  "mode-elm", "state-machine-elm", "mode-group-elm"):
-        toks = sorted(t._name() for t in g.rules[name].first)
-        print("%-22s %s" % (name, ", ".join(toks)))
+        if name in g.rules:
+            print("%-20s %s" % (name, _fmt_set(g.rules[name].first)))
 
 
-def run_ll1_ok():
-    """RETURN: None. The real grammar compiles and is LL(1)."""
+def run_ll2_ok():
+    """RETURN: None. The real grammar compiles and is LL(2)."""
     banner("compile and validate the rule-file grammar")
     g = compiled_grammar()
     print("rules compiled:", len(g.rules))
     print("start symbol:  ", g.start)
-    print("LL(1):          yes (no conflict raised)")
-
-
-def run_ll1_conflict():
-    """RETURN: None. An ambiguous grammar is rejected with a located report."""
-    banner("two ALT branches sharing a FIRST token")
-    t_re_id = T.regex(r'[a-zA-Z_]\w*')
-    bad = {
-        "top-level": ("<a>", ALT, "<b>"),
-        "a":         (t_re_id, ":end"),
-        "b":         (t_re_id, "on:"),
-    }
-    actions = {"top-level": None, "a": None, "b": None}
-    try:
-        Grammar(bad, actions, start="top-level")
-        print("UNEXPECTED: no conflict detected")
-    except LL1ConflictError as exc:
-        print("rejected with %d conflict(s):" % len(exc.conflicts))
-        for c in exc.conflicts:
-            print("  ", c)
+    print("LL(2):          yes (no conflict raised)")
 
 
 def run_token_inventory():
@@ -128,12 +77,12 @@ def run_token_inventory():
     silent keyword the grammar uses is a registered token.
     """
     banner("generated tokens (debug name -> pattern)")
+    g = compiled_grammar()          # ensure the grammar is registered/compiled
     names = token_debug_names()
     for term, pattern in sorted(token_spec(), key=lambda kp: names[kp[0]]):
         print("%-22s %r" % (names[term], pattern))
 
     banner("every silent keyword in the grammar is a registered token")
-    g = compiled_grammar()
     known = {term for term, _ in token_spec()}
     missing = []
     for name, nt in g.rules.items():
@@ -149,8 +98,7 @@ def _silent_terminals(node, seen=None):
     Walks the compiled object tree. A BranchNode (Sequence/Alternative) exposes
     its sub-nodes through .branches; an OperatorNode (Opt/Star/Plus) through
     .body; a PassThroughNode is followed once via .pattern (cycle guard) so a
-    recursive rule terminates. An opaque TerminalNode carries no silent keyword,
-    so it contributes nothing.
+    recursive rule terminates. An opaque TerminalNode carries no silent keyword.
     """
     if seen is None:
         seen = set()
@@ -170,46 +118,15 @@ def _silent_terminals(node, seen=None):
     return out
 
 
-def run_deep_alt():
-    """RETURN: None. The LL(1) conflict scan survives a pathologically deep tree.
-
-    collect_alt_conflicts and the FIRST-set computation it drives are iterative
-    (an explicit worklist, not Python recursion), so a grammar nested far deeper
-    than the interpreter's recursion limit must not overflow. This builds a
-    20000-level nested alternation by hand, lowers the recursion limit well below
-    that, and checks the scan returns a (here empty) conflict list rather than
-    raising RecursionError.
-    """
-    banner("deeply nested ALT does not overflow the conflict scan")
-    saved = sys.getrecursionlimit()
-    sys.setrecursionlimit(2000)
-    try:
-        node = N.TerminalNode(T.string("leaf"), silent=True)
-        for _ in range(20000):
-            node = N.AlternativeNode([node])
-
-        class _Ctx:
-            rules = {}
-        try:
-            conflicts = N.collect_alt_conflicts(node, "deep", _Ctx())
-            print("depth 20000, recursion limit 2000")
-            print("overflow:   no")
-            print("conflicts:  %d" % len(conflicts))
-        except RecursionError:
-            print("overflow:   YES -- the scan is still recursive")
-    finally:
-        sys.setrecursionlimit(saved)
-
-
 def run_shallow_member_access():
     """RETURN: None. Argument forms: positional, named, and shallow member access.
 
     Parses one effect per line and prints each argument's name (or '-'), kind,
-    and value. Exercises: a bare-identifier LITERAL, a named LITERAL, a shallow
-    'binding.member' MEMBER for each of the four bindings, a named MEMBER, and an
-    opaque LUAU expression. Then a block of forms that MUST be rejected: a deep
-    'event.a.b' (shallow is one '.' only), a binding with no member, a missing
-    member after the dot, and a non-binding head 'foo.bar'.
+    and value. Exercises a bare-identifier LITERAL positional, a named LITERAL, a
+    shallow 'binding.member' MEMBER for each of the four bindings, a named MEMBER,
+    and an opaque LUAU expression. Then forms that MUST be rejected: a deep
+    'event.a.b' (shallow is one '.'), a binding with no member, a missing member
+    after the dot, and a non-binding head 'foo.bar'.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
     from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
@@ -272,16 +189,145 @@ def run_shallow_member_access():
         print("  %-28s %s" % (src.split("=>")[1].strip(), verdict))
 
 
+def run_cause_effect():
+    """RETURN: None. Named cause/effect definitions and references parse and bind.
+
+    Exercises the reuse feature: a 'cause:' definition with a signature and an
+    'on:'-signalled body; an 'effect:' definition with a '=>'-signalled bundle; a
+    causality rule that fires a cause BY REFERENCE ('NAME(args)') and names an
+    effect bundle BY REFERENCE (bare 'NAME'); and a mixed effect list where a
+    bare name (effect-ref) and a name-with-parens (event-spec) sit side by side,
+    told apart by the two-token lookahead. Prints the AST node kind per item.
+    """
+    from vut.engine.temporal_logic.parser.rule_parser import parse
+    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.parser import ast_nodes as ast
+    from fake_luau_oracle import FakeLuauOracle
+
+    cases = [
+        ("cause definition",
+         "cause: NETWORK_UP(time: int)\n        on: NETWORK & { NETWORK.time > time }"),
+        ("effect definition",
+         "effect: SUPER_POWER => PACMAN_RUN(speed=12)\n"
+         "                    => PELLET_BLINK\n"
+         "                    => GHOSTS_FLEE"),
+        ("cause-ref and effect-ref", "on: NETWORK(20) => SUPER_POWER"),
+        ("mixed effect list", "on: NETWORK(20) => SUPER_POWER => Beep(3)"),
+        ("inline still works", "on: Tick & { sm.n > 0 } => Beep()"),
+    ]
+    for label, src in cases:
+        banner(label)
+        rep = DiagnosticReporter()
+        rf = parse(src, FakeLuauOracle(), rep)
+        if rep.errors:
+            for d in rep.errors:
+                print("  ERROR off=%d %s" % (d.source_offset, d.message))
+            continue
+        for it in rf.items:
+            kind = type(it).__name__
+            if isinstance(it, ast.CauseDef):
+                print("  CauseDef name=%s params=%d body=%s"
+                      % (it.name, len(it.params), type(it.body).__name__))
+            elif isinstance(it, ast.EffectDef):
+                print("  EffectDef name=%s effects=[%s]"
+                      % (it.name, ", ".join(type(e).__name__ for e in it.effects)))
+            elif isinstance(it, ast.Causality):
+                print("  Causality cause=%s effects=[%s]"
+                      % (type(it.cause).__name__,
+                         ", ".join(type(e).__name__ for e in it.effects)))
+            else:
+                print("  %s" % kind)
+
+
+def _render_cond(node):
+    """RETURN: str, a flat readable rendering of a bracket-condition tree."""
+    n = type(node).__name__
+    if n == "Condition":
+        return _render_cond(node.expr)
+    if n == "BoolOp":
+        return "(%s)" % ((" %s " % node.op).join(_render_cond(o) for o in node.operands))
+    if n == "Not":
+        return "not %s" % _render_cond(node.operand)
+    if n == "Comparison":
+        return "%s %s %s" % (_render_cond(node.left), node.op, _render_cond(node.right))
+    if n == "EventMember":
+        return ".%s" % node.name
+    if n == "Literal":
+        return node.text
+    return n
+
+
+def run_guards_and_inheritance():
+    """RETURN: None. Bracket-condition guards, effect-def signatures, is: bases.
+
+    Exercises the constructs added alongside cause/effect reuse: a guard given as
+    a bracket condition '[ ... ]' (an and/or/not algebra over leading-dot event
+    members) as an alternative to a Luau guard; an effect definition carrying a
+    parameter signature; and state-machine / mode-group inheritance via repeated
+    'is:' base statements. Prints the guard kind and rendered condition, the
+    effect-def signature, and the aggregate bases.
+    """
+    from vut.engine.temporal_logic.parser.rule_parser import parse
+    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.parser import ast_nodes as ast
+    from fake_luau_oracle import FakeLuauOracle
+
+    cases = [
+        ("bracket guard: comparison",
+         'on: NetUp & [ .ip_adr == "10.0.0.1" ] => Beep()'),
+        ("bracket guard: and / not",
+         "on: NetUp & [ .port > 1024 and not .secure == 1 ] => Beep()"),
+        ("bracket guard: parenthesised or",
+         "on: T & [ (.x > 0 or .y < 10) and .ready == 1 ] => B()"),
+        ("luau guard still admitted",
+         "on: T & { sm.n > 0 } => B()"),
+        ("effect definition with signature",
+         "effect: Boost(level: int) => Beep() => Flash()"),
+        ("state-machine inheritance",
+         "state_machine: Derived(r: int) is: Base1 is: Base2 state: X :end"),
+        ("mode-group inheritance",
+         "mode_group: D is: Base mode: M on: E => B() until: T :end"),
+        ("aggregate without bases",
+         "state_machine: Plain state: X :end"),
+    ]
+    for label, src in cases:
+        banner(label)
+        rep = DiagnosticReporter()
+        rf = parse(src, FakeLuauOracle(), rep)
+        if rep.errors:
+            for d in rep.errors:
+                print("  ERROR off=%d %s" % (d.source_offset, d.message))
+            continue
+        it = rf.items[0]
+        if isinstance(it, ast.Causality):
+            g = it.cause.guard
+            if g is None:
+                print("  Causality, no guard")
+            elif isinstance(g, ast.Condition):
+                print("  Causality, bracket guard: %s" % _render_cond(g))
+            elif isinstance(g, ast.Luau):
+                print("  Causality, luau guard: %s" % g.text)
+        elif isinstance(it, ast.EffectDef):
+            print("  EffectDef name=%s params=%d effects=[%s]"
+                  % (it.name, len(it.params),
+                     ", ".join(type(e).__name__ for e in it.effects)))
+        elif isinstance(it, ast.StateMachine):
+            print("  StateMachine name=%s bases=%s states=%d"
+                  % (it.name, it.bases, len(it.states)))
+        elif isinstance(it, ast.ModeGroup):
+            print("  ModeGroup name=%s bases=%s modes=%d"
+                  % (it.name, it.bases, len(it.modes)))
+
+
 HwutRunner(
     argv       = sys.argv,
-    title      = "Table-driven Parse Engine",
+    title      = "Rule-File Language",
     choice_map = {
-        "first_sets":            run_first_sets,
-        "ll1_ok":                run_ll1_ok,
-        "ll1_conflict":          run_ll1_conflict,
-        "token_inventory":       run_token_inventory,
-        "deep_alt":              run_deep_alt,
-        "shallow_member_access": run_shallow_member_access,
+        "first_sets":               run_first_sets,
+        "ll2_ok":                   run_ll2_ok,
+        "token_inventory":          run_token_inventory,
+        "shallow_member_access":    run_shallow_member_access,
+        "cause_effect":             run_cause_effect,
+        "guards_and_inheritance":   run_guards_and_inheritance,
     },
 ).run()
-

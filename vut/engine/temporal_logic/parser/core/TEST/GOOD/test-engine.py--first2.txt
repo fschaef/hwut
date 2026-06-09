@@ -1,0 +1,5 @@
+
+--- FIRST_2 of rule shapes ---
+seq          {(regex:@id\b, regex:@num\b)}
+opt_head     {(regex:@id\b, regex:@num\b), (regex:@num\b)}
+null_tail    {(regex:@id\b), (regex:@id\b, regex:@num\b)}

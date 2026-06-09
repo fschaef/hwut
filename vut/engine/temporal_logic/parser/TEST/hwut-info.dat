@@ -9,3 +9,4 @@ coverage run --omit ./*.py -a *.py
 --not aux_renderer.py
 --not fake_luau_oracle.py
 --not monkey-file-creator.py
+--not sprites*.py

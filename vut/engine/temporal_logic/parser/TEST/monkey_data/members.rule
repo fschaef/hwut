@@ -1,0 +1,40 @@
+open: X2 . X4 . X6 . X8
+clock: X10 1
+on: ANY & { x{ y } }
+=> -! X17 . X19 . X21 . X23
+mode_group: X25 . X27 . X29 ( n31: X32 ; n34: X35 ; n37: X38 ) is: X41 . X43 . X45 is: X47 . X49 . X51 . X53
+init: { x }
+deinit: { x{ y } }
+:end
+:close X58 is: X60
+open: X62 . X64 effect: X66 . X68 ( n70: X71 ; n73: X74 ; n76: X77 )
+=> X80
+=> X82 . X84 . X86 . X88 ( X90 , X92 = { x } , X95 = "s" , 1 )
+:close cause: X103 . X105 . X107 ( )
+on: X111 ( X113 = event . X117 , mg . X121 , { x } , X124 = 1 )
+state_machine: X129 . X131 ( n133: X134 ; n136: X137 ; n139: X140 ) is: X143 . X145 is: X147 . X149 . X151 is: X153 . X155 . X157
+init: { x{ y } }
+has: X160 . VOID
+:end
+event: X165 ( n167: X168 ; n170: X171 ; n173: X174 )
+mode: X177 . X179 . X181 . X183 ( n185: X186 ; n188: X189 )
+init: { x{ y }{ y } }
+deinit: { x{ y } }
+on: X194 ( X196 = X198 , "s" , X202 )
+=> { x }
+=> ! X207 . X209 ( X211 = "s" , X215 = 1 , { x{ y } } )
+=> +! X222 . X224 ( X226 = sm . X230 , { x{ y } } , X233 = mode . X237 , "s" ) in: X242 . X244 . X246
+until: END & [ not . X253 != "s" and not . X259 >= . X262 and not . X266 > 1 or not . X272 == 1 and not . X278 < . X281 and not . X285 <= "s" and . X290 < 1 or not . X296 >= . X299 and not . X303 > "s" and not . X309 != "s" and not . X315 <= . X318 ]
+mode_group: X321 . X323 . X325 . X327 ( n329: X330 ; n332: X333 ; n335: X336 ) is: X339 . X341
+mode: X343 . X345 . X347 . X349 ( n351: X352 ; n354: X355 ; n357: X358 ; n360: X361 )
+on: X364 & { x{ y } }
+=> "s"
+=> -! X370 . X372
+until: X374 ( X376 = 1 , X380 , { x } )
+until: BEGIN & [ . X388 == 1 and . X393 <= "s" or . X398 == . X401 and . X404 != 1 ]
+has: X409 . X411
+mode: X413 . X415 . X417 ( n419: X420 ; n422: X423 )
+deinit: { x }
+init: { x{ y }{ y } }
+until: X428 ( X430 = X432 , X434 = mg . X438 )
+:end

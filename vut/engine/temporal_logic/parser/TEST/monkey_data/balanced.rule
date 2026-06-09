@@ -1,16 +1,17 @@
-state_machine: X2 . X4
+include: "s" into: X4 . X6
+open: X8 . X10 . X12
+on: X14 ( )
+=> -! X19 . X21 . X23
+=> X25
+:close
+state_machine: X28 . X30 ( ) is: X34 . X36 . X38
 init: { x{ y }{ y } }
-:end include: "s" into: X10 . X12
-mode: X14 . X16
-init: { x }
-on: X19
-=> ! X22 . X24 . X26 ( )
-until: END
-clock: X32 1
-mode_group: X35 . X37 ( )
-init: { x{ y }{ y } }
-mode: X42 . X44 ( )
-deinit: { x{ y }{ y } }
-until: BEGIN
-until: ANY & { x{ y } }
+default: X41 . VOID
 :end
+mode: X46 . X48
+on: ANY
+=> ! X53 . X55 ( mode . X59 , X61 = "s" )
+=> X66 . X68 ( X70 , X72 = { x } )
+until: X76 ( )
+until: X80 & [ . X84 > 1 and . X89 >= "s" and . X94 <= . X97 or . X100 < . X103 and . X106 != 1 and . X111 == "s" ] cause: X116 . X118 . X120
+on: X122 ( )

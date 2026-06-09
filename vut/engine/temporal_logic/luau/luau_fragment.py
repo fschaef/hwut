@@ -36,13 +36,28 @@ import subprocess
 from enum         import Enum
 from dataclasses  import dataclass
 
+from ..parser.core.span_oracle import (
+        SpanOracle, SpanMode, SpanSyntaxError, SpanOracleError)
 
-class Role(Enum):
-    """Syntactic role of an opaque Luau span. Selects the wrapper frame."""
+
+class Role(SpanMode, Enum):
+    """Syntactic role of an opaque Luau span. Selects the wrapper frame.
+
+    A Role is the Luau layer's concrete SpanMode: the engine carries it on an
+    opaque terminal and hands it back to this oracle unread; only this module
+    interprets it (to pick a wrapper). qualified_name() gives the engine a stable
+    identity 'luau:<ROLE>' for the opaque terminal -- the sub-language ('luau')
+    plus the role -- so two opaque positions of different roles are distinct
+    terminals and the debug name reads 'opaque:luau:CONDITION'.
+    """
     CONDITION       = "condition"        # guard:  '& { <expr> }'
     EXPRESSION      = "expression"       # rvalue: '{ <luau-expr> }'  (r-value)
     LVALUE          = "lvalue"           # access: 'as: { <luau-lvalue> }'
     STATEMENT_BLOCK = "statement_block"  # '=> { }', init, deinit, BEGIN, END
+
+    def qualified_name(self):
+        """RETURN: str, the engine-facing identity 'luau:<ROLE NAME>'."""
+        return "luau:" + self.name
 
 
 @dataclass
@@ -56,24 +71,22 @@ class ParseResult:
     error: str = None
 
 
-class FragmentSyntaxError(Exception):
+class FragmentSyntaxError(SpanSyntaxError):
     """INPUT-SIDE failure: the Luau inside the span is malformed.
 
-    Raised when no candidate '}' produces a parseable wrapped fragment. Carries
-    the open '{' offset so the caller can locate the span in the original
-    source. Surfaces as an ordinary rule-file syntax error.
+    Raised when no candidate '}' produces a parseable wrapped fragment. A Luau-
+    flavoured SpanSyntaxError, so the engine's generic 'except SpanSyntaxError'
+    handles it; it carries the open '{' offset for source location.
     """
-    def __init__(self, message, open_offset):
-        super().__init__(message)
-        self.open_offset = open_offset
+    pass
 
 
-class OracleError(Exception):
+class OracleError(SpanOracleError):
     """INFRASTRUCTURE failure: the oracle process misbehaved.
 
     Raised when the subprocess crashes, fails to start, or returns output that
-    is not decodable. Distinct from FragmentSyntaxError: the author cannot fix
-    this by editing rules.
+    is not decodable. A Luau-flavoured SpanOracleError -- not author-fixable, so
+    the engine treats it as fatal.
     """
     pass
 
@@ -113,19 +126,34 @@ def _wrapper_for(role):
 # ---------------------------------------------------------------------------
 # The oracle boundary.
 # ---------------------------------------------------------------------------
-class LuauOracle:
-    """Parses Luau text via the 'luau-ast [file]' subprocess.
+class LuauOracle(SpanOracle):
+    """Parses Luau text via the 'luau-ast [file]' subprocess; a SpanOracle.
 
-    The ONLY component that touches the external binary. Substitutable in tests
-    by any object with a 'parse(text) -> ParseResult' method.
+    The ONLY component that touches the external binary. As the engine's injected
+    SpanOracle it implements find_close (the brace search); its parse() is the
+    substitutable seam -- any object with 'parse(text) -> ParseResult' stands in
+    for the binary in tests.
 
     'luau-ast' accepts a single file argument and no flags. Parse success is
     detected by an empty stderr: a clean parse produces no output; a failed
     parse prints error lines to stderr.
     """
+    open_delimiter  = "{"
+    close_delimiter = "}"
+
     def __init__(self, binary="luau-ast"):
         """RETURN: None. Remembers the binary path; launches nothing yet."""
         self.binary = binary
+
+    def find_close(self, source, open_offset, mode):
+        """RETURN: int, the index of the '}' closing the '{' at 'open_offset'.
+
+        The SpanOracle entry the engine calls. 'mode' is a Role; it selects the
+        wrapper frame. Delegates to find_matching_brace with this oracle as the
+        parse backend. Raises FragmentSyntaxError (a SpanSyntaxError) on malformed
+        Luau, OracleError (a SpanOracleError) on infrastructure failure.
+        """
+        return find_matching_brace(source, open_offset, mode, self)
 
     def parse(self, text):
         """RETURN: ParseResult, ok on a clean parse, not-ok with a diagnostic.
@@ -206,3 +234,4 @@ def find_matching_brace(source, open_offset, role, oracle):
 
         last_diag   = result.error or last_diag
         search_from = candidate + 1
+

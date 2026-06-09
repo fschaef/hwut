@@ -1,158 +1,204 @@
 === monkey: spread ===
-tokens parsed:      437
+tokens parsed:      1039
 top-level items:    12
 diagnostics:        none
 
 -- AST --
 Namespace
-  name = 'X2.X4.X6.X8'
-  items:
-    ForwardDecl
-      kind = 'container'
-      name = 'X9'
-      signature:
-        ArgDecl
-          member = 'n11'
-          type = 'X12'
-          begin = 0
-        ArgDecl
-          member = 'n14'
-          type = 'X15'
-          begin = 0
-      cargs:
-        Arg
-          name = 'X20'
-          value = '"s"'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = None
-          value = '1'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = None
-          value = '"s"'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-      luau_handle:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.LVALUE: 'lvalue'>
-          begin = 0
-      begin = 0
-  begin = 0
-Include
-  filename = 's'
-  mount = 'X33.X35.X37.X39'
-  begin = 0
-Causality
-  cause:
-    Cause
-      trigger:
-        Trigger
-          name = 'X41'
-          is_keyword = False
-          begin = 0
-      guard:
-        Luau
-          text = '{ x }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-  effects:
-    ModeArming
-      name = 'X45.X47.X49.X51'
-      args:
-        Arg
-          name = 'X53'
-          value = '1'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = 'X57'
-          value:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          kind = <E_ArgKind.LUAU: 1>
-          begin = 0
-      begin = 0
-    Unspawn
-      name = 'X62.X64.X66.X68.X70'
-      begin = 0
-    EventSpec
-      name = 'X72.X74.X76.X78.X80'
-      args:
-        Arg
-          name = None
-          value:
-            ShallowMemberAccess
-              binding = 'mode'
-              member = 'X84'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
-          begin = 0
-        Arg
-          name = None
-          value:
-            Luau
-              text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          kind = <E_ArgKind.LUAU: 1>
-          begin = 0
-        Arg
-          name = 'X87'
-          value = 'X89'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = 'X91'
-          value:
-            ShallowMemberAccess
-              binding = 'event'
-              member = 'X95'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
-          begin = 0
-      begin = 0
-    Mutation
-      body:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      begin = 0
-  begin = 0
-ClockDef
-  name = 'X99'
-  period = '1'
-  begin = 0
-Namespace
-  name = 'X102.X104.X106.X108.X110'
+  name:
+    'X2'
+    'X4'
+    'X6'
+    'X8'
   items:
     Causality
       cause:
         Cause
           trigger:
             Trigger
-              name = 'ANY'
+              name = 'BEGIN'
               is_keyword = True
               begin = 0
           guard:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.CONDITION: 'condition'>
+            Condition
+              expr:
+                BoolOp
+                  op = 'or'
+                  operands:
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X14'
+                              begin = 0
+                          op = '=='
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X19'
+                              begin = 0
+                          op = '>='
+                          right:
+                            EventMember
+                              name = 'X22'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X25'
+                              begin = 0
+                          op = '<='
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X30'
+                              begin = 0
+                          op = '<'
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X35'
+                              begin = 0
+                          op = '!='
+                          right:
+                            EventMember
+                              name = 'X38'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X41'
+                              begin = 0
+                          op = '>'
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X46'
+                              begin = 0
+                          op = '<='
+                          right:
+                            EventMember
+                              name = 'X49'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X52'
+                              begin = 0
+                          op = '!='
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X57'
+                              begin = 0
+                          op = '>='
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X62'
+                              begin = 0
+                          op = '=='
+                          right:
+                            EventMember
+                              name = 'X65'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X68'
+                              begin = 0
+                          op = '>'
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X73'
+                              begin = 0
+                          op = '<'
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X78'
+                              begin = 0
+                          op = '=='
+                          right:
+                            EventMember
+                              name = 'X81'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
               begin = 0
           begin = 0
       effects:
-        Spawn
-          name = 'X116.X118.X120.X122.X124'
+        ModeArming
+          name:
+            'X85'
+            'X87'
+            'X89'
+            'X91'
+            'X93'
           args:
             Arg
               name = None
+              value = 'X95'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X97'
               value:
                 Luau
                   text = '{ x{ y } }'
@@ -160,322 +206,141 @@ Namespace
                   begin = 0
               kind = <E_ArgKind.LUAU: 1>
               begin = 0
-            Arg
-              name = None
-              value = 'X127'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          has_parens = True
-          in_container = 'X130.X132.X134.X136'
-          luau_handle:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.LVALUE: 'lvalue'>
-              begin = 0
           begin = 0
-        ReportString
-          text = '"s"'
-          begin = 0
-      begin = 0
-    ForwardDecl
-      kind = 'X152'
-      name = 'X140'
-      signature:
-        ArgDecl
-          member = 'n142'
-          type = 'X143'
-          begin = 0
-        ArgDecl
-          member = 'n145'
-          type = 'X146'
-          begin = 0
-        ArgDecl
-          member = 'n148'
-          type = 'X149'
-          begin = 0
-      cargs:
-        []
-      luau_handle = None
-      begin = 0
-    ClockDef
-      name = 'X154'
-      period = '1'
       begin = 0
   begin = 0
-Mode
-  name = 'X158.X160.X162.X164'
+EventDef
+  name = 'X102'
   params:
     ArgDecl
-      member = 'n166'
-      type = 'X167'
+      member = 'n104'
+      type = 'X105'
       begin = 0
     ArgDecl
-      member = 'n169'
-      type = 'X170'
+      member = 'n107'
+      type = 'X108'
       begin = 0
-  init:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+    ArgDecl
+      member = 'n110'
+      type = 'X111'
       begin = 0
-  deinit:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+    ArgDecl
+      member = 'n113'
+      type = 'X114'
       begin = 0
-  causalities:
-    []
-  untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'END'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-    Cause
-      trigger:
-        Trigger
-          name = 'BEGIN'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-    Cause
-      trigger:
-        Trigger
-          name = 'X181'
-          is_keyword = False
-          begin = 0
-      guard:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-    Cause
-      trigger:
-        Trigger
-          name = 'ANY'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
+    ArgDecl
+      member = 'n116'
+      type = 'X117'
       begin = 0
   begin = 0
-Include
-  filename = 's'
-  mount = 'X189.X191.X193.X195.X197'
+ClockDef
+  name = 'X120'
+  period = '1'
+  begin = 0
+CauseDef
+  name:
+    'X123'
+    'X125'
+    'X127'
+    'X129'
+    'X131'
+  params:
+    ArgDecl
+      member = 'n133'
+      type = 'X134'
+      begin = 0
+    ArgDecl
+      member = 'n136'
+      type = 'X137'
+      begin = 0
+    ArgDecl
+      member = 'n139'
+      type = 'X140'
+      begin = 0
+    ArgDecl
+      member = 'n142'
+      type = 'X143'
+      begin = 0
+  body:
+    CauseRef
+      name = 'X146'
+      args:
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = 'X150'
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value:
+            ShallowMemberAccess
+              binding = 'event'
+              member = 'X156'
+              begin = 0
+          kind = <E_ArgKind.MEMBER: 2>
+          begin = 0
+      begin = 0
   begin = 0
 ModeGroup
-  name = 'X199.X201.X203'
+  name:
+    'X159'
+    'X161'
+    'X163'
+    'X165'
   params:
     ArgDecl
-      member = 'n205'
-      type = 'X206'
+      member = 'n167'
+      type = 'X168'
       begin = 0
     ArgDecl
-      member = 'n208'
-      type = 'X209'
+      member = 'n170'
+      type = 'X171'
       begin = 0
+  bases:
+    'X174'
+    'X176'
+    'X178'
+    'X180'
+    'X182'
+    'X184'
+    'X186'
+    'X188'
+    'X190'
+    'X192'
   modes:
     Mode
-      name = 'X212.X214'
+      name:
+        'X194'
+        'X196'
+        'X198'
+        'X200'
+        'X202'
       params:
         ArgDecl
-          member = 'n216'
-          type = 'X217'
+          member = 'n204'
+          type = 'X205'
           begin = 0
         ArgDecl
-          member = 'n219'
-          type = 'X220'
+          member = 'n207'
+          type = 'X208'
+          begin = 0
+        ArgDecl
+          member = 'n210'
+          type = 'X211'
+          begin = 0
+        ArgDecl
+          member = 'n213'
+          type = 'X214'
           begin = 0
       init:
-        Luau
-          text = '{ x }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      deinit:
-        Luau
+        SpanResult
           text = '{ x{ y } }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      causalities:
-        Causality
-          cause:
-            Cause
-              trigger:
-                Trigger
-                  name = 'BEGIN'
-                  is_keyword = True
-                  begin = 0
-              guard:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.CONDITION: 'condition'>
-                  begin = 0
-              begin = 0
-          effects:
-            EventSpec
-              name = 'X226.X228.X230.X232.X234'
-              args:
-                Arg
-                  name = None
-                  value = '1'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = None
-                  value:
-                    ShallowMemberAccess
-                      binding = 'mg'
-                      member = 'X240'
-                      begin = 0
-                  kind = <E_ArgKind.MEMBER: 2>
-                  begin = 0
-              begin = 0
-            ReportString
-              text = '"s"'
-              begin = 0
-            Unspawn
-              name = 'X246.X248.X250.X252'
-              begin = 0
-          begin = 0
-        Causality
-          cause:
-            Cause
-              trigger:
-                Trigger
-                  name = 'END'
-                  is_keyword = True
-                  begin = 0
-              guard:
-                Luau
-                  text = '{ x }'
-                  role = <Role.CONDITION: 'condition'>
-                  begin = 0
-              begin = 0
-          effects:
-            ModeArming
-              name = 'X260.X262.X264.X266'
-              args:
-                Arg
-                  name = None
-                  value = 'X268'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = None
-                  value = 'X270'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-              begin = 0
-            Spawn
-              name = 'X274.X276.X278.X280.X282'
-              args:
-                Arg
-                  name = None
-                  value = '"s"'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = None
-                  value = 'X286'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-              has_parens = True
-              in_container = 'X289.X291.X293'
-              luau_handle:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.LVALUE: 'lvalue'>
-                  begin = 0
-              begin = 0
-            Mutation
-              body:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
-                  begin = 0
-              begin = 0
-            Mutation
-              body:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
-                  begin = 0
-              begin = 0
-          begin = 0
-      untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'X298'
-              is_keyword = False
-              begin = 0
-          guard:
-            Luau
-              text = '{ x }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
-          begin = 0
-      begin = 0
-  has_refs:
-    []
-  init = None
-  deinit = None
-  begin = 0
-StateMachine
-  name = 'X302.X304'
-  params:
-    ArgDecl
-      member = 'n306'
-      type = 'X307'
-      begin = 0
-    ArgDecl
-      member = 'n309'
-      type = 'X310'
-      begin = 0
-    ArgDecl
-      member = 'n312'
-      type = 'X313'
-      begin = 0
-    ArgDecl
-      member = 'n315'
-      type = 'X316'
-      begin = 0
-  states:
-    State
-      name = 'X320.X322'
-      params:
-        ArgDecl
-          member = 'n324'
-          type = 'X325'
-          begin = 0
-        ArgDecl
-          member = 'n327'
-          type = 'X328'
-          begin = 0
-        ArgDecl
-          member = 'n330'
-          type = 'X331'
-          begin = 0
-      init:
-        Luau
-          text = '{ x }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
           begin = 0
       deinit = None
       causalities:
@@ -484,19 +349,265 @@ StateMachine
         Cause
           trigger:
             Trigger
-              name = 'ANY'
+              name = 'END'
               is_keyword = True
               begin = 0
           guard:
-            Luau
-              text = '{ x }'
-              role = <Role.CONDITION: 'condition'>
+            Condition
+              expr:
+                BoolOp
+                  op = 'or'
+                  operands:
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X239'
+                              begin = 0
+                          op = '!='
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X244'
+                              begin = 0
+                          op = '>='
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X249'
+                              begin = 0
+                          op = '<'
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X254'
+                              begin = 0
+                          op = '>'
+                          right:
+                            EventMember
+                              name = 'X257'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X260'
+                              begin = 0
+                          op = '<='
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X265'
+                              begin = 0
+                          op = '>='
+                          right:
+                            EventMember
+                              name = 'X268'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X271'
+                              begin = 0
+                          op = '<='
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X276'
+                              begin = 0
+                          op = '>'
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X281'
+                              begin = 0
+                          op = '=='
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
               begin = 0
           begin = 0
+      begin = 0
+  has_refs:
+    HasRef
+      aggregate = 'X286'
+      member = 'VOID'
+      is_void = True
+      begin = 0
+  init:
+    SpanResult
+      text = '{ x{ y } }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  deinit:
+    SpanResult
+      text = '{ x }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+  begin = 0
+StateMachine
+  name:
+    'X293'
+    'X295'
+    'X297'
+  params:
+    ArgDecl
+      member = 'n299'
+      type = 'X300'
+      begin = 0
+    ArgDecl
+      member = 'n302'
+      type = 'X303'
+      begin = 0
+  bases:
+    'X306'
+    'X308'
+    'X310'
+    'X312'
+    'X314'
+    'X316'
+    'X318'
+    'X320'
+  states:
+    State
+      name:
+        'X322'
+        'X324'
+        'X326'
+      params:
+        ArgDecl
+          member = 'n328'
+          type = 'X329'
+          begin = 0
+        ArgDecl
+          member = 'n331'
+          type = 'X332'
+          begin = 0
+      init = None
+      deinit:
+        SpanResult
+          text = '{ x }'
+          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      causalities:
+        Causality
+          cause:
+            CauseRef
+              name = 'X335'
+              args:
+                Arg
+                  name = 'X337'
+                  value:
+                    ShallowMemberAccess
+                      binding = 'mg'
+                      member = 'X341'
+                      begin = 0
+                  kind = <E_ArgKind.MEMBER: 2>
+                  begin = 0
+                Arg
+                  name = None
+                  value:
+                    Luau
+                      text = '{ x{ y } }'
+                      role = <Role.EXPRESSION: 'expression'>
+                      begin = 0
+                  kind = <E_ArgKind.LUAU: 1>
+                  begin = 0
+              begin = 0
+          effects:
+            Mutation
+              body:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+              begin = 0
+            EffectRef
+              name = 'X346'
+              begin = 0
+            Spawn
+              name:
+                'X349'
+                'X351'
+              args:
+                Arg
+                  name = 'X353'
+                  value = '"s"'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+                Arg
+                  name = None
+                  value:
+                    ShallowMemberAccess
+                      binding = 'sm'
+                      member = 'X359'
+                      begin = 0
+                  kind = <E_ArgKind.MEMBER: 2>
+                  begin = 0
+              has_parens = True
+              in_container:
+                'X362'
+                'X364'
+                'X366'
+                'X368'
+                'X370'
+              luau_handle:
+                Luau
+                  text = '{ x }'
+                  role = <Role.LVALUE: 'lvalue'>
+                  begin = 0
+              begin = 0
+          begin = 0
+      untils:
         Cause
           trigger:
             Trigger
-              name = 'END'
+              name = 'ANY'
               is_keyword = True
               begin = 0
           guard:
@@ -507,61 +618,177 @@ StateMachine
           begin = 0
       begin = 0
   has_refs:
-    HasRef
-      aggregate = 'X341'
-      member = 'VOID'
-      is_void = True
-      begin = 0
+    []
   default = None
-  init:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+  init = None
+  deinit:
+    SpanResult
+      text = '{ x{ y } }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
-  deinit = None
   begin = 0
-EventDef
-  name = 'X346'
+Mode
+  name:
+    'X420'
+    'X422'
+    'X424'
+    'X426'
   params:
     ArgDecl
-      member = 'n348'
-      type = 'X349'
+      member = 'n428'
+      type = 'X429'
       begin = 0
     ArgDecl
-      member = 'n351'
-      type = 'X352'
+      member = 'n431'
+      type = 'X432'
       begin = 0
-    ArgDecl
-      member = 'n354'
-      type = 'X355'
+  init:
+    SpanResult
+      text = '{ x{ y } }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
-    ArgDecl
-      member = 'n357'
-      type = 'X358'
+  deinit:
+    SpanResult
+      text = '{ x }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
-    ArgDecl
-      member = 'n360'
-      type = 'X361'
+  causalities:
+    Causality
+      cause:
+        CauseRef
+          name = 'X435'
+          args:
+            Arg
+              name = 'X437'
+              value = 'X439'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X441'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = 'X445'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+      effects:
+        ReportString
+          text = '"s"'
+          begin = 0
+        EventSpec
+          name:
+            'X450'
+            'X452'
+            'X454'
+            'X456'
+            'X458'
+          args:
+            Arg
+              name = 'X460'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+        Unspawn
+          name:
+            'X468'
+            'X470'
+            'X472'
+          begin = 0
+        Mutation
+          body:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+          begin = 0
       begin = 0
+  untils:
+    []
   begin = 0
-Causality
-  cause:
-    Cause
-      trigger:
-        Trigger
-          name = 'BEGIN'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
+Include
+  filename = 's'
+  mount:
+    'X794'
+    'X796'
+  begin = 0
+ForwardDecl
+  kind = 'X809'
+  name = 'X797'
+  signature:
+    ArgDecl
+      member = 'n799'
+      type = 'X800'
+      begin = 0
+    ArgDecl
+      member = 'n802'
+      type = 'X803'
+      begin = 0
+    ArgDecl
+      member = 'n805'
+      type = 'X806'
+      begin = 0
+  cargs:
+    []
+  luau_handle = None
+  begin = 0
+EffectDef
+  name:
+    'X811'
+    'X813'
+    'X815'
+    'X817'
+    'X819'
+  params:
+    ArgDecl
+      member = 'n821'
+      type = 'X822'
+      begin = 0
+    ArgDecl
+      member = 'n824'
+      type = 'X825'
+      begin = 0
+    ArgDecl
+      member = 'n827'
+      type = 'X828'
+      begin = 0
+    ArgDecl
+      member = 'n830'
+      type = 'X831'
       begin = 0
   effects:
-    ModeArming
-      name = 'X368.X370.X372'
+    EffectRef
+      name = 'X834'
+      begin = 0
+    Spawn
+      name:
+        'X837'
+        'X839'
+        'X841'
+        'X843'
       args:
+        Arg
+          name = None
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = 'X847'
+          value:
+            ShallowMemberAccess
+              binding = 'sm'
+              member = 'X851'
+              begin = 0
+          kind = <E_ArgKind.MEMBER: 2>
+          begin = 0
         Arg
           name = None
           value:
@@ -572,60 +799,241 @@ Causality
           kind = <E_ArgKind.LUAU: 1>
           begin = 0
         Arg
-          name = 'X375'
-          value:
-            ShallowMemberAccess
-              binding = 'sm'
-              member = 'X379'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
-          begin = 0
-        Arg
-          name = None
-          value = '1'
+          name = 'X854'
+          value = 'X856'
           kind = <E_ArgKind.LITERAL: 0>
           begin = 0
         Arg
           name = None
-          value:
-            ShallowMemberAccess
-              binding = 'mg'
-              member = 'X385'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+      has_parens = True
+      in_container:
+        'X861'
+        'X863'
+      luau_handle:
+        Luau
+          text = '{ x }'
+          role = <Role.LVALUE: 'lvalue'>
           begin = 0
       begin = 0
-    ReportString
-      text = '"s"'
-      begin = 0
   begin = 0
-ModeGroup
-  name = 'X390.X392.X394'
+Include
+  filename = 's'
+  mount:
+    'X868'
+    'X870'
+    'X872'
+    'X874'
+  begin = 0
+Mode
+  name:
+    'X876'
+    'X878'
+    'X880'
+    'X882'
   params:
     ArgDecl
-      member = 'n396'
-      type = 'X397'
+      member = 'n884'
+      type = 'X885'
       begin = 0
     ArgDecl
-      member = 'n399'
-      type = 'X400'
+      member = 'n887'
+      type = 'X888'
       begin = 0
     ArgDecl
-      member = 'n402'
-      type = 'X403'
+      member = 'n890'
+      type = 'X891'
       begin = 0
-  modes:
-    []
-  has_refs:
-    []
-  init:
-    Luau
-      text = '{ x{ y } }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+    ArgDecl
+      member = 'n893'
+      type = 'X894'
       begin = 0
+    ArgDecl
+      member = 'n896'
+      type = 'X897'
+      begin = 0
+  init = None
   deinit:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+    SpanResult
+      text = '{ x{ y } }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
+  causalities:
+    Causality
+      cause:
+        Cause
+          trigger:
+            Trigger
+              name = 'X901'
+              is_keyword = False
+              begin = 0
+          guard:
+            Condition
+              expr:
+                BoolOp
+                  op = 'or'
+                  operands:
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X905'
+                              begin = 0
+                          op = '>'
+                          right:
+                            EventMember
+                              name = 'X908'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X911'
+                              begin = 0
+                          op = '<'
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X916'
+                              begin = 0
+                          op = '!='
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X921'
+                              begin = 0
+                          op = '=='
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X926'
+                              begin = 0
+                          op = '<'
+                          right:
+                            EventMember
+                              name = 'X929'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X932'
+                              begin = 0
+                          op = '<='
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X937'
+                              begin = 0
+                          op = '>='
+                          right:
+                            EventMember
+                              name = 'X940'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+      effects:
+        ModeArming
+          name:
+            'X944'
+            'X946'
+            'X948'
+          args:
+            Arg
+              name = 'X950'
+              value:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = 'X953'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value:
+                ShallowMemberAccess
+                  binding = 'event'
+                  member = 'X959'
+                  begin = 0
+              kind = <E_ArgKind.MEMBER: 2>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X963'
+              value = 'X965'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+        EventSpec
+          name:
+            'X968'
+            'X970'
+            'X972'
+            'X974'
+          args:
+            Arg
+              name = None
+              value:
+                ShallowMemberAccess
+                  binding = 'sm'
+                  member = 'X978'
+                  begin = 0
+              kind = <E_ArgKind.MEMBER: 2>
+              begin = 0
+            Arg
+              name = 'X980'
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+          begin = 0
+        ReportString
+          text = '"s"'
+          begin = 0
+      begin = 0
+  untils:
+    []
   begin = 0

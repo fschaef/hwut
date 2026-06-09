@@ -1,9 +1,10 @@
 
---- FIRST sets of key rules ---
-top-level              regex:[a-zA-Z_]\w*, string:clock:, string:event:, string:include:, string:mode:, string:mode_group:, string:on:, string:open:, string:state_machine:
-trigger                captured:ANY, captured:BEGIN, captured:END, regex:[a-zA-Z_]\w*
-effect                 framing:luau-open, regex:"[^"]*", regex:[a-zA-Z_]\w*, string:!, string:+!, string:-!
-rvalue                 captured:event, captured:mg, captured:mode, captured:sm, framing:luau-open, regex:"[^"]*", regex:[+-]?\d+(?:\.\d+)?, regex:[a-zA-Z_]\w*
-mode-elm               string:deinit:, string:init:, string:on:
-state-machine-elm      string:default:, string:deinit:, string:has:, string:init:, string:state:
-mode-group-elm         string:deinit:, string:has:, string:init:, string:mode:
+--- FIRST_2 sets of key rules ---
+top-level            {(regex:[a-zA-Z_]\w*, string:(), (regex:[a-zA-Z_]\w*, string:is:), (string:cause:, regex:[a-zA-Z_]\w*), (string:clock:, regex:[a-zA-Z_]\w*), (string:effect:, regex:[a-zA-Z_]\w*), (string:event:, regex:[a-zA-Z_]\w*), (string:include:, regex:"[^"]*"), (string:mode:, regex:[a-zA-Z_]\w*), (string:mode_group:, regex:[a-zA-Z_]\w*), (string:on:, captured:ANY), (string:on:, captured:BEGIN), (string:on:, captured:END), (string:on:, regex:[a-zA-Z_]\w*), (string:open:, regex:[a-zA-Z_]\w*), (string:state_machine:, regex:[a-zA-Z_]\w*)}
+trigger              {(captured:ANY), (captured:BEGIN), (captured:END), (regex:[a-zA-Z_]\w*)}
+effect               {(framing:span-open), (regex:"[^"]*"), (regex:[a-zA-Z_]\w*), (regex:[a-zA-Z_]\w*, string:(), (regex:[a-zA-Z_]\w*, string:.), (string:!, regex:[a-zA-Z_]\w*), (string:+!, regex:[a-zA-Z_]\w*), (string:-!, regex:[a-zA-Z_]\w*)}
+rvalue               {(captured:event, string:.), (captured:mg, string:.), (captured:mode, string:.), (captured:sm, string:.), (framing:span-open), (regex:"[^"]*"), (regex:[+-]?\d+(?:\.\d+)?), (regex:[a-zA-Z_]\w*)}
+arg                  {(captured:event, string:.), (captured:mg, string:.), (captured:mode, string:.), (captured:sm, string:.), (framing:span-open), (regex:"[^"]*"), (regex:[+-]?\d+(?:\.\d+)?), (regex:[a-zA-Z_]\w*), (regex:[a-zA-Z_]\w*, string:=)}
+mode-elm             {(string:deinit:, framing:span-open), (string:init:, framing:span-open), (string:on:, captured:ANY), (string:on:, captured:BEGIN), (string:on:, captured:END), (string:on:, regex:[a-zA-Z_]\w*)}
+state-machine-elm    {(string:default:, regex:[a-zA-Z_]\w*), (string:deinit:, framing:span-open), (string:has:, regex:[a-zA-Z_]\w*), (string:init:, framing:span-open), (string:state:, regex:[a-zA-Z_]\w*)}
+mode-group-elm       {(string:deinit:, framing:span-open), (string:has:, regex:[a-zA-Z_]\w*), (string:init:, framing:span-open), (string:mode:, regex:[a-zA-Z_]\w*)}

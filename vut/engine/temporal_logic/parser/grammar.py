@@ -95,10 +95,10 @@ t_re_number     = T.regex(r'[+-]?\d+(?:\.\d+)?')
 t_re_string     = T.regex(r'"[^"]*"')
 t_re_id         = T.regex(r'[a-zA-Z_]\w*')
 
-t_opq_cond      = T.opaque("luau", role=Role.CONDITION)
-t_opq_expr      = T.opaque("luau", role=Role.EXPRESSION)
-t_opq_lvalue    = T.opaque("luau", role=Role.LVALUE)
-t_opq_stmts     = T.opaque("luau", role=Role.STATEMENT_BLOCK)
+t_opq_cond      = T.opaque(Role.CONDITION)
+t_opq_expr      = T.opaque(Role.EXPRESSION)
+t_opq_lvalue    = T.opaque(Role.LVALUE)
+t_opq_stmts     = T.opaque(Role.STATEMENT_BLOCK)
 
 t_kw_any        = T.captured("ANY")
 t_kw_end        = T.captured("END")
@@ -120,19 +120,48 @@ t_kw_sm         = T.captured("sm")
 t_kw_mg         = T.captured("mg")
 t_kw_mode       = T.captured("mode")
 
+# Bracket-guard vocabulary. 'not' is captured (the builder must SEE it to wrap a
+# negation); 'and'/'or' stay silent (they only separate operands at a level). The
+# six comparison operators are captured so the comparison builder reads the exact
+# operator from the token; two-char operators precede their one-char prefixes in
+# the lexer's longest-first ordering.
+t_kw_not        = T.captured("not")
+t_op_ge         = T.captured(">=")
+t_op_le         = T.captured("<=")
+t_op_eq         = T.captured("==")
+t_op_ne         = T.captured("!=")
+t_op_gt         = T.captured(">")
+t_op_lt         = T.captured("<")
+
 
 GRAMMAR = {
 "top-level":      ("<namespace>", ALT, "<include>", ALT, "<causality>", ALT, "<mode>",
                    ALT, "<mode-group>", ALT, "<state-machine>", ALT, "<event-def>",
-                   ALT, "<clock-def>", ALT, "<forward-decl>"),
+                   ALT, "<clock-def>", ALT, "<cause-def>", ALT, "<effect-def>",
+                   ALT, "<forward-decl>"),
 "include":        ("include:", t_re_string, "into:", "<dotted-name>"),
 "namespace":      ("open:", "<dotted-name>", PLUS("<top-level>"), ":close"),
 "causality":      ("on:", "<cause>", PLUS(("=>", "<effect>"))),
-"cause":          ("<trigger>", ["&", "<guard>"]),
+"cause":          ("<cause-ref>", ALT, ("<trigger>", ["&", "<guard>"])),
+"cause-ref":      (t_re_id, "<arg-parens>"),
 "trigger":        (t_re_id, ALT, t_kw_any, ALT, t_kw_end, ALT, t_kw_begin),
-"guard":          t_opq_cond,
+"guard":          ("<luau-guard>", ALT, "<bracket-guard>"),
+"luau-guard":     t_opq_cond,
+"bracket-guard":  ("[", "<or-cond>", "]"),
+"or-cond":        ("<and-cond>", STAR(("or", "<and-cond>"))),
+"and-cond":       ("<not-cond>", STAR(("and", "<not-cond>"))),
+"not-cond":       ([t_kw_not], "<cond-atom>"),
+"cond-atom":      ("<paren-cond>", ALT, "<comparison>"),
+"paren-cond":     ("(", "<or-cond>", ")"),
+"comparison":     ("<evt-member>", "<cmp-op>", "<cond-operand>"),
+"evt-member":     (".", t_re_id),
+"cmp-op":         (t_op_ge, ALT, t_op_le, ALT, t_op_eq, ALT, t_op_ne, ALT, t_op_gt, ALT, t_op_lt),
+"cond-operand":   ("<evt-member>", ALT, t_re_number, ALT, t_re_string),
 "effect":         ("<mutation>", ALT, "<spawn>", ALT, "<unspawn>", ALT, "<mode-arming>",
-                   ALT, "<report-string>", ALT, "<event-spec>"),
+                   ALT, "<report-string>", ALT, "<event-spec>", ALT, "<effect-ref>"),
+"effect-ref":     (t_re_id,),
+"cause-def":      ("cause:", "<signature>", "on:", "<cause>"),
+"effect-def":     ("effect:", "<signature>", PLUS(("=>", "<effect>"))),
 "mutation":       t_opq_stmts,
 "spawn":          ("+!", "<dotted-name>", "<arg-parens>", ["in:", "<dotted-name>", ["as:", t_opq_lvalue]]),
 "unspawn":        ("-!", "<dotted-name>"),
@@ -142,7 +171,7 @@ GRAMMAR = {
 
 "arg-parens":            ("(", ["<arg-list>"], ")"),
 "arg-list":              ("<arg>", STAR((",", "<arg>"))),
-"arg":                   (t_re_id, ["=", "<rvalue>"]),
+"arg":                   ("<rvalue>", ALT, (t_re_id, "=", "<rvalue>")),
 "rvalue":                (t_re_number, ALT, t_re_string, ALT, "<shallow-member-access>",
                           ALT, t_re_id, ALT, t_opq_expr),
 "shallow-member-access": ("<binding>", ".", t_re_id),
@@ -157,12 +186,14 @@ GRAMMAR = {
 "has-ref":   ("has:", "<member-ref>"),
 
 "forward-decl":      (t_re_id, ["<decl-parens>"], "is:", "<fwd-kind>"),
-"fwd-kind":          (t_re_id, ALT, (t_kw_container, "<", ["<arg-list>"], ">", ["as:", t_opq_lvalue])),
+"fwd-kind":          (t_re_id, ALT, t_kw_mode, ALT, (t_kw_container, t_op_lt, ["<arg-list>"], t_op_gt, ["as:", t_opq_lvalue])),
 "member-ref":        (t_re_id, [".", (t_kw_void, ALT, t_re_id)]),
 
-"mode-group":        ("mode_group:", "<signature>", PLUS("<mode-group-elm>"), ":end"),
+"mode-group":        ("mode_group:", "<signature>", STAR(("is:", "<dotted-name>")),
+                      PLUS("<mode-group-elm>"), ":end"),
 "mode-group-elm":    ("<mode>", ALT, "<has-ref>", ALT, "<init>", ALT, "<deinit>"),
-"state-machine":     ("state_machine:", "<signature>", PLUS("<state-machine-elm>"), ":end"),
+"state-machine":     ("state_machine:", "<signature>", STAR(("is:", "<dotted-name>")),
+                      PLUS("<state-machine-elm>"), ":end"),
 "state-machine-elm": ("<state>", ALT, "<has-ref>", ALT, "<default>", ALT, "<init>", ALT, "<deinit>"),
 "default":           ("default:", "<sm-mode-ref>"),
 "sm-mode-ref":       (t_re_id, ".", (t_kw_void, ALT, t_re_id)),
@@ -320,19 +351,43 @@ IMPLICIT EVENTS:
 
 <guard>
 
-    is an arbitrary Luau boolean expression in '{ }'. The rule-file parser does
-    not parse inside '{ }'; it asks the Luau helper to find the matching brace.
-    Guards are compiled at transpile time, so a malformed guard is reported
-    before any event is processed.
+    is the condition gating a trigger, in one of TWO forms.
 
-    Guards must read state, not mutate it. The Luau helper performs a sound
-    *syntactic* read-only check on every guard: any assignment statement, and
-    any call to a recognised mutating builtin ('table.insert', 'table.remove',
-    'table.sort', and similar) is reported as a fatal transpile error. The
-    check is sound but not complete: a guard that calls a user-defined function
-    that itself mutates state cannot be detected statically. Authors are
-    responsible for the function calls they make; the helper catches the
-    obvious mistakes.
+    (1) A Luau boolean expression in '{ }'. The rule-file parser does not parse
+    inside '{ }'; it asks the Luau helper to find the matching brace. Guards are
+    compiled at transpile time, so a malformed guard is reported before any event
+    is processed.
+
+        Luau guards must read state, not mutate it. The Luau helper performs a
+        sound *syntactic* read-only check on every guard: any assignment, and any
+        call to a recognised mutating builtin ('table.insert', 'table.remove',
+        'table.sort', and similar) is reported as a fatal transpile error. The
+        check is sound but not complete: a guard calling a user-defined function
+        that itself mutates state cannot be detected statically.
+
+    (2) A bracket condition in '[ ]': a boolean algebra over the triggering
+    event's members. The parser builds the condition tree directly (it is not
+    opaque), so members and comparisons are validated by the static layer.
+
+        condition  :=  '[' <or> ']'
+        <or>       :=  <and> ( 'or'  <and> )*
+        <and>      :=  <not> ( 'and' <not> )*
+        <not>      :=  [ 'not' ] <atom>
+        <atom>     :=  '(' <or> ')'  |  <comparison>
+        <comparison> := <member> <op> <operand>
+        <member>   :=  '.' name              -- a member of the TRIGGERING event
+        <op>       :=  '>=' | '<=' | '==' | '!=' | '>' | '<'
+        <operand>  :=  <member> | number | string
+
+        A member is LEADING-DOT and SINGLE-LEVEL: '.ip_adr' is the 'ip_adr'
+        member of the event the trigger named -- the event is implicit, so no
+        event name is written. Comparison only: there is no arithmetic and no
+        function call (use a Luau guard for those). 'and' / 'or' / 'not' are
+        reserved words.
+
+        Example:
+            on: NetworkUp & [ .ip_adr == "10.0.0.1" and .port > 1024 ] => ...
+            on: Collision & [ (.severity > 3 or .fatal == 1) and not .handled == 1 ]
 
 <effect>
     is what happens as a result of a cause. Every effect is prefixed by '=>',
@@ -373,6 +428,51 @@ IMPLICIT EVENTS:
          => { vehicle.damaged = true }
          => WRECK(severity = event.severity)
          => "wreck at t={event.time} severity={event.severity}"
+
+<cause-def>, <effect-def>, <cause-ref>, <effect-ref>
+    A cause or an effect-list may be NAMED ONCE and REUSED, so a recurring
+    trigger+guard or a recurring bundle of effects is written in a single place.
+
+    A cause definition gives a cause a name and a parameter signature; the 'on:'
+    that introduces its body is the same signal as in a causality rule:
+
+         cause: NETWORK_UP(time : int)
+                 on: NETWORK & { NETWORK.time > time }
+
+    An effect definition names an ordered bundle of effects and may carry a
+    parameter signature, parallel to a cause definition; each '=>' is the same
+    effect signal as in a causality rule:
+
+         effect: SUPER_POWER => PACMAN_RUN(speed = 12)
+                             => PELLET_BLINK
+                             => GHOSTS_FLEE
+
+         effect: Boost(level : int) => SPEED_UP(by = level)
+                                    => FLASH
+
+    A causality rule may then fire a defined cause BY REFERENCE, passing actual
+    arguments, and name a defined effect bundle BY REFERENCE as a bare name:
+
+         on: NETWORK(20) => SUPER_POWER
+
+    A cause reference is 'NAME(args)' -- always parenthesised, even when niladic;
+    the parens are what distinguish it from an inline trigger ('NAME' or
+    'NAME & guard'). An effect reference is a BARE single name 'NAME' -- the
+    absence of parens is what distinguishes it from an <event-spec>
+    ('NAME(args)'). Both distinctions are decided by the SECOND token after the
+    name, which is why the grammar is LL(2) rather than LL(1). Effect-bundle and
+    cause names are single identifiers, never dotted, so the second-token test is
+    enough. Resolving a reference to its definition (and checking a cause-ref's
+    arguments against the signature) is a pass-2 concern; the parser records the
+    definitions and references, it does not expand or bind them.
+
+    A bare effect reference and a parenthesised event-spec may sit side by side
+    in one effect list:
+
+         on: NETWORK(20) => SUPER_POWER => Beep(3)
+
+    fires the cause NETWORK with argument 20, then runs the SUPER_POWER bundle,
+    then emits Beep(3).
 
 <event-spec>
     constructs an event. The event-name is literal; arguments are <member> '='
@@ -786,7 +886,15 @@ Inside the Luau code sections of the state machine itself and its member
 states, the nesting state machine is referred to by the binding 'sm', and all
 members declared in the state-machine signature are read-available.
 
-<state-machine> declares the aggregate. Beyond its member states it has:
+<state-machine> declares the aggregate. After its signature it may carry zero
+or more 'is: <base>' statements, each naming one base aggregate it inherits
+from; multiple bases are written as multiple 'is:' statements. Beyond its member
+states it has:
+
+   'is:'   names a base aggregate (one base per 'is:' statement, repeatable).
+           The parser records the base names in source order; how a base's
+           members combine with the derived aggregate -- additive, override,
+           collision handling -- is resolved by a later layer, not at parse time.
 
    'default' specifies the active state when no state otherwise remains
              active -- before any state is armed, or after a state terminates
@@ -863,7 +971,10 @@ keyword, or pulled in with 'has:':
 Inside the Luau code sections of the mode group itself and its member modes,
 the nesting mode group is referred to by the binding 'mg' -- the counterpart of
 'sm' for a state machine. A mode group has 'init' and 'deinit', exactly as a
-state machine does, and is closed by 'end'. It has NO closing 'until' causes of
+state machine does, and is closed by 'end'. Like a state machine, it may carry
+zero or more 'is: <base>' statements after its signature (one base per 'is:',
+repeatable); the parser records the bases and a later layer resolves how they
+combine. It has NO closing 'until' causes of
 its own, and NO 'default':
 with overlapping members there is no single active member to fall back to, so
 no fallback exists. A <member-ref> inside a mode group resolves against the
@@ -1197,4 +1308,5 @@ The set of bootstrap helpers is small, fixed, engine-provided -- no
 third-party Luau libraries. The bar for adding one is "would every
 nontrivial test reinvent this?"
 """
+
 

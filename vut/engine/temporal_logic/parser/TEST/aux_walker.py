@@ -47,13 +47,13 @@ ______________________________________________________________________________
 from dataclasses import dataclass, field
 
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
-from vut.engine.temporal_logic.parser.core.ll1_engine import EngineParser, _ResyncError
-from vut.engine.temporal_logic.parser.core.grammar_ast import (
+from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser, _ResyncError
+from vut.engine.temporal_logic.parser.core.ll2_grammar_ast import (
         TerminalNode, PassThroughNode, BranchNode, OperatorNode,
         SequenceNode, AlternativeNode, OptionalNode, PlusNode, StarNode)
 from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.terminals import (t_fr_luau_open,
-                                                          t_fr_luau_block,
+from vut.engine.temporal_logic.parser.core.terminals import (t_fr_span_open,
+                                                          t_fr_span_block,
                                                           t_fr_eof,
                                                           t_fr_mismatch)
 from vut.engine.temporal_logic.parser.grammar import (
@@ -101,16 +101,25 @@ class ListLexer:
     """A lexer stand-in that serves a prebuilt token list to the engine.
 
     Implements the two methods EngineParser uses: 'next()' returns the next token
-    (END_OF_FILE past the end) and 'read_luau_block(open_tok, role)' returns a
+    (END_OF_FILE past the end) and 'read_span(open_tok, role)' returns a
     synthetic LUAU_BLOCK. 'luau_texts', when non-empty, is a FIFO of block texts
-    served one per read_luau_block call; when empty, every block reads '{ luau }'.
+    served one per read_span call; when empty, every block reads '{ luau }'.
     """
     def __init__(self, tokens, luau_texts=()):
-        """RETURN: None. Holds the token list, a read cursor, and a luau FIFO."""
+        """RETURN: None. Holds the token list, a read cursor, and a luau FIFO.
+
+        '_luau_slots' records, in emission order, the list index of every
+        framing:span-open token, so read_span can re-anchor the cursor to
+        the token AFTER a block regardless of how far the 2-token lookahead window
+        has already advanced past the open token.
+        """
         self.tokens     = tokens
         self.i          = 0
         self.luau_texts = list(luau_texts)
         self._luau_i    = 0
+        self._luau_slots = [j for j, t in enumerate(tokens)
+                            if t.kind is t_fr_span_open]
+        self._luau_seen  = 0
 
     def next(self):
         """RETURN: Token, the next token, or an END_OF_FILE sentinel past the end."""
@@ -120,19 +129,30 @@ class ListLexer:
             return t
         return Token(t_fr_eof, "", 0, 0)
 
-    def read_luau_block(self, open_tok, role):
-        """RETURN: Token, a synthetic LUAU_BLOCK at the open offset.
+    def read_span(self, open_tok, role):
+        """RETURN: Token, a synthetic LUAU_BLOCK standing for one opaque span.
 
-        The engine consumes the LUAU_OPEN with _advance() and then calls next()
-        to reload lookahead. The real lexer swallows the block bytes so the next
-        token is the one AFTER the block; we step the cursor back by one so the
-        engine's following next() returns the correct post-block token.
+        A whole Luau span is ONE token in the replayed list (the framing:span-open
+        slot); there are no separate block-body tokens, unlike the real lexer
+        which swallows block bytes from the source. The engine's consume_span
+        re-primes the 2-token window with two next() calls AFTER this returns, so
+        the cursor must be left pointing at the token IMMEDIATELY AFTER the
+        luau-open slot -- those two next() then deliver the post-block tokens.
+
+        The catch: by the time consume_span runs, the 2-token lookahead may have
+        already pulled one or more tokens that follow the luau-open into the
+        window, so 'i' has overshot the open slot. A fixed 'i -= 1' (correct only
+        for single-token lookahead) loses the token between the open slot and the
+        window, desyncing the stream. Instead, re-anchor 'i' to (open_slot + 1)
+        from the recorded slot list -- exact regardless of window depth.
         """
-        self.i -= 1
+        open_slot = self._luau_slots[self._luau_seen]
+        self._luau_seen += 1
+        self.i = open_slot + 1
         text = (self.luau_texts[self._luau_i]
                 if self._luau_i < len(self.luau_texts) else "{ luau }")
         self._luau_i += 1
-        return Token(t_fr_luau_block, text, open_tok.begin,
+        return Token(t_fr_span_block, text, open_tok.begin,
                      open_tok.begin + len(text))
 
 
@@ -155,21 +175,27 @@ def drive(grammar, rule, tokens, luau_texts=()):
     'consumed' is how many supplied tokens were read; 'leftover' is the tail a
     sub-rule left unconsumed by stopping early. A positive caller ignores the
     counts; a negative caller prints them as the recovery signal.
+
+    The parser is built through its REAL constructor with the ListLexer injected,
+    so the 2-token window is primed by the one code path that primes it (no
+    __new__ + by-hand priming, which previously primed only the retired single
+    'tok' and broke _match's tok1/tok2 reads).
     """
-    parser = EngineParser.__new__(EngineParser)
-    parser.reporter   = DiagnosticReporter()
-    parser.grammar    = grammar
-    parser.lexer      = ListLexer(tokens, luau_texts)
-    parser.tok        = parser.lexer.next()
-    parser._top_first = grammar.rules[grammar.start].first
+    lexer  = ListLexer(tokens, luau_texts)
+    parser = EngineParser(None, None, DiagnosticReporter(), grammar, lexer=lexer)
     node = None
     try:
         node = parser._match(rule)
     except _ResyncError:
         node = None
-    consumed = parser.lexer.i - 1          # one token is always in lookahead
-    if parser.tok.kind is t_fr_eof:
-        consumed = len(tokens)
+    # The lexer cursor counts every token handed out, including the two still
+    # buffered in the tok1/tok2 window (and any EOF sentinels past the end). A
+    # token is 'consumed' once it has left the window via _advance; the two
+    # window slots are not consumed unless they are EOF (end reached). Subtract
+    # the live (non-EOF) window slots from the cursor, clamped to the input size.
+    buffered = sum(1 for t in (parser.tok1, parser.tok2)
+                   if t.kind is not t_fr_eof)
+    consumed = min(max(lexer.i - buffered, 0), len(tokens))
     leftover = len(tokens) - consumed
     return DriveResult(node, parser.reporter, consumed, max(leftover, 0))
 
@@ -459,7 +485,7 @@ class _CanonicalPolicy(WalkPolicy):
 
     def on_luau(self, node, ctx):
         """RETURN: None. Append a LUAU_OPEN PathStep tagged with ctx.required."""
-        self.steps.append(PathStep(Token(t_fr_luau_open, "{", 0, 0), ctx.required))
+        self.steps.append(PathStep(Token(t_fr_span_open, "{", 0, 0), ctx.required))
 
 
 def _first_variadic(element):
@@ -564,4 +590,5 @@ def deviations(path):
         if step.required:
             omit_n += 1
             yield ("omit-required-%d" % omit_n, toks[:i] + toks[i + 1:])
+
 

@@ -1,16 +1,72 @@
+=== negative: and-cond ===
+
+-- junk-head --
+   input: ? . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 7
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, string:.)
+
+-- truncate --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+-- omit-required-1 --
+   input: . X >= . X )
+   built:   Comparison
+   consumed: 5 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-2 --
+   input: ( X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, regex:[a-zA-Z_]\w*)
+
+-- omit-required-3 --
+   input: ( . >= . X )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., captured:>=)
+
+-- omit-required-4 --
+   input: ( . X . X )
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
+
+-- omit-required-5 --
+   input: ( . X >= X )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
+
+-- omit-required-6 --
+   input: ( . X >= . )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., string:))
+
+-- omit-required-7 --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
 === negative: arg ===
 
 -- junk-head --
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: arg-decl ===
 
@@ -70,13 +126,13 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: arg-parens ===
 
@@ -110,65 +166,245 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
+
+=== negative: bracket-guard ===
+
+-- junk-head --
+   input: ? ( . X >= . X ) ]
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 9
+   diag: PARSER off=0 expected string:[, found framing:mismatch
+
+-- truncate --
+   input: [ ( . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 8 token(s); leftover: 0
+   diag: PARSER off=0 expected string:], found framing:end-of-file
+
+-- omit-required-1 --
+   input: ( . X >= . X ) ]
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 8
+   diag: PARSER off=0 expected string:[, found string:(
+
+-- omit-required-2 --
+   input: [ . X >= . X ) ]
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 2
+   diag: PARSER off=0 expected string:], found string:)
+
+-- omit-required-3 --
+   input: [ ( X >= . X ) ]
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 7
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, regex:[a-zA-Z_]\w*)
+
+-- omit-required-4 --
+   input: [ ( . >= . X ) ]
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., captured:>=)
+
+-- omit-required-5 --
+   input: [ ( . X . X ) ]
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 4
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
+
+-- omit-required-6 --
+   input: [ ( . X >= X ) ]
+   built:   no (rule abandoned)
+   consumed: 5 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
+
+-- omit-required-7 --
+   input: [ ( . X >= . ) ]
+   built:   no (rule abandoned)
+   consumed: 5 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., string:))
+
+-- omit-required-8 --
+   input: [ ( . X >= . X ]
+   built:   no (rule abandoned)
+   consumed: 7 token(s); leftover: 1
+   diag: PARSER off=0 expected string:), found string:]
+
+-- omit-required-9 --
+   input: [ ( . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 8 token(s); leftover: 0
+   diag: PARSER off=0 expected string:], found framing:end-of-file
 
 === negative: causality ===
 
 -- junk-head --
-   input: ? X => { luau }
+   input: ? X ( ) => { luau }
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 4
+   consumed: 0 token(s); leftover: 6
    diag: PARSER off=0 expected string:on:, found framing:mismatch
 
 -- truncate --
-   input: on: X =>
+   input: on: X ( ) =>
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 5 token(s); leftover: 0
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 -- omit-required-1 --
-   input: X => { luau }
+   input: X ( ) => { luau }
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 3
+   consumed: 0 token(s); leftover: 5
    diag: PARSER off=0 expected string:on:, found regex:[a-zA-Z_]\w*
 
 -- omit-required-2 --
-   input: on: => { luau }
+   input: on: ( ) => { luau }
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 2
-   diag: PARSER off=0 no alternative matches string:=>
+   consumed: 1 token(s); leftover: 4
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, string:))
 
 -- omit-required-3 --
-   input: on: X { luau }
+   input: on: X ) => { luau }
    built:   no (rule abandoned)
-   consumed: 2 token(s); leftover: 1
-   diag: PARSER off=0 expected string:=>, found framing:luau-open
+   consumed: 2 token(s); leftover: 3
+   diag: PARSER off=0 expected string:=>, found string:)
 
 -- omit-required-4 --
-   input: on: X =>
+   input: on: X ( => { luau }
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 3 token(s); leftover: 2
+   diag: PARSER off=0 expected string:), found string:=>
+
+-- omit-required-5 --
+   input: on: X ( ) { luau }
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 1
+   diag: PARSER off=0 expected string:=>, found framing:span-open
+
+-- omit-required-6 --
+   input: on: X ( ) =>
+   built:   no (rule abandoned)
+   consumed: 5 token(s); leftover: 0
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: cause ===
 
 -- junk-head --
-   input: ?
+   input: ? ( )
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   consumed: 0 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, string:()
+
+-- truncate --
+   input: X (
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
 
 -- omit-required-1 --
-   input: (empty)
+   input: ( )
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 0 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, string:))
+
+-- omit-required-2 --
+   input: X )
+   built:   Cause
+   consumed: 1 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-3 --
+   input: X (
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+=== negative: cause-def ===
+
+-- junk-head --
+   input: ? X on: X ( )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 expected string:cause:, found framing:mismatch
+
+-- truncate --
+   input: cause: X on: X (
+   built:   no (rule abandoned)
+   consumed: 5 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+-- omit-required-1 --
+   input: X on: X ( )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 5
+   diag: PARSER off=0 expected string:cause:, found regex:[a-zA-Z_]\w*
+
+-- omit-required-2 --
+   input: cause: on: X ( )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 4
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:on:
+
+-- omit-required-3 --
+   input: cause: X X ( )
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 3
+   diag: PARSER off=0 expected string:on:, found regex:[a-zA-Z_]\w*
+
+-- omit-required-4 --
+   input: cause: X on: ( )
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, string:))
+
+-- omit-required-5 --
+   input: cause: X on: X )
+   built:   CauseDef
+   consumed: 4 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-6 --
+   input: cause: X on: X (
+   built:   no (rule abandoned)
+   consumed: 5 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+=== negative: cause-ref ===
+
+-- junk-head --
+   input: ? ( )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 3
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:mismatch
+
+-- truncate --
+   input: X (
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+-- omit-required-1 --
+   input: ( )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 2
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:(
+
+-- omit-required-2 --
+   input: X )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 1
+   diag: PARSER off=0 expected string:(, found string:)
+
+-- omit-required-3 --
+   input: X (
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
 
 === negative: clock-def ===
 
@@ -201,6 +437,146 @@
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 0
    diag: PARSER off=0 expected regex:[+-]?\d+(?:\.\d+)?, found framing:end-of-file
+
+=== negative: cmp-op ===
+
+-- junk-head --
+   input: ?
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
+
+-- omit-required-1 --
+   input: (empty)
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 0
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
+
+=== negative: comparison ===
+
+-- junk-head --
+   input: ? X >= . X
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 5
+   diag: PARSER off=0 expected string:., found framing:mismatch
+
+-- truncate --
+   input: . X >= .
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., framing:end-of-file)
+
+-- omit-required-1 --
+   input: X >= . X
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 4
+   diag: PARSER off=0 expected string:., found regex:[a-zA-Z_]\w*
+
+-- omit-required-2 --
+   input: . >= . X
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 3
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found captured:>=
+
+-- omit-required-3 --
+   input: . X . X
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
+
+-- omit-required-4 --
+   input: . X >= X
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:end-of-file)
+
+-- omit-required-5 --
+   input: . X >= .
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., framing:end-of-file)
+
+=== negative: cond-atom ===
+
+-- junk-head --
+   input: ? . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 7
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, string:.)
+
+-- truncate --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+-- omit-required-1 --
+   input: . X >= . X )
+   built:   Comparison
+   consumed: 5 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-2 --
+   input: ( X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, regex:[a-zA-Z_]\w*)
+
+-- omit-required-3 --
+   input: ( . >= . X )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., captured:>=)
+
+-- omit-required-4 --
+   input: ( . X . X )
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
+
+-- omit-required-5 --
+   input: ( . X >= X )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
+
+-- omit-required-6 --
+   input: ( . X >= . )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., string:))
+
+-- omit-required-7 --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+=== negative: cond-operand ===
+
+-- junk-head --
+   input: ? X
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, regex:[a-zA-Z_]\w*)
+
+-- truncate --
+   input: .
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., framing:end-of-file)
+
+-- omit-required-1 --
+   input: X
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:end-of-file)
+
+-- omit-required-2 --
+   input: .
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., framing:end-of-file)
 
 === negative: decl-parens ===
 
@@ -240,7 +616,7 @@
    input: default: X .
    built:   no (rule abandoned)
    consumed: 3 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 -- omit-required-1 --
    input: X . VOID
@@ -264,7 +640,7 @@
    input: default: X .
    built:   no (rule abandoned)
    consumed: 3 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: deinit ===
 
@@ -278,19 +654,19 @@
    input: deinit:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
-   diag: PARSER off=0 expected '{' Luau block, found framing:end-of-file
+   diag: PARSER off=0 expected '{' opaque span, found framing:end-of-file
 
 -- omit-required-1 --
    input: { luau }
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 expected string:deinit:, found framing:luau-open
+   diag: PARSER off=0 expected string:deinit:, found framing:span-open
 
 -- omit-required-2 --
    input: deinit:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
-   diag: PARSER off=0 expected '{' Luau block, found framing:end-of-file
+   diag: PARSER off=0 expected '{' opaque span, found framing:end-of-file
 
 === negative: dotted-name ===
 
@@ -312,13 +688,65 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
+
+=== negative: effect-def ===
+
+-- junk-head --
+   input: ? X => { luau }
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 4
+   diag: PARSER off=0 expected string:effect:, found framing:mismatch
+
+-- truncate --
+   input: effect: X =>
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 0
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
+
+-- omit-required-1 --
+   input: X => { luau }
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 3
+   diag: PARSER off=0 expected string:effect:, found regex:[a-zA-Z_]\w*
+
+-- omit-required-2 --
+   input: effect: => { luau }
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 2
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:=>
+
+-- omit-required-3 --
+   input: effect: X { luau }
+   built:   no (rule abandoned)
+   consumed: 2 token(s); leftover: 1
+   diag: PARSER off=0 expected string:=>, found framing:span-open
+
+-- omit-required-4 --
+   input: effect: X =>
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 0
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
+
+=== negative: effect-ref ===
+
+-- junk-head --
+   input: ?
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:mismatch
+
+-- omit-required-1 --
+   input: (empty)
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 0
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:end-of-file
 
 === negative: event-def ===
 
@@ -390,6 +818,32 @@
    consumed: 2 token(s); leftover: 0
    diag: PARSER off=0 expected string:), found framing:end-of-file
 
+=== negative: evt-member ===
+
+-- junk-head --
+   input: ? X
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 2
+   diag: PARSER off=0 expected string:., found framing:mismatch
+
+-- truncate --
+   input: .
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 0
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:end-of-file
+
+-- omit-required-1 --
+   input: X
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 expected string:., found regex:[a-zA-Z_]\w*
+
+-- omit-required-2 --
+   input: .
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 0
+   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:end-of-file
+
 === negative: forward-decl ===
 
 -- junk-head --
@@ -402,7 +856,7 @@
    input: X is:
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 -- omit-required-1 --
    input: is: X
@@ -420,7 +874,7 @@
    input: X is:
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: fwd-kind ===
 
@@ -428,13 +882,13 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: guard ===
 
@@ -442,13 +896,13 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 expected '{' Luau block, found framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 expected '{' Luau block, found framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: has-ref ===
 
@@ -475,14 +929,6 @@
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:end-of-file
-
-=== negative: id-arg-tail ===
-
--- junk-head --
-   input: ?
-   built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 1
-   diag: (none; stopped early)
 
 === negative: include ===
 
@@ -534,19 +980,33 @@
    input: init:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
-   diag: PARSER off=0 expected '{' Luau block, found framing:end-of-file
+   diag: PARSER off=0 expected '{' opaque span, found framing:end-of-file
 
 -- omit-required-1 --
    input: { luau }
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 expected string:init:, found framing:luau-open
+   diag: PARSER off=0 expected string:init:, found framing:span-open
 
 -- omit-required-2 --
    input: init:
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
-   diag: PARSER off=0 expected '{' Luau block, found framing:end-of-file
+   diag: PARSER off=0 expected '{' opaque span, found framing:end-of-file
+
+=== negative: luau-guard ===
+
+-- junk-head --
+   input: ?
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 expected '{' opaque span, found framing:mismatch
+
+-- omit-required-1 --
+   input: (empty)
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 0
+   diag: PARSER off=0 expected '{' opaque span, found framing:end-of-file
 
 === negative: member-ref ===
 
@@ -565,64 +1025,88 @@
 === negative: mode ===
 
 -- junk-head --
-   input: ? X on: X => { luau } until: X
+   input: ? X on: X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 8
+   consumed: 0 token(s); leftover: 12
    diag: PARSER off=0 expected string:mode:, found framing:mismatch
 
 -- truncate --
-   input: mode: X on: X => { luau } until:
+   input: mode: X on: X ( ) => { luau } until: X (
    built:   no (rule abandoned)
-   consumed: 7 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 11 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
 
 -- omit-required-1 --
-   input: X on: X => { luau } until: X
+   input: X on: X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 7
+   consumed: 0 token(s); leftover: 11
    diag: PARSER off=0 expected string:mode:, found regex:[a-zA-Z_]\w*
 
 -- omit-required-2 --
-   input: mode: on: X => { luau } until: X
+   input: mode: on: X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 6
+   consumed: 1 token(s); leftover: 10
    diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:on:
 
 -- omit-required-3 --
-   input: mode: X X => { luau } until: X
+   input: mode: X X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 2 token(s); leftover: 5
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   consumed: 2 token(s); leftover: 9
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:()
 
 -- omit-required-4 --
-   input: mode: X on: => { luau } until: X
+   input: mode: X on: ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 4
-   diag: PARSER off=0 no alternative matches string:=>
+   consumed: 2 token(s); leftover: 9
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:on:, string:()
 
 -- omit-required-5 --
-   input: mode: X on: X { luau } until: X
+   input: mode: X on: X ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 4 token(s); leftover: 3
-   diag: PARSER off=0 expected string:=>, found framing:luau-open
+   consumed: 4 token(s); leftover: 7
+   diag: PARSER off=0 expected string:=>, found string:)
 
 -- omit-required-6 --
-   input: mode: X on: X => until: X
+   input: mode: X on: X ( => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 5 token(s); leftover: 2
-   diag: PARSER off=0 no alternative matches string:until:
+   consumed: 5 token(s); leftover: 6
+   diag: PARSER off=0 expected string:), found string:=>
 
 -- omit-required-7 --
-   input: mode: X on: X => { luau } X
+   input: mode: X on: X ( ) { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 6 token(s); leftover: 1
-   diag: PARSER off=0 expected string:until:, found regex:[a-zA-Z_]\w*
+   consumed: 6 token(s); leftover: 5
+   diag: PARSER off=0 expected string:=>, found framing:span-open
 
 -- omit-required-8 --
-   input: mode: X on: X => { luau } until:
+   input: mode: X on: X ( ) => until: X ( )
    built:   no (rule abandoned)
-   consumed: 7 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 7 token(s); leftover: 4
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:until:, regex:[a-zA-Z_]\w*)
+
+-- omit-required-9 --
+   input: mode: X on: X ( ) => { luau } X ( )
+   built:   no (rule abandoned)
+   consumed: 8 token(s); leftover: 3
+   diag: PARSER off=0 expected string:until:, found regex:[a-zA-Z_]\w*
+
+-- omit-required-10 --
+   input: mode: X on: X ( ) => { luau } until: ( )
+   built:   no (rule abandoned)
+   consumed: 9 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, string:))
+
+-- omit-required-11 --
+   input: mode: X on: X ( ) => { luau } until: X )
+   built:   Mode
+   consumed: 10 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-12 --
+   input: mode: X on: X ( ) => { luau } until: X (
+   built:   no (rule abandoned)
+   consumed: 11 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
 
 === negative: mode-arming ===
 
@@ -665,182 +1149,242 @@
 === negative: mode-elm ===
 
 -- junk-head --
-   input: ? X => { luau }
+   input: ? X ( ) => { luau }
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 4
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, regex:[a-zA-Z_]\w*)
 
 -- truncate --
-   input: on: X =>
+   input: on: X ( ) =>
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 5 token(s); leftover: 0
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 -- omit-required-1 --
-   input: X => { luau }
+   input: X ( ) => { luau }
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 3
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   consumed: 0 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:()
 
 -- omit-required-2 --
-   input: on: => { luau }
+   input: on: ( ) => { luau }
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 2
-   diag: PARSER off=0 no alternative matches string:=>
+   consumed: 0 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:on:, string:()
 
 -- omit-required-3 --
-   input: on: X { luau }
+   input: on: X ) => { luau }
    built:   no (rule abandoned)
-   consumed: 2 token(s); leftover: 1
-   diag: PARSER off=0 expected string:=>, found framing:luau-open
+   consumed: 2 token(s); leftover: 3
+   diag: PARSER off=0 expected string:=>, found string:)
 
 -- omit-required-4 --
-   input: on: X =>
+   input: on: X ( => { luau }
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 3 token(s); leftover: 2
+   diag: PARSER off=0 expected string:), found string:=>
+
+-- omit-required-5 --
+   input: on: X ( ) { luau }
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 1
+   diag: PARSER off=0 expected string:=>, found framing:span-open
+
+-- omit-required-6 --
+   input: on: X ( ) =>
+   built:   no (rule abandoned)
+   consumed: 5 token(s); leftover: 0
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: mode-group ===
 
 -- junk-head --
-   input: ? X mode: X on: X => { luau } until: X :end
+   input: ? X mode: X on: X ( ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 11
+   consumed: 0 token(s); leftover: 15
    diag: PARSER off=0 expected string:mode_group:, found framing:mismatch
 
 -- truncate --
-   input: mode_group: X mode: X on: X => { luau } until: X
+   input: mode_group: X mode: X on: X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 10 token(s); leftover: 0
+   consumed: 14 token(s); leftover: 0
    diag: PARSER off=0 expected string::end, found framing:end-of-file
 
 -- omit-required-1 --
-   input: X mode: X on: X => { luau } until: X :end
+   input: X mode: X on: X ( ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 10
+   consumed: 0 token(s); leftover: 14
    diag: PARSER off=0 expected string:mode_group:, found regex:[a-zA-Z_]\w*
 
 -- omit-required-2 --
-   input: mode_group: mode: X on: X => { luau } until: X :end
+   input: mode_group: mode: X on: X ( ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 9
+   consumed: 1 token(s); leftover: 13
    diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:mode:
 
 -- omit-required-3 --
-   input: mode_group: X X on: X => { luau } until: X :end
+   input: mode_group: X X on: X ( ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 2 token(s); leftover: 8
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   consumed: 2 token(s); leftover: 12
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:on:)
 
 -- omit-required-4 --
-   input: mode_group: X mode: on: X => { luau } until: X :end
+   input: mode_group: X mode: on: X ( ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 7
-   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:on:
+   consumed: 2 token(s); leftover: 12
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:mode:, string:on:)
 
 -- omit-required-5 --
-   input: mode_group: X mode: X X => { luau } until: X :end
+   input: mode_group: X mode: X X ( ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 4 token(s); leftover: 6
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   consumed: 4 token(s); leftover: 10
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:()
 
 -- omit-required-6 --
-   input: mode_group: X mode: X on: => { luau } until: X :end
+   input: mode_group: X mode: X on: ( ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 5 token(s); leftover: 5
-   diag: PARSER off=0 no alternative matches string:=>
+   consumed: 4 token(s); leftover: 10
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:on:, string:()
 
 -- omit-required-7 --
-   input: mode_group: X mode: X on: X { luau } until: X :end
+   input: mode_group: X mode: X on: X ) => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 6 token(s); leftover: 4
-   diag: PARSER off=0 expected string:=>, found framing:luau-open
+   consumed: 6 token(s); leftover: 8
+   diag: PARSER off=0 expected string:=>, found string:)
 
 -- omit-required-8 --
-   input: mode_group: X mode: X on: X => until: X :end
+   input: mode_group: X mode: X on: X ( => { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 7 token(s); leftover: 3
-   diag: PARSER off=0 no alternative matches string:until:
+   consumed: 7 token(s); leftover: 7
+   diag: PARSER off=0 expected string:), found string:=>
 
 -- omit-required-9 --
-   input: mode_group: X mode: X on: X => { luau } X :end
+   input: mode_group: X mode: X on: X ( ) { luau } until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 8 token(s); leftover: 2
-   diag: PARSER off=0 expected string:until:, found regex:[a-zA-Z_]\w*
+   consumed: 8 token(s); leftover: 6
+   diag: PARSER off=0 expected string:=>, found framing:span-open
 
 -- omit-required-10 --
-   input: mode_group: X mode: X on: X => { luau } until: :end
+   input: mode_group: X mode: X on: X ( ) => until: X ( ) :end
    built:   no (rule abandoned)
-   consumed: 9 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches string::end
+   consumed: 9 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:until:, regex:[a-zA-Z_]\w*)
 
 -- omit-required-11 --
-   input: mode_group: X mode: X on: X => { luau } until: X
+   input: mode_group: X mode: X on: X ( ) => { luau } X ( ) :end
    built:   no (rule abandoned)
-   consumed: 10 token(s); leftover: 0
+   consumed: 10 token(s); leftover: 4
+   diag: PARSER off=0 expected string:until:, found regex:[a-zA-Z_]\w*
+
+-- omit-required-12 --
+   input: mode_group: X mode: X on: X ( ) => { luau } until: ( ) :end
+   built:   no (rule abandoned)
+   consumed: 11 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, string:))
+
+-- omit-required-13 --
+   input: mode_group: X mode: X on: X ( ) => { luau } until: X ) :end
+   built:   no (rule abandoned)
+   consumed: 12 token(s); leftover: 2
+   diag: PARSER off=0 expected string::end, found string:)
+
+-- omit-required-14 --
+   input: mode_group: X mode: X on: X ( ) => { luau } until: X ( :end
+   built:   no (rule abandoned)
+   consumed: 13 token(s); leftover: 1
+   diag: PARSER off=0 expected string:), found string::end
+
+-- omit-required-15 --
+   input: mode_group: X mode: X on: X ( ) => { luau } until: X ( )
+   built:   no (rule abandoned)
+   consumed: 14 token(s); leftover: 0
    diag: PARSER off=0 expected string::end, found framing:end-of-file
 
 === negative: mode-group-elm ===
 
 -- junk-head --
-   input: ? X on: X => { luau } until: X
+   input: ? X on: X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 8
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   consumed: 0 token(s); leftover: 12
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, regex:[a-zA-Z_]\w*)
 
 -- truncate --
-   input: mode: X on: X => { luau } until:
+   input: mode: X on: X ( ) => { luau } until: X (
    built:   no (rule abandoned)
-   consumed: 7 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 11 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
 
 -- omit-required-1 --
-   input: X on: X => { luau } until: X
+   input: X on: X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 7
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   consumed: 0 token(s); leftover: 11
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:on:)
 
 -- omit-required-2 --
-   input: mode: on: X => { luau } until: X
+   input: mode: on: X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 6
-   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:on:
+   consumed: 0 token(s); leftover: 11
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:mode:, string:on:)
 
 -- omit-required-3 --
-   input: mode: X X => { luau } until: X
+   input: mode: X X ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 2 token(s); leftover: 5
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   consumed: 2 token(s); leftover: 9
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:()
 
 -- omit-required-4 --
-   input: mode: X on: => { luau } until: X
+   input: mode: X on: ( ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 4
-   diag: PARSER off=0 no alternative matches string:=>
+   consumed: 2 token(s); leftover: 9
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:on:, string:()
 
 -- omit-required-5 --
-   input: mode: X on: X { luau } until: X
+   input: mode: X on: X ) => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 4 token(s); leftover: 3
-   diag: PARSER off=0 expected string:=>, found framing:luau-open
+   consumed: 4 token(s); leftover: 7
+   diag: PARSER off=0 expected string:=>, found string:)
 
 -- omit-required-6 --
-   input: mode: X on: X => until: X
+   input: mode: X on: X ( => { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 5 token(s); leftover: 2
-   diag: PARSER off=0 no alternative matches string:until:
+   consumed: 5 token(s); leftover: 6
+   diag: PARSER off=0 expected string:), found string:=>
 
 -- omit-required-7 --
-   input: mode: X on: X => { luau } X
+   input: mode: X on: X ( ) { luau } until: X ( )
    built:   no (rule abandoned)
-   consumed: 6 token(s); leftover: 1
-   diag: PARSER off=0 expected string:until:, found regex:[a-zA-Z_]\w*
+   consumed: 6 token(s); leftover: 5
+   diag: PARSER off=0 expected string:=>, found framing:span-open
 
 -- omit-required-8 --
-   input: mode: X on: X => { luau } until:
+   input: mode: X on: X ( ) => until: X ( )
    built:   no (rule abandoned)
-   consumed: 7 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   consumed: 7 token(s); leftover: 4
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:until:, regex:[a-zA-Z_]\w*)
+
+-- omit-required-9 --
+   input: mode: X on: X ( ) => { luau } X ( )
+   built:   no (rule abandoned)
+   consumed: 8 token(s); leftover: 3
+   diag: PARSER off=0 expected string:until:, found regex:[a-zA-Z_]\w*
+
+-- omit-required-10 --
+   input: mode: X on: X ( ) => { luau } until: ( )
+   built:   no (rule abandoned)
+   consumed: 9 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, string:))
+
+-- omit-required-11 --
+   input: mode: X on: X ( ) => { luau } until: X )
+   built:   Mode
+   consumed: 10 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-12 --
+   input: mode: X on: X ( ) => { luau } until: X (
+   built:   no (rule abandoned)
+   consumed: 11 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
 
 === negative: mutation ===
 
@@ -848,13 +1392,13 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 expected '{' Luau block, found framing:mismatch
+   diag: PARSER off=0 expected '{' opaque span, found framing:mismatch
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 expected '{' Luau block, found framing:end-of-file
+   diag: PARSER off=0 expected '{' opaque span, found framing:end-of-file
 
 === negative: namespace ===
 
@@ -886,13 +1430,13 @@
    input: open: X "s" into: X :close
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 4
-   diag: PARSER off=0 no alternative matches regex:"[^"]*"
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:"[^"]*", string:into:)
 
 -- omit-required-4 --
    input: open: X include: into: X :close
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 3
-   diag: PARSER off=0 expected regex:"[^"]*", found string:into:
+   consumed: 2 token(s); leftover: 4
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:include:, string:into:)
 
 -- omit-required-5 --
    input: open: X include: "s" X :close
@@ -911,6 +1455,174 @@
    built:   no (rule abandoned)
    consumed: 6 token(s); leftover: 0
    diag: PARSER off=0 expected string::close, found framing:end-of-file
+
+=== negative: not-cond ===
+
+-- junk-head --
+   input: ? . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 7
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, string:.)
+
+-- truncate --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+-- omit-required-1 --
+   input: . X >= . X )
+   built:   Comparison
+   consumed: 5 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-2 --
+   input: ( X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, regex:[a-zA-Z_]\w*)
+
+-- omit-required-3 --
+   input: ( . >= . X )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., captured:>=)
+
+-- omit-required-4 --
+   input: ( . X . X )
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
+
+-- omit-required-5 --
+   input: ( . X >= X )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
+
+-- omit-required-6 --
+   input: ( . X >= . )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., string:))
+
+-- omit-required-7 --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+=== negative: or-cond ===
+
+-- junk-head --
+   input: ? . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 7
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, string:.)
+
+-- truncate --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+-- omit-required-1 --
+   input: . X >= . X )
+   built:   Comparison
+   consumed: 5 token(s); leftover: 1
+   diag: (none; stopped early)
+
+-- omit-required-2 --
+   input: ( X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:(, regex:[a-zA-Z_]\w*)
+
+-- omit-required-3 --
+   input: ( . >= . X )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., captured:>=)
+
+-- omit-required-4 --
+   input: ( . X . X )
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
+
+-- omit-required-5 --
+   input: ( . X >= X )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
+
+-- omit-required-6 --
+   input: ( . X >= . )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., string:))
+
+-- omit-required-7 --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+=== negative: paren-cond ===
+
+-- junk-head --
+   input: ? . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 7
+   diag: PARSER off=0 expected string:(, found framing:mismatch
+
+-- truncate --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
+
+-- omit-required-1 --
+   input: . X >= . X )
+   built:   no (rule abandoned)
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 expected string:(, found string:.
+
+-- omit-required-2 --
+   input: ( X >= . X )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:>=)
+
+-- omit-required-3 --
+   input: ( . >= . X )
+   built:   no (rule abandoned)
+   consumed: 1 token(s); leftover: 5
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., captured:>=)
+
+-- omit-required-4 --
+   input: ( . X . X )
+   built:   no (rule abandoned)
+   consumed: 3 token(s); leftover: 3
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
+
+-- omit-required-5 --
+   input: ( . X >= X )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
+
+-- omit-required-6 --
+   input: ( . X >= . )
+   built:   no (rule abandoned)
+   consumed: 4 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., string:))
+
+-- omit-required-7 --
+   input: ( . X >= . X
+   built:   no (rule abandoned)
+   consumed: 6 token(s); leftover: 0
+   diag: PARSER off=0 expected string:), found framing:end-of-file
 
 === negative: report-string ===
 
@@ -932,27 +1644,13 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
-
-=== negative: rvalue-noid ===
-
--- junk-head --
-   input: ?
-   built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
-
--- omit-required-1 --
-   input: (empty)
-   built:   no (rule abandoned)
-   consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: shallow-member-access ===
 
@@ -960,7 +1658,7 @@
    input: ? . X
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 3
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, string:.)
 
 -- truncate --
    input: event .
@@ -972,7 +1670,7 @@
    input: . X
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 2
-   diag: PARSER off=0 no alternative matches string:.
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:., regex:[a-zA-Z_]\w*)
 
 -- omit-required-2 --
    input: event X
@@ -1012,7 +1710,7 @@
    input: X .
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 -- omit-required-1 --
    input: . VOID
@@ -1030,7 +1728,7 @@
    input: X .
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: spawn ===
 
@@ -1126,13 +1824,13 @@
    input: state_machine: X X :end
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 2
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
 
 -- omit-required-4 --
    input: state_machine: X state: :end
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 1
-   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string::end
+   consumed: 2 token(s); leftover: 2
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:state:, string::end)
 
 -- omit-required-5 --
    input: state_machine: X state: X
@@ -1146,25 +1844,25 @@
    input: ? X
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 2
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, regex:[a-zA-Z_]\w*)
 
 -- truncate --
    input: state:
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 0
-   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:end-of-file
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:state:, framing:end-of-file)
 
 -- omit-required-1 --
    input: X
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches regex:[a-zA-Z_]\w*
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:end-of-file)
 
 -- omit-required-2 --
    input: state:
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 0
-   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:end-of-file
+   consumed: 0 token(s); leftover: 1
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:state:, framing:end-of-file)
 
 === negative: top-level ===
 
@@ -1172,7 +1870,7 @@
    input: ? X include: "s" into: X :close
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 7
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, regex:[a-zA-Z_]\w*)
 
 -- truncate --
    input: open: X include: "s" into: X
@@ -1183,26 +1881,26 @@
 -- omit-required-1 --
    input: X include: "s" into: X :close
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 5
-   diag: PARSER off=0 expected string:is:, found string:include:
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:include:)
 
 -- omit-required-2 --
    input: open: include: "s" into: X :close
    built:   no (rule abandoned)
-   consumed: 1 token(s); leftover: 5
-   diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found string:include:
+   consumed: 0 token(s); leftover: 6
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:open:, string:include:)
 
 -- omit-required-3 --
    input: open: X "s" into: X :close
    built:   no (rule abandoned)
    consumed: 2 token(s); leftover: 4
-   diag: PARSER off=0 no alternative matches regex:"[^"]*"
+   diag: PARSER off=0 no alternative matches 2-token lookahead (regex:"[^"]*", string:into:)
 
 -- omit-required-4 --
    input: open: X include: into: X :close
    built:   no (rule abandoned)
-   consumed: 3 token(s); leftover: 3
-   diag: PARSER off=0 expected regex:"[^"]*", found string:into:
+   consumed: 2 token(s); leftover: 4
+   diag: PARSER off=0 no alternative matches 2-token lookahead (string:include:, string:into:)
 
 -- omit-required-5 --
    input: open: X include: "s" X :close
@@ -1228,13 +1926,13 @@
    input: ?
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 1
-   diag: PARSER off=0 no alternative matches framing:mismatch
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:mismatch, framing:end-of-file)
 
 -- omit-required-1 --
    input: (empty)
    built:   no (rule abandoned)
    consumed: 0 token(s); leftover: 0
-   diag: PARSER off=0 no alternative matches framing:end-of-file
+   diag: PARSER off=0 no alternative matches 2-token lookahead (framing:end-of-file, framing:end-of-file)
 
 === negative: unspawn ===
 

@@ -1,26 +1,29 @@
 === monkey: sprites (massive example -- AST census) ===
-top-level items: 170 (DIAGNOSTICS)
-total AST nodes: 16391
-   PARSER off=2274 no alternative matches captured:mode
-   PARSER off=2293 no alternative matches captured:mode
+top-level items: 33 (ok)
+total AST nodes: 582
 
-  Arg                       17
-  ArgDecl                  269
-  Causality               2823
-  Cause                   3326
-  ClockDef                   3
-  EventDef                  43
-  ForwardDecl                1
-  HasRef                     7
-  Include                   11
-  Luau                    3056
-  Mode                      59
-  ModeArming               985
-  ModeGroup                 10
-  Mutation                1280
-  ReportString             570
-  Spawn                     17
-  State                    444
-  StateMachine              72
-  StateMachineModeRef       72
-  Trigger                 3326
+  Arg                       64
+  ArgDecl                   21
+  Causality                 45
+  Cause                     87
+  ClockDef                   2
+  EventDef                  13
+  EventSpec                 16
+  ForwardDecl                6
+  HasRef                     6
+  Include                    6
+  Luau                      40
+  Mode                      16
+  ModeArming                12
+  ModeGroup                  6
+  Mutation                  19
+  Namespace                  6
+  ReportString              18
+  ShallowMemberAccess        6
+  SpanResult                42
+  Spawn                      9
+  State                     26
+  StateMachine               8
+  StateMachineModeRef        8
+  Trigger                   87
+  Unspawn                   13

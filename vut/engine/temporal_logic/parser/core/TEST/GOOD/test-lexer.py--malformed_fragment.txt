@@ -1,0 +1,14 @@
+
+--- unbalanced parenthesis in a guard fragment ---
+string:&       [  0:1  ] '&'
+framing:span-block [  2:11 ] '{ ( foo }'
+string:=>      [ 12:14 ] '=>'
+framing:mismatch [ 15:16 ] 'e'
+framing:mismatch [ 16:17 ] 'n'
+framing:mismatch [ 17:18 ] 'd'
+framing:end-of-file [ 18:18 ] ''
+error_f: True
+LEXER    fatal=False off=2   malformed opaque span: unclosed '('
+LEXER    fatal=False off=15  unexpected character 'e'
+LEXER    fatal=False off=16  unexpected character 'n'
+LEXER    fatal=False off=17  unexpected character 'd'

@@ -1,17 +1,50 @@
+=== and-cond ===
+
+-- absent --
+   input: ( . X >= . X )
+Comparison
+  left:
+    EventMember
+      name = 'X'
+      begin = 0
+  op = '>='
+  right:
+    EventMember
+      name = 'X'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: not ( . X >= . X )
+Not
+  operand:
+    Comparison
+      left:
+        EventMember
+          name = 'X'
+          begin = 0
+      op = '>='
+      right:
+        EventMember
+          name = 'X'
+          begin = 0
+      begin = 0
+  begin = 0
+
 === arg ===
 
 -- alternative 0 --
-   input: X = 1
+   input: 1
 Arg
-  name = 'X'
+  name = None
   value = '1'
   kind = <E_ArgKind.LITERAL: 0>
   begin = 0
 
 -- alternative 1 --
-   input: 1
+   input: X = 1
 Arg
-  name = None
+  name = 'X'
   value = '1'
   kind = <E_ArgKind.LITERAL: 0>
   begin = 0
@@ -62,18 +95,41 @@ ArgDecl
 
 === arg-list ===
 
--- absent --
-   input: X
+-- 0x --
+   input: 1
 Arg
   name = None
-  value = 'X'
+  value = '1'
   kind = <E_ArgKind.LITERAL: 0>
   begin = 0
 
--- present --
-   input: X = 1
+-- 1x --
+   input: 1 , 1
 Arg
-  name = 'X'
+  name = None
+  value = '1'
+  kind = <E_ArgKind.LITERAL: 0>
+  begin = 0
+Arg
+  name = None
+  value = '1'
+  kind = <E_ArgKind.LITERAL: 0>
+  begin = 0
+
+-- 2x --
+   input: 1 , 1 , 1
+Arg
+  name = None
+  value = '1'
+  kind = <E_ArgKind.LITERAL: 0>
+  begin = 0
+Arg
+  name = None
+  value = '1'
+  kind = <E_ArgKind.LITERAL: 0>
+  begin = 0
+Arg
+  name = None
   value = '1'
   kind = <E_ArgKind.LITERAL: 0>
   begin = 0
@@ -85,10 +141,10 @@ Arg
 []
 
 -- present --
-   input: ( X )
+   input: ( 1 )
 Arg
   name = None
-  value = 'X'
+  value = '1'
   kind = <E_ArgKind.LITERAL: 0>
   begin = 0
 
@@ -126,19 +182,55 @@ Token
   begin = 0
   end = 0
 
+=== bracket-guard ===
+
+-- absent --
+   input: [ ( . X >= . X ) ]
+Condition
+  expr:
+    Comparison
+      left:
+        EventMember
+          name = 'X'
+          begin = 0
+      op = '>='
+      right:
+        EventMember
+          name = 'X'
+          begin = 0
+      begin = 0
+  begin = 0
+
+-- present --
+   input: [ not ( . X >= . X ) ]
+Condition
+  expr:
+    Not
+      operand:
+        Comparison
+          left:
+            EventMember
+              name = 'X'
+              begin = 0
+          op = '>='
+          right:
+            EventMember
+              name = 'X'
+              begin = 0
+          begin = 0
+      begin = 0
+  begin = 0
+
 === causality ===
 
 -- absent --
-   input: on: X => { luau }
+   input: on: X ( ) => { luau }
 Causality
   cause:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard = None
+    CauseRef
+      name = 'X'
+      args:
+        []
       begin = 0
   effects:
     Mutation
@@ -151,19 +243,16 @@ Causality
   begin = 0
 
 -- present --
-   input: on: X & { luau } => { luau }
+   input: on: X ( 1 ) => { luau }
 Causality
   cause:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard:
-        Luau
-          text = '{ luau }'
-          role = <Role.CONDITION: 'condition'>
+    CauseRef
+      name = 'X'
+      args:
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
           begin = 0
       begin = 0
   effects:
@@ -178,18 +267,19 @@ Causality
 
 === cause ===
 
--- absent --
-   input: X
-Cause
-  trigger:
-    Trigger
-      name = 'X'
-      is_keyword = False
+-- alternative 0 --
+   input: X ( 1 )
+CauseRef
+  name = 'X'
+  args:
+    Arg
+      name = None
+      value = '1'
+      kind = <E_ArgKind.LITERAL: 0>
       begin = 0
-  guard = None
   begin = 0
 
--- present --
+-- alternative 1 --
    input: X & { luau }
 Cause
   trigger:
@@ -204,6 +294,78 @@ Cause
       begin = 0
   begin = 0
 
+=== cause-def ===
+
+-- 0x --
+   input: cause: X on: X ( )
+CauseDef
+  name:
+    'X'
+  params:
+    []
+  body:
+    CauseRef
+      name = 'X'
+      args:
+        []
+      begin = 0
+  begin = 0
+
+-- 1x --
+   input: cause: X . X on: X ( )
+CauseDef
+  name:
+    'X'
+    'X'
+  params:
+    []
+  body:
+    CauseRef
+      name = 'X'
+      args:
+        []
+      begin = 0
+  begin = 0
+
+-- 2x --
+   input: cause: X . X . X on: X ( )
+CauseDef
+  name:
+    'X'
+    'X'
+    'X'
+  params:
+    []
+  body:
+    CauseRef
+      name = 'X'
+      args:
+        []
+      begin = 0
+  begin = 0
+
+=== cause-ref ===
+
+-- absent --
+   input: X ( )
+CauseRef
+  name = 'X'
+  args:
+    []
+  begin = 0
+
+-- present --
+   input: X ( 1 )
+CauseRef
+  name = 'X'
+  args:
+    Arg
+      name = None
+      value = '1'
+      kind = <E_ArgKind.LITERAL: 0>
+      begin = 0
+  begin = 0
+
 === clock-def ===
 
 -- default --
@@ -211,6 +373,125 @@ Cause
 ClockDef
   name = 'X'
   period = '1'
+  begin = 0
+
+=== cmp-op ===
+
+-- alternative 0 --
+   input: >=
+Token
+  kind = Terminal(captured:>=)
+  text = '>='
+  begin = 0
+  end = 0
+
+-- alternative 1 --
+   input: <=
+Token
+  kind = Terminal(captured:<=)
+  text = '<='
+  begin = 0
+  end = 0
+
+-- alternative 2 --
+   input: ==
+Token
+  kind = Terminal(captured:==)
+  text = '=='
+  begin = 0
+  end = 0
+
+-- alternative 3 --
+   input: !=
+Token
+  kind = Terminal(captured:!=)
+  text = '!='
+  begin = 0
+  end = 0
+
+-- alternative 4 --
+   input: >
+Token
+  kind = Terminal(captured:>)
+  text = '>'
+  begin = 0
+  end = 0
+
+-- alternative 5 --
+   input: <
+Token
+  kind = Terminal(captured:<)
+  text = '<'
+  begin = 0
+  end = 0
+
+=== comparison ===
+
+-- default --
+   input: . X >= . X
+Comparison
+  left:
+    EventMember
+      name = 'X'
+      begin = 0
+  op = '>='
+  right:
+    EventMember
+      name = 'X'
+      begin = 0
+  begin = 0
+
+=== cond-atom ===
+
+-- alternative 0 --
+   input: ( not . X >= . X )
+Not
+  operand:
+    Comparison
+      left:
+        EventMember
+          name = 'X'
+          begin = 0
+      op = '>='
+      right:
+        EventMember
+          name = 'X'
+          begin = 0
+      begin = 0
+  begin = 0
+
+-- alternative 1 --
+   input: . X >= . X
+Comparison
+  left:
+    EventMember
+      name = 'X'
+      begin = 0
+  op = '>='
+  right:
+    EventMember
+      name = 'X'
+      begin = 0
+  begin = 0
+
+=== cond-operand ===
+
+-- alternative 0 --
+   input: . X
+EventMember
+  name = 'X'
+  begin = 0
+
+-- alternative 1 --
+   input: 1
+Literal
+  text = '1'
+  begin = 0
+
+-- alternative 2 --
+   input: "s"
+Literal
+  text = '"s"'
   begin = 0
 
 === decl-parens ===
@@ -242,9 +523,9 @@ StateMachineModeRef
    input: deinit: { luau }
 DeinitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 
@@ -256,11 +537,14 @@ DeinitBlock
 
 -- 1x --
    input: X . X
-'X.X'
+'X'
+'X'
 
 -- 2x --
    input: X . X . X
-'X.X.X'
+'X'
+'X'
+'X'
 
 === effect ===
 
@@ -277,7 +561,9 @@ Mutation
 -- alternative 1 --
    input: +! X . X ( )
 Spawn
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   args:
     []
   has_parens = True
@@ -288,13 +574,17 @@ Spawn
 -- alternative 2 --
    input: -! X . X
 Unspawn
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   begin = 0
 
 -- alternative 3 --
    input: ! X . X ( )
 ModeArming
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   args:
     []
   begin = 0
@@ -308,9 +598,81 @@ ReportString
 -- alternative 5 --
    input: X . X ( )
 EventSpec
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   args:
     []
+  begin = 0
+
+-- alternative 6 --
+   input: X
+EffectRef
+  name = 'X'
+  begin = 0
+
+=== effect-def ===
+
+-- 0x --
+   input: effect: X => { luau }
+EffectDef
+  name:
+    'X'
+  params:
+    []
+  effects:
+    Mutation
+      body:
+        Luau
+          text = '{ luau }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0
+
+-- 1x --
+   input: effect: X . X => { luau }
+EffectDef
+  name:
+    'X'
+    'X'
+  params:
+    []
+  effects:
+    Mutation
+      body:
+        Luau
+          text = '{ luau }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0
+
+-- 2x --
+   input: effect: X . X . X => { luau }
+EffectDef
+  name:
+    'X'
+    'X'
+    'X'
+  params:
+    []
+  effects:
+    Mutation
+      body:
+        Luau
+          text = '{ luau }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== effect-ref ===
+
+-- default --
+   input: X
+EffectRef
+  name = 'X'
   begin = 0
 
 === event-def ===
@@ -339,7 +701,8 @@ EventDef
 -- 0x --
    input: X ( )
 EventSpec
-  name = 'X'
+  name:
+    'X'
   args:
     []
   begin = 0
@@ -347,7 +710,9 @@ EventSpec
 -- 1x --
    input: X . X ( )
 EventSpec
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   args:
     []
   begin = 0
@@ -355,9 +720,20 @@ EventSpec
 -- 2x --
    input: X . X . X ( )
 EventSpec
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   args:
     []
+  begin = 0
+
+=== evt-member ===
+
+-- default --
+   input: . X
+EventMember
+  name = 'X'
   begin = 0
 
 === forward-decl ===
@@ -393,16 +769,40 @@ ForwardDecl
 {'kind': 'X', 'cargs': [], 'luau_handle': None}
 
 -- alternative 1 --
-   input: container < X >
-{'kind': 'container', 'cargs': [Arg(name=None, value='X', kind=<E_ArgKind.LITERAL: 0>, begin=0)], 'luau_handle': None}
+   input: mode
+{'kind': 'mode', 'cargs': [], 'luau_handle': None}
+
+-- alternative 2 --
+   input: container < 1 >
+{'kind': 'container', 'cargs': [Arg(name=None, value='1', kind=<E_ArgKind.LITERAL: 0>, begin=0)], 'luau_handle': None}
 
 === guard ===
 
--- default --
+-- alternative 0 --
    input: { luau }
 Luau
   text = '{ luau }'
   role = <Role.CONDITION: 'condition'>
+  begin = 0
+
+-- alternative 1 --
+   input: [ not ( . X >= . X ) ]
+Condition
+  expr:
+    Not
+      operand:
+        Comparison
+          left:
+            EventMember
+              name = 'X'
+              begin = 0
+          op = '>='
+          right:
+            EventMember
+              name = 'X'
+              begin = 0
+          begin = 0
+      begin = 0
   begin = 0
 
 === has-ref ===
@@ -423,41 +823,33 @@ HasRef
   is_void = True
   begin = 0
 
-=== id-arg-tail ===
-
--- absent --
-   input: (empty)
-None
-
--- present --
-   input: = 1
-Token
-  kind = Terminal(regex:[+-]?\d+(?:\.\d+)?)
-  text = '1'
-  begin = 0
-  end = 0
-
 === include ===
 
 -- 0x --
    input: include: "s" into: X
 Include
   filename = 's'
-  mount = 'X'
+  mount:
+    'X'
   begin = 0
 
 -- 1x --
    input: include: "s" into: X . X
 Include
   filename = 's'
-  mount = 'X.X'
+  mount:
+    'X'
+    'X'
   begin = 0
 
 -- 2x --
    input: include: "s" into: X . X . X
 Include
   filename = 's'
-  mount = 'X.X.X'
+  mount:
+    'X'
+    'X'
+    'X'
   begin = 0
 
 === init ===
@@ -466,10 +858,19 @@ Include
    input: init: { luau }
 InitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
+  begin = 0
+
+=== luau-guard ===
+
+-- default --
+   input: { luau }
+Luau
+  text = '{ luau }'
+  role = <Role.CONDITION: 'condition'>
   begin = 0
 
 === member-ref ===
@@ -493,9 +894,10 @@ HasRef
 === mode ===
 
 -- 0x --
-   input: mode: X on: X => { luau } until: X
+   input: mode: X on: X ( ) => { luau } until: X ( )
 Mode
-  name = 'X'
+  name:
+    'X'
   params:
     []
   init = None
@@ -503,13 +905,10 @@ Mode
   causalities:
     Causality
       cause:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
+        CauseRef
+          name = 'X'
+          args:
+            []
           begin = 0
       effects:
         Mutation
@@ -521,20 +920,15 @@ Mode
           begin = 0
       begin = 0
   untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard = None
-      begin = 0
+    []
   begin = 0
 
 -- 1x --
-   input: mode: X . X on: X => { luau } until: X
+   input: mode: X . X on: X ( ) => { luau } until: X ( )
 Mode
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
     []
   init = None
@@ -542,13 +936,10 @@ Mode
   causalities:
     Causality
       cause:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
+        CauseRef
+          name = 'X'
+          args:
+            []
           begin = 0
       effects:
         Mutation
@@ -560,20 +951,16 @@ Mode
           begin = 0
       begin = 0
   untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard = None
-      begin = 0
+    []
   begin = 0
 
 -- 2x --
-   input: mode: X . X . X on: X => { luau } until: X
+   input: mode: X . X . X on: X ( ) => { luau } until: X ( )
 Mode
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   params:
     []
   init = None
@@ -581,13 +968,10 @@ Mode
   causalities:
     Causality
       cause:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
+        CauseRef
+          name = 'X'
+          args:
+            []
           begin = 0
       effects:
         Mutation
@@ -599,14 +983,7 @@ Mode
           begin = 0
       begin = 0
   untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard = None
-      begin = 0
+    []
   begin = 0
 
 === mode-arming ===
@@ -614,7 +991,8 @@ Mode
 -- 0x --
    input: ! X ( )
 ModeArming
-  name = 'X'
+  name:
+    'X'
   args:
     []
   begin = 0
@@ -622,7 +1000,9 @@ ModeArming
 -- 1x --
    input: ! X . X ( )
 ModeArming
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   args:
     []
   begin = 0
@@ -630,7 +1010,10 @@ ModeArming
 -- 2x --
    input: ! X . X . X ( )
 ModeArming
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   args:
     []
   begin = 0
@@ -638,19 +1021,16 @@ ModeArming
 === mode-elm ===
 
 -- alternative 0 --
-   input: on: X & { luau } => { luau }
+   input: on: X ( 1 ) => { luau }
 Causality
   cause:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard:
-        Luau
-          text = '{ luau }'
-          role = <Role.CONDITION: 'condition'>
+    CauseRef
+      name = 'X'
+      args:
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
           begin = 0
       begin = 0
   effects:
@@ -667,9 +1047,9 @@ Causality
    input: init: { luau }
 InitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 
@@ -677,23 +1057,27 @@ InitBlock
    input: deinit: { luau }
 DeinitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 
 === mode-group ===
 
 -- 0x --
-   input: mode_group: X mode: X on: X => { luau } until: X :end
+   input: mode_group: X mode: X on: X ( ) => { luau } until: X ( ) :end
 ModeGroup
-  name = 'X'
+  name:
+    'X'
   params:
+    []
+  bases:
     []
   modes:
     Mode
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -701,13 +1085,10 @@ ModeGroup
       causalities:
         Causality
           cause:
-            Cause
-              trigger:
-                Trigger
-                  name = 'X'
-                  is_keyword = False
-                  begin = 0
-              guard = None
+            CauseRef
+              name = 'X'
+              args:
+                []
               begin = 0
           effects:
             Mutation
@@ -719,14 +1100,7 @@ ModeGroup
               begin = 0
           begin = 0
       untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
-          begin = 0
+        []
       begin = 0
   has_refs:
     []
@@ -735,14 +1109,19 @@ ModeGroup
   begin = 0
 
 -- 1x --
-   input: mode_group: X . X mode: X on: X => { luau } until: X :end
+   input: mode_group: X . X mode: X on: X ( ) => { luau } until: X ( ) :end
 ModeGroup
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
+    []
+  bases:
     []
   modes:
     Mode
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -750,13 +1129,10 @@ ModeGroup
       causalities:
         Causality
           cause:
-            Cause
-              trigger:
-                Trigger
-                  name = 'X'
-                  is_keyword = False
-                  begin = 0
-              guard = None
+            CauseRef
+              name = 'X'
+              args:
+                []
               begin = 0
           effects:
             Mutation
@@ -768,14 +1144,7 @@ ModeGroup
               begin = 0
           begin = 0
       untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
-          begin = 0
+        []
       begin = 0
   has_refs:
     []
@@ -784,14 +1153,20 @@ ModeGroup
   begin = 0
 
 -- 2x --
-   input: mode_group: X . X . X mode: X on: X => { luau } until: X :end
+   input: mode_group: X . X . X mode: X on: X ( ) => { luau } until: X ( ) :end
 ModeGroup
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   params:
+    []
+  bases:
     []
   modes:
     Mode
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -799,13 +1174,10 @@ ModeGroup
       causalities:
         Causality
           cause:
-            Cause
-              trigger:
-                Trigger
-                  name = 'X'
-                  is_keyword = False
-                  begin = 0
-              guard = None
+            CauseRef
+              name = 'X'
+              args:
+                []
               begin = 0
           effects:
             Mutation
@@ -817,14 +1189,7 @@ ModeGroup
               begin = 0
           begin = 0
       untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
-          begin = 0
+        []
       begin = 0
   has_refs:
     []
@@ -835,9 +1200,11 @@ ModeGroup
 === mode-group-elm ===
 
 -- alternative 0 --
-   input: mode: X . X on: X => { luau } until: X
+   input: mode: X . X on: X ( ) => { luau } until: X ( )
 Mode
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
     []
   init = None
@@ -845,13 +1212,10 @@ Mode
   causalities:
     Causality
       cause:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
+        CauseRef
+          name = 'X'
+          args:
+            []
           begin = 0
       effects:
         Mutation
@@ -863,14 +1227,7 @@ Mode
           begin = 0
       begin = 0
   untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard = None
-      begin = 0
+    []
   begin = 0
 
 -- alternative 1 --
@@ -885,9 +1242,9 @@ HasRef
    input: init: { luau }
 InitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 
@@ -895,9 +1252,9 @@ InitBlock
    input: deinit: { luau }
 DeinitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 
@@ -918,33 +1275,141 @@ Mutation
 -- 0x --
    input: open: X include: "s" into: X :close
 Namespace
-  name = 'X'
+  name:
+    'X'
   items:
     Include
       filename = 's'
-      mount = 'X'
+      mount:
+        'X'
       begin = 0
   begin = 0
 
 -- 1x --
    input: open: X . X include: "s" into: X :close
 Namespace
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   items:
     Include
       filename = 's'
-      mount = 'X'
+      mount:
+        'X'
       begin = 0
   begin = 0
 
 -- 2x --
    input: open: X . X . X include: "s" into: X :close
 Namespace
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   items:
     Include
       filename = 's'
-      mount = 'X'
+      mount:
+        'X'
+      begin = 0
+  begin = 0
+
+=== not-cond ===
+
+-- absent --
+   input: ( . X >= . X )
+Comparison
+  left:
+    EventMember
+      name = 'X'
+      begin = 0
+  op = '>='
+  right:
+    EventMember
+      name = 'X'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: not ( . X >= . X )
+Not
+  operand:
+    Comparison
+      left:
+        EventMember
+          name = 'X'
+          begin = 0
+      op = '>='
+      right:
+        EventMember
+          name = 'X'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== or-cond ===
+
+-- absent --
+   input: ( . X >= . X )
+Comparison
+  left:
+    EventMember
+      name = 'X'
+      begin = 0
+  op = '>='
+  right:
+    EventMember
+      name = 'X'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: not ( . X >= . X )
+Not
+  operand:
+    Comparison
+      left:
+        EventMember
+          name = 'X'
+          begin = 0
+      op = '>='
+      right:
+        EventMember
+          name = 'X'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== paren-cond ===
+
+-- absent --
+   input: ( . X >= . X )
+Comparison
+  left:
+    EventMember
+      name = 'X'
+      begin = 0
+  op = '>='
+  right:
+    EventMember
+      name = 'X'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: ( not . X >= . X )
+Not
+  operand:
+    Comparison
+      left:
+        EventMember
+          name = 'X'
+          begin = 0
+      op = '>='
+      right:
+        EventMember
+          name = 'X'
+          begin = 0
       begin = 0
   begin = 0
 
@@ -991,41 +1456,9 @@ Token
 
 -- alternative 4 --
    input: { luau }
-Luau
+SpanResult
   text = '{ luau }'
-  role = <Role.EXPRESSION: 'expression'>
-  begin = 0
-
-=== rvalue-noid ===
-
--- alternative 0 --
-   input: 1
-Token
-  kind = Terminal(regex:[+-]?\d+(?:\.\d+)?)
-  text = '1'
-  begin = 0
-  end = 0
-
--- alternative 1 --
-   input: "s"
-Token
-  kind = Terminal(regex:"[^"]*")
-  text = '"s"'
-  begin = 0
-  end = 0
-
--- alternative 2 --
-   input: event . X
-ShallowMemberAccess
-  binding = 'event'
-  member = 'X'
-  begin = 0
-
--- alternative 3 --
-   input: { luau }
-Luau
-  text = '{ luau }'
-  role = <Role.EXPRESSION: 'expression'>
+  mode = <Role.EXPRESSION: 'expression'>
   begin = 0
 
 === shallow-member-access ===
@@ -1041,15 +1474,15 @@ ShallowMemberAccess
 
 -- 0x --
    input: X
-('X', [])
+(['X'], [])
 
 -- 1x --
    input: X . X
-('X.X', [])
+(['X', 'X'], [])
 
 -- 2x --
    input: X . X . X
-('X.X.X', [])
+(['X', 'X', 'X'], [])
 
 === sm-mode-ref ===
 
@@ -1066,7 +1499,8 @@ StateMachineModeRef
 -- 0x --
    input: +! X ( )
 Spawn
-  name = 'X'
+  name:
+    'X'
   args:
     []
   has_parens = True
@@ -1077,7 +1511,9 @@ Spawn
 -- 1x --
    input: +! X . X ( )
 Spawn
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   args:
     []
   has_parens = True
@@ -1088,7 +1524,10 @@ Spawn
 -- 2x --
    input: +! X . X . X ( )
 Spawn
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   args:
     []
   has_parens = True
@@ -1101,7 +1540,8 @@ Spawn
 -- 0x --
    input: state: X
 State
-  name = 'X'
+  name:
+    'X'
   params:
     []
   init = None
@@ -1115,7 +1555,9 @@ State
 -- 1x --
    input: state: X . X
 State
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
     []
   init = None
@@ -1129,7 +1571,10 @@ State
 -- 2x --
    input: state: X . X . X
 State
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   params:
     []
   init = None
@@ -1145,12 +1590,16 @@ State
 -- 0x --
    input: state_machine: X state: X :end
 StateMachine
-  name = 'X'
+  name:
+    'X'
   params:
+    []
+  bases:
     []
   states:
     State
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -1170,12 +1619,17 @@ StateMachine
 -- 1x --
    input: state_machine: X . X state: X :end
 StateMachine
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
+    []
+  bases:
     []
   states:
     State
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -1195,12 +1649,18 @@ StateMachine
 -- 2x --
    input: state_machine: X . X . X state: X :end
 StateMachine
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   params:
+    []
+  bases:
     []
   states:
     State
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -1222,7 +1682,9 @@ StateMachine
 -- alternative 0 --
    input: state: X . X
 State
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
     []
   init = None
@@ -1253,9 +1715,9 @@ StateMachineModeRef
    input: init: { luau }
 InitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 
@@ -1263,9 +1725,9 @@ InitBlock
    input: deinit: { luau }
 DeinitBlock
   body:
-    Luau
+    SpanResult
       text = '{ luau }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 
@@ -1274,11 +1736,14 @@ DeinitBlock
 -- alternative 0 --
    input: open: X . X include: "s" into: X :close
 Namespace
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   items:
     Include
       filename = 's'
-      mount = 'X'
+      mount:
+        'X'
       begin = 0
   begin = 0
 
@@ -1286,23 +1751,22 @@ Namespace
    input: include: "s" into: X . X
 Include
   filename = 's'
-  mount = 'X.X'
+  mount:
+    'X'
+    'X'
   begin = 0
 
 -- alternative 2 --
-   input: on: X & { luau } => { luau }
+   input: on: X ( 1 ) => { luau }
 Causality
   cause:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard:
-        Luau
-          text = '{ luau }'
-          role = <Role.CONDITION: 'condition'>
+    CauseRef
+      name = 'X'
+      args:
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
           begin = 0
       begin = 0
   effects:
@@ -1316,9 +1780,11 @@ Causality
   begin = 0
 
 -- alternative 3 --
-   input: mode: X . X on: X => { luau } until: X
+   input: mode: X . X on: X ( ) => { luau } until: X ( )
 Mode
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
     []
   init = None
@@ -1326,13 +1792,10 @@ Mode
   causalities:
     Causality
       cause:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
+        CauseRef
+          name = 'X'
+          args:
+            []
           begin = 0
       effects:
         Mutation
@@ -1344,25 +1807,23 @@ Mode
           begin = 0
       begin = 0
   untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'X'
-          is_keyword = False
-          begin = 0
-      guard = None
-      begin = 0
+    []
   begin = 0
 
 -- alternative 4 --
-   input: mode_group: X . X mode: X on: X => { luau } until: X :end
+   input: mode_group: X . X mode: X on: X ( ) => { luau } until: X ( ) :end
 ModeGroup
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
+    []
+  bases:
     []
   modes:
     Mode
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -1370,13 +1831,10 @@ ModeGroup
       causalities:
         Causality
           cause:
-            Cause
-              trigger:
-                Trigger
-                  name = 'X'
-                  is_keyword = False
-                  begin = 0
-              guard = None
+            CauseRef
+              name = 'X'
+              args:
+                []
               begin = 0
           effects:
             Mutation
@@ -1388,14 +1846,7 @@ ModeGroup
               begin = 0
           begin = 0
       untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'X'
-              is_keyword = False
-              begin = 0
-          guard = None
-          begin = 0
+        []
       begin = 0
   has_refs:
     []
@@ -1406,12 +1857,17 @@ ModeGroup
 -- alternative 5 --
    input: state_machine: X . X state: X :end
 StateMachine
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   params:
+    []
+  bases:
     []
   states:
     State
-      name = 'X'
+      name:
+        'X'
       params:
         []
       init = None
@@ -1447,6 +1903,40 @@ ClockDef
   begin = 0
 
 -- alternative 8 --
+   input: cause: X . X on: X ( )
+CauseDef
+  name:
+    'X'
+    'X'
+  params:
+    []
+  body:
+    CauseRef
+      name = 'X'
+      args:
+        []
+      begin = 0
+  begin = 0
+
+-- alternative 9 --
+   input: effect: X . X => { luau }
+EffectDef
+  name:
+    'X'
+    'X'
+  params:
+    []
+  effects:
+    Mutation
+      body:
+        Luau
+          text = '{ luau }'
+          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+      begin = 0
+  begin = 0
+
+-- alternative 10 --
    input: X ( ) is: X
 ForwardDecl
   kind = 'X'
@@ -1493,18 +1983,24 @@ Trigger
 -- 0x --
    input: -! X
 Unspawn
-  name = 'X'
+  name:
+    'X'
   begin = 0
 
 -- 1x --
    input: -! X . X
 Unspawn
-  name = 'X.X'
+  name:
+    'X'
+    'X'
   begin = 0
 
 -- 2x --
    input: -! X . X . X
 Unspawn
-  name = 'X.X.X'
+  name:
+    'X'
+    'X'
+    'X'
   begin = 0
 

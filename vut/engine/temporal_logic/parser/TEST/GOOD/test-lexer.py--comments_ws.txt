@@ -1,9 +1,0 @@
-
---- comment lines and blank lines are skipped ---
-regex:[a-zA-Z_]\w* [ 21:23 ] 'on'
-regex:[a-zA-Z_]\w* [ 24:28 ] 'Tick'
-string:=>    [ 51:53 ] '=>'
-regex:[a-zA-Z_]\w* [ 54:58 ] 'Beep'
-string:(     [ 58:59 ] '('
-string:)     [ 59:60 ] ')'
-framing:end-of-file [ 61:61 ] ''

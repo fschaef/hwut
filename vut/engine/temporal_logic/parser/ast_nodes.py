@@ -73,14 +73,93 @@ class Trigger:
     begin:      int
 
 
+# --- Bracket-condition algebra ('& [ ... ]') ---------------------------------
+# A transparent, engine-inspectable alternative to a Luau CONDITION guard: a
+# boolean combination ('and'/'or'/'not', parenthesisable) of comparisons over
+# the triggering event's members. Members are leading-dot, single-level
+# ('.ip_adr' == the 'ip_adr' member of the event that fired). The tree is built
+# directly by the parser, so the static layer can validate member references and
+# comparisons instead of treating the guard as opaque text.
+
+@dataclass(frozen=True)
+class EventMember:
+    """A reference to a member of the triggering event: '.name'.
+
+    Leading-dot, single-level. The event is implicit -- the one named by the
+    trigger this guard gates -- so only the member 'name' is recorded. Binding
+    the name to a declared event member is a pass-2 concern.
+    """
+    name:  str
+    begin: int
+
+
+@dataclass(frozen=True)
+class Literal:
+    """A number or string literal operand in a comparison.
+
+    'text' is the verbatim lexeme (a number, or a string WITH its quotes); the
+    static layer interprets it against the compared member's type.
+    """
+    text:  str
+    begin: int
+
+
+@dataclass(frozen=True)
+class Comparison:
+    """A single comparison: '<evt-member> <op> <operand>'.
+
+    'op' is one of '>=', '<=', '==', '!=', '>', '<' (verbatim). 'left' is always
+    an EventMember; 'right' is an EventMember or a Literal.
+    """
+    left:  EventMember
+    op:    str
+    right: "object"          # EventMember | Literal
+    begin: int
+
+
+@dataclass(frozen=True)
+class Not:
+    """A negated condition: 'not <cond-atom>'."""
+    operand: "object"        # Comparison | Not | BoolOp
+    begin:   int
+
+
+@dataclass(frozen=True)
+class BoolOp:
+    """An 'and'/'or' chain of two or more operands.
+
+    'op' is 'and' or 'or'. 'operands' are the flattened terms at this precedence
+    level (left-associative, but associativity is irrelevant for and/or). A
+    single-operand level is collapsed by the builder, so a BoolOp always holds at
+    least two operands.
+    """
+    op:       str            # 'and' | 'or'
+    operands: List["object"]
+    begin:    int
+
+
+@dataclass(frozen=True)
+class Condition:
+    """The root of a bracket guard '[ ... ]'.
+
+    'expr' is the top boolean expression (a BoolOp, Not, or Comparison). Wrapping
+    it in a named root keeps a guard's two forms -- Luau span vs. bracket
+    condition -- as two distinct, type-distinguishable node kinds on Cause.guard.
+    """
+    expr:  "object"
+    begin: int
+
+
 @dataclass(frozen=True)
 class Cause:
     """A cause: a trigger with an optional guard.
 
-    'guard' is the CONDITION Luau span after '&', or None when absent.
+    'guard' is the condition gating the trigger, or None when absent. It is
+    either a Luau CONDITION span (the '& { ... }' form) or a Condition tree (the
+    '& [ ... ]' bracket form); both express "the event fired AND this holds".
     """
     trigger: Trigger
-    guard:   Optional[Luau]
+    guard:   "Optional[object]"   # Luau | Condition | None
     begin:   int
 
 
@@ -129,7 +208,7 @@ class Arg:
 @dataclass(frozen=True)
 class EventSpec:
     """An event emission effect: 'name(args)'."""
-    name:  str
+    name:  "list[str]"        # dotted-name segments
     args:  List[Arg]
     begin: int
 
@@ -137,7 +216,7 @@ class EventSpec:
 @dataclass(frozen=True)
 class ModeArming:
     """A mode-arming effect: '! name(args)'."""
-    name:  str
+    name:  "list[str]"        # dotted-name segments
     args:  List[Arg]
     begin: int
 
@@ -161,10 +240,10 @@ class Spawn:
     it is retained for the builder and downstream and no longer discriminates a
     shape.
     """
-    name:        str
+    name:        "list[str]"  # dotted-name segments
     args:        List[Arg]
     has_parens:  bool
-    in_container: Optional[str]
+    in_container: "Optional[list[str]]"  # dotted-name segments, or None
     luau_handle: Optional["Luau"]
     begin:       int
 
@@ -178,7 +257,7 @@ class Unspawn:
     Pass-2 validation enforces that the target resolves to an existing
     instance; the grammar accepts any dotted name.
     """
-    name:  str
+    name:  "list[str]"        # dotted-name segments
     begin: int
 
 
@@ -241,7 +320,7 @@ class Mode(TopLevel):
     'init'/'deinit' are STATEMENT_BLOCK Luau spans or None. 'causalities' are
     the member rules. 'untils' are the closing causes (one or more).
     """
-    name:        str
+    name:        "list[str]"  # dotted-name segments
     params:      List[ArgDecl]
     init:        Optional[Luau]
     deinit:      Optional[Luau]
@@ -259,7 +338,7 @@ class State:
     next state-machine element or 'end', not by a closer keyword. Not a
     TopLevel: a state appears only inside a state-machine.
     """
-    name:        str
+    name:        "list[str]"  # dotted-name segments
     params:      List[ArgDecl]
     init:        Optional[Luau]
     deinit:      Optional[Luau]
@@ -339,8 +418,9 @@ class StateMachine(TopLevel):
     parser error). The block is closed by the 'end' keyword; a state machine
     has no closing 'until' causes of its own.
     """
-    name:     str
+    name:     "list[str]"     # dotted-name segments
     params:   List[ArgDecl]
+    bases:    List["list[str]"]   # 'is:' base names (dotted), in source order
     states:   List[State]
     has_refs: List[HasRef]
     default:  Optional[StateMachineModeRef]
@@ -358,8 +438,9 @@ class ModeGroup(TopLevel):
     (overlapping members have no single fallback) and, like a state machine, no
     closing 'until' causes of its own -- the block is closed by 'end'.
     """
-    name:     str
+    name:     "list[str]"     # dotted-name segments
     params:   List[ArgDecl]
+    bases:    List["list[str]"]   # 'is:' base names (dotted), in source order
     modes:    List[Mode]
     has_refs: List[HasRef]
     init:     Optional[Luau]
@@ -384,6 +465,65 @@ class ClockDef(TopLevel):
 
 
 @dataclass(frozen=True)
+class CauseDef(TopLevel):
+    """A named, parameterised cause: 'cause: NAME(params) on: <cause>'.
+
+    Defines a reusable cause so a causality rule can fire it by reference (see
+    CauseRef) instead of respelling the trigger and guard. 'name'/'params' come
+    from the signature; 'body' is the Cause (trigger + optional guard) after the
+    'on:' signal. 'on:' is a signal even here -- it marks the cause body just as
+    it does in an inline causality rule. Resolution of the reference against this
+    definition is a pass-2 concern; the parser only records the definition.
+    """
+    name:   "list[str]"     # dotted-name segments from the signature
+    params: List[ArgDecl]
+    body:   Cause
+    begin:  int
+
+
+@dataclass(frozen=True)
+class EffectDef(TopLevel):
+    """A named effect bundle: 'effect: NAME(params) => <effect> [=> <effect>]*'.
+
+    Defines a reusable, ordered list of effects so a causality rule can invoke
+    the whole bundle by reference. '=>' is a signal even here -- it introduces
+    each effect exactly as in an inline causality rule. 'name'/'params' come from
+    the signature, parallel to CauseDef; binding a reference's arguments to these
+    params is a pass-2 concern.
+    """
+    name:    "list[str]"     # dotted-name segments from the signature
+    params:  List[ArgDecl]
+    effects: List[object]
+    begin:   int
+
+
+@dataclass(frozen=True)
+class CauseRef:
+    """A reference to a defined cause, invoked with arguments: 'NAME(args)'.
+
+    Appears in cause position of a causality rule as an alternative to an inline
+    trigger. 'name' is the cause's identifier; 'args' are the actual arguments
+    bound to the definition's parameters. Binding the args to a CauseDef and
+    checking arity/types is a pass-2 concern.
+    """
+    name:  str
+    args:  List["Arg"]
+    begin: int
+
+
+@dataclass(frozen=True)
+class EffectRef:
+    """A reference to a defined effect bundle, by bare name: 'NAME'.
+
+    Appears in effect position of a causality rule as an alternative to an inline
+    effect. 'name' is the bundle's identifier; expanding it to the defined
+    effects is a pass-2 concern. The name is a single identifier, never dotted.
+    """
+    name:  str
+    begin: int
+
+
+@dataclass(frozen=True)
 class Include(TopLevel):
     """A file mount: 'include "<file>" as <dotted-name>'.
 
@@ -394,7 +534,7 @@ class Include(TopLevel):
     the parser only records the request.
     """
     filename: str
-    mount:    str
+    mount:    "list[str]"     # dotted-name segments
     begin:    int
 
 
@@ -408,7 +548,7 @@ class Namespace(TopLevel):
     declared inside resolve within this scope; there is no restriction on
     nesting depth.
     """
-    name:  str
+    name:  "list[str]"        # dotted-name segments
     items: "List[TopLevel]"
     begin: int
 
@@ -422,4 +562,5 @@ class RuleFile:
     so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)
+
 

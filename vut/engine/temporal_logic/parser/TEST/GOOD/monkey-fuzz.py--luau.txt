@@ -1,147 +1,176 @@
 === monkey: luau ===
-tokens parsed:      72
+tokens parsed:      102
 top-level items:    6
 diagnostics:        none
 
 -- AST --
-Causality
-  cause:
+Include
+  filename = 's'
+  mount:
+    'X4'
+    'X6'
+    'X8'
+  begin = 0
+ClockDef
+  name = 'X10'
+  period = '1'
+  begin = 0
+CauseDef
+  name:
+    'X13'
+    'X15'
+  params:
+    ArgDecl
+      member = 'n17'
+      type = 'X18'
+      begin = 0
+    ArgDecl
+      member = 'n20'
+      type = 'X21'
+      begin = 0
+  body:
     Cause
       trigger:
         Trigger
-          name = 'BEGIN'
-          is_keyword = True
+          name = 'X24'
+          is_keyword = False
           begin = 0
       guard:
-        Luau
-          text = '{ x{ y }{ y }{ y }{ y }{ y }{ y } }'
-          role = <Role.CONDITION: 'condition'>
+        Condition
+          expr:
+            BoolOp
+              op = 'or'
+              operands:
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X28'
+                          begin = 0
+                      op = '>='
+                      right:
+                        Literal
+                          text = '"s"'
+                          begin = 0
+                      begin = 0
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X33'
+                          begin = 0
+                      op = '>'
+                      right:
+                        EventMember
+                          name = 'X36'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X39'
+                          begin = 0
+                      op = '=='
+                      right:
+                        Literal
+                          text = '1'
+                          begin = 0
+                      begin = 0
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X44'
+                          begin = 0
+                      op = '!='
+                      right:
+                        EventMember
+                          name = 'X47'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+      begin = 0
+  begin = 0
+Causality
+  cause:
+    CauseRef
+      name = 'X50'
+      args:
+        Arg
+          name = None
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = 'X54'
+          value:
+            ShallowMemberAccess
+              binding = 'mode'
+              member = 'X58'
+              begin = 0
+          kind = <E_ArgKind.MEMBER: 2>
           begin = 0
       begin = 0
   effects:
-    Mutation
-      body:
-        Luau
-          text = '{ x{ y }{ y }{ y }{ y }{ y } }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      begin = 0
-    EventSpec
-      name = 'X6.X8'
+    Spawn
+      name:
+        'X62'
+        'X64'
       args:
         []
-      begin = 0
-  begin = 0
-StateMachine
-  name = 'X12.X14'
-  params:
-    []
-  states:
-    []
-  has_refs:
-    []
-  default:
-    StateMachineModeRef
-      sm_name = 'X16'
-      mode_name = 'X18'
-      is_void = False
-      begin = 0
-  init = None
-  deinit = None
-  begin = 0
-Mode
-  name = 'X21.X23'
-  params:
-    ArgDecl
-      member = 'n25'
-      type = 'X26'
-      begin = 0
-    ArgDecl
-      member = 'n28'
-      type = 'X29'
-      begin = 0
-    ArgDecl
-      member = 'n31'
-      type = 'X32'
-      begin = 0
-  init:
-    Luau
-      text = '{ x{ y }{ y }{ y }{ y }{ y }{ y } }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  deinit = None
-  causalities:
-    []
-  untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'END'
-          is_keyword = True
-          begin = 0
-      guard = None
-      begin = 0
-  begin = 0
-Namespace
-  name = 'X38.X40'
-  items:
-    ModeGroup
-      name = 'X42.X44'
-      params:
-        []
-      modes:
-        Mode
-          name = 'X46.X48'
-          params:
-            []
-          init = None
-          deinit = None
-          causalities:
-            Causality
-              cause:
-                Cause
-                  trigger:
-                    Trigger
-                      name = 'X50'
-                      is_keyword = False
-                      begin = 0
-                  guard = None
-                  begin = 0
-              effects:
-                ReportString
-                  text = '"s"'
-                  begin = 0
-              begin = 0
-          untils:
-            Cause
-              trigger:
-                Trigger
-                  name = 'ANY'
-                  is_keyword = True
-                  begin = 0
-              guard = None
-              begin = 0
-          begin = 0
-      has_refs:
-        []
-      init:
+      has_parens = True
+      in_container:
+        'X68'
+        'X70'
+        'X72'
+      luau_handle:
         Luau
-          text = '{ x }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
+          text = '{ x{ y }{ y }{ y }{ y }{ y } }'
+          role = <Role.LVALUE: 'lvalue'>
           begin = 0
-      deinit = None
       begin = 0
-  begin = 0
-Include
-  filename = 's'
-  mount = 'X61.X63.X65'
+    ReportString
+      text = '"s"'
+      begin = 0
   begin = 0
 ForwardDecl
-  kind = 'X68'
-  name = 'X66'
+  kind = 'container'
+  name = 'X76'
   signature:
     []
   cargs:
     []
-  luau_handle = None
+  luau_handle:
+    Luau
+      text = '{ x{ y }{ y }{ y }{ y }{ y }{ y } }'
+      role = <Role.LVALUE: 'lvalue'>
+      begin = 0
+  begin = 0
+ModeGroup
+  name:
+    'X85'
+    'X87'
+  params:
+    []
+  bases:
+    'X91'
+    'X93'
+    'X95'
+    'X97'
+  modes:
+    []
+  has_refs:
+    HasRef
+      aggregate = None
+      member = 'X99'
+      is_void = False
+      begin = 0
+  init = None
+  deinit = None
   begin = 0

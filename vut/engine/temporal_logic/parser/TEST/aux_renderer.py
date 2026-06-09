@@ -9,7 +9,7 @@ ______________________________________________________________________________
 """
 from dataclasses import is_dataclass, fields
 
-from vut.engine.temporal_logic.parser.core.terminals import t_fr_luau_open
+from vut.engine.temporal_logic.parser.core.terminals import t_fr_span_open
 
 
 def fragment(tokens):
@@ -24,7 +24,7 @@ def fragment(tokens):
         return "(empty)"
     out = []
     for t in tokens:
-        out.append("{ luau }" if t.kind is t_fr_luau_open else t.text)
+        out.append("{ luau }" if t.kind is t_fr_span_open else t.text)
     return " ".join(out)
 
 
@@ -51,4 +51,5 @@ def fmt(node, indent=0):
                 lines.append("%s  %s = %r" % (pad, f.name, val))
         return "\n".join(lines)
     return pad + repr(node)
+
 

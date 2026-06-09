@@ -36,7 +36,15 @@ grammar_ast -- never on the parser engine -- and grammar.py depends only on this
 vocabulary plus terminals.py.
 ______________________________________________________________________________
 """
-from . import grammar_ast as nodes
+from . import ll2_grammar_ast as _default_nodes
+
+# The node module is parameterisable: the engine compiles to ll2_grammar_ast
+# (the active LL(2) hierarchy, the default here). A node module exposes the node-
+# class names with matching constructors; compile_element(..., nodes=<module>)
+# threads the choice through, and the combinator classes read their node_class
+# off the active module per compile -- so combinators never hard-depends on one
+# hierarchy.
+nodes = _default_nodes
 
 
 # A bare tuple is a sequence; a bare list is an optional; ALL alternation is
@@ -65,7 +73,7 @@ def _alt_from_tuple(parts):
     return Alt(*branches)
 
 
-def _compile_child(child, ctx):
+def _compile_child(child, ctx, nodes):
     """RETURN: Node, the compiled form of one authored child.
 
     A combinator delegates to its own compile(); a bare tuple is an implicit
@@ -75,16 +83,20 @@ def _compile_child(child, ctx):
     multi-element list is an optional sequence. Any other value (a terminal
     object, a '<name>' rule reference, or a bare-string keyword) is a leaf the
     engine resolves via ctx.compile_leaf.
+
+    'nodes' is the node module to build into (grammar_ast for LL(1),
+    ll2_grammar_ast for LL(2)); it is threaded down so one combinator tree can
+    lower into either hierarchy.
     """
     if isinstance(child, _Combinator):
-        return child.compile(ctx)
+        return child.compile(ctx, nodes)
     if isinstance(child, tuple):
         if ALT in child:
-            return _alt_from_tuple(child).compile(ctx)
-        return Seq(*child).compile(ctx)
+            return _alt_from_tuple(child).compile(ctx, nodes)
+        return Seq(*child).compile(ctx, nodes)
     if isinstance(child, list):
         body = child[0] if len(child) == 1 else Seq(*child)
-        return Opt(body).compile(ctx)
+        return Opt(body).compile(ctx, nodes)
     return ctx.compile_leaf(child)
 
 
@@ -93,17 +105,20 @@ class _Combinator:
 
     Called directly in grammar.py: Alt and Seq take their children variadically
     (Alt(a, b, ...)), Opt/Plus/Star take a single body (Opt(x)). A subclass sets
-    'node_class' (the grammar_ast type it lowers into) and 'compile(ctx)' builds
-    that node from its compiled children.
+    '_node_name' (the node-class name, looked up on the node module passed to
+    compile) and 'compile(ctx, nodes)' builds that node from its compiled
+    children. The name is resolved per-compile rather than bound at class
+    definition, so the same combinator lowers into either the LL(1) or LL(2) node
+    hierarchy depending on which module the engine threads in.
     """
     __slots__ = ("children",)
-    node_class = None
+    _node_name = None
 
     def __init__(self, *children):
         self.children = children
 
-    def compile(self, ctx):
-        """RETURN: Node, this combinator lowered into its node_class."""
+    def compile(self, ctx, nodes):
+        """RETURN: Node, this combinator lowered into nodes.<_node_name>."""
         raise NotImplementedError
 
 
@@ -113,18 +128,20 @@ class Seq(_Combinator):
     Written as a bare tuple in grammar.py (the implicit form); constructed
     variadically (Seq(a, b, ...)) where an explicit instance is needed.
     """
-    node_class = nodes.SequenceNode
+    _node_name = "SequenceNode"
 
-    def compile(self, ctx):
-        return self.node_class([_compile_child(c, ctx) for c in self.children])
+    def compile(self, ctx, nodes):
+        cls = getattr(nodes, self._node_name)
+        return cls([_compile_child(c, ctx, nodes) for c in self.children])
 
 
 class Alt(_Combinator):
     """An alternation; lowers to AlternativeNode. Alt(a, b, ...)."""
-    node_class = nodes.AlternativeNode
+    _node_name = "AlternativeNode"
 
-    def compile(self, ctx):
-        return self.node_class([_compile_child(c, ctx) for c in self.children])
+    def compile(self, ctx, nodes):
+        cls = getattr(nodes, self._node_name)
+        return cls([_compile_child(c, ctx, nodes) for c in self.children])
 
 
 class _Unary(_Combinator):
@@ -135,24 +152,25 @@ class _Unary(_Combinator):
     """
     __slots__ = ()
 
-    def compile(self, ctx):
+    def compile(self, ctx, nodes):
+        cls = getattr(nodes, self._node_name)
         (body,) = self.children
-        return self.node_class(_compile_child(body, ctx))
+        return cls(_compile_child(body, ctx, nodes))
 
 
 class Opt(_Unary):
     """Optional; lowers to OptionalNode."""
-    node_class = nodes.OptionalNode
+    _node_name = "OptionalNode"
 
 
 class Plus(_Unary):
     """One-or-more; lowers to PlusNode."""
-    node_class = nodes.PlusNode
+    _node_name = "PlusNode"
 
 
 class Star(_Unary):
     """Zero-or-more; lowers to StarNode."""
-    node_class = nodes.StarNode
+    _node_name = "StarNode"
 
 
 # -- the authoring surface used in grammar.py ---------------------------------
@@ -168,12 +186,15 @@ PLUS = Plus
 STAR = Star
 
 
-def compile_element(element, ctx):
+def compile_element(element, ctx, nodes=_default_nodes):
     """RETURN: Node, the compiled form of a top-level authored 'element'.
 
     The single entry the engine calls per rule body. A bare tuple is an implicit
     sequence; a combinator lowers itself; a terminal object, an R reference, or a
-    bare-string keyword is a leaf resolved by 'ctx'.
+    bare-string keyword is a leaf resolved by 'ctx'. 'nodes' selects the target
+    node hierarchy (defaults to ll2_grammar_ast, the active LL(2) hierarchy); a
+    different engine may pass its own module.
     """
-    return _compile_child(element, ctx)
+    return _compile_child(element, ctx, nodes)
+
 

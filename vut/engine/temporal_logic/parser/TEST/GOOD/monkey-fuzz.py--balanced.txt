@@ -1,38 +1,74 @@
 === monkey: balanced ===
-tokens parsed:      58
+tokens parsed:      126
 top-level items:    5
 diagnostics:        none
 
 -- AST --
+Include
+  filename = 's'
+  mount:
+    'X4'
+    'X6'
+  begin = 0
+Namespace
+  name:
+    'X8'
+    'X10'
+    'X12'
+  items:
+    Causality
+      cause:
+        CauseRef
+          name = 'X14'
+          args:
+            []
+          begin = 0
+      effects:
+        Unspawn
+          name:
+            'X19'
+            'X21'
+            'X23'
+          begin = 0
+        EffectRef
+          name = 'X25'
+          begin = 0
+      begin = 0
+  begin = 0
 StateMachine
-  name = 'X2.X4'
+  name:
+    'X28'
+    'X30'
   params:
     []
+  bases:
+    'X34'
+    'X36'
+    'X38'
   states:
     []
   has_refs:
     []
-  default = None
+  default:
+    StateMachineModeRef
+      sm_name = 'X41'
+      mode_name = 'VOID'
+      is_void = True
+      begin = 0
   init:
-    Luau
+    SpanResult
       text = '{ x{ y }{ y } }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   deinit = None
   begin = 0
-Include
-  filename = 's'
-  mount = 'X10.X12'
-  begin = 0
 Mode
-  name = 'X14.X16'
+  name:
+    'X46'
+    'X48'
   params:
     []
-  init:
-    Luau
-      text = '{ x }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
+  init = None
   deinit = None
   causalities:
     Causality
@@ -40,77 +76,155 @@ Mode
         Cause
           trigger:
             Trigger
-              name = 'X19'
-              is_keyword = False
+              name = 'ANY'
+              is_keyword = True
               begin = 0
           guard = None
           begin = 0
       effects:
         ModeArming
-          name = 'X22.X24.X26'
+          name:
+            'X53'
+            'X55'
           args:
-            []
+            Arg
+              name = None
+              value:
+                ShallowMemberAccess
+                  binding = 'mode'
+                  member = 'X59'
+                  begin = 0
+              kind = <E_ArgKind.MEMBER: 2>
+              begin = 0
+            Arg
+              name = 'X61'
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+        EventSpec
+          name:
+            'X66'
+            'X68'
+          args:
+            Arg
+              name = None
+              value = 'X70'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X72'
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
           begin = 0
       begin = 0
   untils:
     Cause
       trigger:
         Trigger
-          name = 'END'
-          is_keyword = True
+          name = 'X80'
+          is_keyword = False
           begin = 0
-      guard = None
+      guard:
+        Condition
+          expr:
+            BoolOp
+              op = 'or'
+              operands:
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X84'
+                          begin = 0
+                      op = '>'
+                      right:
+                        Literal
+                          text = '1'
+                          begin = 0
+                      begin = 0
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X89'
+                          begin = 0
+                      op = '>='
+                      right:
+                        Literal
+                          text = '"s"'
+                          begin = 0
+                      begin = 0
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X94'
+                          begin = 0
+                      op = '<='
+                      right:
+                        EventMember
+                          name = 'X97'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X100'
+                          begin = 0
+                      op = '<'
+                      right:
+                        EventMember
+                          name = 'X103'
+                          begin = 0
+                      begin = 0
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X106'
+                          begin = 0
+                      op = '!='
+                      right:
+                        Literal
+                          text = '1'
+                          begin = 0
+                      begin = 0
+                    Comparison
+                      left:
+                        EventMember
+                          name = 'X111'
+                          begin = 0
+                      op = '=='
+                      right:
+                        Literal
+                          text = '"s"'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
       begin = 0
   begin = 0
-ClockDef
-  name = 'X32'
-  period = '1'
-  begin = 0
-ModeGroup
-  name = 'X35.X37'
+CauseDef
+  name:
+    'X116'
+    'X118'
+    'X120'
   params:
     []
-  modes:
-    Mode
-      name = 'X42.X44'
-      params:
+  body:
+    CauseRef
+      name = 'X122'
+      args:
         []
-      init = None
-      deinit:
-        Luau
-          text = '{ x{ y }{ y } }'
-          role = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      causalities:
-        []
-      untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'BEGIN'
-              is_keyword = True
-              begin = 0
-          guard = None
-          begin = 0
-        Cause
-          trigger:
-            Trigger
-              name = 'ANY'
-              is_keyword = True
-              begin = 0
-          guard:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
-          begin = 0
       begin = 0
-  has_refs:
-    []
-  init:
-    Luau
-      text = '{ x{ y }{ y } }'
-      role = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  deinit = None
   begin = 0

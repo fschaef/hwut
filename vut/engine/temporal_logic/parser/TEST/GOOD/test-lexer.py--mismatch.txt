@@ -1,8 +1,0 @@
-
---- stray '?' between valid tokens ---
-string:on:   [  0:3  ] 'on:'
-framing:mismatch [  4:5  ] '?'
-string::end  [  6:10 ] ':end'
-framing:end-of-file [ 10:10 ] ''
-error_f: True
-LEXER    fatal=False off=4   unexpected character '?'

@@ -1,0 +1,4 @@
+
+--- disjoint ALT branches -> no conflict ---
+rules compiled: 3
+conflict:       none

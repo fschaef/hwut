@@ -29,12 +29,12 @@ from dataclasses import is_dataclass, fields
 from vut.language_support.python.deterministic_random import (DeterministicStream,
                                                              SelectionMarker)
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
-from vut.engine.temporal_logic.parser.core.ll1_engine import EngineParser
-from vut.engine.temporal_logic.parser.core.grammar_ast import (
+from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser
+from vut.engine.temporal_logic.parser.core.ll2_grammar_ast import (
         TerminalNode, PassThroughNode,
         SequenceNode, AlternativeNode, OptionalNode, PlusNode, StarNode)
 from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.terminals import T, t_fr_luau_open, t_fr_eof
+from vut.engine.temporal_logic.parser.core.terminals import T, t_fr_span_open, t_fr_eof
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 
 import config  # noqa: F401
@@ -192,7 +192,7 @@ class Walker:
         inner = "x" + "{ y }" * depth
         text  = "{ " + inner + " }"
         self.luau.append(text)
-        self.tokens.append(Token(t_fr_luau_open, "{", 0, 0))
+        self.tokens.append(Token(t_fr_span_open, "{", 0, 0))
 
 
 # --------------------------------------------------------------------------
@@ -242,7 +242,7 @@ def _render_source(tokens, luau_texts):
     for t in tokens:
         if t.kind is t_fr_eof:
             continue
-        if t.kind is t_fr_luau_open:
+        if t.kind is t_fr_span_open:
             text = luau_texts[luau_i] if luau_i < len(luau_texts) else "{ }"
             luau_i += 1
             if out and not out[-1].endswith("\n"):
@@ -343,12 +343,8 @@ def _create_profile(g, name, profile, debug):
     tokens, luau_texts = walker.walk_file(profile["items"])
     _save_fixture(name, tokens, luau_texts)
 
-    parser = EngineParser.__new__(EngineParser)
-    parser.reporter   = DiagnosticReporter()
-    parser.grammar    = g
-    parser.lexer      = _ListLexer(tokens, luau_texts)
-    parser.tok        = parser.lexer.next()
-    parser._top_first = g.rules[g.start].first
+    parser = EngineParser(None, None, DiagnosticReporter(), g,
+                          lexer=_ListLexer(tokens, luau_texts))
     rule_file = parser.parse()
 
     node_types = set()
@@ -383,4 +379,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

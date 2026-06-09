@@ -1,27 +1,30 @@
 open: X2 . X4
-mode_group: X6 . X8 . X10
-init: { x }
-has: X13
-deinit: { x{ y } }
-:end
-on: ANY
-=> -! X20 . X22 . X24 . X26
-=> "s"
-=> ! X31 . X33 ( )
-=> { x }
-clock: X38 1
+event: X6 ( n8: X9 ; n11: X12 ; n14: X15 ; n17: X18 ; n20: X21 ) X23 is: mode
+clock: X27 1
 :close
-state_machine: X42 . X44 . X46 . X48 ( n50: X51 ; n53: X54 ; n56: X57 )
+on: X31 ( X33 = { x } , event . X38 , X40 = 1 , "s" )
+=> +! X48 . X50 . X52 . X54 ( X56 , X58 = { x{ y } } , X61 = mg . X65 )
+=> ! X69 . X71 . X73 . X75 ( )
+=> -! X80 . X82 . X84
+mode_group: X86 . X88 . X90 . X92 is: X94 . X96 . X98 . X100 . X102 is: X104 . X106 . X108 . X110 is: X112 . X114 . X116 . X118 . X120 is: X122 . X124
+mode: X126 . X128
+on: ANY
+=> X132
+=> "s"
+=> X136 . X138 ( )
+=> { x }
+init: { x }
 deinit: { x{ y } }
-has: X61 . X63
+deinit: { x }
+until: X146 ( )
 :end
-event: X66 ( n68: X69 ; n71: X72 ; n74: X75 )
-mode: X78 . X80 . X82 . X84 ( )
-deinit: { x{ y } }
-on: END
-=> +! X92 . X94 ( ) in: X98 . X100 . X102 . X104 as: { x{ y } }
-init: { x{ y } }
-until: X108
-until: BEGIN
-until: END & { x{ y } }
-until: ANY include: "s" into: X119 . X121 X122 is: container < > as: { x }
+mode: X151 . X153 . X155
+on: BEGIN
+=> "s"
+until: X161 & { x }
+until: X164 ( )
+until: END effect: X170 . X172 . X174 . X176
+=> X178 . X180 ( )
+=> +! X185 . X187 . X189 ( )
+=> X193
+=> ! X196 . X198 ( "s" , 1 , X204 = X206 , X208 = 1 ) include: "s" into: X215 . X217

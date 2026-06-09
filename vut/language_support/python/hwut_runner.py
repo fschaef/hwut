@@ -59,7 +59,7 @@ class HwutRunner:
     def __init__(self, 
                  argv:        list[str],
                  title:       str,
-                 choice_map:  dict[str, Callable],
+                 choice_map:  dict[str|None, Callable],
                  happy:       None | list[str] | list[re.Pattern] | str | re.Pattern = None,
                  same_f:      bool = False):
         assert choice_map

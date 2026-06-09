@@ -4,7 +4,7 @@ ______________________________________________________________________________
 TERMINALS  --  the named-terminal authoring surface for the GRAMMAR in grammar.py.
 
 A rule references a richer terminal -- a character class, a kept keyword, or an
-opaque Luau span -- by a 't_...' object defined once in a preamble above GRAMMAR
+opaque embedded span -- by a 't_...' object defined once in a preamble above GRAMMAR
 and bound to a variable whose name documents it. The 'T' factory mints those
 objects; every call RECORDS the terminal into a per-import database in
 declaration order. The lexer-spec generator (lexer.py) later reads that database
@@ -22,24 +22,27 @@ Three terminal shapes, three factories:
                             production's builder (ANY/END/BEGIN/VOID/container),
                             as opposed to a plain bare-string keyword that is
                             silent punctuation.
-    T.opaque("luau", role=ROLE)
-                            an opaque Luau span terminal carrying the Role under
-                            which the parser drives the oracle (CONDITION /
-                            EXPRESSION / LVALUE / STATEMENT_BLOCK). The role lives
-                            on the terminal object, so a rule expresses "this
-                            position takes an lvalue" by which 't_...' it names.
+    T.opaque(mode)
+                            an opaque span terminal carrying the span MODE under
+                            which the oracle measures the span (a
+                            core.span_oracle.SpanMode -- e.g. the Luau layer's
+                            Role: CONDITION / EXPRESSION / LVALUE /
+                            STATEMENT_BLOCK). The mode lives on the terminal
+                            object, so a rule expresses "this position takes an
+                            opaque span of this kind" by which 't_...' it names.
 
 'R(name)' wraps a reference to another GRAMMAR rule (a non-terminal). It is part
 of the same object authoring surface as T and the Alt/Opt/Plus/Star classes, but
 it is NOT a terminal: it records nothing into the database; the engine resolves
 the name against the rule map at compile time.
 
-This module imports Role from the Luau layer (the role is genuinely a Luau-span
-property) and depends on nothing in the parser engine, so the authoring layer
-stays engine-free: grammar.py -> {terminals, combinators} -> grammar_ast.
+This module depends on nothing in the parser engine and nothing in any embedded
+language: the authoring layer stays engine-free AND language-free. An opaque
+span carries a 'mode' (core.span_oracle.SpanMode) defined by whatever oracle
+measures the span; terminals knows only that a mode exposes qualified_name() and
+name. Dependency direction: grammar.py -> {terminals, combinators} -> grammar_ast.
 ______________________________________________________________________________
 """
-from ...luau.luau_fragment import Role
 
 
 # Every T.…() call registers its terminal here, in declaration order. The lexer
@@ -80,27 +83,30 @@ class Terminal:
     the discriminant the lexer generator and the engine's leaf compiler switch
     on. The other fields are populated per shape: 'pattern' for a regex class;
     'spelling' for a string keyword, a captured keyword, or a framing token's
-    friendly tag; 'role' (a Role) for an opaque Luau span. A field not relevant
-    to the shape is None.
+    friendly tag; 'mode' (a span mode -- see core.span_oracle.SpanMode) for an
+    opaque span, naming the oracle sub-language and the role within it. A field
+    not relevant to the shape is None.
 
     A terminal's IDENTITY is _name() -- factory plus every distinguishing field.
     The engine compares terminals by object identity (one Terminal per _name(),
     guaranteed by _register), never by a hand-written id name.
     """
-    __slots__ = ("shape", "pattern", "spelling", "role")
+    __slots__ = ("shape", "pattern", "spelling", "mode")
 
-    def __init__(self, shape, pattern=None, spelling=None, role=None):
+    def __init__(self, shape, pattern=None, spelling=None, mode=None):
         self.shape    = shape
         self.pattern  = pattern
         self.spelling = spelling
-        self.role     = role
+        self.mode     = mode
 
     def _name(self):
         """RETURN: str, the terminal's identity -- factory plus its fields.
 
         Used as the token id for debug tracing and as the distinctness key. Two
         terminals are the same iff their _name() is equal; the scheme therefore
-        includes every field that distinguishes one terminal from another.
+        includes every field that distinguishes one terminal from another. An
+        opaque span's identity is 'opaque:' + the mode's own qualified name (the
+        oracle sub-language plus the role), so core never hard-codes a language.
         """
         if self.shape == "regex":
             return "regex:" + self.pattern
@@ -109,7 +115,7 @@ class Terminal:
         if self.shape == "captured":
             return "captured:" + self.spelling
         if self.shape == "opaque":
-            return "opaque:luau:" + self.role.name
+            return "opaque:" + self.mode.qualified_name()
         if self.shape == "framing":
             return "framing:" + self.spelling
         raise ValueError("unknown terminal shape %r" % (self.shape,))
@@ -160,30 +166,32 @@ class _T:
         return _register(Terminal("captured", spelling=spelling))
 
     @staticmethod
-    def opaque(kind, role):
-        """RETURN: Terminal, an opaque span terminal carrying its parse role.
+    def opaque(mode):
+        """RETURN: Terminal, an opaque span terminal carrying its span mode.
 
-        'kind' is the span family -- only "luau" exists today; it is named
-        explicitly so a second opaque family could be added without overloading
-        the factory. 'role' is the Role the parser hands the oracle for this
-        position (CONDITION / EXPRESSION / LVALUE / STATEMENT_BLOCK); it rides on
-        the terminal object so the rule's choice of 't_opq_...' fixes the role.
+        'mode' is a span mode (core.span_oracle.SpanMode) defined by whatever
+        oracle measures the span -- e.g. the Luau layer's Role. It rides on the
+        terminal object, so a rule expresses "this position takes an opaque span
+        of THIS kind" by which 't_opq_...' it names; the engine passes the mode
+        back to the oracle unread. The mode must expose qualified_name() (used as
+        the terminal's identity) and name (used in diagnostics); SpanMode is the
+        documented base, but any object with those is accepted, keeping core free
+        of any one embedded language.
         """
-        if kind != "luau":
-            raise ValueError("unknown opaque terminal kind %r" % (kind,))
-        if not isinstance(role, Role):
-            raise ValueError("opaque terminal needs a Role, got %r" % (role,))
-        return _register(Terminal("opaque", role=role))
+        if not (hasattr(mode, "qualified_name") and hasattr(mode, "name")):
+            raise ValueError("opaque terminal needs a span mode "
+                             "(qualified_name()/name), got %r" % (mode,))
+        return _register(Terminal("opaque", mode=mode))
 
     @staticmethod
     def framing(tag):
         """RETURN: Terminal, a framing token with no grammar spelling.
 
         A token that is lexer/engine machinery rather than a written terminal:
-        the Luau brace handoff (open and the synthesized block), the skip groups,
-        and the end-of-file and mismatch sentinels. 'tag' is its friendly name;
-        framing tokens reference through the same scheme as every other token and
-        differ only in carrying this readable tag.
+        the opaque-span brace handoff (open and the synthesized block), the skip
+        groups, and the end-of-file and mismatch sentinels. 'tag' is its friendly
+        name; framing tokens reference through the same scheme as every other
+        token and differ only in carrying this readable tag.
         """
         return _register(Terminal("framing", spelling=tag))
 
@@ -197,8 +205,8 @@ T = _T()
 # like any other -- referenced by identity, named by the same scheme -- and are
 # special only in their friendly tags and in being created here rather than from
 # a rule.
-t_fr_luau_open  = T.framing("luau-open")    # a bare '{'; handed to the oracle
-t_fr_luau_block = T.framing("luau-block")   # the synthesized '{ ... }' span
+t_fr_span_open  = T.framing("span-open")    # a bare '{'; handed to the oracle
+t_fr_span_block = T.framing("span-block")   # the synthesized '{ ... }' span
 t_fr_comment    = T.framing("comment")      # '## ...' skip group
 t_fr_ws         = T.framing("whitespace")   # whitespace skip group
 t_fr_mismatch   = T.framing("mismatch")     # illegal char; parser resyncs
@@ -234,4 +242,5 @@ def terminal_by_name(name):
     terminal has been registered.
     """
     return _BY_NAME[name]
+
 

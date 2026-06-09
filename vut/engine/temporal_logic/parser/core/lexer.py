@@ -1,15 +1,17 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-REGEX LEXER & ORACLE HANDOFF
+REGEX LEXER & OPAQUE-SPAN ORACLE HANDOFF
 
-Tokenizes the HWUT 2.0 rule-file language under parser control. A single
-compiled regular expression with named capture groups identifies token
-boundaries. The lexer is PULL-driven: the parser calls 'next()' for each
-control-plane token and, when it reaches a '{', calls 'read_luau_block(role)'
-with the role its grammar context demands -- CONDITION for a guard, EXPRESSION
-for an rvalue, STATEMENT_BLOCK for a '=>'/init/deinit body. The lexer never
-guesses a role; only the parser knows the context.
+Tokenizes the rule-file language under parser control. A single compiled regular
+expression with named capture groups identifies token boundaries. The lexer is
+PULL-driven: the parser calls 'next()' for each control-plane token and, when it
+reaches an opaque-span open '{', calls 'read_span(mode)' with the span mode its
+grammar context demands. The mode is opaque to the lexer and engine -- it is
+defined by the injected oracle (the Luau layer's Role: a guard CONDITION, an
+rvalue EXPRESSION, an lvalue access, a STATEMENT_BLOCK body). The lexer never
+guesses a mode; only the parser knows the context, and only the oracle knows
+what a mode means.
 
 ERROR MODEL (see diagnostic.py):
 
@@ -17,14 +19,18 @@ ERROR MODEL (see diagnostic.py):
     returned as a token so the parser may resync at the next 'end' or
     top-level keyword.
 
-    A malformed Luau fragment (FragmentSyntaxError from the oracle) is reported
+    A malformed opaque span (SpanSyntaxError from the oracle) is reported
     non-fatal, the sticky 'error_f' flag is raised, and lexing continues past
     the best closing-'}' candidate the oracle reached. The run yields a
-    LUAU_BLOCK over that recovered span so the parser can proceed; the
+    SPAN_BLOCK over that recovered span so the parser can proceed; the
     accumulated diagnostics are the detailed report.
 
-    An OracleError (infrastructure: binary missing, crash, timeout) is NOT
+    A SpanOracleError (infrastructure: binary missing, crash, timeout) is NOT
     author-fixable. It is reported fatal and ends the stream.
+
+The lexer depends only on core.span_oracle (the abstract SpanSyntaxError /
+SpanOracleError) and a duck-typed oracle with find_close(); it knows nothing of
+Luau or any embedded language.
 
 Source positions are absolute character offsets. A Token carries its
 '[begin:end]' span; SourceMap converts an offset to a 1-based (line, column)
@@ -36,8 +42,7 @@ import bisect
 from dataclasses  import dataclass
 from typing       import Optional
 
-from ...luau.luau_fragment import (find_matching_brace, Role,
-                                 FragmentSyntaxError, OracleError)
+from .span_oracle import SpanSyntaxError, SpanOracleError
 
 from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 
@@ -134,15 +139,15 @@ def _generate_token_spec():
         3. trailing-colon string keywords ('mode:') -> '\\bword', LONGEST-FIRST.
         4. bare keywords -- captured (ANY) and bare-identifier strings -> '\\bword\\b'.
         5. symbols (string keywords that are not identifiers, '=>') -> re.escape,
-           LONGEST-FIRST; the Luau open framing token ('{') sits here.
+           LONGEST-FIRST; the opaque-span open framing token ('{') sits here.
         6. regex class terminals (T.regex) in DECLARATION order.
         7. mismatch framing ('.') -- fixed framing, last.
 
-    The end-of-file and luau-block framing terminals carry no scanner pattern
+    The end-of-file and span-block framing terminals carry no scanner pattern
     (they are synthesized, not matched) and are omitted from the spec.
     """
     from .terminals import (TERMINAL_DB, T,
-                            t_fr_luau_open, t_fr_comment, t_fr_ws,
+                            t_fr_span_open, t_fr_comment, t_fr_ws,
                             t_fr_mismatch)
 
     if _GRAMMAR is None:
@@ -196,7 +201,7 @@ def _generate_token_spec():
     symbols.sort(key=lambda t: (-len(t.spelling), order(t)))         # tier 5
     for t in symbols:
         spec.append((t, re.escape(t.spelling)))
-    spec.append((t_fr_luau_open, re.escape("{")))                    # opaque open
+    spec.append((t_fr_span_open, re.escape("{")))                    # opaque-span open
 
     for t in regexes:                                                # tier 6
         spec.append((t, t.pattern))
@@ -205,10 +210,10 @@ def _generate_token_spec():
     return spec
 
 
-def _luau_block_term():
+def _span_block_term():
     """RETURN: Terminal, the framing terminal for a synthesized '{ ... }' span."""
-    from .terminals import t_fr_luau_block
-    return t_fr_luau_block
+    from .terminals import t_fr_span_block
+    return t_fr_span_block
 
 
 def token_debug_names():
@@ -285,7 +290,7 @@ class Token:
     RETURN: Token, one lexical unit: its kind, its lexeme, and its source span.
 
     'begin'/'end' are absolute character offsets; 'source[begin:end]' is the
-    exact lexeme. For a LUAU_BLOCK the span runs from the opening '{' through
+    exact lexeme. For a SPAN_BLOCK the span runs from the opening '{' through
     the closing '}' inclusive. Line/column are not stored -- a SourceMap
     resolves 'begin' on demand. END_OF_FILE has 'begin == end' at text length.
     """
@@ -303,7 +308,7 @@ class SourceMap:
     Built once per source text. 'line_starts[i]' is the offset of the first
     character of line 'i' (zero-based index). Resolution bisects that array and
     is independent of tokenization, so an offset inside or beyond an
-    oracle-skipped Luau block resolves with no lexer bookkeeping.
+    oracle-skipped opaque span resolves with no lexer bookkeeping.
     """
     def __init__(self, source_text: str):
         self.line_starts = [0]
@@ -326,16 +331,16 @@ class Lexer:
     """Pull-driven tokenizer for one rule-file text under parser control.
 
     The parser calls 'next()' to advance the control plane and
-    'read_luau_block(role)' when it has reached a LUAU_OPEN and its grammar
-    context fixes the Luau role. 'error_f' is sticky: once any author-fixable
+    'read_span(mode)' when it has reached a SPAN_OPEN and its grammar
+    context fixes the span mode. 'error_f' is sticky: once any author-fixable
     error is reported it stays True for the rest of the run. Diagnostics
     accumulate in the injected reporter.
     """
     def __init__(self, source_text: str, oracle, reporter: DiagnosticReporter):
-        """RETURN: None. Binds the text, the Luau oracle, and the reporter.
+        """RETURN: None. Binds the text, the span oracle, and the reporter.
 
         'oracle' is any object with 'parse(text) -> ParseResult'; it is handed
-        to 'find_matching_brace' unchanged. Launches nothing and reads nothing
+        to the oracle's find_close() unchanged. Launches nothing and reads nothing
         until 'next()' is called.
         """
         self.source   = source_text
@@ -349,12 +354,12 @@ class Lexer:
         """
         RETURN: Token, the next control-plane token; END_OF_FILE at text end.
 
-        A LUAU_OPEN ('{') is returned as-is; the parser must follow it with
-        'read_luau_block(role)'. A MISMATCH is reported non-fatal and returned
+        A SPAN_OPEN ('{') is returned as-is; the parser must follow it with
+        'read_span(mode)'. A MISMATCH is reported non-fatal and returned
         so the parser can resync. WS and '##' comments are consumed silently.
         """
         scanner = _scanner()
-        from .terminals import t_fr_luau_open, t_fr_comment, t_fr_ws, \
+        from .terminals import t_fr_span_open, t_fr_comment, t_fr_ws, \
             t_fr_mismatch, t_fr_eof
         skip = {t_fr_comment, t_fr_ws}
         while self.cursor < self.length:
@@ -382,46 +387,47 @@ class Lexer:
 
         return Token(t_fr_eof, "", self.length, self.length)
 
-    def read_luau_block(self, open_token: Token, role: Role) -> Optional[Token]:
+    def read_span(self, open_token: Token, mode) -> Optional[Token]:
         """
-        RETURN: Token,  a LUAU_BLOCK spanning '{ ... }' for the parser's role.
+        RETURN: Token,  a SPAN_BLOCK spanning '{ ... }' for the parser's mode.
                 None,   if the oracle infrastructure failed (stream ends).
 
-        'open_token' is the LUAU_OPEN just returned by 'next()'. On a malformed
-        fragment the error is reported, 'error_f' is raised, and a LUAU_BLOCK
-        over the recovered span is still returned so the parser can continue.
-        On OracleError the failure is reported fatal and None is returned.
+        'open_token' is the SPAN_OPEN just returned by 'next()'. 'mode' is the
+        opaque span mode the parser supplies from the grammar (passed through to
+        the oracle unread). On a malformed span the error is reported, 'error_f'
+        is raised, and a SPAN_BLOCK over the recovered span is still returned so
+        the parser can continue. On SpanOracleError the failure is reported fatal
+        and None is returned.
         """
         begin = open_token.begin
         try:
-            closing_idx = find_matching_brace(self.source, begin, role,
-                                              self.oracle)
-        except FragmentSyntaxError as exc:
-            return self._recover_fragment(begin, exc)
-        except OracleError as exc:
-            self._report(begin, f"Luau oracle failure: {exc}", fatal=True)
+            closing_idx = self.oracle.find_close(self.source, begin, mode)
+        except SpanSyntaxError as exc:
+            return self._recover_span(begin, exc)
+        except SpanOracleError as exc:
+            self._report(begin, f"span oracle failure: {exc}", fatal=True)
             self.cursor = self.length
             return None
 
         end = closing_idx + 1
         self.cursor = end
-        return Token(_luau_block_term(), self.source[begin:end], begin, end)
+        return Token(_span_block_term(), self.source[begin:end], begin, end)
 
-    def _recover_fragment(self, begin: int, exc: FragmentSyntaxError) -> Token:
+    def _recover_span(self, begin: int, exc: SpanSyntaxError) -> Token:
         """
-        RETURN: Token, a LUAU_BLOCK over the recovered '{ ... }' span.
+        RETURN: Token, a SPAN_BLOCK over the recovered '{ ... }' span.
 
-        Reports the malformed fragment non-fatal, raises 'error_f', and recovers
-        to the nearest closing '}' at or after the opening brace so lexing can
+        Reports the malformed span non-fatal, raises 'error_f', and recovers to
+        the nearest closing '}' at or after the opening brace so lexing can
         continue. If no '}' exists at all, recovers to end of text.
         """
         self.error_f = True
-        self._report(begin, f"malformed Luau fragment: {exc}", fatal=False)
+        self._report(begin, f"malformed opaque span: {exc}", fatal=False)
 
         candidate = self.source.find("}", begin + 1)
         end = (candidate + 1) if candidate != -1 else self.length
         self.cursor = end
-        return Token(_luau_block_term(), self.source[begin:end], begin, end)
+        return Token(_span_block_term(), self.source[begin:end], begin, end)
 
     def _report(self, offset: int, message: str, fatal: bool):
         """RETURN: None. Appends a LEXER-phase Diagnostic and updates error_f.
@@ -437,4 +443,5 @@ class Lexer:
             source_offset = offset,
             fatal         = fatal,
         ))
+
 

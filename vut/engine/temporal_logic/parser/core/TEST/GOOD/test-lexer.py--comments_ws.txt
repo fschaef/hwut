@@ -1,0 +1,14 @@
+
+--- comment lines and blank lines are skipped ---
+string:(       [ 21:22 ] '('
+framing:mismatch [ 23:24 ] 'f'
+framing:mismatch [ 24:25 ] 'o'
+framing:mismatch [ 25:26 ] 'o'
+string:)       [ 27:28 ] ')'
+string:=>      [ 51:53 ] '=>'
+string:(       [ 54:55 ] '('
+framing:mismatch [ 56:57 ] 'b'
+framing:mismatch [ 57:58 ] 'a'
+framing:mismatch [ 58:59 ] 'r'
+string:)       [ 60:61 ] ')'
+framing:end-of-file [ 62:62 ] ''

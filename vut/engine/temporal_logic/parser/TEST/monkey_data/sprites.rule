@@ -5221,3 +5221,4 @@ on: BookOpened
 => "world reacts to {event.kind}"
 => { world.log(event.kind) }
 
+

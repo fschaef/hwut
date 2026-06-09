@@ -1,0 +1,72 @@
+VUT PARSER -- SESSION SUMMARY (LL(2) migration + cause/effect reuse)
+====================================================================
+
+This is the COMPLETE parser tree with every change from this session applied.
+
+ENGINE: LL(1) -> LL(2)
+  - core/ll2_engine.py is the production engine (rule_parser.py imports it).
+  - core/ll2_grammar_ast.py: FIRST_2 sets, two-token lookahead. The {(,)} ->
+    {()} import bug is fixed. choose_alt is TWO-PASS: a full 2-token pair match
+    strictly precedes a length-1 (single-token) match -- the fix that makes the
+    'id' vs 'id =' style distinction work.
+  - core/combinators.py is parameterised by node module (compile_element(...,
+    nodes=)); default is ll2_grammar_ast.
+  - core/ll1_engine.py.unused, core/grammar_ast.py.unused: the retired LL(1)
+    files, kept for archeology (also in ll1-deprecated.zip). No live importers.
+
+GRAMMAR / ACTIONS / AST
+  - <arg> is the WIDE form: '<rvalue> | id = <rvalue>' (LL(2); the one rule that
+    needs the second token). _build_arg, _build_spawn (positional, not type-
+    spotted), _build_dotted_name (-> list[str]) updated; dead builders removed.
+  - fwd-kind accepts 'mode' as a type-name ('X is: mode' parses).
+  - NEW FEATURE -- named cause/effect definitions and references:
+        cause: NAME(params) on: <cause>          (cause-def)
+        effect: NAME => <effect> [=> <effect>]*   (effect-def)
+        on: NAME(args) => NAME                    (cause-ref + effect-ref)
+    'on:' and '=>' are signals even inside definitions. Cause-ref carries parens;
+    effect-ref is a bare single name. Both ref/inline distinctions are decided by
+    the SECOND token (LL(2)). New AST: CauseDef, EffectDef, CauseRef, EffectRef.
+    Resolution/binding is deferred to pass-2.
+
+TESTS
+  - core/TEST/  NEW: grammar-agnostic engine + lexer-machinery tests.
+      test-engine.py: first2, ll2_ok, ll2_conflict, ll1_needs_ll2, choose_alt,
+                      deep_alt, parse_disambiguation (toy grammars; all verified).
+      test-lexer.py:  comments_ws, oracle_handoff, mismatch, malformed_fragment,
+                      source_map (toy keyword set).
+      config.py, fake_luau_oracle.py: core test bootstrap + oracle stub.
+  - TEST/ (parser, language-level):
+      test-engine.py: first_sets, ll2_ok, token_inventory, shallow_member_access,
+                      cause_effect (the new feature).
+      test-lexer.py:  tokens, dotted_names (rule-language tokens only).
+      sprites_generator.py: deterministic sprites menagerie; cached as the
+                      .gitignore'd sprites.rule-git-ignored (a TEST INPUT, not a
+                      GOOD).
+
+ENGINE FINDING (for DISCUSSIONS.txt)
+  TERMINAL_DB is process-global; tier-6 regex terminals match in DECLARATION
+  order, so two regex terminals with overlapping languages are order-dependent --
+  a toy grammar's regex can be silently shadowed. Core tests use '@'-prefixed
+  terminals to avoid it. Worth an explicit note and possibly a guard.
+
+TODO (real infrastructure, never fabricated)
+  - Regenerate ALL GOOD files: the choice sets changed (core/TEST added; parser
+    test-engine/test-lexer trimmed + cause_effect added) and the wide-arg /
+    dotted-name-list / cause-effect grammar changes shift monkey/cover output.
+  - .gitignore: add TEST/monkey_data/sprites.rule-git-ignored.
+
+STALE / ORPHANED GOOD FILES (must be regenerated or removed on real infra)
+  parser/TEST/GOOD orphans (their choices were renamed/moved):
+    test-engine.py--ll1_ok.txt        -> choice removed (now core ll2_ok)
+    test-engine.py--ll1_conflict.txt  -> choice removed (now core ll2_conflict)
+    test-engine.py--deep_alt.txt      -> choice moved to core/TEST
+    test-lexer.py--comments_ws.txt, --oracle_handoff.txt, --mismatch.txt,
+    --malformed_fragment.txt, --source_map.txt -> moved to core/TEST/test-lexer
+  Missing (need first generation):
+    parser/TEST/GOOD/test-engine.py--cause_effect.txt
+    core/TEST/GOOD/*  (all 7 engine + 5 lexer choices)
+  Likely shifted by grammar changes (wide arg, dotted-name list, cause/effect):
+    monkey-fuzz.py--*.txt, cover-syntax-tree.py--positive.txt,
+    cover-negative.py--negative.txt, test-engine.py--first_sets.txt,
+    --token_inventory.txt, --shallow_member_access.txt
+  NONE of these were fabricated. Regenerate on real infrastructure.

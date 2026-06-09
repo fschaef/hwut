@@ -29,6 +29,7 @@ from .grammar import GRAMMAR, t_kw_void, t_kw_container, t_re_id
 # is the construct's start offset. See parser_engine for the Frame contract.
 # ---------------------------------------------------------------------------
 from . import ast_nodes as ast
+from .core.span_oracle import SpanResult
 
 
 def _build_trigger(frame):
@@ -39,23 +40,177 @@ def _build_trigger(frame):
 
 
 def _build_cause(frame):
-    """RETURN: Cause, a trigger with optional guard.
+    """RETURN: Cause | CauseRef, an inline trigger-cause or a cause reference.
 
-    frame.values = [Trigger] or [Trigger, Luau] when a guard followed '&'.
+    The <cause> rule is '<cause-ref> | (<trigger> ["&" <guard>])'. When the
+    cause-ref branch matched, the frame carries the single already-built CauseRef
+    and it is forwarded unchanged. Otherwise the frame is the trigger-cause:
+    [Trigger] or [Trigger, Luau] when a guard followed '&'.
     """
-    trigger = frame.values[0]
+    first = frame.values[0]
+    if isinstance(first, ast.CauseRef):
+        return first
+    trigger = first
     guard   = frame.values[1] if len(frame.values) > 1 else None
     return ast.Cause(trigger=trigger, guard=guard, begin=trigger.begin)
 
 
-def _build_guard(frame):
-    """RETURN: Luau, the CONDITION span value forwarded from the luau marker."""
+def _build_cause_ref(frame):
+    """RETURN: CauseRef, a reference to a defined cause: 'NAME(args)'.
+
+    frame.values = [name_tok, [Arg, ...]] -- the identifier token and the
+    arg-parens arg list (empty list for 'NAME()').
+    """
+    name_tok, args = frame.values[0], frame.values[1]
+    return ast.CauseRef(name=name_tok.text, args=args, begin=name_tok.begin)
+
+
+def _build_effect_ref(frame):
+    """RETURN: EffectRef, a reference to a defined effect bundle: bare 'NAME'.
+
+    frame.values = [name_tok] -- a single identifier (effect bundle names are not
+    dotted, which is what keeps this distinguishable from an event-spec).
+    """
+    name_tok = frame.values[0]
+    return ast.EffectRef(name=name_tok.text, begin=name_tok.begin)
+
+
+def _build_cause_def(frame):
+    """RETURN: CauseDef, a named parameterised cause definition.
+
+    frame.values = [Signature, Cause]: the signature (name + params) before the
+    'on:' signal, then the cause body after it ('cause:'/'on:' are silent
+    keywords). The body is an inline Cause (a CauseRef in a definition body would
+    be meaningless, and the grammar's <cause> there is parsed as one; pass-2
+    rejects a ref body if one ever appears).
+    """
+    sig, body = frame.values[0], frame.values[1]
+    name, params = sig
+    return ast.CauseDef(name=name, params=params, body=body,
+                        begin=frame.begin)
+
+
+def _build_effect_def(frame):
+    """RETURN: EffectDef, a named effect bundle definition.
+
+    frame.values = [Signature, effect, effect, ...]: the signature (name +
+    params) before the '=>' signals, then one-or-more effects from the PLUS over
+    '=> <effect>' ('effect:' is a silent keyword, each '=>' a silent signal).
+    """
+    sig          = frame.values[0]
+    name, params = sig
+    effects      = list(frame.values[1:])
+    return ast.EffectDef(name=name, params=params, effects=effects,
+                         begin=frame.begin)
+
+
+def _to_luau(span):
+    """RETURN: Luau, the rule-language node wrapping an engine SpanResult.
+
+    The engine yields a neutral core.span_oracle.SpanResult at an opaque-span
+    position (it knows no language); the rule language turns it into its own
+    ast.Luau here. SpanResult.mode is the Role this grammar attached to the
+    opaque terminal, so it maps straight onto Luau.role. This single conversion
+    is the seam between the language-agnostic engine and the Luau AST.
+    """
+    return ast.Luau(text=span.text, role=span.mode, begin=span.begin)
+
+
+def _build_luau_guard(frame):
+    """RETURN: Luau, the CONDITION span wrapped from the engine's span marker."""
+    return _to_luau(frame.values[0])
+
+
+def _build_bracket_guard(frame):
+    """RETURN: Condition, the root of a '[ ... ]' bracket guard.
+
+    frame.values = [expr]: the single top boolean expression between '[' and ']'
+    ('[' and ']' are silent). Wrapping it in a Condition keeps the two guard
+    forms (Luau span vs. bracket condition) type-distinguishable on Cause.guard.
+    """
+    expr = frame.values[0]
+    return ast.Condition(expr=expr, begin=frame.begin)
+
+
+def _build_bool_level(frame, op):
+    """RETURN: BoolOp | <operand>, an 'and'/'or' level, collapsed when trivial.
+
+    frame.values = [operand, operand, ...]: the terms at this precedence level
+    (the silent 'and'/'or' separators are dropped from the frame). A single
+    operand is forwarded unchanged so a BoolOp always holds two-or-more; two-or-
+    more become one BoolOp carrying 'op'.
+    """
+    operands = list(frame.values)
+    if len(operands) == 1:
+        return operands[0]
+    return ast.BoolOp(op=op, operands=operands, begin=operands[0].begin)
+
+
+def _build_or_cond(frame):
+    """RETURN: BoolOp('or') | operand. The 'or' precedence level (lowest)."""
+    return _build_bool_level(frame, "or")
+
+
+def _build_and_cond(frame):
+    """RETURN: BoolOp('and') | operand. The 'and' precedence level."""
+    return _build_bool_level(frame, "and")
+
+
+def _build_not_cond(frame):
+    """RETURN: Not | <cond-atom>, an optionally-negated atom.
+
+    frame.values = [atom] when 'not' was absent (forwarded unchanged), or
+    [atom] with the silent 'not' having been recorded; the keyword 'not' is a
+    captured token, so its presence is what distinguishes the two. The grammar
+    keeps 'not' as a bare (silent) keyword, so a present 'not' shows as the only
+    way the atom is wrapped: the builder wraps iff the frame carries the marker.
+    """
+    # 'not' is a silent keyword; when present the frame still has just the atom,
+    # so negation presence is signalled by a captured marker appended ahead of
+    # the atom. Distinguish by count: [atom] -> plain; [marker, atom] -> negated.
+    if len(frame.values) == 2:
+        atom = frame.values[1]
+        return ast.Not(operand=atom, begin=frame.begin)
     return frame.values[0]
+
+
+def _build_comparison(frame):
+    """RETURN: Comparison, '<evt-member> <op> <operand>'.
+
+    frame.values = [EventMember, op_token, operand]: the left event-member, the
+    comparison operator token (its '.text' is the verbatim op), and the right
+    operand (EventMember or Literal).
+    """
+    left, op_tok, right = frame.values[0], frame.values[1], frame.values[2]
+    return ast.Comparison(left=left, op=op_tok.text, right=right,
+                          begin=left.begin)
+
+
+def _build_evt_member(frame):
+    """RETURN: EventMember, a leading-dot event member '.name'.
+
+    frame.values = [name_tok]: the identifier after the silent '.'. The event is
+    implicit (the trigger's); only the member name is recorded.
+    """
+    name_tok = frame.values[0]
+    return ast.EventMember(name=name_tok.text, begin=name_tok.begin)
+
+
+def _build_cond_operand(frame):
+    """RETURN: EventMember | Literal, the right side of a comparison.
+
+    frame.values = [value]: either an already-built EventMember (the '.name'
+    branch) or a number/string token wrapped here as a Literal.
+    """
+    value = frame.values[0]
+    if isinstance(value, ast.EventMember):
+        return value
+    return ast.Literal(text=value.text, begin=value.begin)
 
 
 def _build_mutation(frame):
     """RETURN: Mutation, wrapping the STATEMENT_BLOCK span."""
-    body = frame.values[0]
+    body = _to_luau(frame.values[0])
     return ast.Mutation(body=body, begin=body.begin)
 
 
@@ -107,52 +262,39 @@ def _build_arg_list(frame):
 
 
 def _build_arg(frame):
-    """RETURN: Arg, one argument -- positional or 'name = value'.
+    """RETURN: Arg, one argument -- a bare-rvalue positional or 'name = value'.
 
-    Two parsed shapes (the two ALT branches of <arg>):
-      - bare identifier head: frame.values = [id_tok, tail]. 'tail' is the
-        <id-arg-tail> result: None when the id stood alone (a positional
-        bare-identifier LITERAL), or an rvalue value when '= value' followed (a
-        NAMED argument whose name is the id and whose value is that rvalue). A
-        tail always carries a real rvalue, never None, so None unambiguously
-        means "no '= value' followed".
-      - a <rvalue-noid> value: a positional argument whose value is a NUMBER /
-        STRING literal, a ShallowMemberAccess, or a Luau span.
+    <arg> is '("<rvalue>", ALT, (t_re_id, "=", "<rvalue>"))': a positional whose
+    value is any rvalue, OR a named 'id = rvalue'. The choice needs 2-token
+    lookahead -- an identifier alone is a positional rvalue, but 'identifier ='
+    opens the named branch -- so this rule is the canonical LL(2) construct (the
+    two branches share the identifier in their FIRST sets). Two frame shapes:
+      - [rvalue]            POSITIONAL: the value is the rvalue (a number/string/
+                            identifier LITERAL, a ShallowMemberAccess MEMBER, or a
+                            Luau LUAU span); name is None.
+      - [id_tok, rvalue]    NAMED: 'name' is the identifier text ('=' is silent),
+                            'rvalue' the value, classified by _arg_from_value.
     """
-    head = frame.values[0]
     if len(frame.values) == 2:
-        id_tok, tail = frame.values
-        if tail is None:
-            return _arg_from_value(id_tok.text, name=None, begin=frame.begin)
-        return _arg_from_value(tail, name=id_tok.text, begin=frame.begin)
-    return _arg_from_value(head, name=None, begin=frame.begin)
-
-
-def _build_id_arg_tail(frame):
-    """RETURN: the rvalue value after '=', or None when the tail is absent.
-
-    <id-arg-tail> is the optional '= <rvalue>'. frame.values = [rvalue] when
-    present ('=' is silent), or [] when the identifier stood alone. A present
-    tail always carries a real rvalue (never None), so None is an unambiguous
-    "absent" marker for _build_arg.
-    """
-    if not frame.values:
-        return None
-    return frame.values[0]
+        id_tok, rvalue = frame.values
+        return _arg_from_value(rvalue, name=id_tok.text, begin=frame.begin)
+    rvalue = frame.values[0]
+    return _arg_from_value(rvalue, name=None, begin=frame.begin)
 
 
 def _arg_from_value(value, name, begin):
     """RETURN: Arg, classifying 'value' into its E_ArgKind.
 
-    'value' is one of: a ShallowMemberAccess (MEMBER), a Luau node (LUAU), a
-    bare-identifier/number/string string OR a value-bearing Token carried as text
-    (LITERAL). A Token is reduced to its '.text'. 'name' is the keyword-argument
-    name or None.
+    'value' is one of: a ShallowMemberAccess (MEMBER), a SpanResult opaque span
+    wrapped here into a Luau node (LUAU), a bare-identifier/number/string string
+    OR a value-bearing Token carried as text (LITERAL). A Token is reduced to its
+    '.text'. 'name' is the keyword-argument name or None.
     """
     if isinstance(value, ast.ShallowMemberAccess):
         return ast.Arg(name=name, value=value, kind=ast.E_ArgKind.MEMBER, begin=begin)
-    if isinstance(value, ast.Luau):
-        return ast.Arg(name=name, value=value, kind=ast.E_ArgKind.LUAU, begin=begin)
+    if isinstance(value, SpanResult):
+        return ast.Arg(name=name, value=_to_luau(value),
+                       kind=ast.E_ArgKind.LUAU, begin=begin)
     text = value if isinstance(value, str) else value.text
     return ast.Arg(name=name, value=text, kind=ast.E_ArgKind.LITERAL, begin=begin)
 
@@ -170,8 +312,15 @@ def _build_shallow_member_access(frame):
 
 
 def _build_dotted_name(frame):
-    """RETURN: str, the dotted name joined from its ID tokens."""
-    return ".".join(tok.text for tok in frame.values)
+    """RETURN: list[str], the dotted name as its segment list ['A', 'B', 'C'].
+
+    A bare name 'A' yields ['A']; 'A.B.C' yields ['A','B','C']. The list shape
+    (not a joined 'A.B.C' string) keeps the segmentation that pass-2 needs --
+    scope resolution walks segments -- without re-splitting a joined string, and
+    removes the str/list ambiguity that forced _build_spawn to type-spot its
+    trailing values.
+    """
+    return [tok.text for tok in frame.values]
 
 
 def _build_arg_decl(frame):
@@ -256,6 +405,24 @@ def _members_slice(values):
     members start at index 1 unconditionally (no params type-spotting needed).
     """
     return values[1:]
+
+
+def _bases_and_members(values):
+    """RETURN: (bases, members), splitting an aggregate body after the signature.
+
+    values[1:] begins with zero-or-more 'is:' base names -- each a dotted-name
+    list[str] from the STAR(('is:', <dotted-name>)) -- followed by the member
+    nodes. Bases are the leading list values; members are the dataclass nodes
+    after them. A base is a list and a member never is, so the boundary is the
+    first non-list value.
+    """
+    rest = values[1:]
+    bases = []
+    i = 0
+    while i < len(rest) and isinstance(rest[i], list):
+        bases.append(rest[i])
+        i += 1
+    return bases, rest[i:]
 
 
 def _name_and_params(frame):
@@ -373,9 +540,10 @@ def _build_fwd_kind(frame):
     """
     head = frame.values[0]
     if getattr(head, "kind", None) is t_kw_container:
-        cargs       = next((v for v in frame.values[1:] if isinstance(v, list)), [])
-        luau_handle = next((v for v in frame.values[1:] if isinstance(v, ast.Luau)),
-                           None)
+        cargs    = next((v for v in frame.values[1:] if isinstance(v, list)), [])
+        span     = next((v for v in frame.values[1:] if isinstance(v, SpanResult)),
+                        None)
+        luau_handle = _to_luau(span) if span is not None else None
         return {"kind": "container", "cargs": cargs, "luau_handle": luau_handle}
     # static kind: a bare ID token whose text names the kind
     return {"kind": head.text, "cargs": [], "luau_handle": None}
@@ -390,7 +558,7 @@ def _build_state_machine(frame):
     closing 'end' is silent, so every sliced value is a member.
     """
     name, params = _name_and_params(frame)
-    members = _members_slice(frame.values)
+    bases, members = _bases_and_members(frame.values)
     init = deinit = default = None
     states, has_refs = [], []
     for m in members:
@@ -400,7 +568,7 @@ def _build_state_machine(frame):
             case ast.StateMachineModeRef(): default = m
             case ast.State():               states.append(m)
             case ast.HasRef():              has_refs.append(m)
-    return ast.StateMachine(name=name, params=params, states=states,
+    return ast.StateMachine(name=name, params=params, bases=bases, states=states,
                             has_refs=has_refs, default=default, init=init,
                             deinit=deinit, begin=frame.begin)
 
@@ -413,7 +581,7 @@ def _build_mode_group(frame):
     closing 'end' is silent, so every sliced value is a member.
     """
     name, params = _name_and_params(frame)
-    members = _members_slice(frame.values)
+    bases, members = _bases_and_members(frame.values)
     init = deinit = None
     modes, has_refs = [], []
     for m in members:
@@ -422,28 +590,42 @@ def _build_mode_group(frame):
             case ast.DeinitBlock(): deinit = m.body
             case ast.Mode():        modes.append(m)
             case ast.HasRef():      has_refs.append(m)
-    return ast.ModeGroup(name=name, params=params, modes=modes,
+    return ast.ModeGroup(name=name, params=params, bases=bases, modes=modes,
                          has_refs=has_refs, init=init, deinit=deinit,
                          begin=frame.begin)
 
 
 def _build_spawn(frame):
-    """RETURN: Spawn, an aggregate spawn '+! name (args) [ in: C ] [ as: {lv} ]'.
+    """RETURN: Spawn, an aggregate spawn '+! name (args) [ in: C [ as: {lv} ] ]'.
 
-    frame.values is the dotted name, then the arg list (a Python list, always
-    present since the parens are mandatory), then up to two trailing values with
-    silent punctuation ('+!', 'in:', 'as:') dropped: a str (a dotted-name) when
-    'in:' named a container; a Luau node when 'as:' gave an lvalue handle. Each
-    trailing value is told apart by type, so either modifier may be absent
-    independently.
+    frame.values are POSITIONAL (the '+!', 'in:', 'as:' punctuation is silent):
+
+        [0] name          list[str]   the dotted aggregate name (always present)
+        [1] args          list[Arg]   the arg list (always present: parens are
+                                       mandatory, '()' giving [])
+        [2] in_container  list[str]   the 'in:' container dotted-name  -- optional
+        [3] luau_handle   Luau        the 'as:' lvalue span            -- optional
+
+    Positional, not type-spotted: since <dotted-name> now reduces to a list (the
+    same Python type as the arg list), the old 'the str is the container, the
+    list is the args' discrimination is no longer possible -- and was fragile
+    regardless. The grammar reaches 'as:' only inside 'in:', so a luau_handle
+    cannot appear without an in_container; the trailing shapes are therefore
+    exactly [], [C], or [C, lv], and a trailing Luau (when present) is always the
+    last value.
     """
-    name        = frame.values[0]
-    rest        = frame.values[1:]
-    args        = next((v for v in rest if isinstance(v, list)), [])
-    has_parens  = any(isinstance(v, list) for v in rest)
-    in_container = next((v for v in rest if isinstance(v, str)), None)
-    luau_handle = next((v for v in rest if isinstance(v, ast.Luau)), None)
-    return ast.Spawn(name=name, args=args, has_parens=has_parens,
+    values       = frame.values
+    name         = values[0]
+    args         = values[1]
+    rest         = values[2:]
+    span         = rest[-1] if rest and isinstance(rest[-1], SpanResult) else None
+    luau_handle  = _to_luau(span) if span is not None else None
+    in_container = None
+    for v in rest:
+        if not isinstance(v, SpanResult):
+            in_container = v
+            break
+    return ast.Spawn(name=name, args=args, has_parens=True,
                      in_container=in_container, luau_handle=luau_handle,
                      begin=frame.begin)
 
@@ -507,8 +689,23 @@ ACTIONS = {
     "include":           _build_include,
     "causality":         _build_causality,
     "cause":             _build_cause,
+    "cause-ref":         _build_cause_ref,
+    "cause-def":         _build_cause_def,
+    "effect-def":        _build_effect_def,
+    "effect-ref":        _build_effect_ref,
     "trigger":           _build_trigger,
-    "guard":             _build_guard,
+    "guard":             None,
+    "luau-guard":        _build_luau_guard,
+    "bracket-guard":     _build_bracket_guard,
+    "or-cond":           _build_or_cond,
+    "and-cond":          _build_and_cond,
+    "not-cond":          _build_not_cond,
+    "cond-atom":         None,
+    "paren-cond":        None,
+    "comparison":        _build_comparison,
+    "evt-member":        _build_evt_member,
+    "cmp-op":            None,
+    "cond-operand":      _build_cond_operand,
     "effect":            None,
     "mutation":          _build_mutation,
     "spawn":             _build_spawn,
@@ -519,9 +716,7 @@ ACTIONS = {
     "arg-parens":        _build_arg_parens,
     "arg-list":          _build_arg_list,
     "arg":               _build_arg,
-    "id-arg-tail":       _build_id_arg_tail,
     "rvalue":            None,
-    "rvalue-noid":       None,
     "shallow-member-access": _build_shallow_member_access,
     "binding":           None,
     "mode":              _build_mode,
@@ -547,4 +742,5 @@ ACTIONS = {
     "dotted-name":       _build_dotted_name,
     "signature":         _build_signature,
 }
+
 
