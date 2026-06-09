@@ -30,7 +30,7 @@ authoring objects are lightweight: each carries its children
 and names the runtime node class it becomes (its 'node_class' in grammar_ast).
 'compile(ctx)' lowers the authored structure into that uniform Node tree,
 deferring LEAF resolution -- a terminal object, an '<name>' rule reference, or a
-bare-string keyword -> TerminalNode / LuauNode / NonTerminalNode -- to 'ctx', the engine,
+bare-string keyword -> TerminalNode / PassThroughNode -- to 'ctx', the engine,
 which owns the token-id table and the rule map. Thus this module depends only on
 grammar_ast -- never on the parser engine -- and grammar.py depends only on this
 vocabulary plus terminals.py.
@@ -108,20 +108,20 @@ class _Combinator:
 
 
 class Seq(_Combinator):
-    """An implicit/explicit sequence; lowers to SeqNode.
+    """An implicit/explicit sequence; lowers to SequenceNode.
 
     Written as a bare tuple in grammar.py (the implicit form); constructed
     variadically (Seq(a, b, ...)) where an explicit instance is needed.
     """
-    node_class = nodes.SeqNode
+    node_class = nodes.SequenceNode
 
     def compile(self, ctx):
         return self.node_class([_compile_child(c, ctx) for c in self.children])
 
 
 class Alt(_Combinator):
-    """An alternation; lowers to AltNode. Alt(a, b, ...)."""
-    node_class = nodes.AltNode
+    """An alternation; lowers to AlternativeNode. Alt(a, b, ...)."""
+    node_class = nodes.AlternativeNode
 
     def compile(self, ctx):
         return self.node_class([_compile_child(c, ctx) for c in self.children])
@@ -141,8 +141,8 @@ class _Unary(_Combinator):
 
 
 class Opt(_Unary):
-    """Optional; lowers to OptNode."""
-    node_class = nodes.OptNode
+    """Optional; lowers to OptionalNode."""
+    node_class = nodes.OptionalNode
 
 
 class Plus(_Unary):
@@ -176,3 +176,4 @@ def compile_element(element, ctx):
     bare-string keyword is a leaf resolved by 'ctx'.
     """
     return _compile_child(element, ctx)
+

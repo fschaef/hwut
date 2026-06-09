@@ -31,8 +31,8 @@ from vut.language_support.python.deterministic_random import (DeterministicStrea
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
 from vut.engine.temporal_logic.parser.core.ll1_engine import EngineParser
 from vut.engine.temporal_logic.parser.core.grammar_ast import (
-        TerminalNode, LuauNode, NonTerminalNode,
-        SeqNode, AltNode, OptNode, PlusNode, StarNode)
+        TerminalNode, PassThroughNode,
+        SequenceNode, AlternativeNode, OptionalNode, PlusNode, StarNode)
 from vut.engine.temporal_logic.parser.core.lexer import Token
 from vut.engine.temporal_logic.parser.core.terminals import T, t_fr_luau_open, t_fr_eof
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
@@ -56,9 +56,9 @@ def _branch_reenters(element, active):
 
 def _count_nt(element):
     """RETURN: int, the number of NonTerminals reachable in 'element'."""
-    if isinstance(element, (TerminalNode, LuauNode)):
+    if isinstance(element, TerminalNode):
         return 0
-    if isinstance(element, NonTerminalNode):
+    if isinstance(element, PassThroughNode):
         return 1
     return sum(_count_nt(e) for e in _children(element))
 
@@ -104,12 +104,12 @@ class Walker:
     def _emit(self, element, budget):
         """RETURN: None. Appends tokens for 'element', bounded by 'budget'."""
         if isinstance(element, TerminalNode):
-            self.tokens.append(_tok(element.token_id, self._next_id()))
+            if element.is_opaque:
+                self._emit_luau(budget)
+            else:
+                self.tokens.append(_tok(element.token_id, self._next_id()))
             return
-        if isinstance(element, LuauNode):
-            self._emit_luau(budget)
-            return
-        if isinstance(element, NonTerminalNode):
+        if isinstance(element, PassThroughNode):
             self.visited.add(element.name)
             self._active.append(element.name)
             try:
@@ -117,12 +117,12 @@ class Walker:
             finally:
                 self._active.pop()
             return
-        if isinstance(element, SeqNode):
-            for sub in element.parts:
+        if isinstance(element, SequenceNode):
+            for sub in element.branches:
                 self._emit(sub, budget)
-        elif isinstance(element, AltNode):
+        elif isinstance(element, AlternativeNode):
             self._emit(self._pick_alt(element, budget), budget)
-        elif isinstance(element, OptNode):
+        elif isinstance(element, OptionalNode):
             if budget > 0 and self.s.coin(self.p["opt"] * 0.01):
                 self._emit(element.body, budget)
         elif isinstance(element, PlusNode):
@@ -211,6 +211,11 @@ _PROFILES = {
     "balanced": {"seed": 0xBA1,   "depth": 8,  "reps": 2, "opt": 45, "luau": 2, "items": 5, "recurse": 25},
     "states":   {"seed": 0x101,   "depth": 8,  "reps": 4, "opt": 40, "luau": 1, "items": 6, "recurse": 20},
     "spread":   {"seed": 0xC0FFEE, "depth": 10, "reps": 4, "opt": 100, "luau": 1, "items": 12, "recurse": 10},
+    # 'members' biases toward present optionals and several arg repetitions so
+    # the arg surface is exercised heavily: named args ('name = value'), shallow
+    # member access ('event.x' / 'sm.x' / 'mg.x' / 'mode.x'), and the typed
+    # member declarations ('name: type') that those accesses resolve against.
+    "members":  {"seed": 0x3E3B,  "depth": 9,  "reps": 3, "opt": 90, "luau": 2, "items": 8, "recurse": 15},
 }
 
 
@@ -378,3 +383,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

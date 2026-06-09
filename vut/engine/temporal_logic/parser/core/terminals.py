@@ -208,7 +208,7 @@ t_fr_eof        = T.framing("end-of-file")  # sentinel returned past the end
 class Ref:
     """A reference to another GRAMMAR rule (a non-terminal), authored as R(name).
 
-    Holds the referenced rule's name; the engine interns one NonTerminalNode per
+    Holds the referenced rule's name; the engine interns one PassThroughNode per
     name and binds this reference to it at compile time. Not a terminal: it
     records nothing into TERMINAL_DB.
     """
@@ -234,3 +234,4 @@ def terminal_by_name(name):
     terminal has been registered.
     """
     return _BY_NAME[name]
+

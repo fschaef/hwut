@@ -3,7 +3,7 @@
 top-level              regex:[a-zA-Z_]\w*, string:clock:, string:event:, string:include:, string:mode:, string:mode_group:, string:on:, string:open:, string:state_machine:
 trigger                captured:ANY, captured:BEGIN, captured:END, regex:[a-zA-Z_]\w*
 effect                 framing:luau-open, regex:"[^"]*", regex:[a-zA-Z_]\w*, string:!, string:+!, string:-!
-rvalue                 framing:luau-open, regex:"[^"]*", regex:[+-]?\d+(?:\.\d+)?, regex:[a-zA-Z_]\w*
+rvalue                 captured:event, captured:mg, captured:mode, captured:sm, framing:luau-open, regex:"[^"]*", regex:[+-]?\d+(?:\.\d+)?, regex:[a-zA-Z_]\w*
 mode-elm               string:deinit:, string:init:, string:on:
 state-machine-elm      string:default:, string:deinit:, string:has:, string:init:, string:state:
 mode-group-elm         string:deinit:, string:has:, string:init:, string:mode:

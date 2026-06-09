@@ -115,3 +115,4 @@ def _balanced(text: str):
         if count != 0:
             return False, f"unclosed '{opener}'"
     return True, ""
+

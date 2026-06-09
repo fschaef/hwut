@@ -14,7 +14,7 @@ that answers six questions:
     plus_reps(node, ctx)         >= 1   -- how many PLUS repetitions?
     star_reps(node, ctx)         >= 0   -- how many STAR repetitions?
     on_terminal(node, ctx)       emit one TerminalNode's token
-    on_luau(node, ctx)           emit one LuauNode's token
+    on_luau(node, ctx)           emit one opaque (Luau) terminal's token
 
 The structural recursion (Terminal/Luau/NonTerminal/Seq/Alt/Opt/Plus/Star) is
 written ONCE, in 'walk'. A new grammar node type is handled in one place.
@@ -49,8 +49,8 @@ from dataclasses import dataclass, field
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
 from vut.engine.temporal_logic.parser.core.ll1_engine import EngineParser, _ResyncError
 from vut.engine.temporal_logic.parser.core.grammar_ast import (
-        TerminalNode, LuauNode, NonTerminalNode,
-        SeqNode, AltNode, OptNode, PlusNode, StarNode)
+        TerminalNode, PassThroughNode, BranchNode, OperatorNode,
+        SequenceNode, AlternativeNode, OptionalNode, PlusNode, StarNode)
 from vut.engine.temporal_logic.parser.core.lexer import Token
 from vut.engine.temporal_logic.parser.core.terminals import (t_fr_luau_open,
                                                           t_fr_luau_block,
@@ -185,24 +185,24 @@ from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter 
 def _children(element):
     """RETURN: tuple, the child nodes of a combinator node.
 
-    SeqNode/AltNode hold several children; Opt/Plus/Star hold one body. A leaf
-    (Terminal/Luau/NonTerminal) has no children and is handled by the callers.
+    A BranchNode (Sequence/Alternative) holds several children in .branches; an
+    OperatorNode (Opt/Plus/Star) holds one .body. A leaf (Terminal, including the
+    opaque Luau flavour) and a PassThroughNode have no children here and are
+    handled by the callers.
     """
-    if isinstance(element, SeqNode):
-        return element.parts
-    if isinstance(element, AltNode):
+    if isinstance(element, BranchNode):
         return element.branches
-    if isinstance(element, (OptNode, PlusNode, StarNode)):
+    if isinstance(element, OperatorNode):
         return (element.body,)
     return ()
 
 
 def _direct_refs(element, out):
     """RETURN: None. Collects the NonTerminal names directly named in 'element'."""
-    if isinstance(element, NonTerminalNode):
+    if isinstance(element, PassThroughNode):
         out.add(element.name)
         return
-    if isinstance(element, (TerminalNode, LuauNode)):
+    if isinstance(element, TerminalNode):
         return
     for e in _children(element):
         _direct_refs(e, out)
@@ -235,20 +235,20 @@ def reaches(grammar):
 def shallow_reenters(element, active):
     """RETURN: True if 'element' can re-enter an active rule via its OBLIGATORY prefix.
 
-    A SeqNode re-enters only if its first part does; the recursion deeper in a
+    A SequenceNode re-enters only if its first part does; the recursion deeper in a
     sequence (e.g. inside a PLUS) is reached only after a non-recursive prefix
     and terminates under a budget, so it does not count. This is the canonical
     walk's notion of re-entry -- distinct from the deep reachability closure the
     random walk uses, which asks whether a branch can EVER lead back.
     """
-    if isinstance(element, (TerminalNode, LuauNode)):
+    if isinstance(element, TerminalNode):
         return False
-    if isinstance(element, NonTerminalNode):
+    if isinstance(element, PassThroughNode):
         return element.name in active or shallow_reenters(element.pattern, active)
-    if isinstance(element, AltNode):
+    if isinstance(element, AlternativeNode):
         return all(shallow_reenters(b, active) for b in element.branches)
-    if isinstance(element, SeqNode):
-        return shallow_reenters(element.parts[0], active) if element.parts else False
+    if isinstance(element, SequenceNode):
+        return shallow_reenters(element.branches[0], active) if element.branches else False
     return shallow_reenters(element.body, active)
 
 
@@ -312,7 +312,7 @@ class WalkPolicy:
         raise NotImplementedError
 
     def on_luau(self, node, ctx):
-        """RETURN: None. Emit one LuauNode's token."""
+        """RETURN: None. Emit one opaque (Luau) terminal's token."""
         raise NotImplementedError
 
 
@@ -325,26 +325,26 @@ def walk(element, policy, ctx):
     the canonical policy tags those tokens optional.
     """
     if isinstance(element, TerminalNode):
-        policy.on_terminal(element, ctx)
+        if element.is_opaque:
+            policy.on_luau(element, ctx)
+        else:
+            policy.on_terminal(element, ctx)
         return
-    if isinstance(element, LuauNode):
-        policy.on_luau(element, ctx)
-        return
-    if isinstance(element, NonTerminalNode):
+    if isinstance(element, PassThroughNode):
         ctx.active.add(element.name)
         try:
             walk(element.pattern, policy, ctx)
         finally:
             ctx.active.discard(element.name)
         return
-    if isinstance(element, SeqNode):
-        for sub in element.parts:
+    if isinstance(element, SequenceNode):
+        for sub in element.branches:
             walk(sub, policy, ctx)
         return
-    if isinstance(element, AltNode):
+    if isinstance(element, AlternativeNode):
         walk(policy.pick_alt(element.branches, ctx), policy, ctx)
         return
-    if isinstance(element, OptNode):
+    if isinstance(element, OptionalNode):
         if policy.opt_reps(element, ctx) > 0:
             _walk_body(element.body, policy, ctx)
         return
@@ -432,7 +432,7 @@ class _CanonicalPolicy(WalkPolicy):
         """RETURN: int, reps for the first variadic point, minimum thereafter."""
         if not self.used:
             self.used = True
-            if isinstance(node, OptNode):
+            if isinstance(node, OptionalNode):
                 return 1 if self.reps >= 1 else 0
             return self.reps
         return 1 if isinstance(node, PlusNode) else 0
@@ -464,13 +464,13 @@ class _CanonicalPolicy(WalkPolicy):
 
 def _first_variadic(element):
     """RETURN: the first PLUS/STAR/OPT node under 'element', or None."""
-    if isinstance(element, (TerminalNode, LuauNode)):
+    if isinstance(element, TerminalNode):
         return None
-    if isinstance(element, NonTerminalNode):
+    if isinstance(element, PassThroughNode):
         return _first_variadic(element.pattern)
-    if isinstance(element, (PlusNode, StarNode, OptNode)):
+    if isinstance(element, (PlusNode, StarNode, OptionalNode)):
         return element
-    children = element.parts if isinstance(element, SeqNode) else element.branches
+    children = element.branches if isinstance(element, SequenceNode) else element.branches
     for sub in children:
         found = _first_variadic(sub)
         if found is not None:
@@ -480,9 +480,9 @@ def _first_variadic(element):
 
 def _alt_branches(pattern):
     """RETURN: list, the branches of the first ALT under 'pattern', or []."""
-    if isinstance(pattern, NonTerminalNode):
+    if isinstance(pattern, PassThroughNode):
         return _alt_branches(pattern.pattern)
-    if isinstance(pattern, AltNode):
+    if isinstance(pattern, AlternativeNode):
         return list(pattern.branches)
     return []
 
@@ -497,7 +497,7 @@ def _variadic_cases(pattern):
         return [("1x", 1), ("2x", 2)]
     if isinstance(node, StarNode):
         return [("0x", 0), ("1x", 1), ("2x", 2)]
-    if isinstance(node, OptNode):
+    if isinstance(node, OptionalNode):
         return [("absent", 0), ("present", 1)]
     return [("default", 1)]
 
@@ -564,3 +564,4 @@ def deviations(path):
         if step.required:
             omit_n += 1
             yield ("omit-required-%d" % omit_n, toks[:i] + toks[i + 1:])
+

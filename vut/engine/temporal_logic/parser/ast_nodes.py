@@ -15,12 +15,25 @@ oracle, so the transpiler can re-frame each correctly.
 ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
+from enum        import Enum
 from typing      import List, Optional
 
 from ..luau.luau_fragment import Role
 
 
 from abc import ABC
+
+
+class E_ArgKind(Enum):
+    """The value shape of an Arg (see Arg.kind).
+
+    LITERAL  a NUMBER/STRING/bare-identifier lexeme carried as text.
+    LUAU     an opaque EXPRESSION Luau span (a Luau node).
+    MEMBER   a shallow 'binding.member' reference (a ShallowMemberAccess node).
+    """
+    LITERAL = 0
+    LUAU    = 1
+    MEMBER  = 2
 
 
 class TopLevel(ABC):
@@ -72,20 +85,45 @@ class Cause:
 
 
 @dataclass(frozen=True)
-class Arg:
-    """One argument of an event-spec or mode-arming: optional member, rvalue.
+class ShallowMemberAccess:
+    """A first-class member reference 'binding.member' on the rule-file plane.
 
-    Args are positional ('=' naming is retired from the rule-file plane; any
-    keying lives inside the Luau '{ ... }' value). 'value' is the rvalue: a
-    NUMBER/STRING/bare-identifier lexeme carried as text, or an EXPRESSION Luau
-    span. 'is_luau' True iff 'value' is a Luau span rather than a literal lexeme.
-    A bare identifier (e.g. a container type-parameter 'dict') carries as text
-    like a literal, indistinguishable here from a stringy value; its meaning is
-    a pass-2 concern.
+    The rule-file plane can name a member of one of the four runtime self-
+    bindings -- 'event' (the triggering event), 'sm' / 'mg' (the enclosing state
+    machine / mode group), 'mode' (the enclosing mode) -- WITHOUT descending into
+    opaque Luau. 'binding' is the keyword lexeme ('event'/'sm'/'mg'/'mode');
+    'member' is the bare member name after the '.'. The access is SHALLOW by
+    design: exactly one '.', no deeper dive and no expression -- a pure
+    reference, legible to the static layer, which checks the member against the
+    binding's declared members (an EventDef, or a mode/aggregate's declared
+    members). A deeper navigation or any computation still belongs behind '{ }'.
     """
-    value:   object          # str (number/string literal) | Luau
-    is_luau: bool
+    binding: str
+    member:  str
     begin:   int
+
+
+@dataclass(frozen=True)
+class Arg:
+    """One argument of an event-spec, mode-arming, or spawn: optional name, value.
+
+    'name' is the keyword-argument name when written 'name = value', else None
+    (a positional argument). Named arguments may follow positional ones; whether
+    a given site accepts a name, and binding correctness, are a semantic-layer
+    concern, not a parse error.
+
+    'value' is the rvalue, one of three shapes discriminated by 'kind':
+      - E_ArgKind.LITERAL  : a NUMBER/STRING/bare-identifier lexeme as text (str).
+      - E_ArgKind.LUAU     : an opaque EXPRESSION Luau span (a Luau node).
+      - E_ArgKind.MEMBER   : a ShallowMemberAccess node ('event.x' etc.) the
+                             static layer can read without parsing Luau.
+    A bare identifier (e.g. a container type-parameter 'dict') is a LITERAL
+    carried as text; its meaning is a pass-2 concern.
+    """
+    name:  Optional[str]
+    value: object            # str (literal) | Luau | ShallowMemberAccess
+    kind:  "E_ArgKind"
+    begin: int
 
 
 @dataclass(frozen=True)
@@ -384,3 +422,4 @@ class RuleFile:
     so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)
+

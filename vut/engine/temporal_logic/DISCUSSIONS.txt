@@ -231,3 +231,94 @@ the state machine's mutual-exclusion semantics; it was never a runtime event.
   old 'until: switched' lexes 'switched' as an ordinary identifier and parses as
   "until an event named switched" -- silently, not an error. There is no
   rejection for this; authors updating old rule files must remove the clause.
+-------------------------------------------------------------------------------
+Parser package: file/directory restructure, the two-layer split, and the
+sprites example                                            (session 2026-06-08)
+-------------------------------------------------------------------------------
+
+WHAT WE DID
+
+  Renamed two misleading files (pure, parity-proven): grammar.py -> actions.py
+  (it held the _build_* ACTIONS, not the grammar); syntax.py -> grammar.py (it
+  holds the GRAMMAR dict + terminal defs).
+
+  Split the package into two layers:
+    OUTER  parser/  grammar.py (GRAMMAR + terminals), actions.py (_build_*),
+                    ast_nodes.py (AST shapes), rule_parser.py (facade)
+    core/  grammar-agnostic: ll1_engine.py (was parser_engine.py; Grammar +
+                    EngineParser + FIRST/check_alts/driver), grammar_ast.py (was
+                    parser_nodes.py), combinators.py (was syntax_support.py),
+                    lexer.py, terminals.py, diagnostic.py
+  Dependency direction is now enforced OUTER -> core.
+
+WHAT THE SPLIT TAUGHT US (kept, because it was not obvious going in)
+
+  - first_set is the LOAD-BEARING primitive (used at runtime for branch
+    dispatch); check_alts is BUILT ON first_set (a load-time validator only).
+    The removable one is check_alts, not first_set. An earlier momentary
+    conclusion that we "only need check_alts" was BACKWARDS.
+
+  - The approach (LL(1)) lives in an ANALYSIS + DRIVER pair, currently FUSED
+    onto the node classes (first_set/check_alts/expand are node methods). To
+    make a second approach (PEG, code-emitter, ...) possible they must be pulled
+    OFF the nodes into an Ll1Analysis + Ll1Driver over the neutral grammar AST.
+    Deferred: designing that seam from one example would very likely be wrong
+    for the second; build it when a second approach is real.
+
+  - The split exposed TWO core->outer leaks that had been invisible while
+    everything sat in one directory:
+      1. lexer needed the specific GRAMMAR to harvest string keywords. RESOLVED
+         by inversion: core/lexer exposes register_grammar(GRAMMAR); the outer
+         parser/__init__.py calls it once on import, so every entry path (facade
+         or a direct core.lexer import in a test) finds it wired. The lexer
+         reads no grammar by import.
+      2. ll1_engine constructs ast_nodes.RuleFile and ast_nodes.Luau -- two
+         specific OUTER node types. Repointed to 'from .. import ast_nodes' so
+         it works, but core is therefore NOT yet fully engine-neutral.
+
+  - KNOWN REMAINING LEAKS (core is not yet language-agnostic; deferred, flagged
+    honestly rather than claimed done): core/lexer, core/ll1_engine,
+    core/terminals import ...luau (the embedded-Luau handoff + Role); ll1_engine
+    constructs RuleFile/Luau. Both are the SAME Tier-2 concern: to reuse core
+    for a non-Luau language, the Luau handoff becomes a caller-supplied
+    framing-handler hook and the result-container/leaf construction is injected.
+
+  - Tooling lesson: each move was verified by re-running every test choice
+    against the blessed GOOD files (byte-for-byte), NOT by a compile check.
+    Parity caught four breakages a compile check would have missed: a stale
+    terminal import in aux_walker, bundled facade/core imports needing splitting,
+    the register-on-import requirement, and the ast_nodes core->outer edge.
+
+  - A still-uploaded copy of grammar.py crashed with
+    "No module named ...parser.syntax_support": it predated BOTH the rename and
+    the restructure. The fix is the two repaths on lines 76-77:
+    from .core.combinators import ALT, PLUS, STAR  and
+    from .core.terminals import T.
+
+THE sprites EXAMPLE (parse-only)
+
+  One file, monkey_data/sprites.rule (5223 lines), exercising the full grammar
+  surface: include statements (recorded as AST nodes, NOT resolved -- resolution
+  is a semantic concern), event/clock definitions, forward declarations, 72
+  state machines (exclusive behaviour), 10 mode groups (concurrent behaviour --
+  villain psychologies, etc.), 30 top-level causality rules. Parses to 172
+  top-level items, 0 diagnostics. The 'sprites' test choice prints an AST CENSUS
+  (node-type counts, 16393 nodes across 20 types) rather than the full dump, so
+  its GOOD file is compact and diffable.
+
+  Construction note: only legal constructs were used -- rvalues are positional
+  (number | string | bare-identifier | { luau }), NO name=value, and a dotted
+  arg such as event.name must be wrapped as { event.name }. That last point is
+  the seed of the next discussion (see below).
+
+OPEN FOR NEXT TIME
+
+  Positional arguments vs. the ability to refer to event members. Today an
+  effect that wants a member of the triggering event must wrap it opaquely --
+  ! Chase({ event.target }) -- so the static layer cannot see the event-member
+  dataflow. Question: is "refer to a member of the triggering event" a
+  rule-file-plane RELATION (deserving first-class, non-opaque syntax) or an
+  EXPRESSION (correctly behind the braces, per the colon principle)? A separate
+  prompt drives that discussion; the load-bearing check is whether a dotted-name
+  rvalue stays LL(1) against the existing bare-identifier branch.
+-------------------------------------------------------------------------------

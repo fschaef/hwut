@@ -8,11 +8,11 @@ PURPOSE: Parse STORED monkey-fuzz fixtures and pin the resulting AST, plus two
          monkey-file-creator.py; a normal run here touches no RNG, so the
          recording is reproducible.
 
-CHOICES: deep, wide, luau, balanced, states, spread, depth_bomb, sprites.
+CHOICES: deep, wide, luau, balanced, states, spread, members, depth_bomb, sprites.
 
 DESCRIPTION:
 
-Each profile choice (deep/wide/luau/balanced/states/spread) loads its stored
+Each profile choice (deep/wide/luau/balanced/states/spread/members) loads its stored
 monkey_data/<name>.json token stream and parses it, printing the token count,
 the top-level item count, any diagnostics, and the AST. The stored input is
 fixed, so the AST is fixed -- only a grammar change (after re-running
@@ -47,7 +47,7 @@ from aux_walker import ListLexer
 from fake_luau_oracle import FakeLuauOracle
 
 
-_PROFILE_NAMES = ("deep", "wide", "luau", "balanced", "states", "spread")
+_PROFILE_NAMES = ("deep", "wide", "luau", "balanced", "states", "spread", "members")
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "monkey_data")
 
@@ -182,3 +182,4 @@ HwutRunner(
     title      = "Grammar Monkey Fuzz",
     choice_map = _CHOICES,
 ).run()
+

@@ -93,13 +93,18 @@ def _keyword_pattern(spelling):
 
 
 def _walk_string_keywords(element, out):
-    """RETURN: None. Routes every bare-string leaf under 'element' through T.string.
+    """RETURN: None. Routes every bare-string KEYWORD leaf under 'element' through T.string.
 
     A bare string in GRAMMAR is sugar for a silent string keyword; walking the
     rule bodies and calling T.string on each makes it a real Terminal recorded in
     the database (reused if several rules share the spelling). 'out' is a dict
     used as an ordered set of the resulting terminals (first-appearance order),
     the deterministic tiebreak for equal-length spellings within a tier.
+
+    A '<name>' string is NOT a keyword: it is a reference to the GRAMMAR rule
+    'name' (the same spelling the leaf compiler resolves to a PassThroughNode).
+    It is skipped here, so a rule reference never leaks a phantom '<name>' token
+    into the lexer spec.
     """
     from .combinators import _Combinator
     from .terminals import Terminal, Ref, T
@@ -110,6 +115,8 @@ def _walk_string_keywords(element, out):
         for child in element:
             _walk_string_keywords(child, out)
     elif isinstance(element, str):
+        if len(element) > 2 and element[0] == "<" and element[-1] == ">":
+            return                     # a rule reference, not a keyword
         out[T.string(element)] = None
     # Terminal and Ref contribute no string keyword.
 
@@ -430,3 +437,4 @@ class Lexer:
             source_offset = offset,
             fatal         = fatal,
         ))
+

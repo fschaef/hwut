@@ -1,6 +1,8 @@
 === monkey: sprites (massive example -- AST census) ===
-top-level items: 172 (ok)
-total AST nodes: 16393
+top-level items: 170 (DIAGNOSTICS)
+total AST nodes: 16391
+   PARSER off=2274 no alternative matches captured:mode
+   PARSER off=2293 no alternative matches captured:mode
 
   Arg                       17
   ArgDecl                  269
@@ -8,7 +10,7 @@ total AST nodes: 16393
   Cause                   3326
   ClockDef                   3
   EventDef                  43
-  ForwardDecl                3
+  ForwardDecl                1
   HasRef                     7
   Include                   11
   Luau                    3056

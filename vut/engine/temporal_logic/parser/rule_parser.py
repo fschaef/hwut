@@ -53,3 +53,4 @@ def parse(source_text, oracle, reporter: DiagnosticReporter):
     outer/core split -- only the wiring moved here from the engine module.
     """
     return EngineParser(source_text, oracle, reporter, compiled_grammar()).parse()
+

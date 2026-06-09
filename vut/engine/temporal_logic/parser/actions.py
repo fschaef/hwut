@@ -107,16 +107,66 @@ def _build_arg_list(frame):
 
 
 def _build_arg(frame):
-    """RETURN: Arg, one positional rvalue.
+    """RETURN: Arg, one argument -- positional or 'name = value'.
 
-    frame.values = [rvalue]; 'rvalue' is a Token (number/string literal) or a
-    Luau node. ('=' naming is retired -- args are positional on the rule-file
-    plane; keyed values live inside the Luau span.)
+    Two parsed shapes (the two ALT branches of <arg>):
+      - bare identifier head: frame.values = [id_tok, tail]. 'tail' is the
+        <id-arg-tail> result: None when the id stood alone (a positional
+        bare-identifier LITERAL), or an rvalue value when '= value' followed (a
+        NAMED argument whose name is the id and whose value is that rvalue). A
+        tail always carries a real rvalue, never None, so None unambiguously
+        means "no '= value' followed".
+      - a <rvalue-noid> value: a positional argument whose value is a NUMBER /
+        STRING literal, a ShallowMemberAccess, or a Luau span.
     """
-    rvalue  = frame.values[0]
-    is_luau = isinstance(rvalue, ast.Luau)
-    value   = rvalue if is_luau else rvalue.text
-    return ast.Arg(value=value, is_luau=is_luau, begin=frame.begin)
+    head = frame.values[0]
+    if len(frame.values) == 2:
+        id_tok, tail = frame.values
+        if tail is None:
+            return _arg_from_value(id_tok.text, name=None, begin=frame.begin)
+        return _arg_from_value(tail, name=id_tok.text, begin=frame.begin)
+    return _arg_from_value(head, name=None, begin=frame.begin)
+
+
+def _build_id_arg_tail(frame):
+    """RETURN: the rvalue value after '=', or None when the tail is absent.
+
+    <id-arg-tail> is the optional '= <rvalue>'. frame.values = [rvalue] when
+    present ('=' is silent), or [] when the identifier stood alone. A present
+    tail always carries a real rvalue (never None), so None is an unambiguous
+    "absent" marker for _build_arg.
+    """
+    if not frame.values:
+        return None
+    return frame.values[0]
+
+
+def _arg_from_value(value, name, begin):
+    """RETURN: Arg, classifying 'value' into its E_ArgKind.
+
+    'value' is one of: a ShallowMemberAccess (MEMBER), a Luau node (LUAU), a
+    bare-identifier/number/string string OR a value-bearing Token carried as text
+    (LITERAL). A Token is reduced to its '.text'. 'name' is the keyword-argument
+    name or None.
+    """
+    if isinstance(value, ast.ShallowMemberAccess):
+        return ast.Arg(name=name, value=value, kind=ast.E_ArgKind.MEMBER, begin=begin)
+    if isinstance(value, ast.Luau):
+        return ast.Arg(name=name, value=value, kind=ast.E_ArgKind.LUAU, begin=begin)
+    text = value if isinstance(value, str) else value.text
+    return ast.Arg(name=name, value=text, kind=ast.E_ArgKind.LITERAL, begin=begin)
+
+
+def _build_shallow_member_access(frame):
+    """RETURN: ShallowMemberAccess, 'binding.member'.
+
+    frame.values = [binding_tok, member_tok]; the '.' is silent. 'binding_tok'
+    is the captured binding keyword (event/sm/mg/mode), 'member_tok' the bare
+    member name after the dot.
+    """
+    binding_tok, member_tok = frame.values
+    return ast.ShallowMemberAccess(binding=binding_tok.text,
+                                   member=member_tok.text, begin=frame.begin)
 
 
 def _build_dotted_name(frame):
@@ -239,12 +289,10 @@ def _build_mode(frame):
     init = deinit = None
     causalities = []
     for m in members:
-        if isinstance(m, ast.InitBlock):
-            init = m.body
-        elif isinstance(m, ast.DeinitBlock):
-            deinit = m.body
-        elif isinstance(m, ast.Causality):
-            causalities.append(m)
+        match m:
+            case ast.InitBlock():   init = m.body
+            case ast.DeinitBlock(): deinit = m.body
+            case ast.Causality():   causalities.append(m)
     return ast.Mode(name=name, params=params, init=init, deinit=deinit,
                     causalities=causalities, untils=untils, begin=frame.begin)
 
@@ -262,12 +310,10 @@ def _build_state(frame):
     init = deinit = None
     causalities = []
     for m in members:
-        if isinstance(m, ast.InitBlock):
-            init = m.body
-        elif isinstance(m, ast.DeinitBlock):
-            deinit = m.body
-        elif isinstance(m, ast.Causality):
-            causalities.append(m)
+        match m:
+            case ast.InitBlock():   init = m.body
+            case ast.DeinitBlock(): deinit = m.body
+            case ast.Causality():   causalities.append(m)
     return ast.State(name=name, params=params, init=init, deinit=deinit,
                      causalities=causalities, untils=untils, begin=frame.begin)
 
@@ -348,16 +394,12 @@ def _build_state_machine(frame):
     init = deinit = default = None
     states, has_refs = [], []
     for m in members:
-        if isinstance(m, ast.InitBlock):
-            init = m.body
-        elif isinstance(m, ast.DeinitBlock):
-            deinit = m.body
-        elif isinstance(m, ast.StateMachineModeRef):
-            default = m
-        elif isinstance(m, ast.State):
-            states.append(m)
-        elif isinstance(m, ast.HasRef):
-            has_refs.append(m)
+        match m:
+            case ast.InitBlock():           init = m.body
+            case ast.DeinitBlock():         deinit = m.body
+            case ast.StateMachineModeRef(): default = m
+            case ast.State():               states.append(m)
+            case ast.HasRef():              has_refs.append(m)
     return ast.StateMachine(name=name, params=params, states=states,
                             has_refs=has_refs, default=default, init=init,
                             deinit=deinit, begin=frame.begin)
@@ -375,14 +417,11 @@ def _build_mode_group(frame):
     init = deinit = None
     modes, has_refs = [], []
     for m in members:
-        if isinstance(m, ast.InitBlock):
-            init = m.body
-        elif isinstance(m, ast.DeinitBlock):
-            deinit = m.body
-        elif isinstance(m, ast.Mode):
-            modes.append(m)
-        elif isinstance(m, ast.HasRef):
-            has_refs.append(m)
+        match m:
+            case ast.InitBlock():   init = m.body
+            case ast.DeinitBlock(): deinit = m.body
+            case ast.Mode():        modes.append(m)
+            case ast.HasRef():      has_refs.append(m)
     return ast.ModeGroup(name=name, params=params, modes=modes,
                          has_refs=has_refs, init=init, deinit=deinit,
                          begin=frame.begin)
@@ -480,7 +519,11 @@ ACTIONS = {
     "arg-parens":        _build_arg_parens,
     "arg-list":          _build_arg_list,
     "arg":               _build_arg,
+    "id-arg-tail":       _build_id_arg_tail,
     "rvalue":            None,
+    "rvalue-noid":       None,
+    "shallow-member-access": _build_shallow_member_access,
+    "binding":           None,
     "mode":              _build_mode,
     "mode-elm":          None,
     "init":              _build_init,
@@ -504,3 +547,4 @@ ACTIONS = {
     "dotted-name":       _build_dotted_name,
     "signature":         _build_signature,
 }
+

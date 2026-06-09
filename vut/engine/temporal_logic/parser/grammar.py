@@ -106,6 +106,20 @@ t_kw_begin      = T.captured("BEGIN")
 t_kw_void       = T.captured("VOID")
 t_kw_container  = T.captured("container")
 
+# The four runtime self-bindings, as reserved keyword terminals. They are the
+# ONLY heads a <shallow-member-access> rvalue admits ('event.x', 'sm.x', 'mg.x',
+# 'mode.x'), so a member of the triggering event or the enclosing aggregate can
+# be forwarded as an argument WITHOUT wrapping it in opaque Luau -- the static
+# layer reads the reference directly. Reserving them keeps the rvalue LL(1) (the
+# binding heads are disjoint from the bare-identifier branch's t_re_id) at the
+# stated cost: 'event' / 'sm' / 'mg' / 'mode' can no longer be ordinary
+# identifiers. The trailing-colon definition keywords ('mode:', etc.) are a
+# different, longer token and still win in the lexer's longest-first tier.
+t_kw_event      = T.captured("event")
+t_kw_sm         = T.captured("sm")
+t_kw_mg         = T.captured("mg")
+t_kw_mode       = T.captured("mode")
+
 
 GRAMMAR = {
 "top-level":      ("<namespace>", ALT, "<include>", ALT, "<causality>", ALT, "<mode>",
@@ -125,16 +139,23 @@ GRAMMAR = {
 "event-spec":     ("<dotted-name>", "<arg-parens>"),
 "mode-arming":    ("!", "<dotted-name>", "<arg-parens>"),
 "report-string":  t_re_string,
-"arg-parens":     ("(", ["<arg-list>"], ")"),
-"arg-list":       ("<arg>", STAR((",", "<arg>"))),
-"arg":            "<rvalue>",
-"rvalue":         (t_re_number, ALT, t_re_string, ALT, t_re_id, ALT, t_opq_expr),
-"mode":           ("mode:", "<signature>", PLUS("<mode-elm>"), PLUS(("until:", "<cause>"))),
-"mode-elm":       ("<causality>", ALT, "<init>", ALT, "<deinit>"),
-"init":           ("init:", t_opq_stmts),
-"deinit":         ("deinit:", t_opq_stmts),
-"state":          ("state:", "<signature>", STAR("<mode-elm>"), STAR(("until:", "<cause>"))),
-"has-ref":        ("has:", "<member-ref>"),
+
+"arg-parens":            ("(", ["<arg-list>"], ")"),
+"arg-list":              ("<arg>", STAR((",", "<arg>"))),
+"arg":                   (t_re_id, ["=", "<rvalue>"]),
+"rvalue":                (t_re_number, ALT, t_re_string, ALT, "<shallow-member-access>",
+                          ALT, t_re_id, ALT, t_opq_expr),
+"shallow-member-access": ("<binding>", ".", t_re_id),
+"binding":               (t_kw_event, ALT, t_kw_sm, ALT, t_kw_mg, ALT, t_kw_mode),
+
+"mode":      ("mode:", "<signature>", PLUS("<mode-elm>"), PLUS(("until:", "<cause>"))),
+"state":     ("state:", "<signature>", STAR("<mode-elm>"), STAR(("until:", "<cause>"))),
+
+"mode-elm":  ("<causality>", ALT, "<init>", ALT, "<deinit>"),
+"init":      ("init:", t_opq_stmts),
+"deinit":    ("deinit:", t_opq_stmts),
+"has-ref":   ("has:", "<member-ref>"),
+
 "forward-decl":      (t_re_id, ["<decl-parens>"], "is:", "<fwd-kind>"),
 "fwd-kind":          (t_re_id, ALT, (t_kw_container, "<", ["<arg-list>"], ">", ["as:", t_opq_lvalue])),
 "member-ref":        (t_re_id, [".", (t_kw_void, ALT, t_re_id)]),
@@ -467,11 +488,24 @@ IMPLICIT EVENTS:
 
 <rvalue>
       is something that can be assigned to an event member or a mode
-      parameter in the <arg-list>. A bare <identifier> is also an rvalue: it
-      carries a word whose meaning the static layer does not fix (a container
-      type-parameter such as 'dict' / 'fifo', for instance). The parser admits
-      it everywhere an <arg> is admitted; whether a given site accepts a bare
-      word is a pass-2 concern, not a parse error.
+      parameter in the <arg-list>. It is one of: a NUMBER or STRING literal; a
+      bare <identifier> carrying a word whose meaning the static layer does not
+      fix (a container type-parameter such as 'dict' / 'fifo', for instance); a
+      <shallow-member-access>; or an opaque '{ luau }' EXPRESSION. The parser
+      admits an rvalue everywhere an <arg> is admitted; whether a given site
+      accepts a bare word is a pass-2 concern, not a parse error.
+
+<shallow-member-access>
+      names a member of one of the four runtime self-bindings -- 'event' (the
+      triggering event), 'sm' / 'mg' (the enclosing state machine / mode group),
+      or 'mode' (the enclosing mode) -- as 'binding.member', without descending
+      into Luau. It is the legible, non-opaque way to forward a triggering
+      event's member as an argument (e.g. '=> ! Chase(event.target)'). The
+      access is SHALLOW: exactly one '.', a pure reference -- no deeper
+      navigation and no expression, which still belong behind '{ }'. The four
+      bindings are reserved words; member existence and binding scope ('sm' /
+      'mg' are in scope only inside the aggregate's own definition body) are
+      semantic-layer checks, not parse errors.
 
 <arg-decl-list>
       declares a mode's parameters specifying a member by its name and its
@@ -1163,3 +1197,4 @@ The set of bootstrap helpers is small, fixed, engine-provided -- no
 third-party Luau libraries. The bar for adding one is "would every
 nontrivial test reinvent this?"
 """
+

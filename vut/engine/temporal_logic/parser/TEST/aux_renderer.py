@@ -51,3 +51,4 @@ def fmt(node, indent=0):
                 lines.append("%s  %s = %r" % (pad, f.name, val))
         return "\n".join(lines)
     return pad + repr(node)
+

@@ -81,3 +81,4 @@ class FatalDiagnostics(Exception):
     def __init__(self, diagnostics):
         super().__init__("%d diagnostic(s), fatal present" % len(diagnostics))
         self.diagnostics = diagnostics
+
