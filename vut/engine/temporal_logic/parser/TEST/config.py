@@ -16,5 +16,3 @@ if _here not in sys.path:
     sys.path.insert(0, _here)
 
 from vut.language_support.python.hwut_runner import HwutRunner # noqa: F401, E402
-
-

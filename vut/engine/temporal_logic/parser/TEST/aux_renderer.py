@@ -9,7 +9,7 @@ ______________________________________________________________________________
 """
 from dataclasses import is_dataclass, fields
 
-from vut.engine.temporal_logic.parser.core.terminals import t_fr_span_open
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import t_fr_span_open
 
 
 def fragment(tokens):
@@ -51,5 +51,3 @@ def fmt(node, indent=0):
                 lines.append("%s  %s = %r" % (pad, f.name, val))
         return "\n".join(lines)
     return pad + repr(node)
-
-

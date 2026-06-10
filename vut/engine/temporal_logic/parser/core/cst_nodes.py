@@ -43,6 +43,9 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
 
+from .operator_interface import (OR_Interface, SEQ_Interface,
+                                  PLUS_Interface, STAR_Interface)
+
 
 class _Absent:
     """The sentinel value an OR_Node.child holds when the empty branch matched.
@@ -73,21 +76,29 @@ ABSENT = _Absent()
 
 
 @dataclass(frozen=True)
-class OR_Node:
+class OR_Node(OR_Interface):
     """An alternation (or an absent/present optional) and the branch that matched.
 
     'triggered_index' is the 0-based index of the matched branch within the
     grammar's alternation; 'child' is that branch's reduced value, or ABSENT when
     the node is an optional whose empty branch matched. 'name' is the rule name,
-    or None for an inline alternation/optional.
+    or None for an inline alternation/optional. 'begin' is the construct's start
+    offset (the frame's begin), so a transformer can stamp an AST node's begin
+    without a child token.
     """
     triggered_index: int
     child: object
     name: object = None
+    begin: int = 0
+
+    @property
+    def or_child(self):
+        """RETURN: object, the matched branch value (ABSENT if optional-absent)."""
+        return self.child
 
 
 @dataclass(frozen=True)
-class SEQ_Node:
+class SEQ_Node(SEQ_Interface):
     """A sequence; 'children' is the reduced value per surviving grammar position.
 
     Silent terminals leave no entry, so 'children' is the dense list of values
@@ -98,23 +109,38 @@ class SEQ_Node:
     """
     children: tuple = field(default_factory=tuple)
     name: object = None
+    begin: int = 0
+
+    def seq_children(self):
+        """RETURN: tuple, the sequence's matched contents in grammar order."""
+        return self.children
 
 
 @dataclass(frozen=True)
-class PLUS_Node:
+class PLUS_Node(PLUS_Interface):
     """One-or-more: 'items' is the reduced repetitions, guaranteed non-empty.
 
     'name' is the rule name, or None for an inline PLUS.
     """
     items: tuple = field(default_factory=tuple)
     name: object = None
+    begin: int = 0
+
+    def rep_items(self):
+        """RETURN: tuple, the matched repetitions (non-empty for PLUS)."""
+        return self.items
 
 
 @dataclass(frozen=True)
-class STAR_Node:
+class STAR_Node(STAR_Interface):
     """Zero-or-more: 'items' is the reduced repetitions, possibly empty.
 
     'name' is the rule name, or None for an inline STAR.
     """
     items: tuple = field(default_factory=tuple)
     name: object = None
+    begin: int = 0
+
+    def rep_items(self):
+        """RETURN: tuple, the matched repetitions (possibly empty for STAR)."""
+        return self.items

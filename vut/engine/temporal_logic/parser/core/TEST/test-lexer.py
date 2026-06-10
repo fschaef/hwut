@@ -40,7 +40,7 @@ from config import HwutRunner
 
 from vut.engine.temporal_logic.parser.core.lexer import (Lexer, SourceMap,
                                                          register_grammar)
-from vut.engine.temporal_logic.parser.core.terminals import (t_fr_span_open,
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (t_fr_span_open,
                                                             t_fr_span_block,
                                                             t_fr_eof)
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter

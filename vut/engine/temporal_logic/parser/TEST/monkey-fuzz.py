@@ -39,10 +39,10 @@ from config import HwutRunner
 
 import aux_renderer as R
 
-from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
+from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse, finalize_file
 from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser
 from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.terminals import terminal_by_name
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import terminal_by_name
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 
 from aux_walker import ListLexer
@@ -87,7 +87,7 @@ def _make_choice(profile_name):
 
         parser = EngineParser(None, None, DiagnosticReporter(), g,
                               lexer=ListLexer(tokens, luau_texts))
-        rule_file = parser.parse()
+        rule_file = finalize_file(parser.parse())
 
         print("=== monkey: %s ===" % profile_name)
         print("tokens parsed:      %d" % (len(tokens) - 1))
@@ -207,5 +207,3 @@ HwutRunner(
     title      = "Grammar Monkey Fuzz",
     choice_map = _CHOICES,
 ).run()
-
-

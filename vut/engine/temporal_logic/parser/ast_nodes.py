@@ -19,6 +19,8 @@ from enum        import Enum
 from typing      import List, Optional
 
 from ..luau.luau_fragment import Role
+from .core.operator_interface import (OR_Interface, SEQ_Interface,
+                                      PLUS_Interface, STAR_Interface)
 
 
 from abc import ABC
@@ -36,7 +38,7 @@ class E_ArgKind(Enum):
     MEMBER  = 2
 
 
-class TopLevel(ABC):
+class TopLevel(OR_Interface):
     """Abstract base for the constructs that may appear at rule-file top level.
 
     Namespace, Include, Causality, Mode, ModeGroup, StateMachine, ForwardDecl,
@@ -61,7 +63,7 @@ class Luau:
 
 
 @dataclass(frozen=True)
-class Trigger:
+class Trigger(OR_Interface):
     """A cause trigger: an event name or an implicit keyword (ANY/BEGIN/END).
 
     'name' is the identifier or keyword lexeme. 'is_keyword' True marks the
@@ -82,7 +84,7 @@ class Trigger:
 # comparisons instead of treating the guard as opaque text.
 
 @dataclass(frozen=True)
-class EventMember:
+class EventMember(SEQ_Interface):
     """A reference to a member of the triggering event: '.name'.
 
     Leading-dot, single-level. The event is implicit -- the one named by the
@@ -105,7 +107,7 @@ class Literal:
 
 
 @dataclass(frozen=True)
-class Comparison:
+class Comparison(SEQ_Interface):
     """A single comparison: '<evt-member> <op> <operand>'.
 
     'op' is one of '>=', '<=', '==', '!=', '>', '<' (verbatim). 'left' is always
@@ -118,14 +120,14 @@ class Comparison:
 
 
 @dataclass(frozen=True)
-class Not:
+class Not(SEQ_Interface):
     """A negated condition: 'not <cond-atom>'."""
     operand: "object"        # Comparison | Not | BoolOp
     begin:   int
 
 
 @dataclass(frozen=True)
-class BoolOp:
+class BoolOp(SEQ_Interface):
     """An 'and'/'or' chain of two or more operands.
 
     'op' is 'and' or 'or'. 'operands' are the flattened terms at this precedence
@@ -139,7 +141,7 @@ class BoolOp:
 
 
 @dataclass(frozen=True)
-class Condition:
+class Condition(SEQ_Interface):
     """The root of a bracket guard '[ ... ]'.
 
     'expr' is the top boolean expression (a BoolOp, Not, or Comparison). Wrapping
@@ -151,7 +153,7 @@ class Condition:
 
 
 @dataclass(frozen=True)
-class Cause:
+class Cause(OR_Interface):
     """A cause: a trigger with an optional guard.
 
     'guard' is the condition gating the trigger, or None when absent. It is
@@ -164,7 +166,7 @@ class Cause:
 
 
 @dataclass(frozen=True)
-class ShallowMemberAccess:
+class ShallowMemberAccess(SEQ_Interface):
     """A first-class member reference 'binding.member' on the rule-file plane.
 
     The rule-file plane can name a member of one of the four runtime self-
@@ -183,7 +185,7 @@ class ShallowMemberAccess:
 
 
 @dataclass(frozen=True)
-class Arg:
+class Arg(OR_Interface):
     """One argument of an event-spec, mode-arming, or spawn: optional name, value.
 
     'name' is the keyword-argument name when written 'name = value', else None
@@ -206,7 +208,7 @@ class Arg:
 
 
 @dataclass(frozen=True)
-class EventSpec:
+class EventSpec(SEQ_Interface):
     """An event emission effect: 'name(args)'."""
     name:  "list[str]"        # dotted-name segments
     args:  List[Arg]
@@ -214,7 +216,7 @@ class EventSpec:
 
 
 @dataclass(frozen=True)
-class ModeArming:
+class ModeArming(SEQ_Interface):
     """A mode-arming effect: '! name(args)'."""
     name:  "list[str]"        # dotted-name segments
     args:  List[Arg]
@@ -222,7 +224,7 @@ class ModeArming:
 
 
 @dataclass(frozen=True)
-class Spawn:
+class Spawn(SEQ_Interface):
     """An aggregate-spawning effect: '+! name (args) [ in: C ] [ as: {lvalue} ]'.
 
     Targets a <mode-group> or <state-machine> type. One shape with two
@@ -249,7 +251,7 @@ class Spawn:
 
 
 @dataclass(frozen=True)
-class Unspawn:
+class Unspawn(SEQ_Interface):
     """An existence-ending effect: '-! name'.
 
     'name' references a spawned aggregate by bare or dotted name. Ending an
@@ -276,7 +278,7 @@ class Mutation:
 
 
 @dataclass(frozen=True)
-class InitBlock:
+class InitBlock(SEQ_Interface):
     """An 'init { ... }' member: its STATEMENT_BLOCK body.
 
     A distinct type (vs DeinitBlock) so a mode/state-machine assembler can sort
@@ -287,14 +289,14 @@ class InitBlock:
 
 
 @dataclass(frozen=True)
-class DeinitBlock:
+class DeinitBlock(SEQ_Interface):
     """A 'deinit { ... }' member: its STATEMENT_BLOCK body. See InitBlock."""
     body:  Luau
     begin: int
 
 
 @dataclass(frozen=True)
-class Causality(TopLevel):
+class Causality(SEQ_Interface, TopLevel):
     """A full rule: 'on <cause> (=> <effect>)+'.
 
     'effects' holds the ordered effect nodes (EventSpec, ModeArming,
@@ -306,7 +308,7 @@ class Causality(TopLevel):
 
 
 @dataclass(frozen=True)
-class ArgDecl:
+class ArgDecl(SEQ_Interface):
     """One parameter declaration: 'member : type'."""
     member: str
     type:   str
@@ -314,7 +316,7 @@ class ArgDecl:
 
 
 @dataclass(frozen=True)
-class Mode(TopLevel):
+class Mode(SEQ_Interface, TopLevel):
     """A mode definition with its members and mandatory 'until' causes.
 
     'init'/'deinit' are STATEMENT_BLOCK Luau spans or None. 'causalities' are
@@ -330,7 +332,7 @@ class Mode(TopLevel):
 
 
 @dataclass(frozen=True)
-class State:
+class State(SEQ_Interface):
     """A state: a mode living in a state machine.
 
     Same body shape as Mode. 'untils' are the trailing 'until' causes (now
@@ -348,7 +350,7 @@ class State:
 
 
 @dataclass(frozen=True)
-class HasRef:
+class HasRef(SEQ_Interface):
     """A 'has: <member-ref>' element pulling in a member defined elsewhere.
 
     'aggregate' is the qualifier of 'AGG.member' or None for a bare name.
@@ -400,7 +402,7 @@ class ForwardDecl(TopLevel):
 
 
 @dataclass(frozen=True)
-class StateMachineModeRef:
+class StateMachineModeRef(SEQ_Interface):
     """A reference 'SM.member' or 'SM.VOID' used by 'default ='."""
     sm_name:   str
     mode_name: str          # 'VOID' when the implicit void member is meant
@@ -409,7 +411,7 @@ class StateMachineModeRef:
 
 
 @dataclass(frozen=True)
-class StateMachine(TopLevel):
+class StateMachine(SEQ_Interface, TopLevel):
     """A state-machine definition: members and one 'default', closed by 'end'.
 
     'states' are the inline member states; 'has_refs' are members pulled in
@@ -430,7 +432,7 @@ class StateMachine(TopLevel):
 
 
 @dataclass(frozen=True)
-class ModeGroup(TopLevel):
+class ModeGroup(SEQ_Interface, TopLevel):
     """A mode-group definition: an aggregate of modes, closed by 'end'.
 
     'modes' are the inline member modes; 'has_refs' are members pulled in with
@@ -449,7 +451,7 @@ class ModeGroup(TopLevel):
 
 
 @dataclass(frozen=True)
-class EventDef(TopLevel):
+class EventDef(SEQ_Interface, TopLevel):
     """An event declaration: 'event name(arg-decls)'."""
     name:   str
     params: List[ArgDecl]
@@ -457,7 +459,7 @@ class EventDef(TopLevel):
 
 
 @dataclass(frozen=True)
-class ClockDef(TopLevel):
+class ClockDef(SEQ_Interface, TopLevel):
     """A clock declaration: 'clock event-name number'."""
     name:   str
     period: str             # NUMBER lexeme, kept verbatim
@@ -465,7 +467,7 @@ class ClockDef(TopLevel):
 
 
 @dataclass(frozen=True)
-class CauseDef(TopLevel):
+class CauseDef(SEQ_Interface, TopLevel):
     """A named, parameterised cause: 'cause: NAME(params) on: <cause>'.
 
     Defines a reusable cause so a causality rule can fire it by reference (see
@@ -482,7 +484,7 @@ class CauseDef(TopLevel):
 
 
 @dataclass(frozen=True)
-class EffectDef(TopLevel):
+class EffectDef(SEQ_Interface, TopLevel):
     """A named effect bundle: 'effect: NAME(params) => <effect> [=> <effect>]*'.
 
     Defines a reusable, ordered list of effects so a causality rule can invoke
@@ -498,7 +500,7 @@ class EffectDef(TopLevel):
 
 
 @dataclass(frozen=True)
-class CauseRef:
+class CauseRef(SEQ_Interface):
     """A reference to a defined cause, invoked with arguments: 'NAME(args)'.
 
     Appears in cause position of a causality rule as an alternative to an inline
@@ -512,7 +514,7 @@ class CauseRef:
 
 
 @dataclass(frozen=True)
-class EffectRef:
+class EffectRef(SEQ_Interface):
     """A reference to a defined effect bundle, by bare name: 'NAME'.
 
     Appears in effect position of a causality rule as an alternative to an inline
@@ -524,7 +526,7 @@ class EffectRef:
 
 
 @dataclass(frozen=True)
-class Include(TopLevel):
+class Include(SEQ_Interface, TopLevel):
     """A file mount: 'include "<file>" as <dotted-name>'.
 
     'filename' is the included file's name (the string lexeme, quotes stripped).
@@ -539,7 +541,7 @@ class Include(TopLevel):
 
 
 @dataclass(frozen=True)
-class Namespace(TopLevel):
+class Namespace(SEQ_Interface, TopLevel):
     """A named scope: 'open <dotted-name> ... close' bracketing nested items.
 
     'name' is the dotted path opened ('world.europe.berlin'), nesting several
@@ -562,5 +564,3 @@ class RuleFile:
     so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)
-
-

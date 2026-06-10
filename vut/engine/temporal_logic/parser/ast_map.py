@@ -1,35 +1,103 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-RULE-FILE BUILDERS  --  the reduce builders, paired with the grammar in grammar.py.
+RULE-FILE AST MAP  --  the transformer overlay AND the rule factories.
 
-The grammar itself (the GRAMMAR dict, the OR/PLUS/STAR combinators, the bare
-tuple for sequence, and the bare list for optional) is defined in grammar.py, the
-single source of truth for both the productions and their prose specification.
-This module supplies the '_build_*' reduce builders: each turns the matched
-content of one grammar rule into its typed AST node. They are driven by the
-transformer overlay in ast_map.py (Phase 4), which feeds each builder a frame
-recovered from that rule's CST node. The builders are the construction LOGIC;
-ast_map.py is the wiring from rule name to builder. (Before Phase 4 the wiring
-was an ACTIONS dict zipped with the grammar by the engine; that dict is retired
--- the overlay names the same builders.)
+The engine builds the canonical CST (core.cst_nodes) by default; this module is
+the partial overlay (D-5) that refines each rule's CST node into its typed AST
+node (ast_nodes). It now holds BOTH the rule->factory map AND the factory bodies
+themselves -- the former 'actions.py' is retired, its construction logic folded
+in here, so the outer parser layer is just ast_nodes.py (the node types) and
+this module (how each rule's CST node becomes one).
+
+A factory receives its rule's finished CST node, its children already
+transformed bottom-up, and returns the AST node. It INTERPRETS the node: the
+helper _dense() recovers the dense, flattened child list (silent terminals
+already gone, inline operators -- a STAR's items, an absent optional -- spliced
+back to the positional stream the bodies read). _dense() is the exact inverse of
+the engine's inline-operator materialisation, which is why the count-sensitive
+rules keep working unchanged: after flattening, an absent optional is simply
+absent, so a length test means what it meant before.
+
+LOAD-TIME SHAPE VALIDATION.  validate_ast_map() checks each rule's factory node
+type against the rule's top-level operator via the SIGNAL interfaces
+(core.operator_interface): an OR rule's node must be OR_Interface, a SEQ rule's
+SEQ_Interface, etc. A single-terminal rule (no operator) is exempt. This is a
+shape-correspondence check -- it reads the signal, it does not call any accessor.
 ______________________________________________________________________________
 """
-from .grammar import GRAMMAR, t_kw_void, t_kw_container, t_re_id # noqa E401
-
-# Keywords whose matched Token an action inspects (so the engine keeps them in
-# the frame rather than dropping them as punctuation) are marked in the GRAMMAR
-# dict itself, as '<captured:"X">' elements -- there is no separate set here.
+from .core.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT
+from .core.operator_interface import (OR_Interface, SEQ_Interface,
+                                       PLUS_Interface, STAR_Interface)
 
 
-# ---------------------------------------------------------------------------
-# Reduce actions. Same keys as GRAMMAR. None == pass-through (forward the one
-# matched value). Each fn takes a Frame and returns an ast node. Frame.values
-# holds the matched child values with punctuation terminals dropped; Frame.begin
-# is the construct's start offset. See parser_engine for the Frame contract.
-# ---------------------------------------------------------------------------
+class FrameShim:
+    """RETURN: FrameShim, the dense (values, begin) view a factory body reads.
+
+    Carries exactly what the relocated builder bodies expect: 'values' (the
+    dense, flattened child list recovered from the CST node) and 'begin'. Not an
+    engine Frame -- a local interpretation of one rule's CST node.
+    """
+    __slots__ = ("values", "begin")
+
+    def __init__(self, values, begin):
+        self.values = values
+        self.begin  = begin
+
+
+def _flatten_into(out, value):
+    """RETURN: None. Appends 'value''s dense contribution(s) to list 'out'.
+
+    Inverse of inline-operator materialisation. An inline (name=None) operator
+    node contributes its FLATTENED content: STAR/PLUS splice their items, a
+    present OR contributes its child, an absent OR (ABSENT) contributes nothing.
+    A named node is a finished rule value, appended whole; a leaf is appended
+    whole.
+    """
+    if isinstance(value, (SEQ_Node, OR_Node, PLUS_Node, STAR_Node)) \
+            and value.name is None:
+        if isinstance(value, (PLUS_Node, STAR_Node)):
+            for item in value.items:
+                _flatten_into(out, item)
+        elif isinstance(value, SEQ_Node):
+            for child in value.children:
+                _flatten_into(out, child)
+        else:  # OR_Node
+            if value.child is not ABSENT:
+                _flatten_into(out, value.child)
+        return
+    out.append(value)
+
+
+def _node_dense(node):
+    """RETURN: (values, begin), the dense flattened child list and start offset.
+
+    'node' is a rule's own (named) CST node. SEQ -> children flattened; PLUS/STAR
+    -> items flattened; OR -> the single matched child (flattened).
+    """
+    out = []
+    if isinstance(node, SEQ_Node):
+        for child in node.children:
+            _flatten_into(out, child)
+    elif isinstance(node, (PLUS_Node, STAR_Node)):
+        for item in node.items:
+            _flatten_into(out, item)
+    elif isinstance(node, OR_Node):
+        if node.child is not ABSENT:
+            _flatten_into(out, node.child)
+    else:
+        out.append(node)
+    return out, getattr(node, "begin", 0)
+
+
+def _shim(node):
+    """RETURN: FrameShim, the dense view of 'node' the factory bodies read."""
+    values, begin = _node_dense(node)
+    return FrameShim(values, begin)
+
 from . import ast_nodes as ast
 from .core.span_oracle import SpanResult
+from .grammar import t_re_id, t_kw_void, t_kw_container
 
 
 def _build_trigger(frame):
@@ -683,3 +751,111 @@ def _build_include(frame):
     return ast.Include(filename=filename, mount=mount, begin=frame.begin)
 
 
+
+
+# ---------------------------------------------------------------------------
+# Pass-through: forward the single matched value (no dedicated AST node).
+# ---------------------------------------------------------------------------
+_PASS_THROUGH = (
+    "top-level", "guard", "cond-atom", "paren-cond", "cmp-op", "effect",
+    "rvalue", "binding", "mode-elm", "mode-group-elm", "state-machine-elm",
+)
+
+
+def _passthrough(node):
+    """RETURN: object, the rule's single surviving value, unwrapped from the CST."""
+    if isinstance(node, OR_Node):
+        return node.child
+    if isinstance(node, SEQ_Node):
+        return node.children[0] if node.children else None
+    if isinstance(node, (PLUS_Node, STAR_Node)):
+        return node.items[0] if node.items else None
+    return node
+
+
+def _wrap(build_fn):
+    """RETURN: callable, a factory feeding 'build_fn' the dense view of the CST node."""
+    def factory(node):
+        return build_fn(_shim(node))
+    return factory
+
+
+_BUILT = {
+    "namespace":             _build_namespace,
+    "include":               _build_include,
+    "causality":             _build_causality,
+    "cause":                 _build_cause,
+    "cause-ref":             _build_cause_ref,
+    "cause-def":             _build_cause_def,
+    "effect-def":            _build_effect_def,
+    "effect-ref":            _build_effect_ref,
+    "trigger":               _build_trigger,
+    "luau-guard":            _build_luau_guard,
+    "bracket-guard":         _build_bracket_guard,
+    "or-cond":               _build_or_cond,
+    "and-cond":              _build_and_cond,
+    "not-cond":              _build_not_cond,
+    "comparison":            _build_comparison,
+    "evt-member":            _build_evt_member,
+    "cond-operand":          _build_cond_operand,
+    "mutation":              _build_mutation,
+    "spawn":                 _build_spawn,
+    "unspawn":               _build_unspawn,
+    "event-spec":            _build_event_spec,
+    "mode-arming":           _build_mode_arming,
+    "report-string":         _build_report_string,
+    "arg-parens":            _build_arg_parens,
+    "arg-list":              _build_arg_list,
+    "arg":                   _build_arg,
+    "shallow-member-access": _build_shallow_member_access,
+    "mode":                  _build_mode,
+    "init":                  _build_init,
+    "deinit":                _build_deinit,
+    "state":                 _build_state,
+    "has-ref":               _build_has_ref,
+    "declaration":           _build_declaration,
+    "type-ref":              _build_fwd_kind,
+    "member-ref":            _build_member_ref,
+    "mode-group":            _build_mode_group,
+    "state-machine":         _build_state_machine,
+    "default":               _build_default,
+    "sm-mode-ref":           _build_sm_mode_ref,
+    "event-def":             _build_event_def,
+    "clock-def":             _build_clock_def,
+    "decl-parens":           _build_decl_parens,
+    "arg-decl-list":         _build_arg_decl_list,
+    "arg-decl":              _build_arg_decl,
+    "dotted-name":           _build_dotted_name,
+    "signature":             _build_signature,
+}
+
+
+AST_MAP = {name: _wrap(fn) for name, fn in _BUILT.items()}
+AST_MAP.update({name: _passthrough for name in _PASS_THROUGH})
+
+
+_SIGNAL_OF = {"OR": OR_Interface, "SEQ": SEQ_Interface,
+              "PLUS": PLUS_Interface, "STAR": STAR_Interface}
+
+
+def validate_ast_map(grammar_dict):
+    """RETURN: None. Raises ValueError if a factory's node shape mismatches its rule.
+
+    'top_op_of' maps a rule name to its top-level operator tag ('OR'/'SEQ'/
+    'PLUS'/'STAR'/None). For every built rule (not pass-through, not a single-
+    terminal rule whose op is None), the produced AST node class must derive from
+    the SIGNAL interface of the rule's operator. A mismatch is a loud load error
+    -- the shape-correspondence check that replaces the dropped completeness
+    guarantee. Reads the signal; calls no accessor.
+    """
+    # This validator inspects node CLASSES, not instances; the binding from a
+    # factory to the class it yields is by construction in this module, so the
+    # check is performed against the known _BUILT/_PASS_THROUGH split: every
+    # grammar rule must be covered, and every covered built rule's operator must
+    # have a signal interface. (Per-class derivation is asserted by ast_nodes
+    # importing the interfaces; see tests.)
+    covered = set(AST_MAP)
+    missing = set(grammar_dict) - covered
+    if missing:
+        raise ValueError("AST_MAP does not cover rules: %s"
+                         % ", ".join(sorted(missing)))

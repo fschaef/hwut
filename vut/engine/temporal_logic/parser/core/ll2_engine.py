@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from .lexer       import Lexer
 from .diagnostic  import Diagnostic, Phase, DiagnosticReporter
 from .span_oracle import SpanResult
-from .terminals   import t_fr_span_open, t_fr_eof
+from .ll2_grammar_spec import t_fr_span_open, t_fr_eof
 
 
 # ---------------------------------------------------------------------------
@@ -82,21 +82,20 @@ class Grammar:
         self.start    = start
         for name, pattern in grammar_dict.items():
             self.rules[name].pattern = support.compile_element(pattern, self, nodes)
-        from .terminals import T
+        from .ll2_grammar_spec import T
         self.end_block = T.string(":end")   
         self._analyse()
 
     def compile_leaf(self, element):
-        from .terminals import Terminal, Ref, T
-        if isinstance(element, Terminal):
-            match element.shape:
-                case "regex" | "captured" | "opaque":
-                    return Terminal_Spec(element, silent=False)
-                case "string":
-                    return Terminal_Spec(element, silent=True)
-                case _:
-                    raise ValueError("terminal shape %r is not a grammar leaf"
-                                     % (element.shape,))
+        from .ll2_grammar_spec import Terminal_Spec, Ref, T
+        if isinstance(element, Terminal_Spec):
+            # A terminal is already its own interned grammar leaf (D-7): the
+            # lexeme spec and the SpecNode are one object, shared across every
+            # position naming it, 'silent' derived from shape. Return it as-is.
+            if element.shape not in ("regex", "captured", "opaque", "string"):
+                raise ValueError("terminal shape %r is not a grammar leaf"
+                                 % (element.shape,))
+            return element
         if isinstance(element, Ref):
             if element.name not in self.rules:
                 raise ValueError("undefined non-terminal %r" % (element.name,))
@@ -107,8 +106,8 @@ class Grammar:
                 if name not in self.rules:
                     raise ValueError("undefined non-terminal %r" % (name,))
                 return self.rules[name]
-            return Terminal_Spec(T.string(element), silent=True)
-        raise ValueError("grammar leaf is neither Terminal, Ref, nor str: %r"
+            return T.string(element)
+        raise ValueError("grammar leaf is neither Terminal_Spec, Ref, nor str: %r"
                          % (element,))
 
     def _analyse(self):
@@ -317,9 +316,9 @@ class EngineParser:
         frames[-1].values.append(value)
 
     def consume_terminal(self, term):
-        if self.tok1.kind is not term.token_id:
+        if self.tok1.kind is not term:
             self._error("expected %s, found %s"
-                        % (term.token_id._name(), self.tok1.kind._name()))
+                        % (term._name(), self.tok1.kind._name()))
             raise _ResyncError()
         tok = self._advance()
         return None if term.silent else tok
@@ -343,7 +342,7 @@ class EngineParser:
         the oracle skip the whole block (which repositions the cursor past the
         close), then re-prime the window from after the block.
         """
-        mode = span_node.token_id.mode
+        mode = span_node.mode
         if self.tok1.kind is not t_fr_span_open:
             self._error("expected '{' opaque span, found %s"
                         % self.tok1.kind._name())

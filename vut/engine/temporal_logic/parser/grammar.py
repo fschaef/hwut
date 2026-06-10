@@ -74,7 +74,7 @@ ______________________________________________________________________________
 #   "<name>"         a reference to another GRAMMAR rule
 #   "literal"        a silent bare-string keyword
 from .core.combinators import OR, PLUS, STAR
-from .core.terminals    import T
+from .core.ll2_grammar_spec import T
 from ..luau.luau_fragment import Role
 
 
@@ -213,5 +213,3 @@ GRAMMAR = {
 "signature":         ("<dotted-name>", ["<decl-parens>"]),
 
 }
-
-

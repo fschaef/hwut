@@ -1,0 +1,18 @@
+
+--- rules legitimately without an operator signal ---
+pass-through (no dedicated node):
+  binding
+  cmp-op
+  cond-atom
+  effect
+  guard
+  mode-elm
+  mode-group-elm
+  paren-cond
+  rvalue
+  state-machine-elm
+  top-level
+single-terminal (no operator):
+  luau-guard
+  mutation
+  report-string

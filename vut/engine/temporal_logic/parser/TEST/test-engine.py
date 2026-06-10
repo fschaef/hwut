@@ -105,7 +105,7 @@ def _silent_terminals(node, seen=None):
     out = set()
     if isinstance(node, N.Terminal_Spec):
         if node.silent and not node.is_opaque:
-            out.add(node.token_id)
+            out.add(node)
     elif isinstance(node, N.Rule_Spec):
         if node.name not in seen:
             seen.add(node.name)

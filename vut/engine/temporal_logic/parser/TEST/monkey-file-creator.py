@@ -34,7 +34,7 @@ from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
         Terminal_Spec, Rule_Spec,
         SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec)
 from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.terminals import T, t_fr_span_open, t_fr_eof
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T, t_fr_span_open, t_fr_eof
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 
 import config  # noqa: F401
@@ -107,7 +107,7 @@ class Walker:
             if element.is_opaque:
                 self._emit_luau(budget)
             else:
-                self.tokens.append(_tok(element.token_id, self._next_id()))
+                self.tokens.append(_tok(element, self._next_id()))
             return
         if isinstance(element, Rule_Spec):
             self.visited.add(element.name)

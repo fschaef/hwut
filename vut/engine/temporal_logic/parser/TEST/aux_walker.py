@@ -52,7 +52,7 @@ from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
         Terminal_Spec, Rule_Spec, Branch_Spec, Operator_Spec,
         SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec)
 from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.terminals import (t_fr_span_open,
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (t_fr_span_open,
                                                           t_fr_span_block,
                                                           t_fr_eof,
                                                           t_fr_mismatch)
@@ -481,7 +481,7 @@ class _CanonicalPolicy(WalkPolicy):
 
     def on_terminal(self, node, ctx):
         """RETURN: None. Append a filler-token PathStep tagged with ctx.required."""
-        self.steps.append(PathStep(tok(node.token_id), ctx.required))
+        self.steps.append(PathStep(tok(node), ctx.required))
 
     def on_luau(self, node, ctx):
         """RETURN: None. Append a LUAU_OPEN PathStep tagged with ctx.required."""
@@ -590,5 +590,3 @@ def deviations(path):
         if step.required:
             omit_n += 1
             yield ("omit-required-%d" % omit_n, toks[:i] + toks[i + 1:])
-
-

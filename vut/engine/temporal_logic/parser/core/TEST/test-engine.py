@@ -43,7 +43,7 @@ import config                                                   # noqa: F401
 from config import HwutRunner
 
 from vut.engine.temporal_logic.parser.core.combinators import OR, STAR
-from vut.engine.temporal_logic.parser.core.terminals import T
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T
 from vut.engine.temporal_logic.parser.core import ll2_grammar_spec as N
 from vut.engine.temporal_logic.parser.core.ll2_engine import (
         Grammar, EngineParser, LL2ConflictError)
@@ -199,7 +199,7 @@ def run_deep_alt():
     saved = sys.getrecursionlimit()
     sys.setrecursionlimit(2000)
     try:
-        node = N.Terminal_Spec(T.string("leaf"), silent=True)
+        node = T.string("leaf")
         for _ in range(20000):
             node = N.OR_Spec([node])
 
@@ -305,7 +305,7 @@ class _ListLexer:
             t = self.tokens[self.i]
             self.i += 1
             return t
-        from vut.engine.temporal_logic.parser.core.terminals import t_fr_eof
+        from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import t_fr_eof
         from vut.engine.temporal_logic.parser.core.lexer import Token
         return Token(t_fr_eof, "", 0, 0)
 
@@ -322,7 +322,7 @@ def run_construct_primes_window():
     and the window is always live before any match begins.
     """
     from vut.engine.temporal_logic.parser.core.lexer import Token, register_grammar
-    from vut.engine.temporal_logic.parser.core.terminals import T, t_fr_eof
+    from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T, t_fr_eof
     from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 
     t_a = T.regex(r'@a\b')
@@ -355,7 +355,7 @@ def run_drive_token_list():
     real Lexer.
     """
     from vut.engine.temporal_logic.parser.core.lexer import Token, register_grammar
-    from vut.engine.temporal_logic.parser.core.terminals import T
+    from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T
     from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.parser.core.ll2_engine import _ResyncError
 

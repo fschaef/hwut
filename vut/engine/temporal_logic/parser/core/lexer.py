@@ -112,7 +112,7 @@ def _walk_string_keywords(element, out):
     into the lexer spec.
     """
     from .combinators import _Combinator
-    from .terminals import Terminal, Ref, T
+    from .ll2_grammar_spec import Terminal_Spec as Terminal, Ref, T
     if isinstance(element, _Combinator):
         for child in element.children:
             _walk_string_keywords(child, out)
@@ -146,7 +146,7 @@ def _generate_token_spec():
     The end-of-file and span-block framing terminals carry no scanner pattern
     (they are synthesized, not matched) and are omitted from the spec.
     """
-    from .terminals import (TERMINAL_DB, T,
+    from .ll2_grammar_spec import (TERMINAL_DB, T,
                             t_fr_span_open, t_fr_comment, t_fr_ws,
                             t_fr_mismatch)
 
@@ -212,7 +212,7 @@ def _generate_token_spec():
 
 def _span_block_term():
     """RETURN: Terminal, the framing terminal for a synthesized '{ ... }' span."""
-    from .terminals import t_fr_span_block
+    from .ll2_grammar_spec import t_fr_span_block
     return t_fr_span_block
 
 
@@ -359,7 +359,7 @@ class Lexer:
         so the parser can resync. WS and '##' comments are consumed silently.
         """
         scanner = _scanner()
-        from .terminals import t_fr_span_open, t_fr_comment, t_fr_ws, \
+        from .ll2_grammar_spec import t_fr_span_open, t_fr_comment, t_fr_ws, \
             t_fr_mismatch, t_fr_eof
         skip = {t_fr_comment, t_fr_ws}
         while self.cursor < self.length:

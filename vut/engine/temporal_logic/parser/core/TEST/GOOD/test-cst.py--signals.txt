@@ -1,0 +1,6 @@
+--- every CST node IS its operator-interface signal ---
+seqr root is SEQ_Interface: True
+orr     is OR_Interface : True
+starr   is STAR_Interface: True
+plusr   is PLUS_Interface: True
+OR is not SEQ           : True

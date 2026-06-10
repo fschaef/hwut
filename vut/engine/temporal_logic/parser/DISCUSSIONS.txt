@@ -1,0 +1,264 @@
+===============================================================================
+DISCUSSIONS  --  guards, effect-def signatures, aggregate inheritance
+===============================================================================
+(Append-only. This block records the rationale and costs of the constructs
+added this round. Topology lives in README.txt / SYNTAX_DOC; this file owns the
+"why" and the "what it costs".)
+
+-------------------------------------------------------------------------------
+D-1  Bracket-condition guard as an alternative to a Luau guard
+-------------------------------------------------------------------------------
+PROBLEM
+    A guard written as a Luau span '& { ... }' is opaque to the engine: the
+    parser holds it as black-box text, the static layer cannot see which members
+    it reads, and a behavioural trace cannot attribute a fired guard to a
+    subcondition. Opacity works against the reviewer-attention principle.
+
+IDEA
+    Admit a second guard form, a bracket condition '& [ ... ]': a boolean
+    algebra ('and' / 'or' / 'not', parenthesisable) of comparisons over the
+    triggering event's members. The parser builds an explicit Condition tree, so
+    the static layer can validate member references and comparisons.
+
+    Members are LEADING-DOT, SINGLE-LEVEL: '.ip_adr' is the 'ip_adr' member of
+    the event the trigger named. The event is implicit -- a guard gates exactly
+    the trigger it follows -- so no event name is written. Comparison only:
+    operators are '>= <= == != > <', operands are a member, a number, or a
+    string. No arithmetic, no function calls.
+
+COST
+    1. Expressiveness ceiling. The algebra deliberately cannot express computed
+       terms. A guard needing 'distance(a,b) < t' has no bracket form.
+    2. Reserved words. 'and', 'or', 'not' become keywords; they can no longer be
+       identifiers. The six operators and '[' ']' are new tokens.
+    3. A second guard shape on Cause.guard (Luau | Condition) -- two node kinds
+       a consumer must handle.
+
+MITIGATION
+    1. The Luau guard is RETAINED, not replaced. The bracket form is the
+       transparent fast-path for the common member-comparison case; Luau remains
+       the escape hatch for anything computed. The two coexist on Cause.guard.
+    2. Reservation is the standard keyword cost; 'not'/'and'/'or' are matched on
+       word boundaries so identifiers like 'notice' are unaffected.
+    3. Condition is a distinct named root, so the two guard forms are
+       type-distinguishable, not order- or shape-spotted.
+
+DECISION DEFERRED TO PASS-2
+    Binding a '.member' to a declared event member, and type-checking a
+    comparison against that member's type, are static-layer concerns. The parser
+    only builds the tree.
+
+NOTE (bare-member truthiness)
+    'comparison only' means a bare member is NOT an atom: '[ .secure ]' is
+    rejected; write '[ .secure == 1 ]'. Admitting bare-member truthiness would
+    widen the rule (cond-atom would gain an evt-member branch); left out by the
+    'comparison only' decision.
+
+-------------------------------------------------------------------------------
+D-2  Effect-definition signature
+-------------------------------------------------------------------------------
+PROBLEM
+    A cause definition carried a parameter signature ('cause: N(p:T) on: ...'),
+    but an effect definition carried only a bare name ('effect: N => ...'),
+    so an effect bundle could not be parameterised the way a cause could.
+
+IDEA
+    Give effect-def the same '<signature>' a cause-def uses:
+    'effect: Boost(level: int) => ... '. EffectDef gains name/params, parallel to
+    CauseDef.
+
+COST
+    EffectDef.name changes from a single identifier to a dotted-name list, and
+    the node gains a params field -- a consumer reading EffectDef must adjust.
+
+MITIGATION
+    The change makes EffectDef and CauseDef structurally parallel, removing a
+    special case rather than adding one. Effect-ref is unchanged this round; the
+    'effect-ref carries args' question (and its collision with event-spec) is NOT
+    reopened here.
+
+-------------------------------------------------------------------------------
+D-3  Aggregate inheritance via repeated 'is:' statements
+-------------------------------------------------------------------------------
+PROBLEM
+    State machines and mode groups could reuse single members via 'has:', but
+    could not be expressed as "like that aggregate, plus these changes".
+
+IDEA
+    Admit zero-or-more 'is: <base>' statements after an aggregate's signature:
+    'state_machine: Derived(r:int) is: Base1 is: Base2 <body> :end'. Each
+    inheritance is one 'is:' statement; bases are collected, in source order,
+    into a 'bases' field on StateMachine / ModeGroup.
+
+COST
+    Inheritance is non-local: understanding Derived requires holding its bases in
+    mind. This is the property 'has:' composition avoids (every member visible at
+    its point of use), and it is the reviewer-attention cost flagged when the
+    feature was first reflected on.
+
+MITIGATION
+    The PARSER only records the base names; ALL inheritance semantics --
+    additive vs. override, name-collision handling, single vs. multiple bases,
+    any linearization -- are deferred to a later layer. The grammar admits the
+    form; it does not assign it meaning. Whether the resolved semantics keep the
+    non-locality cost acceptable is a pass-2 design decision, recorded when that
+    layer is built.
+
+-------------------------------------------------------------------------------
+D-4  Comparison operators and container type-params share one '<' / '>' terminal
+-------------------------------------------------------------------------------
+PROBLEM
+    The comparison operators must be CAPTURED (the comparison builder reads the
+    exact operator from the token). But '<' and '>' were already written as bare
+    strings in <fwd-kind> for container type-parameters ('container < ... >').
+    A bare string '<' mints a 'string:<' terminal; T.captured('<') mints a
+    'captured:<' terminal -- two different terminal objects for one lexeme, which
+    the lexer would emit as two competing patterns.
+
+IDEA
+    Use ONE captured terminal per lexeme. The comparison rule and the container
+    type-param rule both reference the same t_op_lt / t_op_gt.
+
+COST
+    <fwd-kind> now carries the '<' / '>' tokens in its frame (they were silent
+    before); its builder ignores them. A cosmetic frame change.
+
+MITIGATION
+    A single terminal per lexeme is the correct invariant regardless -- two
+    terminals for one lexeme is the latent bug, not the fix. The fwd-kind builder
+    already slices positionally, so the extra carried tokens are inert.
+
+-------------------------------------------------------------------------------
+D-5  CST baseline, transformer overlay -- replacing the _build_* / ACTIONS model
+-------------------------------------------------------------------------------
+PROBLEM
+    Reduction is hand-written _build_* functions in an ACTIONS dict, one per
+    rule, registered by name on the PassThroughNode. Each unpacks frame.values
+    positionally and builds a frozen AST node. The model is fragile in three
+    ways. (1) Every grammar change demands synchronised edits in three files --
+    GRAMMAR (grammar.py), the AST node shape (ast_nodes.py), the builder
+    (actions.py) -- and their consistency is the author's manual burden. (2)
+    Positional unpacking is silent-failure-prone: silent terminals are already
+    dropped from frame.values and absent optionals leave no gap, so frame index
+    i is NOT grammar position i, and inserting an optional shifts every index
+    after it. (3) A forgotten ACTIONS entry is a None pass-through, not an error.
+
+IDEA
+    The engine ALWAYS builds a canonical CST. Every rule reduces, bottom-up, to
+    a frozen CST node whose shape mirrors its top-level operator:
+
+        OR-rule    -> OrNode  { name, triggered_index, child }
+        SEQ-rule   -> SeqNode { name, children[] }
+        PLUS-rule  -> PlusNode{ name, items[] }   (items non-empty)
+        STAR-rule  -> StarNode{ name, items[] }   (items may be empty)
+
+    Leaves are Tokens (captured terminals), SpanResults (opaque spans), or the
+    already-reduced CST/AST nodes of child rules. Silent terminals contribute
+    nothing -- this is a PRUNED CST: syntax discarded, structure kept.
+
+    An optional, PARTIAL transformer dict overlays this:
+
+        Grammar(GRAMMAR, transformers=AST_MAP, start="top-level")  # overlay
+        Grammar(GRAMMAR, start="top-level")                        # pure CST
+
+    A rule WITH a transformer: the transformer receives the rule's finished CST
+    node and returns whatever it wants (a typed AST node, or an adjusted CST
+    node). A rule WITHOUT one: its CST node passes through untouched. AST_MAP is
+    keyed by rule name; absence of a key means "no transform".
+
+    Transformer signature follows the rule's operator, matching the natural
+    frame shape (PART-2 framing, NOT a per-grammar-position factory list):
+        SEQ-rule   -> one transformer, receives the SeqNode (children list).
+                      The rule owns the meaning of its whole sequence; it does
+                      not interpret element-by-element.
+        OR-rule    -> one transformer, receives the OrNode; it reads
+                      triggered_index off the node to dispatch by branch. (An
+                      indexed list of per-branch transformers is sugar over this
+                      and may be added later; the node-carries-index form is the
+                      primitive. Keyword/captured dispatch is rejected as messy
+                      and off-engine -- choose_alt already knows the index.)
+        PLUS/STAR  -> one transformer, receives the items list.
+
+CHILDREN ARE TRANSFORMED FIRST (a consequence, not a feature)
+    Reduction is eager and bottom-up: a node is finished the moment its frame
+    reduces, before its parent's frame reduces. So by the time a parent's
+    transformer runs, each child slot already holds the child rule's finished
+    output -- a transformed AST node where the child had a transformer, a CST
+    node where it did not. The comparison transformer receives an EventMember in
+    its left slot, never a SeqNode wrapping one. This is what bottom-up already
+    produces; obtaining it costs nothing, and PREVENTING it (re-wrapping finished
+    children back into CST for the parent) would cost machinery. There is no
+    laziness and no deferral -- "lazy transformation" was considered and
+    discarded as a miscategorisation: both orderings are eager, they differ only
+    in the child TYPE the parent sees, and the transformed-child type is the
+    cheap one and the useful one.
+
+    The case that would justify children-as-CST -- a parent wanting to inspect
+    syntactic structure its children erased -- does not arise: the grammar
+    already encodes such distinctions as SEPARATE rules with distinct output
+    types (paren-cond vs comparison), so a parent reads a child's TYPE, never its
+    pre-transform shape.
+
+COST
+    1. PASS_THROUGH and DEFAULT sentinels are RETIRED. "Forward the child
+       unchanged" is just "no transformer" plus reading OrNode.child /
+       SeqNode.children[0]. "Build the generic node" IS the default (the CST
+       node itself). Both special cases vanish; so does the dict that named them.
+
+    2. The completeness guarantee is GIVEN UP. The PART-1 design required
+       set(AST_MAP) == set(GRAMMAR.rules), enforced at load like an LL(2)
+       conflict, so a forgotten transformer was a loud load-time error naming the
+       rule. Under a partial overlay, a forgotten transformer is SILENT at load:
+       the consumer receives a CST node where it expected an AST node. The
+       failure moves from load-time-named-rule to runtime-at-the-consumer. This
+       is a deliberate trade of a guarantee for a far simpler structure, recorded
+       as a choice, not an oversight.
+
+    3. The CST node is built even for rules whose transformer immediately
+       discards it -- one frozen-wrapper allocation per transformed reduction.
+
+MITIGATION
+    1. The retired sentinels removed real validation surface (PASS_THROUGH was
+       valid only on a single-surviving-value production and had to be checked);
+       deleting the concept deletes the check. Net machinery falls.
+
+    2. The silent-forgotten-transformer failure is bounded by typing: CST nodes
+       are frozen dataclasses, so a consumer that isinstance-checks its inputs
+       fails visibly (and early) on an unexpected OrNode/SeqNode rather than
+       corrupting silently. The guarantee is weaker than load-time, but the CST
+       node is well-typed, not a raw frame -- the failure is diagnosable.
+
+    3. Allocation cost is bounded and small. CST nodes hold REFERENCES to
+       already-reduced children (bottom-up: children finished first), not copies,
+       so a node is one allocation over a child list that already exists. Only
+       TRANSFORMED rules pay the build-then-discard wrapper; untransformed rules
+       pay nothing, because their CST node IS the output. The order is N
+       allocations for N reductions -- the same order the old _build_* path paid,
+       which also built one node per reduction.
+
+ENGINE CHANGE (minimal)
+    SEQ / PLUS / STAR need NO engine change: the dense frame is already exactly
+    what their single transformer wants. OR needs the triggered branch index AT
+    NODE-CONSTRUCTION TIME -- but choose_alt already returns the chosen branch,
+    so the reducer has the index when it builds the OrNode; it is written onto
+    the node, NOT threaded through Frame as a sidecar. The earlier sidecar-field-
+    on-Frame idea is dropped: the node carries the index, and the transformer (if
+    any) reads it there. No Frame change.
+
+CORE LAYERING (close the acknowledged leak)
+    The CST nodes (OrNode/SeqNode/PlusNode/StarNode) and the reducer that builds
+    them live in core/ -- grammar-agnostic, Luau-free. The transformers and the
+    AST node shapes live in the outer layer. A pure-CST parse must NOT reach into
+    the outer ast_nodes; this is the chance to remove ll2_engine.parse()'s
+    'from .. import ast_nodes' (the RuleFile construction) -- the top level
+    becomes a STAR/PLUS CST node like any other, and the outer layer transforms
+    it into RuleFile if it wants.
+
+NOT DECIDED HERE (deferred, to be opened when the work lands)
+    - Whether an indexed per-branch transformer list is added as sugar over the
+      OrNode-carries-index primitive.
+    - The migration of the count-sniffing SEQ rules (not-cond, or-cond/and-cond,
+      cause) -- they stay SEQ-rules whose single transformer still counts the
+      frame values exactly as the _build_* did; outputs (GOODs) identical, the
+      logic mechanically lifted. Confirmed left as-is under PART-2; the PART-1
+      sparse frame would have forced their rewrite, and that frame is not built.

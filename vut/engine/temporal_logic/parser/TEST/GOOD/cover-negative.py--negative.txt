@@ -1959,4 +1959,3 @@
    built:   no (rule abandoned)
    consumed: 1 token(s); leftover: 0
    diag: PARSER off=0 expected regex:[a-zA-Z_]\w*, found framing:end-of-file
-
