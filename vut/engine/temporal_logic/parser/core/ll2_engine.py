@@ -13,11 +13,26 @@ from .terminals   import t_fr_span_open, t_fr_eof
 
 
 # ---------------------------------------------------------------------------
-# Compiled grammar is a tree of ll2_grammar_ast.Node objects
+# Compiled grammar is a tree of ll2_grammar_spec.SpecNode objects
 # ---------------------------------------------------------------------------
-from . import ll2_grammar_ast as nodes
-from .ll2_grammar_ast import (Node, TerminalNode, PassThroughNode,
-                              collect_alt_conflicts, ELEM, REDUCE, LOOP)
+from . import ll2_grammar_spec as nodes
+from .ll2_grammar_spec import (SpecNode, Terminal_Spec, Rule_Spec,
+                              collect_alt_conflicts, ELEM, REDUCE, LOOP,
+                              CST_REDUCE)
+from dataclasses import replace as _dc_replace
+from .cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
+
+_CST_NODE_TYPES = (OR_Node, SEQ_Node, PLUS_Node, STAR_Node)
+
+
+def _is_cst_node(value):
+    """RETURN: True, if 'value' is one of the four CST node types; False else.
+
+    Used by the CST reduce to decide whether a rule's forwarded child can have a
+    rule name stamped onto it (only the frozen CST nodes carry a 'name' field; a
+    bare Token or SpanResult forwarded by a single-terminal rule does not).
+    """
+    return isinstance(value, _CST_NODE_TYPES)
 
 
 class LL2ConflictError(Exception):
@@ -28,10 +43,41 @@ class LL2ConflictError(Exception):
 
 
 class Grammar:
-    """The compiled grammar: a name->PassThroughNode map with FIRST_2 sets analysed."""
-    def __init__(self, grammar_dict, actions, start):
+    """The compiled grammar: a name->Rule_Spec map with FIRST_2 sets analysed."""
+    def __init__(self, grammar_dict, actions=None, start=None,
+                 cst=False, transformers=None):
+        """RETURN: None. Compiles 'grammar_dict' and analyses it for LL(2).
+
+        Three reduction modes, by argument:
+          - actions (the legacy ACTIONS dict): each rule's _build_* hand-builder
+            runs at reduce; the pre-CST model, retained unchanged.
+          - cst=True with no transformers: the engine builds the canonical CST
+            (cst_nodes) and nothing else.
+          - transformers (a PARTIAL dict, rule-name -> callable): implies CST
+            mode; the engine builds the CST, then for each rule that HAS a
+            transformer, calls it on that rule's finished CST node and forwards
+            the result. A rule with no transformer entry passes its CST node
+            through untouched. The dict is partial by design (D-5): there is no
+            completeness check, so a forgotten transformer is a CST node reaching
+            the consumer, not a load error.
+
+        'transformers' and 'actions' are mutually exclusive -- a grammar either
+        runs the legacy builders or the CST/overlay path, never both. Supplying
+        transformers forces cst=True regardless of the flag.
+        """
         from . import combinators as support
-        self.rules    = {name: PassThroughNode(name, actions.get(name))
+        if transformers is not None and actions is not None:
+            raise ValueError("Grammar: 'actions' and 'transformers' are "
+                             "mutually exclusive (legacy vs CST-overlay path)")
+        self.cst          = cst or (transformers is not None)
+        self.transformers = transformers if transformers is not None else {}
+        _actions          = actions if actions is not None else {}
+        if transformers is not None:
+            stray = set(self.transformers) - set(grammar_dict)
+            if stray:
+                raise ValueError("Grammar: transformers name rules not in the "
+                                 "grammar: %s" % ", ".join(sorted(stray)))
+        self.rules    = {name: Rule_Spec(name, _actions.get(name))
                          for name in grammar_dict}
         self.start    = start
         for name, pattern in grammar_dict.items():
@@ -45,9 +91,9 @@ class Grammar:
         if isinstance(element, Terminal):
             match element.shape:
                 case "regex" | "captured" | "opaque":
-                    return TerminalNode(element, silent=False)
+                    return Terminal_Spec(element, silent=False)
                 case "string":
-                    return TerminalNode(element, silent=True)
+                    return Terminal_Spec(element, silent=True)
                 case _:
                     raise ValueError("terminal shape %r is not a grammar leaf"
                                      % (element.shape,))
@@ -61,7 +107,7 @@ class Grammar:
                 if name not in self.rules:
                     raise ValueError("undefined non-terminal %r" % (name,))
                 return self.rules[name]
-            return TerminalNode(T.string(element), silent=True)
+            return Terminal_Spec(T.string(element), silent=True)
         raise ValueError("grammar leaf is neither Terminal, Ref, nor str: %r"
                          % (element,))
 
@@ -108,6 +154,8 @@ class EngineParser:
         """
         self.reporter = reporter
         self.grammar  = grammar
+        self.cst_mode = grammar.cst
+        self.transformers = grammar.transformers
         self.lexer    = lexer if lexer is not None else Lexer(source_text, oracle, reporter)
         # Prime the 2-token lookahead window
         self.tok1     = self.lexer.next()
@@ -162,9 +210,24 @@ class EngineParser:
             self._advance()
 
     def parse(self):
+        start = self.grammar.rules[self.grammar.start]
+        if self.cst_mode:
+            # CST mode: no reach into the outer ast_nodes. The file is the
+            # zero-or-more top-level items, collected into a STAR_Node named
+            # "<file>". The outer layer transforms this into its RuleFile if it
+            # wants; core stays grammar-agnostic and AST-free.
+            items = []
+            while self.tok1.kind is not t_fr_eof:
+                try:
+                    item = self._match(start)
+                    if item is not None:
+                        items.append(item)
+                except _ResyncError:
+                    self._resync()
+            from .cst_nodes import STAR_Node
+            return STAR_Node(items=tuple(items), name="<file>")
         from .. import ast_nodes as ast
         rule_file = ast.RuleFile()
-        start = self.grammar.rules[self.grammar.start]
         while self.tok1.kind is not t_fr_eof:
             try:
                 item = self._match(start)
@@ -184,6 +247,8 @@ class EngineParser:
                 payload.expand(self, frames, work)
             elif tag == REDUCE:
                 self._reduce(payload, frames)
+            elif tag == CST_REDUCE:
+                self._cst_reduce(payload, frames)
             else:  # LOOP
                 # 'payload' is (body, last_consumed): the loop body and the value
                 # of self._consumed at which the PREVIOUS iteration began. A
@@ -207,12 +272,49 @@ class EngineParser:
 
     def _reduce(self, nt, frames):
         frame = frames.pop()
+        if self.cst_mode:
+            # A named rule forwards its single child CST node, STAMPING the rule
+            # name onto it (the child was built anonymous, name=None, by an inline
+            # operator or a leaf). A rule that produced no surviving value
+            # contributes nothing. The rule's pattern is a single operator, so
+            # exactly one value survives in the common case; a bare-terminal rule
+            # forwards its Token unnamed (a Token carries no 'name' to stamp).
+            value = frame.values[0] if frame.values else None
+            if value is not None and _is_cst_node(value):
+                value = _dc_replace(value, name=nt.name)
+            # Transformer overlay (D-5): if this rule HAS a transformer, hand it
+            # the finished, name-stamped CST node and forward whatever it returns
+            # (a typed AST node, or an adjusted CST node). Children are already
+            # transformed -- they reduced first (bottom-up) -- so the transformer
+            # sees finished child values, never raw sub-frames. A rule with no
+            # entry forwards its CST node untouched. The dict is partial: a
+            # missing entry is passthrough, never an error.
+            if value is not None:
+                fn = self.transformers.get(nt.name)
+                if fn is not None:
+                    value = fn(value)
+            if value is not None:
+                frames[-1].values.append(value)
+            return
         if nt.action is None:
             value = frame.values[0] if frame.values else None
         else:
             value = nt.action(frame)
         if value is not None:
             frames[-1].values.append(value)
+
+    def _cst_reduce(self, payload, frames):
+        """RETURN: None. Pops an operator's sub-frame, builds its CST node, appends.
+
+        'payload' is (operator_node, extra): the grammar operator that opened the
+        frame and the per-operator extra (the branch index for OR/OPT, None for
+        SEQ/STAR/PLUS). The node's own cst_reduce builds the right CST node from
+        the collected frame values; the result is appended to the parent frame.
+        """
+        node, extra = payload
+        frame = frames.pop()
+        value = node.cst_reduce(frame, extra)
+        frames[-1].values.append(value)
 
     def consume_terminal(self, term):
         if self.tok1.kind is not term.token_id:
@@ -262,7 +364,7 @@ class EngineParser:
         return SpanResult(text=block.text, mode=mode, begin=block.begin)
 
     def choose_alt(self, alt_node):
-        """RETURN: Node, the ALT branch whose FIRST_2 set admits the lookahead.
+        """RETURN: SpecNode, the OR branch whose FIRST_2 set admits the lookahead.
 
         Raises _ResyncError when no branch matches. Selection is TWO-PASS, and
         the order matters: a full 2-token pair match is strictly preferred over a
@@ -306,4 +408,3 @@ class EngineParser:
         elem_set    = element.first2_set(self.grammar)
         lookahead_2 = (self.tok1.kind, self.tok2.kind)
         return lookahead_2 in elem_set or (self.tok1.kind,) in elem_set
-

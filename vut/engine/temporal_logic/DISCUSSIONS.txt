@@ -16,25 +16,25 @@ semantic log). Renumber into sequence on merge if the live ledger has advanced
 past R-50.
 
 -------------------------------------------------------------------------------
-R-50.  Authoring vocabulary: tuple = sequence, list = optional, ALT = sentinel
+R-50.  Authoring vocabulary: tuple = sequence, list = optional, OR = sentinel
 -------------------------------------------------------------------------------
 Decision: a GRAMMAR rule body is built from plain Python literals plus three
 named operators, chosen so the dict reads like a grammar table.
   (a, b, ...)        SEQUENCE      -- a bare tuple
   [a, b, ...]        OPTIONAL      -- a bare list (one element [x] = x optional;
                                      more = optional sequence)
-  (a, ALT, b, ...)   ALTERNATION   -- the ALT sentinel placed BETWEEN branches
+  (a, OR, b, ...)   ALTERNATION   -- the OR sentinel placed BETWEEN branches
   PLUS(x) STAR(x)    one/zero-or-more
   "<name>"           a reference to GRAMMAR rule 'name'
   "literal"          a silent bare-string keyword
 Rejected: OPT(x) as a wrapping call (retired). A wrapping call doubles the
 visual nesting on the common case ([in: ... [as: ...]] vs OPT((..OPT((..))))),
 and the bracket already means 'optional' everywhere in SYNTAX_DOC prose.
-Rejected: ALT(a, b, ...) as a variadic call. The between-branches sentinel
+Rejected: OR(a, b, ...) as a variadic call. The between-branches sentinel
 reads as BNF's 'a | b | c' with no wrapping parens; an overloaded '|' operator
 was rejected because it needs real combinator objects on both sides, which
 reintroduces the visual noise the change was meant to remove.
-Mechanism: _compile_child lowers a tuple to SeqNode unless it holds the ALT
+Mechanism: _compile_child lowers a tuple to SeqNode unless it holds the OR
 sentinel (then split into an Alt); a list to OptNode (one-element list lowers
 to Opt(elem) directly, identical to the old OPT(x); multi to Opt(Seq(...))).
 Invariant: a single-element optional produces NO list wrapper in the AST -- see
@@ -189,7 +189,7 @@ The grammar's terminal and authoring vocabulary was regularized:
     they get no terminal definition and are extracted from the grammar.
 
   - Combinators are the classes Alt/Opt/Plus/Star, exposed to GRAMMAR under the
-    capitalized aliases ALT/OPT/PLUS/STAR so a rule body reads as grammar
+    capitalized aliases OR/OPT/PLUS/STAR so a rule body reads as grammar
     operators. The alias IS the class (no wrapper functions). No SEQ alias: a
     sequence is a bare tuple.
 
@@ -292,7 +292,7 @@ WHAT THE SPLIT TAUGHT US (kept, because it was not obvious going in)
   - A still-uploaded copy of grammar.py crashed with
     "No module named ...parser.syntax_support": it predated BOTH the rename and
     the restructure. The fix is the two repaths on lines 76-77:
-    from .core.combinators import ALT, PLUS, STAR  and
+    from .core.combinators import OR, PLUS, STAR  and
     from .core.terminals import T.
 
 THE sprites EXAMPLE (parse-only)

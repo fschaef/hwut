@@ -32,7 +32,7 @@ from vut.engine.temporal_logic.parser.core.ll2_engine import LL2ConflictError
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
 from vut.engine.temporal_logic.parser.core.lexer import (token_spec,
                                                          token_debug_names)
-from vut.engine.temporal_logic.parser.core import ll2_grammar_ast as N
+from vut.engine.temporal_logic.parser.core import ll2_grammar_spec as N
 
 
 def banner(label):
@@ -93,27 +93,27 @@ def run_token_inventory():
 
 
 def _silent_terminals(node, seen=None):
-    """RETURN: set, the Terminal of every silent TerminalNode reachable in 'node'.
+    """RETURN: set, the Terminal of every silent Terminal_Spec reachable in 'node'.
 
-    Walks the compiled object tree. A BranchNode (Sequence/Alternative) exposes
-    its sub-nodes through .branches; an OperatorNode (Opt/Star/Plus) through
-    .body; a PassThroughNode is followed once via .pattern (cycle guard) so a
-    recursive rule terminates. An opaque TerminalNode carries no silent keyword.
+    Walks the compiled object tree. A Branch_Spec (Sequence/Alternative) exposes
+    its sub-nodes through .branches; an Operator_Spec (Opt/Star/Plus) through
+    .body; a Rule_Spec is followed once via .pattern (cycle guard) so a
+    recursive rule terminates. An opaque Terminal_Spec carries no silent keyword.
     """
     if seen is None:
         seen = set()
     out = set()
-    if isinstance(node, N.TerminalNode):
+    if isinstance(node, N.Terminal_Spec):
         if node.silent and not node.is_opaque:
             out.add(node.token_id)
-    elif isinstance(node, N.PassThroughNode):
+    elif isinstance(node, N.Rule_Spec):
         if node.name not in seen:
             seen.add(node.name)
             out |= _silent_terminals(node.pattern, seen)
-    elif isinstance(node, N.BranchNode):
+    elif isinstance(node, N.Branch_Spec):
         for sub in node.branches:
             out |= _silent_terminals(sub, seen)
-    elif isinstance(node, N.OperatorNode):
+    elif isinstance(node, N.Operator_Spec):
         out |= _silent_terminals(node.body, seen)
     return out
 

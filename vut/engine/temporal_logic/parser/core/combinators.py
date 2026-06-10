@@ -10,9 +10,9 @@ terminal/reference objects from terminals.py:
     [a, b, ...]      an OPTIONAL (a list is zero-or-one): a one-element list is
                      that element made optional; more elements, an optional
                      sequence
-    (a, ALT, b, ...) an ALTERNATION: ALT is a sentinel placed BETWEEN branches
+    (a, OR, b, ...) an ALTERNATION: OR is a sentinel placed BETWEEN branches
                      inside a tuple, read as 'a | b | ...'. A branch that is
-                     itself a sequence is grouped: (a, ALT, (b, c))
+                     itself a sequence is grouped: (a, OR, (b, c))
     PLUS(x)          x one or more times
     STAR(x)          x zero or more times
     t_...            a terminal object (T.regex/T.captured/T.opaque, terminals.py)
@@ -24,21 +24,21 @@ terminal/reference objects from terminals.py:
 
 The remaining combinator classes are exposed under capitalized aliases
 (PLUS/STAR), called directly on one body. There is no SEQ alias (a sequence is a
-bare tuple), no OPT alias (an optional is a bare list), and ALT is not a call
+bare tuple), no OPT alias (an optional is a bare list), and OR is not a call
 but a between-branches sentinel (the Alt CLASS it lowers to is internal). These
 authoring objects are lightweight: each carries its children
-and names the runtime node class it becomes (its 'node_class' in grammar_ast).
-'compile(ctx)' lowers the authored structure into that uniform Node tree,
+and names the runtime node class it becomes (its 'node_class' in grammar_spec).
+'compile(ctx)' lowers the authored structure into that uniform SpecNode tree,
 deferring LEAF resolution -- a terminal object, an '<name>' rule reference, or a
-bare-string keyword -> TerminalNode / PassThroughNode -- to 'ctx', the engine,
+bare-string keyword -> Terminal_Spec / Rule_Spec -- to 'ctx', the engine,
 which owns the token-id table and the rule map. Thus this module depends only on
-grammar_ast -- never on the parser engine -- and grammar.py depends only on this
+grammar_spec -- never on the parser engine -- and grammar.py depends only on this
 vocabulary plus terminals.py.
 ______________________________________________________________________________
 """
-from . import ll2_grammar_ast as _default_nodes
+from . import ll2_grammar_spec as _default_nodes
 
-# The node module is parameterisable: the engine compiles to ll2_grammar_ast
+# The node module is parameterisable: the engine compiles to ll2_grammar_spec
 # (the active LL(2) hierarchy, the default here). A node module exposes the node-
 # class names with matching constructors; compile_element(..., nodes=<module>)
 # threads the choice through, and the combinator classes read their node_class
@@ -48,23 +48,23 @@ nodes = _default_nodes
 
 
 # A bare tuple is a sequence; a bare list is an optional; ALL alternation is
-# written with the ALT sentinel placed BETWEEN branches inside a tuple --
-# (a, ALT, b, ALT, c) -- so a rule body reads like BNF's 'a | b | c' with no
+# written with the OR sentinel placed BETWEEN branches inside a tuple --
+# (a, OR, b, OR, c) -- so a rule body reads like BNF's 'a | b | c' with no
 # wrapping call. The sentinel is a unique object; the Alt CLASS below is what a
-# tuple-with-ALT lowers to.
-ALT = type("_AltSentinel", (), {"__repr__": lambda self: "ALT"})()
+# tuple-with-OR lowers to.
+OR = type("_AltSentinel", (), {"__repr__": lambda self: "OR"})()
 
 
 def _alt_from_tuple(parts):
-    """RETURN: Alt, built by splitting 'parts' on the ALT sentinel.
+    """RETURN: Alt, built by splitting 'parts' on the OR sentinel.
 
     Each segment between sentinels is one branch: a one-element segment is that
     element directly; a multi-element segment is an implicit-sequence tuple
-    (so a branch that is itself a sequence is grouped, e.g. (a, ALT, (b, c))).
+    (so a branch that is itself a sequence is grouped, e.g. (a, OR, (b, c))).
     """
     branches, cur = [], []
     for p in parts:
-        if p is ALT:
+        if p is OR:
             branches.append(cur[0] if len(cur) == 1 else tuple(cur))
             cur = []
         else:
@@ -74,24 +74,24 @@ def _alt_from_tuple(parts):
 
 
 def _compile_child(child, ctx, nodes):
-    """RETURN: Node, the compiled form of one authored child.
+    """RETURN: SpecNode, the compiled form of one authored child.
 
     A combinator delegates to its own compile(); a bare tuple is an implicit
-    sequence -- unless it contains the ALT sentinel, in which case it is an
-    ALTERNATION split on ALT into branches; a list is an OPTIONAL ( '[ ... ]' --
+    sequence -- unless it contains the OR sentinel, in which case it is an
+    ALTERNATION split on OR into branches; a list is an OPTIONAL ( '[ ... ]' --
     zero or one time ): a one-element list is that element made optional, a
     multi-element list is an optional sequence. Any other value (a terminal
     object, a '<name>' rule reference, or a bare-string keyword) is a leaf the
     engine resolves via ctx.compile_leaf.
 
-    'nodes' is the node module to build into (grammar_ast for LL(1),
-    ll2_grammar_ast for LL(2)); it is threaded down so one combinator tree can
+    'nodes' is the node module to build into (grammar_spec; LL(1) used the retired grammar_ast,
+    ll2_grammar_spec for LL(2)); it is threaded down so one combinator tree can
     lower into either hierarchy.
     """
     if isinstance(child, _Combinator):
         return child.compile(ctx, nodes)
     if isinstance(child, tuple):
-        if ALT in child:
+        if OR in child:
             return _alt_from_tuple(child).compile(ctx, nodes)
         return Seq(*child).compile(ctx, nodes)
     if isinstance(child, list):
@@ -118,17 +118,17 @@ class _Combinator:
         self.children = children
 
     def compile(self, ctx, nodes):
-        """RETURN: Node, this combinator lowered into nodes.<_node_name>."""
+        """RETURN: SpecNode, this combinator lowered into nodes.<_node_name>."""
         raise NotImplementedError
 
 
 class Seq(_Combinator):
-    """An implicit/explicit sequence; lowers to SequenceNode.
+    """An implicit/explicit sequence; lowers to SEQ_Spec.
 
     Written as a bare tuple in grammar.py (the implicit form); constructed
     variadically (Seq(a, b, ...)) where an explicit instance is needed.
     """
-    _node_name = "SequenceNode"
+    _node_name = "SEQ_Spec"
 
     def compile(self, ctx, nodes):
         cls = getattr(nodes, self._node_name)
@@ -136,8 +136,8 @@ class Seq(_Combinator):
 
 
 class Alt(_Combinator):
-    """An alternation; lowers to AlternativeNode. Alt(a, b, ...)."""
-    _node_name = "AlternativeNode"
+    """An alternation; lowers to OR_Spec. Alt(a, b, ...)."""
+    _node_name = "OR_Spec"
 
     def compile(self, ctx, nodes):
         cls = getattr(nodes, self._node_name)
@@ -159,42 +159,40 @@ class _Unary(_Combinator):
 
 
 class Opt(_Unary):
-    """Optional; lowers to OptionalNode."""
-    _node_name = "OptionalNode"
+    """Optional; lowers to OPT_Spec."""
+    _node_name = "OPT_Spec"
 
 
 class Plus(_Unary):
-    """One-or-more; lowers to PlusNode."""
-    _node_name = "PlusNode"
+    """One-or-more; lowers to PLUS_Spec."""
+    _node_name = "PLUS_Spec"
 
 
 class Star(_Unary):
-    """Zero-or-more; lowers to StarNode."""
-    _node_name = "StarNode"
+    """Zero-or-more; lowers to STAR_Spec."""
+    _node_name = "STAR_Spec"
 
 
 # -- the authoring surface used in grammar.py ---------------------------------
 # PLUS(x) and STAR(x) are exposed under CAPITALIZED aliases of their classes, to
 # read as grammar operators called on one body. There is no SEQ alias (a sequence
 # is a bare tuple), no OPT alias (an optional is a bare list, e.g. [x] or [a, b];
-# the Opt CLASS still exists and is what a list lowers to), and ALT is the
+# the Opt CLASS still exists and is what a list lowers to), and OR is the
 # sentinel defined at the top of this module -- written BETWEEN branches inside a
 # tuple, not as a call (the Alt CLASS it lowers to stays internal). The terminal
 # factories (T) live in terminals.py; a rule reference is the bare string
-# '<name>' resolved by the engine. grammar.py imports ALT/PLUS/STAR and T.
+# '<name>' resolved by the engine. grammar.py imports OR/PLUS/STAR and T.
 PLUS = Plus
 STAR = Star
 
 
 def compile_element(element, ctx, nodes=_default_nodes):
-    """RETURN: Node, the compiled form of a top-level authored 'element'.
+    """RETURN: SpecNode, the compiled form of a top-level authored 'element'.
 
     The single entry the engine calls per rule body. A bare tuple is an implicit
     sequence; a combinator lowers itself; a terminal object, an R reference, or a
     bare-string keyword is a leaf resolved by 'ctx'. 'nodes' selects the target
-    node hierarchy (defaults to ll2_grammar_ast, the active LL(2) hierarchy); a
+    node hierarchy (defaults to ll2_grammar_spec, the active LL(2) hierarchy); a
     different engine may pass its own module.
     """
     return _compile_child(element, ctx, nodes)
-
-

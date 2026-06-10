@@ -507,6 +507,32 @@ ArgDecl
   type = 'X'
   begin = 0
 
+=== declaration ===
+
+-- absent --
+   input: X is: X
+ForwardDecl
+  kind = 'X'
+  name = 'X'
+  signature:
+    []
+  cargs:
+    []
+  luau_handle = None
+  begin = 0
+
+-- present --
+   input: X ( ) is: X
+ForwardDecl
+  kind = 'X'
+  name = 'X'
+  signature:
+    []
+  cargs:
+    []
+  luau_handle = None
+  begin = 0
+
 === default ===
 
 -- default --
@@ -735,46 +761,6 @@ EventSpec
 EventMember
   name = 'X'
   begin = 0
-
-=== forward-decl ===
-
--- absent --
-   input: X is: X
-ForwardDecl
-  kind = 'X'
-  name = 'X'
-  signature:
-    []
-  cargs:
-    []
-  luau_handle = None
-  begin = 0
-
--- present --
-   input: X ( ) is: X
-ForwardDecl
-  kind = 'X'
-  name = 'X'
-  signature:
-    []
-  cargs:
-    []
-  luau_handle = None
-  begin = 0
-
-=== fwd-kind ===
-
--- alternative 0 --
-   input: X
-{'kind': 'X', 'cargs': [], 'luau_handle': None}
-
--- alternative 1 --
-   input: mode
-{'kind': 'mode', 'cargs': [], 'luau_handle': None}
-
--- alternative 2 --
-   input: container < 1 >
-{'kind': 'container', 'cargs': [Arg(name=None, value='1', kind=<E_ArgKind.LITERAL: 0>, begin=0)], 'luau_handle': None}
 
 === guard ===
 
@@ -1978,11 +1964,26 @@ Trigger
   is_keyword = True
   begin = 0
 
+=== type-ref ===
+
+-- alternative 0 --
+   input: X
+{'kind': 'X', 'cargs': [], 'luau_handle': None}
+
+-- alternative 1 --
+   input: mode
+{'kind': 'mode', 'cargs': [], 'luau_handle': None}
+
+-- alternative 2 --
+   input: container < 1 >
+{'kind': 'container', 'cargs': [Arg(name=None, value='1', kind=<E_ArgKind.LITERAL: 0>, begin=0)], 'luau_handle': None}
+
 === unspawn ===
 
 -- 0x --
    input: -! X
 Unspawn
+
   name:
     'X'
   begin = 0
@@ -1990,17 +1991,30 @@ Unspawn
 -- 1x --
    input: -! X . X
 Unspawn
+
   name:
+
+    'X'
+    'X'
+  begin = 0
+-- 2x --
+   input: -! X . X . X
+Unspawn
+
+  name:
+    'X'
     'X'
     'X'
   begin = 0
 
--- 2x --
-   input: -! X . X . X
-Unspawn
-  name:
-    'X'
-    'X'
-    'X'
-  begin = 0
+
+
+
+
+
+
+
+
+
+
 

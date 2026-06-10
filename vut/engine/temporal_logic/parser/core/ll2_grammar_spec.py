@@ -1,14 +1,28 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-GRAMMAR NODES  --  the compiled grammar as a uniform polymorphic tree.
+GRAMMAR SPEC  --  the compiled grammar as a uniform polymorphic tree.
+
+These '*_Spec' classes are the GRAMMAR layer: the static, compile-once,
+shared-across-every-parse description of what the engine may match at each point
+(OR_Spec / SEQ_Spec / OPT_Spec / STAR_Spec / PLUS_Spec, plus Terminal_Spec and
+the per-rule Rule_Spec). They carry first2_set / nullable / the conflict scan /
+expand -- they DESCRIBE and the engine consults them. They never hold a parse
+result. The RESULT layer is cst_nodes (OR_Node / SEQ_Node / STAR_Node /
+PLUS_Node): a fresh node per occurrence, built by a Spec's cst_reduce, recording
+what actually matched THIS time. One Spec (the mould) yields many Nodes (the
+castings). The prefix mirrors the grammar operator the author wrote (OR / OPT /
+SEQ / PLUS / STAR); OPT_Spec has no OPT_Node -- an optional casts to an OR_Node
+whose absent state is the ABSENT child.
 ______________________________________________________________________________
 """
 from .terminals import t_fr_span_open, t_fr_eof
+from .cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT
 
-ELEM   = 0
-REDUCE = 1
-LOOP   = 2
+ELEM       = 0
+REDUCE     = 1
+LOOP       = 2
+CST_REDUCE = 3      # operator self-reduce to a CST node (CST build mode only)
 
 
 def merge_first2(set_a, set_b):
@@ -33,7 +47,7 @@ def merge_first2(set_a, set_b):
     return result
 
 
-class Node:
+class SpecNode:
     __slots__ = ()
 
     def first2_set(self, grammar):
@@ -53,7 +67,7 @@ class Node:
 # ---------------------------------------------------------------------------
 # Leaves.
 # ---------------------------------------------------------------------------
-class TerminalNode(Node):
+class Terminal_Spec(SpecNode):
     __slots__ = ("token_id", "silent")
 
     def __init__(self, token_id, silent):
@@ -87,7 +101,7 @@ class TerminalNode(Node):
                 frames[-1].values.append(value)
 
 
-class PassThroughNode(Node):
+class Rule_Spec(SpecNode):
     __slots__ = ("name", "action", "pattern", "first")
 
     def __init__(self, name, action):
@@ -112,9 +126,9 @@ class PassThroughNode(Node):
 
 
 # ---------------------------------------------------------------------------
-# Combinators: BranchNode and OperatorNode
+# Combinators: Branch_Spec and Operator_Spec
 # ---------------------------------------------------------------------------
-class BranchNode(Node):
+class Branch_Spec(SpecNode):
     __slots__ = ("branches",)
 
     def __init__(self, branches):
@@ -124,7 +138,7 @@ class BranchNode(Node):
         return self.branches
 
 
-class SequenceNode(BranchNode):
+class SEQ_Spec(Branch_Spec):
     __slots__ = ()
 
     def __repr__(self):
@@ -142,11 +156,23 @@ class SequenceNode(BranchNode):
         return all(sub.nullable(grammar) for sub in self.branches)
 
     def expand(self, parser, frames, work):
+        if parser.cst_mode:
+            # Materialise this sequence as its own SEQ_Node. Open a sub-frame so
+            # the surviving per-position values collect here (not the parent),
+            # then reduce. The node is anonymous (name=None); a named rule whose
+            # pattern is this sequence stamps its rule name at the Rule_Spec
+            # reduce, so inline sequences stay None and rule-level ones get named.
+            parser.open_frame(frames)
+            work.append((CST_REDUCE, (self, None)))
         for sub in reversed(self.branches):
             work.append((ELEM, sub))
 
+    def cst_reduce(self, frame, _extra):
+        """RETURN: SEQ_Node, over the surviving per-position values of the frame."""
+        return SEQ_Node(children=tuple(frame.values))
 
-class AlternativeNode(BranchNode):
+
+class OR_Spec(Branch_Spec):
     __slots__ = ()
 
     def __repr__(self):
@@ -162,10 +188,28 @@ class AlternativeNode(BranchNode):
         return any(sub.nullable(grammar) for sub in self.branches)
 
     def expand(self, parser, frames, work):
-        work.append((ELEM, parser.choose_alt(self)))
+        chosen = parser.choose_alt(self)
+        if parser.cst_mode:
+            # Capture WHICH branch fired (its grammar index) and reduce to an
+            # OR_Node carrying that index plus the branch's reduced value. The
+            # sub-frame collects exactly one value (the chosen branch's result).
+            index = self.branches.index(chosen)
+            parser.open_frame(frames)
+            work.append((CST_REDUCE, (self, index)))
+        work.append((ELEM, chosen))
+
+    def cst_reduce(self, frame, index):
+        """RETURN: OR_Node, the matched branch index and its single reduced value.
+
+        'index' is the grammar index of the branch choose_alt selected. A branch
+        that produced no surviving value (all-silent, or an empty inline branch)
+        yields child=ABSENT.
+        """
+        child = frame.values[0] if frame.values else ABSENT
+        return OR_Node(triggered_index=index, child=child)
 
 
-class OperatorNode(Node):
+class Operator_Spec(SpecNode):
     __slots__ = ("body",)
 
     def __init__(self, body):
@@ -178,7 +222,7 @@ class OperatorNode(Node):
         return self.body.first2_set(grammar)
 
 
-class OptionalNode(OperatorNode):
+class OPT_Spec(Operator_Spec):
     __slots__ = ()
 
     def __repr__(self):
@@ -192,11 +236,28 @@ class OptionalNode(OperatorNode):
         return True
 
     def expand(self, parser, frames, work):
-        if parser.starts(self.body):
+        present = parser.starts(self.body)
+        if parser.cst_mode:
+            # An optional is the two-branch alternation '(body | empty)'. Reduce
+            # to an OR_Node: index 0 = body present (child = its value), index 1
+            # = absent (child = ABSENT). Absence is a STATE of OR_Node, marked on
+            # the node, never inferred from a missing frame slot downstream.
+            index = 0 if present else 1
+            parser.open_frame(frames)
+            work.append((CST_REDUCE, (self, index)))
+        if present:
             work.append((ELEM, self.body))
 
+    def cst_reduce(self, frame, index):
+        """RETURN: OR_Node, index 0 (present, child=value) or 1 (absent, ABSENT)."""
+        if index == 0:
+            child = frame.values[0] if frame.values else ABSENT
+        else:
+            child = ABSENT
+        return OR_Node(triggered_index=index, child=child)
 
-class StarNode(OperatorNode):
+
+class STAR_Spec(Operator_Spec):
     __slots__ = ()
 
     def __repr__(self):
@@ -209,10 +270,20 @@ class StarNode(OperatorNode):
         return True
 
     def expand(self, parser, frames, work):
+        if parser.cst_mode:
+            # Open a sub-frame so each loop iteration's reduced body value
+            # collects here; reduce to a STAR_Node (items possibly empty). The
+            # CST_REDUCE is pushed FIRST so it runs LAST, after the loop drains.
+            parser.open_frame(frames)
+            work.append((CST_REDUCE, (self, None)))
         work.append((LOOP, (self.body, -1)))
 
+    def cst_reduce(self, frame, _extra):
+        """RETURN: STAR_Node, over the (possibly empty) collected repetitions."""
+        return STAR_Node(items=tuple(frame.values))
 
-class PlusNode(OperatorNode):
+
+class PLUS_Spec(Operator_Spec):
     __slots__ = ()
 
     def __repr__(self):
@@ -222,8 +293,18 @@ class PlusNode(OperatorNode):
         return False
 
     def expand(self, parser, frames, work):
+        if parser.cst_mode:
+            # As STAR_Spec, but the body is matched once eagerly before the loop,
+            # so items is guaranteed non-empty. Sub-frame collects all
+            # repetitions; CST_REDUCE (pushed first, runs last) builds PLUS_Node.
+            parser.open_frame(frames)
+            work.append((CST_REDUCE, (self, None)))
         work.append((LOOP, (self.body, -1)))
         work.append((ELEM, self.body))
+
+    def cst_reduce(self, frame, _extra):
+        """RETURN: PLUS_Node, over the collected repetitions (guaranteed non-empty)."""
+        return PLUS_Node(items=tuple(frame.values))
 
 
 # ---------------------------------------------------------------------------
@@ -236,19 +317,19 @@ def _first2_sets_iterative(pattern, grammar):
     while work:
         node = work.pop()
         order.append(node)
-        if not isinstance(node, PassThroughNode):
+        if not isinstance(node, Rule_Spec):
             work.extend(node.children())
 
     first2 = {}
     null   = {}
     for node in reversed(order):
-        if isinstance(node, TerminalNode):
+        if isinstance(node, Terminal_Spec):
             first2[node] = node.first2_set(grammar)
             null[node]  = False
-        elif isinstance(node, PassThroughNode):
+        elif isinstance(node, Rule_Spec):
             first2[node] = set(node.first)        
             null[node]  = node.nullable(grammar)
-        elif isinstance(node, SequenceNode):
+        elif isinstance(node, SEQ_Spec):
             if not node.branches:
                 first2[node] = {()}
             else:
@@ -257,15 +338,15 @@ def _first2_sets_iterative(pattern, grammar):
                     acc = merge_first2(acc, first2[sub])
                 first2[node] = acc
             null[node]  = all(null[s] for s in node.branches)
-        elif isinstance(node, AlternativeNode):
+        elif isinstance(node, OR_Spec):
             first2[node] = set().union(*(first2[s] for s in node.branches)) \
                            if node.branches else set()
             null[node]  = any(null[s] for s in node.branches)
-        else:  # OperatorNode
+        else:  # Operator_Spec
             first2[node] = set(first2[node.body])
-            if isinstance(node, (OptionalNode, StarNode)):
+            if isinstance(node, (OPT_Spec, STAR_Spec)):
                 first2[node].add(())
-            null[node]  = isinstance(node, (OptionalNode, StarNode))
+            null[node]  = isinstance(node, (OPT_Spec, STAR_Spec))
     return first2
 
 
@@ -276,7 +357,7 @@ def collect_alt_conflicts(pattern, rule_name, grammar):
     work = [pattern]
     while work:
         node = work.pop()
-        if isinstance(node, AlternativeNode):
+        if isinstance(node, OR_Spec):
             seen = {}
             for branch in node.branches:
                 for lookahead_tuple in first2[branch]:
@@ -288,11 +369,10 @@ def collect_alt_conflicts(pattern, rule_name, grammar):
                     
                     if normalized in seen:
                         conflicts.append(
-                            "rule %s: 2-token lookahead (%s, %s) starts two ALT branches"
+                            "rule %s: 2-token lookahead (%s, %s) starts two OR branches"
                             % (rule_name, normalized[0]._name(), normalized[1]._name()))
                     else:
                         seen[normalized] = branch
-        if not isinstance(node, PassThroughNode):
+        if not isinstance(node, Rule_Spec):
             work.extend(node.children())
     return conflicts
-

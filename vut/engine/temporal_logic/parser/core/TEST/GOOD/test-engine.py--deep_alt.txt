@@ -1,5 +1,5 @@
 
---- deeply nested ALT does not overflow the conflict scan ---
+--- deeply nested OR does not overflow the conflict scan ---
 depth 20000, recursion limit 2000
 overflow:   no
 conflicts:  0

@@ -40,7 +40,7 @@ This module depends on nothing in the parser engine and nothing in any embedded
 language: the authoring layer stays engine-free AND language-free. An opaque
 span carries a 'mode' (core.span_oracle.SpanMode) defined by whatever oracle
 measures the span; terminals knows only that a mode exposes qualified_name() and
-name. Dependency direction: grammar.py -> {terminals, combinators} -> grammar_ast.
+name. Dependency direction: grammar.py -> {terminals, combinators} -> grammar_spec.
 ______________________________________________________________________________
 """
 
@@ -161,7 +161,7 @@ class _T:
 
         Unlike a silent string keyword, a captured keyword's matched token is
         passed to the production's reduce builder, which inspects which one
-        matched (the ALT discriminants ANY / END / BEGIN / VOID / container).
+        matched (the OR discriminants ANY / END / BEGIN / VOID / container).
         """
         return _register(Terminal("captured", spelling=spelling))
 
@@ -216,7 +216,7 @@ t_fr_eof        = T.framing("end-of-file")  # sentinel returned past the end
 class Ref:
     """A reference to another GRAMMAR rule (a non-terminal), authored as R(name).
 
-    Holds the referenced rule's name; the engine interns one PassThroughNode per
+    Holds the referenced rule's name; the engine interns one Rule_Spec per
     name and binds this reference to it at compile time. Not a terminal: it
     records nothing into TERMINAL_DB.
     """
@@ -242,5 +242,3 @@ def terminal_by_name(name):
     terminal has been registered.
     """
     return _BY_NAME[name]
-
-

@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 RULE-FILE ACTIONS  --  reduce builders, paired with the grammar in grammar.py.
 
-The grammar itself (the GRAMMAR dict, the ALT/PLUS/STAR combinators, the bare
+The grammar itself (the GRAMMAR dict, the OR/PLUS/STAR combinators, the bare
 tuple for sequence, and the bare list for optional) is defined in grammar.py, the
 single source of truth for both the productions and their prose specification.
 This module imports GRAMMAR from
@@ -12,10 +12,10 @@ nodes.
 
 ACTIONS maps each GRAMMAR rule name to a builder 'fn(frame) -> node', or None
 for a pass-through rule (one that simply forwards its single matched value, as
-the ALT dispatch rules do). The parser engine zips GRAMMAR and ACTIONS by key.
+the OR dispatch rules do). The parser engine zips GRAMMAR and ACTIONS by key.
 ______________________________________________________________________________
 """
-from .grammar import GRAMMAR, t_kw_void, t_kw_container, t_re_id
+from .grammar import GRAMMAR, t_kw_void, t_kw_container, t_re_id # noqa E401
 
 # Keywords whose matched Token an action inspects (so the engine keeps them in
 # the frame rather than dropping them as punctuation) are marked in the GRAMMAR
@@ -264,7 +264,7 @@ def _build_arg_list(frame):
 def _build_arg(frame):
     """RETURN: Arg, one argument -- a bare-rvalue positional or 'name = value'.
 
-    <arg> is '("<rvalue>", ALT, (t_re_id, "=", "<rvalue>"))': a positional whose
+    <arg> is '("<rvalue>", OR, (t_re_id, "=", "<rvalue>"))': a positional whose
     value is any rvalue, OR a named 'id = rvalue'. The choice needs 2-token
     lookahead -- an identifier alone is a positional rvalue, but 'identifier ='
     opens the named branch -- so this rule is the canonical LL(2) construct (the
@@ -509,12 +509,12 @@ def _build_has_ref(frame):
                       is_void=ref.is_void, begin=frame.begin)
 
 
-def _build_forward_decl(frame):
+def _build_declaration(frame):
     """RETURN: ForwardDecl, a '<name> [signature] is: <kind>' scope-level decl.
 
     frame.values = [name_tok, (signature?), kind_dict]; 'is:' is silent and the
     round-bracket signature is optional. 'signature' is the <decl-parens> list
-    of ArgDecls when present, else []. 'kind_dict' comes from <fwd-kind>: keys
+    of ArgDecls when present, else []. 'kind_dict' comes from <type-ref>: keys
     'kind', 'cargs', 'luau_handle'. 'begin' is the name offset. Signature vs
     type-params, and the mandatory-on-spawnable-kinds rule: see SYNTAX_DOC in grammar.py.
     """
@@ -536,7 +536,7 @@ def _build_fwd_kind(frame):
     The 'container' form (KW_CONTAINER captured) gives frame.values =
     ['container', [Arg,...], maybe Luau]: 'cargs' the angle-bracket type-params
     (ordinary <arg>s), 'luau_handle' the optional 'as:' LVALUE span. See
-    SYNTAX_DOC in grammar.py, <fwd-kind>.
+    SYNTAX_DOC in grammar.py, <type-ref>.
     """
     head = frame.values[0]
     if getattr(head, "kind", None) is t_kw_container:
@@ -725,8 +725,8 @@ ACTIONS = {
     "deinit":            _build_deinit,
     "state":             _build_state,
     "has-ref":           _build_has_ref,
-    "forward-decl":      _build_forward_decl,
-    "fwd-kind":          _build_fwd_kind,
+    "declaration":      _build_declaration,
+    "type-ref":          _build_fwd_kind,
     "member-ref":        _build_member_ref,
     "mode-group":        _build_mode_group,
     "mode-group-elm":    None,

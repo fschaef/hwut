@@ -13,7 +13,7 @@ change; monkey-fuzz.py then parses the STORED fixtures with no RNG dependency.
 
 Each profile writes monkey_data/<name>.json (the token stream) and
 monkey_data/<name>.rule (the rendered source, for human reading). The random
-walk's policy (ALT spread, recursion coin, repetition counts, Luau nesting) is
+walk's policy (OR spread, recursion coin, repetition counts, Luau nesting) is
 the Walker class here; the shared primitives (tok, ListLexer, reachability) come
 from aux_walker.
 
@@ -30,9 +30,9 @@ from vut.language_support.python.deterministic_random import (DeterministicStrea
                                                              SelectionMarker)
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
 from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser
-from vut.engine.temporal_logic.parser.core.ll2_grammar_ast import (
-        TerminalNode, PassThroughNode,
-        SequenceNode, AlternativeNode, OptionalNode, PlusNode, StarNode)
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
+        Terminal_Spec, Rule_Spec,
+        SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec)
 from vut.engine.temporal_logic.parser.core.lexer import Token
 from vut.engine.temporal_logic.parser.core.terminals import T, t_fr_span_open, t_fr_eof
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
@@ -56,9 +56,9 @@ def _branch_reenters(element, active):
 
 def _count_nt(element):
     """RETURN: int, the number of NonTerminals reachable in 'element'."""
-    if isinstance(element, TerminalNode):
+    if isinstance(element, Terminal_Spec):
         return 0
-    if isinstance(element, PassThroughNode):
+    if isinstance(element, Rule_Spec):
         return 1
     return sum(_count_nt(e) for e in _children(element))
 
@@ -86,7 +86,7 @@ class Walker:
         self.luau    = []
         self._active = []
         self.visited = set()      # rule names entered during the walk
-        self._markers = {}        # id(ALT element) -> SelectionMarker
+        self._markers = {}        # id(OR element) -> SelectionMarker
 
     def walk_file(self, n_items):
         """RETURN: (tokens, luau_texts) for 'n_items' top-level constructs."""
@@ -103,13 +103,13 @@ class Walker:
 
     def _emit(self, element, budget):
         """RETURN: None. Appends tokens for 'element', bounded by 'budget'."""
-        if isinstance(element, TerminalNode):
+        if isinstance(element, Terminal_Spec):
             if element.is_opaque:
                 self._emit_luau(budget)
             else:
                 self.tokens.append(_tok(element.token_id, self._next_id()))
             return
-        if isinstance(element, PassThroughNode):
+        if isinstance(element, Rule_Spec):
             self.visited.add(element.name)
             self._active.append(element.name)
             try:
@@ -117,27 +117,27 @@ class Walker:
             finally:
                 self._active.pop()
             return
-        if isinstance(element, SequenceNode):
+        if isinstance(element, SEQ_Spec):
             for sub in element.branches:
                 self._emit(sub, budget)
-        elif isinstance(element, AlternativeNode):
+        elif isinstance(element, OR_Spec):
             self._emit(self._pick_alt(element, budget), budget)
-        elif isinstance(element, OptionalNode):
+        elif isinstance(element, OPT_Spec):
             if budget > 0 and self.s.coin(self.p["opt"] * 0.01):
                 self._emit(element.body, budget)
-        elif isinstance(element, PlusNode):
+        elif isinstance(element, PLUS_Spec):
             for _ in range(self._rep_count(1, budget)):
                 self._emit(element.body, budget)
-        elif isinstance(element, StarNode):
+        elif isinstance(element, STAR_Spec):
             for _ in range(self._rep_count(0, budget)):
                 self._emit(element.body, budget)
         else:
             raise ValueError("unknown grammar node %r" % (element,))
 
     def _marker_for(self, element):
-        """RETURN: SelectionMarker, the spread memory for one grammar ALT node.
+        """RETURN: SelectionMarker, the spread memory for one grammar OR node.
 
-        Keyed by the ALT element's identity, so one marker serves every entry
+        Keyed by the OR element's identity, so one marker serves every entry
         into that alternation across the whole walk -- coverage-style spread.
         The element is a long-lived grammar node, so id() is a stable key
         (unlike id() of the transient safe/recursive sub-pools).
@@ -150,15 +150,15 @@ class Walker:
 
     def _pick_alt(self, element, budget):
         """
-        RETURN: element, a chosen ALT branch.
+        RETURN: element, a chosen OR branch.
 
         When the budget is spent, restricts the choice to branches that do NOT
         re-enter the rule being expanded so the walk terminates. While budget
         remains, with probability 'recurse'% prefers a branch that re-enters an
         active rule (deep nesting); otherwise spreads across branches, preferring
-        ones not yet chosen at this ALT so every alternative is exercised.
+        ones not yet chosen at this OR so every alternative is exercised.
 
-        Spread memory is one SelectionMarker per ALT node (held by the walker),
+        Spread memory is one SelectionMarker per OR node (held by the walker),
         shared across this site's safe/recursive/full sub-pools by BRANCH
         identity. So the spread is reproducible regardless of container address
         reuse -- the marker, not id(container), is the memory.
@@ -173,7 +173,7 @@ class Walker:
         recursive = [b for b in branches if _branch_reenters(b, active)]
         if recursive and self.s.coin(self.p["recurse"] * 0.01):
             return self.s.select_unchosen(recursive, marker)
-        # Spread across ALL branches, preferring unchosen ones at this ALT.
+        # Spread across ALL branches, preferring unchosen ones at this OR.
         return self.s.select_unchosen(branches, marker)
 
     def _rep_count(self, minimum, budget):
@@ -197,7 +197,7 @@ class Walker:
 
 # --------------------------------------------------------------------------
 # Profiles: a seed and weight dict each.
-#   depth : descent budget before ALT is forced shallow / reps forced minimal
+#   depth : descent budget before OR is forced shallow / reps forced minimal
 #   reps  : maximum PLUS/STAR repetition count
 #   opt   : percent chance an OPT is taken
 #   luau  : maximum nested-brace depth inside a Luau block
@@ -379,5 +379,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

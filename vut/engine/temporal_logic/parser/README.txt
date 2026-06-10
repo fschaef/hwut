@@ -80,7 +80,7 @@ MODULES AND RESPONSIBILITIES
         The language as data, and its prose spec in one place. A preamble binds
         the regex/opaque/captured terminals to 't_re_'/'t_opq_'/'t_kw_'
         variables; GRAMMAR then maps each non-terminal to a pattern built from
-        the combinators ALT/OPT/PLUS/STAR (syntax_support), plain tuples for
+        the combinators OR/OPT/PLUS/STAR (syntax_support), plain tuples for
         sequence, bare strings for silent keywords, terminal objects, and R()
         references. SYNTAX_DOC, the module docstring, is the DOMINATING prose
         reference for the concrete syntax; this README cites it and defers to it
@@ -96,7 +96,7 @@ MODULES AND RESPONSIBILITIES
         The reduce actions. ACTIONS maps each GRAMMAR rule name to a builder
         '_build_*(frame) -> node' that turns a matched frame into an AST node,
         or 'None' for a pass-through rule that forwards its single child value
-        (the ALT dispatch rules). It imports GRAMMAR from syntax.py and supplies
+        (the OR dispatch rules). It imports GRAMMAR from syntax.py and supplies
         the actions; the engine zips the two by key.
 
     parser_nodes.py
@@ -120,7 +120,7 @@ MODULES AND RESPONSIBILITIES
     parser_engine.py
         The engine. 'Grammar' compiles GRAMMAR/ACTIONS into the parser_nodes
         tree (resolving each leaf to its Terminal/Luau/NonTerminal node),
-        computes FIRST sets, and rejects any ALT whose branches share a FIRST
+        computes FIRST sets, and rejects any OR whose branches share a FIRST
         token (LL1ConflictError), so ambiguity is caught at compile time, not at
         parse time. 'EngineParser' walks the compiled patterns with one token of
         lookahead on the explicit work/frame stacks, building a 'Frame' of child
@@ -164,7 +164,7 @@ parsing can continue.
 (B) THE GRAMMAR TABLE AND LL(1) GUARANTEE
 -------------------------------------------------------------------------------
 
-A pattern is a plain tuple for sequence, with the combinator classes ALT / OPT
+A pattern is a plain tuple for sequence, with the combinator classes OR / OPT
 / PLUS / STAR for the rest. For example a causality:
 
     "causality": ("on:", R("cause"), PLUS(("=>", R("effect"))))
@@ -172,9 +172,9 @@ A pattern is a plain tuple for sequence, with the combinator classes ALT / OPT
 A bare string ('on:', '=>') is a silent keyword terminal; R("name") references
 another rule; a 't_opq_...' terminal marks an opaque Luau span under its Role.
 
-At compile time 'Grammar' computes FIRST(rule) for every rule and, for each ALT
+At compile time 'Grammar' computes FIRST(rule) for every rule and, for each OR
 and each repetition, checks that the continuation is decidable from one
-lookahead token. If two ALT branches can start with the same token the grammar
+lookahead token. If two OR branches can start with the same token the grammar
 is rejected with a located LL1ConflictError. This is why the test-engine
 'll1_ok' choice can assert the real grammar is conflict-free, and 'll1_conflict'
 can show a toy grammar being rejected.

@@ -70,7 +70,7 @@ from .diagnostic import Diagnostic, Phase, DiagnosticReporter
 # Generation runs lazily on first use (see _scanner / token_spec): it imports
 # syntax and terminals INSIDE the builder, after the import graph has settled, so
 # lexer.py carries no module-level dependency on the authoring layer and the
-# graph stays acyclic (grammar_ast -> lexer -> diagnostic only).
+# graph stays acyclic (grammar_spec -> lexer -> diagnostic only).
 # ---------------------------------------------------------------------------
 
 
@@ -107,7 +107,7 @@ def _walk_string_keywords(element, out):
     the deterministic tiebreak for equal-length spellings within a tier.
 
     A '<name>' string is NOT a keyword: it is a reference to the GRAMMAR rule
-    'name' (the same spelling the leaf compiler resolves to a PassThroughNode).
+    'name' (the same spelling the leaf compiler resolves to a Rule_Spec).
     It is skipped here, so a rule reference never leaks a phantom '<name>' token
     into the lexer spec.
     """
@@ -443,5 +443,3 @@ class Lexer:
             source_offset = offset,
             fatal         = fatal,
         ))
-
-

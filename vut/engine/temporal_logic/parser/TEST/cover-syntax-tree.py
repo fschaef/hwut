@@ -12,7 +12,7 @@ CHOICES: positive.
 DESCRIPTION:
 
 A single 'positive' choice iterates 'sorted(grammar.rules)'. For each rule the
-canonical paths come from aux_walker.rule_paths: an ALT rule yields one path per
+canonical paths come from aux_walker.rule_paths: an OR rule yields one path per
 branch; a rule with a variadic point yields one path per case (PLUS 1x/2x, STAR
 0x/1x/2x, OPT absent/present); otherwise a single default path. Each path is
 driven against its rule in isolation and the built AST is printed beneath the

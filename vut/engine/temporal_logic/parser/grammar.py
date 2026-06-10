@@ -28,9 +28,9 @@ GRAMMAR element vocabulary -- every element is one of:
   t_re_name_colon     number, string, name_colon.
   t_kw_any t_kw_end   a captured keyword (T.captured), KEPT in the parse frame
   t_kw_begin          (not dropped as punctuation) because a builder must read
-  t_kw_void           which one matched. Used where the keyword is an ALT
+  t_kw_void           which one matched. Used where the keyword is an OR
   t_kw_container      discriminant -- ANY / END / BEGIN (trigger), VOID
-                      (member-ref, sm-mode-ref), container (fwd-kind).
+                      (member-ref, sm-mode-ref), container (type-ref).
   t_opq_cond          an opaque Luau span terminal (T.opaque) carrying its Role
   t_opq_expr          (CONDITION / EXPRESSION / LVALUE / STATEMENT_BLOCK). The
   t_opq_lvalue        role rides on the object, so the position's role is fixed
@@ -44,7 +44,7 @@ GRAMMAR element vocabulary -- every element is one of:
   (a, b, ...)         an implicit SEQUENCE: match a, then b, ... -- a tuple.
   [a, b, ...]         an OPTIONAL: match the bracketed sequence zero or one
                       time -- a list. (One element, [x], is just x optional.)
-  (a, ALT, b, ...)    an ALTERNATION: ALT is a sentinel placed BETWEEN branches
+  (a, OR, b, ...)    an ALTERNATION: OR is a sentinel placed BETWEEN branches
                       inside a tuple, read as 'a | b | ...'.
   PLUS(x) STAR(x)     one-or-more / zero-or-more (combinator classes, one body).
                       (A sequence is a bare tuple; an optional is a bare list;
@@ -60,20 +60,20 @@ ______________________________________________________________________________
 
 # Grammar combinators, terminals, and references. Authored directly: a bare
 # tuple is an implicit SEQUENCE (no Seq() call); a bare list is an OPTIONAL (no
-# Opt() call); a tuple holding the ALT sentinel between branches is an
+# Opt() call); a tuple holding the OR sentinel between branches is an
 # ALTERNATION; Plus/Star are combinator classes; T.* mints the richer terminals
 # (recorded in terminals.py's database for the lexer generator); a bare '<name>'
 # is a rule reference.
 #
 #   (a, b, ...)      implicit sequence: match a, then b, ...
 #   [a, b, ...]      optional: match the bracketed sequence zero or one time
-#   (a, ALT, b, ...) alternation: one branch, chosen by FIRST set
+#   (a, OR, b, ...) alternation: one branch, chosen by FIRST set
 #   PLUS(x)          x one or more times
 #   STAR(x)          x zero or more times
 #   t_...            a terminal object bound in the preamble below
 #   "<name>"         a reference to another GRAMMAR rule
 #   "literal"        a silent bare-string keyword
-from .core.combinators import ALT, PLUS, STAR
+from .core.combinators import OR, PLUS, STAR
 from .core.terminals    import T
 from ..luau.luau_fragment import Role
 
@@ -135,30 +135,48 @@ t_op_lt         = T.captured("<")
 
 
 GRAMMAR = {
-"top-level":      ("<namespace>", ALT, "<include>", ALT, "<causality>", ALT, "<mode>",
-                   ALT, "<mode-group>", ALT, "<state-machine>", ALT, "<event-def>",
-                   ALT, "<clock-def>", ALT, "<cause-def>", ALT, "<effect-def>",
-                   ALT, "<forward-decl>"),
+"top-level":      ("<namespace>", OR, "<include>", OR, "<causality>", OR, "<mode>",
+                   OR, "<mode-group>", OR, "<state-machine>", OR, "<event-def>",
+                   OR, "<clock-def>", OR, "<cause-def>", OR, "<effect-def>",
+                   OR, "<declaration>"),
+
 "include":        ("include:", t_re_string, "into:", "<dotted-name>"),
 "namespace":      ("open:", "<dotted-name>", PLUS("<top-level>"), ":close"),
+
+"event-def":      ("event:", t_re_id, "<decl-parens>"),
+"clock-def":      ("clock:", t_re_id, t_re_number),
+"declaration":    (t_re_id, ["<decl-parens>"], "is:", "<type-ref>"),
+"type-ref":       (t_re_id, OR, t_kw_mode, OR, (t_kw_container, t_op_lt, ["<arg-list>"], t_op_gt, ["as:", t_opq_lvalue])),
+
 "causality":      ("on:", "<cause>", PLUS(("=>", "<effect>"))),
-"cause":          ("<cause-ref>", ALT, ("<trigger>", ["&", "<guard>"])),
+
+"mode":           ("mode:", "<signature>", PLUS("<mode-elm>"), PLUS(("until:", "<cause>"))),
+"state":          ("state:", "<signature>", STAR("<mode-elm>"), STAR(("until:", "<cause>"))),
+
+"mode-group":     ("mode_group:", "<signature>", STAR(("is:", "<dotted-name>")),
+                   PLUS("<mode-group-elm>"), ":end"),
+"state-machine":  ("state_machine:", "<signature>", STAR(("is:", "<dotted-name>")),
+                   PLUS("<state-machine-elm>"), ":end"),
+
+"cause":          ("<cause-ref>", OR, ("<trigger>", ["&", "<guard>"])),
 "cause-ref":      (t_re_id, "<arg-parens>"),
-"trigger":        (t_re_id, ALT, t_kw_any, ALT, t_kw_end, ALT, t_kw_begin),
-"guard":          ("<luau-guard>", ALT, "<bracket-guard>"),
+
+"trigger":        (t_re_id, OR, t_kw_any, OR, t_kw_end, OR, t_kw_begin),
+
+"guard":          ("<luau-guard>", OR, "<bracket-guard>"),
 "luau-guard":     t_opq_cond,
 "bracket-guard":  ("[", "<or-cond>", "]"),
 "or-cond":        ("<and-cond>", STAR(("or", "<and-cond>"))),
 "and-cond":       ("<not-cond>", STAR(("and", "<not-cond>"))),
 "not-cond":       ([t_kw_not], "<cond-atom>"),
-"cond-atom":      ("<paren-cond>", ALT, "<comparison>"),
+"cond-atom":      ("<paren-cond>", OR, "<comparison>"),
 "paren-cond":     ("(", "<or-cond>", ")"),
 "comparison":     ("<evt-member>", "<cmp-op>", "<cond-operand>"),
 "evt-member":     (".", t_re_id),
-"cmp-op":         (t_op_ge, ALT, t_op_le, ALT, t_op_eq, ALT, t_op_ne, ALT, t_op_gt, ALT, t_op_lt),
-"cond-operand":   ("<evt-member>", ALT, t_re_number, ALT, t_re_string),
-"effect":         ("<mutation>", ALT, "<spawn>", ALT, "<unspawn>", ALT, "<mode-arming>",
-                   ALT, "<report-string>", ALT, "<event-spec>", ALT, "<effect-ref>"),
+"cmp-op":         (t_op_ge, OR, t_op_le, OR, t_op_eq, OR, t_op_ne, OR, t_op_gt, OR, t_op_lt),
+"cond-operand":   ("<evt-member>", OR, t_re_number, OR, t_re_string),
+"effect":         ("<mutation>", OR, "<spawn>", OR, "<unspawn>", OR, "<mode-arming>",
+                   OR, "<report-string>", OR, "<event-spec>", OR, "<effect-ref>"),
 "effect-ref":     (t_re_id,),
 "cause-def":      ("cause:", "<signature>", "on:", "<cause>"),
 "effect-def":     ("effect:", "<signature>", PLUS(("=>", "<effect>"))),
@@ -171,42 +189,29 @@ GRAMMAR = {
 
 "arg-parens":            ("(", ["<arg-list>"], ")"),
 "arg-list":              ("<arg>", STAR((",", "<arg>"))),
-"arg":                   ("<rvalue>", ALT, (t_re_id, "=", "<rvalue>")),
-"rvalue":                (t_re_number, ALT, t_re_string, ALT, "<shallow-member-access>",
-                          ALT, t_re_id, ALT, t_opq_expr),
+"arg":                   ("<rvalue>", OR, (t_re_id, "=", "<rvalue>")),
+"rvalue":                (t_re_number, OR, t_re_string, OR, "<shallow-member-access>",
+                          OR, t_re_id, OR, t_opq_expr),
 "shallow-member-access": ("<binding>", ".", t_re_id),
-"binding":               (t_kw_event, ALT, t_kw_sm, ALT, t_kw_mg, ALT, t_kw_mode),
+"binding":               (t_kw_event, OR, t_kw_sm, OR, t_kw_mg, OR, t_kw_mode),
 
-"mode":      ("mode:", "<signature>", PLUS("<mode-elm>"), PLUS(("until:", "<cause>"))),
-"state":     ("state:", "<signature>", STAR("<mode-elm>"), STAR(("until:", "<cause>"))),
-
-"mode-elm":  ("<causality>", ALT, "<init>", ALT, "<deinit>"),
+"mode-elm":  ("<causality>", OR, "<init>", OR, "<deinit>"),
 "init":      ("init:", t_opq_stmts),
 "deinit":    ("deinit:", t_opq_stmts),
 "has-ref":   ("has:", "<member-ref>"),
 
-"forward-decl":      (t_re_id, ["<decl-parens>"], "is:", "<fwd-kind>"),
-"fwd-kind":          (t_re_id, ALT, t_kw_mode, ALT, (t_kw_container, t_op_lt, ["<arg-list>"], t_op_gt, ["as:", t_opq_lvalue])),
-"member-ref":        (t_re_id, [".", (t_kw_void, ALT, t_re_id)]),
+"member-ref":        (t_re_id, [".", (t_kw_void, OR, t_re_id)]),
 
-"mode-group":        ("mode_group:", "<signature>", STAR(("is:", "<dotted-name>")),
-                      PLUS("<mode-group-elm>"), ":end"),
-"mode-group-elm":    ("<mode>", ALT, "<has-ref>", ALT, "<init>", ALT, "<deinit>"),
-"state-machine":     ("state_machine:", "<signature>", STAR(("is:", "<dotted-name>")),
-                      PLUS("<state-machine-elm>"), ":end"),
-"state-machine-elm": ("<state>", ALT, "<has-ref>", ALT, "<default>", ALT, "<init>", ALT, "<deinit>"),
+"mode-group-elm":    ("<mode>", OR, "<has-ref>", OR, "<init>", OR, "<deinit>"),
+"state-machine-elm": ("<state>", OR, "<has-ref>", OR, "<default>", OR, "<init>", OR, "<deinit>"),
 "default":           ("default:", "<sm-mode-ref>"),
-"sm-mode-ref":       (t_re_id, ".", (t_kw_void, ALT, t_re_id)),
+"sm-mode-ref":       (t_re_id, ".", (t_kw_void, OR, t_re_id)),
 "decl-parens":       ("(", ["<arg-decl-list>"], ")"),
 "arg-decl-list":     ("<arg-decl>", STAR((";", "<arg-decl>"))),
 "arg-decl":          (t_re_name_colon, t_re_id),
 "dotted-name":       (t_re_id, STAR((".", t_re_id))),
 "signature":         ("<dotted-name>", ["<decl-parens>"]),
 
-"event-def":         ("event:", t_re_id, "<decl-parens>"),
-"clock-def":         ("clock:", t_re_id, t_re_number),
 }
-
-
 
 

@@ -1,4 +1,4 @@
 
---- disjoint ALT branches -> no conflict ---
+--- disjoint OR branches -> no conflict ---
 rules compiled: 3
 conflict:       none

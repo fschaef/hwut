@@ -21,17 +21,17 @@ language. Each builds its own toy grammar.
     first2              FIRST_2 of a sequence 'a b c' is {(a, b)}; of an optional
                         head 'a? b' both {(a, b)} and {(b, ...)}; a nullable tail
                         leaves a length-1 entry.
-    ll2_ok              A grammar whose ALT branches differ in their FIRST token
+    ll2_ok              A grammar whose OR branches differ in their FIRST token
                         compiles with no conflict.
-    ll2_conflict        ALT branches sharing BOTH lookahead tokens are rejected
+    ll2_conflict        OR branches sharing BOTH lookahead tokens are rejected
                         with a located conflict report.
-    ll1_needs_ll2       The canonical case: two ALT branches share their FIRST
+    ll1_needs_ll2       The canonical case: two OR branches share their FIRST
                         token but differ on the SECOND ('x' vs 'x ='); LL(1)
                         would reject this, LL(2) accepts it.
     choose_alt          Two-pass selection: a full 2-token pair match beats a
                         length-1 (single-token) match, so 'x =' picks the named
                         branch even though the positional branch begins with 'x'.
-    deep_alt            The conflict scan is iterative: a 20000-deep nested ALT
+    deep_alt            The conflict scan is iterative: a 20000-deep nested OR
                         does not overflow a lowered recursion limit.
     parse_disambiguation  An end-to-end parse over the LL(2) toy grammar yields
                         the correct branch for each input.
@@ -42,12 +42,12 @@ import sys
 import config                                                   # noqa: F401
 from config import HwutRunner
 
-from vut.engine.temporal_logic.parser.core.combinators import ALT, STAR
+from vut.engine.temporal_logic.parser.core.combinators import OR, STAR
 from vut.engine.temporal_logic.parser.core.terminals import T
-from vut.engine.temporal_logic.parser.core import ll2_grammar_ast as N
+from vut.engine.temporal_logic.parser.core import ll2_grammar_spec as N
 from vut.engine.temporal_logic.parser.core.ll2_engine import (
         Grammar, EngineParser, LL2ConflictError)
-from vut.engine.temporal_logic.parser.core.ll2_grammar_ast import merge_first2
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import merge_first2
 from vut.engine.temporal_logic.parser.core.lexer import register_grammar
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 
@@ -100,10 +100,10 @@ def run_first2():
 
 
 def run_ll2_ok():
-    """RETURN: None. ALT branches with distinct FIRST tokens compile cleanly."""
-    banner("disjoint ALT branches -> no conflict")
+    """RETURN: None. OR branches with distinct FIRST tokens compile cleanly."""
+    banner("disjoint OR branches -> no conflict")
     g = Grammar({
-        "top": ("<a>", ALT, "<b>"),
+        "top": ("<a>", OR, "<b>"),
         "a":   (t_ID,  "then"),
         "b":   (t_NUM, "then"),
     }, {"top": None, "a": None, "b": None}, start="top")
@@ -112,14 +112,14 @@ def run_ll2_ok():
 
 
 def run_ll2_conflict():
-    """RETURN: None. ALT branches sharing BOTH lookahead tokens are rejected.
+    """RETURN: None. OR branches sharing BOTH lookahead tokens are rejected.
 
     Both branches begin 'id then', so neither one nor two tokens separates them;
     the LL(2) analyser must report the conflict, located by rule name.
     """
-    banner("ALT branches identical in two-token lookahead -> conflict")
+    banner("OR branches identical in two-token lookahead -> conflict")
     bad = {
-        "top": ("<a>", ALT, "<b>"),
+        "top": ("<a>", OR, "<b>"),
         "a":   (t_ID, "then", "left"),
         "b":   (t_ID, "then", "right"),
     }
@@ -136,7 +136,7 @@ def run_ll2_conflict():
 def run_ll1_needs_ll2():
     """RETURN: None. The construct LL(1) cannot do but LL(2) can.
 
-    The two ALT branches share their FIRST token (an identifier) but differ on
+    The two OR branches share their FIRST token (an identifier) but differ on
     the SECOND: the positional branch is a bare identifier, the named branch is
     'identifier ='. One token cannot tell them apart; two can. This grammar would
     raise under an LL(1) analyser; under LL(2) it compiles, and FIRST_2 shows the
@@ -144,8 +144,8 @@ def run_ll1_needs_ll2():
     """
     banner("shared FIRST token, distinct SECOND -> needs LL(2)")
     g = Grammar({
-        "arg": ("<rvalue>", ALT, (t_ID, "=", "<rvalue>")),
-        "rvalue": (t_NUM, ALT, t_ID),
+        "arg": ("<rvalue>", OR, (t_ID, "=", "<rvalue>")),
+        "rvalue": (t_NUM, OR, t_ID),
     }, {"arg": None, "rvalue": None}, start="arg")
     print("compiled under LL(2): yes")
     # Show the two branches' FIRST_2 explicitly.
@@ -169,8 +169,8 @@ def run_choose_alt():
     terminal DB may already hold a regex that matches the same lexeme, so a toy
     regex could be shadowed at lex time. Unique keywords keep identity exact.
     """
-    grammar = {"arg":    (t_ID, ALT, (t_ID, "EQ", "<rvalue>")),
-               "rvalue": (t_NUM, ALT, "THEN")}
+    grammar = {"arg":    (t_ID, OR, (t_ID, "EQ", "<rvalue>")),
+               "rvalue": (t_NUM, OR, "THEN")}
     banner("choose_alt prefers the two-token match")
     register_grammar(grammar)
     g = Grammar(grammar, {"arg": None, "rvalue": None}, start="arg")
@@ -195,13 +195,13 @@ def run_deep_alt():
     lowers the recursion limit well below that, and checks the scan returns a
     (here empty) conflict list rather than raising RecursionError.
     """
-    banner("deeply nested ALT does not overflow the conflict scan")
+    banner("deeply nested OR does not overflow the conflict scan")
     saved = sys.getrecursionlimit()
     sys.setrecursionlimit(2000)
     try:
-        node = N.TerminalNode(T.string("leaf"), silent=True)
+        node = N.Terminal_Spec(T.string("leaf"), silent=True)
         for _ in range(20000):
-            node = N.AlternativeNode([node])
+            node = N.OR_Spec([node])
 
         class _Ctx:
             rules = {}
@@ -255,7 +255,7 @@ def run_parse_disambiguation():
 
     Parses each input against a toy comma-separated argument list and prints, per
     argument, whether it parsed positional or named. This integrates lexer +
-    two-token window + choose_alt over a STAR-repeated ALT -- the shape the rule
+    two-token window + choose_alt over a STAR-repeated OR -- the shape the rule
     language's argument list has, reduced to essentials. Terminals are unique
     string keywords (see run_choose_alt) so token identity is exact, including at
     end-of-input where a length-1 lookahead '(NUM, eof)' must still select the
@@ -263,8 +263,8 @@ def run_parse_disambiguation():
     """
     grammar = {
         "args":   ("<arg>", STAR(("COMMA", "<arg>"))),
-        "arg":    ("<rvalue>", ALT, (t_ID, "EQ", "<rvalue>")),
-        "rvalue": (t_NUM, ALT, t_ID),
+        "arg":    ("<rvalue>", OR, (t_ID, "EQ", "<rvalue>")),
+        "rvalue": (t_NUM, OR, t_ID),
     }
     register_grammar(grammar)
     g = Grammar(grammar, {"args": None, "arg": _mk_arg, "rvalue": None},
