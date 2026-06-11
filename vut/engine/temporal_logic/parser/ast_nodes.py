@@ -61,6 +61,19 @@ class Luau:
     role:  Role
     begin: int
 
+    @classmethod
+    def from_span(cls, span):
+        """RETURN: Luau, wrapping an engine SpanResult.
+
+        The engine yields a neutral core.span_oracle.SpanResult at an opaque-span
+        position (it knows no language); this is the single seam where the rule
+        language turns it into its own Luau node. SpanResult.mode is the Role the
+        grammar attached to the opaque terminal, mapped straight onto 'role'.
+        For the <luau-guard> rule (a single-terminal rule) the factory receives
+        the raw SpanResult itself -- there is no operator node to unwrap.
+        """
+        return cls(text=span.text, role=span.mode, begin=span.begin)
+
 
 @dataclass(frozen=True)
 class Trigger(OR_Interface):
@@ -83,6 +96,19 @@ class Trigger(OR_Interface):
 # directly by the parser, so the static layer can validate member references and
 # comparisons instead of treating the guard as opaque text.
 
+    @classmethod
+    def from_or(cls, node):
+        """RETURN: Trigger, from the <trigger> OR_Node.
+
+        Branch 0 is the bare identifier; branches 1..3 the captured keywords
+        (ANY / END / BEGIN), so 'is_keyword' is exactly 'a non-zero branch fired'
+        -- read off triggered_index, no token-kind comparison needed.
+        """
+        tok = node.child
+        return cls(name=tok.text, is_keyword=(node.triggered_index != 0),
+                   begin=tok.begin)
+
+
 @dataclass(frozen=True)
 class EventMember(SEQ_Interface):
     """A reference to a member of the triggering event: '.name'.
@@ -94,6 +120,12 @@ class EventMember(SEQ_Interface):
     name:  str
     begin: int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: EventMember, from the <evt-member> SEQ_Node ('.' is silent)."""
+        tok = node.children[0]
+        return cls(name=tok.text, begin=tok.begin)
+
 
 @dataclass(frozen=True)
 class Literal:
@@ -104,6 +136,18 @@ class Literal:
     """
     text:  str
     begin: int
+
+    @classmethod
+    def from_or(cls, node):
+        """RETURN: EventMember | Literal, from the <cond-operand> OR_Node.
+
+        Branch 0 is an already-built EventMember (children-transformed-first),
+        forwarded unchanged; branches 1..2 are number/string tokens wrapped here.
+        """
+        value = node.child
+        if node.triggered_index == 0:
+            return value
+        return cls(text=value.text, begin=value.begin)
 
 
 @dataclass(frozen=True)
@@ -118,12 +162,35 @@ class Comparison(SEQ_Interface):
     right: "object"          # EventMember | Literal
     begin: int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Comparison, from the <comparison> SEQ_Node.
+
+        children = (EventMember, op_token, operand): left member, the comparison
+        operator token (its '.text' is the verbatim op), right operand.
+        """
+        left, op_tok, right = node.children
+        return cls(left=left, op=op_tok.text, right=right, begin=left.begin)
+
 
 @dataclass(frozen=True)
 class Not(SEQ_Interface):
     """A negated condition: 'not <cond-atom>'."""
     operand: "object"        # Comparison | Not | BoolOp
     begin:   int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Not | <cond-atom>, from the <not-cond> SEQ_Node.
+
+        children = (opt_not, atom): the inline optional 'not' is an OR_Node at a
+        STABLE slot -- triggered_index 0 means 'not' was present. No counting.
+        A plain (un-negated) atom is forwarded unchanged.
+        """
+        opt_not, atom = node.children
+        if opt_not.triggered_index == 0:
+            return cls(operand=atom, begin=node.begin)
+        return atom
 
 
 @dataclass(frozen=True)
@@ -139,6 +206,32 @@ class BoolOp(SEQ_Interface):
     operands: List["object"]
     begin:    int
 
+    @classmethod
+    def _from_level(cls, node, op):
+        """RETURN: BoolOp | operand, one precedence level, collapsed when trivial.
+
+        children = (first, STAR(('kw', operand))): the head operand, then the
+        repetition -- each item an anonymous SEQ whose single survivor is the
+        next operand (the 'and'/'or' keyword is silent). One operand forwards
+        unchanged; two-or-more become one BoolOp carrying 'op'.
+        """
+        first    = node.children[0]
+        rest     = [s.children[0] for s in node.children[1].items]
+        operands = [first] + rest
+        if len(operands) == 1:
+            return first
+        return cls(op=op, operands=operands, begin=first.begin)
+
+    @classmethod
+    def from_and_cond(cls, node):
+        """RETURN: BoolOp('and') | operand, the 'and' precedence level."""
+        return cls._from_level(node, "and")
+
+    @classmethod
+    def from_or_cond(cls, node):
+        """RETURN: BoolOp('or') | operand, the 'or' precedence level (lowest)."""
+        return cls._from_level(node, "or")
+
 
 @dataclass(frozen=True)
 class Condition(SEQ_Interface):
@@ -150,6 +243,16 @@ class Condition(SEQ_Interface):
     """
     expr:  "object"
     begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Condition, the root of a '[ ... ]' bracket guard.
+
+        children = (expr,): the single top boolean expression ('[' / ']' are
+        silent). The wrapper keeps the two guard forms (Luau span vs bracket
+        condition) type-distinguishable on Cause.guard.
+        """
+        return cls(expr=node.children[0], begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -163,6 +266,24 @@ class Cause(OR_Interface):
     trigger: Trigger
     guard:   "Optional[object]"   # Luau | Condition | None
     begin:   int
+
+    @classmethod
+    def from_or(cls, node):
+        """RETURN: Cause | CauseRef, from the <cause> OR_Node.
+
+        Branch 0 is an already-built CauseRef, forwarded unchanged. Branch 1 is
+        the anonymous SEQ (Trigger, opt_guard): the inline optional ["&" <guard>]
+        is an OR_Node at a stable slot whose present child is the anonymous
+        one-survivor SEQ around the guard ('&' is silent). No counting.
+        """
+        if node.triggered_index == 0:
+            return node.child
+        seq       = node.child
+        trigger   = seq.children[0]
+        opt_guard = seq.children[1]
+        guard     = (opt_guard.child.children[0]
+                     if opt_guard.triggered_index == 0 else None)
+        return cls(trigger=trigger, guard=guard, begin=trigger.begin)
 
 
 @dataclass(frozen=True)
@@ -182,6 +303,13 @@ class ShallowMemberAccess(SEQ_Interface):
     binding: str
     member:  str
     begin:   int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: ShallowMemberAccess -- children = (binding_tok, member_tok)."""
+        binding_tok, member_tok = node.children
+        return cls(binding=binding_tok.text, member=member_tok.text,
+                   begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -206,6 +334,36 @@ class Arg(OR_Interface):
     kind:  "E_ArgKind"
     begin: int
 
+    @classmethod
+    def _classify(cls, value, name, begin):
+        """RETURN: Arg, classifying 'value' into its E_ArgKind.
+
+        A ShallowMemberAccess is a MEMBER; an opaque SpanResult becomes a Luau
+        node (LUAU); a value-bearing Token (or bare str) is carried as text
+        (LITERAL).
+        """
+        from .core.span_oracle import SpanResult
+        if isinstance(value, ShallowMemberAccess):
+            return cls(name=name, value=value, kind=E_ArgKind.MEMBER, begin=begin)
+        if isinstance(value, SpanResult):
+            return cls(name=name, value=Luau.from_span(value),
+                       kind=E_ArgKind.LUAU, begin=begin)
+        text = value if isinstance(value, str) else value.text
+        return cls(name=name, value=text, kind=E_ArgKind.LITERAL, begin=begin)
+
+    @classmethod
+    def from_or(cls, node):
+        """RETURN: Arg, from the <arg> OR_Node (the canonical LL(2) construct).
+
+        Branch 0: positional -- the child is the rvalue, name None. Branch 1:
+        named -- the child is the anonymous SEQ (id_tok, rvalue), '=' silent.
+        Dispatch by triggered_index, never by shape.
+        """
+        if node.triggered_index == 1:
+            id_tok, rvalue = node.child.children
+            return cls._classify(rvalue, name=id_tok.text, begin=node.begin)
+        return cls._classify(node.child, name=None, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class EventSpec(SEQ_Interface):
@@ -214,6 +372,12 @@ class EventSpec(SEQ_Interface):
     args:  List[Arg]
     begin: int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: EventSpec -- children = (dotted_name, args_list)."""
+        name, args = node.children
+        return cls(name=name, args=args, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class ModeArming(SEQ_Interface):
@@ -221,6 +385,12 @@ class ModeArming(SEQ_Interface):
     name:  "list[str]"        # dotted-name segments
     args:  List[Arg]
     begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: ModeArming -- children = (dotted_name, args_list); '!' silent."""
+        name, args = node.children
+        return cls(name=name, args=args, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -249,6 +419,30 @@ class Spawn(SEQ_Interface):
     luau_handle: Optional["Luau"]
     begin:       int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Spawn, '+! name (args) [ in: C [ as: {lv} ] ]'.
+
+        children = (name, args, opt_in): the trailing options are NESTED stable
+        OR_Node slots mirroring the grammar's nested optionals -- opt_in present
+        yields the anonymous SEQ (container_name, opt_as); opt_as present yields
+        the anonymous one-survivor SEQ around the LVALUE span. The old last-
+        value-is-a-span type-spotting is gone: each option has its slot.
+        """
+        name, args, opt_in = node.children
+        in_container = None
+        luau_handle  = None
+        if opt_in.triggered_index == 0:
+            seq          = opt_in.child
+            in_container = seq.children[0]
+            opt_as       = seq.children[1]
+            if opt_as.triggered_index == 0:
+                span        = opt_as.child.children[0]
+                luau_handle = Luau.from_span(span)
+        return cls(name=name, args=args, has_parens=True,
+                   in_container=in_container, luau_handle=luau_handle,
+                   begin=node.begin)
+
 
 @dataclass(frozen=True)
 class Unspawn(SEQ_Interface):
@@ -262,6 +456,11 @@ class Unspawn(SEQ_Interface):
     name:  "list[str]"        # dotted-name segments
     begin: int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Unspawn, '-! name' -- children = (dotted_name,)."""
+        return cls(name=node.children[0], begin=node.begin)
+
 
 @dataclass(frozen=True)
 class ReportString:
@@ -269,12 +468,25 @@ class ReportString:
     text:  str
     begin: int
 
+    @classmethod
+    def from_token(cls, tok):
+        """RETURN: ReportString, from the matched STRING token (single-terminal
+        rule: the factory receives the raw Token, no operator node)."""
+        return cls(text=tok.text, begin=tok.begin)
+
 
 @dataclass(frozen=True)
 class Mutation:
     """A mutation effect: a STATEMENT_BLOCK Luau span after '=>'."""
     body:  Luau
     begin: int
+
+    @classmethod
+    def from_span(cls, span):
+        """RETURN: Mutation, wrapping the STATEMENT_BLOCK span (single-terminal
+        rule: the factory receives the raw SpanResult)."""
+        body = Luau.from_span(span)
+        return cls(body=body, begin=body.begin)
 
 
 @dataclass(frozen=True)
@@ -287,12 +499,24 @@ class InitBlock(SEQ_Interface):
     body:  Luau
     begin: int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: InitBlock -- children = (span,), the STATEMENT_BLOCK body."""
+        body = node.children[0]
+        return cls(body=body, begin=body.begin)
+
 
 @dataclass(frozen=True)
 class DeinitBlock(SEQ_Interface):
     """A 'deinit { ... }' member: its STATEMENT_BLOCK body. See InitBlock."""
     body:  Luau
     begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: DeinitBlock -- children = (span,), the STATEMENT_BLOCK body."""
+        body = node.children[0]
+        return cls(body=body, begin=body.begin)
 
 
 @dataclass(frozen=True)
@@ -306,6 +530,13 @@ class Causality(SEQ_Interface, TopLevel):
     effects: List[object]
     begin:   int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Causality -- children = (Cause, PLUS(('=>', effect)))."""
+        cause   = node.children[0]
+        effects = [s.children[0] for s in node.children[1].items]
+        return cls(cause=cause, effects=effects, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class ArgDecl(SEQ_Interface):
@@ -313,6 +544,16 @@ class ArgDecl(SEQ_Interface):
     member: str
     type:   str
     begin:  int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: ArgDecl, one 'member: type' -- children = (name_colon, type).
+
+        The member name carries a glued trailing ':' (NAME_COLON), stripped here.
+        """
+        member_tok, type_tok = node.children
+        return cls(member=member_tok.text[:-1], type=type_tok.text,
+                   begin=member_tok.begin)
 
 
 @dataclass(frozen=True)
@@ -329,6 +570,27 @@ class Mode(SEQ_Interface, TopLevel):
     causalities: List[Causality]
     untils:      List[Cause]
     begin:       int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Mode -- children = (signature, PLUS(members), PLUS(untils)).
+
+        Members come off their PLUS slot directly; each until item is the
+        anonymous one-survivor SEQ around its Cause ('until:' is silent). The
+        old trailing-run split is gone: the grammar slots are explicit.
+        """
+        name, params = node.children[0]
+        members      = node.children[1].items
+        untils       = [s.children[0] for s in node.children[2].items]
+        init = deinit = None
+        causalities = []
+        for m in members:
+            match m:
+                case InitBlock():   init = m.body
+                case DeinitBlock(): deinit = m.body
+                case Causality():   causalities.append(m)
+        return cls(name=name, params=params, init=init, deinit=deinit,
+                   causalities=causalities, untils=untils, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -348,6 +610,25 @@ class State(SEQ_Interface):
     untils:      List[Cause]
     begin:       int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: State -- children = (signature, STAR(members), STAR(untils)).
+
+        Same shape as Mode.from_seq with zero-or-more slots.
+        """
+        name, params = node.children[0]
+        members      = node.children[1].items
+        untils       = [s.children[0] for s in node.children[2].items]
+        init = deinit = None
+        causalities = []
+        for m in members:
+            match m:
+                case InitBlock():   init = m.body
+                case DeinitBlock(): deinit = m.body
+                case Causality():   causalities.append(m)
+        return cls(name=name, params=params, init=init, deinit=deinit,
+                   causalities=causalities, untils=untils, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class HasRef(SEQ_Interface):
@@ -361,6 +642,33 @@ class HasRef(SEQ_Interface):
     member:    str
     is_void:   bool
     begin:     int
+
+    @classmethod
+    def from_member_ref(cls, node):
+        """RETURN: HasRef, a bare or qualified member reference.
+
+        children = (name_tok, opt): the inline optional ('.', VOID|id) is an
+        OR_Node at a stable slot. Absent -> bare name (the bare token is always a
+        plain identifier, never VOID, so is_void is False). Present -> the
+        optional's child is the anonymous one-survivor SEQ around the inner
+        member OR_Node ('.' is silent); is_void IS that inner branch index.
+        """
+        name_tok, opt = node.children
+        if opt.triggered_index != 0:
+            return cls(aggregate=None, member=name_tok.text, is_void=False,
+                       begin=name_tok.begin)
+        member_or  = opt.child.children[0]
+        member_tok = member_or.child
+        return cls(aggregate=name_tok.text, member=member_tok.text,
+                   is_void=(member_or.triggered_index == 0),
+                   begin=name_tok.begin)
+
+    @classmethod
+    def from_has_kw(cls, node):
+        """RETURN: HasRef, the 'has:' member rebased to the keyword offset."""
+        ref = node.children[0]
+        return cls(aggregate=ref.aggregate, member=ref.member,
+                   is_void=ref.is_void, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -400,6 +708,21 @@ class ForwardDecl(TopLevel):
     luau_handle: Optional["Luau"]
     begin:       int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: ForwardDecl, '<name> [signature] is: <kind>'.
+
+        children = (name_tok, opt_sig, kind_dict): the optional round-bracket
+        signature is an OR_Node at a stable slot (its present child is the
+        already-reduced ArgDecl list); 'kind_dict' from <type-ref> carries keys
+        'kind' / 'cargs' / 'luau_handle'. 'is:' is silent.
+        """
+        name_tok, opt_sig, kind = node.children
+        signature = opt_sig.child if opt_sig.triggered_index == 0 else []
+        return cls(kind=kind["kind"], name=name_tok.text, signature=signature,
+                   cargs=kind["cargs"], luau_handle=kind["luau_handle"],
+                   begin=name_tok.begin)
+
 
 @dataclass(frozen=True)
 class StateMachineModeRef(SEQ_Interface):
@@ -408,6 +731,26 @@ class StateMachineModeRef(SEQ_Interface):
     mode_name: str          # 'VOID' when the implicit void member is meant
     is_void:   bool
     begin:     int
+
+    @classmethod
+    def from_sm_mode_ref(cls, node):
+        """RETURN: StateMachineModeRef, 'SM.member' or 'SM.VOID'.
+
+        children = (sm_tok, member_or): the member is an inline OR_Node whose
+        branch 0 is the captured VOID keyword -- is_void IS the branch index.
+        """
+        sm_tok, member_or = node.children
+        member_tok = member_or.child
+        return cls(sm_name=sm_tok.text, mode_name=member_tok.text,
+                   is_void=(member_or.triggered_index == 0), begin=sm_tok.begin)
+
+    @classmethod
+    def from_default(cls, node):
+        """RETURN: StateMachineModeRef, the 'default:' target, rebased to the
+        construct start ('default:' is the connective)."""
+        ref = node.children[0]
+        return cls(sm_name=ref.sm_name, mode_name=ref.mode_name,
+                   is_void=ref.is_void, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -430,6 +773,32 @@ class StateMachine(SEQ_Interface, TopLevel):
     deinit:   Optional[Luau]
     begin:    int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: StateMachine -- children = (signature, STAR(is-bases),
+        PLUS(members)); ':end' silent.
+
+        Each base item is the anonymous one-survivor SEQ around its dotted-name
+        ('is:' is silent); members come off their PLUS slot directly. The old
+        list-vs-node type-spotting boundary scan is gone: bases and members have
+        their own grammar slots.
+        """
+        name, params = node.children[0]
+        bases        = [s.children[0] for s in node.children[1].items]
+        members      = node.children[2].items
+        init = deinit = default = None
+        states, has_refs = [], []
+        for m in members:
+            match m:
+                case InitBlock():           init = m.body
+                case DeinitBlock():         deinit = m.body
+                case StateMachineModeRef(): default = m
+                case State():               states.append(m)
+                case HasRef():              has_refs.append(m)
+        return cls(name=name, params=params, bases=bases, states=states,
+                   has_refs=has_refs, default=default, init=init,
+                   deinit=deinit, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class ModeGroup(SEQ_Interface, TopLevel):
@@ -449,6 +818,25 @@ class ModeGroup(SEQ_Interface, TopLevel):
     deinit:   Optional[Luau]
     begin:    int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: ModeGroup -- children = (signature, STAR(is-bases),
+        PLUS(members)); ':end' silent. Same slot shape as StateMachine."""
+        name, params = node.children[0]
+        bases        = [s.children[0] for s in node.children[1].items]
+        members      = node.children[2].items
+        init = deinit = None
+        modes, has_refs = [], []
+        for m in members:
+            match m:
+                case InitBlock():   init = m.body
+                case DeinitBlock(): deinit = m.body
+                case Mode():        modes.append(m)
+                case HasRef():      has_refs.append(m)
+        return cls(name=name, params=params, bases=bases, modes=modes,
+                   has_refs=has_refs, init=init, deinit=deinit,
+                   begin=node.begin)
+
 
 @dataclass(frozen=True)
 class EventDef(SEQ_Interface, TopLevel):
@@ -457,6 +845,12 @@ class EventDef(SEQ_Interface, TopLevel):
     params: List[ArgDecl]
     begin:  int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: EventDef -- children = (name_tok, params_list)."""
+        name_tok, params = node.children
+        return cls(name=name_tok.text, params=params, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class ClockDef(SEQ_Interface, TopLevel):
@@ -464,6 +858,12 @@ class ClockDef(SEQ_Interface, TopLevel):
     name:   str
     period: str             # NUMBER lexeme, kept verbatim
     begin:  int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: ClockDef -- children = (name_tok, period_tok)."""
+        name_tok, period_tok = node.children
+        return cls(name=name_tok.text, period=period_tok.text, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -482,6 +882,13 @@ class CauseDef(SEQ_Interface, TopLevel):
     body:   Cause
     begin:  int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: CauseDef -- children = (signature, Cause); keywords silent."""
+        sig, body    = node.children
+        name, params = sig
+        return cls(name=name, params=params, body=body, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class EffectDef(SEQ_Interface, TopLevel):
@@ -498,6 +905,18 @@ class EffectDef(SEQ_Interface, TopLevel):
     effects: List[object]
     begin:   int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: EffectDef -- children = (signature, PLUS(('=>', effect))).
+
+        Each repetition item is an anonymous one-survivor SEQ around its effect
+        ('=>' is silent), so the effects are read off the PLUS slot directly.
+        """
+        sig          = node.children[0]
+        name, params = sig
+        effects      = [s.children[0] for s in node.children[1].items]
+        return cls(name=name, params=params, effects=effects, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class CauseRef(SEQ_Interface):
@@ -512,6 +931,12 @@ class CauseRef(SEQ_Interface):
     args:  List["Arg"]
     begin: int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: CauseRef, 'NAME(args)' -- children = (name_tok, args_list)."""
+        name_tok, args = node.children
+        return cls(name=name_tok.text, args=args, begin=name_tok.begin)
+
 
 @dataclass(frozen=True)
 class EffectRef(SEQ_Interface):
@@ -523,6 +948,12 @@ class EffectRef(SEQ_Interface):
     """
     name:  str
     begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: EffectRef, a bare effect-bundle name -- children = (name_tok,)."""
+        tok = node.children[0]
+        return cls(name=tok.text, begin=tok.begin)
 
 
 @dataclass(frozen=True)
@@ -539,6 +970,16 @@ class Include(SEQ_Interface, TopLevel):
     mount:    "list[str]"     # dotted-name segments
     begin:    int
 
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Include -- children = (string_tok, dotted_name); quotes
+        stripped from the filename lexeme."""
+        string_tok, mount = node.children
+        filename = string_tok.text
+        if len(filename) >= 2 and filename[0] in "\"'" and filename[-1] == filename[0]:
+            filename = filename[1:-1]
+        return cls(filename=filename, mount=mount, begin=node.begin)
+
 
 @dataclass(frozen=True)
 class Namespace(SEQ_Interface, TopLevel):
@@ -553,6 +994,17 @@ class Namespace(SEQ_Interface, TopLevel):
     name:  "list[str]"        # dotted-name segments
     items: "List[TopLevel]"
     begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Namespace -- children = (dotted_name, PLUS(items)).
+
+        The PLUS body is a single rule reference, so its items are the finished
+        top-level nodes directly (no anonymous wrap).
+        """
+        name  = node.children[0]
+        items = list(node.children[1].items)
+        return cls(name=name, items=items, begin=node.begin)
 
 
 @dataclass

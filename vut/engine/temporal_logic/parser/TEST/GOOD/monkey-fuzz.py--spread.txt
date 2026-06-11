@@ -349,6 +349,46 @@ ModeGroup
         Cause
           trigger:
             Trigger
+              name = 'X218'
+              is_keyword = False
+              begin = 0
+          guard:
+            Luau
+              text = '{ x{ y } }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+        CauseRef
+          name = 'X221'
+          args:
+            Arg
+              name = 'X223'
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = 'X226'
+              value = 'X228'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+        Cause
+          trigger:
+            Trigger
               name = 'END'
               is_keyword = True
               begin = 0
@@ -612,6 +652,92 @@ StateMachine
               begin = 0
           guard:
             Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+        CauseRef
+          name = 'X377'
+          args:
+            Arg
+              name = 'X379'
+              value = 'X381'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X385'
+              value:
+                ShallowMemberAccess
+                  binding = 'mode'
+                  member = 'X389'
+                  begin = 0
+              kind = <E_ArgKind.MEMBER: 2>
+              begin = 0
+            Arg
+              name = 'X391'
+              value = 'X393'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+        CauseRef
+          name = 'X398'
+          args:
+            Arg
+              name = 'X400'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = 'X405'
+              value:
+                ShallowMemberAccess
+                  binding = 'mg'
+                  member = 'X409'
+                  begin = 0
+              kind = <E_ArgKind.MEMBER: 2>
+              begin = 0
+            Arg
+              name = None
+              value:
+                Luau
+                  text = '{ x{ y } }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+        Cause
+          trigger:
+            Trigger
+              name = 'ANY'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
               text = '{ x{ y } }'
               role = <Role.CONDITION: 'condition'>
               begin = 0
@@ -712,7 +838,785 @@ Mode
           begin = 0
       begin = 0
   untils:
-    []
+    Cause
+      trigger:
+        Trigger
+          name = 'END'
+          is_keyword = True
+          begin = 0
+      guard:
+        Condition
+          expr:
+            BoolOp
+              op = 'or'
+              operands:
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X483'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X488'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    EventMember
+                                      name = 'X491'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X494'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    EventMember
+                                      name = 'X497'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X500'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X508'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X513'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    EventMember
+                                      name = 'X516'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X519'
+                                      begin = 0
+                                  op = '>'
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X524'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X532'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    EventMember
+                                      name = 'X535'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X538'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X543'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X548'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    EventMember
+                                      name = 'X551'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X557'
+                                      begin = 0
+                                  op = '>'
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X562'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X567'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X572'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X580'
+                                      begin = 0
+                                  op = '>'
+                                  right:
+                                    EventMember
+                                      name = 'X583'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X586'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    EventMember
+                                      name = 'X589'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X592'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X597'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X605'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X610'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X615'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    EventMember
+                                      name = 'X618'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X621'
+                                      begin = 0
+                                  op = '>'
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X629'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    EventMember
+                                      name = 'X632'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X635'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X640'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    EventMember
+                                      name = 'X643'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X646'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X654'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X659'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X664'
+                                      begin = 0
+                                  op = '>'
+                                  right:
+                                    EventMember
+                                      name = 'X667'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X670'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X678'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X683'
+                                      begin = 0
+                                  op = '>'
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X688'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    EventMember
+                                      name = 'X691'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X694'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    EventMember
+                                      name = 'X697'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X703'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X708'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X713'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X718'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    EventMember
+                                      name = 'X721'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X727'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X732'
+                                      begin = 0
+                                  op = '<'
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X737'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X742'
+                                      begin = 0
+                                  op = '>'
+                                  right:
+                                    EventMember
+                                      name = 'X745'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolOp
+                          op = 'or'
+                          operands:
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X751'
+                                      begin = 0
+                                  op = '!='
+                                  right:
+                                    EventMember
+                                      name = 'X754'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X757'
+                                      begin = 0
+                                  op = '>='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                            BoolOp
+                              op = 'and'
+                              operands:
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X762'
+                                      begin = 0
+                                  op = '=='
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                                Comparison
+                                  left:
+                                    EventMember
+                                      name = 'X767'
+                                      begin = 0
+                                  op = '<='
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+      begin = 0
+    Cause
+      trigger:
+        Trigger
+          name = 'BEGIN'
+          is_keyword = True
+          begin = 0
+      guard:
+        Luau
+          text = '{ x{ y } }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+    CauseRef
+      name = 'X776'
+      args:
+        Arg
+          name = None
+          value:
+            ShallowMemberAccess
+              binding = 'mode'
+              member = 'X780'
+              begin = 0
+          kind = <E_ArgKind.MEMBER: 2>
+          begin = 0
+        Arg
+          name = 'X782'
+          value:
+            Luau
+              text = '{ x }'
+              role = <Role.EXPRESSION: 'expression'>
+              begin = 0
+          kind = <E_ArgKind.LUAU: 1>
+          begin = 0
+        Arg
+          name = 'X785'
+          value = 'X787'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+      begin = 0
   begin = 0
 Include
   filename = 's'
@@ -1035,5 +1939,62 @@ Mode
           begin = 0
       begin = 0
   untils:
-    []
+    CauseRef
+      name = 'X986'
+      args:
+        Arg
+          name = 'X988'
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = 'X996'
+          value:
+            ShallowMemberAccess
+              binding = 'mg'
+              member = 'X1000'
+              begin = 0
+          kind = <E_ArgKind.MEMBER: 2>
+          begin = 0
+      begin = 0
+    Cause
+      trigger:
+        Trigger
+          name = 'X1003'
+          is_keyword = False
+          begin = 0
+      guard:
+        Luau
+          text = '{ x }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+    CauseRef
+      name = 'X1006'
+      args:
+        Arg
+          name = None
+          value:
+            Luau
+              text = '{ x }'
+              role = <Role.EXPRESSION: 'expression'>
+              begin = 0
+          kind = <E_ArgKind.LUAU: 1>
+          begin = 0
+        Arg
+          name = 'X1009'
+          value = 'X1011'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+      begin = 0
   begin = 0

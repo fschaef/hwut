@@ -1,760 +1,114 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-RULE-FILE AST MAP  --  the transformer overlay AND the rule factories.
+RULE-FILE AST MAP  --  rule name -> constructor.
 
-The engine builds the canonical CST (core.cst_nodes) by default; this module is
-the partial overlay (D-5) that refines each rule's CST node into its typed AST
-node (ast_nodes). It now holds BOTH the rule->factory map AND the factory bodies
-themselves -- the former 'actions.py' is retired, its construction logic folded
-in here, so the outer parser layer is just ast_nodes.py (the node types) and
-this module (how each rule's CST node becomes one).
+The engine builds the canonical CST (core.cst_nodes) by default; this map is the
+partial overlay (D-5) naming, for each rule, the CONSTRUCTOR that turns its
+finished CST node into the typed value. Construction lives where it belongs:
 
-A factory receives its rule's finished CST node, its children already
-transformed bottom-up, and returns the AST node. It INTERPRETS the node: the
-helper _dense() recovers the dense, flattened child list (silent terminals
-already gone, inline operators -- a STAR's items, an absent optional -- spliced
-back to the positional stream the bodies read). _dense() is the exact inverse of
-the engine's inline-operator materialisation, which is why the count-sensitive
-rules keep working unchanged: after flattening, an absent optional is simply
-absent, so a length test means what it meant before.
+  - a rule producing an AST NODE maps to a classmethod ON that node's class
+    (ast_nodes): Comparison.from_seq, Trigger.from_or, ... -- one factory per
+    class where one suffices, a named factory (HasRef.from_member_ref /
+    from_has_kw) where one class serves several rules;
+  - a rule producing a PLAIN VALUE (a dotted-name segment list, a signature
+    tuple, an arg list, the type-ref kind dict) maps to a small function HERE --
+    there is no node class to host it;
+  - a PASS-THROUGH rule (an OR dispatch forwarding its single child) maps to
+    _passthrough -- it builds nothing.
 
-LOAD-TIME SHAPE VALIDATION.  validate_ast_map() checks each rule's factory node
-type against the rule's top-level operator via the SIGNAL interfaces
-(core.operator_interface): an OR rule's node must be OR_Interface, a SEQ rule's
-SEQ_Interface, etc. A single-terminal rule (no operator) is exempt. This is a
-shape-correspondence check -- it reads the signal, it does not call any accessor.
+Every constructor receives the rule's finished CST node -- children already
+transformed, bottom-up -- and reads its structure DIRECTLY: SEQ children by
+stable slot, OR branches by triggered_index, repetitions off their STAR/PLUS
+slot, optionals as OR_Nodes whose presence is a state on the node. The old dense
+-frame idiom (and with it the count-sniffing, the trailing-run splits, and the
+type-spotting boundary scans) is gone: the CST slots carry the structure those
+reconstructed.
+
+Single-terminal rules (<luau-guard>, <mutation>, <report-string>) have no
+operator node: their factory receives the raw leaf (SpanResult / Token) itself.
+
+validate_ast_map() is the load-time coverage guard (every grammar rule mapped);
+the shape correspondence (a SEQ rule's node IS SEQ_Interface, ...) is asserted
+by TEST/test-ast-signals.py.
 ______________________________________________________________________________
 """
-from .core.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT
-from .core.operator_interface import (OR_Interface, SEQ_Interface,
-                                       PLUS_Interface, STAR_Interface)
-
-
-class FrameShim:
-    """RETURN: FrameShim, the dense (values, begin) view a factory body reads.
-
-    Carries exactly what the relocated builder bodies expect: 'values' (the
-    dense, flattened child list recovered from the CST node) and 'begin'. Not an
-    engine Frame -- a local interpretation of one rule's CST node.
-    """
-    __slots__ = ("values", "begin")
-
-    def __init__(self, values, begin):
-        self.values = values
-        self.begin  = begin
-
-
-def _flatten_into(out, value):
-    """RETURN: None. Appends 'value''s dense contribution(s) to list 'out'.
-
-    Inverse of inline-operator materialisation. An inline (name=None) operator
-    node contributes its FLATTENED content: STAR/PLUS splice their items, a
-    present OR contributes its child, an absent OR (ABSENT) contributes nothing.
-    A named node is a finished rule value, appended whole; a leaf is appended
-    whole.
-    """
-    if isinstance(value, (SEQ_Node, OR_Node, PLUS_Node, STAR_Node)) \
-            and value.name is None:
-        if isinstance(value, (PLUS_Node, STAR_Node)):
-            for item in value.items:
-                _flatten_into(out, item)
-        elif isinstance(value, SEQ_Node):
-            for child in value.children:
-                _flatten_into(out, child)
-        else:  # OR_Node
-            if value.child is not ABSENT:
-                _flatten_into(out, value.child)
-        return
-    out.append(value)
-
-
-def _node_dense(node):
-    """RETURN: (values, begin), the dense flattened child list and start offset.
-
-    'node' is a rule's own (named) CST node. SEQ -> children flattened; PLUS/STAR
-    -> items flattened; OR -> the single matched child (flattened).
-    """
-    out = []
-    if isinstance(node, SEQ_Node):
-        for child in node.children:
-            _flatten_into(out, child)
-    elif isinstance(node, (PLUS_Node, STAR_Node)):
-        for item in node.items:
-            _flatten_into(out, item)
-    elif isinstance(node, OR_Node):
-        if node.child is not ABSENT:
-            _flatten_into(out, node.child)
-    else:
-        out.append(node)
-    return out, getattr(node, "begin", 0)
-
-
-def _shim(node):
-    """RETURN: FrameShim, the dense view of 'node' the factory bodies read."""
-    values, begin = _node_dense(node)
-    return FrameShim(values, begin)
-
+from .core.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
 from . import ast_nodes as ast
-from .core.span_oracle import SpanResult
-from .grammar import t_re_id, t_kw_void, t_kw_container
-
-
-def _build_trigger(frame):
-    """RETURN: Trigger, from the single matched token of <trigger>."""
-    tok = frame.values[0]
-    is_kw = tok.kind is not t_re_id
-    return ast.Trigger(name=tok.text, is_keyword=is_kw, begin=tok.begin)
-
-
-def _build_cause(frame):
-    """RETURN: Cause | CauseRef, an inline trigger-cause or a cause reference.
-
-    The <cause> rule is '<cause-ref> | (<trigger> ["&" <guard>])'. When the
-    cause-ref branch matched, the frame carries the single already-built CauseRef
-    and it is forwarded unchanged. Otherwise the frame is the trigger-cause:
-    [Trigger] or [Trigger, Luau] when a guard followed '&'.
-    """
-    first = frame.values[0]
-    if isinstance(first, ast.CauseRef):
-        return first
-    trigger = first
-    guard   = frame.values[1] if len(frame.values) > 1 else None
-    return ast.Cause(trigger=trigger, guard=guard, begin=trigger.begin)
-
-
-def _build_cause_ref(frame):
-    """RETURN: CauseRef, a reference to a defined cause: 'NAME(args)'.
-
-    frame.values = [name_tok, [Arg, ...]] -- the identifier token and the
-    arg-parens arg list (empty list for 'NAME()').
-    """
-    name_tok, args = frame.values[0], frame.values[1]
-    return ast.CauseRef(name=name_tok.text, args=args, begin=name_tok.begin)
-
-
-def _build_effect_ref(frame):
-    """RETURN: EffectRef, a reference to a defined effect bundle: bare 'NAME'.
-
-    frame.values = [name_tok] -- a single identifier (effect bundle names are not
-    dotted, which is what keeps this distinguishable from an event-spec).
-    """
-    name_tok = frame.values[0]
-    return ast.EffectRef(name=name_tok.text, begin=name_tok.begin)
-
-
-def _build_cause_def(frame):
-    """RETURN: CauseDef, a named parameterised cause definition.
-
-    frame.values = [Signature, Cause]: the signature (name + params) before the
-    'on:' signal, then the cause body after it ('cause:'/'on:' are silent
-    keywords). The body is an inline Cause (a CauseRef in a definition body would
-    be meaningless, and the grammar's <cause> there is parsed as one; pass-2
-    rejects a ref body if one ever appears).
-    """
-    sig, body = frame.values[0], frame.values[1]
-    name, params = sig
-    return ast.CauseDef(name=name, params=params, body=body,
-                        begin=frame.begin)
-
-
-def _build_effect_def(frame):
-    """RETURN: EffectDef, a named effect bundle definition.
-
-    frame.values = [Signature, effect, effect, ...]: the signature (name +
-    params) before the '=>' signals, then one-or-more effects from the PLUS over
-    '=> <effect>' ('effect:' is a silent keyword, each '=>' a silent signal).
-    """
-    sig          = frame.values[0]
-    name, params = sig
-    effects      = list(frame.values[1:])
-    return ast.EffectDef(name=name, params=params, effects=effects,
-                         begin=frame.begin)
-
-
-def _to_luau(span):
-    """RETURN: Luau, the rule-language node wrapping an engine SpanResult.
-
-    The engine yields a neutral core.span_oracle.SpanResult at an opaque-span
-    position (it knows no language); the rule language turns it into its own
-    ast.Luau here. SpanResult.mode is the Role this grammar attached to the
-    opaque terminal, so it maps straight onto Luau.role. This single conversion
-    is the seam between the language-agnostic engine and the Luau AST.
-    """
-    return ast.Luau(text=span.text, role=span.mode, begin=span.begin)
-
-
-def _build_luau_guard(frame):
-    """RETURN: Luau, the CONDITION span wrapped from the engine's span marker."""
-    return _to_luau(frame.values[0])
-
-
-def _build_bracket_guard(frame):
-    """RETURN: Condition, the root of a '[ ... ]' bracket guard.
-
-    frame.values = [expr]: the single top boolean expression between '[' and ']'
-    ('[' and ']' are silent). Wrapping it in a Condition keeps the two guard
-    forms (Luau span vs. bracket condition) type-distinguishable on Cause.guard.
-    """
-    expr = frame.values[0]
-    return ast.Condition(expr=expr, begin=frame.begin)
-
-
-def _build_bool_level(frame, op):
-    """RETURN: BoolOp | <operand>, an 'and'/'or' level, collapsed when trivial.
-
-    frame.values = [operand, operand, ...]: the terms at this precedence level
-    (the silent 'and'/'or' separators are dropped from the frame). A single
-    operand is forwarded unchanged so a BoolOp always holds two-or-more; two-or-
-    more become one BoolOp carrying 'op'.
-    """
-    operands = list(frame.values)
-    if len(operands) == 1:
-        return operands[0]
-    return ast.BoolOp(op=op, operands=operands, begin=operands[0].begin)
-
-
-def _build_or_cond(frame):
-    """RETURN: BoolOp('or') | operand. The 'or' precedence level (lowest)."""
-    return _build_bool_level(frame, "or")
-
-
-def _build_and_cond(frame):
-    """RETURN: BoolOp('and') | operand. The 'and' precedence level."""
-    return _build_bool_level(frame, "and")
-
-
-def _build_not_cond(frame):
-    """RETURN: Not | <cond-atom>, an optionally-negated atom.
-
-    frame.values = [atom] when 'not' was absent (forwarded unchanged), or
-    [atom] with the silent 'not' having been recorded; the keyword 'not' is a
-    captured token, so its presence is what distinguishes the two. The grammar
-    keeps 'not' as a bare (silent) keyword, so a present 'not' shows as the only
-    way the atom is wrapped: the builder wraps iff the frame carries the marker.
-    """
-    # 'not' is a silent keyword; when present the frame still has just the atom,
-    # so negation presence is signalled by a captured marker appended ahead of
-    # the atom. Distinguish by count: [atom] -> plain; [marker, atom] -> negated.
-    if len(frame.values) == 2:
-        atom = frame.values[1]
-        return ast.Not(operand=atom, begin=frame.begin)
-    return frame.values[0]
-
-
-def _build_comparison(frame):
-    """RETURN: Comparison, '<evt-member> <op> <operand>'.
-
-    frame.values = [EventMember, op_token, operand]: the left event-member, the
-    comparison operator token (its '.text' is the verbatim op), and the right
-    operand (EventMember or Literal).
-    """
-    left, op_tok, right = frame.values[0], frame.values[1], frame.values[2]
-    return ast.Comparison(left=left, op=op_tok.text, right=right,
-                          begin=left.begin)
-
-
-def _build_evt_member(frame):
-    """RETURN: EventMember, a leading-dot event member '.name'.
-
-    frame.values = [name_tok]: the identifier after the silent '.'. The event is
-    implicit (the trigger's); only the member name is recorded.
-    """
-    name_tok = frame.values[0]
-    return ast.EventMember(name=name_tok.text, begin=name_tok.begin)
-
-
-def _build_cond_operand(frame):
-    """RETURN: EventMember | Literal, the right side of a comparison.
-
-    frame.values = [value]: either an already-built EventMember (the '.name'
-    branch) or a number/string token wrapped here as a Literal.
-    """
-    value = frame.values[0]
-    if isinstance(value, ast.EventMember):
-        return value
-    return ast.Literal(text=value.text, begin=value.begin)
-
-
-def _build_mutation(frame):
-    """RETURN: Mutation, wrapping the STATEMENT_BLOCK span."""
-    body = _to_luau(frame.values[0])
-    return ast.Mutation(body=body, begin=body.begin)
-
-
-def _build_causality(frame):
-    """RETURN: Causality, from a cause and one-or-more effects.
-
-    frame.values = [Cause, effect, effect, ...]; the PLUS over '=> <effect>'
-    contributes each effect as a separate value. begin is the 'on' offset.
-    """
-    cause   = frame.values[0]
-    effects = list(frame.values[1:])
-    return ast.Causality(cause=cause, effects=effects, begin=frame.begin)
-
-
-def _build_event_spec(frame):
-    """RETURN: EventSpec, name plus argument list.
-
-    frame.values = [name_str, [Arg, ...]].
-    """
-    name, args = frame.values[0], frame.values[1]
-    return ast.EventSpec(name=name, args=args, begin=frame.begin)
-
-
-def _build_mode_arming(frame):
-    """RETURN: ModeArming, name plus argument list (the '+' is punctuation)."""
-    name, args = frame.values[0], frame.values[1]
-    return ast.ModeArming(name=name, args=args, begin=frame.begin)
-
-
-def _build_report_string(frame):
-    """RETURN: ReportString, from the matched STRING token."""
-    tok = frame.values[0]
-    return ast.ReportString(text=tok.text, begin=tok.begin)
-
-
-def _build_arg_parens(frame):
-    """RETURN: list, the Args inside the parens (empty when '()').
-
-    frame.values is [] for '()' or [[Arg, ...]] when an arg-list matched.
-    """
-    if not frame.values:
-        return []
-    return frame.values[0]
-
-
-def _build_arg_list(frame):
-    """RETURN: list, the Args of an arg-list in order."""
-    return list(frame.values)
-
-
-def _build_arg(frame):
-    """RETURN: Arg, one argument -- a bare-rvalue positional or 'name = value'.
-
-    <arg> is '("<rvalue>", OR, (t_re_id, "=", "<rvalue>"))': a positional whose
-    value is any rvalue, OR a named 'id = rvalue'. The choice needs 2-token
-    lookahead -- an identifier alone is a positional rvalue, but 'identifier ='
-    opens the named branch -- so this rule is the canonical LL(2) construct (the
-    two branches share the identifier in their FIRST sets). Two frame shapes:
-      - [rvalue]            POSITIONAL: the value is the rvalue (a number/string/
-                            identifier LITERAL, a ShallowMemberAccess MEMBER, or a
-                            Luau LUAU span); name is None.
-      - [id_tok, rvalue]    NAMED: 'name' is the identifier text ('=' is silent),
-                            'rvalue' the value, classified by _arg_from_value.
-    """
-    if len(frame.values) == 2:
-        id_tok, rvalue = frame.values
-        return _arg_from_value(rvalue, name=id_tok.text, begin=frame.begin)
-    rvalue = frame.values[0]
-    return _arg_from_value(rvalue, name=None, begin=frame.begin)
-
-
-def _arg_from_value(value, name, begin):
-    """RETURN: Arg, classifying 'value' into its E_ArgKind.
-
-    'value' is one of: a ShallowMemberAccess (MEMBER), a SpanResult opaque span
-    wrapped here into a Luau node (LUAU), a bare-identifier/number/string string
-    OR a value-bearing Token carried as text (LITERAL). A Token is reduced to its
-    '.text'. 'name' is the keyword-argument name or None.
-    """
-    if isinstance(value, ast.ShallowMemberAccess):
-        return ast.Arg(name=name, value=value, kind=ast.E_ArgKind.MEMBER, begin=begin)
-    if isinstance(value, SpanResult):
-        return ast.Arg(name=name, value=_to_luau(value),
-                       kind=ast.E_ArgKind.LUAU, begin=begin)
-    text = value if isinstance(value, str) else value.text
-    return ast.Arg(name=name, value=text, kind=ast.E_ArgKind.LITERAL, begin=begin)
-
-
-def _build_shallow_member_access(frame):
-    """RETURN: ShallowMemberAccess, 'binding.member'.
-
-    frame.values = [binding_tok, member_tok]; the '.' is silent. 'binding_tok'
-    is the captured binding keyword (event/sm/mg/mode), 'member_tok' the bare
-    member name after the dot.
-    """
-    binding_tok, member_tok = frame.values
-    return ast.ShallowMemberAccess(binding=binding_tok.text,
-                                   member=member_tok.text, begin=frame.begin)
-
-
-def _build_dotted_name(frame):
-    """RETURN: list[str], the dotted name as its segment list ['A', 'B', 'C'].
-
-    A bare name 'A' yields ['A']; 'A.B.C' yields ['A','B','C']. The list shape
-    (not a joined 'A.B.C' string) keeps the segmentation that pass-2 needs --
-    scope resolution walks segments -- without re-splitting a joined string, and
-    removes the str/list ambiguity that forced _build_spawn to type-spot its
-    trailing values.
-    """
-    return [tok.text for tok in frame.values]
-
-
-def _build_arg_decl(frame):
-    """RETURN: ArgDecl, one 'member: type'.
-
-    frame.values = [name_colon_tok, type_tok]; the member name carries a glued
-    trailing ':' (NAME_COLON), stripped here to recover the bare member name.
-    """
-    member_tok, type_tok = frame.values
-    member = member_tok.text[:-1]          # strip the glued ':'
-    return ast.ArgDecl(member=member, type=type_tok.text,
-                       begin=member_tok.begin)
-
-
-def _build_arg_decl_list(frame):
-    """RETURN: list, the ArgDecls in order."""
-    return list(frame.values)
-
-
-def _build_decl_parens(frame):
-    """RETURN: list, the ArgDecls inside the parens (empty when '()')."""
-    if not frame.values:
-        return []
-    return frame.values[0]
-
-
-def _build_init(frame):
-    """RETURN: InitBlock, wrapping the STATEMENT_BLOCK body after 'init'."""
-    body = frame.values[0]
-    return ast.InitBlock(body=body, begin=body.begin)
-
-
-def _build_deinit(frame):
-    """RETURN: DeinitBlock, wrapping the STATEMENT_BLOCK body after 'deinit'."""
-    body = frame.values[0]
-    return ast.DeinitBlock(body=body, begin=body.begin)
-
-
-def _build_default(frame):
-    """RETURN: StateMachineModeRef, the 'default:' target.
-
-    Rebinds the ref's begin to the construct start rather than the inner SM-name
-    token. ('=' is retired; 'default:' is the connective.)
-    """
-    ref = frame.values[0]
-    return ast.StateMachineModeRef(sm_name=ref.sm_name, mode_name=ref.mode_name,
-                                   is_void=ref.is_void, begin=frame.begin)
-
-
-def _build_sm_mode_ref(frame):
-    """RETURN: StateMachineModeRef, 'SM.member' or 'SM.VOID'.
-
-    frame.values = [sm_tok, member_tok]; member is the VOID keyword or an ID.
-    """
-    sm_tok, member_tok = frame.values
-    is_void = member_tok.kind is t_kw_void
-    return ast.StateMachineModeRef(sm_name=sm_tok.text, mode_name=member_tok.text,
-                                   is_void=is_void, begin=sm_tok.begin)
-
-
-def _split_members_and_untils(values):
-    """
-    RETURN: (members, untils), the leading member values and trailing Causes.
-
-    A reactor/aggregate body is '<elm>+ ( until <cause> )+'. Every until cause
-    reduces to a Cause; every member reduces to a Causality, InitBlock,
-    DeinitBlock, StateMachineModeRef, State, Mode, or HasRef. The untils are
-    exactly the trailing run of bare Cause nodes, so split at the first trailing
-    Cause. A member's own nested untils live inside that member node, not here.
-    """
-    split = len(values)
-    while split > 0 and isinstance(values[split - 1], ast.Cause):
-        split -= 1
-    return values[:split], values[split:]
-
-
-def _members_slice(values):
-    """
-    RETURN: list, the member/until values after the <signature>.
-
-    values[0] is the <signature> -- a (name, params) tuple, one slot -- so the
-    members start at index 1 unconditionally (no params type-spotting needed).
-    """
-    return values[1:]
-
-
-def _bases_and_members(values):
-    """RETURN: (bases, members), splitting an aggregate body after the signature.
-
-    values[1:] begins with zero-or-more 'is:' base names -- each a dotted-name
-    list[str] from the STAR(('is:', <dotted-name>)) -- followed by the member
-    nodes. Bases are the leading list values; members are the dataclass nodes
-    after them. A base is a list and a member never is, so the boundary is the
-    first non-list value.
-    """
-    rest = values[1:]
-    bases = []
-    i = 0
-    while i < len(rest) and isinstance(rest[i], list):
-        bases.append(rest[i])
-        i += 1
-    return bases, rest[i:]
-
-
-def _name_and_params(frame):
-    """RETURN: (name, params), unpacked from the <signature> at frame.values[0]."""
-    return frame.values[0]
-
-
-def _build_signature(frame):
-    """RETURN: (name, params), a reactor/aggregate signature.
-
-    frame.values = [dotted_name] or [dotted_name, [ArgDecl, ...]]; the
-    round-bracket parameter list is optional ('()' or absent both give []).
-    The single value a <signature> contributes to its parent frame, so a
-    reactor/aggregate rule carries one signature slot, not a name plus a
-    type-spotted optional params slot.
-    """
-    name   = frame.values[0]
-    params = frame.values[1] if len(frame.values) > 1 else []
-    return (name, params)
-
-
-def _build_mode(frame):
-    """RETURN: Mode, assembled from interleaved members and the until causes.
-
-    Members are sorted by kind: Causality -> causalities, InitBlock -> init,
-    DeinitBlock -> deinit. Duplicate init/deinit keeps the last (a validator
-    concern, not a parse error).
-    """
-    name, params = _name_and_params(frame)
-    members, untils = _split_members_and_untils(_members_slice(frame.values))
-    init = deinit = None
-    causalities = []
-    for m in members:
-        match m:
-            case ast.InitBlock():   init = m.body
-            case ast.DeinitBlock(): deinit = m.body
-            case ast.Causality():   causalities.append(m)
-    return ast.Mode(name=name, params=params, init=init, deinit=deinit,
-                    causalities=causalities, untils=untils, begin=frame.begin)
-
-
-def _build_state(frame):
-    """RETURN: State, a state-machine member with its trailing until causes.
-
-    Same shape as a mode: members ('<mode-elm>+') sorted by kind, then the
-    trailing run of 'until' Causes (now optional -- possibly empty). The state's
-    block is terminated structurally by the next state-machine element or 'end',
-    not by a closer keyword.
-    """
-    name, params = _name_and_params(frame)
-    members, untils = _split_members_and_untils(_members_slice(frame.values))
-    init = deinit = None
-    causalities = []
-    for m in members:
-        match m:
-            case ast.InitBlock():   init = m.body
-            case ast.DeinitBlock(): deinit = m.body
-            case ast.Causality():   causalities.append(m)
-    return ast.State(name=name, params=params, init=init, deinit=deinit,
-                     causalities=causalities, untils=untils, begin=frame.begin)
-
-
-def _build_member_ref(frame):
-    """RETURN: HasRef, a bare or qualified member reference.
-
-    frame.values = [name_tok] for a bare name, or [agg_tok, member_tok] for the
-    qualified 'AGG.member' / 'AGG.VOID' form.
-    """
-    if len(frame.values) == 1:
-        member_tok = frame.values[0]
-        is_void = member_tok.kind is t_kw_void
-        return ast.HasRef(aggregate=None, member=member_tok.text,
-                          is_void=is_void, begin=member_tok.begin)
-    agg_tok, member_tok = frame.values
-    is_void = member_tok.kind is t_kw_void
-    return ast.HasRef(aggregate=agg_tok.text, member=member_tok.text,
-                      is_void=is_void, begin=agg_tok.begin)
-
-
-def _build_has_ref(frame):
-    """RETURN: HasRef, the 'has:' member, rebased to the 'has' keyword offset."""
-    ref = frame.values[0]
-    return ast.HasRef(aggregate=ref.aggregate, member=ref.member,
-                      is_void=ref.is_void, begin=frame.begin)
-
-
-def _build_declaration(frame):
-    """RETURN: ForwardDecl, a '<name> [signature] is: <kind>' scope-level decl.
-
-    frame.values = [name_tok, (signature?), kind_dict]; 'is:' is silent and the
-    round-bracket signature is optional. 'signature' is the <decl-parens> list
-    of ArgDecls when present, else []. 'kind_dict' comes from <type-ref>: keys
-    'kind', 'cargs', 'luau_handle'. 'begin' is the name offset. Signature vs
-    type-params, and the mandatory-on-spawnable-kinds rule: see SYNTAX_DOC in grammar.py.
-    """
-    name_tok  = frame.values[0]
-    kind      = frame.values[-1]
-    middle    = frame.values[1:-1]
-    signature = middle[0] if (middle and isinstance(middle[0], list)) else []
-    return ast.ForwardDecl(kind=kind["kind"], name=name_tok.text,
-                           signature=signature,
-                           cargs=kind["cargs"], luau_handle=kind["luau_handle"],
-                           begin=name_tok.begin)
-
-
-def _build_fwd_kind(frame):
-    """RETURN: dict, the kind of a forward declaration: keys 'kind', 'cargs',
-            'luau_handle'.
-
-    A lone ID token is a static kind ('kind' = its text, no cargs, no handle).
-    The 'container' form (KW_CONTAINER captured) gives frame.values =
-    ['container', [Arg,...], maybe Luau]: 'cargs' the angle-bracket type-params
-    (ordinary <arg>s), 'luau_handle' the optional 'as:' LVALUE span. See
-    SYNTAX_DOC in grammar.py, <type-ref>.
-    """
-    head = frame.values[0]
-    if getattr(head, "kind", None) is t_kw_container:
-        cargs    = next((v for v in frame.values[1:] if isinstance(v, list)), [])
-        span     = next((v for v in frame.values[1:] if isinstance(v, SpanResult)),
-                        None)
-        luau_handle = _to_luau(span) if span is not None else None
-        return {"kind": "container", "cargs": cargs, "luau_handle": luau_handle}
-    # static kind: a bare ID token whose text names the kind
-    return {"kind": head.text, "cargs": [], "luau_handle": None}
-
-
-def _build_state_machine(frame):
-    """RETURN: StateMachine, assembled from its member elements.
-
-    Members are sorted by kind: State -> states, HasRef -> has_refs,
-    StateMachineModeRef -> default, InitBlock/DeinitBlock -> init/deinit.
-    Duplicate default/init/deinit keeps the last (a validator concern). The
-    closing 'end' is silent, so every sliced value is a member.
-    """
-    name, params = _name_and_params(frame)
-    bases, members = _bases_and_members(frame.values)
-    init = deinit = default = None
-    states, has_refs = [], []
-    for m in members:
-        match m:
-            case ast.InitBlock():           init = m.body
-            case ast.DeinitBlock():         deinit = m.body
-            case ast.StateMachineModeRef(): default = m
-            case ast.State():               states.append(m)
-            case ast.HasRef():              has_refs.append(m)
-    return ast.StateMachine(name=name, params=params, bases=bases, states=states,
-                            has_refs=has_refs, default=default, init=init,
-                            deinit=deinit, begin=frame.begin)
-
-
-def _build_mode_group(frame):
-    """RETURN: ModeGroup, assembled from its member elements.
-
-    Members are sorted by kind: Mode -> modes, HasRef -> has_refs,
-    InitBlock/DeinitBlock -> init/deinit. A mode group has no 'default'. The
-    closing 'end' is silent, so every sliced value is a member.
-    """
-    name, params = _name_and_params(frame)
-    bases, members = _bases_and_members(frame.values)
-    init = deinit = None
-    modes, has_refs = [], []
-    for m in members:
-        match m:
-            case ast.InitBlock():   init = m.body
-            case ast.DeinitBlock(): deinit = m.body
-            case ast.Mode():        modes.append(m)
-            case ast.HasRef():      has_refs.append(m)
-    return ast.ModeGroup(name=name, params=params, bases=bases, modes=modes,
-                         has_refs=has_refs, init=init, deinit=deinit,
-                         begin=frame.begin)
-
-
-def _build_spawn(frame):
-    """RETURN: Spawn, an aggregate spawn '+! name (args) [ in: C [ as: {lv} ] ]'.
-
-    frame.values are POSITIONAL (the '+!', 'in:', 'as:' punctuation is silent):
-
-        [0] name          list[str]   the dotted aggregate name (always present)
-        [1] args          list[Arg]   the arg list (always present: parens are
-                                       mandatory, '()' giving [])
-        [2] in_container  list[str]   the 'in:' container dotted-name  -- optional
-        [3] luau_handle   Luau        the 'as:' lvalue span            -- optional
-
-    Positional, not type-spotted: since <dotted-name> now reduces to a list (the
-    same Python type as the arg list), the old 'the str is the container, the
-    list is the args' discrimination is no longer possible -- and was fragile
-    regardless. The grammar reaches 'as:' only inside 'in:', so a luau_handle
-    cannot appear without an in_container; the trailing shapes are therefore
-    exactly [], [C], or [C, lv], and a trailing Luau (when present) is always the
-    last value.
-    """
-    values       = frame.values
-    name         = values[0]
-    args         = values[1]
-    rest         = values[2:]
-    span         = rest[-1] if rest and isinstance(rest[-1], SpanResult) else None
-    luau_handle  = _to_luau(span) if span is not None else None
-    in_container = None
-    for v in rest:
-        if not isinstance(v, SpanResult):
-            in_container = v
-            break
-    return ast.Spawn(name=name, args=args, has_parens=True,
-                     in_container=in_container, luau_handle=luau_handle,
-                     begin=frame.begin)
-
-
-def _build_unspawn(frame):
-    """RETURN: Unspawn, an aggregate removal '-! name'.
-
-    frame.values = [name]. The '-!' is punctuation. The name is a dotted-name
-    reference to a spawned aggregate; validity is a pass-2 concern.
-    """
-    return ast.Unspawn(name=frame.values[0], begin=frame.begin)
-
-
-def _build_event_def(frame):
-    """RETURN: EventDef, name plus parameter declarations.
-
-    frame.values = [name_tok, [ArgDecl, ...]].
-    """
-    name_tok, params = frame.values
-    return ast.EventDef(name=name_tok.text, params=params, begin=frame.begin)
-
-
-def _build_clock_def(frame):
-    """RETURN: ClockDef, event name plus period literal.
-
-    frame.values = [name_tok, period_tok].
-    """
-    name_tok, period_tok = frame.values
-    return ast.ClockDef(name=name_tok.text, period=period_tok.text,
-                        begin=frame.begin)
-
-
-def _build_namespace(frame):
-    """RETURN: Namespace, the opened dotted path plus its nested items.
-
-    frame.values = [dotted_name, item, item, ...]. The 'open' and 'close' are
-    silent punctuation; each <top-level> item in the body contributes one value.
-    """
-    name  = frame.values[0]
-    items = list(frame.values[1:])
-    return ast.Namespace(name=name, items=items, begin=frame.begin)
-
-
-def _build_include(frame):
-    """RETURN: Include, the mounted file name and its target path.
-
-    frame.values = [string_tok, dotted_name]. 'include:' and 'into:' are silent.
-    Surrounding quotes are stripped from the filename lexeme.
-    """
-    string_tok = frame.values[0]
-    mount       = frame.values[1]
-    filename    = string_tok.text
-    if len(filename) >= 2 and filename[0] in "\"'" and filename[-1] == filename[0]:
-        filename = filename[1:-1]
-    return ast.Include(filename=filename, mount=mount, begin=frame.begin)
-
-
 
 
 # ---------------------------------------------------------------------------
-# Pass-through: forward the single matched value (no dedicated AST node).
+# Plain-value rule factories (no node class to host them).
+# ---------------------------------------------------------------------------
+def _dotted_name(node):
+    """RETURN: list[str], the dotted name as its segment list ['A', 'B', 'C'].
+
+    children = (head_tok, STAR(('.', tok))): each repetition item is the
+    anonymous one-survivor SEQ around the next segment token ('.' is silent).
+    The list shape (not a joined string) keeps the segmentation pass-2 walks.
+    """
+    head = node.children[0]
+    return [head.text] + [s.children[0].text for s in node.children[1].items]
+
+
+def _signature(node):
+    """RETURN: (name, params), a reactor/aggregate signature.
+
+    children = (dotted_name, opt_params): the optional round-bracket parameter
+    list is an OR_Node at a stable slot; absent and '()' both give []. One
+    signature value per rule slot, so no parent ever type-spots params.
+    """
+    opt = node.children[1]
+    params = opt.child if opt.triggered_index == 0 else []
+    return (node.children[0], params)
+
+
+def _head_and_rest(node):
+    """RETURN: list, '(X, STAR((sep, X)))' collapsed to [X, X, ...].
+
+    The shared shape of <arg-list> and <arg-decl-list>: a head value, then a
+    repetition whose items are anonymous one-survivor SEQs (separator silent).
+    """
+    return [node.children[0]] + [s.children[0] for s in node.children[1].items]
+
+
+def _parens(node):
+    """RETURN: list, the values inside '( ... )' (empty for '()').
+
+    The shared shape of <arg-parens> and <decl-parens>: parens silent, so the
+    single child is the optional inner list -- an OR_Node whose present child is
+    the already-reduced list.
+    """
+    opt = node.children[0]
+    return opt.child if opt.triggered_index == 0 else []
+
+
+def _fwd_kind(node):
+    """RETURN: dict, a forward declaration's kind: 'kind'/'cargs'/'luau_handle'.
+
+    <type-ref> is an OR: branches 0 (bare ID) and 1 (the 'mode' keyword) are a
+    static kind named by the token text. Branch 2 is the container form -- the
+    anonymous SEQ (container_tok, '<', opt_cargs, '>', opt_as): the angle-bracket
+    type-params and the 'as:' LVALUE handle are stable optional slots ('<'/'>'
+    are captured, so they occupy slots of their own).
+    """
+    if node.triggered_index in (0, 1):
+        tok = node.child
+        return {"kind": tok.text, "cargs": [], "luau_handle": None}
+    seq      = node.child
+    opt_args = seq.children[2]
+    opt_as   = seq.children[4]
+    cargs    = opt_args.child if opt_args.triggered_index == 0 else []
+    if opt_as.triggered_index == 0:
+        span        = opt_as.child.children[0]
+        luau_handle = ast.Luau.from_span(span)
+    else:
+        luau_handle = None
+    return {"kind": "container", "cargs": cargs, "luau_handle": luau_handle}
+
+
+# ---------------------------------------------------------------------------
+# Pass-through: forward the single matched value (no dedicated node).
 # ---------------------------------------------------------------------------
 _PASS_THROUGH = (
     "top-level", "guard", "cond-atom", "paren-cond", "cmp-op", "effect",
@@ -763,7 +117,7 @@ _PASS_THROUGH = (
 
 
 def _passthrough(node):
-    """RETURN: object, the rule's single surviving value, unwrapped from the CST."""
+    """RETURN: object, the rule's single surviving value, unwrapped."""
     if isinstance(node, OR_Node):
         return node.child
     if isinstance(node, SEQ_Node):
@@ -773,89 +127,71 @@ def _passthrough(node):
     return node
 
 
-def _wrap(build_fn):
-    """RETURN: callable, a factory feeding 'build_fn' the dense view of the CST node."""
-    def factory(node):
-        return build_fn(_shim(node))
-    return factory
+# ---------------------------------------------------------------------------
+# The map: rule name -> constructor.
+# ---------------------------------------------------------------------------
+AST_MAP = {
+    # plain-value rules (hosted here)
+    "dotted-name":           _dotted_name,
+    "signature":             _signature,
+    "arg-list":              _head_and_rest,
+    "arg-decl-list":         _head_and_rest,
+    "arg-parens":            _parens,
+    "decl-parens":           _parens,
+    "type-ref":              _fwd_kind,
 
-
-_BUILT = {
-    "namespace":             _build_namespace,
-    "include":               _build_include,
-    "causality":             _build_causality,
-    "cause":                 _build_cause,
-    "cause-ref":             _build_cause_ref,
-    "cause-def":             _build_cause_def,
-    "effect-def":            _build_effect_def,
-    "effect-ref":            _build_effect_ref,
-    "trigger":               _build_trigger,
-    "luau-guard":            _build_luau_guard,
-    "bracket-guard":         _build_bracket_guard,
-    "or-cond":               _build_or_cond,
-    "and-cond":              _build_and_cond,
-    "not-cond":              _build_not_cond,
-    "comparison":            _build_comparison,
-    "evt-member":            _build_evt_member,
-    "cond-operand":          _build_cond_operand,
-    "mutation":              _build_mutation,
-    "spawn":                 _build_spawn,
-    "unspawn":               _build_unspawn,
-    "event-spec":            _build_event_spec,
-    "mode-arming":           _build_mode_arming,
-    "report-string":         _build_report_string,
-    "arg-parens":            _build_arg_parens,
-    "arg-list":              _build_arg_list,
-    "arg":                   _build_arg,
-    "shallow-member-access": _build_shallow_member_access,
-    "mode":                  _build_mode,
-    "init":                  _build_init,
-    "deinit":                _build_deinit,
-    "state":                 _build_state,
-    "has-ref":               _build_has_ref,
-    "declaration":           _build_declaration,
-    "type-ref":              _build_fwd_kind,
-    "member-ref":            _build_member_ref,
-    "mode-group":            _build_mode_group,
-    "state-machine":         _build_state_machine,
-    "default":               _build_default,
-    "sm-mode-ref":           _build_sm_mode_ref,
-    "event-def":             _build_event_def,
-    "clock-def":             _build_clock_def,
-    "decl-parens":           _build_decl_parens,
-    "arg-decl-list":         _build_arg_decl_list,
-    "arg-decl":              _build_arg_decl,
-    "dotted-name":           _build_dotted_name,
-    "signature":             _build_signature,
+    # node rules (constructors on the classes)
+    "namespace":             ast.Namespace.from_seq,
+    "include":               ast.Include.from_seq,
+    "causality":             ast.Causality.from_seq,
+    "cause":                 ast.Cause.from_or,
+    "cause-ref":             ast.CauseRef.from_seq,
+    "cause-def":             ast.CauseDef.from_seq,
+    "effect-def":            ast.EffectDef.from_seq,
+    "effect-ref":            ast.EffectRef.from_seq,
+    "trigger":               ast.Trigger.from_or,
+    "luau-guard":            ast.Luau.from_span,
+    "bracket-guard":         ast.Condition.from_seq,
+    "or-cond":               ast.BoolOp.from_or_cond,
+    "and-cond":              ast.BoolOp.from_and_cond,
+    "not-cond":              ast.Not.from_seq,
+    "comparison":            ast.Comparison.from_seq,
+    "evt-member":            ast.EventMember.from_seq,
+    "cond-operand":          ast.Literal.from_or,
+    "mutation":              ast.Mutation.from_span,
+    "spawn":                 ast.Spawn.from_seq,
+    "unspawn":               ast.Unspawn.from_seq,
+    "event-spec":            ast.EventSpec.from_seq,
+    "mode-arming":           ast.ModeArming.from_seq,
+    "report-string":         ast.ReportString.from_token,
+    "arg":                   ast.Arg.from_or,
+    "shallow-member-access": ast.ShallowMemberAccess.from_seq,
+    "mode":                  ast.Mode.from_seq,
+    "init":                  ast.InitBlock.from_seq,
+    "deinit":                ast.DeinitBlock.from_seq,
+    "state":                 ast.State.from_seq,
+    "has-ref":               ast.HasRef.from_has_kw,
+    "member-ref":            ast.HasRef.from_member_ref,
+    "declaration":           ast.ForwardDecl.from_seq,
+    "mode-group":            ast.ModeGroup.from_seq,
+    "state-machine":         ast.StateMachine.from_seq,
+    "default":               ast.StateMachineModeRef.from_default,
+    "sm-mode-ref":           ast.StateMachineModeRef.from_sm_mode_ref,
+    "event-def":             ast.EventDef.from_seq,
+    "clock-def":             ast.ClockDef.from_seq,
+    "arg-decl":              ast.ArgDecl.from_seq,
 }
-
-
-AST_MAP = {name: _wrap(fn) for name, fn in _BUILT.items()}
 AST_MAP.update({name: _passthrough for name in _PASS_THROUGH})
 
 
-_SIGNAL_OF = {"OR": OR_Interface, "SEQ": SEQ_Interface,
-              "PLUS": PLUS_Interface, "STAR": STAR_Interface}
-
-
 def validate_ast_map(grammar_dict):
-    """RETURN: None. Raises ValueError if a factory's node shape mismatches its rule.
+    """RETURN: None. Raises ValueError if a grammar rule has no constructor.
 
-    'top_op_of' maps a rule name to its top-level operator tag ('OR'/'SEQ'/
-    'PLUS'/'STAR'/None). For every built rule (not pass-through, not a single-
-    terminal rule whose op is None), the produced AST node class must derive from
-    the SIGNAL interface of the rule's operator. A mismatch is a loud load error
-    -- the shape-correspondence check that replaces the dropped completeness
-    guarantee. Reads the signal; calls no accessor.
+    The load-time coverage guard, run alongside the LL(2) analysis. The shape
+    correspondence (each node class derives from its rule's operator signal) is
+    a standing test (TEST/test-ast-signals.py), not re-derived here.
     """
-    # This validator inspects node CLASSES, not instances; the binding from a
-    # factory to the class it yields is by construction in this module, so the
-    # check is performed against the known _BUILT/_PASS_THROUGH split: every
-    # grammar rule must be covered, and every covered built rule's operator must
-    # have a signal interface. (Per-class derivation is asserted by ast_nodes
-    # importing the interfaces; see tests.)
-    covered = set(AST_MAP)
-    missing = set(grammar_dict) - covered
+    missing = set(grammar_dict) - set(AST_MAP)
     if missing:
         raise ValueError("AST_MAP does not cover rules: %s"
                          % ", ".join(sorted(missing)))

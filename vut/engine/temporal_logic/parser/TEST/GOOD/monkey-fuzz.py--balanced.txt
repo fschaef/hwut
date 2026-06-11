@@ -124,6 +124,11 @@ Mode
           begin = 0
       begin = 0
   untils:
+    CauseRef
+      name = 'X76'
+      args:
+        []
+      begin = 0
     Cause
       trigger:
         Trigger

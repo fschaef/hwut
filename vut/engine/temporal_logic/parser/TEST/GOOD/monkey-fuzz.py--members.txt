@@ -631,6 +631,29 @@ ModeGroup
               begin = 0
           begin = 0
       untils:
+        CauseRef
+          name = 'X374'
+          args:
+            Arg
+              name = 'X376'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = 'X380'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value:
+                Luau
+                  text = '{ x }'
+                  role = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+          begin = 0
         Cause
           trigger:
             Trigger
@@ -726,7 +749,24 @@ ModeGroup
       causalities:
         []
       untils:
-        []
+        CauseRef
+          name = 'X428'
+          args:
+            Arg
+              name = 'X430'
+              value = 'X432'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X434'
+              value:
+                ShallowMemberAccess
+                  binding = 'mg'
+                  member = 'X438'
+                  begin = 0
+              kind = <E_ArgKind.MEMBER: 2>
+              begin = 0
+          begin = 0
       begin = 0
   has_refs:
     HasRef

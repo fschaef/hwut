@@ -208,7 +208,11 @@ ModeGroup
               begin = 0
           begin = 0
       untils:
-        []
+        CauseRef
+          name = 'X146'
+          args:
+            []
+          begin = 0
       begin = 0
   has_refs:
     []
@@ -241,6 +245,23 @@ Mode
           begin = 0
       begin = 0
   untils:
+    Cause
+      trigger:
+        Trigger
+          name = 'X161'
+          is_keyword = False
+          begin = 0
+      guard:
+        Luau
+          text = '{ x }'
+          role = <Role.CONDITION: 'condition'>
+          begin = 0
+      begin = 0
+    CauseRef
+      name = 'X164'
+      args:
+        []
+      begin = 0
     Cause
       trigger:
         Trigger

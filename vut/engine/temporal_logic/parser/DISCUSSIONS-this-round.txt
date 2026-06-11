@@ -532,3 +532,100 @@ VERIFICATION
     must be PROMOTED on real infrastructure before being trusted as canonical.
     The in-container runs prove new-vs-old agreement on identical inputs (a closed
     loop sufficient for a refactor), NOT canonical-oracle status.
+
+-------------------------------------------------------------------------------
+D-10 Constructors on the nodes; the dense-frame bridge retired; a latent
+     data-loss bug surfaced and fixed (untils preservation)
+-------------------------------------------------------------------------------
+PROBLEM
+    D-8 folded the _build_* bodies into ast_map.py but kept them as free
+    functions speaking the dense-frame idiom, fed through a flatten bridge
+    (_node_dense / FrameShim). That was the right MIGRATION step (zero per-body
+    transcription risk, byte-exact parity) but the wrong END STATE: construction
+    logic did not live on the classes it constructs, the bodies still read
+    positional dense lists, and ast_map.py was 861 lines of displaced logic.
+
+DECISION -- rule name maps to a CONSTRUCTOR; bodies read the CST node directly
+    Each node-producing rule maps to a classmethod ON its AST node class
+    (Comparison.from_cst, Trigger.from_cst, ...; named factories where one class
+    serves several rules: HasRef.from_member_ref / from_has_kw,
+    StateMachineModeRef.from_cst / from_default, BoolOp.from_and_cond /
+    from_or_cond; Luau.from_span is the single SpanResult->Luau seam). A rule
+    producing a PLAIN VALUE (dotted-name list, signature tuple, arg lists, the
+    type-ref kind dict) maps to a small function in ast_map.py -- no class to
+    host it. Pass-throughs stay bare. ast_map.py: 861 -> 197 lines, a pure
+    rule->constructor map.
+
+    Every constructor reads its CST node's STRUCTURE: SEQ children by stable
+    slot, OR branches by triggered_index, repetitions off the STAR/PLUS slot,
+    optionals as OR_Nodes whose presence is a state on the node. The bridge
+    (_flatten/_node_dense/FrameShim) is deleted. With it die the idioms the
+    dense list forced: count-sniffing (not-cond, cause, arg, signature,
+    member-ref now dispatch on triggered_index), the bases/members type-spotting
+    boundary scan (state-machine/mode-group read bases and members off their own
+    slots), and the trailing-run untils split (mode/state read untils off their
+    own slot). Trigger.is_keyword and StateMachineModeRef.is_void read the
+    branch index instead of comparing token kinds.
+
+THE SURFACED BUG -- the old trailing-run split silently LOST untils
+    _split_members_and_untils recognised an until only as a TRAILING run of
+    ast.Cause instances. An 'until:' whose <cause> took the cause-ref branch
+    yields a CauseRef, not a Cause -- so it was never counted as an until, AND
+    the scan stopped there, cutting off every until BEFORE it in the run. All of
+    those fell into the member list, matched no case in the member sorter, and
+    were SILENTLY DISCARDED -- including full Cause-with-guard subtrees. The
+    GOODs recorded that data loss (untils: [] where untils existed in the
+    source). The slot-reading constructor preserves them all, because the
+    grammar slot says what is an until -- no type scanning, nothing to misfile.
+
+    Per "fix at the source, not the assertion": the fix is kept; code was NOT
+    written to replicate the loss for byte-parity. Diff signature across all
+    affected recordings: the ONLY GOOD-side lines displaced are the empty '[]'
+    untils placeholders; the ONLY new lines are the recovered until subtrees.
+    No other value changed anywhere.
+
+GOOD FILES REGENERATED (bug-fix regenerations -- REQUIRE PROMOTION on real
+infrastructure, as does everything container-recorded):
+    TEST/GOOD/cover-syntax-tree.py--positive.txt
+    TEST/GOOD/monkey-fuzz.py--balanced.txt
+    TEST/GOOD/monkey-fuzz.py--members.txt
+    TEST/GOOD/monkey-fuzz.py--spread.txt
+    TEST/GOOD/monkey-fuzz.py--states.txt
+    TEST/GOOD/monkey-fuzz.py--wide.txt
+    TEST/GOOD/test-ast-signals.py--exemptions.txt   (test updated to the slim
+                                                     ast_map structure; not the
+                                                     untils bug)
+
+VERIFICATION
+    All 42 checks green: 14 core (engine+lexer) + 6 cst + 8 outer (engine+
+    lexer) + 3 signal + 9 fuzz + 2 cover. Of these, 35 are byte-identical to
+    the pre-migration oracles; the 7 above changed EXACTLY by the documented
+    untils recovery (and the exemptions restructure) and were regenerated with
+    the diff audited line-by-line before promotion was requested.
+
+-------------------------------------------------------------------------------
+D-11 Factories named for their input's CST shape
+-------------------------------------------------------------------------------
+PROBLEM
+    The D-10 constructors were uniformly named 'from_cst', which left the
+    reader to consult the grammar to learn what shape the node parameter has.
+    The signal interface (D-8) already says the shape; the factory name did not.
+
+DECISION
+    Single-factory classes use shape-named factories: from_seq / from_or /
+    from_plus / from_star -- so the call site states the grammar operator the
+    rule has, the SpecNode subtype the parameter is, and what the body will
+    read. Terminal-leaf rules keep from_token / from_span (single-terminal
+    rules, no operator node). MULTI-factory classes keep rule-derived names
+    (HasRef.from_member_ref / from_has_kw, BoolOp.from_and_cond /
+    from_or_cond, StateMachineModeRef.from_default / from_sm_mode_ref): there
+    the rule distinction is the meaningful disambiguator and the shape is
+    already carried by the signal interface, so restating it would bloat.
+
+    Side-benefit: a shape-named factory on a class whose signal disagrees
+    (from_seq on an OR_Interface class) is wrong at a glance -- a second,
+    reader-level correspondence check on top of test-ast-signals.
+
+VERIFICATION
+    Pure rename, all 42 checks byte-identical to the post-D-10 state. No GOOD
+    regenerated.

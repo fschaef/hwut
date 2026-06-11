@@ -76,7 +76,91 @@ ModeGroup
       causalities:
         []
       untils:
-        []
+        Cause
+          trigger:
+            Trigger
+              name = 'BEGIN'
+              is_keyword = True
+              begin = 0
+          guard:
+            Condition
+              expr:
+                BoolOp
+                  op = 'or'
+                  operands:
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X81'
+                              begin = 0
+                          op = '<='
+                          right:
+                            Literal
+                              text = '1'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X86'
+                              begin = 0
+                          op = '<'
+                          right:
+                            EventMember
+                              name = 'X89'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X92'
+                              begin = 0
+                          op = '>'
+                          right:
+                            Literal
+                              text = '"s"'
+                              begin = 0
+                          begin = 0
+                        Comparison
+                          left:
+                            EventMember
+                              name = 'X97'
+                              begin = 0
+                          op = '!='
+                          right:
+                            EventMember
+                              name = 'X100'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+        CauseRef
+          name = 'X103'
+          args:
+            []
+          begin = 0
+        Cause
+          trigger:
+            Trigger
+              name = 'END'
+              is_keyword = True
+              begin = 0
+          guard = None
+          begin = 0
+        CauseRef
+          name = 'X109'
+          args:
+            []
+          begin = 0
       begin = 0
   has_refs:
     HasRef
@@ -230,6 +314,11 @@ Namespace
               begin = 0
           begin = 0
       untils:
+        CauseRef
+          name = 'X208'
+          args:
+            []
+          begin = 0
         Cause
           trigger:
             Trigger
@@ -365,7 +454,35 @@ StateMachine
               begin = 0
           begin = 0
       untils:
-        []
+        Cause
+          trigger:
+            Trigger
+              name = 'BEGIN'
+              is_keyword = True
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+        Cause
+          trigger:
+            Trigger
+              name = 'X330'
+              is_keyword = False
+              begin = 0
+          guard:
+            Luau
+              text = '{ x }'
+              role = <Role.CONDITION: 'condition'>
+              begin = 0
+          begin = 0
+        CauseRef
+          name = 'X333'
+          args:
+            []
+          begin = 0
       begin = 0
   has_refs:
     HasRef

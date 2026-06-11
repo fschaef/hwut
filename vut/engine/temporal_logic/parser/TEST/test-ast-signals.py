@@ -129,10 +129,8 @@ def run_signal_match():
 
 def run_exemptions():
     banner("rules legitimately without an operator signal")
-    built = set(M._BUILT)
-    passthrough = set(M._PASS_THROUGH)
     print("pass-through (no dedicated node):")
-    for r in sorted(passthrough):
+    for r in sorted(M._PASS_THROUGH):
         print("  %s" % r)
     print("single-terminal (no operator):")
     for r in sorted(GRAMMAR):
