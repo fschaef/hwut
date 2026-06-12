@@ -7,17 +7,11 @@ PURPOSE:
     to capture the registry instance active during the engine's execution.
 """
 import sys
-import os
 import io
 import asyncio
 
 # --- Path Setup ---
-try:
-    from vut.language_support.python.hwut_runner import HwutRunner
-except ImportError:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    sys.path.insert(0, os.path.abspath(os.path.join(current_dir, "../../../../")))
-    from vut.language_support.python.hwut_runner import HwutRunner
+from config import HwutRunner
 
 from vut.engine.compare.configuration import Configuration
 import vut.engine.compare.main          as main

@@ -35,15 +35,13 @@ THE __main__ GUARD
     re-run the test - without that guard the child would recurse.
 ________________________________________________________________________________
 """
-import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 import asyncio
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from config import HwutRunner
 
 from vut.engine.spawner        import (spawn_async, spawn_thread,
-                                       spawn_process, E_ChildState,
-                                       ProcessConfig)
+                                       spawn_process, E_ChildState)
 
 
 # ----------------------------------------------------------------------

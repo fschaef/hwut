@@ -27,13 +27,12 @@ This file verifies:
 ______________________________________________________________________________
 """
 import sys
-import config                                                       # noqa: F401
+from   config import HwutRunner           
 
-from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.workflow.artifact               import (E_Artifact,
-                                                        ArtifactHandling,
-                                                        ArtifactHandlingRegistry,
-                                                        FilepathHandling)
+from vut.engine.workflow.artifact import (E_Artifact,
+                                          ArtifactHandling,
+                                          ArtifactHandlingRegistry,
+                                          FilepathHandling)
 
 
 def banner(label):

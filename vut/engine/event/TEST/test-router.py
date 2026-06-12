@@ -32,14 +32,13 @@ ______________________________________________________________________________
 """
 import asyncio
 import sys
-import config                                                       # noqa: F401
+from   config import HwutRunner
 
-from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.event                           import (Event,
-                                                        category,
-                                                        EventChannelParameter,
-                                                        EventTerminal,
-                                                        EventRouter)
+from   vut.engine.event import (Event,
+                                category,
+                                EventChannelParameter,
+                                EventTerminal,
+                                EventRouter)
 
 
 # Test-local events in two categories so the predicate-routing test

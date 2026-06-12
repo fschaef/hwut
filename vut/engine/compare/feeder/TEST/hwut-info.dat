@@ -5,4 +5,5 @@ coverage run --omit ./*.py -a *.py
 bash *.sh
 
 --not *html*.py
+--not config.py
 

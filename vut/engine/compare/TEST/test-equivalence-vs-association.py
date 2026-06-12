@@ -18,7 +18,7 @@ import io
 sys.path.insert(0, "../" * 4)
 
 # 1. Setup Path to find 'vut' package using the provided runner
-from vut.language_support.python.hwut_runner import HwutRunner # noqa e402
+from config import HwutRunner # noqa e402
 
 from vut.engine.compare.configuration import Configuration # noqa e402
 import vut.engine.compare.main        as main # noqa e402

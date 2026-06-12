@@ -28,11 +28,10 @@ deterministic: the FSM emits EventChildStateChanged whose __str__ is
 old->new only (no timestamp); the test never prints killed_at.
 ________________________________________________________________________________
 """
-import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 import asyncio
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from config import HwutRunner
 
 from vut.engine.event.channel.parameter import EventChannelParameter
 

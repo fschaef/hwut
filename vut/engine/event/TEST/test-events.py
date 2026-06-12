@@ -30,7 +30,7 @@ are declared by users in their own modules.
 ______________________________________________________________________________
 """
 import sys
-import config                                                       # noqa: F401
+from   config import HwutRunner
 
 from dataclasses                                import FrozenInstanceError
 from vut.language_support.python.hwut_runner    import HwutRunner

@@ -10,3 +10,4 @@ coverage run --omit ./*.py -a *.py
 --not common.py
 --not mini_ui.py
 --not tmp.py
+--not config.py

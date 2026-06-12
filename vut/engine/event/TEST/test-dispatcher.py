@@ -28,12 +28,11 @@ ______________________________________________________________________________
 """
 import asyncio
 import sys
-import config                                                       # noqa: F401
+from   config import HwutRunner
 
-from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.event                           import (Event,
-                                                        category,
-                                                        EventDispatcher)
+from   vut.engine.event import (Event,
+                                category,
+                                EventDispatcher)
 
 
 # Test-local event vocabulary. Split into two categories so that

@@ -1,8 +1,8 @@
 """Acceptance tests for the expect_* methods on EventDispatcher."""
+import config # noqa E401
 import asyncio
 import sys
 
-import config                                                       # noqa: F401
 
 from vut.engine.event.event      import Event, category
 from vut.engine.event.dispatcher import EventDispatcher

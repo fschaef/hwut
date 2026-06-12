@@ -20,10 +20,9 @@ each event's __str__, which omits timestamp), so no HAPPY pattern is
 needed.
 ________________________________________________________________________________
 """
-import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from config import HwutRunner
 
 from vut.engine.spawner.enums  import E_ChildState, E_Liveness
 from vut.engine.spawner.events import (EventChildTerminationReq,

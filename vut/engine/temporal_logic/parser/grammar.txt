@@ -41,7 +41,8 @@ NOTE:
     ## container internals (those live in Luau, behind '{ ... }'). The colon is
     ## the mark of a rule-file connective, and it ABUTS ITS FILLER: to the
     ## keyword's right when an operand follows ('on: T', 'mode: X', 'has: X', 'is: K',
-    ## 'in: C', 'as: {lv}', 'into: NS', 'until: C', 'default: R'), and to a
+    ## 'in: C', 'via: K', 'by: {lv}', 'for: E', 'into: NS', 'until: C',
+    ## 'default: R'), and to a
     ## terminator's left when it closes a block (':end', ':close'). A leading
     ## colon finishes something; a trailing colon starts something whose filler
     ## is next. ':' is always a connective and never stands alone; '{ ... }' is
@@ -61,13 +62,15 @@ NOTE:
 
 BINDINGS: Names that bind nesting entities:
 
-    'event'   event of the current rule firing. Always available inside any
-              '{ }' span attached to a fired trigger: guards, '=> { ... }'
-              state blocks, and the <luau-expr> in any <rvalue>.
+    'e'       event of the current rule firing. Available inside any '{ }'
+              span attached to a fired trigger -- guards, '=> { ... }'
+              mutation blocks, the Luau expression in any rvalue -- and, with
+              the SAME spelling, in bracket conditions and as an rvalue
+              ('e.target').
 
-    'mode'    mode instance in which the referencing code fragment resides.
-              Not bound inside top-level rules; referring to it
-              there is a transpile-time error.
+    'm'       mode instance in which the referencing code fragment resides.
+              Not bound inside top-level rules; referring to it there is a
+              semantic-layer error.
 
     'sm'      state machine where the code fragment resides. This may be the
               'init' and 'deinit' handlers of the state machine or any code
@@ -79,15 +82,35 @@ BINDINGS: Names that bind nesting entities:
               'mg' are the two aggregate self-bindings; exactly one is in
               scope, decided by the enclosing aggregate kind.
 
+    The binding names are NOT reserved words. On the rule-file plane they are
+    ordinary leading segments of a <name-dotted>, resolved by the semantic
+    layer as self-binding pseudo-symbols; in the opaque plane they are Luau
+    locals bound by the generated code. One spelling, both planes: the guard
+    '[ e.temp > limit ]' and the guard '{ e.temp > limit }' read identically.
+
+
 IMPLICIT EVENTS:
 
-    'ANY'   at the same time at any event that occurs.
+    'ANY'    at the same time at any event that occurs.
 
-    'BEGIN' immediately (zero-time ahead) before first event of the event
-            sequence.
+    'BEGIN'  immediately (zero-time ahead) before first event of the event
+             sequence.
 
-    'END'   immediately (zero-time ahead) after last event of the event
-            sequence.
+    'END'    immediately (zero-time ahead) after last event of the event
+             sequence. END carries the system members 'run_time_sec' and
+             'event_n', readable as 'e.run_time_sec' / 'e.event_n' inside an
+             'on: END' rule.
+
+    'CHANGE' delivered at the STEP BOUNDARY after a no-time cascade in which
+             opaque code raised it. CHANGE is a system citizen beside
+             BEGIN/END: it is a legal trigger ('on: CHANGE'), it is NOT an
+             authorable emission, and it is raised only by opaque code through
+             the engine API. Sitting on the time axis, it contributes no
+             inbound edges to the cascade graph.
+
+    ANY, BEGIN, and CHANGE are memberless; only END carries the system
+    members above.
+
 
 (A.2.2) Grammar Productions
 
@@ -113,18 +136,20 @@ IMPLICIT EVENTS:
          block is terminated structurally by the next state-machine element or
          'end' (A.2.5).
 
-<trigger> is an event, optionally narrowed by member conditions. The
-          triggering event is always accessible as 'event' inside the
-          rule's Luau spans -- no per-rule binding form is needed.
+<trigger> is an event named by a <name-dotted> (a definition reached through
+          a namespace or an import is a legal trigger), optionally narrowed by
+          a guard. The triggering event is always accessible as 'e' inside the
+          rule's guards, Luau spans, and rvalues -- no per-rule binding form
+          is needed.
 
    Examples:
 
-      on: TICK & { event.time > 0 } => LOG(time = event.time)
+      on: TICK & { e.time > 0 } => LOG(time = e.time)
 
       on: ANY  & { car.gas == 0 } => FRUSTRATION(gravity = 0.1)
 
-      on: PING & { Glob("tester_?_intruder"):match(event.user) and event.ip ~= "127.0.0.1" }
-      => INTRUSION(intruder=event.user)
+      on: PING & { Glob("tester_?_intruder"):match(e.user) and e.ip ~= "127.0.0.1" }
+      => INTRUSION(intruder=e.user)
 
    'ANY' matches every event, including cascade-emitted events and the
    terminating event.
@@ -132,11 +157,11 @@ IMPLICIT EVENTS:
    Example:
 
       mode: WAITING_FOR_ACK(req: number)
-          on: ACK & { event.req == mode.req }
-          => "ack received for {mode.req}"
+          on: ACK & { e.req == m.req }
+          => "ack received for {m.req}"
           on: END
-          => "no ack received for {mode.req}"
-      until: ACK & { event.req == mode.req }
+          => "no ack received for {m.req}"
+      until: ACK & { e.req == m.req }
 
 <guard>
 
@@ -154,41 +179,47 @@ IMPLICIT EVENTS:
         check is sound but not complete: a guard calling a user-defined function
         that itself mutates state cannot be detected statically.
 
-    (2) A bracket condition in '[ ]': a boolean algebra over the triggering
-    event's members. The parser builds the condition tree directly (it is not
-    opaque), so members and comparisons are validated by the static layer.
+    (2) A bracket condition in '[ ]': a boolean algebra over comparisons and
+    boolean references. The parser builds the condition tree directly (it is
+    not opaque), so names and comparisons are validated by the static layer.
 
-        condition  :=  '[' <or> ']'
-        <or>       :=  <and> ( 'or'  <and> )*
-        <and>      :=  <not> ( 'and' <not> )*
-        <not>      :=  [ 'not' ] <atom>
-        <atom>     :=  '(' <or> ')'  |  <comparison>
-        <comparison> := <member> <op> <operand>
-        <member>   :=  '.' name              -- a member of the TRIGGERING event
-        <op>       :=  '>=' | '<=' | '==' | '!=' | '>' | '<'
-        <operand>  :=  <member> | number | string
+        condition   :=  '[' <cond> ']'
+        <cond>      :=  <cond-and> ( 'or'  <cond-and> )*
+        <cond-and>  :=  <cond-not> ( 'and' <cond-not> )*
+        <cond-not>  :=  [ 'not' ] <cond-atom>
+        <cond-atom> :=  '(' <cond> ')'  |  <cond-term>
+        <cond-term> :=  <name-dotted> [ <op-cmp> <operand> ]
+        <op-cmp>    :=  '>=' | '<=' | '==' | '!=' | '>' | '<'
+        <operand>   :=  <name-dotted> | number | string | 'true' | 'false'
 
-        A member is LEADING-DOT and SINGLE-LEVEL: '.ip_adr' is the 'ip_adr'
-        member of the event the trigger named -- the event is implicit, so no
-        event name is written. Comparison only: there is no arithmetic and no
-        function call (use a Luau guard for those). 'and' / 'or' / 'not' are
-        reserved words.
+        The ladder encodes precedence -- 'not' over 'and' over 'or' -- with
+        parentheses to override. A <cond-term> WITHOUT a comparison tail is a
+        bare boolean reference: '[ GHOSTS_AT_HOME ]' and '[ not e.armed ]'
+        are legal, equivalent to '== true' comparisons. Both comparison sides
+        admit a <name-dotted> -- an event member through the 'e' binding
+        ('e.port'), a variable ('TIMEOUT'), or a struct member
+        ('tracker.number') -- symmetrically: '[ e.elapsed > TIMEOUT ]' and
+        '[ TIMEOUT < e.elapsed ]' alike. Literals stand only on the right.
+        Comparison only: there is no arithmetic and no function call (use a
+        Luau guard for those). 'and' / 'or' / 'not' are reserved words; name
+        resolution and operand kinds are semantic-layer checks.
 
         Example:
-            on: NetworkUp & [ .ip_adr == "10.0.0.1" and .port > 1024 ] => ...
-            on: Collision & [ (.severity > 3 or .fatal == 1) and not .handled == 1 ]
+            on: NetworkUp & [ e.ip_adr == "10.0.0.1" and e.port > 1024 ] => ...
+            on: Collision & [ (e.severity > 3 or e.fatal == 1) and not e.handled ]
 
 <effect>
     is what happens as a result of a cause. Every effect is prefixed by '=>',
     which is the marker of causality. There are five kinds:
 
-         emit an event:      => EVENT(arg = ...)
-         arm a mode         => !  MODE(arg = ...)
-         spawn (default):    => +! STATE_MACHINE(arg = ...)
-         spawn into container:=> +! STATE_MACHINE(arg = ...) in: C as: { sprite_db.ghost }
-         end existence:       => -! STATE_MACHINE
-         report a line:      => "text {with} interpolation"
-         mutate state       => { vehicle.speed = 0 }
+         emit an event:        => EVENT(arg = ...)
+         arm a mode:           => !  MODE(arg = ...)
+         spawn (default):      => +! STATE_MACHINE(arg = ...)
+         spawn into container: => +! STATE_MACHINE(arg = ...) in: C via: e.name
+         end existence:        => -! STATE_MACHINE
+         report a line:        => "text {with} interpolation"
+         mutate state:         => { vehicle.speed = 0 }
+         run an effect bundle: => BUNDLE_NAME
 
      The state-mutation form is opaque Luau, the same as a guard, but without
      the read-only restriction: a '=> { ... }' span is the place to write
@@ -204,10 +235,10 @@ IMPLICIT EVENTS:
      unspawns one (<unspawn>). The verbs are distinct: '!' targets a reactor,
      '+!'/'-!' target an aggregate. Only a named (spawned) entity may be
      unspawned, so '-!' takes a reference by name, not a fresh invocation. A
-     spawn may name a target container with 'in: C'; the 'as: { lvalue }' handle
-     is reachable only inside that 'in:' clause, since a handle is the name by
-     which the container holds the instance -- 'as:' without 'in:' is a syntax
-     error.
+     spawn may name a target container with 'in: C'; the 'via: <rvalue>' key
+     is reachable only inside that 'in:' clause, since the key is the name by
+     which the container holds the instance -- 'via:' without 'in:' is a
+     syntax error.
 
      The six kinds may be interleaved freely in any order within one rule,
      each starting with its own '=>'.
@@ -215,18 +246,30 @@ IMPLICIT EVENTS:
      Example:
          on: COLLISION
          => { vehicle.damaged = true }
-         => WRECK(severity = event.severity)
-         => "wreck at t={event.time} severity={event.severity}"
+         => WRECK(severity = e.severity)
+         => "wreck at t={e.time} severity={e.severity}"
 
-<cause-def>, <effect-def>, <cause-ref>, <effect-ref>
+<def-cause>, <def-effect>, <cause-named>, <effect-named>
     A cause or an effect-list may be NAMED ONCE and REUSED, so a recurring
     trigger+guard or a recurring bundle of effects is written in a single place.
 
-    A cause definition gives a cause a name and a parameter signature; the 'on:'
-    that introduces its body is the same signal as in a causality rule:
+    A cause definition gives a cause a name, a parameter signature, a 'for:'
+    EVENT BINDING, and a MANDATORY guard introduced by '&', so the definition
+    reads exactly like a use site:
 
-         cause: NETWORK_UP(time : int)
-                 on: NETWORK & { NETWORK.time > time }
+         event: TEMPERATURE_MEASUREMENT(temp: float)
+         cause: TOO_HOT(limit: int) for: TEMPERATURE_MEASUREMENT
+                                    & [ e.temp > limit ]
+
+    'for:' names the event as a <name-dotted>; the event is defined before the
+    cause definition, and the cause definition itself is fully defined before
+    any rule references it. The guard is mandatory -- a guard-less definition
+    would be a bare alias of its event -- and its body is a CONCRETE guard
+    only (a Luau span or a bracket condition), never another cause reference:
+    no alias chains. 'e.member' references inside the definition's guard are
+    checked against the 'for:' event's members once, at the definition. A
+    guard referencing only variables is legitimate; the binding makes member
+    references checkable when present, it does not demand them.
 
     An effect definition names an ordered bundle of effects and may carry a
     parameter signature, parallel to a cause definition; each '=>' is the same
@@ -242,29 +285,32 @@ IMPLICIT EVENTS:
     A causality rule may then fire a defined cause BY REFERENCE, passing actual
     arguments, and name a defined effect bundle BY REFERENCE as a bare name:
 
-         on: NETWORK(20) => SUPER_POWER
+         on: TOO_HOT(75) => SUPER_POWER
 
-    A cause reference is 'NAME(args)' -- always parenthesised, even when niladic;
-    the parens are what distinguish it from an inline trigger ('NAME' or
-    'NAME & guard'). An effect reference is a BARE single name 'NAME' -- the
-    absence of parens is what distinguishes it from an <event-spec>
-    ('NAME(args)'). Both distinctions are decided by the SECOND token after the
-    name, which is why the grammar is LL(2) rather than LL(1). Effect-bundle and
-    cause names are single identifiers, never dotted, so the second-token test is
-    enough. Resolving a reference to its definition (and checking a cause-ref's
-    arguments against the signature) is a pass-2 concern; the parser records the
-    definitions and references, it does not expand or bind them.
+    On the cause side and on the effect side alike, the named form is ONE
+    grammatical shape -- a <name-dotted> with an optional argument list -- and
+    the PARENS DECIDE: 'NAME(args)' is a cause reference / an <event-spec>
+    emission; a bare 'NAME' is an inline trigger / an effect-bundle reference.
+    The decision is made on the token after the name (which is why the grammar
+    is LL(2) rather than LL(1)). Names may be DOTTED, so definitions reached
+    through namespaces and imports are referenceable: 'on: Sprites.GHOST_EATEN',
+    '=> NS.Effects.cleanup'. Resolving a reference to its definition (and
+    checking a cause reference's arguments against the signature) is a pass-2
+    concern; the parser records definitions and references, it does not expand
+    or bind them. A cause reference followed by '& <guard>' parses; whether it
+    is legal is a semantic-layer decision.
 
     A bare effect reference and a parenthesised event-spec may sit side by side
     in one effect list:
 
-         on: NETWORK(20) => SUPER_POWER => Beep(3)
+         on: TOO_HOT(20) => SUPER_POWER => Beep(3)
 
-    fires the cause NETWORK with argument 20, then runs the SUPER_POWER bundle,
+    fires the cause TOO_HOT with argument 20, then runs the SUPER_POWER bundle,
     then emits Beep(3).
 
+
 <event-spec>
-    constructs an event. The event-name is literal; arguments are <member> '='
+    constructs an event. The event-name is literal; arguments are member '='
     <rvalue> pairs, or positional <rvalue>s. The 'time' field is intrinsic and
     not written in the emit; the engine sets it to the current instant.
 
@@ -285,10 +331,10 @@ IMPLICIT EVENTS:
 
 <spawn>
     constructs an aggregate instance -- a <mode-group> or a <state-machine> --
-    with the verb '+!'. The aggregate-type name is literal. One shape, with two
-    independent optional modifiers:
+    with the verb '+!'. The aggregate-type name is literal. One shape, with one
+    optional modifier chain:
 
-         => +! SM_TRAFFIC(lane = 2) [ in: <container> ] [ as: { <lvalue> } ]
+         => +! SM_TRAFFIC(lane = 2) [ in: <container> [ via: <rvalue> ] ]
 
     THE ARGUMENT LIST IS MANDATORY -- it is how the instance is instantiated.
     The parentheses are required; the list inside may be empty for a type that
@@ -302,22 +348,26 @@ IMPLICIT EVENTS:
        <mode-arming> (identity = parameters, as for modes). Present, the
        instance is offered to the named container instead.
 
-    'as:' -- THE KEY / HANDLE the container holds the instance under. For a dict
-       container this is the key; generally it is the script-world handle naming
-       the instance. The lvalue is opaque Luau: the rule-file parser does not
-       resolve it.
+    'via:' -- THE KEY the container holds the instance under. For a dict
+       container this is the key. The operand is an <rvalue>: a literal, a
+       <name-dotted> (an event member 'e.name', a variable, a struct member),
+       or an opaque '{ luau }' expression. 'via:' is legal only inside an 'in:'
+       clause -- a key without a container is meaningless.
 
-         => +! SM_TRAFFIC(lane = 2) in: sprite_bin as: { vehicle.lead }
+         => +! SM_TRAFFIC(lane = 2) in: sprite_bin via: e.lead_id
 
     Whether an offered instance is admitted is the CONTAINER's decision, taken
     under a mutex; a rejected offer leaves no instance and runs no 'init'. The
     type name and any parenthesised argument names are literal; only argument
-    values and the 'as:' lvalue may be Luau.
+    values and the 'via:' key may be computed.
 
-    SINGLE-INSTANCE there is no dedicated construct. Spawn the type once, 
-    at BEGIN, and bind it to a fixed handle:
+    SINGLE-INSTANCE there is no dedicated construct. Spawn the type once,
+    at BEGIN; it lands in the per-kind default container and is addressed by
+    its type name ('-! SM_TRAFFIC' ends it). Script-side access goes through
+    the holding container.
 
-         on: BEGIN => +! SM_TRAFFIC(lane = 2) as: { the_only_traffic }
+         on: BEGIN => +! SM_TRAFFIC(lane = 2)
+
 
 <unspawn>
     ends the existence of an instance with the verb '-!'. The operand is a
@@ -326,7 +376,7 @@ IMPLICIT EVENTS:
     the trace END would, and releases the instance from whatever container
     holds it.
 
-      => +! SM_TRAFFIC(lane = 2) in { bin }   # spawn into a container
+      => +! SM_TRAFFIC(lane = 2) in: bin       # spawn into a container
       => -! SM_TRAFFIC                          # end existence
       => -! LIGHTS.GLOW                          # dotted reference
 
@@ -336,40 +386,80 @@ IMPLICIT EVENTS:
     the static pass does not decide.
 
 
-<forward-decl>
-      declares a name with its kind before its definition -- the (B.1) gate of
-      the (A)/(B) forward-reference rule, the scope-level counterpart of an
-      aggregate's 'has:' ('is:' states the kind outright; 'has:' lets the frame
-      imply it). The matching definition follows later in the same scope.
+<declaration>
+      introduces a scope-level name with 'is:' and a KIND. One head -- a bare
+      name, an optional ROUND-bracket '(' <list-decl-arg> ')' signature, 'is:'
+      -- followed by one of FOUR kind shapes, distinguished by their leading
+      keyword:
 
-      The name side has the same SHAPE as a <signature>: a bare name optionally
-      followed by a ROUND-bracket '(' <arg-decl-list> ')' instantiation
-      signature -- the same '(member: type ; ...)' form an aggregate definition
-      declares (the optional decl-parens reused, not reinvented). (A forward
-      declaration names a single scope-level identifier, so it takes a bare name
-      rather than the dotted path the <signature> rule allows.) It says HOW a
-      later '+!' instantiates the type, which the
-      engine needs even when only the declaration is in scope. Since a '+!' is
-      the begin-of-life of an instance and we cannot tell at declaration time
-      whether one will target the name, the signature is MANDATORY on the
-      spawnable kinds -- 'mode_group' and 'state_machine'. 'mode' takes NO
-      signature (a mode is armed, not instantiated); 'container' takes none
-      either. This kind-vs-signature rule is a pass-2 check; the grammar accepts
-      the parens on any kind.
+        north(lane: int) is: state_machine                   -- reactor kinds
+        Idle             is: state
+        Watcher          is: mode
+        Patrol           is: mode_group
 
-<fwd-kind>
-      is the declared kind. A bare <kind-name> is a static kind (mode /
-      mode_group / state_machine, validated in pass 2). 'container' is the one
-      kind that reaches into Luau: its ANGLE brackets carry TYPE PARAMETERS --
-      ordinary <arg>s (a shape word 'dict' / 'list' / 'fifo', an optional size,
-      access flags), opaque to the rule-file plane and read by the resolver --
-      and an optional 'as:' binds it to a script-world lvalue. Angle, not round:
-      a container is parameterised by type, never instantiated by a constructor
-      signature, and the bracket shape keeps the two apart on sight. Round =
-      HOW TO INSTANTIATE; angle = WHAT KIND.
+        ghost_state_tracker(                                 -- struct
+            number : int;
+            chasing: bool;
+        ) is: struct
 
-        Sprites is: container<dict>
-        Ghosts  is: container<fifo, 64> as: { db.ghosts }
+        Sprites is: container<dict>                          -- container
+        Ghosts  is: container<fifo, 64> by: { db.ghosts }
+
+        TIMEOUT is: int(5)                                   -- variable
+        RETRIES is: int(3) by: { cfg.retries }
+        tracker is: ghost_state_tracker(number = 3, chasing = false)
+
+      REACTOR KINDS ('mode', 'state', 'mode_group', 'state_machine') forward-
+      declare a name before its definition -- the (B.1) gate of the (A)/(B)
+      forward-reference rule, the scope-level counterpart of an aggregate's
+      'has:' ('is:' states the kind outright; 'has:' lets the frame imply it).
+      The matching definition follows later in the same scope. The signature
+      says HOW a later '+!' instantiates the type, which the engine needs even
+      when only the declaration is in scope; since a '+!' is the begin-of-life
+      of an instance and we cannot tell at declaration time whether one will
+      target the name, the signature is MANDATORY on the spawnable kinds --
+      'mode_group' and 'state_machine'. 'mode' and 'state' take NO signature
+      (armed, not instantiated).
+
+      STRUCT declares an aggregate VALUE type. The signature IS the member
+      list -- the same '(member: type ; ...)' form an aggregate definition
+      declares -- and it is MANDATORY: the declaration is the complete
+      definition, there is no struct forward declaration. Members may be
+      built-in-typed or struct-typed, so structs nest. Structs are (A)-strict
+      -- fully defined before any use -- which makes member cycles impossible
+      by construction.
+
+      CONTAINER is the kind that reaches into Luau: its ANGLE brackets carry
+      TYPE PARAMETERS -- ordinary <arg>s (a shape word 'dict' / 'list' /
+      'fifo', an optional size, access flags), opaque to the rule-file plane
+      and read by the resolver. The angle brackets are OPTIONAL ('X is:
+      container' takes the per-kind defaults). Angle, not round: a container
+      is parameterised by type, never instantiated by a constructor signature.
+      Round = HOW TO INSTANTIATE; angle = WHAT KIND. A container is never
+      spawned: it exists as soon as the scope that declares it exists. It
+      takes no round-bracket signature.
+
+      VARIABLE declares a name of a built-in type ('int', 'float', 'string',
+      'bool') or of a previously declared struct type, with a MANDATORY
+      round-bracket initialiser. The initialiser is an argument list: for a
+      built-in type, exactly one positional value; for a struct type, values
+      binding positionally or by name against the struct's member signature,
+      exactly as mode parameters bind. NAME and TYPE are static -- a scope
+      symbol like any other, legal in bracket conditions and as an <rvalue> --
+      while the VALUE lives in the opaque world: engine-owned storage,
+      materialised in the generated bootstrap, readable and writable from
+      opaque code. The rule-file plane has no assignment construct, so write
+      access is opaque-only by construction. Initialisers evaluate in
+      DECLARATION ORDER at bootstrap; a name referenced in an initialiser
+      resolves under the (A) define-before-use rule. A variable takes no
+      round-bracket signature before 'is:'.
+
+      'by: { lvalue }' OPTIONALLY binds a container or a variable to an
+      EXISTING opaque-code reference, for script-side access under a script-
+      chosen name. The kind-vs-shape legality -- which kinds require, accept,
+      or forbid the head signature, the initialiser, the angle brackets, and
+      'by:' -- is a pass-2 check; the grammar accepts the shared head on any
+      kind.
 
 
 <arg> binds an argument by name or by position. Named arguments may follow
@@ -377,32 +467,36 @@ IMPLICIT EVENTS:
 
 <rvalue>
       is something that can be assigned to an event member or a mode
-      parameter in the <arg-list>. It is one of: a NUMBER or STRING literal; a
-      bare <identifier> carrying a word whose meaning the static layer does not
-      fix (a container type-parameter such as 'dict' / 'fifo', for instance); a
-      <shallow-member-access>; or an opaque '{ luau }' EXPRESSION. The parser
+      parameter in the <list-arg>. It is one of: a NUMBER or STRING literal;
+      'true' / 'false'; a <name-dotted>; or an opaque '{ luau }' EXPRESSION.
+      A <name-dotted> covers a bare word whose meaning the static layer does
+      not fix (a container type-parameter such as 'dict' / 'fifo'), a
+      variable, a struct member ('tracker.number'), and a self-binding member
+      ('e.target' -- the legible, non-opaque way to forward a triggering
+      event's member as an argument, e.g. '=> ! Chase(e.target)'). The parser
       admits an rvalue everywhere an <arg> is admitted; whether a given site
-      accepts a bare word is a pass-2 concern, not a parse error.
+      accepts a given name is a pass-2 concern, not a parse error.
 
-<shallow-member-access>
-      names a member of one of the four runtime self-bindings -- 'event' (the
-      triggering event), 'sm' / 'mg' (the enclosing state machine / mode group),
-      or 'mode' (the enclosing mode) -- as 'binding.member', without descending
-      into Luau. It is the legible, non-opaque way to forward a triggering
-      event's member as an argument (e.g. '=> ! Chase(event.target)'). The
-      access is SHALLOW: exactly one '.', a pure reference -- no deeper
-      navigation and no expression, which still belong behind '{ }'. The four
-      bindings are reserved words; member existence and binding scope ('sm' /
-      'mg' are in scope only inside the aggregate's own definition body) are
-      semantic-layer checks, not parse errors.
 
-<arg-decl-list>
-      declares a mode's parameters specifying a member by its name and its
-      type. Parameter order matters: positional arguments bind in declaration
-      order. A parameter's type is either a Luau primitive ('number', 'string',
-      'boolean') or the name of a class created in 'on: BEGIN'.
+<name-dotted>
+      is a dot-separated chain of identifiers -- 'TIMEOUT', 'e.target',
+      'NS.Sprites.GHOST_EATEN', 'tracker.pos.x' -- and the ONE member-access
+      and reference shape of the rule-file plane. The parser fixes no meaning:
+      the semantic layer resolves the leading segment (a namespace, an
+      aggregate, a variable, a struct, or one of the self-binding pseudo-
+      symbols 'e' / 'sm' / 'mg' / 'm') and descends the remaining segments.
+      Expressions and computation still belong behind '{ }'.
+
+
+<list-decl-arg>
+      declares an aggregate's parameters -- or a struct's members -- by name
+      and type, ';'-separated. Parameter order matters: positional arguments
+      bind in declaration order. A type is a built-in ('int', 'float',
+      'string', 'bool'), the name of a declared struct, or the name of a
+      class created in 'on: BEGIN'.
 
       Class-typed parameters are bound by reference into the one object space.
+
 
 <report-string>
       is an interpolated string emitted as a report line. Report lines are the
@@ -440,9 +534,9 @@ are aggregates and are closed by 'end'.
 
       mode: AWAIT_ACK(req: number)
           on: END
-          => "timeout on request {mode.req}"
-      until: TICK & { event.time >= mode.begin_time + 5 }
-      until: ACK  & { event.req == mode.req }
+          => "timeout on request {m.req}"
+      until: TICK & { e.time >= m.begin_time + 5 }
+      until: ACK  & { e.req == m.req }
 
 
 (A.2.3) Details on Modes
@@ -465,8 +559,8 @@ by reference -- as enforced by the Luau engine.
 The engine stamps every instance with two readable members in addition
 to the parameters defined in the mode's declaration:
 
-    mode.begin_time        'time' at which it was instantiated.
-    mode.begin_event_index index of the event that caused the instantiation.
+    m.begin_time        'time' at which it was instantiated.
+    m.begin_event_index index of the event that caused the instantiation.
 
 The engine-stamped members may not be specified by the user. The parameter
 list provides identity: no two modes exist with identical parameter lists.
@@ -550,27 +644,27 @@ constructor arguments are passed.
 Example: vehicle must stop within 10 s of a stop sign
 
     on: STOP_SIGN_PASSED
-    => ! LOOK_FOR_CAR_SPEED(at = event.time)
+    => ! LOOK_FOR_CAR_SPEED(at = e.time)
 
     mode: LOOK_FOR_CAR_SPEED(at: number)
         on: TICK & { vehicle.speed > 0 }
-        => "t={format(event.time)} vehicle moving at stop sign"
-    until: TICK & { event.time >= mode.at + 10 }
+        => "t={format(e.time)} vehicle moving at stop sign"
+    until: TICK & { e.time >= m.at + 10 }
 
 Example: parameterized, with conditional arming
 
     ## arm one watcher per (ip, port); the ':has' guard is illustrative --
     ## under idempotent re-arm a duplicate arming would be a silent no-op
-    on: NW_EVENT & { not NETWORK_WATCHER:has(ip = event.ip, port = event.port) }
-    => ! NETWORK_WATCHER(ip = event.ip, port = event.port, firewall = global_fw)
+    on: NW_EVENT & { not NETWORK_WATCHER:has(ip = e.ip, port = e.port) }
+    => ! NETWORK_WATCHER(ip = e.ip, port = e.port, firewall = global_fw)
 
     mode: NETWORK_WATCHER(ip: string; port: number; firewall: Firewall)
-        on: PING & { event.ip == mode.ip and event.port == mode.port }
-        => INTRUSION(ip = mode.ip)
+        on: PING & { e.ip == m.ip and e.port == m.port }
+        => INTRUSION(ip = m.ip)
         on: END
-        => "watcher for {mode.ip} expired unresolved"
-    until: TICK & { event.time >= mode.begin_time + 30 }
-    until: ACK  & { event.ip == mode.ip }
+        => "watcher for {m.ip} expired unresolved"
+    until: TICK & { e.time >= m.begin_time + 30 }
+    until: ACK  & { e.ip == m.ip }
 
 There is one special mode, the GROUND_MODE, which is active all the time.
 All causalities which are not bound to an explicit mode belong to the
@@ -609,19 +703,16 @@ transition, and the mutual-exclusion is automatic.
 A member-state is declared inline in the state-machine body with the 'state'
 keyword and an unqualified name:
 
-    state <reactor-name> [ '(' <arg-decl-list> ')' ] ':'
+    state <reactor-name> [ '(' <list-decl-arg> ')' ] ':'
         <reactor-elm>*
         ( 'until' <cause> )*
 
 A state defined elsewhere is pulled in with 'has:':
 
-    has: <member-ref>
+    has: <ref-member>
 
 A name may also be DECLARED at scope level before its definition, with its kind
-stated, using 'is:':
-
-    <signature> 'is:' ( 'mode' | 'mode_group' | 'state_machine'
-                      | 'container' '<' <arg>* '>' [ 'as:' '{' <luau-lvalue> '}' ] )
+stated, using 'is:' (the <declaration> production, A.2.2).
 
 'is:' is the scope-level counterpart of the aggregate-body 'has:'. Both declare
 a name together with its kind -- the (B.1) gate of the forward-reference rule.
@@ -629,47 +720,24 @@ a name together with its kind -- the (B.1) gate of the forward-reference rule.
 holds only member modes / states, so 'has: NAME' already says "NAME is a
 mode/state"); 'is:' states the kind outright, because a scope holds names of
 several kinds and the frame fixes nothing. The name is bare: declaration and
-definition share one scope, so nothing is qualified across a boundary.
-
-The name side is a <signature> -- a bare name optionally followed by a
-round-bracket '(' <arg-decl-list> ')' instantiation signature, the same
-'(member: type ; ...)' form an aggregate definition declares. A '+!' spawn is
-the begin-of-life of an instance, so the engine needs the signature to
-instantiate even when the body follows the declaration; since at declaration
-time we cannot tell whether a '+!' will target the name, the signature is
-MANDATORY on the spawnable aggregate kinds -- 'mode_group' and 'state_machine'.
-'mode' takes NO signature (a mode is armed, not instantiated), and 'container'
-takes none either: its angle brackets are TYPE PARAMETERS, not a constructor
-signature. The round brackets say HOW TO INSTANTIATE; the angle brackets say
-WHAT KIND. Beyond that signature a static-kind forward declaration opens no
-Luau and carries no body -- the definition site carries the body. Having and
-being: 'has:' / 'is:'.
+definition share one scope, so nothing is qualified across a boundary. Beyond
+its signature a reactor-kind forward declaration opens no Luau and carries no
+body -- the definition site carries the body. Having and being: 'has:' / 'is:'.
 
 The 'container' kind is the one that reaches into the script world. A container
 is a place spawned instances are caught into; 'X is: container<...>' declares
-that X may be used wherever a container is expected. Its angle-bracket contents
-are TYPE PARAMETERS -- a shape word ('dict', 'list', 'fifo'), an optional size,
-and (extensibly) access flags such as 'r' / 'w' / 'x'. They are ordinary <arg>s
-(bare words, numbers, or '{ ... }' Luau), opaque to the rule-file plane and
-interpreted by the resolver. Angle brackets, not round: a container is
-parameterised by type, never instantiated by a constructor signature, and the
-bracket shape keeps the two apart on sight:
+that X may be used wherever a container is expected (the kind shapes, the
+optional angle-bracket type parameters, and the 'by:' script binding are
+specified at <declaration>, A.2.2). A container is never spawned; it exists as
+soon as its declaring scope exists. A spawn reaches a declared container by
+name with 'in:' and may name the key its caught instance is held under with
+'via:':
 
-    Sprites is: container<dict>
-    Ghosts  is: container<fifo, 64> as: { db.ghosts }
+    on: Hatch => +! ghost(seed) in: Ghosts via: e.id
 
-The optional 'as:' clause binds the container to a script-world lvalue: an
-opaque Luau path inside '{ ... }', carried in the LVALUE role (assignability is
-the runtime's concern, not the parser's). It is the same tampering-with-Luau
-act as a spawn's own 'as:' handle -- '{ ... }' always means "script world here",
-never anything else. A spawn reaches a declared container by name with 'in:'
-and may name its caught instance in Luau with 'as:':
-
-    on: Hatch => +! ghost(seed) in: Ghosts as: { db.ghosts[id] }
-
-Here 'in: Ghosts' is an ordinary (B.1) forward reference to a container declared
-with 'is: container<...>'; the container declaration is exactly what lets the
-spawn name it before the container's full setup appears in scope.
+Here 'in: Ghosts' is an ordinary (B.1) forward reference to a container
+declared with 'is: container<...>'; the container declaration is exactly what
+lets the spawn name it before the container's full setup appears in scope.
 
 Inside the Luau code sections of the state machine itself and its member
 states, the nesting state machine is referred to by the binding 'sm', and all
@@ -688,19 +756,19 @@ states it has:
    'default' specifies the active state when no state otherwise remains
              active -- before any state is armed, or after a state terminates
              via its own 'until' with no successor armed. The target is a
-             <member-ref>. If 'default' is not specified, an empty VOID state
+             <ref-member>. If 'default' is not specified, an empty VOID state
              is activated.
 
    'init'  runs once when the state machine comes into being. Arguments to
            the state machine are already bound to the 'sm' binding -- same as
-           'event' in <causality>, 'mode' in <mode>, and the mode-group
+           'e' in <causality>, 'm' in <mode>, and the mode-group
            counterpart 'mg'.
 
            The typical body arms the first state.
 
    'deinit'  runs once when the state machine ceases. Takes no arguments.
 
-A <member-ref> is resolved against the enclosing aggregate, so a member is
+A <ref-member> is resolved against the enclosing aggregate, so a member is
 named by its bare <reactor-name>. The qualified form
 '<aggregate-name>.<reactor-name>' is also accepted and is GOOD PRACTICE where
 it aids the reader; the bare form and the qualified form denote the same
@@ -732,7 +800,7 @@ Example: a task state machine
         until: EVENT_TASK_TERMINATED
 
         state: RUN
-            on: TICK & { event.time >= mode.begin_time + quantum }
+            on: TICK & { e.time >= m.begin_time + quantum }
             => ! SLEEP
         until: EVENT_TASK_TERMINATED
     end   # a state machine is closed by 'end'; it has no 'until' of its own
@@ -751,11 +819,11 @@ deactivate another. It is the non-exclusive counterpart of the state machine.
 A member mode is declared inline in the mode-group body with the 'mode'
 keyword, or pulled in with 'has:':
 
-    mode <reactor-name> [ '(' <arg-decl-list> ')' ] ':'
+    mode <reactor-name> [ '(' <list-decl-arg> ')' ] ':'
         <reactor-elm>+
         ( 'until' <cause> )+
 
-    has: <member-ref>
+    has: <ref-member>
 
 Inside the Luau code sections of the mode group itself and its member modes,
 the nesting mode group is referred to by the binding 'mg' -- the counterpart of
@@ -766,7 +834,7 @@ repeatable); the parser records the bases and a later layer resolves how they
 combine. It has NO closing 'until' causes of
 its own, and NO 'default':
 with overlapping members there is no single active member to fall back to, so
-no fallback exists. A <member-ref> inside a mode group resolves against the
+no fallback exists. A <ref-member> inside a mode group resolves against the
 group by bare <reactor-name>, with the qualified form accepted as good
 practice.
 
@@ -790,7 +858,7 @@ marks where the last member -- and the group -- closes.
 
 Both aggregates are spawned as an effect with '+!' (see <spawn>): the type name
 with its mandatory argument list, optionally directed to a named container with
-'in:' and keyed with 'as:'. An instance's existence is ended with '-!' (see
+'in:' and keyed with 'via:'. An instance's existence is ended with '-!' (see
 <unspawn>).
 
 
@@ -798,7 +866,7 @@ with its mandatory argument list, optionally directed to a named container with
 
 A namespace brackets a group of declarations into a named scope:
 
-    open <dotted-name>
+    open <name-dotted>
         <top-level>+
     :close
 
@@ -839,35 +907,36 @@ instance-name visibility works -- are a semantic-pass concern, not a parsing
 one.)
 
 
-(A.2.8) Including Other Files
+(A.2.8) Importing Other Files
 
 Another file's namespace is mounted into this one with:
 
-    include: "<file>" into: <dotted-name>
+    import: "<file>" into: <name-dotted>
 
-The INCLUDING file decides the mount point (the 'as' path); the included file
-is placement-agnostic and does not name its own location -- the same file may
-be mounted at different paths in different files, and there is no self-naming
-collision. This mirrors how a module system separates a unit's internal,
-self-relative names from its external, caller-chosen placement.
+The IMPORTING file decides the mount point (the 'into' path); the imported
+file is placement-agnostic and does not name its own location -- the same file
+may be mounted at different paths in different files, and there is no
+self-naming collision. This mirrors how a module system separates a unit's
+internal, self-relative names from its external, caller-chosen placement.
 
-    include: "city_rules" into: earth.europe.berlin
-    include: "sensor_pack" into: sensors
+    import: "city_rules" into: earth.europe.berlin
+    import: "sensor_pack" into: sensors
 
     open: world.zone
-        include: "diagnostics" into: diag      # mount inside a scope
+        import: "diagnostics" into: diag      # mount inside a scope
         on: TICK => HEARTBEAT()
     :close
 
-An include may appear at the top level or inside an 'open' scope; the mount
-path is relative to where the include sits. The included file is parsed once on
+An import may appear at the top level or inside an 'open' scope; the mount
+path is relative to where the import sits. The imported file is parsed once on
 its own and is lexically self-contained: its internal references resolve within
 itself, not against the mounting file's surrounding scope.
 
-The parser only RECORDS each include (the file name and the mount path).
+The parser only RECORDS each import (the file name and the mount path).
 Resolving the file, parsing it, and mounting its symbol table -- and the
 visibility and caching rules that govern that -- are semantic-pass concerns,
 not parsing ones.
+
 
 
 (A.3) OBJECT SPACE INIT and DEINIT
@@ -940,11 +1009,11 @@ sequence, where it sends its first event and sets the 'last sent time'.
 Whenever an event arrives, it considers the timestamp of that event. It
 determines the difference
 
-    delta_t = event.time - clock.last_time_event_sent
+    delta_t = e.time - clock.last_time_event_sent
 
 It then sends events based on 'synthetic time'
 
-    for t = clock.last_time_event_sent; t <= event.time ;  t += delta_t:
+    for t = clock.last_time_event_sent; t <= e.time ;  t += delta_t:
         emit <event-name>(time=t)
 
 This allows for integration of differential equations, or other simulation
@@ -1046,8 +1115,8 @@ EXAMPLE
         tracer.watch(LOGIN)
     }
 
-    on: PING & { LOGIN:has(ip = event.ip) }
-    => "ping from logged-in ip {event.ip}"
+    on: PING & { LOGIN:has(ip = e.ip) }
+    => "ping from logged-in ip {e.ip}"
 
 -------------------------------------------------------------------------------
 (C) BOOTSTRAP HELPERS  --  available inside guards and Luau spans
@@ -1088,11 +1157,12 @@ authors do not write the dispatch.
 In a free Luau guard (one not routed through a query method), the author
 calls the comparator's ':match' directly:
 
-       on: PING & { Glob("tester_?_intruder"):match(event.user) }
-       => INTRUSION(intruder = event.user)
+       on: PING & { Glob("tester_?_intruder"):match(e.user) }
+       => INTRUSION(intruder = e.user)
 
 THE BAR FOR ADDING A HELPER
 
 The set of bootstrap helpers is small, fixed, engine-provided -- no
 third-party Luau libraries. The bar for adding one is "would every
 nontrivial test reinvent this?"
+

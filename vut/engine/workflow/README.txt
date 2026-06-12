@@ -23,15 +23,16 @@ SYNOPSIS
   ordered artifact.
 
 STRUCTURE:
-            Factory
-               '--- task_generator(function)
-               |--- RecipeDb
-               '--- WorkflowManager
-                     '--- DependencyGraph 
-                     '--- ArtifactManager      
-                     '--- TaskSelector          # decides what to run
-                     '--- TaskSupervisor        # supervises running tasks
-                     '--- EventRouter           # user-facing fan-out
+
+    Factory
+       '--- task_generator(function)
+       |--- RecipeDb
+       '--- WorkflowManager
+             '--- DependencyGraph 
+             '--- ArtifactManager      
+             '--- TaskSelector          # decides what to run
+             '--- TaskSupervisor        # supervises running tasks
+             '--- EventRouter           # user-facing fan-out
 
 Sibling Components: 
 

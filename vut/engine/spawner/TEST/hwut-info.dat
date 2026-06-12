@@ -3,4 +3,4 @@ Testing the Spawner component
 
 coverage run --omit ./*.py -a *.py
 
---not test_env.py
+--not config.py

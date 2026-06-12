@@ -38,15 +38,14 @@ ______________________________________________________________________________
 """
 import asyncio
 import sys
-import config                                                       # noqa: F401
+from   config import HwutRunner
 
-from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.event                           import (Event,
-                                                        category,
-                                                        EventChannelParameter,
-                                                        EventTerminal,
-                                                        EventTerminalUp,
-                                                        EventTerminalDown)
+from   vut.engine.event import (Event,
+                                category,
+                                EventChannelParameter,
+                                EventTerminal,
+                                EventTerminalUp,
+                                EventTerminalDown)
 
 
 # Test-local event vocabulary in two categories so subscribe_on_category

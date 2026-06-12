@@ -23,12 +23,14 @@ GRAMMAR element vocabulary -- every element is one of:
 
   "<name>"            a reference to another GRAMMAR rule (a non-terminal),
                       written as a bare angle-bracketed string.
-  t_re_id t_re_number a character-class terminal (T.regex), bound to a 't_re_...'
+  t_re_number         a character-class terminal (T.regex), bound to a 't_re_...'
   t_re_string         variable in the preamble below. The four classes are id,
   t_re_name_colon     number, string, name_colon.
-  t_kw_any t_kw_end   a captured keyword (T.captured), KEPT in the parse frame
+  t_re_id 
+  t_kw_end            a captured keyword (T.captured), KEPT in the parse frame
   t_kw_begin          (not dropped as punctuation) because a builder must read
   t_kw_void           which one matched. Used where the keyword is an OR
+  t_kw_any 
   t_kw_container      discriminant -- ANY / END / BEGIN (trigger), VOID
                       (member-ref, sm-mode-ref), container (type-ref).
   t_opq_cond          an opaque Luau span terminal (T.opaque) carrying its Role

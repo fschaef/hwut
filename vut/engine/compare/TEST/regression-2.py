@@ -7,18 +7,9 @@ Covers:
 2. Boolean Logic Bug (Failure flag not tripping on mismatch)
 """
 import sys
-import os
 
 # --- Path Setup ---
-try:
-    from vut.language_support.python.hwut_runner import HwutRunner
-except ImportError:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    runner_path = os.path.abspath(os.path.join(current_dir, "../../../../"))
-    sys.path.insert(0, runner_path)
-    from vut.language_support.python.hwut_runner import HwutRunner
-
-HwutRunner.insert_project_path(directory_n=4)
+from config import HwutRunner
 
 from vut.engine.compare.engine.association.edit_operations.line_sequence import do as calc_seq_ops # noqa E402
 from vut.engine.compare.engine.potpourri.matching import pairing_analogy_lines, pairing_non_analogy_lines # noqa E402

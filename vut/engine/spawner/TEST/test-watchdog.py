@@ -47,11 +47,10 @@ DETERMINISM
     no HAPPY pattern is needed.
 ________________________________________________________________________________
 """
-import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 import asyncio
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from config import HwutRunner
 
 from vut.engine.event.channel.parameter import EventChannelParameter
 

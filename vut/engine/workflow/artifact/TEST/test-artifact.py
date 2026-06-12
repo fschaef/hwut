@@ -18,12 +18,11 @@ contract:
 ______________________________________________________________________________
 """
 import sys
-import config                                                       # noqa: F401
+from   config  import HwutRunner                                                     # noqa: F401
 
-from dataclasses                                import FrozenInstanceError
-from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.workflow.artifact               import (ArtifactManager,
-                                                        E_Artifact)
+from dataclasses                  import FrozenInstanceError
+from vut.engine.workflow.artifact import (ArtifactManager,
+                                          E_Artifact)
 
 
 def banner(label):

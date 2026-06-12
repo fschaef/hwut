@@ -3,350 +3,822 @@ REACTIVE RULE ENGINE  --  HWUT 2.0
 SEMANTIC LAYER  --  DISCUSSIONS LOG
 ===============================================================================
 
-Rationale, costs, and rejected alternatives for the semantic layer. README =
-settled mechanics; this = why. Entries newest-first, 'L-N'. Parser ledger
-('R-N') named this layer's open items L-5 (correctness round-trip) and L-7
-(name/target validity); this log opens at L-7 and works the design forward.
+Rationale, costs, and rejected alternatives for the semantic layer (pass 2).
+Append-only, numbered entries. The previous round's log is preserved verbatim
+as DISCUSSIONS-PREVIOUS.txt; its surviving substance (L-7..L-14, S-1..S-6) is
+cited from here by 'PREV L-N' / 'PREV S-N' and will be consolidated into
+README/DISCUSSIONS in a later dedicated session. The parser's ledger is cited
+as 'parser D-N'.
 
 -------------------------------------------------------------------------------
-LIVE QUESTIONS (open; resolve before the resolver is built)
+D-1  OPAQUE-SPAN REFERENCES: lazy get_references() on the node; abstract
+     collect_references() on the oracle; core stays language-free
 -------------------------------------------------------------------------------
+PROBLEM
+    Pass 2 must resolve names used INSIDE opaque code spans, but no such
+    capability exists: the oracle surface is find_close() -> int, and
+    SpanResult carries only {text, mode, begin}. The capability must be
+    designed, and the design must not leak the embedded language (Luau) into
+    core or into the parser.
 
-  S-Q1  ENCLOSING-OPEN-SCOPE VISIBILITY. When an inner scope references a name
-        in a still-OPEN enclosing scope (e.g. Traffic uses SIREN declared in the
-        still-open 'outer' that contains it): is the enclosing scope visible by
-        virtue of lexical nesting, or must it be mounted too?
-          (1) nesting IS the explicit dependency -- visible, no mount. (leaning)
-          (2) even the encloser must be explicit.
-        Lean (1): the author wrote the inner scope INSIDE the outer; that is on
-        the page, structural, not implicit. Requiring a mount to one's own
-        enclosing scope is redundant with visible nesting.
+DECISION
+    Two pieces, both language-neutral:
 
-  S-Q2  SPAWN-TARGET TOLERANCE -- the lone open item after S-6. A '+! Type'
-        references an aggregate TYPE. Under the S-6 general rule it is (B): the
-        type must be declared by name and kind above the spawn (B.1), body may
-        follow (B.2). Open ruling: keep (B), or hold spawn targets to (A) (type
-        FULLY defined before any spawn of it, the event-like strict treatment)?
-        Flagged "functional / a problem to think about". Singleton references
-        ('+! THE_ONLY') follow whatever spawn targets get. Everything else in
-        S-6 is settled. Note: the declaration syntax (S-Q3 / parser R-40) admits
-        'is: mode_group' and 'is: state_machine' regardless of how S-Q2
-        resolves, so settling S-Q2 needs no syntax change -- only a resolver
-        ruling on whether a forward-declared aggregate type may back a forward
-        '+!' spawn.
+    (a) core/span_oracle.py gains the neutral vocabulary: a frozen
+        Reference{segments: list[str], begin: int} (begin absolute, like every
+        node) and an abstract
+            SpanOracle.collect_references(source, open_offset, close_offset,
+                                          mode) -> tuple[Reference]
+        WHAT counts as a reference (which identifiers, in which syntactic
+        positions) is the concrete oracle's private knowledge; core carries
+        only the neutral pairs.
 
-  S-Q3  DECLARATION SYNTAX -- (B.1) needs a way to DECLARE a name+kind without
-        (yet) defining it. RESOLVED in the parser layer (R-40): 'has:' is
-        already a declaration inside an aggregate (kind implied by the frame);
-        'is:' ('<name> is: <kind>') is its scope-level sibling (kind stated). No
-        new resolver work beyond matching each declaration to a same-scope
-        definition (the (B.2) check). -> parser R-40; SYNTAX <forward-decl>. 'has: HUNGER' already does this for aggregate
-        members; but for the general (B) case (a mode declared by name+type
-        above, body later; a type declared before a forward spawn) the grammar
-        may need explicit DECLARATION elements distinct from DEFINITION. To be
-        designed against the parser/SYNTAX in a separate pass (see the prompt
-        accompanying this work). Until then the resolver assumes (B.1) is
-        satisfiable by whatever declares-and-types a name (membership, has:,
-        and any future forward-declaration form).
+    (b) The opaque-code AST node gains get_references(oracle): LAZY, computed
+        on first call, cached. The oracle is an ARGUMENT per call -- the node
+        never holds an oracle handle (no live subprocess reference inside pure
+        data). The cache is one field(compare=False, repr=False) slot written
+        once via object.__setattr__: the node stays pure data in identity and
+        in print; the method is a memoised accessor, not behaviour.
 
--------------------------------------------------------------------------------
-RESOLVED  --  resolution discipline (S-series)
--------------------------------------------------------------------------------
+    REJECTED: widening SpanResult so pass 1 collects references eagerly during
+    the measuring pass. References are relevant only to the semantic layer;
+    eager collection taxes every parse (including parses whose spans are never
+    resolved, e.g. fuzz runs) for a consumer that may not exist.
 
-  S-6   THE (A)/(B) REFERENCE RULE -- declared-and-typed is the gate; the scope
-        is the deadline. Supersedes the definitional/operational framing tried
-        in the first draft of S-5 (kept below as REJECTED). One general rule,
-        then per-entity application.
+    SINGLE-PASS FUSION STAYS OPEN, deliberately. find_matching_brace already
+    feeds each candidate close through the Luau parser, but success is
+    detected by EMPTY STDERR -- stdout (the AST dump) is discarded unread.
+    Extracting identifiers from the winning candidate's dump would yield the
+    references for free in the same pass. That is an oracle-INTERNAL
+    optimisation behind collect_references, invisible to core and to the node;
+    nothing in this decision blocks it.
 
-        GENERAL RULE. A reference target:
-          (A) must either be defined before the reference location; or
-          (B) if it profits from or requires loose referencing, it
-              (B.1) must be declared by name and type -- present in the same
-                    scope above the reference; and
-              (B.2) its full definition (body, members' bodies, transitions)
-                    must follow later in the same scope (the nesting scope of an
-                    aggregate).
-        === border: general rule above / per-use-case application below ===
-        Events / clocks: (A). Degenerate case: being LEAVES, they have no later-
-            definition need -- an event references nothing (not another event,
-            not a mode), so it carries no relationship of explanation that could
-            be painful or circular to order. Nothing about it profits from loose
-            referencing, so (B) never applies. Strict; one place to declare,
-            one place to find.
-        Modes: (B). A mode's effect block may transit into another mode
-            ('=> ! OTHER'). Restricting transit to already-defined modes would
-            make DAG state machines impossible -- no forward or cyclic edge.
-            Target declared by name+type above (B.1); body and transitions
-            follow (B.2).
-        Aggregate members under 'has:': (B). 'has: HUNGER' declares HUNGER by
-            name and links it to type HOMEOSTASIS (B.1); HUNGER's definition may
-            follow later in the scope where HOMEOSTASIS lives (B.2). Profits from
-            loose referencing -- naming the parts of a whole before detailing
-            each is how one describes the whole; the (B.2) scope may be the
-            aggregate's nesting scope, not strictly the aggregate body.
-        Arming targets ('! MODE', '=> ! MODE'): (B). An arming target IS a mode
-            target, inheriting the mode rule -- the DAG-transition need seen from
-            the effect side.
-        Spawn targets ('+! Type'): (B) by default -- type declared by name+kind
-            above (B.1), body may follow (B.2) -- but UNDER REVIEW (S-Q2): may be
-            held to (A) instead. Singleton refs follow the spawn-target ruling.
-
-        Two scope facts this rule rides on:
-          - (B.2) is BOUNDED: a (B.1)-declared name with no (B.2) definition by
-            the scope's close is an error reported AT the close. The closing-
-            scope principle (S-2) survives as the DEADLINE on (B.2); it is no
-            longer the rule by itself -- declared-and-typed (B.1) is the gate.
-          - (A)/(B) is the INTRA-scope discipline. Reaching ANOTHER scope still
-            requires an explicit mount (S-4); a closed-sibling or nonexistent
-            target is still a hard error (S-3). Inter-scope discipline sits above
-            (A)/(B), unchanged.
-
-        REJECTED (first-draft framing): "DEFINITIONAL (forgiving) vs OPERATIONAL
-        (strict)" as the governing cut. Replaced because the real gate is
-        "declared and linked to a type at the reference site," with events as
-        the leaf-degenerate case where declared-and-typed coincides with fully-
-        defined. The definitional/operational labels described the symptom
-        (members forgiving, events strict) but not the cause (declared-and-typed
-        vs not), and mis-predicted modes (operational yet forgiving, because
-        DAGs demand it).
-        -> README (C), rewritten around (A)/(B); declaration syntax -> S-Q3.
-
-  S-4   DEPENDENCIES MUST BE EXPLICIT -- MOUNT TO USE ANOTHER SCOPE. A scope
-        cannot reach another scope's names by lexical proximity or ambient
-        global visibility. It must DECLARE reliance ('include ... as ...') and
-        only then name what it mounted. Reading a scope's mounts then tells you
-        the COMPLETE, finite, auditable set of other scopes it can depend on.
-        REJECTED: ambient innermost-out lexical search ACROSS scope boundaries
-        (the README's original (C)) -- that is implicit dependency, the
-        "definitions elsewhere" chaos the completeness principle (S-3) exists to
-        prevent. Implicit cross-scope edges end in chaos; explicit mounts keep
-        the dependency surface on the page. (Open: whether a still-OPEN encloser
-        counts as already-explicit via nesting -- S-Q1.)
-        -> README (C), (D); supersedes the cross-scope part of the old (C).
-
-  S-3   A CLOSED SCOPE IS COMPLETE AND FINAL -- NEVER REOPENED. Once 'close' is
-        seen the scope is sealed: its name set is fixed forever, never extended.
-        Payoff: to comprehend a scope the reader looks in EXACTLY ONE place
-        (open..close); having read it, they have everything -- no "might also be
-        defined elsewhere" residue. The seal holds BOTH ways: outsiders may not
-        forward-reference INTO a closed scope either, or reading the scope would
-        no longer reveal all uses of its names. Deep reason behind balanced
-        open/close (R-37): the brackets bound the total KNOWABLE extent of the
-        entity, not just its syntax.
-        Consequences, hard errors at the reference site:
-          - reference into an ALREADY-CLOSED sibling scope -> error (sealed).
-          - reference into a NONEXISTENT scope -> error (reader has nowhere to
-            look; no deferral, no "maybe later").
-        -> README (C); cf. R-37.
-
-  S-2   THE BOUND IS A CLOSING SCOPE, NOT TEXTUAL ORDER. A forward reference is
-        coherent IFF a closing delimiter caps the wait -- a marked endpoint in
-        the input stream by which the referent MUST be resolved. 'default RED'
-        before RED appears is fine: RED must be a member of this machine, whose
-        scope closes; the reader holds the unresolved name only to 'close', and
-        the close guarantees the wait terminates. The decisive property is not
-        "defined before used" but "is the question mark guaranteed to expire."
-        Serves a real authoring need: sometimes A must be explained via B before
-        B is fully given, because giving B first would be exhaustive or backwards
-        (the default is part of HOW you describe the machine). Strict define-
-        before-use WITHIN a scope is the hostile over-correction; the scope
-        boundary makes the bounded-forward safe.
-        Mechanics: two regimes joined at the closing delimiter -- bounded-forward
-        WITHIN an open scope (obligation drained at 'close'; a name still
-        dangling at close is an error reported AT the close, where the reader
-        also expected resolution), and resolve-against-already-established ACROSS
-        scope boundaries. No whole-file second pass: the "second pass" is just
-        draining each scope's pending list at its matching close -- close to a
-        single descent carrying a small bounded per-open-scope obligation.
-        -> README (C).
-
-  S-1   FORWARD REFERENCE != CIRCULARITY; FEEDBACK LOOPS NEED NO FORWARD REF.
-        (a) Two-pass resolution does not risk name cycles: pass one records
-            names, consulting no other name, so it cannot loop. The only genuine
-            cycle risk is in INCLUDES (A mounts B mounts A), which exists
-            regardless of one-pass/two-pass and is handled by the ordered-chain
-            cycle diagnostic (L-10).
-        (b) REJECTED (a wrong claim made mid-discussion): "reactive feedback
-            loops require use-before-definition." False. A loop A->B->C->A lives
-            in the CAUSAL WIRING, not in text order. Declare every entity first,
-            then write the causal rules wiring them; the cycle is in the wiring,
-            which references only already-declared names. Allowing use-before-
-            definition buys NO expressiveness that declare-then-wire lacks; its
-            only effect is to PERMIT documents that do not make sense read
-            linearly and then quietly repair them. The objection that settled
-            it: "if I reference something before I define it, I do not know what
-            I am talking about" -- correct and decisive, EXCEPT where a closing
-            scope bounds the wait (S-2).
-        -> motivates S-2..S-5.
+COST
+    A second oracle invocation per span when references are first requested
+    (until the fusion lands). MITIGATION: lazy means only spans the resolver
+    actually opens pay it; the cache means each pays once.
+    -> README (to be written); cf. parser core/span_oracle.py.
 
 -------------------------------------------------------------------------------
-RESOLVED
+D-2  ast.Luau renamed OpaqueCode{text, mode, begin}; parser sheds its last
+     import of the luau component
 -------------------------------------------------------------------------------
+PROBLEM
+    The parser's AST node for an opaque span is named 'Luau' and its 'role'
+    field is annotated with the Luau component's Role -- the ONE remaining
+    import from parser/ into luau/. The principle: everything span-related
+    speaks 'oracle', not 'Luau'; only code generation may be language-specific
+    (every language needs its bootstrap).
 
-  L-14  EVENT DELIVERY IS IMPLICIT -- DERIVED FROM 'on:', NO SUBSCRIBE CONSTRUCT.
-        An event reaches a reactor exactly when the reactor names it in an 'on:'
-        cause; the cause's guard ('& { ... }') is the filter. The engine derives
-        the publisher/subscriber wiring from the event types named across the
-        live 'on:' causes. The author writes reaction; routing follows.
+DECISION
+    Rename ast.Luau -> ast.OpaqueCode; rename its 'role' field -> 'mode',
+    typed as core's SpanMode. Core already says 'mode'; 'role' was luau
+    vocabulary inside a neutral type. With the annotation neutralised,
+    ast_nodes.py drops 'from ..luau.luau_fragment import Role' and the parser
+    package is embedded-language-agnostic end to end. The Luau layer keeps
+    Role (a SpanMode) and interprets it alone.
 
-        REJECTED -- an explicit 'subscribe: <event> [filter: { <cond> }]' element
-        on aggregates. It carries no information the causality does not already
-        hold: 'subscribe: E filter: { p }' and 'on: E & { p } => ...' name the
-        same event and the same predicate. 'filter:' and a cause guard are the
-        same predicate; offering both is two surface forms for one meaning -- the
-        redundancy the colon work exists to remove. Worse, it leaks plumbing
-        (who-routes-what) into the rule-file plane, which speaks intent, not
-        transport.
+    Riding the same edit window: InitBlock.from_seq / DeinitBlock.from_seq
+    currently store the raw SpanResult where the annotation promises the
+    wrapped node (latent annotation lie); both gain the from_span wrap.
 
-        NO SUBSCRIBE-WITHOUT-REACT CASE. "See an event only to observe/filter,
-        without reacting" is not a real exception: observing-to-maintain-state
-        IS a reaction ('on: E & { p } => { sm.seen = sm.seen + 1 }'); and with no
-        effect there is nothing to deliver. So delivery-derived-from-'on:' loses
-        no expressible behaviour.
-
-        CONSEQUENCE: this feature needs NO syntax -- no grammar, lexer, or
-        recording change. It is a model note only: delivery is a consequence of
-        reaction being declared. (-> README EVENTS; SYNTAX A.2.2 cause+guard.
-        The prefix on a qualified event name may still inform default routing as
-        a convenience, but explicit naming in 'on:' is the contract.)
-
-
-        thing produced -- resolved FQN, scope tree, diagnostic text -- and the
-        GOOD recording judges it. Printing 'SUCCESS:'/'FAIL:' self-reports
-        REJECTED: a test that grades its own homework hides the actual output
-        behind a verdict the author asserted; the reader can no longer see what
-        the resolver did, only that the author claims it passed. HWUT's contract
-        is output vs. recording; the verdict is the diff, not a printed line.
-        (A 'SUCCESS:.*' happy-pattern convention from a sibling project does NOT
-        apply here.)
-        -> README (F).
-
-  L-12  UNSPAWN VALIDITY = STATIC RESOLVE + KIND CHECK; LIVENESS = RUNTIME.
-        '-! north' checks that 'north' resolves to an instance symbol from a
-        reachable Spawn 'as'. Whether the instance is live on the path reaching
-        the unspawn is NOT checked. Cost: a file can pass the static check yet
-        unspawn a not-yet-spawned instance at run time. Mitigation: that is a
-        data-plane fact -- it depends on guards and event order (R-6, R-2:
-        substance lives in Luau), which this layer cannot evaluate without
-        becoming an interpreter. Flow-aware unspawn checking REJECTED for this
-        layer: wrong plane. The static check still catches the real authoring
-        error -- a name that was never an instance anywhere.
-        -> README (E.3); SYNTAX A.2 ('-!'); cf. R-31 (target validity = here).
-
-  L-11  INSTANCES RESOLVE BY THE ORDINARY RULE -- NO SPECIAL CASE. An 'as'
-        instance is a name in its defining scope (R-37); '-! north' and
-        '-! world.europe.north' resolve by the same innermost-out search and
-        descent as any other reference. A separate instance lookup path was
-        considered and dropped: one resolution algorithm, parameterized only by
-        the expected KIND at the site. Cost: none beyond the kind tag already
-        carried.
-        -> README (C), (E.3).
-
-  L-10  INCLUDE CYCLE = ORDERED CHAIN DIAGNOSTIC. A re-entered file is not a
-        bare 'cycle detected'. The mount stack -- the explicit set tracking
-        in-progress files -- is printed in order: first file, what it mounted,
-        onward to the mount that re-enters. Cost: the detector must retain mount
-        sites, not just a visited flag. Mitigation: the flag alone names the
-        closing edge only; the author then hunts the route by hand. The set is
-        cheap; the route is the diagnostic's whole value.
-        -> README (D).
-
-  L-9   INCLUDE = PARSE-ONCE CACHED, BUILD A FRESH TREE PER MOUNT. 'Parse once'
-        (R-38) honored by caching the lex+parse, keyed by resolved file path.
-        The cheap table-build runs PER MOUNT. REJECTED: grafting one shared
-        Scope object at two mount points -- a node would then have two parents,
-        two paths, two FQNs, breaking FQN = path + name as a single-valued
-        identity. Cost of per-mount build: the same file mounted twice builds
-        its tree twice. Mitigation: building is a linear walk over an
-        already-parsed AST; the expensive stage (lex+parse) is the cached one.
-        Shared-identity aliasing REJECTED on the identity ground, not the cost
-        ground.
-        -> README (D).
-
-  L-8   INCLUDE VISIBILITY = ASYMMETRIC BY STRUCTURE. The mounted unit's root
-        carries no parent across the graft, so outward lexical search physically
-        stops at it -- the mounted unit cannot see the mounting scope -- while
-        descent from the mounter still walks in. The Python-style direction
-        (R-36, R-38) is thus enforced by the tree shape, not by a runtime guard
-        the resolver must remember to apply. Cost: the graft is a special edge
-        (crossed one way, not the other). Mitigation: it is the ONLY such edge;
-        every other parent link is symmetric, and the asymmetry is exactly the
-        module-boundary semantics wanted.
-        -> README (A), (D).
-
-  L-7b  RESOLUTION = INNERMOST-OUT LEXICAL, HEAD-SEARCHED-THEN-DESCEND. A bare
-        name searches the site scope, then outward to the unit root. A dotted
-        ref searches only its HEAD outward, then descends strictly for the tail.
-        REJECTED: searching every dotted segment outward -- 'Traffic.RED' would
-        let 'RED' escape 'Traffic' and match some outer RED, defeating the
-        qualification the author wrote. Fully-qualified-from-root accepted as the
-        FQN identity (L-7d) but not required at a reference site; bare/partial
-        cover the natural cases.
-        -> README (A), (C).
-
-  L-7c  SEPARATOR STAYS THE DOT. Matches Luau's qualification operator
-        ('Colors.RED', 'player.name', 'Color.New()' all dot). REJECTED: a colon
-        'colonned-name'. In Luau a colon is method-call-with-self sugar
-        ('o:m(x)' == 'o.m(o, x)') AND the type-annotation separator; a third,
-        namespace meaning collides with both the moment the reader crosses into
-        a guard or body. Dotted 'Traffic.RED' reads identically in a VUT
-        reference and in the emitted Luau field access. The colon's one
-        legitimate VUT use -- ArgDecl 'member : type' -- already mirrors Luau's
-        annotation colon; no second meaning loaded onto it.
-        -> README (A); SYNTAX (dotted-name).
-
-  L-7d  ONE UNDIVIDED NAME SHELL PER SCOPE -- NOT PER-KIND SUB-MAPS. Modes, mode
-        groups, state machines, instances, AND events compete in one map; any
-        in-scope name clash is an error. REJECTED: three sub-spaces (types /
-        events / instances) keyed so a type and an instance could share a
-        spelling. Ground: a name meaning 'the event RED' in one breath and 'the
-        mode RED' in another is the confusion to forbid; an event is action --
-        reacted to, reasoned about -- not configuration, and must not alias a
-        configuration name. Creative freedom from shared spellings is not worth
-        the interference. Cost: an author cannot reuse a spelling across kinds in
-        one scope. Mitigation: distinct scopes (or qualified names) still let the
-        same spelling recur where it cannot be confused. The KIND tag survives
-        for the REFERENCE side only (L-12, README C), never to partition
-        definitions.
-        -> README (A); cf. R-37 (mode (+) state-machine share one namespace --
-        generalized here to all kinds).
-
-  L-7a  AGGREGATES OPEN SCOPES; MEMBERS ARE DOTTED NAMES. A mode group and a
-        state machine each open a child scope; their inline members are symbols
-        there, reached as 'Agg.member' by ordinary tree descent (A.2: a
-        member-ref resolves against its enclosing aggregate; the qualified form
-        is the same referent). REJECTED: a per-aggregate 'members' dict hung off
-        the type symbol -- a second, parallel lookup mechanism beside the scope
-        tree. One mechanism: membership IS scope containment, so 'Traffic.RED'
-        and 'world.europe.berlin' resolve by the identical descent. A global
-        'mode RED' and a member 'Traffic.RED' cannot collide -- different scopes.
-        -> README (A), (C); cf. R-37.
-
-  L-7   SCOPE TREE + STACKLESS BUILD. The table is a TREE of scopes mirroring
-        the nesting (open, mode group, state machine), each scope a single
-        name->symbol map; not a flat FQN map (loses lexical search) and not a
-        tree-without-maps (forces a walk per lookup). FQN falls out as the
-        root-to-symbol path. The builder walks the AST on an explicit
-        (scope, item) stack, NOT Python recursion -- the same motivation that
-        made the parser stackless (R-34): namespace nesting is unbounded, a
-        recursive build would overflow where the parser does not. Cost: an
-        explicit stack is more code than a recursive descent. Mitigation: the
-        parser already paid and proved this (depth_bomb FAIL->PASS); the build
-        reuses the discipline.
-        -> README (A), (B); cf. R-34, R-37, R-38.
+COST
+    Pass-1 edit; the class name appears in printed ASTs, so GOOD recordings
+    rendering 'Luau(...)' change mechanically (cover-syntax-tree, fuzz
+    profiles, others). Regeneration list to be compiled when the edit lands;
+    recordings are never fabricated.
+    -> parser ast_nodes.py; parser ledger entry when the edit lands.
 
 -------------------------------------------------------------------------------
-NOTE ON INHERITED PREMISES  (settled upstream, not reopened here)
+D-3  NAMESPACES ARE SINGLE-SHOT; ':close' seals EVERY link a dotted open
+     materialised; mounts obey the same law
 -------------------------------------------------------------------------------
+DECISION
+    A namespace path may be opened ONCE. 'open: a.b ... :close' materialises
+    the chain a -> b and the close seals the WHOLE chain, 'a' included. A
+    later 'open: a.c' is an error at the second open (it would extend sealed
+    'a'), diagnosed with both offsets. Shared prefixes are authored as
+    physical nesting:
 
-  R-37  namespaces, balanced open/close, names scoped to defining namespace,
-        modes (+) state machines share one namespace.
-  R-38  include = caller-decides-placement, included file self-contained,
-        load-time mount, parser records only.
-  R-34  stackless engine motivated by unbounded nesting.
-  R-6 / R-2  substance (field values, body logic) lives in Luau; the static
-        line carries only literal names. Bounds what this layer can check.
+        open: a
+            open: b ... :close
+            open: c ... :close
+        :close
+
+    The dotted shorthand is one-shot for every link it creates.
+
+    REJECTED (alternative): only the deepest link seals; intermediate links
+    stay open to end-of-file. That makes 'a' a scope whose extent no bracket
+    bounds -- exactly the knowable-extent property the seal (PREV S-3) exists
+    to protect.
+
+    REJECTED (re-opening for staged cross-dependency): the pattern
+
+        open: outer
+            XYZ
+            open: inner ... uses XYZ ... :close
+            ... uses inner.XYZ to produce UVW ...
+            open: inner ... uses UVW ... :close     <- forbidden
+        :close
+
+    encodes EVALUATION ORDER as scope brackets. The two inner blocks have
+    different dependency footprints, so they are two units sharing a spelling
+    (the L-7d confusion, recurring at scope level), and the reader who closed
+    'inner' the first time believed they had everything -- the seal exists to
+    make that belief true. Nothing expressible is lost: the back-and-forth
+    lives on the CAUSAL plane (PREV S-1); declare UVW by name and kind above
+    a single merged inner block (B.1) and define it below before outer's
+    close (B.2). If the blocks truly cannot merge, the shared name was the
+    lie: inner_stage_1 / inner_stage_2.
+
+CONSEQUENCE FOR MOUNTS (Q3 residue, settled by the same law)
+    'into: a.b.c' materialises fresh links exactly as a namespace chain does.
+    A mount may not land on or pass through a sealed scope; the links it
+    creates are sealed the moment the graft completes -- an include is a
+    complete statement, not an opening bracket.
+    -> README (to be written); PREV S-3, PREV L-7d, PREV S-1.
+
+-------------------------------------------------------------------------------
+D-4  SCOPES HOLD THE TYPE PLANE; PARAMETERS ARE INSTANCE DATA ON THE SYMBOL;
+     modes/states open no scope of their own
+-------------------------------------------------------------------------------
+THE RUNTIME MODEL (the ground the cut rests on)
+    Spawning a state machine / mode group creates an OBJECT of that type. The
+    signature parameters are literally the object's data members (aggregation)
+    -- per-instance, runtime. The modes/states stand to the object as a
+    VIRTUAL FUNCTION TABLE: type-level structure, shared by all instances,
+    hidden from the user. Inside its own body the object is reachable via the
+    'sm'/'mg' bindings; outside, only through the 'is:'/'as:' definitions that
+    bind generated objects to script-world entities.
+
+DECISION
+    The scope tree carries the TYPE plane only:
+      - Scopes are opened by exactly: the file root (GROUND), namespaces,
+        mode groups, state machines. Modes and states are SYMBOLS in their
+        containing scope (PREV L-7a) and open no scope of their own -- with
+        parameters off the table their bodies define no names, and an empty
+        scope per mode is machinery with nothing to hold.
+      - 'Traffic.RED' descends the tree: RED is type structure (the vtable
+        side), identical for every instance.
+
+    Parameters live on the aggregate's (or event's) SYMBOL as its declared-
+    member list (name, type text, offset), read straight off the AST 'params'
+    field. They are NOT scope symbols, so the dotted-name machinery never
+    sees them: 'Traffic.threshold' fails NATURALLY -- there is no static
+    referent, only objects have a threshold ("which instance?" has no static
+    answer). The list is consulted by exactly the binding checks:
+    'sm.x'/'mg.x'/'mode.x' against the enclosing aggregate's params,
+    'event.x' and bracket-guard '.x' against the trigger's EventDef params.
+
+    REJECTED: params as kind-'param' symbols in the aggregate's scope, with
+    the resolver refusing descent into them from outside. One map, but the
+    refusal is a guard the resolver must remember at every lookup -- the
+    PREV L-8 lesson done badly (asymmetry by rule instead of by shape). Here
+    the inaccessibility falls out of the structure.
+
+SPELLING CHECK (across the planes)
+    A parameter may not share its spelling with a mode/state of the same
+    aggregate ('state: RED' next to param 'RED:' is an error). Nothing
+    collides technically -- different storage -- but RED meaning data in one
+    breath and a state in the next is the PREV L-7d confusion recurring
+    across planes. One cheap check when the aggregate's symbol is recorded.
+
+PARKED (not resolved here)
+    PREV L-11/L-12 assumed '-! north' resolves against an instance symbol
+    created by a spawn's 'as'. In the current grammar the 'as:' handle is an
+    OPAQUE LUAU LVALUE: instance naming lives on the script-world side, so
+    unspawn-target validation likely flows through the D-1 reference
+    mechanism, not the scope tree. To be settled with the constraint checks.
+    -> PREV L-7a, L-7d, L-8; parser ast_nodes Spawn/ForwardDecl.
+
+-------------------------------------------------------------------------------
+D-5  'event.member' REQUIRES A NAMED EVENT TRIGGER; END has system members;
+     ANY/BEGIN have none
+-------------------------------------------------------------------------------
+DECISION
+    The 'event.' binding (ShallowMemberAccess and the bracket-guard '.member')
+    is member-checked against the EventDef of the rule's trigger. That demands
+    a NAMED trigger:
+      - trigger ANY    -> 'event.x' is an ERROR. The rule fires for any event;
+                          x cannot be checked against one definition. Under
+                          ANY the author does not know what they are talking
+                          about; a computed need belongs in a Luau guard.
+      - trigger BEGIN  -> ERROR; BEGIN carries no members.
+      - trigger END    -> checked against END's SYSTEM MEMBERS, declared by
+                          the engine, currently: run_time_sec, event_n.
+                          Strict: any other member is an error.
+    REJECTED: tolerated-unchecked ("dynamic") resolution under ANY. A
+    tolerated unknown name in a validation suite is a silent false pass --
+    the principle that makes every name check FATAL applies here unchanged.
+    -> README binding checks; cf. D-4.
+
+-------------------------------------------------------------------------------
+D-6  'cause:' ABSTRACTION RETIRED; 'condition:' ABSTRACTS THE GUARD ONLY;
+     triggers are always inline -- referencing becomes deterministic
+-------------------------------------------------------------------------------
+PROBLEM
+    A CauseDef bundled the TRIGGER with the guard, so a rule using a CauseRef
+    had no locally visible trigger: 'event.x' in its effects could only be
+    checked through the referenced definition, and an 'until <cause-ref>'
+    raised semantics the old pipeline dodged by (buggily) dropping the node
+    (parser D-10).
+
+DECISION
+    The abstraction moves DOWN one level: a definition names a reusable,
+    parameterised CONDITION (predicate), never a trigger.
+
+        condition: Hot(limit: int) [ .temp > limit ]
+        on: PING & Hot(75) => ...
+        until: PING & Hot(75)
+
+    The keyword is 'condition:' -- aligning with the vocabulary already in
+    the code: the guard POSITION (Cause.guard) holds a CONDITION (the bracket
+    root node Condition; the Luau guard role Role.CONDITION). Nodes:
+    ConditionDef / ConditionRef; CauseDef / CauseRef retire.
+
+    A definition BODY admits only the two concrete forms (Luau span, bracket
+    condition), NOT another ConditionRef. REJECTED: condition-as-alias --
+    buys nothing, creates ref chains that can cycle, demanding a detector
+    for a feature nobody asked for.
+
+CONSEQUENCES
+    - Q9 (CauseRef as an 'until') dissolves BY CONSTRUCTION: every until
+      names its trigger inline; the questionable shape no longer exists.
+    - <cause> loses its cause-ref branch and becomes LL(1) (the branch needed
+      a second token to split 'NAME(' from a bare trigger 'NAME'). The
+      reference moves into <guard>, whose FIRST sets are trivially disjoint:
+      '{' (Luau) / '[' (bracket) / id (reference).
+    - 'event.x' context (D-5) is always determined by the rule's own line.
+
+COST
+    Grammar + AST change (pass 1): GRAMMAR rules cause/cause-def reshaped,
+    condition-def/guard-ref added; CauseDef/CauseRef nodes deleted,
+    ConditionDef/ConditionRef added; lexer keyword set changes. GOOD
+    recordings over the grammar (cover, fuzz, lexer token inventory)
+    regenerate -- list compiled when the edit lands, never fabricated.
+    -> SYNTAX_DOC (dominating) edited first; parser ledger entry when the
+    edit lands; parser D-10.
+
+-------------------------------------------------------------------------------
+D-7  VARIABLES: statically declared names, opaque-world values
+-------------------------------------------------------------------------------
+DECISION
+    The rule file may declare VARIABLES of the simple types int, float,
+    string, via the 'is:' form with a MANDATORY LITERAL initialiser:
+
+        TIMEOUT is: int(5)
+
+    The split follows settled point 7 (names static, values computed):
+      - NAME and TYPE are static: a scope-tree symbol of kind 'variable',
+        (A)-strict define-before-use (a leaf), fully-qualified like any
+        symbol.
+      - The VALUE lives in the OPAQUE WORLD: engine-owned storage,
+        materialised in the generated bootstrap, readable and writable from
+        opaque code (e.g. a network-timeout knob the script side adjusts).
+        The rule-file plane has no assignment construct, so write access is
+        opaque-only BY CONSTRUCTION, not by a guard.
+    Reads are statically visible: a variable is legal as a bracket-condition
+    comparison term and as an rvalue. Script-side touches surface through
+    collect_references (D-1).
+
+    BOTH COMPARISON SIDES admit a variable: '[ .elapsed > TIMEOUT ]' and
+    '[ TIMEOUT < .elapsed ]' alike. If x is equivalent to y, both carry the
+    same admissibility -- an asymmetric rule would read as a parser
+    limitation, not a design statement. (Grammar: lhs = evt-member |
+    dotted-name; stays LL(1).)
+
+    REJECTED: constants-only (immutability). The objection -- mutable
+    rule-file state as a hidden channel between rules -- assumed a rule-file
+    mutation path that does not exist. Mutation flows through the opaque
+    plane, where substance lives anyway (PREV R-6/R-2); the variable is a
+    DECLARED, visible bridge between the planes, strictly better than
+    forcing every runtime-tunable guard into opaque Luau.
+
+    REJECTED (deferred, not refused): 'as: {lvalue}' binding a variable to
+    an EXISTING script lvalue (the container precedent). Engine-owned
+    storage suffices for the motivating cases; the grammar pattern exists if
+    it is ever wanted.
+
+    Initialiser without value REJECTED: 'TIMEOUT is: int' leaves an
+    undefined initial value -- the silent-nil bug class the tracer-
+    registration check exists to kill.
+
+COST
+    Grammar (pass 1): <type-ref>'s bare-id branch gains the optional literal
+    initialiser parens; comparison lhs generalised; pass 2 enforces
+    kind-vs-shape (scalar kinds REQUIRE the initialiser and forbid a
+    signature and angle brackets). GOOD regeneration list compiled when the
+    edit lands.
+    -> SYNTAX_DOC first; D-1, D-4, settled point 7.
+
+-------------------------------------------------------------------------------
+D-8  'cause:' RETURNS, WITH A MANDATORY 'for:' EVENT BINDING; supersedes D-6
+     (which never reached code); Q9 answered
+-------------------------------------------------------------------------------
+PROBLEM (the flaw in D-6's 'condition:')
+    A free-floating predicate has no event to be checked against:
+    '[ .temp > limit ]' is meaningful only relative to SOME event's members,
+    and checking at every use site re-scatters what a definition should pin.
+
+DECISION
+    The reusable construct is again a CAUSE -- but its event is bound INTO
+    the definition, statically:
+
+        event: TEMPERATURE_MEASUREMENT(temp: float)
+        cause: TOO_HOT(limit: int) for: TEMPERATURE_MEASUREMENT
+                                   & [ .temp > limit ]
+        on:    TOO_HOT(75) => ...
+        until: TOO_HOT(75)
+
+    Shape and rules:
+      - 'for:' names the event as a <dotted-name>, resolved by the ordinary
+        rule; it is NOT parameterisable. The event is (A): defined before
+        the cause definition.
+      - Cause definitions are themselves (A): fully defined before any rule
+        references them. Leaf-like -- they reference only an already-(A)
+        event; nothing profits from loose ordering.
+      - The guard is MANDATORY (a guard-less def is a bare alias of its
+        event -- pointless, use the event) and is introduced by '&', so the
+        def reads exactly like the use site ('for: EVT & [...]' parallels
+        'on: EVT & [...]').
+      - The def body is a CONCRETE guard only (Luau span or bracket
+        condition), never another cause-ref: no alias chains (survives from
+        D-6).
+      - '.member' references in the def's guard are checked against the
+        'for:' event's members ONCE, at the definition (D-5 applied at the
+        def). A rule 'on: TOO_HOT(75)' has its trigger determined through
+        one static hop, so 'event.x' in its effects checks against the
+        def's event.
+
+    NO "influenced-by-the-event" REQUIREMENT. A guard referencing only
+    variables is legitimate:
+        PACMAN_ATE_POWER_PILL & [ GHOSTS_AT_HOME == 1 ]
+    The 'for:' binding makes member references checkable WHEN PRESENT; it
+    does not demand them. (Considered and dropped: requiring at least one
+    .member in a cause def's guard.)
+
+CONSEQUENCES
+    - Q9 ANSWERED (not dissolved): 'until: TOO_HOT(75)' is LEGAL -- the run
+      closes on the def's event, gated by the def's guard. The untils
+      recovered by parser D-10 now carry defined semantics.
+    - <cause> keeps its ref branch (the known, proven LL(2) spot).
+    - D-6's 'condition:' keyword and ConditionDef/ConditionRef are
+      superseded BEFORE implementation -- paper-only churn, no code or GOOD
+      ever existed for them.
+
+COST
+    Grammar + AST change (pass 1): cause-def gains 'for:' <dotted-name> and
+    the mandatory '& <guard>'; lexer gains 'for:'. GOOD regeneration list
+    compiled when the edit lands.
+    -> SYNTAX_DOC first; D-5, D-6, parser D-10.
+
+-------------------------------------------------------------------------------
+D-9  SIMPLE TYPE 'bool', LITERALS 'true'/'false'  (amends D-7)
+-------------------------------------------------------------------------------
+DECISION
+    The variable types are int, float, string, bool. Bool literals are
+    'true' and 'false' (lowercase, matching Luau's spelling), legal as the
+    mandatory initialiser ('GHOSTS_AT_HOME is: bool(false)') and as
+    comparison terms ('[ GHOSTS_AT_HOME == true ]'). Without this, 'true'
+    would be a bare identifier forced to resolve as a variable -- an
+    accident, not a design. REJECTED: int-encoding booleans (== 1) -- the
+    type exists in the target language; pretending otherwise loses checkable
+    intent.
+    -> D-7; SYNTAX_DOC first.
+
+-------------------------------------------------------------------------------
+D-10 A STILL-OPEN ENCLOSING SCOPE IS VISIBLE BY NESTING; NO SELF-MOUNT
+     (closes PREV S-Q1)
+-------------------------------------------------------------------------------
+DECISION
+    A reference reaches names in its own scope and, outward, in its still-
+    OPEN enclosing scopes up to the unit root. Nesting IS the explicit
+    dependency: the author wrote the inner scope INSIDE the outer; that is
+    on the page, structural, not ambient. Mounts are for reaching OTHER
+    units.
+
+    The seal law (D-3) is what makes this safe in a way the original
+    discussion could not yet claim: the encloser is necessarily still open
+    while the inner scope is read (brackets balance), and once it closes,
+    single-shot namespaces guarantee nothing is ever added that the inner
+    scope might retroactively have seen.
+
+    REJECTED: mounting one's own encloser. Mechanically incoherent -- a
+    mount grafts a CLOSED, complete unit; the encloser is not closed yet.
+    The inner-to-outer search stops at the unit root, exactly as the include
+    graft enforces by shape (PREV L-8).
+    -> PREV S-Q1, S-4, L-8; D-3.
+
+-------------------------------------------------------------------------------
+D-11 SPAWN TARGETS ARE (B); singleton refs follow  (closes PREV S-Q2)
+-------------------------------------------------------------------------------
+DECISION
+    '+! Type(...)' follows the general (B) rule: type declared by name,
+    kind, and signature above the spawn (B.1); body may follow in the same
+    scope (B.2). Grounds:
+      - A spawn is an EFFECT: it executes at run time, long after the scope
+        closed and the (B.2) deadline drained -- the definition provably
+        exists by then. Strictness at the TEXTUAL spawn site buys no safety,
+        only authoring-order constraint.
+      - The instantiation contract is the SIGNATURE, and a ForwardDecl of a
+        spawnable kind carries it mandatorily: the spawn site is
+        arity-checkable against the declaration alone.
+      - Arming targets are (B); holding spawns to (A) would split two
+        effect-kinds across regimes for no cause -- a mode armed before its
+        body and a machine spawned before its body are the same forward
+        shape.
+    Honest cost: a spawn may reference a type whose later body is garbage --
+    but that body fails its OWN checks at the (B.2) deadline; nothing leaks
+    past the close. Singleton references follow the same ruling.
+    -> PREV S-Q2, S-6; README (C).
+
+-------------------------------------------------------------------------------
+D-12 CASCADE-GRAPH GROUND RULES: events are the only edges; opaque code may
+     emit exactly one system event; clock/BEGIN/END are not authorable
+     emissions
+-------------------------------------------------------------------------------
+DECISION
+    (a) EVENTS ARE THE ONLY EDGES, and the only thing that triggers
+        condition checks. Nodes = event kinds; edge X -> Y iff an
+        X-triggered rule emits Y (EventSpec). ModeArming and Spawn create NO
+        edges: they activate a reactor, they emit nothing; the activated
+        reactor's rules carry their own edges. Liveness is over-
+        approximated: every mode's / aggregate's rules contribute their
+        edges unconditionally, as if always armed -- whether a mode is
+        actually live is the data plane, which this layer does not
+        interpret. A rule on ANY contributes its emission edges from EVERY
+        node. 'until:' causes contribute no edges (they close, they do not
+        emit).
+
+    (b) OPAQUE CODE MAY SET VARIABLES (D-7) AND MAY EMIT EXACTLY ONE SYSTEM
+        EVENT -- the bridge announcing "script-side state changed, re-check
+        conditions" -- and no other. Causalities may react to it with
+        variable conditions ('on: <EVT> & [ GHOSTS_AT_HOME == true ]'), so
+        behaviour can be armed from inside the opaque world while, from
+        outside, the events/edges remain fully observable: the one kind is
+        statically known, so the graph stays complete. Name TBD in the
+        detail round; candidates: VARS_CHANGED (lean -- variables are the
+        only rule-visible thing opaque code can change), STATE_CHANGED,
+        NOTIFY, WORLD_CHANGED.
+        REJECTED: opaque code emitting arbitrary events -- every mutation
+        block would be a potential invisible edge and the cycle check a
+        fiction (settled point 7: emitted kinds are statically literal
+        BECAUSE they are the graph's edges).
+
+    (c) SYSTEM-PRODUCED KINDS ARE NOT AUTHORABLE EMISSIONS. A clock event is
+        produced by the clock machinery alone; BEGIN/END by the run
+        boundaries alone. An event-spec naming a clock event, BEGIN, or END
+        is a semantic error. These nodes carry outgoing edges (rules react
+        to them) but no rule-authored incoming edge.
+    -> settled point 7; D-5, D-7; PREV R-6/R-2. Detailed check semantics:
+    next entry.
+
+-------------------------------------------------------------------------------
+D-13 THE BRIDGE EVENT IS 'CHANGE'; ANY CASCADE CYCLE IS FATAL -- the graph
+     models the no-time plane
+-------------------------------------------------------------------------------
+DECISION
+    (1) The D-12(b) bridge event is named CHANGE -- a system citizen beside
+        BEGIN and END. It carries NO members (D-5 rejects 'event.x' under
+        it, as under BEGIN). Like BEGIN/END it is not an authorable
+        event-spec emission (D-12(c)); opaque code raises it through the one
+        permitted API.
+
+    (2) EMISSION IS A FLAG, NOT A QUEUE ENTRY. Raising CHANGE is idempotent
+        within an instant: raised once or N times during one step, exactly
+        one CHANGE is delivered, then the flag clears. This is the batching
+        answer for free -- the author writes several variable updates, the
+        rule plane sees one announcement.
+
+    (3) ANY CYCLE IN THE CASCADE GRAPH IS FATAL -- a cycle means an event
+        kind re-fires within ONE NO-TIME CASCADE, which no guard redeems.
+        The graph models the instantaneous event plane; homeostasis and
+        every legitimate feedback loop evolve over TIME, passing through
+        clocks, external events, or CHANGE -- nodes with no rule-authored
+        inbound edge, through which a static cycle cannot close. REJECTED
+        (an earlier proposal this round): tolerating cycles that contain a
+        guarded edge -- guards are the data plane; the no-time argument
+        makes them irrelevant to the verdict.
+        Consequence: a CHANGE-triggered rule whose own opaque code raises
+        CHANGE is a CHANGE -> CHANGE self-edge: a cycle, fatal. Handlers of
+        CHANGE do not re-raise it.
+
+    (4) X -> CHANGE EDGES ARE PRECISE, NOT COARSE: contributed only by rules
+        whose opaque blocks actually REFERENCE the raise API, discovered
+        through collect_references (D-1) -- the call is a name in the span.
+        REJECTED: an edge from every rule containing any opaque block (false
+        edges, false cycles).
+
+    (5) DETECTION: iterative coloured DFS on an explicit stack (the house
+        stackless discipline), linear in nodes+edges. Each back-edge yields
+        one cycle, reported with its full event chain; all cycles found in
+        the sweep are reported (accumulate-and-report), the pass continues.
+        The old README's "node-visit bound" language is SUPERSEDED: plain
+        DFS is naturally bounded; no artificial ceiling, no exponential
+        cycle enumeration.
+    -> D-1, D-5, D-7, D-12; PREV S-1 (re-read: feedback lives on the time
+    axis, the graph has none).
+
+-------------------------------------------------------------------------------
+D-14 INHERITANCE SEMANTICS DEFERRED; PASS 2 RESOLVES BASE NAMES AND CHECKS
+     REACTOR CATEGORY (sm with sm, mg with mg)
+-------------------------------------------------------------------------------
+DECISION
+    The semantics of 'is:' bases (member merging, overrides, linearisation)
+    stay UNDEFINED -- a design area as large as this whole session, which
+    the emitter cannot consume until the runtime object model defines what
+    a derived machine IS. Not designed on spec.
+    Pass 2 nevertheless: resolves every base by the ordinary rule ((B), like
+    every aggregate reference) and checks the REACTOR CATEGORY -- a base of
+    a state_machine must resolve to a state_machine, of a mode_group to a
+    mode_group; cross-category inheritance is fatal. Resolutions land in the
+    ordinary resolution record, so the future semantics start from resolved
+    symbols, not strings. Unresolved or miscategorised base: the usual
+    fatal.
+    -> parser D-3 (bases collected); D-11; prompt Q10.
+
+-------------------------------------------------------------------------------
+D-15 ResolvedProgram IS ONE FROZEN ARTEFACT (closes Q4)
+-------------------------------------------------------------------------------
+DECISION
+    Pass 2 hands the emitter exactly ONE frozen dataclass. Composition:
+      - ast          the RuleFile, untouched (nodes are frozen -- which by
+                     itself kills the "rewrite references into the AST"
+                     alternative; resolution is a SIDECAR, not a mutation)
+      - scope_tree   the GROUND root with everything beneath
+      - resolutions  reference -> Symbol map, keyed on node identity
+      - mounts       include graft records (path, mount point, file)
+      - cascade      the D-12/D-13 graph, cycle-free by the time this
+                     artefact exists (cycles were fatal)
+      - queried      the set of event kinds the rules consume (D-16)
+      - source_map   seed for diagnostics in emitted code
+    Several loose artefacts REJECTED: the emitter's input contract is one
+    name, one freeze, one shape.
+    -> PREV README (E); D-16.
+
+-------------------------------------------------------------------------------
+D-16 TRACER REGISTRATION IS ENGINE/BOOTSTRAP CODE -- generated, not checked
+-------------------------------------------------------------------------------
+DECISION
+    The old mandate ("querying an event type not registered via
+    tracer.watch in 'on BEGIN' is fatal") presumed HAND-WRITTEN
+    registrations. The engine writes the bootstrap itself: pass 2 computes
+    the set of event kinds the rules consume (triggers, for:-events,
+    until-triggers); the emitter generates the tracer.watch calls from it.
+    The silent-nil bug class is closed BY CONSTRUCTION -- there is no
+    author mistake left to detect, hence no pass-2 consistency check. The
+    computed set rides in ResolvedProgram.queried (D-15).
+    -> D-15; PREV README sec. 5.
+
+-------------------------------------------------------------------------------
+D-17 INCLUDES ARE IMPORTS: per-module SOURCE -> PARSED -> RESOLVED states
+-------------------------------------------------------------------------------
+DECISION
+    An included file is a MODULE. Modules parse independently -- parsing
+    needs no name resolution -- so each module passes through three states:
+        SOURCE   text located, not yet parsed
+        PARSED   lexed + parsed once (the L-9 cache holds this state)
+        RESOLVED when ALL modules of the program are PARSED, they are
+                 resolved and CONNECTED in one step
+    Resolution is therefore a whole-program phase over fully parsed
+    modules, not an interleaved per-include activity. The mount semantics
+    stand unchanged: asymmetric graft by tree shape (PREV L-8), scope
+    subtree built per mount (L-9), and the (A)/(B) "above" definition:
+    inside a module, "above" is the module's own textual order (it cannot
+    see its includer anyway); in the includer, everything mounted counts as
+    defined AT the textual position of the include statement -- references
+    below it see all of it, references above it see none.
+    NOTED AS FUTURE (not designed): per-module writeability.
+    -> PREV L-8, L-9, L-10; D-3.
+
+-------------------------------------------------------------------------------
+D-18 DIAGNOSTICS CARRY A CLASS TAG; stages gate, no numeric cap
+-------------------------------------------------------------------------------
+DECISION
+    Every pass-2 diagnostic carries a CLASS tag -- a stable taxonomy for
+    tests and readers: NAME, KIND, BINDING, CASCADE, GUARD, STRUCTURE.
+    Phase.SEMANTIC is added beside LEXER/PARSER/ANALYZER; the reporter is
+    the same shared DiagnosticReporter as pass 1.
+    Gating follows the D-17 state model structurally: full accumulation
+    WITHIN a stage, hard gate BETWEEN stages (all-parsed -> scope build ->
+    resolve + checks -> cascade); a stage with errors stops the pipeline
+    after reporting -- later stages over broken input produce noise, not
+    information. NO numeric error cap: counts are an arbitrary knob, gates
+    are structural.
+    -> core diagnostic.py; D-17.
+
+-------------------------------------------------------------------------------
+D-19 'as:' TAKES A RULE-SPACE NAME; 'by:' BINDS TO AN OPAQUE LVALUE --
+     for every object the user must be able to address
+-------------------------------------------------------------------------------
+PROBLEM (parked in D-4)
+    The grammar gave spawn/container 'as:' an OPAQUE LVALUE, so the handle
+    lived in script space and '-! north' had nothing to resolve against --
+    contradicting PREV L-11/L-12, which assumed instance SYMBOLS.
+
+DECISION
+    Split the two concerns, uniformly for ALL user-addressable objects:
+      - 'as: <name>'      a TRANSPARENT rule-space name: creates a symbol
+                          (kind 'instance' for spawns, typed by the spawned
+                          aggregate; container symbol for containers) in
+                          the enclosing scope. '-! north' resolves
+                          statically again; liveness stays data plane
+                          (PREV L-12).
+      - 'by: {lvalue}'    OPTIONAL, after 'as:': additionally binds the
+                          object to an opaque code reference, for script-
+                          side access.
+    Applies wherever the current grammar says 'as: {lvalue}' (Spawn,
+    container ForwardDecl); variables already carry a rule-space name by
+    declaration, their 'by:' stays deferred with D-7's 'as:' deferral.
+COST
+    Grammar + AST edit (pass 1): 'as:' operand becomes a rule name; new
+    optional 'by:' with t_opq_lvalue; lexer gains 'by:'. Joins the one
+    GOOD-regeneration batch.
+    -> PREV L-11, L-12; D-4 (parked item closed); SYNTAX_DOC first.
+
+-------------------------------------------------------------------------------
+D-20 CHANGE IS DELIVERED AT THE STEP BOUNDARY -- time axis, not no-time
+     plane; no raise detection; supersedes D-13(4)
+-------------------------------------------------------------------------------
+DECISION
+    The raised flag is checked at the STEP BOUNDARY: CHANGE fires after the
+    current no-time cascade has completed. CHANGE therefore sits on the
+    TIME AXIS like a clock -- no rule-authored path can close a no-time
+    cycle through it, so "CHANGE never appears in a circle" holds BY
+    CONSTRUCTION. The only check that remains is the existing one: CHANGE
+    is not an authorable event-spec emission (D-12(c)).
+    Consequences:
+      - D-13(4) (precise X->CHANGE edge detection via collected
+        references) is SUPERSEDED: no detection apparatus at all; CHANGE
+        contributes no inbound edges to the cascade graph.
+      - A CHANGE handler may freely contain mutation blocks that raise
+        again: that is a NEXT-step CHANGE -- time-evolving, legal. The
+        D-13(3) consequence sentence ("handlers do not re-raise") is
+        withdrawn with it.
+      - The raise-API spelling becomes pure codegen: pass 2 never looks
+        for it. Deferred to the emitter session.
+    REJECTED (Reading B): same-instant delivery -- would force
+    conservative X->CHANGE edges from every rule containing any opaque
+    block, barring CHANGE handlers from opaque effects entirely.
+    -> D-12, D-13; flag semantics D-13(2).
+
+-------------------------------------------------------------------------------
+D-21 THE DECLARATION FAMILY: ONE HEAD, KEYWORD-DISTINGUISHED KINDS; supersedes
+     the 'type-ref' shape; closes the D-7 grammar paragraph
+-------------------------------------------------------------------------------
+PROBLEM
+    Variables, containers, and reactor forward-declarations were three
+    species sharing one 'is:' surface; making them sibling grammar rules
+    fails LL(2) MEASURABLY (all open 'id is:' / 'id ('; the engine reports
+    the conflicts at compile time).
+
+DECISION
+    ONE head -- 'name [parens-decl] is:' -- with the OR in the KIND SLOT,
+    where keywords distinguish: reactor kinds ('mode', 'state', 'mode_group',
+    'state_machine'), 'struct', 'container' (optional angle type-parameters),
+    and variable (built-in keyword or struct-type id, mandatory parens-arg
+    initialiser). Kind names spell exactly as their definition keywords
+    ('state_machine', never 'sm'). The builder splits the kind branch into
+    distinct AST nodes; kind-vs-shape legality of the shared head is pass 2
+    (FOR-SEMANTICS F-2).
+    REJECTED: sibling rules (the measured LL(2) conflict); built-in types as
+    plain ids with optional parens (loses on-sight kind distinction the
+    keyword route buys at no LL cost).
+COST
+    New captured keywords: state, mode_group, state_machine, struct, int,
+    float, string, bool. <decl-arg>'s type slot widens to 'id | built-in'
+    so '(t: float)' signatures keep parsing.
+    -> D-7, D-9; parser SYNTAX_DOC <declaration>.
+
+-------------------------------------------------------------------------------
+D-22 VARIABLES TAKE A parens-arg INITIALISER AND 'by:'; STRUCT-TYPED
+     VARIABLES; amends D-7 (initialiser width, 'by:' un-deferred)
+-------------------------------------------------------------------------------
+DECISION
+    The initialiser is a full argument list, not a bare literal: built-ins
+    take exactly one positional value (pass-2 arity, F-4); struct-typed
+    variables bind arguments against the struct's member signature exactly
+    as mode parameters bind. Initialisers evaluate in DECLARATION ORDER at
+    bootstrap; names inside them resolve (A)-strict. D-7's deferred
+    'as: {lvalue}' arrives as 'by: {lvalue}' on variables and containers --
+    binding the engine-owned object to an EXISTING script lvalue.
+COST
+    The ordering rule is normative SYNTAX text; pass 2 owns arity/kind.
+    -> D-7, D-9, D-21; FOR-SEMANTICS F-4.
+
+-------------------------------------------------------------------------------
+D-23 'struct': AGGREGATE VALUE TYPES, (A)-STRICT, NO FORWARD DECLARATION
+-------------------------------------------------------------------------------
+DECISION
+    'NAME( member: type; ... ) is: struct' declares an aggregate value type;
+    the signature IS the member list and the declaration IS the definition.
+    Members may be built-in- or struct-typed (nesting). Structs are (A):
+    fully defined before use -- member cycles impossible by construction,
+    no cycle check exists because none is needed. D-4 absorbs the symbol
+    shape unchanged: declared-member lists live ON the Symbol.
+    REJECTED: (B)-style struct forward declaration -- it would reopen the
+    cycle question for zero authoring gain.
+COST
+    Pass 2: signature-mandatory check (F-2), initialiser binding (F-4),
+    scalar-only comparisons (F-5).
+    -> D-4, D-7; FOR-SEMANTICS F-2..F-5.
+
+-------------------------------------------------------------------------------
+D-24 BINDINGS DISSOLVE INTO <name-dotted>: 'e'/'sm'/'mg'/'m' ARE PASS-2
+     PSEUDO-SYMBOLS; the leading dot and the shallow-access rule die;
+     supersedes D-5's spelling
+-------------------------------------------------------------------------------
+PROBLEM
+    Event members were spelled '.x' in bracket conditions and 'event.x'
+    elsewhere -- two spellings for one thing -- and a leading dot is illegal
+    in the embedded language, so the transparent and opaque guard forms
+    could never read alike.
+
+DECISION
+    The binding names shorten to 'e', 'sm', 'mg', 'm' and become ORDINARY
+    IDENTIFIERS: the lexer never knows them; the parser sees one shape,
+    <name-dotted>, everywhere a member or reference stands (rvalues, both
+    comparison sides, via:-keys). Pass 2 resolves leading segments --
+    including the four pseudo-symbols -- and descends tails (two regimes,
+    F-6). The generated code binds the SAME spellings as Luau locals, so
+    '[ e.temp > limit ]' and '{ e.temp > limit }' are textually identical
+    guards. Declaring any of the four spellings is fatal (F-1). The
+    'shallow' one-dot doctrine retires: struct nesting makes deep tails
+    meaningful; depth legality is resolution's.
+    REJECTED: keeping 'event.'/'mode.' long forms beside short ones (two
+    spellings again); reserving 'e'/'m' as keywords (steals popular
+    identifiers for no gain once resolution owns the names).
+COST
+    D-5's check survives respelled ('e.member' requires a named trigger);
+    binding-scope checks move whole to pass 2.
+    -> D-5, D-12; FOR-SEMANTICS F-1, F-6, F-9.
+
+-------------------------------------------------------------------------------
+D-25 SPAWN KEY IS 'via: <rvalue>' INSIDE 'in:'; 'by:' BINDS DECLARATIONS;
+     supersedes D-19
+-------------------------------------------------------------------------------
+DECISION
+    The spawn modifier chain is '[in: <container> [via: <rvalue>]]': 'via:'
+    is THE KEY the container holds the instance under (dict key), computable
+    (literal, name-dotted such as 'e.name', or opaque expression), and legal
+    only with 'in:' -- a key without a container is meaningless. D-19's
+    rule-space 'as:' name on spawn is WITHDRAWN before implementation:
+    instance names come from <declaration> (the (B) forward-decl already in
+    place), and the script binding 'by:' lives on declarations (containers,
+    variables), not on spawns. Containers are never spawned; they exist with
+    their declaring scope.
+COST
+    Lexer: 'via:', 'by:'; grammar/AST: spawn tail, container/variable by:.
+    -> D-11, D-19 (superseded); FOR-SEMANTICS F-10.
+
+-------------------------------------------------------------------------------
+D-26 NAMED TAILS MERGE; DOTTED REFERENCES EVERYWHERE; THE PARENS DECIDE;
+     BARE BOOLEANS STAND AS CONDITIONS
+-------------------------------------------------------------------------------
+PROBLEM
+    Reference heads (trigger, cause-ref, effect-ref, has:/default: targets)
+    were single bare ids -- unreachable across namespaces and imports, the
+    exact paths the mount machinery exists for. Widening each to
+    <name-dotted> naively collides: 'NAME(args)' emission and dotted
+    reference share FIRST_2 pairs.
+
+DECISION
+    One merged shape per side: cause-named / effect-named =
+    '<name-dotted> [parens-arg]'; the PARENS DECIDE ref-vs-inline /
+    emission-vs-bundle (the known LL(2) spot, now load-bearing twice).
+    'has:'/'default:' share <ref-member> = '<name-dotted> [. VOID]'. A cause
+    reference followed by '&' parses; legality is pass 2 (F-7, default:
+    fatal until decided). In bracket conditions, <cond-term> =
+    '<name-dotted> [op operand]': a tail-less term is a bare boolean
+    reference, equivalent to '== true'. The condition grammar is the
+    standard LL precedence ladder ('not' > 'and' > 'or'); the natural
+    left-recursive BNF measurably fails LL(2) (14 conflicts) and is
+    ambiguous besides.
+COST
+    Trigger/ref builders re-key; FOLLOW/FIRST shifts regenerate GOODs.
+    -> parser D-10, D-8; FOR-SEMANTICS F-5, F-7, F-8, F-11.
+
+-------------------------------------------------------------------------------
+D-27 SURFACE SPELLINGS: 'import:' REPLACES 'include:'; CHANGE IS A KEYWORD
+     TRIGGER; GRAMMAR RULE NAMES CARRY THE FUNCTIONALITY PREFIX
+-------------------------------------------------------------------------------
+DECISION
+    (a) 'import: "<file>" into: <path>' -- the statement mounts a parsed-once
+        unit (D-17); 'import' names the act without promising per-line
+        re-instantiation that does not exist.
+    (b) CHANGE joins ANY/BEGIN/END as a captured keyword in the system-
+        trigger branch; not an authorable emission; memberless; time-axis
+        delivery per D-20.
+    (c) Grammar rule names put the FUNCTIONALITY FIRST: def-event, def-cause,
+        ref-has, ref-member, kind-decl, elm-mode, cond-term, list-arg,
+        parens-decl, name-dotted, ... -- one scheme across the dict, the
+        SYNTAX_DOC, and the AST map keys.
+COST
+    Pure renames ripple through ACTIONS/ast_map/tests; joined to the one
+    GOOD-regeneration batch.
+    -> D-13, D-17, D-20.
 
 ===============================================================================
 END OF DISCUSSIONS LOG
 ===============================================================================
+

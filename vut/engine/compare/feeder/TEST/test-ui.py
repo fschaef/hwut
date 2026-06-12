@@ -26,7 +26,7 @@ from itertools import zip_longest
 # Depth: vut/engine/compare/feeder/TEST/ -> ../../../../../
 sys.path.insert(0, "../../../../../")
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from config import HwutRunner
 from vut.engine.compare.configuration        import Configuration
 import vut.engine.compare.feeder.ui          as ui
 

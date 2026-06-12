@@ -10,21 +10,9 @@ This script validates fixes for:
 It uses HwutRunner for execution control.
 """
 import sys
-import os
 
 # --- Path Setup ---
-# Attempt to locate HwutRunner if not in path
-try:
-    from vut.language_support.python.hwut_runner import HwutRunner
-except ImportError:
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Assuming script is in vut/engine/compare/TEST/
-    runner_path = os.path.abspath(os.path.join(current_dir, "../../../../"))
-    sys.path.insert(0, runner_path)
-    from vut.language_support.python.hwut_runner import HwutRunner
-
-# Insert project path (4 levels up from vut/engine/compare/TEST/)
-HwutRunner.insert_project_path(directory_n=4)
+from config import HwutRunner # noqa E401
 
 from vut.engine.compare.engine.association.edit_operations.line import do as calc_edit_ops
 from vut.engine.compare.engine.line import Line

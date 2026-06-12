@@ -20,10 +20,9 @@ ECPs need a live host:port and are exercised in test-spawner.py, not
 here.
 ________________________________________________________________________________
 """
-import test_env  # noqa: F401  (path bootstrap; must precede vut.* imports)
 import sys
 
-from vut.language_support.python.hwut_runner import HwutRunner
+from config import HwutRunner
 
 from vut.engine.spawner.config import (SpawnerConfig,
                                        AsyncConfig,

@@ -24,13 +24,12 @@ Inside the `with` block, every Event subclass joins that category.
 ______________________________________________________________________________
 """
 import sys
-import config                                                       # noqa: F401
+from   config import HwutRunner                                                  # noqa: F401
 
-from vut.language_support.python.hwut_runner    import HwutRunner
-from vut.engine.event                           import (Event,
-                                                        category,
-                                                        CLASS_BY_ID,
-                                                        EventIdCollision,
+from vut.engine.event import (Event,
+                              category,
+                              CLASS_BY_ID,
+                              EventIdCollision,
                                                         EventDefinitionOutsideCategoryContext)
 
 
