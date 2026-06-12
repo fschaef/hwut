@@ -1,0 +1,17 @@
+
+--- accepted argument forms (name | kind | value) ---
+  -        NAME     target
+  lane     LITERAL  2
+  -        NAME     e.target
+  -        NAME     sm.count
+  -        NAME     mg.index
+  -        NAME     m.req
+  time     NAME     e.time
+  -        NAME     tracker.pos.x
+  armed    LITERAL  true
+  -        LUAU     { e.x + 1 }
+
+--- rejected forms (no trailing dot, no lone '=', no leading dot) ---
+  Chase(e.)                    rejected
+  Chase(= 3)                   rejected
+  Chase(.target)               rejected

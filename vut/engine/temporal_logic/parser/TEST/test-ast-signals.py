@@ -90,19 +90,16 @@ def run_operator_table():
 from vut.engine.temporal_logic.parser import ast_nodes as A
 
 _RULE_NODE = {
-    "namespace": A.Namespace, "include": A.Include, "causality": A.Causality,
-    "cause": A.Cause, "cause-ref": A.CauseRef, "cause-def": A.CauseDef,
-    "effect-def": A.EffectDef, "effect-ref": A.EffectRef, "trigger": A.Trigger,
-    "bracket-guard": A.Condition, "or-cond": A.BoolOp, "and-cond": A.BoolOp,
-    "not-cond": A.Not, "comparison": A.Comparison, "evt-member": A.EventMember,
-    "spawn": A.Spawn, "unspawn": A.Unspawn, "event-spec": A.EventSpec,
-    "mode-arming": A.ModeArming, "arg": A.Arg,
-    "shallow-member-access": A.ShallowMemberAccess, "mode": A.Mode,
+    "namespace": A.Namespace, "import": A.Import, "causality": A.Causality,
+    "def-cause": A.CauseDef, "def-effect": A.EffectDef,
+    "guard-bracket": A.Condition, "cond": A.BoolOp, "cond-and": A.BoolOp,
+    "cond-not": A.Not,
+    "spawn": A.Spawn, "unspawn": A.Unspawn, "arming-mode": A.ModeArming,
+    "arg": A.Arg, "mode": A.Mode,
     "init": A.InitBlock, "deinit": A.DeinitBlock, "state": A.State,
-    "has-ref": A.HasRef, "declaration": A.ArgDecl, "type-ref": A.ForwardDecl,
+    "ref-has": A.HasRef, "default": A.DefaultRef,
     "mode-group": A.ModeGroup, "state-machine": A.StateMachine,
-    "default": A.StateMachineModeRef, "sm-mode-ref": A.StateMachineModeRef,
-    "event-def": A.EventDef, "clock-def": A.ClockDef, "arg-decl": A.ArgDecl,
+    "def-event": A.EventDef, "def-clock": A.ClockDef, "decl-arg": A.ArgDecl,
 }
 
 
@@ -136,6 +133,12 @@ def run_exemptions():
     for r in sorted(GRAMMAR):
         if _top_operator(GRAMMAR[r]) == "TERMINAL":
             print("  %s" % r)
+    print("map-hosted (plain value or input-decided node kind):")
+    hosted = sorted(r for r, f in M.AST_MAP.items()
+                    if getattr(f, "__module__", "").endswith("ast_map")
+                    and r not in M._PASS_THROUGH)
+    for r in hosted:
+        print("  %s" % r)
 
 
 HwutRunner(
@@ -147,3 +150,4 @@ HwutRunner(
         "exemptions":     run_exemptions,
     },
 ).run()
+

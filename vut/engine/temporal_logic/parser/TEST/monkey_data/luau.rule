@@ -1,9 +1,10 @@
-include: "s" into: X4 . X6 . X8
-clock: X10 1 cause: X13 . X15 ( n17: X18 ; n20: X21 )
-on: X24 & [ . X28 >= "s" and . X33 > . X36 or . X39 == 1 and . X44 != . X47 ]
-on: X50 ( "s" , X54 = mode . X58 )
-=> +! X62 . X64 ( ) in: X68 . X70 . X72 as: { x{ y }{ y }{ y }{ y }{ y } }
-=> "s" X76 ( ) is: container < > as: { x{ y }{ y }{ y }{ y }{ y }{ y } }
-mode_group: X85 . X87 ( ) is: X91 . X93 is: X95 . X97
-has: X99
+import: "s" into: X4 . X6 . X8
+clock: X10 1 cause: X13 . X15 ( n17: X18 ; n20: string ; n23: bool ; ) for: X28 . X30 . X32 & [ X35 . X37 and X39 . X41 or X43 . X45 and X47 . X49 ]
+open: X52 . X54 . X56
+on: X58 . X60
+=> { x{ y }{ y }{ y }{ y } }
+:close X63 is: int ( X67 = true , { x } )
+state_machine: X73 . X75 is: X77 . X79 . X81
+init: { x{ y }{ y }{ y } }
+has: X84 . X86
 :end

@@ -7,20 +7,23 @@ PURPOSE: Test the grammar-agnostic CST machinery (core/) in isolation, on small
          test: the canonical CST the engine builds by default (cst_nodes), the
          operator SIGNAL interfaces (operator_interface), the transformer overlay
          (a partial rule-name -> factory map), children-transformed-first
-         (bottom-up), and absent-optional carried as an OR_Node state.
+         (bottom-up), and absent-optional carried as an OPT_Node state.
 
-CHOICES: cst_shapes, absent_optional, signals, overlay, overlay_partial,
-         children_first.
+CHOICES: cst_shapes, absent_optional, silent_optional, signals, overlay,
+         overlay_partial, children_first.
 
 DESCRIPTION:
 
     cst_shapes        A grammar exercising SEQ / OR / STAR / PLUS yields the four
                       canonical CST node kinds, with rule names stamped on rule
                       nodes and None on inline operators.
-    absent_optional   An inline optional is an OR_Node whose triggered_index is
-                      0 (present, child = value) or 1 (absent, child = ABSENT);
-                      the parent SEQ keeps a STABLE slot either way -- presence is
-                      read off the node, never inferred from child count.
+    absent_optional   An inline optional is an OPT_Node: 'present' marks
+                      whether it fired, 'child' is the body's value or ABSENT;
+                      the parent SEQ keeps a STABLE slot either way -- presence
+                      is read off the node, never inferred from child count.
+    silent_optional   An optional over an ALL-SILENT body keeps fired-ness:
+                      present=True with child=ABSENT (fired) is distinguishable
+                      from present=False (absent).
     signals           Every CST node derives from the operator interface matching
                       its shape (OR_Node IS OR_Interface, etc.); the interfaces
                       are signals -- isinstance against them reports shape.
@@ -45,9 +48,10 @@ from vut.engine.temporal_logic.parser.core.ll2_engine import Grammar, EnginePars
 from vut.engine.temporal_logic.parser.core.lexer import register_grammar
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
 from vut.engine.temporal_logic.parser.core.cst_nodes import (
-        OR_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT)
+        OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT)
 from vut.engine.temporal_logic.parser.core.operator_interface import (
-        OR_Interface, SEQ_Interface, PLUS_Interface, STAR_Interface)
+        OR_Interface, OPT_Interface, SEQ_Interface, PLUS_Interface,
+        STAR_Interface)
 
 
 # '@'-led toy terminals: no other terminal in the process-global DB can match the
@@ -76,6 +80,14 @@ def _show(node, indent=0):
             print("%s  <absent>" % pad)
         else:
             _show(node.child, indent + 1)
+    elif isinstance(node, OPT_Node):
+        print("%sOPT name=%r" % (pad, node.name))
+        if node.child is not ABSENT:
+            _show(node.child, indent + 1)
+        elif node.present:
+            print("%s  <fired, all-silent body>" % pad)
+        else:
+            print("%s  <absent>" % pad)
     elif isinstance(node, SEQ_Node):
         print("%sSEQ name=%r (%d)" % (pad, node.name, len(node.children)))
         for c in node.children:
@@ -126,12 +138,30 @@ _OPT_GRAMMAR = {
 
 
 def run_absent_optional():
-    banner("optional PRESENT: OR_Node index 0, child = value; SEQ slot stable")
+    banner("optional PRESENT: OPT_Node child = value; SEQ slot stable")
     node, _ = _parse(_OPT_GRAMMAR, "decl", "@a @b @c")
     _show(node)
-    banner("optional ABSENT: OR_Node index 1, child = ABSENT; SEQ slot STILL there")
+    banner("optional ABSENT: OPT_Node child = ABSENT; SEQ slot STILL there")
     node2, _ = _parse(_OPT_GRAMMAR, "decl", "@a @c")
     _show(node2)
+
+
+_SILENT_OPT_GRAMMAR = {
+    "tail": (t_a, ["sep"]),       # the optional's whole body is a silent keyword
+}
+
+
+def run_silent_optional():
+    banner("fired over all-silent body: present=True, child=ABSENT")
+    node, _ = _parse(_SILENT_OPT_GRAMMAR, "tail", "@a sep")
+    _show(node)
+    opt = node.children[1]
+    print("present:", opt.present, " child is ABSENT:", opt.child is ABSENT)
+    banner("absent: present=False, child=ABSENT")
+    node2, _ = _parse(_SILENT_OPT_GRAMMAR, "tail", "@a")
+    _show(node2)
+    opt2 = node2.children[1]
+    print("present:", opt2.present, " child is ABSENT:", opt2.child is ABSENT)
 
 
 def run_signals():
@@ -145,6 +175,10 @@ def run_signals():
     node2, _ = _parse(_SHAPES_GRAMMAR, "plusr", "@b")
     print("plusr   is PLUS_Interface:", isinstance(node2, PLUS_Interface))
     print("OR is not SEQ           :", not isinstance(orn, SEQ_Interface))
+    node3, _ = _parse(_OPT_GRAMMAR, "decl", "@a @c")
+    optn = node3.children[1]
+    print("optional is OPT_Interface:", isinstance(optn, OPT_Interface))
+    print("OPT is not OR           :", not isinstance(optn, OR_Interface))
 
 
 def run_overlay():
@@ -196,6 +230,7 @@ HwutRunner(
     choice_map = {
         "cst_shapes":      run_cst_shapes,
         "absent_optional": run_absent_optional,
+        "silent_optional": run_silent_optional,
         "signals":         run_signals,
         "overlay":         run_overlay,
         "overlay_partial": run_overlay_partial,

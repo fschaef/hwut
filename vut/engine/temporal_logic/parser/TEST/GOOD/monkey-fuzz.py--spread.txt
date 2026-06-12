@@ -1,5 +1,5 @@
 === monkey: spread ===
-tokens parsed:      1039
+tokens parsed:      931
 top-level items:    12
 diagnostics:        none
 
@@ -13,10 +13,121 @@ Namespace
   items:
     Causality
       cause:
+        CauseRef
+          name:
+            'X10'
+            'X12'
+            'X14'
+            'X16'
+            'X18'
+          args:
+            Arg
+              name = None
+              value = 'true'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X22'
+              value:
+                OpaqueCode
+                  text = '{ x }'
+                  mode = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+                  _references = None
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          guard:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <Role.CONDITION: 'condition'>
+              begin = 0
+              _references = None
+          begin = 0
+      effects:
+        EventSpec
+          name:
+            'X29'
+            'X31'
+            'X33'
+            'X35'
+          args:
+            Arg
+              name = 'X37'
+              value:
+                'X39'
+                'X41'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+            Arg
+              name = 'X43'
+              value = 'false'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = 'false'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+      begin = 0
+  begin = 0
+ClockDef
+  name = 'X53'
+  period = '1'
+  begin = 0
+Import
+  filename = 's'
+  mount:
+    'X58'
+    'X60'
+    'X62'
+  begin = 0
+Mode
+  name:
+    'X64'
+    'X66'
+    'X68'
+    'X70'
+    'X72'
+  params:
+    ArgDecl
+      member = 'n74'
+      type = 'X75'
+      begin = 0
+    ArgDecl
+      member = 'n77'
+      type = 'bool'
+      begin = 0
+  init:
+    OpaqueCode
+      text = '{ x{ y } }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+      _references = None
+  deinit:
+    OpaqueCode
+      text = '{ x }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+      _references = None
+  causalities:
+    Causality
+      cause:
         Cause
           trigger:
             Trigger
-              name = 'BEGIN'
+              name:
+                'CHANGE'
               is_keyword = True
               begin = 0
           guard:
@@ -28,735 +139,616 @@ Namespace
                     BoolOp
                       op = 'and'
                       operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X14'
-                              begin = 0
-                          op = '=='
-                          right:
-                            Literal
-                              text = '1'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X86'
+                            'X88'
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X19'
-                              begin = 0
-                          op = '>='
-                          right:
-                            EventMember
-                              name = 'X22'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X25'
-                              begin = 0
-                          op = '<='
-                          right:
-                            Literal
-                              text = '"s"'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X90'
+                            'X92'
                           begin = 0
                       begin = 0
                     BoolOp
                       op = 'and'
                       operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X30'
-                              begin = 0
-                          op = '<'
-                          right:
-                            Literal
-                              text = '"s"'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X94'
+                            'X96'
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X35'
-                              begin = 0
-                          op = '!='
-                          right:
-                            EventMember
-                              name = 'X38'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X41'
-                              begin = 0
-                          op = '>'
-                          right:
-                            Literal
-                              text = '1'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X46'
-                              begin = 0
-                          op = '<='
-                          right:
-                            EventMember
-                              name = 'X49'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X52'
-                              begin = 0
-                          op = '!='
-                          right:
-                            Literal
-                              text = '1'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                    BoolOp
-                      op = 'and'
-                      operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X57'
-                              begin = 0
-                          op = '>='
-                          right:
-                            Literal
-                              text = '"s"'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X62'
-                              begin = 0
-                          op = '=='
-                          right:
-                            EventMember
-                              name = 'X65'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X68'
-                              begin = 0
-                          op = '>'
-                          right:
-                            Literal
-                              text = '1'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X73'
-                              begin = 0
-                          op = '<'
-                          right:
-                            Literal
-                              text = '"s"'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X78'
-                              begin = 0
-                          op = '=='
-                          right:
-                            EventMember
-                              name = 'X81'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X98'
+                            'X100'
                           begin = 0
                       begin = 0
                   begin = 0
               begin = 0
           begin = 0
       effects:
-        ModeArming
+        Spawn
           name:
-            'X85'
-            'X87'
-            'X89'
-            'X91'
-            'X93'
+            'X104'
+            'X106'
+            'X108'
+            'X110'
           args:
             Arg
-              name = None
-              value = 'X95'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X97'
-              value:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-          begin = 0
-      begin = 0
-  begin = 0
-EventDef
-  name = 'X102'
-  params:
-    ArgDecl
-      member = 'n104'
-      type = 'X105'
-      begin = 0
-    ArgDecl
-      member = 'n107'
-      type = 'X108'
-      begin = 0
-    ArgDecl
-      member = 'n110'
-      type = 'X111'
-      begin = 0
-    ArgDecl
-      member = 'n113'
-      type = 'X114'
-      begin = 0
-    ArgDecl
-      member = 'n116'
-      type = 'X117'
-      begin = 0
-  begin = 0
-ClockDef
-  name = 'X120'
-  period = '1'
-  begin = 0
-CauseDef
-  name:
-    'X123'
-    'X125'
-    'X127'
-    'X129'
-    'X131'
-  params:
-    ArgDecl
-      member = 'n133'
-      type = 'X134'
-      begin = 0
-    ArgDecl
-      member = 'n136'
-      type = 'X137'
-      begin = 0
-    ArgDecl
-      member = 'n139'
-      type = 'X140'
-      begin = 0
-    ArgDecl
-      member = 'n142'
-      type = 'X143'
-      begin = 0
-  body:
-    CauseRef
-      name = 'X146'
-      args:
-        Arg
-          name = None
-          value = '1'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = 'X150'
-          value = '"s"'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = None
-          value:
-            ShallowMemberAccess
-              binding = 'event'
-              member = 'X156'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
-          begin = 0
-      begin = 0
-  begin = 0
-ModeGroup
-  name:
-    'X159'
-    'X161'
-    'X163'
-    'X165'
-  params:
-    ArgDecl
-      member = 'n167'
-      type = 'X168'
-      begin = 0
-    ArgDecl
-      member = 'n170'
-      type = 'X171'
-      begin = 0
-  bases:
-    'X174'
-    'X176'
-    'X178'
-    'X180'
-    'X182'
-    'X184'
-    'X186'
-    'X188'
-    'X190'
-    'X192'
-  modes:
-    Mode
-      name:
-        'X194'
-        'X196'
-        'X198'
-        'X200'
-        'X202'
-      params:
-        ArgDecl
-          member = 'n204'
-          type = 'X205'
-          begin = 0
-        ArgDecl
-          member = 'n207'
-          type = 'X208'
-          begin = 0
-        ArgDecl
-          member = 'n210'
-          type = 'X211'
-          begin = 0
-        ArgDecl
-          member = 'n213'
-          type = 'X214'
-          begin = 0
-      init:
-        SpanResult
-          text = '{ x{ y } }'
-          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      deinit = None
-      causalities:
-        []
-      untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'X218'
-              is_keyword = False
-              begin = 0
-          guard:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
-          begin = 0
-        CauseRef
-          name = 'X221'
-          args:
-            Arg
-              name = 'X223'
-              value:
-                Luau
-                  text = '{ x }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-            Arg
-              name = 'X226'
-              value = 'X228'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
+              name = 'X112'
               value = '1'
               kind = <E_ArgKind.LITERAL: 0>
               begin = 0
-          begin = 0
-        Cause
-          trigger:
-            Trigger
-              name = 'END'
-              is_keyword = True
+            Arg
+              name = None
+              value:
+                OpaqueCode
+                  text = '{ x{ y } }'
+                  mode = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+                  _references = None
+              kind = <E_ArgKind.LUAU: 1>
               begin = 0
-          guard:
-            Condition
-              expr:
-                BoolOp
-                  op = 'or'
-                  operands:
+            Arg
+              name = 'X117'
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          has_parens = True
+          in_container:
+            'X122'
+            'X124'
+            'X126'
+            'X128'
+            'X130'
+          via:
+            Arg
+              name = None
+              value:
+                'X132'
+                'X134'
+                'X136'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+          begin = 0
+        Mutation
+          body:
+            OpaqueCode
+              text = '{ x }'
+              mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+              _references = None
+          begin = 0
+      begin = 0
+  untils:
+    Cause
+      trigger:
+        Trigger
+          name:
+            'BEGIN'
+          is_keyword = True
+          begin = 0
+      guard:
+        OpaqueCode
+          text = '{ x{ y } }'
+          mode = <Role.CONDITION: 'condition'>
+          begin = 0
+          _references = None
+      begin = 0
+  begin = 0
+CauseDef
+  name:
+    'X144'
+    'X146'
+    'X148'
+    'X150'
+    'X152'
+  params:
+    ArgDecl
+      member = 'n154'
+      type = 'X155'
+      begin = 0
+    ArgDecl
+      member = 'n157'
+      type = 'float'
+      begin = 0
+    ArgDecl
+      member = 'n160'
+      type = 'string'
+      begin = 0
+  for_event:
+    'X165'
+    'X167'
+    'X169'
+    'X171'
+    'X173'
+  guard:
+    Condition
+      expr:
+        BoolOp
+          op = 'or'
+          operands:
+            BoolOp
+              op = 'and'
+              operands:
+                Not
+                  operand:
                     BoolOp
-                      op = 'and'
+                      op = 'or'
                       operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X239'
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X178'
+                                'X180'
                               begin = 0
-                          op = '!='
-                          right:
-                            Literal
-                              text = '1'
+                            BoolRef
+                              name:
+                                'X182'
+                                'X184'
                               begin = 0
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X244'
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X186'
+                                'X188'
                               begin = 0
-                          op = '>='
-                          right:
-                            Literal
-                              text = '"s"'
+                            BoolRef
+                              name:
+                                'X190'
+                                'X192'
                               begin = 0
                           begin = 0
                       begin = 0
+                  begin = 0
+                Not
+                  operand:
                     BoolOp
-                      op = 'and'
+                      op = 'or'
                       operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X249'
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X197'
+                                'X199'
                               begin = 0
-                          op = '<'
-                          right:
-                            Literal
-                              text = '"s"'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X254'
-                              begin = 0
-                          op = '>'
-                          right:
-                            EventMember
-                              name = 'X257'
+                            BoolRef
+                              name:
+                                'X201'
+                                'X203'
                               begin = 0
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X260'
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X205'
+                                'X207'
                               begin = 0
-                          op = '<='
-                          right:
-                            Literal
-                              text = '1'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X265'
-                              begin = 0
-                          op = '>='
-                          right:
-                            EventMember
-                              name = 'X268'
-                              begin = 0
-                          begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X271'
-                              begin = 0
-                          op = '<='
-                          right:
-                            Literal
-                              text = '"s"'
+                            BoolRef
+                              name:
+                                'X209'
+                                'X211'
                               begin = 0
                           begin = 0
                       begin = 0
+                  begin = 0
+              begin = 0
+            BoolOp
+              op = 'and'
+              operands:
+                Not
+                  operand:
                     BoolOp
-                      op = 'and'
+                      op = 'or'
                       operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X276'
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X216'
+                                'X218'
                               begin = 0
-                          op = '>'
-                          right:
-                            Literal
-                              text = '1'
+                            BoolRef
+                              name:
+                                'X220'
+                                'X222'
                               begin = 0
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X281'
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X224'
+                                'X226'
                               begin = 0
-                          op = '=='
-                          right:
-                            Literal
-                              text = '"s"'
+                            BoolRef
+                              name:
+                                'X228'
+                                'X230'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X235'
+                                'X237'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X239'
+                                'X241'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X243'
+                                'X245'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X247'
+                                'X249'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+            BoolOp
+              op = 'and'
+              operands:
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X254'
+                                'X256'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X258'
+                                'X260'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X262'
+                                'X264'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X266'
+                                'X268'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X273'
+                                'X275'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X277'
+                                'X279'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X281'
+                                'X283'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X285'
+                                'X287'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+            BoolOp
+              op = 'and'
+              operands:
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X292'
+                                'X294'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X296'
+                                'X298'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X300'
+                                'X302'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X304'
+                                'X306'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X311'
+                                'X313'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X315'
+                                'X317'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X319'
+                                'X321'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X323'
+                                'X325'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X330'
+                                'X332'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X334'
+                                'X336'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X338'
+                                'X340'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X342'
+                                'X344'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X349'
+                                'X351'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X353'
+                                'X355'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X357'
+                                'X359'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X361'
+                                'X363'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X368'
+                                'X370'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X372'
+                                'X374'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X376'
+                                'X378'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X380'
+                                'X382'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+            BoolOp
+              op = 'and'
+              operands:
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X387'
+                                'X389'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X391'
+                                'X393'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X395'
+                                'X397'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X399'
+                                'X401'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                Not
+                  operand:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X406'
+                                'X408'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X410'
+                                'X412'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X414'
+                                'X416'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X418'
+                                'X420'
                               begin = 0
                           begin = 0
                       begin = 0
                   begin = 0
               begin = 0
           begin = 0
-      begin = 0
-  has_refs:
-    HasRef
-      aggregate = 'X286'
-      member = 'VOID'
-      is_void = True
-      begin = 0
-  init:
-    SpanResult
-      text = '{ x{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  deinit:
-    SpanResult
-      text = '{ x }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
   begin = 0
 StateMachine
   name:
-    'X293'
-    'X295'
-    'X297'
-  params:
-    ArgDecl
-      member = 'n299'
-      type = 'X300'
-      begin = 0
-    ArgDecl
-      member = 'n302'
-      type = 'X303'
-      begin = 0
-  bases:
-    'X306'
-    'X308'
-    'X310'
-    'X312'
-    'X314'
-    'X316'
-    'X318'
-    'X320'
-  states:
-    State
-      name:
-        'X322'
-        'X324'
-        'X326'
-      params:
-        ArgDecl
-          member = 'n328'
-          type = 'X329'
-          begin = 0
-        ArgDecl
-          member = 'n331'
-          type = 'X332'
-          begin = 0
-      init = None
-      deinit:
-        SpanResult
-          text = '{ x }'
-          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-      causalities:
-        Causality
-          cause:
-            CauseRef
-              name = 'X335'
-              args:
-                Arg
-                  name = 'X337'
-                  value:
-                    ShallowMemberAccess
-                      binding = 'mg'
-                      member = 'X341'
-                      begin = 0
-                  kind = <E_ArgKind.MEMBER: 2>
-                  begin = 0
-                Arg
-                  name = None
-                  value:
-                    Luau
-                      text = '{ x{ y } }'
-                      role = <Role.EXPRESSION: 'expression'>
-                      begin = 0
-                  kind = <E_ArgKind.LUAU: 1>
-                  begin = 0
-              begin = 0
-          effects:
-            Mutation
-              body:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.STATEMENT_BLOCK: 'statement_block'>
-                  begin = 0
-              begin = 0
-            EffectRef
-              name = 'X346'
-              begin = 0
-            Spawn
-              name:
-                'X349'
-                'X351'
-              args:
-                Arg
-                  name = 'X353'
-                  value = '"s"'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = None
-                  value:
-                    ShallowMemberAccess
-                      binding = 'sm'
-                      member = 'X359'
-                      begin = 0
-                  kind = <E_ArgKind.MEMBER: 2>
-                  begin = 0
-              has_parens = True
-              in_container:
-                'X362'
-                'X364'
-                'X366'
-                'X368'
-                'X370'
-              luau_handle:
-                Luau
-                  text = '{ x }'
-                  role = <Role.LVALUE: 'lvalue'>
-                  begin = 0
-              begin = 0
-          begin = 0
-      untils:
-        Cause
-          trigger:
-            Trigger
-              name = 'ANY'
-              is_keyword = True
-              begin = 0
-          guard:
-            Luau
-              text = '{ x }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
-          begin = 0
-        CauseRef
-          name = 'X377'
-          args:
-            Arg
-              name = 'X379'
-              value = 'X381'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value = '1'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X385'
-              value:
-                ShallowMemberAccess
-                  binding = 'mode'
-                  member = 'X389'
-                  begin = 0
-              kind = <E_ArgKind.MEMBER: 2>
-              begin = 0
-            Arg
-              name = 'X391'
-              value = 'X393'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          begin = 0
-        CauseRef
-          name = 'X398'
-          args:
-            Arg
-              name = 'X400'
-              value = '1'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-            Arg
-              name = 'X405'
-              value:
-                ShallowMemberAccess
-                  binding = 'mg'
-                  member = 'X409'
-                  begin = 0
-              kind = <E_ArgKind.MEMBER: 2>
-              begin = 0
-            Arg
-              name = None
-              value:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-            Arg
-              name = None
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          begin = 0
-        Cause
-          trigger:
-            Trigger
-              name = 'ANY'
-              is_keyword = True
-              begin = 0
-          guard:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.CONDITION: 'condition'>
-              begin = 0
-          begin = 0
-      begin = 0
-  has_refs:
-    []
-  default = None
-  init = None
-  deinit:
-    SpanResult
-      text = '{ x{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  begin = 0
-Mode
-  name:
-    'X420'
-    'X422'
     'X424'
     'X426'
   params:
@@ -768,82 +760,77 @@ Mode
       member = 'n431'
       type = 'X432'
       begin = 0
-  init:
-    SpanResult
-      text = '{ x{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+    ArgDecl
+      member = 'n434'
+      type = 'int'
       begin = 0
-  deinit:
-    SpanResult
+    ArgDecl
+      member = 'n437'
+      type = 'float'
+      begin = 0
+  bases:
+    'X442'
+    'X444'
+    'X446'
+    'X448'
+    'X450'
+    'X452'
+    'X454'
+    'X456'
+    'X458'
+    'X460'
+  states:
+    []
+  has_refs:
+    []
+  default = None
+  init:
+    OpaqueCode
       text = '{ x }'
       mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
-  causalities:
-    Causality
-      cause:
-        CauseRef
-          name = 'X435'
-          args:
-            Arg
-              name = 'X437'
-              value = 'X439'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X441'
-              value = '1'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value = 'X445'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          begin = 0
-      effects:
-        ReportString
-          text = '"s"'
-          begin = 0
-        EventSpec
-          name:
-            'X450'
-            'X452'
-            'X454'
-            'X456'
-            'X458'
-          args:
-            Arg
-              name = 'X460'
-              value = '1'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          begin = 0
-        Unspawn
-          name:
-            'X468'
-            'X470'
-            'X472'
-          begin = 0
-        Mutation
-          body:
-            Luau
-              text = '{ x{ y } }'
-              role = <Role.STATEMENT_BLOCK: 'statement_block'>
-              begin = 0
-          begin = 0
+      _references = None
+  deinit:
+    OpaqueCode
+      text = '{ x }'
+      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
-  untils:
-    Cause
-      trigger:
-        Trigger
-          name = 'END'
-          is_keyword = True
+      _references = None
+  begin = 0
+Namespace
+  name:
+    'X465'
+    'X467'
+    'X469'
+  items:
+    CauseDef
+      name:
+        'X471'
+        'X473'
+        'X475'
+        'X477'
+        'X479'
+      params:
+        ArgDecl
+          member = 'n481'
+          type = 'X482'
           begin = 0
+        ArgDecl
+          member = 'n484'
+          type = 'int'
+          begin = 0
+        ArgDecl
+          member = 'n487'
+          type = 'X488'
+          begin = 0
+        ArgDecl
+          member = 'n490'
+          type = 'X491'
+          begin = 0
+      for_event:
+        'X495'
+        'X497'
+        'X499'
       guard:
         Condition
           expr:
@@ -855,120 +842,42 @@ Mode
                   operands:
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X483'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X488'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    EventMember
-                                      name = 'X491'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X494'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    EventMember
-                                      name = 'X497'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X500'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X503'
+                            'X505'
                           begin = 0
                       begin = 0
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X508'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X513'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    EventMember
-                                      name = 'X516'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X519'
-                                      begin = 0
-                                  op = '>'
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X524'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X508'
+                            'X510'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X513'
+                            'X515'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X518'
+                            'X520'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X523'
+                            'X525'
                           begin = 0
                       begin = 0
                   begin = 0
@@ -977,297 +886,26 @@ Mode
                   operands:
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X532'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    EventMember
-                                      name = 'X535'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X538'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X543'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X548'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    EventMember
-                                      name = 'X551'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X528'
+                            'X530'
                           begin = 0
                       begin = 0
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X557'
-                                      begin = 0
-                                  op = '>'
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X562'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X567'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X572'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X533'
+                            'X535'
                           begin = 0
                       begin = 0
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X580'
-                                      begin = 0
-                                  op = '>'
-                                  right:
-                                    EventMember
-                                      name = 'X583'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X586'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    EventMember
-                                      name = 'X589'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X592'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X597'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                    Not
-                      operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X605'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X610'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X615'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    EventMember
-                                      name = 'X618'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X621'
-                                      begin = 0
-                                  op = '>'
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                    Not
-                      operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X629'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    EventMember
-                                      name = 'X632'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X635'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X640'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    EventMember
-                                      name = 'X643'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X646'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X538'
+                            'X540'
                           begin = 0
                       begin = 0
                   begin = 0
@@ -1276,502 +914,443 @@ Mode
                   operands:
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X654'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X659'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X664'
-                                      begin = 0
-                                  op = '>'
-                                  right:
-                                    EventMember
-                                      name = 'X667'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X670'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X543'
+                            'X545'
                           begin = 0
                       begin = 0
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X678'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X683'
-                                      begin = 0
-                                  op = '>'
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X688'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    EventMember
-                                      name = 'X691'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X694'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    EventMember
-                                      name = 'X697'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X548'
+                            'X550'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X553'
+                            'X555'
                           begin = 0
                       begin = 0
                     Not
                       operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X703'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X708'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X713'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X718'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    EventMember
-                                      name = 'X721'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                    Not
-                      operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X727'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X732'
-                                      begin = 0
-                                  op = '<'
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X737'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X742'
-                                      begin = 0
-                                  op = '>'
-                                  right:
-                                    EventMember
-                                      name = 'X745'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                    Not
-                      operand:
-                        BoolOp
-                          op = 'or'
-                          operands:
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X751'
-                                      begin = 0
-                                  op = '!='
-                                  right:
-                                    EventMember
-                                      name = 'X754'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X757'
-                                      begin = 0
-                                  op = '>='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                            BoolOp
-                              op = 'and'
-                              operands:
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X762'
-                                      begin = 0
-                                  op = '=='
-                                  right:
-                                    Literal
-                                      text = '"s"'
-                                      begin = 0
-                                  begin = 0
-                                Comparison
-                                  left:
-                                    EventMember
-                                      name = 'X767'
-                                      begin = 0
-                                  op = '<='
-                                  right:
-                                    Literal
-                                      text = '1'
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X558'
+                            'X560'
                           begin = 0
                       begin = 0
                   begin = 0
               begin = 0
           begin = 0
       begin = 0
-    Cause
-      trigger:
-        Trigger
-          name = 'BEGIN'
-          is_keyword = True
-          begin = 0
-      guard:
-        Luau
-          text = '{ x{ y } }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
-      begin = 0
-    CauseRef
-      name = 'X776'
-      args:
-        Arg
-          name = None
-          value:
-            ShallowMemberAccess
-              binding = 'mode'
-              member = 'X780'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
-          begin = 0
-        Arg
-          name = 'X782'
-          value:
-            Luau
-              text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          kind = <E_ArgKind.LUAU: 1>
-          begin = 0
-        Arg
-          name = 'X785'
-          value = 'X787'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = None
-          value = '1'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-      begin = 0
-  begin = 0
-Include
-  filename = 's'
-  mount:
-    'X794'
-    'X796'
-  begin = 0
-ForwardDecl
-  kind = 'X809'
-  name = 'X797'
-  signature:
-    ArgDecl
-      member = 'n799'
-      type = 'X800'
-      begin = 0
-    ArgDecl
-      member = 'n802'
-      type = 'X803'
-      begin = 0
-    ArgDecl
-      member = 'n805'
-      type = 'X806'
-      begin = 0
-  cargs:
-    []
-  luau_handle = None
   begin = 0
 EffectDef
   name:
-    'X811'
-    'X813'
-    'X815'
-    'X817'
-    'X819'
+    'X564'
+    'X566'
+    'X568'
+    'X570'
+    'X572'
   params:
     ArgDecl
-      member = 'n821'
-      type = 'X822'
+      member = 'n574'
+      type = 'bool'
       begin = 0
     ArgDecl
-      member = 'n824'
-      type = 'X825'
+      member = 'n577'
+      type = 'string'
       begin = 0
     ArgDecl
-      member = 'n827'
-      type = 'X828'
+      member = 'n580'
+      type = 'X581'
       begin = 0
     ArgDecl
-      member = 'n830'
-      type = 'X831'
+      member = 'n583'
+      type = 'X584'
       begin = 0
   effects:
-    EffectRef
-      name = 'X834'
-      begin = 0
-    Spawn
+    ModeArming
       name:
-        'X837'
-        'X839'
-        'X841'
-        'X843'
+        'X589'
+        'X591'
       args:
         Arg
-          name = None
-          value = '"s"'
+          name = 'X593'
+          value = 'true'
           kind = <E_ArgKind.LITERAL: 0>
           begin = 0
         Arg
-          name = 'X847'
-          value:
-            ShallowMemberAccess
-              binding = 'sm'
-              member = 'X851'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
+          name = None
+          value = 'false'
+          kind = <E_ArgKind.LITERAL: 0>
           begin = 0
         Arg
-          name = None
+          name = 'X599'
           value:
-            Luau
+            OpaqueCode
               text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
+              mode = <Role.EXPRESSION: 'expression'>
               begin = 0
+              _references = None
           kind = <E_ArgKind.LUAU: 1>
           begin = 0
-        Arg
-          name = 'X854'
-          value = 'X856'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = None
-          value = '"s"'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-      has_parens = True
-      in_container:
-        'X861'
-        'X863'
-      luau_handle:
-        Luau
-          text = '{ x }'
-          role = <Role.LVALUE: 'lvalue'>
-          begin = 0
+      begin = 0
+    Unspawn
+      name:
+        'X604'
+        'X606'
+        'X608'
+        'X610'
+        'X612'
+      begin = 0
+    ReportString
+      text = '"s"'
       begin = 0
   begin = 0
-Include
-  filename = 's'
-  mount:
-    'X868'
-    'X870'
-    'X872'
-    'X874'
+ClockDef
+  name = 'X616'
+  period = '1'
   begin = 0
-Mode
+StateMachine
   name:
-    'X876'
-    'X878'
-    'X880'
-    'X882'
+    'X619'
+    'X621'
+    'X623'
+    'X625'
+    'X627'
   params:
     ArgDecl
-      member = 'n884'
-      type = 'X885'
+      member = 'n629'
+      type = 'string'
       begin = 0
     ArgDecl
-      member = 'n887'
-      type = 'X888'
+      member = 'n632'
+      type = 'X633'
       begin = 0
     ArgDecl
-      member = 'n890'
-      type = 'X891'
+      member = 'n635'
+      type = 'int'
       begin = 0
     ArgDecl
-      member = 'n893'
-      type = 'X894'
+      member = 'n638'
+      type = 'bool'
       begin = 0
-    ArgDecl
-      member = 'n896'
-      type = 'X897'
-      begin = 0
-  init = None
-  deinit:
-    SpanResult
-      text = '{ x{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  causalities:
-    Causality
-      cause:
+  bases:
+    'X643'
+    'X645'
+    'X647'
+    'X649'
+    'X651'
+    'X653'
+  states:
+    State
+      name:
+        'X655'
+        'X657'
+        'X659'
+      params:
+        ArgDecl
+          member = 'n661'
+          type = 'X662'
+          begin = 0
+        ArgDecl
+          member = 'n664'
+          type = 'float'
+          begin = 0
+      init:
+        OpaqueCode
+          text = '{ x }'
+          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+          _references = None
+      deinit:
+        OpaqueCode
+          text = '{ x }'
+          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+          _references = None
+      causalities:
+        Causality
+          cause:
+            CauseRef
+              name:
+                'X669'
+                'X671'
+              args:
+                Arg
+                  name = None
+                  value = '"s"'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+                Arg
+                  name = None
+                  value:
+                    'X675'
+                    'X677'
+                  kind = <E_ArgKind.NAME: 2>
+                  begin = 0
+              guard:
+                OpaqueCode
+                  text = '{ x }'
+                  mode = <Role.CONDITION: 'condition'>
+                  begin = 0
+                  _references = None
+              begin = 0
+          effects:
+            Mutation
+              body:
+                OpaqueCode
+                  text = '{ x }'
+                  mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+                  _references = None
+              begin = 0
+            ModeArming
+              name:
+                'X683'
+                'X685'
+              args:
+                Arg
+                  name = 'X687'
+                  value = '1'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+                Arg
+                  name = 'X691'
+                  value = 'true'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+              begin = 0
+            EventSpec
+              name:
+                'X696'
+                'X698'
+                'X700'
+              args:
+                Arg
+                  name = None
+                  value = 'true'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+                Arg
+                  name = None
+                  value = '"s"'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+              begin = 0
+            Spawn
+              name:
+                'X708'
+                'X710'
+                'X712'
+                'X714'
+                'X716'
+              args:
+                Arg
+                  name = 'X718'
+                  value = 'false'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+                Arg
+                  name = 'X722'
+                  value:
+                    OpaqueCode
+                      text = '{ x }'
+                      mode = <Role.EXPRESSION: 'expression'>
+                      begin = 0
+                      _references = None
+                  kind = <E_ArgKind.LUAU: 1>
+                  begin = 0
+              has_parens = True
+              in_container:
+                'X726'
+                'X728'
+                'X730'
+              via:
+                Arg
+                  name = None
+                  value:
+                    'X732'
+                    'X734'
+                  kind = <E_ArgKind.NAME: 2>
+                  begin = 0
+              begin = 0
+          begin = 0
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name:
+                    'END'
+                  is_keyword = True
+                  begin = 0
+              guard:
+                Condition
+                  expr:
+                    BoolOp
+                      op = 'or'
+                      operands:
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X740'
+                                'X742'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X744'
+                                'X746'
+                              begin = 0
+                          begin = 0
+                        BoolOp
+                          op = 'and'
+                          operands:
+                            BoolRef
+                              name:
+                                'X748'
+                                'X750'
+                              begin = 0
+                            BoolRef
+                              name:
+                                'X752'
+                                'X754'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          effects:
+            ReportString
+              text = '"s"'
+              begin = 0
+            Unspawn
+              name:
+                'X760'
+                'X762'
+                'X764'
+                'X766'
+              begin = 0
+            Unspawn
+              name:
+                'X769'
+                'X771'
+                'X773'
+                'X775'
+                'X777'
+              begin = 0
+            EventSpec
+              name:
+                'X779'
+                'X781'
+                'X783'
+              args:
+                Arg
+                  name = None
+                  value = '1'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+                Arg
+                  name = 'X787'
+                  value = 'false'
+                  kind = <E_ArgKind.LITERAL: 0>
+                  begin = 0
+              begin = 0
+          begin = 0
+      untils:
+        CauseRef
+          name:
+            'X793'
+            'X795'
+            'X797'
+          args:
+            Arg
+              name = None
+              value = 'true'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X803'
+              value:
+                OpaqueCode
+                  text = '{ x{ y } }'
+                  mode = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+                  _references = None
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = None
+              value:
+                'X806'
+                'X808'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+            Arg
+              name = 'X810'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          guard:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <Role.CONDITION: 'condition'>
+              begin = 0
+              _references = None
+          begin = 0
         Cause
           trigger:
             Trigger
-              name = 'X901'
-              is_keyword = False
+              name:
+                'ANY'
+              is_keyword = True
+              begin = 0
+          guard:
+            OpaqueCode
+              text = '{ x }'
+              mode = <Role.CONDITION: 'condition'>
+              begin = 0
+              _references = None
+          begin = 0
+        CauseRef
+          name:
+            'X819'
+            'X821'
+            'X823'
+            'X825'
+          args:
+            Arg
+              name = 'X827'
+              value:
+                'X829'
+                'X831'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X835'
+              value = 'true'
+              kind = <E_ArgKind.LITERAL: 0>
               begin = 0
           guard:
             Condition
@@ -1782,219 +1361,106 @@ Mode
                     BoolOp
                       op = 'and'
                       operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X905'
-                              begin = 0
-                          op = '>'
-                          right:
-                            EventMember
-                              name = 'X908'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X841'
+                            'X843'
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X911'
-                              begin = 0
-                          op = '<'
-                          right:
-                            Literal
-                              text = '"s"'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X845'
+                            'X847'
                           begin = 0
                       begin = 0
                     BoolOp
                       op = 'and'
                       operands:
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X916'
-                              begin = 0
-                          op = '!='
-                          right:
-                            Literal
-                              text = '"s"'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X849'
+                            'X851'
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X921'
-                              begin = 0
-                          op = '=='
-                          right:
-                            Literal
-                              text = '1'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X853'
+                            'X855'
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X926'
-                              begin = 0
-                          op = '<'
-                          right:
-                            EventMember
-                              name = 'X929'
-                              begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X857'
+                            'X859'
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X932'
-                              begin = 0
-                          op = '<='
-                          right:
-                            Literal
-                              text = '1'
-                              begin = 0
+                        BoolRef
+                          name:
+                            'X861'
+                            'X863'
                           begin = 0
-                        Comparison
-                          left:
-                            EventMember
-                              name = 'X937'
-                              begin = 0
-                          op = '>='
-                          right:
-                            EventMember
-                              name = 'X940'
-                              begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X865'
+                            'X867'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X869'
+                            'X871'
                           begin = 0
                       begin = 0
                   begin = 0
               begin = 0
           begin = 0
-      effects:
-        ModeArming
-          name:
-            'X944'
-            'X946'
-            'X948'
-          args:
-            Arg
-              name = 'X950'
-              value:
-                Luau
-                  text = '{ x{ y } }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-            Arg
-              name = 'X953'
-              value = '1'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value:
-                ShallowMemberAccess
-                  binding = 'event'
-                  member = 'X959'
-                  begin = 0
-              kind = <E_ArgKind.MEMBER: 2>
-              begin = 0
-            Arg
-              name = None
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X963'
-              value = 'X965'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          begin = 0
-        EventSpec
-          name:
-            'X968'
-            'X970'
-            'X972'
-            'X974'
-          args:
-            Arg
-              name = None
-              value:
-                ShallowMemberAccess
-                  binding = 'sm'
-                  member = 'X978'
-                  begin = 0
-              kind = <E_ArgKind.MEMBER: 2>
-              begin = 0
-            Arg
-              name = 'X980'
-              value:
-                Luau
-                  text = '{ x }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-          begin = 0
-        ReportString
-          text = '"s"'
-          begin = 0
       begin = 0
-  untils:
-    CauseRef
-      name = 'X986'
-      args:
-        Arg
-          name = 'X988'
-          value = '1'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = None
-          value = '1'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = None
-          value = '"s"'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-        Arg
-          name = 'X996'
-          value:
-            ShallowMemberAccess
-              binding = 'mg'
-              member = 'X1000'
-              begin = 0
-          kind = <E_ArgKind.MEMBER: 2>
-          begin = 0
+  has_refs:
+    HasRef
+      name:
+        'X874'
+        'X876'
+        'X878'
+        'X880'
+        'X882'
+      is_void = True
       begin = 0
-    Cause
-      trigger:
-        Trigger
-          name = 'X1003'
-          is_keyword = False
-          begin = 0
-      guard:
-        Luau
-          text = '{ x }'
-          role = <Role.CONDITION: 'condition'>
-          begin = 0
+  default = None
+  init = None
+  deinit = None
+  begin = 0
+EventDef
+  name = 'X887'
+  params:
+    ArgDecl
+      member = 'n889'
+      type = 'X890'
       begin = 0
-    CauseRef
-      name = 'X1006'
-      args:
-        Arg
-          name = None
-          value:
-            Luau
-              text = '{ x }'
-              role = <Role.EXPRESSION: 'expression'>
-              begin = 0
-          kind = <E_ArgKind.LUAU: 1>
-          begin = 0
-        Arg
-          name = 'X1009'
-          value = 'X1011'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
+    ArgDecl
+      member = 'n892'
+      type = 'bool'
+      begin = 0
+    ArgDecl
+      member = 'n895'
+      type = 'X896'
+      begin = 0
+  begin = 0
+StructDecl
+  name = 'X899'
+  members:
+    ArgDecl
+      member = 'n901'
+      type = 'float'
+      begin = 0
+    ArgDecl
+      member = 'n904'
+      type = 'X905'
+      begin = 0
+    ArgDecl
+      member = 'n907'
+      type = 'string'
       begin = 0
   begin = 0

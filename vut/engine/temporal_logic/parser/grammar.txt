@@ -204,6 +204,14 @@ IMPLICIT EVENTS:
         Luau guard for those). 'and' / 'or' / 'not' are reserved words; name
         resolution and operand kinds are semantic-layer checks.
 
+        RESERVED WORDS: 'and', 'or', 'not', the system triggers (ANY, BEGIN,
+        END, CHANGE), VOID, the kind keywords ('mode', 'state', 'mode_group',
+        'state_machine', 'struct', 'container'), the built-in types ('int',
+        'float', 'string', 'bool'), and the boolean literals ('true',
+        'false'). None of these may serve as an identifier anywhere on the
+        rule-file plane -- not as a declared name and not as a member segment
+        ('e.mode' is a syntax error; rename the member).
+
         Example:
             on: NetworkUp & [ e.ip_adr == "10.0.0.1" and e.port > 1024 ] => ...
             on: Collision & [ (e.severity > 3 or e.fatal == 1) and not e.handled ]
@@ -490,8 +498,9 @@ IMPLICIT EVENTS:
 
 <list-decl-arg>
       declares an aggregate's parameters -- or a struct's members -- by name
-      and type, ';'-separated. Parameter order matters: positional arguments
-      bind in declaration order. A type is a built-in ('int', 'float',
+      and type, ';'-separated; a trailing ';' before the closing parenthesis
+      is admitted (the multi-line struct style). Parameter order matters:
+      positional arguments bind in declaration order. A type is a built-in ('int', 'float',
       'string', 'bool'), the name of a declared struct, or the name of a
       class created in 'on: BEGIN'.
 

@@ -20,9 +20,9 @@ from .ll2_grammar_spec import (SpecNode, Terminal_Spec, Rule_Spec,
                               collect_alt_conflicts, ELEM, REDUCE, LOOP,
                               CST_REDUCE)
 from dataclasses import replace as _dc_replace
-from .cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
+from .cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node
 
-_CST_NODE_TYPES = (OR_Node, SEQ_Node, PLUS_Node, STAR_Node)
+_CST_NODE_TYPES = (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node)
 
 
 def _is_cst_node(value):
@@ -306,9 +306,10 @@ class EngineParser:
         """RETURN: None. Pops an operator's sub-frame, builds its CST node, appends.
 
         'payload' is (operator_node, extra): the grammar operator that opened the
-        frame and the per-operator extra (the branch index for OR/OPT, None for
-        SEQ/STAR/PLUS). The node's own cst_reduce builds the right CST node from
-        the collected frame values; the result is appended to the parent frame.
+        frame and the per-operator extra (the branch index for OR, the present
+        flag for OPT, None for SEQ/STAR/PLUS). The node's own cst_reduce builds
+        the right CST node from the collected frame values; the result is
+        appended to the parent frame.
         """
         node, extra = payload
         frame = frames.pop()
@@ -407,3 +408,5 @@ class EngineParser:
         elem_set    = element.first2_set(self.grammar)
         lookahead_2 = (self.tok1.kind, self.tok2.kind)
         return lookahead_2 in elem_set or (self.tok1.kind,) in elem_set
+
+

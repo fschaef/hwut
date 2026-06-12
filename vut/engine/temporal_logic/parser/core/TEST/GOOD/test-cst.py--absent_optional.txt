@@ -1,12 +1,12 @@
---- optional PRESENT: OR_Node index 0, child = value; SEQ slot stable ---
+--- optional PRESENT: OPT_Node child = value; SEQ slot stable ---
 SEQ name='decl' (3)
   LEAF '@a'
-  OR name=None index=0
+  OPT name=None
     LEAF '@b'
   LEAF '@c'
---- optional ABSENT: OR_Node index 1, child = ABSENT; SEQ slot STILL there ---
+--- optional ABSENT: OPT_Node child = ABSENT; SEQ slot STILL there ---
 SEQ name='decl' (3)
   LEAF '@a'
-  OR name=None index=1
+  OPT name=None
     <absent>
   LEAF '@c'

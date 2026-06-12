@@ -2,30 +2,30 @@
 ## menagerie -- ROOT: shared vocabulary, then every category
 ## ======================================================================
 
-include: "sprites_moving.rule" into: menagerie.moving
-include: "sprites_plants.rule" into: menagerie.plants
-include: "sprites_undead.rule" into: menagerie.undead
-include: "sprites_villains.rule" into: menagerie.villains
-include: "sprites_rules.rule" into: menagerie.rules
-include: "sprites_sea.rule" into: menagerie.sea
+import: "sprites_moving.rule" into: menagerie.moving
+import: "sprites_plants.rule" into: menagerie.plants
+import: "sprites_undead.rule" into: menagerie.undead
+import: "sprites_villains.rule" into: menagerie.villains
+import: "sprites_rules.rule" into: menagerie.rules
+import: "sprites_sea.rule" into: menagerie.sea
 
 ## ======================================================================
 ## shared event, clock and forward-decl vocabulary
 ## ======================================================================
 
-event: Spooked1(depth: number)
+event: Spooked1(depth: int)
 event: RainFell2(weight: string)
-event: PreyEscaped3(amount: number)
+event: PreyEscaped3(amount: int)
 event: BladeClash4(range: string)
-event: BladeClash5(fear: number)
-event: EnemyInRange6(weight: number)
+event: BladeClash5(fear: int)
+event: EnemyInRange6(weight: int)
 event: WhipCracked7(range: string)
-event: PreyEscaped8(depth: number)
-event: EnemyInRange9(fear: number)
-event: SunRose10(weight: number)
+event: PreyEscaped8(depth: int)
+event: EnemyInRange9(fear: int)
+event: SunRose10(weight: int)
 event: RainFell11(amount: string)
 event: PreyEscaped12(amount: string)
-event: Tick13(depth: number)
+event: Tick13(depth: int)
 
 clock: EnemyInRange14 79
 clock: ArrowIncoming15 151
@@ -170,7 +170,7 @@ state_machine: Drake38(rate: string)
         init: { self.pos = self.pos:step() }
         on: SeesPrey
                 => { self.hp = self.hp - 1 }
-                => Spooked(speed, speed = mode.fear)
+                => Spooked(speed, speed = m.fear)
                 => -! Wizard
         until: SeesPlayer
 :end

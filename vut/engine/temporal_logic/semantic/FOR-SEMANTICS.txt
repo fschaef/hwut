@@ -1,0 +1,124 @@
+===============================================================================
+REACTIVE RULE ENGINE  --  HWUT 2.0
+FOR-SEMANTICS  --  obligations the parser round hands to the semantic layer
+===============================================================================
+
+Facts and checks decided during the grammar round that the parser does NOT
+enforce. Each item names the construct, the rule, and the diagnostic class
+(per semantic D-18). The grammar admits; this file says what pass 2 must do
+about it.
+
+-------------------------------------------------------------------------------
+F-1  SELF-BINDING PSEUDO-SYMBOLS  ('e', 'sm', 'mg', 'm')
+-------------------------------------------------------------------------------
+The binding names are not reserved words; they are ordinary leading segments
+of a <name-dotted>. Pass 2 resolves them as self-binding pseudo-symbols:
+  - 'e'  : the firing trigger's event. Legal only where a NAMED trigger (or a
+           cause definition's 'for:' event) pins the event; memberless system
+           triggers reject members (F-9). [BINDING]
+  - 'sm'/'mg' : the enclosing aggregate; in scope only inside the aggregate's
+           own definition body; exactly one of the two, by aggregate kind.
+           [BINDING]
+  - 'm'  : the enclosing mode/state instance; unbound at top level. [BINDING]
+DECLARING any of the four spellings ('e is: int(0)', a mode named 'm', ...)
+is FATAL [NAME]: a user symbol would shadow the pseudo-symbol and make every
+binding reference ambiguous. One check, no precedence ladder.
+
+-------------------------------------------------------------------------------
+F-2  KIND-VS-SHAPE ON THE SHARED DECLARATION HEAD
+-------------------------------------------------------------------------------
+The grammar accepts '(<list-decl-arg>)' on any declaration head. Pass 2
+enforces per kind [KIND]:
+  - mode_group, state_machine : signature MANDATORY (spawn-instantiation
+    contract).
+  - mode, state               : signature FORBIDDEN (armed, not instantiated).
+  - struct                    : signature MANDATORY; it IS the definition --
+    there is no struct forward declaration.
+  - container, variable       : head signature FORBIDDEN.
+
+-------------------------------------------------------------------------------
+F-3  STRUCTS ARE (A)-STRICT
+-------------------------------------------------------------------------------
+Structs join events, clocks, variables, and cause definitions in the (A)
+class: fully defined before any use. Consequence: struct-typed members can
+never form a cycle -- no cycle check needed, the ordering rule IS the check.
+A reference to an undefined struct type is FATAL [NAME].
+
+-------------------------------------------------------------------------------
+F-4  VARIABLE INITIALISERS
+-------------------------------------------------------------------------------
+The initialiser is a <parens-arg>. Pass 2 enforces [KIND]:
+  - built-in type : exactly ONE positional argument; named args FATAL.
+  - struct type   : arguments bind positionally / by name against the
+    struct's member signature, mode-parameter style; arity and spelling
+    checked; every member must receive a value (no partial initialisation).
+Initialisers evaluate in DECLARATION ORDER at bootstrap; a <name-dotted>
+inside an initialiser resolves under (A) define-before-use. Opaque '{ }'
+initialiser expressions are evaluated at bootstrap in the same order.
+
+-------------------------------------------------------------------------------
+F-5  COMPARISON AND BARE-BOOLEAN KINDS
+-------------------------------------------------------------------------------
+Bracket-condition leaves must resolve to BUILT-IN SCALARS; a struct-valued
+comparison side is FATAL [KIND] (struct equality is not defined on the
+transparent plane). A <cond-term> WITHOUT a comparison tail must resolve to
+kind bool [KIND]; it is equivalent to '== true'. Operand-vs-operand type
+compatibility (int/float vs string vs bool) is checked at the leaf.
+
+-------------------------------------------------------------------------------
+F-6  TWO DESCENT REGIMES FOR A <name-dotted> TAIL
+-------------------------------------------------------------------------------
+The class of the resolved FIRST segment decides how the remaining segments
+descend:
+  - scope descent : namespace / aggregate segments walk the scope tree
+    (mounts, seal law) -- the pre-struct regime.
+  - type descent  : a variable/struct/pseudo-symbol segment walks the TYPE
+    (struct member lists on the Symbol, D-4 'params' slot reused).
+A chain may switch regimes once, scope -> type ('NS.tracker.pos.x'); a type
+segment never reopens scope descent. Depth legality is resolution's business;
+the parser admits any depth.
+
+-------------------------------------------------------------------------------
+F-7  CAUSE REFERENCE WITH AN EXTRA GUARD
+-------------------------------------------------------------------------------
+'<name-dotted>(args) & <guard>' PARSES (one merged grammar shape decides
+ref-vs-trigger by the parens). Semantics are UNDECIDED: until a design entry
+rules otherwise, pass 2 reports a cause reference carrying '&' as FATAL
+[STRUCTURE]. (Candidate future meaning: conjunction with the definition's
+guard.)
+
+-------------------------------------------------------------------------------
+F-8  REF-MEMBER TAILS  ('has:', 'default:')
+-------------------------------------------------------------------------------
+'has:' and 'default:' share <ref-member> = <name-dotted> ['.', VOID]. Pass 2
+validates the final segment as member-or-VOID against the resolved aggregate
+[NAME]; 'default:' additionally requires the target to be a member state of
+the enclosing machine. Dotted heads may cross namespaces and mounts.
+
+-------------------------------------------------------------------------------
+F-9  SYSTEM TRIGGERS AND MEMBERS
+-------------------------------------------------------------------------------
+END carries system members 'run_time_sec' and 'event_n'; 'e.run_time_sec' is
+legal only under 'on: END'. ANY, BEGIN, CHANGE are memberless: any 'e.member'
+under them is FATAL [BINDING]. CHANGE is not an authorable emission [CASCADE]
+and contributes no inbound cascade edges (time axis, D-20).
+
+-------------------------------------------------------------------------------
+F-10 VIA-KEY LEGALITY
+-------------------------------------------------------------------------------
+'via:' operands are <rvalue>s. Pass 2 resolves <name-dotted> keys like any
+reference; key-kind suitability for the container shape (e.g. dict keys)
+is the resolver's concern, recorded but not typed on the rule-file plane.
+
+-------------------------------------------------------------------------------
+F-11 NAMED TAILS: REFERENCE-VS-EMISSION RECORDS
+-------------------------------------------------------------------------------
+The parser builds ONE node family from the merged named-tail shapes:
+  - cause side : parens -> cause reference; bare -> inline trigger.
+  - effect side: parens -> event emission (<event-spec>); bare -> effect-
+    bundle reference.
+Pass 2 resolves each against (A) cause/effect definitions and event
+definitions respectively; an emission whose name resolves to an effect
+bundle (or vice versa) is FATAL [KIND]. Dotted heads resolve through
+namespaces and mounts like any <name-dotted>.
+===============================================================================

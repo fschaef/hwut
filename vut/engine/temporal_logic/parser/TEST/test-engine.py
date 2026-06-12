@@ -9,20 +9,21 @@ PURPOSE: Test the RULE-FILE LANGUAGE against the engine -- that the real GRAMMAR
          selection, the stackless scan) is tested grammar-agnostically in
          core/TEST/test-engine.py; this module is about the language.
 
-CHOICES: first_sets, ll2_ok, token_inventory, shallow_member_access;
+CHOICES: first_sets, ll2_ok, token_inventory, name_dotted_args;
 
 DESCRIPTION:
 
     first_sets       FIRST_2 sets of representative real rules -- the tokens (or
                      token pairs) that can begin each construct.
     ll2_ok           The real rule-file grammar compiles and passes LL(2)
-                     validation; exactly one rule (<arg>) needs the second token.
+                     validation; the named tails and <arg> need the second token.
     token_inventory  The generated token inventory, derived from the terminal
                      database (a token's identity is its Terminal object), covers
                      every fixed-spelling terminal the grammar refers to.
-    shallow_member_access  Argument forms: a bare-rvalue positional, a named
-                     'id = rvalue', and a shallow 'binding.member' for each of the
-                     four bindings; plus forms that MUST be rejected.
+    name_dotted_args Argument forms: a bare-name positional, a named
+                     'id = rvalue', <name-dotted> references of any depth
+                     ('e.target', 'tracker.pos.x'), literals incl. true/false,
+                     opaque Luau; plus forms that MUST be rejected.
 ______________________________________________________________________________
 """
 import sys
@@ -54,8 +55,9 @@ def run_first_sets():
     """RETURN: None. FIRST_2 sets of representative real rules."""
     g = compiled_grammar()
     banner("FIRST_2 sets of key rules")
-    for name in ("top-level", "trigger", "effect", "rvalue", "arg",
-                 "mode-elm", "state-machine-elm", "mode-group-elm"):
+    for name in ("top-level", "cause", "cause-named", "effect", "effect-named",
+                 "rvalue", "arg", "cond-term", "kind-decl",
+                 "elm-mode", "elm-state-machine", "elm-mode-group"):
         if name in g.rules:
             print("%-20s %s" % (name, _fmt_set(g.rules[name].first)))
 
@@ -118,15 +120,16 @@ def _silent_terminals(node, seen=None):
     return out
 
 
-def run_shallow_member_access():
-    """RETURN: None. Argument forms: positional, named, and shallow member access.
+def run_name_dotted_args():
+    """RETURN: None. Argument forms: positional, named, name-dotted, literal.
 
     Parses one effect per line and prints each argument's name (or '-'), kind,
-    and value. Exercises a bare-identifier LITERAL positional, a named LITERAL, a
-    shallow 'binding.member' MEMBER for each of the four bindings, a named MEMBER,
-    and an opaque LUAU expression. Then forms that MUST be rejected: a deep
-    'event.a.b' (shallow is one '.'), a binding with no member, a missing member
-    after the dot, and a non-binding head 'foo.bar'.
+    and value. Exercises a bare-name positional (a NAME of one segment), a
+    named LITERAL, <name-dotted> references through the pseudo-symbol bindings
+    ('e.target', 'sm.count', 'mg.index', 'm.req') and through plain symbols of
+    any depth ('tracker.pos.x'), the true/false literals, and an opaque LUAU
+    expression. Then forms that MUST be rejected: a trailing dot, a lone '=',
+    a leading-dot member (the retired spelling).
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
     from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
@@ -149,8 +152,8 @@ def run_shallow_member_access():
         return out
 
     def _val(a):
-        if a.kind is ast.E_ArgKind.MEMBER:
-            return "%s.%s" % (a.value.binding, a.value.member)
+        if a.kind is ast.E_ArgKind.NAME:
+            return ".".join(a.value)
         if a.kind is ast.E_ArgKind.LUAU:
             return a.value.text
         return a.value
@@ -159,12 +162,14 @@ def run_shallow_member_access():
     accepted = [
         "on: A => Chase(target)",
         "on: A => Chase(lane = 2)",
-        "on: A => Chase(event.target)",
+        "on: A => Chase(e.target)",
         "on: A => Chase(sm.count)",
         "on: A => Chase(mg.index)",
-        "on: A => Chase(mode.req)",
-        "on: A => LOG(time = event.time)",
-        "on: A => Chase({ event.x + 1 })",
+        "on: A => Chase(m.req)",
+        "on: A => LOG(time = e.time)",
+        "on: A => Chase(tracker.pos.x)",
+        "on: A => Chase(armed = true)",
+        "on: A => Chase({ e.x + 1 })",
     ]
     for src in accepted:
         rep = DiagnosticReporter()
@@ -175,12 +180,11 @@ def run_shallow_member_access():
         for a in _args(tree):
             print("  %-8s %-8s %s" % (a.name or "-", a.kind.name, _val(a)))
 
-    banner("rejected forms (shallow is one '.', head must be a binding)")
+    banner("rejected forms (no trailing dot, no lone '=', no leading dot)")
     rejected = [
-        "on: A => Chase(event.a.b)",
-        "on: A => Chase(event)",
-        "on: A => Chase(event.)",
-        "on: A => Chase(foo.bar)",
+        "on: A => Chase(e.)",
+        "on: A => Chase(= 3)",
+        "on: A => Chase(.target)",
     ]
     for src in rejected:
         rep = DiagnosticReporter()
@@ -205,14 +209,17 @@ def run_cause_effect():
     from fake_luau_oracle import FakeLuauOracle
 
     cases = [
-        ("cause definition",
-         "cause: NETWORK_UP(time: int)\n        on: NETWORK & { NETWORK.time > time }"),
+        ("cause definition ('for:' binding, mandatory guard)",
+         "cause: TOO_HOT(limit: int) for: NETWORK & { e.time > limit }"),
         ("effect definition",
          "effect: SUPER_POWER => PACMAN_RUN(speed=12)\n"
          "                    => PELLET_BLINK\n"
          "                    => GHOSTS_FLEE"),
-        ("cause-ref and effect-ref", "on: NETWORK(20) => SUPER_POWER"),
-        ("mixed effect list", "on: NETWORK(20) => SUPER_POWER => Beep(3)"),
+        ("cause reference and effect reference", "on: TOO_HOT(20) => SUPER_POWER"),
+        ("mixed effect list", "on: TOO_HOT(20) => SUPER_POWER => Beep(3)"),
+        ("dotted references", "on: NS.TOO_HOT(20) => Fx.cleanup => NS.Beep(3)"),
+        ("reference + extra guard (parses; pass-2 F-7)",
+         "on: TOO_HOT(20) & [ e.x > 1 ] => Beep(3)"),
         ("inline still works", "on: Tick & { sm.n > 0 } => Beep()"),
     ]
     for label, src in cases:
@@ -225,9 +232,16 @@ def run_cause_effect():
             continue
         for it in rf.items:
             kind = type(it).__name__
+            if isinstance(it, ast.Causality) and isinstance(it.cause, ast.CauseRef):
+                print("  Causality cause=CauseRef name=%s guard=%s effects=[%s]"
+                      % (".".join(it.cause.name),
+                         type(it.cause.guard).__name__,
+                         ", ".join(type(e).__name__ for e in it.effects)))
+                continue
             if isinstance(it, ast.CauseDef):
-                print("  CauseDef name=%s params=%d body=%s"
-                      % (it.name, len(it.params), type(it.body).__name__))
+                print("  CauseDef name=%s params=%d for=%s guard=%s"
+                      % (it.name, len(it.params), ".".join(it.for_event),
+                         type(it.guard).__name__))
             elif isinstance(it, ast.EffectDef):
                 print("  EffectDef name=%s effects=[%s]"
                       % (it.name, ", ".join(type(e).__name__ for e in it.effects)))
@@ -250,22 +264,26 @@ def _render_cond(node):
         return "not %s" % _render_cond(node.operand)
     if n == "Comparison":
         return "%s %s %s" % (_render_cond(node.left), node.op, _render_cond(node.right))
-    if n == "EventMember":
-        return ".%s" % node.name
+    if n == "BoolRef":
+        return ".".join(node.name)
     if n == "Literal":
         return node.text
+    if isinstance(node, list):
+        return ".".join(node)
     return n
 
 
 def run_guards_and_inheritance():
     """RETURN: None. Bracket-condition guards, effect-def signatures, is: bases.
 
-    Exercises the constructs added alongside cause/effect reuse: a guard given as
-    a bracket condition '[ ... ]' (an and/or/not algebra over leading-dot event
-    members) as an alternative to a Luau guard; an effect definition carrying a
-    parameter signature; and state-machine / mode-group inheritance via repeated
-    'is:' base statements. Prints the guard kind and rendered condition, the
-    effect-def signature, and the aggregate bases.
+    Exercises the bracket-condition ladder and the aggregate features: a guard
+    given as a bracket condition '[ ... ]' (an and/or/not algebra over
+    comparisons and bare boolean references; members spelled through the 'e'
+    pseudo-symbol, both sides symmetric) as an alternative to a Luau guard; an
+    effect definition carrying a parameter signature; and state-machine /
+    mode-group inheritance via repeated 'is:' base statements. Prints the
+    guard kind and rendered condition, the effect-def signature, and the
+    aggregate bases.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
     from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
@@ -274,11 +292,15 @@ def run_guards_and_inheritance():
 
     cases = [
         ("bracket guard: comparison",
-         'on: NetUp & [ .ip_adr == "10.0.0.1" ] => Beep()'),
+         'on: NetUp & [ e.ip_adr == "10.0.0.1" ] => Beep()'),
         ("bracket guard: and / not",
-         "on: NetUp & [ .port > 1024 and not .secure == 1 ] => Beep()"),
+         "on: NetUp & [ e.port > 1024 and not e.secure == 1 ] => Beep()"),
         ("bracket guard: parenthesised or",
-         "on: T & [ (.x > 0 or .y < 10) and .ready == 1 ] => B()"),
+         "on: T & [ (e.x > 0 or e.y < 10) and e.ready == 1 ] => B()"),
+        ("bracket guard: bare boolean stands",
+         "on: T & [ GHOSTS_AT_HOME and not e.armed ] => B()"),
+        ("bracket guard: symmetric sides, literal right only",
+         "on: T & [ TIMEOUT < e.elapsed and e.flag == true ] => B()"),
         ("luau guard still admitted",
          "on: T & { sm.n > 0 } => B()"),
         ("effect definition with signature",
@@ -305,8 +327,8 @@ def run_guards_and_inheritance():
                 print("  Causality, no guard")
             elif isinstance(g, ast.Condition):
                 print("  Causality, bracket guard: %s" % _render_cond(g))
-            elif isinstance(g, ast.Luau):
-                print("  Causality, luau guard: %s" % g.text)
+            elif isinstance(g, ast.OpaqueCode):
+                print("  Causality, opaque guard: %s" % g.text)
         elif isinstance(it, ast.EffectDef):
             print("  EffectDef name=%s params=%d effects=[%s]"
                   % (it.name, len(it.params),
@@ -326,8 +348,9 @@ HwutRunner(
         "first_sets":               run_first_sets,
         "ll2_ok":                   run_ll2_ok,
         "token_inventory":          run_token_inventory,
-        "shallow_member_access":    run_shallow_member_access,
+        "name_dotted_args":         run_name_dotted_args,
         "cause_effect":             run_cause_effect,
         "guards_and_inheritance":   run_guards_and_inheritance,
     },
 ).run()
+

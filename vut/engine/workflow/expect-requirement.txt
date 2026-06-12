@@ -1,0 +1,109 @@
+================================================================================
+REQUIREMENT - 'expect_*' functions on EventDispatcher
+================================================================================
+
+COMPONENT:  event  (vut/engine/event/)
+ADDS TO:    EventDispatcher
+DEPENDS ON: existing EventDispatcher event/category/predicate matching
+
+
+--------------------------------------------------------------------------------
+1. PURPOSE
+--------------------------------------------------------------------------------
+
+An 'async' function is a written-out sequence: 'await' marks each step and
+the language holds the place. But an event is pushed by the dispatcher into
+a handler - it is not awaitable, so a coroutine cannot wait for "the next
+event of kind X".
+
+The 'expect_*' functions close that gap. Each returns an awaitable;
+awaiting it suspends the coroutine until the next matching Event arrives,
+then resumes with that Event as the value. This lets an event sequence be
+written as straight-line coroutine code:
+
+    async def terminate_task(x):
+        task[x].terminate(wait_to_kill_ms=5000)
+        event = await dispatcher.expect_any([EventTaskCancelled,
+                                             EventChannelDown])
+        match event:
+            case EventTaskCancelled(): remove_task(x)
+            case EventChannelDown():   mark_failed(x)
+
+They are the awaitable counterpart of the existing 'subscribe_*' handler
+API, and live in the scope of the dispatcher.
+
+
+--------------------------------------------------------------------------------
+2. THE FUNCTIONS
+--------------------------------------------------------------------------------
+
+Four methods on EventDispatcher, mirroring 'subscribe_event' /
+'subscribe_category' / 'subscribe_predicate':
+
+   expect_event(EventClass)        -> awaitable yielding the next Event
+                                      that is an instance of EventClass.
+
+   expect_category(category)       -> awaitable yielding the next Event
+                                      in that category.
+
+   expect_predicate(callable)      -> awaitable yielding the next Event
+                                      for which callable(event) is true.
+
+   expect_any(event_class_list)    -> awaitable yielding the next Event
+                                      that is an instance of ANY class in
+                                      the list. The caller branches on the
+                                      returned event, e.g. with 'match'.
+
+Each matching rule is the SAME rule the corresponding 'subscribe_*' uses;
+do not re-implement matching.
+
+
+--------------------------------------------------------------------------------
+3. BEHAVIOUR
+--------------------------------------------------------------------------------
+
+B1  Awaiting an 'expect_*' suspends the calling coroutine until a matching
+    Event is dispatched, then resumes it with that Event as the awaited
+    value.
+
+B2  One-shot. An 'expect_*' is satisfied by exactly one Event - the first
+    match after the awaitable was created. It then yields that event and
+    is done; it does not fire again.
+
+B3  Forward-looking. An 'expect_*' matches only Events dispatched AFTER it
+    was created. Events already dispatched beforehand are not matched.
+
+B4  Non-consuming. An 'expect_*' observes the event stream; it does not
+    remove the event from normal delivery. Ordinary 'subscribe_*'
+    handlers, and any other outstanding 'expect_*', still receive the
+    same Event.
+
+B5  Concurrent expects. Several 'expect_*' awaitables may be outstanding
+    at once, from the same or different coroutines. One Event satisfies
+    every outstanding 'expect_*' that matches it (consistent with B4).
+
+B6  expect_any resolves on the FIRST event matching any class in its
+    list, and yields that one event. It does not collect several.
+
+
+--------------------------------------------------------------------------------
+4. CONSTRAINTS
+--------------------------------------------------------------------------------
+
+C1  All four are methods on EventDispatcher; the facility is in the scope
+    of the dispatcher.
+
+C2  Await/callback driven. No polling, no busy-waiting.
+
+C3  Naming and style match the existing 'subscribe_*' methods.
+
+
+--------------------------------------------------------------------------------
+5. ACCEPTANCE
+--------------------------------------------------------------------------------
+
+A1  'await dispatcher.expect_event(E)' resumes with the next E.
+A2  expect_category and expect_predicate behave as A1 for their match rule.
+A3  'await dispatcher.expect_any([A, B])' resumes with whichever of A or B
+    is dispatched first; a 'match' on the result can branch on the type.
+A4  B2 (one-shot), B4 (non-consuming), B5 (concurrent) each have a test.

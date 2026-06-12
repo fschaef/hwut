@@ -47,9 +47,10 @@ def compiled_grammar():
     cycle (grammar.py imports the Luau Role, whose module imports back into
     parser.core; eager registration in __init__ would close that loop mid-init).
     Raises LL2ConflictError if the grammar block is not LL(2) -- surfaced eagerly
-    so a grammar edit that breaks LL(2) fails loud. The grammar is LL(2): all but
-    one rule are LL(1), and <arg> needs the second token ('id =' is a named
-    argument, 'id' alone a positional rvalue).
+    so a grammar edit that breaks LL(2) fails loud. The grammar is LL(2): most
+    rules are LL(1); the second token decides <arg> ('id =' named vs positional
+    rvalue) and steers the merged named tails, where an identifier head must be
+    told from a dotted continuation ('id .' vs 'id (' vs bare).
     """
     global _COMPILED
     if _COMPILED is None:
@@ -87,3 +88,4 @@ def parse(source_text, oracle, reporter: DiagnosticReporter):
     file_node = EngineParser(source_text, oracle, reporter,
                              compiled_grammar()).parse()
     return finalize_file(file_node)
+

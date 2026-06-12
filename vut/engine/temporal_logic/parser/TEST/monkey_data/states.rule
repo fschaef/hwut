@@ -1,30 +1,50 @@
 open: X2 . X4
-event: X6 ( n8: X9 ; n11: X12 ; n14: X15 ; n17: X18 ; n20: X21 ) X23 is: mode
-clock: X27 1
-:close
-on: X31 ( X33 = { x } , event . X38 , X40 = 1 , "s" )
-=> +! X48 . X50 . X52 . X54 ( X56 , X58 = { x{ y } } , X61 = mg . X65 )
-=> ! X69 . X71 . X73 . X75 ( )
-=> -! X80 . X82 . X84
-mode_group: X86 . X88 . X90 . X92 is: X94 . X96 . X98 . X100 . X102 is: X104 . X106 . X108 . X110 is: X112 . X114 . X116 . X118 . X120 is: X122 . X124
-mode: X126 . X128
-on: ANY
-=> X132
+event: X6 ( n8: string ; n11: X12 ; n14: float ; n17: X18 ) effect: X21 . X23 . X25
+=> -! X28 . X30 . X32 . X34
 => "s"
-=> X136 . X138 ( )
-=> { x }
+=> ! X39 . X41 ( )
+=> { x } cause: X46 . X48 . X50 for: X52 . X54 . X56 . X58 & { x{ y } }
+:close
+mode_group: X62 . X64 ( n66: X67 ; n69: int ; n72: X73 ) is: X76 . X78 . X80 is: X82 . X84 . X86 . X88
+init: { x }
+:end X91 is: bool ( 1 , X97 = true , X101 = "s" , X105 . X107 , { x{ y } } )
+open: X111 . X113 . X115
+mode: X117 . X119
 init: { x }
 deinit: { x{ y } }
-deinit: { x }
-until: X146 ( )
-:end
-mode: X151 . X153 . X155
 on: BEGIN
+=> X125 . X127
+on: X129 . X131
+=> +! X134 . X136 ( )
+=> { x }
+=> -! X142 . X144
+until: END & [ X149 . X151 and X153 . X155 or X157 . X159 and X161 . X163 ]
+until: X166 . X168 . X170 . X172 . X174
+until: ANY
+on: X178 . X180 . X182 . X184 & [ X187 . X189 and X191 . X193 or X195 . X197 and X199 . X201 ]
+=> +! X205 . X207 . X209 . X211 . X213 ( )
+=> ! X218 . X220 ( X222 = false , false )
+:close
+open: X230 . X232 . X234
+event: X236 ( n238: float ; n241: X242 ; n244: int ; )
+mode: X249 . X251 . X253
+deinit: { x }
+init: { x }
+deinit: { x }
+init: { x }
+until: X259 . X261 . X263 . X265 . X267 & { x{ y } } cause: X270 . X272 . X274 for: X276 . X278 . X280 & [ X283 . X285 and X287 . X289 or X291 . X293 and X295 . X297 ]
+:close
+state_machine: X301 . X303 is: X305 . X307 . X309
+has: X311 . X313 . X315 . X317 . X319 . VOID
+deinit: { x }
+state: X324 . X326 . X328
+on: CHANGE
+=> X332 . X334
 => "s"
-until: X161 & { x }
-until: X164 ( )
-until: END effect: X170 . X172 . X174 . X176
-=> X178 . X180 ( )
-=> +! X185 . X187 . X189 ( )
-=> X193
-=> ! X196 . X198 ( "s" , 1 , X204 = X206 , X208 = 1 ) include: "s" into: X215 . X217
+=> ! X339 . X341 ( )
+=> X345 . X347
+init: { x }
+until: END
+until: X352 . X354 & { x{ y } }
+until: BEGIN & { x{ y } }
+:end

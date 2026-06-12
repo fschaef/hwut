@@ -262,3 +262,62 @@ NOT DECIDED HERE (deferred, to be opened when the work lands)
       frame values exactly as the _build_* did; outputs (GOODs) identical, the
       logic mechanically lifted. Confirmed left as-is under PART-2; the PART-1
       sparse frame would have forced their rewrite, and that frame is not built.
+
+
+D-6 GRAMMAR MIGRATION TO THE 57-RULE LANGUAGE (2026-06-12)
+
+The grammar redesign decided in the semantic-layer log (D-21..D-27 there) is
+installed: functionality-prefixed rule names, the five-kind declaration
+family, merged named tails ('the parens decide'), the cond ladder with bare
+boolean terms and symmetric comparison sides, 'for:'-bound cause definitions,
+'import:'/'into:', 'via:' spawn keys, CHANGE.
+
+RESERVED WORDS (lexer-level consequence of the captured kind/type keywords)
+    Discriminating the kind-decl slot by CAPTURED keywords makes those words
+    reserved EVERYWHERE on the rule-file plane: 'mode', 'state', 'mode_group',
+    'state_machine', 'struct', 'container', 'int', 'float', 'string', 'bool',
+    'true', 'false' (joining and/or/not, ANY/BEGIN/END/CHANGE, VOID) can no
+    longer be identifiers -- not as declared names, not as member segments
+    ('e.mode' is a syntax error). Inherent to the keyword-discriminated slot;
+    the alternative (bare ids in the kind slot) is not LL-decidable. Recorded
+    in SYNTAX_DOC's reserved-words note. The trailing-colon definition
+    keywords ('mode:', ...) are unaffected -- longer tokens, earlier tier.
+
+TWIN REF CLASSES OVER ONE <ref-member> VALUE
+    <ref-member> reduces to a plain (segments, is_void) pair; 'has:' and
+    'default:' wrap it into HasRef / DefaultRef -- same shape, DISTINCT
+    classes, so the aggregate assembler dispatches by type, never by
+    provenance. StateMachineModeRef is retired with the SM.member split: the
+    head stays a segment list, splitting it is resolution's business (F-8).
+
+SPAWN 'via:' NORMALISED THROUGH THE ONE CLASSIFIER
+    The 'via:' key rvalue is normalised to a positional Arg via Arg._classify
+    -- one classifier for every rvalue position (LITERAL / NAME / LUAU), no
+    second normalisation path.
+
+DEFECTS FIXED IN PASSING (both pre-dating the migration)
+    - InitBlock/DeinitBlock stored the raw SpanResult despite declaring
+      'body: Luau'; now wrapped through Luau.from_span like every other span
+      position.
+    - monkey-file-creator's AST walkers (_fmt, _collect_node_types) only
+      descended lists, but STAR_Node.items is a tuple -- the node-type census
+      always reported 0. Walkers now accept tuples.
+
+D-7 OPAQUECODE LANDS (semantic ledger D-1/D-2) (2026-06-12)
+
+ast.Luau is renamed OpaqueCode{text, mode, begin}; 'role' -> 'mode', typed as
+core's SpanMode; ast_nodes.py drops its luau import -- the node names no
+embedded language. OpaqueCode.get_references(oracle) is the lazy seam to the
+span's insides: computed on first call through the abstract
+SpanOracle.collect_references (core gains Reference{segments, begin}), begins
+rebased onto the node's absolute position, cached in ONE compare=False,
+repr=False slot written once via object.__setattr__ -- pure data in identity
+and print; the oracle is an argument per call, never held.
+
+OPEN: grammar.py still imports the luau Role to mint its opaque terminals
+(T.opaque(Role.CONDITION)) -- a parser -> luau import the D-2 principle
+('everything span-related speaks oracle') would also retire. Candidate shape:
+a parser-owned SpanMode set (the grammar names rule-language positions --
+condition/expression/lvalue/statement-block); the oracle dispatches on
+mode.name. NOT done here: it restructures the luau wrapper selection and is
+Frank-René's call.

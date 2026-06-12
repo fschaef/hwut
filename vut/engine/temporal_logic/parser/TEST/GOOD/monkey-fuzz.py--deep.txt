@@ -1,5 +1,5 @@
 === monkey: deep ===
-tokens parsed:      132
+tokens parsed:      54
 top-level items:    3
 diagnostics:        none
 
@@ -14,14 +14,11 @@ Namespace
         'X6'
         'X8'
       items:
-        ForwardDecl
-          kind = 'mode'
+        ReactorDecl
+          kind = 'mode_group'
           name = 'X9'
-          signature:
+          params:
             []
-          cargs:
-            []
-          luau_handle = None
           begin = 0
       begin = 0
   begin = 0
@@ -45,20 +42,30 @@ Namespace
                 'X27'
                 'X29'
               items:
-                Namespace
+                Mode
                   name:
                     'X31'
                     'X33'
-                  items:
-                    Namespace
-                      name:
-                        'X35'
-                        'X37'
-                      items:
-                        ClockDef
-                          name = 'X39'
-                          period = '1'
+                  params:
+                    []
+                  init = None
+                  deinit:
+                    OpaqueCode
+                      text = '{ x }'
+                      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+                      begin = 0
+                      _references = None
+                  causalities:
+                    []
+                  untils:
+                    Cause
+                      trigger:
+                        Trigger
+                          name:
+                            'BEGIN'
+                          is_keyword = True
                           begin = 0
+                      guard = None
                       begin = 0
                   begin = 0
               begin = 0
@@ -67,111 +74,17 @@ Namespace
   begin = 0
 Namespace
   name:
-    'X48'
-    'X50'
+    'X42'
+    'X44'
   items:
     Namespace
       name:
-        'X52'
-        'X54'
+        'X46'
+        'X48'
       items:
-        Namespace
-          name:
-            'X56'
-            'X58'
-          items:
-            Namespace
-              name:
-                'X60'
-                'X62'
-              items:
-                Namespace
-                  name:
-                    'X64'
-                    'X66'
-                  items:
-                    Namespace
-                      name:
-                        'X68'
-                        'X70'
-                      items:
-                        Namespace
-                          name:
-                            'X72'
-                            'X74'
-                          items:
-                            Namespace
-                              name:
-                                'X76'
-                                'X78'
-                              items:
-                                Namespace
-                                  name:
-                                    'X80'
-                                    'X82'
-                                  items:
-                                    Namespace
-                                      name:
-                                        'X84'
-                                        'X86'
-                                      items:
-                                        Namespace
-                                          name:
-                                            'X88'
-                                            'X90'
-                                          items:
-                                            Namespace
-                                              name:
-                                                'X92'
-                                                'X94'
-                                              items:
-                                                Namespace
-                                                  name:
-                                                    'X96'
-                                                    'X98'
-                                                  items:
-                                                    Namespace
-                                                      name:
-                                                        'X100'
-                                                        'X102'
-                                                      items:
-                                                        Namespace
-                                                          name:
-                                                            'X104'
-                                                            'X106'
-                                                          items:
-                                                            ModeGroup
-                                                              name:
-                                                                'X108'
-                                                                'X110'
-                                                              params:
-                                                                []
-                                                              bases:
-                                                                'X112'
-                                                                'X114'
-                                                              modes:
-                                                                []
-                                                              has_refs:
-                                                                []
-                                                              init:
-                                                                SpanResult
-                                                                  text = '{ x }'
-                                                                  mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-                                                                  begin = 0
-                                                              deinit = None
-                                                              begin = 0
-                                                          begin = 0
-                                                      begin = 0
-                                                  begin = 0
-                                              begin = 0
-                                          begin = 0
-                                      begin = 0
-                                  begin = 0
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
+        ClockDef
+          name = 'X50'
+          period = '1'
           begin = 0
       begin = 0
   begin = 0

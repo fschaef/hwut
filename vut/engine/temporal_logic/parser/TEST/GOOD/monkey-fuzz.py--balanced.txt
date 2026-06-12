@@ -1,10 +1,10 @@
 === monkey: balanced ===
-tokens parsed:      126
+tokens parsed:      147
 top-level items:    5
 diagnostics:        none
 
 -- AST --
-Include
+Import
   filename = 's'
   mount:
     'X4'
@@ -18,218 +18,227 @@ Namespace
   items:
     Causality
       cause:
-        CauseRef
-          name = 'X14'
-          args:
-            []
+        Cause
+          trigger:
+            Trigger
+              name:
+                'END'
+              is_keyword = True
+              begin = 0
+          guard:
+            OpaqueCode
+              text = '{ x{ y }{ y } }'
+              mode = <Role.CONDITION: 'condition'>
+              begin = 0
+              _references = None
           begin = 0
       effects:
-        Unspawn
-          name:
-            'X19'
-            'X21'
-            'X23'
+        ReportString
+          text = '"s"'
           begin = 0
-        EffectRef
-          name = 'X25'
+        Mutation
+          body:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+              _references = None
+          begin = 0
+      begin = 0
+  begin = 0
+Namespace
+  name:
+    'X21'
+    'X23'
+  items:
+    EffectDef
+      name:
+        'X25'
+        'X27'
+      params:
+        []
+      effects:
+        ModeArming
+          name:
+            'X30'
+            'X32'
+          args:
+            Arg
+              name = None
+              value:
+                'X34'
+                'X36'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+            Arg
+              name = 'X38'
+              value:
+                OpaqueCode
+                  text = '{ x }'
+                  mode = <Role.EXPRESSION: 'expression'>
+                  begin = 0
+                  _references = None
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+          begin = 0
+      begin = 0
+    EventDef
+      name = 'X42'
+      params:
+        []
+      begin = 0
+  begin = 0
+Namespace
+  name:
+    'X47'
+    'X49'
+  items:
+    Namespace
+      name:
+        'X51'
+        'X53'
+        'X55'
+      items:
+        VariableDef
+          name = 'X56'
+          type_name = 'string'
+          args:
+            []
+          by = None
+          head_params:
+            ArgDecl
+              member = 'n58'
+              type = 'X59'
+              begin = 0
+            ArgDecl
+              member = 'n61'
+              type = 'int'
+              begin = 0
+          begin = 0
+        Import
+          filename = 's'
+          mount:
+            'X71'
+            'X73'
           begin = 0
       begin = 0
   begin = 0
 StateMachine
   name:
-    'X28'
-    'X30'
+    'X77'
+    'X79'
   params:
     []
   bases:
-    'X34'
-    'X36'
-    'X38'
+    'X81'
+    'X83'
+    'X85'
+    'X87'
+    'X89'
   states:
-    []
-  has_refs:
-    []
-  default:
-    StateMachineModeRef
-      sm_name = 'X41'
-      mode_name = 'VOID'
-      is_void = True
-      begin = 0
-  init:
-    SpanResult
-      text = '{ x{ y }{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-  deinit = None
-  begin = 0
-Mode
-  name:
-    'X46'
-    'X48'
-  params:
-    []
-  init = None
-  deinit = None
-  causalities:
-    Causality
-      cause:
+    State
+      name:
+        'X91'
+        'X93'
+      params:
+        []
+      init = None
+      deinit = None
+      causalities:
+        Causality
+          cause:
+            Cause
+              trigger:
+                Trigger
+                  name:
+                    'X95'
+                    'X97'
+                  is_keyword = False
+                  begin = 0
+              guard = None
+              begin = 0
+          effects:
+            Unspawn
+              name:
+                'X100'
+                'X102'
+              begin = 0
+            Spawn
+              name:
+                'X105'
+                'X107'
+              args:
+                []
+              has_parens = True
+              in_container = None
+              via = None
+              begin = 0
+          begin = 0
+      untils:
         Cause
           trigger:
             Trigger
-              name = 'ANY'
+              name:
+                'CHANGE'
               is_keyword = True
               begin = 0
+          guard:
+            Condition
+              expr:
+                BoolOp
+                  op = 'or'
+                  operands:
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X114'
+                            'X116'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X118'
+                            'X120'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X122'
+                            'X124'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X126'
+                            'X128'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+        CauseRef
+          name:
+            'X131'
+            'X133'
+            'X135'
+          args:
+            []
           guard = None
           begin = 0
-      effects:
-        ModeArming
-          name:
-            'X53'
-            'X55'
-          args:
-            Arg
-              name = None
-              value:
-                ShallowMemberAccess
-                  binding = 'mode'
-                  member = 'X59'
-                  begin = 0
-              kind = <E_ArgKind.MEMBER: 2>
-              begin = 0
-            Arg
-              name = 'X61'
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          begin = 0
-        EventSpec
-          name:
-            'X66'
-            'X68'
-          args:
-            Arg
-              name = None
-              value = 'X70'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X72'
-              value:
-                Luau
-                  text = '{ x }'
-                  role = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-          begin = 0
       begin = 0
-  untils:
-    CauseRef
-      name = 'X76'
-      args:
-        []
-      begin = 0
-    Cause
-      trigger:
-        Trigger
-          name = 'X80'
-          is_keyword = False
-          begin = 0
-      guard:
-        Condition
-          expr:
-            BoolOp
-              op = 'or'
-              operands:
-                BoolOp
-                  op = 'and'
-                  operands:
-                    Comparison
-                      left:
-                        EventMember
-                          name = 'X84'
-                          begin = 0
-                      op = '>'
-                      right:
-                        Literal
-                          text = '1'
-                          begin = 0
-                      begin = 0
-                    Comparison
-                      left:
-                        EventMember
-                          name = 'X89'
-                          begin = 0
-                      op = '>='
-                      right:
-                        Literal
-                          text = '"s"'
-                          begin = 0
-                      begin = 0
-                    Comparison
-                      left:
-                        EventMember
-                          name = 'X94'
-                          begin = 0
-                      op = '<='
-                      right:
-                        EventMember
-                          name = 'X97'
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                BoolOp
-                  op = 'and'
-                  operands:
-                    Comparison
-                      left:
-                        EventMember
-                          name = 'X100'
-                          begin = 0
-                      op = '<'
-                      right:
-                        EventMember
-                          name = 'X103'
-                          begin = 0
-                      begin = 0
-                    Comparison
-                      left:
-                        EventMember
-                          name = 'X106'
-                          begin = 0
-                      op = '!='
-                      right:
-                        Literal
-                          text = '1'
-                          begin = 0
-                      begin = 0
-                    Comparison
-                      left:
-                        EventMember
-                          name = 'X111'
-                          begin = 0
-                      op = '=='
-                      right:
-                        Literal
-                          text = '"s"'
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-          begin = 0
-      begin = 0
-  begin = 0
-CauseDef
-  name:
-    'X116'
-    'X118'
-    'X120'
-  params:
+  has_refs:
     []
-  body:
-    CauseRef
-      name = 'X122'
-      args:
-        []
+  default:
+    DefaultRef
+      name:
+        'X139'
+        'X141'
+        'X143'
+      is_void = False
       begin = 0
+  init = None
+  deinit = None
   begin = 0

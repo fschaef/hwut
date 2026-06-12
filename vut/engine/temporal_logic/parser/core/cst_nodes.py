@@ -3,7 +3,7 @@ ______________________________________________________________________________
 
 CST NODES  --  the canonical concrete-syntax tree the engine builds by default.
 
-The engine ALWAYS reduces a parse to a tree of these four frozen nodes, one node
+The engine ALWAYS reduces a parse to a tree of these five frozen nodes, one node
 per grammar operator, bottom-up. They are the baseline output; a transformer
 overlay (the outer layer's AST_MAP) refines selected rules into typed AST nodes,
 but where no transformer is registered, the CST node IS the output. This is a
@@ -11,14 +11,17 @@ PRUNED CST: silent terminals contribute nothing, so syntax (punctuation
 keywords) is discarded while structure -- which operator matched, which OR
 branch, how many repetitions -- is preserved.
 
-Four node kinds mirror the four authoring operators (combinators.py):
+Five node kinds mirror the five authoring operators (combinators.py):
 
-    OR_Node    an alternation OR an optional. 'triggered_index' names which
-               branch of the alternation matched; 'child' is that branch's
-               reduced value. An OPTIONAL is the degenerate two-branch
-               alternation '(body | empty)': when the empty branch matched,
-               'child' IS the ABSENT sentinel. There is no separate OPT node --
-               absence is a STATE of OR_Node, not a node type.
+    OR_Node    an alternation. 'triggered_index' names which branch matched;
+               'child' is that branch's reduced value, or ABSENT when the
+               matched branch produced no surviving value (an all-silent
+               branch).
+    OPT_Node   an optional. 'present' is True iff the optional fired; 'child'
+               is the body's surviving reduced value, or ABSENT when none
+               survived (not fired, or fired over an all-silent body).
+               Presence is a STATE of the node, marked on it, never inferred
+               from a missing slot downstream.
     SEQ_Node   a sequence: 'children' holds one reduced value per surviving
                grammar position (silent terminals leave no entry; inline
                operators among the positions are themselves CST nodes at their
@@ -43,19 +46,20 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
 
-from .operator_interface import (OR_Interface, SEQ_Interface,
+from .operator_interface import (OR_Interface, OPT_Interface, SEQ_Interface,
                                   PLUS_Interface, STAR_Interface)
 
 
 class _Absent:
-    """The sentinel value an OR_Node.child holds when the empty branch matched.
+    """The sentinel a node's 'child' holds when a position produced no value.
 
-    A single module-global instance, ABSENT, exported below. It is the value an
-    OPTIONAL contributes when it did not fire: 'OR_Node(child=ABSENT)' is "this
-    optional was absent". A distinct type (not None) so a genuinely None-valued
-    child -- should a transformer ever produce one -- is not mistaken for
-    absence. Truthy-falsy: ABSENT is falsey, so 'if node.child:' reads as "the
-    optional fired", though an explicit 'node.child is ABSENT' is clearer.
+    A single module-global instance, ABSENT, exported below. OPT_Node.child IS
+    ABSENT when the optional did not fire OR fired over an all-silent body
+    (read 'present' for which); OR_Node.child is ABSENT when the matched
+    branch was all-silent. A distinct type (not None) so a genuinely
+    None-valued child -- should a transformer ever produce one -- is not
+    mistaken for absence. Truthy-falsy: ABSENT is falsey, so 'if node.child:'
+    reads as "the position produced a value".
     """
     __slots__ = ()
     _instance = None
@@ -77,14 +81,14 @@ ABSENT = _Absent()
 
 @dataclass(frozen=True)
 class OR_Node(OR_Interface):
-    """An alternation (or an absent/present optional) and the branch that matched.
+    """An alternation and the branch that matched.
 
     'triggered_index' is the 0-based index of the matched branch within the
-    grammar's alternation; 'child' is that branch's reduced value, or ABSENT when
-    the node is an optional whose empty branch matched. 'name' is the rule name,
-    or None for an inline alternation/optional. 'begin' is the construct's start
-    offset (the frame's begin), so a transformer can stamp an AST node's begin
-    without a child token.
+    grammar's alternation; 'child' is that branch's reduced value, or ABSENT
+    when the matched branch produced no surviving value (an all-silent branch).
+    'name' is the rule name, or None for an inline alternation. 'begin' is the
+    construct's start offset (the frame's begin), so a transformer can stamp an
+    AST node's begin without a child token.
     """
     triggered_index: int
     child: object
@@ -93,8 +97,26 @@ class OR_Node(OR_Interface):
 
     @property
     def or_child(self):
-        """RETURN: object, the matched branch value (ABSENT if optional-absent)."""
+        """RETURN: object, the matched branch's reduced value (ABSENT if none)."""
         return self.child
+
+
+@dataclass(frozen=True)
+class OPT_Node(OPT_Interface):
+    """An optional position and whether it fired.
+
+    'present' is True iff the optional fired. 'child' is the body's surviving
+    reduced value, or ABSENT when none survived -- exactly OR_Node's child
+    semantics, so a FIRED optional over an all-silent body is present=True,
+    child=ABSENT, distinguishable from absent. Presence is read off 'present',
+    never inferred from the parent's child count -- the parent SEQ keeps a
+    stable slot either way. 'name' is the rule name, or None for an inline
+    optional. 'begin' is the construct's start offset (the frame's begin).
+    """
+    present: bool
+    child: object
+    name: object = None
+    begin: int = 0
 
 
 @dataclass(frozen=True)
@@ -104,7 +126,7 @@ class SEQ_Node(SEQ_Interface):
     Silent terminals leave no entry, so 'children' is the dense list of values
     the sequence produced -- but each inline operator among the positions is
     itself a CST node held at its stable slot, so presence/absence of an inline
-    optional is read OFF that slot's OR_Node, never inferred from list length.
+    optional is read OFF that slot's OPT_Node, never inferred from list length.
     'name' is the rule name, or None for an inline sequence.
     """
     children: tuple = field(default_factory=tuple)

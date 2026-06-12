@@ -21,18 +21,19 @@ SURFACE COVERAGE (the reason sprites exists): the generator deliberately emits
 every top-level construct the grammar admits, so the file is a canary for whole
 classes of regression that the random-walk profiles can miss:
 
-  - include / into                 (mounts, recorded not resolved)
+  - import: / into:                (mounts, recorded not resolved)
   - event: / clock:                (definitions)
-  - forward-decl 'X is: mode'      <-- the construct that catches the binding-
-    and          'X is: state'         keyword reservation regression: 'mode'
-                                       must lex as a bare type-name here, NOT as
-                                       the reserved 'mode' binding keyword.
+  - declaration 'X is: mode'       <-- the kind keywords ('mode', 'state') in
+    and         'X is: state'          their CAPTURED kind-decl position, the
+                                       construct that catches keyword-tier
+                                       regressions against 'mode:' / 'state:'.
   - open: / :close                 (namespaces, nested)
   - state_machine: / state:        (exclusive behaviour, default:)
   - mode_group: / mode:            (concurrent behaviour, has:)
   - on: <cause> => <effect>+       (top-level causality: mutation, spawn,
                                     unspawn, mode-arming, report-string,
-                                    event-spec, shallow-member-access args)
+                                    event-spec, name-dotted args through the
+                                    'e'/'sm'/'mg'/'m' pseudo-symbols)
 ______________________________________________________________________________
 """
 from vut.language_support.python.deterministic_random import DeterministicStream
@@ -61,7 +62,7 @@ _EVENTS = (
     "RainFell", "SunRose", "Cornered", "Wounded", "WhipCracked",
 )
 
-_MEMBER_TYPES = ("number", "string")
+_MEMBER_TYPES = ("int", "string")
 
 # The opaque Luau bodies the generator splices verbatim into condition / mutation
 # / lvalue positions. They are opaque to the parser (balance is all that matters),
@@ -132,10 +133,11 @@ class _Emit:
     def forward_decls(self, count):
         """RETURN: None. Emits 'count' 'Name is: mode' / 'Name is: state' decls.
 
-        This is the surface the binding-keyword reservation can break: 'mode'
-        here MUST be a bare type-name, not the reserved 'mode' binding keyword.
-        Emitting both kinds every run keeps sprites the canary for that class of
-        regression -- the random-walk profiles do not reliably reach it.
+        This is the surface where the bare kind keywords stand in their
+        captured kind-decl position, one lexer tier below their trailing-colon
+        definition spellings ('mode:' / 'state:'). Emitting both kinds every
+        run keeps sprites the canary for keyword-tier regressions -- the
+        random-walk profiles do not reliably reach it.
         """
         for _ in range(count):
             kind = self.s.select(("mode", "state"))
@@ -166,12 +168,12 @@ class _Emit:
     def _arg_list(self):
         """RETURN: str, zero-or-more comma-separated <arg>s (possibly empty).
 
-        An <arg> is 'id' or 'id = <rvalue>' (the only two shapes the grammar
-        admits): a positional argument is a BARE IDENTIFIER, and every richer
-        form -- number / string literal, shallow-member-access binding
-        ('event.x' / 'sm.x' / 'mg.x' / 'mode.x'), or another identifier -- is the
-        RVALUE after '='. So the binding heads and literals are exercised, but
-        only where the grammar puts them (after '='), never as a bare positional.
+        An <arg> is '<rvalue>' or 'id = <rvalue>'. The emitter keeps the
+        positional slot to a bare name and puts every richer form -- number /
+        string literal, a pseudo-symbol member ('e.x' / 'sm.x' / 'mg.x' /
+        'm.x', plain name-dotted references resolved in pass 2), or another
+        identifier -- in the RVALUE after '=', so both shapes and the
+        pseudo-symbol spellings are exercised on every run.
         """
         n = self.s.next_int(0, 3)
         if n == 0:
@@ -188,9 +190,9 @@ class _Emit:
             elif kind == 1:
                 rvalue = '"%s"' % self.s.select(_MODE_NAMES)         # string
             elif kind == 2:
-                binding = self.s.select(("event", "sm", "mg", "mode"))
+                binding = self.s.select(("e", "sm", "mg", "m"))
                 member  = self.s.select(("x", "fear", "depth", "pos"))
-                rvalue  = "%s.%s" % (binding, member)               # shallow member
+                rvalue  = "%s.%s" % (binding, member)        # pseudo-symbol member
             else:
                 rvalue = self.s.select(("fast", "slow", "loud"))    # id
             parts.append("%s = %s" % (name, rvalue))
@@ -254,7 +256,7 @@ def generate(seed=0x5197):
     e.comment("menagerie -- ROOT: shared vocabulary, then every category")
     e.blank()
     for cat in _CATEGORIES:
-        e.lines.append('include: "sprites_%s.rule" into: menagerie.%s' % (cat, cat))
+        e.lines.append('import: "sprites_%s.rule" into: menagerie.%s' % (cat, cat))
 
     e.comment("shared event, clock and forward-decl vocabulary")
     e.blank()
@@ -284,3 +286,4 @@ def generate(seed=0x5197):
 if __name__ == "__main__":
     import sys
     sys.stdout.write(generate())
+

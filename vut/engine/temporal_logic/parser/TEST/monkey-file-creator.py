@@ -258,9 +258,9 @@ def _render_source(tokens, luau_texts):
 
 
 def _fmt(node, indent=0):
-    """RETURN: str, a stable indented rendering of an AST node / list / leaf."""
+    """RETURN: str, a stable indented rendering of an AST node / sequence / leaf."""
     pad = "  " * indent
-    if isinstance(node, list):
+    if isinstance(node, (list, tuple)):
         if not node:
             return pad + "[]"
         return "\n".join(_fmt(x, indent) for x in node)
@@ -285,7 +285,7 @@ def _strip_begin(text):
 
 def _collect_node_types(node, seen):
     """RETURN: None. Adds the type name of every AST dataclass found in 'node'."""
-    if isinstance(node, list):
+    if isinstance(node, (list, tuple)):
         for x in node:
             _collect_node_types(x, seen)
     elif is_dataclass(node) and type(node).__module__.endswith("ast_nodes"):
@@ -379,3 +379,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -91,9 +91,12 @@ def show_diagnostics(reporter):
 def run_tokens():
     """RETURN: None. Each token kind maps as expected, with correct spans."""
     banner("keywords and structure")
-    src = ("on: mode: mode_group: state_machine: state: has: as: until: :end "
-           "event: clock: into: in: open: :close container is: "
-           "default: init: deinit: ANY BEGIN END VOID")
+    src = ("on: mode: mode_group: state_machine: state: has: until: :end "
+           "event: clock: cause: effect: for: by: via: import: into: in: "
+           "open: :close is: default: init: deinit: "
+           "ANY BEGIN END CHANGE VOID "
+           "mode state mode_group state_machine struct container "
+           "int float string bool true false")
     tokens, _, _ = drive(src)
     show_tokens(tokens)
 
@@ -134,3 +137,4 @@ HwutRunner(
         "dotted_names": run_dotted_names,
     },
 ).run()
+

@@ -1,0 +1,7 @@
+
+--- STATEMENT_BLOCK frame: both 'counter' touches, span offsets ---
+     2  counter
+    12  counter
+
+--- wrapper-artifact clipping: 'ghost' in the prefix never surfaces ---
+     2  x

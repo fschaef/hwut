@@ -178,6 +178,14 @@ COMPONENT MODULE REFERENCE
       left brace file boundaries.
     - OracleError: System-level execution or timeout failure exceptions.
 
+* Reference Collection:
+    - collect_references(source, open, close, mode): wraps the measured span
+      in its role frame, parses via the parse_ast JSON seam, walks the AST
+      for GLOBAL-rooted dotted chains, and maps locations back to source
+      offsets as neutral core Reference pairs. Locals never surface; the
+      pseudo-symbols 'e'/'sm'/'mg'/'m' surface as globals by design (the
+      validation wrapper binds nothing).
+
 
 2. luau/location_mapper.py
 -------------------------------------------------------------------------------

@@ -106,3 +106,30 @@ Hand-written Luau lexer (aux.lua / R-27 design): superseded by
 Per-fragment luau-analyze with generated type preamble: requires a
   type-preamble generation step not yet built; deferred.
 Mock oracle in tests: removed once GOOD files promoted from real binary runs.
+
+-------------------------------------------------------------------------------
+D-10. Reference collection (collect_references) and the pseudo-symbol planes
+-------------------------------------------------------------------------------
+Implements core D-1 (semantic ledger): LuauOracle.collect_references wraps the
+measured span in the SAME role frame find_close used, parses through the new
+parse_ast JSON seam (one _run helper backs parse and parse_ast), and walks the
+luau-ast JSON for GLOBAL-rooted dotted chains, mapped back to source offsets
+as neutral core Reference pairs. Explicit-stack walk; a computed index breaks
+a chain at its resolvable head; locals never surface (Luau resolves them at
+parse time -- globals ARE the references to the world outside the span).
+
+THE VALIDATION WRAPPER DELIBERATELY BINDS NOTHING. If the frame declared
+'local e, sm, mg, m', the pseudo-symbols would parse as AstExprLocal and
+vanish from the reference set -- exactly the names pass 2 must see. So:
+
+    validation/collection frame:  pseudo-symbols stay GLOBAL  (this module)
+    GENERATED guard frame:        binds 'e'/'sm'/'mg'/'m' as locals at run
+                                  time -- one spelling on both planes; an
+                                  EMITTER OBLIGATION, owed by the code-
+                                  generation session (no emitter exists yet).
+
+Schema note: the JSON walk targets luau-ast's encoder (AstExprGlobal /
+AstExprIndexName / AstExprIndexExpr, 'l,c - l,c' locations, 0-based). The
+fake-backed choices pin the walk and the offset arithmetic; the 'real_binary'
+choice of test-collect-references.py pins schema fidelity and is promoted only
+on infrastructure carrying the binary (it prints a loud SKIP elsewhere).

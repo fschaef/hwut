@@ -8,15 +8,16 @@ shared-across-every-parse description of what the engine may match at each point
 (OR_Spec / SEQ_Spec / OPT_Spec / STAR_Spec / PLUS_Spec, plus Terminal_Spec and
 the per-rule Rule_Spec). They carry first2_set / nullable / the conflict scan /
 expand -- they DESCRIBE and the engine consults them. They never hold a parse
-result. The RESULT layer is cst_nodes (OR_Node / SEQ_Node / STAR_Node /
-PLUS_Node): a fresh node per occurrence, built by a Spec's cst_reduce, recording
-what actually matched THIS time. One Spec (the mould) yields many Nodes (the
-castings). The prefix mirrors the grammar operator the author wrote (OR / OPT /
-SEQ / PLUS / STAR); OPT_Spec has no OPT_Node -- an optional casts to an OR_Node
-whose absent state is the ABSENT child.
+result. The RESULT layer is cst_nodes (OR_Node / OPT_Node / SEQ_Node /
+STAR_Node / PLUS_Node): a fresh node per occurrence, built by a Spec's
+cst_reduce, recording what actually matched THIS time. One Spec (the mould)
+yields many Nodes (the castings). The prefix mirrors the grammar operator the
+author wrote (OR / OPT / SEQ / PLUS / STAR), Spec and Node alike: each operator
+casts to its own node kind.
 ______________________________________________________________________________
 """
-from .cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT
+from .cst_nodes import (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node,
+                        ABSENT)
 
 ELEM       = 0
 REDUCE     = 1
@@ -439,23 +440,20 @@ class OPT_Spec(Operator_Spec):
     def expand(self, parser, frames, work):
         present = parser.starts(self.body)
         if parser.cst_mode:
-            # An optional is the two-branch alternation '(body | empty)'. Reduce
-            # to an OR_Node: index 0 = body present (child = its value), index 1
-            # = absent (child = ABSENT). Absence is a STATE of OR_Node, marked on
-            # the node, never inferred from a missing frame slot downstream.
-            index = 0 if present else 1
+            # Reduce to an OPT_Node: child = the body's value when present,
+            # ABSENT else. Presence is a STATE of the node, marked on it, never
+            # inferred from a missing frame slot downstream.
             parser.open_frame(frames)
-            work.append((CST_REDUCE, (self, index)))
+            work.append((CST_REDUCE, (self, present)))
         if present:
             work.append((ELEM, self.body))
 
-    def cst_reduce(self, frame, index):
-        """RETURN: OR_Node, index 0 (present, child=value) or 1 (absent, ABSENT)."""
-        if index == 0:
-            child = frame.values[0] if frame.values else ABSENT
-        else:
-            child = ABSENT
-        return OR_Node(triggered_index=index, child=child, begin=frame.begin)
+    def cst_reduce(self, frame, present):
+        """RETURN: OPT_Node, present = whether the optional fired,
+                             child   = the body's surviving value, ABSENT else.
+        """
+        child = frame.values[0] if present and frame.values else ABSENT
+        return OPT_Node(present=present, child=child, begin=frame.begin)
 
 
 class STAR_Spec(Operator_Spec):

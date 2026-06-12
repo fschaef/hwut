@@ -1,18 +1,38 @@
 
 --- rules legitimately without an operator signal ---
 pass-through (no dedicated node):
-  binding
-  cmp-op
+  cause
   cond-atom
+  cond-paren
   effect
+  elm-mode
+  elm-mode-group
+  elm-state-machine
   guard
-  mode-elm
-  mode-group-elm
-  paren-cond
+  kind-decl
+  op-cmp
   rvalue
-  state-machine-elm
   top-level
+  type-built-in
 single-terminal (no operator):
-  luau-guard
+  guard-luau
   mutation
   report-string
+map-hosted (plain value or input-decided node kind):
+  cause-named
+  cause-system
+  cond-term
+  declaration
+  effect-named
+  kind-container
+  kind-reactor
+  kind-struct
+  kind-variable
+  list-arg
+  list-decl-arg
+  name-dotted
+  operand-cond
+  parens-arg
+  parens-decl
+  ref-member
+  signature

@@ -16,7 +16,7 @@ Luau component directly (find_matching_brace, Role, the Luau exceptions). Now
 the dependency points the right way -- the Luau component imports this abstract
 base from core and implements it; core depends on nothing below itself.
 
-WHAT THE ENGINE NEEDS FROM AN OPAQUE SPAN, and nothing more:
+WHAT THE ENGINE -- AND, FOR REFERENCES, PASS 2 -- NEEDS FROM AN OPAQUE SPAN:
 
     find_close(source, open_offset, mode) -> int
         Given the whole source text, the index of the OPEN delimiter, and the
@@ -25,6 +25,13 @@ WHAT THE ENGINE NEEDS FROM AN OPAQUE SPAN, and nothing more:
         delimiter. Raise SpanSyntaxError if the span content is malformed (an
         author error, surfaced as an ordinary parse error) or SpanOracleError on
         infrastructure failure (a tool crash the author cannot fix).
+
+    collect_references(source, open_offset, close_offset, mode)
+            -> tuple[Reference]
+        The names referenced inside one already-measured span, as neutral
+        (segments, begin) pairs -- the vocabulary the semantic pass resolves.
+        Lazy by design: nothing calls this during parsing; the opaque-code AST
+        node exposes it on demand (OpaqueCode.get_references).
 
     open_delimiter / close_delimiter
         The single characters that open and close a span ('{' and '}' for Luau).
@@ -38,6 +45,20 @@ ______________________________________________________________________________
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Reference:
+    """One name referenced inside an opaque span: its segments and offset.
+
+    The neutral pair pass 2 resolves: 'segments' is the dotted chain as a list
+    (['e', 'temp'] for 'e.temp'); 'begin' is the ABSOLUTE source offset of the
+    chain's head, like every node offset. WHAT counts as a reference -- which
+    identifiers, in which syntactic positions -- is the concrete oracle's
+    private knowledge; core carries only these pairs.
+    """
+    segments: "list[str]"
+    begin:    int
 
 
 @dataclass(frozen=True)
@@ -121,3 +142,19 @@ class SpanOracle(ABC):
         span's terminal, interpreted only by the concrete oracle.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def collect_references(self, source, open_offset, close_offset, mode):
+        """RETURN: tuple[Reference], the names referenced inside one span.
+
+        Raises SpanSyntaxError if the span content is malformed,
+        SpanOracleError on infrastructure failure.
+
+        'source' is the text containing the span; 'open_offset' /
+        'close_offset' index its OPEN and CLOSE delimiters; 'mode' is the
+        span's mode tag. Reference begins are offsets INTO 'source'; a caller
+        holding only the span text passes it as 'source' and rebases. WHAT
+        counts as a reference is the concrete oracle's private knowledge.
+        """
+        raise NotImplementedError
+

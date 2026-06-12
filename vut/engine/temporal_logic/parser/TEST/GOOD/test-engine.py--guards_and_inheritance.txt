@@ -1,15 +1,21 @@
 
 --- bracket guard: comparison ---
-  Causality, bracket guard: .ip_adr == "10.0.0.1"
+  Causality, bracket guard: e.ip_adr == "10.0.0.1"
 
 --- bracket guard: and / not ---
-  Causality, bracket guard: (.port > 1024 and not .secure == 1)
+  Causality, bracket guard: (e.port > 1024 and not e.secure == 1)
 
 --- bracket guard: parenthesised or ---
-  Causality, bracket guard: ((.x > 0 or .y < 10) and .ready == 1)
+  Causality, bracket guard: ((e.x > 0 or e.y < 10) and e.ready == 1)
+
+--- bracket guard: bare boolean stands ---
+  Causality, bracket guard: (GHOSTS_AT_HOME and not e.armed)
+
+--- bracket guard: symmetric sides, literal right only ---
+  Causality, bracket guard: (TIMEOUT < e.elapsed and e.flag == true)
 
 --- luau guard still admitted ---
-  Causality, luau guard: { sm.n > 0 }
+  Causality, opaque guard: { sm.n > 0 }
 
 --- effect definition with signature ---
   EffectDef name=['Boost'] params=1 effects=[EventSpec, EventSpec]

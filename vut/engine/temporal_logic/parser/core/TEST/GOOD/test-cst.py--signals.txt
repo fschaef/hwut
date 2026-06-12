@@ -4,3 +4,5 @@ orr     is OR_Interface : True
 starr   is STAR_Interface: True
 plusr   is PLUS_Interface: True
 OR is not SEQ           : True
+optional is OPT_Interface: True
+OPT is not OR           : True

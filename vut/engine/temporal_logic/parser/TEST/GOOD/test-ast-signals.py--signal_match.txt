@@ -1,39 +1,28 @@
 
 --- each dedicated AST node derives from its rule's operator signal ---
-and-cond               -> BoolOp               : OK
 arg                    -> Arg                  : OK
-arg-decl               -> ArgDecl              : OK
-bracket-guard          -> Condition            : OK
+arming-mode            -> ModeArming           : OK
 causality              -> Causality            : OK
-cause                  -> Cause                : OK
-cause-def              -> CauseDef             : OK
-cause-ref              -> CauseRef             : OK
-clock-def              -> ClockDef             : OK
-comparison             -> Comparison           : OK
-declaration            -> ArgDecl              : OK
-default                -> StateMachineModeRef  : OK
+cond                   -> BoolOp               : OK
+cond-and               -> BoolOp               : OK
+cond-not               -> Not                  : OK
+decl-arg               -> ArgDecl              : OK
+def-cause              -> CauseDef             : OK
+def-clock              -> ClockDef             : OK
+def-effect             -> EffectDef            : OK
+def-event              -> EventDef             : OK
+default                -> DefaultRef           : OK
 deinit                 -> DeinitBlock          : OK
-effect-def             -> EffectDef            : OK
-effect-ref             -> EffectRef            : OK
-event-def              -> EventDef             : OK
-event-spec             -> EventSpec            : OK
-evt-member             -> EventMember          : OK
-has-ref                -> HasRef               : OK
-include                -> Include              : OK
+guard-bracket          -> Condition            : OK
+import                 -> Import               : OK
 init                   -> InitBlock            : OK
 mode                   -> Mode                 : OK
-mode-arming            -> ModeArming           : OK
 mode-group             -> ModeGroup            : OK
 namespace              -> Namespace            : OK
-not-cond               -> Not                  : OK
-or-cond                -> BoolOp               : OK
-shallow-member-access  -> ShallowMemberAccess  : OK
-sm-mode-ref            -> StateMachineModeRef  : OK
+ref-has                -> HasRef               : OK
 spawn                  -> Spawn                : OK
 state                  -> State                : OK
 state-machine          -> StateMachine         : OK
-trigger                -> Trigger              : OK
-type-ref               -> ForwardDecl          : OK
 unspawn                -> Unspawn              : OK
 
 mismatches: 0

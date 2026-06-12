@@ -1,0 +1,13 @@
+
+--- first call: computed, begins rebased by node.begin (100) ---
+   102  e.temp
+   111  limit
+
+--- second call: served from the cache (oracle untouched) ---
+   102  e.temp
+   111  limit
+  oracle parse_ast calls: 1
+
+--- cache stays out of identity and print ---
+  node == twin (twin never computed): True
+  'references' in repr(node): False

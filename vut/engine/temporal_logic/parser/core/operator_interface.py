@@ -6,8 +6,8 @@ OPERATOR INTERFACES  --  shape-identity signals over a truthful universal root.
 Every operator-shaped node -- the generic CST castings (core.cst_nodes) AND the
 typed AST nodes (the outer ast_nodes) -- derives from one of these. Their purpose
 is SIGNALLING, not behaviour: a node's interface declares WHICH grammar operator
-produced it (OR / SEQ / PLUS / STAR), truthfully, for both kinds of node, with no
-fakery on either side.
+produced it (OR / OPT / SEQ / PLUS / STAR), truthfully, for both kinds of node,
+with no fakery on either side.
 
 Why signalling and not a callable accessor contract.  A digested AST node (say
 Trigger, from an OR rule) does not retain a raw 'triggered_index' -- the branch
@@ -29,10 +29,10 @@ What the signal is FOR (it carries real weight, it is not a bare tag):
 None of those call shape accessors; they READ THE SHAPE. That is the contract.
 
 Where the shape-specific accessors live.  The GENERIC CST nodes expose
-triggered_index / seq_children / rep_items as their OWN concrete surface (the
-engine reads them off CST nodes during construction). Those are NOT hoisted here
-as universal obligations, because a digested AST node cannot honour them without
-fakery -- they are honestly answerable only on the generic casting.
+triggered_index / present+child / seq_children / rep_items as their OWN concrete
+surface (the engine reads them off CST nodes during construction). Those are NOT
+hoisted here as universal obligations, because a digested AST node cannot honour
+them without fakery -- they are honestly answerable only on the generic casting.
 
 core stays grammar-agnostic and language-free.
 ______________________________________________________________________________
@@ -54,6 +54,11 @@ class Operator_Interface(ABC):
 
 class OR_Interface(Operator_Interface):
     """Signal: this node was produced by an alternation (OR) rule."""
+    __slots__ = ()
+
+
+class OPT_Interface(Operator_Interface):
+    """Signal: this node was produced by an optional (OPT) position."""
     __slots__ = ()
 
 

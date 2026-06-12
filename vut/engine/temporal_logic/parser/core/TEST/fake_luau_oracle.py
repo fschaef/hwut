@@ -21,6 +21,8 @@ This is deliberately not a Luau parser. It is the smallest judge that makes the
 candidate-search behaviour deterministic and subprocess-free in tests.
 ______________________________________________________________________________
 """
+from vut.engine.temporal_logic.parser.core.span_oracle import (
+        Reference, SpanSyntaxError)
 from vut.engine.temporal_logic.luau.luau_fragment import ParseResult, LuauOracle
 
 
@@ -53,6 +55,95 @@ class FakeLuauOracle(LuauOracle):
         ok, detail = _balanced(text)
         return ParseResult(ok=True) if ok else ParseResult(ok=False, error=detail)
 
+    def collect_references(self, source, open_offset, close_offset, mode):
+        """RETURN: tuple[Reference], the dotted identifier chains in the span
+                                   body the fake counts as references.
+
+        Raises SpanSyntaxError when the body is not balance-clean (the same
+        judge parse() applies).
+
+        Approximation, in the module-docstring spirit (smallest deterministic
+        judge, not a Luau parser): a reference is a maximal chain
+        ident('.'ident)* -- no whitespace inside the chain -- outside strings
+        and comments, whose head is not a reserved word and which is not
+        preceded by '.' or ':' (a method name is no chain head). Definition
+        sites and table keys are NOT excluded.
+        """
+        body = source[open_offset + 1: close_offset]
+        ok, detail = _balanced(body)
+        if not ok:
+            raise SpanSyntaxError(detail, open_offset)
+        result = []
+        i, n = 0, len(body)
+        while i < n:
+            j, detail = _skip_noncode(body, i)
+            if j > i:
+                i = j
+                continue
+            ch = body[i]
+            if ch.isalpha() or ch == "_":
+                begin = i
+                segments = []
+                while True:
+                    k = i
+                    while k < n and (body[k].isalnum() or body[k] == "_"):
+                        k += 1
+                    segments.append(body[i:k])
+                    i = k
+                    if i < n and body[i] == "." and i + 1 < n \
+                            and (body[i + 1].isalpha() or body[i + 1] == "_"):
+                        i += 1
+                        continue
+                    break
+                if segments[0] not in _RESERVED \
+                        and (begin == 0 or body[begin - 1] not in ".:"):
+                    result.append(Reference(segments=segments,
+                                            begin=open_offset + 1 + begin))
+                continue
+            i += 1
+        return tuple(result)
+
+
+# Reserved words a chain head cannot be (Lua 5.1 set plus Luau 'continue').
+_RESERVED = frozenset((
+    "and", "break", "continue", "do", "else", "elseif", "end", "false", "for",
+    "function", "goto", "if", "in", "local", "nil", "not", "or", "repeat",
+    "return", "then", "true", "until", "while",
+))
+
+
+def _skip_noncode(text, i):
+    """RETURN: (j, detail), j > i  index past the comment/string starting at i,
+                            j == i  when no such construct starts here;
+               detail names the defect when the construct never closes (j = end).
+    """
+    n = len(text)
+    ch = text[i]
+    if ch == "-" and i + 1 < n and text[i + 1] == "-":
+        if text.startswith("--[[", i):
+            end = text.find("]]", i + 4)
+            if end == -1:
+                return n, "unterminated block comment"
+            return end + 2, None
+        nl = text.find("\n", i)
+        return (n if nl == -1 else nl), None
+    if ch == "[" and i + 1 < n and text[i + 1] == "[":
+        end = text.find("]]", i + 2)
+        if end == -1:
+            return n, "unterminated long string"
+        return end + 2, None
+    if ch in ("'", '"'):
+        j = i + 1
+        while j < n:
+            if text[j] == "\\":
+                j += 2
+                continue
+            if text[j] == ch:
+                return j + 1, None
+            j += 1
+        return n, "unterminated string"
+    return i, None
+
 
 def _balanced(text: str):
     """
@@ -67,42 +158,14 @@ def _balanced(text: str):
     i, n = 0, len(text)
 
     while i < n:
+        # comments and strings (shared with collect_references) -------------
+        j, detail = _skip_noncode(text, i)
+        if detail is not None:
+            return False, detail
+        if j > i:
+            i = j
+            continue
         ch = text[i]
-
-        # -- comments (line or block) ---------------------------------------
-        if ch == "-" and i + 1 < n and text[i + 1] == "-":
-            if text.startswith("--[[", i):
-                end = text.find("]]", i + 4)
-                if end == -1:
-                    return False, "unterminated block comment"
-                i = end + 2
-                continue
-            nl = text.find("\n", i)
-            i = n if nl == -1 else nl
-            continue
-
-        # long-bracket string [[ ... ]] ------------------------------------
-        if ch == "[" and i + 1 < n and text[i + 1] == "[":
-            end = text.find("]]", i + 2)
-            if end == -1:
-                return False, "unterminated long string"
-            i = end + 2
-            continue
-
-        # quoted strings ----------------------------------------------------
-        if ch in ("'", '"'):
-            j = i + 1
-            while j < n:
-                if text[j] == "\\":
-                    j += 2
-                    continue
-                if text[j] == ch:
-                    break
-                j += 1
-            else:
-                return False, "unterminated string"
-            i = j + 1
-            continue
 
         # brackets ----------------------------------------------------------
         if ch in depth:
