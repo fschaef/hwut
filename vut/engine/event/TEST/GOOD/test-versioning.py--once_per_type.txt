@@ -1,0 +1,5 @@
+
+--- send EventAlpha twice, then EventBeta once ---
+delivered:    [1, 2, 'x']
+a._info_sent: ['TEST_LOCAL_VER.EventAlpha', 'TEST_LOCAL_VER.EventBeta']
+b._info_seen: ['TEST_LOCAL_VER.EventAlpha', 'TEST_LOCAL_VER.EventBeta']

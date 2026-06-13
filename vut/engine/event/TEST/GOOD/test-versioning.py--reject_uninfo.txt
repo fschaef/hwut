@@ -1,0 +1,8 @@
+
+--- push event directly onto channel, bypassing send() ---
+delivered (expected empty): []
+b._info_seen (expected empty): []
+
+--- a proper send() of the same type is then admitted ---
+delivered: [7]
+b._info_seen: ['TEST_LOCAL_VER.EventAlpha']

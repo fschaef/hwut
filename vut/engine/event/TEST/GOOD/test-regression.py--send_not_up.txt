@@ -1,0 +1,4 @@
+
+--- send() on a NEW (not started) terminal returns False ---
+state: NEW
+send returned: False

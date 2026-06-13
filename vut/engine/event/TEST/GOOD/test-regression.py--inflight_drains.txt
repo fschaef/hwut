@@ -1,0 +1,6 @@
+
+--- while the async sink is in flight ---
+inflight (sink running): 1
+
+--- after releasing the sink ---
+inflight (sink done):    0

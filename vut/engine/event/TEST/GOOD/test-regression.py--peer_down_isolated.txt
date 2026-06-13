@@ -1,0 +1,3 @@
+
+--- stop A; first callback raises, second still fires ---
+fired: ['survivor']

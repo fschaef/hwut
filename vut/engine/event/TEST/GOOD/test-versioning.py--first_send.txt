@@ -1,0 +1,9 @@
+
+--- before any send ---
+a._info_sent: []
+b._info_seen: []
+
+--- after first send of EventAlpha ---
+delivered:    [42]
+a._info_sent: ['TEST_LOCAL_VER.EventAlpha']
+b._info_seen: [('TEST_LOCAL_VER.EventAlpha', 1)]

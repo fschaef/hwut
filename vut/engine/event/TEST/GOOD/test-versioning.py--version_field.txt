@@ -1,0 +1,8 @@
+
+--- class WIRE_VERSION values ---
+EventAlpha.WIRE_VERSION: 1
+EventV3.WIRE_VERSION:    3
+
+--- version cached by receiver ---
+delivered:    [7]
+b._info_seen: [('TEST_LOCAL_VER.EventV3', 3)]
