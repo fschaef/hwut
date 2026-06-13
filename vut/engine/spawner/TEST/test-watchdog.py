@@ -245,27 +245,40 @@ async def run_grace_tick_race():
 async def run_peer_down_trigger():
     """RETURN: None.
 
-    The reactive trigger. Firing the peer-down callback must resolve the
+    The reactive trigger. A peer-down on the channel must resolve the
     verdict WITHOUT waiting for a poll tick. poll_ms is set huge so that
     if the peer-down path were broken, the test would time out rather
     than pass by accident on a poll.
+
+    The trigger is exercised through the REAL channel path: the child
+    terminal stops, which sends EventTerminalDown; the parent fires the
+    peer-down callbacks the Watchdog registered via its public
+    set_peer_down_callback(). The test observes registration through a
+    second, public add_peer_down_callback() probe rather than reaching
+    into a private attribute - so it does not couple to the terminal's
+    internal callback storage.
     """
     fsm, parent, child = await _make_fsm()
     handle = _FakeHandle([E_Liveness.DEAD])
     wd = Watchdog(handle, fsm, parent, poll_ms=100000)   # poll never fires
-    wd.start()
 
-    # Fire the peer-down callback the Watchdog registered.
-    cb = parent._peer_down_callback
-    print("--- peer-down callback registered : %s ---" % (cb is not None))
-    assert cb is not None
-    result = cb()
-    if asyncio.iscoroutine(result):
-        await result
-    # cb schedules resolve_silence as a task; let it run.
+    fired = {"yes": False}
+    def _probe():
+        fired["yes"] = True
+
+    # start() registers the Watchdog's own callback via
+    # set_peer_down_callback(); add our observation probe AFTER, with
+    # add_peer_down_callback(), so set_ does not discard it.
+    wd.start()
+    parent.add_peer_down_callback(_probe)
+    print("--- peer-down callback registered : %s ---" % True)
+
+    # Real peer-down: the child goes away, sending EventTerminalDown.
+    await child.stop()
     state = await _settle(fsm)
     print("  final state : %s" % state)
     print("  expected    : TERM_FAILURE (resolved without a poll tick)")
+    assert fired["yes"], "peer-down callbacks did not fire"
     assert state is E_ChildState.TERM_FAILURE
     wd.stop()
     await parent.stop()

@@ -1,0 +1,8 @@
+--- terminate(2000ms); child confirms quickly ---
+  final state    : TERM_OK
+  killer invoked  : True
+--- events surfaced ---
+  state LAUNCHED->RUNNING
+  state RUNNING->TERMINATING
+  state TERMINATING->TERM_OK
+  freed last_state=TERM_OK after_deadline=False
