@@ -96,7 +96,7 @@ from .core.span_oracle import E_SpanMode
 # The naming convention groups terminals by family: t_re_ for regex classes,
 # t_opq_ for opaque Luau spans, t_kw_ for captured keywords (kept in the frame).
 t_re_name_colon = T.regex(r'[a-zA-Z_]\w*:')
-t_re_number     = T.regex(r'[+-]?\d+(?:\.\d+)?')
+t_re_number     = T.regex(r'\d+(?:\.\d+)?')
 t_re_string     = T.regex(r'"[^"]*"')
 t_re_id         = T.regex(r'[a-zA-Z_]\w*')
 
@@ -134,8 +134,7 @@ t_kw_true       = T.captured("true")
 t_kw_false      = T.captured("false")
 
 # Bracket-guard vocabulary. 'not' is captured (the builder must SEE it to wrap a
-# negation); 'and'/'or' stay silent (they only separate operands at a level). The
-# six comparison operators are captured so the cond-term builder reads the exact
+# negation); the comparison operators are captured so the builder reads the exact
 # operator from the token; two-char operators precede their one-char prefixes in
 # the lexer's longest-first ordering. '<'/'>' double as the container
 # type-parameter brackets -- same captured terminals, position decides.
@@ -146,6 +145,24 @@ t_op_eq         = T.captured("==")
 t_op_ne         = T.captured("!=")
 t_op_gt         = T.captured(">")
 t_op_lt         = T.captured("<")
+
+# Expression operators (D-13). All CAPTURED: each level that carries two operators
+# ('or'/'nor', 'xor'/'nxor', 'and'/'nand', '+'/'-', 'shl:'/'shr:') needs the exact
+# token kept so the left-fold builder records which BinOp it is; '*' and unary '-'
+# are captured for a uniform builder. Numbers are UNSIGNED (the lexer carves '+'
+# and '-' as their own atoms); negation is the unary-minus operator at alg-un.
+t_op_add        = T.captured("+")
+t_op_sub        = T.captured("-")
+t_op_mul        = T.captured("*")
+t_kw_shl        = T.captured("shl:")
+t_kw_shr        = T.captured("shr:")
+t_kw_and        = T.captured("and")
+t_kw_nand       = T.captured("nand")
+t_kw_or         = T.captured("or")
+t_kw_nor        = T.captured("nor")
+t_kw_xor        = T.captured("xor")
+t_kw_nxor       = T.captured("nxor")
+t_op_question   = T.captured("?")    # the bool->num bridge leader
 
 
 # ADVISORY ROLE HINTS:
@@ -218,11 +235,26 @@ GRAMMAR = {
 # own trailing-colon keyword or '{'. LL(2)-clean by leader.
 "step-clockwork":     ("<clockwork-instant>", OR, "<clockwork-wait>", OR, "<clockwork-select>",
                    OR, "<clockwork-if>", OR, "<clockwork-while>", OR, "<spawn>",
-                   OR, "<unspawn>", OR, "<arming-mode>", OR, "<mutation>",
-                   OR, "<clockwork-emit>"),
+                   OR, "<unspawn>", OR, "<arming-mode>", OR, "<incr>", OR, "<decr>",
+                   OR, "<mutation>", OR, "<clockwork-name-step>"),
 
-# Paced emission (consumes a tick) -- a bare <event-spec>: name + mandatory args.
-"clockwork-emit":     ("<name-dotted(emission)>", "<parens-arg>"),
+# A name-led step left-factored on its shared <name-dotted> prefix, so the three
+# name-led forms (paced emission, assignment, guarded reciprocal) are LL(2)-clean:
+# the tail dispatches on the next token -- '(' / 'gets:' / 'recip:' (D-13).
+"clockwork-name-step": ("<name-dotted>",
+                   ("<parens-arg>", OR, "<assign-rhs>", OR, "<recip-rhs>")),
+# assignment:  <lvalue> gets: <algebr>
+"assign-rhs":     ("gets:", "<algebr>"),
+# guarded reciprocal: <lvalue> recip: <algebr> else: <body> :end  (1/x, or run body
+# when the value is zero -- the only division path, total by construction).
+"recip-rhs":      ("recip:", "<algebr>", "else:", PLUS("<elm-clockwork>"), ":end"),
+# saturating step counters; 'by:' amount (default 1, pass 2) and 'to:' clamp both
+# optional. 'by:' is required to introduce the amount so a bare next statement
+# (also name-led) is never mistaken for it.
+"incr":           ("incr:", "<name-dotted(operand)>", ["by:", "<algebr>"],
+                   ["to:", "<algebr>"]),
+"decr":           ("decr:", "<name-dotted(operand)>", ["by:", "<algebr>"],
+                   ["to:", "<algebr>"]),
 # Immediate injection (tick-free) into the current queue.
 "clockwork-instant":  ("instant:", "<name-dotted(emission)>", "<parens-arg>"),
 # Suspend until a cause fires; optional co-temporal effect tail.
@@ -243,32 +275,54 @@ GRAMMAR = {
 "guard":          ("<guard-luau>", OR, "<guard-bracket>"),
 "guard-luau":     t_opq_cond,
 "guard-bracket":  ("[", "<cond>", "]"),
-"cond":           ("<cond-and>", STAR(("or", "<cond-and>"))),
-"cond-and":       ("<cond-not>", STAR(("and", "<cond-not>"))),
-"cond-not":       ([t_kw_not], "<cond-atom>"),
-"cond-atom":      ("<cond-paren>", OR, "<cond-term>"),
-"cond-paren":     ("(", "<cond>", ")"),
-"cond-term":      ("<name-dotted(operand)>", ["<op-cmp>", "<operand-cond>"]),
-"op-cmp":         (t_op_ge, OR, t_op_le, OR, t_op_eq, OR, t_op_ne,
-                   OR, t_op_gt, OR, t_op_lt),
-"operand-cond":   ("<name-dotted(operand)>", OR, t_re_number, OR, t_re_string,
-                   OR, t_kw_true, OR, t_kw_false),
+
+# Condition ladder (D-13). Left-assoc folds, loosest to tightest:
+# or/nor < xor/nxor < and/nand < not < comparison. '[' always opens a nested
+# condition (the condition world); the two-token worlds never collide because
+# algebra groups with '(' (the algebra world) instead.
+"cond":        ("<cond-or>",),
+"cond-or":     ("<cond-xor>", STAR(("<op-or>",  "<cond-xor>"))),
+"cond-xor":    ("<cond-and>", STAR(("<op-xor>", "<cond-and>"))),
+"cond-and":    ("<cond-not>", STAR(("<op-and>", "<cond-not>"))),
+"cond-not":    ([t_kw_not], "<cond-atom>"),
+"cond-atom":   ("<cond-bracket>", OR, "<comparison>"),
+"cond-bracket":("[", "<cond>", "]"),
+"comparison":  ("<algebr>", ["<op-cmp>", "<algebr>"]),
+"op-or":       (t_kw_or,  OR, t_kw_nor),
+"op-xor":      (t_kw_xor, OR, t_kw_nxor),
+"op-and":      (t_kw_and, OR, t_kw_nand),
+"op-cmp":      (t_op_ge, OR, t_op_le, OR, t_op_eq, OR, t_op_ne,
+                OR, t_op_gt, OR, t_op_lt),
+
+# Algebraic ladder (D-13). shift < add < mul < unary-minus < atom. '(' always
+# opens nested algebra; the '?'-bridge is the ONLY bool->num crossing.
+"algebr":      ("<alg-shift>",),
+"alg-shift":   ("<alg-add>", STAR(("<op-shift>", "<alg-add>"))),
+"alg-add":     ("<alg-mul>", STAR(("<op-add>",   "<alg-mul>"))),
+"alg-mul":     ("<alg-un>",  STAR(("<op-mul>",   "<alg-un>"))),
+"alg-un":      ([t_op_sub], "<alg-atom>"),
+"alg-atom":    ("<alg-paren>", OR, "<bridge>", OR, t_re_number, OR, t_re_string,
+                OR, t_kw_true, OR, t_kw_false, OR, t_opq_expr,
+                OR, "<name-dotted(operand)>"),
+"alg-paren":   ("(", "<algebr>", ")"),
+"op-shift":    (t_kw_shl, OR, t_kw_shr),
+"op-add":      (t_op_add, OR, t_op_sub),
+"op-mul":      (t_op_mul,),
+"bridge":      (t_op_question, "<cond>", "then:", "<algebr>", "else:", "<algebr>"),
 
 "effect":         ("<mutation>", OR, "<spawn>", OR, "<unspawn>", OR, "<arming-mode>",
                    OR, "<report-string>", OR, "<effect-named>"),
 "effect-named":   ("<name-dotted(emission)>", ["<parens-arg>"]),
 "mutation":       t_opq_stmts,
 "spawn":          ("spawn:", "<name-dotted(aggregate)>", "<parens-arg>",
-                   ["in:", "<name-dotted(container)>", ["via:", "<rvalue>"]]),
+                   ["in:", "<name-dotted(container)>", ["via:", "<algebr>"]]),
 "unspawn":        ("unspawn:", "<name-dotted(instance)>"),
 "arming-mode":    ("arm:", "<name-dotted(mode)>", "<parens-arg>"),
 "report-string":  t_re_string("report"),
 
 "parens-arg":     ("(", ["<list-arg>"], ")"),
 "list-arg":       ("<arg>", STAR((",", "<arg>"))),
-"arg":            ("<rvalue>", OR, (t_re_id("arg-name"), "=", "<rvalue>")),
-"rvalue":         (t_re_number, OR, t_re_string, OR, t_kw_true, OR, t_kw_false,
-                   OR, "<name-dotted(reference)>", OR, t_opq_expr),
+"arg":            ("<algebr>", OR, (t_re_id("arg-name"), "=", "<algebr>")),
 
 "elm-mode":  ("<causality>", OR, "<init>", OR, "<deinit>"),
 "init":      ("init:", t_opq_stmts),

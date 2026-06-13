@@ -1,9 +1,13 @@
 
 --- rules legitimately without an operator signal ---
 pass-through (no dedicated node):
+  alg-paren
+  algebr
+  assign-rhs
   cause
+  cond
   cond-atom
-  cond-paren
+  cond-bracket
   effect
   elm-clockwork
   elm-mode
@@ -11,8 +15,13 @@ pass-through (no dedicated node):
   elm-state-machine
   guard
   kind-decl
+  op-add
+  op-and
   op-cmp
-  rvalue
+  op-mul
+  op-or
+  op-shift
+  op-xor
   step-clockwork
   top-level
   type-built-in
@@ -21,10 +30,19 @@ single-terminal (no operator):
   mutation
   report-string
 map-hosted (plain value or input-decided node kind):
+  alg-add
+  alg-atom
+  alg-mul
+  alg-shift
+  alg-un
   cause-named
   cause-system
-  clockwork-emit
-  cond-term
+  clockwork-name-step
+  comparison
+  cond-and
+  cond-not
+  cond-or
+  cond-xor
   declaration
   effect-named
   kind-container
@@ -34,8 +52,8 @@ map-hosted (plain value or input-decided node kind):
   list-arg
   list-decl-arg
   name-dotted
-  operand-cond
   parens-arg
   parens-decl
+  recip-rhs
   ref-member
   signature

@@ -1,0 +1,37 @@
+
+--- minimal clockwork (one paced emission) ---
+  Clockwork name=a params=0 clock=clk guard=False init=False deinit=False
+  steps=[EventSpec]
+
+--- signature + guarded clock + init/deinit ---
+  Clockwork name=heinz params=1 clock=clk guard=True init=True deinit=True
+  steps=[EventSpec]
+
+--- tick law: paced vs instant vs commands ---
+  Clockwork name=a params=0 clock=clk guard=False init=False deinit=False
+  steps=[EventSpec, Instant, Spawn, ModeArming, Mutation, Unspawn]
+
+--- wait with co-temporal tail, then tail-less gate ---
+  Clockwork name=a params=0 clock=clk guard=False init=False deinit=False
+  steps=[WaitLine, WaitLine]
+    WaitLine cause=RESP tail=2
+    WaitLine cause=GO tail=0
+
+--- select: first-of-many ---
+  Clockwork name=a params=0 clock=clk guard=False init=False deinit=False
+  steps=[SelectFrame]
+    SelectFrame branches=2 (tails=1,0)
+
+--- if / elif / else, one :end ---
+  Clockwork name=a params=0 clock=clk guard=False init=False deinit=False
+  steps=[IfFrame]
+    IfFrame arms=2 else=True
+
+--- while: own :end, nested wait ---
+  Clockwork name=a params=0 clock=clk guard=False init=False deinit=False
+  steps=[WhileFrame]
+    WhileFrame body=[EventSpec, WaitLine]
+
+--- FENCE: imperative construct rejected as a causality effect ---
+  ERROR off=9 no alternative matches 2-token lookahead (string:wait:, regex:[a-zA-Z_]\w*)
+  ERROR off=15 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:end-of-file)

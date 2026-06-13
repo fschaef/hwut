@@ -2,11 +2,18 @@ state_machine: X2 . X4 . X6 ( n8: string ; n11: X12 ; ) is: X16 . X18 . X20
 default: X22 . X24
 :end
 clockwork: X27 . X29 . X31 ( )
-on: ANY & [ X38 . X40 and X42 . X44 or X46 . X48 and X50 . X52 ]
-instant: X55 . X57 ( )
+on: ANY & [ { x{ y }{ y }{ y }{ y }{ y }{ y } } * false - X41 . X43 * true shl: 1 * "s" + X51 . X53 * { x{ y } } and true * "s" + false * 1 shr: 1 * "s" - true * { x{ y }{ y }{ y }{ y }{ y } } nxor false * X73 . X75 - false * 1 shl: "s" * X83 . X85 + { x{ y } } * true nand { x } * 1 - true * X95 . X97 shr: "s" * false + X103 . X105 * false nor true * "s" + 1 * { x{ y }{ y }{ y } } shl: X116 . X118 * "s" - false * { x{ y } } and 1 * true + X129 . X131 * "s" shr: false * true - 1 * { x{ y }{ y }{ y } } xor 1 * true - X146 . X148 * false shl: "s" * { x{ y } } + false * true nand 1 * { x{ y }{ y }{ y }{ y }{ y }{ y } } + "s" * X164 . X166 shr: 1 * true - false * { x } ]
+unspawn: X176 . X178
+:end
+open: X181 . X183
+open: X185 . X187
+mode_group: X189 . X191 is: X193 . X195
 init: { x{ y }{ y }{ y }{ y } }
-:end import: "s" into: X65 . X67 . X69 X70 is: container < X74 = false , 1 , X80 = "s" >
-open: X85 . X87 . X89
-clock: X91 1
+:end effect: X199 . X201
+=>
+arm: X204 . X206 ( )
 :close
-event: X95 ( n97: X98 ; n100: int ; )
+:close
+event: X212 ( n214: X215 ; n217: int ) cause: X221 . X223 . X225 for: X227 . X229 & { x{ y }{ y }{ y }{ y }{ y } }
+on: X232 . X234 ( )
+=> "s"

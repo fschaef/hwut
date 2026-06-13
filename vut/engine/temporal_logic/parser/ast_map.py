@@ -242,53 +242,106 @@ def _effect_named(node):
 # ---------------------------------------------------------------------------
 # Condition terms: the bare boolean stands (D-26).
 # ---------------------------------------------------------------------------
-def _cond_term(node):
-    """RETURN: Comparison | BoolRef, '<name-dotted> [<op-cmp> <operand-cond>]'.
+def _left_fold(node):
+    """RETURN: BinOp | operand, a left-associative operator level (D-13).
 
-    children = (name, opt_tail): the comparison tail is an OPT_Node at a
-    stable slot; present -> the anonymous SEQ (op_token, operand) completing a
-    Comparison; absent -> a bare boolean reference (BoolRef, '== true' in
-    meaning, kind-checked pass 2, F-5).
+    children = (head, STAR((op, operand))): the head operand, then the
+    repetition -- each item an anonymous SEQ (captured operator token, next
+    operand). An empty repetition forwards the bare head; otherwise the items
+    fold left into nested BinOp nodes, the operator read verbatim from each
+    token. Shared by every binary ladder rule (cond-or/-xor/-and, alg-shift/
+    -add/-mul).
     """
-    name, opt_tail = node.children
-    if not opt_tail.present:
-        return ast.BoolRef(name=name, begin=node.begin)
-    op_tok, operand = opt_tail.child.children
-    return ast.Comparison(left=name, op=op_tok.text, right=operand,
-                          begin=node.begin)
+    acc = node.children[0]
+    for item in node.children[1].items:
+        op_tok, operand = item.children
+        acc = ast.BinOp(op=op_tok.text, left=acc, right=operand, begin=op_tok.begin)
+    return acc
 
 
-def _operand_cond(node):
-    """RETURN: list[str] | Literal, an <operand-cond> branch value.
+def _un_fold(node):
+    """RETURN: UnOp | operand, an optional unary prefix (D-13).
 
-    Branch 0 is an already-reduced name-dotted segment list, forwarded
-    unchanged; branches 1..4 (number/string/true/false) are tokens wrapped
-    into a Literal.
+    children = (opt_prefix, operand): the inline optional 'not' (cond-not) or
+    '-' (alg-un) is an OPT_Node at a stable slot. Present -> a UnOp carrying the
+    captured operator's verbatim text; absent -> the bare operand, forwarded.
     """
-    if node.triggered_index == 0:
+    opt, operand = node.children
+    if opt.present:
+        tok = opt.child
+        return ast.UnOp(op=tok.text, operand=operand, begin=tok.begin)
+    return operand
+
+
+def _comparison(node):
+    """RETURN: Comparison | BoolRef | operand, '<algebr> [op-cmp <algebr>]' (D-13).
+
+    children = (left, opt_tail): with a comparison tail -> a Comparison (the
+    num->bool crossing); without one, a bare boolean expression -- a lone
+    <name-dotted> becomes a BoolRef ('== true' in meaning, F-5), anything else
+    (a Literal, a nested expression) forwards unchanged.
+    """
+    left, opt_tail = node.children
+    if opt_tail.present:
+        op_tok, right = opt_tail.child.children
+        return ast.Comparison(left=left, op=op_tok.text, right=right,
+                              begin=node.begin)
+    if isinstance(left, list):
+        return ast.BoolRef(name=left, begin=node.begin)
+    return left
+
+
+def _alg_atom(node):
+    """RETURN: object, one <alg-atom> branch value (D-13).
+
+    A parenthesised algebra (0), the '?'-bridge (1) and a bare <name-dotted> (7)
+    forward unchanged; an opaque expression span (6) becomes an OpaqueCode; the
+    number/string/true/false literals (2..5) wrap into a Literal.
+    """
+    i = node.triggered_index
+    if i in (0, 1, 7):
         return node.child
+    if i == 6:
+        return ast.OpaqueCode.from_span(node.child)
     return ast.Literal.from_token(node.child)
 
 
-def _clockwork_emit(node):
-    """RETURN: EventSpec, a paced clockwork emission '<name-dotted>(args)'.
+def _recip_rhs(node):
+    """RETURN: tuple ('recip', operand, else_body), a recip tail carrier.
 
-    children = (name, args): a bare event-spec (no keyword) standing as an
-    clockwork step. Reuses the EventSpec node -- the same emission shape an effect
-    list builds -- so downstream tells a paced emission from any other emission
-    by node identity, not by a separate class. The tick-consuming property is a
-    fact of the step POSITION (clockwork body), not of the node.
+    children = (operand, PLUS(body)); 'recip:'/'else:'/':end' silent. A plain
+    carrier consumed by _clockwork_name_step, which has the lvalue to build the
+    Recip node.
     """
-    name, args = node.children
-    return ast.EventSpec(name=name, args=args, begin=node.begin)
+    return ("recip", node.children[0], list(node.children[1].items))
+
+
+def _clockwork_name_step(node):
+    """RETURN: EventSpec | Assign | Recip, a name-led clockwork step (D-13).
+
+    children = (name, tail): the tail is the left-factored dispatch on the token
+    after the shared <name-dotted>. A parens-arg list -> a paced EventSpec
+    emission; the 'gets:' algebr (forwarded bare) -> an Assign; the 'recip:'
+    carrier -> a Recip with the lvalue filled in.
+    """
+    name, or_node = node.children
+    tail = or_node.child
+    if isinstance(tail, tuple) and tail and tail[0] == "recip":
+        return ast.Recip(lvalue=name, operand=tail[1], else_body=tail[2],
+                         begin=node.begin)
+    if isinstance(tail, list):
+        return ast.EventSpec(name=name, args=tail, begin=node.begin)
+    return ast.Assign(lvalue=name, rhs=tail, begin=node.begin)
 
 
 # ---------------------------------------------------------------------------
 # Pass-through: forward the single matched value (no dedicated node).
 # ---------------------------------------------------------------------------
 _PASS_THROUGH = (
-    "top-level", "cause", "guard", "cond-atom", "cond-paren", "op-cmp",
-    "effect", "rvalue", "kind-decl", "type-built-in",
+    "top-level", "cause", "guard", "cond", "cond-atom", "cond-bracket",
+    "algebr", "alg-paren", "op-cmp", "op-or", "op-xor", "op-and",
+    "op-shift", "op-add", "op-mul", "assign-rhs",
+    "effect", "kind-decl", "type-built-in",
     "elm-mode", "elm-mode-group", "elm-state-machine",
     "elm-clockwork", "step-clockwork",
 )
@@ -325,12 +378,23 @@ AST_MAP = {
     "kind-variable":         _kind_variable,
     "declaration":           _declaration,
 
-    # merged named tails + condition terms (D-26): the input decides the class
+    # merged named tails (D-26): the input decides the class
     "cause-system":          _cause_system,
     "cause-named":           _cause_named,
     "effect-named":          _effect_named,
-    "cond-term":             _cond_term,
-    "operand-cond":          _operand_cond,
+
+    # expression band (D-13): the two ladders, comparison, atom, bridge
+    "cond-or":               _left_fold,
+    "cond-xor":              _left_fold,
+    "cond-and":              _left_fold,
+    "cond-not":              _un_fold,
+    "comparison":            _comparison,
+    "alg-shift":             _left_fold,
+    "alg-add":               _left_fold,
+    "alg-mul":               _left_fold,
+    "alg-un":                _un_fold,
+    "alg-atom":              _alg_atom,
+    "bridge":                ast.Bridge.from_seq,
 
     # node rules (constructors on the classes)
     "namespace":             ast.Namespace.from_seq,
@@ -340,9 +404,6 @@ AST_MAP = {
     "def-effect":            ast.EffectDef.from_seq,
     "guard-luau":            ast.OpaqueCode.from_span,
     "guard-bracket":         ast.Condition.from_seq,
-    "cond":                  ast.BoolOp.from_cond,
-    "cond-and":              ast.BoolOp.from_cond_and,
-    "cond-not":              ast.Not.from_seq,
     "mutation":              ast.Mutation.from_span,
     "spawn":                 ast.Spawn.from_seq,
     "unspawn":               ast.Unspawn.from_seq,
@@ -361,9 +422,12 @@ AST_MAP = {
     "def-clock":             ast.ClockDef.from_seq,
     "decl-arg":              ast.ArgDecl.from_seq,
 
-    # clockwork band (D-11)
+    # clockwork band (D-11) + mutations (D-13)
     "clockwork":                 ast.Clockwork.from_seq,
-    "clockwork-emit":            _clockwork_emit,
+    "clockwork-name-step":       _clockwork_name_step,
+    "recip-rhs":                 _recip_rhs,
+    "incr":                      ast.Incr.from_seq,
+    "decr":                      ast.Decr.from_seq,
     "clockwork-instant":         ast.Instant.from_seq,
     "clockwork-wait":            ast.WaitLine.from_seq,
     "clockwork-select":          ast.SelectFrame.from_seq,

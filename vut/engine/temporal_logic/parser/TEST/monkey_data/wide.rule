@@ -5,10 +5,59 @@ init: { x{ y } }
 :end
 event: X35 ( ) cause: X39 . X41 for: X43 . X45 . X47 . X49 & { x }
 clockwork: X52 . X54 . X56 . X58 . X60 . X62 ( n64: float ; n67: X68 ; n70: X71 ; n73: bool ; n76: X77 ; n79: int ; )
-on: X84 . X86 . X88 . X90 . X92 . X94 ( ) & [ X99 . X101 and X103 . X105 or X107 . X109 and X111 . X113 ]
-deinit: { x }
-spawn: X117 . X119 ( ) in: X123 . X125 via: false
-init: { x{ y } }
+on: X84 . X86 . X88 . X90 . X92 . X94 ( ) & [ true * false - "s" * X105 . X107 shl: 1 * { x{ y } } + false * 1 nand true * "s" - X120 . X122 * { x{ y } } shr: true * { x{ y } } + 1 * false xor X132 . X134 * "s" + "s" * { x } shr: true * false - 1 * X147 . X149 and X151 . X153 * "s" + false * { x{ y } } shl: 1 * true - "s" * 1 nor false * { x{ y } } + true * X173 . X175 shl: { x } * X178 . X180 - true * 1 and "s" * false + 1 * X192 . X194 shr: true * false - "s" * { x } nxor true * false + "s" * 1 shr: { x{ y } } * X212 . X214 - { x } * true nand 1 * false - "s" * X225 . X227 shl: 1 * false + "s" * { x } ]
+init: { x }
+if: [ X239 . X241 * true + 1 * "s" shl: true * false - X253 . X255 * { x } and false * { x{ y } } + "s" * X263 . X265 shr: 1 * true - false * "s" nxor true * X277 . X279 + 1 * { x } shr: true * false - { x } * 1 nand X291 . X293 * "s" + "s" * false shl: true * { x } - 1 * X306 . X308 or "s" * 1 + { x{ y } } * true shl: false * X319 . X321 - X323 . X325 * true nand false * "s" - 1 * { x{ y } } shr: false * true + X340 . X342 * { x{ y } } xor "s" * 1 + true * X351 . X353 shr: "s" * 1 - { x{ y } } * false and 1 * X364 . X366 - false * "s" shl: true * { x } + false * "s" ]
+wait: BEGIN
+=> "s" decr: X384 . X386
+arm: X388 . X390 ( )
+spawn: X394 . X396 ( ) { x{ y } }
+elif: { x{ y } }
+instant: X401 . X403 ( )
+select:
+wait: CHANGE
+=> X410 . X412
+:end
+unspawn: X415 . X417
+elif: { x{ y } } incr: X420 . X422
+wait: X424 . X426
+=>
+unspawn: X429 . X431
+:end
+deinit: { x{ y } }
+:end
+mode_group: X436 . X438 . X440 is: X442 . X444 is: X446 . X448 . X450 . X452 . X454 . X456 is: X458 . X460 . X462
+has: X464 . X466
 init: { x{ y } }
 :end
-clock: X132 1 import: "s" into: X137 . X139 . X141 . X143
+open: X470 . X472 . X474 . X476 . X478
+mode: X480 . X482 ( )
+deinit: { x }
+on: ANY
+=> { x }
+init: { x{ y } }
+init: { x{ y } }
+until: X492 . X494
+until: X496 . X498
+until: END
+on: BEGIN
+=>
+arm: X505 . X507 ( )
+open: X511 . X513 . X515 effect: X517 . X519
+=>
+spawn: X522 . X524 ( )
+mode: X528 . X530
+on: X532 . X534
+=> { x }
+until: X537 . X539
+clockwork: X541 . X543
+on: ANY
+deinit: { x }
+:end X548 is: mode
+open: X552 . X554 X555 is: string ( )
+:close
+:close import: "s" into: X565 . X567 . X569 . X571 . X573 . X575
+mode_group: X577 . X579 is: X581 . X583 . X585 . X587 . X589 is: X591 . X593 . X595 . X597 . X599
+deinit: { x{ y } }
+:end
+:close

@@ -94,9 +94,9 @@ from vut.engine.temporal_logic.parser import ast_nodes as A
 _RULE_NODE = {
     "namespace": A.Namespace, "import": A.Import, "causality": A.Causality,
     "def-cause": A.CauseDef, "def-effect": A.EffectDef,
-    "guard-bracket": A.Condition, "cond": A.BoolOp, "cond-and": A.BoolOp,
-    "cond-not": A.Not,
+    "guard-bracket": A.Condition, "bridge": A.Bridge,
     "spawn": A.Spawn, "unspawn": A.Unspawn, "arming-mode": A.ModeArming,
+    "incr": A.Incr, "decr": A.Decr,
     "arg": A.Arg, "mode": A.Mode,
     "init": A.InitBlock, "deinit": A.DeinitBlock, "state": A.State,
     "ref-has": A.HasRef, "default": A.DefaultRef,

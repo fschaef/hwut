@@ -24,8 +24,6 @@ import os
 import sys
 import json
 
-import config
-
 from dataclasses import is_dataclass, fields
 
 from vut.language_support.python.deterministic_random import (DeterministicStream,
@@ -43,7 +41,7 @@ import config  # noqa: F401
 from fake_luau_oracle import FakeLuauOracle
 
 from aux_walker import (tok as _tok, ListLexer as _ListLexer,
-                        reaches, branch_reenters, _children)
+                        reaches, branch_reenters, _children, min_terminal_distance)
 
 
 # Reachability closure over the grammar graph, computed once. The Walker asks
@@ -66,8 +64,17 @@ def _count_nt(element):
 
 
 def _shallowest(branches):
-    """RETURN: list, the branch(es) with the fewest NonTerminals (fallback)."""
-    scored = [(_count_nt(b), b) for b in branches]
+    """RETURN: list, the branch(es) with the shortest full derivation (fallback).
+
+    Scored by min_terminal_distance (the fewest tokens to bottom out at
+    terminals), not by a one-level NonTerminal count: at a deep cyclic OR where
+    every branch re-enters (e.g. <cond-atom> via the bridge/paren cycle), the
+    one-level count ties <cond-bracket> with <comparison> and could pick the
+    re-entering bracket forever. The shortest-derivation branch always
+    terminates.
+    """
+    g = compiled_grammar()
+    scored = [(min_terminal_distance(b, g), b) for b in branches]
     lo = min(s for s, _ in scored)
     return [b for s, b in scored if s == lo]
 

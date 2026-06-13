@@ -254,19 +254,24 @@ def run_cause_effect():
 
 
 def _render_cond(node):
-    """RETURN: str, a flat readable rendering of a bracket-condition tree."""
+    """RETURN: str, a flat readable rendering of a bracket-condition / algebr tree."""
     n = type(node).__name__
     if n == "Condition":
         return _render_cond(node.expr)
-    if n == "BoolOp":
-        return "(%s)" % ((" %s " % node.op).join(_render_cond(o) for o in node.operands))
-    if n == "Not":
-        return "not %s" % _render_cond(node.operand)
+    if n == "BinOp":
+        return "(%s %s %s)" % (_render_cond(node.left), node.op, _render_cond(node.right))
+    if n == "UnOp":
+        return "%s %s" % (node.op, _render_cond(node.operand))
+    if n == "Bridge":
+        return "(? %s then: %s else: %s)" % (_render_cond(node.cond),
+                _render_cond(node.then_), _render_cond(node.else_))
     if n == "Comparison":
         return "%s %s %s" % (_render_cond(node.left), node.op, _render_cond(node.right))
     if n == "BoolRef":
         return ".".join(node.name)
     if n == "Literal":
+        return node.text
+    if n == "OpaqueCode":
         return node.text
     if isinstance(node, list):
         return ".".join(node)
@@ -415,6 +420,79 @@ def run_clockwork_shapes():
             print("  %s" % type(it).__name__)
 
 
+def run_expressions():
+    """RETURN: None. The expression band and the clockwork mutations (D-13).
+
+    Exercises the two ladders and their explicit crossings: arithmetic
+    precedence ('+'/'-'/'*') and the unary minus; the shifts 'shl:'/'shr:'; the
+    full boolean set 'and'/'nand'/'or'/'nor'/'xor'/'nxor'/'not'; the comparison
+    (num->bool) and the '?'-bridge (bool->num); '[ ]' nesting and '( )' grouping;
+    and -- in a clockwork body -- the four mutations 'gets:'/'incr:'/'decr:'/
+    'recip:'. Prints the rendered guard tree, then the mutation step kinds.
+    """
+    from vut.engine.temporal_logic.parser.rule_parser import parse
+    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.parser import ast_nodes as ast
+    from fake_luau_oracle import FakeLuauOracle
+
+    guards = [
+        ("arithmetic precedence + comparison",
+         "on: T & [ e.a + e.b * 2 - 1 == sm.total ] => X()"),
+        ("unary minus, parens override",
+         "on: T & [ -(e.a + 1) * 3 < e.b ] => X()"),
+        ("shift below add",
+         "on: T & [ e.a + 1 shl: 2 >= e.mask ] => X()"),
+        ("every boolean operator",
+         "on: T & [ e.p and e.q nand e.r or e.s nor e.t xor e.u nxor e.v ] => X()"),
+        ("not + nested condition bracket",
+         "on: T & [ not [ e.a > 0 and e.b > 0 ] ] => X()"),
+        ("the bridge: bool -> num inside a comparison",
+         "on: T & [ ? [ e.ok ] then: e.hi else: e.lo  >  sm.limit ] => X()"),
+    ]
+    for label, src in guards:
+        banner(label)
+        rep = DiagnosticReporter()
+        rf = parse(src, FakeLuauOracle(), rep)
+        if rep.errors:
+            print("  ERROR %s" % rep.errors[0].message)
+            continue
+        print("  %s" % _render_cond(rf.items[0].cause.guard))
+
+    banner("clockwork mutations: gets / incr / decr / recip")
+    src = ("clockwork: m on: clk\n"
+           " cw.acc gets: cw.acc + e.delta * 2\n"
+           " incr: cw.hits\n"
+           " incr: cw.score by: 10 to: 100\n"
+           " decr: cw.lives by: 1\n"
+           " cw.rate recip: cw.divisor\n"
+           " else:\n"
+           "   instant: DIV0()\n"
+           "   { log() }\n"
+           " :end\n"
+           ":end")
+    rep = DiagnosticReporter()
+    rf = parse(src, FakeLuauOracle(), rep)
+    if rep.errors:
+        print("  ERROR %s" % rep.errors[0].message)
+    else:
+        for s in rf.items[0].steps:
+            n = type(s).__name__
+            if n == "Assign":
+                print("  Assign %s = %s" % (".".join(s.lvalue), _render_cond(s.rhs)))
+            elif n == "Incr":
+                print("  Incr %s by=%s to=%s" % (".".join(s.lvalue),
+                      _render_cond(s.amount) if s.amount else "default",
+                      _render_cond(s.limit) if s.limit else "none"))
+            elif n == "Decr":
+                print("  Decr %s by=%s to=%s" % (".".join(s.lvalue),
+                      _render_cond(s.amount) if s.amount else "default",
+                      _render_cond(s.limit) if s.limit else "none"))
+            elif n == "Recip":
+                print("  Recip %s = 1/(%s) else_body=[%s]" % (".".join(s.lvalue),
+                      _render_cond(s.operand),
+                      ", ".join(type(x).__name__ for x in s.else_body)))
+
+
 HwutRunner(
     argv       = sys.argv,
     title      = "Rule-File Language",
@@ -426,5 +504,6 @@ HwutRunner(
         "cause_effect":             run_cause_effect,
         "guards_and_inheritance":   run_guards_and_inheritance,
         "clockwork_shapes":         run_clockwork_shapes,
+        "expressions":              run_expressions,
     },
 ).run()

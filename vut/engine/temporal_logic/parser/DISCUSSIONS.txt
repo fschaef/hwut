@@ -600,3 +600,82 @@ TESTS
     'clockwork_shapes' (signature, guarded clock, the step variety, wait tail,
     select, if/elif/else, while, and the FENCE rejection) and the monkey-fuzz
     'clockwork' profile (seed 0xC107).
+
+-------------------------------------------------------------------------------
+D-13  ALGEBRAIC + BOOLEAN EXPRESSION BAND, GUARDED MUTATIONS (2026-06-13)
+-------------------------------------------------------------------------------
+DECISION
+    The bracket-condition grammar grows from a comparison-only boolean algebra
+    into two LL(2) precedence ladders with an asymmetric, explicit crossing:
+      - cond ladder: or/nor < xor/nxor < and/nand < not < comparison;
+      - algebr ladder: shl:/shr: < +/- < * < unary-minus < atom;
+      - the sole num->bool crossing is <comparison>; the sole bool->num crossing
+        is the '?'-bridge ('? <cond> then: <algebr> else: <algebr>').
+    '[ ]' groups conditions, '( )' groups algebra -- the bracket names the world.
+    <rvalue> is folded into <algebr> (arguments are full expressions). Four
+    clockwork-fenced mutation statements are added: '<lvalue> gets: <algebr>'
+    (assign), 'incr:'/'decr: <name> [by: <algebr>] [to: <algebr>]' (saturating
+    step), and '<lvalue> recip: <algebr> else: <body> :end' (guarded reciprocal).
+    Read-only expressions are GLOBAL (every guard); the four mutations are
+    clockwork-only.
+
+RATIONALE
+    [ ] vs ( ) splits the two worlds so the parser never has to decide at '('
+    which ladder it is in -- a real LL(2) conflict otherwise. It is also the
+    explicit type boundary the design wants, made syntactic. The crossings are
+    deliberately one-way-per-direction and named, so a reader always sees where
+    a number becomes a truth value and vice versa.
+
+    Numbers are UNSIGNED ('\d+(\.\d+)?'); negation is the unary-minus operator.
+    A signed literal makes binary '-' ambiguous: maximal-munch lexes 'x - 2' as
+    'x' '(-2)', two operands. Carving '+'/'-' as their own atoms (the lexer
+    operating on units of meaning) and reading '-2' as 'negate 2' removes the
+    ambiguity. (F-R: '+/- are separable from the number'.)
+
+    NO division operator. Reciprocal is a STATEMENT ('recip:'), not an rvalue,
+    with a MANDATORY 'else:' zero-branch: the spark 'it can be zero' gets a
+    prominent position in the code, and division is total by construction (no
+    run-time div-by-zero possible). The operand is promoted to float -- the one
+    implicit-promotion site.
+
+    Mutations are clockwork-fenced ('operations live in a clockwork frame, not
+    floating'): state mutates only on a tick, inside a clockwork body, so every
+    write has a time anchor. Reads do not, so the expression ladder stays global
+    and the guard grammar stays uniform.
+
+    'by:' introduces the incr/decr amount because a bare optional '[<algebr>]'
+    collides with the next (also name-led) statement under LL(2). 'gets:'/'recip:'
+    are name-led and left-factored with the paced-emission tail under one shared
+    <name-dotted> prefix (dispatch on '(' / 'gets:' / 'recip:'); 'incr:'/'decr:'
+    are keyword-led.
+
+    shl:/shr: are spelled as keywords, not '<<'/'>>', so '>>' never collides with
+    nested 'container<...>' type closes (the C++ '>>' problem) and the lexer
+    stays trivial.
+
+    ONE BinOp / ONE UnOp for both ladders (op read verbatim), 'not' and unary
+    '-' unified into UnOp. BoolOp and Not are retired -- a two-operator level
+    (or/nor) cannot be an op-by-level n-ary node, so the binary-with-explicit-op
+    shape subsumes both. Comparison's operands widen from name-dotted to full
+    <algebr>.
+
+REJECTED
+    Signed number literals -- ambiguous binary '-' (above).
+    A '/' operator -- a silent div-by-zero / int-vs-float liability; 'recip:'
+        with a forced zero-branch is the only division.
+    'recip:' as a general rvalue -- the zero-branch is control flow and would
+        drag a ':end'-terminated block into the expression grammar; statement-
+        only keeps the zero spark prominent (F-R).
+    '( )' for both worlds -- the LL(2) '(' conflict (above).
+    bracketing unary minus '(- x)' -- buys no parsing safety; alg-un already
+        disambiguates by position.
+
+TESTS
+    test-engine.py 'guards_and_inheritance' exercises the ladders; the monkey
+    and the positive/negative coverage walkers reach every new rule. A shared
+    walker fix was required: the bridge/paren cycle makes OR rules where EVERY
+    branch can re-enter an active rule, so the canonical fallback (and the
+    monkey's budget-spent fallback) now choose the shortest-derivation branch
+    (min_terminal_distance) instead of branch[0]/fewest-nonterminals, which could
+    loop. WalkContext.active became a Counter so a rule re-entered through a
+    cycle stays marked until its own frame exits.

@@ -1,0 +1,12 @@
+
+--- FIRST_2 per rule: bare vs tagged ---
+  args     equal=True
+    bare:   {(regex:@id\b), (regex:@id\b, string:COMMA), (regex:@id\b, string:EQ), (regex:@num\b), (regex:@num\b, string:COMMA)}
+    tagged: {(regex:@id\b), (regex:@id\b, string:COMMA), (regex:@id\b, string:EQ), (regex:@num\b), (regex:@num\b, string:COMMA)}
+  arg      equal=True
+    bare:   {(regex:@id\b), (regex:@id\b, string:EQ), (regex:@num\b)}
+    tagged: {(regex:@id\b), (regex:@id\b, string:EQ), (regex:@num\b)}
+  rvalue   equal=True
+    bare:   {(regex:@id\b), (regex:@num\b)}
+    tagged: {(regex:@id\b), (regex:@num\b)}
+both LL(2)-clean: yes (no conflict raised)

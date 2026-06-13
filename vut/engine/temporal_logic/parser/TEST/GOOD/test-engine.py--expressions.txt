@@ -1,0 +1,25 @@
+
+--- arithmetic precedence + comparison ---
+  ((e.a + (e.b * 2)) - 1) == sm.total
+
+--- unary minus, parens override ---
+  (- (e.a + 1) * 3) < e.b
+
+--- shift below add ---
+  ((e.a + 1) shl: 2) >= e.mask
+
+--- every boolean operator ---
+  ((((e.p and e.q) nand e.r) or e.s) nor ((e.t xor e.u) nxor e.v))
+
+--- not + nested condition bracket ---
+  not (e.a > 0 and e.b > 0)
+
+--- the bridge: bool -> num inside a comparison ---
+  (? e.ok then: e.hi else: e.lo) > sm.limit
+
+--- clockwork mutations: gets / incr / decr / recip ---
+  Assign cw.acc = (cw.acc + (e.delta * 2))
+  Incr cw.hits by=default to=none
+  Incr cw.score by=10 to=100
+  Decr cw.lives by=1 to=none
+  Recip cw.rate = 1/(cw.divisor) else_body=[Instant, Mutation]

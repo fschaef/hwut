@@ -1,19 +1,376 @@
-=== arg ===
+=== alg-add ===
+
+-- absent --
+   input: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== alg-atom ===
 
 -- alternative 0 --
-   input: 1
-Arg
-  name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
+   input: ( - ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
   begin = 0
 
 -- alternative 1 --
-   input: X = 1
+   input: ? not [ ( 1 ) ] then: ( 1 ) else: ( 1 )
+Bridge
+  cond:
+    UnOp
+      op = 'not'
+      operand:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- alternative 2 --
+   input: 1
+Literal
+  text = '1'
+  begin = 0
+
+-- alternative 3 --
+   input: "s"
+Literal
+  text = '"s"'
+  begin = 0
+
+-- alternative 4 --
+   input: true
+Literal
+  text = 'true'
+  begin = 0
+
+-- alternative 5 --
+   input: false
+Literal
+  text = 'false'
+  begin = 0
+
+-- alternative 6 --
+   input: { luau }
+OpaqueCode
+  text = '{ luau }'
+  mode = <E_SpanMode.EXPRESSION: 'expression'>
+  begin = 0
+  _references = None
+
+-- alternative 7 --
+   input: X . X
+'X'
+'X'
+
+=== alg-mul ===
+
+-- absent --
+   input: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== alg-paren ===
+
+-- absent --
+   input: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: ( - ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== alg-shift ===
+
+-- absent --
+   input: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== alg-un ===
+
+-- absent --
+   input: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== algebr ===
+
+-- absent --
+   input: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== arg ===
+
+-- alternative 0 --
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+Arg
+  name = None
+  value:
+    UnOp
+      op = '-'
+      operand:
+        Bridge
+          cond:
+            Literal
+              text = '1'
+              begin = 0
+          then_:
+            Literal
+              text = '1'
+              begin = 0
+          else_:
+            Literal
+              text = '1'
+              begin = 0
+          begin = 0
+      begin = 0
+  kind = <E_ArgKind.EXPR: 3>
+  begin = 0
+
+-- alternative 1 --
+   input: X = - ( ? [ 1 ] then: 1 else: 1 )
 Arg
   name = 'X'
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
+  value:
+    UnOp
+      op = '-'
+      operand:
+        Bridge
+          cond:
+            Literal
+              text = '1'
+              begin = 0
+          then_:
+            Literal
+              text = '1'
+              begin = 0
+          else_:
+            Literal
+              text = '1'
+              begin = 0
+          begin = 0
+      begin = 0
+  kind = <E_ArgKind.EXPR: 3>
   begin = 0
 
 === arming-mode ===
@@ -46,6 +403,86 @@ ModeArming
     'X'
   args:
     []
+  begin = 0
+
+=== assign-rhs ===
+
+-- absent --
+   input: gets: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: gets: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== bridge ===
+
+-- absent --
+   input: ? [ ( 1 ) ] then: ( 1 ) else: ( 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: ? not [ ( 1 ) ] then: ( 1 ) else: ( 1 )
+Bridge
+  cond:
+    UnOp
+      op = 'not'
+      operand:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
   begin = 0
 
 === causality ===
@@ -296,38 +733,6 @@ Clockwork
       begin = 0
   begin = 0
 
-=== clockwork-emit ===
-
--- 0x --
-   input: X ( )
-EventSpec
-  name:
-    'X'
-  args:
-    []
-  begin = 0
-
--- 1x --
-   input: X . X ( )
-EventSpec
-  name:
-    'X'
-    'X'
-  args:
-    []
-  begin = 0
-
--- 2x --
-   input: X . X . X ( )
-EventSpec
-  name:
-    'X'
-    'X'
-    'X'
-  args:
-    []
-  begin = 0
-
 === clockwork-if ===
 
 -- absent --
@@ -367,6 +772,38 @@ Instant
 -- 2x --
    input: instant: X . X . X ( )
 Instant
+  name:
+    'X'
+    'X'
+    'X'
+  args:
+    []
+  begin = 0
+
+=== clockwork-name-step ===
+
+-- 0x --
+   input: X ( )
+EventSpec
+  name:
+    'X'
+  args:
+    []
+  begin = 0
+
+-- 1x --
+   input: X . X ( )
+EventSpec
+  name:
+    'X'
+    'X'
+  args:
+    []
+  begin = 0
+
+-- 2x --
+   input: X . X . X ( )
+EventSpec
   name:
     'X'
     'X'
@@ -497,126 +934,328 @@ WhileFrame
       begin = 0
   begin = 0
 
-=== cond ===
+=== comparison ===
 
 -- absent --
-   input: ( X )
-BoolRef
-  name:
-    'X'
+   input: ( ? [ 1 ] then: 1 else: 1 )
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
   begin = 0
 
 -- present --
-   input: not ( X )
-Not
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
   operand:
-    BoolRef
-      name:
-        'X'
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== cond ===
+
+-- absent --
+   input: [ ( ? 1 then: 1 else: 1 ) ]
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: not [ ( ? 1 then: 1 else: 1 ) ]
+UnOp
+  op = 'not'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
       begin = 0
   begin = 0
 
 === cond-and ===
 
 -- absent --
-   input: ( X )
-BoolRef
-  name:
-    'X'
+   input: [ ( ? 1 then: 1 else: 1 ) ]
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
   begin = 0
 
 -- present --
-   input: not ( X )
-Not
+   input: not [ ( ? 1 then: 1 else: 1 ) ]
+UnOp
+  op = 'not'
   operand:
-    BoolRef
-      name:
-        'X'
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
       begin = 0
   begin = 0
 
 === cond-atom ===
 
 -- alternative 0 --
-   input: ( not X )
-Not
+   input: [ not ( ? 1 then: 1 else: 1 ) ]
+UnOp
+  op = 'not'
   operand:
-    BoolRef
-      name:
-        'X'
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
       begin = 0
   begin = 0
 
 -- alternative 1 --
-   input: X . X
-BoolRef
-  name:
-    'X'
-    'X'
+   input: - ( ? [ 1 ] then: 1 else: 1 )
+UnOp
+  op = '-'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== cond-bracket ===
+
+-- absent --
+   input: [ ( ? 1 then: 1 else: 1 ) ]
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
+  begin = 0
+
+-- present --
+   input: [ not ( ? 1 then: 1 else: 1 ) ]
+UnOp
+  op = 'not'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
   begin = 0
 
 === cond-not ===
 
 -- absent --
-   input: ( X )
-BoolRef
-  name:
-    'X'
-  begin = 0
-
--- present --
-   input: not ( X )
-Not
-  operand:
-    BoolRef
-      name:
-        'X'
+   input: [ ( ? 1 then: 1 else: 1 ) ]
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
       begin = 0
   begin = 0
 
-=== cond-paren ===
+-- present --
+   input: not [ ( ? 1 then: 1 else: 1 ) ]
+UnOp
+  op = 'not'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+
+=== cond-or ===
 
 -- absent --
-   input: ( X )
-BoolRef
-  name:
-    'X'
-  begin = 0
-
--- present --
-   input: ( not X )
-Not
-  operand:
-    BoolRef
-      name:
-        'X'
+   input: [ ( ? 1 then: 1 else: 1 ) ]
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
       begin = 0
   begin = 0
 
-=== cond-term ===
-
--- 0x --
-   input: X
-BoolRef
-  name:
-    'X'
+-- present --
+   input: not [ ( ? 1 then: 1 else: 1 ) ]
+UnOp
+  op = 'not'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
   begin = 0
 
--- 1x --
-   input: X . X
-BoolRef
-  name:
-    'X'
-    'X'
+=== cond-xor ===
+
+-- absent --
+   input: [ ( ? 1 then: 1 else: 1 ) ]
+Bridge
+  cond:
+    Literal
+      text = '1'
+      begin = 0
+  then_:
+    Literal
+      text = '1'
+      begin = 0
+  else_:
+    Literal
+      text = '1'
+      begin = 0
   begin = 0
 
--- 2x --
-   input: X . X . X
-BoolRef
-  name:
-    'X'
-    'X'
-    'X'
+-- present --
+   input: not [ ( ? 1 then: 1 else: 1 ) ]
+UnOp
+  op = 'not'
+  operand:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
   begin = 0
 
 === decl-arg ===
@@ -646,6 +1285,38 @@ ReactorDecl
   name = 'X'
   params:
     []
+  begin = 0
+
+=== decr ===
+
+-- 0x --
+   input: decr: X
+Decr
+  lvalue:
+    'X'
+  amount = None
+  limit = None
+  begin = 0
+
+-- 1x --
+   input: decr: X . X
+Decr
+  lvalue:
+    'X'
+    'X'
+  amount = None
+  limit = None
+  begin = 0
+
+-- 2x --
+   input: decr: X . X . X
+Decr
+  lvalue:
+    'X'
+    'X'
+    'X'
+  amount = None
+  limit = None
   begin = 0
 
 === def-cause ===
@@ -1152,14 +1823,25 @@ OpaqueCode
   _references = None
 
 -- alternative 1 --
-   input: [ not ( X ) ]
+   input: [ not [ ( ? 1 then: 1 else: 1 ) ] ]
 Condition
   expr:
-    Not
+    UnOp
+      op = 'not'
       operand:
-        BoolRef
-          name:
-            'X'
+        Bridge
+          cond:
+            Literal
+              text = '1'
+              begin = 0
+          then_:
+            Literal
+              text = '1'
+              begin = 0
+          else_:
+            Literal
+              text = '1'
+              begin = 0
           begin = 0
       begin = 0
   begin = 0
@@ -1167,24 +1849,45 @@ Condition
 === guard-bracket ===
 
 -- absent --
-   input: [ ( X ) ]
+   input: [ [ ( ? 1 then: 1 else: 1 ) ] ]
 Condition
   expr:
-    BoolRef
-      name:
-        'X'
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
       begin = 0
   begin = 0
 
 -- present --
-   input: [ not ( X ) ]
+   input: [ not [ ( ? 1 then: 1 else: 1 ) ] ]
 Condition
   expr:
-    Not
+    UnOp
+      op = 'not'
       operand:
-        BoolRef
-          name:
-            'X'
+        Bridge
+          cond:
+            Literal
+              text = '1'
+              begin = 0
+          then_:
+            Literal
+              text = '1'
+              begin = 0
+          else_:
+            Literal
+              text = '1'
+              begin = 0
           begin = 0
       begin = 0
   begin = 0
@@ -1228,6 +1931,38 @@ Import
     'X'
   begin = 0
 
+=== incr ===
+
+-- 0x --
+   input: incr: X
+Incr
+  lvalue:
+    'X'
+  amount = None
+  limit = None
+  begin = 0
+
+-- 1x --
+   input: incr: X . X
+Incr
+  lvalue:
+    'X'
+    'X'
+  amount = None
+  limit = None
+  begin = 0
+
+-- 2x --
+   input: incr: X . X . X
+Incr
+  lvalue:
+    'X'
+    'X'
+    'X'
+  amount = None
+  limit = None
+  begin = 0
+
 === init ===
 
 -- default --
@@ -1266,8 +2001,8 @@ InitBlock
 {'kind': 'container', 'cargs': [], 'by': None}
 
 -- alternative 3 --
-   input: int ( 1 )
-{'kind': 'variable', 'type': 'int', 'args': [Arg(name=None, value='1', kind=<E_ArgKind.LITERAL: 0>, begin=0)], 'by': None}
+   input: int ( ( ? [ 1 ] then: 1 else: 1 ) )
+{'kind': 'variable', 'type': 'int', 'args': [Arg(name=None, value=Bridge(cond=Literal(text='1', begin=0), then_=Literal(text='1', begin=0), else_=Literal(text='1', begin=0), begin=0), kind=<E_ArgKind.EXPR: 3>, begin=0)], 'by': None}
 
 === kind-reactor ===
 
@@ -1304,48 +2039,57 @@ InitBlock
 {'kind': 'variable', 'type': 'int', 'args': [], 'by': None}
 
 -- present --
-   input: int ( 1 )
-{'kind': 'variable', 'type': 'int', 'args': [Arg(name=None, value='1', kind=<E_ArgKind.LITERAL: 0>, begin=0)], 'by': None}
+   input: int ( ( ? [ 1 ] then: 1 else: 1 ) )
+{'kind': 'variable', 'type': 'int', 'args': [Arg(name=None, value=Bridge(cond=Literal(text='1', begin=0), then_=Literal(text='1', begin=0), else_=Literal(text='1', begin=0), begin=0), kind=<E_ArgKind.EXPR: 3>, begin=0)], 'by': None}
 
 === list-arg ===
 
--- 0x --
-   input: 1
+-- absent --
+   input: ( ? [ 1 ] then: 1 else: 1 )
 Arg
   name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
+  value:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  kind = <E_ArgKind.EXPR: 3>
   begin = 0
 
--- 1x --
-   input: 1 , 1
+-- present --
+   input: - ( ? [ 1 ] then: 1 else: 1 )
 Arg
   name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
-  begin = 0
-Arg
-  name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
-  begin = 0
-
--- 2x --
-   input: 1 , 1 , 1
-Arg
-  name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
-  begin = 0
-Arg
-  name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
-  begin = 0
-Arg
-  name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
+  value:
+    UnOp
+      op = '-'
+      operand:
+        Bridge
+          cond:
+            Literal
+              text = '1'
+              begin = 0
+          then_:
+            Literal
+              text = '1'
+              begin = 0
+          else_:
+            Literal
+              text = '1'
+              begin = 0
+          begin = 0
+      begin = 0
+  kind = <E_ArgKind.EXPR: 3>
   begin = 0
 
 === list-decl-arg ===
@@ -1764,6 +2508,42 @@ Namespace
       begin = 0
   begin = 0
 
+=== op-add ===
+
+-- alternative 0 --
+   input: +
+Token
+  kind = Terminal(captured:+)
+  text = '+'
+  begin = 0
+  end = 0
+
+-- alternative 1 --
+   input: -
+Token
+  kind = Terminal(captured:-)
+  text = '-'
+  begin = 0
+  end = 0
+
+=== op-and ===
+
+-- alternative 0 --
+   input: and
+Token
+  kind = Terminal(captured:and)
+  text = 'and'
+  begin = 0
+  end = 0
+
+-- alternative 1 --
+   input: nand
+Token
+  kind = Terminal(captured:nand)
+  text = 'nand'
+  begin = 0
+  end = 0
+
 === op-cmp ===
 
 -- alternative 0 --
@@ -1814,36 +2594,69 @@ Token
   begin = 0
   end = 0
 
-=== operand-cond ===
+=== op-mul ===
+
+-- default --
+   input: *
+Token
+  kind = Terminal(captured:*)
+  text = '*'
+  begin = 0
+  end = 0
+
+=== op-or ===
 
 -- alternative 0 --
-   input: X . X
-'X'
-'X'
+   input: or
+Token
+  kind = Terminal(captured:or)
+  text = 'or'
+  begin = 0
+  end = 0
 
 -- alternative 1 --
-   input: 1
-Literal
-  text = '1'
+   input: nor
+Token
+  kind = Terminal(captured:nor)
+  text = 'nor'
   begin = 0
+  end = 0
 
--- alternative 2 --
-   input: "s"
-Literal
-  text = '"s"'
-  begin = 0
+=== op-shift ===
 
--- alternative 3 --
-   input: true
-Literal
-  text = 'true'
+-- alternative 0 --
+   input: shl:
+Token
+  kind = Terminal(captured:shl:)
+  text = 'shl:'
   begin = 0
+  end = 0
 
--- alternative 4 --
-   input: false
-Literal
-  text = 'false'
+-- alternative 1 --
+   input: shr:
+Token
+  kind = Terminal(captured:shr:)
+  text = 'shr:'
   begin = 0
+  end = 0
+
+=== op-xor ===
+
+-- alternative 0 --
+   input: xor
+Token
+  kind = Terminal(captured:xor)
+  text = 'xor'
+  begin = 0
+  end = 0
+
+-- alternative 1 --
+   input: nxor
+Token
+  kind = Terminal(captured:nxor)
+  text = 'nxor'
+  begin = 0
+  end = 0
 
 === parens-arg ===
 
@@ -1852,11 +2665,25 @@ Literal
 []
 
 -- present --
-   input: ( 1 )
+   input: ( ( ? [ 1 ] then: 1 else: 1 ) )
 Arg
   name = None
-  value = '1'
-  kind = <E_ArgKind.LITERAL: 0>
+  value:
+    Bridge
+      cond:
+        Literal
+          text = '1'
+          begin = 0
+      then_:
+        Literal
+          text = '1'
+          begin = 0
+      else_:
+        Literal
+          text = '1'
+          begin = 0
+      begin = 0
+  kind = <E_ArgKind.EXPR: 3>
   begin = 0
 
 === parens-decl ===
@@ -1871,6 +2698,16 @@ ArgDecl
   member = 'n'
   type = 'X'
   begin = 0
+
+=== recip-rhs ===
+
+-- absent --
+   input: recip: ( ? [ 1 ] then: 1 else: 1 ) else: instant: X ( ) :end
+('recip', Bridge(cond=Literal(text='1', begin=0), then_=Literal(text='1', begin=0), else_=Literal(text='1', begin=0), begin=0), [Instant(name=['X'], args=[], begin=0)])
+
+-- present --
+   input: recip: - ( ? [ 1 ] then: 1 else: 1 ) else: instant: X ( ) :end
+('recip', UnOp(op='-', operand=Bridge(cond=Literal(text='1', begin=0), then_=Literal(text='1', begin=0), else_=Literal(text='1', begin=0), begin=0), begin=0), [Instant(name=['X'], args=[], begin=0)])
 
 === ref-has ===
 
@@ -1921,52 +2758,6 @@ HasRef
    input: "s"
 ReportString
   text = '"s"'
-  begin = 0
-
-=== rvalue ===
-
--- alternative 0 --
-   input: 1
-Token
-  kind = Terminal(regex:[+-]?\d+(?:\.\d+)?)
-  text = '1'
-  begin = 0
-  end = 0
-
--- alternative 1 --
-   input: "s"
-Token
-  kind = Terminal(regex:"[^"]*")
-  text = '"s"'
-  begin = 0
-  end = 0
-
--- alternative 2 --
-   input: true
-Token
-  kind = Terminal(captured:true)
-  text = 'true'
-  begin = 0
-  end = 0
-
--- alternative 3 --
-   input: false
-Token
-  kind = Terminal(captured:false)
-  text = 'false'
-  begin = 0
-  end = 0
-
--- alternative 4 --
-   input: X . X
-'X'
-'X'
-
--- alternative 5 --
-   input: { luau }
-SpanResult
-  text = '{ luau }'
-  mode = <E_SpanMode.EXPRESSION: 'expression'>
   begin = 0
 
 === signature ===
@@ -2278,6 +3069,26 @@ ModeArming
   begin = 0
 
 -- alternative 8 --
+   input: incr: X . X
+Incr
+  lvalue:
+    'X'
+    'X'
+  amount = None
+  limit = None
+  begin = 0
+
+-- alternative 9 --
+   input: decr: X . X
+Decr
+  lvalue:
+    'X'
+    'X'
+  amount = None
+  limit = None
+  begin = 0
+
+-- alternative 10 --
    input: { luau }
 Mutation
   body:
@@ -2288,7 +3099,7 @@ Mutation
       _references = None
   begin = 0
 
--- alternative 9 --
+-- alternative 11 --
    input: X . X ( )
 EventSpec
   name:

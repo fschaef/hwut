@@ -1,9 +1,8 @@
 === monkey: sprites (massive example -- AST census) ===
 top-level items: 34 (DIAGNOSTICS)
 total AST nodes: 87
-   LEXER off=2043 unexpected character '-'
    LEXER off=2044 unexpected character '!'
-   PARSER off=2043 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=2043 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=2046 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
    PARSER off=2072 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=2077 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
@@ -27,11 +26,9 @@ total AST nodes: 87
    PARSER off=2581 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=2586 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    LEXER off=2599 unexpected character '}'
-   LEXER off=2643 unexpected character '-'
    LEXER off=2644 unexpected character '!'
-   PARSER off=2643 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=2643 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=2646 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
-   LEXER off=2670 unexpected character '-'
    LEXER off=2671 unexpected character '!'
    PARSER off=2673 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
    PARSER off=2693 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:state:)
@@ -39,9 +36,8 @@ total AST nodes: 87
    PARSER off=2739 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=2744 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    LEXER off=2757 unexpected character '}'
-   LEXER off=2804 unexpected character '+'
    LEXER off=2805 unexpected character '!'
-   PARSER off=2804 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=2804 no alternative matches 2-token lookahead (captured:+, framing:mismatch)
    PARSER off=2813 expected string:is:, found string:(
    PARSER off=2814 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=2822 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:,)
@@ -55,16 +51,14 @@ total AST nodes: 87
    PARSER off=2931 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    LEXER off=2947 unexpected character '}'
    PARSER off=2947 expected string:is:, found framing:mismatch
-   LEXER off=3008 unexpected character '-'
    LEXER off=3009 unexpected character '!'
-   PARSER off=3008 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=3008 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=3011 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
    LEXER off=3035 unexpected character '!'
    PARSER off=3041 expected string:is:, found string:(
    PARSER off=3042 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=3073 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
    PARSER off=3089 no alternative matches 2-token lookahead (string::close, string:open:)
-   LEXER off=3969 unexpected character '-'
    PARSER off=3966 expected string::end, found string:=>
    LEXER off=3970 unexpected character '!'
    PARSER off=3972 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
@@ -73,9 +67,8 @@ total AST nodes: 87
    PARSER off=4043 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=4048 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    LEXER off=4061 unexpected character '}'
-   LEXER off=4105 unexpected character '-'
    LEXER off=4106 unexpected character '!'
-   PARSER off=4105 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=4105 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=4108 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
    PARSER off=4135 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=4140 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
@@ -83,14 +76,12 @@ total AST nodes: 87
    PARSER off=4176 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=4181 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=4186 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
-   LEXER off=4194 unexpected character '-'
-   PARSER off=4191 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:mismatch)
+   PARSER off=4191 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:-)
    LEXER off=4198 unexpected character '}'
    PARSER off=4215 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
    PARSER off=4228 no alternative matches 2-token lookahead (string::close, string:open:)
-   LEXER off=4598 unexpected character '+'
    LEXER off=4599 unexpected character '!'
-   PARSER off=4598 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=4598 no alternative matches 2-token lookahead (captured:+, framing:mismatch)
    PARSER off=4605 expected string:is:, found string:(
    PARSER off=4606 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=4626 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
@@ -103,8 +94,7 @@ total AST nodes: 87
    PARSER off=4773 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    LEXER off=4789 unexpected character '}'
    PARSER off=4789 expected string:is:, found framing:mismatch
-   LEXER off=4926 unexpected character '-'
-   PARSER off=4923 no alternative matches 2-token lookahead (string:=>, framing:mismatch)
+   PARSER off=4923 no alternative matches 2-token lookahead (string:=>, captured:-)
    LEXER off=4927 unexpected character '!'
    PARSER off=4929 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
    PARSER off=4951 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
@@ -119,9 +109,8 @@ total AST nodes: 87
    PARSER off=5071 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:has:)
    PARSER off=5087 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=5093 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:mode:)
-   LEXER off=5388 unexpected character '-'
    LEXER off=5389 unexpected character '!'
-   PARSER off=5388 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=5388 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=5391 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
    PARSER off=5448 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:mode:)
    LEXER off=5562 unexpected character '!'
@@ -138,15 +127,13 @@ total AST nodes: 87
    PARSER off=5647 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:,)
    PARSER off=5652 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
    PARSER off=5708 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
-   LEXER off=5847 unexpected character '+'
    LEXER off=5848 unexpected character '!'
-   PARSER off=5847 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=5847 no alternative matches 2-token lookahead (captured:+, framing:mismatch)
    PARSER off=5856 expected string:is:, found string:(
    PARSER off=5857 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:,)
    PARSER off=5864 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:))
    PARSER off=5875 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
    PARSER off=5897 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:mode:)
-   LEXER off=6040 unexpected character '+'
    PARSER off=6037 expected string:until:, found string:=>
    LEXER off=6041 unexpected character '!'
    PARSER off=6049 expected string:is:, found string:(
@@ -161,14 +148,12 @@ total AST nodes: 87
    PARSER off=6238 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=6243 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=6248 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
-   LEXER off=6256 unexpected character '-'
-   PARSER off=6253 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:mismatch)
+   PARSER off=6253 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:-)
    LEXER off=6260 unexpected character '}'
    PARSER off=6277 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
    PARSER off=6293 no alternative matches 2-token lookahead (string::close, string:open:)
-   LEXER off=6690 unexpected character '+'
    LEXER off=6691 unexpected character '!'
-   PARSER off=6690 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=6690 no alternative matches 2-token lookahead (captured:+, framing:mismatch)
    PARSER off=6703 expected string:is:, found string:in:
    PARSER off=6707 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
    PARSER off=6729 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:state:)
@@ -190,18 +175,15 @@ total AST nodes: 87
    PARSER off=7022 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=7027 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=7032 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
-   LEXER off=7040 unexpected character '-'
-   PARSER off=7037 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:mismatch)
+   PARSER off=7037 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:-)
    LEXER off=7044 unexpected character '}'
-   LEXER off=7111 unexpected character '-'
    LEXER off=7112 unexpected character '!'
-   PARSER off=7111 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=7111 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=7114 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
    PARSER off=7139 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=7144 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=7149 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
-   LEXER off=7157 unexpected character '-'
-   PARSER off=7154 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:mismatch)
+   PARSER off=7154 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:-)
    LEXER off=7161 unexpected character '}'
    PARSER off=7178 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:state:)
    PARSER off=7203 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:init:)
@@ -210,14 +192,12 @@ total AST nodes: 87
    PARSER off=7238 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    LEXER off=7254 unexpected character '}'
    PARSER off=7254 expected string:is:, found framing:mismatch
-   LEXER off=7334 unexpected character '-'
-   PARSER off=7331 no alternative matches 2-token lookahead (string:=>, framing:mismatch)
+   PARSER off=7331 no alternative matches 2-token lookahead (string:=>, captured:-)
    LEXER off=7335 unexpected character '!'
    PARSER off=7337 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
    PARSER off=7357 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
-   LEXER off=7555 unexpected character '+'
    LEXER off=7556 unexpected character '!'
-   PARSER off=7555 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=7555 no alternative matches 2-token lookahead (captured:+, framing:mismatch)
    PARSER off=7563 expected string:is:, found string:(
    PARSER off=7564 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=7572 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:,)
@@ -231,11 +211,9 @@ total AST nodes: 87
    PARSER off=7670 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    LEXER off=7686 unexpected character '}'
    PARSER off=7686 expected string:is:, found framing:mismatch
-   LEXER off=7751 unexpected character '-'
    LEXER off=7752 unexpected character '!'
-   PARSER off=7751 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=7751 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=7754 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
-   LEXER off=7780 unexpected character '+'
    LEXER off=7781 unexpected character '!'
    PARSER off=7787 expected string:is:, found string:(
    PARSER off=7788 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
@@ -246,8 +224,7 @@ total AST nodes: 87
    PARSER off=7875 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=7880 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=7885 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
-   LEXER off=7893 unexpected character '-'
-   PARSER off=7890 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:mismatch)
+   PARSER off=7890 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:-)
    LEXER off=7897 unexpected character '}'
    PARSER off=8021 no alternative matches 2-token lookahead (string:until:, regex:[a-zA-Z_]\w*)
    PARSER off=8028 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:state:)
@@ -255,13 +232,11 @@ total AST nodes: 87
    PARSER off=8074 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=8079 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=8084 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
-   LEXER off=8092 unexpected character '-'
-   PARSER off=8089 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:mismatch)
+   PARSER off=8089 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:-)
    LEXER off=8096 unexpected character '}'
    PARSER off=8177 no alternative matches 2-token lookahead (string:until:, regex:[a-zA-Z_]\w*)
    PARSER off=8184 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
-   LEXER off=8289 unexpected character '+'
-   PARSER off=8286 no alternative matches 2-token lookahead (string:=>, framing:mismatch)
+   PARSER off=8286 no alternative matches 2-token lookahead (string:=>, captured:+)
    LEXER off=8290 unexpected character '!'
    PARSER off=8296 expected string:is:, found string:(
    PARSER off=8297 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
@@ -269,17 +244,15 @@ total AST nodes: 87
    PARSER off=8343 expected string:is:, found string:(
    PARSER off=8344 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=8361 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
-   LEXER off=9688 unexpected character '-'
    LEXER off=9689 unexpected character '!'
-   PARSER off=9688 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=9688 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=9691 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
    PARSER off=9781 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:state:)
    PARSER off=9807 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:init:)
    PARSER off=9831 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
    PARSER off=9836 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=9841 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
-   LEXER off=9849 unexpected character '-'
-   PARSER off=9846 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, framing:mismatch)
+   PARSER off=9846 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:-)
    LEXER off=9853 unexpected character '}'
    PARSER off=9948 no alternative matches 2-token lookahead (string:until:, regex:[a-zA-Z_]\w*)
    PARSER off=9955 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
@@ -290,16 +263,14 @@ total AST nodes: 87
    PARSER off=10568 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:,)
    PARSER off=10574 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=10592 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
-   LEXER off=10627 unexpected character '+'
    LEXER off=10628 unexpected character '!'
    PARSER off=10636 expected string:is:, found string:(
    PARSER off=10637 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)
    PARSER off=10659 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
    PARSER off=10681 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string::end)
    PARSER off=10695 no alternative matches 2-token lookahead (string::close, string:open:)
-   LEXER off=11189 unexpected character '-'
    LEXER off=11190 unexpected character '!'
-   PARSER off=11189 no alternative matches 2-token lookahead (framing:mismatch, framing:mismatch)
+   PARSER off=11189 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=11192 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:until:)
    PARSER off=11212 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:mode:)
    LEXER off=11352 unexpected character '!'

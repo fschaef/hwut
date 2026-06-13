@@ -45,6 +45,7 @@ CANONICAL WALK (positive + negative coverage):
 ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
+from collections import Counter
 
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
 from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser, _ResyncError
@@ -292,6 +293,56 @@ def branch_reenters(element, active, reach):
     return False
 
 
+_MIN_DIST_CACHE = {}
+
+
+def min_terminal_distance(element, grammar):
+    """RETURN: int, the shortest token count to fully expand 'element' to terminals.
+
+    A fixpoint over the (cyclic) grammar: a Terminal costs 1; an OR takes its
+    cheapest branch; a SEQ sums its parts; OPT/STAR cost 0 (empty); PLUS costs
+    its body once. Lets a walk, when EVERY alternative re-enters an active rule,
+    fall back to the alternative that bottoms out fastest instead of looping --
+    the cyclic grammar always has SOME finite-derivation branch (a terminal
+    atom), so this terminates.
+    """
+    key = id(grammar)
+    table = _MIN_DIST_CACHE.get(key)
+    if table is None:
+        table = {}
+        INF = float("inf")
+        for name in grammar.rules:
+            table[name] = INF
+        changed = True
+        while changed:
+            changed = False
+            for name, rule in grammar.rules.items():
+                d = _elem_distance(rule.pattern, table)
+                if d < table[name]:
+                    table[name] = d
+                    changed = True
+        _MIN_DIST_CACHE[key] = table
+    return _elem_distance(element, table)
+
+
+def _elem_distance(element, table):
+    """RETURN: int|inf, shortest derivation of 'element' given rule-distance table."""
+    if isinstance(element, Terminal_Spec):
+        return 1
+    if isinstance(element, Rule_Spec):
+        return table.get(element.name, float("inf"))
+    if isinstance(element, Tagged_Spec):
+        return _elem_distance(element.body, table)
+    if isinstance(element, OR_Spec):
+        return min((_elem_distance(b, table) for b in element.branches),
+                   default=float("inf"))
+    if isinstance(element, SEQ_Spec):
+        return sum(_elem_distance(b, table) for b in element.branches)
+    if isinstance(element, (OPT_Spec, STAR_Spec)):
+        return 0
+    return _elem_distance(element.body, table)    # PLUS
+
+
 # ==========================================================================
 # The walk skeleton + policy interface.
 # ==========================================================================
@@ -299,14 +350,18 @@ def branch_reenters(element, active, reach):
 class WalkContext:
     """Carries ONLY what both policies need: the active-rule stack and 'required'.
 
-    'active' is the set of rule names currently being expanded (recursion
-    avoidance). 'required' is True while the skeleton is on an unconditional path
-    and False once inside any OPT/STAR body -- the canonical policy reads it to
-    tag PathSteps; the random policy ignores it. Policies keep their own private
-    state on themselves, not here.
+    'active' is the multiset of rule names currently being expanded (recursion
+    avoidance). A Counter, not a set: a rule legitimately re-entered through a
+    cycle (e.g. <algebr> inside <alg-paren> and again inside a nested <bridge>)
+    must stay marked active until ITS OWN frame exits, not the innermost
+    duplicate's -- a plain set's discard would clear it early and let the guard
+    pick the cyclic branch again, diverging. 'required' is True while the
+    skeleton is on an unconditional path and False once inside any OPT/STAR body
+    -- the canonical policy reads it to tag PathSteps; the random policy ignores
+    it. Policies keep their own private state on themselves, not here.
     """
-    active:   set  = field(default_factory=set)
-    required: bool = True
+    active:   "Counter" = field(default_factory=Counter)
+    required: bool       = True
 
 
 class WalkPolicy:
@@ -357,11 +412,13 @@ def walk(element, policy, ctx):
             policy.on_terminal(element, ctx)
         return
     if isinstance(element, Rule_Spec):
-        ctx.active.add(element.name)
+        ctx.active[element.name] += 1
         try:
             walk(element.pattern, policy, ctx)
         finally:
-            ctx.active.discard(element.name)
+            ctx.active[element.name] -= 1
+            if ctx.active[element.name] <= 0:
+                del ctx.active[element.name]
         return
     if isinstance(element, SEQ_Spec):
         for sub in element.branches:
@@ -457,7 +514,12 @@ class _CanonicalPolicy(WalkPolicy):
         for b in branches:
             if not shallow_reenters(b, ctx.active):
                 return b
-        return branches[0]
+        # Every branch re-enters an active rule (a deep cyclic point, e.g.
+        # <cond-atom> reached through the bridge/paren cycle). Falling back to
+        # branches[0] could pick a re-entering branch and loop; instead take the
+        # branch that bottoms out in the fewest tokens, which always terminates.
+        return min(branches,
+                   key=lambda b: min_terminal_distance(b, compiled_grammar()))
 
     def _budget(self, node):
         """RETURN: int, reps for the first variadic point, minimum thereafter."""
@@ -539,7 +601,7 @@ def _variadic_cases(pattern):
 def _canonical_path(grammar, rule, label, reps):
     """RETURN: Path, one canonical path through 'rule' for the given budget."""
     pol = _CanonicalPolicy(reps)
-    ctx = WalkContext(active={rule.name})
+    ctx = WalkContext(active=Counter([rule.name]))
     walk(rule.pattern, pol, ctx)
     return Path(label, tuple(pol.steps))
 
@@ -555,7 +617,7 @@ def rule_paths(grammar, rule):
     if branches:
         for i, branch in enumerate(branches):
             pol = _CanonicalPolicy(1)
-            ctx = WalkContext(active={rule.name})
+            ctx = WalkContext(active=Counter([rule.name]))
             walk(branch, pol, ctx)
             yield Path("alternative %d" % i, tuple(pol.steps))
     else:
@@ -571,7 +633,7 @@ def minimal_path(grammar, rule):
     rule_paths, which enumerates the positive cases by varying one point.
     """
     pol = _CanonicalPolicy(0, minimal=True)
-    ctx = WalkContext(active={rule.name})
+    ctx = WalkContext(active=Counter([rule.name]))
     walk(rule.pattern, pol, ctx)
     return Path("minimal", tuple(pol.steps))
 

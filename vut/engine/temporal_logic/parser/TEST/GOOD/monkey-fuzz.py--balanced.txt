@@ -1,5 +1,5 @@
 === monkey: balanced ===
-tokens parsed:      99
+tokens parsed:      392
 top-level items:    5
 diagnostics:        none
 
@@ -10,159 +10,1240 @@ VariableDef
   args:
     Arg
       name = 'X5'
-      value = 'false'
-      kind = <E_ArgKind.LITERAL: 0>
+      value:
+        BinOp
+          op = 'shr:'
+          left:
+            BinOp
+              op = '-'
+              left:
+                BinOp
+                  op = '*'
+                  left:
+                    Literal
+                      text = 'false'
+                      begin = 0
+                  right:
+                    Literal
+                      text = '"s"'
+                      begin = 0
+                  begin = 0
+              right:
+                BinOp
+                  op = '*'
+                  left:
+                    'X11'
+                    'X13'
+                  right:
+                    Literal
+                      text = 'true'
+                      begin = 0
+                  begin = 0
+              begin = 0
+          right:
+            BinOp
+              op = '+'
+              left:
+                BinOp
+                  op = '*'
+                  left:
+                    OpaqueCode
+                      text = '{ x{ y } }'
+                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                      begin = 0
+                      _references = None
+                  right:
+                    Literal
+                      text = '1'
+                      begin = 0
+                  begin = 0
+              right:
+                BinOp
+                  op = '*'
+                  left:
+                    OpaqueCode
+                      text = '{ x }'
+                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                      begin = 0
+                      _references = None
+                  right:
+                    Literal
+                      text = '"s"'
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+      kind = <E_ArgKind.EXPR: 3>
       begin = 0
     Arg
       name = None
       value:
-        'X9'
-        'X11'
-      kind = <E_ArgKind.NAME: 2>
+        BinOp
+          op = 'shl:'
+          left:
+            BinOp
+              op = '+'
+              left:
+                BinOp
+                  op = '*'
+                  left:
+                    Literal
+                      text = 'false'
+                      begin = 0
+                  right:
+                    'X25'
+                    'X27'
+                  begin = 0
+              right:
+                BinOp
+                  op = '*'
+                  left:
+                    Literal
+                      text = '1'
+                      begin = 0
+                  right:
+                    Literal
+                      text = 'true'
+                      begin = 0
+                  begin = 0
+              begin = 0
+          right:
+            BinOp
+              op = '-'
+              left:
+                BinOp
+                  op = '*'
+                  left:
+                    Literal
+                      text = '1'
+                      begin = 0
+                  right:
+                    Literal
+                      text = 'false'
+                      begin = 0
+                  begin = 0
+              right:
+                BinOp
+                  op = '*'
+                  left:
+                    Literal
+                      text = 'true'
+                      begin = 0
+                  right:
+                    OpaqueCode
+                      text = '{ x }'
+                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                      begin = 0
+                      _references = None
+                  begin = 0
+              begin = 0
+          begin = 0
+      kind = <E_ArgKind.EXPR: 3>
       begin = 0
-  by = None
+    Arg
+      name = None
+      value:
+        BinOp
+          op = 'shl:'
+          left:
+            BinOp
+              op = '+'
+              left:
+                BinOp
+                  op = '*'
+                  left:
+                    'X40'
+                    'X42'
+                  right:
+                    Literal
+                      text = '"s"'
+                      begin = 0
+                  begin = 0
+              right:
+                BinOp
+                  op = '*'
+                  left:
+                    Literal
+                      text = 'false'
+                      begin = 0
+                  right:
+                    Literal
+                      text = '"s"'
+                      begin = 0
+                  begin = 0
+              begin = 0
+          right:
+            BinOp
+              op = '-'
+              left:
+                BinOp
+                  op = '*'
+                  left:
+                    'X50'
+                    'X52'
+                  right:
+                    OpaqueCode
+                      text = '{ x{ y }{ y } }'
+                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                      begin = 0
+                      _references = None
+                  begin = 0
+              right:
+                BinOp
+                  op = '*'
+                  left:
+                    Literal
+                      text = '1'
+                      begin = 0
+                  right:
+                    Literal
+                      text = 'true'
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+      kind = <E_ArgKind.EXPR: 3>
+      begin = 0
+  by:
+    OpaqueCode
+      text = '{ x{ y } }'
+      mode = <E_SpanMode.LVALUE: 'lvalue'>
+      begin = 0
+      _references = None
   head_params:
     []
   begin = 0
-ClockDef
-  name = 'X14'
-  period = '1'
+EventDef
+  name = 'X61'
+  params:
+    []
   begin = 0
-Namespace
+CauseDef
   name:
-    'X17'
-    'X19'
-  items:
-    StateMachine
-      name:
-        'X21'
-        'X23'
-        'X25'
-      params:
-        []
-      bases:
-        'X27'
-        'X29'
-      states:
-        State
-          name:
-            'X31'
-            'X33'
-          params:
-            []
-          init = None
-          deinit = None
-          causalities:
-            Causality
-              cause:
-                Cause
-                  trigger:
-                    Trigger
-                      name:
-                        'BEGIN'
-                      is_keyword = True
+    'X65'
+    'X67'
+  params:
+    []
+  for_event:
+    'X71'
+    'X73'
+  guard:
+    Condition
+      expr:
+        BinOp
+          op = 'or'
+          left:
+            BinOp
+              op = 'xor'
+              left:
+                BinOp
+                  op = 'nxor'
+                  left:
+                    BinOp
+                      op = 'nand'
+                      left:
+                        BinOp
+                          op = 'shr:'
+                          left:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x{ y } }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    'X79'
+                                    'X81'
+                                  right:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    'X91'
+                                    'X93'
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = 'shr:'
+                          left:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    OpaqueCode
+                                      text = '{ x{ y }{ y } }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
                       begin = 0
-                  guard = None
+                  right:
+                    BinOp
+                      op = 'and'
+                      left:
+                        BinOp
+                          op = 'shl:'
+                          left:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    'X109'
+                                    'X111'
+                                  right:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    'X119'
+                                    'X121'
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = 'shr:'
+                          left:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x{ y } }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  right:
+                                    'X137'
+                                    'X139'
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
                   begin = 0
-              effects:
-                ModeArming
-                  name:
-                    'X40'
-                    'X42'
-                  args:
-                    []
+              right:
+                BinOp
+                  op = 'and'
+                  left:
+                    BinOp
+                      op = 'shl:'
+                      left:
+                        BinOp
+                          op = '-'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = '"s"'
+                                  begin = 0
+                              right:
+                                OpaqueCode
+                                  text = '{ x }'
+                                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                  begin = 0
+                                  _references = None
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = '1'
+                                  begin = 0
+                              right:
+                                'X150'
+                                'X152'
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = '+'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = 'true'
+                                  begin = 0
+                              right:
+                                'X156'
+                                'X158'
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = '"s"'
+                                  begin = 0
+                              right:
+                                OpaqueCode
+                                  text = '{ x{ y }{ y } }'
+                                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                  begin = 0
+                                  _references = None
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = 'shl:'
+                      left:
+                        BinOp
+                          op = '-'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = '1'
+                                  begin = 0
+                              right:
+                                Literal
+                                  text = 'false'
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = '1'
+                                  begin = 0
+                              right:
+                                Literal
+                                  text = '"s"'
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = '+'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                OpaqueCode
+                                  text = '{ x{ y } }'
+                                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                  begin = 0
+                                  _references = None
+                              right:
+                                'X172'
+                                'X174'
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = 'true'
+                                  begin = 0
+                              right:
+                                Literal
+                                  text = 'false'
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
                   begin = 0
               begin = 0
-          untils:
-            Cause
-              trigger:
-                Trigger
-                  name:
-                    'X46'
-                    'X48'
-                  is_keyword = False
+          right:
+            BinOp
+              op = 'xor'
+              left:
+                BinOp
+                  op = 'nxor'
+                  left:
+                    BinOp
+                      op = 'nand'
+                      left:
+                        BinOp
+                          op = 'shr:'
+                          left:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  right:
+                                    'X189'
+                                    'X191'
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x{ y }{ y } }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = 'shr:'
+                          left:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    'X198'
+                                    'X200'
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  right:
+                                    'X208'
+                                    'X210'
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x{ y }{ y } }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = 'nand'
+                      left:
+                        BinOp
+                          op = 'shl:'
+                          left:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    'X227'
+                                    'X229'
+                                  right:
+                                    OpaqueCode
+                                      text = '{ x }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = 'shl:'
+                          left:
+                            BinOp
+                              op = '+'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '"s"'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = 'true'
+                                      begin = 0
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '-'
+                              left:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    OpaqueCode
+                                      text = '{ x{ y }{ y } }'
+                                      mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                      begin = 0
+                                      _references = None
+                                  right:
+                                    'X241'
+                                    'X243'
+                                  begin = 0
+                              right:
+                                BinOp
+                                  op = '*'
+                                  left:
+                                    Literal
+                                      text = '1'
+                                      begin = 0
+                                  right:
+                                    Literal
+                                      text = 'false'
+                                      begin = 0
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
                   begin = 0
-              guard = None
+              right:
+                BinOp
+                  op = 'and'
+                  left:
+                    BinOp
+                      op = 'shr:'
+                      left:
+                        BinOp
+                          op = '+'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = 'true'
+                                  begin = 0
+                              right:
+                                OpaqueCode
+                                  text = '{ x{ y }{ y } }'
+                                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                  begin = 0
+                                  _references = None
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                'X252'
+                                'X254'
+                              right:
+                                Literal
+                                  text = '"s"'
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = '-'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                OpaqueCode
+                                  text = '{ x }'
+                                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                  begin = 0
+                                  _references = None
+                              right:
+                                Literal
+                                  text = 'true'
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                'X261'
+                                'X263'
+                              right:
+                                Literal
+                                  text = 'false'
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = 'shl:'
+                      left:
+                        BinOp
+                          op = '-'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = '1'
+                                  begin = 0
+                              right:
+                                Literal
+                                  text = '"s"'
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                OpaqueCode
+                                  text = '{ x{ y }{ y } }'
+                                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                                  begin = 0
+                                  _references = None
+                              right:
+                                Literal
+                                  text = 'false'
+                                  begin = 0
+                              begin = 0
+                          begin = 0
+                      right:
+                        BinOp
+                          op = '+'
+                          left:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = 'true'
+                                  begin = 0
+                              right:
+                                Literal
+                                  text = '"s"'
+                                  begin = 0
+                              begin = 0
+                          right:
+                            BinOp
+                              op = '*'
+                              left:
+                                Literal
+                                  text = '1'
+                                  begin = 0
+                              right:
+                                'X280'
+                                'X282'
+                              begin = 0
+                          begin = 0
+                      begin = 0
+                  begin = 0
               begin = 0
           begin = 0
-      has_refs:
-        []
-      default = None
-      init = None
-      deinit = None
       begin = 0
+  begin = 0
+ModeGroup
+  name:
+    'X285'
+    'X287'
+  params:
+    []
+  bases:
+    'X289'
+    'X291'
+  modes:
+    []
+  has_refs:
+    []
+  init:
+    OpaqueCode
+      text = '{ x }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+      _references = None
+  deinit = None
   begin = 0
 EffectDef
   name:
-    'X52'
-    'X54'
-    'X56'
+    'X295'
+    'X297'
+    'X299'
   params:
-    ArgDecl
-      member = 'n58'
-      type = 'X59'
-      begin = 0
-    ArgDecl
-      member = 'n61'
-      type = 'string'
-      begin = 0
+    []
   effects:
-    Spawn
+    EventSpec
       name:
-        'X66'
-        'X68'
-        'X70'
+        'X303'
+        'X305'
+        'X307'
       args:
         Arg
-          name = 'X72'
-          value = 'true'
-          kind = <E_ArgKind.LITERAL: 0>
+          name = 'X309'
+          value:
+            BinOp
+              op = 'shr:'
+              left:
+                BinOp
+                  op = '-'
+                  left:
+                    BinOp
+                      op = '*'
+                      left:
+                        Literal
+                          text = 'true'
+                          begin = 0
+                      right:
+                        Literal
+                          text = '1'
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = '*'
+                      left:
+                        Literal
+                          text = 'false'
+                          begin = 0
+                      right:
+                        OpaqueCode
+                          text = '{ x{ y }{ y } }'
+                          mode = <E_SpanMode.EXPRESSION: 'expression'>
+                          begin = 0
+                          _references = None
+                      begin = 0
+                  begin = 0
+              right:
+                BinOp
+                  op = '+'
+                  left:
+                    BinOp
+                      op = '*'
+                      left:
+                        Literal
+                          text = '"s"'
+                          begin = 0
+                      right:
+                        'X320'
+                        'X322'
+                      begin = 0
+                  right:
+                    BinOp
+                      op = '*'
+                      left:
+                        OpaqueCode
+                          text = '{ x{ y } }'
+                          mode = <E_SpanMode.EXPRESSION: 'expression'>
+                          begin = 0
+                          _references = None
+                      right:
+                        Literal
+                          text = '"s"'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          kind = <E_ArgKind.EXPR: 3>
           begin = 0
         Arg
-          name = None
-          value = '"s"'
-          kind = <E_ArgKind.LITERAL: 0>
+          name = 'X327'
+          value:
+            BinOp
+              op = 'shl:'
+              left:
+                BinOp
+                  op = '-'
+                  left:
+                    BinOp
+                      op = '*'
+                      left:
+                        'X329'
+                        'X331'
+                      right:
+                        Literal
+                          text = 'true'
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = '*'
+                      left:
+                        Literal
+                          text = '1'
+                          begin = 0
+                      right:
+                        Literal
+                          text = 'false'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              right:
+                BinOp
+                  op = '+'
+                  left:
+                    BinOp
+                      op = '*'
+                      left:
+                        Literal
+                          text = '1'
+                          begin = 0
+                      right:
+                        Literal
+                          text = '"s"'
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = '*'
+                      left:
+                        Literal
+                          text = 'true'
+                          begin = 0
+                      right:
+                        OpaqueCode
+                          text = '{ x{ y }{ y } }'
+                          mode = <E_SpanMode.EXPRESSION: 'expression'>
+                          begin = 0
+                          _references = None
+                      begin = 0
+                  begin = 0
+              begin = 0
+          kind = <E_ArgKind.EXPR: 3>
           begin = 0
-        Arg
-          name = None
-          value = '1'
-          kind = <E_ArgKind.LITERAL: 0>
-          begin = 0
-      has_parens = True
-      in_container:
-        'X81'
-        'X83'
-        'X85'
-      via:
         Arg
           name = None
           value:
-            OpaqueCode
-              text = '{ x{ y } }'
-              mode = <E_SpanMode.EXPRESSION: 'expression'>
+            BinOp
+              op = 'shr:'
+              left:
+                BinOp
+                  op = '-'
+                  left:
+                    BinOp
+                      op = '*'
+                      left:
+                        'X346'
+                        'X348'
+                      right:
+                        Literal
+                          text = 'false'
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = '*'
+                      left:
+                        'X352'
+                        'X354'
+                      right:
+                        Literal
+                          text = 'true'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              right:
+                BinOp
+                  op = '+'
+                  left:
+                    BinOp
+                      op = '*'
+                      left:
+                        Literal
+                          text = '"s"'
+                          begin = 0
+                      right:
+                        Literal
+                          text = 'false'
+                          begin = 0
+                      begin = 0
+                  right:
+                    BinOp
+                      op = '*'
+                      left:
+                        OpaqueCode
+                          text = '{ x{ y } }'
+                          mode = <E_SpanMode.EXPRESSION: 'expression'>
+                          begin = 0
+                          _references = None
+                      right:
+                        Literal
+                          text = '1'
+                          begin = 0
+                      begin = 0
+                  begin = 0
               begin = 0
-              _references = None
-          kind = <E_ArgKind.LUAU: 1>
+          kind = <E_ArgKind.EXPR: 3>
           begin = 0
       begin = 0
-    Mutation
-      body:
-        OpaqueCode
-          text = '{ x{ y } }'
-          mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-          _references = None
-      begin = 0
-  begin = 0
-EventDef
-  name = 'X89'
-  params:
-    ArgDecl
-      member = 'n91'
-      type = 'int'
-      begin = 0
-    ArgDecl
-      member = 'n94'
-      type = 'X95'
+    ReportString
+      text = '"s"'
       begin = 0
   begin = 0

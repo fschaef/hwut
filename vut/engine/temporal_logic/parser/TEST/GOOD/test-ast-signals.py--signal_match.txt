@@ -2,11 +2,10 @@
 --- each dedicated AST node derives from its rule's operator signal ---
 arg                    -> Arg                  : OK
 arming-mode            -> ModeArming           : OK
+bridge                 -> Bridge               : OK
 causality              -> Causality            : OK
-cond                   -> BoolOp               : OK
-cond-and               -> BoolOp               : OK
-cond-not               -> Not                  : OK
 decl-arg               -> ArgDecl              : OK
+decr                   -> Decr                 : OK
 def-cause              -> CauseDef             : OK
 def-clock              -> ClockDef             : OK
 def-effect             -> EffectDef            : OK
@@ -15,6 +14,7 @@ default                -> DefaultRef           : OK
 deinit                 -> DeinitBlock          : OK
 guard-bracket          -> Condition            : OK
 import                 -> Import               : OK
+incr                   -> Incr                 : OK
 init                   -> InitBlock            : OK
 mode                   -> Mode                 : OK
 mode-group             -> ModeGroup            : OK

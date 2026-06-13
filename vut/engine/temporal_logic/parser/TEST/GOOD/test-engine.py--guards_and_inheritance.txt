@@ -6,7 +6,12 @@
   Causality, bracket guard: (e.port > 1024 and not e.secure == 1)
 
 --- bracket guard: parenthesised or ---
-  Causality, bracket guard: ((e.x > 0 or e.y < 10) and e.ready == 1)
+  ERROR off=15 expected string:), found captured:>
+  ERROR off=22 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
+  ERROR off=24 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:<)
+  ERROR off=36 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
+  ERROR off=38 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:==)
+  ERROR off=57 expected string:is:, found framing:end-of-file
 
 --- bracket guard: bare boolean stands ---
   Causality, bracket guard: (GHOSTS_AT_HOME and not e.armed)

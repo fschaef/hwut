@@ -170,4 +170,37 @@ resolution expectation, but the binding kind checks (F-12 clock, F-11 event,
 etc.) are the enforcement -- the hint never substitutes for a check, and a
 missing hint is never an error.
 
+-------------------------------------------------------------------------------
+F-15 EXPRESSION TYPING + GUARDED MUTATIONS (parser D-13)
+-------------------------------------------------------------------------------
+The bracket-condition guard now carries a full algebraic+boolean expression
+(BinOp/UnOp/Bridge/Comparison/BoolRef/Literal over <name-dotted> leaves). Pass 2
+owns the typing the parser deliberately does not:
+
+  - KIND CHECK (extends F-5). A boolean operator's operands must be bool; an
+    arithmetic/shift operator's must be numeric; a <comparison> needs two
+    comparable scalars; a bare boolean operand (BoolRef, or a Literal 'true'/
+    'false') must resolve to bool. A Bridge's 'cond' is bool; its 'then_'/'else_'
+    are the algebraic result. The grammar admits ill-typed mixes ('e.flag + 1');
+    they are pass-2 errors, not parse errors.
+
+  - MUTATIONS are clockwork-fenced WRITES (Assign/Incr/Decr/Recip), each with an
+    <lvalue> that is a <name-dotted> resolving to a writable member (a 'cw.'
+    self-binding member, or a writable variable). Writing a read-only or
+    unresolved target is a pass-2 error.
+
+  - INCR/DECR. 'amount' None means the default step (define it -- 1 is the
+    natural choice). 'limit' (the 'to:' clamp) is SATURATING: incr stops at the
+    ceiling, decr at the floor; it does not skip the step. (If a guard reading
+    is wanted instead, that is a separate decision -- saturating is the recorded
+    intent.)
+
+  - RECIP is the only division. 'lvalue := 1/(operand)' when the operand is
+    non-zero; the operand is PROMOTED TO FLOAT (the one implicit-promotion site
+    in the language). When the operand is zero, the mandatory 'else_body' runs
+    instead -- the zero case is total and explicit, never a run-time fault.
+
+The expression ladder is GLOBAL (every '[ ]' guard, anywhere) because reads
+anchor nothing; only the four mutations are clockwork-bound (F-12 fence).
+
 ===============================================================================

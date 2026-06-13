@@ -35,10 +35,15 @@ class E_ArgKind(Enum):
     NAME     a <name-dotted> reference carried as its segment list -- a bare
              word ('dict'), a variable, a struct member ('tracker.pos.x'), or
              a self-binding member ('e.target'); resolved in pass 2 (D-24).
+    EXPR     a compound algebraic expression (BinOp/UnOp/Bridge/Comparison),
+             carried as the expression node -- 'base + 1', '? c then: a else: b'
+             (D-13). The simple atoms above remain their own kinds so a plain
+             arg renders unchanged.
     """
     LITERAL = 0
     LUAU    = 1
     NAME    = 2
+    EXPR    = 3
 
 
 class TopLevel(OR_Interface):
@@ -158,87 +163,84 @@ class Literal:
 
 @dataclass(frozen=True)
 class Comparison:
-    """A single comparison: '<name-dotted> <op-cmp> <operand-cond>'.
+    """A comparison: '<algebr> <op-cmp> <algebr>' -- the num->bool crossing (D-13).
 
-    'op' is one of '>=', '<=', '==', '!=', '>', '<' (verbatim). 'left' is a
-    <name-dotted> segment list; 'right' is a segment list or a Literal -- both
-    sides admit names symmetrically, literals stand only on the right. That a
-    side resolves to a built-in scalar is a pass-2 check (F-5). Constructed by
-    the cond-term builder (ast_map).
+    'op' is one of '>=', '<=', '==', '!=', '>', '<' (verbatim). 'left'/'right'
+    are algebraic expressions (a BinOp, UnOp, Bridge, Literal, OpaqueCode, or a
+    bare <name-dotted> segment list). That the two sides resolve to comparable
+    scalars is a pass-2 check (F-5).
     """
-    left:  "list[str]"       # name-dotted segments
+    left:  "object"          # algebraic expression
     op:    str
-    right: "object"          # list[str] | Literal
+    right: "object"          # algebraic expression
     begin: int
 
 
 @dataclass(frozen=True)
-class Not(SEQ_Interface):
-    """A negated condition: 'not <cond-atom>'."""
-    operand: "object"        # Comparison | Not | BoolOp
+class UnOp(SEQ_Interface):
+    """A unary operation: 'not <cond-atom>' or '- <alg-atom>' (D-13).
+
+    'op' is 'not' (boolean negation) or '-' (arithmetic negation), verbatim.
+    'operand' is the negated expression. Built by the cond-not / alg-un folds,
+    which forward a plain (un-prefixed) operand unchanged, so a UnOp always
+    carries a real prefix.
+    """
+    op:      str             # 'not' | '-'
+    operand: "object"
     begin:   int
-
-    @classmethod
-    def from_seq(cls, node):
-        """RETURN: Not | <cond-atom>, from the <not-cond> SEQ_Node.
-
-        children = (opt_not, atom): the inline optional 'not' is an OPT_Node at
-        a STABLE slot -- 'present' True means 'not' was written. No counting.
-        A plain (un-negated) atom is forwarded unchanged.
-        """
-        opt_not, atom = node.children
-        if opt_not.present:
-            return cls(operand=atom, begin=node.begin)
-        return atom
 
 
 @dataclass(frozen=True)
-class BoolOp(SEQ_Interface):
-    """An 'and'/'or' chain of two or more operands.
+class BinOp(SEQ_Interface):
+    """A binary operation, left-associative (D-13).
 
-    'op' is 'and' or 'or'. 'operands' are the flattened terms at this precedence
-    level (left-associative, but associativity is irrelevant for and/or). A
-    single-operand level is collapsed by the builder, so a BoolOp always holds at
-    least two operands.
+    One node for every infix operator in both ladders: boolean
+    'or'/'nor'/'xor'/'nxor'/'and'/'nand', arithmetic '+'/'-'/'*', and the shifts
+    'shl:'/'shr:'. 'op' is the verbatim operator; 'left'/'right' are the operands
+    (each a BinOp, UnOp, Bridge, Comparison, Literal, BoolRef, OpaqueCode, or a
+    bare <name-dotted> segment list). The left-fold builder collapses a level
+    with no operator to its bare head, so a BinOp always carries a real operator.
+    Operator kind and operand kinds are pass-2 concerns (F-5).
     """
-    op:       str            # 'and' | 'or'
-    operands: List["object"]
-    begin:    int
+    op:    str
+    left:  "object"
+    right: "object"
+    begin: int
+
+
+@dataclass(frozen=True)
+class Bridge(SEQ_Interface):
+    """The '?' bridge: the only bool->num crossing (D-13).
+
+    '? <cond> then: <algebr> else: <algebr>' -- evaluates 'cond' and yields
+    'then_' or 'else_' accordingly, the single explicit way a condition feeds an
+    algebraic expression. 'cond' is a boolean expression; 'then_'/'else_' are
+    algebraic expressions.
+    """
+    cond:  "object"
+    then_: "object"
+    else_: "object"
+    begin: int
 
     @classmethod
-    def _from_level(cls, node, op):
-        """RETURN: BoolOp | operand, one precedence level, collapsed when trivial.
+    def from_seq(cls, node):
+        """RETURN: Bridge -- children = (?, cond, then-algebr, else-algebr).
 
-        children = (first, STAR(('kw', operand))): the head operand, then the
-        repetition -- each item an anonymous SEQ whose single survivor is the
-        next operand (the 'and'/'or' keyword is silent). One operand forwards
-        unchanged; two-or-more become one BoolOp carrying 'op'.
+        'then:'/'else:' are silent; the leading '?' is captured (its position
+        anchors the node) and otherwise unused.
         """
-        first    = node.children[0]
-        rest     = [s.children[0] for s in node.children[1].items]
-        operands = [first] + rest
-        if len(operands) == 1:
-            return first
-        return cls(op=op, operands=operands, begin=first.begin)
-
-    @classmethod
-    def from_cond_and(cls, node):
-        """RETURN: BoolOp('and') | operand, the <cond-and> precedence level."""
-        return cls._from_level(node, "and")
-
-    @classmethod
-    def from_cond(cls, node):
-        """RETURN: BoolOp('or') | operand, the <cond> level ('or', lowest)."""
-        return cls._from_level(node, "or")
+        q, cond, then_, else_ = node.children
+        return cls(cond=cond, then_=then_, else_=else_, begin=q.begin)
 
 
 @dataclass(frozen=True)
 class Condition(SEQ_Interface):
     """The root of a bracket guard '[ ... ]'.
 
-    'expr' is the top boolean expression (a BoolOp, Not, or Comparison). Wrapping
-    it in a named root keeps a guard's two forms -- opaque span vs. bracket
-    condition -- as two distinct, type-distinguishable node kinds on Cause.guard.
+    'expr' is the top boolean expression (a BinOp, UnOp, Comparison, BoolRef, or
+    Literal). Wrapping it in a named root keeps a guard's two forms -- opaque
+    span vs. bracket condition -- as two distinct, type-distinguishable node
+    kinds on Cause.guard.
     """
     expr:  "object"
     begin: int
@@ -287,26 +289,34 @@ class Arg(OR_Interface):
                              'e.target', 'TIMEOUT', 'dict', 'tracker.pos.x'.
     """
     name:  Optional[str]
-    value: object            # str (literal) | OpaqueCode | list[str]
+    value: object            # str (literal) | OpaqueCode | list[str] | expr node
     kind:  "E_ArgKind"
     begin: int
 
     @classmethod
     def _classify(cls, value, name, begin):
-        """RETURN: Arg, classifying 'value' into its E_ArgKind.
+        """RETURN: Arg, classifying an <algebr> 'value' into its E_ArgKind (D-13).
 
-        A segment list is a NAME; an opaque SpanResult becomes an OpaqueCode node
-        (LUAU); a value-bearing Token (or bare str) is carried as text
-        (LITERAL).
+        A segment list is a NAME; an OpaqueCode (or raw opaque span) is LUAU; a
+        Literal node (or value-bearing token / bare str) carries its text as a
+        LITERAL; any other expression node -- BinOp, UnOp, Bridge, Comparison --
+        is a compound EXPR carried whole.
         """
         from .core.span_oracle import SpanResult
         if isinstance(value, list):
             return cls(name=name, value=value, kind=E_ArgKind.NAME, begin=begin)
+        if isinstance(value, OpaqueCode):
+            return cls(name=name, value=value, kind=E_ArgKind.LUAU, begin=begin)
         if isinstance(value, SpanResult):
             return cls(name=name, value=OpaqueCode.from_span(value),
                        kind=E_ArgKind.LUAU, begin=begin)
-        text = value if isinstance(value, str) else value.text
-        return cls(name=name, value=text, kind=E_ArgKind.LITERAL, begin=begin)
+        if isinstance(value, Literal):
+            return cls(name=name, value=value.text, kind=E_ArgKind.LITERAL,
+                       begin=begin)
+        if isinstance(value, str) or hasattr(value, "text"):
+            text = value if isinstance(value, str) else value.text
+            return cls(name=name, value=text, kind=E_ArgKind.LITERAL, begin=begin)
+        return cls(name=name, value=value, kind=E_ArgKind.EXPR, begin=begin)
 
     @classmethod
     def from_or(cls, node):
@@ -968,6 +978,84 @@ class Namespace(SEQ_Interface, TopLevel):
         name  = node.children[0]
         items = list(node.children[1].items)
         return cls(name=name, items=items, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class Assign(SEQ_Interface):
+    """An assignment statement: '<lvalue> gets: <algebr>' (D-13).
+
+    A clockwork-fenced mutation -- the analysable counterpart of an opaque
+    '{ ... }' block. 'lvalue' is the target <name-dotted> segment list; 'rhs' is
+    the assigned algebraic expression. State mutates only here (and via incr/
+    decr/recip), inside a clockwork body, so every write has a tick to anchor it.
+    """
+    lvalue: "list[str]"
+    rhs:    "object"
+    begin:  int
+
+
+@dataclass(frozen=True)
+class Recip(SEQ_Interface):
+    """A guarded reciprocal: '<lvalue> recip: <algebr> else: <body> :end' (D-13).
+
+    Sets 'lvalue' to 1/(operand) when the operand is non-zero, else runs
+    'else_body'. The only division path in the language, total by construction:
+    the zero case is never silent -- it is the mandatory 'else_body'. The operand
+    is promoted to float (the one implicit-promotion site). 'else_body' is the
+    ordered clockwork steps run on zero.
+    """
+    lvalue:    "list[str]"
+    operand:   "object"
+    else_body: List["object"]
+    begin:     int
+
+
+@dataclass(frozen=True)
+class Incr(SEQ_Interface):
+    """A saturating increment: 'incr: <lvalue> [by: <algebr>] [to: <algebr>]' (D-13).
+
+    Increases 'lvalue' by 'amount' (None -> the default step, pass 2), optionally
+    clamped at the ceiling 'limit' (None -> unbounded). Clockwork-fenced. The
+    saturate-vs-guard reading of 'limit' is a pass-2 semantic (F-15).
+    """
+    lvalue: "list[str]"
+    amount: "object"         # algebr | None
+    limit:  "object"         # algebr | None
+    begin:  int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Incr -- children = (lvalue, opt_by, opt_to); keywords silent.
+
+        Each optional is an OPT_Node at a stable slot; present yields the
+        anonymous one-survivor SEQ around its <algebr> ('by:'/'to:' silent).
+        """
+        lvalue, opt_by, opt_to = node.children
+        amount = opt_by.child.children[0] if opt_by.present else None
+        limit  = opt_to.child.children[0] if opt_to.present else None
+        return cls(lvalue=lvalue, amount=amount, limit=limit, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class Decr(SEQ_Interface):
+    """A saturating decrement: 'decr: <lvalue> [by: <algebr>] [to: <algebr>]' (D-13).
+
+    Decreases 'lvalue' by 'amount' (None -> default step), optionally clamped at
+    the floor 'limit'. The decrement twin of Incr; see it for the slot layout
+    and the pass-2 notes.
+    """
+    lvalue: "list[str]"
+    amount: "object"
+    limit:  "object"
+    begin:  int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Decr -- children = (lvalue, opt_by, opt_to); keywords silent."""
+        lvalue, opt_by, opt_to = node.children
+        amount = opt_by.child.children[0] if opt_by.present else None
+        limit  = opt_to.child.children[0] if opt_to.present else None
+        return cls(lvalue=lvalue, amount=amount, limit=limit, begin=node.begin)
 
 
 @dataclass(frozen=True)

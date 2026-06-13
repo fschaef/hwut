@@ -186,42 +186,71 @@ IMPLICIT EVENTS:
         check is sound but not complete: a guard calling a user-defined function
         that itself mutates state cannot be detected statically.
 
-    (2) A bracket condition in '[ ]': a boolean algebra over comparisons and
-    boolean references. The parser builds the condition tree directly (it is
-    not opaque), so names and comparisons are validated by the static layer.
+    (2) A bracket condition in '[ ]': a boolean algebra over comparisons,
+    arithmetic, and boolean references. The parser builds the expression tree
+    directly (it is not opaque), so names, comparisons, and operators are
+    validated by the static layer.
 
         condition   :=  '[' <cond> ']'
-        <cond>      :=  <cond-and> ( 'or'  <cond-and> )*
-        <cond-and>  :=  <cond-not> ( 'and' <cond-not> )*
+        <cond>      :=  <cond-or>
+        <cond-or>   :=  <cond-xor> ( ('or'  | 'nor' ) <cond-xor> )*
+        <cond-xor>  :=  <cond-and> ( ('xor' | 'nxor') <cond-and> )*
+        <cond-and>  :=  <cond-not> ( ('and' | 'nand') <cond-not> )*
         <cond-not>  :=  [ 'not' ] <cond-atom>
-        <cond-atom> :=  '(' <cond> ')'  |  <cond-term>
-        <cond-term> :=  <name-dotted> [ <op-cmp> <operand> ]
+        <cond-atom> :=  '[' <cond> ']'  |  <comparison>
+        <comparison>:=  <algebr> [ <op-cmp> <algebr> ]
         <op-cmp>    :=  '>=' | '<=' | '==' | '!=' | '>' | '<'
-        <operand>   :=  <name-dotted> | number | string | 'true' | 'false'
 
-        The ladder encodes precedence -- 'not' over 'and' over 'or' -- with
-        parentheses to override. A <cond-term> WITHOUT a comparison tail is a
-        bare boolean reference: '[ GHOSTS_AT_HOME ]' and '[ not e.armed ]'
-        are legal, equivalent to '== true' comparisons. Both comparison sides
-        admit a <name-dotted> -- an event member through the 'e' binding
-        ('e.port'), a variable ('TIMEOUT'), or a struct member
-        ('tracker.number') -- symmetrically: '[ e.elapsed > TIMEOUT ]' and
-        '[ TIMEOUT < e.elapsed ]' alike. Literals stand only on the right.
-        Comparison only: there is no arithmetic and no function call (use a
-        Luau guard for those). 'and' / 'or' / 'not' are reserved words; name
-        resolution and operand kinds are semantic-layer checks.
+        <algebr>    :=  <alg-shift>
+        <alg-shift> :=  <alg-add> ( ('shl:' | 'shr:') <alg-add> )*
+        <alg-add>   :=  <alg-mul> ( ('+' | '-') <alg-mul> )*
+        <alg-mul>   :=  <alg-un>  ( '*' <alg-un> )*
+        <alg-un>    :=  [ '-' ] <alg-atom>
+        <alg-atom>  :=  '(' <algebr> ')' | <bridge> | number | string
+                     |  'true' | 'false' | '{' luau '}' | <name-dotted>
+        <bridge>    :=  '?' <cond> 'then:' <algebr> 'else:' <algebr>
 
-        RESERVED WORDS: 'and', 'or', 'not', the system triggers (ANY, BEGIN,
-        END, CHANGE), VOID, the kind keywords ('mode', 'state', 'mode_group',
-        'state_machine', 'struct', 'container', 'clockwork'), the built-in types ('int',
-        'float', 'string', 'bool'), and the boolean literals ('true',
-        'false'). None of these may serve as an identifier anywhere on the
-        rule-file plane -- not as a declared name and not as a member segment
-        ('e.mode' is a syntax error; rename the member).
+        TWO WORLDS, TWO BRACKETS. '[ ]' groups a CONDITION (boolean); '( )'
+        groups ALGEBRA (numeric). The bracket you write names the world, so the
+        parser never has to guess at '(' which ladder it is in. Crossing between
+        the worlds is explicit and one-way per direction: a <comparison> is the
+        only num->bool crossing; the '?'-bridge is the only bool->num crossing
+        ('? [ cond ] then: <algebr> else: <algebr>').
+
+        Each ladder is loosest-operator-first; 'not' / unary '-' bind tighter
+        than the binary operators; an atom binds tightest. The negated boolean
+        operators are whole words: 'nand'/'nor'/'nxor' (not '!and'). There is NO
+        division operator -- the only division is the guarded reciprocal 'recip:'
+        (a clockwork statement, see <clockwork>), which forces the zero case to
+        be handled. Shifts are spelled 'shl:'/'shr:' (keywords, not '<<'/'>>')
+        so the angle brackets stay free for 'container<...>' type parameters.
+
+        NUMBERS ARE UNSIGNED. The lexer carves '+' and '-' as their own atoms; a
+        leading minus is the unary-minus operator ('-2' is 'negate 2'), never
+        part of the literal. This keeps binary '-' unambiguous before a number
+        ('e.count - 2').
+
+        A <comparison> WITHOUT a comparison tail is a bare boolean reference:
+        '[ GHOSTS_AT_HOME ]' and '[ not e.armed ]' are legal, equivalent to
+        '== true'. Both comparison sides are full algebraic expressions and admit
+        a <name-dotted> symmetrically -- an event member through the 'e' binding
+        ('e.port'), a variable ('TIMEOUT'), or a struct member ('tracker.number').
+        Name resolution, operator typing, and operand kinds are semantic-layer
+        checks (the grammar admits 'e.count * 2 >= sm.threshold'; that the sides
+        are numeric is a pass-2 concern).
+
+        RESERVED WORDS: the boolean operators ('and', 'nand', 'or', 'nor', 'xor',
+        'nxor', 'not'), the system triggers (ANY, BEGIN, END, CHANGE), VOID, the
+        kind keywords ('mode', 'state', 'mode_group', 'state_machine', 'struct',
+        'container', 'clockwork'), the built-in types ('int', 'float', 'string',
+        'bool'), and the boolean literals ('true', 'false'). None may serve as an
+        identifier anywhere on the rule-file plane -- not as a declared name and
+        not as a member segment ('e.mode' is a syntax error; rename the member).
 
         Example:
             on: NetworkUp & [ e.ip_adr == "10.0.0.1" and e.port > 1024 ] => ...
-            on: Collision & [ (e.severity > 3 or e.fatal == 1) and not e.handled ]
+            on: Tick & [ e.base + 1 shl: 2 < sm.limit and not [ e.flag xor sm.q ] ]
+            on: Tick & [ ? [ e.ok ] then: e.a + 1 else: 0  >  sm.threshold ]
 
 <effect>
     is what happens as a result of a cause. Every effect is prefixed by '=>',
@@ -483,17 +512,25 @@ IMPLICIT EVENTS:
 <arg> binds an argument by name or by position. Named arguments may follow
       positional ones; the parser allows both forms in the same call.
 
-<rvalue>
-      is something that can be assigned to an event member or a mode
-      parameter in the <list-arg>. It is one of: a NUMBER or STRING literal;
-      'true' / 'false'; a <name-dotted>; or an opaque '{ luau }' EXPRESSION.
-      A <name-dotted> covers a bare word whose meaning the static layer does
-      not fix (a container type-parameter such as 'dict' / 'fifo'), a
-      variable, a struct member ('tracker.number'), and a self-binding member
-      ('e.target' -- the legible, non-opaque way to forward a triggering
-      event's member as an argument, e.g. '=> arm: Chase(e.target)'). The parser
-      admits an rvalue everywhere an <arg> is admitted; whether a given site
-      accepts a given name is a pass-2 concern, not a parse error.
+<algebr> (was <rvalue>)
+      is the value assigned to an event member or a mode parameter in a
+      <list-arg>, and the operand world generally (D-13). An argument value is a
+      full algebraic expression: a NUMBER or STRING literal; 'true' / 'false'; a
+      <name-dotted>; an opaque '{ luau }' EXPRESSION; or any of these combined
+      with the arithmetic ('+' '-' '*'), shift ('shl:' 'shr:') and unary-minus
+      operators, parenthesised with '( )', and the '?'-bridge -- the same
+      <algebr> the bracket-condition ladder uses (see <guard>). So
+      'E(port = base + 1)' and 'E(x = ? [ e.ok ] then: e.a else: 0)' are legal
+      arguments; a plain literal, name, or '{ }' is the common case and is
+      carried unchanged.
+
+      A <name-dotted> covers a bare word whose meaning the static layer does not
+      fix (a container type-parameter such as 'dict' / 'fifo'), a variable, a
+      struct member ('tracker.number'), and a self-binding member ('e.target' --
+      the legible, non-opaque way to forward a triggering event's member as an
+      argument, e.g. '=> arm: Chase(e.target)'). The parser admits an <algebr>
+      everywhere an <arg> is admitted; whether a given site accepts a given name
+      or expression is a pass-2 concern, not a parse error.
 
 
 <name-dotted>
@@ -1012,6 +1049,36 @@ consequence). All four are tick-free.
     { setup_fixture() }
     unspawn: SM_TRAFFIC
 
+MUTATIONS. State changes are clockwork-fenced: they appear only as clockwork
+steps, never as causality effects, so every write has a tick to anchor it
+(the opaque '{ ... }' block is the escape hatch; 'gets:'/'incr:'/'decr:'/
+'recip:' are the analysable subset the static layer can see). All are tick-free.
+
+    cw.retries gets: cw.base + 1            -- assignment: <lvalue> gets: <algebr>
+    incr: cw.n by: 2 to: 10                 -- +amount (default 1), clamp at 10
+    decr: cw.n                              -- -1 (default step), no clamp
+    cw.rate recip: cw.divisor               -- guarded reciprocal (1/x)...
+    else:
+        instant: DIVISION_BY_ZERO()         -- ...or run this body when x is 0
+    :end
+
+    <clockwork-name-step> := <name-dotted> ( <parens-arg>               (emit)
+                                           | 'gets:' <algebr>           (assign)
+                                           | 'recip:' <algebr>
+                                             'else:' <elm-clockwork>+ ':end' )
+    <incr> := 'incr:' <name-dotted> [ 'by:' <algebr> ] [ 'to:' <algebr> ]
+    <decr> := 'decr:' <name-dotted> [ 'by:' <algebr> ] [ 'to:' <algebr> ]
+
+'gets:' assigns. 'incr:'/'decr:' step a counter: the amount is introduced by
+'by:' (omitted -> the default step, pass 2) and a saturating limit by 'to:'
+(omitted -> unbounded). 'by:' is mandatory before an explicit amount so a bare
+following statement (also name-led) is never mistaken for it. 'recip:' is the
+ONLY division: it assigns 1/(operand), and the 'else:' body -- MANDATORY -- runs
+when the operand is zero, so the zero case can never be silent. The operand is
+promoted to float automatically (the one implicit-promotion site); there is no
+run-time division error by construction. The saturate-vs-guard reading of 'to:'
+and the default step are pass-2 semantics (FOR-SEMANTICS F-15).
+
 WAITING. 'wait:' suspends the script until its cause fires; the cause is the
 ordinary <cause> (a trigger with an optional guard, or a cause reference).
 'e' is bound inside the guard. A 'wait:' may carry an effect tail -- zero or
@@ -1070,9 +1137,12 @@ sequence, so 'select:', 'if:', 'while:' nest without restriction.
     :end
 
 FENCE. The imperative constructs -- 'instant:', 'wait:', 'select:', 'if:',
-'elif:', 'else:', 'while:', and the bare command forms -- are legal ONLY
-inside clockwork bodies, never in causality effects. The fence is structural: the
-grammar admits them in <step-clockwork> alone.
+'elif:', 'else:', 'while:', the mutations ('gets:', 'incr:', 'decr:', 'recip:'),
+and the bare command forms -- are legal ONLY inside clockwork bodies, never in
+causality effects. The fence is structural: the grammar admits them in
+<step-clockwork> alone. (Read-only EXPRESSIONS are not fenced -- the algebra and
+comparison ladder is available in every '[ ]' guard everywhere, since reading
+state anchors nothing; only writes are clockwork-bound.)
 
 CASCADE. The clockwork has NO causes: its only inbound sensitivity is 'wait:'.
 Clockwork emissions are STIMULUS EDGES INTO the cascade graph; the clockwork is never

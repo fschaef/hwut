@@ -286,4 +286,3 @@ def generate(seed=0x5197):
 if __name__ == "__main__":
     import sys
     sys.stdout.write(generate())
-
