@@ -1,104 +1,104 @@
 {
  "tokens": [
   [
-   "string:event:",
-   "event:"
+   "string:state_machine:",
+   "state_machine:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
    "X2"
   ],
   [
-   "string:(",
-   "("
+   "string:.",
+   "."
   ],
   [
-   "regex:[a-zA-Z_]\\w*:",
-   "n4:"
+   "regex:[a-zA-Z_]\\w*",
+   "X4"
   ],
   [
-   "captured:int",
-   "int"
+   "string:.",
+   "."
   ],
   [
-   "string:;",
-   ";"
+   "regex:[a-zA-Z_]\\w*",
+   "X6"
   ],
   [
-   "regex:[a-zA-Z_]\\w*:",
-   "n7:"
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
    "X8"
   ],
   [
-   "string:;",
-   ";"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*:",
-   "n10:"
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X11"
+   "X10"
   ],
   [
-   "string:;",
-   ";"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*:",
-   "n13:"
-  ],
-  [
-   "captured:float",
-   "float"
-  ],
-  [
-   "string:;",
-   ";"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*:",
-   "n16:"
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X17"
+   "X12"
   ],
   [
-   "string:;",
-   ";"
+   "string:is:",
+   "is:"
   ],
   [
-   "regex:[a-zA-Z_]\\w*:",
-   "n19:"
+   "regex:[a-zA-Z_]\\w*",
+   "X14"
   ],
   [
-   "captured:bool",
-   "bool"
+   "string:.",
+   "."
   ],
   [
-   "string:;",
-   ";"
+   "regex:[a-zA-Z_]\\w*",
+   "X16"
   ],
   [
-   "string:)",
-   ")"
+   "string:.",
+   "."
   ],
   [
-   "string:mode_group:",
-   "mode_group:"
+   "regex:[a-zA-Z_]\\w*",
+   "X18"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X20"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X22"
+  ],
+  [
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
    "X24"
   ],
   [
-   "string:.",
-   "."
+   "string:has:",
+   "has:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
@@ -117,48 +117,8 @@
    "."
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X30"
-  ],
-  [
-   "string:is:",
-   "is:"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X32"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X34"
-  ],
-  [
-   "string:mode:",
-   "mode:"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X36"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X38"
-  ],
-  [
-   "string:(",
-   "("
-  ],
-  [
-   "string:)",
-   ")"
+   "captured:VOID",
+   "VOID"
   ],
   [
    "string:deinit:",
@@ -177,40 +137,16 @@
    "{"
   ],
   [
-   "string:on:",
-   "on:"
+   "string::end",
+   ":end"
+  ],
+  [
+   "string:event:",
+   "event:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X44"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X46"
-  ],
-  [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "string:+!",
-   "+!"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X49"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X51"
+   "X35"
   ],
   [
    "string:(",
@@ -221,24 +157,88 @@
    ")"
   ],
   [
-   "string:init:",
-   "init:"
+   "string:cause:",
+   "cause:"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X39"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X41"
+  ],
+  [
+   "string:for:",
+   "for:"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X43"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X45"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X47"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X49"
+  ],
+  [
+   "string:&",
+   "&"
   ],
   [
    "framing:span-open",
    "{"
   ],
   [
-   "string:on:",
-   "on:"
+   "string:clockwork:",
+   "clockwork:"
   ],
   [
-   "captured:ANY",
-   "ANY"
+   "regex:[a-zA-Z_]\\w*",
+   "X52"
   ],
   [
-   "string:=>",
-   "=>"
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X54"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X56"
+  ],
+  [
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
@@ -253,128 +253,120 @@
    "X60"
   ],
   [
-   "string:until:",
-   "until:"
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
    "X62"
   ],
   [
-   "string:.",
-   "."
+   "string:(",
+   "("
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*:",
+   "n64:"
+  ],
+  [
+   "captured:float",
+   "float"
+  ],
+  [
+   "string:;",
+   ";"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*:",
+   "n67:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X64"
+   "X68"
   ],
   [
-   "string:until:",
-   "until:"
+   "string:;",
+   ";"
   ],
   [
-   "captured:END",
-   "END"
-  ],
-  [
-   "string:deinit:",
-   "deinit:"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "string:has:",
-   "has:"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X69"
-  ],
-  [
-   "string:.",
-   "."
+   "regex:[a-zA-Z_]\\w*:",
+   "n70:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
    "X71"
   ],
   [
-   "string:.",
-   "."
+   "string:;",
+   ";"
   ],
   [
-   "captured:VOID",
-   "VOID"
+   "regex:[a-zA-Z_]\\w*:",
+   "n73:"
   ],
   [
-   "string::end",
-   ":end"
+   "captured:bool",
+   "bool"
   ],
   [
-   "string:clock:",
-   "clock:"
+   "string:;",
+   ";"
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X76"
-  ],
-  [
-   "regex:[+-]?\\d+(?:\\.\\d+)?",
-   "1"
-  ],
-  [
-   "string:mode:",
-   "mode:"
+   "regex:[a-zA-Z_]\\w*:",
+   "n76:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X79"
+   "X77"
   ],
   [
-   "string:.",
-   "."
+   "string:;",
+   ";"
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X81"
+   "regex:[a-zA-Z_]\\w*:",
+   "n79:"
   ],
   [
-   "string:.",
-   "."
+   "captured:int",
+   "int"
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X83"
+   "string:;",
+   ";"
   ],
   [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X85"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X87"
-  ],
-  [
-   "string:deinit:",
-   "deinit:"
-  ],
-  [
-   "framing:span-open",
-   "{"
+   "string:)",
+   ")"
   ],
   [
    "string:on:",
    "on:"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X84"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X86"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X88"
+  ],
+  [
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
@@ -389,44 +381,20 @@
    "X92"
   ],
   [
-   "string:=>",
-   "=>"
+   "string:.",
+   "."
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "regex:[a-zA-Z_]\\w*",
+   "X94"
   ],
   [
-   "string:deinit:",
-   "deinit:"
+   "string:(",
+   "("
   ],
   [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "string:init:",
-   "init:"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "string:init:",
-   "init:"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "string:until:",
-   "until:"
-  ],
-  [
-   "captured:BEGIN",
-   "BEGIN"
+   "string:)",
+   ")"
   ],
   [
    "string:&",
@@ -438,7 +406,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X102"
+   "X99"
   ],
   [
    "string:.",
@@ -446,7 +414,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X104"
+   "X101"
   ],
   [
    "string:and",
@@ -454,7 +422,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X106"
+   "X103"
   ],
   [
    "string:.",
@@ -462,7 +430,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X108"
+   "X105"
   ],
   [
    "string:or",
@@ -470,7 +438,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X110"
+   "X107"
   ],
   [
    "string:.",
@@ -478,7 +446,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X112"
+   "X109"
   ],
   [
    "string:and",
@@ -486,7 +454,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X114"
+   "X111"
   ],
   [
    "string:.",
@@ -494,31 +462,47 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X116"
+   "X113"
   ],
   [
    "string:]",
    "]"
   ],
   [
-   "string:effect:",
-   "effect:"
+   "string:deinit:",
+   "deinit:"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "string:spawn:",
+   "spawn:"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X117"
+  ],
+  [
+   "string:.",
+   "."
   ],
   [
    "regex:[a-zA-Z_]\\w*",
    "X119"
   ],
   [
-   "string:.",
-   "."
+   "string:(",
+   "("
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X121"
+   "string:)",
+   ")"
   ],
   [
-   "string:.",
-   "."
+   "string:in:",
+   "in:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
@@ -533,220 +517,60 @@
    "X125"
   ],
   [
-   "string:=>",
-   "=>"
+   "string:via:",
+   "via:"
   ],
   [
-   "string:-!",
-   "-!"
+   "captured:false",
+   "false"
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X128"
+   "string:init:",
+   "init:"
   ],
   [
-   "string:.",
-   "."
+   "framing:span-open",
+   "{"
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X130"
+   "string:init:",
+   "init:"
   ],
   [
-   "string:.",
-   "."
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "string::end",
+   ":end"
+  ],
+  [
+   "string:clock:",
+   "clock:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
    "X132"
   ],
   [
-   "string:.",
-   "."
+   "regex:[+-]?\\d+(?:\\.\\d+)?",
+   "1"
   ],
   [
-   "regex:[a-zA-Z_]\\w*",
-   "X134"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X136"
-  ],
-  [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "string:!",
-   "!"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X140"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X142"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X144"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X146"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X148"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X150"
-  ],
-  [
-   "string:(",
-   "("
-  ],
-  [
-   "string:)",
-   ")"
-  ],
-  [
-   "string:open:",
-   "open:"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X154"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X156"
-  ],
-  [
-   "string:on:",
-   "on:"
-  ],
-  [
-   "captured:CHANGE",
-   "CHANGE"
-  ],
-  [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "string:+!",
-   "+!"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X161"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X163"
-  ],
-  [
-   "string:(",
-   "("
-  ],
-  [
-   "string:)",
-   ")"
-  ],
-  [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "string:!",
-   "!"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X168"
-  ],
-  [
-   "string:.",
-   "."
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X170"
-  ],
-  [
-   "string:(",
-   "("
-  ],
-  [
-   "string:)",
-   ")"
-  ],
-  [
-   "string:=>",
-   "=>"
+   "string:import:",
+   "import:"
   ],
   [
    "regex:\"[^\"]*\"",
    "\"s\""
   ],
   [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "string:=>",
-   "=>"
+   "string:into:",
+   "into:"
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X177"
+   "X137"
   ],
   [
    "string:.",
@@ -754,11 +578,23 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X179"
+   "X139"
   ],
   [
-   "string::close",
-   ":close"
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X141"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X143"
   ],
   [
    "framing:end-of-file",
@@ -770,11 +606,7 @@
   "{ x{ y } }",
   "{ x }",
   "{ x }",
-  "{ x }",
   "{ x{ y } }",
-  "{ x{ y } }",
-  "{ x{ y } }",
-  "{ x{ y } }",
-  "{ x }"
+  "{ x{ y } }"
  ]
 }

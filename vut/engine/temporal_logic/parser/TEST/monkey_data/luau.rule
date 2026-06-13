@@ -1,10 +1,12 @@
-import: "s" into: X4 . X6 . X8
-clock: X10 1 cause: X13 . X15 ( n17: X18 ; n20: string ; n23: bool ; ) for: X28 . X30 . X32 & [ X35 . X37 and X39 . X41 or X43 . X45 and X47 . X49 ]
-open: X52 . X54 . X56
-on: X58 . X60
-=> { x{ y }{ y }{ y }{ y } }
-:close X63 is: int ( X67 = true , { x } )
-state_machine: X73 . X75 is: X77 . X79 . X81
-init: { x{ y }{ y }{ y } }
-has: X84 . X86
+state_machine: X2 . X4 . X6 ( n8: string ; n11: X12 ; ) is: X16 . X18 . X20
+default: X22 . X24
 :end
+clockwork: X27 . X29 . X31 ( )
+on: ANY & [ X38 . X40 and X42 . X44 or X46 . X48 and X50 . X52 ]
+instant: X55 . X57 ( )
+init: { x{ y }{ y }{ y }{ y } }
+:end import: "s" into: X65 . X67 . X69 X70 is: container < X74 = false , 1 , X80 = "s" >
+open: X85 . X87 . X89
+clock: X91 1
+:close
+event: X95 ( n97: X98 ; n100: int ; )

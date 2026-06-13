@@ -1,155 +1,158 @@
 === monkey: luau ===
-tokens parsed:      90
+tokens parsed:      104
 top-level items:    6
 diagnostics:        none
 
 -- AST --
-Import
-  filename = 's'
-  mount:
+StateMachine
+  name:
+    'X2'
     'X4'
     'X6'
-    'X8'
-  begin = 0
-ClockDef
-  name = 'X10'
-  period = '1'
-  begin = 0
-CauseDef
-  name:
-    'X13'
-    'X15'
   params:
     ArgDecl
-      member = 'n17'
-      type = 'X18'
-      begin = 0
-    ArgDecl
-      member = 'n20'
+      member = 'n8'
       type = 'string'
       begin = 0
     ArgDecl
-      member = 'n23'
-      type = 'bool'
+      member = 'n11'
+      type = 'X12'
       begin = 0
-  for_event:
-    'X28'
-    'X30'
-    'X32'
-  guard:
-    Condition
-      expr:
-        BoolOp
-          op = 'or'
-          operands:
-            BoolOp
-              op = 'and'
-              operands:
-                BoolRef
-                  name:
-                    'X35'
-                    'X37'
-                  begin = 0
-                BoolRef
-                  name:
-                    'X39'
-                    'X41'
-                  begin = 0
-              begin = 0
-            BoolOp
-              op = 'and'
-              operands:
-                BoolRef
-                  name:
-                    'X43'
-                    'X45'
-                  begin = 0
-                BoolRef
-                  name:
-                    'X47'
-                    'X49'
-                  begin = 0
-              begin = 0
-          begin = 0
+  bases:
+    'X16'
+    'X18'
+    'X20'
+  states:
+    []
+  has_refs:
+    []
+  default:
+    DefaultRef
+      name:
+        'X22'
+        'X24'
+      is_void = False
       begin = 0
+  init = None
+  deinit = None
   begin = 0
-Namespace
+Clockwork
   name:
-    'X52'
-    'X54'
-    'X56'
-  items:
-    Causality
-      cause:
-        Cause
-          trigger:
-            Trigger
-              name:
-                'X58'
-                'X60'
-              is_keyword = False
-              begin = 0
-          guard = None
+    'X27'
+    'X29'
+    'X31'
+  params:
+    []
+  clock:
+    Cause
+      trigger:
+        Trigger
+          name:
+            'ANY'
+          is_keyword = True
           begin = 0
-      effects:
-        Mutation
-          body:
-            OpaqueCode
-              text = '{ x{ y }{ y }{ y }{ y } }'
-              mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      guard:
+        Condition
+          expr:
+            BoolOp
+              op = 'or'
+              operands:
+                BoolOp
+                  op = 'and'
+                  operands:
+                    BoolRef
+                      name:
+                        'X38'
+                        'X40'
+                      begin = 0
+                    BoolRef
+                      name:
+                        'X42'
+                        'X44'
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    BoolRef
+                      name:
+                        'X46'
+                        'X48'
+                      begin = 0
+                    BoolRef
+                      name:
+                        'X50'
+                        'X52'
+                      begin = 0
+                  begin = 0
               begin = 0
-              _references = None
           begin = 0
       begin = 0
+  init:
+    OpaqueCode
+      text = '{ x{ y }{ y }{ y }{ y } }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+      _references = None
+  deinit = None
+  steps:
+    Instant
+      name:
+        'X55'
+        'X57'
+      args:
+        []
+      begin = 0
   begin = 0
-VariableDef
-  name = 'X63'
-  type_name = 'int'
-  args:
+Import
+  filename = 's'
+  mount:
+    'X65'
+    'X67'
+    'X69'
+  begin = 0
+ContainerDecl
+  name = 'X70'
+  cargs:
     Arg
-      name = 'X67'
-      value = 'true'
+      name = 'X74'
+      value = 'false'
       kind = <E_ArgKind.LITERAL: 0>
       begin = 0
     Arg
       name = None
-      value:
-        OpaqueCode
-          text = '{ x }'
-          mode = <Role.EXPRESSION: 'expression'>
-          begin = 0
-          _references = None
-      kind = <E_ArgKind.LUAU: 1>
+      value = '1'
+      kind = <E_ArgKind.LITERAL: 0>
+      begin = 0
+    Arg
+      name = 'X80'
+      value = '"s"'
+      kind = <E_ArgKind.LITERAL: 0>
       begin = 0
   by = None
   head_params:
     []
   begin = 0
-StateMachine
+Namespace
   name:
-    'X73'
-    'X75'
+    'X85'
+    'X87'
+    'X89'
+  items:
+    ClockDef
+      name = 'X91'
+      period = '1'
+      begin = 0
+  begin = 0
+EventDef
+  name = 'X95'
   params:
-    []
-  bases:
-    'X77'
-    'X79'
-    'X81'
-  states:
-    []
-  has_refs:
-    HasRef
-      name:
-        'X84'
-        'X86'
-      is_void = False
+    ArgDecl
+      member = 'n97'
+      type = 'X98'
       begin = 0
-  default = None
-  init:
-    OpaqueCode
-      text = '{ x{ y }{ y }{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+    ArgDecl
+      member = 'n100'
+      type = 'int'
       begin = 0
-      _references = None
-  deinit = None
   begin = 0

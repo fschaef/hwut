@@ -122,32 +122,32 @@ definitions respectively; an emission whose name resolves to an effect
 bundle (or vice versa) is FATAL [KIND]. Dotted heads resolve through
 namespaces and mounts like any <name-dotted>.
 -------------------------------------------------------------------------------
-F-12 AGENT: CLOCK BINDING, FENCE, AND 'ag' SCOPE
+F-12 CLOCKWORK: CLOCK BINDING, FENCE, AND 'cw' SCOPE
 -------------------------------------------------------------------------------
-An agent's 'on:' target is a <cause> (trigger + optional guard). Pass 2 [KIND]:
+An clockwork's 'on:' target is a <cause> (trigger + optional guard). Pass 2 [KIND]:
   - the trigger must resolve to kind CLOCK; any other kind is FATAL. (The
     grammar tags the position '<cause(clock)>' as an advisory hint, F-14; the
     check is the semantic enforcement, not the hint.)
-The agent's signature parameters ARE its instance members, read through the
-'ag' pseudo-symbol. 'ag.member' is legal ONLY inside the agent's own body
-(init/deinit, opaque blocks, bracket conditions, rvalues) -- the agent
-counterpart of 'sm'/'mg' (F-1); referencing 'ag' outside any agent is FATAL
-[BINDING]. Declaring 'ag' (a user symbol of that spelling) is FATAL [NAME], as
-for the other pseudo-symbols. An agent carries no 'is:' bases.
+The clockwork's signature parameters ARE its instance members, read through the
+'cw' pseudo-symbol. 'cw.member' is legal ONLY inside the clockwork's own body
+(init/deinit, opaque blocks, bracket conditions, rvalues) -- the clockwork
+counterpart of 'sm'/'mg' (F-1); referencing 'cw' outside any clockwork is FATAL
+[BINDING]. Declaring 'cw' (a user symbol of that spelling) is FATAL [NAME], as
+for the other pseudo-symbols. An clockwork carries no 'is:' bases.
 The fence is STRUCTURAL: the grammar admits the imperative constructs
 ('instant:', 'wait:', 'select:', 'if:'/'elif:'/'else:', 'while:', and the bare
-commands) only inside an agent body, so a fence violation is a parse error, not
+commands) only inside an clockwork body, so a fence violation is a parse error, not
 a pass-2 check. Pass 2 ASSERTS the fence held (defensive), it does not enforce
 it.
 
 -------------------------------------------------------------------------------
-F-13 AGENT STEPS: EMISSION KINDS, WAIT BINDING, CASCADE EDGES
+F-13 CLOCKWORK STEPS: EMISSION KINDS, WAIT BINDING, CASCADE EDGES
 -------------------------------------------------------------------------------
   - A PACED emission (a bare EventSpec) and an 'instant:' injection both name
     an event; the name resolves per F-11 (an EventSpec name resolving to an
     effect bundle is FATAL [KIND]). A paced emission enters the cascade as a
     stimulus edge AT A TICK BOUNDARY; an 'instant:' emission as a stimulus edge
-    that may land WITHIN a running no-time cascade [CASCADE]. The agent is
+    that may land WITHIN a running no-time cascade [CASCADE]. The clockwork is
     never a cascade node; it has no inbound edges.
   - A 'wait:'/'select:' branch binds 'e' to the firing event for its guard and
     its co-temporal '=>' effect tail ONLY (F-1 'e' rules, F-9 system-trigger

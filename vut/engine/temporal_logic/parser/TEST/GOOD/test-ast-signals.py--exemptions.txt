@@ -5,6 +5,7 @@ pass-through (no dedicated node):
   cond-atom
   cond-paren
   effect
+  elm-clockwork
   elm-mode
   elm-mode-group
   elm-state-machine
@@ -12,6 +13,7 @@ pass-through (no dedicated node):
   kind-decl
   op-cmp
   rvalue
+  step-clockwork
   top-level
   type-built-in
 single-terminal (no operator):
@@ -21,6 +23,7 @@ single-terminal (no operator):
 map-hosted (plain value or input-decided node kind):
   cause-named
   cause-system
+  clockwork-emit
   cond-term
   declaration
   effect-named

@@ -1,20 +1,14 @@
 open: X2 . X4
-open: X6 . X8 X9 is: mode_group
+open: X6 . X8
+clock: X10 1
 :close
 :close
-open: X15 . X17
+event: X15 ( )
 open: X19 . X21
 open: X23 . X25
 open: X27 . X29
-mode: X31 . X33
-deinit: { x }
-until: BEGIN
+open: X31 . X33 cause: X35 . X37 for: X39 . X41 & { x }
 :close
 :close
-:close
-:close
-open: X42 . X44
-open: X46 . X48
-clock: X50 1
 :close
 :close

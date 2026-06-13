@@ -566,3 +566,37 @@ SEMANTIC OBLIGATIONS HANDED ON (recorded in FOR-SEMANTICS, not enforced here)
     resolve per F-11; a PACED agent emission is a stimulus edge entering the
     cascade at a tick boundary, an 'instant:' emission a stimulus edge that may
     land within a running no-time cascade; the agent is never a cascade node.
+-------------------------------------------------------------------------------
+D-12  RENAME 'agent' -> 'clockwork', 'ag' -> 'cw' (2026-06-13)
+-------------------------------------------------------------------------------
+DECISION
+    The construct introduced in D-11 as 'agent:' is renamed 'clockwork:'
+    throughout, and its self-binding 'ag' is renamed 'cw'. The keyword, the rule
+    band (clockwork / elm-clockwork / step-clockwork / clockwork-emit /
+    -instant / -wait / -select / -if / -while), the reserved word, the AST node
+    (Clockwork) and its factory, SYNTAX_DOC, and FOR-SEMANTICS all move together.
+    D-11 is left verbatim above as the historical record; read its 'agent' as
+    'clockwork' and its 'ag' as 'cw'.
+
+RATIONALE
+    'agent' connotes autonomy -- an entity that senses, decides, and reacts. The
+    construct has none of that: it runs a fixed script on a fixed clock,
+    identical every run. The name advertised a freedom the design forbids, which
+    is precisely wrong for a golden-master engine whose value is determinism.
+    'clockwork' encodes the constraint instead of fighting it: a pre-wound
+    mechanism, executed tick by tick, no choice. The mechanism connotation that
+    would weaken an 'actor' name is the point here. 'cw' follows 'sm'/'mg' as the
+    two-letter self-binding.
+
+REJECTED
+    'monad:' -- collides hard with the FP meaning (bind/return), the opposite of
+        an imperative tick-script; actively misleading.
+    'machine:' -- collides with 'state_machine:'; the construct is deliberately
+        NOT a state machine (linear script, not a transition habitat).
+    Keeping 'agent' -- the autonomy it implies is the specific defect above.
+
+TESTS
+    New positive coverage lands with the rename: test-engine.py
+    'clockwork_shapes' (signature, guarded clock, the step variety, wait tail,
+    select, if/elif/else, while, and the FENCE rejection) and the monkey-fuzz
+    'clockwork' profile (seed 0xC107).

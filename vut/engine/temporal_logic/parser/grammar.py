@@ -122,7 +122,7 @@ t_kw_mode_group    = T.captured("mode_group")
 t_kw_state_machine = T.captured("state_machine")
 t_kw_struct        = T.captured("struct")
 t_kw_container     = T.captured("container")
-t_kw_agent         = T.captured("agent")
+t_kw_clockwork         = T.captured("clockwork")
 
 # Built-in value types and the boolean literals (variable declarations,
 # rvalues, bracket-condition operands).
@@ -171,7 +171,7 @@ ROLES = {
 
 GRAMMAR = {
 "top-level":      ("<namespace>", OR, "<import>", OR, "<causality>", OR, "<mode>",
-                   OR, "<mode-group>", OR, "<state-machine>", OR, "<agent>",
+                   OR, "<mode-group>", OR, "<state-machine>", OR, "<clockwork>",
                    OR, "<def-event>", OR, "<def-clock>", OR, "<def-cause>",
                    OR, "<def-effect>", OR, "<declaration>"),
 
@@ -187,7 +187,7 @@ GRAMMAR = {
 "kind-decl":      ("<kind-reactor>", OR, "<kind-struct>", OR, "<kind-container>",
                    OR, "<kind-variable>"),
 "kind-reactor":   (t_kw_mode, OR, t_kw_state, OR, t_kw_mode_group,
-                   OR, t_kw_state_machine, OR, t_kw_agent),
+                   OR, t_kw_state_machine, OR, t_kw_clockwork),
 "kind-struct":    (t_kw_struct,),
 "kind-container": (t_kw_container, [t_op_lt, ["<list-arg>"], t_op_gt],
                    ["by:", t_opq_lvalue]),
@@ -205,35 +205,35 @@ GRAMMAR = {
 "state-machine":  ("state_machine:", "<signature>", STAR(("is:", "<name-dotted(base)>")),
                    PLUS("<elm-state-machine>"), ":end"),
 
-# --- agent: a tick-scripted stimulus actor (D-11) -------------------------
-# 'agent: <id> [(sig)] on: <cause>' then a body of agent elements, ':end'.
+# --- clockwork: a tick-scripted stimulus actor (D-11) -------------------------
+# 'clockwork: <id> [(sig)] on: <cause>' then a body of clockwork elements, ':end'.
 # 'on:' reuses <cause> (trigger + optional guard, the heartbeat shape); pass 2
 # resolves the trigger to a clock. The body element is a step or an init/deinit.
-"agent":          ("agent:", "<signature>", "on:", "<cause(heartbeat)>",
-                   PLUS("<elm-agent>"), ":end"),
-"elm-agent":      ("<step-agent>", OR, "<init>", OR, "<deinit>"),
+"clockwork":          ("clockwork:", "<signature>", "on:", "<cause(heartbeat)>",
+                   PLUS("<elm-clockwork>"), ":end"),
+"elm-clockwork":      ("<step-clockwork>", OR, "<init>", OR, "<deinit>"),
 
 # The step alternation. Each branch opens with a distinct leader: a bare
 # emission with <name-dotted> (the identifier class); every other step with its
 # own trailing-colon keyword or '{'. LL(2)-clean by leader.
-"step-agent":     ("<agent-instant>", OR, "<agent-wait>", OR, "<agent-select>",
-                   OR, "<agent-if>", OR, "<agent-while>", OR, "<spawn>",
+"step-clockwork":     ("<clockwork-instant>", OR, "<clockwork-wait>", OR, "<clockwork-select>",
+                   OR, "<clockwork-if>", OR, "<clockwork-while>", OR, "<spawn>",
                    OR, "<unspawn>", OR, "<arming-mode>", OR, "<mutation>",
-                   OR, "<agent-emit>"),
+                   OR, "<clockwork-emit>"),
 
 # Paced emission (consumes a tick) -- a bare <event-spec>: name + mandatory args.
-"agent-emit":     ("<name-dotted(emission)>", "<parens-arg>"),
+"clockwork-emit":     ("<name-dotted(emission)>", "<parens-arg>"),
 # Immediate injection (tick-free) into the current queue.
-"agent-instant":  ("instant:", "<name-dotted(emission)>", "<parens-arg>"),
+"clockwork-instant":  ("instant:", "<name-dotted(emission)>", "<parens-arg>"),
 # Suspend until a cause fires; optional co-temporal effect tail.
-"agent-wait":     ("wait:", "<cause>", STAR(("=>", "<effect>"))),
+"clockwork-wait":     ("wait:", "<cause>", STAR(("=>", "<effect>"))),
 # First-of-many: only wait lines inside.
-"agent-select":   ("select:", PLUS("<agent-wait>"), ":end"),
+"clockwork-select":   ("select:", PLUS("<clockwork-wait>"), ":end"),
 # Control frames; conditions reuse <guard>; one ':end' per if-chain, own for while.
-"agent-if":       ("if:", "<guard>", PLUS("<step-agent>"),
-                   STAR(("elif:", "<guard>", PLUS("<step-agent>"))),
-                   ["else:", PLUS("<step-agent>")], ":end"),
-"agent-while":    ("while:", "<guard>", PLUS("<step-agent>"), ":end"),
+"clockwork-if":       ("if:", "<guard>", PLUS("<step-clockwork>"),
+                   STAR(("elif:", "<guard>", PLUS("<step-clockwork>"))),
+                   ["else:", PLUS("<step-clockwork>")], ":end"),
+"clockwork-while":    ("while:", "<guard>", PLUS("<step-clockwork>"), ":end"),
 
 "cause":          ("<cause-system>", OR, "<cause-named>"),
 "cause-system":   ((t_kw_any, OR, t_kw_end, OR, t_kw_begin, OR, t_kw_change),

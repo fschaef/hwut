@@ -1,244 +1,168 @@
 === monkey: balanced ===
-tokens parsed:      147
+tokens parsed:      99
 top-level items:    5
 diagnostics:        none
 
 -- AST --
-Import
-  filename = 's'
-  mount:
-    'X4'
-    'X6'
-  begin = 0
-Namespace
-  name:
-    'X8'
-    'X10'
-    'X12'
-  items:
-    Causality
-      cause:
-        Cause
-          trigger:
-            Trigger
-              name:
-                'END'
-              is_keyword = True
-              begin = 0
-          guard:
-            OpaqueCode
-              text = '{ x{ y }{ y } }'
-              mode = <Role.CONDITION: 'condition'>
-              begin = 0
-              _references = None
-          begin = 0
-      effects:
-        ReportString
-          text = '"s"'
-          begin = 0
-        Mutation
-          body:
-            OpaqueCode
-              text = '{ x{ y } }'
-              mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-              begin = 0
-              _references = None
-          begin = 0
+VariableDef
+  name = 'X1'
+  type_name = 'bool'
+  args:
+    Arg
+      name = 'X5'
+      value = 'false'
+      kind = <E_ArgKind.LITERAL: 0>
       begin = 0
-  begin = 0
-Namespace
-  name:
-    'X21'
-    'X23'
-  items:
-    EffectDef
-      name:
-        'X25'
-        'X27'
-      params:
-        []
-      effects:
-        ModeArming
-          name:
-            'X30'
-            'X32'
-          args:
-            Arg
-              name = None
-              value:
-                'X34'
-                'X36'
-              kind = <E_ArgKind.NAME: 2>
-              begin = 0
-            Arg
-              name = 'X38'
-              value:
-                OpaqueCode
-                  text = '{ x }'
-                  mode = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-                  _references = None
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-          begin = 0
+    Arg
+      name = None
+      value:
+        'X9'
+        'X11'
+      kind = <E_ArgKind.NAME: 2>
       begin = 0
-    EventDef
-      name = 'X42'
-      params:
-        []
-      begin = 0
-  begin = 0
-Namespace
-  name:
-    'X47'
-    'X49'
-  items:
-    Namespace
-      name:
-        'X51'
-        'X53'
-        'X55'
-      items:
-        VariableDef
-          name = 'X56'
-          type_name = 'string'
-          args:
-            []
-          by = None
-          head_params:
-            ArgDecl
-              member = 'n58'
-              type = 'X59'
-              begin = 0
-            ArgDecl
-              member = 'n61'
-              type = 'int'
-              begin = 0
-          begin = 0
-        Import
-          filename = 's'
-          mount:
-            'X71'
-            'X73'
-          begin = 0
-      begin = 0
-  begin = 0
-StateMachine
-  name:
-    'X77'
-    'X79'
-  params:
+  by = None
+  head_params:
     []
-  bases:
-    'X81'
-    'X83'
-    'X85'
-    'X87'
-    'X89'
-  states:
-    State
+  begin = 0
+ClockDef
+  name = 'X14'
+  period = '1'
+  begin = 0
+Namespace
+  name:
+    'X17'
+    'X19'
+  items:
+    StateMachine
       name:
-        'X91'
-        'X93'
+        'X21'
+        'X23'
+        'X25'
       params:
         []
-      init = None
-      deinit = None
-      causalities:
-        Causality
-          cause:
+      bases:
+        'X27'
+        'X29'
+      states:
+        State
+          name:
+            'X31'
+            'X33'
+          params:
+            []
+          init = None
+          deinit = None
+          causalities:
+            Causality
+              cause:
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'BEGIN'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+              effects:
+                ModeArming
+                  name:
+                    'X40'
+                    'X42'
+                  args:
+                    []
+                  begin = 0
+              begin = 0
+          untils:
             Cause
               trigger:
                 Trigger
                   name:
-                    'X95'
-                    'X97'
+                    'X46'
+                    'X48'
                   is_keyword = False
                   begin = 0
               guard = None
               begin = 0
-          effects:
-            Unspawn
-              name:
-                'X100'
-                'X102'
-              begin = 0
-            Spawn
-              name:
-                'X105'
-                'X107'
-              args:
-                []
-              has_parens = True
-              in_container = None
-              via = None
-              begin = 0
           begin = 0
-      untils:
-        Cause
-          trigger:
-            Trigger
-              name:
-                'CHANGE'
-              is_keyword = True
-              begin = 0
-          guard:
-            Condition
-              expr:
-                BoolOp
-                  op = 'or'
-                  operands:
-                    BoolOp
-                      op = 'and'
-                      operands:
-                        BoolRef
-                          name:
-                            'X114'
-                            'X116'
-                          begin = 0
-                        BoolRef
-                          name:
-                            'X118'
-                            'X120'
-                          begin = 0
-                      begin = 0
-                    BoolOp
-                      op = 'and'
-                      operands:
-                        BoolRef
-                          name:
-                            'X122'
-                            'X124'
-                          begin = 0
-                        BoolRef
-                          name:
-                            'X126'
-                            'X128'
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-          begin = 0
-        CauseRef
-          name:
-            'X131'
-            'X133'
-            'X135'
-          args:
-            []
-          guard = None
-          begin = 0
+      has_refs:
+        []
+      default = None
+      init = None
+      deinit = None
       begin = 0
-  has_refs:
-    []
-  default:
-    DefaultRef
+  begin = 0
+EffectDef
+  name:
+    'X52'
+    'X54'
+    'X56'
+  params:
+    ArgDecl
+      member = 'n58'
+      type = 'X59'
+      begin = 0
+    ArgDecl
+      member = 'n61'
+      type = 'string'
+      begin = 0
+  effects:
+    Spawn
       name:
-        'X139'
-        'X141'
-        'X143'
-      is_void = False
+        'X66'
+        'X68'
+        'X70'
+      args:
+        Arg
+          name = 'X72'
+          value = 'true'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+      has_parens = True
+      in_container:
+        'X81'
+        'X83'
+        'X85'
+      via:
+        Arg
+          name = None
+          value:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <E_SpanMode.EXPRESSION: 'expression'>
+              begin = 0
+              _references = None
+          kind = <E_ArgKind.LUAU: 1>
+          begin = 0
       begin = 0
-  init = None
-  deinit = None
+    Mutation
+      body:
+        OpaqueCode
+          text = '{ x{ y } }'
+          mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+          _references = None
+      begin = 0
+  begin = 0
+EventDef
+  name = 'X89'
+  params:
+    ArgDecl
+      member = 'n91'
+      type = 'int'
+      begin = 0
+    ArgDecl
+      member = 'n94'
+      type = 'X95'
+      begin = 0
   begin = 0

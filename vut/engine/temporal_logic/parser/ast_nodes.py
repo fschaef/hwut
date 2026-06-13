@@ -44,7 +44,7 @@ class E_ArgKind(Enum):
 class TopLevel(OR_Interface):
     """Abstract base for the constructs that may appear at rule-file top level.
 
-    Namespace, Import, Causality, Mode, ModeGroup, StateMachine, Agent, the
+    Namespace, Import, Causality, Mode, ModeGroup, StateMachine, Clockwork, the
     four declaration nodes (ReactorDecl, StructDecl, ContainerDecl, VariableDef),
     EventDef, ClockDef, CauseDef and EffectDef derive from it, so
     'RuleFile.items' is typed as list[TopLevel] and only these node kinds are
@@ -974,9 +974,9 @@ class Namespace(SEQ_Interface, TopLevel):
 class Instant(SEQ_Interface):
     """An immediate-injection step: 'instant: name(args)'.
 
-    A tick-free agent stimulus -- the named event with its mandatory argument
+    A tick-free clockwork stimulus -- the named event with its mandatory argument
     list is injected into the CURRENT event queue at the present instant, off
-    the agent's clock beat (D-11). The paced counterpart is a bare EventSpec
+    the clockwork's clock beat (D-11). The paced counterpart is a bare EventSpec
     (no keyword), which consumes a tick.
     """
     name:  "list[str]"        # name-dotted segments
@@ -994,10 +994,10 @@ class Instant(SEQ_Interface):
 class WaitLine(SEQ_Interface):
     """A wait step: 'wait: <cause> (=> <effect>)*'.
 
-    Suspends the agent script until 'cause' fires. 'effects' is the optional
+    Suspends the clockwork script until 'cause' fires. 'effects' is the optional
     co-temporal tail (possibly empty), run with 'e' bound to the firing event
     -- 'e' does not flow into subsequent steps. A tail-less wait is a pure
-    progression gate. Resumption is at the agent's next own-clock tick (D-11).
+    progression gate. Resumption is at the clockwork's next own-clock tick (D-11).
     """
     cause:   Cause
     effects: List[object]     # EventSpec/EffectRef/ModeArming/Spawn/Unspawn/...
@@ -1036,7 +1036,7 @@ class SelectFrame(SEQ_Interface):
 class IfFrame(SEQ_Interface):
     """An if step: 'if: <guard> <steps> (elif: <guard> <steps>)* [else: <steps>] :end'.
 
-    A tick-free control frame fencing step sequences inside an agent body. 'arms'
+    A tick-free control frame fencing step sequences inside an clockwork body. 'arms'
     is the list of (guard, body) pairs -- the leading 'if:' and each 'elif:', in
     source order; 'else_body' is the trailing 'else:' steps or None. The whole
     if/elif/else chain is closed by ONE ':end'. Conditions reuse <guard> (an
@@ -1077,7 +1077,7 @@ class WhileFrame(SEQ_Interface):
     scope.
     """
     guard: "object"           # OpaqueCode | Condition
-    body:  List[object]       # agent steps
+    body:  List[object]       # clockwork steps
     begin: int
 
     @classmethod
@@ -1089,16 +1089,16 @@ class WhileFrame(SEQ_Interface):
 
 
 @dataclass(frozen=True)
-class Agent(SEQ_Interface, TopLevel):
-    """An agent definition: a tick-scripted stimulus actor, closed by ':end'.
+class Clockwork(SEQ_Interface, TopLevel):
+    """An clockwork definition: a tick-scripted stimulus actor, closed by ':end'.
 
     'name'/'params' come from the signature; the params ARE the instance
-    members, read through the 'ag' self-binding (D-11). 'clock' is the 'on:'
+    members, read through the 'cw' self-binding (D-11). 'clock' is the 'on:'
     <cause> -- a trigger (resolved to a clock in pass 2) with an optional guard,
     the heartbeat shape. 'init'/'deinit' are STATEMENT_BLOCK OpaqueCode spans or
     None. 'steps' are the ordered body steps: EventSpec (paced emission),
     Instant, WaitLine, SelectFrame, IfFrame, WhileFrame, and the bare commands
-    (Spawn, Unspawn, ModeArming, Mutation). No inheritance: an agent carries no
+    (Spawn, Unspawn, ModeArming, Mutation). No inheritance: an clockwork carries no
     'is:' bases.
     """
     name:   "list[str]"       # dotted-name segments
@@ -1111,9 +1111,9 @@ class Agent(SEQ_Interface, TopLevel):
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: Agent -- children = (signature, cause, PLUS(elements)).
+        """RETURN: Clockwork -- children = (signature, cause, PLUS(elements)).
 
-        'agent:', 'on:', ':end' silent. The signature is the (name, params)
+        'clockwork:', 'on:', ':end' silent. The signature is the (name, params)
         pair; the cause is the 'on:' clock binding. Each element is a step or an
         InitBlock/DeinitBlock; init/deinit are sorted out by type, the rest keep
         source order as the script.
@@ -1137,9 +1137,8 @@ class RuleFile:
     """The whole parsed rule file: an ordered list of top-level constructs.
 
     'items' holds Namespace, Import, Causality, Mode, ModeGroup, StateMachine,
-    Agent, declaration (ReactorDecl/StructDecl/ContainerDecl/VariableDef),
+    Clockwork, declaration (ReactorDecl/StructDecl/ContainerDecl/VariableDef),
     EventDef, ClockDef, CauseDef and EffectDef nodes in source order. A mutable
     container so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)
-

@@ -1,5 +1,5 @@
 === monkey: spread ===
-tokens parsed:      931
+tokens parsed:      1136
 top-level items:    12
 diagnostics:        none
 
@@ -11,61 +11,562 @@ Namespace
     'X6'
     'X8'
   items:
-    Causality
-      cause:
-        CauseRef
+    StateMachine
+      name:
+        'X10'
+        'X12'
+        'X14'
+      params:
+        ArgDecl
+          member = 'n16'
+          type = 'int'
+          begin = 0
+        ArgDecl
+          member = 'n19'
+          type = 'X20'
+          begin = 0
+        ArgDecl
+          member = 'n22'
+          type = 'bool'
+          begin = 0
+        ArgDecl
+          member = 'n25'
+          type = 'X26'
+          begin = 0
+      bases:
+        'X30'
+        'X32'
+        'X34'
+        'X36'
+        'X38'
+        'X40'
+      states:
+        []
+      has_refs:
+        []
+      default:
+        DefaultRef
           name:
-            'X10'
-            'X12'
-            'X14'
-            'X16'
-            'X18'
-          args:
-            Arg
-              name = None
-              value = 'true'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X22'
-              value:
+            'X42'
+            'X44'
+            'X46'
+          is_void = True
+          begin = 0
+      init = None
+      deinit:
+        OpaqueCode
+          text = '{ x }'
+          mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+          _references = None
+      begin = 0
+  begin = 0
+ClockDef
+  name = 'X53'
+  period = '1'
+  begin = 0
+Namespace
+  name:
+    'X56'
+    'X58'
+    'X60'
+  items:
+    Namespace
+      name:
+        'X62'
+        'X64'
+        'X66'
+      items:
+        Namespace
+          name:
+            'X68'
+            'X70'
+          items:
+            Mode
+              name:
+                'X72'
+                'X74'
+              params:
+                []
+              init:
                 OpaqueCode
                   text = '{ x }'
-                  mode = <Role.EXPRESSION: 'expression'>
+                  mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+                  _references = None
+              deinit:
+                OpaqueCode
+                  text = '{ x }'
+                  mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+                  _references = None
+              causalities:
+                Causality
+                  cause:
+                    Cause
+                      trigger:
+                        Trigger
+                          name:
+                            'ANY'
+                          is_keyword = True
+                          begin = 0
+                      guard = None
+                      begin = 0
+                  effects:
+                    Unspawn
+                      name:
+                        'X81'
+                        'X83'
+                      begin = 0
+                  begin = 0
+                Causality
+                  cause:
+                    Cause
+                      trigger:
+                        Trigger
+                          name:
+                            'X87'
+                            'X89'
+                          is_keyword = False
+                          begin = 0
+                      guard = None
+                      begin = 0
+                  effects:
+                    Spawn
+                      name:
+                        'X92'
+                        'X94'
+                      args:
+                        []
+                      has_parens = True
+                      in_container = None
+                      via = None
+                      begin = 0
+                  begin = 0
+              untils:
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'CHANGE'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'X100'
+                        'X102'
+                      is_keyword = False
+                      begin = 0
+                  guard = None
+                  begin = 0
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'END'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'X106'
+                        'X108'
+                      is_keyword = False
+                      begin = 0
+                  guard = None
+                  begin = 0
+              begin = 0
+            StructDecl
+              name = 'X109'
+              members:
+                ArgDecl
+                  member = 'n111'
+                  type = 'float'
+                  begin = 0
+                ArgDecl
+                  member = 'n114'
+                  type = 'X115'
+                  begin = 0
+              begin = 0
+          begin = 0
+      begin = 0
+    ClockDef
+      name = 'X122'
+      period = '1'
+      begin = 0
+    Namespace
+      name:
+        'X125'
+        'X127'
+        'X129'
+        'X131'
+      items:
+        StateMachine
+          name:
+            'X133'
+            'X135'
+            'X137'
+            'X139'
+            'X141'
+          params:
+            ArgDecl
+              member = 'n143'
+              type = 'X144'
+              begin = 0
+            ArgDecl
+              member = 'n146'
+              type = 'string'
+              begin = 0
+            ArgDecl
+              member = 'n149'
+              type = 'int'
+              begin = 0
+            ArgDecl
+              member = 'n152'
+              type = 'X153'
+              begin = 0
+          bases:
+            'X157'
+            'X159'
+            'X161'
+            'X163'
+            'X165'
+            'X167'
+            'X169'
+            'X171'
+            'X173'
+            'X175'
+            'X177'
+            'X179'
+            'X181'
+            'X183'
+            'X185'
+          states:
+            State
+              name:
+                'X187'
+                'X189'
+              params:
+                []
+              init:
+                OpaqueCode
+                  text = '{ x{ y } }'
+                  mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+                  _references = None
+              deinit:
+                OpaqueCode
+                  text = '{ x }'
+                  mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+                  begin = 0
+                  _references = None
+              causalities:
+                []
+              untils:
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'BEGIN'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'X198'
+                        'X200'
+                      is_keyword = False
+                      begin = 0
+                  guard = None
+                  begin = 0
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'X202'
+                        'X204'
+                      is_keyword = False
+                      begin = 0
+                  guard = None
+                  begin = 0
+                Cause
+                  trigger:
+                    Trigger
+                      name:
+                        'BEGIN'
+                      is_keyword = True
+                      begin = 0
+                  guard = None
+                  begin = 0
+              begin = 0
+          has_refs:
+            HasRef
+              name:
+                'X209'
+                'X211'
+              is_void = True
+              begin = 0
+          default = None
+          init:
+            OpaqueCode
+              text = '{ x }'
+              mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+              _references = None
+          deinit:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+              begin = 0
+              _references = None
+          begin = 0
+        Import
+          filename = 's'
+          mount:
+            'X219'
+            'X221'
+          begin = 0
+        ContainerDecl
+          name = 'X222'
+          cargs:
+            Arg
+              name = None
+              value:
+                OpaqueCode
+                  text = '{ x{ y } }'
+                  mode = <E_SpanMode.EXPRESSION: 'expression'>
                   begin = 0
                   _references = None
               kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = 'X238'
+              value = 'true'
+              kind = <E_ArgKind.LITERAL: 0>
               begin = 0
             Arg
               name = None
               value = '"s"'
               kind = <E_ArgKind.LITERAL: 0>
               begin = 0
-          guard:
-            OpaqueCode
-              text = '{ x{ y } }'
-              mode = <Role.CONDITION: 'condition'>
-              begin = 0
-              _references = None
-          begin = 0
-      effects:
-        EventSpec
-          name:
-            'X29'
-            'X31'
-            'X33'
-            'X35'
-          args:
             Arg
-              name = 'X37'
+              name = 'X244'
               value:
-                'X39'
-                'X41'
+                'X246'
+                'X248'
               kind = <E_ArgKind.NAME: 2>
               begin = 0
             Arg
-              name = 'X43'
+              name = 'X250'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          by:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <E_SpanMode.LVALUE: 'lvalue'>
+              begin = 0
+              _references = None
+          head_params:
+            ArgDecl
+              member = 'n224'
+              type = 'float'
+              begin = 0
+            ArgDecl
+              member = 'n227'
+              type = 'X228'
+              begin = 0
+            ArgDecl
+              member = 'n230'
+              type = 'X231'
+              begin = 0
+          begin = 0
+        ClockDef
+          name = 'X256'
+          period = '1'
+          begin = 0
+      begin = 0
+  begin = 0
+ModeGroup
+  name:
+    'X261'
+    'X263'
+    'X265'
+    'X267'
+  params:
+    ArgDecl
+      member = 'n269'
+      type = 'bool'
+      begin = 0
+    ArgDecl
+      member = 'n272'
+      type = 'string'
+      begin = 0
+  bases:
+    'X277'
+    'X279'
+    'X281'
+    'X283'
+    'X285'
+    'X287'
+    'X289'
+    'X291'
+    'X293'
+    'X295'
+    'X297'
+    'X299'
+  modes:
+    Mode
+      name:
+        'X314'
+        'X316'
+        'X318'
+        'X320'
+      params:
+        ArgDecl
+          member = 'n322'
+          type = 'X323'
+          begin = 0
+        ArgDecl
+          member = 'n325'
+          type = 'int'
+          begin = 0
+        ArgDecl
+          member = 'n328'
+          type = 'X329'
+          begin = 0
+      init:
+        OpaqueCode
+          text = '{ x }'
+          mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+          _references = None
+      deinit = None
+      causalities:
+        []
+      untils:
+        Cause
+          trigger:
+            Trigger
+              name:
+                'ANY'
+              is_keyword = True
+              begin = 0
+          guard:
+            Condition
+              expr:
+                BoolOp
+                  op = 'or'
+                  operands:
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X337'
+                            'X339'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X341'
+                            'X343'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X345'
+                            'X347'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X349'
+                            'X351'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X353'
+                            'X355'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X357'
+                            'X359'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+        CauseRef
+          name:
+            'X362'
+            'X364'
+            'X366'
+          args:
+            Arg
+              name = None
               value = 'false'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X370'
+              value:
+                'X372'
+                'X374'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X378'
+              value:
+                OpaqueCode
+                  text = '{ x{ y } }'
+                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                  begin = 0
+                  _references = None
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+            Arg
+              name = None
+              value = 'false'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          guard:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <E_SpanMode.CONDITION: 'condition'>
+              begin = 0
+              _references = None
+          begin = 0
+        CauseRef
+          name:
+            'X385'
+            'X387'
+            'X389'
+          args:
+            Arg
+              name = 'X391'
+              value = 'true'
               kind = <E_ArgKind.LITERAL: 0>
               begin = 0
             Arg
@@ -73,51 +574,152 @@ Namespace
               value = '1'
               kind = <E_ArgKind.LITERAL: 0>
               begin = 0
-            Arg
-              name = None
-              value = 'false'
-              kind = <E_ArgKind.LITERAL: 0>
+          guard:
+            Condition
+              expr:
+                BoolOp
+                  op = 'or'
+                  operands:
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X399'
+                            'X401'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X403'
+                            'X405'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X407'
+                            'X409'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X411'
+                            'X413'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X415'
+                            'X417'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X419'
+                            'X421'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X423'
+                            'X425'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X427'
+                            'X429'
+                          begin = 0
+                      begin = 0
+                  begin = 0
               begin = 0
           begin = 0
       begin = 0
-  begin = 0
-ClockDef
-  name = 'X53'
-  period = '1'
-  begin = 0
-Import
-  filename = 's'
-  mount:
-    'X58'
-    'X60'
-    'X62'
-  begin = 0
-Mode
-  name:
-    'X64'
-    'X66'
-    'X68'
-    'X70'
-    'X72'
-  params:
-    ArgDecl
-      member = 'n74'
-      type = 'X75'
-      begin = 0
-    ArgDecl
-      member = 'n77'
-      type = 'bool'
+  has_refs:
+    HasRef
+      name:
+        'X301'
+        'X303'
+        'X305'
+        'X307'
+        'X309'
+      is_void = True
       begin = 0
   init:
     OpaqueCode
       text = '{ x{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+      _references = None
+  deinit = None
+  begin = 0
+CauseDef
+  name:
+    'X433'
+    'X435'
+    'X437'
+    'X439'
+  params:
+    ArgDecl
+      member = 'n441'
+      type = 'bool'
+      begin = 0
+    ArgDecl
+      member = 'n444'
+      type = 'X445'
+      begin = 0
+    ArgDecl
+      member = 'n447'
+      type = 'string'
+      begin = 0
+    ArgDecl
+      member = 'n450'
+      type = 'X451'
+      begin = 0
+  for_event:
+    'X455'
+    'X457'
+    'X459'
+    'X461'
+    'X463'
+  guard:
+    OpaqueCode
+      text = '{ x }'
+      mode = <E_SpanMode.CONDITION: 'condition'>
+      begin = 0
+      _references = None
+  begin = 0
+Mode
+  name:
+    'X466'
+    'X468'
+    'X470'
+    'X472'
+    'X474'
+  params:
+    ArgDecl
+      member = 'n476'
+      type = 'X477'
+      begin = 0
+    ArgDecl
+      member = 'n479'
+      type = 'float'
+      begin = 0
+  init:
+    OpaqueCode
+      text = '{ x{ y } }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
       _references = None
   deinit:
     OpaqueCode
-      text = '{ x }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      text = '{ x{ y } }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
       _references = None
   causalities:
@@ -131,6 +733,70 @@ Mode
               is_keyword = True
               begin = 0
           guard:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <E_SpanMode.CONDITION: 'condition'>
+              begin = 0
+              _references = None
+          begin = 0
+      effects:
+        ModeArming
+          name:
+            'X488'
+            'X490'
+            'X492'
+            'X494'
+            'X496'
+          args:
+            Arg
+              name = 'X498'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = 'true'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+          begin = 0
+      begin = 0
+    Causality
+      cause:
+        CauseRef
+          name:
+            'X506'
+            'X508'
+            'X510'
+            'X512'
+          args:
+            Arg
+              name = None
+              value:
+                'X514'
+                'X516'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+            Arg
+              name = 'X518'
+              value = 'false'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value = '"s"'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X524'
+              value:
+                OpaqueCode
+                  text = '{ x{ y } }'
+                  mode = <E_SpanMode.EXPRESSION: 'expression'>
+                  begin = 0
+                  _references = None
+              kind = <E_ArgKind.LUAU: 1>
+              begin = 0
+          guard:
             Condition
               expr:
                 BoolOp
@@ -141,13 +807,13 @@ Mode
                       operands:
                         BoolRef
                           name:
-                            'X86'
-                            'X88'
+                            'X529'
+                            'X531'
                           begin = 0
                         BoolRef
                           name:
-                            'X90'
-                            'X92'
+                            'X533'
+                            'X535'
                           begin = 0
                       begin = 0
                     BoolOp
@@ -155,70 +821,79 @@ Mode
                       operands:
                         BoolRef
                           name:
-                            'X94'
-                            'X96'
+                            'X537'
+                            'X539'
                           begin = 0
                         BoolRef
                           name:
-                            'X98'
-                            'X100'
+                            'X541'
+                            'X543'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X545'
+                            'X547'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X549'
+                            'X551'
+                          begin = 0
+                      begin = 0
+                    BoolOp
+                      op = 'and'
+                      operands:
+                        BoolRef
+                          name:
+                            'X553'
+                            'X555'
+                          begin = 0
+                        BoolRef
+                          name:
+                            'X557'
+                            'X559'
                           begin = 0
                       begin = 0
                   begin = 0
               begin = 0
           begin = 0
       effects:
-        Spawn
+        EventSpec
           name:
-            'X104'
-            'X106'
-            'X108'
-            'X110'
+            'X562'
+            'X564'
+            'X566'
+            'X568'
           args:
             Arg
-              name = 'X112'
+              name = None
+              value = 'true'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X572'
               value = '1'
               kind = <E_ArgKind.LITERAL: 0>
               begin = 0
             Arg
-              name = None
+              name = 'X576'
               value:
                 OpaqueCode
                   text = '{ x{ y } }'
-                  mode = <Role.EXPRESSION: 'expression'>
+                  mode = <E_SpanMode.EXPRESSION: 'expression'>
                   begin = 0
                   _references = None
               kind = <E_ArgKind.LUAU: 1>
               begin = 0
             Arg
-              name = 'X117'
-              value = '"s"'
+              name = None
+              value = 'false'
               kind = <E_ArgKind.LITERAL: 0>
               begin = 0
-          has_parens = True
-          in_container:
-            'X122'
-            'X124'
-            'X126'
-            'X128'
-            'X130'
-          via:
-            Arg
-              name = None
-              value:
-                'X132'
-                'X134'
-                'X136'
-              kind = <E_ArgKind.NAME: 2>
-              begin = 0
-          begin = 0
-        Mutation
-          body:
-            OpaqueCode
-              text = '{ x }'
-              mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-              begin = 0
-              _references = None
           begin = 0
       begin = 0
   untils:
@@ -226,611 +901,9 @@ Mode
       trigger:
         Trigger
           name:
-            'BEGIN'
+            'END'
           is_keyword = True
           begin = 0
-      guard:
-        OpaqueCode
-          text = '{ x{ y } }'
-          mode = <Role.CONDITION: 'condition'>
-          begin = 0
-          _references = None
-      begin = 0
-  begin = 0
-CauseDef
-  name:
-    'X144'
-    'X146'
-    'X148'
-    'X150'
-    'X152'
-  params:
-    ArgDecl
-      member = 'n154'
-      type = 'X155'
-      begin = 0
-    ArgDecl
-      member = 'n157'
-      type = 'float'
-      begin = 0
-    ArgDecl
-      member = 'n160'
-      type = 'string'
-      begin = 0
-  for_event:
-    'X165'
-    'X167'
-    'X169'
-    'X171'
-    'X173'
-  guard:
-    Condition
-      expr:
-        BoolOp
-          op = 'or'
-          operands:
-            BoolOp
-              op = 'and'
-              operands:
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X178'
-                                'X180'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X182'
-                                'X184'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X186'
-                                'X188'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X190'
-                                'X192'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X197'
-                                'X199'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X201'
-                                'X203'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X205'
-                                'X207'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X209'
-                                'X211'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-            BoolOp
-              op = 'and'
-              operands:
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X216'
-                                'X218'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X220'
-                                'X222'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X224'
-                                'X226'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X228'
-                                'X230'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X235'
-                                'X237'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X239'
-                                'X241'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X243'
-                                'X245'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X247'
-                                'X249'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-            BoolOp
-              op = 'and'
-              operands:
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X254'
-                                'X256'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X258'
-                                'X260'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X262'
-                                'X264'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X266'
-                                'X268'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X273'
-                                'X275'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X277'
-                                'X279'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X281'
-                                'X283'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X285'
-                                'X287'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-            BoolOp
-              op = 'and'
-              operands:
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X292'
-                                'X294'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X296'
-                                'X298'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X300'
-                                'X302'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X304'
-                                'X306'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X311'
-                                'X313'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X315'
-                                'X317'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X319'
-                                'X321'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X323'
-                                'X325'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X330'
-                                'X332'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X334'
-                                'X336'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X338'
-                                'X340'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X342'
-                                'X344'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X349'
-                                'X351'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X353'
-                                'X355'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X357'
-                                'X359'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X361'
-                                'X363'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X368'
-                                'X370'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X372'
-                                'X374'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X376'
-                                'X378'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X380'
-                                'X382'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-            BoolOp
-              op = 'and'
-              operands:
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X387'
-                                'X389'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X391'
-                                'X393'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X395'
-                                'X397'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X399'
-                                'X401'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                Not
-                  operand:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X406'
-                                'X408'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X410'
-                                'X412'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X414'
-                                'X416'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X418'
-                                'X420'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-          begin = 0
-      begin = 0
-  begin = 0
-StateMachine
-  name:
-    'X424'
-    'X426'
-  params:
-    ArgDecl
-      member = 'n428'
-      type = 'X429'
-      begin = 0
-    ArgDecl
-      member = 'n431'
-      type = 'X432'
-      begin = 0
-    ArgDecl
-      member = 'n434'
-      type = 'int'
-      begin = 0
-    ArgDecl
-      member = 'n437'
-      type = 'float'
-      begin = 0
-  bases:
-    'X442'
-    'X444'
-    'X446'
-    'X448'
-    'X450'
-    'X452'
-    'X454'
-    'X456'
-    'X458'
-    'X460'
-  states:
-    []
-  has_refs:
-    []
-  default = None
-  init:
-    OpaqueCode
-      text = '{ x }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-      _references = None
-  deinit:
-    OpaqueCode
-      text = '{ x }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-      _references = None
-  begin = 0
-Namespace
-  name:
-    'X465'
-    'X467'
-    'X469'
-  items:
-    CauseDef
-      name:
-        'X471'
-        'X473'
-        'X475'
-        'X477'
-        'X479'
-      params:
-        ArgDecl
-          member = 'n481'
-          type = 'X482'
-          begin = 0
-        ArgDecl
-          member = 'n484'
-          type = 'int'
-          begin = 0
-        ArgDecl
-          member = 'n487'
-          type = 'X488'
-          begin = 0
-        ArgDecl
-          member = 'n490'
-          type = 'X491'
-          begin = 0
-      for_event:
-        'X495'
-        'X497'
-        'X499'
       guard:
         Condition
           expr:
@@ -844,40 +917,32 @@ Namespace
                       operand:
                         BoolRef
                           name:
-                            'X503'
-                            'X505'
+                            'X587'
+                            'X589'
                           begin = 0
                       begin = 0
                     Not
                       operand:
                         BoolRef
                           name:
-                            'X508'
-                            'X510'
+                            'X592'
+                            'X594'
                           begin = 0
                       begin = 0
                     Not
                       operand:
                         BoolRef
                           name:
-                            'X513'
-                            'X515'
+                            'X597'
+                            'X599'
                           begin = 0
                       begin = 0
                     Not
                       operand:
                         BoolRef
                           name:
-                            'X518'
-                            'X520'
-                          begin = 0
-                      begin = 0
-                    Not
-                      operand:
-                        BoolRef
-                          name:
-                            'X523'
-                            'X525'
+                            'X602'
+                            'X604'
                           begin = 0
                       begin = 0
                   begin = 0
@@ -888,44 +953,32 @@ Namespace
                       operand:
                         BoolRef
                           name:
-                            'X528'
-                            'X530'
+                            'X607'
+                            'X609'
                           begin = 0
                       begin = 0
                     Not
                       operand:
                         BoolRef
                           name:
-                            'X533'
-                            'X535'
+                            'X612'
+                            'X614'
                           begin = 0
                       begin = 0
                     Not
                       operand:
                         BoolRef
                           name:
-                            'X538'
-                            'X540'
-                          begin = 0
-                      begin = 0
-                  begin = 0
-                BoolOp
-                  op = 'and'
-                  operands:
-                    Not
-                      operand:
-                        BoolRef
-                          name:
-                            'X543'
-                            'X545'
+                            'X617'
+                            'X619'
                           begin = 0
                       begin = 0
                     Not
                       operand:
                         BoolRef
                           name:
-                            'X548'
-                            'X550'
+                            'X622'
+                            'X624'
                           begin = 0
                       begin = 0
                   begin = 0
@@ -936,56 +989,515 @@ Namespace
                       operand:
                         BoolRef
                           name:
-                            'X553'
-                            'X555'
+                            'X627'
+                            'X629'
                           begin = 0
                       begin = 0
                     Not
                       operand:
                         BoolRef
                           name:
-                            'X558'
-                            'X560'
+                            'X632'
+                            'X634'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X637'
+                            'X639'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X642'
+                            'X644'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X647'
+                            'X649'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X652'
+                            'X654'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X657'
+                            'X659'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X662'
+                            'X664'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X667'
+                            'X669'
                           begin = 0
                       begin = 0
                   begin = 0
               begin = 0
           begin = 0
       begin = 0
+    CauseRef
+      name:
+        'X672'
+        'X674'
+        'X676'
+        'X678'
+      args:
+        Arg
+          name = 'X680'
+          value:
+            'X682'
+            'X684'
+            'X686'
+            'X688'
+            'X690'
+          kind = <E_ArgKind.NAME: 2>
+          begin = 0
+        Arg
+          name = None
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <E_SpanMode.EXPRESSION: 'expression'>
+              begin = 0
+              _references = None
+          kind = <E_ArgKind.LUAU: 1>
+          begin = 0
+      guard:
+        OpaqueCode
+          text = '{ x{ y } }'
+          mode = <E_SpanMode.CONDITION: 'condition'>
+          begin = 0
+          _references = None
+      begin = 0
+  begin = 0
+Clockwork
+  name:
+    'X697'
+    'X699'
+    'X701'
+    'X703'
+    'X705'
+  params:
+    ArgDecl
+      member = 'n707'
+      type = 'X708'
+      begin = 0
+    ArgDecl
+      member = 'n710'
+      type = 'float'
+      begin = 0
+  clock:
+    Cause
+      trigger:
+        Trigger
+          name:
+            'ANY'
+          is_keyword = True
+          begin = 0
+      guard:
+        OpaqueCode
+          text = '{ x{ y } }'
+          mode = <E_SpanMode.CONDITION: 'condition'>
+          begin = 0
+          _references = None
+      begin = 0
+  init = None
+  deinit:
+    OpaqueCode
+      text = '{ x }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+      begin = 0
+      _references = None
+  steps:
+    IfFrame
+      arms:
+        (Condition(expr=BoolOp(op='or', operands=[BoolOp(op='and', operands=[BoolRef(name=['X720', 'X722'], begin=0), BoolRef(name=['X724', 'X726'], begin=0), BoolRef(name=['X728', 'X730'], begin=0), BoolRef(name=['X732', 'X734'], begin=0), BoolRef(name=['X736', 'X738'], begin=0)], begin=0), BoolOp(op='and', operands=[BoolRef(name=['X740', 'X742'], begin=0), BoolRef(name=['X744', 'X746'], begin=0), BoolRef(name=['X748', 'X750'], begin=0), BoolRef(name=['X752', 'X754'], begin=0), BoolRef(name=['X756', 'X758'], begin=0)], begin=0), BoolOp(op='and', operands=[BoolRef(name=['X760', 'X762'], begin=0), BoolRef(name=['X764', 'X766'], begin=0), BoolRef(name=['X768', 'X770'], begin=0), BoolRef(name=['X772', 'X774'], begin=0)], begin=0), BoolOp(op='and', operands=[BoolRef(name=['X776', 'X778'], begin=0), BoolRef(name=['X780', 'X782'], begin=0), BoolRef(name=['X784', 'X786'], begin=0), BoolRef(name=['X788', 'X790'], begin=0)], begin=0), BoolOp(op='and', operands=[BoolRef(name=['X792', 'X794'], begin=0), BoolRef(name=['X796', 'X798'], begin=0)], begin=0)], begin=0), begin=0), [Instant(name=['X801', 'X803'], args=[Arg(name='X805', value='true', kind=<E_ArgKind.LITERAL: 0>, begin=0), Arg(name=None, value='"s"', kind=<E_ArgKind.LITERAL: 0>, begin=0), Arg(name='X811', value='1', kind=<E_ArgKind.LITERAL: 0>, begin=0), Arg(name=None, value='false', kind=<E_ArgKind.LITERAL: 0>, begin=0)], begin=0)])
+        (OpaqueCode(text='{ x }', mode=<E_SpanMode.CONDITION: 'condition'>, begin=0), [WhileFrame(guard=Condition(expr=BoolOp(op='or', operands=[BoolOp(op='and', operands=[BoolRef(name=['X820', 'X822'], begin=0), BoolRef(name=['X824', 'X826'], begin=0)], begin=0), BoolOp(op='and', operands=[BoolRef(name=['X828', 'X830'], begin=0), BoolRef(name=['X832', 'X834'], begin=0)], begin=0)], begin=0), begin=0), body=[Mutation(body=OpaqueCode(text='{ x{ y } }', mode=<E_SpanMode.STATEMENT_BLOCK: 'statement_block'>, begin=0), begin=0), Spawn(name=['X837', 'X839'], args=[], has_parens=True, in_container=['X843', 'X845'], via=Arg(name=None, value=['X847', 'X849'], kind=<E_ArgKind.NAME: 2>, begin=0), begin=0)], begin=0)])
+      else_body:
+        ModeArming
+          name:
+            'X853'
+            'X855'
+            'X857'
+          args:
+            Arg
+              name = 'X859'
+              value = '1'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = 'X863'
+              value = 'true'
+              kind = <E_ArgKind.LITERAL: 0>
+              begin = 0
+            Arg
+              name = None
+              value:
+                'X867'
+                'X869'
+              kind = <E_ArgKind.NAME: 2>
+              begin = 0
+          begin = 0
+        Unspawn
+          name:
+            'X872'
+            'X874'
+          begin = 0
+      begin = 0
+  begin = 0
+Causality
+  cause:
+    CauseRef
+      name:
+        'X878'
+        'X880'
+        'X882'
+        'X884'
+      args:
+        Arg
+          name = None
+          value = 'false'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = 'X888'
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = 'X892'
+          value:
+            OpaqueCode
+              text = '{ x }'
+              mode = <E_SpanMode.EXPRESSION: 'expression'>
+              begin = 0
+              _references = None
+          kind = <E_ArgKind.LUAU: 1>
+          begin = 0
+        Arg
+          name = None
+          value = '"s"'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
+          value:
+            OpaqueCode
+              text = '{ x{ y } }'
+              mode = <E_SpanMode.EXPRESSION: 'expression'>
+              begin = 0
+              _references = None
+          kind = <E_ArgKind.LUAU: 1>
+          begin = 0
+      guard:
+        OpaqueCode
+          text = '{ x{ y } }'
+          mode = <E_SpanMode.CONDITION: 'condition'>
+          begin = 0
+          _references = None
+      begin = 0
+  effects:
+    ReportString
+      text = '"s"'
+      begin = 0
+    Mutation
+      body:
+        OpaqueCode
+          text = '{ x }'
+          mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+          _references = None
+      begin = 0
+    ModeArming
+      name:
+        'X904'
+        'X906'
+        'X908'
+        'X910'
+        'X912'
+      args:
+        Arg
+          name = 'X914'
+          value:
+            'X916'
+            'X918'
+            'X920'
+            'X922'
+          kind = <E_ArgKind.NAME: 2>
+          begin = 0
+        Arg
+          name = 'X924'
+          value = 'false'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+      begin = 0
+    ReportString
+      text = '"s"'
+      begin = 0
+  begin = 0
+EventDef
+  name = 'X931'
+  params:
+    ArgDecl
+      member = 'n933'
+      type = 'X934'
+      begin = 0
+    ArgDecl
+      member = 'n936'
+      type = 'int'
+      begin = 0
   begin = 0
 EffectDef
   name:
-    'X564'
-    'X566'
-    'X568'
-    'X570'
-    'X572'
+    'X941'
+    'X943'
+    'X945'
   params:
     ArgDecl
-      member = 'n574'
-      type = 'bool'
+      member = 'n947'
+      type = 'X948'
       begin = 0
     ArgDecl
-      member = 'n577'
+      member = 'n950'
       type = 'string'
       begin = 0
     ArgDecl
-      member = 'n580'
-      type = 'X581'
+      member = 'n953'
+      type = 'X954'
       begin = 0
     ArgDecl
-      member = 'n583'
-      type = 'X584'
+      member = 'n956'
+      type = 'bool'
       begin = 0
   effects:
-    ModeArming
+    Mutation
+      body:
+        OpaqueCode
+          text = '{ x{ y } }'
+          mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
+          begin = 0
+          _references = None
+      begin = 0
+    Unspawn
       name:
-        'X589'
-        'X591'
+        'X963'
+        'X965'
+        'X967'
+      begin = 0
+  begin = 0
+EventDef
+  name = 'X969'
+  params:
+    ArgDecl
+      member = 'n971'
+      type = 'int'
+      begin = 0
+    ArgDecl
+      member = 'n974'
+      type = 'X975'
+      begin = 0
+    ArgDecl
+      member = 'n977'
+      type = 'X978'
+      begin = 0
+    ArgDecl
+      member = 'n980'
+      type = 'string'
+      begin = 0
+  begin = 0
+Causality
+  cause:
+    Cause
+      trigger:
+        Trigger
+          name:
+            'END'
+          is_keyword = True
+          begin = 0
+      guard:
+        Condition
+          expr:
+            BoolOp
+              op = 'or'
+              operands:
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X989'
+                            'X991'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X994'
+                            'X996'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X999'
+                            'X1001'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1004'
+                            'X1006'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1009'
+                            'X1011'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1014'
+                            'X1016'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1019'
+                            'X1021'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1024'
+                            'X1026'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+                BoolOp
+                  op = 'and'
+                  operands:
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1029'
+                            'X1031'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1034'
+                            'X1036'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1039'
+                            'X1041'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1044'
+                            'X1046'
+                          begin = 0
+                      begin = 0
+                    Not
+                      operand:
+                        BoolRef
+                          name:
+                            'X1049'
+                            'X1051'
+                          begin = 0
+                      begin = 0
+                  begin = 0
+              begin = 0
+          begin = 0
+      begin = 0
+  effects:
+    EventSpec
+      name:
+        'X1054'
+        'X1056'
+        'X1058'
       args:
         Arg
-          name = 'X593'
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = None
           value = 'true'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+        Arg
+          name = 'X1064'
+          value = '"s"'
           kind = <E_ArgKind.LITERAL: 0>
           begin = 0
         Arg
@@ -994,473 +1506,50 @@ EffectDef
           kind = <E_ArgKind.LITERAL: 0>
           begin = 0
         Arg
-          name = 'X599'
+          name = 'X1070'
           value:
             OpaqueCode
               text = '{ x }'
-              mode = <Role.EXPRESSION: 'expression'>
+              mode = <E_SpanMode.EXPRESSION: 'expression'>
               begin = 0
               _references = None
           kind = <E_ArgKind.LUAU: 1>
           begin = 0
       begin = 0
-    Unspawn
+    Spawn
       name:
-        'X604'
-        'X606'
-        'X608'
-        'X610'
-        'X612'
+        'X1075'
+        'X1077'
+        'X1079'
+        'X1081'
+      args:
+        Arg
+          name = 'X1083'
+          value:
+            'X1085'
+            'X1087'
+          kind = <E_ArgKind.NAME: 2>
+          begin = 0
+        Arg
+          name = None
+          value = '1'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
+      has_parens = True
+      in_container:
+        'X1092'
+        'X1094'
+        'X1096'
+        'X1098'
+        'X1100'
+      via:
+        Arg
+          name = None
+          value = 'true'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
       begin = 0
     ReportString
       text = '"s"'
-      begin = 0
-  begin = 0
-ClockDef
-  name = 'X616'
-  period = '1'
-  begin = 0
-StateMachine
-  name:
-    'X619'
-    'X621'
-    'X623'
-    'X625'
-    'X627'
-  params:
-    ArgDecl
-      member = 'n629'
-      type = 'string'
-      begin = 0
-    ArgDecl
-      member = 'n632'
-      type = 'X633'
-      begin = 0
-    ArgDecl
-      member = 'n635'
-      type = 'int'
-      begin = 0
-    ArgDecl
-      member = 'n638'
-      type = 'bool'
-      begin = 0
-  bases:
-    'X643'
-    'X645'
-    'X647'
-    'X649'
-    'X651'
-    'X653'
-  states:
-    State
-      name:
-        'X655'
-        'X657'
-        'X659'
-      params:
-        ArgDecl
-          member = 'n661'
-          type = 'X662'
-          begin = 0
-        ArgDecl
-          member = 'n664'
-          type = 'float'
-          begin = 0
-      init:
-        OpaqueCode
-          text = '{ x }'
-          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-          _references = None
-      deinit:
-        OpaqueCode
-          text = '{ x }'
-          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-          _references = None
-      causalities:
-        Causality
-          cause:
-            CauseRef
-              name:
-                'X669'
-                'X671'
-              args:
-                Arg
-                  name = None
-                  value = '"s"'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = None
-                  value:
-                    'X675'
-                    'X677'
-                  kind = <E_ArgKind.NAME: 2>
-                  begin = 0
-              guard:
-                OpaqueCode
-                  text = '{ x }'
-                  mode = <Role.CONDITION: 'condition'>
-                  begin = 0
-                  _references = None
-              begin = 0
-          effects:
-            Mutation
-              body:
-                OpaqueCode
-                  text = '{ x }'
-                  mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-                  begin = 0
-                  _references = None
-              begin = 0
-            ModeArming
-              name:
-                'X683'
-                'X685'
-              args:
-                Arg
-                  name = 'X687'
-                  value = '1'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = 'X691'
-                  value = 'true'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-              begin = 0
-            EventSpec
-              name:
-                'X696'
-                'X698'
-                'X700'
-              args:
-                Arg
-                  name = None
-                  value = 'true'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = None
-                  value = '"s"'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-              begin = 0
-            Spawn
-              name:
-                'X708'
-                'X710'
-                'X712'
-                'X714'
-                'X716'
-              args:
-                Arg
-                  name = 'X718'
-                  value = 'false'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = 'X722'
-                  value:
-                    OpaqueCode
-                      text = '{ x }'
-                      mode = <Role.EXPRESSION: 'expression'>
-                      begin = 0
-                      _references = None
-                  kind = <E_ArgKind.LUAU: 1>
-                  begin = 0
-              has_parens = True
-              in_container:
-                'X726'
-                'X728'
-                'X730'
-              via:
-                Arg
-                  name = None
-                  value:
-                    'X732'
-                    'X734'
-                  kind = <E_ArgKind.NAME: 2>
-                  begin = 0
-              begin = 0
-          begin = 0
-        Causality
-          cause:
-            Cause
-              trigger:
-                Trigger
-                  name:
-                    'END'
-                  is_keyword = True
-                  begin = 0
-              guard:
-                Condition
-                  expr:
-                    BoolOp
-                      op = 'or'
-                      operands:
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X740'
-                                'X742'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X744'
-                                'X746'
-                              begin = 0
-                          begin = 0
-                        BoolOp
-                          op = 'and'
-                          operands:
-                            BoolRef
-                              name:
-                                'X748'
-                                'X750'
-                              begin = 0
-                            BoolRef
-                              name:
-                                'X752'
-                                'X754'
-                              begin = 0
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-          effects:
-            ReportString
-              text = '"s"'
-              begin = 0
-            Unspawn
-              name:
-                'X760'
-                'X762'
-                'X764'
-                'X766'
-              begin = 0
-            Unspawn
-              name:
-                'X769'
-                'X771'
-                'X773'
-                'X775'
-                'X777'
-              begin = 0
-            EventSpec
-              name:
-                'X779'
-                'X781'
-                'X783'
-              args:
-                Arg
-                  name = None
-                  value = '1'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-                Arg
-                  name = 'X787'
-                  value = 'false'
-                  kind = <E_ArgKind.LITERAL: 0>
-                  begin = 0
-              begin = 0
-          begin = 0
-      untils:
-        CauseRef
-          name:
-            'X793'
-            'X795'
-            'X797'
-          args:
-            Arg
-              name = None
-              value = 'true'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = None
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X803'
-              value:
-                OpaqueCode
-                  text = '{ x{ y } }'
-                  mode = <Role.EXPRESSION: 'expression'>
-                  begin = 0
-                  _references = None
-              kind = <E_ArgKind.LUAU: 1>
-              begin = 0
-            Arg
-              name = None
-              value:
-                'X806'
-                'X808'
-              kind = <E_ArgKind.NAME: 2>
-              begin = 0
-            Arg
-              name = 'X810'
-              value = '1'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          guard:
-            OpaqueCode
-              text = '{ x{ y } }'
-              mode = <Role.CONDITION: 'condition'>
-              begin = 0
-              _references = None
-          begin = 0
-        Cause
-          trigger:
-            Trigger
-              name:
-                'ANY'
-              is_keyword = True
-              begin = 0
-          guard:
-            OpaqueCode
-              text = '{ x }'
-              mode = <Role.CONDITION: 'condition'>
-              begin = 0
-              _references = None
-          begin = 0
-        CauseRef
-          name:
-            'X819'
-            'X821'
-            'X823'
-            'X825'
-          args:
-            Arg
-              name = 'X827'
-              value:
-                'X829'
-                'X831'
-              kind = <E_ArgKind.NAME: 2>
-              begin = 0
-            Arg
-              name = None
-              value = '"s"'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-            Arg
-              name = 'X835'
-              value = 'true'
-              kind = <E_ArgKind.LITERAL: 0>
-              begin = 0
-          guard:
-            Condition
-              expr:
-                BoolOp
-                  op = 'or'
-                  operands:
-                    BoolOp
-                      op = 'and'
-                      operands:
-                        BoolRef
-                          name:
-                            'X841'
-                            'X843'
-                          begin = 0
-                        BoolRef
-                          name:
-                            'X845'
-                            'X847'
-                          begin = 0
-                      begin = 0
-                    BoolOp
-                      op = 'and'
-                      operands:
-                        BoolRef
-                          name:
-                            'X849'
-                            'X851'
-                          begin = 0
-                        BoolRef
-                          name:
-                            'X853'
-                            'X855'
-                          begin = 0
-                      begin = 0
-                    BoolOp
-                      op = 'and'
-                      operands:
-                        BoolRef
-                          name:
-                            'X857'
-                            'X859'
-                          begin = 0
-                        BoolRef
-                          name:
-                            'X861'
-                            'X863'
-                          begin = 0
-                      begin = 0
-                    BoolOp
-                      op = 'and'
-                      operands:
-                        BoolRef
-                          name:
-                            'X865'
-                            'X867'
-                          begin = 0
-                        BoolRef
-                          name:
-                            'X869'
-                            'X871'
-                          begin = 0
-                      begin = 0
-                  begin = 0
-              begin = 0
-          begin = 0
-      begin = 0
-  has_refs:
-    HasRef
-      name:
-        'X874'
-        'X876'
-        'X878'
-        'X880'
-        'X882'
-      is_void = True
-      begin = 0
-  default = None
-  init = None
-  deinit = None
-  begin = 0
-EventDef
-  name = 'X887'
-  params:
-    ArgDecl
-      member = 'n889'
-      type = 'X890'
-      begin = 0
-    ArgDecl
-      member = 'n892'
-      type = 'bool'
-      begin = 0
-    ArgDecl
-      member = 'n895'
-      type = 'X896'
-      begin = 0
-  begin = 0
-StructDecl
-  name = 'X899'
-  members:
-    ArgDecl
-      member = 'n901'
-      type = 'float'
-      begin = 0
-    ArgDecl
-      member = 'n904'
-      type = 'X905'
-      begin = 0
-    ArgDecl
-      member = 'n907'
-      type = 'string'
       begin = 0
   begin = 0

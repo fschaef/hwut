@@ -1,35 +1,14 @@
-event: X2 ( n4: int ; n7: X8 ; n10: X11 ; n13: float ; n16: X17 ; n19: bool ; )
-mode_group: X24 . X26 . X28 . X30 is: X32 . X34
-mode: X36 . X38 ( )
+state_machine: X2 . X4 . X6 . X8 . X10 . X12 is: X14 . X16 . X18 . X20 . X22 . X24
+has: X26 . X28 . VOID
 deinit: { x }
 init: { x{ y } }
-on: X44 . X46
-=> +! X49 . X51 ( )
-init: { x }
-on: ANY
-=> X58 . X60
-until: X62 . X64
-until: END
-deinit: { x }
-has: X69 . X71 . VOID
 :end
-clock: X76 1
-mode: X79 . X81 . X83 . X85 . X87
+event: X35 ( ) cause: X39 . X41 for: X43 . X45 . X47 . X49 & { x }
+clockwork: X52 . X54 . X56 . X58 . X60 . X62 ( n64: float ; n67: X68 ; n70: X71 ; n73: bool ; n76: X77 ; n79: int ; )
+on: X84 . X86 . X88 . X90 . X92 . X94 ( ) & [ X99 . X101 and X103 . X105 or X107 . X109 and X111 . X113 ]
 deinit: { x }
-on: X90 . X92
-=> "s"
-deinit: { x{ y } }
+spawn: X117 . X119 ( ) in: X123 . X125 via: false
 init: { x{ y } }
 init: { x{ y } }
-until: BEGIN & [ X102 . X104 and X106 . X108 or X110 . X112 and X114 . X116 ] effect: X119 . X121 . X123 . X125
-=> -! X128 . X130 . X132 . X134 . X136
-=> { x{ y } }
-=> ! X140 . X142 . X144 . X146 . X148 . X150 ( )
-open: X154 . X156
-on: CHANGE
-=> +! X161 . X163 ( )
-=> ! X168 . X170 ( )
-=> "s"
-=> { x }
-=> X177 . X179
-:close
+:end
+clock: X132 1 import: "s" into: X137 . X139 . X141 . X143

@@ -1,197 +1,116 @@
 === monkey: wide ===
-tokens parsed:      190
+tokens parsed:      149
 top-level items:    6
 diagnostics:        none
 
 -- AST --
-EventDef
-  name = 'X2'
-  params:
-    ArgDecl
-      member = 'n4'
-      type = 'int'
-      begin = 0
-    ArgDecl
-      member = 'n7'
-      type = 'X8'
-      begin = 0
-    ArgDecl
-      member = 'n10'
-      type = 'X11'
-      begin = 0
-    ArgDecl
-      member = 'n13'
-      type = 'float'
-      begin = 0
-    ArgDecl
-      member = 'n16'
-      type = 'X17'
-      begin = 0
-    ArgDecl
-      member = 'n19'
-      type = 'bool'
-      begin = 0
-  begin = 0
-ModeGroup
+StateMachine
   name:
-    'X24'
-    'X26'
-    'X28'
-    'X30'
+    'X2'
+    'X4'
+    'X6'
+    'X8'
+    'X10'
+    'X12'
   params:
     []
   bases:
-    'X32'
-    'X34'
-  modes:
-    Mode
-      name:
-        'X36'
-        'X38'
-      params:
-        []
-      init:
-        OpaqueCode
-          text = '{ x }'
-          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-          _references = None
-      deinit:
-        OpaqueCode
-          text = '{ x }'
-          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-          _references = None
-      causalities:
-        Causality
-          cause:
-            Cause
-              trigger:
-                Trigger
-                  name:
-                    'X44'
-                    'X46'
-                  is_keyword = False
-                  begin = 0
-              guard = None
-              begin = 0
-          effects:
-            Spawn
-              name:
-                'X49'
-                'X51'
-              args:
-                []
-              has_parens = True
-              in_container = None
-              via = None
-              begin = 0
-          begin = 0
-        Causality
-          cause:
-            Cause
-              trigger:
-                Trigger
-                  name:
-                    'ANY'
-                  is_keyword = True
-                  begin = 0
-              guard = None
-              begin = 0
-          effects:
-            EffectRef
-              name:
-                'X58'
-                'X60'
-              begin = 0
-          begin = 0
-      untils:
-        Cause
-          trigger:
-            Trigger
-              name:
-                'X62'
-                'X64'
-              is_keyword = False
-              begin = 0
-          guard = None
-          begin = 0
-        Cause
-          trigger:
-            Trigger
-              name:
-                'END'
-              is_keyword = True
-              begin = 0
-          guard = None
-          begin = 0
-      begin = 0
+    'X14'
+    'X16'
+    'X18'
+    'X20'
+    'X22'
+    'X24'
+  states:
+    []
   has_refs:
     HasRef
       name:
-        'X69'
-        'X71'
+        'X26'
+        'X28'
       is_void = True
       begin = 0
-  init = None
-  deinit:
-    OpaqueCode
-      text = '{ x }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-      begin = 0
-      _references = None
-  begin = 0
-ClockDef
-  name = 'X76'
-  period = '1'
-  begin = 0
-Mode
-  name:
-    'X79'
-    'X81'
-    'X83'
-    'X85'
-    'X87'
-  params:
-    []
+  default = None
   init:
     OpaqueCode
       text = '{ x{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
       _references = None
   deinit:
     OpaqueCode
-      text = '{ x{ y } }'
-      mode = <Role.STATEMENT_BLOCK: 'statement_block'>
+      text = '{ x }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
       _references = None
-  causalities:
-    Causality
-      cause:
-        Cause
-          trigger:
-            Trigger
-              name:
-                'X90'
-                'X92'
-              is_keyword = False
-              begin = 0
-          guard = None
-          begin = 0
-      effects:
-        ReportString
-          text = '"s"'
-          begin = 0
+  begin = 0
+EventDef
+  name = 'X35'
+  params:
+    []
+  begin = 0
+CauseDef
+  name:
+    'X39'
+    'X41'
+  params:
+    []
+  for_event:
+    'X43'
+    'X45'
+    'X47'
+    'X49'
+  guard:
+    OpaqueCode
+      text = '{ x }'
+      mode = <E_SpanMode.CONDITION: 'condition'>
       begin = 0
-  untils:
-    Cause
-      trigger:
-        Trigger
-          name:
-            'BEGIN'
-          is_keyword = True
-          begin = 0
+      _references = None
+  begin = 0
+Clockwork
+  name:
+    'X52'
+    'X54'
+    'X56'
+    'X58'
+    'X60'
+    'X62'
+  params:
+    ArgDecl
+      member = 'n64'
+      type = 'float'
+      begin = 0
+    ArgDecl
+      member = 'n67'
+      type = 'X68'
+      begin = 0
+    ArgDecl
+      member = 'n70'
+      type = 'X71'
+      begin = 0
+    ArgDecl
+      member = 'n73'
+      type = 'bool'
+      begin = 0
+    ArgDecl
+      member = 'n76'
+      type = 'X77'
+      begin = 0
+    ArgDecl
+      member = 'n79'
+      type = 'int'
+      begin = 0
+  clock:
+    CauseRef
+      name:
+        'X84'
+        'X86'
+        'X88'
+        'X90'
+        'X92'
+        'X94'
+      args:
+        []
       guard:
         Condition
           expr:
@@ -203,13 +122,13 @@ Mode
                   operands:
                     BoolRef
                       name:
-                        'X102'
-                        'X104'
+                        'X99'
+                        'X101'
                       begin = 0
                     BoolRef
                       name:
-                        'X106'
-                        'X108'
+                        'X103'
+                        'X105'
                       begin = 0
                   begin = 0
                 BoolOp
@@ -217,105 +136,58 @@ Mode
                   operands:
                     BoolRef
                       name:
-                        'X110'
-                        'X112'
+                        'X107'
+                        'X109'
                       begin = 0
                     BoolRef
                       name:
-                        'X114'
-                        'X116'
+                        'X111'
+                        'X113'
                       begin = 0
                   begin = 0
               begin = 0
           begin = 0
       begin = 0
-  begin = 0
-EffectDef
-  name:
-    'X119'
-    'X121'
-    'X123'
-    'X125'
-  params:
-    []
-  effects:
-    Unspawn
-      name:
-        'X128'
-        'X130'
-        'X132'
-        'X134'
-        'X136'
+  init:
+    OpaqueCode
+      text = '{ x{ y } }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
-    Mutation
-      body:
-        OpaqueCode
-          text = '{ x{ y } }'
-          mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-          begin = 0
-          _references = None
+      _references = None
+  deinit:
+    OpaqueCode
+      text = '{ x }'
+      mode = <E_SpanMode.STATEMENT_BLOCK: 'statement_block'>
       begin = 0
-    ModeArming
+      _references = None
+  steps:
+    Spawn
       name:
-        'X140'
-        'X142'
-        'X144'
-        'X146'
-        'X148'
-        'X150'
+        'X117'
+        'X119'
       args:
         []
+      has_parens = True
+      in_container:
+        'X123'
+        'X125'
+      via:
+        Arg
+          name = None
+          value = 'false'
+          kind = <E_ArgKind.LITERAL: 0>
+          begin = 0
       begin = 0
   begin = 0
-Namespace
-  name:
-    'X154'
-    'X156'
-  items:
-    Causality
-      cause:
-        Cause
-          trigger:
-            Trigger
-              name:
-                'CHANGE'
-              is_keyword = True
-              begin = 0
-          guard = None
-          begin = 0
-      effects:
-        Spawn
-          name:
-            'X161'
-            'X163'
-          args:
-            []
-          has_parens = True
-          in_container = None
-          via = None
-          begin = 0
-        ModeArming
-          name:
-            'X168'
-            'X170'
-          args:
-            []
-          begin = 0
-        ReportString
-          text = '"s"'
-          begin = 0
-        Mutation
-          body:
-            OpaqueCode
-              text = '{ x }'
-              mode = <Role.STATEMENT_BLOCK: 'statement_block'>
-              begin = 0
-              _references = None
-          begin = 0
-        EffectRef
-          name:
-            'X177'
-            'X179'
-          begin = 0
-      begin = 0
+ClockDef
+  name = 'X132'
+  period = '1'
+  begin = 0
+Import
+  filename = 's'
+  mount:
+    'X137'
+    'X139'
+    'X141'
+    'X143'
   begin = 0

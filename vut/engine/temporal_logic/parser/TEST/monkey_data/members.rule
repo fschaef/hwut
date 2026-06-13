@@ -1,50 +1,37 @@
-open: X2 . X4 . X6 . X8
-clock: X10 1
-on: X13 . X15 . X17 . X19 ( 1 , X23 = { x{ y }{ y } } ) & { x{ y } }
-=> +! X29 . X31 . X33 ( ) in: X37 . X39 . X41 via: X43 . X45 . X47
-=> "s"
-state_machine: X51 . X53 ( n55: X56 ; n58: string ; ) is: X63 . X65 is: X67 . X69 . X71
-deinit: { x }
-state: X74 . X76 ( n78: X79 ; n81: bool )
-on: ANY
-=> X87 . X89
-=> -! X92 . X94
-=> { x }
-until: X97 . X99 ( ) & [ X104 . X106 and X108 . X110 or X112 . X114 and X116 . X118 ]
-:end
-:close
-mode: X123 . X125 ( n127: float ; n130: X131 ; )
-init: { x{ y }{ y } }
-deinit: { x{ y } }
-init: { x{ y } }
-until: CHANGE & { x{ y } }
-until: BEGIN
-until: X143 . X145 . X147 . X149 ( "s" , X153 = false , X157 = true , true ) & [ X165 . X167 and X169 . X171 and X173 . X175 or X177 . X179 and X181 . X183 and X185 . X187 and X189 . X191 or X193 . X195 and X197 . X199 and X201 . X203 ]
-open: X206 . X208
-open: X210 . X212
-event: X214 ( n216: X217 ; n219: int ; n222: bool ; n225: X226 ; )
-:close effect: X231 . X233 . X235 ( )
-=> ! X240 . X242 . X244 ( { x{ y }{ y } } , X247 = 1 )
-on: X252 . X254 . X256 ( false , X260 = "s" , X264 = X266 . X268 ) & [ X272 . X274 and X276 . X278 or X280 . X282 and X284 . X286 ]
-=> X289 . X291 . X293 . X295
-=> ! X298 . X300 . X302 . X304 ( true , X308 . X310 , X312 = { x{ y }{ y } } , false )
-=> "s"
-:close
-open: X321 . X323 . X325 . X327
-clock: X329 1
-on: END & { x }
-=> -! X336 . X338
-:close
-open: X341 . X343 . X345 . X347
-event: X349 ( n351: X352 ; n354: float ; )
-on: ANY & [ X362 . X364 and X366 . X368 or X370 . X372 and X374 . X376 ]
-=> { x }
-=> +! X381 . X383 ( X385 = "s" , 1 , X391 = { x } ) in: X395 . X397 . X399 via: true X402 ( n404: X405 ; n407: string ; n410: int ; n413: X414 ; ) is: state_machine
-:close
-open: X421 . X423 . X425 X426 ( n428: string ; n431: X432 ; n434: int ; ) is: struct
-:close
-state_machine: X442 . X444 ( n446: X447 ; n449: X450 ; ) is: X454 . X456 . X458 . X460 is: X462 . X464 is: X466 . X468 . X470
+open: X2 . X4 . X6 . X8 effect: X10 . X12 ( n14: bool ; n17: X18 ; )
+=> X22 . X24 . X26 . X28
+mode: X30 . X32 . X34 ( n36: string ; n39: X40 ; n42: X43 ; )
 init: { x }
+deinit: { x }
+until: X49 . X51 ( false , X55 = true , "s" ) & { x }
+until: ANY & [ X66 . X68 and X70 . X72 or X74 . X76 and X78 . X80 ]
+until: CHANGE & [ X86 . X88 and X90 . X92 or X94 . X96 and X98 . X100 ]
+mode_group: X103 . X105 . X107 ( n109: int ; n112: X113 ; n115: float ; ) is: X120 . X122 . X124 . X126
+has: X128 . X130 . X132 . X134 . VOID
 :end
-on: X474 . X476 ( X478 . X480 , X482 = 1 , false ) & { x{ y }{ y } }
-=> "s"
+:close
+on: X140 . X142 . X144 ( X146 = X148 . X150 , 1 , X154 = { x{ y }{ y } } , 1 ) & { x }
+=>
+spawn: X162 . X164 . X166 . X168 ( X170 = { x{ y } } , "s" , X175 = X177 . X179 ) in: X182 . X184 . X186 via: true
+=> "s" X191 ( n193: string ; n196: X197 ; n199: float ; ) is: struct
+open: X206 . X208 effect: X210 . X212 . X214 . X216 ( n218: X219 ; n221: bool ; )
+=>
+unspawn: X227 . X229 . X231
+=> { x{ y } }
+:close import: "s" into: X237 . X239 . X241 . X243
+mode: X245 . X247 ( n249: X250 ; n252: X253 ; n255: int ; n258: int ; )
+on: END & { x{ y } }
+=>
+arm: X267 . X269 ( X271 = false , { x{ y }{ y } } , false )
+=> X279 . X281 . X283 ( X285 = 1 , X289 . X291 , X293 = "s" , true )
+deinit: { x{ y }{ y } }
+on: X301 . X303 . X305 . X307 ( X309 = { x{ y }{ y } } , X312 = false ) & [ X318 . X320 and X322 . X324 or X326 . X328 and X330 . X332 ]
+=>
+unspawn: X336 . X338
+=>
+spawn: X341 . X343 . X345 ( 1 , true , X351 = "s" ) in: X356 . X358 . X360 . X362 via: X364 . X366 . X368 . X370
+=> { x{ y } }
+until: X373 . X375 . X377 . X379 ( { x{ y } } , X382 = false , X386 = 1 ) & { x }
+until: BEGIN & [ X395 . X397 and X399 . X401 and X403 . X405 and X407 . X409 or X411 . X413 and X415 . X417 and X419 . X421 or X423 . X425 and X427 . X429 and X431 . X433 and X435 . X437 or X439 . X441 and X443 . X445 ]
+until: X448 . X450 . X452 . X454 ( X456 . X458 , true ) cause: X463 . X465 ( n467: X468 ; n470: X471 ; ) for: X475 . X477 . X479 . X481 & [ not ( X486 . X488 and X490 . X492 or X494 . X496 and X498 . X500 ) and not ( X505 . X507 and X509 . X511 or X513 . X515 and X517 . X519 ) or ( X523 . X525 and X527 . X529 or X531 . X533 and X535 . X537 ) and not ( X542 . X544 and X546 . X548 or X550 . X552 and X554 . X556 ) and not ( X561 . X563 and X565 . X567 or X569 . X571 and X573 . X575 ) and not ( X580 . X582 and X584 . X586 or X588 . X590 and X592 . X594 ) or not ( X599 . X601 and X603 . X605 or X607 . X609 and X611 . X613 ) and not ( X618 . X620 and X622 . X624 or X626 . X628 and X630 . X632 ) and not ( X637 . X639 and X641 . X643 or X645 . X647 and X649 . X651 ) and not ( X656 . X658 and X660 . X662 or X664 . X666 and X668 . X670 ) or not ( X675 . X677 and X679 . X681 or X683 . X685 and X687 . X689 ) and not ( X694 . X696 and X698 . X700 or X702 . X704 and X706 . X708 ) ]
+event: X712 ( n714: string ; n717: bool ; n720: X721 ; )

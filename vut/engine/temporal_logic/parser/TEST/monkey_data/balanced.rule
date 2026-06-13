@@ -1,23 +1,15 @@
-import: "s" into: X4 . X6
-open: X8 . X10 . X12
-on: END & { x{ y }{ y } }
-=> "s"
-=> { x{ y } }
-:close
-open: X21 . X23 effect: X25 . X27
-=> ! X30 . X32 ( X34 . X36 , X38 = { x } )
-event: X42 ( )
-:close
-open: X47 . X49
-open: X51 . X53 . X55 X56 ( n58: X59 ; n61: int ) is: string ( ) import: "s" into: X71 . X73
-:close
-:close
-state_machine: X77 . X79 is: X81 . X83 is: X85 . X87 . X89
-state: X91 . X93
-on: X95 . X97
-=> -! X100 . X102
-=> +! X105 . X107 ( )
-until: CHANGE & [ X114 . X116 and X118 . X120 or X122 . X124 and X126 . X128 ]
-until: X131 . X133 . X135 ( )
-default: X139 . X141 . X143
+X1 is: bool ( X5 = false , X9 . X11 )
+clock: X14 1
+open: X17 . X19
+state_machine: X21 . X23 . X25 is: X27 . X29
+state: X31 . X33 ( )
+on: BEGIN
+=>
+arm: X40 . X42 ( )
+until: X46 . X48
 :end
+:close effect: X52 . X54 . X56 ( n58: X59 ; n61: string )
+=>
+spawn: X66 . X68 . X70 ( X72 = true , "s" , 1 ) in: X81 . X83 . X85 via: { x{ y } }
+=> { x{ y } }
+event: X89 ( n91: int ; n94: X95 ; )

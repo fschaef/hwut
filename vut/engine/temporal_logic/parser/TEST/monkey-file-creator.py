@@ -24,6 +24,8 @@ import os
 import sys
 import json
 
+import config
+
 from dataclasses import is_dataclass, fields
 
 from vut.language_support.python.deterministic_random import (DeterministicStream,
@@ -220,6 +222,11 @@ _PROFILES = {
     # member access ('event.x' / 'sm.x' / 'mg.x' / 'mode.x'), and the typed
     # member declarations ('name: type') that those accesses resolve against.
     "members":  {"seed": 0x3E3B,  "depth": 9,  "reps": 3, "opt": 90, "luau": 2, "items": 8, "recurse": 15},
+    # 'clockwork' biases toward deep nesting and present optionals so the
+    # clockwork body is exercised: the step variety (paced emission, instant:,
+    # the bare commands), wait:/select: suspension, and the if/elif/else and
+    # while control frames composing within one another.
+    "clockwork": {"seed": 0xC107,  "depth": 12, "reps": 3, "opt": 80, "luau": 2, "items": 6, "recurse": 30},
 }
 
 
@@ -230,6 +237,8 @@ _NEWLINE_BEFORE = {
         "=>", "until:", "on:", "mode:", "mode_group:", "state_machine:",
         "state:", "event:", "clock:", "open:", ":close", "has:", "default:",
         "init:", "deinit:", ":end",
+        "clockwork:", "instant:", "wait:", "select:", "if:", "elif:", "else:",
+        "while:", "spawn:", "unspawn:", "arm:",
     )
 }
 

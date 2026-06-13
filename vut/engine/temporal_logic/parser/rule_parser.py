@@ -88,4 +88,3 @@ def parse(source_text, oracle, reporter: DiagnosticReporter):
     file_node = EngineParser(source_text, oracle, reporter,
                              compiled_grammar()).parse()
     return finalize_file(file_node)
-

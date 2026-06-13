@@ -341,6 +341,80 @@ def run_guards_and_inheritance():
                   % (it.name, it.bases, len(it.modes)))
 
 
+def run_clockwork_shapes():
+    """RETURN: None. The clockwork construct parses; steps build their nodes (D-11).
+
+    Exercises the tick-scripted stimulus actor: the signature and guarded 'on:'
+    clock binding; the step variety told apart by leader -- a bare EventSpec
+    (paced emission), 'instant:' (immediate injection), the bare commands
+    ('spawn:'/'unspawn:'/'arm:'/opaque block), 'wait:' with and without a
+    co-temporal effect tail, 'select:' (first-of-many), and the 'if:'/'elif:'/
+    'else:' and 'while:' control frames composing within the body. Also pins the
+    FENCE: an imperative clockwork construct used as a causality effect is
+    rejected. Prints the clockwork shape and the ordered step kinds.
+    """
+    from vut.engine.temporal_logic.parser.rule_parser import parse
+    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.parser import ast_nodes as ast
+    from fake_luau_oracle import FakeLuauOracle
+
+    cases = [
+        ("minimal clockwork (one paced emission)",
+         "clockwork: a on: clk\n GO()\n:end"),
+        ("signature + guarded clock + init/deinit",
+         "clockwork: heinz(deadline: float) on: clk & [ ready ]\n"
+         " init: { x }\n PING(seq = 1)\n deinit: { y }\n:end"),
+        ("tick law: paced vs instant vs commands",
+         "clockwork: a on: clk\n EVENT(p = 1)\n instant: OTHER(p = 2)\n"
+         " spawn: SM(lane = 0)\n arm: W(ip = \"x\")\n { setup() }\n unspawn: SM\n:end"),
+        ("wait with co-temporal tail, then tail-less gate",
+         "clockwork: a on: clk\n wait: RESP & [ e.ok ]\n => { x }\n => DONE(ok = true)\n"
+         " wait: GO\n:end"),
+        ("select: first-of-many",
+         "clockwork: a on: clk\n select:\n  wait: ACK & [ e.p == 1 ]\n  => DONE()\n"
+         "  wait: SHUTDOWN\n :end\n:end"),
+        ("if / elif / else, one :end",
+         "clockwork: a on: clk\n if: [ x ]\n  A()\n elif: [ y ]\n  instant: B()\n"
+         " else:\n  { z }\n :end\n:end"),
+        ("while: own :end, nested wait",
+         "clockwork: a on: clk\n while: [ x ]\n  P(s = 1)\n  wait: PONG\n :end\n:end"),
+        ("FENCE: imperative construct rejected as a causality effect",
+         "on: T => wait: GO"),
+    ]
+    for label, src in cases:
+        banner(label)
+        rep = DiagnosticReporter()
+        rf = parse(src, FakeLuauOracle(), rep)
+        if rep.errors:
+            for d in rep.errors:
+                print("  ERROR off=%d %s" % (d.source_offset, d.message))
+            continue
+        it = rf.items[0]
+        if isinstance(it, ast.Clockwork):
+            print("  Clockwork name=%s params=%d clock=%s guard=%s init=%s deinit=%s"
+                  % (".".join(it.name), len(it.params),
+                     ".".join(it.clock.trigger.name),
+                     it.clock.guard is not None,
+                     it.init is not None, it.deinit is not None))
+            print("  steps=[%s]" % ", ".join(type(s).__name__ for s in it.steps))
+            for s in it.steps:
+                if isinstance(s, ast.WaitLine):
+                    print("    WaitLine cause=%s tail=%d"
+                          % (".".join(s.cause.trigger.name), len(s.effects)))
+                elif isinstance(s, ast.SelectFrame):
+                    print("    SelectFrame branches=%d (tails=%s)"
+                          % (len(s.branches),
+                             ",".join(str(len(b.effects)) for b in s.branches)))
+                elif isinstance(s, ast.IfFrame):
+                    print("    IfFrame arms=%d else=%s"
+                          % (len(s.arms), s.else_body is not None))
+                elif isinstance(s, ast.WhileFrame):
+                    print("    WhileFrame body=[%s]"
+                          % ", ".join(type(x).__name__ for x in s.body))
+        else:
+            print("  %s" % type(it).__name__)
+
+
 HwutRunner(
     argv       = sys.argv,
     title      = "Rule-File Language",
@@ -351,6 +425,6 @@ HwutRunner(
         "name_dotted_args":         run_name_dotted_args,
         "cause_effect":             run_cause_effect,
         "guards_and_inheritance":   run_guards_and_inheritance,
+        "clockwork_shapes":         run_clockwork_shapes,
     },
 ).run()
-

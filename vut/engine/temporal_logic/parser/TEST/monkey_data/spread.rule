@@ -1,43 +1,92 @@
 open: X2 . X4 . X6 . X8
-on: X10 . X12 . X14 . X16 . X18 ( true , X22 = { x } , "s" ) & { x{ y } }
-=> X29 . X31 . X33 . X35 ( X37 = X39 . X41 , X43 = false , 1 , false )
+state_machine: X10 . X12 . X14 ( n16: int ; n19: X20 ; n22: bool ; n25: X26 ; ) is: X30 . X32 is: X34 . X36 . X38 . X40
+default: X42 . X44 . X46 . VOID
+deinit: { x }
+:end
 :close
-clock: X53 1 import: "s" into: X58 . X60 . X62
-mode: X64 . X66 . X68 . X70 . X72 ( n74: X75 ; n77: bool ; )
+clock: X53 1
+open: X56 . X58 . X60
+open: X62 . X64 . X66
+open: X68 . X70
+mode: X72 . X74 ( )
+on: ANY
+=>
+unspawn: X81 . X83
 deinit: { x }
-on: CHANGE & [ X86 . X88 and X90 . X92 or X94 . X96 and X98 . X100 ]
-=> +! X104 . X106 . X108 . X110 ( X112 = 1 , { x{ y } } , X117 = "s" ) in: X122 . X124 . X126 . X128 . X130 via: X132 . X134 . X136
-=> { x }
 init: { x }
+on: X87 . X89
+=>
+spawn: X92 . X94 ( )
+until: CHANGE
+until: X100 . X102
+until: END
+until: X106 . X108 X109 ( n111: float ; n114: X115 ) is: struct
+:close
+:close
+clock: X122 1
+open: X125 . X127 . X129 . X131
+state_machine: X133 . X135 . X137 . X139 . X141 ( n143: X144 ; n146: string ; n149: int ; n152: X153 ; ) is: X157 . X159 is: X161 . X163 . X165 is: X167 . X169 . X171 . X173 . X175 is: X177 . X179 . X181 . X183 . X185
+state: X187 . X189 ( )
+deinit: { x }
 init: { x{ y } }
-until: BEGIN & { x{ y } } cause: X144 . X146 . X148 . X150 . X152 ( n154: X155 ; n157: float ; n160: string ; ) for: X165 . X167 . X169 . X171 . X173 & [ not ( X178 . X180 and X182 . X184 or X186 . X188 and X190 . X192 ) and not ( X197 . X199 and X201 . X203 or X205 . X207 and X209 . X211 ) or not ( X216 . X218 and X220 . X222 or X224 . X226 and X228 . X230 ) and not ( X235 . X237 and X239 . X241 or X243 . X245 and X247 . X249 ) or not ( X254 . X256 and X258 . X260 or X262 . X264 and X266 . X268 ) and not ( X273 . X275 and X277 . X279 or X281 . X283 and X285 . X287 ) or not ( X292 . X294 and X296 . X298 or X300 . X302 and X304 . X306 ) and not ( X311 . X313 and X315 . X317 or X319 . X321 and X323 . X325 ) and not ( X330 . X332 and X334 . X336 or X338 . X340 and X342 . X344 ) and not ( X349 . X351 and X353 . X355 or X357 . X359 and X361 . X363 ) and not ( X368 . X370 and X372 . X374 or X376 . X378 and X380 . X382 ) or not ( X387 . X389 and X391 . X393 or X395 . X397 and X399 . X401 ) and not ( X406 . X408 and X410 . X412 or X414 . X416 and X418 . X420 ) ]
-state_machine: X424 . X426 ( n428: X429 ; n431: X432 ; n434: int ; n437: float ; ) is: X442 . X444 is: X446 . X448 . X450 is: X452 . X454 . X456 is: X458 . X460
 deinit: { x }
+until: BEGIN
+until: X198 . X200
+until: X202 . X204
+until: BEGIN
 init: { x }
+has: X209 . X211 . VOID
+deinit: { x{ y } }
+:end import: "s" into: X219 . X221 X222 ( n224: float ; n227: X228 ; n230: X231 ; ) is: container < { x{ y } } , X238 = true , "s" , X244 = X246 . X248 , X250 = 1 > by: { x{ y } }
+clock: X256 1
+:close
+:close
+mode_group: X261 . X263 . X265 . X267 ( n269: bool ; n272: string ; ) is: X277 . X279 . X281 . X283 is: X285 . X287 . X289 . X291 . X293 is: X295 . X297 . X299
+has: X301 . X303 . X305 . X307 . X309 . VOID
+init: { x{ y } }
+mode: X314 . X316 . X318 . X320 ( n322: X323 ; n325: int ; n328: X329 ; )
+init: { x }
+until: ANY & [ X337 . X339 and X341 . X343 or X345 . X347 and X349 . X351 or X353 . X355 and X357 . X359 ]
+until: X362 . X364 . X366 ( false , X370 = X372 . X374 , "s" , X378 = { x{ y } } , false ) & { x{ y } }
+until: X385 . X387 . X389 ( X391 = true , 1 ) & [ X399 . X401 and X403 . X405 or X407 . X409 and X411 . X413 or X415 . X417 and X419 . X421 or X423 . X425 and X427 . X429 ]
+:end cause: X433 . X435 . X437 . X439 ( n441: bool ; n444: X445 ; n447: string ; n450: X451 ; ) for: X455 . X457 . X459 . X461 . X463 & { x }
+mode: X466 . X468 . X470 . X472 . X474 ( n476: X477 ; n479: float ; )
+on: CHANGE & { x{ y } }
+=>
+arm: X488 . X490 . X492 . X494 . X496 ( X498 = 1 , true )
+init: { x{ y } }
+on: X506 . X508 . X510 . X512 ( X514 . X516 , X518 = false , "s" , X524 = { x{ y } } ) & [ X529 . X531 and X533 . X535 or X537 . X539 and X541 . X543 or X545 . X547 and X549 . X551 or X553 . X555 and X557 . X559 ]
+=> X562 . X564 . X566 . X568 ( true , X572 = 1 , X576 = { x{ y } } , false )
+deinit: { x{ y } }
+until: END & [ not X587 . X589 and not X592 . X594 and not X597 . X599 and not X602 . X604 or not X607 . X609 and not X612 . X614 and not X617 . X619 and not X622 . X624 or not X627 . X629 and not X632 . X634 or not X637 . X639 and not X642 . X644 or not X647 . X649 and not X652 . X654 and not X657 . X659 and not X662 . X664 and not X667 . X669 ]
+until: X672 . X674 . X676 . X678 ( X680 = X682 . X684 . X686 . X688 . X690 , "s" , { x{ y } } ) & { x{ y } }
+clockwork: X697 . X699 . X701 . X703 . X705 ( n707: X708 ; n710: float ; )
+on: ANY & { x{ y } }
+deinit: { x }
+if: [ X720 . X722 and X724 . X726 and X728 . X730 and X732 . X734 and X736 . X738 or X740 . X742 and X744 . X746 and X748 . X750 and X752 . X754 and X756 . X758 or X760 . X762 and X764 . X766 and X768 . X770 and X772 . X774 or X776 . X778 and X780 . X782 and X784 . X786 and X788 . X790 or X792 . X794 and X796 . X798 ]
+instant: X801 . X803 ( X805 = true , "s" , X811 = 1 , false )
+elif: { x }
+while: [ X820 . X822 and X824 . X826 or X828 . X830 and X832 . X834 ] { x{ y } }
+spawn: X837 . X839 ( ) in: X843 . X845 via: X847 . X849
 :end
-open: X465 . X467 . X469 cause: X471 . X473 . X475 . X477 . X479 ( n481: X482 ; n484: int ; n487: X488 ; n490: X491 ; ) for: X495 . X497 . X499 & [ not X503 . X505 and not X508 . X510 and not X513 . X515 and not X518 . X520 and not X523 . X525 or not X528 . X530 and not X533 . X535 and not X538 . X540 or not X543 . X545 and not X548 . X550 or not X553 . X555 and not X558 . X560 ]
-:close effect: X564 . X566 . X568 . X570 . X572 ( n574: bool ; n577: string ; n580: X581 ; n583: X584 ; )
-=> ! X589 . X591 ( X593 = true , false , X599 = { x } )
-=> -! X604 . X606 . X608 . X610 . X612
+else:
+arm: X853 . X855 . X857 ( X859 = 1 , X863 = true , X867 . X869 )
+unspawn: X872 . X874
+:end
+:end
+on: X878 . X880 . X882 . X884 ( false , X888 = "s" , X892 = { x } , "s" , { x{ y } } ) & { x{ y } }
 => "s"
-clock: X616 1
-state_machine: X619 . X621 . X623 . X625 . X627 ( n629: string ; n632: X633 ; n635: int ; n638: bool ; ) is: X643 . X645 . X647 . X649 is: X651 . X653
-state: X655 . X657 . X659 ( n661: X662 ; n664: float ; )
-on: X669 . X671 ( "s" , X675 . X677 ) & { x }
 => { x }
-=> ! X683 . X685 ( X687 = 1 , X691 = true )
-=> X696 . X698 . X700 ( true , "s" )
-=> +! X708 . X710 . X712 . X714 . X716 ( X718 = false , X722 = { x } ) in: X726 . X728 . X730 via: X732 . X734
-deinit: { x }
-on: END & [ X740 . X742 and X744 . X746 or X748 . X750 and X752 . X754 ]
+=>
+arm: X904 . X906 . X908 . X910 . X912 ( X914 = X916 . X918 . X920 . X922 , X924 = false )
 => "s"
-=> -! X760 . X762 . X764 . X766
-=> -! X769 . X771 . X773 . X775 . X777
-=> X779 . X781 . X783 ( 1 , X787 = false )
-init: { x }
-until: X793 . X795 . X797 ( true , "s" , X803 = { x{ y } } , X806 . X808 , X810 = 1 ) & { x{ y } }
-until: ANY & { x }
-until: X819 . X821 . X823 . X825 ( X827 = X829 . X831 , "s" , X835 = true ) & [ X841 . X843 and X845 . X847 or X849 . X851 and X853 . X855 or X857 . X859 and X861 . X863 or X865 . X867 and X869 . X871 ]
-has: X874 . X876 . X878 . X880 . X882 . VOID
-:end
-event: X887 ( n889: X890 ; n892: bool ; n895: X896 ; ) X899 ( n901: float ; n904: X905 ; n907: string ; ) is: struct
+event: X931 ( n933: X934 ; n936: int ; ) effect: X941 . X943 . X945 ( n947: X948 ; n950: string ; n953: X954 ; n956: bool ; )
+=> { x{ y } }
+=>
+unspawn: X963 . X965 . X967
+event: X969 ( n971: int ; n974: X975 ; n977: X978 ; n980: string ; )
+on: END & [ not X989 . X991 and not X994 . X996 and not X999 . X1001 and not X1004 . X1006 and not X1009 . X1011 or not X1014 . X1016 and not X1019 . X1021 and not X1024 . X1026 or not X1029 . X1031 and not X1034 . X1036 and not X1039 . X1041 and not X1044 . X1046 and not X1049 . X1051 ]
+=> X1054 . X1056 . X1058 ( 1 , true , X1064 = "s" , false , X1070 = { x } )
+=>
+spawn: X1075 . X1077 . X1079 . X1081 ( X1083 = X1085 . X1087 , 1 ) in: X1092 . X1094 . X1096 . X1098 . X1100 via: true
+=> "s"

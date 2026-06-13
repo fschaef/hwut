@@ -6,6 +6,13 @@ causality                  SEQ
 cause                      OR
 cause-named                SEQ
 cause-system               SEQ
+clockwork                  SEQ
+clockwork-emit             SEQ
+clockwork-if               SEQ
+clockwork-instant          SEQ
+clockwork-select           SEQ
+clockwork-wait             SEQ
+clockwork-while            SEQ
 cond                       SEQ
 cond-and                   SEQ
 cond-atom                  OR
@@ -22,6 +29,7 @@ default                    SEQ
 deinit                     SEQ
 effect                     OR
 effect-named               SEQ
+elm-clockwork              OR
 elm-mode                   OR
 elm-mode-group             OR
 elm-state-machine          OR
@@ -54,6 +62,7 @@ signature                  SEQ
 spawn                      SEQ
 state                      SEQ
 state-machine              SEQ
+step-clockwork             OR
 top-level                  OR
 type-built-in              OR
 unspawn                    SEQ

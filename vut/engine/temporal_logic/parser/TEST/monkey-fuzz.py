@@ -10,7 +10,7 @@ PURPOSE: Parse STORED monkey-fuzz fixtures and pin the resulting AST, plus two
          sprites generator (deterministic by seed), so the recording is
          reproducible.
 
-CHOICES: deep, wide, luau, balanced, states, spread, members, depth_bomb, sprites.
+CHOICES: deep, wide, luau, balanced, states, spread, members, clockwork, depth_bomb, sprites.
 
 DESCRIPTION:
 
@@ -50,7 +50,7 @@ from aux_walker import ListLexer
 from fake_luau_oracle import FakeLuauOracle
 
 
-_PROFILE_NAMES = ("deep", "wide", "luau", "balanced", "states", "spread", "members")
+_PROFILE_NAMES = ("deep", "wide", "luau", "balanced", "states", "spread", "members", "clockwork")
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "monkey_data")
 
