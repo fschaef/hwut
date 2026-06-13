@@ -105,6 +105,14 @@ class Terminal_Spec(SpecNode):
     object is interned on it (_register_terminal), so the engine compares
     terminals by object identity (one Terminal_Spec per _name()), never by a
     hand-written id. The same object is what the lexer stamps on Token.kind.
+
+    IMMUTABLE AFTER CONSTRUCTION: the fields are set once in __init__ and never
+    reassigned, so the object is a safe HASHABLE KEY. __hash__/__eq__ are
+    content-based on _name() (which is derived from those frozen-in-practice
+    fields), making the value-key contract explicit rather than resting on the
+    interning invariant alone; because interning yields exactly one object per
+    _name(), content equality and identity coincide. This lets a terminal be a
+    key in the role vocabulary (ROLES, ll2_engine).
     """
     __slots__ = ("shape", "pattern", "spelling", "mode", "silent")
 
@@ -115,9 +123,27 @@ class Terminal_Spec(SpecNode):
         self.mode     = mode
         self.silent   = _SHAPE_SILENT[shape]
 
+    def __hash__(self):
+        return hash(self._name())
+
+    def __eq__(self, other):
+        return isinstance(other, Terminal_Spec) and self._name() == other._name()
+
     @property
     def is_opaque(self):
         return self.shape == "opaque"
+
+    def __call__(self, role):
+        """RETURN: Tagged_Spec, a per-occurrence role-tagged VIEW of this terminal.
+
+        The advisory role-hint call operator (D-10): 't_re_id("event")' tags the
+        OCCURRENCE with the plain-string role 'event' for legibility and as a
+        pass-2 resolution hint. The view delegates identity, lexing, and LL(2)
+        to this terminal unchanged -- the role is NON-IDENTITY, recorded only on
+        the wrapper, never entering _name() or the interning that makes one
+        keyword one token. A fresh view per call (not interned).
+        """
+        return Tagged_Spec(self, role)
 
     def _name(self):
         """RETURN: str, the terminal's identity -- shape plus its fields.
@@ -504,6 +530,37 @@ class PLUS_Spec(Operator_Spec):
     def cst_reduce(self, frame, _extra):
         """RETURN: PLUS_Node, over the collected repetitions (guaranteed non-empty)."""
         return PLUS_Node(items=tuple(frame.values), begin=frame.begin)
+
+
+class Tagged_Spec(Operator_Spec):
+    """A role-tagged occurrence of an inner element (D-10): TRANSPARENT.
+
+    Wraps one inner SpecNode (a terminal view or a rule reference) plus an
+    advisory 'role' string. It is an Operator_Spec so the FIRST_2 fixpoint and
+    the conflict walk descend through it via 'body'/children() exactly as for any
+    operator. It adds NOTHING to the value stream: nullable, first2, and expand
+    delegate straight to the body, so lexing, the LL(2) analysis, and the CST
+    are byte-identical to writing the body bare. The role lives ONLY on this
+    wrapper -- non-identity, repr-visible, walkable off the compiled grammar by
+    a later layer (the pass-2 resolution hint). Tag terminals and rule
+    references (non-nullable leaves); the body's nullability is delegated.
+    """
+    __slots__ = ("role",)
+
+    def __init__(self, body, role):
+        super().__init__(body)
+        self.role = role
+
+    def __repr__(self):
+        return "%r@%s" % (self.body, self.role)
+
+    def nullable(self, grammar):
+        return self.body.nullable(grammar)
+
+    def expand(self, parser, frames, work):
+        # Fully transparent: the body expands as if unwrapped. The role is not
+        # injected into any frame value -- it is grammar-spec metadata only.
+        self.body.expand(parser, frames, work)
 
 
 # ---------------------------------------------------------------------------

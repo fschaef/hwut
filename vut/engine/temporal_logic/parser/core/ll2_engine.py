@@ -42,10 +42,25 @@ class LL2ConflictError(Exception):
         self.conflicts = conflicts
 
 
+class RoleVocabularyError(Exception):
+    """Raised when a role hint (D-10) violates the declared ROLES vocabulary.
+
+    A grammar may supply a ROLES dict mapping each role-bearing pattern -- a
+    terminal object, or a rule reference written '<name>' -- to the tuple of
+    role strings it is ALLOWED to carry. Every advisory role hint in the grammar
+    ('t_re_id("event")', '<name-dotted(event)>') is checked against it at compile
+    time: an undeclared pattern or an unlisted role is a load error, so a typo
+    ('evnet') fails loud here instead of misdirecting the semantic layer later.
+    """
+    def __init__(self, violations):
+        super().__init__("%d role-vocabulary violation(s)" % len(violations))
+        self.violations = violations
+
+
 class Grammar:
     """The compiled grammar: a name->Rule_Spec map with FIRST_2 sets analysed."""
     def __init__(self, grammar_dict, actions=None, start=None,
-                 cst=False, transformers=None):
+                 cst=False, transformers=None, roles=None):
         """RETURN: None. Compiles 'grammar_dict' and analyses it for LL(2).
 
         Three reduction modes, by argument:
@@ -64,6 +79,13 @@ class Grammar:
         'transformers' and 'actions' are mutually exclusive -- a grammar either
         runs the legacy builders or the CST/overlay path, never both. Supplying
         transformers forces cst=True regardless of the flag.
+
+        'roles' (optional) is the role vocabulary (D-10): a dict mapping each
+        role-bearing pattern -- a terminal object, or a rule reference as the
+        string '<name>' -- to the tuple of role strings it may carry. When
+        given, every advisory role hint in the grammar is validated against it
+        at compile time (RoleVocabularyError on an undeclared pattern or an
+        unlisted role -- the typo guard). When None, role hints are not checked.
         """
         from . import combinators as support
         if transformers is not None and actions is not None:
@@ -71,6 +93,7 @@ class Grammar:
                              "mutually exclusive (legacy vs CST-overlay path)")
         self.cst          = cst or (transformers is not None)
         self.transformers = transformers if transformers is not None else {}
+        self.roles        = roles
         _actions          = actions if actions is not None else {}
         if transformers is not None:
             stray = set(self.transformers) - set(grammar_dict)
@@ -85,9 +108,61 @@ class Grammar:
         from .ll2_grammar_spec import T
         self.end_block = T.string(":end")   
         self._analyse()
+        if roles is not None:
+            self._validate_roles()
+
+    def _validate_roles(self):
+        """RETURN: None. Raises RoleVocabularyError if a role hint is undeclared.
+
+        Walks every rule's compiled pattern, finds each advisory role hint
+        (a Tagged_Spec, D-10), resolves the vocabulary KEY -- the wrapped
+        terminal object, or '<rule-name>' for a wrapped rule reference -- and
+        checks the carried role against self.roles[key]. An undeclared key or a
+        role outside its declared tuple is a violation; all are collected and
+        raised together so one compile reports every typo.
+        """
+        from .ll2_grammar_spec import (Tagged_Spec, Terminal_Spec, Rule_Spec,
+                                        Operator_Spec, Branch_Spec)
+        violations = []
+        seen = set()
+
+        def visit(node):
+            if id(node) in seen:
+                return
+            seen.add(id(node))
+            if isinstance(node, Tagged_Spec):
+                body = node.body
+                if isinstance(body, Terminal_Spec):
+                    key, shown = body, body._name()
+                elif isinstance(body, Rule_Spec):
+                    key = "<%s>" % body.name
+                    shown = key
+                else:
+                    key = shown = None
+                allowed = self.roles.get(key) if key is not None else None
+                if allowed is None:
+                    violations.append(
+                        "role %r on %s: no vocabulary declared in ROLES"
+                        % (node.role, shown))
+                elif node.role not in allowed:
+                    violations.append(
+                        "role %r on %s: not in declared vocabulary %s"
+                        % (node.role, shown, tuple(allowed)))
+            for c in node.children():
+                visit(c)
+
+        for rule in self.rules.values():
+            visit(rule.pattern)
+        if violations:
+            raise RoleVocabularyError(sorted(set(violations)))
 
     def compile_leaf(self, element):
-        from .ll2_grammar_spec import Terminal_Spec, Ref, T
+        from .ll2_grammar_spec import Terminal_Spec, Tagged_Spec, Ref, T
+        if isinstance(element, Tagged_Spec):
+            # A role-tagged terminal view ('t_re_id("event")', D-10). Its body is
+            # an already-resolved terminal; the wrapper is transparent, returned
+            # as-is so lexing/LL(2)/CST are unchanged and the role rides along.
+            return element
         if isinstance(element, Terminal_Spec):
             # A terminal is already its own interned grammar leaf (D-7): the
             # lexeme spec and the SpecNode are one object, shared across every
@@ -103,9 +178,20 @@ class Grammar:
         if isinstance(element, str):
             if len(element) > 2 and element[0] == "<" and element[-1] == ">":
                 name = element[1:-1]
+                role = None
+                # '<name(role)>' carries an advisory role hint (D-10): split the
+                # parenthesised role off the rule name. The role is recorded on a
+                # transparent Tagged_Spec wrapping the referenced rule; it does
+                # not alter the reference's identity, lexing, or LL(2).
+                if name.endswith(")") and "(" in name:
+                    name, _, rest = name.partition("(")
+                    role = rest[:-1]
                 if name not in self.rules:
                     raise ValueError("undefined non-terminal %r" % (name,))
-                return self.rules[name]
+                target = self.rules[name]
+                if role:
+                    return Tagged_Spec(target, role)
+                return target
             return T.string(element)
         raise ValueError("grammar leaf is neither Terminal_Spec, Ref, nor str: %r"
                          % (element,))

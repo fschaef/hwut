@@ -76,7 +76,8 @@ from .event              import (Event,
                                  EventDefinitionOutsideCategoryContext,
                                  EventRegistrationLocked)
 from .events             import (EventTerminalUp,
-                                 EventTerminalDown)
+                                 EventTerminalDown,
+                                 EventInfo)
 from .dispatcher         import EventDispatcher, Subscription
 from .terminal           import EventTerminal
 from .router             import EventRouter
@@ -99,6 +100,7 @@ __all__ = [
     # Lifecycle events
     "EventTerminalUp",
     "EventTerminalDown",
+    "EventInfo",
     # Transport
     "Marshaller",
     "EventDispatcher",
@@ -112,3 +114,4 @@ __all__ = [
     "EventTerminal",
     "EventRouter",
 ]
+

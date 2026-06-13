@@ -4,7 +4,7 @@ PURPOSE: Events of the Spawner component, category "SPAWNER".
 
     EventChildTerminationReq   parent  -> spawner   the .terminate() request
     EventChildTermination      child   -> parent    the child's exit report
-    EventChildKilled           spawner -> parent    deadline reached, killed
+    EventChildResourcesFreed   spawner -> parent    OS context reclaimed
     EventChildStateChanged     spawner -> parent    every FSM edge
 ________________________________________________________________________________
 """
@@ -34,30 +34,41 @@ with category("SPAWNER"):
         def __str__(self) -> str:
             return "EventChildTermination(reason=%s)" % (self.reason,)
 
-    class EventChildKilled(Event):
-        """The child's OS context was force-terminated; spawner -> parent.
+    class EventChildResourcesFreed(Event):
+        """The child's OS context was reclaimed; spawner -> parent.
 
-        Emitted when the wait_to_kill_ms deadline was reached and the
-        Spawner killed the OS context. 
+        Reports ONE fact: the execution context (Task / thread / process
+        / remote process) has been freed and no longer occupies any OS
+        resource. It says nothing about the supervision verdict - that
+        is EventChildStateChanged's job - and nothing about the task
+        outcome - that rides on EventChildTermination.reason.
 
-            last_state  the E_ChildState the FSM was in when the kill
+        It is emitted on EVERY freeing path. The after_deadline flag is
+        the only thing that distinguishes them:
+
+            after_deadline=False  routine reclamation AFTER a clean
+                                  confirmation - the child had already
+                                  reported termination; the kill is pure
+                                  bookkeeping that frees the husk.
+            after_deadline=True   the wait_to_kill_ms deadline elapsed
+                                  WITHOUT a confirmation; this freeing is
+                                  the force-kill, and the paired verdict
+                                  is TERM_FAILURE - the child's results
+                                  cannot be relied upon.
+
+            last_state  the E_ChildState the FSM was in when the freeing
                         was issued.
-            killed_at   wall-clock time of the kill (time.time()).
-            grace_ms    the wait_to_kill_ms value that elapsed before
-                        the kill.
-
-        EventChildKilled means definited: something went wrong and one cannot
-        rely on the child's results.
+            freed_at    wall-clock time of the freeing (time.time()).
         """
 
-        last_state: E_ChildState
-        killed_at:  float
-        grace_ms:   int
+        last_state:     E_ChildState
+        freed_at:       float
+        after_deadline: bool
 
         def __str__(self) -> str:
-            return "EventChildKilled(last_state=%s, killed_at=%.3f, " \
-                   "grace_ms=%s)" % (self.last_state, self.killed_at,
-                                     self.grace_ms)
+            return "EventChildResourcesFreed(last_state=%s, freed_at=%.3f, " \
+                   "after_deadline=%s)" % (self.last_state, self.freed_at,
+                                           self.after_deadline)
 
 
     class EventChildStateChanged(Event):

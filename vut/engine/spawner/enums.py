@@ -40,11 +40,14 @@ class E_Liveness(Enum):
         return self.name
 
 class E_TerminationReason(Enum):
-    COMPLETED  = auto() # work finished. 
-    TERMINATED = auto() # work unfinished, termination request came early.
-    FAILED     = auto() # failed to produce work
+    # The TASK's own outcome (Level 1) - distinct from the supervision
+    # verdict E_ChildState.TERM_* (Level 2). These names describe what
+    # happened to the WORK and deliberately do not echo a verdict word.
+    DONE          = auto() # work finished.
+    TERMINATED    = auto() # work unfinished; a termination request was observed.
+    UNACCOMPLISHED = auto() # work did not get done (the callable raised).
 
     def __str__(self) -> str:
-        """RETURN: str, the bare member name (e.g. 'COMPLETED')."""
+        """RETURN: str, the bare member name (e.g. 'DONE')."""
         return self.name
 

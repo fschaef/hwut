@@ -28,7 +28,7 @@ for the peer's Up. start() returns only when state == UP.
 
     stop                stop() sends EventTerminalDown to the peer,
                         ends the receive loop, closes the channel.
-                        Further sends raise RuntimeError. The peer
+                        Further sends return False (not UP). The peer
                         sees Down via its peer-down callback.
 
     context_manager     async with EventTerminal(ecp) as t:
@@ -189,12 +189,12 @@ async def _stop():
     print("b.state after peer Down: %s" % b.state)
     print("peer_down_seen: %s" % peer_down_seen)
 
-    banner("send after stop raises")
+    banner("send after stop returns False")
     verdict = await a.send(EventTaskDone(task_id=2, duration_s=2.0))
     if verdict:
         print("UNEXPECTED: send succeeded")
     else:
-        print("Send failed (expected)")
+        print("send returned False (expected)")
 
     banner("stop is idempotent")
     await a.stop()
@@ -271,3 +271,4 @@ HwutRunner(
         "context_manager":   run_context_manager,
     },
 ).run()
+

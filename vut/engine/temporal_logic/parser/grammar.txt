@@ -42,7 +42,8 @@ NOTE:
     ## the mark of a rule-file connective, and it ABUTS ITS FILLER: to the
     ## keyword's right when an operand follows ('on: T', 'mode: X', 'has: X', 'is: K',
     ## 'in: C', 'via: K', 'by: {lv}', 'for: E', 'into: NS', 'until: C',
-    ## 'default: R'), and to a
+    ## 'default: R', 'spawn: T', 'unspawn: T', 'arm: M', 'agent: A', 'wait: C',
+    ## 'instant: E', 'select:', 'if:', 'elif:', 'else:', 'while:'), and to a
     ## terminator's left when it closes a block (':end', ':close'). A leading
     ## colon finishes something; a trailing colon starts something whose filler
     ## is next. ':' is always a connective and never stands alone; '{ ... }' is
@@ -82,6 +83,12 @@ BINDINGS: Names that bind nesting entities:
               'mg' are the two aggregate self-bindings; exactly one is in
               scope, decided by the enclosing aggregate kind.
 
+    'ag'      agent in which the referencing code fragment resides: bound
+              inside an agent's 'init'/'deinit' handlers, its opaque '{ }'
+              command blocks, its bracket conditions, and its rvalues. The
+              agent's signature parameters are its instance members, read as
+              'ag.x' -- the agent counterpart of 'sm'/'mg'.
+
     The binding names are NOT reserved words. On the rule-file plane they are
     ordinary leading segments of a <name-dotted>, resolved by the semantic
     layer as self-binding pseudo-symbols; in the opaque plane they are Luau
@@ -116,8 +123,8 @@ IMPLICIT EVENTS:
 
 <rule-file>
          is the top-level container of all setup-file constructs: causalities,
-         modes, mode groups, state machines, event definitions, and clock
-         definitions.
+         modes, mode groups, state machines, agents, event definitions, and
+         clock definitions.
 
 <reactor> is the umbrella term for a <mode> and a <state>: a named,
          parameterized block of rules with optional 'init'/'deinit' hooks and
@@ -206,7 +213,7 @@ IMPLICIT EVENTS:
 
         RESERVED WORDS: 'and', 'or', 'not', the system triggers (ANY, BEGIN,
         END, CHANGE), VOID, the kind keywords ('mode', 'state', 'mode_group',
-        'state_machine', 'struct', 'container'), the built-in types ('int',
+        'state_machine', 'struct', 'container', 'agent'), the built-in types ('int',
         'float', 'string', 'bool'), and the boolean literals ('true',
         'false'). None of these may serve as an identifier anywhere on the
         rule-file plane -- not as a declared name and not as a member segment
@@ -221,10 +228,10 @@ IMPLICIT EVENTS:
     which is the marker of causality. There are five kinds:
 
          emit an event:        => EVENT(arg = ...)
-         arm a mode:           => !  MODE(arg = ...)
-         spawn (default):      => +! STATE_MACHINE(arg = ...)
-         spawn into container: => +! STATE_MACHINE(arg = ...) in: C via: e.name
-         end existence:        => -! STATE_MACHINE
+         arm a mode:           => arm: MODE(arg = ...)
+         spawn (default):      => spawn: STATE_MACHINE(arg = ...)
+         spawn into container: => spawn: STATE_MACHINE(arg = ...) in: C via: e.name
+         end existence:        => unspawn: STATE_MACHINE
          report a line:        => "text {with} interpolation"
          mutate state:         => { vehicle.speed = 0 }
          run an effect bundle: => BUNDLE_NAME
@@ -234,15 +241,15 @@ IMPLICIT EVENTS:
      changes to the object space. Each effect is on its own line, and the
      effect list ends at the first line that is not an '=>' effect (no closing
      keyword). The event-type name in an emit, the mode name
-     in a '!' arm, and the aggregate-type name in a '+!' spawn are always
-     literal -- never computed by Luau. The arguments may be computed (see
-     <rvalue>); only the names are fixed.
+     in an 'arm:' arming, and the aggregate-type name in a 'spawn:' spawn are
+     always literal -- never computed by Luau. The arguments may be computed
+     (see <rvalue>); only the names are fixed.
 
-     '!' arms a single mode (<mode-arming>). '+!' spawns a named aggregate
-     instance -- a <mode-group> or a <state-machine> (<spawn>) -- and '-!'
-     unspawns one (<unspawn>). The verbs are distinct: '!' targets a reactor,
-     '+!'/'-!' target an aggregate. Only a named (spawned) entity may be
-     unspawned, so '-!' takes a reference by name, not a fresh invocation. A
+     'arm:' arms a single mode (<mode-arming>). 'spawn:' spawns a named aggregate
+     instance -- a <mode-group> or a <state-machine> (<spawn>) -- and 'unspawn:'
+     unspawns one (<unspawn>). The verbs are distinct: 'arm:' targets a reactor,
+     'spawn:'/'unspawn:' target an aggregate. Only a named (spawned) entity may be
+     unspawned, so 'unspawn:' takes a reference by name, not a fresh invocation. A
      spawn may name a target container with 'in: C'; the 'via: <rvalue>' key
      is reachable only inside that 'in:' clause, since the key is the name by
      which the container holds the instance -- 'via:' without 'in:' is a
@@ -339,14 +346,14 @@ IMPLICIT EVENTS:
 
 <spawn>
     constructs an aggregate instance -- a <mode-group> or a <state-machine> --
-    with the verb '+!'. The aggregate-type name is literal. One shape, with one
+    with the verb 'spawn:'. The aggregate-type name is literal. One shape, with one
     optional modifier chain:
 
-         => +! SM_TRAFFIC(lane = 2) [ in: <container> [ via: <rvalue> ] ]
+         => spawn: SM_TRAFFIC(lane = 2) [ in: <container> [ via: <rvalue> ] ]
 
     THE ARGUMENT LIST IS MANDATORY -- it is how the instance is instantiated.
     The parentheses are required; the list inside may be empty for a type that
-    takes no arguments ('+! SM_TRAFFIC()'). A bare type name with no parentheses
+    takes no arguments ('spawn: SM_TRAFFIC()'). A bare type name with no parentheses
     is a SYNTAX ERROR -- there is no parameterless spawn form.
 
     'in:' -- WHICH CONTAINER catches the instance. Absent, the instance is
@@ -362,7 +369,7 @@ IMPLICIT EVENTS:
        or an opaque '{ luau }' expression. 'via:' is legal only inside an 'in:'
        clause -- a key without a container is meaningless.
 
-         => +! SM_TRAFFIC(lane = 2) in: sprite_bin via: e.lead_id
+         => spawn: SM_TRAFFIC(lane = 2) in: sprite_bin via: e.lead_id
 
     Whether an offered instance is admitted is the CONTAINER's decision, taken
     under a mutex; a rejected offer leaves no instance and runs no 'init'. The
@@ -371,22 +378,22 @@ IMPLICIT EVENTS:
 
     SINGLE-INSTANCE there is no dedicated construct. Spawn the type once,
     at BEGIN; it lands in the per-kind default container and is addressed by
-    its type name ('-! SM_TRAFFIC' ends it). Script-side access goes through
+    its type name ('unspawn: SM_TRAFFIC' ends it). Script-side access goes through
     the holding container.
 
-         on: BEGIN => +! SM_TRAFFIC(lane = 2)
+         on: BEGIN => spawn: SM_TRAFFIC(lane = 2)
 
 
 <unspawn>
-    ends the existence of an instance with the verb '-!'. The operand is a
+    ends the existence of an instance with the verb 'unspawn:'. The operand is a
     reference by name (bare or dotted), not an invocation: no arguments. Ending
     existence runs the instance's 'deinit' once, exactly as a firing 'until' or
     the trace END would, and releases the instance from whatever container
     holds it.
 
-      => +! SM_TRAFFIC(lane = 2) in: bin       # spawn into a container
-      => -! SM_TRAFFIC                          # end existence
-      => -! LIGHTS.GLOW                          # dotted reference
+      => spawn: SM_TRAFFIC(lane = 2) in: bin       # spawn into a container
+      => unspawn: SM_TRAFFIC                          # end existence
+      => unspawn: LIGHTS.GLOW                          # dotted reference
 
     Resolving the operand to an existing instance is a semantic-pass concern;
     an operand resolving to no instance is a validation error (pass 2), not a
@@ -397,13 +404,15 @@ IMPLICIT EVENTS:
 <declaration>
       introduces a scope-level name with 'is:' and a KIND. One head -- a bare
       name, an optional ROUND-bracket '(' <list-decl-arg> ')' signature, 'is:'
-      -- followed by one of FOUR kind shapes, distinguished by their leading
+      -- followed by one of FIVE kind shapes, distinguished by their leading
       keyword:
 
         north(lane: int) is: state_machine                   -- reactor kinds
         Idle             is: state
         Watcher          is: mode
         Patrol           is: mode_group
+
+        heinz(retries: int) is: agent                        -- agent
 
         ghost_state_tracker(                                 -- struct
             number : int;
@@ -417,16 +426,17 @@ IMPLICIT EVENTS:
         RETRIES is: int(3) by: { cfg.retries }
         tracker is: ghost_state_tracker(number = 3, chasing = false)
 
-      REACTOR KINDS ('mode', 'state', 'mode_group', 'state_machine') forward-
+      REACTOR KINDS ('mode', 'state', 'mode_group', 'state_machine') and the
+      AGENT kind forward-
       declare a name before its definition -- the (B.1) gate of the (A)/(B)
       forward-reference rule, the scope-level counterpart of an aggregate's
       'has:' ('is:' states the kind outright; 'has:' lets the frame imply it).
       The matching definition follows later in the same scope. The signature
-      says HOW a later '+!' instantiates the type, which the engine needs even
-      when only the declaration is in scope; since a '+!' is the begin-of-life
+      says HOW a later 'spawn:' instantiates the type, which the engine needs even
+      when only the declaration is in scope; since a 'spawn:' is the begin-of-life
       of an instance and we cannot tell at declaration time whether one will
       target the name, the signature is MANDATORY on the spawnable kinds --
-      'mode_group' and 'state_machine'. 'mode' and 'state' take NO signature
+      'mode_group', 'state_machine', and 'agent'. 'mode' and 'state' take NO signature
       (armed, not instantiated).
 
       STRUCT declares an aggregate VALUE type. The signature IS the member
@@ -481,7 +491,7 @@ IMPLICIT EVENTS:
       not fix (a container type-parameter such as 'dict' / 'fifo'), a
       variable, a struct member ('tracker.number'), and a self-binding member
       ('e.target' -- the legible, non-opaque way to forward a triggering
-      event's member as an argument, e.g. '=> ! Chase(e.target)'). The parser
+      event's member as an argument, e.g. '=> arm: Chase(e.target)'). The parser
       admits an rvalue everywhere an <arg> is admitted; whether a given site
       accepts a given name is a pass-2 concern, not a parse error.
 
@@ -552,7 +562,7 @@ are aggregates and are closed by 'end'.
 
 LIFECYCLE
 
-  '=>' '!' <mode-arming> instantiates a mode and activates a mode block.
+  '=>' 'arm:' <mode-arming> instantiates a mode and activates a mode block.
 
   'until' <cause>          removes the mode from existence.
 
@@ -653,7 +663,7 @@ constructor arguments are passed.
 Example: vehicle must stop within 10 s of a stop sign
 
     on: STOP_SIGN_PASSED
-    => ! LOOK_FOR_CAR_SPEED(at = e.time)
+    => arm: LOOK_FOR_CAR_SPEED(at = e.time)
 
     mode: LOOK_FOR_CAR_SPEED(at: number)
         on: TICK & { vehicle.speed > 0 }
@@ -665,7 +675,7 @@ Example: parameterized, with conditional arming
     ## arm one watcher per (ip, port); the ':has' guard is illustrative --
     ## under idempotent re-arm a duplicate arming would be a silent no-op
     on: NW_EVENT & { not NETWORK_WATCHER:has(ip = e.ip, port = e.port) }
-    => ! NETWORK_WATCHER(ip = e.ip, port = e.port, firewall = global_fw)
+    => arm: NETWORK_WATCHER(ip = e.ip, port = e.port, firewall = global_fw)
 
     mode: NETWORK_WATCHER(ip: string; port: number; firewall: Firewall)
         on: PING & { e.ip == m.ip and e.port == m.port }
@@ -742,7 +752,7 @@ soon as its declaring scope exists. A spawn reaches a declared container by
 name with 'in:' and may name the key its caught instance is held under with
 'via:':
 
-    on: Hatch => +! ghost(seed) in: Ghosts via: e.id
+    on: Hatch => spawn: ghost(seed) in: Ghosts via: e.id
 
 Here 'in: Ghosts' is an ordinary (B.1) forward reference to a container
 declared with 'is: container<...>'; the container declaration is exactly what
@@ -805,12 +815,12 @@ Example: a task state machine
         }
 
         state: SLEEP
-            on: WAKE => ! RUN
+            on: WAKE => arm: RUN
         until: EVENT_TASK_TERMINATED
 
         state: RUN
             on: TICK & { e.time >= m.begin_time + quantum }
-            => ! SLEEP
+            => arm: SLEEP
         until: EVENT_TASK_TERMINATED
     end   # a state machine is closed by 'end'; it has no 'until' of its own
 
@@ -865,9 +875,9 @@ marks where the last member -- and the group -- closes.
         has: GLOW
     :end
 
-Both aggregates are spawned as an effect with '+!' (see <spawn>): the type name
+Both aggregates are spawned as an effect with 'spawn:' (see <spawn>): the type name
 with its mandatory argument list, optionally directed to a named container with
-'in:' and keyed with 'via:'. An instance's existence is ended with '-!' (see
+'in:' and keyed with 'via:'. An instance's existence is ended with 'unspawn:' (see
 <unspawn>).
 
 
@@ -903,7 +913,7 @@ A 'close' takes no name; the matching 'open' is unambiguous from the nesting.
 A namespace may contain a nested 'open'/'close':
 
     open: world.europe
-        on: TICK => ! WATCH()
+        on: TICK => arm: WATCH()
         open: germany.berlin
             mode: GUARD
                 on: ALERT => SIREN()
@@ -947,6 +957,151 @@ visibility and caching rules that govern that -- are semantic-pass concerns,
 not parsing ones.
 
 
+(A.2.9) Agents -- Scripted Stimulus Actors
+
+An agent is a tick-scripted stimulus actor defined inside the rule file. It
+drives the system under test deterministically: a self-contained scenario, no
+external driver, no hand-written stimulus Luau. An agent is clocked -- its
+'on:' target follows the <cause> syntax (a trigger with an optional guard, the
+heartbeat shape), whose trigger the semantic layer resolves to kind CLOCK --
+and acts only at ticks of that clock.
+
+    agent: <id> [ '(' <list-decl-arg> ')' ] on: <cause>
+        <elm-agent>+
+    :end
+
+    <elm-agent>:  <step-agent> | 'init:' '{ }' | 'deinit:' '{ }'
+
+The signature parameters are the agent instance's members, read through the
+self-binding 'ag' ('ag.retries') -- exactly the 'sm'/'mg' model. There is no
+in-body member declaration and no inheritance: an agent carries no 'is:'
+bases. An agent is spawned and unspawned like an aggregate ('spawn:' /
+'unspawn:'), is forward-declarable at scope level ('heinz(retries: int) is:
+agent', signature mandatory -- spawnable kind), and has 'init:'/'deinit:'
+exactly as a state machine does. The script is the lifetime: when the last
+step completes, the agent's existence ends as if unspawned (its 'deinit'
+runs); 'unspawn:' ends it early.
+
+TICK LAW. Only PACED EVENT EMISSION consumes a tick. Every other step -- the
+commands, the immediate injection, the control constructs, 'wait:' -- is
+tick-free, evaluated at the tick boundary, instantaneously.
+
+    EVENT(port = 8080)                      -- paced emission, ONE tick
+
+A paced emission is a bare <event-spec>: the literal event-type name with its
+MANDATORY argument list (empty parentheses for a memberless event). It is the
+agent's well-behaved, clock-paced stimulus -- the event fires at the agent's
+next clock beat. The bare, unmarked line IS the paced form.
+
+    instant: EVENT(port = 8080)             -- immediate injection, tick-free
+
+'instant:' injects one <event-spec> into the CURRENT event queue at the
+present instant -- off the clock beat, no tick consumed, no wait for the next
+beat. It is the deliberately marked side-channel: instant injection pours
+dynamics into the running cascade, and the keyword's weight is intentional --
+the author thinks twice. Several immediate events are written as several
+'instant:' lines.
+
+COMMANDS. 'spawn:', 'unspawn:', 'arm:', and an opaque '{ ... }' statement
+block stand as bare steps -- no '=>' precedes them ('=>' means 'it follows
+that' and belongs to causality; an agent step is a command, not a
+consequence). All four are tick-free.
+
+    spawn: SM_TRAFFIC(lane = 2) in: bin via: ag.key
+    arm: WATCHER(ip = "10.0.0.1")
+    { setup_fixture() }
+    unspawn: SM_TRAFFIC
+
+WAITING. 'wait:' suspends the script until its cause fires; the cause is the
+ordinary <cause> (a trigger with an optional guard, or a cause reference).
+'e' is bound inside the guard. A 'wait:' may carry an effect tail -- zero or
+more '=>' effects, causality semantics -- which runs CO-TEMPORALLY with the
+firing cause, with 'e' bound; a tail-less 'wait:' is a pure progression gate.
+'e' does NOT flow into subsequent steps: its scope is the wait's guard and
+effect tail.
+
+    wait: NW_RESPONSE & [ e.ip == "192.168.1.2" ]
+    => "response from {e.ip}"
+    => { ag.responded = true }
+
+    wait: GO                                -- pure gate, no tail
+
+'select:' groups several 'wait:' lines into one suspension: the FIRST cause
+to fire selects its branch, that branch's effect tail runs (co-temporal with
+the cause, 'e' bound per branch), and the other branches are abandoned. Only
+'wait:' lines appear inside a 'select:'.
+
+    select:
+        wait: NW_RESPONSE & [ e.port == 8080 ]
+        => { ag.responded = true }
+        wait: SHUTDOWN
+        => "shutdown while waiting"
+        wait: TICK & [ e.time > ag.deadline ]
+    :end
+
+RESUMPTION. After the awaited cause fires (and its effect tail has run), the
+agent resumes at the NEXT TICK of its own clock. The agent acts only at ticks
+of its own clock -- unconditionally: the wait's tail is the co-temporal
+reaction; the scripted continuation is tick-quantised. This keeps every agent
+action attributable to a clock tick, so a recording is a pure function of the
+trace and the clock periods.
+
+CONTROL. 'if:'/'elif:'/'else:' and 'while:' frame step sequences; their
+conditions are guards -- a bracket condition '[ ... ]' or an opaque Luau
+condition '{ ... }' -- over variables, struct members, and 'ag' members ('e'
+is not in scope: no trigger pins it). One ':end' closes a whole
+if/elif/else chain; a 'while:' takes its own ':end'. Control heads and ':end'
+are tick-free. The constructs compose freely: any frame body is a step
+sequence, so 'select:', 'if:', 'while:' nest without restriction.
+
+    if: [ ag.retries > 0 ]
+        REQUEST(port = 8080)
+        select:
+            wait: ACK & [ e.port == 8080 ]
+            wait: SHUTDOWN
+        :end
+    else:
+        { log_give_up() }
+    :end
+
+    while: [ ag.budget > 0 ]
+        PING(seq = 1)
+        wait: PONG
+    :end
+
+FENCE. The imperative constructs -- 'instant:', 'wait:', 'select:', 'if:',
+'elif:', 'else:', 'while:', and the bare command forms -- are legal ONLY
+inside agent bodies, never in causality effects. The fence is structural: the
+grammar admits them in <step-agent> alone.
+
+CASCADE. The agent has NO causes: its only inbound sensitivity is 'wait:'.
+Agent emissions are STIMULUS EDGES INTO the cascade graph; the agent is never
+a cascade node. A PACED emission lands at a tick boundary; an 'instant:'
+injection lands within the running no-time cascade at the present instant --
+the side-channel that can perturb a cascade in flight. Tick quantisation
+breaks instantaneous feedback for the paced form by construction (at most one
+paced emission per tick); 'instant:' is the marked exception that does not.
+How the cascade layer admits a stimulus edge from each form is a
+semantic-pass concern.
+
+Example:
+
+    agent: heinz(deadline: float) on: his_clock
+        init: { ag.responded = false }
+
+        EVENT(port = 8080)
+        instant: OTHER(port = 20)
+
+        wait: NW_RESPONSE & [ e.ip == "192.168.1.2" ]
+        => { ag.responded = true }
+
+        if: [ ag.responded ]
+            DONE(ok = true)
+        :end
+
+        deinit: { teardown() }
+    :end
+
 
 (A.3) OBJECT SPACE INIT and DEINIT
 
@@ -960,8 +1115,8 @@ event in the event trace.
   -- do not allow for a <guard>
   -- cannot EMIT events (no <event-spec> effect): they sit before the first and
      after the last trace event, so emitting one would inject an event outside
-     the trace's own timeline. Other effects are fine -- spawn ('+!'), unspawn
-     ('-!'), mode-arming, mutation, and Luau setup/teardown.
+     the trace's own timeline. Other effects are fine -- spawn ('spawn:'), unspawn
+     ('unspawn:'), mode-arming, mutation, and Luau setup/teardown.
 
 The 'on: BEGIN' handler defines the classes whose instances populate the object
 space, brings up the single-instance aggregates, sets their initial state, and

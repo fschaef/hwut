@@ -74,10 +74,11 @@ EventTerminalUp and EventTerminalDown received from the peer are
 handled INTERNALLY by the Terminal (state transitions, handshake
 release). They are NOT passed to the user's receive-side Dispatcher.
 
-The one exception is EventTerminalDown forwarded by an EventRouter:
-the Router subscribes (via a private hook) to "the peer told us
-they're going" so it can remove the dead Terminal's entry. This
-hook is exposed via the `_on_peer_down` mechanism; see set_peer_down_callback.
+The one exception is EventTerminalDown observed by an EventRouter:
+the Router registers a peer-down callback ("the peer told us they're
+going") so it can remove the dead Terminal's entry. The hook is
+add_peer_down_callback() (additive); set_peer_down_callback() is the
+single-slot back-compat form.
 
 Locally-emitted Up / Down (the ones we send) are NEVER dispatched
 to our own dispatcher. The Terminal's local lifecycle is the
@@ -106,7 +107,9 @@ from vut.engine.event.channel.channel   import EventChannel
 from vut.engine.event.channel.parameter import EventChannelParameter
 from vut.engine.event.dispatcher        import EventDispatcher
 from vut.engine.event.event             import Event
-from vut.engine.event.events            import EventTerminalUp, EventTerminalDown
+from vut.engine.event.events            import (EventTerminalUp,
+                                                EventTerminalDown,
+                                                EventInfo)
 
 
 # ============================================================================
@@ -140,10 +143,21 @@ class EventTerminal:
         # has been received. start() awaits it.
         self._peer_up_event = asyncio.Event()
 
-        # Optional callback (Router uses this) invoked when peer Down
-        # arrives - i.e. when "this Terminal's peer told us they're
-        # going". Set via set_peer_down_callback().
-        self._peer_down_callback = None
+        # Callbacks invoked when peer Down arrives - i.e. when "this
+        # Terminal's peer told us they're going". A LIST: more than one
+        # consumer may care (e.g. several Router entries sharing this
+        # Terminal). Registered via add_peer_down_callback();
+        # set_peer_down_callback() is the single-slot back-compat form.
+        self._peer_down_callbacks: list = []
+
+        # EventInfo handshake state (versioning, see send()/_receive_loop):
+        #   _info_sent  -- event ids for which we have already sent an
+        #                  EventInfo ahead of the first occurrence.
+        #   _info_seen  -- event id -> version, learned from peer EventInfo.
+        #                  An incoming non-infra event whose id is absent
+        #                  here is REJECTED (loud diagnostic, dropped).
+        self._info_sent: set            = set()
+        self._info_seen: dict[str, int] = {}
 
         # User-facing receive dispatcher. 
         # EVENT_INFRA are NOT routed here.
@@ -154,29 +168,33 @@ class EventTerminal:
     # ------------------------------------------------------------------
     # Explicit lifecycle
     # ------------------------------------------------------------------
-    async def start(self) -> None:
-        """RETURN: None,  after the handshake has completed (both our
-                          Up sent and peer's Up received).
+    async def start(self) -> bool:
+        """RETURN: True,  the Terminal is UP (handshake complete: our Up
+                          sent and the peer's Up received), or was
+                          already UP.
+                   False, the Terminal is DOWN and cannot be started
+                          (single-use); a diagnostic is written to
+                          stderr. Nothing is built.
 
         Builds the Channel, spawns the receive loop, sends our
         EventTerminalUp on the wire, and BLOCKS until the peer's Up
         arrives. A Terminal is not functional without its counterpart
         so we do not return until the counterpart has confirmed.
 
-        Idempotent: calling start() while already UP returns immediately.
-        Calling start() after stop() raises RuntimeError - a Terminal
-        is single-use.
+        Idempotent: calling start() while already UP returns True
+        immediately. A Terminal is single-use - once DOWN it cannot be
+        restarted; that is reported by return value, not exception.
         """
         if self._state == _STATE_UP:
-            return
+            return True
         elif self._state == _STATE_DOWN:
-            raise RuntimeError(
-                "EventTerminal.start: terminal is DOWN; cannot restart."
-            )
+            print("EventTerminal.start: terminal is DOWN; cannot restart "
+                  "(single-use) - not started.", file=sys.stderr)
+            return False
         elif self._state != _STATE_NEW:
             # UP_PENDING - already starting; await the existing handshake.
             await self._peer_up_event.wait()
-            return
+            return True
 
         # NEW -> UP_PENDING: build the channel, spawn the receive loop,
         # send our Up, then block until the peer's Up arrives.
@@ -189,22 +207,54 @@ class EventTerminal:
         # Block until '_receive_loop()' receives the counter sides 'Up' message
         await self._peer_up_event.wait()
         # received 'Up' message => 'self._state == _STATE_UP'
+        return True
 
-    async def send(self, event: Event) -> None:
-        """RETURN: True, in case of success
-                   False, else
+    async def send(self, event: Event) -> bool:
+        """RETURN: True,  the event was handed to the Channel.
+                   False, the Terminal was not UP; nothing was sent
+                          (a diagnostic is written to stderr).
 
-        Sends event to the peer Terminal. Requires the terminal to
-        be UP (handshake complete). Raises RuntimeError if not UP.
+        Sends event to the peer Terminal. A not-UP send() is a NORMAL,
+        expected outcome - the peer may go DOWN between the caller's
+        check and this call through no fault of the caller - so it is
+        reported by return value, not by exception. The caller decides
+        whether a failed send matters.
+
+        On first send of a given event TYPE, an EventInfo descriptor for
+        that type is sent ahead of the event (see _ensure_event_info);
+        the peer rejects an event whose type it has no EventInfo for.
         """
         if self._state != _STATE_UP:
-            print("EventTerminal.send: terminal state is %s; "
-                  "send() requires UP. Did you forget start()?" % self._state,
-                  file=sys.stderr)
+            print("EventTerminal.send: terminal state is %s; send() requires "
+                  "UP - event not sent." % self._state, file=sys.stderr)
             return False
-        else:
-            await self._channel.send(event)
-            return True
+        await self._ensure_event_info(event)
+        await self._channel.send(event)
+        return True
+
+    async def _ensure_event_info(self, event: Event) -> None:
+        """RETURN: None.
+
+        On the FIRST send of a given event type, send an EventInfo
+        descriptor (carrying that type's WIRE_VERSION) ahead of it, so
+        the peer learns the version before it sees the event itself.
+        Subsequent sends of the same type send nothing extra.
+
+        EVENT_INFRA events (Up, Down, EventInfo itself) are exempt -
+        they are the bootstrap protocol and carry no EventInfo, else
+        the handshake would recurse. The peer accepts EVENT_INFRA
+        unconditionally (see _receive_loop).
+        """
+        if event.category == "EVENT_INFRA":
+            return
+        event_id = type(event).id
+        if event_id in self._info_sent:
+            return
+        self._info_sent.add(event_id)
+        await self._channel.send(
+            EventInfo(event_id=event_id,
+                      version=type(event).WIRE_VERSION)
+        )
 
     async def stop(self) -> None:
         """RETURN: None.
@@ -275,18 +325,29 @@ class EventTerminal:
     # ------------------------------------------------------------------
     # Router hook for peer-Down notification
     # ------------------------------------------------------------------
-    def set_peer_down_callback(self, callback) -> None:
+    def add_peer_down_callback(self, callback) -> None:
         """RETURN: None.
 
         Register a callback invoked when this Terminal receives an
-        EventTerminalDown from its peer (i.e. the peer has signalled
-        deliberate termination). The callback receives no arguments
-        and may be sync or async.
+        EventTerminalDown from its peer (the peer signalled deliberate
+        termination). The callback receives no arguments and may be
+        sync or async. Multiple callbacks may be registered; all fire,
+        in registration order, on peer Down.
 
-        Used by EventRouter to remove a dead Terminal's entry from
-        its dispatch table.
+        EventRouter uses this to remove a dead Terminal's entry from
+        its dispatch table - several entries may share one Terminal,
+        so additive registration (not a single slot) is required.
         """
-        self._peer_down_callback = callback
+        self._peer_down_callbacks.append(callback)
+
+    def set_peer_down_callback(self, callback) -> None:
+        """RETURN: None.
+
+        Back-compat single-slot form: REPLACES all registered peer-down
+        callbacks with the one given. Prefer add_peer_down_callback()
+        when more than one consumer may care.
+        """
+        self._peer_down_callbacks = [callback]
 
     # ------------------------------------------------------------------
     # Internals
@@ -294,9 +355,13 @@ class EventTerminal:
     async def _receive_loop(self) -> None:
         """RETURN: None,  when the channel closes or the task is cancelled.
 
-        Pulls events from the channel. EVENT_INFRA events are handled
-        internally (handshake / peer-Down). All other events are
-        dispatched through the user-facing dispatcher.
+        Pulls events from the channel. EVENT_INFRA events (Up, Down,
+        EventInfo) are consumed internally - handshake, peer-down, and
+        version caching - and never reach the user dispatcher. Every
+        other event is checked against the EventInfo cache: an event
+        whose type has no prior EventInfo is REJECTED (loud diagnostic,
+        dropped) rather than dispatched. Accepted events go to the
+        user-facing dispatcher.
 
         Individual-event exceptions are logged and do NOT kill the
         loop. Cancellation propagates cleanly.
@@ -314,14 +379,25 @@ class EventTerminal:
                 if event is None:                       # channel closed
                     break
 
-                # Filter EVENT_INFRA events into the internal handler;
-                # everything else goes to the user dispatcher.
+                # EVENT_INFRA events are the bootstrap protocol: handled
+                # internally, accepted unconditionally, never dispatched.
                 if isinstance(event, EventTerminalUp):
                     await self._on_EventTerminalUp(event)
                 elif isinstance(event, EventTerminalDown):
                     await self._on_EventTerminalDown(event)
                     break
+                elif isinstance(event, EventInfo):
+                    self._on_EventInfo(event)
                 else:
+                    # Versioned admission: the type must have been
+                    # announced by an EventInfo first, else reject.
+                    if type(event).id not in self._info_seen:
+                        print("EventTerminal._receive_loop: rejected event "
+                              "of type %r - no EventInfo received for it "
+                              "first (version handshake missing or out of "
+                              "order); dropping."
+                              % type(event).id, file=sys.stderr)
+                        continue
                     try:
                         self.dispatcher.dispatch(event)
                     except Exception as e:
@@ -331,6 +407,16 @@ class EventTerminal:
         except asyncio.CancelledError:
             pass
 
+    def _on_EventInfo(self, event) -> None:
+        """RETURN: None.
+
+        Cache the (event_id -> version) announced by the peer. A later
+        event of that type is admitted; one with no cached EventInfo is
+        rejected in _receive_loop. Re-announcement (same id again) just
+        overwrites - last writer wins, harmless for a single peer.
+        """
+        self._info_seen[event.event_id] = event.version
+
     async def _on_EventTerminalUp(self, event):
         # Peer Up: complete the handshake if still pending. If
         # already UP, ignore (peer restarted / duplicate).
@@ -339,19 +425,22 @@ class EventTerminal:
             self._peer_up_event.set()
 
     async def _on_EventTerminalDown(self, event):
-        # Mark DOWN immediately => no more send() 
+        # Mark DOWN immediately => no more send()
         self._state = _STATE_DOWN
 
-        # Peer is going. Notify the router (or whoever subscribed).
-        # We do NOT send our own Down back; the peer is gone.
-        if self._peer_down_callback is not None:
+        # Peer is going. Notify every registered consumer (Router
+        # entries, user hooks). We do NOT send our own Down back; the
+        # peer is gone. One callback raising must not stop the others,
+        # so each is isolated. Iterate a snapshot in case a callback
+        # mutates the list (e.g. Router.remove_entry).
+        for callback in tuple(self._peer_down_callbacks):
             try:
-                result = self._peer_down_callback()
+                result = callback()
                 if asyncio.iscoroutine(result):
                     await result
             except Exception as e:
-                print("EventTerminal._on_EVENT_INFRA: peer_down callback raised: %s"
-                      % e, file=sys.stderr)
+                print("EventTerminal._on_EventTerminalDown: peer-down "
+                      "callback raised: %s" % e, file=sys.stderr)
 
     # ------------------------------------------------------------------
     # Object-as-sink protocol: a Terminal IS a sink.
@@ -387,3 +476,4 @@ class EventTerminal:
     def is_up(self) -> bool:
         """RETURN: bool,  True if the terminal is fully connected (state == UP)."""
         return self._state == _STATE_UP
+

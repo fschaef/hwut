@@ -347,6 +347,13 @@ class Event(metaclass=EventMeta):
     category: ClassVar[str] = None     # set by __init_subclass__
     id:       ClassVar[str] = None     # set by __init_subclass__, e.g. "WORKFLOW.EventTaskDone"
 
+    # Wire-format version for this event TYPE. Sent once per type in an
+    # EventInfo descriptor ahead of the type's first occurrence on the
+    # wire (see EventTerminal). Bump on any backward-incompatible change
+    # to a subclass's field set or encoding. Subclasses override by
+    # assigning WIRE_VERSION = N in the class body.
+    WIRE_VERSION: ClassVar[int] = 1
+
     # Pydantic adapter cache. Created lazily on first use; see
     # _get_adapter().
     _adapter: ClassVar = None
@@ -488,4 +495,5 @@ class Event(metaclass=EventMeta):
         """
         from vut.engine.event.channel.marshaller import Marshaller
         return Marshaller.deserialize(wire)
+
 

@@ -175,6 +175,14 @@ class EventDispatcher:
         self._subscriptions:   dict[int, Subscription] = {}
         self._next_handle:     int                     = 0
 
+        # Strong references to scheduled async sink tasks. CPython holds
+        # only a WEAK reference to a bare create_task() result, so a
+        # fire-and-forget task can be garbage-collected mid-flight. We
+        # keep each task here until it finishes (see _spawn), which also
+        # gives us a place to surface exceptions that an unawaited task
+        # would otherwise swallow.
+        self._inflight: set = set()
+
     # ----------------------------------------------------------------
     # Subscription
     # ----------------------------------------------------------------
@@ -287,7 +295,7 @@ class EventDispatcher:
                 "expect_any: event_class_list must not be empty."
             )
 
-        loop   = asyncio.get_event_loop()
+        loop   = asyncio.get_running_loop()
         future = loop.create_future()
 
         # One subscription per class. Each carries a one-shot sink that
@@ -316,8 +324,14 @@ class EventDispatcher:
 
         The sink unsubscribes itself on first match, so the
         subscription does not leak once the awaitable completes.
+
+        INVARIANT: relies on there being no 'await' between the
+        subscribe_method() call and box.append(sub) below. In
+        single-threaded asyncio nothing can preempt this stretch, so
+        the sink's back-reference (box) is always filled before any
+        event can reach it.
         """
-        loop   = asyncio.get_event_loop()
+        loop   = asyncio.get_running_loop()
         future = loop.create_future()
 
         # The sink needs its own Subscription handle to unsubscribe
@@ -350,9 +364,11 @@ class EventDispatcher:
         Snapshot iteration: mutation of the subscription set during
         dispatch does NOT affect the current call.
 
-        Per-subscription exceptions in predicates or sink-calls are
+        Per-subscription exceptions in predicates or sync sink-calls are
         caught and logged to stderr; other subscriptions are still
-        served.
+        served. Async sinks are scheduled via _spawn, which retains the
+        task (so it cannot be GC'd mid-flight) and logs any exception it
+        raises through the same stderr channel.
         """
         for sub in tuple(self._subscriptions.values()):
             try:
@@ -370,9 +386,9 @@ class EventDispatcher:
                     # If send() returned a coroutine (Terminal.send is async),
                     # schedule it so we do not block.
                     if inspect.iscoroutine(result):
-                        asyncio.create_task(result)
+                        self._spawn(result, sub.handle)
                 elif sub.kind == "async":
-                    asyncio.create_task(sub.sink(event))
+                    self._spawn(sub.sink(event), sub.handle)
                 else:                              # "sync"
                     sub.sink(event)
             except RuntimeError as e:
@@ -401,6 +417,42 @@ class EventDispatcher:
     # ----------------------------------------------------------------
     # Internals
     # ----------------------------------------------------------------
+
+    def _spawn(self, coro, handle: int) -> None:
+        """RETURN: None.
+
+        Schedule 'coro' on the running loop and keep a STRONG reference
+        to the resulting task until it completes - so the task cannot be
+        garbage-collected mid-flight. When it finishes, drop the
+        reference and, if it raised, log the exception to stderr in the
+        same form as the synchronous path (an unawaited task would
+        otherwise swallow the exception until GC).
+
+        Raises nothing: a RuntimeError from create_task (no running
+        loop) is caught and logged, matching the sync path's behaviour.
+        """
+        try:
+            task = asyncio.create_task(coro)
+        except RuntimeError as e:
+            # No running loop: same diagnostic the inline path emits.
+            print("EventDispatcher.dispatch: cannot deliver to "
+                  "subscription %d: %s" % (handle, e),
+                  file=sys.stderr)
+            return
+
+        self._inflight.add(task)
+
+        def _done(t: "asyncio.Task", h=handle) -> None:
+            self._inflight.discard(t)
+            if t.cancelled():
+                return
+            exc = t.exception()
+            if exc is not None:
+                print("EventDispatcher.dispatch: async sink raised on "
+                      "subscription %d: %s" % (h, exc),
+                      file=sys.stderr)
+
+        task.add_done_callback(_done)
 
     def _add(self, predicate, sink) -> Subscription:
         """RETURN: Subscription, the handle for the new entry.
@@ -438,3 +490,4 @@ class EventDispatcher:
                            sink=sink, kind=kind)
         self._subscriptions[handle] = sub
         return sub
+

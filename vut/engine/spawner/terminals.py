@@ -270,12 +270,12 @@ class SpawnerChildEventTerminal(EventTerminal):
     def __init__(self, ecp: EventChannelParameter):
         """RETURN: a new (not yet started) child terminal.
 
-        The exit reason defaults to COMPLETED; the trampoline overrides
+        The exit reason defaults to DONE; the trampoline overrides
         it via report_reason() if the callable was terminated on
         request or raised.
         """
         super().__init__(ecp)
-        self._exit_reason          = E_TerminationReason.COMPLETED
+        self._exit_reason          = E_TerminationReason.DONE
         self._termination_callback = None      # optional; set by user code
 
     # ----------------------------------------------------------------
@@ -337,9 +337,9 @@ class SpawnerChildEventTerminal(EventTerminal):
         Sets the reason that the EventChildTermination emitted by stop()
         will carry. The trampoline calls this from the callable's
         outcome:
-            normal return            -> COMPLETED (the default)
+            normal return            -> DONE (the default)
             EventChildTerminationReq -> TERMINATED
-            callable raised          -> FAILED
+            callable raised          -> UNACCOMPLISHED
 
         Calling it after stop() has run has no effect; the event is
         already on the wire.
@@ -368,7 +368,7 @@ class SpawnerChildEventTerminal(EventTerminal):
         """RETURN: None.
 
         Receive-side handler for EventChildTerminationReq. Records that
-        the eventual exit reason is TERMINATED (not COMPLETED) and, if
+        the eventual exit reason is TERMINATED (not DONE) and, if
         the user registered a termination callback, invokes it so the
         callable can begin a cooperative wind-down.
 

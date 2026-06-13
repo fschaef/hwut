@@ -27,7 +27,7 @@ from config import HwutRunner
 from vut.engine.spawner.enums  import E_ChildState, E_Liveness
 from vut.engine.spawner.events import (EventChildTerminationReq,
                                        EventChildTermination,
-                                       EventChildKilled,
+                                       EventChildResourcesFreed,
                                        EventChildStateChanged,
                                        E_TerminationReason)
 
@@ -79,16 +79,16 @@ def run_events():
         print("  str        : %s" % e2)
         assert e2.reason is reason
 
-    print("--- EventChildKilled ---")
-    e3 = EventChildKilled(last_state = E_ChildState.TERMINATING,
-                          killed_at  = 1000.0,
-                          grace_ms   = 250)
-    # killed_at is fixed here (not time.time()), so printing str() is
+    print("--- EventChildResourcesFreed ---")
+    e3 = EventChildResourcesFreed(last_state     = E_ChildState.TERMINATING,
+                                  freed_at       = 1000.0,
+                                  after_deadline = True)
+    # freed_at is fixed here (not time.time()), so printing str() is
     # safe and deterministic.
     print("  str        : %s" % e3)
-    print("  fields     : last_state=%s grace_ms=%s"
-          % (e3.last_state, e3.grace_ms))
-    assert e3.last_state is E_ChildState.TERMINATING and e3.grace_ms == 250
+    print("  fields     : last_state=%s after_deadline=%s"
+          % (e3.last_state, e3.after_deadline))
+    assert e3.last_state is E_ChildState.TERMINATING and e3.after_deadline is True
 
     print("--- EventChildStateChanged ---")
     e4 = EventChildStateChanged(old_state = E_ChildState.RUNNING,
@@ -99,7 +99,7 @@ def run_events():
 
     print("--- event identity (category derives from class) ---")
     # Every SPAWNER event's id is the string 'SPAWNER.<ClassName>'.
-    for ev in (e1, EventChildTermination(reason=E_TerminationReason.COMPLETED),
+    for ev in (e1, EventChildTermination(reason=E_TerminationReason.DONE),
                e3, e4):
         print("  %-26s -> id=%s" % (type(ev).__name__, ev.id))
         assert ev.id == "SPAWNER.%s" % type(ev).__name__, ev.id
@@ -110,15 +110,15 @@ def run_reason():
     """RETURN: None.
 
     Walks E_TerminationReason and reports each member. The reason
-    enum records the child's FUNCTIONAL verdict on itself, distinct
-    from the Spawner's E_ChildState verdict (DISCUSSION.txt D7).
+    enum records the child's TASK outcome (Level 1), distinct from the
+    Spawner's E_ChildState verdict (Level 2, DISCUSSION.txt D7).
     """
     print("--- E_TerminationReason members ---")
     for r in E_TerminationReason:
         print("  %s" % r)
     assert {str(r) for r in E_TerminationReason} \
-           == {"COMPLETED", "TERMINATED", "FAILED"}
-    print("  exactly COMPLETED / TERMINATED / FAILED: OK")
+           == {"DONE", "TERMINATED", "UNACCOMPLISHED"}
+    print("  exactly DONE / TERMINATED / UNACCOMPLISHED: OK")
 
 
 def run_liveness():

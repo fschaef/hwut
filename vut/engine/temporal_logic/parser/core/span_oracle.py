@@ -45,6 +45,7 @@ ______________________________________________________________________________
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass(frozen=True)
@@ -88,6 +89,33 @@ class SpanMode:
     value at the terminals factory boundary.
     """
     __slots__ = ()
+
+
+class E_SpanMode(SpanMode, Enum):
+    """The rule-language span positions an opaque terminal may occupy.
+
+    A core-owned enum so the rule-file grammar names its opaque positions
+    without importing any embedded language: CONDITION (a guard span),
+    EXPRESSION (an rvalue span), LVALUE (a 'by:'/'as:' access span), and
+    STATEMENT_BLOCK (a mutation / init / deinit body). The concrete oracle
+    interprets each member (the Luau oracle maps it to a wrapper frame); core
+    carries it on the opaque terminal and hands it back unread.
+
+    qualified_name() is the identity half an opaque terminal stamps into its
+    _name() ('opaque:' + qualified_name()). It is oracle-neutral here -- the
+    member spelling alone -- since one compiled grammar binds one oracle, so
+    the member already distinguishes every opaque position within it.
+    """
+    CONDITION       = "condition"        # guard:  '& { <expr> }'
+    EXPRESSION      = "expression"       # rvalue: '{ <luau-expr> }'
+    LVALUE          = "lvalue"           # access: 'by: { <luau-lvalue> }'
+    STATEMENT_BLOCK = "statement_block"  # '=> { }', init, deinit, BEGIN, END
+
+    def qualified_name(self):
+        """RETURN: str, the opaque terminal's identity half -- the member value."""
+        return self.value
+
+
 
 
 class SpanSyntaxError(Exception):

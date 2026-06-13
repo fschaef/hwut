@@ -270,6 +270,19 @@ def _operand_cond(node):
     return ast.Literal.from_token(node.child)
 
 
+def _agent_emit(node):
+    """RETURN: EventSpec, a paced agent emission '<name-dotted>(args)'.
+
+    children = (name, args): a bare event-spec (no keyword) standing as an
+    agent step. Reuses the EventSpec node -- the same emission shape an effect
+    list builds -- so downstream tells a paced emission from any other emission
+    by node identity, not by a separate class. The tick-consuming property is a
+    fact of the step POSITION (agent body), not of the node.
+    """
+    name, args = node.children
+    return ast.EventSpec(name=name, args=args, begin=node.begin)
+
+
 # ---------------------------------------------------------------------------
 # Pass-through: forward the single matched value (no dedicated node).
 # ---------------------------------------------------------------------------
@@ -277,6 +290,7 @@ _PASS_THROUGH = (
     "top-level", "cause", "guard", "cond-atom", "cond-paren", "op-cmp",
     "effect", "rvalue", "kind-decl", "type-built-in",
     "elm-mode", "elm-mode-group", "elm-state-machine",
+    "elm-agent", "step-agent",
 )
 
 
@@ -346,6 +360,15 @@ AST_MAP = {
     "def-event":             ast.EventDef.from_seq,
     "def-clock":             ast.ClockDef.from_seq,
     "decl-arg":              ast.ArgDecl.from_seq,
+
+    # agent band (D-11)
+    "agent":                 ast.Agent.from_seq,
+    "agent-emit":            _agent_emit,
+    "agent-instant":         ast.Instant.from_seq,
+    "agent-wait":            ast.WaitLine.from_seq,
+    "agent-select":          ast.SelectFrame.from_seq,
+    "agent-if":              ast.IfFrame.from_seq,
+    "agent-while":           ast.WhileFrame.from_seq,
 }
 AST_MAP.update({name: _passthrough for name in _PASS_THROUGH})
 

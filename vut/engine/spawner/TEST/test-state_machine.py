@@ -25,7 +25,7 @@ CHOICES
 
 Every choice prints the transition sequence it drove. Output is
 deterministic: the FSM emits EventChildStateChanged whose __str__ is
-old->new only (no timestamp); the test never prints killed_at.
+old->new only (no timestamp); the test never prints freed_at.
 ________________________________________________________________________________
 """
 import sys
@@ -155,7 +155,7 @@ async def run_self_completion():
     parent.dispatcher.subscribe_on_event(
         EventChildTermination, _on_confirmation)
     await child.send(EventChildTermination(
-        reason=E_TerminationReason.COMPLETED))
+        reason=E_TerminationReason.DONE))
     await asyncio.sleep(0.05)               # let the event be delivered
     print("  state: %s" % fsm.state)
     assert fsm.state is E_ChildState.TERM_OK

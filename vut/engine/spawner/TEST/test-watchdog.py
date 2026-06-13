@@ -231,7 +231,7 @@ async def run_grace_tick_race():
     # Confirmation arrives while the watchdog is in its grace tick.
     await asyncio.sleep(0.09)                         # past first poll
     await child.send(EventChildTermination(
-        reason=E_TerminationReason.COMPLETED))
+        reason=E_TerminationReason.DONE))
 
     state = await _settle(fsm)
     print("--- DEAD reading, but confirmation arrives in the grace tick ---")

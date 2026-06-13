@@ -35,7 +35,7 @@ ________________________________________________________________________________
 from vut.engine.spawner.enums      import E_ChildState, E_Liveness
 from vut.engine.spawner.events     import (EventChildTerminationReq,
                                            EventChildTermination,
-                                           EventChildKilled,
+                                           EventChildResourcesFreed,
                                            EventChildStateChanged,
                                            E_TerminationReason)
 from vut.engine.spawner.config     import (SpawnerConfig,
@@ -61,7 +61,7 @@ __all__ = [
     "E_ChildState", "E_Liveness",
     # events
     "EventChildTerminationReq", "EventChildTermination",
-    "EventChildKilled", "EventChildStateChanged", "E_TerminationReason",
+    "EventChildResourcesFreed", "EventChildStateChanged", "E_TerminationReason",
     # terminals (mostly for type annotations)
     "SpawnerParentEventTerminal", "SpawnerChildEventTerminal",
     # the hub (rarely needed directly)

@@ -35,10 +35,10 @@ EXIT-REASON MAPPING (DISCUSSION.txt D7, events.py E_TerminationReason)
 The trampoline maps the callable's outcome onto the reason carried by
 EventChildTermination:
 
-    callable returns normally     -> COMPLETED
+    callable returns normally     -> DONE
     callable observed a
       termination request          -> TERMINATED
-    callable raised                -> FAILED   (reported out cleanly,
+    callable raised                -> UNACCOMPLISHED (reported out cleanly,
                                                 not crashed silently)
 
 ARGUMENT SHAPES (README.txt, 'args' section)
@@ -108,7 +108,7 @@ async def _invoke(callable_thing, term, args):
 
     If the callable returns a coroutine it is awaited, so both sync and
     async user callables are supported. Any exception the callable
-    raises propagates to run_trampoline(), which maps it to a FAILED
+    raises propagates to run_trampoline(), which maps it to an UNACCOMPLISHED
     termination reason.
     """
     if args is None:
@@ -142,12 +142,12 @@ async def run_trampoline(child_ecp:      EventChannelParameter,
     Outcome -> reason mapping (the reason is set on the terminal so the
     EventChildTermination emitted by stop() carries it):
 
-        normal return            -> COMPLETED
+        normal return            -> DONE
         a termination request was
           observed during the run -> TERMINATED  (the terminal records
                                      this itself on receiving
                                      EventChildTerminationReq)
-        callable raised           -> FAILED       (re-raised after the
+        callable raised           -> UNACCOMPLISHED (re-raised after the
                                      reason is recorded, so the failure
                                      is also visible to the child's own
                                      runtime)
@@ -169,20 +169,20 @@ async def run_trampoline(child_ecp:      EventChannelParameter,
         try:
             await _invoke(callable_thing, term, args)
         except Exception as e:
-            # The callable raised. Record FAILED so the confirmation
+            # The callable raised. Record UNACCOMPLISHED so the confirmation
             # event carries it, then re-raise so the child runtime sees
             # the failure too. stop() (in __aexit__) still runs and
             # still emits the confirmation - the reason is already set.
-            term.report_reason(E_TerminationReason.FAILED)
+            term.report_reason(E_TerminationReason.UNACCOMPLISHED)
             print("run_trampoline: user callable raised: %s" % e,
                   file=sys.stderr)
             raise
         # Normal return. If a termination request was observed during
         # the run the terminal has ALREADY set TERMINATED on itself;
-        # only stamp COMPLETED if it has not.
-        # report_reason is idempotent-friendly: a later COMPLETED would
+        # only stamp DONE if it has not.
+        # report_reason is idempotent-friendly: a later DONE would
         # wrongly overwrite an earlier TERMINATED, so we do not call it
-        # here - COMPLETED is the terminal's constructed default and
+        # here - DONE is the terminal's constructed default and
         # _on_termination_req upgrades it to TERMINATED when relevant.
 
     return term._exit_reason
@@ -191,8 +191,8 @@ async def run_trampoline(child_ecp:      EventChannelParameter,
 def run_trampoline_entry(child_ecp:      EventChannelParameter,
                          callable_thing,
                          args) -> int:
-    """RETURN: int, a process exit code: 0 on COMPLETED/TERMINATED,
-                                         1 on FAILED or startup failure.
+    """RETURN: int, a process exit code: 0 on DONE/TERMINATED,
+                                         1 on UNACCOMPLISHED or startup failure.
 
     The picklable, module-level entry point a spawned PROCESS (and the
     remote process) boots into. multiprocessing needs a top-level
@@ -221,5 +221,5 @@ def run_trampoline_entry(child_ecp:      EventChannelParameter,
               file=sys.stderr)
         return 1
 
-    return 0 if reason in (E_TerminationReason.COMPLETED,
+    return 0 if reason in (E_TerminationReason.DONE,
                            E_TerminationReason.TERMINATED) else 1

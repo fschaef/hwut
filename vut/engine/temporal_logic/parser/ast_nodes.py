@@ -44,8 +44,8 @@ class E_ArgKind(Enum):
 class TopLevel(OR_Interface):
     """Abstract base for the constructs that may appear at rule-file top level.
 
-    Namespace, Import, Causality, Mode, ModeGroup, StateMachine, the four
-    declaration nodes (ReactorDecl, StructDecl, ContainerDecl, VariableDef),
+    Namespace, Import, Causality, Mode, ModeGroup, StateMachine, Agent, the
+    four declaration nodes (ReactorDecl, StructDecl, ContainerDecl, VariableDef),
     EventDef, ClockDef, CauseDef and EffectDef derive from it, so
     'RuleFile.items' is typed as list[TopLevel] and only these node kinds are
     admissible there. A Namespace nests further TopLevel items. Carries no
@@ -336,27 +336,27 @@ class EventSpec:
 
 @dataclass(frozen=True)
 class ModeArming(SEQ_Interface):
-    """A mode-arming effect: '! name(args)'."""
+    """A mode-arming effect: 'arm: name(args)'."""
     name:  "list[str]"        # dotted-name segments
     args:  List[Arg]
     begin: int
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: ModeArming -- children = (dotted_name, args_list); '!' silent."""
+        """RETURN: ModeArming -- children = (dotted_name, args_list); 'arm:' silent."""
         name, args = node.children
         return cls(name=name, args=args, begin=node.begin)
 
 
 @dataclass(frozen=True)
 class Spawn(SEQ_Interface):
-    """An aggregate-spawning effect: '+! name (args) [ in: C [ via: <rvalue> ] ]'.
+    """An aggregate-spawning effect: 'spawn: name (args) [ in: C [ via: <rvalue> ] ]'.
 
     Targets a <mode-group> or <state-machine> type. One shape with one nested
     optional modifier chain:
       - 'args' is the instantiation argument list; the parentheses are MANDATORY
-        (a bare '+! name' is rejected by the grammar). 'args' is empty when the
-        type takes none ('+! name()').
+        (a bare 'spawn: name' is rejected by the grammar). 'args' is empty when the
+        type takes none ('spawn: name()').
       - 'in_container' names a declared container ('+! x in: C') the fresh
         instance is caught by, or None for the per-kind default container;
         resolved in pass 2 to an 'is: container' declaration.
@@ -377,7 +377,7 @@ class Spawn(SEQ_Interface):
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: Spawn, '+! name (args) [ in: C [ via: <rvalue> ] ]'.
+        """RETURN: Spawn, 'spawn: name (args) [ in: C [ via: <rvalue> ] ]'.
 
         children = (name, args, opt_in): the trailing options are NESTED stable
         OPT_Node slots mirroring the grammar's nested optionals -- opt_in
@@ -402,7 +402,7 @@ class Spawn(SEQ_Interface):
 
 @dataclass(frozen=True)
 class Unspawn(SEQ_Interface):
-    """An existence-ending effect: '-! name'.
+    """An existence-ending effect: 'unspawn: name'.
 
     'name' references a spawned aggregate by bare or dotted name. Ending an
     existence runs the instance's 'deinit' and releases it from its container.
@@ -414,7 +414,7 @@ class Unspawn(SEQ_Interface):
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: Unspawn, '-! name' -- children = (dotted_name,)."""
+        """RETURN: Unspawn, 'unspawn: name' -- children = (dotted_name,)."""
         return cls(name=node.children[0], begin=node.begin)
 
 
@@ -625,7 +625,7 @@ class ReactorDecl(TopLevel):
     reference rule; the matching definition follows later in the same scope
     (B.2). 'kind' is one of 'mode', 'state', 'mode_group', 'state_machine'
     (the verbatim kind keyword). 'params' is the ROUND-bracket instantiation
-    signature, a list of ArgDecl -- how a later '+!' instantiates the type.
+    signature, a list of ArgDecl -- how a later 'spawn:' instantiates the type.
     MANDATORY on the spawnable kinds (mode_group, state_machine), forbidden on
     'mode'/'state' (armed, not instantiated) -- the kind-vs-shape rule checked
     in pass 2 (F-2); the parser records what was written. Empty when the head
@@ -970,14 +970,176 @@ class Namespace(SEQ_Interface, TopLevel):
         return cls(name=name, items=items, begin=node.begin)
 
 
+@dataclass(frozen=True)
+class Instant(SEQ_Interface):
+    """An immediate-injection step: 'instant: name(args)'.
+
+    A tick-free agent stimulus -- the named event with its mandatory argument
+    list is injected into the CURRENT event queue at the present instant, off
+    the agent's clock beat (D-11). The paced counterpart is a bare EventSpec
+    (no keyword), which consumes a tick.
+    """
+    name:  "list[str]"        # name-dotted segments
+    args:  List[Arg]
+    begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Instant -- children = (name, args); 'instant:' silent."""
+        name, args = node.children
+        return cls(name=name, args=args, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class WaitLine(SEQ_Interface):
+    """A wait step: 'wait: <cause> (=> <effect>)*'.
+
+    Suspends the agent script until 'cause' fires. 'effects' is the optional
+    co-temporal tail (possibly empty), run with 'e' bound to the firing event
+    -- 'e' does not flow into subsequent steps. A tail-less wait is a pure
+    progression gate. Resumption is at the agent's next own-clock tick (D-11).
+    """
+    cause:   Cause
+    effects: List[object]     # EventSpec/EffectRef/ModeArming/Spawn/Unspawn/...
+    begin:   int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: WaitLine -- children = (cause, STAR(('=>', effect))).
+
+        Each repetition item is the anonymous one-survivor SEQ around its
+        effect ('=>' silent); the tail may be empty.
+        """
+        cause   = node.children[0]
+        effects = [s.children[0] for s in node.children[1].items]
+        return cls(cause=cause, effects=effects, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class SelectFrame(SEQ_Interface):
+    """A select step: 'select: <wait-line>+ :end'.
+
+    Suspends on several waits at once; the first cause to fire selects its
+    branch, the others are abandoned (D-11). 'branches' are the member
+    WaitLines, each with its own optional co-temporal effect tail.
+    """
+    branches: List["WaitLine"]
+    begin:    int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: SelectFrame -- children = (PLUS(wait-line),); ':end' silent."""
+        return cls(branches=list(node.children[0].items), begin=node.begin)
+
+
+@dataclass(frozen=True)
+class IfFrame(SEQ_Interface):
+    """An if step: 'if: <guard> <steps> (elif: <guard> <steps>)* [else: <steps>] :end'.
+
+    A tick-free control frame fencing step sequences inside an agent body. 'arms'
+    is the list of (guard, body) pairs -- the leading 'if:' and each 'elif:', in
+    source order; 'else_body' is the trailing 'else:' steps or None. The whole
+    if/elif/else chain is closed by ONE ':end'. Conditions reuse <guard> (an
+    OpaqueCode CONDITION span or a Condition tree); 'e' is not in scope (D-11).
+    """
+    arms:      List["tuple"]   # [(guard, [step, ...]), ...]
+    else_body: "Optional[list]"
+    begin:     int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: IfFrame, 'if:/elif:/else: ... :end'.
+
+        children = (guard, PLUS(steps), STAR(('elif:', guard, PLUS(steps))),
+        opt_else): the head arm, then the elif repetition (each item the
+        anonymous SEQ (guard, PLUS) -- 'elif:' silent), then the optional else
+        (present yields the anonymous one-survivor SEQ around its PLUS, 'else:'
+        silent). ':end' silent.
+        """
+        head_guard  = node.children[0]
+        head_body   = list(node.children[1].items)
+        arms        = [(head_guard, head_body)]
+        for s in node.children[2].items:
+            g, plus = s.children
+            arms.append((g, list(plus.items)))
+        opt_else  = node.children[3]
+        else_body = list(opt_else.child.children[0].items) if opt_else.present \
+                    else None
+        return cls(arms=arms, else_body=else_body, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class WhileFrame(SEQ_Interface):
+    """A while step: 'while: <guard> <steps> :end'.
+
+    A tick-free control frame: the step body repeats while 'guard' holds. The
+    block takes its OWN ':end' (D-11). Condition reuses <guard>; 'e' is not in
+    scope.
+    """
+    guard: "object"           # OpaqueCode | Condition
+    body:  List[object]       # agent steps
+    begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: WhileFrame -- children = (guard, PLUS(steps)); ':end' silent."""
+        guard = node.children[0]
+        body  = list(node.children[1].items)
+        return cls(guard=guard, body=body, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class Agent(SEQ_Interface, TopLevel):
+    """An agent definition: a tick-scripted stimulus actor, closed by ':end'.
+
+    'name'/'params' come from the signature; the params ARE the instance
+    members, read through the 'ag' self-binding (D-11). 'clock' is the 'on:'
+    <cause> -- a trigger (resolved to a clock in pass 2) with an optional guard,
+    the heartbeat shape. 'init'/'deinit' are STATEMENT_BLOCK OpaqueCode spans or
+    None. 'steps' are the ordered body steps: EventSpec (paced emission),
+    Instant, WaitLine, SelectFrame, IfFrame, WhileFrame, and the bare commands
+    (Spawn, Unspawn, ModeArming, Mutation). No inheritance: an agent carries no
+    'is:' bases.
+    """
+    name:   "list[str]"       # dotted-name segments
+    params: List[ArgDecl]
+    clock:  Cause
+    init:   Optional[OpaqueCode]
+    deinit: Optional[OpaqueCode]
+    steps:  List[object]
+    begin:  int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Agent -- children = (signature, cause, PLUS(elements)).
+
+        'agent:', 'on:', ':end' silent. The signature is the (name, params)
+        pair; the cause is the 'on:' clock binding. Each element is a step or an
+        InitBlock/DeinitBlock; init/deinit are sorted out by type, the rest keep
+        source order as the script.
+        """
+        name, params = node.children[0]
+        clock        = node.children[1]
+        elements     = node.children[2].items
+        init = deinit = None
+        steps = []
+        for elm in elements:
+            match elm:
+                case InitBlock():   init = elm.body
+                case DeinitBlock(): deinit = elm.body
+                case _:             steps.append(elm)
+        return cls(name=name, params=params, clock=clock, init=init,
+                   deinit=deinit, steps=steps, begin=node.begin)
+
+
 @dataclass
 class RuleFile:
     """The whole parsed rule file: an ordered list of top-level constructs.
 
     'items' holds Namespace, Import, Causality, Mode, ModeGroup, StateMachine,
-    declaration (ReactorDecl/StructDecl/ContainerDecl/VariableDef), EventDef,
-    ClockDef, CauseDef and EffectDef nodes in source order. A mutable container
-    so the parser can append as it goes.
+    Agent, declaration (ReactorDecl/StructDecl/ContainerDecl/VariableDef),
+    EventDef, ClockDef, CauseDef and EffectDef nodes in source order. A mutable
+    container so the parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)
 

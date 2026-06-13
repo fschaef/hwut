@@ -18,6 +18,15 @@ GRAMMAR element vocabulary -- every element is one of:
 
   "<name>"            a reference to another GRAMMAR rule (a non-terminal),
                       written as a bare angle-bracketed string.
+  "<name(role)>"      the SAME reference carrying an advisory ROLE HINT, a
+                      plain string (D-10): the position is expected to resolve
+                      to that role ('<cause(clock)>', '<name-dotted(event)>').
+                      Likewise a terminal is tagged by CALLING it with a role,
+                      't_re_id("event")'. The hint is NON-IDENTITY -- it does
+                      not affect lexing, interning, or the LL(2) analysis, and
+                      it adds nothing to the CST values; it is recorded on the
+                      compiled grammar (a transparent Tagged_Spec) for legibility
+                      and as a pass-2 resolution hint walkable by position.
   t_re_id t_re_number a character-class terminal (T.regex), bound to a 't_re_...'
   t_re_string         variable in the preamble below. The four classes are id,
   t_re_name_colon     number, string, name_colon.
@@ -27,7 +36,7 @@ GRAMMAR element vocabulary -- every element is one of:
                       discriminant -- ANY / END / BEGIN / CHANGE (cause-system),
                       VOID (ref-member), the kind keywords (kind-decl), the
                       built-in type and bool-literal keywords.
-  t_opq_cond          an opaque Luau span terminal (T.opaque) carrying its Role
+  t_opq_cond          an opaque Luau span terminal (T.opaque) carrying its E_SpanMode
   t_opq_expr          (CONDITION / EXPRESSION / LVALUE / STATEMENT_BLOCK). The
   t_opq_lvalue        role rides on the object, so the position's role is fixed
   t_opq_stmts         by which 't_opq_...' the rule names.
@@ -71,7 +80,7 @@ ______________________________________________________________________________
 #   "literal"        a silent bare-string keyword
 from .core.combinators import OR, PLUS, STAR
 from .core.ll2_grammar_spec import T
-from ..luau.luau_fragment import Role
+from .core.span_oracle import E_SpanMode
 
 
 # -- terminal preamble -------------------------------------------------------
@@ -91,10 +100,10 @@ t_re_number     = T.regex(r'[+-]?\d+(?:\.\d+)?')
 t_re_string     = T.regex(r'"[^"]*"')
 t_re_id         = T.regex(r'[a-zA-Z_]\w*')
 
-t_opq_cond      = T.opaque(Role.CONDITION)
-t_opq_expr      = T.opaque(Role.EXPRESSION)
-t_opq_lvalue    = T.opaque(Role.LVALUE)
-t_opq_stmts     = T.opaque(Role.STATEMENT_BLOCK)
+t_opq_cond      = T.opaque(E_SpanMode.CONDITION)
+t_opq_expr      = T.opaque(E_SpanMode.EXPRESSION)
+t_opq_lvalue    = T.opaque(E_SpanMode.LVALUE)
+t_opq_stmts     = T.opaque(E_SpanMode.STATEMENT_BLOCK)
 
 t_kw_any        = T.captured("ANY")
 t_kw_end        = T.captured("END")
@@ -113,6 +122,7 @@ t_kw_mode_group    = T.captured("mode_group")
 t_kw_state_machine = T.captured("state_machine")
 t_kw_struct        = T.captured("struct")
 t_kw_container     = T.captured("container")
+t_kw_agent         = T.captured("agent")
 
 # Built-in value types and the boolean literals (variable declarations,
 # rvalues, bracket-condition operands).
@@ -138,29 +148,50 @@ t_op_gt         = T.captured(">")
 t_op_lt         = T.captured("<")
 
 
+# ADVISORY ROLE HINTS:
+# Role hints are restricted to what is mentioned in the per-item vocabulary
+# below. Role hints in the vocabulare, that are unused do not harm.
+#
+# Role hints in rules:     '<rule(role)>'
+#            in terminals: t_something("role")
+#
+# Roles are decorations, but are communicated to the semantic analyzer.
+ROLES = {
+    # terminals (keyed by the interned terminal object; hashable + immutable)
+    t_re_id:         ("event", "clock", "type", "name", "arg-name"),
+    t_re_string:     ("filename", "report"),
+    t_re_number:     ("period",),
+    t_re_name_colon: ("member",),
+    # rule references (keyed by the '<name>' reference string)
+    "<name-dotted>": ("namespace", "event", "cause", "emission", "mode",
+                      "aggregate", "container", "instance", "base", "member",
+                      "operand", "reference", "name"),
+    "<cause>":       ("heartbeat",),
+}
+
 GRAMMAR = {
 "top-level":      ("<namespace>", OR, "<import>", OR, "<causality>", OR, "<mode>",
-                   OR, "<mode-group>", OR, "<state-machine>", OR, "<def-event>",
-                   OR, "<def-clock>", OR, "<def-cause>", OR, "<def-effect>",
-                   OR, "<declaration>"),
+                   OR, "<mode-group>", OR, "<state-machine>", OR, "<agent>",
+                   OR, "<def-event>", OR, "<def-clock>", OR, "<def-cause>",
+                   OR, "<def-effect>", OR, "<declaration>"),
 
-"import":         ("import:", t_re_string, "into:", "<name-dotted>"),
-"namespace":      ("open:", "<name-dotted>", PLUS("<top-level>"), ":close"),
+"import":         ("import:", t_re_string("filename"), "into:", "<name-dotted(namespace)>"),
+"namespace":      ("open:", "<name-dotted(namespace)>", PLUS("<top-level>"), ":close"),
 
-"def-event":      ("event:", t_re_id, "<parens-decl>"),
-"def-clock":      ("clock:", t_re_id, t_re_number),
-"def-cause":      ("cause:", "<signature>", "for:", "<name-dotted>", "&", "<guard>"),
+"def-event":      ("event:", t_re_id("event"), "<parens-decl>"),
+"def-clock":      ("clock:", t_re_id("clock"), t_re_number("period")),
+"def-cause":      ("cause:", "<signature>", "for:", "<name-dotted(event)>", "&", "<guard>"),
 "def-effect":     ("effect:", "<signature>", PLUS(("=>", "<effect>"))),
 
-"declaration":    (t_re_id, ["<parens-decl>"], "is:", "<kind-decl>"),
+"declaration":    (t_re_id("name"), ["<parens-decl>"], "is:", "<kind-decl>"),
 "kind-decl":      ("<kind-reactor>", OR, "<kind-struct>", OR, "<kind-container>",
                    OR, "<kind-variable>"),
 "kind-reactor":   (t_kw_mode, OR, t_kw_state, OR, t_kw_mode_group,
-                   OR, t_kw_state_machine),
+                   OR, t_kw_state_machine, OR, t_kw_agent),
 "kind-struct":    (t_kw_struct,),
 "kind-container": (t_kw_container, [t_op_lt, ["<list-arg>"], t_op_gt],
                    ["by:", t_opq_lvalue]),
-"kind-variable":  (("<type-built-in>", OR, t_re_id), "<parens-arg>",
+"kind-variable":  (("<type-built-in>", OR, t_re_id("type")), "<parens-arg>",
                    ["by:", t_opq_lvalue]),
 "type-built-in":  (t_kw_int, OR, t_kw_float, OR, t_kw_string, OR, t_kw_bool),
 
@@ -169,15 +200,45 @@ GRAMMAR = {
 "mode":           ("mode:", "<signature>", PLUS("<elm-mode>"), PLUS(("until:", "<cause>"))),
 "state":          ("state:", "<signature>", STAR("<elm-mode>"), STAR(("until:", "<cause>"))),
 
-"mode-group":     ("mode_group:", "<signature>", STAR(("is:", "<name-dotted>")),
+"mode-group":     ("mode_group:", "<signature>", STAR(("is:", "<name-dotted(base)>")),
                    PLUS("<elm-mode-group>"), ":end"),
-"state-machine":  ("state_machine:", "<signature>", STAR(("is:", "<name-dotted>")),
+"state-machine":  ("state_machine:", "<signature>", STAR(("is:", "<name-dotted(base)>")),
                    PLUS("<elm-state-machine>"), ":end"),
+
+# --- agent: a tick-scripted stimulus actor (D-11) -------------------------
+# 'agent: <id> [(sig)] on: <cause>' then a body of agent elements, ':end'.
+# 'on:' reuses <cause> (trigger + optional guard, the heartbeat shape); pass 2
+# resolves the trigger to a clock. The body element is a step or an init/deinit.
+"agent":          ("agent:", "<signature>", "on:", "<cause(heartbeat)>",
+                   PLUS("<elm-agent>"), ":end"),
+"elm-agent":      ("<step-agent>", OR, "<init>", OR, "<deinit>"),
+
+# The step alternation. Each branch opens with a distinct leader: a bare
+# emission with <name-dotted> (the identifier class); every other step with its
+# own trailing-colon keyword or '{'. LL(2)-clean by leader.
+"step-agent":     ("<agent-instant>", OR, "<agent-wait>", OR, "<agent-select>",
+                   OR, "<agent-if>", OR, "<agent-while>", OR, "<spawn>",
+                   OR, "<unspawn>", OR, "<arming-mode>", OR, "<mutation>",
+                   OR, "<agent-emit>"),
+
+# Paced emission (consumes a tick) -- a bare <event-spec>: name + mandatory args.
+"agent-emit":     ("<name-dotted(emission)>", "<parens-arg>"),
+# Immediate injection (tick-free) into the current queue.
+"agent-instant":  ("instant:", "<name-dotted(emission)>", "<parens-arg>"),
+# Suspend until a cause fires; optional co-temporal effect tail.
+"agent-wait":     ("wait:", "<cause>", STAR(("=>", "<effect>"))),
+# First-of-many: only wait lines inside.
+"agent-select":   ("select:", PLUS("<agent-wait>"), ":end"),
+# Control frames; conditions reuse <guard>; one ':end' per if-chain, own for while.
+"agent-if":       ("if:", "<guard>", PLUS("<step-agent>"),
+                   STAR(("elif:", "<guard>", PLUS("<step-agent>"))),
+                   ["else:", PLUS("<step-agent>")], ":end"),
+"agent-while":    ("while:", "<guard>", PLUS("<step-agent>"), ":end"),
 
 "cause":          ("<cause-system>", OR, "<cause-named>"),
 "cause-system":   ((t_kw_any, OR, t_kw_end, OR, t_kw_begin, OR, t_kw_change),
                    ["&", "<guard>"]),
-"cause-named":    ("<name-dotted>", ["<parens-arg>"], ["&", "<guard>"]),
+"cause-named":    ("<name-dotted(cause)>", ["<parens-arg>"], ["&", "<guard>"]),
 
 "guard":          ("<guard-luau>", OR, "<guard-bracket>"),
 "guard-luau":     t_opq_cond,
@@ -187,34 +248,34 @@ GRAMMAR = {
 "cond-not":       ([t_kw_not], "<cond-atom>"),
 "cond-atom":      ("<cond-paren>", OR, "<cond-term>"),
 "cond-paren":     ("(", "<cond>", ")"),
-"cond-term":      ("<name-dotted>", ["<op-cmp>", "<operand-cond>"]),
+"cond-term":      ("<name-dotted(operand)>", ["<op-cmp>", "<operand-cond>"]),
 "op-cmp":         (t_op_ge, OR, t_op_le, OR, t_op_eq, OR, t_op_ne,
                    OR, t_op_gt, OR, t_op_lt),
-"operand-cond":   ("<name-dotted>", OR, t_re_number, OR, t_re_string,
+"operand-cond":   ("<name-dotted(operand)>", OR, t_re_number, OR, t_re_string,
                    OR, t_kw_true, OR, t_kw_false),
 
 "effect":         ("<mutation>", OR, "<spawn>", OR, "<unspawn>", OR, "<arming-mode>",
                    OR, "<report-string>", OR, "<effect-named>"),
-"effect-named":   ("<name-dotted>", ["<parens-arg>"]),
+"effect-named":   ("<name-dotted(emission)>", ["<parens-arg>"]),
 "mutation":       t_opq_stmts,
-"spawn":          ("+!", "<name-dotted>", "<parens-arg>",
-                   ["in:", "<name-dotted>", ["via:", "<rvalue>"]]),
-"unspawn":        ("-!", "<name-dotted>"),
-"arming-mode":    ("!", "<name-dotted>", "<parens-arg>"),
-"report-string":  t_re_string,
+"spawn":          ("spawn:", "<name-dotted(aggregate)>", "<parens-arg>",
+                   ["in:", "<name-dotted(container)>", ["via:", "<rvalue>"]]),
+"unspawn":        ("unspawn:", "<name-dotted(instance)>"),
+"arming-mode":    ("arm:", "<name-dotted(mode)>", "<parens-arg>"),
+"report-string":  t_re_string("report"),
 
 "parens-arg":     ("(", ["<list-arg>"], ")"),
 "list-arg":       ("<arg>", STAR((",", "<arg>"))),
-"arg":            ("<rvalue>", OR, (t_re_id, "=", "<rvalue>")),
+"arg":            ("<rvalue>", OR, (t_re_id("arg-name"), "=", "<rvalue>")),
 "rvalue":         (t_re_number, OR, t_re_string, OR, t_kw_true, OR, t_kw_false,
-                   OR, "<name-dotted>", OR, t_opq_expr),
+                   OR, "<name-dotted(reference)>", OR, t_opq_expr),
 
 "elm-mode":  ("<causality>", OR, "<init>", OR, "<deinit>"),
 "init":      ("init:", t_opq_stmts),
 "deinit":    ("deinit:", t_opq_stmts),
 "ref-has":   ("has:", "<ref-member>"),
 
-"ref-member":        ("<name-dotted>", [".", t_kw_void]),
+"ref-member":        ("<name-dotted(member)>", [".", t_kw_void]),
 
 "elm-mode-group":    ("<mode>", OR, "<ref-has>", OR, "<init>", OR, "<deinit>"),
 "elm-state-machine": ("<state>", OR, "<ref-has>", OR, "<default>", OR, "<init>",
@@ -223,8 +284,8 @@ GRAMMAR = {
 
 "parens-decl":       ("(", ["<list-decl-arg>"], ")"),
 "list-decl-arg":     ("<decl-arg>", STAR((";", "<decl-arg>")), [";"]),
-"decl-arg":          (t_re_name_colon, (t_re_id, OR, "<type-built-in>")),
+"decl-arg":          (t_re_name_colon("member"), (t_re_id("type"), OR, "<type-built-in>")),
 "name-dotted":       (t_re_id, STAR((".", t_re_id))),
-"signature":         ("<name-dotted>", ["<parens-decl>"]),
+"signature":         ("<name-dotted(name)>", ["<parens-decl>"]),
 
 }

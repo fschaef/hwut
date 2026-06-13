@@ -1,87 +1,157 @@
 ================================================================================
 HWUT 2.0 Spawner Component
 
-Launching tasks into parallel execution over the event infrastructure.
+Launching a callable into parallel execution and supervising it over the
+'event' subsystem.
 ================================================================================
 
 OVERVIEW
 --------
 
-This component launches a task/process/function to be executed in parallel.
-After the launch the communication between the user's 'parent' process and the
-'child' process is agnostic of the communication channel or the nature of the
-execution context. It relies on the 'event' subsystem.
+The Spawner launches a callable into a parallel execution context and supervises
+its lifecycle. After launch, the user's 'parent' side and the launched 'child'
+side communicate solely through paired EventTerminal objects; the execution
+context (asyncio Task, thread, process, remote process) and the transport are
+hidden behind those terminals.
 
-The user, that launched the task, communicates via 'parent event terminal' and
-the child process via a 'child event terminal'.
+Four execution contexts ('kinds') are supported: async, thread, process, and
+remote process. The same supervision surface and the same event traffic apply
+to all four; the kinds differ only in their power to stop a child (see
+TERMINATION).
+
+The user holds a SpawnerParentEventTerminal. The child holds a
+SpawnerChildEventTerminal. Between them sits the Spawner, which owns an
+EventRouter and observes traffic in both directions:
 
     User
-    parent process o-<-->-o SpawnerParentEventTerminal
-                                         :
-                                   .-----------.
-                                  [  Transport  ]
-                                   '-----------'
-                                         :
-                              SpawnerChildEventTerminal o-<-->-o child process
+    parent side  o-<-->-o  SpawnerParentEventTerminal
+                                       :
+                                  .---------.
+                                  | Spawner |   owns EventRouter,
+                                  |         |   ChildHandle, FSM, Watchdog
+                                  '---------'
+                                       :
+              SpawnerChildEventTerminal  o-<-->-o  child side (the callable)
 
-The 'Spawner' functions as a router between the user's parent terminal and the
-child's terminal. To some extent it monitors their traffic and communicates
-with both sides.
+The Spawner is a router, not a peer: it sits BETWEEN the two terminals rather
+than being one of them. Its EventRouter's dispatcher is the single point where
+all traffic is observed, and that observation drives the child-state machine.
 
-Concerns:
+The Spawner holds, for one launched child:
 
-  -- building the terminal pair (setting up event channel parameters etc.)
-  -- launching the child, instantiating an EventTerminal based 
-     the event channel parameters
-  -- startup handshake between parent and child terminal
-  -- holding the OS handle(s)
-  -- running the child-state machine
-  -- process a 'terminate' call from the user
+    EventRouter        the hub; carries parent <-> child traffic and is the
+                       observation point for state tracking.
+    ChildHandle        the OS-level handle (Task / thread / process), kept
+                       inside the Spawner and never surfaced to the user.
+    ChildStateMachine  turns observed events into E_ChildState transitions.
+    Watchdog           background liveness supervision of the child.
 
-Communication between user and the child's process happens solely through the 
-EventTerminal objects.
+The component invents no transport. Channel, terminal, handshake, and dispatcher
+all belong to the 'event' subsystem; the Spawner is a launch-and-supervise
+device only.
+
 
 --------
 SPAWNING
 --------
 
-Every spawning results in a 'SpawnerParentEventTerminal' by means of which the
-user may communicate with the child's process. Following functions are provided
-for spawning:
+A spawn call names WHAT to run (a callable plus its arguments) and HOW to run it
+(a per-kind config). Four entry functions, one per kind:
 
-      spawn_async (callable, args, config) 
-      spawn_thread(callable, args, config) 
-      spawn_process(callable, args, config)
-      spawn_remote_process(function_name_str, args, config)
+    spawn_async         (callable, args, config)
+    spawn_thread        (callable, args, config)
+    spawn_process       (callable, args, config)
+    spawn_remote_process(function_name_str, args, config)
 
-callable/function_name_str:
+callable / function_name_str:
 
-    The first three functions receive an ordinary Python callable, the remote 
-    process invocation takes the name of the function and its arguments in order
-    to resolve it through module import (remote side must be equipped with
-    according modules).
+    spawn_async / spawn_thread / spawn_process take a live Python callable.
+    spawn_remote_process takes the callable's dotted import path as a STRING;
+    the remote side resolves it by ordinary import, so the remote side must be
+    equipped with the matching modules.
 
 args:
 
-    Arguments are specified in terms of tuples or dict-s. The remote function
-    must receive an 'SpawnerChildEventTerminal' as first argument (when named
-    in a dict, it is called 'event_terminal').
+    One object - a tuple/list or a dict - carrying the user arguments, never
+    loose parameters mixed into the spawn call. The callable receives the
+    child terminal as its FIRST argument, then the user args:
+
+        args is a tuple / list  ->  callable(term, *args)
+        args is a dict          ->  callable(event_terminal=term, **args)
+        args is None            ->  callable(term)
 
 config:
 
-    Configuration parameters to specify the Event transport and Execution
-    Context.
+    One per-kind config object: AsyncConfig, ThreadConfig, ProcessConfig, or
+    RemoteProcessConfig. It carries the event-channel setup and the
+    execution-context setup. Its make_ecp_pair() produces the
+    (parent_ecp, child_ecp) EventChannelParameter pair that backs the two
+    terminals.
 
-The child on the other side is instantiated and receives an instantiated
-'SpawnerChildEventTerminal' as first argument.
+Every successful spawn call returns a SpawnerParentEventTerminal; a startup
+failure returns None.
+
+
+----------
+TRAMPOLINE
+----------
+
+The child does not begin at the user callable directly. It begins at a framework
+trampoline (run_trampoline), which:
+
+    1. builds the SpawnerChildEventTerminal from the child ECP,
+    2. start()s it - running the Up handshake,
+    3. and only then invokes the user callable inside that frame.
+
+The terminal is held as an async context manager, so its termination
+confirmation is emitted on every exit path:
+
+    async with SpawnerChildEventTerminal(child_ecp) as term:
+        await invoke(callable, term, args)
+
+    __aenter__  ->  start()  (Up handshake; subscribe to EventChildTerminationReq)
+    __aexit__   ->  stop()   (emit EventChildTermination; close)
+
+The trampoline maps the callable's outcome onto the reason carried by
+EventChildTermination:
+
+    callable returns normally           ->  COMPLETED
+    callable observed a
+      termination request                ->  TERMINATED
+    callable raised                      ->  FAILED  (reported out, then re-raised)
+
+For spawn_remote_process the callable arrives as a STRING and is resolved by
+import before invocation. The trampoline runs in this interpreter for
+async/thread; for process/remote a module-level, picklable entry
+(run_trampoline_entry) boots an event loop and then runs run_trampoline.
+
+
+-------
+STARTUP
+-------
+
+A spawn call runs through the kind-independent core _spawn:
+
+    1. build the parent terminal from parent_ecp,
+    2. launch the child (it boots into the trampoline),
+    3. wire supervision - the FSM and its event subscriptions - BEFORE the
+       handshake is awaited,
+    4. RACE the parent-side Up handshake against the child dying,
+    5. handshake won  ->  start the Watchdog, drive LAUNCHED -> RUNNING, return
+                          the parent terminal.
+       child died first ->  close the half-open terminal, return None.
+
+Because the trampoline completes the child-side handshake before the user
+callable runs, a won handshake means the channel is live - not merely that a
+process exists. The two outcomes share no path: a live
+SpawnerParentEventTerminal, or None.
 
 
 -------------------
 CHILD STATE MACHINE
 -------------------
 
-The spawner attempts to track the state of the child process in terms
-of the following state machine:
+The ChildStateMachine models one child's lifecycle:
 
             ┌───────────┐
             │ LAUNCHED  │
@@ -98,7 +168,7 @@ of the following state machine:
             └──┬─────────┬──┘
                │ confirm │ unconfirmed (=> kill)
                │         └────────────────┐
-               │                          │ 
+               │                          │
                ▼                          ▼
             ┌───────────────┐   ┌──────────────────────┐
             │    TERM_OK    │   │     TERM_FAILURE     │
@@ -108,162 +178,200 @@ of the following state machine:
     any state ────────►│  TERM_LOST_CONNECTION │
                        └───────────────────────┘
 
-The above state machine specifies the states and transitions that make up the
-lifecycle of a parallel-operating child launched by the 'spawner'. It is
-elegantly implemented relying on event's dispatcher 'expect' functionality and
-asyncio coroutines.
-
 STATES
 
     LAUNCHED              Internal startup state. The child has been launched
                           but its terminal has not yet completed the Up
-                          handshake. 
+                          handshake.
 
-    RUNNING               Up handshake confirmed; the child is live and connected.
+    RUNNING               Up handshake confirmed; the child is live and
+                          connected.
 
     SUSPENDED             The child has been stopped via its OS handle.
-                          Process/remote only 
+                          Process and remote only.
 
-    TERMINATING           .terminate(wait_to_kill_ms) has been issued; wait
-                          for the child's confirmation of proper termination.
-                          
-                          wait_to_kill_ms = numeric => kill process after 
-                              wait time, if no confirmation is received.
-                          wait_to_kill_ms = None => wait for ever.
+    TERMINATING           .terminate(wait_to_kill_ms) has been issued; awaiting
+                          the child's EventChildTermination confirmation.
+                          wait_to_kill_ms numeric  -> kill the OS context after
+                                                      the wait if no confirmation
+                                                      arrives.
+                          wait_to_kill_ms None     -> wait forever.
 
-    TERM_OK               Terminal. Child reported its termination and,
-                          therefore ended with mutual agreement.
+    TERM_OK               Terminal. The child confirmed termination
+                          (EventChildTermination) BEFORE its resources were
+                          freed.
 
-    TERM_FAILURE          Terminal. Child did not confirm proper termination
-                          and its process has been forcefully terminated. 
+    TERM_FAILURE          Terminal. Resources were freed BEFORE or WITHOUT a
+                          confirmation; the functional outcome is unknown.
 
-    TERM_LOST_CONNECTION  Terminal. Whenever the channel connection breaks, 
-                           this state is entered (except from TERM_OK). 
-                          Here, no information about the child is available
-                          whatsoever.
+    TERM_LOST_CONNECTION  Terminal. The channel broke and the Spawner has no
+                          information about the child whatsoever. Reachable from
+                          any live state.
 
-Every transition additionally emits EventChildStateChanged(old, new), to the
-user's terminal, so a caller may either poll .child_state() or await the change
-via the dispatcher's expect_* helpers.
+The terminal split TERM_OK / TERM_FAILURE turns on the ORDERING of the child's
+confirmation against the freeing of its resources, not on "exited cleanly" vs
+"killed".
+
+E_ChildState.is_terminal() reports whether a state is one of the terminal three;
+is_live() is its complement.
+
+Every transition emits EventChildStateChanged(old, new) to the parent terminal,
+so a caller may either poll .child_state() or await the transition via the
+dispatcher's expect_* helpers.
+
+
+--------
+WATCHDOG
+--------
+
+The Watchdog supervises liveness: it is the only place where a child that dies
+WITHOUT a clean EventChildTermination becomes a terminal E_ChildState. It is
+constructed with three collaborators and holds nothing else:
+
+    handle           the ChildHandle; its liveness() returns an E_Liveness
+                     (ALIVE / DEAD / UNKNOWN) and is the liveness source.
+    state_machine    the ChildStateMachine; its verdict sink, and its .state
+                     tells the Watchdog when to stop.
+    parent_terminal  the SpawnerParentEventTerminal; only its peer-down callback
+                     is used.
+
+Two triggers feed one resolver:
+
+    periodic poll    every poll_ms the loop consults handle.liveness();
+                     catches a child gone silent without the channel signalling.
+    peer-down        the parent terminal's peer-down callback fires the resolver
+                     at once when the channel itself signalled.
+
+Both funnel into resolve_silence(), which hands an E_Liveness to the FSM. The
+Watchdog reads liveness and forwards it; the ChildStateMachine owns the verdict.
+The Watchdog starts once the handshake has proven the channel live and runs
+until the FSM reaches a terminal state.
+
+
+-----------
+CHILDHANDLE
+-----------
+
+ChildHandle abstracts the OS-level execution context behind one homogeneous,
+kind-agnostic API. The ChildStateMachine drives it through this API alone -
+"await a kill", "await a suspend / resume" - and never touches kind specifics:
+
+    await handle.kill()        force-terminate the OS context  -> bool
+    await handle.suspend()                                     -> bool
+    await handle.resume()                                      -> bool
+    await handle.liveness()    -> E_Liveness (ALIVE / DEAD / UNKNOWN)
+    handle.can_force_kill                                      -> bool (property)
+    handle.can_suspend                                         -> bool (property)
+
+kill / suspend / resume report success or refusal by RETURN VALUE (bool), never
+by exception. The four concrete handles differ only in capability:
+
+    AsyncChildHandle    force-kill yes (Task.cancel), suspend no
+    ThreadChildHandle   force-kill no,                suspend no
+    ProcessChildHandle  force-kill yes,               suspend yes
+    RemoteChildHandle   force-kill yes,               suspend yes
 
 
 -----------------------------------------
 SpawnerParentEventTerminal(EventTerminal)
 -----------------------------------------
 
-A call to a 'spawn_*()' function delivers either 'None' upon failure, or a
-SpawnerParentEventTerminal. Any technicalities, such as OS handles, are hidden
-from the end user.
+What a spawn_* call returns: a real EventTerminal (send / dispatcher /
+start / stop and the async context-manager form inherited unchanged) plus a thin
+supervision surface.
 
-   SpawnerParentEventTerminal(EventTerminal)  
+   SpawnerParentEventTerminal(EventTerminal)
        .send
        .dispatcher
-       .start/ .stop 
-    
-       + .terminate(wait_to_kill_ms) -> bool
-       + .suspend() / .resume()      -> bool (ONLY for 'process'/'remote') 
-       + .child_state()              -> ChildState
+       .start / .stop
 
-.terminate()
-   => sends 'EventChildTerminationReq' to the spawner. Spawner initiates
-      child shutdown (see state machine). 
+       + .terminate(wait_to_kill_ms)  -> bool
+       + .suspend() / .resume()       -> bool   (process / remote only)
+       + .child_state()               -> E_ChildState
+
+.terminate() is a REQUEST, not an action: it emits EventChildTerminationReq
+through the Spawner's router; the Spawner then drives the shutdown sequence. The
+terminal stays a terminal.
+
+The three supervision methods report success or refusal by RETURN VALUE (bool).
+A refusal is a normal outcome: .terminate() returns False for a numeric deadline
+on a thread; .suspend() / .resume() return False on async or thread.
+
 
 ----------------------------------------
 SpawnerChildEventTerminal(EventTerminal)
 ----------------------------------------
 
-Built by the trampoline on the 'other' side of the user's context. 
+What the trampoline builds on the child side and hands to the user callable as
+its first argument. Inherits the full EventTerminal contract and adds the
+child-side termination behaviour:
 
-.start() => subscribe to 'EventChildTerminationReq'
-.stop()  => send nice 'EventChildTermination'
+    .start()  ->  subscribe to EventChildTerminationReq
+    .stop()   ->  emit EventChildTermination
 
-When a SpawnerChildEventTerminal receives an EventChildTerminationReq it
-drives the cooperate wind-down. The trampoline calls the thing to be
-called from inside a context manager, as show below:
+On receiving EventChildTerminationReq it drives the cooperative wind-down and
+records TERMINATED, so the EventChildTermination emitted by .stop() carries the
+correct reason.
 
-   async with SpawnerChildEventTerminal(ecp) as term:
-       await callable_thing.run(term, task_args)
-
-__aenter__ => start() 
-__aexit__  => stop()
 
 -----------
 TERMINATION
 -----------
 
-Forced termination is incited via a call to 
+.terminate(wait_to_kill_ms) starts a kind-specific shutdown. wait_to_kill_ms is
+mandatory:
 
-   terminal.terminate(wait_to_kill_ms)
+    numeric  ->  kill the OS context after the wait if no confirmation arrives.
+    None     ->  wait forever for the confirmation.
 
-where the 'wait_to_kill_ms' is an argument to be specified mandatorily.
-In conclusion with the 'thread' context model, it may only be 'None', 
-because a thread can never be killed. An async-Task may be forcefully
-cancelled, but the time that it remains in TERMINATING mode cannot be 
-determined, because it needs to hit an 'await' point before it becomes
-effective.
+For a thread it must be None; a thread has no force-kill path.
 
-Remote and Process: 
-  - send EventChildTerminationReq
-  - TERMINATING 
-  - while wait time < wait_to_kill_ms
-  -   if EventChildTermination
-  -      => TERM_OK; 
-  -      kill child process
-  -      <exit>
-  - kill child process
-  - => TERM_FAILURE
+    Process / Remote:
+        send EventChildTerminationReq; -> TERMINATING
+        while wait < wait_to_kill_ms:
+            EventChildTermination   ->  TERM_OK; kill OS context; exit
+        kill OS context;            ->  TERM_FAILURE
 
-Thread: 
-  - send EventChildTerminationReq
-  - => TERMINATING 
-  - forever (wait_to_kill_ms must be 'None')
-  -    if EventChildTermination
-  -       TERM_OK
-  -       <exit>
+    Async (Task):
+        send EventChildTerminationReq; -> TERMINATING
+        while wait < wait_to_kill_ms:
+            EventChildTermination   ->  TERM_OK; exit
+        Task.cancel();
+        loop:
+            EventChildTermination   ->  TERM_OK; exit
+            Task observed cancelled ->  TERM_FAILURE
 
-async.Task: 
-  - send EventChildTerminationReq
-  - => TERMINATING 
-  - while wait time < wait_to_kill_ms
-  -    if EventChildTermination
-  -       TERM_OK
-  -       <exit>
-  - cancel Task
-  - forever  
-  -    if EventChildTermination
-  -       TERM_OK
-  -    if task cancelled done
-  -       TERM_FAILURE
+    Thread (wait_to_kill_ms is None):
+        send EventChildTerminationReq; -> TERMINATING
+        loop forever:
+            EventChildTermination   ->  TERM_OK; exit
+
+A Task.cancel() lands only at the child's next await, so the time an async child
+spends in TERMINATING is not bounded by wait_to_kill_ms alone.
+
 
 -----------------------------------
 SPAWNER EVENTS (category "SPAWNER")
 -----------------------------------
 
-EventChildTerminationReq        parent  -> spawner
+EventChildTerminationReq        parent  -> spawner   (the .terminate() request)
     wait_to_kill_ms: int | None
-    (internal from user's terminal to spawner)
 
-EventChildTermination      child   -> parent
+EventChildTermination           child   -> parent    (the child's exit report)
     reason: {COMPLETED, TERMINATED, FAILED}
+        COMPLETED   work finished; no terminate was ever requested.
+        TERMINATED  left because EventChildTerminationReq arrived.
+        FAILED      the child's work raised; reported out cleanly.
 
-    COMPLETED  - work finished; no terminate was ever requested.
-    TERMINATED - left because EventChildTerminationReq arrived.
-    FAILED     - the child's work raised; reported out cleanly.
+EventChildKilled                spawner -> parent    (deadline reached, killed)
+    last_state: E_ChildState,  killed_at: float,  grace_ms: int
 
-EventChildKilled           spawner -> parent
-    last_state: ChildState,  killed_at: float,  grace_ms: int
-    -- 'wait_to_kill_ms' deadline reached
-    -- OS - context terminated 
-    -- no guarantee about child's resource deallocation or anything
+EventChildStateChanged          spawner -> parent    (every FSM edge)
+    old_state: E_ChildState,  new_state: E_ChildState
 
-EventChildStateChanged     spawner -> parent
-    old_state: ChildState,  new_state: ChildState
-    Emitted on every FSM edge.
 
 --------
 EXAMPLES
 --------
 
-See the examples in TEST directory.
-
-
+See the TEST directory.

@@ -22,14 +22,23 @@ emits on the wire to inform its peer of its own state:
                         Down does NOT require a reply: the side that
                         sent Down is gone.
 
-Neither event is dispatched to the Terminal's own local subscribers
-when generated locally. Both ARE dispatched to local subscribers when
-received from the peer - so a Router (or any other local consumer)
-may subscribe to EventTerminalDown to learn that a peer is no longer
-available.
+    EventInfo           a per-event-TYPE descriptor sent ahead of the
+                        first occurrence of each event type on the wire
+                        (see EventTerminal._ensure_event_info). Carries
+                        the wire-format version for that type. The
+                        receiver caches it and rejects any event whose
+                        type it has not first seen an EventInfo for.
 
-These are wire-level lifecycle signals, not connection-error
-indicators. A channel that fails mid-flight is a separate concern.
+EVENT_INFRA events are NEVER dispatched to a Terminal's local
+subscribers - neither the ones it sends NOR the ones it receives. They
+are consumed entirely inside the receive loop (handshake, peer-down,
+event-info caching). To learn that a peer has gone, register a
+callback via add_peer_down_callback(); subscribing to EventTerminalUp
+/ EventTerminalDown / EventInfo on .dispatcher will never fire.
+
+These are wire-level lifecycle and metadata signals, not
+connection-error indicators. A channel that fails mid-flight is a
+separate concern.
 ________________________________________________________________________________
 """
 
@@ -59,10 +68,30 @@ with category("EVENT_INFRA"):
         """Lifecycle: a Terminal is shutting down deliberately.
 
         Emitted on the wire just before the channel is closed from this
-        side. The peer's receive loop dispatches it locally (so local
-        subscribers may react), and then exits cleanly when the channel
-        signals closed.
+        side. The peer's receive loop consumes it internally (it fires
+        peer-down callbacks) and then exits cleanly when the channel
+        signals closed. It is NOT dispatched to local subscribers.
         """
 
         def __str__(self) -> str:
             return "EventTerminalDown"
+
+
+    class EventInfo(Event):
+        """Metadata: describes one event TYPE before its first use.
+
+        Sent ahead of the first occurrence of event type 'event_id' on
+        the wire. Carries the wire-format version the sender uses for
+        that type. The receiver caches (event_id -> version) and rejects
+        any subsequent event of a type for which no EventInfo was seen.
+
+        Version-only today; the field set is deliberately open to grow
+        (encoding kind, field schema, ...) without a new event type -
+        add fields here and bump the relevant type's WIRE_VERSION.
+        """
+        event_id: str
+        version:  int
+
+        def __str__(self) -> str:
+            return "EventInfo(%s v%d)" % (self.event_id, self.version)
+

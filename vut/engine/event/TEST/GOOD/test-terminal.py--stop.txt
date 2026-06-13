@@ -6,8 +6,8 @@ a.state: DOWN
 b.state after peer Down: DOWN
 peer_down_seen: ['b saw peer Down']
 
---- send after stop raises ---
-Send failed (expected)
+--- send after stop returns False ---
+send returned False (expected)
 
 --- stop is idempotent ---
 second stop returned cleanly

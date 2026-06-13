@@ -44,7 +44,7 @@ from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (t_fr_span_op
                                                             t_fr_span_block,
                                                             t_fr_eof)
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
-from vut.engine.temporal_logic.luau.luau_fragment import Role
+from vut.engine.temporal_logic.parser.core.span_oracle import E_SpanMode
 from fake_luau_oracle import FakeLuauOracle
 
 
@@ -63,7 +63,7 @@ def banner(label):
     print("--- %s ---" % label)
 
 
-def drive(text, role=Role.STATEMENT_BLOCK, record=False):
+def drive(text, role=E_SpanMode.STATEMENT_BLOCK, record=False):
     """RETURN: (tokens, reporter, lexer), the full pull-driven lex of 'text'.
 
     Steps the Lexer to exhaustion. At each LUAU_OPEN it calls read_span
@@ -132,7 +132,7 @@ def run_oracle_handoff():
     lx  = Lexer('=> { s = "a}b}c" }', rec, rep)
     lx.next()                       # ARROW
     open_tok = lx.next()            # LUAU_OPEN
-    lx.read_span(open_tok, Role.STATEMENT_BLOCK)
+    lx.read_span(open_tok, E_SpanMode.STATEMENT_BLOCK)
     print("oracle parse attempts:", len(rec.seen))
 
 
@@ -150,7 +150,7 @@ def run_malformed_fragment():
     banner("unbalanced parenthesis in a guard fragment")
     # '( foo' never balances for any candidate '}', so the oracle rejects all;
     # find_matching_brace raises FragmentSyntaxError and the lexer recovers.
-    tokens, reporter, lexer = drive("& { ( foo } => end", role=Role.CONDITION)
+    tokens, reporter, lexer = drive("& { ( foo } => end", role=E_SpanMode.CONDITION)
     show_tokens(tokens)
     print("error_f:", lexer.error_f)
     show_diagnostics(reporter)

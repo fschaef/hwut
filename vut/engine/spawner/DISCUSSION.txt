@@ -77,6 +77,28 @@ Inside _spawn the parent-side handshake is raced against child-death. The
 two outcomes share no path: the spawn function either returns a live
 SpawnerParentEventTerminal, or returns None on startup failure.
 
+ORDERING INVARIANT (subscribe before handshake). The FSM's subscriptions to
+EventChildTermination and EventChildTerminationReq are wired BEFORE the
+handshake is awaited - not after RUNNING is reached. Problem: the event
+dispatcher is forward-looking; a subscription added later does not see an
+event already dispatched. Idea: subscribe in the gap that terminal.py
+explicitly permits, between construction and start(). Cost: the wiring step
+straddles two lifecycle phases (construct, then start) rather than living
+in one place. Mitigation: it is confined to _spawn's documented sequence.
+Without it, an instant-completing child's confirmation is dispatched to an
+empty subscriber set and lost, and the FSM hangs in LAUNCHED forever.
+
+DEATH-WATCH SHIELDING (async kind). _spawn cancels the death-watch the
+moment the handshake wins. For thread/process the watch only polls
+is_alive(), so a cancel is harmless. For an async child the launch result
+IS the child Task; a bare 'await launch_result' would make the death-watch
+the Task's awaiter, and cancelling an awaiter propagates the cancel DOWN
+into the awaited Task - the watch would kill the very child it was meant
+only to observe. asyncio.shield breaks the downward propagation. Cost: the
+async branch needs a kind-specific code path the poll-based branches do
+not. Mitigation: it is the single isinstance(asyncio.Task) branch in
+_await_child_gone, with the trap documented at the call site.
+
 
 D6  THE CHILD-STATE MACHINE
 ---------------------------
@@ -161,6 +183,45 @@ consumer - the 'event' component's hard rule applies.
   EventChildStateChanged    spawner -> parent    every FSM edge
 
 
+D11 THE WATCHDOG IS A SEPARATE UNIT
+-----------------------------------
+Liveness supervision is pulled out of the Spawner into its own Watchdog.
+Problem: the Spawner has three jobs - launch, route, supervise liveness.
+Launch and route are event-driven and synchronous to the spawn call;
+liveness is a free-running background loop with its own poll period and
+its own shutdown. Idea: give liveness its own small unit, constructed with
+exactly three collaborators (handle, state_machine, parent_terminal) and
+nothing else. Cost: one more object and one more seam (Spawner <->
+Watchdog) to keep narrow. Mitigation: the Watchdog never decides a verdict
+- it reads handle.liveness() and forwards an E_Liveness to the FSM, which
+owns the E_ChildState transition - so the verdict logic stays in one
+place and the seam carries only liveness, never state.
+
+Two triggers, one resolver: a periodic poll catches a child gone silent
+without the channel ever signalling (a wedged or abnormally-killed child
+whose queue never closes); the parent terminal's peer-down callback fires
+the same resolver at once when the channel DID signal. Both funnel into
+resolve_silence(), so there is one verdict path, not two.
+
+
+D12 EventChildKilled NAMING AND THE FORWARDED REQUEST
+-----------------------------------------------------
+Two earlier TODO items, now settled.
+
+EventChildKilled is emitted ONLY when the wait_to_kill_ms deadline was
+reached and the OS context was force-terminated. It is not emitted when a
+child exits properly - a clean exit is reported by EventChildTermination
+alone. The name was questioned (EventChildStoppedForcefully was floated);
+'Killed' is kept because the event's sole meaning is "the deadline expired
+and the Spawner killed the context", which is exactly a kill.
+
+EventChildTerminationReq is forwarded from the parent terminal THROUGH the
+Spawner TO the child terminal: the child's cooperative wind-down is driven
+by receiving that event (it subscribes in start()), not by the Spawner
+calling into the child. This keeps the .terminate() hand-off event-based
+end to end (D3).
+
+
 OPEN POINTS
 -----------
   - spawn_sandbox (a sandboxed system call via the 'sandbox' subsystem)
@@ -169,5 +230,3 @@ OPEN POINTS
     chosen for now, aligning with multiprocessing vocabulary.
   - Resource allocation in the spawner - foreseen (it motivates D3),
     not yet designed.
-  - The implementation sketch is held until the concrete 'event'
-    component API signatures (expect_*, peer-down) are bound.

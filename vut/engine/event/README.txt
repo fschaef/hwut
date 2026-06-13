@@ -25,9 +25,11 @@ between async tasks, threads, processes, and remote processes homogenously.
      .send(event)
      .dispatcher.subscribe_on_*(*, handler_func)
 
+  Direction: .send(event) ships to the PEER; the LOCAL dispatcher fires on
+  events ARRIVING from the peer (not on what this Terminal sends).
+
   The dispatcher (class Dispatcher) allows for subscription on events, event
-  categories, or arbitrarily defined predicates. It is the heart of the 
-  Event infrastructure:
+  categories, or arbitrarily defined predicates:
 
                          Dispatcher
                        .-------------.
@@ -167,10 +169,10 @@ FILE LAYOUT
     events.py        Concrete Event subclasses, organised by category
     dispatcher.py    EventDispatcher, Subscription
     terminal.py      EventTerminal
+    router.py        EventRouter
 
     ./channel/
 
-       router.py     EventRouter
        channel.py    EventChannel ABC, AsyncChannel,
                      ThreadChannel, ProcessChannel,
                      RemoteChannel
@@ -243,8 +245,9 @@ NOTE: Category "EVENT_INFRA" is only used by the event infrastructure
 
 4. EVENTDISPATCHER: PREDICATE-TO-SINK MATCHING
 
-   The Dispatcher is the foundational matching primitive. It supports
-   three subscribe shapes and three sink kinds:
+   The Dispatcher is the foundational matching primitive - the heart of
+   the Event infrastructure. It supports three subscribe shapes and three
+   sink kinds:
 
        subscribe_on_event(class_or_name, sink)
        subscribe_on_category(category,   sink)
@@ -302,7 +305,7 @@ NOTE: Category "EVENT_INFRA" is only used by the event infrastructure
        term = EventTerminal(ecp)
        term.dispatcher.subscribe_on_*(...)    # local handlers
        await term.start()                     # build, recv loop, HANDSHAKE
-       await term.send(event)                 # ship to peer
+       await term.send(event)                 # ship to peer (False if not UP)
        await term.stop()                      # send Down, tear down
 
    Or as an async context manager (start/stop run on enter/exit, also
@@ -337,12 +340,12 @@ NOTE: Category "EVENT_INFRA" is only used by the event infrastructure
    separate processing.
 
    EVENT_INFRA events received from the peer are handled internally
-   (state transitions). They are NOT forwarded to the user's
-   .dispatcher; subscribing to EventTerminalUp / EventTerminalDown
-   on .dispatcher will never fire. To learn that a peer has gone
-   down, register a callback via set_peer_down_callback(). The
-   EventRouter uses this hook to auto-remove entries when peers
-   close.
+   (state transitions, version caching). They are NOT forwarded to the
+   user's .dispatcher; subscribing to EventTerminalUp / EventTerminalDown
+   / EventInfo on .dispatcher will never fire. To learn that a peer has
+   gone down, register a callback via add_peer_down_callback() (additive;
+   set_peer_down_callback() is a single-slot back-compat form). The
+   EventRouter uses this hook to auto-remove entries when peers close.
 
 
 8. EVENTROUTER: HUB OF TERMINALS
@@ -399,7 +402,9 @@ step integer to keep.
             case EventTaskCancelled(): remove_task(x)
             case EventChannelDown():   mark_failed(x)
 
-Four methods, mirroring the three subscribe_on_* filter dimensions:
+Four methods over the three subscribe_on_* filter dimensions:
+expect_any is expect_event widened to a SET of classes - same event-id
+dimension, multiple ids - so the matching dimensions stay three.
 
     expect_event(class_or_name)     next Event of that id
     expect_category(category)       next Event in that category
@@ -457,6 +462,34 @@ consumer producing or consuming that class on the wire - "do not
 rename event types or move their categories lightly" is a hard
 rule, not a soft convention.
 
+VERSIONING (EventInfo handshake)
+
+The envelope carries no per-message version. Instead, the first time a
+Terminal sends a given event TYPE, it sends an EventInfo descriptor
+ahead of it:
+
+    {
+        "id":   "EVENT_INFRA.EventInfo",
+        "data": {"event_id": "WORKFLOW.EventTaskDone", "version": 1},
+    }
+
+The receiver caches (event_id -> version) and admits later events of
+that type. An event whose type has NOT been announced by a prior
+EventInfo is REJECTED with a stderr diagnostic and dropped - it is not
+dispatched. This keeps the per-message envelope lean while making a
+version skew a loud, distinct failure rather than a silently dropped
+or mis-decoded event (which, against a byte-exact GOOD recording,
+would masquerade as a behavioural mismatch).
+
+Each event type declares its version via the WIRE_VERSION class
+attribute on its Event subclass (default 1); bump it on any
+backward-incompatible field-set or encoding change. EventInfo is
+version-only today; its field set is deliberately open to grow
+(encoding kind, field schema) without introducing a new event type.
+
+EVENT_INFRA events (Up, Down, EventInfo) are exempt from the handshake
+- they are the bootstrap protocol and are accepted unconditionally.
+
 For specialist serialisation, see marshaller.py's _SPECIALISTS hook
 and the Construct future-direction note in its module header.
 
@@ -474,7 +507,7 @@ Cipher is a CHANNEL-INTERNAL concept. It is NOT exported from this
 package - most users never name it. Encryption is configured
 indirectly: pass a CipherSpec to a channel-parameter factory.
 
-    from vut.engine.event.channel_parameter import (
+    from vut.engine.event.channel.parameter import (
         EventChannelParameter, CipherSpec,
     )
 
@@ -593,6 +626,11 @@ Cross-process (parent spawns child):
             # ... use term ...
         asyncio.run(go())
 
+The deadlock rule (above) forbids a lone start() only when both peers
+share one event loop. Here each peer runs start() in its own loop (own
+process), so the two run concurrently; awaiting the parent's start()
+alone is correct.
+
 WFM as a router (sketch):
 
     router = EventRouter()
@@ -632,3 +670,4 @@ To run a single choice:
 
 GOOD/ holds expected output, one file per (test-script, choice).
 After running, OUT/ holds produced output for comparison.
+

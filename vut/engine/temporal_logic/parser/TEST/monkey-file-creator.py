@@ -31,7 +31,7 @@ from vut.language_support.python.deterministic_random import (DeterministicStrea
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
 from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser
 from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
-        Terminal_Spec, Rule_Spec,
+        Terminal_Spec, Rule_Spec, Tagged_Spec,
         SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec)
 from vut.engine.temporal_logic.parser.core.lexer import Token
 from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T, t_fr_span_open, t_fr_eof
@@ -108,6 +108,10 @@ class Walker:
                 self._emit_luau(budget)
             else:
                 self.tokens.append(_tok(element, self._next_id()))
+            return
+        if isinstance(element, Tagged_Spec):
+            # An advisory role tag (D-10) is transparent: emit its body.
+            self._emit(element.body, budget)
             return
         if isinstance(element, Rule_Spec):
             self.visited.add(element.name)
@@ -379,4 +383,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

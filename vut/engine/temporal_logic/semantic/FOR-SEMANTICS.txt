@@ -121,4 +121,53 @@ Pass 2 resolves each against (A) cause/effect definitions and event
 definitions respectively; an emission whose name resolves to an effect
 bundle (or vice versa) is FATAL [KIND]. Dotted heads resolve through
 namespaces and mounts like any <name-dotted>.
+-------------------------------------------------------------------------------
+F-12 AGENT: CLOCK BINDING, FENCE, AND 'ag' SCOPE
+-------------------------------------------------------------------------------
+An agent's 'on:' target is a <cause> (trigger + optional guard). Pass 2 [KIND]:
+  - the trigger must resolve to kind CLOCK; any other kind is FATAL. (The
+    grammar tags the position '<cause(clock)>' as an advisory hint, F-14; the
+    check is the semantic enforcement, not the hint.)
+The agent's signature parameters ARE its instance members, read through the
+'ag' pseudo-symbol. 'ag.member' is legal ONLY inside the agent's own body
+(init/deinit, opaque blocks, bracket conditions, rvalues) -- the agent
+counterpart of 'sm'/'mg' (F-1); referencing 'ag' outside any agent is FATAL
+[BINDING]. Declaring 'ag' (a user symbol of that spelling) is FATAL [NAME], as
+for the other pseudo-symbols. An agent carries no 'is:' bases.
+The fence is STRUCTURAL: the grammar admits the imperative constructs
+('instant:', 'wait:', 'select:', 'if:'/'elif:'/'else:', 'while:', and the bare
+commands) only inside an agent body, so a fence violation is a parse error, not
+a pass-2 check. Pass 2 ASSERTS the fence held (defensive), it does not enforce
+it.
+
+-------------------------------------------------------------------------------
+F-13 AGENT STEPS: EMISSION KINDS, WAIT BINDING, CASCADE EDGES
+-------------------------------------------------------------------------------
+  - A PACED emission (a bare EventSpec) and an 'instant:' injection both name
+    an event; the name resolves per F-11 (an EventSpec name resolving to an
+    effect bundle is FATAL [KIND]). A paced emission enters the cascade as a
+    stimulus edge AT A TICK BOUNDARY; an 'instant:' emission as a stimulus edge
+    that may land WITHIN a running no-time cascade [CASCADE]. The agent is
+    never a cascade node; it has no inbound edges.
+  - A 'wait:'/'select:' branch binds 'e' to the firing event for its guard and
+    its co-temporal '=>' effect tail ONLY (F-1 'e' rules, F-9 system-trigger
+    members apply); 'e' does NOT flow into subsequent steps. A tail-less wait
+    binds no 'e'.
+  - The bare commands (spawn:/unspawn:/arm:) resolve exactly as their causality
+    counterparts (D-25 spawn/in:/via:, unspawn target, arm mode).
+  - if:/elif:/while: conditions are <guard>s; their kinds follow F-5; 'e' is
+    NOT in scope in a control condition (no trigger pins it) -- an 'e.member'
+    there is FATAL [BINDING].
+
+-------------------------------------------------------------------------------
+F-14 ADVISORY ROLE HINTS (parser D-10)
+-------------------------------------------------------------------------------
+The grammar may tag a reference or terminal position with a plain-string role
+('<cause(clock)>', '<name-dotted(event)>', 't_re_id("event")'). The hint is
+recorded on the compiled grammar (a transparent Tagged_Spec), walkable by
+position; it is NON-IDENTITY and advisory. Pass 2 MAY consult it as a
+resolution expectation, but the binding kind checks (F-12 clock, F-11 event,
+etc.) are the enforcement -- the hint never substitutes for a check, and a
+missing hint is never an error.
+
 ===============================================================================

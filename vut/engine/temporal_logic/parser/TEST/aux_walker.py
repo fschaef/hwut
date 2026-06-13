@@ -50,7 +50,7 @@ from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
 from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser, _ResyncError
 from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
         Terminal_Spec, Rule_Spec, Branch_Spec, Operator_Spec,
-        SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec)
+        SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec, Tagged_Spec)
 from vut.engine.temporal_logic.parser.core.lexer import Token
 from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (t_fr_span_open,
                                                           t_fr_span_block,
@@ -383,6 +383,11 @@ def walk(element, policy, ctx):
         for _ in range(policy.star_reps(element, ctx)):
             _walk_body(element.body, policy, ctx)
         return
+    if isinstance(element, Tagged_Spec):
+        # An advisory role-tagged occurrence (D-10) is transparent: walk its
+        # body. The role is grammar metadata, not a structural node.
+        walk(element.body, policy, ctx)
+        return
     raise ValueError("unknown grammar node %r" % (element,))
 
 
@@ -492,6 +497,9 @@ def _first_variadic(element):
     """RETURN: the first PLUS/STAR/OPT node under 'element', or None."""
     if isinstance(element, Terminal_Spec):
         return None
+    if isinstance(element, Tagged_Spec):
+        # Advisory role tag (D-10) is transparent: look under its body.
+        return _first_variadic(element.body)
     if isinstance(element, Rule_Spec):
         return _first_variadic(element.pattern)
     if isinstance(element, (PLUS_Spec, STAR_Spec, OPT_Spec)):

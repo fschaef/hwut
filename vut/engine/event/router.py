@@ -63,6 +63,7 @@ Or pass source-aware publish for use in such forwards.
 ________________________________________________________________________________
 """
 import sys
+import asyncio
 
 from typing  import Callable, Optional
 
@@ -130,20 +131,13 @@ class EventRouter:
         )
         entry.subscription = sub
 
-        # Wire peer-down: when this terminal's peer goes away, drop
-        # the entry. Each terminal supports a single peer-down callback;
-        # if the caller had already set one, we chain it.
-        prior = getattr(terminal, "_peer_down_callback", None)
-        def _on_peer_down(h=handle, p=prior):
-            # Best-effort: ignore the result; this Router cleans up its
-            # own table. If a prior callback existed, invoke it after.
+        # Wire peer-down: when this terminal's peer goes away, drop this
+        # entry. Additive registration - several entries may share one
+        # Terminal, and each must clean up its own row. No need to read
+        # or chain a prior callback; the Terminal fires them all.
+        def _on_peer_down(h=handle):
             self.remove_entry(h)
-            if p is not None:
-                try:
-                    return p()
-                except Exception:
-                    return None
-        terminal.set_peer_down_callback(_on_peer_down)
+        terminal.add_peer_down_callback(_on_peer_down)
 
         return handle
 
@@ -238,9 +232,9 @@ class RouterEntry:
         Called by the Dispatcher when this entry matches.
         """
         # The Terminal's send is async; schedule it.
-        import asyncio
         try:
             asyncio.create_task(self.terminal.send(event))
         except RuntimeError as e:
             print("RouterEntry.__call__: cannot forward to terminal "
                   "(no running loop): %s" % e, file=sys.stderr)
+

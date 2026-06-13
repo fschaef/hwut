@@ -513,14 +513,258 @@ TESTING:     test-cipher.py exercises all four ciphers (round-trips,
 
 
 --------------------------------------------------------------------------------
+DECISION 17 - Send is to the peer; the local dispatcher fires on arrivals
+--------------------------------------------------------------------------------
+
+DECISION:    .send(event) ships to the PEER. A Terminal's own dispatcher
+             fires only on events ARRIVING from the peer - never on what
+             the Terminal itself sends.
+
+RATIONALE:   The README previously left this to be inferred from the
+             section 7 note about EVENT_INFRA events being handled on the
+             receive side. Stating the direction flatly at the Terminal
+             API removes the most common first-reader confusion (which
+             dispatcher fires, sender's or receiver's). A Terminal that
+             wants to observe its own outbound traffic subscribes on the
+             far side, or routes through an EventRouter - the local
+             dispatcher is deliberately a receive-side construct.
+
+
+--------------------------------------------------------------------------------
+DECISION 18 - The lone-start() deadlock rule is loop-scoped, not peer-scoped
+--------------------------------------------------------------------------------
+
+DECISION:    The handshake is symmetric: both peers send Up and both
+             block on the other's Up. Awaiting one start() before the
+             other deadlocks ONLY when both peers share a single event
+             loop. Across a process (or any separate-loop) boundary,
+             each peer runs start() in its own loop concurrently, so
+             awaiting one side's start() alone is correct.
+
+RATIONALE:   The in-process example (asyncio.gather) and the cross-
+             process example (lone await) appeared to contradict each
+             other. They do not: the constraint is "both starts must be
+             in flight at once", which asyncio.gather guarantees on one
+             loop and which separate processes guarantee by construction.
+             The deadlock is a same-loop scheduling property, not a
+             property of the handshake protocol itself.
+
+
+--------------------------------------------------------------------------------
+DECISION 19 - expect_any is expect_event widened, not a fourth dimension
+--------------------------------------------------------------------------------
+
+DECISION:    There are three matching dimensions (event-id, category,
+             predicate) and three subscribe_on_* methods. The expect_*
+             family has four methods because expect_any is expect_event
+             generalised to a SET of class ids - same event-id dimension,
+             multiple ids - not a new dimension.
+
+RATIONALE:   "Four methods" against "three filter dimensions" read as an
+             inconsistency. Framing expect_any as a widening of
+             expect_event keeps the dimension count honest and matches
+             the implementation, where expect_any installs one per-class
+             subscription per listed class and the first match cancels
+             the losing alternatives (the subs_func indirection in
+             _ExpectSink). No new matching rule is introduced; the
+             existing event-id rule is reused N times.
+
+
+--------------------------------------------------------------------------------
+DECISION 20 - Async sinks run through an owned-task registry
+--------------------------------------------------------------------------------
+
+DECISION:    EventDispatcher.dispatch no longer fires bare
+             asyncio.create_task() for async sinks. It routes them
+             through _spawn(), which (a) keeps a strong reference to
+             the task in self._inflight until completion and (b) attaches
+             a done-callback that drops the reference and logs any
+             exception to stderr.
+
+RATIONALE:   Two latent bugs in the bare-create_task form. First,
+             CPython holds only a WEAK reference to a task returned by
+             create_task; with no strong reference an async sink could
+             be garbage-collected mid-flight under light load. Second,
+             an unawaited task that raised produced only a "Task
+             exception was never retrieved" warning at GC time - the
+             exact opposite of the careful per-subscription stderr
+             diagnostics the synchronous path already had. _spawn fixes
+             both and makes the async and sync error-handling paths
+             symmetric. The RuntimeError-on-no-loop case is logged with
+             the same message the inline path used, so behaviour is
+             unchanged when there is no running loop.
+
+NOTE:        This does NOT impose ordering between async sinks; tasks
+             still complete in scheduler order. Ordering guarantees, if
+             ever required, are a separate decision.
+
+
+--------------------------------------------------------------------------------
+DECISION 21 - A not-UP send() raises, rather than returning False
+--------------------------------------------------------------------------------
+
+DECISION:    EventTerminal.send() raises RuntimeError when the Terminal
+             is not UP. It no longer prints to stderr and returns False.
+             Its return contract is now None (event handed to channel).
+
+RATIONALE:   The previous form had two different failure idioms for the
+             same class of mistake: start()-after-stop() raised
+             RuntimeError, while send()-before-UP returned a boolean.
+             A returned False is silently ignorable; a lifecycle misuse
+             should not be. The engine's stated philosophy is that
+             operational errors surface distinctly - a not-UP send() is
+             an operational error, so it is raised, consistent with
+             start(). This is a breaking change for any caller that
+             checked send()'s boolean; none existed in the suite.
+
+
+--------------------------------------------------------------------------------
+DECISION 22 - Peer-down notification is an additive callback list
+--------------------------------------------------------------------------------
+
+DECISION:    EventTerminal holds a LIST of peer-down callbacks.
+             add_peer_down_callback() appends; set_peer_down_callback()
+             is retained as a back-compat single-slot setter that
+             replaces the list. EventRouter.add_entry uses the additive
+             form.
+
+RATIONALE:   The single-slot callback forced add_entry into a
+             read-modify-write dance: it reached into the Terminal's
+             private _peer_down_callback, wrapped the prior callback,
+             and re-set it. That worked only by the luck of wrapping
+             order when several Router entries shared one Terminal, and
+             it coupled the Router to a Terminal private attribute. An
+             explicit list is honest about the real requirement (more
+             than one consumer may care) and removes the cross-module
+             reach-in. _on_EventTerminalDown iterates a snapshot of the
+             list and isolates each callback's exceptions, so one
+             failing callback does not stop the others or the loop.
+
+
+--------------------------------------------------------------------------------
+DECISION 23 - Wire versioning via a per-type EventInfo descriptor
+              (supersedes the deferral in DECISION 8)
+--------------------------------------------------------------------------------
+
+DECISION:    Versioning is no longer wholly deferred. The wire gains a
+             lazy, per-event-TYPE version handshake:
+
+               -- Each Event subclass carries WIRE_VERSION (ClassVar,
+                  default 1).
+               -- The first time a Terminal sends a given event type, it
+                  sends an EventInfo(event_id, version) descriptor ahead
+                  of the event. Tracked per Terminal in _info_sent.
+               -- The receiver caches event_id -> version in _info_seen.
+                  An incoming non-infra event whose type has no cached
+                  EventInfo is REJECTED (stderr diagnostic, dropped),
+                  not dispatched.
+               -- EVENT_INFRA events (Up, Down, EventInfo) are exempt;
+                  they are the bootstrap protocol, accepted
+                  unconditionally - an EventInfo for EventInfo would
+                  recurse.
+
+RATIONALE:   DECISION 8 deferred versioning on the grounds that events
+             are produced and consumed within one matched build and
+             cross-build replay is undefined. That reasoning does not
+             hold for VUT specifically: a golden-master GOOD recording
+             IS a serialized trace that outlives the build that produced
+             it, so replaying a recorded trace against a later build is
+             exactly the cross-build case - and it is the normal life of
+             an oracle, not an edge case. Under the old unversioned
+             envelope a field added with a Pydantic default would be
+             silently dropped on an old consumer, and a field made
+             required would make an old frame fail validation and vanish
+             at the marshaller - either way producing a trace MISMATCH
+             that masquerades as a behavioural difference. The whole
+             point of byte-exact oracles is to prevent that masquerade.
+
+             The descriptor is per-type and lazy (not per-message) so
+             the hot-path envelope stays lean: one extra record per
+             event type per connection, not per event. It is sent by the
+             Terminal (which owns the wire and the sent-type set), not
+             the Marshaller (which is a stateless class-as-singleton and
+             has no per-connection state to hang "first send" on).
+
+             Unknown-type-with-no-EventInfo is handled by REJECT rather
+             than accept-and-assume or buffer: a missing handshake is a
+             version-protocol violation, and a loud distinct failure is
+             preferable to a silent assumption - again, the masquerade
+             argument. Buffering was rejected as it adds reordering
+             machinery for a case (info lost or reordered) that on an
+             ordered channel should not arise.
+
+             EventInfo is version-only today but its field set is
+             deliberately open: encoding kind, field schema, etc. can be
+             added without a new event type. This is the seam through
+             which the Construct binary-format work (DECISION 7 / the
+             Marshaller note) would announce a non-JSON encoding per
+             type.
+
+SCOPE:       Touches event.py (WIRE_VERSION), events.py (EventInfo),
+             terminal.py (_ensure_event_info send-side, _on_EventInfo
+             and admission check receive-side, _info_sent/_info_seen),
+             and __init__.py (export). The Marshaller is unchanged:
+             EventInfo is an ordinary registered Event and serialises
+             through the existing envelope.
+
+
+--------------------------------------------------------------------------------
+DECISION 24 - Lifecycle misuse is reported by return value, not exception
+              (REVERSES DECISION 21)
+--------------------------------------------------------------------------------
+
+DECISION:    send() and start() do NOT raise on a wrong-state call.
+             Both return bool and write a stderr diagnostic:
+               -- send() on a not-UP Terminal returns False (nothing
+                  sent).
+               -- start() on a DOWN (single-use, already stopped)
+                  Terminal returns False (nothing built). start() on an
+                  already-UP or UP_PENDING Terminal returns True.
+             No RuntimeError is raised from either path.
+
+RATIONALE:   DECISION 21 made a not-UP send() raise, on the analogy
+             that it is a lifecycle misuse like start()-after-stop().
+             That analogy is wrong. A send to a peer that has gone DOWN
+             is a NORMAL, expected race on a point-to-point link: the
+             peer can transition to DOWN between the caller's UP-check
+             and the send, through no fault of the caller. Forcing every
+             send() into a try/except for a routine outcome is
+             exception-as-control-flow, which this project rejects. The
+             caller decides whether a failed send matters; the return
+             value lets them, and the stderr line keeps it observable.
+
+             start()-after-stop() was reconsidered on the same call.
+             Although that one IS caller-controlled ordering, raising
+             from one lifecycle method and returning bool from the other
+             is an inconsistent surface. A single non-throwing idiom
+             across the lifecycle (bool + stderr) is simpler to use and
+             to reason about. A Terminal remains single-use; the
+             difference is only in how the single-use violation is
+             reported.
+
+NOTE:        The async context manager's __aenter__ calls start() on a
+             fresh (NEW) Terminal, which never returns False, so the
+             ignored return there is correct. EVENT_INFRA bootstrap
+             sends inside start()/stop() bypass the public send() (they
+             go straight to the channel), so they are unaffected by the
+             not-UP guard.
+
+
+--------------------------------------------------------------------------------
 THINGS LEFT OPEN
 --------------------------------------------------------------------------------
 
 1. Tuple-composite event ids (E_Entity, E_Event). Worth revisiting
    if/when federation problems bite.
 
-2. Versioning machinery. Worth revisiting if/when persistent storage
-   or cross-build replay becomes required.
+2. Version MIGRATION. The EventInfo handshake (DECISION 23) detects a
+   version per type and rejects on absence, but does NOT translate
+   between versions. Cross-version DECODING - reading a v1 frame with a
+   v2 consumer, or vice versa - has no machinery yet; the receiver only
+   learns the sender's version, it cannot adapt to it. Revisit when a
+   concrete migration (a real field change replayed across builds)
+   exists to design against. The per-type version in _info_seen is the
+   hook a future per-version decoder would branch on.
 
 3. Workload-id field on Event. Will be added when workloads exist
    and predicates need them.
@@ -567,3 +811,4 @@ THINGS LEFT OPEN
     behaviour for unknown tokens. Deferred until a wire-size
     profile justifies it; grouped with the Construct note as a
     wire-size optimisation.
+

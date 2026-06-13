@@ -62,7 +62,7 @@ import time
 
 from vut.engine.spawner.enums  import E_ChildState
 from vut.engine.spawner.events import (EventChildTermination,
-                                       EventChildKilled,
+                                       EventChildResourcesFreed,
                                        EventChildStateChanged)
 
 
@@ -79,7 +79,7 @@ class ChildStateMachine:
       -- parent_terminal -- the SpawnerParentEventTerminal; source of
                             expect_* awaitables and the terminal whose
                             receive dispatcher the FSM dispatches
-                            EventChildKilled / EventChildStateChanged
+                            EventChildResourcesFreed / EventChildStateChanged
                             onto (locally - they are spawner -> parent
                             events for the user, not channel traffic).
       -- killer           -- async callable; performs the OS-level
@@ -199,11 +199,15 @@ class ChildStateMachine:
         """RETURN: None.
 
         Drives RUNNING (or SUSPENDED) -> TERM_OK when the child reports
-        its own termination WITHOUT a prior .terminate() request - the
-        child finished its own work and confirmed (E_TerminationReason
-        COMPLETED, or FAILED reported out cleanly). The child confirmed
-        before its resources were freed, so TERM_OK is the correct
-        verdict (DISCUSSION.txt D7).
+        its own termination WITHOUT a prior .terminate() request. The
+        verdict is set on ORDERING alone (DISCUSSION.txt D7): the child
+        confirmed before its resources were freed, so the supervision
+        relationship ended in order -> TERM_OK. This is independent of
+        the TASK outcome: a child that finished (DONE) and one that did
+        not accomplish its work (UNACCOMPLISHED) both reach TERM_OK if
+        they confirmed in order. The task outcome is carried separately
+        by the EventChildTermination.reason and is not the FSM's concern
+        here.
 
         This is the always-on counterpart to begin_termination()'s
         one-shot expect_event: the Spawner subscribes it to
@@ -352,7 +356,8 @@ class ChildStateMachine:
             int   milliseconds to wait for confirmation before killing.
             None  wait forever - no deadline branch is armed.
 
-        On a deadline kill the machine emits EventChildKilled and lands
+        On a deadline kill the machine emits EventChildResourcesFreed
+        (after_deadline=True) and lands
         in TERM_FAILURE - resources freed without (or before)
         confirmation (DISCUSSION.txt D7). If confirmation arrives after
         the kill was issued the kill still stands; the OS context is
@@ -402,19 +407,22 @@ class ChildStateMachine:
 
         If the child kind has an OS handle (killer is not None) the OS
         context is then reclaimed - a kill AFTER a confirmation is pure
-        reclamation and emits EventChildKilled for the record; it does
-        NOT change the TERM_OK verdict, because confirmation came first.
+        reclamation. It emits EventChildResourcesFreed with
+        after_deadline=False (a routine freeing, NOT a deadline kill) and
+        does NOT change the TERM_OK verdict, because confirmation came
+        first.
         """
         await self._transition(E_ChildState.TERM_OK)
         # Reclaim the OS context if there is one. The child confirmed;
-        # this kill is bookkeeping, not the verdict.
+        # this freeing is bookkeeping, not the verdict - surface it as a
+        # neutral 'resources freed', never as a deadline kill.
         if self._killer is not None:
             try:
                 await self._killer()
-                self._parent.dispatcher.dispatch(EventChildKilled(
-                    last_state = E_ChildState.TERM_OK,
-                    killed_at  = time.time(),
-                    grace_ms   = 0,
+                self._parent.dispatcher.dispatch(EventChildResourcesFreed(
+                    last_state     = E_ChildState.TERM_OK,
+                    freed_at       = time.time(),
+                    after_deadline = False,
                 ))
             except Exception as e:
                 print("ChildStateMachine._confirmed: post-confirmation "
@@ -429,8 +437,11 @@ class ChildStateMachine:
         freed without confirmation, functional outcome unknown
         (DISCUSSION.txt D7).
 
-        Emits EventChildKilled recording last_state, the kill time, and
-        the grace period that elapsed. A kind with no killer (a thread)
+        Emits EventChildResourcesFreed with after_deadline=True, the one
+        flag that distinguishes this freeing from a clean reclamation,
+        recording last_state and the freeing time. The freed event is
+        emitted BEFORE the TERM_FAILURE transition (the husk is gone,
+        then the verdict is published). A kind with no killer (a thread)
         never reaches this path, because .terminate() refuses a numeric
         deadline for it up front (DISCUSSION.txt D9).
         """
@@ -449,9 +460,9 @@ class ChildStateMachine:
                   "kind, yet a numeric deadline elapsed; the .terminate() "
                   "refusal was bypassed.", file=sys.stderr)
 
-        self._parent.dispatcher.dispatch(EventChildKilled(
-            last_state = last_state,
-            killed_at  = time.time(),
-            grace_ms   = grace_ms,
+        self._parent.dispatcher.dispatch(EventChildResourcesFreed(
+            last_state     = last_state,
+            freed_at       = time.time(),
+            after_deadline = True,
         ))
         await self._transition(E_ChildState.TERM_FAILURE)

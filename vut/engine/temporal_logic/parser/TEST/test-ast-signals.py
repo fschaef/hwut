@@ -29,7 +29,7 @@ from   config import HwutRunner
 from vut.engine.temporal_logic.parser.grammar import GRAMMAR
 from vut.engine.temporal_logic.parser.core.combinators import OR, PLUS, STAR
 from vut.engine.temporal_logic.parser.core.combinators import _Combinator
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import Terminal_Spec
+from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import Terminal_Spec, Tagged_Spec
 from vut.engine.temporal_logic.parser.core.operator_interface import (
         OR_Interface, SEQ_Interface, PLUS_Interface, STAR_Interface)
 from vut.engine.temporal_logic.parser import ast_map as M
@@ -47,6 +47,8 @@ def _top_operator(pattern):
     'STAR'/'PLUS' for those combinators; 'OPT' for a bare list; 'TERMINAL' for a
     single terminal spec; else the combinator class name.
     """
+    if isinstance(pattern, Tagged_Spec):
+        return _top_operator(pattern.body)
     if isinstance(pattern, tuple):
         return "OR" if any(p is OR for p in pattern) else "SEQ"
     if isinstance(pattern, list):
@@ -150,4 +152,3 @@ HwutRunner(
         "exemptions":     run_exemptions,
     },
 ).run()
-

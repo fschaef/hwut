@@ -37,13 +37,15 @@ class ChildHandle(ABC):
     _CAN_SUSPEND    = False
 
     async def kill(self) -> bool:
-        """
-        RETURNS: True, if context type can 'kill' the child process and 
-                       such a kill has been initiated.
-                 False, if not -- nothing happend.
+        """RETURN: True,  a force-kill was initiated for this kind.
+                   False, this kind has no force-kill path; nothing done.
 
-        Force-terminate the child's execution context, i.e. free any system
-        resources related to the child's execution. 
+        Force-terminate the child's execution context, i.e. free any
+        system resources related to the child's execution. The base has
+        no force path and returns False; kinds that can force-kill
+        override this and return True. Selection by capability
+        (handle.can_force_kill) means the base kill() is not used as a
+        killer - it is the honest default for a kind with no force path.
 
         Idempotent: killing an already-dead context is harmless.
         """
@@ -118,9 +120,13 @@ class AsyncChildHandle(ChildHandle):
         self._task = task
 
     async def kill(self) -> bool:
-        """RETURNS: True, if context type can 'kill' the child process and 
-                          such a kill has been initiated.
-                    False, if not -- nothing happend.
+        """RETURN: True, always - an asyncio.Task is cancellable, so the
+                         force-kill (Task.cancel + await) is always
+                         initiated. Cancellation is cooperative (the
+                         CancelledError lands at the next await), so a
+                         cancelled Task ends in TERM_FAILURE.
+
+        A no-op returning True if the Task is already done.
         """
         if self._task.done():
             return True
@@ -188,15 +194,14 @@ class ProcessChildHandle(ChildHandle):
         self._process = process
 
     async def kill(self) -> bool:
-        """RETURNS: True, if context type can 'kill' the child process and 
-                          such a kill has been initiated.
-                    False, if not -- nothing happend.
+        """RETURN: True, always - a process has an OS handle, so the
+                         force-kill is always initiated.
 
         Issues Process.kill() (SIGKILL) and then joins the process in the
         executor so the asyncio loop is not blocked. After this returns the OS
         context is gone and reaped - no zombie.
 
-        A no-op if the process is already not alive.
+        A no-op returning True if the process is already not alive.
         """
         if not self._process.is_alive():
             return True
@@ -285,15 +290,15 @@ class RemoteChildHandle(ChildHandle):
         self._remote_id      = remote_id
         self._liveness_query = liveness_query
 
-    async def kill(self) -> None:
-        """RETURNS: True, if context type can 'kill' the child process and 
-                          such a kill has been initiated.
-                    False, if not -- nothing happend.
+    async def kill(self) -> bool:
+        """RETURN: True,  the remote agent acknowledged the kill.
+                   False, the agent did not acknowledge, or the control
+                          send failed - from the local side this is
+                          indistinguishable from a lost connection, and
+                          the FSM's TERM_LOST_CONNECTION path is the
+                          safety net.
 
-        Ships a 'kill' control action to the remote agent. If the agent
-        does not acknowledge, the failure is logged - from the local
-        side this is indistinguishable from a lost connection, and the
-        FSM's TERM_LOST_CONNECTION path is the safety net.
+        Ships a 'kill' control action to the remote agent.
         """
         try:
             ok = await self._control_send("kill")
@@ -301,10 +306,11 @@ class RemoteChildHandle(ChildHandle):
                 print("RemoteChildHandle.kill: remote agent did not "
                       "acknowledge kill of %r." % (self._remote_id,),
                       file=sys.stderr)
+            return bool(ok)
         except Exception as e:
             print("RemoteChildHandle.kill: control send failed for %r: %s"
                   % (self._remote_id, e), file=sys.stderr)
-        return True
+            return False
 
     async def suspend(self) -> bool:
         """RETURN: True,  the remote agent acknowledged the suspend.
