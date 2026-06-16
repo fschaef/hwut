@@ -1,0 +1,209 @@
+===============================================================================
+REACTIVE RULE ENGINE  --  HWUT 2.0
+RATIONALE  (component root)
+===============================================================================
+
+-------------------------------------------------------------------------------
+X-1  THE THREE-LAYER SPLIT: parser -> (semantic) -> luau, dependencies DOWN only
+-------------------------------------------------------------------------------
+PROBLEM
+
+One rule-file language must be lexed, parsed, name-resolved, checked, and
+emitted as a runnable program in a second language (Luau). Fusing those
+concerns produces a monolith in which the parser knows Luau, the emitter
+re-parses, and no layer can be reused or tested alone.
+
+DECISION
+
+    Three layers with a strict downward dependency arrow:
+
+      parser/    text -> typed AST (front end). Knows the rule-file language;
+                 does NOT resolve names, does NOT know Luau except through the
+                 abstract span oracle.
+      semantic/  AST -> ResolvedProgram (pass 2). Imports DOWN into parser/;
+                 the reverse import never exists.
+      luau/      the embedded-language backbone: span measurement, reference
+                 collection, location mapping, generated-code checking, and the
+                 runtime substrate (bootstrap.lua). Implements the parser core's
+                 abstract span-oracle contract.
+
+    The arrow is enforced: parser/core depends on nothing below itself; the
+    Luau component imports the abstract SpanOracle FROM core and implements it;
+    semantic imports parser, never the reverse.
+
+COST
+    A grammar-language fact and an embedded-language fact that must meet (an
+    opaque span's position) cross a layer boundary through an abstract contract,
+    not a direct call -- one indirection at the seam.
+
+MITIGATION
+
+    The seam is the SpanOracle interface (parser/core owns it; luau implements
+    it). The indirection is the price of core never naming Luau; see parser/core
+    RATIONALE for the inversion that removed the former parser->luau import.
+
+INVARIANT
+    No upward import. parser/core names no rule and no embedded language;
+    parser/ names no embedded language except via the oracle; semantic imports
+    parser but parser never imports semantic.
+
+-------------------------------------------------------------------------------
+X-2  TWO STAGES, ONE LANGUAGE SEAM CROSSED TWICE PER TEST  (portability)
+-------------------------------------------------------------------------------
+PROBLEM
+    Per-event processing that crossed a Python<->Luau boundary would make every
+    trace event pay an inter-process cost and would tie verdicts to host timing.
+
+DECISION
+    TRANSPILE (Python, once): parse the rule file, run static analysis, emit a
+    complete self-contained Luau application. RUN (Luau, once per trace): the
+    generated engine reads a trace and writes its report. The transpiler is pure
+    Python; the engine is generated Luau on a standard interpreter. The
+    Python<->Luau seam is crossed exactly twice per test (launch, exit), never
+    per event.
+
+COST
+    The engine is GENERATED code, so a runtime fault can surface in Luau the
+    author never wrote.
+MITIGATION
+    Source mapping: every spliced fragment registers its rule-file 'file:line',
+    so a runtime fault or a static diagnostic points back at the author's
+    source. (Mechanism: luau/location_mapper.py; see luau RATIONALE.)
+
+INVARIANT
+    The engine never consults a system clock; 'dt' derives only from the
+    previous event's time, so a saved trace replays deterministically.
+
+-------------------------------------------------------------------------------
+X-3  THE BYTE-EXACT GOOD DISCIPLINE  (house law; never fabricated)
+-------------------------------------------------------------------------------
+PROBLEM
+    A validator that grades its own behaviour can pass itself. A recording
+    invented by the tool, rather than captured from a real run, asserts nothing.
+
+DECISION
+    The printed output IS the assertion. Each test prints to stdout; HWUT
+    compares it byte-for-byte against a GOOD recording captured on real
+    infrastructure. The engine never judges behaviour; comparison is HWUT's job;
+    neither the engine nor a test prints a self-graded verdict. An operational
+    error (oracle down, binary missing, tool crash) surfaces DISTINCTLY from a
+    report mismatch -- a nonzero status and a diagnostic, never plain report text
+    a reader might diff away.
+
+COST
+    A GOOD recorded in a throwaway build container is not yet canonical: it
+    proves new-vs-old agreement on identical inputs (a closed loop sufficient for
+    a refactor), not oracle status.
+MITIGATION
+    Container-recorded GOODs are PROMOTED on real infrastructure before being
+    trusted; a regeneration list accompanies any change that moves recordings.
+    Recordings are verified hash-seed independent and free of absolute paths and
+    tracebacks before promotion.
+
+INVARIANT
+    A recording is never fabricated. A test that requires a binary absent from
+    the recording host prints a loud SKIP, and the SKIP must never become the
+    GOOD (e.g. luau/TEST real-binary choices).
+
+-------------------------------------------------------------------------------
+X-4  REPORT vs. ERROR ARE TWO DISTINCT OUTCOMES
+-------------------------------------------------------------------------------
+PROBLEM
+    If an ill-formed rule file or malformed trace produced ordinary report text,
+    a real failure would look like a behavioural difference the author silently
+    diffs away.
+
+DECISION
+    A REPORT is the deterministic behavioural text compared by HWUT. An ERROR --
+    the engine cannot operate -- surfaces as a real failure (nonzero status plus
+    a diagnostic). Error classes: lex, parse, name, guard (read-only violation),
+    cascade (cyclic causality), state-machine, trace (e.g. not ending in END),
+    and internal (tool/infrastructure).
+
+INVARIANT
+    The two output channels never interleave: report lines are assembled only
+    after the run; the '##' debug stream is printed live and ignored in HWUT
+    comparison.
+
+-------------------------------------------------------------------------------
+X-5  WHY LUAU IS THE TARGET LANGUAGE          (was RATIONALE_FOR_LUAU.txt)
+-------------------------------------------------------------------------------
+A DSL transpiling to Luau, rather than hand-written imperative code, because:
+  - the DSL gives declarative syntax for events, modes, and state machines, and
+    the transpiler statically validates syntax, types, and constraints (e.g.
+    rejecting queries on unwatched events) before execution, killing a class of
+    runtime bugs;
+  - Luau sandboxes hard: the 'io' library, 'dofile', and 'loadfile' are removed,
+    'os'/'debug' are stripped, and globals are read-only, so a test cannot touch
+    the host or cross-contaminate other tests;
+  - Luau's metatable model implements the '_match' comparators and the Queryable
+    interface without a heavy class system; single-threaded execution mirrors a
+    synchronous simulation clock with no race conditions;
+  - Luau's gradual type system lets generated code carry type annotations that
+    catch structural mismatches at static-analysis time and dissolve at run time.
+COST
+    The engine is generated, not authored -- the source-mapping obligation of
+    X-2 exists precisely to repay this. Capability grants (network, filesystem)
+    are denied unless the test configuration explicitly permits them; the
+    generated bootstrap is the trust boundary, and rule-file Luau cannot widen
+    its own environment.
+
+-------------------------------------------------------------------------------
+X-6  TERMINOLOGICAL CONVENTIONS  (locked across all docs, grammar, and code)
+-------------------------------------------------------------------------------
+One noun per entity, identical in every README, every RATIONALE, grammar.py,
+grammar.txt, and the code. The load-bearing conventions:
+  - SYNTAX_DOC = parser/grammar.py (the dict IS the grammar, the dominating
+    source) with parser/grammar.txt as its prose companion; on any discrepancy
+    the grammar dict wins.
+  - Enum names carry the 'E_' prefix (E_ArgKind, E_SpanMode); the convention has
+    no exception. (Originating: parser D-9.)
+  - British spellings throughout; SPDX-License file headers; '##' is both the
+    rule-file comment marker and the live debug-stream prefix.
+  - The reactor self-bindings are 'e' (firing event), 'm' (enclosing mode/state
+    instance), 'sm' (enclosing state machine), 'mg' (enclosing mode group), and
+    'cw' (enclosing clockwork). 'sm'/'mg'/'cw' are two-letter aggregate
+    self-bindings; exactly one is in scope per enclosing kind.
+
+-------------------------------------------------------------------------------
+X-7  THE 'clockwork' CONSTRUCT IS NAMED FOR ITS CONSTRAINT, NOT ITS ROLE
+-------------------------------------------------------------------------------
+The tick-scripted stimulus actor was first introduced as 'agent:' (parser D-11)
+and renamed 'clockwork:', self-binding 'ag' -> 'cw' (parser D-12).
+RATIONALE
+    'agent' connotes autonomy -- sensing, deciding, reacting -- which the
+    construct does not have: it runs a fixed script on a fixed clock, identical
+    every run. The name advertised a freedom the design forbids, exactly wrong
+    for a golden-master engine whose value is determinism. 'clockwork' encodes
+    the constraint: a pre-wound mechanism, tick by tick, no choice.
+REJECTED
+    'monad:' (collides with the FP meaning, the opposite of an imperative
+    tick-script); 'machine:' (collides with 'state_machine:'; the construct is
+    deliberately not a state machine); keeping 'agent' (the autonomy it implies
+    is the defect).
+NOTE  The full rationale of the construct's shape, tick law, and resumption rule
+    lives in the parser RATIONALE (the construct is a grammar-level entity).
+
+-------------------------------------------------------------------------------
+X-8  DELIVERY IS IMPLICIT; THE ENGINE OWNS FORM, LUAU OWNS SUBSTANCE
+-------------------------------------------------------------------------------
+There is no subscription construct: an event reaches a reactor precisely when
+that reactor names it in an 'on:' cause, and the cause's guard is the only
+filter; the engine derives the publisher/subscriber wiring from the event types
+named across the live causes. There is exactly one object model -- the Luau
+table space of the running engine -- and the transpiler builds no parallel
+object model: it owns FORM (the static structure, the checks, the names), Luau
+owns SUBSTANCE (every runtime instance). No rule-file fragment may reach
+engine-internal objects except through dedicated read-only functions, and no
+fragment may emit events. This is why container membership and instance liveness
+are run-time facts the static layer never sees (see semantic RATIONALE for the
+spawn/in:/by: consequences).
+INVARIANT
+    Control-plane names (event types, mode names, the cascade-graph edges) are
+    STATICALLY LITERAL: a body may compute argument VALUES but never which type
+    it emits or which mode it arms. The cascade termination guarantee (parser /
+    semantic RATIONALE) rests on this.
+
+===============================================================================
+END
+===============================================================================

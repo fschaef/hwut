@@ -1,0 +1,25 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+todo-1  RUNTIME + HWUT CLOSURE  (a rule file RUNS as a test)
+===============================================================================
+SCOPE     runtime. Real luau binary required throughout. Unbuilt.
+
+TO IMPLEMENT:
+    - DISPATCH LOOP in bootstrap: event queue, rule firing, clock ticks,
+      END synthesis with run_time_sec/event_n, CHANGE semantics.
+    - DRIVER: run luau on the generated module, capture the report block, write
+      it as the test's stdout; HWUT compares against GOOD. Operational errors
+      (oracle down, luau crash) surface DISTINCTLY from a report mismatch
+      (house law: no self-grading).
+    - END-TO-END ACCEPTANCE: a directory of complete rule-file scenarios
+      (clockworks stimulating modes / state machines / containers), each a
+      choice; recordings promoted on real infrastructure. The moment HWUT 2.0
+      first validates a behavioural trace end to end.
+    - FAILURE-PATH ACCEPTANCE: guard runtime error -> mapped offset; malformed
+      fragment -> FragmentSyntaxError surfaced operationally.
+
+OPEN within this todo: the clockwork SCHEDULER POSITION is the determinism
+    point still to nail down (where a clockwork's tick falls in the dispatch
+    order). If that turns into a genuine fork, split it into its own disc.
+
+DEPENDS ON: the emitter. See emitter todo-1.

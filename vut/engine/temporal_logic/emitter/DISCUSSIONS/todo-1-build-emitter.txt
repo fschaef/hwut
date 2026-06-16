@@ -1,0 +1,32 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+todo-1  BUILD THE EMITTER  (ResolvedProgram -> one generated Luau module)
+===============================================================================
+SCOPE     emitter (transpiler top). The bottom layer EXISTS (bootstrap.lua
+          habitats, fragment oracle, code checker, brace finder, location
+          mapper); this writes the top. Unbuilt.
+
+TO IMPLEMENT:
+    - EMISSION FRAME. One module: provenance header, bootstrap require,
+      declaration-ordered variable/struct/container bootstrap ('by:' bindings
+      splice the lvalue spans), reactor registrations, rule tables, clockworks,
+      tracer.watch generated from the QUERIED event set (trace only what the
+      rules ask).
+    - GUARD FRAMES. Each guard a function whose scope BINDS e/sm/mg/m as locals
+      (the recorded emitter obligation, luau D-10; one spelling on both planes).
+      Bracket-condition trees -> plain Luau boolean expressions; opaque guards
+      splice verbatim.
+    - EFFECTS. Emission, spawn/unspawn through the habitat spawn API, arming,
+      report strings (collected, sorted, uniqueness-filtered into THE block,
+      never printed live), mutations spliced as statement blocks.
+    - CLOCKWORKS. Each compiles to a tick coroutine/step-table over its clock;
+      control frames -> plain Luau control flow; wait: parks on the cause per
+      the settled resumption rule.
+    - DEFERRED SPELLINGS LAND HERE: CHANGE raise API, variable/struct exposure
+      in generated code.
+    - LOCATION MAPPING. Every spliced fragment registers with the
+      Source2TargetLocationMapper (the source-map seed from ResolvedProgram).
+    - TESTS. Golden generated-modules for canonical rule files (byte-stable);
+      luau-analyze clean via the code checker; mapper round-trips.
+
+DEPENDS ON: the semantic layer (ResolvedProgram). See semantic todo-5.
