@@ -1,0 +1,4 @@
+--- two positions, same role, one sequence -> load error ---
+   rule 'rule': role 'dup' on 2 positions of one sequence
+--- same role across DIFFERENT sequences -> compiles clean ---
+compiled OK (role recurs across sequences, not within one)

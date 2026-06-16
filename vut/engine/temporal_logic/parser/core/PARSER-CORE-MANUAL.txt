@@ -1,0 +1,491 @@
+===============================================================================
+PARSER CORE -- USER MANUAL
+The grammar-agnostic LL(2) machinery of the reactive rule engine (HWUT 2.0)
+===============================================================================
+
+This is the how-to companion to README.txt. The README states the topology
+(what the files are); this manual states the tasks (how you use them). It is
+for someone writing or feeding a grammar to the core, reading the tree it
+produces, or extending the machinery. The core names no rule and no keyword of
+its own -- a grammar is data you hand it. The concrete rule-file grammar lives
+one level up and is documented in GRAMMAR-MANUAL.txt.
+
+Every code block below is a runnable excerpt. Imports are written from the
+package root 'vut.engine.temporal_logic.parser.core'.
+
+
+-------------------------------------------------------------------------------
+0.  THE SHAPE OF A SESSION
+-------------------------------------------------------------------------------
+The pipeline is four steps, each owned by one module:
+
+    author a grammar      (combinators + the T terminal factory)
+        |
+        v
+    register + compile     register_grammar(...) ; Grammar(...) -- each flattens
+        |                   subspaces internally, then Grammar lowers to the
+        |                   *_Spec tree and runs the load-time gates
+        v
+    lex                    Lexer (built from the terminal table)
+        |
+        v
+    parse                  EngineParser(...).parse() / ._match(rule)
+        |
+        v
+    a CST node tree        (cst_nodes) -- or transformed products
+
+You write a grammar dict, register it (so the lexer knows the terminals), build
+a Grammar from it (which compiles and validates in one step), then run an
+EngineParser over source text. The parser returns a tree of CST nodes, or -- if
+you supplied a transformer overlay -- whatever your transformers built.
+
+
+-------------------------------------------------------------------------------
+1.  AUTHORING A GRAMMAR
+-------------------------------------------------------------------------------
+A grammar is a plain dict: rule name -> pattern. A pattern is built from the
+authoring combinators. There are six surface forms; learn these and you can
+write any rule.
+
+    bare tuple        SEQUENCE          (a, b, c)
+    bare list         OPTIONAL          [a]            -- zero or one
+    OR between parts  ALTERNATION       (a, OR, b)
+    PLUS(x)           ONE OR MORE
+    STAR(x)           ZERO OR MORE
+    "<name>"          RULE REFERENCE    an angle-bracketed string
+
+A bare string WITHOUT angle brackets is a keyword terminal (sugar for a string
+terminal). 'OR' is a sentinel you import; it sits BETWEEN tuple elements to mean
+alternation: (a, OR, b, OR, c) is a three-way choice. A terminal object built
+with the T factory (section 2) is a leaf.
+
+  from vut.engine.temporal_logic.parser.core.combinators import OR, PLUS, STAR
+
+A complete tiny grammar -- a comma-separated list of identifiers:
+
+  from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T
+
+  t_id    = T.regex(r'[A-Za-z_]\w*')
+  t_comma = T.string(",")
+
+  GRAMMAR = {
+      "list": (t_id, STAR((t_comma, t_id))),
+  }
+
+Read it as: a list is one identifier, then zero or more of (comma, identifier).
+Nesting is free; the compiler lowers the whole thing to a uniform tree.
+
+WHAT EACH FORM PRODUCES (look ahead to section 5):
+    a SEQUENCE      -> a SEQ_Node
+    an ALTERNATION  -> an OR_Node (which branch fired)
+    an OPTIONAL     -> an OPT_Node (present / absent)
+    PLUS / STAR     -> a PLUS_Node / STAR_Node (the repetitions)
+    a terminal      -> a Token (or nothing, if the terminal is silent)
+    a reference     -> whatever the referenced rule produces
+
+
+-------------------------------------------------------------------------------
+2.  TERMINALS -- THE T FACTORY
+-------------------------------------------------------------------------------
+Every leaf terminal is built through the T factory. There are four kinds:
+
+  T.regex(pattern)     a character-class terminal, matched by regex.
+                         t_id = T.regex(r'[A-Za-z_]\w*')
+  T.string(spelling)   a fixed-spelling terminal.   t_comma = T.string(",")
+  T.captured(spelling) a fixed spelling that SURVIVES into the tree as a Token
+                         (an ordinary string terminal is silent once matched; a
+                         captured one is kept, e.g. an OR-discriminant you must
+                         see). t_lt = T.captured("<")
+  T.opaque(mode)       an OPAQUE SPAN leaf -- '{ ... }' text the control plane
+                         does not parse; 'mode' is an E_SpanMode (section 7).
+
+IDENTITY AND INTERNING. A Terminal_Spec is INTERNED on its _name() (its shape
+plus every distinguishing field): build "the same terminal" twice and you get
+the same object back. The engine compares terminals by object IDENTITY and the
+lexer stamps that same object onto Token.kind -- so you test a token's kind with
+'is', never by spelling:
+
+  if token.kind is t_comma: ...
+
+Because a Terminal_Spec is immutable and content-hashed, it doubles as a
+dictionary key (the roles vocabulary in section 6 uses this).
+
+SILENT vs CAPTURED, the one thing that bites. A plain T.string keyword is
+SILENT: matched and consumed but contributing NO value to its sequence's
+children. T.captured keeps the Token. Mixing them means a sequence's children
+are the DENSE list of surviving values -- so positions shift when you add or
+remove a captured discriminant. Section 5 (role-keyed access) is the cure.
+
+
+-------------------------------------------------------------------------------
+3.  COMPILING AND VALIDATING -- Grammar(...)
+-------------------------------------------------------------------------------
+Grammar compiles the dict into the spec tree, computes FIRST_2 sets, and runs
+the load-time gates -- all in the constructor. If the grammar is malformed it
+raises HERE, before you ever parse. It also FLATTENS subspaces internally
+(section 11), so you may hand it a nested grammar directly.
+
+  from vut.engine.temporal_logic.parser.core.ll2_engine import Grammar
+
+  g = Grammar(GRAMMAR, cst=True, start="list")
+
+CONSTRUCTOR ARGUMENTS:
+    grammar_dict   required: the rule-name -> pattern dict (nested or flat).
+    start          the start rule's name (the entry the driver matches).
+    cst=True       build the canonical CST and nothing else (section 5).
+    transformers   a PARTIAL dict, rule-name -> callable, layered over the CST
+                   (section 8). Implies cst. Mutually exclusive with 'actions'.
+    actions        the legacy hand-builder reduce dict (rarely used now).
+    roles          the role vocabulary to validate hints against (section 6).
+
+AFTER COMPILE, the Grammar exposes:
+    g.flat       the flattened rule map, keyed by QUALIFIED names (section 11).
+    g.scope_of   each rule's body-resolution scope.
+    g.rules      the compiled Rule_Spec per qualified name.
+
+THE LOAD-TIME GATES (each raises, each locates the offending rule):
+
+    FIRST_2 / LL(2)   Every alternation is scanned for a two-token collision --
+                      two branches a 2-token lookahead cannot tell apart. A
+                      clash raises LL2ConflictError. This is what "the grammar
+                      is LL(2)" means operationally: at most two tokens of
+                      lookahead resolve every choice.
+
+    ROLE UNIQUENESS   No SEQ may give two positions the SAME advisory role. A
+                      clash raises RoleUniquenessError. Always run.
+
+    ROLES (optional)  If you pass roles=..., every role hint is checked against
+                      the declared vocabulary; an undeclared pattern or unlisted
+                      role raises RoleVocabularyError. Skipped if no roles dict.
+
+    SUBSPACE          A TOP-dict missing its TOP key, or a duplicate qualified
+                      name, raises SubspaceError at flatten (section 11).
+
+Catching a malformed grammar therefore costs you nothing at parse time -- the
+gate already fired at construction.
+
+
+-------------------------------------------------------------------------------
+4.  LEXING AND PARSING -- register_grammar + EngineParser
+-------------------------------------------------------------------------------
+The lexer assembles ONE compiled regular expression from the terminal table, in
+declaration order, and tokenizes the control plane. Before lexing, register the
+grammar so the table exists; register_grammar flattens internally too, so a
+nested grammar is fine:
+
+  from vut.engine.temporal_logic.parser.core.lexer import register_grammar
+  register_grammar(GRAMMAR)
+
+Then run a parser. EngineParser needs the source, a span oracle (section 7), a
+DiagnosticReporter (section 9), and the compiled Grammar:
+
+  from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser
+  from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+
+  class NoOracle:                       # a grammar with no '{...}' spans
+      def measure(self, *a, **k): return None
+
+  rep  = DiagnosticReporter()
+  node = EngineParser("a, b, c", NoOracle(), rep, g)._match(g.rules["list"])
+
+  print(type(node).__name__)            # SEQ_Node
+  print(node.children[0].text)          # 'a'
+  print(len(node.children[1].items))    # 2   (the STAR's two (',', id) reps)
+
+TWO ENTRY POINTS:
+    ._match(rule)   parse ONE construct from a named rule -- the right tool for
+                    testing a single rule, as above. (It does not install the
+                    file-level resync handler, so it surfaces a raw error on a
+                    bad parse rather than recovering.)
+    .parse()        parse a whole FILE: zero-or-more top-level start-rule items
+                    until end-of-input, collected into a STAR_Node (CST mode).
+                    This is what a real driver calls.
+
+THE DRIVER IS STACKLESS. EngineParser interprets the spec tree over an explicit
+heap work-stack, so parse depth is bounded by memory, not Python's recursion
+limit -- deeply nested input cannot blow the stack.
+
+ERROR RECOVERY. On a parse failure .parse() resynchronises and continues, so
+one bad construct does not abort the file; diagnostics accumulate in the
+reporter and the returned tree may be partial.
+
+
+-------------------------------------------------------------------------------
+5.  READING THE CST
+-------------------------------------------------------------------------------
+By default the engine reduces every parse to a tree of five frozen node kinds,
+one per operator. This is a PRUNED CST: silent terminals leave no trace.
+
+  OR_Node    an alternation and the branch that fired.
+             .triggered_index  which branch (0-based)
+             .child            that branch's reduced value (ABSENT if none)
+             .role             the fired branch's advisory role, or None
+  OPT_Node   an optional and whether it fired.
+             .present          True iff it fired
+             .child            the body's value, ABSENT if absent
+             .or_else(default) -> child if present, else 'default'
+  SEQ_Node   a sequence.
+             .children         the surviving values, in order
+             .roles            advisory role per position, parallel to children
+             node[i] / node["role"]   -- see below
+  PLUS_Node  one or more.   .items   the repetitions (non-empty)
+  STAR_Node  zero or more.  .items   the repetitions (possibly empty)
+
+Each node also carries .name (its rule's QUALIFIED name, or None for an inline
+operator) and .begin (the source offset). ABSENT is a sentinel marking a
+position that produced no value -- distinct from None and from a missing slot.
+
+POSITIONAL vs ROLE-KEYED ACCESS ON A SEQ_Node. node.children[i] is positional,
+but positions DRIFT when captured terminals occupy slots (section 2). The cure:
+tag the positions you care about with a role in the grammar, then read by NAME.
+
+  t_kw_dict = T.captured("dict"); t_lt = T.captured("<"); t_gt = T.captured(">")
+  t_id = T.regex(r'[A-Za-z_]\w*'); t_comma = T.string(",")
+
+  GRAMMAR = {"pair": (t_kw_dict, t_lt, t_id("key"), t_comma, t_id("value"), t_gt)}
+
+  g = Grammar(GRAMMAR, cst=True, start="pair")
+  n = EngineParser("dict < K , V >", NoOracle(), rep, g)._match(g.rules["pair"])
+
+  n.roles            # (None, None, 'key', 'value', None) -- captured slots None
+  n["key"].text      # 'K'   -- by role, immune to the leading captured slots
+  n["value"].text    # 'V'
+
+A terminal CALL t_id("key") and a reference SUFFIX "<name(role)>" both attach a
+role. node[int] is positional (IndexError out of range). node["role"] is the
+roled child, or None if no position carries that role. An ABSENT optional is
+still a normal OPT_Node at its slot, NOT a None return -- read its absence off
+.present.
+
+
+-------------------------------------------------------------------------------
+6.  ROLE HINTS AND THE ROLES VOCABULARY
+-------------------------------------------------------------------------------
+A role is a plain string naming the kind a position is expected to denote. It is
+ADVISORY: recorded on the spec and riding into the built node (SEQ_Node.roles,
+OR_Node.role) but OUTSIDE terminal identity and the value stream -- lexing,
+interning, FIRST_2, and every reduced value are identical to the bare form.
+Roles buy you two things: drift-proof access (section 5) and a checkable
+vocabulary.
+
+To CHECK roles, declare the allowed set and pass it as roles=...: a dict mapping
+each role-bearing pattern (a terminal object, or a "<name>" reference string) to
+the tuple of roles it may carry.
+
+  Grammar(GRAMMAR, cst=True, start="pair",
+          roles={t_id: ("key", "value")})        # ok: both roles declared
+
+  Grammar(GRAMMAR, cst=True, start="pair",
+          roles={t_id: ("key",)})                # raises RoleVocabularyError
+
+The check is opt-in: with no roles dict, hints are recorded and usable but not
+validated.
+
+
+-------------------------------------------------------------------------------
+7.  OPAQUE SPANS AND THE SPAN ORACLE
+-------------------------------------------------------------------------------
+The core parses the CONTROL plane only. Embedded '{ ... }' text -- an expression,
+an lvalue, a statement block -- is an OPAQUE SPAN the core does not interpret. A
+span leaf is a T.opaque(mode) terminal, where 'mode' is an E_SpanMode:
+
+  from vut.engine.temporal_logic.parser.core.span_oracle import E_SpanMode
+  # EXPRESSION       -- an rvalue span '{ <expr> }'
+  # LVALUE           -- a 'by:'/'as:' access span
+  # STATEMENT_BLOCK  -- a mutation / init / deinit / BEGIN / END body
+
+When the lexer reaches a span opener it hands control to the SPAN ORACLE you
+supplied to EngineParser, passing the E_SpanMode the grammar position demanded;
+the oracle returns the matching-brace extent (a SpanResult: text, mode, begin),
+and the lexer splices it in as one token. The oracle carries ALL knowledge of
+the embedded language; the core knows only "a span of this mode sits here."
+
+If your grammar has no opaque spans, supply a stub oracle whose measure() is
+never called. A real oracle implements the SpanOracle boundary and is the only
+party that interprets the embedded text -- which is how the core hard-codes no
+embedded language.
+
+
+-------------------------------------------------------------------------------
+8.  TRANSFORMERS -- BUILDING YOUR OWN NODES
+-------------------------------------------------------------------------------
+The CST is canonical but generic. To get typed nodes of your own, supply a
+TRANSFORMER overlay: a partial dict, rule-name -> callable, keyed by the rule's
+QUALIFIED name. After a rule reduces to its CST node, the engine hands that node
+to the rule's transformer (if any) and forwards whatever it returns. Children
+reduce first (bottom-up), so a transformer always sees finished child values.
+
+  def make_pair(node):                 # node is the SEQ_Node for "pair"
+      return ("PAIR", node["key"].text, node["value"].text)
+
+  g = Grammar(GRAMMAR, transformers={"pair": make_pair}, start="pair")
+  v = EngineParser("dict < K , V >", NoOracle(), rep, g)._match(g.rules["pair"])
+  # v == ('PAIR', 'K', 'V')
+
+THE DICT IS PARTIAL. A rule with no transformer forwards its CST node untouched
+-- intentional, not an error. So you transform only the rules you care about.
+
+A transformer's OUTPUT IS OPAQUE to its parent (the opaque-product law). A rule
+may produce different kinds depending on which branch fired, so a parent never
+reads a child product through a shape accessor -- it takes the product as a
+typed value. Read the node through its OWN rule's CST shape inside the
+transformer; never assume what a child transformer produced beyond the fields
+you put there.
+
+ROUTERS FOR THE BRANCHING SHAPES (ast_map_family, a core module). When a rule's
+transformer is just "pick a factory by which branch/case fired," use a router
+instead of hand-written dispatch:
+
+  from vut.engine.temporal_logic.parser.core.ast_map_family import (
+          OrMap, OptMap, StarMap, PASS)
+
+  # OrMap routes on the fired branch -- key is an int (triggered_index), a str
+  # (the branch's role), or a tuple of either (a grouped fan-out). A leaf is a
+  # factory, a constant, or PASS (forward the routed value unchanged).
+  "type": OrMap({(0, 1): PASS, 2: DictType.from_seq})
+
+  # OptMap routes on present/absent; StarMap on empty/non-empty.
+  OptMap({True: from_span, False: None})
+
+A router is callable, so the engine seam is unchanged -- it is applied exactly
+like a plain factory. SEQ and PLUS rules take a single factory (nothing to route
+on); a terminal needs none. A load-time shape gate (in the outer layer, since it
+reads the map) pins each router to its rule's shape: an OrMap only on an OR rule,
+an OptMap on OPT, a StarMap on STAR.
+
+
+-------------------------------------------------------------------------------
+9.  DIAGNOSTICS
+-------------------------------------------------------------------------------
+A DiagnosticReporter is the single error sink threaded through the lexer and the
+engine. You create one, pass it in, and inspect it after.
+
+  from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+
+  rep = DiagnosticReporter()
+  node = EngineParser(src, oracle, rep, g)._match(g.rules["..."])
+
+  if rep.errors:                        # every Diagnostic of the run
+      for d in rep.errors:
+          print(d.phase, d.source_offset, d.message)
+
+Each Diagnostic carries its Phase (LEXER / PARSER) and a source offset. A clean
+run leaves rep.errors empty. rep.has_fatal() / rep.abort_if_fatal() detect and
+raise on a fatal diagnostic. Because .parse() recovers, a non-fatal run can
+still produce a usable (if partial) tree alongside its diagnostics.
+
+
+-------------------------------------------------------------------------------
+10. OPERATOR INTERFACES -- ASKING "WHAT SHAPE IS THIS NODE"
+-------------------------------------------------------------------------------
+Each CST node kind also IS an operator interface: OR_Node is an OR_Interface,
+SEQ_Node a SEQ_Interface, and so on. A consumer that wants to branch on shape --
+a diagnostic, a semantic walk -- asks by interface:
+
+  from vut.engine.temporal_logic.parser.core.operator_interface import SEQ_Interface
+  if isinstance(node, SEQ_Interface): ...
+
+The interface is a SHAPE-IDENTITY SIGNAL, not an accessor contract: it asserts
+"this came from a SEQ rule," nothing more. It lives on the generic CST node,
+BEFORE transformation -- the contract between a rule's CST node and that same
+rule's transformer, one level, internal. A transformed product is opaque and
+carries no operator-interface promise upward (the opaque-product law): the kind
+a rule produces is branch-determined at runtime, so no upward interface can
+exist. Do not expect a typed product to answer triggered_index just because the
+CST node it replaced did.
+
+
+-------------------------------------------------------------------------------
+11. GRAMMAR SUBSPACES -- A PATH NAMESPACE FOR RULES
+-------------------------------------------------------------------------------
+A flat grammar dict has no structure: a cluster of rules forming one subsystem
+is visually scattered, and every name must be unique across the whole grammar,
+so rules carry disambiguating prefixes. A SUBSPACE groups a subsystem into a
+namespace. Write a rule's value as a dict instead of a pattern: its TOP key
+holds the rule's own pattern, its other keys are MEMBER rules -- and because the
+subspace supplies the category, members use SHORT names.
+
+  from vut.engine.temporal_logic.parser.core.combinators import TOP
+
+  GRAMMAR = {
+      "cond": {
+          TOP:      ("<or>",),               # cond's own pattern
+          "or":     ("<and>", STAR(("<op-or>", "<and>"))),
+          "and":    ("<atom>", STAR(("<op-and>", "<atom>"))),
+          "atom":   (t_id,),
+          "op-or":  (t_pipe,),
+          "op-and": (t_amp,),
+      },
+  }
+
+Every rule now has a QUALIFIED name -- its path joined by '/': 'cond/or',
+'cond/atom'. TOP is a sentinel, conventionally first. Subspaces NEST arbitrarily,
+so a path may be deep ('a/b/leaf').
+
+RESOLUTION IS SCOPE-AWARE. Inside the subspace a BARE reference '<and>' resolves
+to 'cond/and' -- the resolver tries the writing rule's subspace first, then walks
+UP the enclosing subspaces, then the root. A PATH-QUALIFIED reference
+'<cond/atom>' resolves from ANYWHERE. So short names are local sugar; the full
+path is the global handle. Two subspaces may each own an 'atom'.
+
+PRIVACY IS A RESOLUTION PROPERTY, NOT A WALL. A bare '<atom>' written at the root
+does not see 'cond/atom' (it is not in scope) -- it either finds an unrelated
+'atom' up its own scope or fails as an undefined non-terminal. You cannot
+ACCIDENTALLY reach a private member; reaching one DELIBERATELY requires spelling
+its path. There is no separate gate -- the boundary is the resolver.
+
+The engine FLATTENS subspaces for you: pass the nested grammar straight to
+Grammar() (and to register_grammar()), and it lowers to the qualified-named map,
+computes each rule's resolution scope, and compiles. You never pre-flatten.
+
+  g = Grammar(GRAMMAR, cst=True, start="cond")   # nested GRAMMAR is fine
+
+flatten() is exposed from core.subspace if you need the qualified map directly
+(e.g. to iterate the rule universe), and Grammar.flat holds it after compile.
+
+TWO CONSTRAINTS. Qualified names are globally unique by construction (the path
+disambiguates); only a literal duplicate qualified name is a load error. And a
+TOP-dict without a TOP key is a structural error. Both surface from flatten() as
+a SubspaceError.
+
+A SUBTLETY WORTH KNOWING: a subspace's TOP rule's NAME lives at the parent path,
+but its BODY references the subspace's members -- so the TOP rule resolves its
+body at the MEMBER path. The engine handles this; you only see that '<or>'
+inside 'cond' correctly finds 'cond/or' even though 'cond' itself sits at root.
+
+
+-------------------------------------------------------------------------------
+12. CHECKLIST -- ADDING A RULE OR A TERMINAL
+-------------------------------------------------------------------------------
+Adding a terminal:
+    * Build it with the right T factory. Silent (T.string) unless the tree must
+      SEE it (then T.captured).
+    * Reuse the same Python object everywhere -- interning means equal _name()s
+      are the same object, but bind it to a name and share it.
+
+Adding or editing a rule:
+    * Write the pattern from the six surface forms (section 1).
+    * If a position is read by a factory, give it a ROLE and read it by name --
+      do not count captured slots.
+    * Construct the Grammar. LL2ConflictError -> two branches share a 2-token
+      prefix: left-factor, or push the discriminator earlier. RoleUniquenessError
+      -> two positions in one sequence share a role: rename one.
+    * Add a transformer entry (by qualified name) only if you want a typed
+      product; otherwise the CST node forwards untouched. For pure branch/case
+      dispatch use an OrMap/OptMap/StarMap; for content dispatch (reading a built
+      child's value) write a plain function.
+    * The product a transformer returns is opaque to parents -- expose what the
+      parent needs as plain fields.
+    * If the rule heads a subsystem, make it a SUBSPACE (section 11): TOP for its
+      pattern, members beneath with short names.
+
+Reading the tree:
+    * Match shapes by interface (section 10), not ad-hoc attribute probing.
+    * On a SEQ_Node prefer node["role"] over node.children[i].
+    * Distinguish "absent optional" (OPT_Node.present is False) from "missing
+      role" (node["x"] is None) from "no value" (ABSENT) -- three different
+      things.
+
+===============================================================================
+END -- PARSER CORE USER MANUAL
+===============================================================================

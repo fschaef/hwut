@@ -1,0 +1,8 @@
+
+--- OrMap index out of range + branch left unrouted ---
+  rule 'code-block': OrMap index 9 out of range (0..1)
+  rule 'code-block': OrMap leaves branches unrouted: 1
+
+--- OrMap role that tags no branch + branch left unrouted ---
+  rule 'type': OrMap leaves branches unrouted: 3
+  rule 'type': OrMap role 'nosuch' tags no branch

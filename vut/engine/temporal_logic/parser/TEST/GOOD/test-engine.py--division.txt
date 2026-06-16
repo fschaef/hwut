@@ -1,0 +1,20 @@
+
+--- division in the multiplicative ladder ---
+  (e.a / e.b) == sm.q
+
+--- mixed * and / left-fold ---
+  ((e.a * e.b) / e.c) > 0
+
+--- a math function call as an operand ---
+  (sqrt(1) + min(2)) > sm.limit
+
+--- 'undef:' in a bridge arm coexists with the bridge's 'else:' ---
+  (? e.ok then: Expr else: 9) > sm.t
+
+--- the expression-level 'undef:' fallback wraps the expression in Expr ---
+  rhs node: Expr
+  body: (e.a / e.b)
+  fallback: 0
+
+--- a fallback-free expression stays bare (no Expr wrapper) ---
+  rhs node: BinOp

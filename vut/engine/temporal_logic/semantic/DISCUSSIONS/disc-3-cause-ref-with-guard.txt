@@ -1,0 +1,26 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-3  CAUSE REFERENCE CARRYING AN EXTRA GUARD  ('<ref>(args) & <guard>')
+===============================================================================
+SCOPE     semantic (pass-2). Grammar admits it; meaning undecided.
+
+THE SHAPE:
+    '<name-dotted>(args) & <guard>' PARSES -- one merged grammar shape decides
+    reference-vs-trigger by the parens. So a cause REFERENCE may syntactically
+    carry an extra '& <guard>'.
+
+OPEN -- what it means:
+    No semantics assigned. Until decided, pass 2 reports a cause reference
+    carrying '&' as FATAL [STRUCTURE] (admitted by the grammar, refused by the
+    checker).
+
+CANDIDATE MEANING:
+    Conjunction with the referenced definition's own guard (the extra guard
+    AND-ed onto the definition's condition). Not adopted -- needs a decision on
+    whether a reference may tighten a definition's guard, and how the combined
+    guard reads against the definition's event binding.
+
+ENTRY CONDITION:
+    Decide when a use actually wants to constrain a referenced cause at the
+    reference site. Either assign the conjunction meaning or keep the FATAL
+    refusal as the permanent answer.

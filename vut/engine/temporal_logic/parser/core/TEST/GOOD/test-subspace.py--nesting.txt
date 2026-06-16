@@ -1,0 +1,10 @@
+
+--- a subspace inside a subspace flattens recursively ---
+flat keys: ['cond', 'cond/term', 'cond/term/atom', 'cond/term/op', 'top']
+
+--- a deep member's qualified name is the full path ---
+  cond             body-scope cond
+  cond/term        body-scope cond/term
+  cond/term/atom   body-scope cond/term
+  cond/term/op     body-scope cond/term
+  top              body-scope <root>

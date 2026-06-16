@@ -1,0 +1,268 @@
+===============================================================================
+RULE-FILE GRAMMAR -- USER MANUAL
+The reactive rule language of the VUT engine (HWUT 2.0)
+===============================================================================
+
+This is the orientation guide for WRITING rule files. It builds the mental
+model, then walks the constructs in the order you meet them. It is deliberately
+not exhaustive: grammar.txt is the authoritative syntax reference (the EBNF and
+every edge rule), and this manual points into it ("see SYNTAX: <x>") rather than
+restating it. The parser that reads these files is documented in the core's
+MANUAL.txt; the rule file is the CONTROL plane the parser parses.
+
+-------------------------------------------------------------------------------
+0.  THE MENTAL MODEL: STIMULUS -> REACTION
+-------------------------------------------------------------------------------
+A rule file describes a REACTIVE system. The world emits EVENTS; the system
+REACTS. Everything else is structure around that core:
+
+    a CAUSE detects a stimulus            (an event fired, a condition held)
+    an EFFECT is what happens in response (emit an event, change state)
+    a RULE wires a cause to its effects   ('on: X & [guard] => Y()')
+
+Two planes coexist in one file. The CONTROL plane -- triggers, wiring, control
+flow -- is what this grammar defines. The DATA plane -- the actual arithmetic
+and state mutations -- lives inside '{ ... }' opaque spans the control parser
+does not read (it hands them to the embedded-language oracle). You write control
+syntax; you drop into '{ }' for computation.
+
+TWO WORLDS, TWO BRACKETS (remember this and the rest follows):
+    [ ... ]   a CONDITION (boolean world)
+    ( ... )   ALGEBRA (numeric world)
+The bracket you write names the world, so nothing is ambiguous. Crossing is
+explicit: a comparison ('a > b') is the only number->boolean crossing; the
+'?'-bridge ('? [c] then: x else: y') is the only boolean->number crossing.
+
+
+-------------------------------------------------------------------------------
+1.  YOUR FIRST RULE
+-------------------------------------------------------------------------------
+The smallest useful thing is a causality rule -- "when this, do that":
+
+    on: NETWORK_PINGED & [ e.n > 1024 ] => Connect(port = e.n)
+
+Read it left to right:
+    on: NETWORK_PINGED    the CAUSE: the event 'NETWORK_PINGED' fired. 'e' binds.
+    & [ e.n > 1024 ]      a mandatory GUARD: a boolean condition narrowing the
+                          cause. 'e.n' reads a member of the firing event.
+    => Connect(...)       the EFFECT: emit the 'Connect' event with an argument.
+
+The '&' guard is mandatory on a causality rule -- a bare event trigger still
+writes '& [ true ]' implicitly when you mean "no extra condition" (see SYNTAX:
+<causality>). The argument list on an emitted event is mandatory, even if empty:
+'Tick()'.
+
+KEY DISCIPLINE: the cause/effect arrow '=>' may carry several effects, and a
+cause may be a composite of event triggers and guards. The exact shape of
+triggers (ANY/BEGIN/END/CHANGE system triggers, narrowing, the until-tail) is
+SYNTAX: <causality>.
+
+
+-------------------------------------------------------------------------------
+2.  EVENTS AND CLOCKS -- THE THINGS THAT FIRE
+-------------------------------------------------------------------------------
+A cause reacts to an EVENT. Events are declared with their member shape; a
+field is 'name: type' and fields are separated by any whitespace (the ';' below
+is conventional). The types are Luau's -- 'number', 'string', 'boolean' -- plus
+the name of any declared event type:
+
+    event: NETWORK_PINGED(
+        n: number;
+        incoming_ip: string;
+    )
+    event: Tick()
+
+A CLOCK is a periodic event source, named with its tick interval:
+
+    clock: heartbeat 50
+
+Every event carries intrinsic 'time' and 'dt' members of type number; you do not
+declare them. Events have NO lifecycle ('init'/'deinit') -- they are momentary
+(SYNTAX: EVENTS HAVE NO 'init' / 'deinit'). Some events are IMPLICIT (the system
+triggers ANY/BEGIN/END/CHANGE, and the per-entity lifecycle events); see SYNTAX:
+IMPLICIT EVENTS. An event member is read through the 'e' binding inside any
+effect that fires from that cause: 'e.n', 'e.incoming_ip'.
+
+
+-------------------------------------------------------------------------------
+3.  EXPRESSIONS -- THE NUMERIC AND BOOLEAN SUBLANGUAGE
+-------------------------------------------------------------------------------
+Guards and arguments are expressions. The two ladders:
+
+    BOOLEAN (inside [ ]):  or > xor > and > not > atom
+        e.armed and not [ sm.locked ]          ('not' takes a [ ] sub-condition)
+        e.flag xor sm.q
+        the negated operators are whole words: nand, nor, nxor.
+
+    NUMERIC (inside ( ) or bare in a numeric position):
+        shift > add > mul > unary-minus > atom
+        e.base + 1 shl: 2                       (shifts are 'shl:'/'shr:', not <<)
+        e.a * e.b / e.c                         ('/' sits beside '*')
+
+A COMPARISON crosses number->boolean: 'e.count * 2 >= sm.threshold'. A bare
+boolean reference is a comparison without a tail: '[ GHOSTS_AT_HOME ]' means
+'== true'.
+
+DIVISION AND THE 'undef:' FALLBACK. '/' can be undefined (divide by zero), so an
+expression that can raise a math exception carries ONE trailing 'undef:'
+fallback -- the value used when the operation is undefined:
+
+    e.total / e.count undef: 0
+
+'undef:' is its OWN keyword, distinct from the conditional 'else:' (the bridge's
+false branch). One fallback per whole expression; a sub-expression that needs
+its own uses parentheses: '( a / b undef: 0 ) * c'. The parser accepts 'undef:'
+on any expression; the SEMANTIC layer makes it mandatory exactly when a math
+exception can arise and rejects it as dead otherwise.
+
+MATH AND METHOD CALLS. A free-function call is 'name(args)' -- 'sqrt(e.x)',
+'min(a, b)', 'abs(e.delta)'. A method call is '.name(args)' on a receiver --
+'d.keys()', 'L.len()'. Which names are valid is a semantic-layer catalogue; the
+grammar admits any 'name(args)' and any '.name(args)'. See SYNTAX: OPERANDS AND
+CALLS.
+
+THE BRIDGE crosses boolean->number: '? [ e.ok ] then: e.hi else: e.lo'. Its arms
+are full expressions, so an arm may carry its own 'undef:' while the bridge keeps
+its 'else:': '? [ok] then: a / b undef: 0 else: 9'.
+
+
+-------------------------------------------------------------------------------
+4.  DECLARATIONS -- NAMING THINGS
+-------------------------------------------------------------------------------
+A declaration names an entity and gives its kind. A VARIABLE names its type
+directly with an initial value; a typed container or struct uses 'is:' with the
+kind:
+
+    TIMEOUT is: int(5)
+    rate    is: float(1.5)
+    roster  is: list<Player>
+    config  is: dict<string, number>
+
+The 'is:' keyword separates the name from its kind. The built-in variable types
+are 'int', 'float', 'string', 'bool'; a parameterised 'dict<...>'/'list<...>'
+holds a declared element type; 'struct' groups members. A variable takes no
+round-bracket signature before 'is:'. The full kind grammar, including the 'by:'
+lvalue binding, is SYNTAX: <declaration>.
+
+The stateful AGGREGATES -- state machines and mode groups -- are NOT declared
+with 'is:'; they use their own keyword-prefixed definition form (section 5).
+
+
+-------------------------------------------------------------------------------
+5.  AGGREGATES -- STATE MACHINES AND MODE GROUPS
+-------------------------------------------------------------------------------
+Two stateful aggregates structure reactive behaviour. Each is defined with its
+own keyword-prefixed form (NOT 'is:'), a signature, members, and a ':end'
+terminator.
+
+A STATE MACHINE holds member STATES, exactly one active at a time. A 'default:'
+names the start state; each 'state:' member carries its body and a mandatory
+'until:' transition cause:
+
+    state_machine: Traffic(rate: string)
+        default: Traffic.Red
+        state: Red
+            on: Tick & [ true ] => Green()
+            until: Tick
+        state: Green
+            on: Tick & [ true ] => Red()
+            until: Tick
+    :end
+
+A MODE GROUP holds member MODES that can be independently armed; each 'mode:'
+member likewise carries a body and a mandatory 'until:':
+
+    mode_group: Alerts
+        mode: Sound
+            on: Tick & [ true ] => Beep()
+            until: Tick
+    :end
+
+Inside an aggregate's body, the self-bindings 'sm.' (state machine), 'mg.' (mode
+group), and 'mode.' read the aggregate's own members -- valid ONLY inside the
+definition body. A state/mode defined elsewhere is pulled in with 'has:'. The
+signature, lifecycle ('init'/'deinit'), the 'until:' transitions, and arming are
+SYNTAX: <state-machine>, <mode-group>, <state>, <mode>.
+
+
+-------------------------------------------------------------------------------
+6.  CLOCKWORK -- SCRIPTED, TICK-PACED BEHAVIOUR
+-------------------------------------------------------------------------------
+A causality rule is instantaneous: stimulus in, reaction out. A CLOCKWORK is a
+SCRIPT -- a sequenced actor that runs step by step, paced by a clock:
+
+    clockwork: pulse on: heartbeat
+        instant: Blink()
+        wait: NetworkUp => Log()
+        if: [ sm.ready ]
+            instant: Go()
+        else:
+            instant: Hold()
+        :end
+    :end
+
+The steps form a body that executes in order. Key facts:
+    THE TICK LAW: only PACED EVENT EMISSION ('instant:') consumes a tick; every
+        other step is instantaneous within the same tick (SYNTAX: TICK LAW).
+    WAITING: 'wait:' suspends the script until its cause fires; 'select:' waits
+        on the first of several.
+    CONTROL: 'if:'/'elif:'/'else:' and 'while:' frame step sequences.
+    MUTATIONS are clockwork-fenced: state changes ('gets:', 'incr:', 'decr:',
+        the guarded reciprocal 'recip:', opaque '{ }' statements) appear only as
+        clockwork steps, never in a bare causality effect.
+    COMMANDS: 'spawn:', 'unspawn:', 'arm:'.
+The full step vocabulary is SYNTAX: <clockwork>.
+
+
+-------------------------------------------------------------------------------
+7.  SPAWNING -- INSTANTIATING AGGREGATES
+-------------------------------------------------------------------------------
+A 'state_machine' or 'mode_group' declaration declares a TYPE. To get a running
+instance you SPAWN it from a clockwork:
+
+    spawn: enemy (level = 3) into: roster [ e.id ]
+
+The argument list is mandatory (it instantiates the instance). The optional
+'into:' clause names the container that catches the instance, with an optional
+key. Single-instance aggregates spawn once with no container. See SYNTAX:
+<spawn>.
+
+
+-------------------------------------------------------------------------------
+8.  SCOPING -- NAMESPACES AND IMPORTS
+-------------------------------------------------------------------------------
+A NAMESPACE brackets a group of declarations into a named scope:
+
+    open: Sprites
+        event: GHOST_EATEN()
+        ...
+    :close
+
+Names cross namespace boundaries by qualification: 'on: Sprites.GHOST_EATEN'.
+There are several independent namespaces (no single global flat space), nesting
+is unrestricted, and an IMPORT pulls another file's namespace in. The visibility
+rules (what an import exposes, how a leading segment resolves) are a SEMANTIC-
+layer concern; the grammar just admits the qualified names. See SYNTAX:
+<namespace>, <import>.
+
+
+-------------------------------------------------------------------------------
+9.  HOW TO READ grammar.txt
+-------------------------------------------------------------------------------
+grammar.txt is organised as: an ARCHITECTURE preamble (the two planes, the
+bindings 'e'/'sm'/'mg'/'mode'), then one section per construct, each with its
+EBNF and the prose rules the EBNF cannot show (mandatory-ness, semantic-layer
+deferrals, examples). When this manual says "SYNTAX: <x>", find the section
+headed '<x>'. The EBNF uses the same six surface forms the core manual lists,
+written in conventional notation ('|' alternation, '[ ]' optional, '( )*'
+repetition); the angle-bracket names are rule references.
+
+WHAT IS DEFERRED TO THE SEMANTIC LAYER (the grammar admits it; pass-2 checks it):
+name resolution and visibility, operator/operand typing, the method and free-
+function catalogues, the 'undef:'-mandatory-when-division rule, 'sm.'/'mg.'/
+'mode.' scope (valid only inside their aggregate body), and the forward-
+reference rules. The grammar's job is shape; meaning is the next component.
+
+===============================================================================
+END -- RULE-FILE GRAMMAR USER MANUAL
+===============================================================================

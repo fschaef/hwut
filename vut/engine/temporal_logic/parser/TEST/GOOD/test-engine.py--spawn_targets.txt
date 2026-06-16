@@ -1,0 +1,27 @@
+
+--- default target (per-kind default container) ---
+  DoSweep steps:
+    Spawn into=default key=(append/none)
+
+--- into a list (append, no key) ---
+  DoSweep steps:
+    Spawn into=queue key=(append/none)
+
+--- into a dict at a key ---
+  DoSweep steps:
+    Spawn into=roster key=e.id
+
+--- into a dotted dict at a dotted key ---
+  DoSweep steps:
+    Spawn into=NS.roster key=e.lead.id
+
+--- container writes + luau side by side ---
+  DoSweep steps:
+    Assign
+    Mutation
+    Instant
+
+--- spawn as a BARE effect is rejected (clockwork-only) ---
+  ERROR off=9 no alternative matches 2-token lookahead (string:spawn:, regex:[a-zA-Z_]\w*)
+  ERROR off=18 expected string:is:, found string:(
+  ERROR off=19 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=)

@@ -1,0 +1,20 @@
+
+--- a bare name resolves SCOPE-LOCAL (own subspace first) ---
+'term' from ('cond',)   -> cond/term
+'factor' from ('cond',) -> cond/factor
+
+--- a bare name walks UP to the root for a public rule ---
+'top' from ('cond',)    -> top
+
+--- a bare name does NOT reach a private member from the root (privacy) ---
+'factor' from <root>    -> None
+
+--- a path-qualified name resolves from anywhere ---
+'cond/factor' from <root> -> cond/factor
+
+--- an unresolved name yields None ---
+'nope' from ('cond',)   -> None
+
+--- nested: a deep member reaches a sibling by bare name ---
+'atom' from ('cond','term') -> cond/term/atom
+'cond/term/atom' from <root> -> cond/term/atom

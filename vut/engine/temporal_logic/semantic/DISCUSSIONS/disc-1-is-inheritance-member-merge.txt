@@ -1,0 +1,31 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-1  'is:' INHERITANCE -- MEMBER MERGE / OVERRIDE / LINEARISATION
+===============================================================================
+SCOPE     semantic (pass-2) -- the runtime object model decides this.
+
+DECIDED (not under discussion, see RATIONALE):
+    Parser collects base names in source order. Pass 2 resolves each base by the
+    ordinary (B) rule and checks reactor CATEGORY (a state_machine base must
+    resolve to a state_machine, a mode_group to a mode_group; cross-category is
+    fatal). Resolutions land in the ordinary resolution record.
+
+OPEN -- what a derived aggregate IS:
+    - MEMBER MERGE. How a derived aggregate's own members combine with each
+      base's members. Union? Disjointness required?
+    - OVERRIDE. May a derived member redefine a same-named base member, or is a
+      name collision fatal? If override is allowed, what may change (type?
+      initialiser? reactor body?).
+    - LINEARISATION. With multiple bases ('is: A is: B'), the order in which
+      bases contribute when names collide across bases -- and whether a
+      diamond (A and B share a base) is admitted at all.
+
+WHY IT CANNOT BE SETTLED YET:
+    The emitter cannot consume a derived machine until the runtime object model
+    defines what derivation means at run time. Designing the merge on spec,
+    ahead of that model, would fix a contract the runtime might not want. The
+    design area is as large as a full session on its own.
+
+ENTRY CONDITION:
+    Settle once the runtime object model exists. Start from the resolved base
+    symbols already in the resolution record, not from names.

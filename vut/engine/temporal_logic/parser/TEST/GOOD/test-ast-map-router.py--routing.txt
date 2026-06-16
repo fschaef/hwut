@@ -1,0 +1,14 @@
+
+--- code-block: branch 0 -> OpaqueCode, branch 1 -> DoSweep (PASS) ---
+{ x = 1 }              -> OpaqueCode
+do: instant: X ( ) :end -> DoSweep
+
+--- type: built-in & named-id -> text; nested dict -> DictType (PASS) ---
+int               -> 'int'
+MyStruct          -> 'MyStruct'
+dict < int , int> -> DictType
+
+--- algebr/atom: literal group -> Literal; opaque -> OpaqueCode ---
+42      -> Literal
+"hi"    -> Literal
+true    -> Literal

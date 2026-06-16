@@ -1,0 +1,28 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-2  'as: {lvalue}' -- BINDING A DECLARED NAME TO AN OPAQUE LVALUE
+===============================================================================
+SCOPE     semantic (pass-2) + a possible grammar admission.
+
+STATE     Parked: deferred, NOT refused. A real fork left undecided.
+
+THE QUESTION:
+    Whether a declaration may bind its rule-space name to an opaque-world
+    lvalue via 'as: {lvalue}' -- i.e. the name on the rule side names a value
+    that lives, and is written, inside an opaque '{ ... }' span.
+
+WHAT IS OPEN:
+    - Admit it at all? It crosses the rule/opaque boundary in the WRITE
+      direction, which the current model keeps narrow.
+    - If admitted: what may be bound (variables only? aggregate members?), and
+      how pass-2 type-checks a target it cannot see inside the opaque span.
+    - Interaction with 'by:' (which binds a declaration to an existing opaque
+      reference for READ/lookup). 'as:' and 'by:' must not overlap in meaning.
+
+WHY DEFERRED:
+    No driving use yet. Admitting a boundary-crossing write before a concrete
+    need risks a contract that later constructs must honour for no benefit.
+
+ENTRY CONDITION:
+    Reopen when a construct actually needs a rule-named handle to an
+    opaque-written value. Decide 'as:' vs 'by:' boundaries together.
