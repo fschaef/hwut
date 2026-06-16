@@ -34,6 +34,7 @@ ______________________________________________________________________________
 import os
 import sys
 import json
+import subprocess
 
 from config import HwutRunner
 
@@ -50,7 +51,7 @@ from aux_walker import ListLexer
 from fake_luau_oracle import FakeLuauOracle
 
 
-_PROFILE_NAMES = ("deep", "wide", "luau", "balanced", "states", "spread", "members", "clockwork")
+_PROFILE_NAMES = ("deep", "wide", "luau", "balanced", "states", "spread", "members", "clockwork", "math")
 
 _DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "monkey_data")
 
@@ -60,18 +61,40 @@ def _fixture_path(profile_name):
     return os.path.join(_DATA_DIR, profile_name + ".json")
 
 
+def _ensure_fixtures():
+    """RETURN: None. Generates monkey_data/ if any profile fixture is missing.
+
+    Raises RuntimeError if the creator runs but a fixture is still absent.
+
+    Checks every profile's '.json' fixture; if one is missing (a fresh checkout,
+    or a new/renamed profile after a grammar change) it runs
+    monkey-file-creator.py once -- in this directory, with this interpreter -- so
+    a profile choice self-heals instead of failing with a load error.
+    """
+    if all(os.path.exists(_fixture_path(name)) for name in _PROFILE_NAMES):
+        return
+    here    = os.path.dirname(os.path.abspath(__file__))
+    creator = os.path.join(here, "monkey-file-creator.py")
+    # Silence the creator's progress output: it must not pollute a profile's
+    # deterministic test output (the GOOD records only the parse result).
+    subprocess.run([sys.executable, creator], cwd=here, check=True,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    missing = [name for name in _PROFILE_NAMES
+               if not os.path.exists(_fixture_path(name))]
+    if missing:
+        raise RuntimeError(
+            "monkey-file-creator.py ran but did not produce: %s"
+            % ", ".join(missing))
+
+
 def _load_fixture(profile_name):
     """RETURN: (tokens, luau_texts), the stored token stream for a profile.
 
-    Raises FileNotFoundError naming monkey-file-creator.py if the fixture is
-    absent, so a fresh checkout or a new profile fails with a clear action
-    rather than a confusing parse error.
+    Calls _ensure_fixtures() first, so a missing monkey_data/ is regenerated on
+    demand rather than failing with a confusing parse error.
     """
+    _ensure_fixtures()
     path = _fixture_path(profile_name)
-    if not os.path.exists(path):
-        raise FileNotFoundError(
-            "no fixture %s; run 'python3 monkey-file-creator.py' to generate "
-            "monkey_data/ after a grammar change" % path)
     with open(path) as fh:
         payload = json.load(fh)
     tokens = [Token(terminal_by_name(name), text, 0, 0)
@@ -79,8 +102,51 @@ def _load_fixture(profile_name):
     return tokens, payload["luau"]
 
 
+# Profiles whose full AST dump is oversized; print a node-type census + success
+# verdict instead (the same shape run_sprites prints), not the whole tree.
+_CENSUS_PROFILES = frozenset(("deep", "spread", "clockwork"))
+
+
+def _ast_census(items):
+    """RETURN: Counter, node-type -> count over the whole AST forest.
+
+    Walks lists and dataclass nodes recursively; every dataclass instance is one
+    tally under its class name. The shared basis for the diffable, size-stable
+    census printed for the large profiles and for sprites.
+    """
+    from dataclasses import is_dataclass, fields
+    from collections import Counter
+    census = Counter()
+
+    def walk(n):
+        if isinstance(n, list):
+            for x in n:
+                walk(x)
+        elif is_dataclass(n):
+            census[type(n).__name__] += 1
+            for fld in fields(n):
+                walk(getattr(n, fld.name))
+
+    walk(items)
+    return census
+
+
+def _print_census(census):
+    """RETURN: None. Prints 'total AST nodes' then per-type counts, name-sorted
+    for a stable, diffable record."""
+    print("total AST nodes: %d" % sum(census.values()))
+    print()
+    for name in sorted(census):
+        print("  %-22s %5d" % (name, census[name]))
+
+
 def _make_choice(profile_name):
-    """RETURN: function, the HWUT run-function that parses one stored profile."""
+    """RETURN: function, the HWUT run-function that parses one stored profile.
+
+    Large profiles (_CENSUS_PROFILES) print a node-type census and a success
+    verdict instead of the full AST -- the dump would be megabytes -- so the
+    GOOD stays small and diffable. The rest print the full AST.
+    """
     def run():
         g = compiled_grammar()
         tokens, luau_texts = _load_fixture(profile_name)
@@ -91,17 +157,26 @@ def _make_choice(profile_name):
 
         print("=== monkey: %s ===" % profile_name)
         print("tokens parsed:      %d" % (len(tokens) - 1))
-        print("top-level items:    %d" % len(rule_file.items))
+        ok = bool(rule_file.items) and not parser.reporter.errors
+        if profile_name in _CENSUS_PROFILES:
+            print("top-level items:    %d (%s)"
+                  % (len(rule_file.items), "ok" if ok else "DIAGNOSTICS"))
+        else:
+            print("top-level items:    %d" % len(rule_file.items))
         if parser.reporter.errors:
             print("UNEXPECTED DIAGNOSTICS:")
             for d in parser.reporter.errors:
                 print("   %s off=%d %s"
                       % (d.phase.name, d.source_offset, d.message))
-        else:
+        elif profile_name not in _CENSUS_PROFILES:
             print("diagnostics:        none")
 
-        print("\n-- AST --")
-        print(R.fmt(rule_file.items))
+        if profile_name in _CENSUS_PROFILES:
+            print()
+            _print_census(_ast_census(rule_file.items))
+        else:
+            print("\n-- AST --")
+            print(R.fmt(rule_file.items))
     return run
 
 
@@ -164,24 +239,10 @@ def run_sprites():
     pins the parse result compactly. The source is generated, not stored (see
     _sprites_source); only the census here is a GOOD.
     """
-    from dataclasses import is_dataclass, fields
-    from collections import Counter
-
     rep = DiagnosticReporter()
     rule_file = parse(_sprites_source(), FakeLuauOracle(), rep)
 
-    census = Counter()
-
-    def walk(n):
-        if isinstance(n, list):
-            for x in n:
-                walk(x)
-        elif is_dataclass(n):
-            census[type(n).__name__] += 1
-            for fld in fields(n):
-                walk(getattr(n, fld.name))
-
-    walk(rule_file.items)
+    census = _ast_census(rule_file.items)
 
     print("=== monkey: sprites (massive example -- AST census) ===")
     status = "ok" if (rule_file.items and not rep.errors) else "DIAGNOSTICS"

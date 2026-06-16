@@ -23,6 +23,7 @@ ELEM       = 0
 REDUCE     = 1
 LOOP       = 2
 CST_REDUCE = 3      # operator self-reduce to a CST node (CST build mode only)
+ROLE_STAMP = 4      # post-body marker: tag the just-produced value with a role
 
 
 class SpecNode:
@@ -153,17 +154,13 @@ class Terminal_Spec(SpecNode):
         field. An opaque span's identity is 'opaque:' + the mode's qualified name
         (oracle sub-language plus role), so core hard-codes no language.
         """
-        if self.shape == "regex":
-            return "regex:" + self.pattern
-        if self.shape == "string":
-            return "string:" + self.spelling
-        if self.shape == "captured":
-            return "captured:" + self.spelling
-        if self.shape == "opaque":
-            return "opaque:" + self.mode.qualified_name()
-        if self.shape == "framing":
-            return "framing:" + self.spelling
-        raise ValueError("unknown terminal shape %r" % (self.shape,))
+        match self.shape:
+            case "regex":    return "regex:" + self.pattern
+            case "string":   return "string:" + self.spelling
+            case "captured": return "captured:" + self.spelling
+            case "opaque":   return "opaque:" + self.mode.qualified_name()
+            case "framing":  return "framing:" + self.spelling
+            case _:          raise ValueError("unknown terminal shape %r" % (self.shape,))
 
     def __repr__(self):
         return "Terminal(%s)" % (self._name(),)
@@ -183,14 +180,14 @@ class Terminal_Spec(SpecNode):
 
     def expand(self, parser, frames, work):
         if self.is_opaque:
-            frames[-1].values.append(parser.consume_span(self))
+            frames[-1].add(parser.consume_span(self))
         else:
             value = parser.consume_terminal(self)
             if value is not None:
-                frames[-1].values.append(value)
+                frames[-1].add(value)
 
 
-class _T:
+class TerminalFactory:
     """The terminal factory namespace exposed to grammar.py as 'T'.
 
     Each method builds a Terminal_Spec and interns it (recording declaration
@@ -257,7 +254,7 @@ class _T:
         return _register_terminal(Terminal_Spec("framing", spelling=tag))
 
 
-T = _T()
+T = TerminalFactory()
 
 
 # Framing terminals: lexer/engine machinery with no place in GRAMMAR. Declared
@@ -396,8 +393,14 @@ class SEQ_Spec(Branch_Spec):
             work.append((ELEM, sub))
 
     def cst_reduce(self, frame, _extra):
-        """RETURN: SEQ_Node, over the surviving per-position values of the frame."""
-        return SEQ_Node(children=tuple(frame.values), begin=frame.begin)
+        """RETURN: SEQ_Node, over the surviving per-position values of the frame.
+
+        'roles' rides parallel to 'children' (D-18): the advisory role of each
+        surviving position, or None, enabling role-keyed access (node["key"])
+        that is immune to captured-terminal index drift.
+        """
+        return SEQ_Node(children=tuple(frame.values),
+                        roles=tuple(frame.roles), begin=frame.begin)
 
 
 class OR_Spec(Branch_Spec):
@@ -421,20 +424,29 @@ class OR_Spec(Branch_Spec):
             # Capture WHICH branch fired (its grammar index) and reduce to an
             # OR_Node carrying that index plus the branch's reduced value. The
             # sub-frame collects exactly one value (the chosen branch's result).
+            # A tagged branch additionally contributes its role, the string
+            # routing address an OrMap may key on (D-19); choose_alt returns the
+            # Tagged_Spec itself when the branch is tagged, so its '.role' is
+            # read directly here -- no stamp needed (an OR sub-frame holds one
+            # value, so the branch role attaches to the OR_Node, not a slot).
             index = self.branches.index(chosen)
+            role  = chosen.role if isinstance(chosen, Tagged_Spec) else None
             parser.open_frame(frames)
-            work.append((CST_REDUCE, (self, index)))
+            work.append((CST_REDUCE, (self, (index, role))))
         work.append((ELEM, chosen))
 
-    def cst_reduce(self, frame, index):
-        """RETURN: OR_Node, the matched branch index and its single reduced value.
+    def cst_reduce(self, frame, extra):
+        """RETURN: OR_Node, the matched branch index, its role, and reduced value.
 
-        'index' is the grammar index of the branch choose_alt selected. A branch
+        'extra' is (index, role): the grammar index of the branch choose_alt
+        selected and the advisory role it carried (None if untagged). A branch
         that produced no surviving value (all-silent, or an empty inline branch)
         yields child=ABSENT.
         """
+        index, role = extra
         child = frame.values[0] if frame.values else ABSENT
-        return OR_Node(triggered_index=index, child=child, begin=frame.begin)
+        return OR_Node(triggered_index=index, child=child, role=role,
+                       begin=frame.begin)
 
 
 class Operator_Spec(SpecNode):
@@ -558,8 +570,19 @@ class Tagged_Spec(Operator_Spec):
         return self.body.nullable(grammar)
 
     def expand(self, parser, frames, work):
-        # Fully transparent: the body expands as if unwrapped. The role is not
-        # injected into any frame value -- it is grammar-spec metadata only.
+        # Transparent for lexing / FIRST_2 / LL(2): the body expands as if
+        # unwrapped. The ONE addition (D-18): schedule a ROLE_STAMP to run AFTER
+        # the body so the value the body contributes carries this role into its
+        # frame slot, enabling role-keyed child access on the built SEQ_Node.
+        # A tagged body is a non-nullable leaf (terminal view or rule reference)
+        # that contributes exactly one value to the enclosing frame; 'slot' is
+        # that value's index, captured now (the current value count). The stamp
+        # is pushed BEFORE the body so it pops LAST (work is LIFO) -- it executes
+        # once the value is present. In legacy (non-CST) mode the stamp still
+        # runs but the role is never read, costing one frame-slot write.
+        target = frames[-1]
+        slot   = len(target.values)
+        work.append((ROLE_STAMP, (self.role, target, slot)))
         self.body.expand(parser, frames, work)
 
 
@@ -632,3 +655,39 @@ def collect_alt_conflicts(pattern, rule_name, grammar):
         if not isinstance(node, Rule_Spec):
             work.extend(node.children())
     return conflicts
+
+
+# ---------------------------------------------------------------------------
+# Rule shape classification (D-19): the CST node kind a rule produces is fixed
+# by its top marker, knowable at load. This drives the AST-map shape gate -- an
+# OrMap belongs only on an OR rule, an OptMap only on OPT, etc. It says NOTHING
+# about what a factory PRODUCES (branch-dependent, opaque, not knowable here).
+# ---------------------------------------------------------------------------
+SHAPE_OR       = "OR"
+SHAPE_OPT      = "OPT"
+SHAPE_SEQ      = "SEQ"
+SHAPE_PLUS     = "PLUS"
+SHAPE_STAR     = "STAR"
+SHAPE_TERMINAL = "TERMINAL"   # bare terminal: a Token, no operator node
+SHAPE_FORWARD  = "FORWARD"    # bare reference: forwards the referent's product
+
+
+def rule_shape(rule):
+    """RETURN: str, the SHAPE_* of the CST node 'rule' reduces to.
+
+    Reads the rule's top marker, unwrapping a top-level Tagged_Spec (transparent).
+    A bare reference forwards its referent (SHAPE_FORWARD); a bare terminal is a
+    Token (SHAPE_TERMINAL); otherwise the operator marker fixes the node kind.
+    Used by the AST-map shape gate; never inspects what a factory builds.
+    """
+    p = rule.pattern
+    while isinstance(p, Tagged_Spec):
+        p = p.body
+    if isinstance(p, OR_Spec):     return SHAPE_OR
+    if isinstance(p, OPT_Spec):    return SHAPE_OPT
+    if isinstance(p, SEQ_Spec):    return SHAPE_SEQ
+    if isinstance(p, PLUS_Spec):   return SHAPE_PLUS
+    if isinstance(p, STAR_Spec):   return SHAPE_STAR
+    if isinstance(p, Terminal_Spec): return SHAPE_TERMINAL
+    if isinstance(p, Rule_Spec):   return SHAPE_FORWARD
+    return SHAPE_FORWARD

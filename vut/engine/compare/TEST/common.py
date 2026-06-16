@@ -9,14 +9,14 @@ This module collects some functions which are used accross multiple tests
 applications.
 ______________________________________________________________________________
 """
-from   vut.engine.compare.input.line_element import LineElementString, \
+from   vut.engine.compare.engine.input.line_element import LineElementString, \
                                                         LineElementNumber, \
                                                         LineElementAnalogy, \
                                                         LineElementVisibleNothing, \
                                                         LineElementEquivalencePattern
 from   vut.engine.compare.engine.enums           import E_Chunk
 from   vut.engine.compare.engine.line            import Line
-from   vut.engine.compare.input.input_chunk      import InputChunk_factory
+from   vut.engine.compare.engine.input.input_chunk      import InputChunk_factory
 
 from   itertools import zip_longest
 

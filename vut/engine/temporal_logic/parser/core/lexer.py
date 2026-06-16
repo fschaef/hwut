@@ -242,7 +242,12 @@ def register_grammar(grammar_dict):
     the single injection point that keeps core independent of the rule language.
     """
     global _GRAMMAR, _TOKEN_SPEC, _SCANNER, _GROUP_OF
-    _GRAMMAR    = grammar_dict
+    # Flatten a possibly-nested grammar (subspaces, D-21) so the token-spec walk
+    # below sees every rule body, including those inside subspace dicts. A flat
+    # grammar passes through unchanged.
+    from .subspace import flatten
+    flat, _ = flatten(grammar_dict)
+    _GRAMMAR    = flat
     _TOKEN_SPEC = None
     _SCANNER    = None
     _GROUP_OF   = None

@@ -68,7 +68,10 @@ The operators (one per authoring combinator):
                string (the role-hint facility). Its nullable / FIRST_2 / expand
                delegate straight to the body, so it adds nothing to lexing, the
                LL(2) analysis, or the value stream; the role is metadata read
-               off the spec by position. See "ROLE HINTS" below.
+               off the spec by position. It additionally stamps the role onto
+               the slot its body fills in the built SEQ_Node, enabling role-
+               keyed child access (node["key"]); the value itself is unchanged.
+               See "ROLE HINTS" below.
 
 FIRST_2 sets are computed by an iterative fixpoint over the tree (no recursion
 on grammar depth); merge_first2 combines a prefix set with a follower set under
@@ -93,6 +96,17 @@ into the '*_Spec' tree, deferring leaf resolution (terminal object / '<name>'
 reference / '<name(role)>' tagged reference / bare-string keyword) to the
 engine, which owns the terminal table and the rule map.
 
+A grammar VALUE may also be a SUBSPACE (subspace.py): a dict whose TOP key (a
+combinators sentinel) holds the rule's own pattern and whose other keys are
+member rules. A subspace is a NAMESPACE node: every rule has a QUALIFIED name --
+its path joined by '/' ('algebr/shift') -- and members may use SHORT names (the
+path supplies the category). flatten() lowers subspaces, nested arbitrarily, to
+the flat qualified-named rule map before compile; resolve() binds each reference
+SCOPE-AWARE -- a bare '<shift>' resolves within the writing rule's subspace then
+walks up to the root, a path-qualified '<algebr/shift>' resolves from anywhere.
+Privacy is a resolution property: a bare name does not reach a private member of
+an unrelated subspace (no separate wall), and reaching one requires its path.
+
 -------------------------------------------------------------------------------
 CST NODES  (cst_nodes.py)
 -------------------------------------------------------------------------------
@@ -100,7 +114,22 @@ Five frozen nodes -- OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node -- one
 per operator. The engine reduces every parse to a tree of these by default; this
 is a PRUNED CST (silent terminals contribute nothing). Each carries the
 producing rule's name, or None for an inline operator. The ABSENT sentinel marks
-a position that produced no surviving value.
+a position that produced no surviving value. SEQ_Node also carries a 'roles'
+tuple parallel to 'children' (the advisory role per surviving position, or
+None); node["key"] reads the child whose position carried that role, immune to
+captured-terminal index drift, while children[i] positional access is unchanged.
+
+-------------------------------------------------------------------------------
+AST-MAP ROUTER FAMILY  (ast_map_family.py)
+-------------------------------------------------------------------------------
+OrMap / OptMap / StarMap: callable routers an outer AST map uses for the
+branching rule shapes -- an OR routes on its fired branch (by index or role), an
+OPT on present/absent, a STAR on empty/non-empty -- each picking a factory (or a
+constant, or the PASS sentinel). Grammar-agnostic: they route over CST node
+kinds and name no rule, so they live here, not in the outer layer. SEQ and PLUS
+rules take a single factory (no router); a terminal needs none. The load-time
+shape gate that pins a router to its rule's shape lives outer (it reads the AST
+map); the routers themselves are core.
 
 -------------------------------------------------------------------------------
 LEXER  (lexer.py)
@@ -122,15 +151,19 @@ rule-name -> callable overlay). Three gates run at compile time:
     FIRST_2 / LL(2)   merge the sets, scan every alternation for a two-token
                       collision; a clash raises LL2ConflictError, located by
                       rule.
+    ROLE UNIQUENESS   no SEQ may give two positions the same advisory role
+                      (its role-keyed access would be ambiguous); a clash raises
+                      RoleUniquenessError, located by rule. Always run.
     ROLES (optional)  validate every role hint against the supplied vocabulary
                       (see below); a violation raises RoleVocabularyError.
 
 EngineParser is the driver: a STACKLESS interpreter over an explicit heap
-work-stack (ELEM / REDUCE / CST_REDUCE / LOOP items), so parse depth is bounded
-by memory, not the interpreter recursion limit. It primes a two-token lookahead
-window, expands each spec node into work items, consumes terminals and spans,
-and reduces finished frames into CST nodes (then through the transformer overlay
-where one is registered).
+work-stack (ELEM / REDUCE / CST_REDUCE / ROLE_STAMP / LOOP items), so parse
+depth is bounded by memory, not the interpreter recursion limit. It primes a
+two-token lookahead window, expands each spec node into work items, consumes
+terminals and spans, reduces finished frames into CST nodes (then through the
+transformer overlay where one is registered), and runs the ROLE_STAMP item a
+tagged element schedules after its body to tag that value's frame slot.
 
 -------------------------------------------------------------------------------
 ROLE HINTS AND THE ROLES VOCABULARY  (ll2_grammar_spec.py + ll2_engine.py)

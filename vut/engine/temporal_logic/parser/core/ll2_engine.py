@@ -18,7 +18,7 @@ from .ll2_grammar_spec import t_fr_span_open, t_fr_eof
 from . import ll2_grammar_spec as nodes
 from .ll2_grammar_spec import (SpecNode, Terminal_Spec, Rule_Spec,
                               collect_alt_conflicts, ELEM, REDUCE, LOOP,
-                              CST_REDUCE)
+                              CST_REDUCE, ROLE_STAMP)
 from dataclasses import replace as _dc_replace
 from .cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node
 
@@ -40,6 +40,23 @@ class LL2ConflictError(Exception):
     def __init__(self, conflicts):
         super().__init__("%d LL(2) conflict(s)" % len(conflicts))
         self.conflicts = conflicts
+
+
+class RoleUniquenessError(Exception):
+    """Raised when one SEQ rule gives two positions the SAME advisory role (D-18).
+
+    Role-keyed child access (node["key"]) selects the SINGLE position carrying a
+    role, so two siblings sharing a role in one sequence make every keyed read
+    of that role ambiguous. This is checked at compile time -- like the LL(2)
+    conflict and the role-vocabulary check, all violations are collected and
+    raised together -- so the ambiguity fails loud at load with the rule named,
+    not as a ValueError deep in a factory at parse time. Inline sub-sequences
+    are checked independently of their enclosing sequence: a role unique within
+    each SEQ_Node is all role access needs.
+    """
+    def __init__(self, violations):
+        super().__init__("%d role-uniqueness violation(s)" % len(violations))
+        self.violations = violations
 
 
 class RoleVocabularyError(Exception):
@@ -91,25 +108,81 @@ class Grammar:
         if transformers is not None and actions is not None:
             raise ValueError("Grammar: 'actions' and 'transformers' are "
                              "mutually exclusive (legacy vs CST-overlay path)")
+        # The engine owns flattening (D-21): a grammar value may be a SUBSPACE (a
+        # TOP-keyed dict). flatten() lowers a possibly-nested grammar to the flat
+        # QUALIFIED-named rule map plus each rule's body-resolution scope; a flat
+        # grammar passes through unchanged (all rules at the root scope). The
+        # engine compiles the flat map and resolves references scope-aware.
+        from .subspace import flatten
+        flat, scope_of = flatten(grammar_dict)
+        self.flat         = flat
+        self.scope_of     = scope_of
         self.cst          = cst or (transformers is not None)
         self.transformers = transformers if transformers is not None else {}
         self.roles        = roles
         _actions          = actions if actions is not None else {}
         if transformers is not None:
-            stray = set(self.transformers) - set(grammar_dict)
+            stray = set(self.transformers) - set(flat)
             if stray:
                 raise ValueError("Grammar: transformers name rules not in the "
                                  "grammar: %s" % ", ".join(sorted(stray)))
         self.rules    = {name: Rule_Spec(name, _actions.get(name))
-                         for name in grammar_dict}
+                         for name in flat}
         self.start    = start
-        for name, pattern in grammar_dict.items():
+        self._current_scope = ()
+        for name, pattern in flat.items():
+            self._current_scope = scope_of.get(name, ())
             self.rules[name].pattern = support.compile_element(pattern, self, nodes)
+        self._current_scope = ()
         from .ll2_grammar_spec import T
         self.end_block = T.string(":end")   
         self._analyse()
+        self._validate_role_uniqueness()
         if roles is not None:
             self._validate_roles()
+
+    def _validate_role_uniqueness(self):
+        """RETURN: None. Raises RoleUniquenessError if a SEQ repeats a role (D-18).
+
+        Walks every rule's compiled pattern; at each SEQ_Spec, collects the roles
+        of its DIRECT branches (a Tagged_Spec branch carries '.role') and flags
+        any role appearing more than once -- that role's keyed access would be
+        ambiguous on the built SEQ_Node. Each violation names the rule (or
+        '<inline>' for an anonymous sub-sequence) and the duplicated role; all
+        are collected so one compile reports every clash. Inline sequences are
+        scoped independently -- a role may recur ACROSS different sequences, just
+        not WITHIN one.
+        """
+        from .ll2_grammar_spec import Tagged_Spec, SEQ_Spec
+        violations = []
+        seen = set()
+
+        def role_of(branch):
+            return branch.role if isinstance(branch, Tagged_Spec) else None
+
+        def visit(node, rule_name):
+            if id(node) in seen:
+                return
+            seen.add(id(node))
+            if isinstance(node, SEQ_Spec):
+                counts = {}
+                for sub in node.branches:
+                    r = role_of(sub)
+                    if r is not None:
+                        counts[r] = counts.get(r, 0) + 1
+                for r, n in sorted(counts.items()):
+                    if n > 1:
+                        violations.append(
+                            "rule %r: role %r on %d positions of one sequence"
+                            % (rule_name, r, n))
+            for c in node.children():
+                visit(c, rule_name)
+
+        for name, rule in self.rules.items():
+            if rule.pattern is not None:
+                visit(rule.pattern, name)
+        if violations:
+            raise RoleUniquenessError(sorted(set(violations)))
 
     def _validate_roles(self):
         """RETURN: None. Raises RoleVocabularyError if a role hint is undeclared.
@@ -158,12 +231,15 @@ class Grammar:
 
     def compile_leaf(self, element):
         from .ll2_grammar_spec import Terminal_Spec, Tagged_Spec, Ref, T
+        from .subspace import resolve
+        # Mutually-exclusive leaf kinds: a tagged terminal view, a bare terminal,
+        # a Ref object, or a reference/keyword string. if/elif -- exactly one fires.
         if isinstance(element, Tagged_Spec):
             # A role-tagged terminal view ('t_re_id("event")', D-10). Its body is
             # an already-resolved terminal; the wrapper is transparent, returned
             # as-is so lexing/LL(2)/CST are unchanged and the role rides along.
             return element
-        if isinstance(element, Terminal_Spec):
+        elif isinstance(element, Terminal_Spec):
             # A terminal is already its own interned grammar leaf (D-7): the
             # lexeme spec and the SpecNode are one object, shared across every
             # position naming it, 'silent' derived from shape. Return it as-is.
@@ -171,30 +247,35 @@ class Grammar:
                 raise ValueError("terminal shape %r is not a grammar leaf"
                                  % (element.shape,))
             return element
-        if isinstance(element, Ref):
-            if element.name not in self.rules:
-                raise ValueError("undefined non-terminal %r" % (element.name,))
-            return self.rules[element.name]
-        if isinstance(element, str):
+        elif isinstance(element, Ref):
+            target = resolve(element.name, self._current_scope, self.rules)
+            if target is None:
+                raise ValueError("undefined non-terminal %r (scope %s)"
+                                 % (element.name, "/".join(self._current_scope) or "<root>"))
+            return self.rules[target]
+        elif isinstance(element, str):
             if len(element) > 2 and element[0] == "<" and element[-1] == ">":
                 name = element[1:-1]
                 role = None
                 # '<name(role)>' carries an advisory role hint (D-10): split the
                 # parenthesised role off the rule name. The role is recorded on a
                 # transparent Tagged_Spec wrapping the referenced rule; it does
-                # not alter the reference's identity, lexing, or LL(2).
+                # not alter the reference's identity, lexing, or LL(2). The name
+                # may be path-qualified ('<algebr/shift>') or bare; resolve()
+                # binds it scope-aware against the writing rule's subspace (D-21).
                 if name.endswith(")") and "(" in name:
                     name, _, rest = name.partition("(")
                     role = rest[:-1]
-                if name not in self.rules:
-                    raise ValueError("undefined non-terminal %r" % (name,))
-                target = self.rules[name]
-                if role:
-                    return Tagged_Spec(target, role)
-                return target
+                target = resolve(name, self._current_scope, self.rules)
+                if target is None:
+                    raise ValueError("undefined non-terminal %r (scope %s)"
+                                     % (name, "/".join(self._current_scope) or "<root>"))
+                rule = self.rules[target]
+                return Tagged_Spec(rule, role) if role else rule
             return T.string(element)
-        raise ValueError("grammar leaf is neither Terminal_Spec, Ref, nor str: %r"
-                         % (element,))
+        else:
+            raise ValueError("grammar leaf is neither Terminal_Spec, Ref, nor "
+                             "str: %r" % (element,))
 
     def _analyse(self):
         """Computes FIRST_2 sets to a fixpoint, then validates LL(2)."""
@@ -215,8 +296,27 @@ class Grammar:
 
 @dataclass
 class Frame:
-    values: list
-    begin:  int
+    """A reduction frame: the surviving values of one operator, plus their roles.
+
+    'values' holds one entry per surviving grammar position (silent terminals
+    leave none); 'roles' is the SAME length, a parallel list of the advisory
+    role string for each value or None. The two lists are kept in lockstep by
+    'add()' -- every value enters with a role slot, defaulting None, so an
+    untagged position reads role None and a '<type(key)>'-tagged one reads
+    'key'. 'roles' is consumed only by SEQ_Spec.cst_reduce (role-keyed child
+    access, D-18); other reduces ignore it.
+    """
+    __slots__ = ("values", "roles", "begin")
+
+    def __init__(self, values=None, begin=0):
+        self.values = [] if values is None else values
+        self.roles  = [None] * len(self.values)
+        self.begin  = begin
+
+    def add(self, value, role=None):
+        """RETURN: None. Appends 'value' with its 'role', keeping the lists equal."""
+        self.values.append(value)
+        self.roles.append(role)
 
 
 class _ResyncError(Exception):
@@ -323,7 +423,7 @@ class EngineParser:
         return rule_file
 
     def _match(self, element):
-        root = Frame(values=[], begin=self.tok1.begin)
+        root = Frame(begin=self.tok1.begin)
         frames = [root]
         work = [(ELEM, element)]
         while work:
@@ -334,6 +434,18 @@ class EngineParser:
                 self._reduce(payload, frames)
             elif tag == CST_REDUCE:
                 self._cst_reduce(payload, frames)
+            elif tag == ROLE_STAMP:
+                # Post-body marker (D-18): the tagged element has just contributed
+                # its single value to 'target_frame' at 'slot' (captured as the
+                # value count at schedule time). Stamp the role onto that slot.
+                # Scheduled by Tagged_Spec.expand AFTER the body, so the value is
+                # present. Capturing the slot index (not 'roles[-1]' now) keeps
+                # the stamp correct even if the body opened/closed nested frames
+                # or a later sibling already appended. A tagged non-nullable leaf
+                # always fills the slot; a no-fill (impossible here) is skipped.
+                role, target_frame, slot = payload
+                if slot < len(target_frame.roles):
+                    target_frame.roles[slot] = role
             else:  # LOOP
                 # 'payload' is (body, last_consumed): the loop body and the value
                 # of self._consumed at which the PREVIOUS iteration began. A
@@ -353,7 +465,7 @@ class EngineParser:
         return root.values[0] if root.values else None
 
     def open_frame(self, frames):
-        frames.append(Frame(values=[], begin=self.tok1.begin))
+        frames.append(Frame(begin=self.tok1.begin))
 
     def _reduce(self, nt, frames):
         frame = frames.pop()
@@ -379,14 +491,14 @@ class EngineParser:
                 if fn is not None:
                     value = fn(value)
             if value is not None:
-                frames[-1].values.append(value)
+                frames[-1].add(value)
             return
         if nt.action is None:
             value = frame.values[0] if frame.values else None
         else:
             value = nt.action(frame)
         if value is not None:
-            frames[-1].values.append(value)
+            frames[-1].add(value)
 
     def _cst_reduce(self, payload, frames):
         """RETURN: None. Pops an operator's sub-frame, builds its CST node, appends.
@@ -400,7 +512,7 @@ class EngineParser:
         node, extra = payload
         frame = frames.pop()
         value = node.cst_reduce(frame, extra)
-        frames[-1].values.append(value)
+        frames[-1].add(value)
 
     def consume_terminal(self, term):
         if self.tok1.kind is not term:
@@ -494,5 +606,3 @@ class EngineParser:
         elem_set    = element.first2_set(self.grammar)
         lookahead_2 = (self.tok1.kind, self.tok2.kind)
         return lookahead_2 in elem_set or (self.tok1.kind,) in elem_set
-
-

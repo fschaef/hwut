@@ -10,8 +10,8 @@ ________________________________________________________________________________
 """
 from typeguard import typechecked
 
-import vut.engine.compare.engine.association.edit_operations.line as     edit_operations_line
-from   vut.engine.compare.engine.association.line_pair            import LinePair
+import vut.engine.compare.associate.edit_operations.line as     edit_operations_line
+from   vut.engine.compare.associate.line_pair            import LinePair
 import vut.engine.compare.engine.potpourri.pairing                as     pairing
 from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb

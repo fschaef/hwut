@@ -1,41 +1,73 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
-______________________________________________________________________________
+================================================================================
+                              OPERATOR INTERFACES
+================================================================================
 
-OPERATOR INTERFACES  --  shape-identity signals over a truthful universal root.
+              +--------------------------------------------------+
+              |               OPERATOR INTERFACE                 |
+              |   (Universal Root: Carries 'begin', Placeable)   |
+              +--------------------------------------------------+
+              | Signals Grammar Op: OR / OPT / SEQ / PLUS / STAR |
+              +--------------------------------------------------+
+                                       |
+                   +-------------------+-------------------+
+                   |                                       |
+                   v                                       v
+     +---------------------------+           +---------------------------+
+     |     GENERIC CST NODES     |           |      TYPED AST NODES      |
+     |     (core.cst_nodes)      |           |       (outer nodes)       |
+     +---------------------------+           +---------------------------+
+     | Concrete Surface:         |           | Digested Structure:       |
+     | - triggered_index         |           | - Choices translated into |
+     | - present+child           |           |   typed fields at factory |
+     | - seq_children / items    |           | - No internal operator    |
+     |                           |           |   accessors (no fakery)   |
+     | *Engine reads directly*   |           |                           |
+     +---------------------------+           +---------------------------+
 
-Every operator-shaped node -- the generic CST castings (core.cst_nodes) AND the
-typed AST nodes (the outer ast_nodes) -- derives from one of these. Their purpose
-is SIGNALLING, not behaviour: a node's interface declares WHICH grammar operator
-produced it (OR / OPT / SEQ / PLUS / STAR), truthfully, for both kinds of node,
-with no fakery on either side.
+CORE PRINCIPLE: SIGNALLING OVER BEHAVIOUR
+--------------------------------------------------------------------------------
 
-Why signalling and not a callable accessor contract.  A digested AST node (say
-Trigger, from an OR rule) does not retain a raw 'triggered_index' -- the branch
-choice was TRANSLATED into typed fields (is_keyword, name) at the factory. And
-nothing ever asks a held child for its operator internals: the engine, when a
-node is a sub-element of a parent sequence, only PLACES it as a value; the
-which-branch question is asked once, at the OR's own reduce, then baked in and
-never re-asked. So an accessor contract ('give me your triggered_index') would
-force every digested node to fabricate an answer no caller reads. The honest,
-GENERAL law is therefore the truthful intersection: every node carries 'begin'
-and is placeable, and DECLARES its shape by which interface it derives from.
+The interface asserts structural identity, not a callable accessor contract.
+The deep reason (D-19): the product a rule's factory builds is NOT KNOWABLE
+before runtime -- an OR rule yields a different node kind per branch that fires
+(a Literal, an OpaqueCode, a passed-through operand), so no single interface can
+be promised upward. A parent therefore CANNOT query a child product through a
+shape accessor even in principle; it takes the product as an opaque typed value
+and reads its own fields. Forcing a universal accessor like 'triggered_index'
+onto a digested AST node would compel it to fabricate data that no caller reads
+AND could not read coherently. The honest law is the shape-identity intersection.
 
-What the signal is FOR (it carries real weight, it is not a bare tag):
-  - error analysis / diagnostics: "expected an OR-construct, got a SEQ-shaped
-    node" -- detectable uniformly on a generic node or a typed one;
-  - the load-time validator: "this rule is an OR rule, so its factory's node
-    must be OR-shaped" -- a pure shape-correspondence check;
-  - a semantic pass walking constructs by grammatical category.
-None of those call shape accessors; they READ THE SHAPE. That is the contract.
+WHERE THE INTERFACE LIVES
+--------------------------------------------------------------------------------
 
-Where the shape-specific accessors live.  The GENERIC CST nodes expose
-triggered_index / present+child / seq_children / rep_items as their OWN concrete
-surface (the engine reads them off CST nodes during construction). Those are NOT
-hoisted here as universal obligations, because a digested AST node cannot honour
-them without fakery -- they are honestly answerable only on the generic casting.
+The operator interface is a property of the GENERIC CST node a rule produces
+BEFORE transformation -- OR_Node is OR_Interface, SEQ_Node is SEQ_Interface, and
+so on. It is the contract between a rule's CST node and THAT SAME RULE's factory
+or router (one level, internal): the OR rule's OrMap routes on the OR_Node it
+receives; the SEQ rule's factory reads its SEQ_Node. Once the factory runs, the
+product is opaque -- there is no operator-interface contract upward. A produced
+AST node does not carry, derive from, or fake any operator interface as a
+promise to its parent.
 
-core stays grammar-agnostic and language-free.
-______________________________________________________________________________
+
+APPLICATIONS OF THE SHAPE SIGNAL
+--------------------------------------------------------------------------------
+The shape is read directly via interface type-matching to drive:
+
+1. ERROR ANALYSIS: 
+   Uniform diagnostics across both node categories 
+   (e.g., "expected an OR-construct, got a SEQ-shaped node").
+
+2. LOAD-TIME VALIDATION:
+   The AST-map shape gate (D-19, ast_map.validate_ast_map_shapes) pins each
+   rule's map entry to the rule's OWN shape -- an OrMap only on an OR rule, an
+   OptMap on OPT, a StarMap on STAR; SEQ/PLUS take a single factory; a terminal
+   needs none. It checks the rule's shape, never the opaque product.
+
+3. SEMANTIC PASSES: 
+   Walking constructs cleanly by their grammatical category.
+================================================================================
 """
 from abc import ABC
 

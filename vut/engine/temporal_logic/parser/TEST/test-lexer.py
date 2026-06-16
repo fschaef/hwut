@@ -95,7 +95,7 @@ def run_tokens():
            "event: clock: cause: effect: for: by: via: import: into: in: "
            "open: :close is: default: init: deinit: "
            "ANY BEGIN END CHANGE VOID "
-           "mode state mode_group state_machine struct container "
+           "mode state mode_group state_machine struct dict list "
            "int float string bool true false")
     tokens, _, _ = drive(src)
     show_tokens(tokens)

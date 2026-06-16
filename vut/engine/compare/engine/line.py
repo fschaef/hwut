@@ -7,8 +7,8 @@ split up into 'LineElements' objects. Such line elements may be numbers,
 strings, lexemes which match some pattern, whitespace etc.
 ________________________________________________________________________________
 """
-import vut.engine.compare.engine.association.edit_operations.line   as     edit_operations_line
-from   vut.engine.compare.input.pattern_finder     import PatternFinder
+import vut.engine.compare.associate.edit_operations.line   as     edit_operations_line
+from   vut.engine.compare.engine.input.pattern_finder     import PatternFinder
 from   vut.engine.compare.engine.enums             import (E_Verdict, 
                                                            E_ToleranceId)
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb

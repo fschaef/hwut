@@ -1,6 +1,6 @@
 
 --- cause definition ('for:' binding, mandatory guard) ---
-  CauseDef name=['TOO_HOT'] params=1 for=NETWORK guard=OpaqueCode
+  CauseDef name=['TOO_HOT'] params=1 for=NETWORK guard=Condition
 
 --- effect definition ---
   EffectDef name=['SUPER_POWER'] effects=[EventSpec, EffectRef, EffectRef]
@@ -17,5 +17,5 @@
 --- reference + extra guard (parses; pass-2 F-7) ---
   Causality cause=CauseRef name=TOO_HOT guard=Condition effects=[EventSpec]
 
---- inline still works ---
+--- inline guard with a method call ---
   Causality cause=Cause effects=[EventSpec]

@@ -555,20 +555,30 @@ class _CanonicalPolicy(WalkPolicy):
         self.steps.append(PathStep(Token(t_fr_span_open, "{", 0, 0), ctx.required))
 
 
-def _first_variadic(element):
-    """RETURN: the first PLUS/STAR/OPT node under 'element', or None."""
+def _first_variadic(element, _seen=None):
+    """RETURN: the first PLUS/STAR/OPT node under 'element', or None.
+
+    '_seen' guards against recursive rule references (e.g. <type> -> <type-dict>
+    -> <type>): a rule already on the current descent path is not re-entered, so
+    a legitimately cyclic type grammar terminates.
+    """
+    if _seen is None:
+        _seen = set()
     if isinstance(element, Terminal_Spec):
         return None
     if isinstance(element, Tagged_Spec):
         # Advisory role tag (D-10) is transparent: look under its body.
-        return _first_variadic(element.body)
+        return _first_variadic(element.body, _seen)
     if isinstance(element, Rule_Spec):
-        return _first_variadic(element.pattern)
+        if element.name in _seen:
+            return None
+        _seen = _seen | {element.name}
+        return _first_variadic(element.pattern, _seen)
     if isinstance(element, (PLUS_Spec, STAR_Spec, OPT_Spec)):
         return element
     children = element.branches if isinstance(element, SEQ_Spec) else element.branches
     for sub in children:
-        found = _first_variadic(sub)
+        found = _first_variadic(sub, _seen)
         if found is not None:
             return found
     return None

@@ -54,6 +54,14 @@ nodes = _default_nodes
 # tuple-with-OR lowers to.
 OR = type("_AltSentinel", (), {"__repr__": lambda self: "OR"})()
 
+# A grammar VALUE may be a dict instead of a pattern: a SUBSPACE (D-20). Its TOP
+# key holds the rule's own pattern; its other keys are member rules reachable
+# ONLY from within this subspace (or a nested one). TOP is a unique sentinel
+# key, conventionally written first. Subspaces flatten to the one flat rule map
+# (bare names, unchanged resolver) before compile; an encapsulation gate then
+# rejects a reference into a subspace from outside it. See core/subspace.py.
+TOP = type("_TopKey", (), {"__repr__": lambda self: "TOP"})()
+
 
 def _alt_from_tuple(parts):
     """RETURN: Alt, built by splitting 'parts' on the OR sentinel.

@@ -79,7 +79,7 @@ class OpaqueCode:
         The engine yields a neutral core.span_oracle.SpanResult at an
         opaque-span position (it knows no language); this is the single seam
         where the rule language turns it into its own node. SpanResult.mode is
-        carried straight onto 'mode'. For the <guard-luau> rule (a
+        carried straight onto 'mode'. For the <mutation> rule (a
         single-terminal rule) the factory receives the raw SpanResult itself
         -- there is no operator node to unwrap.
         """
@@ -124,12 +124,12 @@ class Trigger:
 
 
 # --- Bracket-condition algebra ('& [ ... ]') ---------------------------------
-# A transparent, engine-inspectable alternative to an opaque CONDITION guard: a
-# boolean combination ('and'/'or'/'not', parenthesisable) of comparisons over
-# the triggering event's members. Members are leading-dot, single-level
-# ('.ip_adr' == the 'ip_adr' member of the event that fired). The tree is built
-# directly by the parser, so the static layer can validate member references and
-# comparisons instead of treating the guard as opaque text.
+# The guard form: a transparent, engine-inspectable boolean combination
+# ('and'/'or'/'not', parenthesisable) of comparisons over the triggering event's
+# members. Members are leading-dot, single-level ('.ip_adr' == the 'ip_adr'
+# member of the event that fired). The tree is built directly by the parser, so
+# the static layer can validate member references and comparisons; a guard is
+# never opaque text.
 
 @dataclass(frozen=True)
 class BoolRef:
@@ -159,6 +159,29 @@ class Literal:
     def from_token(cls, tok):
         """RETURN: Literal, wrapping a number/string/true/false token."""
         return cls(text=tok.text, begin=tok.begin)
+
+
+@dataclass(frozen=True)
+class MethodCall:
+    """A postfix on an operand: a method call '.method(args)' or, after a call,
+    a member read '.field'.
+
+    'method' is the verbatim postfix name ('glob', 'len', 'has', 'keys', or a
+    field). 'args' is the already-reduced argument list when this is a CALL
+    (possibly empty for '()'), or None when it is a bare member read on a call
+    result ('d.first().name'). 'receiver' is what the postfix applies to -- a
+    name-dotted segment list, or another MethodCall when chaining
+    ('d.keys().len()' nests the inner call as the outer postfix's receiver).
+    Whether 'method' is a real member function/field of the receiver's type, and
+    the arg arity/kinds, is a pass-2 catalogue check; the grammar admits any
+    '.id' or '.id(args)'. An operand with NO call collapses to its name-dotted
+    segment list, so a bare reference stays list[str] and the BoolRef path is
+    preserved.
+    """
+    receiver: object         # list[str] | MethodCall
+    method:   str
+    args:     "object"       # list[Arg] (call) | None (member read on a result)
+    begin:    int
 
 
 @dataclass(frozen=True)
@@ -209,6 +232,44 @@ class BinOp(SEQ_Interface):
 
 
 @dataclass(frozen=True)
+class Expr(SEQ_Interface):
+    """An algebraic expression carrying an explicit division-fallback (D-23).
+
+    'body undef: fallback' -- the optional 'undef:' supplies the value the
+    expression takes when a math operation inside 'body' is undefined (divide by
+    zero, a domain error on a math function). 'undef:' is DISTINCT from the
+    conditional 'else:' (the bridge's false-branch, recip's zero-guard body), so
+    a math fallback never collides with a structural 'else:'.
+    The PARSER accepts 'undef:' on any expression; the SEMANTIC layer REQUIRES it
+    when (and only when) a math exception can arise in 'body' -- in practice when
+    a '/' is present -- and rejects it as dead otherwise. This node exists only
+    when the 'undef:' fired -- a fallback-free expression is its bare 'body'
+    value (the factory passes it through), so adding the clause never reshapes
+    existing trees.
+    """
+    body:     "object"
+    fallback: "object"
+    begin:    int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Expr if an 'undef:' fallback is present, else the bare body.
+
+        children = (shift-body, opt_undef): 'undef:' is silent, so the optional's
+        child (when present) is the one-survivor SEQ around the fallback <shift>.
+        Absent -> the body value is forwarded unchanged, keeping a fallback-free
+        expression identical to its pre-D-23 shape.
+        """
+        body    = node.children[0]
+        opt_undef = node.children[1]
+        if not opt_undef.present:
+            return body
+        fallback = opt_undef.child.children[0]
+        begin = getattr(body, "begin", node.begin)
+        return cls(body=body, fallback=fallback, begin=begin)
+
+
+@dataclass(frozen=True)
 class Bridge(SEQ_Interface):
     """The '?' bridge: the only bool->num crossing (D-13).
 
@@ -235,12 +296,12 @@ class Bridge(SEQ_Interface):
 
 @dataclass(frozen=True)
 class Condition(SEQ_Interface):
-    """The root of a bracket guard '[ ... ]'.
+    """The root of a bracket guard '[ ... ]' -- the sole guard form.
 
     'expr' is the top boolean expression (a BinOp, UnOp, Comparison, BoolRef, or
-    Literal). Wrapping it in a named root keeps a guard's two forms -- opaque
-    span vs. bracket condition -- as two distinct, type-distinguishable node
-    kinds on Cause.guard.
+    Literal). Wrapping it in a named root gives Cause.guard a single concrete
+    node kind; a guard never carries an opaque Luau span (values cross from Luau
+    only via 'is:').
     """
     expr:  "object"
     begin: int
@@ -250,8 +311,8 @@ class Condition(SEQ_Interface):
         """RETURN: Condition, the root of a '[ ... ]' bracket guard.
 
         children = (expr,): the single top boolean expression ('[' / ']' are
-        silent). The wrapper keeps the two guard forms (opaque span vs bracket
-        condition) type-distinguishable on Cause.guard.
+        silent). The bracket condition is the only guard form Cause.guard ever
+        holds.
         """
         return cls(expr=node.children[0], begin=node.begin)
 
@@ -260,15 +321,14 @@ class Condition(SEQ_Interface):
 class Cause(OR_Interface):
     """A cause: a trigger with an optional guard.
 
-    'guard' is the condition gating the trigger, or None when absent. It is
-    either an opaque CONDITION span (the '& { ... }' form) or a Condition tree (the
-    '& [ ... ]' bracket form); both express "the event fired AND this holds".
-    Built by the cause-system builder (system keyword trigger) and by the
-    cause-named builder for the paren-less branch (inline named trigger); the
-    paren branch builds a CauseRef instead -- the parens decide (D-26).
+    'guard' is the Condition gating the trigger ('& [ ... ]'), or None when
+    absent; it expresses "the event fired AND this holds". Built by the
+    cause-system builder (system keyword trigger) and by the cause-named builder
+    for the paren-less branch (inline named trigger); the paren branch builds a
+    CauseRef instead -- the parens decide (D-26).
     """
     trigger: Trigger
-    guard:   "Optional[object]"   # OpaqueCode | Condition | None
+    guard:   "Optional[Condition]"   # Condition | None
     begin:   int
 
 
@@ -360,53 +420,67 @@ class ModeArming(SEQ_Interface):
 
 @dataclass(frozen=True)
 class Spawn(SEQ_Interface):
-    """An aggregate-spawning effect: 'spawn: name (args) [ in: C [ via: <rvalue> ] ]'.
+    """An aggregate-spawning effect: 'spawn: name (args) [ into: target ]'.
 
-    Targets a <mode-group> or <state-machine> type. One shape with one nested
-    optional modifier chain:
+    Targets a <mode-group> or <state-machine> type. One shape with one optional
+    'into:' clause:
       - 'args' is the instantiation argument list; the parentheses are MANDATORY
         (a bare 'spawn: name' is rejected by the grammar). 'args' is empty when the
         type takes none ('spawn: name()').
-      - 'in_container' names a declared container ('+! x in: C') the fresh
-        instance is caught by, or None for the per-kind default container;
-        resolved in pass 2 to an 'is: container' declaration.
-      - 'via' is the optional key the container holds the instance under (a
-        dict container's key): an rvalue normalised to a positional Arg
-        (LITERAL / NAME / LUAU), or None. Legal only inside 'in:' -- the
-        grammar nests it so (D-25).
-    'has_parens' is now always True for a parsed node (the parens are mandatory);
-    it is retained for the builder and downstream and no longer discriminates a
-    shape.
+      - 'into_container' names the declared container that catches the fresh
+        instance ('into: roster' / 'into: roster[e.id]'), or None for the
+        per-kind default container; resolved in pass 2 to a dict/list
+        declaration.
+      - 'key' is the dict key the instance is held under, a name-dotted segment
+        list ('into: roster[e.id]'), or None. None with a container means a LIST
+        target -- the instance APPENDS. A key on a list, or its absence on a
+        dict, is a pass-2 error (the container's declared kind decides).
+    'has_parens' is always True for a parsed node (the parens are mandatory);
+    retained for the builder and downstream, no longer a shape discriminant.
     """
-    name:        "list[str]"  # name-dotted segments
-    args:        List[Arg]
-    has_parens:  bool
-    in_container: "Optional[list[str]]"  # name-dotted segments, or None
-    via:         Optional["Arg"]
-    begin:       int
+    name:           "list[str]"  # name-dotted segments
+    args:           List[Arg]
+    has_parens:     bool
+    into_container: "Optional[list[str]]"  # name-dotted segments, or None
+    key:            "Optional[list[str]]"  # dict key segments; None = list append
+    begin:          int
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: Spawn, 'spawn: name (args) [ in: C [ via: <rvalue> ] ]'.
+        """RETURN: Spawn, 'spawn: name (args) [ into: C [ "[" key "]" ] ]'.
 
-        children = (name, args, opt_in): the trailing options are NESTED stable
-        OPT_Node slots mirroring the grammar's nested optionals -- opt_in
-        present yields the anonymous SEQ (container_name, opt_via); opt_via
-        present yields the anonymous one-survivor SEQ around the rvalue,
-        normalised to an Arg through the one classifier (Arg._classify).
+        ROLE-KEYED at the FLAT level only (D-18, B2): 'name' is read by its
+        '<name-dotted(aggregate)>' role, immune to the silent 'spawn:' and any
+        future discriminant on this sequence. The args and the optional 'into:'
+        clause stay POSITIONAL: 'children' here is (aggregate, parens-arg,
+        opt_into) -- 'spawn:' silent, the parens-arg an unroled SEQ at slot 1,
+        the optional an OPT_Node at slot 2. The 'into:' target ('container',
+        'key') is tagged one rule DOWN, inside <spawn-into>, reached through this
+        OPT_Node and an anonymous inline SEQ; the container now reads by ROLE off
+        the 'step/spawn/into' member node (D-22), and only the key keeps a single
+        optional unwrap -- the residual boundary is one hop, not the former two.
         """
-        name, args, opt_in = node.children
-        in_container = None
-        via          = None
-        if opt_in.present:
-            seq          = opt_in.child
-            in_container = seq.children[0]
-            opt_via      = seq.children[1]
-            if opt_via.present:
-                rvalue = opt_via.child.children[0]
-                via    = Arg._classify(rvalue, name=None, begin=node.begin)
+        name = node["aggregate"]
+        # Positional below: parens-arg at slot 1, the into-optional at slot 2.
+        args    = node.children[1]
+        opt_into = node.children[2]
+        into_container = None
+        key            = None
+        if opt_into.present:
+            # opt_into wraps the one-survivor SEQ around <into> ('into:' silent);
+            # its first child is the 'step/spawn/into' SEQ_Node, which tags its
+            # container slot (D-22 made <into> a roled subspace member), so the
+            # container reads by ROLE -- drift-proof. The optional key sits one
+            # level down inside <into>'s own '[' ... ']' optional, whose role tag
+            # does not surface at this SEQ level, so the key keeps a one-level
+            # optional unwrap (the residual B2 boundary, now just one hop).
+            into           = opt_into.child.children[0]
+            into_container = into["container"]
+            opt_key        = into.children[1]
+            if opt_key.present:
+                key = opt_key.child.children[0]
         return cls(name=name, args=args, has_parens=True,
-                   in_container=in_container, via=via,
+                   into_container=into_container, key=key,
                    begin=node.begin)
 
 
@@ -443,56 +517,66 @@ class ReportString:
 
 @dataclass(frozen=True)
 class Mutation:
-    """A mutation effect: a STATEMENT_BLOCK opaque span after '=>'."""
-    body:  OpaqueCode
+    """A mutation effect: a statement-block CODE BLOCK after '=>'.
+
+    'body' is the code block -- an OpaqueCode (opaque Luau '{ ... }') or a
+    DoSweep ('do: <step>+ :end'); the sweep is the rule-plane alternative to a
+    Luau statement block. A DoSweep body carries its one-sweep restriction via a
+    role hint read in pass-2.
+    """
+    body:  object            # OpaqueCode | DoSweep
     begin: int
 
     @classmethod
-    def from_span(cls, span):
-        """RETURN: Mutation, wrapping the STATEMENT_BLOCK span (single-terminal
-        rule: the factory receives the raw SpanResult)."""
-        body = OpaqueCode.from_span(span)
-        return cls(body=body, begin=body.begin)
+    def from_block(cls, block):
+        """RETURN: Mutation, wrapping a code-block value.
+
+        The <mutation> rule is the single reference '<code-block>', so its value
+        is the already-built block (an OpaqueCode | DoSweep), passed straight in.
+        """
+        return cls(body=block, begin=block.begin)
 
 
 @dataclass(frozen=True)
 class InitBlock(SEQ_Interface):
-    """An 'init { ... }' member: its STATEMENT_BLOCK body.
+    """An 'init: <code-block>' member: its statement-block body.
 
-    A distinct type (vs DeinitBlock) so a mode/state-machine assembler can sort
+    'body' is the code block (OpaqueCode | DoSweep), as for a mutation. A
+    distinct type (vs DeinitBlock) so a mode/state-machine assembler can sort
     interleaved members by kind rather than by source position.
     """
-    body:  OpaqueCode
+    body:  object            # OpaqueCode | DoSweep
     begin: int
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: InitBlock -- children = (span,), the STATEMENT_BLOCK body
-        wrapped into the rule language's own OpaqueCode node."""
-        body = OpaqueCode.from_span(node.children[0])
+        """RETURN: InitBlock -- children = (code-block,), an OpaqueCode | DoSweep."""
+        body = node.children[0]
         return cls(body=body, begin=body.begin)
 
 
 @dataclass(frozen=True)
 class DeinitBlock(SEQ_Interface):
-    """A 'deinit { ... }' member: its STATEMENT_BLOCK body. See InitBlock."""
-    body:  OpaqueCode
+    """A 'deinit: <code-block>' member: its statement-block body. See InitBlock."""
+    body:  object            # OpaqueCode | DoSweep
     begin: int
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: DeinitBlock -- children = (span,), the STATEMENT_BLOCK body
-        wrapped into the rule language's own OpaqueCode node."""
-        body = OpaqueCode.from_span(node.children[0])
+        """RETURN: DeinitBlock -- children = (code-block,), an OpaqueCode | DoSweep."""
+        body = node.children[0]
         return cls(body=body, begin=body.begin)
 
 
 @dataclass(frozen=True)
 class Causality(SEQ_Interface, TopLevel):
-    """A full rule: 'on <cause> (=> <effect>)+'.
+    """A full rule: 'on: <cause> (=> <effect>)+'.
 
     'effects' holds the ordered effect nodes (EventSpec, EffectRef, ModeArming,
-    Spawn, Unspawn, ReportString, Mutation).
+    Unspawn, ReportString, Mutation). A Mutation's body may itself be a 'do:'
+    sweep (a DoSweep) rather than opaque Luau -- the sweep is an alternative to
+    a Luau code block at every statement-block site. Spawn and container writes
+    are NOT effects: they appear only inside a clockwork or sweep body (D-16).
     """
     cause:   Cause
     effects: List[object]
@@ -664,20 +748,79 @@ class StructDecl(TopLevel):
 
 
 @dataclass(frozen=True)
-class ContainerDecl(TopLevel):
-    """A container declaration: '<name> is: container<...> [by: {lvalue}]'.
+class DictType(SEQ_Interface):
+    """A 'dict<K,V>' type: a map from one key type to one value type.
 
-    'cargs' are the ANGLE-bracket TYPE PARAMETERS, a list of Arg (shape, size,
-    access words -- opaque to the static layer, read by the resolver); empty
-    when the angle brackets are absent (per-kind defaults). A container has no
-    constructor signature -- round = how to instantiate, angle = what kind --
-    yet the grammar admits a head signature on the shared declaration head, so
+    'key'/'value' are each a <type>: a built-in scalar word (str), a named user
+    type (str), or a nested DictType/ListType. The type words' resolution is a
+    pass-2 concern. Used both as a declaration kind (DictDecl.dtype) and as a
+    nested type parameter inside another container type.
+    """
+    key:   object            # str | DictType | ListType
+    value: object            # str | DictType | ListType
+    begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: DictType, 'dict < <type> , <type> >'.
+
+        Reads the key/value type slots by ROLE (D-18): the grammar tags them
+        '<type(key)>' / '<type(value)>', so 'dict' and the '<'/'>' captured
+        discriminants -- present in 'children' but unroled -- are never named
+        and their slots cannot drift the read. ',' is silent.
+        """
+        return cls(key=node["key"], value=node["value"],
+                   begin=node.begin)
+
+
+@dataclass(frozen=True)
+class ListType(SEQ_Interface):
+    """A 'list<V>' type: an ordered sequence of one element type.
+
+    'element' is a <type> (built-in scalar word, named type, or nested
+    DictType/ListType), resolved in pass 2. Used as a declaration kind
+    (ListDecl.dtype) and as a nested type parameter.
+    """
+    element: object          # str | DictType | ListType
+    begin:   int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: ListType, 'list < <type> >'.
+
+        Reads the element type by ROLE (D-18): the grammar tags it
+        '<type(element)>', so 'list' and the captured '<'/'>' -- unroled slots
+        in 'children' -- cannot drift the read.
+        """
+        return cls(element=node["element"], begin=node.begin)
+
+
+@dataclass(frozen=True)
+class DictDecl(TopLevel):
+    """A dict declaration: '<name> is: dict<K,V> [by: {lvalue}]'.
+
+    'dtype' is the DictType (key and value types). A container has no
+    constructor signature -- the angle brackets say what it holds -- yet the
+    grammar admits a head signature on the shared declaration head, so
     'head_params' records what was written for the pass-2 kind-vs-shape check
     (F-2). 'by' is the optional script binding: an LVALUE opaque span giving the
     engine-owned container an EXISTING opaque-code reference, or None.
     """
     name:        str
-    cargs:       List["Arg"]
+    dtype:       "DictType"
+    by:          Optional["OpaqueCode"]
+    head_params: List["ArgDecl"]
+    begin:       int
+
+
+@dataclass(frozen=True)
+class ListDecl(TopLevel):
+    """A list declaration: '<name> is: list<V> [by: {lvalue}]'.
+
+    'dtype' is the ListType (element type). 'head_params'/'by' as on DictDecl.
+    """
+    name:        str
+    dtype:       "ListType"
     by:          Optional["OpaqueCode"]
     head_params: List["ArgDecl"]
     begin:       int
@@ -847,14 +990,14 @@ class CauseDef(SEQ_Interface, TopLevel):
     from the signature; 'for_event' is the bound event's <name-dotted> segment
     list -- the event the definition's 'e.member' references are checked
     against, once, at the definition (D-8). 'guard' is MANDATORY and CONCRETE
-    (an opaque span or a Condition tree), never another cause reference: no alias
-    chains. Resolution of references against this definition is a pass-2
+    (a Condition tree), never another cause reference: no alias chains.
+    Resolution of references against this definition is a pass-2
     concern; the parser only records it.
     """
     name:      "list[str]"     # name-dotted segments from the signature
     params:    List[ArgDecl]
     for_event: "list[str]"     # name-dotted segments of the bound event
-    guard:     "object"        # OpaqueCode | Condition
+    guard:     "Condition"
     begin:     int
 
     @classmethod
@@ -911,7 +1054,7 @@ class CauseRef:
     """
     name:  "list[str]"        # name-dotted segments
     args:  List["Arg"]
-    guard: "Optional[object]" # OpaqueCode | Condition | None -- parsed, pass-2 F-7
+    guard: "Optional[Condition]" # Condition | None -- parsed, pass-2 F-7
     begin: int
 
 
@@ -1127,8 +1270,8 @@ class IfFrame(SEQ_Interface):
     A tick-free control frame fencing step sequences inside an clockwork body. 'arms'
     is the list of (guard, body) pairs -- the leading 'if:' and each 'elif:', in
     source order; 'else_body' is the trailing 'else:' steps or None. The whole
-    if/elif/else chain is closed by ONE ':end'. Conditions reuse <guard> (an
-    OpaqueCode CONDITION span or a Condition tree); 'e' is not in scope (D-11).
+    if/elif/else chain is closed by ONE ':end'. Conditions reuse <guard> (a
+    Condition tree); 'e' is not in scope (D-11).
     """
     arms:      List["tuple"]   # [(guard, [step, ...]), ...]
     else_body: "Optional[list]"
@@ -1164,7 +1307,7 @@ class WhileFrame(SEQ_Interface):
     block takes its OWN ':end' (D-11). Condition reuses <guard>; 'e' is not in
     scope.
     """
-    guard: "object"           # OpaqueCode | Condition
+    guard: "Condition"        # bracket condition '[ ... ]'
     body:  List[object]       # clockwork steps
     begin: int
 
@@ -1218,6 +1361,32 @@ class Clockwork(SEQ_Interface, TopLevel):
                 case _:             steps.append(elm)
         return cls(name=name, params=params, clock=clock, init=init,
                    deinit=deinit, steps=steps, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class DoSweep(SEQ_Interface):
+    """A one-sweep clockwork body as a causality reaction: 'do: <step>+ :end'.
+
+    The heartbeat-free alternative to an effect list: the causality's cause
+    triggers this body, which runs to completion in a SINGLE sweep. It is where
+    container writes and other clockwork-only statements (spawn, gets:, incr:,
+    instant:, ...) run from a causality, mixed freely with '{ luau }' segments.
+    No signature, no inner 'on:', no init/deinit -- just 'steps'. The grammar
+    admits the full step vocabulary; the one-sweep restrictions (no heartbeat,
+    so 'while:', the heartbeat-shaped 'wait:'/'select:', and bare events are
+    flagged) are pass-2 checks, not parse errors.
+    """
+    steps: List[object]
+    begin: int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: DoSweep -- children = (PLUS(step-clockwork),).
+
+        'do:'/':end' silent. Body steps keep source order; no init/deinit (those
+        are lifecycle hooks of a named actor, absent here).
+        """
+        return cls(steps=list(node.children[0].items), begin=node.begin)
 
 
 @dataclass

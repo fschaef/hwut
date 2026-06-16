@@ -37,75 +37,80 @@ Spider19 is: state
 Beetle20 is: mode
 Eel21 is: mode
 
+Ghoul22 is: list<bool>
+Dryad23 is: dict<string, int>
+Beetle24 is: dict<bool, string>
+
 ## ======================================================================
 ## category: moving
 ## ======================================================================
 open: menagerie.moving
 
-mode_group: Raven22
-    has: Wizard.y
+state_machine: Wasp25(rate: string)
+    default: Wasp25.Flee26
 
-    mode: Roost23
+    state: Flee26
+        init: { self.alert = true }
+        on: SeesPlayer & [ e.tags.has("boss") ]
+                => { self.hp = self.hp - 1 }
+        until: ArrowIncoming
+
+    state: Stalk27
         init: { self.pos = self.pos:step() }
-        on: SunRose
-                => "Wizard reacts"
-                => Splash(level = "Idle")
-        until: RainFell
+        on: Wounded & [ e.name.glob("prey_*") ]
+                => { self.alert = true }
+        until: PreyEscaped
 
-    mode: Flee24
+    state: Idle28
         init: { self.pos = self.pos:step() }
-        on: Splash & { self.hp > 0 }
-                => "Lich reacts"
-        until: SeesPlayer
-:end
-
-mode_group: Wolf25
-    has: Troll.x
-
-    mode: Rally26
-        init: { self.pos = self.pos:step() }
-        on: PreyEscaped & { self.hp > 0 }
+        on: Cornered
                 => -! Ogre
                 => { self.alert = true }
         until: EnemyInRange
 
-    mode: Guard27
-        init: { self.hp = self.hp - 1 }
-        on: Cornered
-                => ! Stalk(speed, power, rate = "Flee")
-        until: NoiseHeard
-:end
-
-state_machine: Ogre28(rate: string)
-    default: Ogre28.Roost29
-
-    state: Roost29
-        init: { self.hp = self.hp - 1 }
-        on: Splash
-                => "Wasp reacts"
-                => ! Forage(power, power = "Patrol", rate)
-        until: Splash
-
-    state: Roost30
-        init: { self.alert = true }
-        on: BladeClash
-                => -! Crab
-                => -! Lich
-        until: Splash
-
-    state: Submerge31
-        init: { self.alert = true }
-        on: ArrowIncoming
-                => +! Wraith(speed = slow, speed, level = 99) in: plants
-        until: NoiseHeard
-
-    state: Roost32
+    state: Retreat29
         init: { self.pos = self.pos:step() }
-        on: SunRose & { self.fear < 5 }
-                => -! Stag
-                => ! Lurk(level = "Idle")
-        until: BladeClash
+        on: Cornered
+                => { self.pos = self.pos:step() }
+                => Splash(level)
+        until: NoiseHeard
 :end
+
+on: SeesPrey & [ e.range <= 10 ]
+        => "Ogre reacts"
+        => -! Serpent
+        => +! Kraken(power) in: villains
+
+mode_group: Siren30
+    has: Wasp.y
+
+    mode: Rest31
+        init: { self.hp = self.hp - 1 }
+        on: Tick & [ e.path.len() > 0 ]
+                => -! Goblin
+                => "Boar reacts"
+        until: SunRose
+
+    mode: Lurk32
+        init: { self.hp = self.hp - 1 }
+        on: RainFell & [ e.path.len() > 0 ]
+                => { self.hp = self.hp - 1 }
+                => ArrowIncoming(power = loud, speed = slow)
+                => BladeClash(level)
+        until: WhipCracked
+
+    mode: Roost33
+        init: { self.alert = true }
+        on: PreyEscaped
+                => ! Guard(speed)
+                => ! Retreat(level = slow, rate)
+                => +! Beetle(rate = fast) in: sea
+        until: PreyEscaped
+:end
+
+on: SunRose
+        => { self.hp = self.hp - 1 }
+        => BladeClash(level, level = sm.x)
 :close
 
 ## ======================================================================
@@ -113,41 +118,27 @@ state_machine: Ogre28(rate: string)
 ## ======================================================================
 open: menagerie.plants
 
-on: BladeClash
-        => "Stag reacts"
+on: SeesPrey
+        => -! Lich
 
-state_machine: Lich33(rate: string)
-    default: Lich33.Guard34
+state_machine: Wizard34(rate: string)
+    default: Wizard34.Rally35
 
-    state: Guard34
+    state: Rally35
         init: { self.pos = self.pos:step() }
-        on: Splash & { self.range <= 10 }
-                => { self.hp = self.hp - 1 }
-                => Cornered(speed, speed = 33)
-        until: SeesPrey
-
-    state: Patrol35
-        init: { self.hp = self.hp - 1 }
-        on: NoiseHeard
-                => Splash(rate = mg.x, level = 9, speed = 21)
-        until: Cornered
-
-    state: Rally36
-        init: { self.alert = true }
-        on: PreyEscaped
-                => SeesPrey(depth, level = "Patrol")
-                => RainFell()
-                => -! Bandit
+        on: ArrowIncoming & [ e.hp > 0 ]
+                => -! Wizard
         until: WhipCracked
 
-    state: Charge37
+    state: Stalk36
         init: { self.alert = true }
-        on: NoiseHeard
-                => -! Dryad
+        on: SeesPrey
                 => { self.alert = true }
-                => { self.hp = self.hp - 1 }
-        until: SunRose
+        until: PreyEscaped
 :end
+
+on: EnemyInRange
+        => WhipCracked()
 :close
 
 ## ======================================================================
@@ -155,79 +146,38 @@ state_machine: Lich33(rate: string)
 ## ======================================================================
 open: menagerie.undead
 
-state_machine: Drake38(rate: string)
-    default: Drake38.Stalk39
+on: Tick
+        => +! Dryad(rate, level, speed) in: sea
+        => { self.hp = self.hp - 1 }
+        => SeesPrey(power = 89)
 
-    state: Stalk39
-        init: { self.pos = self.pos:step() }
-        on: SunRose
-                => +! Hawk(speed = "Lurk") in: undead
-                => ! Ambush()
-                => "Wraith reacts"
-        until: BladeClash
+state_machine: Bear37(rate: string)
+    default: Bear37.Retreat38
 
-    state: Retreat40
-        init: { self.pos = self.pos:step() }
-        on: SeesPrey
-                => { self.hp = self.hp - 1 }
-                => Spooked(speed, speed = m.fear)
-                => -! Wizard
-        until: SeesPlayer
-:end
-
-on: BladeClash
-        => ! Rest()
-        => ! Hunt(power, rate)
-        => BladeClash()
-
-mode_group: Moth41
-    has: Raven.x
-
-    mode: Idle42
+    state: Retreat38
         init: { self.alert = true }
-        on: SeesPrey & { self.hp > 0 }
-                => Splash(power = "Guard", rate = slow, depth)
-        until: RainFell
-
-    mode: Flee43
-        init: { self.alert = true }
-        on: SunRose & { self.fear < 5 }
-                => -! Serpent
-                => "Drake reacts"
-        until: Splash
-
-    mode: Forage44
-        init: { self.pos = self.pos:step() }
         on: BladeClash
-                => ! Idle(rate = fast, power, depth)
-                => RainFell(power = 41, depth = sm.pos, speed)
-                => "Pixie reacts"
+                => "Troll reacts"
+        until: SunRose
+
+    state: Rally39
+        init: { self.pos = self.pos:step() }
+        on: SunRose & [ e.hp > 0 ]
+                => "Wraith reacts"
+                => ! Guard(depth = e.depth)
+                => RainFell(speed = "Forage")
         until: Tick
-:end
 
-mode_group: Wizard45
-    has: Troll.y
-
-    mode: Lurk46
+    state: Rally40
         init: { self.alert = true }
-        on: Tick
-                => +! Archer(level, speed) in: moving
-        until: Wounded
-
-    mode: Patrol47
-        init: { self.hp = self.hp - 1 }
-        on: SeesPrey
-                => "Goblin reacts"
-                => +! Bandit(power) in: rules
+        on: NoiseHeard
+                => -! Wolf
+                => ! Submerge(power = "Hunt", depth = slow, speed = fast)
         until: BladeClash
-
-    mode: Flee48
-        init: { self.alert = true }
-        on: WhipCracked
-                => ! Roost(speed, level = 19)
-                => { self.hp = self.hp - 1 }
-        until: SeesPlayer
 :end
+
+on: Cornered & [ e.tags.has("boss") ]
+        => SeesPrey()
 :close
 
 ## ======================================================================
@@ -235,72 +185,50 @@ mode_group: Wizard45
 ## ======================================================================
 open: menagerie.villains
 
-state_machine: Bandit49(rate: string)
-    default: Bandit49.Submerge50
+state_machine: Bandit41(rate: string)
+    default: Bandit41.Rest42
 
-    state: Submerge50
-        init: { self.alert = true }
-        on: ArrowIncoming & { self.hp > 0 }
-                => +! Serpent() in: undead
-        until: BladeClash
-
-    state: Lurk51
-        init: { self.alert = true }
-        on: PreyEscaped & { self.range <= 10 }
-                => ! Stalk(rate)
-                => { self.pos = self.pos:step() }
-                => "Ghoul reacts"
-        until: Cornered
-
-    state: Submerge52
+    state: Rest42
         init: { self.hp = self.hp - 1 }
-        on: SeesPlayer & { self.range <= 10 }
-                => -! Eel
+        on: RainFell
+                => +! Spider(depth, speed, speed) in: rules
+                => +! Stag(rate = fast) in: villains
+        until: Wounded
+
+    state: Charge43
+        init: { self.pos = self.pos:step() }
+        on: BladeClash
+                => "Stag reacts"
+                => -! Bear
+        until: WhipCracked
+:end
+
+state_machine: Hawk44(rate: string)
+    default: Hawk44.Ambush45
+
+    state: Ambush45
+        init: { self.pos = self.pos:step() }
+        on: Tick & [ e.range <= 10 ]
+                => -! Troll
+                => { self.pos = self.pos:step() }
+                => ! Idle()
+        until: NoiseHeard
+
+    state: Roost46
+        init: { self.hp = self.hp - 1 }
+        on: SunRose
+                => PreyEscaped(depth = "Idle")
                 => { self.hp = self.hp - 1 }
-        until: EnemyInRange
+        until: RainFell
 
-    state: Stalk53
+    state: Patrol47
         init: { self.pos = self.pos:step() }
-        on: ArrowIncoming
-                => "Ogre reacts"
-                => -! Wolf
-        until: Tick
+        on: Splash & [ e.range <= 10 ]
+                => +! Dryad(speed = "Forage", power) in: villains
+                => +! Bandit(power) in: rules
+                => +! Wizard(depth = slow, rate = 73) in: sea
+        until: RainFell
 :end
-
-state_machine: Wizard54(rate: string)
-    default: Wizard54.Forage55
-
-    state: Forage55
-        init: { self.hp = self.hp - 1 }
-        on: Spooked & { self.hp > 0 }
-                => +! Siren(depth = fast, depth, level) in: sea
-        until: SunRose
-
-    state: Guard56
-        init: { self.pos = self.pos:step() }
-        on: ArrowIncoming & { self.hp > 0 }
-                => -! Goblin
-                => +! Ogre(level = loud) in: plants
-        until: PreyEscaped
-
-    state: Idle57
-        init: { self.hp = self.hp - 1 }
-        on: SeesPlayer
-                => { self.pos = self.pos:step() }
-                => { self.alert = true }
-        until: SeesPlayer
-
-    state: Idle58
-        init: { self.hp = self.hp - 1 }
-        on: Tick & { self.fear < 5 }
-                => "Drake reacts"
-        until: SeesPlayer
-:end
-
-on: SunRose & { self.range <= 10 }
-        => { self.pos = self.pos:step() }
-        => +! Ogre(power = "Rest") in: undead
-        => Cornered(rate = "Forage", speed = "Lurk")
 :close
 
 ## ======================================================================
@@ -308,79 +236,47 @@ on: SunRose & { self.range <= 10 }
 ## ======================================================================
 open: menagerie.rules
 
-state_machine: Archer59(rate: string)
-    default: Archer59.Retreat60
+mode_group: Dryad48
+    has: Raven.y
 
-    state: Retreat60
-        init: { self.hp = self.hp - 1 }
-        on: Wounded
+    mode: Forage49
+        init: { self.alert = true }
+        on: SunRose & [ e.name.glob("prey_*") ]
+                => -! Bear
+                => "Pixie reacts"
                 => { self.hp = self.hp - 1 }
-        until: RainFell
-
-    state: Ambush61
-        init: { self.hp = self.hp - 1 }
-        on: EnemyInRange & { self.hp > 0 }
-                => { self.pos = self.pos:step() }
-                => "Lich reacts"
-        until: ArrowIncoming
-
-    state: Idle62
-        init: { self.pos = self.pos:step() }
-        on: RainFell & { self.hp > 0 }
-                => { self.hp = self.hp - 1 }
-                => Tick(power, rate, depth = "Lurk")
-        until: Cornered
-
-    state: Rally63
-        init: { self.hp = self.hp - 1 }
-        on: Tick & { self.range <= 10 }
-                => BladeClash(power = 70, level = "Hunt", rate)
-                => { self.alert = true }
-                => { self.pos = self.pos:step() }
-        until: Spooked
-:end
-
-state_machine: Stag64(rate: string)
-    default: Stag64.Rally65
-
-    state: Rally65
-        init: { self.hp = self.hp - 1 }
-        on: PreyEscaped
-                => -! Ghoul
-                => "Raven reacts"
-                => "Archer reacts"
-        until: ArrowIncoming
-
-    state: Roost66
-        init: { self.hp = self.hp - 1 }
-        on: Cornered
-                => RainFell()
-                => "Troll reacts"
         until: SeesPlayer
+
+    mode: Roost50
+        init: { self.alert = true }
+        on: SunRose
+                => +! Wraith(power = 29, rate) in: moving
+                => +! Spider(level = "Hunt") in: sea
+                => ! Submerge(speed, speed)
+        until: ArrowIncoming
 :end
 
-mode_group: Bandit67
-    has: Pixie.y
+mode_group: Troll51
+    has: Ogre.y
 
-    mode: Patrol68
+    mode: Lurk52
         init: { self.hp = self.hp - 1 }
-        on: SeesPlayer & { self.range <= 10 }
-                => { self.alert = true }
-                => Tick(power = "Guard")
+        on: ArrowIncoming & [ e.path.len() > 0 ]
+                => ! Idle(rate = mg.pos)
         until: BladeClash
 
-    mode: Patrol69
-        init: { self.pos = self.pos:step() }
-        on: BladeClash & { self.fear < 5 }
-                => "Pixie reacts"
-        until: PreyEscaped
-
-    mode: Guard70
-        init: { self.pos = self.pos:step() }
-        on: SunRose & { self.range <= 10 }
+    mode: Idle53
+        init: { self.hp = self.hp - 1 }
+        on: Splash
+                => "Kraken reacts"
+                => BladeClash(level = m.x, rate = fast, power)
                 => "Dryad reacts"
-                => ! Lurk(speed = fast, depth = "Ambush", speed = "Idle")
-                => +! Spider(depth = "Charge") in: plants
+        until: SeesPlayer
+
+    mode: Submerge54
+        init: { self.alert = true }
+        on: RainFell
+                => +! Drake(rate, rate = m.fear) in: sea
         until: RainFell
 :end
 :close
@@ -390,44 +286,51 @@ mode_group: Bandit67
 ## ======================================================================
 open: menagerie.sea
 
-mode_group: Pixie71
-    has: Sprite.y
+state_machine: Drake55(rate: string)
+    default: Drake55.Submerge56
 
-    mode: Submerge72
+    state: Submerge56
         init: { self.alert = true }
-        on: SeesPrey
-                => RainFell(power)
-        until: Splash
+        on: NoiseHeard
+                => +! Ogre(power = "Rest") in: undead
+                => Cornered(rate = "Forage", speed = "Lurk")
+        until: BladeClash
 
-    mode: Stalk73
-        init: { self.pos = self.pos:step() }
-        on: Wounded & { self.range <= 10 }
-                => -! Boar
-        until: Cornered
-
-    mode: Hunt74
+    state: Rally57
         init: { self.hp = self.hp - 1 }
-        on: Spooked
-                => "Troll reacts"
-                => ! Rest(rate = slow, speed = fast, level = 49)
-        until: NoiseHeard
+        on: SeesPlayer
+                => "Knight reacts"
+                => -! Knight
+        until: Wounded
+
+    state: Stalk58
+        init: { self.alert = true }
+        on: ArrowIncoming
+                => +! Siren(speed, level = 59) in: moving
+        until: ArrowIncoming
 :end
 
-state_machine: Drake75(rate: string)
-    default: Drake75.Submerge76
+mode_group: Stag59
+    has: Goblin.x
 
-    state: Submerge76
-        init: { self.pos = self.pos:step() }
-        on: EnemyInRange & { self.range <= 10 }
-                => { self.pos = self.pos:step() }
-                => { self.hp = self.hp - 1 }
-        until: PreyEscaped
-
-    state: Flee77
+    mode: Rest60
         init: { self.hp = self.hp - 1 }
-        on: SeesPrey
-                => ! Retreat(rate = sm.depth, speed = sm.fear, speed = "Rest")
-                => SeesPrey(power = sm.fear)
-        until: SeesPrey
+        on: Spooked
+                => { self.alert = true }
+        until: Wounded
+
+    mode: Retreat61
+        init: { self.hp = self.hp - 1 }
+        on: NoiseHeard & [ e.name.glob("prey_*") ]
+                => "Knight reacts"
+        until: NoiseHeard
+
+    mode: Submerge62
+        init: { self.alert = true }
+        on: WhipCracked & [ e.path.len() > 0 ]
+                => { self.pos = self.pos:step() }
+                => +! Crab() in: plants
+                => "Bandit reacts"
+        until: EnemyInRange
 :end
 :close

@@ -64,13 +64,20 @@ _EVENTS = (
 
 _MEMBER_TYPES = ("int", "string")
 
-# The opaque Luau bodies the generator splices verbatim into condition / mutation
-# / lvalue positions. They are opaque to the parser (balance is all that matters),
-# so a small fixed set keeps the text legible and the Luau census stable.
-_LUAU_COND   = ("{ self.hp > 0 }", "{ self.fear < 5 }", "{ self.range <= 10 }")
+# The opaque Luau bodies the generator splices verbatim into mutation / lvalue
+# positions. They are opaque to the parser (balance is all that matters), so a
+# small fixed set keeps the text legible and the Luau census stable.
 _LUAU_STMTS  = ("{ self.hp = self.hp - 1 }", "{ self.pos = self.pos:step() }",
                 "{ self.alert = true }")
 _LUAU_LVALUE = ("{ db.slot }", "{ db.pool }")
+
+# Bracket-condition guards '[ <cond> ]' -- the sole guard form. Comparisons over
+# the fired event's members (bound 'e', D-13), plus standard-member-function
+# calls ('.has', '.glob', '.len') over event members; operands are dotted names,
+# never leading-dot. A guard is never opaque text.
+_GUARD_COND  = ("[ e.hp > 0 ]", "[ e.fear < 5 ]", "[ e.range <= 10 ]",
+                "[ e.tags.has(\"boss\") ]", "[ e.name.glob(\"prey_*\") ]",
+                "[ e.path.len() > 0 ]")
 
 
 class _Emit:
@@ -143,6 +150,27 @@ class _Emit:
             kind = self.s.select(("mode", "state"))
             self.lines.append("%s is: %s" % (self._name(_CREATURES), kind))
 
+    def container_decls(self, count):
+        """RETURN: None. Emits 'count' 'Name is: dict<K,V>' / 'list<V>' decls.
+
+        Exercises the container kinds and the nested type parameter ('<'/'>'
+        shared with comparison, the '>>'-close case): a list element type is
+        itself sometimes a 'dict<...>'. Both kinds appear every run so sprites
+        stays the canary for the container-type grammar.
+        """
+        _SCALAR = ("int", "float", "string", "bool")
+        for _ in range(count):
+            name = self._name(_CREATURES)
+            if self.s.coin(0.5):
+                self.lines.append("%s is: dict<%s, %s>"
+                                  % (name, self.s.select(_SCALAR),
+                                     self.s.select(_SCALAR)))
+            else:
+                elem = ("dict<%s, %s>" % (self.s.select(_SCALAR),
+                                          self.s.select(_SCALAR))
+                        if self.s.coin(0.3) else self.s.select(_SCALAR))
+                self.lines.append("%s is: list<%s>" % (name, elem))
+
     # -- causality -----------------------------------------------------------
     def _effect(self):
         """RETURN: str, one '<effect>' body (no leading '=>').
@@ -205,7 +233,7 @@ class _Emit:
         each on its own continuation line for legibility.
         """
         trigger = self.s.select(_EVENTS)
-        guard   = (" & " + self.s.select(_LUAU_COND)
+        guard   = (" & " + self.s.select(_GUARD_COND)
                    if self.s.coin(0.4) else "")
         self.lines.append("%son: %s%s" % (indent, trigger, guard))
         for _ in range(self.s.next_int(1, 3)):
@@ -265,6 +293,8 @@ def generate(seed=0x5197):
     e.clock_defs(s.next_int(2, 4))
     e.blank()
     e.forward_decls(s.next_int(4, 8))
+    e.blank()
+    e.container_decls(s.next_int(3, 6))
 
     for cat in _CATEGORIES:
         e.comment("category: %s" % cat)

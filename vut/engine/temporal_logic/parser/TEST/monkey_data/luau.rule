@@ -2,18 +2,16 @@ state_machine: X2 . X4 . X6 ( n8: string ; n11: X12 ; ) is: X16 . X18 . X20
 default: X22 . X24
 :end
 clockwork: X27 . X29 . X31 ( )
-on: ANY & [ { x{ y }{ y }{ y }{ y }{ y }{ y } } * false - X41 . X43 * true shl: 1 * "s" + X51 . X53 * { x{ y } } and true * "s" + false * 1 shr: 1 * "s" - true * { x{ y }{ y }{ y }{ y }{ y } } nxor false * X73 . X75 - false * 1 shl: "s" * X83 . X85 + { x{ y } } * true nand { x } * 1 - true * X95 . X97 shr: "s" * false + X103 . X105 * false nor true * "s" + 1 * { x{ y }{ y }{ y } } shl: X116 . X118 * "s" - false * { x{ y } } and 1 * true + X129 . X131 * "s" shr: false * true - 1 * { x{ y }{ y }{ y } } xor 1 * true - X146 . X148 * false shl: "s" * { x{ y } } + false * true nand 1 * { x{ y }{ y }{ y }{ y }{ y }{ y } } + "s" * X164 . X166 shr: 1 * true - false * { x } ]
-unspawn: X176 . X178
+on: ANY & [ { x{ y }{ y } } / true - 1 * "s" shl: false / "s" + { x{ y }{ y }{ y } } * 1 nand false / true + 1 * "s" shr: false / { x{ y } } - true * 1 xor false / "s" - { x{ y }{ y }{ y }{ y } } * true shl: 1 / true + "s" * { x{ y }{ y }{ y }{ y }{ y } } and false / "s" - false * { x{ y }{ y }{ y } } shr: true * 1 + "s" / false or { x{ y }{ y }{ y }{ y }{ y }{ y } } / true + 1 * false shl: { x{ y }{ y }{ y } } / 1 - "s" * true nand "s" * false - 1 / { x{ y }{ y }{ y }{ y }{ y }{ y } } shr: true / "s" + { x } * 1 nxor false / true - true * false shl: 1 * "s" + { x{ y } } / 1 and false * true - "s" / { x{ y } } shr: true / { x{ y }{ y }{ y } } + 1 * "s" ]
+spawn: X154 . X156 ( ) into: X160 . X162
 :end
-open: X181 . X183
-open: X185 . X187
-mode_group: X189 . X191 is: X193 . X195
-init: { x{ y }{ y }{ y }{ y } }
-:end effect: X199 . X201
+open: X165 . X167 . X169 effect: X171 . X173 ( )
 =>
-arm: X204 . X206 ( )
+arm: X178 . X180 ( )
 :close
-:close
-event: X212 ( n214: X215 ; n217: int ) cause: X221 . X223 . X225 for: X227 . X229 & { x{ y }{ y }{ y }{ y }{ y } }
-on: X232 . X234 ( )
-=> "s"
+clock: X185 1 cause: X188 . X190 ( n192: int ; n195: X196 ; ) for: X200 . X202 & [ false / { x{ y }{ y } } + 1 * true shl: "s" * false - true / "s" nand false * 1 - { x{ y }{ y }{ y }{ y }{ y } } / false shr: true * 1 + { x{ y } } / "s" xor "s" / 1 - false * true shr: { x{ y } } / false + "s" * true and 1 * { x{ y }{ y }{ y }{ y }{ y } } + "s" / { x } shl: true * 1 - false / true nor 1 * { x{ y } } + "s" / false shl: { x } / 1 - "s" * true nand false * "s" - 1 / false shr: true / { x{ y }{ y }{ y } } + { x{ y }{ y }{ y }{ y } } * 1 nxor "s" * true - false / { x{ y }{ y }{ y }{ y }{ y } } shl: "s" * 1 + true / false and true * "s" - { x{ y }{ y }{ y }{ y }{ y } } / false shr: 1 * false + 1 / { x{ y } } nor true / "s" - "s" * false shl: { x{ y }{ y }{ y } } / 1 + true * false nand 1 * true - { x{ y }{ y }{ y }{ y }{ y }{ y } } / "s" shr: false * true + { x{ y }{ y }{ y }{ y }{ y } } / "s" nxor 1 / 1 - { x{ y }{ y }{ y } } * "s" shl: true / false + true * false and "s" * 1 - { x{ y } } / "s" shr: 1 / false + true * { x{ y }{ y }{ y }{ y }{ y }{ y } } ]
+mode_group: X379 . X381 . X383 ( n385: bool ; n388: X389 ; n391: float ; ) is: X396 . X398 . X400 is: X402 . X404
+init: do: decr: X408 . X410
+:end
+has: X413 . X415 . VOID
+:end

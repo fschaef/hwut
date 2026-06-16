@@ -95,9 +95,12 @@ class E_SpanMode(SpanMode, Enum):
     """The rule-language span positions an opaque terminal may occupy.
 
     A core-owned enum so the rule-file grammar names its opaque positions
-    without importing any embedded language: CONDITION (a guard span),
-    EXPRESSION (an rvalue span), LVALUE (a 'by:'/'as:' access span), and
-    STATEMENT_BLOCK (a mutation / init / deinit body). The concrete oracle
+    without importing any embedded language: EXPRESSION (an rvalue span),
+    LVALUE (a 'by:'/'as:' access span), and STATEMENT_BLOCK (a mutation / init /
+    deinit body). CONDITION is retained as a lexer-role label only -- the
+    grammar no longer opens an opaque guard span (a guard is the bracket
+    condition '[ <cond> ]'); the member stays for the span-handling tests that
+    drive the oracle handoff under a CONDITION role. The concrete oracle
     interprets each member (the Luau oracle maps it to a wrapper frame); core
     carries it on the opaque terminal and hands it back unread.
 
@@ -106,7 +109,7 @@ class E_SpanMode(SpanMode, Enum):
     member spelling alone -- since one compiled grammar binds one oracle, so
     the member already distinguishes every opaque position within it.
     """
-    CONDITION       = "condition"        # guard:  '& { <expr> }'
+    CONDITION       = "condition"        # lexer role only; grammar opens no guard span
     EXPRESSION      = "expression"       # rvalue: '{ <luau-expr> }'
     LVALUE          = "lvalue"           # access: 'by: { <luau-lvalue> }'
     STATEMENT_BLOCK = "statement_block"  # '=> { }', init, deinit, BEGIN, END
@@ -185,4 +188,3 @@ class SpanOracle(ABC):
         counts as a reference is the concrete oracle's private knowledge.
         """
         raise NotImplementedError
-

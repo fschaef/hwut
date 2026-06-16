@@ -1,46 +1,66 @@
 open: X2 . X4 . X6 . X8 effect: X10 . X12 ( n14: bool ; n17: X18 ; )
-=> X22 . X24 . X26 . X28
-mode: X30 . X32 . X34 ( n36: string ; n39: X40 ; n42: X43 ; )
+=> { x }
+event: X23 ( n25: string ; n28: X29 ; n31: X32 ; )
+state_machine: X36 . X38 is: X40 . X42 . X44 . X46
+state: X48 . X50 ( n52: int ; n55: X56 )
 init: { x }
-deinit: { x }
-until: X49 . X51 ( false * 1 + X57 . X59 * true shr: "s" * { x } - true * 1 , X70 = false * "s" - { x{ y }{ y } } * X77 . X79 shl: { x } * "s" + true * X86 . X88 ) & { x{ y }{ y } }
-until: BEGIN & [ 1 * false - X99 . X101 * true shr: 1 * { x{ y } } + "s" * false nand true * 1 - "s" * X118 . X120 shl: false * { x{ y } } + true * 1 xor X129 . X131 * { x{ y } } - false * "s" shl: true * 1 + false * { x{ y } } and X145 . X147 * "s" + 1 * false shr: { x{ y } } * X156 . X158 - true * "s" nor "s" * { x } - X167 . X169 * false shl: true * 1 + "s" * false and X181 . X183 * true + { x{ y } } * 1 shr: { x{ y } } * "s" - X193 . X195 * 1 nxor true * false - { x{ y } } * X204 . X206 shl: true * "s" + 1 * false nand false * true - 1 * { x{ y }{ y } } shr: X223 . X225 * "s" + X229 . X231 * true ]
-until: CHANGE X237 ( n239: int ; n242: float ; n245: X246 ; n248: X249 ; ) is: container < "s" * { x } - false * 1 shl: 1 * false + true * X268 . X270 , X272 = { x{ y } } * "s" + { x{ y } } * false shr: true * X282 . X284 - "s" * 1 > by: { x{ y }{ y } }
-:close import: "s" into: X295 . X297 . X299 . X301
-clockwork: X303 . X305 ( n307: float ; n310: string ; n313: X314 ; )
-on: X318 . X320 . X322 ( X324 = X326 . X328 * true + false * { x{ y } } shr: "s" * 1 - X339 . X341 * false , true * "s" + 1 * { x } shl: X352 . X354 * false - "s" * { x } , true * 1 - 1 * "s" shr: { x } * true + false * X374 . X376 )
-deinit: { x }
-init: { x{ y }{ y } }
-:end
-event: X382 ( n384: X385 ; n387: bool ; )
-on: X392 . X394 ( X396 = { x{ y }{ y } } * true - false * 1 shl: "s" * X407 . X409 + { x{ y }{ y } } * "s" , X414 = true * false - 1 * X422 . X424 shr: 1 * "s" + false * X432 . X434 , true * { x } + X439 . X441 * false shl: 1 * "s" - { x{ y }{ y } } * true ) & { x }
+on: X60 . X62
 =>
-spawn: X455 . X457 . X459 . X461 ( X463 = "s" * { x } + X468 . X470 * false shl: true * 1 - { x } * false , true * 1 - "s" * X487 . X489 shr: true * X493 . X495 + { x } * 1 ) in: X501 . X503 via: false * "s" * "s" - false * { x{ y }{ y } } * X514 . X516 * 1 + true * false + 1 * "s" shr: { x{ y } } * X529 . X531 - true * { x{ y }{ y } } * false + true * X540 . X542
-=> { x{ y }{ y } }
+unspawn: X65 . X67
+=> X69 . X71
+=> "s"
+until: END & [ false / { x{ y } } - 1 * true shr: "s" * false + true / 1 nand "s" / { x } - false * 1 shl: "s" / { x{ y } } + true * { x{ y }{ y } } nxor false * 1 + true / "s" shr: 1 * true - false / "s" and { x{ y } } / true + { x{ y }{ y } } * 1 shl: false * "s" - { x{ y } } / "s" nor 1 / false - true * 1 shl: false / { x{ y }{ y } } + true * "s" nand 1 * false + "s" / { x } shr: true * "s" - 1 / { x{ y }{ y } } xor false * true + 1 / false shr: true / "s" - { x{ y }{ y } } * 1 and "s" / { x{ y }{ y } } + false * true shl: 1 * "s" - false / true ]
+until: X195 . X197 ( ) & [ { x{ y } } / 1 + false * { x{ y }{ y } } shl: "s" / true - false * 1 and true * "s" + { x{ y }{ y } } / "s" shr: 1 * true - { x } / false nxor 1 / true + false * "s" shr: { x{ y }{ y } } / "s" - 1 * false nand true / { x{ y } } - false * 1 shl: "s" * { x{ y }{ y } } + true / 1 or { x{ y }{ y } } / "s" - false * true shl: { x{ y }{ y } } * "s" + 1 / true nand false / "s" - false * true shr: 1 * { x{ y }{ y } } + { x } / true xor false * "s" + 1 / true shl: { x } / 1 - false * "s" and "s" * true - { x } / 1 shr: false / false + 1 * { x{ y } } ]
+until: CHANGE & [ "s" * true + 1 / true shr: "s" * { x{ y }{ y } } - false / true and 1 * false + { x{ y } } / "s" shl: true / { x{ y } } - 1 * false xor "s" * "s" + { x{ y } } / 1 shl: false * true - false / true nand "s" / { x{ y } } + 1 * { x{ y } } shr: true * false - 1 / "s" or true / { x } + "s" * 1 shl: false / true - { x } * 1 and false / "s" + false * true shr: 1 * { x } - "s" / true nxor 1 / false + "s" * { x{ y } } shl: "s" / false - { x{ y } } * 1 nand true / false - "s" * { x } shr: 1 / true + true * "s" ]
+:end
+:close
+clockwork: X439 . X441 ( n443: float ; n446: X447 ; )
+on: X451 . X453 . X455 . X457 & [ 1 * { x{ y }{ y } } - false / true shr: "s" * false + 1 / { x{ y }{ y } } and true / 1 - "s" * false shl: { x{ y }{ y } } / true + { x } * 1 xor "s" / false - false * 1 shl: { x } / "s" + true * false nand { x{ y }{ y } } / "s" - 1 * true shr: 1 / { x } + "s" * false nxor true * "s" - true / { x{ y } } shr: 1 * false + true / "s" and { x{ y }{ y } } / false - 1 * 1 shl: true / false + { x } * "s" nxor 1 * "s" + { x{ y }{ y } } / false shl: true / 1 - true * { x{ y } } nand false * "s" - true / { x } shr: "s" * 1 + false / 1 nor "s" * { x{ y }{ y } } - false / true shr: { x{ y }{ y } } * true + 1 / "s" nand false * false - true / 1 shl: "s" / { x{ y } } + "s" * 1 xor true * { x{ y } } - false / "s" shr: true / false + { x{ y } } * 1 and 1 * { x{ y } } - true / "s" shl: false * { x{ y } } + false / true xor "s" / 1 - 1 * { x{ y }{ y } } shl: "s" / false + true * "s" and false / { x } + true * 1 shr: "s" * 1 - false / { x{ y }{ y } } or true / 1 + { x{ y } } * "s" shr: true / false - false * { x{ y } } nand true / "s" - 1 * { x{ y } } shl: true / "s" + false * 1 nxor "s" / true - false * { x{ y } } shr: 1 * true + { x{ y } } / "s" and 1 * false + "s" / { x{ y } } shl: false * true - 1 / false ]
+select:
+wait: BEGIN & [ true / "s" + 1 * { x{ y } } shl: { x{ y }{ y } } * false - 1 / "s" nand true * false + true / "s" shr: 1 * { x{ y } } - true / 1 xor "s" * { x{ y }{ y } } - false / { x{ y }{ y } } shr: 1 / true + false * "s" nand true * { x{ y } } + 1 / "s" shl: false * 1 - true / { x{ y }{ y } } nor "s" / false + 1 * "s" shl: true * { x{ y }{ y } } - false / false and "s" / { x } - 1 * true shr: false / "s" + 1 * { x } nxor true / true + false * "s" shr: { x{ y }{ y } } / 1 - true * false and { x } / 1 - "s" * false shl: 1 * { x } + "s" / true ]
 =>
-arm: X546 . X548 ( "s" * 1 - true * "s" shl: false * 1 - X562 . X564 * { x } , X567 = "s" * 1 + true * false shl: { x{ y } } * X578 . X580 + "s" * X584 . X586 , false * { x{ y } } - true * 1 shr: "s" * 1 + X599 . X601 * false , X605 = true * { x } - X610 . X612 * 1 shr: true * false - { x{ y } } * "s" ) cause: X624 . X626 . X628 . X630 ( n632: int ; n635: X636 ; ) for: X640 . X642 & [ "s" * 1 + { x{ y } } * X650 . X652 shl: false * true + "s" * true nand { x } * X663 . X665 - false * 1 shr: false * true - "s" * 1 and { x{ y } } * X680 . X682 + 1 * { x } shl: "s" * false + X691 . X693 * true nand X697 . X699 * true - false * 1 shl: { x } * "s" + X710 . X712 * { x{ y }{ y } } nxor true * 1 - false * "s" shr: 1 * true - false * "s" and X731 . X733 * { x{ y } } + true * "s" shl: false * 1 - X744 . X746 * { x{ y }{ y } } and X749 . X751 * 1 + "s" * true shr: { x{ y } } * false + "s" * X764 . X766 nand true * false - 1 * { x } shl: X775 . X777 * true - { x{ y }{ y } } * 1 xor false * "s" + "s" * X790 . X792 shr: false * 1 - { x } * true and true * X803 . X805 + "s" * false shl: { x } * 1 - { x{ y }{ y } } * "s" nand true * X819 . X821 + false * 1 shr: "s" * false + X831 . X833 * { x{ y } } or 1 * true - X840 . X842 * false shl: { x{ y }{ y } } * 1 - "s" * true and true * X855 . X857 + false * 1 shr: { x{ y } } * "s" + "s" * X868 . X870 nxor true * { x{ y } } - 1 * false shl: X879 . X881 * "s" + 1 * true nand false * { x{ y } } - { x{ y } } * false shr: X895 . X897 * true - 1 * "s" xor 1 * "s" + X909 . X911 * false shr: { x } * true - 1 * false and X922 . X924 * { x{ y }{ y } } + true * "s" shl: false * X933 . X935 - { x{ y }{ y } } * true nand "s" * 1 + "s" * 1 shr: true * { x{ y } } - false * X953 . X955 or false * true + 1 * "s" shl: { x{ y } } * X966 . X968 - true * false and 1 * X976 . X978 + { x } * "s" shr: { x } * true - 1 * "s" nxor X990 . X992 * false + X996 . X998 * "s" shl: { x } * true - 1 * false nand "s" * X1011 . X1013 + true * { x{ y } } shr: false * 1 - false * X1024 . X1026 and 1 * { x } + true * "s" shl: "s" * true + { x } * X1040 . X1042 ]
-mode_group: X1045 . X1047 . X1049 ( n1051: int ; n1054: X1055 ; n1057: X1058 ) is: X1061 . X1063 . X1065 . X1067 is: X1069 . X1071
-has: X1073 . X1075 . VOID
-mode: X1079 . X1081 . X1083 . X1085 ( n1087: float ; n1090: string ; n1093: X1094 ; n1096: bool ; )
-on: ANY & { x }
+arm: X841 . X843 ( )
+=> { x }
+:end
+:end
+clock: X850 1
+on: X853 . X855 . X857 ( X859 = true * 1 - { x{ y }{ y } } / "s" shr: false / "s" + { x{ y } } * false undef: 1 / true - false * "s" shl: 1 * { x } + true / true , false * "s" - { x{ y } } / 1 shl: 1 * { x{ y } } + false / true undef: "s" / false - 1 * "s" shr: { x } / true + "s" * 1 ) & [ false * true - { x } / 1 shl: "s" / false + { x{ y }{ y } } * true nand "s" / 1 + true * false shr: { x{ y } } * { x{ y }{ y } } - true / "s" xor 1 / false + false * 1 shr: true * { x } - "s" / false and 1 / { x{ y }{ y } } + "s" * true shl: true * "s" - { x{ y }{ y } } / 1 nxor false / { x{ y }{ y } } - false * true shr: "s" / 1 + false * { x } nand true * 1 - "s" / "s" shl: true / { x } + 1 * false nor 1 * false + { x } / "s" shl: true / "s" - { x{ y } } * true nand false / 1 - "s" * false shr: { x{ y } } * 1 + true / { x{ y }{ y } } xor true / 1 - "s" * false shl: false * "s" + 1 / true and { x{ y }{ y } } / false + "s" * 1 shr: true / { x{ y }{ y } } - "s" * true nxor { x{ y } } * false - 1 / { x{ y } } shl: "s" / true + 1 * false and "s" / false - true * 1 shr: { x{ y }{ y } } * "s" + false / true nxor 1 / { x } - { x{ y } } * "s" shl: true * false + 1 / true nand { x{ y } } / false - "s" * 1 shr: 1 / { x } + "s" * false ]
 =>
-unspawn: X1105 . X1107
-until: X1109 . X1111 ( 1 * false - { x } * X1118 . X1120 shl: "s" * 1 + true * false , X1130 = false * "s" - X1136 . X1138 * { x } shr: true * 1 - true * false , X1149 = "s" * 1 + { x{ y }{ y } } * X1156 . X1158 shl: { x{ y } } * 1 + "s" * false ) & [ true * X1171 . X1173 - X1175 . X1177 * "s" shr: 1 * false - true * { x{ y } } nand false * true + { x{ y }{ y } } * 1 shr: "s" * X1197 . X1199 + "s" * X1203 . X1205 xor { x{ y }{ y } } * 1 - true * false shl: false * { x{ y } } - true * 1 nand "s" * X1223 . X1225 + true * "s" shr: { x{ y } } * X1232 . X1234 + false * 1 nor "s" * { x{ y } } - false * true shl: 1 * X1249 . X1251 - true * "s" and { x{ y }{ y } } * 1 + false * X1262 . X1264 shr: { x{ y }{ y } } * true - false * 1 xor "s" * X1275 . X1277 + "s" * 1 shl: X1283 . X1285 * false + { x{ y }{ y } } * true and true * false - X1296 . X1298 * { x{ y }{ y } } shr: 1 * "s" + true * { x{ y } } ]
-until: END & { x }
-until: CHANGE & [ false * 1 - X1319 . X1321 * "s" shl: true * { x{ y } } + X1328 . X1330 * false nand 1 * "s" - { x{ y } } * false shl: true * "s" - X1345 . X1347 * 1 nxor false * { x{ y } } + "s" * 1 shr: true * X1360 . X1362 + false * X1366 . X1368 nand { x{ y }{ y } } * true - "s" * 1 shr: 1 * false - true * "s" nor { x } * X1386 . X1388 + 1 * { x{ y }{ y } } shl: "s" * false + true * X1399 . X1401 and false * 1 - X1407 . X1409 * true shl: "s" * { x{ y }{ y } } + true * X1418 . X1420 nxor false * { x{ y } } - 1 * "s" shr: "s" * true - X1433 . X1435 * false nand 1 * { x{ y } } + true * X1444 . X1446 shl: "s" * { x{ y }{ y } } + 1 * false ]
+arm: X1124 . X1126 . X1128 ( true / true + false * "s" shl: 1 * { x{ y } } - 1 / true undef: false / "s" - { x{ y }{ y } } * false shr: 1 / "s" + { x } * true , X1159 = false * 1 + "s" / { x } shl: true / "s" - true * false , X1176 = 1 / { x{ y }{ y } } - false * { x{ y }{ y } } shr: true * "s" + 1 / false undef: { x } * 1 + true / "s" shr: 1 * true - "s" / false )
+mode: X1208 . X1210 . X1212 ( n1214: bool ; n1217: X1218 ; n1220: string ; )
+deinit: do:
+if: [ { x } * false + 1 / true shl: "s" / { x } - 1 * "s" nand { x{ y } } / true + false * 1 shr: false / true - { x{ y } } * "s" xor false * "s" + true / { x{ y }{ y } } shl: 1 * "s" - false / true and { x{ y } } / 1 + { x{ y }{ y } } * "s" shl: 1 / true - false * 1 or true / false + { x } * "s" shr: true / false - "s" * 1 nand { x{ y }{ y } } * 1 - "s" / { x{ y } } shl: false * true + "s" / false nxor 1 / true + { x{ y }{ y } } * false shr: { x{ y }{ y } } / "s" - true * 1 and false * "s" + { x } / true shl: 1 * 1 - "s" / { x } ]
+spawn: X1343 . X1345 ( )
+elif: [ false * true + false / 1 shr: true * { x{ y }{ y } } - "s" / { x{ y }{ y } } and false / 1 - true * "s" shl: true / "s" + { x } * false xor 1 / { x{ y }{ y } } + false * 1 shr: true * "s" - true / "s" nand false * 1 - { x } / "s" shr: { x{ y } } / false + 1 * true or 1 * true - { x{ y }{ y } } / false shl: "s" / false + { x{ y } } * "s" nand true / 1 - false * 1 shl: "s" * true + { x } / false nxor 1 / { x{ y }{ y } } - true * "s" shr: false * "s" + { x{ y }{ y } } / 1 and true / true - { x{ y } } * 1 shr: "s" / false + "s" * false ]
+instant: X1467 . X1469 ( )
 :end
-open: X1457 . X1459 . X1461 . X1463
-state_machine: X1465 . X1467 . X1469 . X1471 ( n1473: X1474 ; n1476: float ; n1479: X1480 ; n1482: X1483 ; ) is: X1487 . X1489 . X1491 . X1493 is: X1495 . X1497 . X1499 . X1501
-default: X1503 . X1505 . X1507
-deinit: { x{ y } }
-has: X1510 . X1512 . X1514 . VOID
+wait: ANY
+=> "s"
+=>
+unspawn: X1479 . X1481
 :end
-open: X1519 . X1521 import: "s" into: X1525 . X1527 . X1529
-clockwork: X1531 . X1533 . X1535 . X1537 ( n1539: bool ; n1542: X1543 )
-on: X1546 . X1548 ( ) & { x } { x }
-while: [ "s" * true - X1558 . X1560 * false shr: 1 * { x{ y }{ y } } - false * "s" and X1571 . X1573 * 1 + true * { x{ y }{ y } } shl: true * 1 + "s" * X1586 . X1588 xor { x{ y }{ y } } * false - false * X1595 . X1597 shr: { x } * 1 + true * "s" nand 1 * "s" - X1610 . X1612 * { x } shr: true * false - 1 * true or false * X1625 . X1627 + { x{ y } } * "s" shl: 1 * "s" + true * X1638 . X1640 and { x{ y }{ y } } * false - false * true shl: "s" * { x{ y } } - 1 * X1654 . X1656 nxor true * { x{ y } } + 1 * X1663 . X1665 shr: "s" * false + 1 * false nand X1675 . X1677 * "s" - { x{ y }{ y } } * true shr: 1 * X1686 . X1688 + true * false ] decr: X1695 . X1697
+until: X1484 . X1486 . X1488 . X1490 & [ 1 * { x{ y } } - true / 1 shl: "s" / { x } + false * true nand 1 * { x{ y } } - "s" / true shl: false / 1 + false * "s" xor true / { x{ y } } + { x{ y }{ y } } * 1 shr: "s" / false - true * { x{ y }{ y } } and "s" * true + false / 1 shl: true * { x{ y }{ y } } - false / 1 nor "s" / false - "s" * { x } shr: 1 / true + "s" * true and false * { x } + 1 / true shr: { x{ y }{ y } } * false - 1 / "s" xor "s" * false + true / 1 shl: { x{ y }{ y } } / false - 1 * { x } nand true / "s" - 1 * false shr: true / { x{ y }{ y } } + "s" * "s" ]
+until: CHANGE & [ false / 1 - { x{ y } } * true shl: { x } * true + false / "s" nand 1 / { x } + true * "s" shl: 1 / false - "s" * 1 nxor { x{ y } } * true + false / { x{ y }{ y } } shr: "s" / true - 1 * false and 1 * { x{ y } } - "s" / false shl: true * { x } + false / 1 or true * "s" - false / "s" shr: 1 / true + { x{ y } } * 1 and { x } / "s" + false * true shr: "s" * 1 - true / false nxor { x } / 1 - { x{ y } } * true shl: false / "s" + { x{ y }{ y } } * false nand true / "s" + 1 * "s" shr: true * { x{ y } } - false / 1 xor true * false + { x{ y } } / "s" shl: 1 / true - { x{ y } } * 1 and false / "s" + true * { x } shl: 1 * false - "s" / "s" ]
+until: X1757 . X1759 . X1761 . X1763 ( { x{ y }{ y } } / 1 - false * true shr: "s" / { x{ y }{ y } } + 1 * false undef: true * "s" + true / 1 shr: false / { x } - true * 1 , X1794 = "s" * false - { x{ y }{ y } } / { x{ y } } shl: true * 1 + "s" / false undef: 1 * "s" - true / { x{ y }{ y } } shr: false * { x{ y }{ y } } + false / 1 , "s" / true - { x{ y } } * 1 shl: "s" / true + false * true undef: "s" / false - { x } * 1 shl: 1 * "s" + false / true , { x{ y } } / { x{ y }{ y } } + true * false shr: 1 / "s" - 1 * false undef: "s" * true - { x{ y }{ y } } / "s" shl: { x{ y } } * true + false / 1 ) & [ 1 / { x{ y } } + false * "s" shr: true / true - { x{ y } } * 1 nand "s" * false + { x{ y }{ y } } / true shl: 1 / "s" - false * false nxor 1 * "s" - true / { x{ y }{ y } } shr: true / false + "s" * 1 nand { x{ y } } / "s" + { x{ y } } * 1 shr: true / false - true * 1 xor false / "s" - { x{ y } } * "s" shl: false * { x{ y } } + true / 1 and true * { x{ y } } - "s" / 1 shr: false / true + "s" * false nxor { x{ y }{ y } } * 1 + false / true shl: "s" / { x{ y } } - 1 * { x{ y }{ y } } nand 1 * true - false / "s" shl: { x{ y } } * false + true / "s" nor 1 / 1 - "s" * false shr: { x } * true + { x{ y } } / false and "s" * 1 + true / true shr: "s" * { x } - false / 1 xor "s" / { x{ y }{ y } } - true * false shl: 1 / false + "s" * { x{ y }{ y } } and 1 * true - true / false shr: "s" * { x } + 1 / false nxor true / { x } - 1 * "s" shl: { x{ y } } * 1 + true / false nand "s" * 1 + { x{ y } } / "s" shl: true * false - true / false ]
+open: X2087 . X2089
+on: END
+=> X2093 . X2095 ( { x{ y }{ y } } / "s" + 1 * 1 shr: "s" * true - false / { x } , false / 1 - true * "s" shr: { x } * 1 + false / { x{ y } } , true / "s" - false * 1 shl: { x{ y }{ y } } / true + "s" * false )
+=>
+arm: X2142 . X2144 . X2146 . X2148 ( "s" / { x{ y } } - 1 * true shl: "s" * 1 + true / false , { x{ y }{ y } } * false - "s" / true shr: { x{ y } } * 1 + { x } / false , "s" * true - 1 / "s" shr: { x{ y }{ y } } / 1 + true * false )
+mode_group: X2194 . X2196 ( n2198: float ; n2201: X2202 ; n2204: int ) is: X2208 . X2210 . X2212
+has: X2214 . X2216 . VOID
+deinit: do:
+arm: X2222 . X2224 ( )
 :end
-:end
-event: X1701 ( n1703: string ; n1706: int ; n1709: X1710 ; n1712: X1713 ; )
+:end effect: X2230 . X2232 . X2234 ( n2236: X2237 ; n2239: X2240 ; n2242: float ; )
+=> "s"
+:close
+open: X2250 . X2252
+open: X2254 . X2256 . X2258 . X2260 import: "s" into: X2264 . X2266 . X2268
 :close
 :close
+on: X2272 . X2274 . X2276 . X2278 ( X2280 = 1 / false + "s" * { x{ y }{ y } } shl: true * { x{ y }{ y } } - false / "s" undef: 1 / true + true * false shr: "s" * 1 - { x{ y } } / true , X2311 = { x{ y } } * 1 - false / "s" shl: { x } * 1 + true / "s" undef: false / "s" - 1 * false shl: true / { x } + { x } * "s" ) & [ 1 * false + true / 1 shr: "s" / false - true * { x } nand true * 1 - { x{ y }{ y } } / "s" shl: false / { x } + true * "s" xor false * 1 + false / { x{ y } } shr: 1 / "s" - true * false and 1 * "s" + true / { x } shl: false / true - 1 * "s" or { x{ y } } * true + { x } / 1 shr: false / "s" - "s" * true and false * { x } - 1 / false shl: 1 / true + { x } * "s" nxor true / { x{ y } } + false * "s" shr: 1 * 1 - true / "s" nand false / { x{ y }{ y } } + 1 * false shl: { x{ y }{ y } } / true - "s" * "s" xor { x } * false + 1 / true shr: false / "s" - true * { x{ y }{ y } } nand 1 * "s" + true / false shl: 1 * { x{ y } } - { x } / "s" nxor true * 1 + false / 1 shr: false * true - { x{ y } } / "s" and { x } / true - "s" * false shl: 1 / false + true * { x } ]
+=>
+unspawn: X2518 . X2520 . X2522
+=> X2524 . X2526 . X2528 ( "s" * 1 + true / "s" shr: { x{ y } } / 1 - false * true undef: "s" * 1 - { x{ y }{ y } } / false shl: "s" / false + true * 1 , { x{ y }{ y } } * false + 1 / true shr: { x{ y }{ y } } * "s" - false / { x{ y }{ y } } undef: "s" / 1 - true * true shr: { x } / 1 + false * "s" , X2588 = "s" * false - 1 / true shl: { x{ y }{ y } } * false + 1 / { x{ y }{ y } } undef: "s" / true - false * { x{ y }{ y } } shr: "s" * 1 + true / { x } )
+=> { x }

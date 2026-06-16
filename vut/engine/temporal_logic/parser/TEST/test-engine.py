@@ -210,7 +210,7 @@ def run_cause_effect():
 
     cases = [
         ("cause definition ('for:' binding, mandatory guard)",
-         "cause: TOO_HOT(limit: int) for: NETWORK & { e.time > limit }"),
+         "cause: TOO_HOT(limit: int) for: NETWORK & [ e.time > limit ]"),
         ("effect definition",
          "effect: SUPER_POWER => PACMAN_RUN(speed=12)\n"
          "                    => PELLET_BLINK\n"
@@ -220,7 +220,8 @@ def run_cause_effect():
         ("dotted references", "on: NS.TOO_HOT(20) => Fx.cleanup => NS.Beep(3)"),
         ("reference + extra guard (parses; pass-2 F-7)",
          "on: TOO_HOT(20) & [ e.x > 1 ] => Beep(3)"),
-        ("inline still works", "on: Tick & { sm.n > 0 } => Beep()"),
+        ("inline guard with a method call",
+         'on: Tick & [ e.tags.has("boss") ] => Beep()'),
     ]
     for label, src in cases:
         banner(label)
@@ -271,6 +272,14 @@ def _render_cond(node):
         return ".".join(node.name)
     if n == "Literal":
         return node.text
+    if n == "MethodCall":
+        if node.receiver is None:
+            # A free-function call ('sqrt(x)', 'min(a,b)') -- no receiver.
+            return "%s(%d)" % (node.method, len(node.args))
+        recv = _render_cond(node.receiver)
+        if node.args is None:
+            return "%s.%s" % (recv, node.method)
+        return "%s.%s(%d)" % (recv, node.method, len(node.args))
     if n == "OpaqueCode":
         return node.text
     if isinstance(node, list):
@@ -283,12 +292,12 @@ def run_guards_and_inheritance():
 
     Exercises the bracket-condition ladder and the aggregate features: a guard
     given as a bracket condition '[ ... ]' (an and/or/not algebra over
-    comparisons and bare boolean references; members spelled through the 'e'
-    pseudo-symbol, both sides symmetric) as an alternative to a Luau guard; an
-    effect definition carrying a parameter signature; and state-machine /
-    mode-group inheritance via repeated 'is:' base statements. Prints the
-    guard kind and rendered condition, the effect-def signature, and the
-    aggregate bases.
+    comparisons, bare boolean references, and standard member-function calls;
+    members spelled through the 'e' pseudo-symbol, both sides symmetric) -- the
+    sole guard form; an effect definition carrying a parameter signature; and
+    state-machine / mode-group inheritance via repeated 'is:' base statements.
+    Prints the guard kind and rendered condition, the effect-def signature, and
+    the aggregate bases.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
     from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
@@ -306,8 +315,8 @@ def run_guards_and_inheritance():
          "on: T & [ GHOSTS_AT_HOME and not e.armed ] => B()"),
         ("bracket guard: symmetric sides, literal right only",
          "on: T & [ TIMEOUT < e.elapsed and e.flag == true ] => B()"),
-        ("luau guard still admitted",
-         "on: T & { sm.n > 0 } => B()"),
+        ("bracket guard: standard member-function call",
+         'on: T & [ e.tags.has("admin") and e.name.glob("svc_*") ] => B()'),
         ("effect definition with signature",
          "effect: Boost(level: int) => Beep() => Flash()"),
         ("state-machine inheritance",
@@ -332,8 +341,6 @@ def run_guards_and_inheritance():
                 print("  Causality, no guard")
             elif isinstance(g, ast.Condition):
                 print("  Causality, bracket guard: %s" % _render_cond(g))
-            elif isinstance(g, ast.OpaqueCode):
-                print("  Causality, opaque guard: %s" % g.text)
         elif isinstance(it, ast.EffectDef):
             print("  EffectDef name=%s params=%d effects=[%s]"
                   % (it.name, len(it.params),
@@ -493,6 +500,124 @@ def run_expressions():
                       ", ".join(type(x).__name__ for x in s.else_body)))
 
 
+def run_division():
+    """RETURN: None. The '/' operator and the expression-level 'undef:' fallback (D-23).
+
+    '/' joins the multiplicative ladder beside '*'. An expression may carry one
+    trailing 'undef:' fallback, supplying the value when a math operation is
+    undefined (divide by zero); 'undef:' is distinct from the conditional 'else:';
+    the PARSER accepts it on any expression (the SEMANTIC layer makes it
+    mandatory iff a '/' appears, and dead otherwise -- not checked here). Math
+    functions need no new grammar: they enter through the existing call form
+    'name(args)'. Prints the rendered expression and the node kind, so a bare
+    'undef:' shows the Expr wrapper while a fallback-free expression stays bare.
+    """
+    from vut.engine.temporal_logic.parser.rule_parser import parse
+    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from fake_luau_oracle import FakeLuauOracle
+
+    cases = [
+        ("division in the multiplicative ladder",
+         "on: T & [ e.a / e.b == sm.q ] => X()"),
+        ("mixed * and / left-fold",
+         "on: T & [ e.a * e.b / e.c > 0 ] => X()"),
+        ("a math function call as an operand",
+         "on: T & [ sqrt(e.x) + min(e.a, e.b) > sm.limit ] => X()"),
+        ("'undef:' in a bridge arm coexists with the bridge's 'else:'",
+         "on: T & [ ? [ e.ok ] then: e.a / e.b undef: 0 else: 9 > sm.t ] => X()"),
+    ]
+    for label, src in cases:
+        banner(label)
+        rep = DiagnosticReporter()
+        rf = parse(src, FakeLuauOracle(), rep)
+        if rep.errors:
+            print("  ERROR %s" % rep.errors[0].message)
+            continue
+        print("  %s" % _render_cond(rf.items[0].cause.guard))
+
+    banner("the expression-level 'undef:' fallback wraps the expression in Expr")
+    src = ("clockwork: m on: clk\n"
+           " cw.r gets: e.a / e.b undef: 0\n"
+           ":end")
+    rep = DiagnosticReporter()
+    rf = parse(src, FakeLuauOracle(), rep)
+    if rep.errors:
+        print("  ERROR %s" % rep.errors[0].message)
+    else:
+        rhs = rf.items[0].steps[0].rhs
+        print("  rhs node: %s" % type(rhs).__name__)
+        if type(rhs).__name__ == "Expr":
+            print("  body: %s" % _render_cond(rhs.body))
+            print("  fallback: %s" % _render_cond(rhs.fallback))
+
+    banner("a fallback-free expression stays bare (no Expr wrapper)")
+    src = ("clockwork: m on: clk\n"
+           " cw.r gets: e.a + e.b\n"
+           ":end")
+    rep = DiagnosticReporter()
+    rf = parse(src, FakeLuauOracle(), rep)
+    if rep.errors:
+        print("  ERROR %s" % rep.errors[0].message)
+    else:
+        print("  rhs node: %s" % type(rf.items[0].steps[0].rhs).__name__)
+
+
+def run_spawn_targets():
+    """RETURN: None. Spawn 'into:' targets inside an anonymous clockwork.
+
+    Spawn and container writes are clockwork-only (D-16): they run from a
+    causality rule through an ANONYMOUS clockwork ('=> clockwork: ... :end'),
+    never as bare effects. Pins the spawn target clause inside that body: a bare
+    'into: <list>' (append, no key); an 'into: <dict>[ <key> ]' subscript; the
+    keyless default. Also shows container entry access as standard member
+    functions ('D.set', 'L.append') sitting as clockwork statements, mixed with
+    a '{ luau }' segment. Prints the anonymous body's steps with spawn target
+    and key.
+    """
+    from vut.engine.temporal_logic.parser.rule_parser import parse
+    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.parser import ast_nodes as ast
+    from fake_luau_oracle import FakeLuauOracle
+
+    cases = [
+        ("default target (per-kind default container)",
+         "on: T => do: spawn: SM(lane = 0) :end"),
+        ("into a list (append, no key)",
+         "on: T => do: spawn: SM(lane = 0) into: queue :end"),
+        ("into a dict at a key",
+         "on: T => do: spawn: SM(lane = 0) into: roster[e.id] :end"),
+        ("into a dotted dict at a dotted key",
+         "on: T => do: spawn: SM() into: NS.roster[e.lead.id] :end"),
+        ("container writes + luau side by side",
+         'on: T => do: scores gets: 5\n { db.flush() }\n'
+         " instant: Ping() :end"),
+        ("spawn as a BARE effect is rejected (clockwork-only)",
+         "on: T => spawn: SM(lane = 0)"),
+    ]
+    for label, src in cases:
+        banner(label)
+        rep = DiagnosticReporter()
+        rf = parse(src, FakeLuauOracle(), rep)
+        if rep.errors:
+            for d in rep.errors:
+                print("  ERROR off=%d %s" % (d.source_offset, d.message))
+            continue
+        it = rf.items[0]
+        sweeps = [e.body for e in it.effects
+                  if isinstance(e, ast.Mutation) and isinstance(e.body, ast.DoSweep)]
+        if sweeps:
+            print("  DoSweep steps:")
+            for s in sweeps[0].steps:
+                if isinstance(s, ast.Spawn):
+                    tgt = ".".join(s.into_container) if s.into_container else "default"
+                    key = ".".join(s.key) if s.key else "(append/none)"
+                    print("    Spawn into=%s key=%s" % (tgt, key))
+                else:
+                    print("    %s" % type(s).__name__)
+        else:
+            print("  effects:", [type(e).__name__ for e in it.effects])
+
+
 HwutRunner(
     argv       = sys.argv,
     title      = "Rule-File Language",
@@ -504,6 +629,8 @@ HwutRunner(
         "cause_effect":             run_cause_effect,
         "guards_and_inheritance":   run_guards_and_inheritance,
         "clockwork_shapes":         run_clockwork_shapes,
+        "spawn_targets":            run_spawn_targets,
         "expressions":              run_expressions,
+        "division":                 run_division,
     },
 ).run()

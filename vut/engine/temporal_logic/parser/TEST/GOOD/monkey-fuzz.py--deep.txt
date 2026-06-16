@@ -1,67 +1,19 @@
 === monkey: deep ===
-tokens parsed:      47
-top-level items:    3
-diagnostics:        none
+tokens parsed:      8047
+top-level items:    3 (ok)
 
--- AST --
-Namespace
-  name:
-    'X2'
-    'X4'
-  items:
-    Namespace
-      name:
-        'X6'
-        'X8'
-      items:
-        ClockDef
-          name = 'X10'
-          period = '1'
-          begin = 0
-      begin = 0
-  begin = 0
-EventDef
-  name = 'X15'
-  params:
-    []
-  begin = 0
-Namespace
-  name:
-    'X19'
-    'X21'
-  items:
-    Namespace
-      name:
-        'X23'
-        'X25'
-      items:
-        Namespace
-          name:
-            'X27'
-            'X29'
-          items:
-            Namespace
-              name:
-                'X31'
-                'X33'
-              items:
-                CauseDef
-                  name:
-                    'X35'
-                    'X37'
-                  params:
-                    []
-                  for_event:
-                    'X39'
-                    'X41'
-                  guard:
-                    OpaqueCode
-                      text = '{ x }'
-                      mode = <E_SpanMode.CONDITION: 'condition'>
-                      begin = 0
-                      _references = None
-                  begin = 0
-              begin = 0
-          begin = 0
-      begin = 0
-  begin = 0
+total AST nodes: 7865
+
+  BinOp                   3899
+  Bridge                     7
+  CauseDef                   1
+  ClockDef                   1
+  Comparison                 1
+  Condition                  1
+  EventDef                   1
+  Expr                       8
+  Literal                 3138
+  MethodCall                 1
+  Namespace                  6
+  OpaqueCode               784
+  UnOp                      17

@@ -35,10 +35,10 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 import vut.engine.compare.engine.frozen_analogy_db      as     frozen_analogy_db
-from   vut.engine.compare.engine.association.chunk_pair import ChunkPair
-from   vut.engine.compare.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
+from   vut.engine.compare.associate.chunk_pair import ChunkPair
+from   vut.engine.compare.engine.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
                                                                AssociationChunkPipe
-from   vut.engine.compare.input.input_chunk_zip         import generate_chunk_pairs, \
+from   vut.engine.compare.engine.input.input_chunk_zip         import generate_chunk_pairs, \
                                                                generate_chunk_pairs_type_aligned
 from   vut.engine.compare.configuration                 import Configuration
 

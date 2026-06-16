@@ -26,7 +26,9 @@ ______________________________________________________________________________
 import sys
 from   config import HwutRunner
 
-from vut.engine.temporal_logic.parser.grammar import GRAMMAR
+from vut.engine.temporal_logic.parser.grammar import GRAMMAR as _AUTHORED
+from vut.engine.temporal_logic.parser.core.subspace import flatten as _flatten
+GRAMMAR, _OWNER = _flatten(_AUTHORED)   # subspaces lowered to the flat rule map
 from vut.engine.temporal_logic.parser.core.combinators import OR, PLUS, STAR
 from vut.engine.temporal_logic.parser.core.combinators import _Combinator
 from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import Terminal_Spec, Tagged_Spec
@@ -94,14 +96,16 @@ from vut.engine.temporal_logic.parser import ast_nodes as A
 _RULE_NODE = {
     "namespace": A.Namespace, "import": A.Import, "causality": A.Causality,
     "def-cause": A.CauseDef, "def-effect": A.EffectDef,
-    "guard-bracket": A.Condition, "bridge": A.Bridge,
-    "spawn": A.Spawn, "unspawn": A.Unspawn, "arming-mode": A.ModeArming,
-    "incr": A.Incr, "decr": A.Decr,
+    "guard": A.Condition, "algebr/bridge": A.Bridge,
+    "step/spawn": A.Spawn, "unspawn": A.Unspawn, "arming-mode": A.ModeArming,
+    "step/incr": A.Incr, "step/decr": A.Decr,
     "arg": A.Arg, "mode": A.Mode,
     "init": A.InitBlock, "deinit": A.DeinitBlock, "state": A.State,
     "ref-has": A.HasRef, "default": A.DefaultRef,
     "mode-group": A.ModeGroup, "state-machine": A.StateMachine,
     "def-event": A.EventDef, "def-clock": A.ClockDef, "decl-arg": A.ArgDecl,
+    "type-dict": A.DictType, "type-list": A.ListType,
+    "clockwork": A.Clockwork, "do-sweep": A.DoSweep,
 }
 
 
@@ -140,6 +144,13 @@ def run_exemptions():
                     if getattr(f, "__module__", "").endswith("ast_map")
                     and r not in M._PASS_THROUGH)
     for r in hosted:
+        print("  %s" % r)
+    print("router (branch-routed by OrMap/OptMap/StarMap):")
+    from vut.engine.temporal_logic.parser.core.ast_map_family import (
+            OrMap, OptMap, StarMap)
+    routed = sorted(r for r, f in M.AST_MAP.items()
+                    if isinstance(f, (OrMap, OptMap, StarMap)))
+    for r in routed:
         print("  %s" % r)
 
 

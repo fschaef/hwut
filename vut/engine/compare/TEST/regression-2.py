@@ -11,7 +11,7 @@ import sys
 # --- Path Setup ---
 from config import HwutRunner
 
-from vut.engine.compare.engine.association.edit_operations.line_sequence import do as calc_seq_ops # noqa E402
+from vut.engine.compare.associate.edit_operations.line_sequence import do as calc_seq_ops # noqa E402
 from vut.engine.compare.engine.potpourri.matching import pairing_analogy_lines, pairing_non_analogy_lines # noqa E402
 from vut.engine.compare.engine.potpourri.result import Result, PairedGraph # noqa E402
 from vut.engine.compare.engine.potpourri.potential_pair_db import PotentialPairDb # noqa E402
@@ -19,9 +19,9 @@ from vut.engine.compare.engine.analogy_db import AnalogyDb # noqa E402
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb # noqa E402
 from vut.engine.compare.engine.line import Line # noqa E402
 from vut.engine.compare.engine.enums import E_ToleranceId # noqa E402
-from vut.engine.compare.input.pattern_finder import PatternFinder # noqa E402
+from vut.engine.compare.engine.input.pattern_finder import PatternFinder # noqa E402
 from vut.engine.compare.configuration import Configuration # noqa E402
-from vut.engine.compare.engine.association.edit_operations.edit import list_EditGOOD_line # noqa E402
+from vut.engine.compare.associate.edit_operations.edit import list_EditGOOD_line # noqa E402
 # --- Formatting Helpers ---
 
 def print_header(title):

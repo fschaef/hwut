@@ -7,9 +7,9 @@ RULE-FILE PARSER  --  the facade that binds the reactive-engine rule language
 
 This is the seam between "this specific language" and "the general machinery":
 
-  OUTER (this layer)   grammar.py   the GRAMMAR dict + terminal definitions
-                       actions.py   the _build_* reduce builders (ACTIONS)
-                       ast_nodes.py the AST node shapes the actions build
+  OUTER (this layer)   grammar.py   GRAMMAR dict + terminal definitions
+                       ast_nodes.py AST node shapes the actions build
+                       ...
 
   core/ (general)      a grammar-agnostic LL(2) engine, lexer, node tree,
                        terminal factory, diagnostics -- knows nothing of the
@@ -26,7 +26,7 @@ from .core.diagnostic import DiagnosticReporter
 from .core.lexer import register_grammar
 
 from .grammar import GRAMMAR
-from .ast_map import AST_MAP, validate_ast_map
+from .ast_map import AST_MAP, validate_ast_map, validate_ast_map_shapes
 from . import ast_nodes as _ast
 
 # Grammar registration with the core lexer happens once at package import
@@ -54,10 +54,13 @@ def compiled_grammar():
     """
     global _COMPILED
     if _COMPILED is None:
+        # The engine flattens subspaces internally (D-21); the outer layer just
+        # registers the grammar and compiles it. register_grammar and Grammar
+        # each flatten what they receive, so GRAMMAR is passed nested.
         register_grammar(GRAMMAR)
-        validate_ast_map(GRAMMAR)
-        _COMPILED = Grammar(GRAMMAR, transformers=AST_MAP,
-                            start="top-level")
+        _COMPILED = Grammar(GRAMMAR, transformers=AST_MAP, start="top-level")
+        validate_ast_map(_COMPILED.flat)
+        validate_ast_map_shapes(_COMPILED)
     return _COMPILED
 
 

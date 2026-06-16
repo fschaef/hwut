@@ -1,28 +1,32 @@
 
 --- each dedicated AST node derives from its rule's operator signal ---
+algebr/bridge          -> Bridge               : OK
 arg                    -> Arg                  : OK
 arming-mode            -> ModeArming           : OK
-bridge                 -> Bridge               : OK
 causality              -> Causality            : OK
+clockwork              -> Clockwork            : OK
 decl-arg               -> ArgDecl              : OK
-decr                   -> Decr                 : OK
 def-cause              -> CauseDef             : OK
 def-clock              -> ClockDef             : OK
 def-effect             -> EffectDef            : OK
 def-event              -> EventDef             : OK
 default                -> DefaultRef           : OK
 deinit                 -> DeinitBlock          : OK
-guard-bracket          -> Condition            : OK
+do-sweep               -> DoSweep              : OK
+guard                  -> Condition            : OK
 import                 -> Import               : OK
-incr                   -> Incr                 : OK
 init                   -> InitBlock            : OK
 mode                   -> Mode                 : OK
 mode-group             -> ModeGroup            : OK
 namespace              -> Namespace            : OK
 ref-has                -> HasRef               : OK
-spawn                  -> Spawn                : OK
 state                  -> State                : OK
 state-machine          -> StateMachine         : OK
+step/decr              -> Decr                 : OK
+step/incr              -> Incr                 : OK
+step/spawn             -> Spawn                : OK
+type-dict              -> DictType             : OK
+type-list              -> ListType             : OK
 unspawn                -> Unspawn              : OK
 
 mismatches: 0

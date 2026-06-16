@@ -27,12 +27,12 @@ sys.path.insert(0, root_dir)
 
 import vut.version                                      as     version         #noqa: E402
 import vut.engine.compare.main                          as     main            #noqa: E402
-from   vut.engine.compare.engine.association.line_pair  import (LinePair,      #noqa: E402
+from   vut.engine.compare.associate.line_pair  import (LinePair,      #noqa: E402
                                                                 LineNumberPair,
                                                                 NominalCell,
                                                                 SubjectCell)
-from   vut.engine.compare.engine.association.chunk_pair import ChunkPair       #noqa: E402
-from   vut.engine.compare.input.line_element            import E_ToleranceId   #noqa: E402
+from   vut.engine.compare.associate.chunk_pair import ChunkPair       #noqa: E402
+from   vut.engine.compare.engine.input.line_element            import E_ToleranceId   #noqa: E402
 
 from   inspect     import isclass                   #noqa: E402
 from   typing      import List, AsyncIterable  #noqa: E402

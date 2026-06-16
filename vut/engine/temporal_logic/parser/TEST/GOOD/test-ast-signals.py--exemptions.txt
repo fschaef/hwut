@@ -1,59 +1,62 @@
 
 --- rules legitimately without an operator signal ---
 pass-through (no dedicated node):
-  alg-paren
-  algebr
-  assign-rhs
+  algebr/op-add
+  algebr/op-mul
+  algebr/op-shift
+  algebr/paren
   cause
   cond
-  cond-atom
-  cond-bracket
+  cond/atom
+  cond/bracket
+  cond/op-and
+  cond/op-cmp
+  cond/op-or
+  cond/op-xor
+  declaration/decl
   effect
   elm-clockwork
   elm-mode
   elm-mode-group
   elm-state-machine
-  guard
-  kind-decl
-  op-add
-  op-and
-  op-cmp
-  op-mul
-  op-or
-  op-shift
-  op-xor
-  step-clockwork
+  step
+  step/assign-rhs
   top-level
   type-built-in
 single-terminal (no operator):
-  guard-luau
-  mutation
   report-string
 map-hosted (plain value or input-decided node kind):
-  alg-add
-  alg-atom
-  alg-mul
-  alg-shift
-  alg-un
+  algebr/add
+  algebr/mul
+  algebr/operand
+  algebr/postfix
+  algebr/shift
+  algebr/un
   cause-named
   cause-system
-  clockwork-name-step
-  comparison
-  cond-and
-  cond-not
-  cond-or
-  cond-xor
+  cond/and
+  cond/comparison
+  cond/not
+  cond/or
+  cond/xor
   declaration
+  declaration/dict
+  declaration/list
+  declaration/reactor
+  declaration/struct
+  declaration/variable
   effect-named
-  kind-container
-  kind-reactor
-  kind-struct
-  kind-variable
   list-arg
   list-decl-arg
   name-dotted
   parens-arg
   parens-decl
-  recip-rhs
   ref-member
   signature
+  step/name-step
+  step/recip-rhs
+  step/spawn/into
+router (branch-routed by OrMap/OptMap/StarMap):
+  algebr/atom
+  code-block
+  type

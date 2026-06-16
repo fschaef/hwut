@@ -359,4 +359,3 @@ def find_matching_brace(source, open_offset, role, oracle):
 
         last_diag   = result.error or last_diag
         search_from = candidate + 1
-

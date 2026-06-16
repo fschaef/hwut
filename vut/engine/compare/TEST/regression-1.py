@@ -14,10 +14,10 @@ import sys
 # --- Path Setup ---
 from config import HwutRunner # noqa E401
 
-from vut.engine.compare.engine.association.edit_operations.line import do as calc_edit_ops
+from vut.engine.compare.associate.edit_operations.line import do as calc_edit_ops
 from vut.engine.compare.engine.line import Line
 from vut.engine.compare.engine.enums import E_ToleranceId
-from vut.engine.compare.input.pattern_finder import PatternFinder
+from vut.engine.compare.engine.input.pattern_finder import PatternFinder
 from vut.engine.compare.configuration import Configuration
 
 # --- Formatting Helpers ---

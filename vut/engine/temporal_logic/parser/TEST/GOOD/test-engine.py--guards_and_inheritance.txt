@@ -19,8 +19,8 @@
 --- bracket guard: symmetric sides, literal right only ---
   Causality, bracket guard: (TIMEOUT < e.elapsed and e.flag == true)
 
---- luau guard still admitted ---
-  Causality, opaque guard: { sm.n > 0 }
+--- bracket guard: standard member-function call ---
+  Causality, bracket guard: (e.tags.has(1) and e.name.glob(1))
 
 --- effect definition with signature ---
   EffectDef name=['Boost'] params=1 effects=[EventSpec, EventSpec]

@@ -1,6 +1,6 @@
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 from vut.engine.compare.engine.analogy_db        import AnalogyDb
-from vut.engine.compare.input.line_element       import structural_hash
+from vut.engine.compare.engine.input.line_element       import structural_hash
 from collections import defaultdict
 from typeguard   import typechecked
 

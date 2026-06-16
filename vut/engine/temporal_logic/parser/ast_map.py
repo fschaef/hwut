@@ -25,7 +25,7 @@ stable slot, OR branches by triggered_index, repetitions off their STAR/PLUS
 slot, optionals as OPT_Nodes whose presence is the 'present' flag ON the node
 (never inferred from the parent's child count).
 
-Single-terminal rules (<guard-luau>, <mutation>, <report-string>) have no
+Single-terminal rules (<mutation>, <report-string>) have no
 operator node: their factory receives the raw leaf (SpanResult / Token) itself.
 
 validate_ast_map() is the load-time coverage guard (every grammar rule mapped);
@@ -35,6 +35,7 @@ ______________________________________________________________________________
 """
 from .core.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
 from . import ast_nodes as ast
+from .core.ast_map_family import OrMap, OptMap, StarMap, PASS
 
 
 # ---------------------------------------------------------------------------
@@ -58,9 +59,7 @@ def _signature(node):
     list is an OPT_Node at a stable slot; absent and '()' both give []. One
     signature value per rule slot, so no parent ever type-spots params.
     """
-    opt = node.children[1]
-    params = opt.child if opt.present else []
-    return (node.children[0], params)
+    return (node.children[0], node.children[1].or_else([]))
 
 
 def _head_and_rest(node):
@@ -82,8 +81,7 @@ def _parens(node):
     single child is the optional inner list -- an OPT_Node whose child is the
     already-reduced list when present.
     """
-    opt = node.children[0]
-    return opt.child if opt.present else []
+    return node.children[0].or_else([])
 
 
 def _ref_member(node):
@@ -97,15 +95,12 @@ def _ref_member(node):
     return (node.children[0], node.children[1].present)
 
 
-def _opt_by(opt_node):
-    """RETURN: OpaqueCode | None, an optional ['by:', LVALUE] slot's binding.
-
-    Present -> the anonymous one-survivor SEQ around the LVALUE span ('by:'
-    silent), wrapped into an OpaqueCode node; absent -> None.
-    """
-    if not opt_node.present:
-        return None
-    return ast.OpaqueCode.from_span(opt_node.child.children[0])
+# An optional ['by:', LVALUE] binding read off a child OPT_Node: present -> the
+# one-survivor SEQ around the LVALUE span ('by:' silent), wrapped into an
+# OpaqueCode; absent -> None. An OptMap used as a helper (D-19) -- the same
+# present/absent routing the family expresses, reused off a rule entry.
+_opt_by = OptMap({True:  lambda seq: ast.OpaqueCode.from_span(seq.children[0]),
+                  False: None})
 
 
 # ---------------------------------------------------------------------------
@@ -127,20 +122,27 @@ def _kind_struct(node):
     return {"kind": "struct"}
 
 
-def _kind_container(node):
-    """RETURN: dict, a container kind: 'kind'/'cargs'/'by'.
+def _kind_dict(node):
+    """RETURN: dict, a dict-container kind: 'kind'/'dtype'/'by'.
 
-    children = (container_tok, opt_angle, opt_by): the angle-bracket type
-    parameters are a NESTED optional -- opt_angle present yields the anonymous
-    SEQ ('<', opt_cargs, '>') with '<'/'>' captured (slots of their own);
-    opt_by per _opt_by.
+    children = (type_dict, opt_by): the type slot is the already-reduced
+    DictType; 'by' the optional storage accessor (an LVALUE opaque span) per
+    _opt_by, hoisted to the declaration level so a nested 'dict<...>' type stays
+    by:-free.
     """
-    opt_angle = node.children[1]
-    cargs = []
-    if opt_angle.present:
-        opt_cargs = opt_angle.child.children[1]
-        cargs = opt_cargs.child if opt_cargs.present else []
-    return {"kind": "container", "cargs": cargs, "by": _opt_by(node.children[2])}
+    return {"kind": "dict", "dtype": node.children[0],
+            "by": _opt_by(node.children[1])}
+
+
+def _kind_list(node):
+    """RETURN: dict, a list-container kind: 'kind'/'dtype'/'by'.
+
+    children = (type_list, opt_by): the type slot is the already-reduced
+    ListType; 'by' per _opt_by (declaration-level, as for _kind_dict).
+    """
+    return {"kind": "list", "dtype": node.children[0],
+            "by": _opt_by(node.children[1])}
+
 
 
 def _kind_variable(node):
@@ -155,7 +157,7 @@ def _kind_variable(node):
 
 
 def _declaration(node):
-    """RETURN: ReactorDecl | StructDecl | ContainerDecl | VariableDef.
+    """RETURN: ReactorDecl | StructDecl | DictDecl | ListDecl | VariableDef.
 
     children = (name_tok, opt_sig, kind_dict): the optional round-bracket head
     signature is an OPT_Node at a stable slot (its child is the already-
@@ -170,10 +172,12 @@ def _declaration(node):
     match kind["kind"]:
         case "struct":
             return ast.StructDecl(name=name, members=head_params, begin=begin)
-        case "container":
-            return ast.ContainerDecl(name=name, cargs=kind["cargs"],
-                                     by=kind["by"], head_params=head_params,
-                                     begin=begin)
+        case "dict":
+            return ast.DictDecl(name=name, dtype=kind["dtype"], by=kind["by"],
+                                head_params=head_params, begin=begin)
+        case "list":
+            return ast.ListDecl(name=name, dtype=kind["dtype"], by=kind["by"],
+                                head_params=head_params, begin=begin)
         case "variable":
             return ast.VariableDef(name=name, type_name=kind["type"],
                                    args=kind["args"], by=kind["by"],
@@ -188,7 +192,7 @@ def _declaration(node):
 # dispatcher reads the optional parens slot and builds reference or emission.
 # ---------------------------------------------------------------------------
 def _opt_guard(opt_node):
-    """RETURN: OpaqueCode | Condition | None, an optional ['&', <guard>] slot's guard.
+    """RETURN: Condition | None, an optional ['&', <guard>] slot's guard.
 
     Present -> the anonymous one-survivor SEQ around the guard ('&' silent);
     absent -> None.
@@ -273,6 +277,7 @@ def _un_fold(node):
     return operand
 
 
+
 def _comparison(node):
     """RETURN: Comparison | BoolRef | operand, '<algebr> [op-cmp <algebr>]' (D-13).
 
@@ -291,19 +296,46 @@ def _comparison(node):
     return left
 
 
-def _alg_atom(node):
-    """RETURN: object, one <alg-atom> branch value (D-13).
 
-    A parenthesised algebra (0), the '?'-bridge (1) and a bare <name-dotted> (7)
-    forward unchanged; an opaque expression span (6) becomes an OpaqueCode; the
-    number/string/true/false literals (2..5) wrap into a Literal.
+def _operand(node):
+    """RETURN: list[str] | MethodCall, a base reference with postfixes (D-13, D-23).
+
+    children = (receiver_tok, opt_call, STAR(<postfix>)): each postfix is ('.',
+    member, opt_parens). A leading 'opt_call' present means the receiver is
+    itself CALLED ('sqrt(x)', 'min(a,b)') -- a free-function call, built as a
+    MethodCall with receiver=None and method=the receiver name. Bare members
+    ('.field') extend the current name-segment list; a '.member(args)' postfix
+    becomes a MethodCall whose receiver is everything accumulated so far, after
+    which further postfixes chain on that call. With NO call and NO method
+    postfix the result collapses to the segment list, so a bare reference stays
+    list[str] and the BoolRef path is preserved. The math-function catalogue
+    (which free names are valid) is a pass-2 concern; the grammar admits any
+    'name(args)'.
     """
-    i = node.triggered_index
-    if i in (0, 1, 7):
-        return node.child
-    if i == 6:
-        return ast.OpaqueCode.from_span(node.child)
-    return ast.Literal.from_token(node.child)
+    recv = node.children[0]
+    opt_call = node.children[1]
+    if opt_call.present:
+        value = ast.MethodCall(receiver=None, method=recv.text,
+                               args=opt_call.child, begin=recv.begin)
+        is_list = False
+    else:
+        value = [recv.text]          # accumulating name-segment list
+        is_list = True               # True while 'value' is still a segment list
+    for s in node.children[2].items:
+        member_tok, opt_parens = s.children
+        if opt_parens.present:
+            args = opt_parens.child
+            value = ast.MethodCall(receiver=value, method=member_tok.text,
+                                   args=args, begin=recv.begin)
+            is_list = False
+        elif is_list:
+            value.append(member_tok.text)
+        else:
+            # A bare member read on a call result ('d.first().name'): a postfix
+            # carrying args=None to mark a field read rather than a call.
+            value = ast.MethodCall(receiver=value, method=member_tok.text,
+                                   args=None, begin=recv.begin)
+    return value
 
 
 def _recip_rhs(node):
@@ -338,12 +370,12 @@ def _clockwork_name_step(node):
 # Pass-through: forward the single matched value (no dedicated node).
 # ---------------------------------------------------------------------------
 _PASS_THROUGH = (
-    "top-level", "cause", "guard", "cond", "cond-atom", "cond-bracket",
-    "algebr", "alg-paren", "op-cmp", "op-or", "op-xor", "op-and",
-    "op-shift", "op-add", "op-mul", "assign-rhs",
-    "effect", "kind-decl", "type-built-in",
+    "top-level", "cause", "cond", "cond/atom", "cond/bracket",
+    "algebr/paren", "cond/op-cmp", "cond/op-or", "cond/op-xor", "cond/op-and",
+    "algebr/op-shift", "algebr/op-add", "algebr/op-mul", "step/assign-rhs",
+    "effect", "declaration/decl", "type-built-in",
     "elm-mode", "elm-mode-group", "elm-state-machine",
-    "elm-clockwork", "step-clockwork",
+    "elm-clockwork", "step",
 )
 
 
@@ -355,6 +387,12 @@ def _passthrough(node):
         return node.children[0] if node.children else None
     if isinstance(node, (PLUS_Node, STAR_Node)):
         return node.items[0] if node.items else None
+    return node
+
+
+def _raw(node):
+    """RETURN: the CST node itself, unchanged -- for rules a parent reads
+    structurally (e.g. <postfix>, whose children _operand walks directly)."""
     return node
 
 
@@ -372,10 +410,20 @@ AST_MAP = {
     "ref-member":            _ref_member,
 
     # kind family + declaration dispatch (D-21)
-    "kind-reactor":          _kind_reactor,
-    "kind-struct":           _kind_struct,
-    "kind-container":        _kind_container,
-    "kind-variable":         _kind_variable,
+    "declaration/reactor":   _kind_reactor,
+    "declaration/struct":    _kind_struct,
+    "declaration/dict":      _kind_dict,
+    "declaration/list":      _kind_list,
+    "declaration/variable":  _kind_variable,
+    # type (D-13): a built-in scalar word (branch 0, forwarded as its token
+    # text) or a named-type id (role "type", its text) resolve to the type word;
+    # a nested dict<...> / list<...> (branches 1, 2) forward the already-reduced
+    # type node. OrMap routes by branch index and by role -- the named-id branch
+    # keyed by role so its position can shift without touching this entry.
+    "type":                  OrMap({(0, "type"): lambda v: v.text,
+                                    (1, 2): PASS}),
+    "type-dict":             ast.DictType.from_seq,
+    "type-list":             ast.ListType.from_seq,
     "declaration":           _declaration,
 
     # merged named tails (D-26): the input decides the class
@@ -384,28 +432,39 @@ AST_MAP = {
     "effect-named":          _effect_named,
 
     # expression band (D-13): the two ladders, comparison, atom, bridge
-    "cond-or":               _left_fold,
-    "cond-xor":              _left_fold,
-    "cond-and":              _left_fold,
-    "cond-not":              _un_fold,
-    "comparison":            _comparison,
-    "alg-shift":             _left_fold,
-    "alg-add":               _left_fold,
-    "alg-mul":               _left_fold,
-    "alg-un":                _un_fold,
-    "alg-atom":              _alg_atom,
-    "bridge":                ast.Bridge.from_seq,
+    "cond/or":               _left_fold,
+    "cond/xor":              _left_fold,
+    "cond/and":              _left_fold,
+    "cond/not":              _un_fold,
+    "cond/comparison":       _comparison,
+    "algebr":                ast.Expr.from_seq,
+    "algebr/shift":          _left_fold,
+    "algebr/add":            _left_fold,
+    "algebr/mul":            _left_fold,
+    "algebr/un":             _un_fold,
+    # alg-atom (D-13): paren-algebra (0), bridge (1), operand (7) forward
+    # unchanged; an opaque expr span (6) -> OpaqueCode; the literals (2..5) ->
+    # Literal. OrMap collapses each group to one leaf -- the fan-out that was a
+    # hand-written 'i in (...)' ladder.
+    "algebr/atom":           OrMap({(0, 1, 7): PASS,
+                                    6: ast.OpaqueCode.from_span,
+                                    (2, 3, 4, 5): ast.Literal.from_token}),
+    "algebr/operand":        _operand,
+    "algebr/postfix":        _raw,
+    "algebr/bridge":         ast.Bridge.from_seq,
 
     # node rules (constructors on the classes)
     "namespace":             ast.Namespace.from_seq,
     "import":                ast.Import.from_seq,
     "causality":             ast.Causality.from_seq,
+    "do-sweep":              ast.DoSweep.from_seq,
+    "code-block":            OrMap({0: ast.OpaqueCode.from_span, 1: PASS}),
     "def-cause":             ast.CauseDef.from_seq,
     "def-effect":            ast.EffectDef.from_seq,
-    "guard-luau":            ast.OpaqueCode.from_span,
-    "guard-bracket":         ast.Condition.from_seq,
-    "mutation":              ast.Mutation.from_span,
-    "spawn":                 ast.Spawn.from_seq,
+    "guard":                 ast.Condition.from_seq,
+    "mutation":              ast.Mutation.from_block,
+    "step/spawn":            ast.Spawn.from_seq,
+    "step/spawn/into":       _raw,
     "unspawn":               ast.Unspawn.from_seq,
     "arming-mode":           ast.ModeArming.from_seq,
     "report-string":         ast.ReportString.from_token,
@@ -424,15 +483,15 @@ AST_MAP = {
 
     # clockwork band (D-11) + mutations (D-13)
     "clockwork":                 ast.Clockwork.from_seq,
-    "clockwork-name-step":       _clockwork_name_step,
-    "recip-rhs":                 _recip_rhs,
-    "incr":                      ast.Incr.from_seq,
-    "decr":                      ast.Decr.from_seq,
-    "clockwork-instant":         ast.Instant.from_seq,
-    "clockwork-wait":            ast.WaitLine.from_seq,
-    "clockwork-select":          ast.SelectFrame.from_seq,
-    "clockwork-if":              ast.IfFrame.from_seq,
-    "clockwork-while":           ast.WhileFrame.from_seq,
+    "step/name-step":            _clockwork_name_step,
+    "step/recip-rhs":            _recip_rhs,
+    "step/incr":                 ast.Incr.from_seq,
+    "step/decr":                 ast.Decr.from_seq,
+    "step/instant":              ast.Instant.from_seq,
+    "step/wait":                 ast.WaitLine.from_seq,
+    "step/select":               ast.SelectFrame.from_seq,
+    "step/if":                   ast.IfFrame.from_seq,
+    "step/while":                ast.WhileFrame.from_seq,
 }
 AST_MAP.update({name: _passthrough for name in _PASS_THROUGH})
 
@@ -440,11 +499,101 @@ AST_MAP.update({name: _passthrough for name in _PASS_THROUGH})
 def validate_ast_map(grammar_dict):
     """RETURN: None. Raises ValueError if a grammar rule has no constructor.
 
-    The load-time coverage guard, run alongside the LL(2) analysis. The shape
-    correspondence (each node class derives from its rule's operator signal) is
-    a standing test (TEST/test-ast-signals.py), not re-derived here.
+    The load-time COVERAGE guard, run alongside the LL(2) analysis. Shape
+    correspondence is a SECOND gate, validate_ast_map_shapes, run after compile
+    (it needs the compiled rules to read each rule's shape).
     """
     missing = set(grammar_dict) - set(AST_MAP)
     if missing:
         raise ValueError("AST_MAP does not cover rules: %s"
                          % ", ".join(sorted(missing)))
+
+
+class MapShapeError(Exception):
+    """Raised when an AST_MAP entry's form does not fit its rule's shape (D-19).
+
+    A router belongs only on its shape: an OrMap on an OR rule, an OptMap on an
+    OPT rule, a StarMap on a STAR rule. A SEQ or PLUS rule takes a single plain
+    factory (no router). A bare-terminal rule needs no factory (a Token is the
+    value); a plain callable that transforms the Token is allowed, a router is
+    not. Like the LL(2) and role gates, all violations are collected and raised
+    together, each naming the rule, so one compile reports every mismatch. The
+    gate inspects only the rule's OWN shape -- never what a factory produces,
+    which is branch-dependent and opaque.
+    """
+    def __init__(self, violations):
+        super().__init__("%d AST-map shape violation(s)" % len(violations))
+        self.violations = violations
+
+
+def validate_ast_map_shapes(grammar):
+    """RETURN: None. Raises MapShapeError if any AST_MAP entry mismatches shape.
+
+    'grammar' is the COMPILED Grammar (rule_shape needs the compiled patterns).
+    A router (OrMap/OptMap/StarMap) carries a '.shape'; it must sit on a rule of
+    that shape. A plain callable is accepted on any shape (SEQ/PLUS hand it the
+    node; FORWARD/TERMINAL hand it the forwarded value / Token). An OrMap is
+    additionally checked: its branch addresses must be valid for the OR (int in
+    range, role actually tagged on a branch) and cover every branch.
+    """
+    from .core.ast_map_family import OrMap, OptMap, StarMap
+    from .core.ll2_grammar_spec import (rule_shape, Tagged_Spec,
+                                         SHAPE_OR, SHAPE_OPT, SHAPE_STAR)
+    violations = []
+    routers = (OrMap, OptMap, StarMap)
+    for name, entry in AST_MAP.items():
+        if name not in grammar.rules:
+            continue
+        shape = rule_shape(grammar.rules[name])
+        if isinstance(entry, routers):
+            if entry.shape != shape:
+                violations.append(
+                    "rule %r is %s but its entry is %s"
+                    % (name, shape, type(entry).__name__))
+                continue
+            if isinstance(entry, OrMap):
+                violations.extend(_check_or_addresses(name, entry, grammar))
+        # a plain callable (or _passthrough) fits any shape -- no claim to check
+    if violations:
+        raise MapShapeError(sorted(set(violations)))
+
+
+def _check_or_addresses(name, ormap, grammar):
+    """RETURN: list[str], address violations of an OrMap against its OR rule.
+
+    Every int address must index a real branch; every str address must be a role
+    actually tagged on some branch; together the addresses must cover all
+    branches (no branch left unrouted). Reads the rule's OR_Spec branches and
+    their Tagged_Spec roles.
+    """
+    from .core.ll2_grammar_spec import Tagged_Spec, OR_Spec
+    p = grammar.rules[name].pattern
+    while isinstance(p, Tagged_Spec):
+        p = p.body
+    if not isinstance(p, OR_Spec):
+        return ["rule %r OrMap but pattern is not an OR" % name]
+    n = len(p.branches)
+    roles = {b.role for b in p.branches if isinstance(b, Tagged_Spec)}
+    out, covered = [], set()
+    for addr in ormap.addresses():
+        if isinstance(addr, int):
+            if not (0 <= addr < n):
+                out.append("rule %r: OrMap index %d out of range (0..%d)"
+                           % (name, addr, n - 1))
+            else:
+                covered.add(addr)
+        elif isinstance(addr, str):
+            if addr not in roles:
+                out.append("rule %r: OrMap role %r tags no branch" % (name, addr))
+            else:
+                for i, b in enumerate(p.branches):
+                    if isinstance(b, Tagged_Spec) and b.role == addr:
+                        covered.add(i)
+        else:
+            out.append("rule %r: OrMap address %r is neither int nor str"
+                       % (name, addr))
+    missing = set(range(n)) - covered
+    if missing:
+        out.append("rule %r: OrMap leaves branches unrouted: %s"
+                   % (name, ", ".join(map(str, sorted(missing)))))
+    return out

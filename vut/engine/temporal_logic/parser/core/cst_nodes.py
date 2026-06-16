@@ -86,12 +86,15 @@ class OR_Node(OR_Interface):
     'triggered_index' is the 0-based index of the matched branch within the
     grammar's alternation; 'child' is that branch's reduced value, or ABSENT
     when the matched branch produced no surviving value (an all-silent branch).
-    'name' is the rule name, or None for an inline alternation. 'begin' is the
-    construct's start offset (the frame's begin), so a transformer can stamp an
-    AST node's begin without a child token.
+    'role' is the advisory role string the matched branch carried (D-19), or
+    None for an untagged branch -- the role-keyed routing address parallel to
+    SEQ_Node's per-position roles. 'name' is the rule name, or None for an
+    inline alternation. 'begin' is the construct's start offset (the frame's
+    begin), so a transformer can stamp an AST node's begin without a child token.
     """
     triggered_index: int
     child: object
+    role: object = None
     name: object = None
     begin: int = 0
 
@@ -99,6 +102,17 @@ class OR_Node(OR_Interface):
     def or_child(self):
         """RETURN: object, the matched branch's reduced value (ABSENT if none)."""
         return self.child
+
+    def route_key(self, address):
+        """RETURN: bool, whether this OR_Node's fired branch matches 'address'.
+
+        An int 'address' matches the fired branch's 'triggered_index'; a str
+        'address' matches its 'role'. The routing primitive an OrMap uses to
+        pick the factory for the branch that actually fired (D-19).
+        """
+        if isinstance(address, int):
+            return address == self.triggered_index
+        return address == self.role
 
 
 @dataclass(frozen=True)
@@ -118,6 +132,17 @@ class OPT_Node(OPT_Interface):
     name: object = None
     begin: int = 0
 
+    def or_else(self, default):
+        """RETURN: object, the body's value if the optional fired, else 'default'.
+
+        The present->child / absent->default read a SEQ factory does on a child
+        optional slot, named so the call site states intent ('params =
+        node[1].or_else([])') instead of re-deriving 'present'/'child' (D-19).
+        An optional that FIRED over an all-silent body is present with
+        child=ABSENT; callers wanting that distinction read '.present' directly.
+        """
+        return self.child if self.present else default
+
 
 @dataclass(frozen=True)
 class SEQ_Node(SEQ_Interface):
@@ -128,14 +153,52 @@ class SEQ_Node(SEQ_Interface):
     itself a CST node held at its stable slot, so presence/absence of an inline
     optional is read OFF that slot's OPT_Node, never inferred from list length.
     'name' is the rule name, or None for an inline sequence.
+
+    'roles' (D-18) rides PARALLEL to 'children': one entry per surviving value,
+    the advisory role string a position carried ('<type(key)>' -> "key") or
+    None for an untagged position (including every captured discriminant like
+    '<', '>', 'dict'). Positional access 'children[i]' is unchanged; role access
+    'node["key"]' is a SECOND index over the same tuple, immune to captured-
+    terminal index drift -- a factory reads the slot it means by name, and an
+    inserted or removed silent/captured terminal no longer shifts it.
     """
     children: tuple = field(default_factory=tuple)
+    roles:    tuple = field(default_factory=tuple)
     name: object = None
     begin: int = 0
 
     def seq_children(self):
         """RETURN: tuple, the sequence's matched contents in grammar order."""
         return self.children
+
+    def __getitem__(self, address):
+        """RETURN: object, the child addressed positionally or by role.
+
+        An int 'address' is POSITIONAL -- 'self.children[address]', raising
+        IndexError out of range exactly as the tuple does; a slot that does not
+        exist is a structural bug worth surfacing. A str 'address' is a ROLE:
+        the single surviving child whose grammar position carried that role, or
+        None if no position carries it (a wrong/absent role reads None, never
+        raises -- D-19). The two never blur: '.children[i]' and node["role"]
+        are one operator with two key types. An ABSENT OPTIONAL is NOT a None
+        return -- the optional position survives as an OPT_Node(present=False)
+        at its slot, returned normally; its absence is read off '.present',
+        never conflated with a missing-role None. ValueError if two positions
+        share a role (load-gated by Grammar._validate_role_uniqueness, so this
+        guards a hand-built node only).
+        """
+        if isinstance(address, int):
+            return self.children[address]
+        if not isinstance(address, str):
+            raise TypeError("SEQ_Node index must be int (positional) or str "
+                            "(role); got %r" % type(address).__name__)
+        hits = [v for v, r in zip(self.children, self.roles) if r == address]
+        if not hits:
+            return None
+        if len(hits) > 1:
+            raise ValueError("role %r is ambiguous: %d positions carry it"
+                             % (address, len(hits)))
+        return hits[0]
 
 
 @dataclass(frozen=True)

@@ -24,6 +24,8 @@ import os
 import sys
 import json
 
+import config  # noqa: F401  -- FIRST: puts the 'vut' repository on sys.path
+
 from dataclasses import is_dataclass, fields
 
 from vut.language_support.python.deterministic_random import (DeterministicStream,
@@ -36,8 +38,6 @@ from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
 from vut.engine.temporal_logic.parser.core.lexer import Token
 from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T, t_fr_span_open, t_fr_eof
 from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
-
-import config  # noqa: F401
 from fake_luau_oracle import FakeLuauOracle
 
 from aux_walker import (tok as _tok, ListLexer as _ListLexer,
@@ -234,6 +234,12 @@ _PROFILES = {
     # the bare commands), wait:/select: suspension, and the if/elif/else and
     # while control frames composing within one another.
     "clockwork": {"seed": 0xC107,  "depth": 12, "reps": 3, "opt": 80, "luau": 2, "items": 6, "recurse": 30},
+    # 'math' biases toward long operator chains (high reps) and present optionals
+    # (high opt) to exercise the arithmetic surface: the multiplicative ladder
+    # including '/', and the expression-level 'undef:' fallback that a division
+    # carries. Free-function and method calls fall out of the operand's optional
+    # leading call and postfix chain.
+    "math":     {"seed": 0x4A12,  "depth": 10, "reps": 6, "opt": 95, "luau": 0, "items": 5, "recurse": 12},
 }
 
 
