@@ -2,136 +2,129 @@ SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ===============================================================================
 DEVELOPMENT-ACCOMPANYING DOCUMENTS -- A RECOMMENDATION
 ===============================================================================
-A draft to be improved. It states the document KINDS, the ONE rule that sorts
-content between them, and the disciplines that keep them from rotting.
+This approach moves the iterating into the design phase, where a fork costs a
+paragraph, and takes the weight of feasibility checks off implementation, where
+a fork costs a rebuild. Three documents, one rule -- and the rot that comes from
+piling up summaries, handoffs, and changelogs never starts.
+
+README.txt          -- how to USE it
+                    -- facilitate UNDERSTANDING it
+                    (current tree only; topology, no rationale)
+
+RATIONALE.txt       -- WHY things are made as they are
+                    -- let a contributor judge: new ground, or already-trodden?
+                    -- and if trodden, was the reasoning sound?
+                    (settled decisions only; brief)
+
+DISCUSSIONS/*.txt   -- EPHEMERAL: one live question per file
+                    -- forgotten the moment it settles
+                    -- the directory IS the worklist: 'ls' = what is owed
+
+A file's existence IS its truth-claim. Nothing ever asks "still valid?",
+because only the valid things are present. For long stretches these three ARE
+the work, not a record beside it: the design runs to convergence as text, and
+code is emitted only once the open forks close. This is where AI earns its
+place -- sorting a note, surfacing a hidden fork in a "decided" paragraph,
+catching a RATIONALE entry that is still a discussion all run on text alone.
 
 -------------------------------------------------------------------------------
-1.  THE THREE KINDS (per scope -- a scope is a buildable unit, e.g. a parser,
-    a semantic layer, a core engine)
+1.  THE THREE KINDS (per scope -- a scope is a buildable unit: a parser, a
+    semantic layer, a core engine)
 -------------------------------------------------------------------------------
-README.txt        TOPOLOGY. What exists now and how the pieces connect. An
-                  ASCII diagram near the top, linear DAG order, telegraphic.
-                  Describes the CURRENT tree -- never what was retired or why
-                  it evolved. No rationale.
+README.txt        What exists now and how the pieces connect -- enough to
+                  operate it and navigate the tree. ASCII diagram near the top,
+                  linear DAG order, telegraphic. CURRENT tree only; never what
+                  was retired. No rationale.
 
-RATIONALE.txt     SETTLED DECISIONS. For each closed decision: what was decided
-                  and the reason it was decided. Brief. This is the durable
-                  record of WHY the thing is shaped as it is.
+RATIONALE.txt     Per closed decision: what was decided, and why. A rejected
+                  alternative survives as at most one sentence (why not) -- so a
+                  contributor can see it was weighed and judge the rejection.
+                  Brief.
 
-DISCUSSIONS/      OPEN ITEMS, one file each. The directory IS the worklist:
-                  'ls' shows exactly what is still owed. Two file kinds:
-                    disc-N-<name>.txt   a CHOICE is still owed (a live fork).
-                    todo-N-<name>.txt   the choice is made; only the WORK
-                                        is owed (decided, unbuilt).
+DISCUSSIONS/      One file per open item. No DISCUSSIONS.txt -- only the
+                  directory. A discussion is forgotten the moment it settles,
+                  like a path tried on the way to the maze's centre. Two kinds:
+                    disc-N-<name>.txt   a CHOICE is owed (a live fork).
+                    todo-N-<name>.txt   the choice is made; only WORK is owed.
 
 -------------------------------------------------------------------------------
-2.  THE SORTING RULE (the whole system rests on this)
+2.  THE SORTING RULE
 -------------------------------------------------------------------------------
 Every piece of accompanying text is exactly one of:
 
     SETTLED   -> a brief entry in RATIONALE.txt; the source note is deleted.
     OPEN      -> its own file under DISCUSSIONS/; deleted when it settles.
-    RESIDUE   -> dropped entirely.
+    RESIDUE   -> dropped.
 
-There is no fourth bin. A note does not get to survive as "a session summary"
-or "a handoff spec" or "this round's changes." It dissolves into one of the
-three outcomes and the original file disappears.
+There is no fourth bin. A note does not survive as "a session summary" or "a
+handoff spec" or "this round's changes".
 
-DISTINGUISHING THE THREE:
-  - SETTLED vs OPEN: is a DECISION still owed? If the answer is fixed and only
-    the writing-down remains, it is settled. If a genuine fork is unresolved,
-    it is open.
-  - disc vs todo (both are open): is the open thing a CHOICE or LABOUR?
-    A discussion is resolved by DECIDING. A todo is resolved by DOING. "Should
-    a reference be allowed to tighten a definition's guard?" is a discussion;
-    "implement the FOLLOW-set validator we agreed to want" is a todo.
-  - RESIDUE: anything resolved by neither deciding nor building because it
-    carries no development content -- "regenerate the GOOD files on real
-    infrastructure", stale-file inventories, "promote on the test rig",
-    per-drop changelogs. Nobody needs it once the drop has landed. Drop it.
+  SETTLED vs OPEN   Is a decision still owed? Answer fixed, only the writing-
+                    down remains -- settled. A genuine unresolved fork -- open.
+  disc vs todo      A disc is resolved by deciding, a todo by doing. "May a
+                    reference tighten a definition's guard?" is a disc.
+                    "Implement the FOLLOW-set validator" is a todo.
+  RESIDUE           No development content; nobody needs it once the drop has
+                    landed. "Regenerate the GOOD files on real infrastructure",
+                    stale-file lists, per-drop changelogs.
 
 -------------------------------------------------------------------------------
-3.  LIFECYCLE (how a thing moves between bins)
+3.  LIFECYCLE
 -------------------------------------------------------------------------------
 A question arises
-    -> open a disc-N file: state the question, what is open, what is already
-       fixed around it (so a later reader sees the constraints), and the entry
-       condition that lets it be settled.
+    -> open a disc-N file: the question, what is open, what is already fixed
+       around it, and the entry condition that lets it settle.
 A question is decided
-    -> delete its disc-N file; write a brief RATIONALE entry (what + why). If
-       the decision left work behind, open a todo-N file for that work.
+    -> delete its disc-N file; write a brief RATIONALE entry. If it left work
+       behind, open a todo-N file.
 A todo is built
-    -> delete its todo-N file. If the building settled a sub-decision, that
-       decision lands in RATIONALE.
-A note arrives from elsewhere (a session log, a handoff, a changelog)
-    -> sort each of its paragraphs SETTLED / OPEN / RESIDUE; file or drop each;
-       delete the note.
+    -> delete its todo-N file. A sub-decision settled while building lands in
+       RATIONALE.
+A note arrives from elsewhere (session log, handoff, changelog)
+    -> sort each paragraph SETTLED / OPEN / RESIDUE; file or drop each; delete
+       the note.
 
-The invariant: a DISCUSSIONS/ file exists if and only if the item is open.
-"What is open" is therefore always 'ls DISCUSSIONS/', never a scan of a long
-append-only log for the entries that have not been superseded yet.
+Invariant: a DISCUSSIONS/ file exists if and only if the item is open.
 
 -------------------------------------------------------------------------------
-4.  ROUTING ACROSS SCOPES -- a discussion lives where the SOLUTION is built
+4.  ROUTING -- a discussion lives where the SOLUTION is built
 -------------------------------------------------------------------------------
 A question raised while building one component, whose answer is a feature of
 another, belongs to the OTHER component's DISCUSSIONS/. A lexer-stage question
-whose resolution is a semantic feature is a semantic discussion. The trigger
-that surfaced the question does not own it; the layer that will resolve it does.
-
-This keeps each scope's worklist honest: it lists what THAT scope must decide
-or build, not every question that happened to come up while touching its code.
+resolved by a semantic feature is a semantic discussion. The trigger that
+surfaced it does not own it; the layer that resolves it does.
 
 -------------------------------------------------------------------------------
-5.  RATIONALE DISCIPLINE -- keep it brief, keep it current
+5.  RATIONALE DISCIPLINE
 -------------------------------------------------------------------------------
-  - One decision, stated as: what was decided, then the reason. A few lines.
-    If an entry grows past a short paragraph, the decision is probably not
-    actually settled -- check whether part of it belongs back in DISCUSSIONS/.
-  - REJECTED ALTERNATIVES go entirely, or survive as at most one sentence
-    saying why they were not chosen. Enough to stop re-litigation; not a
-    history of the road not taken.
-  - SUPERSESSION COLLAPSES. When decision B replaced decision A, RATIONALE
-    states only B (the current truth). It does not narrate "we first did A,
-    then changed to B." The reader wants what holds now, not the sequence.
-    (The exception is a one-line "supersedes the earlier X" only where a reader
-    might otherwise expect the old form to still work.)
-  - NO PROCESS in RATIONALE: no test counts, no "regenerated on infra", no
-    dates-as-changelog. Those are residue.
+  - One decision: what, then why. An entry growing past a short paragraph is
+    probably not settled -- check whether part belongs back in DISCUSSIONS/.
+  - SUPERSESSION COLLAPSES. When B replaced A, state only B; do not narrate "we
+    did A, then changed to B". (Exception: a one-line "supersedes X" where a
+    reader might expect the old form to still work.)
+  - NO PROCESS: no test counts, no "regenerated on infra", no dates-as-
+    changelog.
 
 -------------------------------------------------------------------------------
 6.  DISCUSSIONS-FILE DISCIPLINE -- sections of concern, no fixed skeleton
 -------------------------------------------------------------------------------
-A disc/todo file carries the sections it needs and no boilerplate. Useful
-sections, included only when they have content:
+A disc/todo file carries the sections it needs, no boilerplate. Useful when
+they have content:
   - the QUESTION or the WORK, stated plainly;
-  - WHAT IS OPEN (the actual fork(s)) -- for a disc;
-  - WHAT IS DECIDED already (so the open part is bounded) -- for a disc;
-  - TO IMPLEMENT -- for a todo;
-  - WHY it cannot be settled yet / why it is deferred;
-  - ENTRY CONDITION: what has to be true before it can be picked up.
-Name the file for the PROBLEM, not for the round or the date. The 'disc-N-' /
-'todo-N-' prefix gives a stable short handle ("disc-3", "todo-1") for reference
-in conversation and in RATIONALE cross-links.
+  - WHAT IS OPEN (the fork) / WHAT IS DECIDED already (bounds it) -- disc;
+  - TO IMPLEMENT -- todo;
+  - WHY it cannot settle yet / why deferred;
+  - ENTRY CONDITION: what must be true before it can be picked up.
+Name the file for the PROBLEM, not the round or the date.
 
 -------------------------------------------------------------------------------
 7.  WHAT NOT TO KEEP
 -------------------------------------------------------------------------------
-  - Append-only ledgers that accrete settled and open together until you cannot
-    tell which entries still matter. (The settled half belongs in RATIONALE;
-    the open half belongs in DISCUSSIONS/; the ledger itself goes.)
-  - Multiple working copies of the same document (-this-round, -edited, -next).
-    Exactly one canonical file per kind per scope.
+  - Append-only ledgers mixing settled and open. (Settled -> RATIONALE; open ->
+    DISCUSSIONS/; the ledger goes.)
+  - Multiple working copies of one document (-this-round, -edited, -next). One
+    canonical file per kind per scope.
   - Per-session / per-drop notes as durable artefacts. Mine them, then delete.
-  - A separate "handoff spec" between two scopes. Its settled facts are the
-    receiving scope's RATIONALE; its open questions are that scope's
-    DISCUSSIONS/. It does not survive as a third document kind.
-
--------------------------------------------------------------------------------
-8.  ONE-LINE SUMMARY
--------------------------------------------------------------------------------
-Settled goes to RATIONALE (briefly, with the reason). Open goes to
-DISCUSSIONS/ (one file each, disc for a choice, todo for work). Residue is
-dropped. Every other document dissolves into those outcomes and is deleted.
+  - A separate "handoff spec". Its settled facts are the receiving scope's
+    RATIONALE; its open questions are that scope's DISCUSSIONS/.
 ===============================================================================
-EOF
