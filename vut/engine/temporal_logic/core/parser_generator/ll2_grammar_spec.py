@@ -119,7 +119,7 @@ class Terminal_Spec(SpecNode):
     the discriminant the lexer's pattern extractor and the engine switch on.
     Per shape: 'pattern' for a regex class; 'spelling' for a string/captured
     keyword or a framing token's friendly tag; 'mode' (a span mode, see
-    core.span_oracle.SpanMode) for an opaque span. Irrelevant fields are None.
+    world.span_oracle.SpanMode) for an opaque span. Irrelevant fields are None.
     'silent' is derived from shape (see _SHAPE_SILENT): a string keyword is
     dropped as punctuation, every richer terminal is kept in the parse frame.
 
@@ -257,7 +257,7 @@ class TerminalFactory:
     def opaque(mode):
         """RETURN: Terminal_Spec, an opaque span terminal carrying its span mode.
 
-        'mode' is a span mode (core.span_oracle.SpanMode) defined by whatever
+        'mode' is a span mode (world.span_oracle.SpanMode) defined by whatever
         oracle measures the span -- e.g. the Luau layer's Role. It rides on the
         terminal, so a rule expresses "this position takes an opaque span of THIS
         kind" by which 't_opq_...' it names; the engine passes the mode to the

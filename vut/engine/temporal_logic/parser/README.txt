@@ -32,7 +32,7 @@ RUNNING A PARSE
 Arguments:
 
     source_text   the rule-file text, one str.
-    oracle        the opaque-span oracle: any core.span_oracle.SpanOracle.
+    oracle        the opaque-span oracle: any world.span_oracle.SpanOracle.
                   The lexer hands it each '{ ... }' span to find the matching
                   brace under the Role the grammar position demands. The ONE
                   external dependency; a source with no spans never calls it.
@@ -92,11 +92,12 @@ FILES
                               stable slots; silent terminals are dropped.
         operator_interface.py OR/SEQ/PLUS/STAR_Interface -- the operator
                               signal an AST node class derives from.
-        span_oracle.py        SpanOracle ABC + SpanResult (neutral span
-                              value: text, mode, begin) + Reference (segments,
-                              begin) and the abstract collect_references --
-                              the neutral vocabulary pass 2 resolves.
         diagnostic.py         Phase-tagged Diagnostic + DiagnosticReporter.
+
+    The opaque-span boundary (SpanOracle ABC + the neutral SpanResult /
+    Reference vocabulary + collect_references) is NOT in core/: it lives in
+    world/span_oracle.py (the language-neutral world authority) and is imported
+    by the lexer and by ast_nodes. Pass 2 resolves the Reference vocabulary.
 
     ast_map.py
         The overlay: rule name -> constructor. Classmethods on the node

@@ -12,7 +12,7 @@ the parser builds them and the validator/transpiler consume them.
 Opaque code spans are stored verbatim (braces included) together with the
 span MODE under which the parser handed them to the oracle (OpaqueCode), so
 the code generator can re-frame each correctly. The parser names no embedded
-language: everything span-related speaks 'oracle' (core.span_oracle).
+language: everything span-related speaks 'oracle' (world.span_oracle).
 ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
@@ -68,7 +68,7 @@ class OpaqueCode:
     the only party that interprets it. The node names no embedded language.
     """
     text:  str
-    mode:  object             # core.span_oracle.SpanMode
+    mode:  object             # world.span_oracle.SpanMode
     begin: int
     _references: "tuple|None" = field(default=None, compare=False, repr=False)
 
@@ -76,7 +76,7 @@ class OpaqueCode:
     def from_span(cls, span):
         """RETURN: OpaqueCode, wrapping an engine SpanResult.
 
-        The engine yields a neutral core.span_oracle.SpanResult at an
+        The engine yields a neutral world.span_oracle.SpanResult at an
         opaque-span position (it knows no language); this is the single seam
         where the rule language turns it into its own node. SpanResult.mode is
         carried straight onto 'mode'. For the <mutation> rule (a

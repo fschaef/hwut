@@ -40,6 +40,10 @@ THE ABCs
                      plus the neutral vocabulary Reference / SpanResult /
                      SpanMode and the errors SpanSyntaxError / SpanOracleError.
                      BUILT.
+                     (SpanMode is the abstract base; E_SpanMode is the core
+                     enum of neutral modes (CONDITION / EXPRESSION / LVALUE /
+                     STATEMENT_BLOCK); a world subclasses it -- the Luau world's
+                     concrete enum is Role. One hierarchy, three names by layer.)
     emission.py      Emitter     -- emit(resolved_program) -> str; EmissionError.
                      CONTRACT ONLY (todo-4); signature provisional.
     execution.py     Runner      -- run(program_text, trace) -> str;
@@ -67,3 +71,4 @@ A concrete world imports its own face ABCs from this package and the neutral
 Reference vocabulary they carry. It imports nothing from the lexer, the parser,
 or the semantic layer: the contract points INTO the world (consumers depend on
 the ABCs), never out of it.
+

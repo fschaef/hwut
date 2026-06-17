@@ -20,6 +20,24 @@ spellings -- two booleans whose kinds the check can verify. Restructuring the
 tree into meaning is exactly this, node by node: resolve the operands, and the
 operator that joined their spellings now joins their referents.
 
+VOCABULARY  (house terms this layer assumes; the owning doc is cited)
+  OPAQUE SPAN   The '{ ... }' embedded target-language text the control plane
+                does NOT parse (parser-core README). Pass 2 sees only the names
+                referenced inside it, never the code.
+  ORACLE        The SpanOracle (world/span_oracle.py): the abstract boundary
+                that measures an opaque span and, on demand, collects the
+                Reference names inside it. The ONE external dependency; a source
+                with no spans never calls it.
+  PSEUDO-SYMBOL One of e / sm / mg / m (and cw): a binding the resolver seats
+                ITSELF, never user-declared. They resolve FIRST; declaring any
+                of their spellings is fatal [NAME] (F-1).
+  STACKLESS     A house rule, not an algorithm property: every walk uses an
+                explicit work-list, never interpreter recursion, so depth is
+                bounded by memory not the stack (as the parser driver is).
+  REGIME (A)/(B) The two name-ordering rules (D), NOT the section letters.
+                (A) = strict define-before-use; (B) = declare-before-use with
+                bounded-forward definition. Read "(A)-strict" / "(B)-forward".
+
         AST
      from parser
          |
@@ -59,7 +77,7 @@ Arguments:
 
     root_source   the top-level rule-file text, one str. Imports reach further
                   modules through the loader.
-    oracle        the same core.span_oracle.SpanOracle the parser uses. Pass 2
+    oracle        the same world.span_oracle.SpanOracle the parser uses. Pass 2
                   calls it a SECOND time, through OpaqueCode.get_references, to
                   collect the names referenced inside opaque spans (the guard
                   read-only check reads them). A program with no opaque
@@ -80,21 +98,33 @@ Returns:
     for d in reporter.errors:
         ...                         # d.phase, d.tag, d.message, d.source_offset
 
+Two error worlds are distinct. A loader exception (the source cannot be
+fetched) is INFRASTRUCTURE: it sets has_fatal and stops the load stage at once.
+An author mistake (a cycle, an undefined name) is a located diagnostic the
+author fixes; it never sets the infrastructure flag.
+
 -------------------------------------------------------------------------------
 (A) MODULES: SOURCE -> PARSED -> RESOLVED
 -------------------------------------------------------------------------------
 
 Any file is a MODULE. The module manager moves each module through three
-states: 
+states:
 
    -- SOURCE (text located through the loader)
-   -- PARSED (lexed and parsed once -- parsing needs no resolution, so the 
+   -- PARSED (lexed and parsed once -- parsing needs no resolution, so the
       cache holds this)
-   -- RESOLVED. 
+   -- RESOLVED.
 
 Resolution is a WHOLE-PROGRAM phase: when every reachable module is PARSED,
-they are resolved and connected in one step, not interleaved per import. An
-import cycle is reported as an ordered chain.
+they are resolved and connected in one step, not interleaved per import.
+
+The load walk that reaches modules is itself a graph walk, and an IMPORT CYCLE
+(A imports B imports A) is found here, before any scope tree exists -- a looping
+load can never reach ALL-PARSED. An import cycle is FATAL-STOP for the load
+stage, reported as one ordered chain; the pipeline does not advance to the
+scope build. (Contrast the cascade cycle below, which accumulates every chain
+and continues -- the two cycle checks have OPPOSITE recovery policies because a
+load cycle leaves no remainder to continue over.)
 
 An import MOUNTS one parsed module's tree under a namespace path in the
 mounter ('import: "<file>" into: <path>'). The graft is ASYMMETRIC by tree
@@ -104,6 +134,13 @@ import line's position. A fresh subtree is grafted per mount. The links a mount
 materialises seal the moment the graft completes -- an import is a complete
 statement, never an opening bracket -- and a mount may not land on or pass
 through a sealed scope.
+
+ORDER WITHIN THE SCOPE STAGE. The graft needs a built, sealed donor: a module
+is fully built and SEALED before any mount grafts onto it, and the graft itself
+seals on completion. So the scope stage runs build-all, then graft-all, and
+only then does resolution read the sealed forest. Resolution never observes a
+half-built or still-open foreign tree; "one step" names the resolution, not the
+build that precedes it.
 
 -------------------------------------------------------------------------------
 (B) THE SCOPE TREE AND SYMBOLS
@@ -122,7 +159,29 @@ instance data on the symbol, NOT scope symbols -- 'Traffic.threshold' finds no
 scope entry, only an object has a threshold. The params list is consulted by
 exactly the binding checks (E).
 
-The build is STACKLESS over RuleFile.items. SEAL LAW: a namespace path opens
+WORKED EXAMPLE. The struct declaration
+
+    Traffic(threshold: int; lane: int) is: struct
+
+records ONE Symbol in its scope:
+
+    Symbol(name   = "Traffic",
+           kind   = "struct",
+           params = [ ("threshold", "int"), ("lane", "int") ],   # ordered
+           offset = <decl offset>)
+
+'params' is a flat ordered list of (member-name, member-type) pairs -- a member
+is a pair, NOT a nested Symbol and NOT a scope entry. So a TYPE-descent tail
+('myTraffic.threshold', C) walks THIS list by member-name and stops at the leaf;
+a SCOPE-descent lookup of 'Traffic.threshold' finds nothing in the scope tree,
+which is exactly why it fails (D-4). An aggregate's params are its signature
+parameters in the same shape; an event's are its typed fields. (One cheap check
+at record time: a parameter may not share a spelling with a mode/state of the
+same aggregate -- data in one breath, a state in the next, is a confusion.)
+
+The build is STACKLESS (the house rule, VOCABULARY) over RuleFile.items: a
+linear forward sweep, a work-list never the interpreter stack. SEAL LAW: a
+namespace path opens
 ONCE ('open: a.b ... :close' materialises a -> b and the close seals the whole
 chain, 'a' included); a closed scope is FINAL and is never reopened. A reference
 reaches names in its own scope and outward through its still-OPEN enclosers up
@@ -147,31 +206,70 @@ never unified:
                     member lists on the Symbol.
 
 A chain may switch ONCE, scope -> type; a type segment never reopens scope
-descent. Depth legality is resolution's; the parser admits any depth.
+descent. A segment the legal descent cannot seat -- including a tail that tries
+to switch BACK, type -> scope -- is an undefined name, fatal [NAME]. Depth
+legality is resolution's; the parser admits any depth.
+
+    head resolves                  one-way switch
+    innermost-out                  (scope -> type)
+         |                               |
+         v          loop on a            v          loop on a
+    .---------.     namespace/      .---------.     struct
+    | SCOPE   |<--. aggregate seg   | TYPE    |<--. member seg
+    | descent |---'                 | descent |---'
+    '---------'-------------------->'---------'------> member leaf
+         ^                                              (chain end)
+         '-- type -> scope back-switch : FATAL [NAME] (no way back)
 
 -------------------------------------------------------------------------------
 (D) THE (A)/(B) REFERENCE RULE
 -------------------------------------------------------------------------------
 
-Two ordering regimes gate "is this name in scope yet":
+Two ordering regimes gate "is this name in scope yet". Every declarable kind
+belongs to exactly one regime:
 
-    (A) STRICT define-before-use: events, clocks, variables, structs, cause
-        definitions. Fully defined above the reference. Member cycles among
-        (A) types are impossible by construction -- the ordering rule IS the
-        check, no cycle detector.
+    (A) STRICT define-before-use -- fully defined above the reference:
+            event        clock        variable
+            struct       cause-def
+        These leaves reference nothing, so loose ordering buys them nothing.
+        Member cycles among (A) types are impossible BY CONSTRUCTION -- the
+        ordering rule IS the check, no cycle detector.
 
-    (B) DECLARE-before-use with bounded-forward definition: modes, aggregate
-        members ('has:'), arming targets, spawn targets, 'is:' bases. The name
-        is declared above by name and kind (and signature where spawnable); the
-        body may follow in the same scope. An unmet (B) obligation DRAINS at the
-        scope close, the diagnostic carrying the obligating reference's offset.
+    (B) DECLARE-before-use, bounded-forward definition -- declared above by
+        name and kind (and signature where spawnable), body may follow in the
+        same scope:
+            mode                  aggregate member ('has:')
+            arming target         spawn target           'is:' base
+        An unmet (B) obligation DRAINS at the scope close, the diagnostic
+        carrying the obligating REFERENCE's offset.
+
+The (B) drain is the layer's quietest correctness boundary. A forward reference
+whose body never arrives must surface AS AN ERROR at the close, not pass
+silently -- a tolerated unknown name in a validation tool is a false PASS. The
+drain queue is keyed by scope; the diagnostic points at the REFERENCE that made
+the promise, not at the close that found it unkept.
 
 -------------------------------------------------------------------------------
 (E) THE CONSISTENCY CHECKS
 -------------------------------------------------------------------------------
 
-Each check owns one diagnostic class: NAME, KIND, BINDING, CASCADE, GUARD,
-STRUCTURE, SWEEP.
+Each check owns one diagnostic class. The seven classes, and where each is
+raised (the test suite carries one choice per class, J):
+
+    NAME       undefined name; shadowed pseudo-symbol; bad descent (C); a
+               member-or-VOID tail that names no member.
+    KIND       kind-vs-shape on a declaration head; struct in a comparison;
+               cross-resolution (emission <-> bundle); non-CLOCK clockwork
+               trigger.
+    BINDING    'e'/'sm'/'mg'/'m'/'cw' used where it is not in scope; a member
+               on a memberless trigger.
+    CASCADE    a cascade cycle; a system kind named as an emission.
+    GUARD      a mutation inside a read-only guard or bracket condition.
+    STRUCTURE  a shape the grammar admits but pass 2 refuses (e.g. a cause
+               reference carrying '&', disc-3).
+    SWEEP      a step kind forbidden in its sweep role (the one-sweep table, G).
+
+The checks, by the construct they guard:
 
   KIND-VS-SHAPE on the shared declaration head: a signature is mandatory for
   mode-group / state-machine / struct, forbidden for mode / state / container /
@@ -215,8 +313,8 @@ STRUCTURE, SWEEP.
 
   GUARD READ-ONLY LAW: an 'on: BEGIN' / 'on: END' guard, and a bracket
   condition, may not mutate. The check reads OpaqueCode.get_references against a
-  mutating-builtin denylist; this is where the lazy reference collection (A) is
-  spent.
+  mutating-builtin denylist; this is where the lazy reference collection (the
+  second oracle call, RUNNING A RESOLUTION) is spent.
 
 -------------------------------------------------------------------------------
 (F) THE CASCADE GRAPH
@@ -234,7 +332,7 @@ so it adds no inbound cascade edge.
 ANY cascade CYCLE is fatal [CASCADE] -- a cycle means an event kind re-fires
 within one no-time cascade. Detection is a stackless coloured DFS, linear in
 nodes plus edges; every back-edge is reported with its full event chain,
-accumulate-and-continue.
+ACCUMULATE-AND-CONTINUE (unlike the import cycle, which stops the load stage).
 
 -------------------------------------------------------------------------------
 (G) CLOCKWORK CHECKS
@@ -268,12 +366,21 @@ The emitter's ENTIRE input is one frozen dataclass:
 
     ast           the untouched RuleFile (nodes frozen; resolution is a sidecar).
     scope_tree    the scope tree with its symbols.
-    resolutions   reference -> Symbol, keyed on node identity.
+    resolutions   reference -> Symbol, keyed on node IDENTITY (id(node)), NOT on
+                  the node as a dict key. The AST nodes are frozen dataclasses
+                  with value equality: two textually identical references
+                  ('e.temp' in two rules) compare EQUAL and would collide as
+                  keys, yet they may resolve to different symbols. The frozen ast
+                  in this same artefact keeps every node alive, so its id is
+                  stable for the program's lifetime.
     mounts        the import grafts.
     cascade       the event-kind graph (cycle-free by the time this exists).
     queried       the event kinds the rules consume -- the set the emitter
                   generates tracer registration from (no hand-written watch).
     source_map    the diagnostics seed.
+
+Resolution is a SIDECAR: the ast is never rewritten to carry resolved symbols.
+The resolutions map is the one place a reference's meaning lives.
 
 -------------------------------------------------------------------------------
 (I) FILES
@@ -293,9 +400,25 @@ The emitter's ENTIRE input is one frozen dataclass:
     cascade.py        the EventSpec edge graph and the coloured-DFS cycle check.
     program.py        the frozen ResolvedProgram dataclass.
 
-The neutral resolution vocabulary (Reference, SpanOracle.collect_references) and
-the diagnostic spine (Phase, DiagnosticReporter) live in the parser's core/ and
-are imported DOWN; this layer imports nothing below the parser.
+FOUR STACKLESS WALKS, never one shared walker -- each carries its own re-entry
+policy and unifying them silently corrupts output:
+    load DFS         (modules.py)    import-cycle, fatal-stop
+    scope build      (scope_tree.py) linear forward sweep, seal at close
+    head resolution  (resolver.py)   upward chain, bounded by the unit root
+    cascade DFS      (cascade.py)    coloured, accumulate-and-continue
+
+IMPORTS DOWN, from two layers, and nothing of its own consumers:
+
+    parser core/    the diagnostic spine (Phase, DiagnosticReporter) and the
+                    parsed AST (RuleFile and its frozen nodes).
+    world/          the neutral span vocabulary (SpanOracle, Reference) -- the
+                    oracle this layer calls a second time (D-1), and the
+                    Reference pairs it returns. The world is the language
+                    authority; this layer names no target language.
+
+The emitter consumes ResolvedProgram (world/emission.py, Emitter) -- the world
+sits beside this layer at the language boundary, not below the parser. This
+layer imports the parser and the world; it is imported by neither.
 
 -------------------------------------------------------------------------------
 (J) THE TEST SUITE (TEST/)
@@ -307,12 +430,27 @@ class (NAME, KIND, BINDING, CASCADE, GUARD, STRUCTURE, SWEEP) plus positive
 coverage; multi-file import fixtures exercise the mount graft, asymmetric
 visibility, and the import-cycle chain.
 
+THREE SPINE FIXTURES prove the resolution core before any F-check is written:
+    -- a (B) forward reference whose body NEVER arrives: must error at the scope
+       close, the diagnostic carrying the reference's offset.
+    -- a (B) forward reference whose body arrives LATE but valid: must pass.
+    -- two textually identical references resolving to DIFFERENT symbols: both
+       present in 'resolutions', each correct (the id-keying proof, H).
+
 -------------------------------------------------------------------------------
 (K) AUTHOR FLAGS  (obligations not yet met in the code below)
 -------------------------------------------------------------------------------
 
     Phase.SEMANTIC is an obligation on core diagnostic.py; the live Phase enum
-    is LEXER / PARSER / ANALYZER. It is added beside them.
+    is LEXER / PARSER / ANALYZER. It is added beside them. The class tag is a
+    core-neutral 'tag' slot on Diagnostic (string, defaulting None so existing
+    lexer/parser call sites are untouched); this layer owns the enum of class
+    names and stringifies into that slot -- core never learns the semantic
+    vocabulary.
+
+    The mutating-builtin denylist (the guard read-only law, E) and the method
+    catalogue (E, CALLS) are both per-builtin fact TABLES the checker reads.
+    Whether they are one table or two is an open item (DISCUSSIONS/todo-1).
 
     The whole pass-2 block is DESIGNED, not yet built (RATIONALE + this file
     are the design; the modules above are the target). Open design items live

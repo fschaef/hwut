@@ -5,4 +5,3 @@ coverage run --omit ./*.py -a *.py
 
 --not config.py
 --not fake_luau_oracle.py
-

@@ -28,7 +28,7 @@ ERROR MODEL (see diagnostic.py):
     A SpanOracleError (infrastructure: binary missing, crash, timeout) is NOT
     author-fixable. It is reported fatal and ends the stream.
 
-The lexer depends only on core.span_oracle (the abstract SpanSyntaxError /
+The lexer depends only on world.span_oracle (the abstract SpanSyntaxError /
 SpanOracleError) and a duck-typed oracle with find_close(); it knows nothing of
 Luau or any embedded language.
 

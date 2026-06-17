@@ -8,7 +8,7 @@ generated-code type checking. Together they form an integrated pipeline:
 
     rule-file text
          │
-         ├── find_matching_brace()              [luau_fragment.py]
+         ├── find_matching_brace()              [luau_span_oracle.py]
          ▼
     (open_offset, end_offset)
          │
@@ -25,17 +25,18 @@ generated-code type checking. Together they form an integrated pipeline:
 QUICK START & PUBLIC ENTRY POINTS
 ===============================================================================
 
-1. SCANNING OPAQUE SPANS (luau/luau_fragment.py)
+1. SCANNING OPAQUE SPANS (luau/luau_span_oracle.py)
 
 Isolate verbatim Luau snippets inside a rule-file by identifying the exact 
 closing '}' relative to an opening '{'. Braces inside Luau strings, long-bracket 
-comments, or template blocks are cleanly bypassed using a parser oracle loop.
+comments, or template blocks are bypassed by an oracle parse loop, not by
+lexing Luau.
 
 SIGNATURE:
   find_matching_brace(source: str, open_offset: int, role: Role, oracle: object) -> int
 
 USAGE:
-  from luau.luau_fragment import find_matching_brace, Role, LuauOracle
+  from luau.luau_span_oracle import find_matching_brace, Role, LuauOracle
   
   oracle = LuauOracle(binary="luau-ast")
   closing_idx = find_matching_brace(
@@ -160,23 +161,23 @@ USAGE:
 COMPONENT MODULE REFERENCE
 ===============================================================================
 
-1. luau/luau_fragment.py
+1. luau/luau_span_oracle.py
 -------------------------------------------------------------------------------
-* Mechanism: Bypasses character-by-character string/comment parsing by iteratively 
-  extracting potential code snippets between '{' and sequentially discovered '}' characters. 
-  The text gets safely wrapped in role-specific framing structures and parsed via a 
-  headless 'luau-ast' process execution loop. The first structural match that compiles 
-  successfully cleanly exposes the true target span boundary.
+* Mechanism: avoids lexing Luau itself. It takes the text between '{' and each
+  successive candidate '}', wraps it in the role's framing, and parses that with
+  a headless 'luau-ast' process. The first candidate that parses is the true
+  span boundary; braces inside strings, long-bracket comments, and templates
+  thus fall out without a Luau lexer.
 
 * Role Classification:
-    - CONDITION: Framing prefix/suffix handles conditional rule guards.
-    - EXPRESSION: Evaluates decoupled single rvalues smoothly.
-    - STATEMENT_BLOCK: Isolates large function body procedures seamlessly.
+    - CONDITION: frames a rule guard.
+    - EXPRESSION: frames a single rvalue.
+    - STATEMENT_BLOCK: frames a function body.
 
-* Exceptional Handling Paths:
-    - FragmentSyntaxError: Dispatched on invalid source blocks with clear 
-      left brace file boundaries.
-    - OracleError: System-level execution or timeout failure exceptions.
+* Exceptions:
+    - FragmentSyntaxError: no candidate parses; carries the opening-brace file
+      offset.
+    - OracleError: the 'luau-ast' process failed or timed out.
 
 * Reference Collection:
     - collect_references(source, open, close, mode): wraps the measured span
@@ -189,24 +190,26 @@ COMPONENT MODULE REFERENCE
 
 2. luau/location_mapper.py
 -------------------------------------------------------------------------------
-* Mechanism: Line counts remain directly equivalent between source fragments and 
-  destination documents, allowing linear translation shifts. Emitted content pieces 
-  sequentially register explicit block intervals to handle precise column shifts caused 
-  by arbitrary block alignment indentation.
+* Mechanism: a generated line maps back to a source line by the block interval
+  it falls in. Boilerplate the transpiler emits is counted (advance); each
+  copied fragment registers its interval, recording the column shift its
+  indentation introduces. A lookup outside any registered interval is
+  boilerplate and maps to None.
 
 * Functional Protocols:
-    - .advance(): Advances cursor parameters across generated compiler boilerplate lines.
-    - .register_fragment(): Records physical boundaries for source files and 
-      returns target offsets.
-    - .source_line_of(): Looks up line targets, mapping compiler boilerplate errors to None.
+    - .advance(): step the cursor over generated boilerplate lines.
+    - .register_fragment(): record a source fragment's interval; return its
+      target offset.
+    - .source_line_of(): map a target line back to source, or None for
+      boilerplate.
 
 
 3. luau/generated_code_checker.py
 -------------------------------------------------------------------------------
-* Mechanism: Processes complete text or saved paths with raw 'luau-analyze' process calls 
-  to execute deep structural verification. Errors landing inside verified intervals 
-  are output with an explicit origin prefix; any errors landing outside intervals 
-  flag internal transpiler bugs.
+* Mechanism: runs 'luau-analyze' over the assembled generated code. Each error
+  line is mapped through the location mapper: one landing inside a registered
+  fragment interval is attributed to the rule-file author (with its source
+  location); one landing outside any interval is flagged a transpiler bug.
 
 * Diagnostic Outputs:
     - Author Error Formatting: '<file>:<line>:<col>: <kind>: <message>'.

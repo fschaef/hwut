@@ -42,9 +42,11 @@ VOCABULARY
                 modes are active at once.
   STATE MACHINE An aggregate of states in which at most one member-state is
                 active at a time; arming a member deactivates the previous one.
-  AGGREGATE     A MODE GROUP or a STATE MACHINE (both are reactors). Spawned by '+!' into a
-                container (default or named); its existence ended by '-!'. A
-                'singleton :' declaration fixes one instance re-init by name.
+  AGGREGATE     A MODE GROUP or a STATE MACHINE (both are reactors). Spawned by
+                'spawn:' into a container; its existence ended by 'unspawn:'.
+                Both are clockwork-only. A single persistent instance is the
+                default-container dedup (a duplicate spawn is a silent no-op),
+                not a declaration.
   CONTAINER     A structure that holds aggregate instances -- one (a
                 ScalarReactorContainer) or many (a MultiReactorContainer). It
                 admits an offered instance under a mutexed slot protocol.
@@ -175,7 +177,7 @@ the one before:
   REACTORS
     A reactor is a declared, parameterized, dormant rule unit, armed as an
     effect of a cause. Identity is the parameter list, so a duplicate arming is
-    a silent no-op. A live reactor's inner rules fire with the 'mode' binding
+    a silent no-op. A live reactor's inner rules fire with the 'm' binding
     set to the instance; optional 'init'/'deinit' hooks run once at arming and
     once at cessation. MODE and STATE are its two forms; they share one body
     shape and differ only in how they close and whether they exclude siblings.
@@ -213,26 +215,35 @@ the one before:
     A.2.5.)
 
   AGGREGATE SPAWNING AND CONTAINERS
-    A mode group or state machine (an AGGREGATE) is spawned with the '+!' effect verb,
-    paralleling the '!' that arms a single mode. '+!' has three forms: the
-    bracketless re-init of a 'singleton :'-declared type; the parenthesised
-    default-container spawn (admitted unless an instance of identical type and
-    parameters is already present); and the 'in { lvalue }' form that offers
-    the instance to a named container. The container admits or rejects the
-    instance under a mutexed slot protocol; a rejected offer constructs
-    nothing. Several aggregates of one type run concurrently when their
-    container holds many. An instance's existence is ended with the '-!' verb,
-    which takes a reference by name (bare or dotted).
-    (Effect forms: SYNTAX_DOC (parser/grammar.py) <spawn>, <singleton-def>, <unspawn>; the
+    A mode group or state machine (an AGGREGATE) is spawned with the 'spawn:'
+    verb -- the clockwork-only counterpart to the bare 'arm:' that arms a single
+    mode. Spawn has ONE shape: a mandatory argument list (the parentheses are
+    required, empty for an argument-less type, 'spawn: T()'), with an optional
+    'into:' target. A bare type name without parentheses is a syntax error --
+    there is no parameterless or bracketless form. Absent 'into:', the instance
+    goes to the per-kind DEFAULT container, which accepts it unless one of
+    identical type and identical parameters is already present (then the spawn
+    is a silent no-op, exactly like a duplicate arming -- identity is the
+    parameters). Present, 'into:' names a container: a dict target carries a key
+    subscript ('into: roster[e.id]'), a list target is bare and appends
+    ('into: queue'); the container admits or rejects under a mutexed slot
+    protocol, and a rejected offer constructs nothing. Several aggregates of one
+    type run concurrently when their container holds many. An instance's
+    existence is ended with 'unspawn:', also clockwork-only, which takes a
+    reference by name (bare or dotted), not a fresh invocation; ending runs
+    'deinit' once and releases the instance from its container.
+    (Effect forms: SYNTAX_DOC (parser/grammar.py) <spawn>, <unspawn>; the
     container protocol: section on the runtime substrate.)
 
   BINDINGS
-    Engine-supplied names in scope inside a fired rule's Luau spans: 'event'
-    (the triggering event), 'mode' (the enclosing mode instance), 'sm' (the
-    enclosing state machine), and 'mg' (the enclosing mode group). 'mode',
+    Engine-supplied names in scope inside a fired rule's Luau spans: 'e'
+    (the triggering event), 'm' (the enclosing mode/state instance), 'sm' (the
+    enclosing state machine), and 'mg' (the enclosing mode group). 'm',
     'sm', and 'mg' are unbound at top level; referring to them there is a
     transpile-time error. 'sm' and 'mg' are the two aggregate self-bindings,
-    one in scope at a time per the enclosing aggregate kind.
+    one in scope at a time per the enclosing aggregate kind. The same spellings
+    serve both planes (a guard '[ e.temp > limit ]' and a Luau span
+    '{ e.temp > limit }' read identically); they are not reserved words.
     (Full rules: SYNTAX_DOC (parser/grammar.py) A.2.1.)
 
   TIME-LINE BOUNDS -- BEGIN AND END
@@ -356,7 +367,7 @@ the one before:
 
   MODE LIFECYCLE
     Identity is the parameter list, making arming idempotent: an author writes
-    '=> ! MODE(...)' without first checking whether it is already live. 'init'
+    '=> arm: MODE(...)' without first checking whether it is already live. 'init'
     runs once on creation, 'deinit' once on cessation. The first 'until' to
     fire wins and no further 'until' is checked, so 'deinit' has a single
     well-defined moment and an 'until' clause may safely inspect the
@@ -364,13 +375,13 @@ the one before:
     GROUND_MODE, so the engine has one mechanism (the reactor) rather than two.
 
   AGGREGATE SPAWNING
-    A single mode is armed with '!'; an aggregate -- a mode group or a state
-    machine -- is spawned with '+!' and its existence ended with '-!'. '+!'
-    spawns into a container: the per-kind default, or a named one via
-    'in { lvalue }'; a 'singleton :' type is instead re-initialised by its
-    bare name. The verbs keep the targets distinct: '!' takes a reactor,
-    '+!'/'-!' take an aggregate. '-!' takes a reference by name, not a fresh
-    invocation.
+    A single mode is armed with the bare effect 'arm:'; an aggregate -- a mode
+    group or a state machine -- is spawned with 'spawn:' and ended with
+    'unspawn:', both clockwork-only (never a bare '=>' effect). 'spawn:' directs
+    its instance to a container via 'into:': the per-kind default when omitted,
+    or a named dict (at a key) or list (append) when given. The verbs keep the
+    targets distinct: 'arm:' takes a reactor, 'spawn:'/'unspawn:' take an
+    aggregate; 'unspawn:' takes a reference by name, not a fresh invocation.
 
   STATE-MACHINE LIFECYCLE
     Member states are mutually exclusive; arming one deactivates the
@@ -446,3 +457,4 @@ the one before:
     REPORT block.
 
 ===============================================================================
+
