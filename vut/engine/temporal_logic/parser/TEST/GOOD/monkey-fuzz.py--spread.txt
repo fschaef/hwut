@@ -1,6 +1,7 @@
 === monkey: spread ===
 tokens parsed:      8186
 top-level items:    12 (ok)
+diagnostics:        none
 
 total AST nodes: 6051
 

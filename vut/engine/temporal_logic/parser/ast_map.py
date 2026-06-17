@@ -33,9 +33,9 @@ the shape correspondence (a SEQ rule's node IS SEQ_Interface, ...) is asserted
 by TEST/test-ast-signals.py.
 ______________________________________________________________________________
 """
-from .core.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
+from vut.engine.temporal_logic.core.parser_generator.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
 from . import ast_nodes as ast
-from .core.ast_map_family import OrMap, OptMap, StarMap, PASS
+from vut.engine.temporal_logic.core.parser_generator.ast_map_family import OrMap, OptMap, StarMap, PASS
 
 
 # ---------------------------------------------------------------------------
@@ -536,8 +536,8 @@ def validate_ast_map_shapes(grammar):
     additionally checked: its branch addresses must be valid for the OR (int in
     range, role actually tagged on a branch) and cover every branch.
     """
-    from .core.ast_map_family import OrMap, OptMap, StarMap
-    from .core.ll2_grammar_spec import (rule_shape, Tagged_Spec,
+    from vut.engine.temporal_logic.core.parser_generator.ast_map_family import OrMap, OptMap, StarMap
+    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (rule_shape, Tagged_Spec,
                                          SHAPE_OR, SHAPE_OPT, SHAPE_STAR)
     violations = []
     routers = (OrMap, OptMap, StarMap)
@@ -566,7 +566,7 @@ def _check_or_addresses(name, ormap, grammar):
     branches (no branch left unrouted). Reads the rule's OR_Spec branches and
     their Tagged_Spec roles.
     """
-    from .core.ll2_grammar_spec import Tagged_Spec, OR_Spec
+    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import Tagged_Spec, OR_Spec
     p = grammar.rules[name].pattern
     while isinstance(p, Tagged_Spec):
         p = p.body

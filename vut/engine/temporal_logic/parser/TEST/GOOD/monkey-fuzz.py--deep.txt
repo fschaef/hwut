@@ -1,6 +1,7 @@
 === monkey: deep ===
 tokens parsed:      8047
 top-level items:    3 (ok)
+diagnostics:        none
 
 total AST nodes: 7865
 

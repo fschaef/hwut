@@ -16,7 +16,7 @@ author wrote (OR / OPT / SEQ / PLUS / STAR), Spec and Node alike: each operator
 casts to its own node kind.
 ______________________________________________________________________________
 """
-from .cst_nodes import (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node,
+from vut.engine.temporal_logic.core.parser_generator.cst_nodes import (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node,
                         ABSENT)
 
 ELEM       = 0
@@ -30,7 +30,28 @@ class SpecNode:
     __slots__ = ()
 
     def first2_set(self, grammar):
-        """RETURN: set[tuple], the 2-token lookahead sequences beginning this node."""
+        """RETURN: set[tuple], the 2-token lookahead sequences beginning this node.
+
+        Memoised once the grammar is sealed (after _analyse reaches its FIRST_2
+        fixpoint): the set is a pure function of the node thereafter, and the
+        parse-time presence/branch tests (engine starts/choose_alt) ask for it
+        repeatedly. During the fixpoint the grammar is NOT sealed, so the set is
+        recomputed each iteration and never cached stale.
+        """
+        if getattr(grammar, "_sealed", False):
+            cached = getattr(self, "_first2_cache", None)
+            if cached is not None:
+                return cached
+            result = self._compute_first2(grammar)
+            try:
+                self._first2_cache = result
+            except AttributeError:
+                pass
+            return result
+        return self._compute_first2(grammar)
+
+    def _compute_first2(self, grammar):
+        """RETURN: set[tuple], freshly computed FIRST_2 (no memoisation)."""
         raise NotImplementedError
 
     def nullable(self, grammar):
@@ -115,7 +136,8 @@ class Terminal_Spec(SpecNode):
     _name(), content equality and identity coincide. This lets a terminal be a
     key in the role vocabulary (ROLES, ll2_engine).
     """
-    __slots__ = ("shape", "pattern", "spelling", "mode", "silent")
+    __slots__ = ("shape", "pattern", "spelling", "mode", "silent",
+                 "_name_str", "_hash")
 
     def __init__(self, shape, pattern=None, spelling=None, mode=None):
         self.shape    = shape
@@ -123,12 +145,14 @@ class Terminal_Spec(SpecNode):
         self.spelling = spelling
         self.mode     = mode
         self.silent   = _SHAPE_SILENT[shape]
+        self._name_str = self._compute_name()
+        self._hash     = hash(self._name_str)
 
     def __hash__(self):
-        return hash(self._name())
+        return self._hash
 
     def __eq__(self, other):
-        return isinstance(other, Terminal_Spec) and self._name() == other._name()
+        return isinstance(other, Terminal_Spec) and self._name_str == other._name_str
 
     @property
     def is_opaque(self):
@@ -147,6 +171,10 @@ class Terminal_Spec(SpecNode):
         return Tagged_Spec(self, role)
 
     def _name(self):
+        """RETURN: str, the cached identity string (see _compute_name)."""
+        return self._name_str
+
+    def _compute_name(self):
         """RETURN: str, the terminal's identity -- shape plus its fields.
 
         The distinctness key and the debug-trace id. Two terminals are the same
@@ -165,7 +193,7 @@ class Terminal_Spec(SpecNode):
     def __repr__(self):
         return "Terminal(%s)" % (self._name(),)
 
-    def first2_set(self, grammar):
+    def _compute_first2(self, grammar):
         """RETURN: set[tuple], the length-1 lookahead beginning this terminal.
 
         An opaque span begins with the span-open framing token; every other
@@ -338,7 +366,7 @@ class Rule_Spec(SpecNode):
     def __repr__(self):
         return "PT(%s)" % self.name
 
-    def first2_set(self, grammar):
+    def _compute_first2(self, grammar):
         return set(self.first)
 
     def nullable(self, grammar):
@@ -354,7 +382,7 @@ class Rule_Spec(SpecNode):
 # Combinators: Branch_Spec and Operator_Spec
 # ---------------------------------------------------------------------------
 class Branch_Spec(SpecNode):
-    __slots__ = ("branches",)
+    __slots__ = ("branches", "_first2_cache")
 
     def __init__(self, branches):
         self.branches = tuple(branches)
@@ -369,7 +397,7 @@ class SEQ_Spec(Branch_Spec):
     def __repr__(self):
         return "Seq(%s)" % ", ".join(map(repr, self.branches))
 
-    def first2_set(self, grammar):
+    def _compute_first2(self, grammar):
         if not self.branches:
             return {()}
         acc = self.branches[0].first2_set(grammar)
@@ -409,7 +437,7 @@ class OR_Spec(Branch_Spec):
     def __repr__(self):
         return "Alt(%s)" % " | ".join(map(repr, self.branches))
 
-    def first2_set(self, grammar):
+    def _compute_first2(self, grammar):
         result = set()
         for sub in self.branches:
             result |= sub.first2_set(grammar)
@@ -450,7 +478,7 @@ class OR_Spec(Branch_Spec):
 
 
 class Operator_Spec(SpecNode):
-    __slots__ = ("body",)
+    __slots__ = ("body", "_first2_cache")
 
     def __init__(self, body):
         self.body = body
@@ -458,7 +486,7 @@ class Operator_Spec(SpecNode):
     def children(self):
         return (self.body,)
 
-    def first2_set(self, grammar):
+    def _compute_first2(self, grammar):
         return self.body.first2_set(grammar)
 
 
@@ -468,7 +496,7 @@ class OPT_Spec(Operator_Spec):
     def __repr__(self):
         return "Opt(%r)" % (self.body,)
 
-    def first2_set(self, grammar):
+    def _compute_first2(self, grammar):
         # Includes empty baseline marker to flag structural path choice
         return self.body.first2_set(grammar) | {()}
 
@@ -500,7 +528,7 @@ class STAR_Spec(Operator_Spec):
     def __repr__(self):
         return "Star(%r)" % (self.body,)
 
-    def first2_set(self, grammar):
+    def _compute_first2(self, grammar):
         return self.body.first2_set(grammar) | {()}
 
     def nullable(self, grammar):

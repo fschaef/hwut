@@ -36,7 +36,7 @@ import subprocess
 from enum         import Enum
 from dataclasses  import dataclass
 
-from ..parser.core.span_oracle import (
+from vut.engine.temporal_logic.world.span_oracle import (
         SpanOracle, SpanMode, SpanSyntaxError, SpanOracleError, Reference)
 
 

@@ -48,12 +48,12 @@ from dataclasses import dataclass, field
 from collections import Counter
 
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
-from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser, _ResyncError
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import EngineParser, _ResyncError
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (
         Terminal_Spec, Rule_Spec, Branch_Spec, Operator_Spec,
         SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec, Tagged_Spec)
-from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (t_fr_span_open,
+from vut.engine.temporal_logic.lexer.lexer import Token
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (t_fr_span_open,
                                                           t_fr_span_block,
                                                           t_fr_eof,
                                                           t_fr_mismatch)
@@ -203,7 +203,7 @@ def drive(grammar, rule, tokens, luau_texts=()):
 
 # DiagnosticReporter is imported lazily to keep this module's import graph flat
 # at definition time; it is the reporter EngineParser writes into.
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter  # noqa: E402
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter  # noqa: E402
 
 
 # ==========================================================================

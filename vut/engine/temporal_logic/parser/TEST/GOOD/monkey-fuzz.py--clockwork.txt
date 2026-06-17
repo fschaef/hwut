@@ -1,6 +1,7 @@
 === monkey: clockwork ===
 tokens parsed:      3974
 top-level items:    6 (ok)
+diagnostics:        none
 
 total AST nodes: 3514
 

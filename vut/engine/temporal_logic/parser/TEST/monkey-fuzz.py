@@ -38,13 +38,12 @@ import subprocess
 
 from config import HwutRunner
 
-import aux_renderer as R
 
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse, finalize_file
-from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser
-from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import terminal_by_name
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import EngineParser
+from vut.engine.temporal_logic.lexer.lexer import Token
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import terminal_by_name
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
 from aux_walker import ListLexer
 
@@ -102,11 +101,6 @@ def _load_fixture(profile_name):
     return tokens, payload["luau"]
 
 
-# Profiles whose full AST dump is oversized; print a node-type census + success
-# verdict instead (the same shape run_sprites prints), not the whole tree.
-_CENSUS_PROFILES = frozenset(("deep", "spread", "clockwork"))
-
-
 def _ast_census(items):
     """RETURN: Counter, node-type -> count over the whole AST forest.
 
@@ -143,9 +137,9 @@ def _print_census(census):
 def _make_choice(profile_name):
     """RETURN: function, the HWUT run-function that parses one stored profile.
 
-    Large profiles (_CENSUS_PROFILES) print a node-type census and a success
-    verdict instead of the full AST -- the dump would be megabytes -- so the
-    GOOD stays small and diffable. The rest print the full AST.
+    Every profile prints a node-type census and a success verdict -- never the
+    full AST dump (which would be megabytes) -- so the GOOD stays small and
+    diffable. The AST is still walked to produce the census.
     """
     def run():
         g = compiled_grammar()
@@ -158,25 +152,18 @@ def _make_choice(profile_name):
         print("=== monkey: %s ===" % profile_name)
         print("tokens parsed:      %d" % (len(tokens) - 1))
         ok = bool(rule_file.items) and not parser.reporter.errors
-        if profile_name in _CENSUS_PROFILES:
-            print("top-level items:    %d (%s)"
-                  % (len(rule_file.items), "ok" if ok else "DIAGNOSTICS"))
-        else:
-            print("top-level items:    %d" % len(rule_file.items))
+        print("top-level items:    %d (%s)"
+              % (len(rule_file.items), "ok" if ok else "DIAGNOSTICS"))
         if parser.reporter.errors:
             print("UNEXPECTED DIAGNOSTICS:")
             for d in parser.reporter.errors:
                 print("   %s off=%d %s"
                       % (d.phase.name, d.source_offset, d.message))
-        elif profile_name not in _CENSUS_PROFILES:
+        else:
             print("diagnostics:        none")
 
-        if profile_name in _CENSUS_PROFILES:
-            print()
-            _print_census(_ast_census(rule_file.items))
-        else:
-            print("\n-- AST --")
-            print(R.fmt(rule_file.items))
+        print()
+        _print_census(_ast_census(rule_file.items))
     return run
 
 

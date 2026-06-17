@@ -21,7 +21,7 @@ This is deliberately not a Luau parser. It is the smallest judge that makes the
 candidate-search behaviour deterministic and subprocess-free in tests.
 ______________________________________________________________________________
 """
-from vut.engine.temporal_logic.luau.luau_fragment import ParseResult, LuauOracle
+from vut.engine.temporal_logic.world.luau.luau_span_oracle import ParseResult, LuauOracle
 
 
 class FakeLuauOracle(LuauOracle):

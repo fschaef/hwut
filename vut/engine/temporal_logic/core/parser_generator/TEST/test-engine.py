@@ -42,14 +42,14 @@ import sys
 import config                                                   # noqa: F401
 from config import HwutRunner
 
-from vut.engine.temporal_logic.parser.core.combinators import OR, STAR
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T
-from vut.engine.temporal_logic.parser.core import ll2_grammar_spec as N
-from vut.engine.temporal_logic.parser.core.ll2_engine import (
+from vut.engine.temporal_logic.core.parser_generator.combinators import OR, STAR
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
+from vut.engine.temporal_logic.core.parser_generator import ll2_grammar_spec as N
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import (
         Grammar, EngineParser, LL2ConflictError)
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import merge_first2
-from vut.engine.temporal_logic.parser.core.lexer import register_grammar
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import merge_first2
+from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
 
 # Toy VALUE terminals: captured (non-silent) so they reach reduce frames. Their
@@ -269,7 +269,7 @@ def run_parse_disambiguation():
     register_grammar(grammar)
     g = Grammar(grammar, {"args": None, "arg": _mk_arg, "rvalue": None},
                 start="args")
-    from vut.engine.temporal_logic.parser.core.ll2_engine import _ResyncError
+    from vut.engine.temporal_logic.core.parser_generator.ll2_engine import _ResyncError
 
     banner("end-to-end LL(2) parse of an argument list")
     for src in ("@id", "@id EQ @num", "@id COMMA @id EQ @num", "@id EQ @num COMMA @num"):
@@ -305,8 +305,8 @@ class _ListLexer:
             t = self.tokens[self.i]
             self.i += 1
             return t
-        from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import t_fr_eof
-        from vut.engine.temporal_logic.parser.core.lexer import Token
+        from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import t_fr_eof
+        from vut.engine.temporal_logic.lexer.lexer import Token
         return Token(t_fr_eof, "", 0, 0)
 
 
@@ -321,9 +321,9 @@ def run_construct_primes_window():
     unset. The point is that priming lives in exactly one place (the constructor)
     and the window is always live before any match begins.
     """
-    from vut.engine.temporal_logic.parser.core.lexer import Token, register_grammar
-    from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T, t_fr_eof
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.lexer.lexer import Token, register_grammar
+    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T, t_fr_eof
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
     t_a = T.regex(r'@a\b')
     grammar = {"top": (t_a,)}
@@ -354,10 +354,10 @@ def run_drive_token_list():
     both the happy path and recovery work through the driver, not only through a
     real Lexer.
     """
-    from vut.engine.temporal_logic.parser.core.lexer import Token, register_grammar
-    from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
-    from vut.engine.temporal_logic.parser.core.ll2_engine import _ResyncError
+    from vut.engine.temporal_logic.lexer.lexer import Token, register_grammar
+    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.parser_generator.ll2_engine import _ResyncError
 
     t_a = T.regex(r'@a\b')
     t_b = T.regex(r'@b\b')

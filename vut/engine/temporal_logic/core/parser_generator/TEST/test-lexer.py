@@ -38,13 +38,13 @@ import sys
 import config                                                   # noqa: F401
 from config import HwutRunner
 
-from vut.engine.temporal_logic.parser.core.lexer import (Lexer, SourceMap,
+from vut.engine.temporal_logic.lexer.lexer import (Lexer, SourceMap,
                                                          register_grammar)
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (t_fr_span_open,
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (t_fr_span_open,
                                                             t_fr_span_block,
                                                             t_fr_eof)
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
-from vut.engine.temporal_logic.parser.core.span_oracle import E_SpanMode
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.world.span_oracle import E_SpanMode
 from fake_luau_oracle import FakeLuauOracle
 
 

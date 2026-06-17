@@ -27,12 +27,12 @@ import sys
 from   config import HwutRunner
 
 from vut.engine.temporal_logic.parser.grammar import GRAMMAR as _AUTHORED
-from vut.engine.temporal_logic.parser.core.subspace import flatten as _flatten
+from vut.engine.temporal_logic.core.parser_generator.subspace import flatten as _flatten
 GRAMMAR, _OWNER = _flatten(_AUTHORED)   # subspaces lowered to the flat rule map
-from vut.engine.temporal_logic.parser.core.combinators import OR, PLUS, STAR
-from vut.engine.temporal_logic.parser.core.combinators import _Combinator
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import Terminal_Spec, Tagged_Spec
-from vut.engine.temporal_logic.parser.core.operator_interface import (
+from vut.engine.temporal_logic.core.parser_generator.combinators import OR, PLUS, STAR
+from vut.engine.temporal_logic.core.parser_generator.combinators import _Combinator
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import Terminal_Spec, Tagged_Spec
+from vut.engine.temporal_logic.core.parser_generator.operator_interface import (
         OR_Interface, SEQ_Interface, PLUS_Interface, STAR_Interface)
 from vut.engine.temporal_logic.parser import ast_map as M
 
@@ -146,7 +146,7 @@ def run_exemptions():
     for r in hosted:
         print("  %s" % r)
     print("router (branch-routed by OrMap/OptMap/StarMap):")
-    from vut.engine.temporal_logic.parser.core.ast_map_family import (
+    from vut.engine.temporal_logic.core.parser_generator.ast_map_family import (
             OrMap, OptMap, StarMap)
     routed = sorted(r for r, f in M.AST_MAP.items()
                     if isinstance(f, (OrMap, OptMap, StarMap)))

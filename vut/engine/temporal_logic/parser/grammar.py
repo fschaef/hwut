@@ -9,9 +9,9 @@ source of truth for the rule-file syntax. Do not add explanatory comments
 here; document in grammar.txt.
 """
 
-from .core.combinators import OR, PLUS, STAR, TOP
-from .core.ll2_grammar_spec import T
-from .core.span_oracle import E_SpanMode
+from vut.engine.temporal_logic.core.parser_generator.combinators import OR, PLUS, STAR, TOP
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
+from vut.engine.temporal_logic.world.span_oracle import E_SpanMode
 
 
 t_re_name_colon = T.regex(r'[a-zA-Z_]\w*:')

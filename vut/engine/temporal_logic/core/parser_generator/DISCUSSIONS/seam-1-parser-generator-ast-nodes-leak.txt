@@ -1,0 +1,34 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+seam-1  core/parser_generator STILL CONSTRUCTS parser.ast_nodes  (deferred)
+===============================================================================
+SCOPE     core/parser_generator. The neutrality blocker for extracting the
+          machinery as a standalone parser-generator project. Flagged, not
+          fixed -- a mechanical restructure must not fold in a design task.
+
+THE LEAK:
+    core/parser_generator/ll2_engine.py constructs two SPECIFIC outer node
+    types -- parser.ast_nodes.RuleFile and parser.ast_nodes.Luau -- via
+    'from ...parser import ast_nodes'. After the parser/core -> core/
+    parser_generator rename this is an edge from core/ UP into parser/: the
+    machinery named "parser_generator" is therefore NOT yet language-agnostic,
+    and the directory name now advertises a neutrality the code does not have.
+
+WHY DEFERRED:
+    The fix is a real design seam, not a repath: the result-container and leaf
+    construction (RuleFile / Luau) must be INJECTED -- a caller-supplied
+    framing-handler hook, exactly as the SpanOracle inversion already did for
+    the embedded-language handoff. Designing that injection from one example
+    (this rule language) would very likely be wrong for the second consumer;
+    build it when a second consumer is real (or when the standalone extraction
+    is actually attempted). Same Tier-2 concern recorded at the engine-neutral
+    analysis/driver seam.
+
+ENTRY CONDITION:
+    Reopen when the standalone parser-generator extraction is attempted, or a
+    second grammar drives the engine. Until then ll2_engine carries a loud
+    in-code SEAM comment at the construction site; do not silently relativise
+    the import to hide the edge.
+
+STATUS:
+    Tagged in code (# SEAM: ...). No further action this session.

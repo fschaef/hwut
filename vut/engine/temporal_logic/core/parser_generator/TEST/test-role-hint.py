@@ -37,13 +37,13 @@ import sys
 import config                                                   # noqa: F401
 from config import HwutRunner
 
-from vut.engine.temporal_logic.parser.core.combinators import OR, STAR
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
+from vut.engine.temporal_logic.core.parser_generator.combinators import OR, STAR
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (
         T, Terminal_Spec, Tagged_Spec, Rule_Spec)
-from vut.engine.temporal_logic.parser.core.ll2_engine import (
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import (
         Grammar, EngineParser, RoleVocabularyError)
-from vut.engine.temporal_logic.parser.core.lexer import register_grammar
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
 
 # Toy VALUE terminals: '@'-led regex classes so no real-grammar terminal in the

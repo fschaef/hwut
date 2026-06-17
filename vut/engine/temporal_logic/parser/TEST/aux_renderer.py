@@ -9,7 +9,7 @@ ______________________________________________________________________________
 """
 from dataclasses import is_dataclass, fields
 
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import t_fr_span_open
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import t_fr_span_open
 
 
 def fragment(tokens):

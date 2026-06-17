@@ -42,14 +42,14 @@ import sys
 import config                                                   # noqa: F401
 from config import HwutRunner
 
-from vut.engine.temporal_logic.parser.core.combinators import OR, STAR, PLUS
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T
-from vut.engine.temporal_logic.parser.core.ll2_engine import Grammar, EngineParser
-from vut.engine.temporal_logic.parser.core.lexer import register_grammar
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
-from vut.engine.temporal_logic.parser.core.cst_nodes import (
+from vut.engine.temporal_logic.core.parser_generator.combinators import OR, STAR, PLUS
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import Grammar, EngineParser
+from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.core.parser_generator.cst_nodes import (
         OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT)
-from vut.engine.temporal_logic.parser.core.operator_interface import (
+from vut.engine.temporal_logic.core.parser_generator.operator_interface import (
         OR_Interface, OPT_Interface, SEQ_Interface, PLUS_Interface,
         STAR_Interface)
 

@@ -29,11 +29,11 @@ ______________________________________________________________________________
 import sys
 from   config import HwutRunner
 
-from vut.engine.temporal_logic.parser.core.ll2_engine import LL2ConflictError
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import LL2ConflictError
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar
-from vut.engine.temporal_logic.parser.core.lexer import (token_spec,
+from vut.engine.temporal_logic.lexer.lexer import (token_spec,
                                                          token_debug_names)
-from vut.engine.temporal_logic.parser.core import ll2_grammar_spec as N
+from vut.engine.temporal_logic.core.parser_generator import ll2_grammar_spec as N
 
 
 def banner(label):
@@ -132,7 +132,7 @@ def run_name_dotted_args():
     a leading-dot member (the retired spelling).
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.parser import ast_nodes as ast
     from fake_luau_oracle import FakeLuauOracle
 
@@ -204,7 +204,7 @@ def run_cause_effect():
     told apart by the two-token lookahead. Prints the AST node kind per item.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.parser import ast_nodes as ast
     from fake_luau_oracle import FakeLuauOracle
 
@@ -300,7 +300,7 @@ def run_guards_and_inheritance():
     the aggregate bases.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.parser import ast_nodes as ast
     from fake_luau_oracle import FakeLuauOracle
 
@@ -366,7 +366,7 @@ def run_clockwork_shapes():
     rejected. Prints the clockwork shape and the ordered step kinds.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.parser import ast_nodes as ast
     from fake_luau_oracle import FakeLuauOracle
 
@@ -438,7 +438,7 @@ def run_expressions():
     'recip:'. Prints the rendered guard tree, then the mutation step kinds.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.parser import ast_nodes as ast
     from fake_luau_oracle import FakeLuauOracle
 
@@ -513,7 +513,7 @@ def run_division():
     'undef:' shows the Expr wrapper while a fallback-free expression stays bare.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from fake_luau_oracle import FakeLuauOracle
 
     cases = [
@@ -575,7 +575,7 @@ def run_spawn_targets():
     and key.
     """
     from vut.engine.temporal_logic.parser.rule_parser import parse
-    from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.parser import ast_nodes as ast
     from fake_luau_oracle import FakeLuauOracle
 

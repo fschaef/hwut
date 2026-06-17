@@ -43,8 +43,8 @@ ______________________________________________________________________________
 import sys
 from   config import HwutRunner
 
-from vut.engine.temporal_logic.luau.location_mapper      import Source2TargetLocationMapper
-from vut.engine.temporal_logic.luau.generated_code_checker import GeneratedCodeChecker, format_diagnostic
+from vut.engine.temporal_logic.world.luau.location_mapper      import Source2TargetLocationMapper
+from vut.engine.temporal_logic.world.luau.generated_code_checker import GeneratedCodeChecker, format_diagnostic
 
 
 def banner(label):

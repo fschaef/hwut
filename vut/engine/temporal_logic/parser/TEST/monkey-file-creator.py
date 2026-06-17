@@ -31,13 +31,13 @@ from dataclasses import is_dataclass, fields
 from vut.language_support.python.deterministic_random import (DeterministicStream,
                                                              SelectionMarker)
 from vut.engine.temporal_logic.parser.rule_parser import compiled_grammar, parse
-from vut.engine.temporal_logic.parser.core.ll2_engine import EngineParser
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import (
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import EngineParser
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (
         Terminal_Spec, Rule_Spec, Tagged_Spec,
         SEQ_Spec, OR_Spec, OPT_Spec, PLUS_Spec, STAR_Spec)
-from vut.engine.temporal_logic.parser.core.lexer import Token
-from vut.engine.temporal_logic.parser.core.ll2_grammar_spec import T, t_fr_span_open, t_fr_eof
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.lexer.lexer import Token
+from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T, t_fr_span_open, t_fr_eof
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 from fake_luau_oracle import FakeLuauOracle
 
 from aux_walker import (tok as _tok, ListLexer as _ListLexer,

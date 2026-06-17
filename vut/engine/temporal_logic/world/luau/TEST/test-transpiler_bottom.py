@@ -32,8 +32,8 @@ ______________________________________________________________________________
 import sys
 from   config import HwutRunner
 
-from vut.engine.temporal_logic.luau.luau_fragment   import find_matching_brace, Role, FragmentSyntaxError, LuauOracle
-from vut.engine.temporal_logic.luau.location_mapper import Source2TargetLocationMapper
+from vut.engine.temporal_logic.world.luau.luau_span_oracle   import find_matching_brace, Role, FragmentSyntaxError, LuauOracle
+from vut.engine.temporal_logic.world.luau.location_mapper import Source2TargetLocationMapper
 
 
 ORACLE = LuauOracle()

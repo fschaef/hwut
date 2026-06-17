@@ -48,7 +48,7 @@ WHAT THIS MODULE DOES (the engine compiles the flat qualified-named map)
   subspace_report()  the namespace tree, for review.
 ================================================================================
 """
-from .combinators import TOP, OR, _Combinator
+from vut.engine.temporal_logic.core.parser_generator.combinators import TOP, OR, _Combinator
 
 
 SEP = "/"

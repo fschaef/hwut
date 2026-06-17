@@ -36,15 +36,15 @@ import config                                                   # noqa: F401
 from config import HwutRunner
 
 from vut.engine.temporal_logic.parser.grammar import GRAMMAR as _AUTHORED
-from vut.engine.temporal_logic.parser.core.subspace import flatten as _flatten
+from vut.engine.temporal_logic.core.parser_generator.subspace import flatten as _flatten
 GRAMMAR, _SCOPE = _flatten(_AUTHORED)   # subspaces lowered to the flat qualified-named map
-from vut.engine.temporal_logic.parser.core.lexer import register_grammar
-from vut.engine.temporal_logic.parser.core.ll2_engine import Grammar, EngineParser
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
-from vut.engine.temporal_logic.parser.core.cst_nodes import (
+from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from vut.engine.temporal_logic.core.parser_generator.ll2_engine import Grammar, EngineParser
+from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.core.parser_generator.cst_nodes import (
         OR_Node, OPT_Node, STAR_Node, ABSENT)
 from vut.engine.temporal_logic.parser import ast_map as M
-from vut.engine.temporal_logic.parser.core.ast_map_family import (
+from vut.engine.temporal_logic.core.parser_generator.ast_map_family import (
         OrMap, OptMap, StarMap, PASS)
 from fake_luau_oracle import FakeLuauOracle
 

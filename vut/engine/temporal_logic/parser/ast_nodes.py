@@ -19,8 +19,8 @@ from dataclasses import dataclass, field
 from enum        import Enum
 from typing      import List, Optional
 
-from .core.span_oracle        import Reference
-from .core.operator_interface import (OR_Interface, SEQ_Interface,
+from vut.engine.temporal_logic.world.span_oracle import Reference
+from vut.engine.temporal_logic.core.parser_generator.operator_interface import (OR_Interface, SEQ_Interface,
                                       PLUS_Interface, STAR_Interface)
 
 
@@ -362,7 +362,7 @@ class Arg(OR_Interface):
         LITERAL; any other expression node -- BinOp, UnOp, Bridge, Comparison --
         is a compound EXPR carried whole.
         """
-        from .core.span_oracle import SpanResult
+        from vut.engine.temporal_logic.world.span_oracle import SpanResult
         if isinstance(value, list):
             return cls(name=name, value=value, kind=E_ArgKind.NAME, begin=begin)
         if isinstance(value, OpaqueCode):
