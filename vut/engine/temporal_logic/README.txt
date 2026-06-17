@@ -10,8 +10,8 @@ NAME
 
 COMPANION FILES
   SYNTAX_DOC         The dominating reference: concrete syntax of rule files and
-  (parser/syntax.py) event traces, carried as the module docstring of
-                     parser/syntax.py. Where this document needs a syntactic
+  (parser/grammar.py) event traces, carried as the module docstring of
+                     parser/grammar.py. Where this document needs a syntactic
                      detail it cites a SYNTAX_DOC section rather than repeating
                      it; on any discrepancy, SYNTAX_DOC wins.
 
@@ -109,11 +109,47 @@ VOCABULARY
         |-- '##' debug stream: printed live during the run (emission order)
         +-- REPORT block: printed after completion (sorted and deduplicated)
 
+STAGE 1: (more detail) THE CONSTRUCTION OF MEANING
+
+A rule engine is built in the following steps, each consuming the product of
+the one before:
+
+  - LEXER => TOKEN STREAM: (atomic chunks of meaning)
+
+      Tokens are the smallest spans that denote (a keyword, a name, a number,
+      an opaque span). Below a token is mere spelling; at a token, meaning
+      begins.
+
+  - GRAMMAR => ABSTRACT SYNTAX TREE (AST)
+
+      The grammar defines how tokens operate to build structures in the space
+      of meaning: which token, adjacent to which structure, forms which larger
+      structure. Each AST node is produced by a pattern rule that matched. The
+      AST holds the BUILD COMMANDS for the meaning the text expresses -- not
+      the meaning itself.
+
+  - SEMANTICS => CONSTRUCT (standalone luau engine)
+
+      (1) ANALYSIS: => DATA REPRESENTATION OF MEANING
+
+      A recursive walk over the AST nodes executes those build commands: each
+      name is followed to the thing it denotes, each operator combines the
+      denoted meanings, and the result is checked for validity. The result
+      is a 'plan'--a representation of intended meaning.
+
+      (2) EMISSION => STANDALONE LUAU ENGINE
+
+      From the finished plan, EMISSION produces an executable program.
+
+  - EXECUTION => REPORT
+      The engine runs, processing a trace and writing the report.
+
 -------------------------------------------------------------------------------
 3. THE MODEL
 -------------------------------------------------------------------------------
+
   This section gives the conceptual model. Concrete declaration and rule syntax
-  is in SYNTAX_DOC (parser/syntax.py); the cross-references below point to it.
+  is in SYNTAX_DOC (parser/grammar.py); the cross-references below point to it.
 
   EVENTS
     Ephemeral, struct-like aggregates with typed fields. They exist only at the
@@ -121,14 +157,14 @@ VOCABULARY
     intrinsic number fields. The pair (type, time) uniquely identifies an
     occurrence; within one instant T a given event kind occurs at most once --
     the property the termination guarantee rests on (section 5).
-    (Declaration syntax: SYNTAX_DOC (parser/syntax.py) A.2.4.)
+    (Declaration syntax: SYNTAX_DOC (parser/grammar.py) A.2.4.)
 
     DELIVERY is implicit. There is no subscription construct: an event reaches a
     reactor precisely when that reactor names it in an 'on:' cause, and the
     cause's guard ('& { ... }') is the only filter. The engine derives the
     publisher/subscriber wiring from the set of event types named across the
     live 'on:' causes; the author expresses reaction, and routing follows.
-    (Cause and guard syntax: SYNTAX_DOC (parser/syntax.py) A.2.2.)
+    (Cause and guard syntax: SYNTAX_DOC (parser/grammar.py) A.2.2.)
 
   OBJECTS
     Stateful aggregates persisting across time, defined in 'on BEGIN' via the
@@ -149,21 +185,21 @@ VOCABULARY
     mode ends when one of its 'until' clauses fires (first-wins; no further
     'until' is then checked) or at END if still live. A mode lives at GROUND
     level or as a member of a mode group.
-    (Lifecycle, parameters, and queries: SYNTAX_DOC (parser/syntax.py) A.2.3.)
+    (Lifecycle, parameters, and queries: SYNTAX_DOC (parser/grammar.py) A.2.3.)
 
   STATES
     A state is a mode living in a state machine. Its block is terminated
     structurally (by the next state-machine element or 'end'); its own trailing
     'until' causes are optional (first-wins), and it also ceases when a sibling
     state is armed.
-    (Declaration: SYNTAX_DOC (parser/syntax.py) A.2.5.)
+    (Declaration: SYNTAX_DOC (parser/grammar.py) A.2.5.)
 
   MODE GROUPS
     An aggregate of modes with no exclusion: arming one member does not
     deactivate another, and any number of members are live at once. A mode
     group has its own 'init'/'deinit', may carry parameters, has no 'default',
     and is closed by 'end' (it has no closing 'until' clauses of its own).
-    (Declaration: SYNTAX_DOC (parser/syntax.py) A.2.6.)
+    (Declaration: SYNTAX_DOC (parser/grammar.py) A.2.6.)
 
   STATE MACHINES
     An aggregate of states with single-active semantics: arming one member
@@ -173,7 +209,7 @@ VOCABULARY
     'default' member (an implicit do-nothing 'VOID' state when unspecified),
     may carry parameters, and is closed by 'end'. Its Luau spans bind the
     state machine as 'sm'.
-    (Declaration and the 'sm' binding: SYNTAX_DOC (parser/syntax.py)
+    (Declaration and the 'sm' binding: SYNTAX_DOC (parser/grammar.py)
     A.2.5.)
 
   AGGREGATE SPAWNING AND CONTAINERS
@@ -187,7 +223,7 @@ VOCABULARY
     nothing. Several aggregates of one type run concurrently when their
     container holds many. An instance's existence is ended with the '-!' verb,
     which takes a reference by name (bare or dotted).
-    (Effect forms: SYNTAX_DOC (parser/syntax.py) <spawn>, <singleton-def>, <unspawn>; the
+    (Effect forms: SYNTAX_DOC (parser/grammar.py) <spawn>, <singleton-def>, <unspawn>; the
     container protocol: section on the runtime substrate.)
 
   BINDINGS
@@ -197,26 +233,26 @@ VOCABULARY
     'sm', and 'mg' are unbound at top level; referring to them there is a
     transpile-time error. 'sm' and 'mg' are the two aggregate self-bindings,
     one in scope at a time per the enclosing aggregate kind.
-    (Full rules: SYNTAX_DOC (parser/syntax.py) A.2.1.)
+    (Full rules: SYNTAX_DOC (parser/grammar.py) A.2.1.)
 
   TIME-LINE BOUNDS -- BEGIN AND END
     Two implicit events frame every trace: BEGIN fires zero-time-ahead before
     the first trace event, END zero-time-ahead after the last. A trace must end
     with an explicit END or the engine rejects it. 'on BEGIN' / 'on END' are
     where object-space init and teardown live; they are restricted handlers
-    (no guard, no emission), detailed in SYNTAX_DOC (parser/syntax.py) A.3.
+    (no guard, no emission), detailed in SYNTAX_DOC (parser/grammar.py) A.3.
 
   TRACE TIMING
     A trace is uniformly EXPLICITLY-TIMED or CLOCK-TIMED, never mixed. The
     engine never consults a system clock, so a saved trace always replays
     deterministically; 'dt' is always derived from the previous event's time.
-    (SYNTAX_DOC (parser/syntax.py) B.)
+    (SYNTAX_DOC (parser/grammar.py) B.)
 
   CLOCKS
     A 'clock' declaration is a periodic emitter on synthetic time, used to give
     a regular cadence (e.g. differential-equation integration) between authored
     events. It generates ordinary events and respects the cascade rules; it is
-    not a system-time source. (Mechanism and syntax: SYNTAX_DOC (parser/syntax.py) A.4.)
+    not a system-time source. (Mechanism and syntax: SYNTAX_DOC (parser/grammar.py) A.4.)
 
 -------------------------------------------------------------------------------
 4. ARCHITECTURE -- TRANSPILER AND ENGINE
@@ -259,7 +295,7 @@ VOCABULARY
   SANDBOXING & CAPABILITIES
     The generated bootstrap injects only the capabilities the test
     configuration grants (network, filesystem, etc. denied unless explicitly
-    permitted) plus the fixed helper set (SYNTAX_DOC (parser/syntax.py) C). Rule-file Luau cannot
+    permitted) plus the fixed helper set (SYNTAX_DOC (parser/grammar.py) C). Rule-file Luau cannot
     widen its own environment; Python is the trust boundary.
 
   WATCHDOG
@@ -293,7 +329,7 @@ VOCABULARY
     - GUARD READ-ONLY (fatal). A sound syntactic check rejects assignments and
       recognised mutating builtins inside guards. Sound but not complete:
       mutation via a user-defined call is not detected. (Rationale and exempt
-      forms: SYNTAX_DOC (parser/syntax.py) <guard>.)
+      forms: SYNTAX_DOC (parser/grammar.py) <guard>.)
     - CASCADE CYCLE (fatal). A depth-first search of the cascade graph
       (nodes = event kinds; edge X->Y iff an X-triggered rule emits Y) reports
       any cycle and the offending chain. The search is bounded by a node-visit
@@ -303,7 +339,7 @@ VOCABULARY
 -------------------------------------------------------------------------------
 6. RULES, REACTORS, AGGREGATES, AND THE TRACER
 -------------------------------------------------------------------------------
-  Concrete forms for everything below are in SYNTAX_DOC (parser/syntax.py) A.2 and B.1; this
+  Concrete forms for everything below are in SYNTAX_DOC (parser/grammar.py) A.2 and B.1; this
   section records only the design choices behind them.
 
   UNIFORM RULE SHAPE
@@ -349,7 +385,7 @@ VOCABULARY
     '_match' dispatcher that accepts literals or comparator value objects. The
     author writes the comparator; the engine does the dispatch. This replaced
     an earlier family of separately named query methods with one call surface.
-    (Method names and comparators: SYNTAX_DOC (parser/syntax.py) A.2.3 and C.)
+    (Method names and comparators: SYNTAX_DOC (parser/grammar.py) A.2.3 and C.)
 
   THE TRACER
     History is opt-in: an event is queryable only if registered with
@@ -359,7 +395,7 @@ VOCABULARY
     unregistered event is a fatal transpile error -- this closes the silent-nil
     class of bug, where a forgotten registration would make every query return
     nil and look like an absence of behaviour. The author pays memory only for
-    what is declared. (Call form and checks: SYNTAX_DOC (parser/syntax.py) B.1.)
+    what is declared. (Call form and checks: SYNTAX_DOC (parser/grammar.py) B.1.)
 
 -------------------------------------------------------------------------------
 7. THE REPORT AND LOGGING
