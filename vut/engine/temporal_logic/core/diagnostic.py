@@ -18,6 +18,7 @@ class Phase(Enum):
     LEXER    = auto()
     PARSER   = auto()
     ANALYZER = auto()
+    SEMANTIC = auto()
 
 
 @dataclass(frozen=True)
@@ -28,11 +29,18 @@ class Diagnostic:
     SourceMap converts it to a 1-based (line, column) at the render site.
     'fatal' True marks an error that must stop the run at the next phase
     boundary; False marks a recoverable problem the run continues past.
+    'tag' is a core-neutral diagnostic-class label, used by a phase that
+    classifies its errors (the semantic layer tags NAME / KIND / BINDING /
+    CASCADE / GUARD / STRUCTURE / SWEEP). It defaults None so the lexer and
+    parser, which do not classify, construct unchanged. Core never enumerates
+    the tag values; each phase owns its own vocabulary and stringifies into
+    this slot.
     """
     phase:         Phase
     message:       str
     source_offset: int
     fatal:         bool = True
+    tag:           "str | None" = None
 
 
 class DiagnosticReporter:

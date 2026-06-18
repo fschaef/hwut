@@ -3,22 +3,45 @@ REACTIVE RULE ENGINE  --  HWUT 2.0
 SEMANTIC LAYER (PASS 2) ARCHITECTURE
 ===============================================================================
 
-A name inserts the meaning it refers to when it is mentioned; meanings are
-combined by operators. Take the rule cond/and:
+WHAT THIS LAYER DOES
+  The parser (pass 1) turns rule-file text into an AST, but the names in that
+  AST are just spellings -- 'e.armed', 'sm.ready', 'Traffic' are segment chains
+  copied down verbatim, bound to nothing. Pass 2 is the step that gives them
+  meaning: it builds a scope tree, resolves every name to the symbol it refers
+  to, checks that the references are consistent (right kind, in scope, no cycles),
+  and hands the emitter a single frozen ResolvedProgram. Nothing downstream has
+  to guess what a name meant; pass 2 already decided.
+
+  It sits between two layers and is imported by neither:
+
+        parser (pass 1)  ---AST--->  [ SEMANTIC LAYER ]  ---ResolvedProgram--->  emitter
+
+  Input: a parsed AST plus an oracle (to peek inside opaque '{ }' spans) and a
+  loader (to fetch imported modules). Output: a ResolvedProgram on success, or a
+  reporter full of located errors the rule-file author can fix.
+
+COMPANION FILES
+  RATIONALE.txt     why each cut was made; the rejected alternatives (a
+                    contributor filter -- do not re-tread settled ground).
+  DISCUSSIONS/      open forks (disc-N) and decided-but-unbuilt items (todo-N).
+  SYNTAX_DOC        the dominating reference for concrete syntax
+  (parser/grammar.py) (module docstring of parser/grammar.py); on any
+                    discrepancy, SYNTAX_DOC wins.
+
+THE IDEA IN ONE EXAMPLE
+  Resolution is, at heart, one move repeated over the tree: take a name, insert
+  the meaning it refers to, and let the operators that joined spellings now join
+  meanings. Take the grammar rule cond/and:
 
     cond/and :=  <cond/not> ( ('and' | 'nand') <cond/not> )*
 
-It produces an AST node when text like 'e.armed and sm.ready' appears. The node
-holds three things: a left operand ('e.armed'), an operator ('and'), and a right
-operand ('sm.ready'). The two operands are themselves names -- bare segment
-chains the parser copied down verbatim. They mean nothing yet.
-
-The semantic layer mentions each name and inserts what it refers to: 'e.armed'
-resolves to a member of the firing event's symbol, 'sm.ready' to a member of the
-enclosing aggregate's symbol. Now the 'and' node combines two MEANINGS, not two
-spellings -- two booleans whose kinds the check can verify. Restructuring the
-tree into meaning is exactly this, node by node: resolve the operands, and the
-operator that joined their spellings now joins their referents.
+  For text like 'e.armed and sm.ready' it produces an AST node holding a left
+  operand ('e.armed'), an operator ('and'), and a right operand ('sm.ready').
+  The two operands are bare names; they mean nothing yet. Pass 2 resolves
+  'e.armed' to a member of the firing event's symbol and 'sm.ready' to a member
+  of the enclosing aggregate's symbol -- now the 'and' combines two MEANINGS,
+  two booleans whose kinds the check can verify, not two spellings. Every check
+  in this layer is a variation on that single move.
 
 VOCABULARY  (house terms this layer assumes; the owning doc is cited)
   OPAQUE SPAN   The '{ ... }' embedded target-language text the control plane
@@ -38,6 +61,7 @@ VOCABULARY  (house terms this layer assumes; the owning doc is cited)
                 (A) = strict define-before-use; (B) = declare-before-use with
                 bounded-forward definition. Read "(A)-strict" / "(B)-forward".
 
+THE PIPELINE
         AST
      from parser
          |
@@ -67,8 +91,8 @@ diagnostics accumulate WITHIN a stage; there is no numeric cap.
 RUNNING A RESOLUTION
 -------------------------------------------------------------------------------
 
-from vut.engine.temporal_logic.semantic.resolve       import resolve_program
-from vut.engine.temporal_logic.parser.core.diagnostic import DiagnosticReporter
+from vut.engine.temporal_logic.semantic.resolve  import resolve_program
+from vut.engine.temporal_logic.core.diagnostic    import DiagnosticReporter
 
 reporter = DiagnosticReporter()
 program  = resolve_program(root_source, oracle, loader, reporter)
