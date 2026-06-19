@@ -1,0 +1,3 @@
+program: None
+errors: 1
+  tag=CASCADE [CASCADE] cascade cycle: A -> B -> A

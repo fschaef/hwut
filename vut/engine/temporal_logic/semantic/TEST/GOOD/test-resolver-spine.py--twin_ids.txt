@@ -1,0 +1,4 @@
+ref A (outer) -> event
+ref B (inner) -> clock
+both present: True
+distinct kinds: True

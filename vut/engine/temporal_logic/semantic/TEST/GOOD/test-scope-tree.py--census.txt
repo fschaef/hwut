@@ -1,0 +1,10 @@
+SCOPE[ground] '' sealed=True
+  event         tick [amount:int]
+  clock         heartbeat
+  SCOPE[namespace] 'monitor.north' sealed=True
+    event         arrived [depth:int]
+    state-machine crossing [rate:string]
+    SCOPE[state-machine] 'crossing' sealed=True
+      state         Idle
+      state         Active
+clean build

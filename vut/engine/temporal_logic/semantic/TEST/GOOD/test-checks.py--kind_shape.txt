@@ -1,0 +1,2 @@
+DIAGNOSTICS (1):
+  tag=KIND [KIND] struct 'Foo' requires a signature @0

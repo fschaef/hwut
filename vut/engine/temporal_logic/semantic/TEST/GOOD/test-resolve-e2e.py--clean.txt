@@ -1,0 +1,6 @@
+program: ResolvedProgram
+errors: 0
+root sealed: True
+top symbols: ['A', 'B', 'heartbeat']
+queried: ['A']
+cascade edges: {'A': ['B']}

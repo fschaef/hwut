@@ -1,0 +1,2 @@
+DIAGNOSTICS (1):
+  tag=NAME [NAME] parameter 'Idle' collides with a mode/state of the same aggregate @0

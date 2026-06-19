@@ -1,0 +1,2 @@
+ok=False
+  tag=STRUCTURE [STRUCTURE] import cycle: a.rule -> b.rule -> a.rule @0

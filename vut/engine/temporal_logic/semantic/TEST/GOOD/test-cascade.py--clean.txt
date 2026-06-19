@@ -1,0 +1,2 @@
+EDGES: {'A': ['B'], 'B': ['C']}
+DIAGNOSTICS (0):
