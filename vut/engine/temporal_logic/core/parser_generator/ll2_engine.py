@@ -402,7 +402,7 @@ class EngineParser:
         if self.cst_mode:
             # CST mode: no reach into the outer ast_nodes. The file is the
             # zero-or-more top-level items, collected into a STAR_Node named
-            # "<file>". The outer layer transforms this into its RuleFile if it
+            # "<file>". The outer layer transforms this into its Module if it
             # wants; core stays grammar-agnostic and AST-free.
             items = []
             while self.tok1.kind is not t_fr_eof:
@@ -414,18 +414,18 @@ class EngineParser:
                     self._resync()
             from vut.engine.temporal_logic.core.parser_generator.cst_nodes import STAR_Node
             return STAR_Node(items=tuple(items), name="<file>")
-        # SEAM: engine constructs parser.ast_nodes (RuleFile/Luau). Neutrality
+        # SEAM: engine constructs parser.ast_nodes (Module/Luau). Neutrality
         # blocker for the standalone parser-generator. See DISCUSSIONS/seam-1.
         from vut.engine.temporal_logic.parser import ast_nodes as ast
-        rule_file = ast.RuleFile()
+        module_node = ast.Module()
         while self.tok1.kind is not t_fr_eof:
             try:
                 item = self._match(start)
                 if item is not None:
-                    rule_file.items.append(item)
+                    module_node.items.append(item)
             except _ResyncError:
                 self._resync()
-        return rule_file
+        return module_node
 
     def _match(self, element):
         root = Frame(begin=self.tok1.begin)
