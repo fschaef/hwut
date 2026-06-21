@@ -35,14 +35,14 @@ from . import ast_nodes as _ast
 
 _COMPILED = None
 
-def parse(source_text, oracle, reporter: DiagnosticReporter) -> _ast.Module:
+def parse(source_text, oracle, reporter: DiagnosticReporter) -> _ast.ModuleRoot:
     """RETURN: Module, the AST for 'source_text' via the table-driven engine.
 
     Diagnostics accumulate in 'reporter'; the AST may be partial when errors
     were recovered. The observable contract is unchanged from before the
     outer/core split and the Phase-4 CST overlay -- only the wiring moved. The
     engine produces a STAR_Node('<file>') of transformed top-level items (CST
-    mode); this wraps them in the outer ast.Module so the public return type is
+    mode); this wraps them in the outer ast.ModuleRoot so the public return type is
     unchanged.
     """
     file_node = EngineParser(source_text, oracle, reporter,
@@ -77,16 +77,16 @@ def compiled_grammar():
     return _COMPILED
 
 
-def finalize_file(file_node) -> _ast.Module:
+def finalize_file(file_node) -> _ast.ModuleRoot:
     """RETURN: Module, the outer-layer module node wrapping the CST items.
 
     The engine (core, AST-free) yields a STAR_Node('<file>') of transformed
-    top-level items in CST mode. The outer layer wraps those into ast.Module --
+    top-level items in CST mode. The outer layer wraps those into ast.ModuleRoot --
     the public module type. Any caller that drives EngineParser.parse() directly
     (e.g. the fuzz harness, which injects its own lexer) finalises through here
     so the file type is consistent everywhere, not just via parse().
     """
-    module_node = _ast.Module()
+    module_node = _ast.ModuleRoot()
     module_node.items.extend(file_node.items)
     return module_node
 

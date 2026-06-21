@@ -323,7 +323,7 @@ def _collect_node_types(node, seen):
 def _all_node_types():
     """RETURN: set, names of AST node types that can appear in a finished tree."""
     import vut.engine.temporal_logic.parser.ast_nodes as ast_mod
-    transient = {"Module", "InitBlock", "DeinitBlock"}
+    transient = {"ModuleRoot", "InitBlock", "DeinitBlock"}
     out = set()
     for name in dir(ast_mod):
         obj = getattr(ast_mod, name)

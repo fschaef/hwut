@@ -52,7 +52,7 @@ class TopLevel(OR_Interface):
     Namespace, Import, Causality, Mode, ModeGroup, StateMachine, Clockwork, the
     four declaration nodes (ReactorDecl, StructDecl, ContainerDecl, VariableDef),
     EventDef, ClockDef, CauseDef and EffectDef derive from it, so
-    'Module.items' is typed as list[TopLevel] and only these node kinds are
+    'ModuleRoot.items' is typed as list[TopLevel] and only these node kinds are
     admissible there. A Namespace nests further TopLevel items. Carries no
     fields; the concrete nodes hold their own.
     """
@@ -1400,7 +1400,7 @@ class DoSweep(SEQ_Interface):
 
 
 @dataclass
-class Module:
+class ModuleRoot:
     """The whole parsed module: an ordered list of top-level constructs.
 
     'items' holds Namespace, Import, Causality, Mode, ModeGroup, StateMachine,

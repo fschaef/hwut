@@ -417,7 +417,7 @@ class EngineParser:
         # SEAM: engine constructs parser.ast_nodes (Module/Luau). Neutrality
         # blocker for the standalone parser-generator. See DISCUSSIONS/seam-1.
         from vut.engine.temporal_logic.parser import ast_nodes as ast
-        module_node = ast.Module()
+        module_node = ast.ModuleRoot()
         while self.tok1.kind is not t_fr_eof:
             try:
                 item = self._match(start)
