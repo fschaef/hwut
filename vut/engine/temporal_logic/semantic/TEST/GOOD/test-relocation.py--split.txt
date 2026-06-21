@@ -1,0 +1,4 @@
+local  before: SYM(count)
+reloc  before: SYM(NS.tick)
+local  after:  SYM(count)
+reloc  after:  None

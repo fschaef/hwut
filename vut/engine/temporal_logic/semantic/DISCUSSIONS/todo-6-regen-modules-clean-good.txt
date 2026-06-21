@@ -1,0 +1,31 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+todo-6  REGENERATE test-modules.py--clean.txt ON REAL INFRASTRUCTURE
+===============================================================================
+SCOPE     semantic/TEST. A one-command close-out; labour owed, no decision owed.
+
+WHY:
+    The typestate rewrite (RATIONALE D-29) changed test-modules.py run_clean to
+    print each module's PROVENANCE instead of a phase token. The GOOD file was
+    regenerated against a STUB harness (real modules.py, stubbed parser), so its
+    structure is correct and verified, but the import_offset it prints is the
+    stub fixture's value (0), NOT the offset the real parser computes for the
+    'import:' line. GOOD files are byte-exact oracles regenerated on real
+    infrastructure -- a stub-derived offset must not stand as the oracle.
+
+WHAT TO DO:
+    Run the real test under HWUT and accept the regenerated clean GOOD:
+        hwut --good   (or the project's regen-this-test invocation)
+    for choice 'clean'. The cycle and missing GOODs are byte-identical to the
+    pre-rewrite oracles (the diagnostic path was untouched) and need no regen.
+
+EXPECTED SHAPE (offset value will differ):
+    ok=True root=root.rule
+      leaf.rule  by=root.rule@<N>  imports=[]
+      root.rule  by=ROOT           imports=[leaf.rule->lib]
+    diagnostics=0
+    -- where <N> is the real parser's offset of the 'import:' token in the root
+       fixture, replacing the stub's 0.
+
+STATUS:
+    Open. Closes when the clean GOOD is regenerated on real infrastructure.

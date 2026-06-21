@@ -1,0 +1,56 @@
+disc-5 -- THE REFERENCE-WALK TAXONOMY  (open; surfaced building 2b)
+===================================================================
+
+CONTEXT
+  2b wired _resolve_module to drive resolve_with_chain over the AST. A first
+  attempt walked EVERY node carrying a 'name: list[str]' as a reference. That is
+  WRONG, and the e2e fixture proved it: a declaration's own name (StateMachine
+  'crossing', Mode/State 'Idle'/'Active', the 'monitor' namespace) is a DEFINING
+  occurrence, not a reference -- resolving it produced false undefined-name
+  errors. Two findings, both real, both blocking the full walk:
+
+FINDING 1 -- DEFINING vs REFERENCING occurrence.
+  Only specific node kinds carry a 'name' that POINTS AT a declaration. A walk
+  must resolve THOSE and skip declaration names. The current code gates on an
+  explicit _REF_SITES set. ACTIVE today (scope-flat, ground-resolvable):
+      Trigger    the triggering event of a cause
+      BoolRef    a bare boolean condition reference
+  DEFERRED (carry references but need FINDING 2):
+      DefaultRef, CauseRef, EffectRef, Comparison operands, Arg(NAME) values,
+      ModeArming, Spawn, Unspawn, HasRef.
+
+FINDING 2 -- SCOPE-CONTEXT resolution.
+  A reference must resolve from ITS ENCLOSING scope, not always from ground.
+  Example (e2e 'clean'): a state machine's  default: crossing.Idle  resolves
+  'crossing' from the NAMESPACE scope that contains the SM, then descends into
+  the SM's CHILD scope for 'Idle'. The current flat walk passes the ground scope
+  for every reference, so any reference that sits inside a namespace/aggregate
+  and names something in a non-ground scope cannot seat. resolve_with_chain and
+  the resolver's _resolve_head ALREADY walk innermost-out CORRECTLY -- the gap is
+  that the WALK does not know each node's enclosing scope to start the walk from.
+
+THE OPEN DECISION (settle before completing the walk)
+  How does the reference walk obtain each reference's ENCLOSING scope?
+    (1) Walk the scope tree and the AST IN LOCKSTEP, carrying the current scope
+        as the walk descends a namespace/aggregate body (the scope tree already
+        records children in source order -- build_scopes built it this way).
+    (2) Annotate each scope with its opening AST node (or vice versa) at
+        build_scopes time, then the reference walk looks up a node's scope.
+    (3) A two-level walk: outer over scope-opening nodes (each gives a scope),
+        inner over that node's direct reference sites.
+  Forks: (1) couples the two walks but reuses build_scopes' ordering; (2) adds a
+  back-link field to Scope (a structural change to a built type); (3) keeps them
+  separate at the cost of restating the open/close structure.
+
+  Also open: the per-node EXTRACTION of segments+offset for the deferred sites
+  (CauseRef/EffectRef carry segment lists; Comparison operands are leading-dot
+  single-level member refs against the triggering event -- a DIFFERENT scope
+  (the event's members, README C TYPE-descent), not the enclosing lexical
+  scope). So FINDING 2 is not one rule: lexical-enclosing for most, event-member
+  for guard operands.
+
+NOT BLOCKED
+  The cross-file machinery (ModuleProxy mounted view, resolve_with_chain mount
+  routing, proxies_from_imports) is built and tested (test-module-proxy, 5
+  choices). It is correct INDEPENDENT of which sites the walk feeds it; settling
+  disc-5 only widens what the walk extracts, it does not change the lookup.

@@ -1,0 +1,2 @@
+seated:      True
+symbol:      here

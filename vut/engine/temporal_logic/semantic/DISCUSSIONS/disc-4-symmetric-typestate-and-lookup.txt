@@ -1,0 +1,281 @@
+disc-4 : symmetric two-axis typestate + resolution-as-lookup (L-design)
+=======================================================================
+STATUS  ALL decisions SETTLED (the former open tail O-1..O-4 resolved in
+        SETTLED 5). Supersedes D-29. Ready to plan the build. On the rename
+        landing this whole file migrates to RATIONALE.txt as the D-29
+        supersession; until then it is the source of truth.
+        Two early frames were CORRECTED mid-design and are marked as such:
+        SETTLED 3 (program/library = 'main', not open-import-set) and SETTLED 4
+        (3) (resolved axis fuses to ONE module). Read those as authoritative;
+        the superseded wording is gone, not struck.
+
+WHY THIS EXISTS
+    User wanted the pipeline to read in textbook compiler shape. Probing showed
+    the felt need was NOT a textbook optimisation IR (that is parked, P-1) but a
+    legible artifact for "what the parser understood". That artifact already
+    exists (ResolvedProgram). The real result is a typestate + resolution model,
+    below.
+
+
+SETTLED 1 -- SYMMETRIC TWO-AXIS TYPESTATE  (supersedes D-29)
+------------------------------------------------------------
+Two parallel chains, shared stem per axis, prefix marks maturity:
+
+  per-MODULE :  SourceModule --parse--> ParsedModule --resolve--> ResolvedModule
+                     | set                  | set                     | set
+                     v                       v                        v
+  per-PROGRAM:  SourceProgram --parse--> ParsedProgram --integrate--> ResolvedProgram
+
+  - A Program is the SET of its Modules at the SOURCE and PARSED maturities;
+    at the RESOLVED maturity link FUSES the set into ONE module (SETTLED 4(3)).
+  - Verbs differ by axis ON PURPOSE: modules RESOLVE (local); the program
+    INTEGRATES / LINKS (global). Not a symmetry violation -- resolution has a
+    real local part and a real global part; two verbs name two real transforms.
+  - SourceFile -> SourceModule (removes the file/module granularity switch D-29
+    left in the chain; stems now constant per axis).
+
+LOCAL / GLOBAL SPLIT (the substance that earns the per-module resolved type)
+  ResolvedModule  = a module resolved AGAINST ITSELF: local scope tree, local
+                    symbol tables, intra-module refs seated CONCRETELY. Cross-file
+                    refs recorded as RELOCATIONS (= the module's public import
+                    surface), kept after eager seating (SETTLED 3).
+  ResolvedProgram = link fuses the ResolvedModule set into ONE module: relocations
+                    seated, mounts grafted, per-module cascade contributions folded
+                    into ONE acyclic whole-program graph; carries 'main' iff a
+                    program.
+
+
+SETTLED 2 -- RESOLUTION IS DELEGATED LOOKUP, NOT REWRITE  (L-design)
+--------------------------------------------------------------------
+'integrate' does NOT copy symbols and builds NO new global binding table. It
+makes each module's table REACHABLE from the others; a lookup that misses
+locally DELEGATES to the imported module's table. Binding = a LINK, not a copied
+entry. (This is linking against object files: tables mutually addressable,
+references point across, nothing merged.)
+  L-design: consumer resolving a ref in A looks in A's local table; if the ref
+  is a RELOCATION, the lookup CHAINS into the target file's table. Two hops, one
+  lookup mechanism.
+  RECONCILE with SETTLED 4(3) 'fuse to ONE': 'fuse' is the ARTIFACT (one
+  ResolvedProgram container holds the linked module set); the SYMBOL TABLES stay
+  separate-but-mutually-addressable inside it (no copied entries). One container,
+  N still-distinct tables reachable by relocation -- exactly object-file linking.
+
+
+SETTLED 3 -- PROGRAM vs LIBRARY = PRESENCE OF AN ENTRY POINT  (corrected)
+-------------------------------------------------------------------------
+CORRECTION (supersedes the earlier 'open vs closed import set' frame -- that
+frame was wrong). A program AND a library have ALL references resolved: every
+reference is seated either CONCRETELY (a Symbol, now) or BY A RELOCATION (a
+recorded load-and-link instruction, seated at load time). Neither ships with a
+dangling/open reference. There is NO 'pending set allowed to stay open'.
+
+The ONLY difference:
+  - PROGRAM  has an ENTRY POINT (a 'main').
+  - LIBRARY  has NO entry point; otherwise identical, fully resolved.
+
+RELOCATION (the established shared-library term, adopted): a cross-file
+reference NOT seated concretely is recorded as a relocation -- (file, into-scope,
+id-hash) -- the linker seats it at load-and-link. A relocation is COMPLETE
+information (it knows what to load and how to bind), not an absence.
+
+EAGER BY DEFAULT, LAZY BY DESIGN (strengthened). Loadability is TOTALLY
+DYNAMIC. Lazy binding is the DESIGN BASELINE, not a future bolt-on; eager is a
+startup POLICY over the same primitive.
+  - seat(relocation) is the primitive: load-and-link one relocation on demand.
+    EAGER = for r in relocations: seat(r)  at startup.
+    LAZY  = seat(r)                         on first miss.
+    One mechanism, two trigger policies.
+  - A relocation is PERMANENT metadata, NEVER consumed/dropped: it is the recipe
+    a later unseat/reseat re-runs. unseat(relocation) drops the concrete binding
+    back to the relocation it came from.
+  - Therefore the SEATED RESULT lives SEPARATE from the (frozen) relocation, and
+    RESOLUTIONS SPLIT BY ORIGIN:
+        intra-module concrete seatings   PERMANENT (never evicted)
+        relocation seatings              EVICTABLE (unseat clears these only)
+    unseat touches the evictable set; the permanent set is untouched.
+
+This still makes pre-parsed / pre-resolved libraries first-class (the original
+motivation over D-29's whole-program-only fold): a library ships resolved, its
+cross-file references carried as relocations a consumer's link seats.
+
+
+SETTLED 4 -- HOW THE THREE SUB-QUESTIONS RESOLVE (data shapes)
+--------------------------------------------------------------
+(1) A cross-file reference not seated concretely = a RELOCATION:
+    (file, into-scope, id-hash). link VALIDATES it (file loads, id-hash matches,
+    name exported, no collision) and seats it; never copies a table. A module's
+    relocations ARE its public import surface. 'into-scope' is the import's
+    'into:' mount (None = current scope, todo-7).
+(2) The old monolithic ResolvedProgram 'resolutions' dict DISSOLVES into:
+      - per-module LOCAL resolutions sidecar  id(node)->Symbol  (the identity-key
+        trick, now per MODULE, for intra-module refs seated concretely);
+      - cross-file refs carried as RELOCATIONS (1), kept after eager seating;
+      - link fuses the modules into ONE resolved module (see (3)).
+    Net: no new global resolution table; the id-keyed sidecar survives but drops
+    to per-module granularity.
+(3) AXIS ASYMMETRY AT THE RESOLVED END (corrected, your Correction 1):
+      SourceProgram   = SET of SourceModules
+      ParsedProgram   = SET of ParsedModules
+      ResolvedProgram = ONE module -- link FUSES the parsed set into a single
+                        resolved module (+ source_map + 'main' if a program).
+    Source/Parsed/Resolved Program are REAL types. The discriminator carried is
+    'main' (entry point) -- PRESENT = program, ABSENT = library -- not a closure
+    flag (SETTLED 3). Both are fully resolved.
+
+NAME NOTE
+  'decoratedAst.Module' was considered and REJECTED for the resolved artifact:
+  it is a SIDECAR semantic model beside the AST, not a tree decorated in place;
+  'decoratedAst' asserts a category it is not (same error class as the old
+  'RuleFile'). The chain names (ResolvedModule / ResolvedProgram) are honest;
+  no decoratedAst rename.
+
+
+SETTLED 5 -- THE OPEN TAIL, NOW RESOLVED  (was O-1..O-4)
+--------------------------------------------------------
+O-1  loader-ref form = PATH + id-hash. A relocation names its target by PATH
+     (version may ride in the extension). It also carries an EXPECTED id-hash;
+     the loaded file's header carries its OWN id-hash; link COMPARES the two
+     (compared, not necessarily recomputed -- the hash is a declared identity
+     token; recompute-from-content is optional verification).
+
+O-2  there is NO reachability-map-as-closure-predicate (that question dissolved
+     with SETTLED 3). link fuses modules into one; relocations are KEPT on the
+     fused module so lazy reload stays open. The program/library discriminator
+     is 'main', not a map.
+
+O-2b MATURITY LADDER (pre-parsed / pre-resolved, REQUIRED). load() probes top-
+     down and returns the unit at the HIGHEST maturity present, running only the
+     downstream stages:
+         load(path):
+             if   loader.resolved(path):  -> ResolvedModule   (link only)
+             elif loader.parsed(path):    -> ParsedModule      (resolve, link)
+             else:                        -> SourceModule      (parse, resolve, link)
+     A pre-resolved library is picked up by the first branch and NEVER re-parsed.
+     LOADER SEAM CHANGE: today loader(path)->text becomes three probes
+     (resolved? parsed? else source-fetch). Each shippable form carries a header
+     id-hash; link checks it regardless of which branch supplied the unit.
+
+O-3  LINK ERROR SURFACE (six, each attributable to a relocation; version-incompat
+     PARKED until/unless the link interface is versioned):
+       missing-library   path won't load                  -> relocation.path, site
+       hash-mismatch     declared id-hash != expected      -> relocation
+       stale-form        form's built-from != its upstream -> the form's header
+                         (the cached-form integrity self-check)
+       missing-export    a bound name isn't exported       -> relocation + name
+       name-collision    a bound name hits a live local    -> relocation + name
+                                                              + local definer
+       circular-link     cycle in the relocation graph     -> the relocation ring
+                         (pre-resolved units SKIP the source load walk's cycle
+                         check, so link needs its OWN cycle detection)
+     TRACEABILITY (user requirement): every linked-in Symbol keeps a back-pointer
+     to its originating relocation, so a diagnostic on any imported operation
+     names the file, the relocation, and the site.
+
+O-4  FIELD CONTRACTS PER TYPESTATE (honest types; supersedes bare object/dict).
+     A shippable form carries a HEADER: (id_hash, built_from). built_from = hash
+     of the upstream form it was built from (the stale-form self-check basis).
+
+       SourceModule    key, text, provenance
+                       (bytes; no ast; no header -- source is not a cached form)
+       ParsedModule    key, ast, provenance, header
+                       (structure; no text; header present -> pre-parsed shippable)
+       ResolvedModule  key, scope_tree(sealed),
+                       local_resolutions(id(node)->Symbol, intra-module concrete,
+                       PERMANENT), seated_relocations(id(node)->Symbol, from
+                       relocations, EVICTABLE by unseat), relocations(tuple,
+                       cross-file recipes, kept permanently), cascade_part,
+                       header, provenance
+       ResolvedProgram module(the ONE fused ResolvedModule), main(Symbol or None),
+                       source_map
+                       (main None = library; both fully resolved)
+
+GRAMMAR SIDE (recorded, separate file): import 'into:' becomes OPTIONAL; absent
+= mount into current scope. See todo-7-import-into-optional.txt. 'mount' is the
+EXISTING Import.mount word; no rename.
+
+
+COST / BLAST RADIUS (this is NET-NEW STRUCTURE, not a rename)
+------------------------------------------------------------
+  - new ResolvedModule type; split today's whole-program fold (resolve.py/
+    resolver.py -> ResolvedProgram) into resolve(local) + link(global).
+  - RELOCATION mechanism (file, into-scope, id-hash), kept after eager seat;
+    per-module local resolutions sidecars; UnitHeader (id_hash, built_from).
+  - MATURITY LADDER in load(): loader gains resolved?/parsed? probes beyond the
+    source fetch -- a loader-interface change (today loader(path)->text).
+  - link-side CYCLE detection over the relocation graph (separate from the
+    source load walk's import-cycle check, which pre-resolved units skip).
+  - 'main' discriminator on ResolvedProgram (present=program, absent=library).
+  - SourceFile -> SourceModule rename rides along.
+  - terminological-invariance sweep TREE-WIDE on every renamed symbol (code,
+    params, docstrings, tests, GOOD files).
+  - any printed type-name change regenerates GOOD files on real infrastructure.
+  - GRAMMAR: import 'into:' optional (todo-7) is a SEPARATE landing -- grammar
+    + SYNTAX_DOC + AST + GOOD; not gated on the typestate rename.
+  - RATIONALE.txt: record the D-29 SUPERSESSION (keep D-29's typestate-
+    metamorphosis insight; reverse only its 'no per-module resolved state'
+    conclusion) once the rename lands.
+
+
+PARKED (recorded elsewhere, not this work)
+------------------------------------------
+  P-1  optimisation IR (ir.Module/iropt.Module + lower/optimise). Only if a real
+       target-INDEPENDENT transform earns it (candidate: cascade normalisation).
+       Insertion point is the ResolvedProgram->Emitter seam, already abstract.
+  P-2  state machines / mode groups as parameter-records-on-a-prototype.
+       Forks emit-time (codegen template; cheap; no IR; no static-check loss) vs
+       runtime (interpreter; records become a real IR; moves checks static->
+       runtime). Decide if/when raised.
+  TODO-1 (sep.) emission must leave semantic/ (it is the backend, via world/).
+  TODO-2 (sep.) semantic/ -> a more standard phase name. open: verb vs noun.
+
+
+SETTLED 6 -- THE CROSS-FILE REFERENCE MODEL  (supersedes the Relocation-per-
+              reference shape recorded above as SETTLED 3 / COST)
+------------------------------------------------------------------------
+The cross-file record is reified around the IMPORTED MODULE, not around each
+reference. The seating facts SETTLED 5 left implicit (which name to fetch, which
+node it binds) now have a home, and "load once, many referrers" becomes
+STRUCTURE rather than a path string repeated per relocation.
+
+  ONE Reference type. A reference resolves by LOOKUP, not by carrying its own
+  binding recipe. It asks a table for its name; the answer (a Symbol) is seated
+  id(node)->Symbol as before (README H -- the sidecar shape is UNCHANGED).
+
+  A reference whose name misses the local table chains (L-design, SETTLED 2)
+  into the imported module's table. That target is a SHARED object -- one per
+  imported file -- pointed at by EVERY reference importing from that file.
+
+  ModuleProxy: the shared per-import stand-in. A local representative of an
+  imported file the references point at; it forwards a name request to the real
+  file, loading it first if needed. Carries the load STATE and the export table.
+  Asked for a name, it:
+      - if loaded   -> answers with the Symbol (or 'absent' = not exported).
+      - if unloaded -> loads, then answers.
+  Eager link = load every proxy up-front (the startup loop); lazy link = a proxy
+  loads on first ask. ONE mechanism, SETTLED 3's "lazy by design, eager by
+  default" unchanged -- only its CARRIER changes.
+
+  unseat (lazy unload) flips the proxy's state to unloaded; all its referrers
+  revert together, in one place, without touching local_resolutions. (Old model:
+  unseat cleared a per-reference evictable sidecar. New model: the evictable fact
+  lives on the proxy. seated_relocations as a per-module dict is reconsidered
+  against this in the build -- recorded when settled.)
+
+  SUPERSEDES: the frozen Relocation{path,into_scope,expected_hash,site} as the
+  cross-file CARRIER. The VERIFICATION facts it held (path, expected_hash,
+  built_from vs UnitHeader, into_scope mount, site offset) do not vanish -- they
+  move ONTO the proxy (one verification per imported file, not per reference,
+  which is where they belonged: a file is loaded and verified once). The six link
+  errors (SETTLED 5 O-3) stay attributable -- now to the proxy plus the
+  referencing site.
+
+  REASON for the reversal: a per-reference Relocation cannot seat without ALSO
+  carrying the using-node and the wanted-name; adding them made N copies of facts
+  that are really ONE-per-file (the path, the hash, the load). Reifying the
+  imported module removes the duplication and makes lazy load/unload a single-
+  object state flip instead of an N-sidecar sweep.
+
+  BUILD ORDER unchanged (2a then 2b): 2a proves the chaining LOOKUP against a
+  hand-built ModuleProxy export table; 2b's reference walk constructs the
+  references and the proxies. Field-placement that was parked for 2b is now
+  answered by this entry.

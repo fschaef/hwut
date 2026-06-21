@@ -1,0 +1,2 @@
+seated:      False
+symbol:      None
