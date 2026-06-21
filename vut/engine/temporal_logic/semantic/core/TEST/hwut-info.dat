@@ -1,0 +1,9 @@
+Testing the GENERAL core resolution engine: the join (head search + scope/type
+descent + proxy hop) and ModuleProxy, against hand-built tables. No rule
+language, no parser -- core in isolation.
+--------------------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py
+

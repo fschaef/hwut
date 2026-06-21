@@ -1,0 +1,3 @@
+declared:    Symbol(name='tick', kind='event', params=(), offset=0)
+undeclared:  None
+uncovered:   None
