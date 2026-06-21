@@ -129,7 +129,7 @@ GRAMMAR = {
     "step":     {
         TOP:        ("<instant>", OR, "<wait>", OR, "<select>",
                      OR, "<if>", OR, "<while>", OR, "<spawn>",
-                     OR, "<unspawn>", OR, "<arming-mode>", OR, "<incr>", OR, "<decr>",
+                     OR, "<unspawn>", OR, "<incr>", OR, "<decr>",
                      OR, "<mutation>", OR, "<name-step>"),
         "name-step": ("<name-dotted>",
                       ("<parens-arg>", OR, "<assign-rhs>", OR, "<recip-rhs>")),
@@ -194,14 +194,13 @@ GRAMMAR = {
         "bridge":   (t_op_question, "<cond>", "then:", "<algebr>", "else:", "<algebr>"),
     },
     
-    "effect":         ("<mutation>", OR, "<unspawn>", OR, "<arming-mode>",
+    "effect":         ("<mutation>", OR, "<unspawn>",
                        OR, "<report-string>", OR, "<effect-named>"),
     "effect-named":   ("<name-dotted(emission)>", ["<parens-arg>"]),
     "mutation":       "<code-block>",
     "code-block":     (t_opq_stmts, OR, "<do-sweep(one-sweep)>"),
     "do-sweep":       ("do:", PLUS("<step>"), ":end"),
     "unspawn":        ("unspawn:", "<name-dotted(instance)>"),
-    "arming-mode":    ("arm:", "<name-dotted(mode)>", "<parens-arg>"),
     "report-string":  t_re_string("report"),
     
     "parens-arg":     ("(", ["<list-arg>"], ")"),

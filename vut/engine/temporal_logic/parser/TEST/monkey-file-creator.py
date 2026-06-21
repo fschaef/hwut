@@ -251,7 +251,7 @@ _NEWLINE_BEFORE = {
         "state:", "event:", "clock:", "open:", ":close", "has:", "default:",
         "init:", "deinit:", ":end",
         "clockwork:", "instant:", "wait:", "select:", "if:", "elif:", "else:",
-        "while:", "spawn:", "unspawn:", "arm:",
+        "while:", "spawn:", "unspawn:",
     )
 }
 

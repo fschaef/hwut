@@ -1,5 +1,5 @@
 === monkey: luau ===
-tokens parsed:      450
+tokens parsed:      445
 top-level items:    6 (ok)
 diagnostics:        none
 
@@ -12,16 +12,16 @@ total AST nodes: 342
   ClockDef                   1
   Clockwork                  1
   Condition                  2
-  Decr                       1
   DefaultRef                 1
   DoSweep                    1
   EffectDef                  1
   HasRef                     1
   Literal                  128
-  ModeArming                 1
   ModeGroup                  1
   Namespace                  1
   OpaqueCode                32
+  ReportString               1
   Spawn                      1
   StateMachine               1
   Trigger                    1
+  Unspawn                    1

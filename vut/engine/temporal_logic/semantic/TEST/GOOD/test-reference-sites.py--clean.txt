@@ -1,6 +1,0 @@
-errors: 0
-references (name | enclosing-scope | seated):
-  A                  STATE_MACHINE  A:event
-  B                  STATE_MACHINE  B:event
-  crossing.Idle      STATE_MACHINE  UNSEATED
-  A                  GROUND         A:event

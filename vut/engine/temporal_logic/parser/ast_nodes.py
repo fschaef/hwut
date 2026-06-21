@@ -406,14 +406,24 @@ class EventSpec:
 
 @dataclass(frozen=True)
 class ModeArming(SEQ_Interface):
-    """A mode-arming effect: 'arm: name(args)'."""
+    """A mode-arming effect: 'arm: name(args)'.
+
+    DORMANT (grammar collapse, disc-7 / D-36): the parser NO LONGER produces this
+    node. Since '=> arm: Mode' collapsed to a bare '=> Mode', an arm-target now
+    parses as EventSpec/EffectRef (or a clockwork name-step), and PASS 2 finalizes
+    it into a ModeArming once the target resolves to kind mode/state -- a shallow
+    interface-preserving substitution. Kept as that finalization target; not
+    constructed at parse time. 'from_seq' is retained for pass 2 to build one.
+    """
     name:  "list[str]"        # dotted-name segments
     args:  List[Arg]
     begin: int
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: ModeArming -- children = (dotted_name, args_list); 'arm:' silent."""
+        """RETURN: ModeArming -- children = (dotted_name, args_list); 'arm:' silent.
+
+        Retained for PASS 2 finalization (D-36), not parse-time construction."""
         name, args = node.children
         return cls(name=name, args=args, begin=node.begin)
 

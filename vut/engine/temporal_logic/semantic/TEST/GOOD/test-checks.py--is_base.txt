@@ -1,2 +1,0 @@
-DIAGNOSTICS (1):
-  tag=KIND [KIND] state-machine 'SM' derives from mode-group 'Grp' (category mismatch) @106

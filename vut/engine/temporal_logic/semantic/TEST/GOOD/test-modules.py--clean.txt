@@ -1,4 +1,0 @@
-ok=True root=root.rule
-  leaf.rule  by=root.rule@0  imports=[]
-  root.rule  by=ROOT         imports=[leaf.rule->lib]
-diagnostics=0

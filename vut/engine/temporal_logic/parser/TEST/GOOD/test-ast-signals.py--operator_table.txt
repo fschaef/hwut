@@ -14,7 +14,6 @@ algebr/postfix             SEQ
 algebr/shift               SEQ
 algebr/un                  SEQ
 arg                        OR
-arming-mode                SEQ
 causality                  SEQ
 cause                      OR
 cause-named                SEQ

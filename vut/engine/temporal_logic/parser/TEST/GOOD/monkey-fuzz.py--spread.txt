@@ -1,48 +1,47 @@
 === monkey: spread ===
-tokens parsed:      8186
+tokens parsed:      7889
 top-level items:    12 (ok)
 diagnostics:        none
 
-total AST nodes: 6051
+total AST nodes: 5456
 
-  Arg                       35
-  ArgDecl                   44
+  Arg                       39
+  ArgDecl                   45
   Assign                     1
-  BinOp                   2830
-  Causality                  5
+  BinOp                   2540
+  Causality                  6
   Cause                     19
   CauseDef                   1
   CauseRef                   6
+  ClockDef                   1
   Clockwork                  2
-  Condition                 17
-  Decr                       3
-  DefaultRef                 1
-  DoSweep                    9
-  EffectDef                  2
-  EffectRef                  7
+  Condition                 15
+  Decr                       1
+  DefaultRef                 2
+  DoSweep                   10
+  EffectDef                  1
+  EffectRef                  5
   EventDef                   2
-  EventSpec                  2
-  Expr                      23
-  HasRef                     3
+  EventSpec                  5
+  Expr                      25
+  HasRef                     2
   IfFrame                    3
   Import                     2
   Incr                       3
-  Instant                    4
-  Literal                 2334
+  Instant                    3
+  Literal                 2097
   Mode                       2
-  ModeArming                12
-  ModeGroup                  2
-  Mutation                  12
+  ModeGroup                  1
+  Mutation                  10
   Namespace                  5
-  OpaqueCode               598
-  Recip                      2
-  ReportString               8
+  OpaqueCode               541
+  ReportString               6
   SelectFrame                4
   Spawn                      2
-  State                      1
-  StateMachine               2
+  State                      2
+  StateMachine               3
   Trigger                   19
-  Unspawn                   10
+  Unspawn                   11
   VariableDef                1
   WaitLine                  10
   WhileFrame                 3

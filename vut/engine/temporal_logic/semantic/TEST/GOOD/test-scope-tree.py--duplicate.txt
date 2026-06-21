@@ -1,2 +1,0 @@
-DIAGNOSTICS (1):
-  tag=NAME [NAME] duplicate declaration of 'tick' in this scope @25

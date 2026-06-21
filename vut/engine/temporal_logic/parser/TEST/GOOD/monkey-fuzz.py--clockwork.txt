@@ -1,44 +1,44 @@
 === monkey: clockwork ===
-tokens parsed:      3974
+tokens parsed:      7648
 top-level items:    6 (ok)
 diagnostics:        none
 
-total AST nodes: 3514
+total AST nodes: 6048
 
-  Arg                        2
-  ArgDecl                   31
-  BinOp                   1674
-  Causality                  4
-  Cause                     18
-  CauseDef                   1
-  CauseRef                   2
-  ClockDef                   1
-  Clockwork                  1
-  Condition                  4
-  DefaultRef                 1
-  DoSweep                    4
-  EffectDef                  1
-  EffectRef                  1
-  EventDef                   1
-  EventSpec                  1
-  HasRef                     2
-  Import                     1
+  Arg                       12
+  ArgDecl                   30
+  Assign                     1
+  BinOp                   2921
+  Causality                  2
+  Cause                      9
+  CauseDef                   3
+  CauseRef                   1
+  Clockwork                  2
+  Condition                  8
+  Decr                       1
+  DictDecl                   1
+  DictType                   1
+  DoSweep                    7
+  EffectDef                  3
+  EffectRef                  2
+  EventSpec                  4
+  Expr                      11
+  IfFrame                    3
+  Import                     2
   Incr                       1
-  Literal                 1344
-  Mode                       3
-  ModeArming                 4
-  ModeGroup                  2
-  Mutation                   5
-  Namespace                  5
-  OpaqueCode               347
+  Instant                    2
+  Literal                 2364
+  Mode                       1
+  ModeGroup                  1
+  Mutation                   9
+  Namespace                  7
+  OpaqueCode               598
   ReactorDecl                1
   ReportString               5
-  SelectFrame                1
-  State                      1
-  StateMachine               1
-  StructDecl                 1
-  Trigger                   18
-  UnOp                      17
-  Unspawn                    3
-  VariableDef                1
-  WaitLine                   4
+  SelectFrame                2
+  Spawn                      1
+  Trigger                    9
+  UnOp                      15
+  Unspawn                    2
+  WaitLine                   5
+  WhileFrame                 1

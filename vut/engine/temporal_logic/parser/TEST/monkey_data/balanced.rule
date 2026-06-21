@@ -3,11 +3,7 @@ state_machine: X5 . X7 ( n9: X10 ; n12: int ; n15: bool ) is: X19 . X21
 has: X23 . X25
 :end cause: X28 . X30 for: X32 . X34 & [ true * 1 + "s" / { x{ y } } shr: false * { x{ y }{ y } } - false / true and 1 / "s" - 1 * "s" shl: false / true + { x{ y } } * "s" nand true * { x{ y }{ y } } + false / 1 shr: true / 1 - "s" * { x } xor false * true - "s" / 1 shl: { x } * false + false / "s" nand true / { x{ y }{ y } } + 1 * "s" shl: true / false - 1 * { x } and false / 1 - "s" * true shr: { x } * { x } + 1 / false nxor "s" * true + 1 / false shr: { x{ y }{ y } } * "s" - true / true and 1 / false - { x } * "s" shl: { x{ y } } / 1 + false * true or "s" * 1 - false / "s" shl: true / { x{ y } } + { x{ y }{ y } } * 1 nand false * "s" + true / { x{ y }{ y } } shr: false / 1 - true * "s" xor { x{ y } } * false + true / 1 shl: "s" / false - 1 * { x{ y }{ y } } and "s" * true - "s" / false shr: { x{ y } } / true + 1 * 1 nxor "s" / { x{ y }{ y } } - true * false shr: true / false + "s" * 1 nand { x{ y } } / { x{ y } } + false * "s" shl: true * 1 - { x{ y }{ y } } / true ]
 on: CHANGE
+=> "s"
 =>
-arm: X242 . X244 . X246 ( X248 = "s" / false - 1 * true shl: 1 * "s" + { x{ y } } / false , true / 1 - { x } * false shr: "s" * { x{ y }{ y } } + true / "s" )
-=> do:
-instant: X282 . X284 ( ) incr: X288 . X290
-:end effect: X293 . X295 ( )
-=> do:
-spawn: X301 . X303 ( )
-:end
+unspawn: X244 . X246
+event: X248 ( )

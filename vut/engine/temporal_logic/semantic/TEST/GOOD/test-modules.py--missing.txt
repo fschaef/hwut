@@ -1,2 +1,0 @@
-ok=False has_fatal=True
-  tag=None cannot load module 'ghost.rule': no such module

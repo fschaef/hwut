@@ -1,4 +1,0 @@
-EDGES: {'A': ['A', 'B'], 'B': ['A']}
-DIAGNOSTICS (2):
-  tag=CASCADE [CASCADE] cascade cycle: A -> A @63
-  tag=CASCADE [CASCADE] cascade cycle: A -> B -> A @63

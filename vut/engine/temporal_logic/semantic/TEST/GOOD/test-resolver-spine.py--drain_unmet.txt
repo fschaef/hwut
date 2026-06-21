@@ -1,4 +1,0 @@
-seated at use: False
-errors before close: 0
-errors after close: 1
-  tag=NAME [NAME] undefined name: 'Watcher' (no definition by scope close) @42

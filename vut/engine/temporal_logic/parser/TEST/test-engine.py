@@ -359,7 +359,7 @@ def run_clockwork_shapes():
     Exercises the tick-scripted stimulus actor: the signature and guarded 'on:'
     clock binding; the step variety told apart by leader -- a bare EventSpec
     (paced emission), 'instant:' (immediate injection), the bare commands
-    ('spawn:'/'unspawn:'/'arm:'/opaque block), 'wait:' with and without a
+    ('spawn:'/'unspawn:'/opaque block; arm collapsed to bare name), 'wait:' with and without a
     co-temporal effect tail, 'select:' (first-of-many), and the 'if:'/'elif:'/
     'else:' and 'while:' control frames composing within the body. Also pins the
     FENCE: an imperative clockwork construct used as a causality effect is
@@ -378,7 +378,7 @@ def run_clockwork_shapes():
          " init: { x }\n PING(seq = 1)\n deinit: { y }\n:end"),
         ("tick law: paced vs instant vs commands",
          "clockwork: a on: clk\n EVENT(p = 1)\n instant: OTHER(p = 2)\n"
-         " spawn: SM(lane = 0)\n arm: W(ip = \"x\")\n { setup() }\n unspawn: SM\n:end"),
+         " spawn: SM(lane = 0)\n W(ip = \"x\")\n { setup() }\n unspawn: SM\n:end"),
         ("wait with co-temporal tail, then tail-less gate",
          "clockwork: a on: clk\n wait: RESP & [ e.ok ]\n => { x }\n => DONE(ok = true)\n"
          " wait: GO\n:end"),

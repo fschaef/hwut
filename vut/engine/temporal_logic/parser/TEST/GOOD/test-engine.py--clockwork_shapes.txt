@@ -9,7 +9,7 @@
 
 --- tick law: paced vs instant vs commands ---
   Clockwork name=a params=0 clock=clk guard=False init=False deinit=False
-  steps=[EventSpec, Instant, Spawn, ModeArming, Mutation, Unspawn]
+  steps=[EventSpec, Instant, Spawn, EventSpec, Mutation, Unspawn]
 
 --- wait with co-temporal tail, then tail-less gate ---
   Clockwork name=a params=0 clock=clk guard=False init=False deinit=False

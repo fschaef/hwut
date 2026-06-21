@@ -504,38 +504,6 @@ Arg
   kind = <E_ArgKind.EXPR: 3>
   begin = 0
 
-=== arming-mode ===
-
--- 0x --
-   input: arm: X ( )
-ModeArming
-  name:
-    'X'
-  args:
-    []
-  begin = 0
-
--- 1x --
-   input: arm: X . X ( )
-ModeArming
-  name:
-    'X'
-    'X'
-  args:
-    []
-  begin = 0
-
--- 2x --
-   input: arm: X . X . X ( )
-ModeArming
-  name:
-    'X'
-    'X'
-    'X'
-  args:
-    []
-  begin = 0
-
 === causality ===
 
 -- absent --
@@ -1667,22 +1635,12 @@ Unspawn
   begin = 0
 
 -- alternative 2 --
-   input: arm: X . X ( )
-ModeArming
-  name:
-    'X'
-    'X'
-  args:
-    []
-  begin = 0
-
--- alternative 3 --
    input: "s"
 ReportString
   text = '"s"'
   begin = 0
 
--- alternative 4 --
+-- alternative 3 --
    input: X . X
 EffectRef
   name:
@@ -2908,16 +2866,6 @@ Unspawn
   begin = 0
 
 -- alternative 7 --
-   input: arm: X . X ( )
-ModeArming
-  name:
-    'X'
-    'X'
-  args:
-    []
-  begin = 0
-
--- alternative 8 --
    input: incr: X . X
 Incr
   lvalue:
@@ -2927,7 +2875,7 @@ Incr
   limit = None
   begin = 0
 
--- alternative 9 --
+-- alternative 8 --
    input: decr: X . X
 Decr
   lvalue:
@@ -2937,7 +2885,7 @@ Decr
   limit = None
   begin = 0
 
--- alternative 10 --
+-- alternative 9 --
    input: { luau }
 Mutation
   body:
@@ -2948,7 +2896,7 @@ Mutation
       _references = None
   begin = 0
 
--- alternative 11 --
+-- alternative 10 --
    input: X . X ( )
 EventSpec
   name:
@@ -3797,3 +3745,4 @@ Unspawn
     'X'
     'X'
   begin = 0
+

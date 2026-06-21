@@ -1,39 +1,40 @@
 === monkey: members ===
-tokens parsed:      2874
+tokens parsed:      2128
 top-level items:    8 (ok)
 diagnostics:        none
 
-total AST nodes: 2341
+total AST nodes: 1910
 
-  Arg                       20
-  ArgDecl                   18
-  BinOp                   1085
-  Causality                  4
-  Cause                      9
-  CauseRef                   4
-  ClockDef                   1
+  Arg                        4
+  ArgDecl                   15
+  BinOp                    893
+  Causality                  3
+  Cause                      7
+  CauseDef                   1
+  CauseRef                   2
   Clockwork                  1
-  Condition                 10
-  DoSweep                    2
-  EffectDef                  2
-  EffectRef                  1
+  Condition                  7
+  Decr                       1
+  DoSweep                    3
+  EffectDef                  1
+  EffectRef                  2
   EventDef                   1
-  EventSpec                  2
-  Expr                      13
-  HasRef                     1
-  IfFrame                    1
   Import                     1
-  Literal                  902
+  Incr                       1
+  Instant                    1
+  Literal                  723
   Mode                       1
-  ModeArming                 4
   ModeGroup                  1
   Mutation                   3
-  Namespace                  4
-  OpaqueCode               230
-  ReportString               3
-  SelectFrame                1
+  Namespace                  2
+  OpaqueCode               184
+  ReactorDecl                1
+  ReportString               2
+  Spawn                      1
   State                      1
   StateMachine               1
-  Trigger                    9
-  Unspawn                    3
-  WaitLine                   2
+  Trigger                    7
+  UnOp                      32
+  Unspawn                    5
+  WaitLine                   1
+  WhileFrame                 1

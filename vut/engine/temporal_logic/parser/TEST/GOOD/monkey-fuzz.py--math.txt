@@ -1,38 +1,39 @@
 === monkey: math ===
-tokens parsed:      13156
+tokens parsed:      5880
 top-level items:    5 (ok)
 diagnostics:        none
 
-total AST nodes: 8518
+total AST nodes: 3086
 
-  Arg                       30
-  ArgDecl                   10
-  Assign                     1
-  BinOp                   4135
-  Causality                  2
-  Cause                      9
-  CauseRef                   4
+  Arg                        9
+  ArgDecl                    9
+  Assign                     2
+  BinOp                   1469
+  Causality                  1
+  Cause                      8
   ClockDef                   1
-  Clockwork                  1
-  Condition                  9
-  Decr                       5
-  DoSweep                    6
-  EffectRef                  3
-  EventSpec                  3
-  Expr                      21
-  IfFrame                    5
+  Condition                  5
+  Decr                       2
+  DefaultRef                 1
+  DoSweep                    4
+  EffectRef                  7
+  EventDef                   1
+  EventSpec                  2
+  Expr                       5
+  HasRef                     1
+  IfFrame                    4
   Import                     1
-  Incr                       3
-  Instant                    5
-  Literal                 3362
-  Mode                       1
-  ModeArming                 8
-  Mutation                   8
-  OpaqueCode               844
-  ReportString               4
-  SelectFrame                4
+  Incr                       5
+  Instant                    3
+  Literal                 1192
+  Mutation                   6
+  OpaqueCode               304
+  Recip                      2
+  ReportString               7
+  SelectFrame                2
   Spawn                      4
-  Trigger                    9
-  Unspawn                    7
-  WaitLine                   9
+  StateMachine               1
+  Trigger                    8
+  Unspawn                    9
+  WaitLine                   7
   WhileFrame                 4

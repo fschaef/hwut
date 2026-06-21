@@ -1,27 +1,22 @@
 === monkey: balanced ===
-tokens parsed:      332
+tokens parsed:      273
 top-level items:    5 (ok)
 diagnostics:        none
 
-total AST nodes: 275
+total AST nodes: 237
 
-  Arg                        2
   ArgDecl                    3
-  BinOp                    125
+  BinOp                    111
   Causality                  1
   Cause                      1
   CauseDef                   1
   Condition                  1
-  DoSweep                    2
-  EffectDef                  1
+  EventDef                   1
   HasRef                     1
-  Incr                       1
-  Instant                    1
-  Literal                  102
-  ModeArming                 1
-  Mutation                   2
-  OpaqueCode                26
-  Spawn                      1
+  Literal                   89
+  OpaqueCode                23
+  ReportString               1
   StateMachine               1
   StructDecl                 1
   Trigger                    1
+  Unspawn                    1

@@ -466,7 +466,6 @@ AST_MAP = {
     "step/spawn":            ast.Spawn.from_seq,
     "step/spawn/into":       _raw,
     "unspawn":               ast.Unspawn.from_seq,
-    "arming-mode":           ast.ModeArming.from_seq,
     "report-string":         ast.ReportString.from_token,
     "arg":                   ast.Arg.from_or,
     "mode":                  ast.Mode.from_seq,

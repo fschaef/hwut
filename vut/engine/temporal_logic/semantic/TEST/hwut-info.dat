@@ -1,8 +1,0 @@
-Testing the reactive-engine grammar parser: positive and negative rule
-coverage, the lexer, the LL(1) engine, and the monkey fuzz fixtures.
---------------------------------------------------------------------------
-
-coverage run --omit ./*.py -a *.py
-
---not config.py
-

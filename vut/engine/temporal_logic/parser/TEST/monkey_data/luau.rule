@@ -6,12 +6,12 @@ on: ANY & [ { x{ y }{ y } } / true - 1 * "s" shl: false / "s" + { x{ y }{ y }{ y
 spawn: X154 . X156 ( ) into: X160 . X162
 :end
 open: X165 . X167 . X169 effect: X171 . X173 ( )
-=>
-arm: X178 . X180 ( )
+=> "s"
 :close
-clock: X185 1 cause: X188 . X190 ( n192: int ; n195: X196 ; ) for: X200 . X202 & [ false / { x{ y }{ y } } + 1 * true shl: "s" * false - true / "s" nand false * 1 - { x{ y }{ y }{ y }{ y }{ y } } / false shr: true * 1 + { x{ y } } / "s" xor "s" / 1 - false * true shr: { x{ y } } / false + "s" * true and 1 * { x{ y }{ y }{ y }{ y }{ y } } + "s" / { x } shl: true * 1 - false / true nor 1 * { x{ y } } + "s" / false shl: { x } / 1 - "s" * true nand false * "s" - 1 / false shr: true / { x{ y }{ y }{ y } } + { x{ y }{ y }{ y }{ y } } * 1 nxor "s" * true - false / { x{ y }{ y }{ y }{ y }{ y } } shl: "s" * 1 + true / false and true * "s" - { x{ y }{ y }{ y }{ y }{ y } } / false shr: 1 * false + 1 / { x{ y } } nor true / "s" - "s" * false shl: { x{ y }{ y }{ y } } / 1 + true * false nand 1 * true - { x{ y }{ y }{ y }{ y }{ y }{ y } } / "s" shr: false * true + { x{ y }{ y }{ y }{ y }{ y } } / "s" nxor 1 / 1 - { x{ y }{ y }{ y } } * "s" shl: true / false + true * false and "s" * 1 - { x{ y } } / "s" shr: 1 / false + true * { x{ y }{ y }{ y }{ y }{ y }{ y } } ]
-mode_group: X379 . X381 . X383 ( n385: bool ; n388: X389 ; n391: float ; ) is: X396 . X398 . X400 is: X402 . X404
-init: do: decr: X408 . X410
+clock: X180 1 cause: X183 . X185 ( n187: int ; n190: X191 ; ) for: X195 . X197 & [ false / { x{ y }{ y } } + 1 * true shl: "s" * false - true / "s" nand false * 1 - { x{ y }{ y }{ y }{ y }{ y } } / false shr: true * 1 + { x{ y } } / "s" xor "s" / 1 - false * true shr: { x{ y } } / false + "s" * true and 1 * { x{ y }{ y }{ y }{ y }{ y } } + "s" / { x } shl: true * 1 - false / true nor 1 * { x{ y } } + "s" / false shl: { x } / 1 - "s" * true nand false * "s" - 1 / false shr: true / { x{ y }{ y }{ y } } + { x{ y }{ y }{ y }{ y } } * 1 nxor "s" * true - false / { x{ y }{ y }{ y }{ y }{ y } } shl: "s" * 1 + true / false and true * "s" - { x{ y }{ y }{ y }{ y }{ y } } / false shr: 1 * false + 1 / { x{ y } } nor true / "s" - "s" * false shl: { x{ y }{ y }{ y } } / 1 + true * false nand 1 * true - { x{ y }{ y }{ y }{ y }{ y }{ y } } / "s" shr: false * true + { x{ y }{ y }{ y }{ y }{ y } } / "s" nxor 1 / 1 - { x{ y }{ y }{ y } } * "s" shl: true / false + true * false and "s" * 1 - { x{ y } } / "s" shr: 1 / false + true * { x{ y }{ y }{ y }{ y }{ y }{ y } } ]
+mode_group: X374 . X376 . X378 ( n380: bool ; n383: X384 ; n386: float ; ) is: X391 . X393 . X395 is: X397 . X399
+init: do:
+unspawn: X403 . X405
 :end
-has: X413 . X415 . VOID
+has: X408 . X410 . VOID
 :end

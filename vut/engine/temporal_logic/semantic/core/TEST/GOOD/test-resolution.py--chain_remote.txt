@@ -1,3 +1,0 @@
-seated:      True
-donor:       shared
-origin:      lib.rule
