@@ -20,8 +20,8 @@ ______________________________________________________________________________
 import sys
 from config import HwutRunner
 
-from vut.engine.temporal_logic.semantic.relocation     import UnitHeader, Relocation
-from vut.engine.temporal_logic.semantic.resolved_module import ResolvedModule
+from vut.engine.temporal_logic.semantic.core.relocation     import UnitHeader, Relocation
+from vut.engine.temporal_logic.semantic.core.resolved_module import ResolvedModule
 
 
 class _Node:

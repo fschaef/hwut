@@ -70,11 +70,12 @@ def run_clean():
     for d in rep.errors:
         print("  tag=%s %s @%d" % (d.tag, d.message, d.source_offset))
     if prog:
-        print("root sealed: %s" % prog.scope_tree.sealed)
-        print("top symbols: %s" % sorted(prog.scope_tree.symbols))
-        print("queried: %s" % sorted(prog.queried))
+        print("root sealed: %s" % prog.module.scope_tree.sealed)
+        print("top symbols: %s" % sorted(prog.module.scope_tree.symbols))
+        print("queried: %s" % sorted(prog.module.cascade_part.queried))
         print("cascade edges: %s"
-              % {k: sorted(v) for k, v in sorted(prog.cascade.edges.items())})
+              % {k: sorted(v)
+                 for k, v in sorted(prog.module.cascade_part.edges.items())})
     assert prog is not None and not rep.errors
 
 
