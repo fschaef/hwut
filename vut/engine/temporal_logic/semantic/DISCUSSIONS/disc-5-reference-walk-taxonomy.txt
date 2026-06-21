@@ -30,6 +30,10 @@ FINDING 2 -- SCOPE-CONTEXT resolution.
   that the WALK does not know each node's enclosing scope to start the walk from.
 
 THE OPEN DECISION (settle before completing the walk)
+  RESOLVED by RATIONALE D-31 -> option (2): annotate at build_scopes time so the
+  reference walk LOOKS UP each node's enclosing scope (the node->scope map). This
+  is the same map that makes resolution static and total. (1)/(3) below are kept
+  as the rejected alternatives.
   How does the reference walk obtain each reference's ENCLOSING scope?
     (1) Walk the scope tree and the AST IN LOCKSTEP, carrying the current scope
         as the walk descends a namespace/aggregate body (the scope tree already
@@ -51,6 +55,51 @@ THE OPEN DECISION (settle before completing the walk)
 
 NOT BLOCKED
   The cross-file machinery (ModuleProxy mounted view, resolve_with_chain mount
-  routing, proxies_from_imports) is built and tested (test-module-proxy, 5
-  choices). It is correct INDEPENDENT of which sites the walk feeds it; settling
-  disc-5 only widens what the walk extracts, it does not change the lookup.
+  routing, proxies_from_imports) is built and tested (test-module-proxy). It is
+  correct INDEPENDENT of which sites the walk feeds it; settling disc-5 only
+  widens what gets emitted, it does not change the lookup.
+
+===================================================================
+SETTLED (supersedes the OPEN DECISION above; see RATIONALE D-32)
+===================================================================
+The framing of "the reference WALK" was itself the defect. There were TWO
+descents of the same AST: build_scopes produced SCOPE + SYMBOL; _references
+produced REFERENCE. "Walking the tree twice" was the smell. The fork (1)/(2)/(3)
+asked only how the SECOND walk learns scope -- decorating the wrong thing.
+
+RESOLUTION -- collapse to ONE descent, model as THREE tables.
+  Resolution is a JOIN over three tables, all produced by the SINGLE descent the
+  application already makes when it builds scopes:
+      SCOPE      (scope_id, kind, parent_id)          -- the containers
+      SYMBOL     (name, kind, scope_id)               -- declarations
+      REFERENCE  (node_id, segments, offset, enclosing_scope, is_pseudo)
+                                                      -- use-sites
+  The descent that opens/seals scopes and records declarations ALSO emits a
+  REFERENCE row at each use-site, WITH its enclosing scope in hand for free (the
+  descent is standing in that scope). FINDING 2 dissolves: enclosing_scope is a
+  COLUMN populated at emit time, not a lookup. FINDING 1 dissolves: definition
+  vs reference is the choice of WHICH rows a node emits (a declaration emits a
+  SYMBOL row; a use-site emits a REFERENCE row), not a gate on a separate walk.
+  The _references walk and the (1)/(2)/(3) fork are DELETED.
+
+  Resolution proper = resolve_with_chain run per REFERENCE row against its
+  enclosing_scope (+ proxies). Under D-31 every row resolves or is an error;
+  REFERENCE is a finished table.
+
+THE SEAM (general vs application -- the user's cut).
+  TABLES + JOIN are GENERAL and live in core/. The application FILLS them.
+      core/   declares Scope, Symbol, Reference and owns the join
+              (resolve_with_chain + the scope->type descent). It never names a
+              rule kind: the two rule-flavoured facts the descent needs --
+              which kinds open a scope, which heads are pseudo -- arrive as an
+              injected ResolutionPolicy (frozen kind-sets).
+      VUT/    walks its OWN AST and emits rows into the core tables (the FILLER);
+              owns the (A)/(B) regime decision (resolve_reference) and builds the
+              ResolutionPolicy from its kind-strings.
+  Database analogy: core is the schema + query engine; the VUT layer is the ETL
+  that loads it. Empty tables mean nothing until VUT populates them; the join
+  does not care who populated them.
+
+  GUARD-OPERAND axis unchanged: leading-dot member refs resolve against the
+  EVENT'S members (TYPE-descent), a different axis than enclosing lexical scope;
+  still emitted as their own REFERENCE shape, handled when those sites land.

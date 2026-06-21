@@ -1,5 +1,0 @@
-before seat:   None
-after seat:    SYM(tick)
-after unseat:  None
-recipe kept:   path=leaf.rule expected=h1
-after reseat:  SYM(tick)#2

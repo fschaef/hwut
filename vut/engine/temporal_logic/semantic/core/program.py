@@ -29,15 +29,15 @@ from dataclasses import dataclass
 class ResolvedProgram:
     """The complete pass-2 result handed to the emitter, frozen.
 
-    'module' is the ONE fused ResolvedModule: its sealed scope_tree carries the
-    ground symbols, its cascade_part carries the folded whole-program cascade
-    (edges + queried), its local_resolutions / seated_relocations carry the
-    seated references. 'main' is the entry-point Symbol, or None for a library
-    (the sole program/library discriminator). 'source_map' is the diagnostics
-    seed (offset -> line/column at render time).
+    'module' is the ONE fused ResolvedModule: its frozen 'ast' is the parser's
+    tree, its sealed symbol_table carries the ground symbols, its cascade_part
+    carries the folded whole-program cascade (edges + queried), its
+    ast_decoration_db carries the seated references (intra-module and cross-file
+    alike; static, D-31). 'main' is the entry-point Symbol, or None for a library (the sole program/library discriminator).
+    'source_map' is the diagnostics seed (offset -> line/column at render time).
 
-    Frozen so no stage past pass 2 mutates the result; the fused module's
-    resolution sidecars are the dynamic surface (seat/unseat), not this frame.
+    Frozen so no stage past pass 2 mutates the result; resolution is static, so
+    there is no dynamic seat/unseat surface to guard against.
     """
     module:     object
     main:       object           = None

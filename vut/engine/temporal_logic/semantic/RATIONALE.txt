@@ -451,6 +451,156 @@ GRAVEYARD
     'file' terms to 'module': rejected per (b) -- it would push the AST-layer word
     across the seam into the substrate layer.
 
+-------------------------------------------------------------------------------
+D-31  RESOLUTION IS STATIC AND TOTAL; the ONLY runtime change is stop-the-world
+      replacement  (supersedes disc-4 SETTLED 3 and the dynamic half of SETTLED 6)
+-------------------------------------------------------------------------------
+PROBLEM
+    disc-4 SETTLED 3 modelled loadability as TOTALLY DYNAMIC: lazy by design,
+    eager by default, with seat/unseat/reseat over an EVICTABLE resolution sidecar
+    and a ModuleProxy ABSENT/PRESENT state machine. That apparatus only earns its
+    keep if a module can be UNLOADED at run time while live references still point
+    into it -- and unload was never actually needed. It also could not be followed:
+    'unloading a module' reads as total chaos, because the hard part is not the
+    symbol table (a cross-file reference is just dangling until link) but the
+    LIVE RUNTIME OBJECTS (a spawned state machine, an in-flight event) that
+    outlive the module -- a lifetime problem no resolution sidecar addresses.
+DECISION
+    Resolution is STATIC and TOTAL. A reference resolves against its enclosing
+    scope via a precomputed node->scope map (built once at scope-build time); it
+    is seated at analysis time, or it is an error at analysis time. There are no
+    misses to fill in later.
+        static + total  => nothing to defer        => no lazy load
+                        => nothing to revert to     => no unload, no seat/unseat,
+                                                       no evictable split
+    The ONLY runtime change is REPLACEMENT, and it is STOP-THE-WORLD: replacing a
+    module at run time HALTS all execution, completes the swap, then resumes.
+    Running XOR replacing -- a reference never lacks its counterpart while it
+    could be followed. Replacement RE-LINKS EVERYTHING, not incrementally: a
+    replaced module may export different names/kinds/cascade edges, so the
+    affected set is in general everything; the stop-the-world pause pays for one
+    full re-link. No incremental machinery.
+    PLUG-INS: not designed against. A plug-in LOAD is reachable from the same
+    replacement op (halt -> link the new module -> resume). Only plug-in UNLOAD
+    is deferred -- and its cost is runtime-object lifetime, not resolution.
+    WHAT SURVIVES, reshaped: one module -> one symbol table; import = a mounted
+    VIEW addressed under a prefix, not a copy (SETTLED 2 / the KEPT half of
+    SETTLED 6); the node->scope map (also what disc-5 F2 needs); link = mount +
+    resolve + check + fold cascade, statically. ModuleProxy survives as a THIN
+    addressing view -- (mount, table) with covers()/lookup() -- with no presence,
+    no manifest/unmanifest, no loader: at link the imported table is always
+    present, so lookup never loads. It is the one place SETTLED 2's 'viewed, not
+    absorbed' is named.
+COST
+    module_proxy.py / resolved_module.py shed the dynamic apparatus (E_Presence,
+    manifest/unmanifest, seated_relocations, seat/unseat). The proxy/relocation
+    GOOD that legitimately change are regenerated. relocation.py / UnitHeader are
+    KEPT pending one open question (can a pre-analysed library table arrive WITHOUT
+    source? if not, they go too); a static link-time hash check is their only
+    surviving role.
+GRAVEYARD
+    Totally-dynamic loadability (SETTLED 3): the unload it justified was never
+    needed; its real cost (live-object lifetime) is not a resolution problem.
+    Lazy load / load-on-miss: nothing to defer under total resolution. Permanent-
+    vs-evictable resolution split, ModuleProxy presence state machine, unseat/
+    reseat: all dead once unload is gone. Incremental re-link on replacement:
+    unsafe (a replaced module's export surface can shift arbitrarily); a full
+    re-link under the stop-the-world pause is both correct and cheap enough.
+
+-------------------------------------------------------------------------------
+D-32  RESOLUTION IS A JOIN OVER THREE TABLES PRODUCED BY ONE DESCENT; the join
+      is GENERAL (core), the tables are FILLED by the application  (drains disc-5)
+-------------------------------------------------------------------------------
+PROBLEM
+    The reference walk was a SECOND descent of the AST: build_scopes descended to
+    produce scopes+symbols, then a separate _references walk descended again to
+    produce references, gated by a _REF_SITES set and starting every reference
+    from the GROUND scope. Two defects followed. (1) References nested in a
+    namespace/aggregate could not seat -- the flat walk did not know each node's
+    ENCLOSING scope (disc-5 FINDING 2). (2) 'walking the tree twice' is a smell:
+    the second walk re-derived structure the first already had in hand.
+DECISION
+    Model resolution RELATIONALLY as three tables, all produced by the SINGLE
+    descent the application already makes:
+        SCOPE     (scope_id, kind, parent)        the lexical containers
+        SYMBOL    (name, kind, scope_id)          declarations
+        REFERENCE (node_id, segments, offset, enclosing_scope, is_pseudo)
+    The descent that opens/seals scopes and records declarations ALSO emits a
+    REFERENCE row at each use-site -- and it is STANDING IN that use-site's scope,
+    so enclosing_scope is filled for free. disc-5 FINDING 2 becomes a COLUMN, not
+    a lookup; FINDING 1 (definition vs reference) becomes WHICH rows a node emits
+    (a declaration -> a SYMBOL row; a use-site -> a REFERENCE row), not a gate on
+    a separate walk. The _references walk and disc-5's (1)/(2)/(3) fork are
+    DELETED. Resolution proper = resolve_with_chain per REFERENCE row against its
+    enclosing_scope (+ proxies); under D-31 every row resolves or is an error.
+    THE SEAM (general vs application). The TABLE TYPES and the JOIN are GENERAL
+    and live in semantic/core/; the application FILLS the tables. core/ never
+    names a rule kind: the two rule-flavoured facts the scope->type descent needs
+    -- which kinds open a scope, which heads are pseudo-symbols -- arrive as an
+    injected ResolutionPolicy (a frozen record of kind-sets). The application
+    (semantic/) walks its OWN AST to emit rows (the filler), owns the (A)/(B)
+    regime decision (resolve_reference), and builds the ResolutionPolicy from its
+    kind-strings. core is the schema + query engine; the VUT layer is the ETL.
+COST
+    resolution mechanism moves semantic/resolver.py -> semantic/core/resolution.py
+    (Reference, Obligation, ResolutionState, the head/descend join, the proxy
+    hop), parameterised by ResolutionPolicy. semantic/resolver.py keeps only the
+    application policy (PSEUDO_SYMBOLS, the _REGIME/_SCOPE_HEAD kind-sets,
+    resolve_reference, drain). The single-descent emit folds the former
+    _references logic into the scope build. test-module-proxy becomes core-pure
+    and moves to core/TEST.
+GRAVEYARD
+    The reference WALK as a separate descent: re-derived structure the build
+    already had, and started every reference from ground (could not seat nested
+    references). disc-5 forks (1) lockstep / (2) node->scope map / (3) two-level
+    walk: all three decorated the second walk; deleting the second walk dissolves
+    them. _SCOPE_HEAD_KINDS / pseudo-set hardcoded in the join: would put rule
+    vocabulary in core; injected as ResolutionPolicy instead.
+
+-------------------------------------------------------------------------------
+D-33  A MODULE IS ast + symbol_table + ast_decoration_db; the AST is NEVER
+      decorated -- resolution is a SEPARATE identity-keyed unit
+-------------------------------------------------------------------------------
+PROBLEM
+    'What is a module, structurally?' had drifted: ResolvedModule carried a
+    scope_tree, a bare local_resolutions dict, a cascade part, a header, a
+    provenance -- a record whose shape did not announce the one clean idea
+    underneath. The idea: everything a module IS reduces to TWO things plus the
+    decoration that joins them.
+DECISION
+    A module is, exactly:
+        ast                 the parser's frozen tree -- a PURE value, untouched
+        symbol_table        declared names + scopes (the former scope_tree)
+        ast_decoration_db   id(node) -> resolved Symbol (the former
+                            local_resolutions) -- the DECORATION
+    The AST is NEVER mutated by resolution. The decoration is a SEPARATE unit
+    that references the AST by node IDENTITY (id(node)); the parser layer knows
+    nothing of it (one-way dependency, semantic -> ast). Every resolution
+    question reduces to these: 'did this reference resolve?' -> query the
+    decoration db at the node; 'what does this module export / contain?' -> the
+    symbol_table; 'can X see Y's name?' -> Y's symbol_table addressed under the
+    mount (ModuleProxy).
+    LIFETIME RULE (load-bearing): the decoration db is keyed by id() and is valid
+    ONLY while the exact AST instance it was built against is alive. It is BOUND
+    to one AST -- never portable to a reparse or a replacement's fresh tree. This
+    matches D-31 (replacement re-links everything against the new tree); the old
+    db is simply discarded, not migrated.
+    NAMING (terminological invariance, tree-wide): scope_tree -> symbol_table;
+    local_resolutions -> ast_decoration_db; the AST becomes a NAMED field of the
+    module record (was held only beside it in ParsedModule). The cascade part /
+    header / provenance remain as secondary products, not part of the core triple.
+COST
+    A mechanical rename sweep (code, params, docstrings, tests, GOOD) plus adding
+    the ast field. No behaviour change -- GOOD is byte-identical, proven under the
+    reference-report net.
+GRAVEYARD
+    Decorating the AST in place (a .resolved field on nodes): impossible without
+    unfreezing the frozen value AST, and the nodes' value-equality would collapse
+    textual twins under any node-keyed map -- id()-keyed side unit avoids both.
+    A name-by-position 'naming function' for anonymous symbol-table entries:
+    considered, PARKED -- it is not needed now, and it must not be allowed to
+    fracture the clean ast + symbol_table structure when revisited.
+
 ===============================================================================
 PART F -- PARSER-HANDOFF OBLIGATIONS  (folded from the former FOR-SEMANTICS spec)
 ===============================================================================

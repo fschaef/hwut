@@ -1,4 +1,0 @@
-before:      ABSENT loads=0
-after load:  PRESENT loads=1 sym=beat
-unmanifest:  ABSENT loads=1
-reload:      PRESENT loads=2

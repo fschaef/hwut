@@ -63,6 +63,11 @@ references point across, nothing merged.)
 
 SETTLED 3 -- PROGRAM vs LIBRARY = PRESENCE OF AN ENTRY POINT  (corrected)
 -------------------------------------------------------------------------
+SUPERSEDED by RATIONALE D-31: the program/library = 'main' discriminator below
+STANDS, but the "loadability is totally dynamic / lazy by design / eager by
+default / seat-unseat-evictable" half is WITHDRAWN. Resolution is static and
+total; the only runtime change is stop-the-world replacement. Read the dynamic
+paragraphs below as history, not as the live model.
 CORRECTION (supersedes the earlier 'open vs closed import set' frame -- that
 frame was wrong). A program AND a library have ALL references resolved: every
 reference is seated either CONCRETELY (a Symbol, now) or BY A RELOCATION (a
@@ -232,6 +237,12 @@ PARKED (recorded elsewhere, not this work)
 SETTLED 6 -- THE CROSS-FILE REFERENCE MODEL  (supersedes the Relocation-per-
               reference shape recorded above as SETTLED 3 / COST)
 ------------------------------------------------------------------------
+PARTIALLY SUPERSEDED by RATIONALE D-31. KEPT: ONE shared mounted-view object per
+import (ModuleProxy), reference-by-lookup, the view-not-copy mounting. WITHDRAWN:
+the proxy's ABSENT/PRESENT state machine, lazy load on first ask, unseat/unload,
+the evictable seated_relocations sidecar. The proxy survives as a THIN addressing
+view (mount, table) with no presence and no loader. Read the load/unload
+paragraphs below as history.
 The cross-file record is reified around the IMPORTED MODULE, not around each
 reference. The seating facts SETTLED 5 left implicit (which name to fetch, which
 node it binds) now have a home, and "load once, many referrers" becomes

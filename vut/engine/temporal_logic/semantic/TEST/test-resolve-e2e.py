@@ -70,8 +70,8 @@ def run_clean():
     for d in rep.errors:
         print("  tag=%s %s @%d" % (d.tag, d.message, d.source_offset))
     if prog:
-        print("root sealed: %s" % prog.module.scope_tree.sealed)
-        print("top symbols: %s" % sorted(prog.module.scope_tree.symbols))
+        print("root sealed: %s" % prog.module.symbol_table.sealed)
+        print("top symbols: %s" % sorted(prog.module.symbol_table.symbols))
         print("queried: %s" % sorted(prog.module.cascade_part.queried))
         print("cascade edges: %s"
               % {k: sorted(v)
