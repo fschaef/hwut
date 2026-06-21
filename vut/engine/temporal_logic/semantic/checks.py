@@ -42,7 +42,7 @@ _SIGNATURE_MANDATORY = {"mode-group", "state-machine", "struct"}
 _SIGNATURE_FORBIDDEN = {"mode", "state", "container", "variable"}
 
 
-def run_checks(rule_file, ground_scope, state, reporter):
+def run_checks(module, ground_scope, state, reporter):
     """RETURN: None. Runs every DECIDED consistency check over one module's AST
               and resolved scope tree, accumulating diagnostics in 'reporter'.
 
@@ -51,7 +51,7 @@ def run_checks(rule_file, ground_scope, state, reporter):
     accumulate-and-continue; none stops the others. The open-table checks
     (calls, sweeps) run as no-ops until their tables are supplied.
     """
-    for item in _walk_items(rule_file.items):
+    for item in _walk_items(module.items):
         check_kind_vs_shape(item, reporter)
         check_is_base_category(item, ground_scope, reporter)
 

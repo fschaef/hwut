@@ -147,13 +147,13 @@ def _make_choice(profile_name):
 
         parser = EngineParser(None, None, DiagnosticReporter(), g,
                               lexer=ListLexer(tokens, luau_texts))
-        rule_file = finalize_file(parser.parse())
+        module = finalize_file(parser.parse())
 
         print("=== monkey: %s ===" % profile_name)
         print("tokens parsed:      %d" % (len(tokens) - 1))
-        ok = bool(rule_file.items) and not parser.reporter.errors
+        ok = bool(module.items) and not parser.reporter.errors
         print("top-level items:    %d (%s)"
-              % (len(rule_file.items), "ok" if ok else "DIAGNOSTICS"))
+              % (len(module.items), "ok" if ok else "DIAGNOSTICS"))
         if parser.reporter.errors:
             print("UNEXPECTED DIAGNOSTICS:")
             for d in parser.reporter.errors:
@@ -163,7 +163,7 @@ def _make_choice(profile_name):
             print("diagnostics:        none")
 
         print()
-        _print_census(_ast_census(rule_file.items))
+        _print_census(_ast_census(module.items))
     return run
 
 
@@ -227,13 +227,13 @@ def run_sprites():
     _sprites_source); only the census here is a GOOD.
     """
     rep = DiagnosticReporter()
-    rule_file = parse(_sprites_source(), FakeLuauOracle(), rep)
+    module = parse(_sprites_source(), FakeLuauOracle(), rep)
 
-    census = _ast_census(rule_file.items)
+    census = _ast_census(module.items)
 
     print("=== monkey: sprites (massive example -- AST census) ===")
-    status = "ok" if (rule_file.items and not rep.errors) else "DIAGNOSTICS"
-    print("top-level items: %d (%s)" % (len(rule_file.items), status))
+    status = "ok" if (module.items and not rep.errors) else "DIAGNOSTICS"
+    print("top-level items: %d (%s)" % (len(module.items), status))
     print("total AST nodes: %d" % sum(census.values()))
     if rep.errors:
         for d in rep.errors:

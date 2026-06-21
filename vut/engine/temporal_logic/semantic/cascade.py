@@ -51,8 +51,8 @@ class Cascade:
         self.offset_of.setdefault((src, dst), offset)
 
 
-def build_cascade(rule_file, reporter) -> Cascade:
-    """RETURN: Cascade, the event-kind graph of 'rule_file' (edges + queried).
+def build_cascade(module, reporter) -> Cascade:
+    """RETURN: Cascade, the event-kind graph of 'module' (edges + queried).
 
     Walks every Causality (including those nested in reactors and namespaces),
     reads the trigger kind and each EventSpec emission, and records an edge per
@@ -63,7 +63,7 @@ def build_cascade(rule_file, reporter) -> Cascade:
     """
     cascade = Cascade()
 
-    for rule in _all_causalities(rule_file.items):
+    for rule in _all_causalities(module.items):
         trigger = rule.cause.trigger
         src     = ".".join(trigger.name)
         cascade.queried.add(src)

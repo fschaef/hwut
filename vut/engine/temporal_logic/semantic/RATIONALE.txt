@@ -362,6 +362,95 @@ DECISION
         name-dotted, ...), one scheme across the dict, the prose, and the AST-map
         keys.
 
+-------------------------------------------------------------------------------
+D-28  AST ROOT NODE IS 'Module', NOT 'RuleFile'
+-------------------------------------------------------------------------------
+PROBLEM
+    The AST root produced by the parser was named RuleFile. 'file' is a storage/
+    IO concept, not a grammatical one: the grammar's start production is named
+    'top-level', and every other AST node is named for a grammatical construct.
+    RuleFile conflated two layers (the grammatical node vs the substrate it was
+    read from) -- a category error, not a style preference.
+DECISION
+    The AST root node is _ast.Module. The grammar start symbol stays 'top-level'
+    (an internal grammar label, untouched); only the AST node the outer layer
+    builds is renamed. This does NOT fight SYNTAX_DOC, because SYNTAX_DOC's start
+    production was never 'rule_file' -- the file-ness was an AST-layer invention,
+    fixed at the AST layer. 'module' is the right word: a module is the unit of
+    import, a program-structure (grammatical) notion, not an IO one.
+COST
+    The manager-side wrapper cluster (Module / E_ModuleState / ModuleSet) had to
+    vacate the name 'Module' first; it was dissolved entirely by D-29.
+GRAVEYARD
+    'Root': positional, not categorical -- under mounts a root becomes a grafted
+    subtree and the name lies. 'CompilationUnit'/'Unit': accurate but the project
+    already says 'unit' for the mount-graft granularity; 'module' is closer to the
+    import vocabulary. 'RuleSet': the file holds more than rules (imports, structs,
+    variables), so it undersells.
+
+-------------------------------------------------------------------------------
+D-29  THE LOAD STAGE IS A METAMORPHOSIS OF TYPES, NOT A PHASE FLAG
+-------------------------------------------------------------------------------
+PROBLEM
+    A file's progress was modelled as one mutable record (a LoadEntry carrying a
+    phase: SOURCE/PARSED/RESOLVED). A phase FIELD asserts 'same object, different
+    flag' across boundaries that are actually discontinuities: source is bytes,
+    AST is structure, resolved is meaning, and nothing of one survives into the
+    next. RESOLVED was moreover DEAD -- never assigned, because resolution is a
+    whole-program fold, not a per-file step.
+DECISION
+    Each per-file world is its OWN frozen type; a transition is a materialising
+    function that consumes one and produces the next (typestate):
+        SourceFile(key, text, provenance)
+              | parse_source                     (one-to-one, per file)
+              v
+        ParsedModule(key, ast, provenance)
+              | resolve                           (many-to-one, whole program)
+              v
+        ResolvedProgram                           (already its own frozen type)
+    A SourceFile has text and no AST; a ParsedModule has an AST and no text. The
+    two failure worlds become structurally distinct: a fetch failure means no
+    SourceFile is born; a parse failure means a SourceFile existed but yielded no
+    ParsedModule. RESOLVED leaves this layer entirely -- it is the program-level
+    fold (program.py), at a DIFFERENT GRANULARITY (many ParsedModules -> one
+    ResolvedProgram), which is exactly why no per-file record could ever carry it.
+    PROVENANCE (importer_key, import_offset) rides through both types unchanged;
+    an error at any stage reconstructs the import chain by walking importer links
+    to the root (whose provenance has no importer). Import-edge extraction is a
+    derived property on ParsedModule, not a stored cache: the AST is the single
+    source of truth.
+COST
+    Two per-file types instead of one record; the SourceFile world is short-lived
+    (fetched, then immediately parsed).
+GRAVEYARD
+    One mutable record + phase field: re-introduces the very layer-conflation
+    D-28 removed, and forces the 'ast is None until PARSED' hole to live in
+    discipline rather than types. 'ModuleFinalized' for the wrapper: names a
+    terminal STATE for a thing whose defining feature is a multi-valued progress,
+    and re-introduces 'module' on the wrapper. Builder pattern: models 'assemble
+    optional parts in arbitrary order', which this fixed linear pipeline is not.
+    Storing the imports list eagerly on every file: taxes every load with a walk
+    most files never need re-read; derived-on-demand is one source of truth.
+
+-------------------------------------------------------------------------------
+D-30  NAMES KEPT (recorded so they are not re-litigated)
+-------------------------------------------------------------------------------
+DECISION
+    (a) The load-stage result type stays LoadTable. It names the ROLE (the table
+        the load walk produces), which is stable, rather than the contents. A
+        contents-name (ModuleClosure / ParsedClosure) would couple the type name
+        to its element type and drift again if a later stage annotated entries.
+    (b) The neutral parser-generator keeps 'file' vocabulary: finalize_file,
+        file_node, the STAR_Node named "<file>". On the neutral side 'file' means
+        the raw input-as-text unit BEFORE AST stamping -- substrate, which is
+        exactly what that layer handles. Only the outer layer speaks 'Module'
+        (D-28). Renaming would blur the seam (core/parser_generator/DISCUSSIONS/
+        seam-1); the seam is kept loud, so the vocabulary split is deliberate.
+GRAVEYARD
+    Renaming LoadTable to a contents-name: rejected per (a). Renaming the neutral
+    'file' terms to 'module': rejected per (b) -- it would push the AST-layer word
+    across the seam into the substrate layer.
+
 ===============================================================================
 PART F -- PARSER-HANDOFF OBLIGATIONS  (folded from the former FOR-SEMANTICS spec)
 ===============================================================================

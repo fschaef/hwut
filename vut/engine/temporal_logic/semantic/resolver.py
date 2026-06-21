@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 
 from vut.engine.temporal_logic.semantic.diagnostics import (
     SemanticClass, semantic_error)
-from vut.engine.temporal_logic.semantic.scope_tree  import Scope, Symbol
+from vut.engine.temporal_logic.semantic.core.scope_types import Scope, Symbol
 
 
 PSEUDO_SYMBOLS = ("e", "sm", "mg", "m", "cw")
@@ -250,6 +250,62 @@ def _head_is_B(ref: Reference, scope: Scope) -> bool:
     hard miss now. (Refined when checks.py supplies the use-site regime.)
     """
     return len(ref.segments) == 1
+
+
+def resolve_with_chain(ref: Reference, scope: Scope, proxies, state: ResolutionState,
+                       loader=None, reporter=None) -> bool:
+    """RETURN: True,  if 'ref' seats -- locally, or through a mounted proxy when
+                     its head lies under an import's mount prefix (the seating is
+                     recorded in state.resolutions for either origin).
+              False, if the head is neither local nor a declared name of the
+                     proxy whose mount covers it (the caller reports the link
+                     error), OR was queued as a (B) obligation.
+
+    The L-design cross-file lookup (disc-4 SETTLED 2 / SETTLED 6): ONE lookup
+    mechanism, two hops, NO walk into the imported module. The head is tried
+    against the local scope chain first. On a local miss, 'proxies' is scanned
+    for one whose mount prefix COVERS the reference's segments; that proxy
+    answers from the imported module's real table (loading it first if ABSENT) by
+    stripping the mount prefix. A proxy hit seats the leaf for 'ref'; a covered
+    head the proxy does not declare is a hard miss the caller turns into a
+    missing-export link error. With no covering proxy the behaviour is exactly
+    the local resolve_reference.
+    """
+    head = ref.segments[0]
+
+    symbol, owner = _resolve_head(head, scope)
+    if symbol is not None:
+        return _descend(symbol, owner, ref.segments[1:], ref, state, reporter)
+
+    proxy = _covering_proxy(ref.segments, proxies)
+    if proxy is not None:
+        donor = proxy.lookup(ref.segments, loader, reporter)
+        if donor is not None:
+            state.resolutions[id(ref.node)] = donor
+            return True
+        return False                       # absent name / absent file (caller reports)
+
+    return resolve_reference(ref, scope, state, reporter)
+
+
+def _covering_proxy(segments, proxies):
+    """RETURN: the ModuleProxy whose mount prefix covers 'segments', or None.
+
+    The routing step: a reference resolves through a proxy only when its leading
+    segments match that proxy's mount path. An empty-mount proxy (current-scope
+    import) covers any head and is tried last so a prefixed mount wins. 'proxies'
+    is an iterable of ModuleProxy; the first non-empty mount that covers wins.
+    """
+    if not proxies:
+        return None
+    fallback = None
+    for proxy in proxies:
+        if not proxy.mount:
+            fallback = proxy
+            continue
+        if proxy.covers(segments):
+            return proxy
+    return fallback
 
 
 def drain_scope(scope: Scope, state: ResolutionState, reporter):

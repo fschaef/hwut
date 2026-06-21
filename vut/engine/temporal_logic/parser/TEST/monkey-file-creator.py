@@ -371,13 +371,13 @@ def _create_profile(g, name, profile, debug):
 
     parser = EngineParser(None, None, DiagnosticReporter(), g,
                           lexer=_ListLexer(tokens, luau_texts))
-    rule_file = parser.parse()
+    module = parser.parse()
 
     node_types = set()
-    _collect_node_types(rule_file.items, node_types)
+    _collect_node_types(module.items, node_types)
     print("=== created: %s ===" % name)
     print("tokens:             %d" % (len(tokens) - 1))
-    print("top-level items:    %d" % len(rule_file.items))
+    print("top-level items:    %d" % len(module.items))
     print("rules visited:      %d / %d" % (len(walker.visited), len(g.rules)))
     print("node types built:   %d / %d" % (len(node_types), len(_all_node_types())))
     if parser.reporter.errors:
@@ -389,7 +389,7 @@ def _create_profile(g, name, profile, debug):
         source = _render_source(tokens, luau_texts)
         rep2   = DiagnosticReporter()
         rule_file2 = parse(source, FakeLuauOracle(), rep2)
-        same = (_strip_begin(_fmt(rule_file.items))
+        same = (_strip_begin(_fmt(module.items))
                 == _strip_begin(_fmt(rule_file2.items)))
         print("[debug] real-lexer reparse: %s, %d diagnostic(s)"
               % ("AST matches" if same else "AST DIFFERS", len(rep2.errors)))
