@@ -153,40 +153,8 @@
    "*"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
-  ],
-  [
-   "captured:+",
-   "+"
-  ],
-  [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
-   "captured:/",
-   "/"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:shr:",
-   "shr:"
-  ],
-  [
-   "captured:false",
-   "false"
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "framing:span-open",
-   "{"
+   "regex:\\d+\\.\\d+",
+   "1.0"
   ],
   [
    "captured:-",
@@ -201,78 +169,126 @@
    "/"
   ],
   [
-   "captured:true",
-   "true"
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:shr:",
+   "shr:"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:+",
+   "+"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "regex:\\d+",
+   "1"
   ],
   [
    "captured:and",
    "and"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "captured:true",
+   "true"
   ],
   [
    "captured:/",
    "/"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "captured:false",
+   "false"
   ],
   [
    "captured:-",
    "-"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "captured:false",
+   "false"
   ],
   [
    "captured:*",
    "*"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "captured:true",
+   "true"
   ],
   [
    "captured:shl:",
    "shl:"
   ],
   [
-   "captured:false",
-   "false"
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
    "captured:/",
    "/"
   ],
   [
-   "captured:true",
-   "true"
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:+",
    "+"
   ],
   [
-   "framing:span-open",
-   "{"
+   "regex:\\d+\\.\\d+",
+   "1.0"
   ],
   [
    "captured:*",
    "*"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "regex:\\d+",
+   "1"
   ],
   [
    "captured:nand",
    "nand"
   ],
   [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
    "captured:true",
    "true"
   ],
@@ -281,12 +297,44 @@
    "*"
   ],
   [
-   "framing:span-open",
-   "{"
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:shr:",
+   "shr:"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "captured:true",
+   "true"
   ],
   [
    "captured:+",
    "+"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:nxor",
+   "nxor"
   ],
   [
    "captured:false",
@@ -297,28 +345,108 @@
    "/"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
+   "regex:\\d+",
    "1"
   ],
   [
-   "captured:shr:",
-   "shr:"
+   "captured:+",
+   "+"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:*",
+   "*"
   ],
   [
    "captured:true",
    "true"
   ],
   [
+   "captured:shl:",
+   "shl:"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
    "captured:/",
    "/"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
    "captured:-",
    "-"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:and",
+   "and"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:shr:",
+   "shr:"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "regex:\\d+",
+   "1"
+  ],
+  [
+   "captured:+",
+   "+"
   ],
   [
    "regex:\"[^\"]*\"",
@@ -337,6 +465,38 @@
    "xor"
   ],
   [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:shl:",
+   "shl:"
+  ],
+  [
    "captured:false",
    "false"
   ],
@@ -349,60 +509,156 @@
    "true"
   ],
   [
-   "captured:-",
-   "-"
-  ],
-  [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
-   "captured:/",
-   "/"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
-  ],
-  [
-   "captured:shl:",
-   "shl:"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "captured:false",
-   "false"
-  ],
-  [
    "captured:+",
    "+"
   ],
   [
-   "captured:false",
-   "false"
+   "regex:\\d+",
+   "1"
   ],
   [
    "captured:/",
    "/"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "captured:false",
+   "false"
   ],
   [
    "captured:nand",
    "nand"
   ],
   [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:+",
+   "+"
+  ],
+  [
    "captured:true",
    "true"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:shl:",
+   "shl:"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "regex:\\d+",
+   "1"
+  ],
+  [
+   "captured:nand",
+   "nand"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:shr:",
+   "shr:"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:+",
+   "+"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:nor",
+   "nor"
+  ],
+  [
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:/",
@@ -417,7 +673,7 @@
    "+"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
+   "regex:\\d+",
    "1"
   ],
   [
@@ -449,16 +705,16 @@
    "-"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:*",
    "*"
   ],
   [
-   "framing:span-open",
-   "{"
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
    "captured:and",
@@ -469,24 +725,24 @@
    "false"
   ],
   [
-   "captured:/",
-   "/"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
-  ],
-  [
-   "captured:-",
-   "-"
-  ],
-  [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
    "captured:*",
    "*"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:+",
+   "+"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
   ],
   [
    "captured:true",
@@ -497,40 +753,88 @@
    "shr:"
   ],
   [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:+",
-   "+"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "captured:false",
+   "false"
   ],
   [
    "captured:/",
    "/"
   ],
   [
-   "captured:false",
-   "false"
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "regex:\\d+",
+   "1"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
    "captured:nxor",
    "nxor"
   ],
   [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:+",
+   "+"
+  ],
+  [
    "regex:\"[^\"]*\"",
    "\"s\""
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:shl:",
+   "shl:"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:*",
@@ -541,20 +845,36 @@
    "true"
   ],
   [
+   "captured:nand",
+   "nand"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "regex:\\d+",
+   "1"
+  ],
+  [
    "captured:+",
    "+"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "captured:false",
+   "false"
   ],
   [
    "captured:/",
    "/"
   ],
   [
-   "captured:false",
-   "false"
+   "captured:true",
+   "true"
   ],
   [
    "captured:shr:",
@@ -565,24 +885,24 @@
    "{"
   ],
   [
-   "captured:*",
-   "*"
+   "captured:/",
+   "/"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "regex:\\d+",
+   "1"
   ],
   [
    "captured:-",
    "-"
   ],
   [
-   "captured:true",
-   "true"
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
-   "captured:/",
-   "/"
+   "captured:*",
+   "*"
   ],
   [
    "captured:true",
@@ -593,8 +913,8 @@
    "and"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "regex:\\d+\\.\\d+",
+   "1.0"
   ],
   [
    "captured:/",
@@ -609,32 +929,32 @@
    "-"
   ],
   [
-   "framing:span-open",
-   "{"
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
    "captured:*",
    "*"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
-   "captured:shl:",
-   "shl:"
-  ],
-  [
    "framing:span-open",
    "{"
   ],
   [
-   "captured:/",
-   "/"
+   "captured:shr:",
+   "shr:"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "captured:true",
+   "true"
   ],
   [
    "captured:+",
@@ -645,28 +965,60 @@
    "false"
   ],
   [
-   "captured:*",
-   "*"
+   "captured:/",
+   "/"
   ],
   [
-   "captured:true",
-   "true"
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:or",
    "or"
   ],
   [
+   "regex:\\d+",
+   "1"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
    "regex:\"[^\"]*\"",
    "\"s\""
+  ],
+  [
+   "captured:+",
+   "+"
+  ],
+  [
+   "captured:false",
+   "false"
   ],
   [
    "captured:*",
    "*"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:shl:",
+   "shl:"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
   ],
   [
    "captured:-",
@@ -677,8 +1029,104 @@
    "false"
   ],
   [
+   "captured:*",
+   "*"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:and",
+   "and"
+  ],
+  [
+   "regex:\\d+",
+   "1"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:+",
+   "+"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
    "captured:/",
    "/"
+  ],
+  [
+   "captured:true",
+   "true"
+  ],
+  [
+   "captured:shr:",
+   "shr:"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:*",
+   "*"
+  ],
+  [
+   "regex:\"[^\"]*\"",
+   "\"s\""
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:xor",
+   "xor"
+  ],
+  [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:false",
+   "false"
+  ],
+  [
+   "captured:-",
+   "-"
+  ],
+  [
+   "framing:span-open",
+   "{"
+  ],
+  [
+   "captured:*",
+   "*"
   ],
   [
    "regex:\"[^\"]*\"",
@@ -693,36 +1141,36 @@
    "true"
   ],
   [
-   "captured:/",
-   "/"
+   "captured:*",
+   "*"
   ],
   [
-   "framing:span-open",
-   "{"
+   "captured:true",
+   "true"
   ],
   [
    "captured:+",
    "+"
   ],
   [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
+   "regex:\\d+",
    "1"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
+   "captured:false",
+   "false"
   ],
   [
    "captured:nand",
    "nand"
   ],
   [
-   "captured:false",
-   "false"
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:*",
@@ -745,12 +1193,12 @@
    "/"
   ],
   [
-   "framing:span-open",
-   "{"
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
-   "captured:shr:",
-   "shr:"
+   "captured:shl:",
+   "shl:"
   ],
   [
    "captured:false",
@@ -761,7 +1209,7 @@
    "/"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
+   "regex:\\d+",
    "1"
   ],
   [
@@ -769,16 +1217,16 @@
    "-"
   ],
   [
-   "captured:true",
-   "true"
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:*",
    "*"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "captured:true",
+   "true"
   ],
   [
    "captured:xor",
@@ -789,36 +1237,36 @@
    "{"
   ],
   [
-   "captured:*",
-   "*"
+   "captured:/",
+   "/"
   ],
   [
-   "captured:false",
-   "false"
+   "regex:\"[^\"]*\"",
+   "\"s\""
   ],
   [
    "captured:+",
    "+"
   ],
   [
-   "captured:true",
-   "true"
+   "captured:false",
+   "false"
   ],
   [
-   "captured:/",
-   "/"
+   "captured:*",
+   "*"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
+   "regex:\\d+\\.\\d+",
+   "1.0"
   ],
   [
-   "captured:shl:",
-   "shl:"
+   "captured:shr:",
+   "shr:"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
+   "framing:span-open",
+   "{"
   ],
   [
    "captured:/",
@@ -833,7 +1281,7 @@
    "-"
   ],
   [
-   "regex:\\d+(?:\\.\\d+)?",
+   "regex:\\d+",
    "1"
   ],
   [
@@ -841,8 +1289,8 @@
    "*"
   ],
   [
-   "framing:span-open",
-   "{"
+   "captured:true",
+   "true"
   ],
   [
    "captured:and",
@@ -857,102 +1305,6 @@
    "*"
   ],
   [
-   "captured:true",
-   "true"
-  ],
-  [
-   "captured:-",
-   "-"
-  ],
-  [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
-   "captured:/",
-   "/"
-  ],
-  [
-   "captured:false",
-   "false"
-  ],
-  [
-   "captured:shr:",
-   "shr:"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:/",
-   "/"
-  ],
-  [
-   "captured:true",
-   "true"
-  ],
-  [
-   "captured:+",
-   "+"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
-  ],
-  [
-   "captured:nxor",
-   "nxor"
-  ],
-  [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
-   "captured:/",
-   "/"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:-",
-   "-"
-  ],
-  [
-   "captured:true",
-   "true"
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "captured:false",
-   "false"
-  ],
-  [
-   "captured:shr:",
-   "shr:"
-  ],
-  [
-   "captured:true",
-   "true"
-  ],
-  [
-   "captured:/",
-   "/"
-  ],
-  [
    "captured:false",
    "false"
   ],
@@ -961,44 +1313,12 @@
    "+"
   ],
   [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
-  ],
-  [
-   "captured:nand",
-   "nand"
-  ],
-  [
    "framing:span-open",
    "{"
   ],
   [
    "captured:/",
    "/"
-  ],
-  [
-   "framing:span-open",
-   "{"
-  ],
-  [
-   "captured:+",
-   "+"
-  ],
-  [
-   "captured:false",
-   "false"
-  ],
-  [
-   "captured:*",
-   "*"
   ],
   [
    "regex:\"[^\"]*\"",
@@ -1009,28 +1329,28 @@
    "shl:"
   ],
   [
+   "regex:\\d+\\.\\d+",
+   "1.0"
+  ],
+  [
+   "captured:/",
+   "/"
+  ],
+  [
    "captured:true",
    "true"
-  ],
-  [
-   "captured:*",
-   "*"
-  ],
-  [
-   "regex:\\d+(?:\\.\\d+)?",
-   "1"
   ],
   [
    "captured:-",
    "-"
   ],
   [
-   "framing:span-open",
-   "{"
+   "captured:false",
+   "false"
   ],
   [
-   "captured:/",
-   "/"
+   "captured:*",
+   "*"
   ],
   [
    "captured:true",
@@ -1041,32 +1361,48 @@
    "]"
   ],
   [
+   "string:event:",
+   "event:"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X312"
+  ],
+  [
+   "string:(",
+   "("
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*:",
+   "n314:"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X315"
+  ],
+  [
+   "string:;",
+   ";"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*:",
+   "n317:"
+  ],
+  [
+   "captured:string",
+   "string"
+  ],
+  [
+   "string:)",
+   ")"
+  ],
+  [
    "string:on:",
    "on:"
   ],
   [
-   "captured:CHANGE",
-   "CHANGE"
-  ],
-  [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "regex:\"[^\"]*\"",
-   "\"s\""
-  ],
-  [
-   "string:=>",
-   "=>"
-  ],
-  [
-   "string:unspawn:",
-   "unspawn:"
-  ],
-  [
    "regex:[a-zA-Z_]\\w*",
-   "X244"
+   "X321"
   ],
   [
    "string:.",
@@ -1074,15 +1410,7 @@
   ],
   [
    "regex:[a-zA-Z_]\\w*",
-   "X246"
-  ],
-  [
-   "string:event:",
-   "event:"
-  ],
-  [
-   "regex:[a-zA-Z_]\\w*",
-   "X248"
+   "X323"
   ],
   [
    "string:(",
@@ -1093,33 +1421,56 @@
    ")"
   ],
   [
+   "string:=>",
+   "=>"
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X327"
+  ],
+  [
+   "string:.",
+   "."
+  ],
+  [
+   "regex:[a-zA-Z_]\\w*",
+   "X329"
+  ],
+  [
    "framing:end-of-file",
    ""
   ]
  ],
  "luau": [
-  "{ x{ y } }",
-  "{ x{ y }{ y } }",
-  "{ x{ y } }",
-  "{ x{ y }{ y } }",
-  "{ x }",
   "{ x }",
   "{ x{ y }{ y } }",
+  "{ x{ y } }",
   "{ x }",
   "{ x }",
   "{ x }",
   "{ x{ y }{ y } }",
+  "{ x{ y }{ y } }",
+  "{ x }",
+  "{ x{ y }{ y } }",
+  "{ x{ y }{ y } }",
+  "{ x{ y } }",
+  "{ x }",
+  "{ x{ y }{ y } }",
+  "{ x{ y } }",
   "{ x }",
   "{ x{ y } }",
-  "{ x{ y } }",
-  "{ x{ y }{ y } }",
-  "{ x{ y }{ y } }",
-  "{ x{ y } }",
-  "{ x{ y }{ y } }",
+  "{ x }",
+  "{ x }",
   "{ x{ y } }",
   "{ x{ y }{ y } }",
   "{ x{ y } }",
+  "{ x }",
+  "{ x }",
+  "{ x }",
+  "{ x }",
+  "{ x }",
   "{ x{ y } }",
+  "{ x{ y }{ y } }",
   "{ x{ y }{ y } }"
  ]
 }

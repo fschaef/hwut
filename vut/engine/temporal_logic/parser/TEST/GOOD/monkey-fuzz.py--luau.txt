@@ -1,27 +1,34 @@
 === monkey: luau ===
-tokens parsed:      445
+tokens parsed:      525
 top-level items:    6 (ok)
 diagnostics:        none
 
-total AST nodes: 342
+total AST nodes: 87
 
-  ArgDecl                    7
-  BinOp                    158
-  Cause                      1
-  CauseDef                   1
+  ArgDecl                    6
+  Cause                      2
+  CauseRef                   1
   ClockDef                   1
   Clockwork                  1
-  Condition                  2
+  Condition                  3
+  ConstantLeaf               1
+  DeclarationLeaf            6
+  Decr                       1
   DefaultRef                 1
-  DoSweep                    1
+  DictDecl                   1
+  DictType                   1
+  DoSweep                    3
   EffectDef                  1
-  HasRef                     1
-  Literal                  128
+  EffectRef                  1
+  Incr                       1
+  Instant                    1
+  LeftFolding               18
+  Mode                       1
   ModeGroup                  1
+  Mutation                   1
   Namespace                  1
-  OpaqueCode                32
-  ReportString               1
-  Spawn                      1
+  OpaqueLeaf                 4
+  ReferenceLeaf              8
+  STAR_Node                 18
   StateMachine               1
-  Trigger                    1
-  Unspawn                    1
+  Trigger                    2

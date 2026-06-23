@@ -37,7 +37,7 @@ from enum         import Enum
 from dataclasses  import dataclass
 
 from vut.engine.temporal_logic.world.span_oracle import (
-        SpanOracle, SpanMode, SpanSyntaxError, SpanOracleError, Reference)
+        SpanOracle, SpanMode, SpanSyntaxError, SpanOracleError, SpanReference)
 
 
 class Role(SpanMode, Enum):
@@ -211,7 +211,7 @@ class LuauOracle(SpanOracle):
             raise OracleError("luau-ast stdout is not JSON: %s" % exc)
 
     def collect_references(self, source, open_offset, close_offset, mode):
-        """RETURN: tuple[Reference], names referenced inside one measured span,
+        """RETURN: tuple[SpanReference], names referenced inside one measured span,
         in source order; begins are offsets into 'source'.
 
         Raises FragmentSyntaxError on malformed span content, OracleError on
@@ -224,12 +224,12 @@ class LuauOracle(SpanOracle):
         are exactly the references to the world outside the span. The
         pseudo-symbols 'e'/'sm'/'mg'/'m' surface this way BY DESIGN: the
         wrapper deliberately binds nothing, so 'e.temp' is a global chain the
-        semantic pass receives as Reference(['e','temp']). (The GENERATED
+        semantic pass receives as SpanReference(['e','temp']). (The GENERATED
         guard frame, by contrast, binds them as locals at run time -- one
         spelling, both planes; an emitter obligation, see DISCUSSIONS D-10.)
 
         A chain is the maximal '.'-spine over one global head: 'a.b.c' yields
-        ONE Reference(['a','b','c']) at the head's offset. A computed index
+        ONE SpanReference(['a','b','c']) at the head's offset. A computed index
         breaks the chain ('a[k].b' yields ['a'], plus whatever 'k' references).
         """
         wrapper = _wrapper_for(mode)
@@ -246,7 +246,7 @@ class LuauOracle(SpanOracle):
             w_off = line_starts[line] + col
             if not (lo <= w_off < hi):
                 continue                       # wrapper artifact, not span text
-            out.append(Reference(segments=segments,
+            out.append(SpanReference(segments=segments,
                                  begin=open_offset + 1 + (w_off - lo)))
         out.sort(key=lambda r: (r.begin, r.segments))
         return tuple(out)

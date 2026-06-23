@@ -1,44 +1,51 @@
 === monkey: clockwork ===
-tokens parsed:      7648
+tokens parsed:      5278
 top-level items:    6 (ok)
 diagnostics:        none
 
-total AST nodes: 6048
+total AST nodes: 617
 
-  Arg                       12
-  ArgDecl                   30
-  Assign                     1
-  BinOp                   2921
-  Causality                  2
-  Cause                      9
-  CauseDef                   3
-  CauseRef                   1
-  Clockwork                  2
-  Condition                  8
-  Decr                       1
+  Arg                       17
+  ArgDecl                   29
+  Causality                  4
+  Cause                     19
+  CauseRef                   3
+  ClockDef                   1
+  Condition                 10
+  ConstantLeaf              30
+  DeclarationLeaf           17
+  Decr                       3
+  DefaultRef                 1
   DictDecl                   1
   DictType                   1
-  DoSweep                    7
-  EffectDef                  3
-  EffectRef                  2
+  DoSweep                   10
+  EffectDef                  2
+  EffectRef                  5
+  EventDef                   1
   EventSpec                  4
-  Expr                      11
-  IfFrame                    3
-  Import                     2
+  Expr                       6
+  HasRef                     2
+  IfFrame                    1
   Incr                       1
-  Instant                    2
-  Literal                 2364
-  Mode                       1
+  Instant                    3
+  LeftFolding              147
+  Mode                       3
   ModeGroup                  1
   Mutation                   9
-  Namespace                  7
-  OpaqueCode               598
+  Namespace                  8
+  OpaqueLeaf                17
   ReactorDecl                1
-  ReportString               5
-  SelectFrame                2
-  Spawn                      1
-  Trigger                    9
-  UnOp                      15
-  Unspawn                    2
-  WaitLine                   5
-  WhileFrame                 1
+  Recip                      1
+  ReferenceLeaf             54
+  ReportString               9
+  STAR_Node                147
+  SelectFrame                3
+  Spawn                      2
+  State                      1
+  StateMachine               2
+  StructDecl                 1
+  Trigger                   19
+  UnOp                       1
+  Unspawn                   10
+  VariableDef                1
+  WaitLine                   9

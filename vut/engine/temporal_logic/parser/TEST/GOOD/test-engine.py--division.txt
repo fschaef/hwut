@@ -17,4 +17,4 @@
   fallback: 0
 
 --- a fallback-free expression stays bare (no Expr wrapper) ---
-  rhs node: BinOp
+  rhs node: LeftFolding

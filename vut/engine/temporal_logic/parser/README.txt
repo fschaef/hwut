@@ -94,7 +94,7 @@ FILES
                               signal an AST node class derives from.
         diagnostic.py         Phase-tagged Diagnostic + DiagnosticReporter.
 
-    The opaque-span boundary (SpanOracle ABC + the neutral SpanResult /
+    The opaque-span boundary (SpanOracle ABC + the neutral OpaqueTerminal /
     Reference vocabulary + collect_references) is NOT in core/: it lives in
     world/span_oracle.py (the language-neutral world authority) and is imported
     by the lexer and by ast_nodes. Pass 2 resolves the Reference vocabulary.
@@ -165,7 +165,7 @@ The engine knows no AST: it builds OR/SEQ/PLUS/STAR nodes, children already
 transformed (bottom-up). The overlay reads structure DIRECTLY: SEQ children
 by stable slot, OR branches by triggered_index, repetitions off items,
 optionals as OR_Nodes whose presence is a state. Single-terminal rules
-(<guard-luau>, <mutation>, <report-string>) hand the raw leaf (SpanResult /
+(<guard-luau>, <mutation>, <report-string>) hand the raw leaf (OpaqueTerminal /
 Token) to their factory.
 
 -------------------------------------------------------------------------------

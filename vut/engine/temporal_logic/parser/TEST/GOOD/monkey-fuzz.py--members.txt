@@ -1,40 +1,45 @@
 === monkey: members ===
-tokens parsed:      2128
+tokens parsed:      2428
 top-level items:    8 (ok)
 diagnostics:        none
 
-total AST nodes: 1910
+total AST nodes: 385
 
-  Arg                        4
-  ArgDecl                   15
-  BinOp                    893
+  Arg                       13
+  ArgDecl                   14
   Causality                  3
-  Cause                      7
+  Cause                      8
   CauseDef                   1
-  CauseRef                   2
+  CauseRef                   4
+  ClockDef                   1
   Clockwork                  1
-  Condition                  7
-  Decr                       1
-  DoSweep                    3
+  Condition                  8
+  ConstantLeaf              21
+  DeclarationLeaf            8
+  DictDecl                   1
+  DictType                   1
+  DoSweep                    2
   EffectDef                  1
   EffectRef                  2
   EventDef                   1
+  EventSpec                  1
+  Expr                       6
   Import                     1
   Incr                       1
   Instant                    1
-  Literal                  723
+  LeftFolding              111
+  ListType                   1
   Mode                       1
-  ModeGroup                  1
   Mutation                   3
-  Namespace                  2
-  OpaqueCode               184
-  ReactorDecl                1
-  ReportString               2
-  Spawn                      1
+  Namespace                  1
+  OpaqueLeaf                13
+  ReferenceLeaf             22
+  ReportString               4
+  STAR_Node                111
+  SelectFrame                1
   State                      1
   StateMachine               1
-  Trigger                    7
-  UnOp                      32
-  Unspawn                    5
-  WaitLine                   1
-  WhileFrame                 1
+  Trigger                    8
+  UnOp                       1
+  Unspawn                    4
+  WaitLine                   2

@@ -43,6 +43,9 @@ def fmt(node, indent=0):
     if is_dataclass(node):
         lines = [pad + type(node).__name__]
         for f in fields(node):
+            if not f.repr:
+                continue            # honor repr=False (e.g. a resolution slot);
+                                    # keeps dumps pure and stable across pass-2
             val = getattr(node, f.name)
             if is_dataclass(val) or isinstance(val, list):
                 lines.append("%s  %s:" % (pad, f.name))

@@ -22,7 +22,7 @@ target language means adding a sibling (world/c/, world/python/, ...) that
 implements these three ABCs; no component above the world names a language.
 ______________________________________________________________________________
 """
-from .span_oracle import SpanOracle, SpanResult, Reference, SpanMode, \
+from .span_oracle import SpanOracle, SpanReference, SpanMode, \
                          SpanSyntaxError, SpanOracleError
 from .emission    import Emitter, EmissionError
 from .execution   import Runner,  ExecutionError

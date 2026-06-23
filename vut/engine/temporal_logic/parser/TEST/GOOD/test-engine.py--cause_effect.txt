@@ -1,9 +1,9 @@
 
 --- cause definition ('for:' binding, mandatory guard) ---
-  CauseDef name=['TOO_HOT'] params=1 for=NETWORK guard=Condition
+  CauseDef name=TOO_HOT params=1 for=NETWORK guard=Condition
 
 --- effect definition ---
-  EffectDef name=['SUPER_POWER'] effects=[EventSpec, EffectRef, EffectRef]
+  EffectDef name=SUPER_POWER effects=[EventSpec, EffectRef, EffectRef]
 
 --- cause reference and effect reference ---
   Causality cause=CauseRef name=TOO_HOT guard=NoneType effects=[EffectRef]

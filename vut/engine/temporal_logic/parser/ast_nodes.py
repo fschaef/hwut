@@ -10,7 +10,7 @@ Source2TargetLocationMapper during code generation. Nodes hold no behaviour;
 the parser builds them and the validator/transpiler consume them.
 
 Opaque code spans are stored verbatim (braces included) together with the
-span MODE under which the parser handed them to the oracle (OpaqueCode), so
+span MODE under which the parser handed them to the oracle (OpaqueLeaf), so
 the code generator can re-frame each correctly. The parser names no embedded
 language: everything span-related speaks 'oracle' (world.span_oracle).
 ______________________________________________________________________________
@@ -19,7 +19,6 @@ from dataclasses import dataclass, field
 from enum        import Enum
 from typing      import List, Optional
 
-from vut.engine.temporal_logic.world.span_oracle import Reference
 from vut.engine.temporal_logic.core.parser_generator.operator_interface import (OR_Interface, SEQ_Interface,
                                       PLUS_Interface, STAR_Interface)
 
@@ -27,15 +26,42 @@ from vut.engine.temporal_logic.core.parser_generator.operator_interface import (
 from abc import ABC
 
 
+def _ref(segments, begin):
+    """RETURN: ReferenceLeaf, the dotted-name segment list as a resolvable leaf,
+              or None if 'segments' is None (an absent optional reference).
+
+    The Bin A wrap point (disc-3): a name that REQUIRES ACCESS becomes a
+    ReferenceLeaf held by the node. 'segments' is the raw list from _name_dotted;
+    'begin' is the owning construct's offset (option A). Declarations (Bin B) and
+    the import path (Bin C) do NOT pass through here.
+    """
+    if segments is None:
+        return None
+    return ReferenceLeaf(segments=tuple(segments), begin=begin)
+
+
+def _decl(segments, begin):
+    """RETURN: DeclarationLeaf, the introduced dotted name as a declaration leaf,
+              or None if 'segments' is None.
+
+    The Bin B/C wrap point (disc-3, disc-4): a name INTRODUCED here -- a
+    definition name or an import mount point -- becomes a DeclarationLeaf the
+    symbol table registers. 'begin' is the owning construct's offset (option A).
+    """
+    if segments is None:
+        return None
+    return DeclarationLeaf(segments=tuple(segments), begin=begin)
+
+
 class E_ArgKind(Enum):
     """The value shape of an Arg (see Arg.kind).
 
     LITERAL  a NUMBER/STRING/true/false lexeme carried as text.
-    LUAU     an opaque EXPRESSION span (an OpaqueCode node).
+    LUAU     an opaque EXPRESSION span (an OpaqueLeaf node).
     NAME     a <name-dotted> reference carried as its segment list -- a bare
              word ('dict'), a variable, a struct member ('tracker.pos.x'), or
              a self-binding member ('e.target'); resolved in pass 2 (D-24).
-    EXPR     a compound algebraic expression (BinOp/UnOp/Bridge/Comparison),
+    EXPR     a compound algebraic expression (LeftFolding/UnOp/Bridge/Comparison),
              carried as the expression node -- 'base + 1', '? c then: a else: b'
              (D-13). The simple atoms above remain their own kinds so a plain
              arg renders unchanged.
@@ -58,54 +84,14 @@ class TopLevel(OR_Interface):
     """
     pass
 
-@dataclass(frozen=True)
-class OpaqueCode:
-    """One opaque code span: its verbatim text, mode, and source offset.
 
-    'text' is the lexeme including the enclosing braces. 'mode' is the span
-    mode the grammar attached to the opaque terminal (a core SpanMode --
-    CONDITION, EXPRESSION, LVALUE, STATEMENT_BLOCK); the concrete oracle is
-    the only party that interprets it. The node names no embedded language.
-    """
-    text:  str
-    mode:  object             # world.span_oracle.SpanMode
-    begin: int
-    _references: "tuple|None" = field(default=None, compare=False, repr=False)
+# OpaqueLeaf is the general opaque-content leaf (core/symbol/ast.py): text +
+# mode + begin, lazy get_references -> ReferenceLeaf, from_span lift. It
+# replaces the former parser-local OpaqueLeaf node wholesale (disc-2).
+from vut.engine.temporal_logic.core.symbol.ast import OpaqueLeaf, Root, ReferenceLeaf, DeclarationLeaf, ConstantLeaf, E_ConstantKind, LeftFolding
 
-    @classmethod
-    def from_span(cls, span):
-        """RETURN: OpaqueCode, wrapping an engine SpanResult.
 
-        The engine yields a neutral world.span_oracle.SpanResult at an
-        opaque-span position (it knows no language); this is the single seam
-        where the rule language turns it into its own node. SpanResult.mode is
-        carried straight onto 'mode'. For the <mutation> rule (a
-        single-terminal rule) the factory receives the raw SpanResult itself
-        -- there is no operator node to unwrap.
-        """
-        return cls(text=span.text, mode=span.mode, begin=span.begin)
 
-    def get_references(self, oracle):
-        """RETURN: tuple[Reference], the names referenced inside this span;
-        begins ABSOLUTE (rebased onto this node's source position).
-
-        Raises SpanSyntaxError / SpanOracleError from the oracle.
-
-        LAZY: computed on the first call via the oracle, then cached. The
-        oracle is an ARGUMENT per call -- the node never holds an oracle
-        handle (no live subprocess reference inside pure data). The cache is
-        one compare=False, repr=False slot written once through
-        object.__setattr__: the node stays pure data in identity and print;
-        this method is a memoised accessor, not behaviour.
-        """
-        if self._references is None:
-            raw = oracle.collect_references(
-                    self.text, 0, len(self.text) - 1, self.mode)
-            rebased = tuple(Reference(segments=r.segments,
-                                      begin=r.begin + self.begin)
-                            for r in raw)
-            object.__setattr__(self, "_references", rebased)
-        return self._references
 
 
 @dataclass(frozen=True)
@@ -118,7 +104,7 @@ class Trigger:
     event that happens to be spelled END elsewhere. Constructed by the
     cause-system / cause-named builders (ast_map), not by a rule of its own.
     """
-    name:       "list[str]"   # name-dotted segments; [keyword] for system
+    name:       ReferenceLeaf  # dotted-name reference; keyword segments for system
     is_keyword: bool
     begin:      int
 
@@ -140,25 +126,8 @@ class BoolRef:
     resolves to kind bool is a pass-2 check (F-5). Constructed by the
     cond-term builder (ast_map).
     """
-    name:  "list[str]"        # name-dotted segments
+    name:  ReferenceLeaf      # dotted-name reference
     begin: int
-
-
-@dataclass(frozen=True)
-class Literal:
-    """A number or string literal operand in a comparison.
-
-    'text' is the verbatim lexeme (a number, a string WITH its quotes, or
-    'true'/'false'); the static layer interprets it against the compared
-    side's kind.
-    """
-    text:  str
-    begin: int
-
-    @classmethod
-    def from_token(cls, tok):
-        """RETURN: Literal, wrapping a number/string/true/false token."""
-        return cls(text=tok.text, begin=tok.begin)
 
 
 @dataclass(frozen=True)
@@ -189,7 +158,7 @@ class Comparison:
     """A comparison: '<algebr> <op-cmp> <algebr>' -- the num->bool crossing (D-13).
 
     'op' is one of '>=', '<=', '==', '!=', '>', '<' (verbatim). 'left'/'right'
-    are algebraic expressions (a BinOp, UnOp, Bridge, Literal, OpaqueCode, or a
+    are algebraic expressions (a LeftFolding, UnOp, Bridge, ConstantLeaf, OpaqueLeaf, or a
     bare <name-dotted> segment list). That the two sides resolve to comparable
     scalars is a pass-2 check (F-5).
     """
@@ -211,24 +180,6 @@ class UnOp(SEQ_Interface):
     op:      str             # 'not' | '-'
     operand: "object"
     begin:   int
-
-
-@dataclass(frozen=True)
-class BinOp(SEQ_Interface):
-    """A binary operation, left-associative (D-13).
-
-    One node for every infix operator in both ladders: boolean
-    'or'/'nor'/'xor'/'nxor'/'and'/'nand', arithmetic '+'/'-'/'*', and the shifts
-    'shl:'/'shr:'. 'op' is the verbatim operator; 'left'/'right' are the operands
-    (each a BinOp, UnOp, Bridge, Comparison, Literal, BoolRef, OpaqueCode, or a
-    bare <name-dotted> segment list). The left-fold builder collapses a level
-    with no operator to its bare head, so a BinOp always carries a real operator.
-    Operator kind and operand kinds are pass-2 concerns (F-5).
-    """
-    op:    str
-    left:  "object"
-    right: "object"
-    begin: int
 
 
 @dataclass(frozen=True)
@@ -298,8 +249,8 @@ class Bridge(SEQ_Interface):
 class Condition(SEQ_Interface):
     """The root of a bracket guard '[ ... ]' -- the sole guard form.
 
-    'expr' is the top boolean expression (a BinOp, UnOp, Comparison, BoolRef, or
-    Literal). Wrapping it in a named root gives Cause.guard a single concrete
+    'expr' is the top boolean expression (a LeftFolding, UnOp, Comparison, BoolRef, or
+    ConstantLeaf). Wrapping it in a named root gives Cause.guard a single concrete
     node kind; a guard never carries an opaque Luau span (values cross from Luau
     only via 'is:').
     """
@@ -343,13 +294,13 @@ class Arg(OR_Interface):
 
     'value' is the rvalue, one of three shapes discriminated by 'kind':
       - E_ArgKind.LITERAL  : a NUMBER/STRING/true/false lexeme as text (str).
-      - E_ArgKind.LUAU     : an opaque EXPRESSION span (an OpaqueCode node).
+      - E_ArgKind.LUAU     : an opaque EXPRESSION span (an OpaqueLeaf node).
       - E_ArgKind.NAME     : a <name-dotted> segment list (list[str]) the
                              static layer resolves without opening the span --
                              'e.target', 'TIMEOUT', 'dict', 'tracker.pos.x'.
     """
     name:  Optional[str]
-    value: object            # str (literal) | OpaqueCode | list[str] | expr node
+    value: object            # str (literal) | OpaqueLeaf | list[str] | expr node
     kind:  "E_ArgKind"
     begin: int
 
@@ -357,20 +308,20 @@ class Arg(OR_Interface):
     def _classify(cls, value, name, begin):
         """RETURN: Arg, classifying an <algebr> 'value' into its E_ArgKind (D-13).
 
-        A segment list is a NAME; an OpaqueCode (or raw opaque span) is LUAU; a
-        Literal node (or value-bearing token / bare str) carries its text as a
-        LITERAL; any other expression node -- BinOp, UnOp, Bridge, Comparison --
+        A segment list is a NAME; an OpaqueLeaf (or raw opaque span) is LUAU; a
+        ConstantLeaf node (or value-bearing token / bare str) carries its text as a
+        LITERAL; any other expression node -- LeftFolding, UnOp, Bridge, Comparison --
         is a compound EXPR carried whole.
         """
-        from vut.engine.temporal_logic.world.span_oracle import SpanResult
+        from vut.engine.temporal_logic.core.parser_generator.cst_nodes import OpaqueTerminal
         if isinstance(value, list):
             return cls(name=name, value=value, kind=E_ArgKind.NAME, begin=begin)
-        if isinstance(value, OpaqueCode):
+        if isinstance(value, OpaqueLeaf):
             return cls(name=name, value=value, kind=E_ArgKind.LUAU, begin=begin)
-        if isinstance(value, SpanResult):
-            return cls(name=name, value=OpaqueCode.from_span(value),
+        if isinstance(value, OpaqueTerminal):
+            return cls(name=name, value=OpaqueLeaf.from_span(value),
                        kind=E_ArgKind.LUAU, begin=begin)
-        if isinstance(value, Literal):
+        if isinstance(value, ConstantLeaf):
             return cls(name=name, value=value.text, kind=E_ArgKind.LITERAL,
                        begin=begin)
         if isinstance(value, str) or hasattr(value, "text"):
@@ -399,7 +350,7 @@ class EventSpec:
     Built by the effect-named builder (ast_map) when the parens are present;
     a bare name builds an EffectRef instead -- the parens decide (D-26).
     """
-    name:  "list[str]"        # name-dotted segments
+    name:  ReferenceLeaf      # dotted-name reference
     args:  List[Arg]
     begin: int
 
@@ -415,7 +366,7 @@ class ModeArming(SEQ_Interface):
     interface-preserving substitution. Kept as that finalization target; not
     constructed at parse time. 'from_seq' is retained for pass 2 to build one.
     """
-    name:  "list[str]"        # dotted-name segments
+    name:  ReferenceLeaf      # dotted-name reference
     args:  List[Arg]
     begin: int
 
@@ -425,7 +376,7 @@ class ModeArming(SEQ_Interface):
 
         Retained for PASS 2 finalization (D-36), not parse-time construction."""
         name, args = node.children
-        return cls(name=name, args=args, begin=node.begin)
+        return cls(name=_ref(name, node.begin), args=args, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -448,11 +399,11 @@ class Spawn(SEQ_Interface):
     'has_parens' is always True for a parsed node (the parens are mandatory);
     retained for the builder and downstream, no longer a shape discriminant.
     """
-    name:           "list[str]"  # name-dotted segments
+    name:           ReferenceLeaf  # dotted-name reference
     args:           List[Arg]
     has_parens:     bool
-    into_container: "Optional[list[str]]"  # name-dotted segments, or None
-    key:            "Optional[list[str]]"  # dict key segments; None = list append
+    into_container: "Optional[ReferenceLeaf]"  # container reference, or None
+    key:            "Optional[ReferenceLeaf]"  # dict key reference; None = list append
     begin:          int
 
     @classmethod
@@ -489,8 +440,9 @@ class Spawn(SEQ_Interface):
             opt_key        = into.children[1]
             if opt_key.present:
                 key = opt_key.child.children[0]
-        return cls(name=name, args=args, has_parens=True,
-                   into_container=into_container, key=key,
+        return cls(name=_ref(name, node.begin), args=args, has_parens=True,
+                   into_container=_ref(into_container, node.begin),
+                   key=_ref(key, node.begin),
                    begin=node.begin)
 
 
@@ -503,13 +455,13 @@ class Unspawn(SEQ_Interface):
     Pass-2 validation enforces that the target resolves to an existing
     instance; the grammar accepts any dotted name.
     """
-    name:  "list[str]"        # dotted-name segments
+    name:  ReferenceLeaf      # dotted-name reference
     begin: int
 
     @classmethod
     def from_seq(cls, node):
         """RETURN: Unspawn, 'unspawn: name' -- children = (dotted_name,)."""
-        return cls(name=node.children[0], begin=node.begin)
+        return cls(name=_ref(node.children[0], node.begin), begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -529,12 +481,12 @@ class ReportString:
 class Mutation:
     """A mutation effect: a statement-block CODE BLOCK after '=>'.
 
-    'body' is the code block -- an OpaqueCode (opaque Luau '{ ... }') or a
+    'body' is the code block -- an OpaqueLeaf (opaque Luau '{ ... }') or a
     DoSweep ('do: <step>+ :end'); the sweep is the rule-plane alternative to a
     Luau statement block. A DoSweep body carries its one-sweep restriction via a
     role hint read in pass-2.
     """
-    body:  object            # OpaqueCode | DoSweep
+    body:  object            # OpaqueLeaf | DoSweep
     begin: int
 
     @classmethod
@@ -542,7 +494,7 @@ class Mutation:
         """RETURN: Mutation, wrapping a code-block value.
 
         The <mutation> rule is the single reference '<code-block>', so its value
-        is the already-built block (an OpaqueCode | DoSweep), passed straight in.
+        is the already-built block (an OpaqueLeaf | DoSweep), passed straight in.
         """
         return cls(body=block, begin=block.begin)
 
@@ -551,16 +503,16 @@ class Mutation:
 class InitBlock(SEQ_Interface):
     """An 'init: <code-block>' member: its statement-block body.
 
-    'body' is the code block (OpaqueCode | DoSweep), as for a mutation. A
+    'body' is the code block (OpaqueLeaf | DoSweep), as for a mutation. A
     distinct type (vs DeinitBlock) so a mode/state-machine assembler can sort
     interleaved members by kind rather than by source position.
     """
-    body:  object            # OpaqueCode | DoSweep
+    body:  object            # OpaqueLeaf | DoSweep
     begin: int
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: InitBlock -- children = (code-block,), an OpaqueCode | DoSweep."""
+        """RETURN: InitBlock -- children = (code-block,), an OpaqueLeaf | DoSweep."""
         body = node.children[0]
         return cls(body=body, begin=body.begin)
 
@@ -568,12 +520,12 @@ class InitBlock(SEQ_Interface):
 @dataclass(frozen=True)
 class DeinitBlock(SEQ_Interface):
     """A 'deinit: <code-block>' member: its statement-block body. See InitBlock."""
-    body:  object            # OpaqueCode | DoSweep
+    body:  object            # OpaqueLeaf | DoSweep
     begin: int
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: DeinitBlock -- children = (code-block,), an OpaqueCode | DoSweep."""
+        """RETURN: DeinitBlock -- children = (code-block,), an OpaqueLeaf | DoSweep."""
         body = node.children[0]
         return cls(body=body, begin=body.begin)
 
@@ -629,13 +581,13 @@ class ArgDecl(SEQ_Interface):
 class Mode(SEQ_Interface, TopLevel):
     """A mode definition with its members and mandatory 'until' causes.
 
-    'init'/'deinit' are STATEMENT_BLOCK OpaqueCode spans or None. 'causalities' are
+    'init'/'deinit' are STATEMENT_BLOCK OpaqueLeaf spans or None. 'causalities' are
     the member rules. 'untils' are the closing causes (one or more).
     """
-    name:        "list[str]"  # dotted-name segments
+    name:        DeclarationLeaf   # introduced name (declaration)
     params:      List[ArgDecl]
-    init:        Optional[OpaqueCode]
-    deinit:      Optional[OpaqueCode]
+    init:        Optional[OpaqueLeaf]
+    deinit:      Optional[OpaqueLeaf]
     causalities: List[Causality]
     untils:      List[Cause]
     begin:       int
@@ -658,7 +610,7 @@ class Mode(SEQ_Interface, TopLevel):
                 case InitBlock():   init = m.body
                 case DeinitBlock(): deinit = m.body
                 case Causality():   causalities.append(m)
-        return cls(name=name, params=params, init=init, deinit=deinit,
+        return cls(name=_decl(name, node.begin), params=params, init=init, deinit=deinit,
                    causalities=causalities, untils=untils, begin=node.begin)
 
 
@@ -671,10 +623,10 @@ class State(SEQ_Interface):
     next state-machine element or 'end', not by a closer keyword. Not a
     TopLevel: a state appears only inside a state-machine.
     """
-    name:        "list[str]"  # dotted-name segments
+    name:        DeclarationLeaf   # introduced name (declaration)
     params:      List[ArgDecl]
-    init:        Optional[OpaqueCode]
-    deinit:      Optional[OpaqueCode]
+    init:        Optional[OpaqueLeaf]
+    deinit:      Optional[OpaqueLeaf]
     causalities: List[Causality]
     untils:      List[Cause]
     begin:       int
@@ -695,7 +647,7 @@ class State(SEQ_Interface):
                 case InitBlock():   init = m.body
                 case DeinitBlock(): deinit = m.body
                 case Causality():   causalities.append(m)
-        return cls(name=name, params=params, init=init, deinit=deinit,
+        return cls(name=_decl(name, node.begin), params=params, init=init, deinit=deinit,
                    causalities=causalities, untils=untils, begin=node.begin)
 
 
@@ -709,7 +661,7 @@ class HasRef(SEQ_Interface):
     Splitting the head into aggregate and member is resolution's business
     (F-8); the parser records the segments.
     """
-    name:    "list[str]"      # name-dotted segments (without the VOID tail)
+    name:    ReferenceLeaf   # dotted-name reference (without the VOID tail)
     is_void: bool
     begin:   int
 
@@ -718,7 +670,7 @@ class HasRef(SEQ_Interface):
         """RETURN: HasRef -- children = (ref_member,): the (segments, is_void)
         pair from the <ref-member> rule, rebased to the 'has:' offset."""
         segments, is_void = node.children[0]
-        return cls(name=segments, is_void=is_void, begin=node.begin)
+        return cls(name=_ref(segments, node.begin), is_void=is_void, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -818,7 +770,7 @@ class DictDecl(TopLevel):
     """
     name:        str
     dtype:       "DictType"
-    by:          Optional["OpaqueCode"]
+    by:          Optional["OpaqueLeaf"]
     head_params: List["ArgDecl"]
     begin:       int
 
@@ -831,7 +783,7 @@ class ListDecl(TopLevel):
     """
     name:        str
     dtype:       "ListType"
-    by:          Optional["OpaqueCode"]
+    by:          Optional["OpaqueLeaf"]
     head_params: List["ArgDecl"]
     begin:       int
 
@@ -851,7 +803,7 @@ class VariableDef(TopLevel):
     name:        str
     type_name:   str
     args:        List["Arg"]
-    by:          Optional["OpaqueCode"]
+    by:          Optional["OpaqueLeaf"]
     head_params: List["ArgDecl"]
     begin:       int
 
@@ -865,7 +817,7 @@ class DefaultRef(SEQ_Interface):
     provenance sniffing. That the target is a member state of the enclosing
     machine is a pass-2 check (F-8).
     """
-    name:    "list[str]"      # name-dotted segments (without the VOID tail)
+    name:    ReferenceLeaf   # dotted-name reference (without the VOID tail)
     is_void: bool
     begin:   int
 
@@ -874,7 +826,7 @@ class DefaultRef(SEQ_Interface):
         """RETURN: DefaultRef -- children = (ref_member,): the (segments,
         is_void) pair from the <ref-member> rule, rebased to 'default:'."""
         segments, is_void = node.children[0]
-        return cls(name=segments, is_void=is_void, begin=node.begin)
+        return cls(name=_ref(segments, node.begin), is_void=is_void, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -887,14 +839,14 @@ class StateMachine(SEQ_Interface, TopLevel):
     error). The block is closed by the 'end' keyword; a state machine has no
     closing 'until' causes of its own.
     """
-    name:     "list[str]"     # dotted-name segments
+    name:     DeclarationLeaf   # introduced name (declaration)
     params:   List[ArgDecl]
     bases:    List["list[str]"]   # 'is:' base names (dotted), in source order
     states:   List[State]
     has_refs: List[HasRef]
     default:  Optional["DefaultRef"]
-    init:     Optional[OpaqueCode]
-    deinit:   Optional[OpaqueCode]
+    init:     Optional[OpaqueLeaf]
+    deinit:   Optional[OpaqueLeaf]
     begin:    int
 
     @classmethod
@@ -919,7 +871,7 @@ class StateMachine(SEQ_Interface, TopLevel):
                 case DefaultRef():          default = m
                 case State():               states.append(m)
                 case HasRef():              has_refs.append(m)
-        return cls(name=name, params=params, bases=bases, states=states,
+        return cls(name=_decl(name, node.begin), params=params, bases=bases, states=states,
                    has_refs=has_refs, default=default, init=init,
                    deinit=deinit, begin=node.begin)
 
@@ -933,13 +885,13 @@ class ModeGroup(SEQ_Interface, TopLevel):
     (overlapping members have no single fallback) and, like a state machine, no
     closing 'until' causes of its own -- the block is closed by 'end'.
     """
-    name:     "list[str]"     # dotted-name segments
+    name:     DeclarationLeaf   # introduced name (declaration)
     params:   List[ArgDecl]
     bases:    List["list[str]"]   # 'is:' base names (dotted), in source order
     modes:    List[Mode]
     has_refs: List[HasRef]
-    init:     Optional[OpaqueCode]
-    deinit:   Optional[OpaqueCode]
+    init:     Optional[OpaqueLeaf]
+    deinit:   Optional[OpaqueLeaf]
     begin:    int
 
     @classmethod
@@ -957,7 +909,7 @@ class ModeGroup(SEQ_Interface, TopLevel):
                 case DeinitBlock(): deinit = m.body
                 case Mode():        modes.append(m)
                 case HasRef():      has_refs.append(m)
-        return cls(name=name, params=params, bases=bases, modes=modes,
+        return cls(name=_decl(name, node.begin), params=params, bases=bases, modes=modes,
                    has_refs=has_refs, init=init, deinit=deinit,
                    begin=node.begin)
 
@@ -1004,9 +956,9 @@ class CauseDef(SEQ_Interface, TopLevel):
     Resolution of references against this definition is a pass-2
     concern; the parser only records it.
     """
-    name:      "list[str]"     # name-dotted segments from the signature
+    name:      DeclarationLeaf   # introduced name (declaration)
     params:    List[ArgDecl]
-    for_event: "list[str]"     # name-dotted segments of the bound event
+    for_event: ReferenceLeaf   # the bound event, a reference
     guard:     "Condition"
     begin:     int
 
@@ -1016,7 +968,8 @@ class CauseDef(SEQ_Interface, TopLevel):
         'cause:', 'for:', '&' silent."""
         sig, for_event, guard = node.children
         name, params = sig
-        return cls(name=name, params=params, for_event=for_event,
+        return cls(name=_decl(name, node.begin), params=params,
+                   for_event=_ref(for_event, node.begin),
                    guard=guard, begin=node.begin)
 
 
@@ -1030,7 +983,7 @@ class EffectDef(SEQ_Interface, TopLevel):
     the signature, parallel to CauseDef; binding a reference's arguments to these
     params is a pass-2 concern.
     """
-    name:    "list[str]"     # dotted-name segments from the signature
+    name:    DeclarationLeaf   # introduced name (declaration)
     params:  List[ArgDecl]
     effects: List[object]
     begin:   int
@@ -1045,7 +998,7 @@ class EffectDef(SEQ_Interface, TopLevel):
         sig          = node.children[0]
         name, params = sig
         effects      = [s.children[0] for s in node.children[1].items]
-        return cls(name=name, params=params, effects=effects, begin=node.begin)
+        return cls(name=_decl(name, node.begin), params=params, effects=effects, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1062,7 +1015,7 @@ class CauseRef:
     decided). Binding the args to a CauseDef and checking arity/kinds is a
     pass-2 concern.
     """
-    name:  "list[str]"        # name-dotted segments
+    name:  ReferenceLeaf      # dotted-name reference
     args:  List["Arg"]
     guard: "Optional[Condition]" # Condition | None -- parsed, pass-2 F-7
     begin: int
@@ -1078,7 +1031,7 @@ class EffectRef:
     segment list (definitions reached through namespaces and imports are
     referenceable); expanding it to the defined effects is a pass-2 concern.
     """
-    name:  "list[str]"        # name-dotted segments
+    name:  ReferenceLeaf      # dotted-name reference
     begin: int
 
 
@@ -1093,7 +1046,7 @@ class Import(SEQ_Interface, TopLevel):
     a semantic-pass concern; the parser only records the request.
     """
     filename: str
-    mount:    "list[str]"     # name-dotted segments
+    mount:    DeclarationLeaf   # introduced name (declaration)
     begin:    int
 
     @classmethod
@@ -1104,7 +1057,7 @@ class Import(SEQ_Interface, TopLevel):
         filename = string_tok.text
         if len(filename) >= 2 and filename[0] in "\"'" and filename[-1] == filename[0]:
             filename = filename[1:-1]
-        return cls(filename=filename, mount=mount, begin=node.begin)
+        return cls(filename=filename, mount=_decl(mount, node.begin), begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1117,7 +1070,7 @@ class Namespace(SEQ_Interface, TopLevel):
     declared inside resolve within this scope; there is no restriction on
     nesting depth.
     """
-    name:  "list[str]"        # dotted-name segments
+    name:  DeclarationLeaf   # introduced name (declaration)
     items: "List[TopLevel]"
     begin: int
 
@@ -1130,7 +1083,7 @@ class Namespace(SEQ_Interface, TopLevel):
         """
         name  = node.children[0]
         items = list(node.children[1].items)
-        return cls(name=name, items=items, begin=node.begin)
+        return cls(name=_decl(name, node.begin), items=items, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1142,7 +1095,7 @@ class Assign(SEQ_Interface):
     the assigned algebraic expression. State mutates only here (and via incr/
     decr/recip), inside a clockwork body, so every write has a tick to anchor it.
     """
-    lvalue: "list[str]"
+    lvalue: ReferenceLeaf    # assignment-target reference
     rhs:    "object"
     begin:  int
 
@@ -1157,7 +1110,7 @@ class Recip(SEQ_Interface):
     is promoted to float (the one implicit-promotion site). 'else_body' is the
     ordered clockwork steps run on zero.
     """
-    lvalue:    "list[str]"
+    lvalue:    ReferenceLeaf  # assignment-target reference
     operand:   "object"
     else_body: List["object"]
     begin:     int
@@ -1171,7 +1124,7 @@ class Incr(SEQ_Interface):
     clamped at the ceiling 'limit' (None -> unbounded). Clockwork-fenced. The
     saturate-vs-guard reading of 'limit' is a pass-2 semantic (F-15).
     """
-    lvalue: "list[str]"
+    lvalue: ReferenceLeaf    # assignment-target reference
     amount: "object"         # algebr | None
     limit:  "object"         # algebr | None
     begin:  int
@@ -1186,7 +1139,7 @@ class Incr(SEQ_Interface):
         lvalue, opt_by, opt_to = node.children
         amount = opt_by.child.children[0] if opt_by.present else None
         limit  = opt_to.child.children[0] if opt_to.present else None
-        return cls(lvalue=lvalue, amount=amount, limit=limit, begin=node.begin)
+        return cls(lvalue=_ref(lvalue, node.begin), amount=amount, limit=limit, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1197,7 +1150,7 @@ class Decr(SEQ_Interface):
     the floor 'limit'. The decrement twin of Incr; see it for the slot layout
     and the pass-2 notes.
     """
-    lvalue: "list[str]"
+    lvalue: ReferenceLeaf    # assignment-target reference
     amount: "object"
     limit:  "object"
     begin:  int
@@ -1208,7 +1161,7 @@ class Decr(SEQ_Interface):
         lvalue, opt_by, opt_to = node.children
         amount = opt_by.child.children[0] if opt_by.present else None
         limit  = opt_to.child.children[0] if opt_to.present else None
-        return cls(lvalue=lvalue, amount=amount, limit=limit, begin=node.begin)
+        return cls(lvalue=_ref(lvalue, node.begin), amount=amount, limit=limit, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1220,7 +1173,7 @@ class Instant(SEQ_Interface):
     the clockwork's clock beat (D-11). The paced counterpart is a bare EventSpec
     (no keyword), which consumes a tick.
     """
-    name:  "list[str]"        # name-dotted segments
+    name:  ReferenceLeaf      # dotted-name reference
     args:  List[Arg]
     begin: int
 
@@ -1228,7 +1181,7 @@ class Instant(SEQ_Interface):
     def from_seq(cls, node):
         """RETURN: Instant -- children = (name, args); 'instant:' silent."""
         name, args = node.children
-        return cls(name=name, args=args, begin=node.begin)
+        return cls(name=_ref(name, node.begin), args=args, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1336,17 +1289,17 @@ class Clockwork(SEQ_Interface, TopLevel):
     'name'/'params' come from the signature; the params ARE the instance
     members, read through the 'cw' self-binding (D-11). 'clock' is the 'on:'
     <cause> -- a trigger (resolved to a clock in pass 2) with an optional guard,
-    the heartbeat shape. 'init'/'deinit' are STATEMENT_BLOCK OpaqueCode spans or
+    the heartbeat shape. 'init'/'deinit' are STATEMENT_BLOCK OpaqueLeaf spans or
     None. 'steps' are the ordered body steps: EventSpec (paced emission),
     Instant, WaitLine, SelectFrame, IfFrame, WhileFrame, and the bare commands
     (Spawn, Unspawn, ModeArming, Mutation). No inheritance: an clockwork carries no
     'is:' bases.
     """
-    name:   "list[str]"       # dotted-name segments
+    name:   DeclarationLeaf   # introduced name (declaration)
     params: List[ArgDecl]
     clock:  Cause
-    init:   Optional[OpaqueCode]
-    deinit: Optional[OpaqueCode]
+    init:   Optional[OpaqueLeaf]
+    deinit: Optional[OpaqueLeaf]
     steps:  List[object]
     begin:  int
 
@@ -1369,7 +1322,7 @@ class Clockwork(SEQ_Interface, TopLevel):
                 case InitBlock():   init = elm.body
                 case DeinitBlock(): deinit = elm.body
                 case _:             steps.append(elm)
-        return cls(name=name, params=params, clock=clock, init=init,
+        return cls(name=_decl(name, node.begin), params=params, clock=clock, init=init,
                    deinit=deinit, steps=steps, begin=node.begin)
 
 
@@ -1400,12 +1353,15 @@ class DoSweep(SEQ_Interface):
 
 
 @dataclass
-class ModuleRoot:
+class ModuleRoot(Root):
     """The whole parsed module: an ordered list of top-level constructs.
 
-    'items' holds Namespace, Import, Causality, Mode, ModeGroup, StateMachine,
-    Clockwork, declaration (ReactorDecl/StructDecl/ContainerDecl/VariableDef),
-    EventDef, ClockDef, CauseDef and EffectDef nodes in source order. A mutable
-    container so the parser can append as it goes.
+    Derives the general core/symbol Root (ordered, generically walkable); this
+    concrete root NAMES the VUT construct kinds it carries. 'items' (inherited
+    from Root) holds Namespace, Import, Causality, Mode, ModeGroup,
+    StateMachine, Clockwork, declaration
+    (ReactorDecl/StructDecl/ContainerDecl/VariableDef), EventDef, ClockDef,
+    CauseDef and EffectDef nodes in source order. A mutable container so the
+    parser can append as it goes.
     """
     items: "List[TopLevel]" = field(default_factory=list)

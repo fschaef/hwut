@@ -235,17 +235,17 @@ def run_cause_effect():
             kind = type(it).__name__
             if isinstance(it, ast.Causality) and isinstance(it.cause, ast.CauseRef):
                 print("  Causality cause=CauseRef name=%s guard=%s effects=[%s]"
-                      % (".".join(it.cause.name),
+                      % (".".join(it.cause.name.segments),
                          type(it.cause.guard).__name__,
                          ", ".join(type(e).__name__ for e in it.effects)))
                 continue
             if isinstance(it, ast.CauseDef):
                 print("  CauseDef name=%s params=%d for=%s guard=%s"
-                      % (it.name, len(it.params), ".".join(it.for_event),
+                      % (".".join(it.name.segments), len(it.params), ".".join(it.for_event.segments),
                          type(it.guard).__name__))
             elif isinstance(it, ast.EffectDef):
                 print("  EffectDef name=%s effects=[%s]"
-                      % (it.name, ", ".join(type(e).__name__ for e in it.effects)))
+                      % (".".join(it.name.segments), ", ".join(type(e).__name__ for e in it.effects)))
             elif isinstance(it, ast.Causality):
                 print("  Causality cause=%s effects=[%s]"
                       % (type(it.cause).__name__,
@@ -259,8 +259,12 @@ def _render_cond(node):
     n = type(node).__name__
     if n == "Condition":
         return _render_cond(node.expr)
-    if n == "BinOp":
-        return "(%s %s %s)" % (_render_cond(node.left), node.op, _render_cond(node.right))
+    if n == "LeftFolding":
+        acc = _render_cond(node.head)
+        for item in node.star.items:
+            op_tok, operand = item.children
+            acc = "(%s %s %s)" % (acc, op_tok.text, _render_cond(operand))
+        return acc
     if n == "UnOp":
         return "%s %s" % (node.op, _render_cond(node.operand))
     if n == "Bridge":
@@ -269,8 +273,8 @@ def _render_cond(node):
     if n == "Comparison":
         return "%s %s %s" % (_render_cond(node.left), node.op, _render_cond(node.right))
     if n == "BoolRef":
-        return ".".join(node.name)
-    if n == "Literal":
+        return ".".join(node.name.segments)
+    if n == "ConstantLeaf":
         return node.text
     if n == "MethodCall":
         if node.receiver is None:
@@ -280,7 +284,7 @@ def _render_cond(node):
         if node.args is None:
             return "%s.%s" % (recv, node.method)
         return "%s.%s(%d)" % (recv, node.method, len(node.args))
-    if n == "OpaqueCode":
+    if n == "OpaqueLeaf":
         return node.text
     if isinstance(node, list):
         return ".".join(node)
@@ -343,14 +347,14 @@ def run_guards_and_inheritance():
                 print("  Causality, bracket guard: %s" % _render_cond(g))
         elif isinstance(it, ast.EffectDef):
             print("  EffectDef name=%s params=%d effects=[%s]"
-                  % (it.name, len(it.params),
+                  % (".".join(it.name.segments), len(it.params),
                      ", ".join(type(e).__name__ for e in it.effects)))
         elif isinstance(it, ast.StateMachine):
             print("  StateMachine name=%s bases=%s states=%d"
-                  % (it.name, it.bases, len(it.states)))
+                  % (".".join(it.name.segments), it.bases, len(it.states)))
         elif isinstance(it, ast.ModeGroup):
             print("  ModeGroup name=%s bases=%s modes=%d"
-                  % (it.name, it.bases, len(it.modes)))
+                  % (".".join(it.name.segments), it.bases, len(it.modes)))
 
 
 def run_clockwork_shapes():
@@ -404,15 +408,15 @@ def run_clockwork_shapes():
         it = rf.items[0]
         if isinstance(it, ast.Clockwork):
             print("  Clockwork name=%s params=%d clock=%s guard=%s init=%s deinit=%s"
-                  % (".".join(it.name), len(it.params),
-                     ".".join(it.clock.trigger.name),
+                  % (".".join(it.name.segments), len(it.params),
+                     ".".join(it.clock.trigger.name.segments),
                      it.clock.guard is not None,
                      it.init is not None, it.deinit is not None))
             print("  steps=[%s]" % ", ".join(type(s).__name__ for s in it.steps))
             for s in it.steps:
                 if isinstance(s, ast.WaitLine):
                     print("    WaitLine cause=%s tail=%d"
-                          % (".".join(s.cause.trigger.name), len(s.effects)))
+                          % (".".join(s.cause.trigger.name.segments), len(s.effects)))
                 elif isinstance(s, ast.SelectFrame):
                     print("    SelectFrame branches=%d (tails=%s)"
                           % (len(s.branches),
@@ -485,17 +489,17 @@ def run_expressions():
         for s in rf.items[0].steps:
             n = type(s).__name__
             if n == "Assign":
-                print("  Assign %s = %s" % (".".join(s.lvalue), _render_cond(s.rhs)))
+                print("  Assign %s = %s" % (".".join(s.lvalue.segments), _render_cond(s.rhs)))
             elif n == "Incr":
-                print("  Incr %s by=%s to=%s" % (".".join(s.lvalue),
+                print("  Incr %s by=%s to=%s" % (".".join(s.lvalue.segments),
                       _render_cond(s.amount) if s.amount else "default",
                       _render_cond(s.limit) if s.limit else "none"))
             elif n == "Decr":
-                print("  Decr %s by=%s to=%s" % (".".join(s.lvalue),
+                print("  Decr %s by=%s to=%s" % (".".join(s.lvalue.segments),
                       _render_cond(s.amount) if s.amount else "default",
                       _render_cond(s.limit) if s.limit else "none"))
             elif n == "Recip":
-                print("  Recip %s = 1/(%s) else_body=[%s]" % (".".join(s.lvalue),
+                print("  Recip %s = 1/(%s) else_body=[%s]" % (".".join(s.lvalue.segments),
                       _render_cond(s.operand),
                       ", ".join(type(x).__name__ for x in s.else_body)))
 
@@ -609,8 +613,8 @@ def run_spawn_targets():
             print("  DoSweep steps:")
             for s in sweeps[0].steps:
                 if isinstance(s, ast.Spawn):
-                    tgt = ".".join(s.into_container) if s.into_container else "default"
-                    key = ".".join(s.key) if s.key else "(append/none)"
+                    tgt = ".".join(s.into_container.segments) if s.into_container else "default"
+                    key = ".".join(s.key.segments) if s.key else "(append/none)"
                     print("    Spawn into=%s key=%s" % (tgt, key))
                 else:
                     print("    %s" % type(s).__name__)

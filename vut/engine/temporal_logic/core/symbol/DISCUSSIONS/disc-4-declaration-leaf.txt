@@ -1,0 +1,41 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-4  DeclarationLeaf  (Bin B definitions + Bin C import mount)
+===============================================================================
+STATUS    DONE. 60/60 green.
+
+DECIDED -- the dual of ReferenceLeaf
+    A name that is INTRODUCED here (not resolved) becomes a
+    core/symbol.DeclarationLeaf: the site the symbol table registers and
+    resolves references against. Sibling to ReferenceLeaf, NO resolution slot
+    (a declaration does not resolve; it is resolved against). segments + begin
+    only. Scope/registration data lives in the symbol table beside the AST
+    (AST-never-mutated), added when the table is built.
+
+BINS FOLDED
+    Bin B (definitions): Mode.name, State.name, StateMachine.name,
+        ModeGroup.name, Namespace.name, CauseDef.name, EffectDef.name,
+        Clockwork.name  -> DeclarationLeaf.
+    Bin C (import): Import.mount -> DeclarationLeaf. The mount point INTRODUCES
+        a binding name (resolved by import/link machinery), so it is a
+        declaration, not a reference. Bin C folds into Bin B; no separate type.
+
+AS BUILT
+    - _decl(segments, begin) helper beside _ref in parser/ast_nodes.py; None->None.
+    - Wrapped at each factory (per-factory seam, as disc-3): the five unique
+      constructions by string; Mode/State (identical bodies) anchored on their
+      distinct docstring tails; CauseDef (mixed: name=_decl, for_event=_ref);
+      Import.mount=_decl.
+    - Field annotations list[str] -> DeclarationLeaf (9 sites).
+    - Readers (test-engine): declaration name prints list-repr before, now
+      '.'.join(it.name.segments); 'bases' left as nested name-lists (not in
+      scope this pass). Clockwork '.'.join(it.name) -> .segments.
+    - 13 GOODs regenerated on real infra (11 dump/count + test-engine
+      cause_effect, guards_and_inheritance); every diff verified wrap/render
+      only, no value drift. DeclarationLeaf has no repr=False slot, nothing
+      leaks into dumps.
+
+NOT CONVERTED (out of scope, noted)
+    StateMachine.bases / ModeGroup.bases: inheritance name-lists (list of
+    name-lists). These are references to base aggregates -- Bin A in spirit,
+    but list-of-names shaped, deferred. Candidate for a later pass.

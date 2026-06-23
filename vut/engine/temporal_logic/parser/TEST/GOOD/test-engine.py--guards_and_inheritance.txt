@@ -23,13 +23,13 @@
   Causality, bracket guard: (e.tags.has(1) and e.name.glob(1))
 
 --- effect definition with signature ---
-  EffectDef name=['Boost'] params=1 effects=[EventSpec, EventSpec]
+  EffectDef name=Boost params=1 effects=[EventSpec, EventSpec]
 
 --- state-machine inheritance ---
-  StateMachine name=['Derived'] bases=[['Base1'], ['Base2']] states=1
+  StateMachine name=Derived bases=[['Base1'], ['Base2']] states=1
 
 --- mode-group inheritance ---
-  ModeGroup name=['D'] bases=[['Base']] modes=1
+  ModeGroup name=D bases=[['Base']] modes=1
 
 --- aggregate without bases ---
-  StateMachine name=['Plain'] bases=[] states=1
+  StateMachine name=Plain bases=[] states=1

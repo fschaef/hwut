@@ -1,0 +1,169 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-2  OPAQUE TERMINAL AS A GENERAL LEAF; ENGINE STOPS NAMING SpanResult
+===============================================================================
+STATUS    DONE.
+          OpaqueCode collapsed into core/symbol.OpaqueLeaf (see below), AND the
+          engine seam inverted (disc-5): opaque-span absorption now produces a
+          core/parser_generator.OpaqueTerminal (text+mode+begin), the reduce
+          action makes OpaqueLeaf from it, and world.SpanResult is DELETED. The
+          core->world carrier edge is gone; the engine names its own type. Full
+          suite 60/60 green, zero diffs (OpaqueTerminal carries the same triple,
+          transparently).
+          HISTORY (the original two-part plan) is retained below for provenance.
+          -----------------------------------------------------------------------
+          PARTLY DONE  [superseded by the DONE above]
+          DONE  -- OpaqueCode collapsed wholesale into core/symbol.OpaqueLeaf
+                   (parser node deleted; ~20 field annotations now name
+                   OpaqueLeaf; from_span + lazy get_references->ReferenceLeaf on
+                   OpaqueLeaf; field order is begin-first per Leaf base; 12
+                   GOODs regenerated on real parser infra -- name + field
+                   reorder only, no semantic change; dead SpanReference import
+                   removed from parser). Full suite 54/54 green.
+          OPEN  -- the ENGINE SEAM. RESOLVED design (disc-5), not yet built:
+                   opaque-span absorption produces an OPAQUE TERMINAL (a
+                   parser-generator type, beside Token), carrying text+mode+
+                   begin. The reduce action makes ast.OpaqueLeaf out of it. The
+                   carrier MOVES from world.SpanResult into
+                   core/parser_generator (its own layer): the engine names its
+                   OWN type, not a world type, so the core->world edge for the
+                   carrier disappears. world sheds SpanResult (it never used it).
+                   See disc-5.
+
+SCOPE     core/symbol (OpaqueLeaf) + core/parser_generator (consume_span,
+          T.opaque) + parser/ (OpaqueCode collapse). Lifts opaque-span
+          absorption from a SpanResult-shaped engine leak into a general,
+          parameterized AST leaf.
+
+-------------------------------------------------------------------------------
+WHAT IS ALREADY GENERAL (do not rebuild)
+-------------------------------------------------------------------------------
+T.opaque(mode) is ALREADY a first-class terminal kind in the generator:
+shape=="opaque", is_opaque, its own FIRST set {(t_fr_span_open,)}, its own
+consume path (frames[-1].add(parser.consume_span(self))). 'mode' already rides
+on the terminal so a rule says "this position takes an opaque span of THIS
+kind". The terminal is general; only its RESULT is not.
+
+The one leak: consume_span constructs world.span_oracle.SpanResult (ll2_engine
+L567) and the engine imports SpanResult (L11). That is the sole core->world
+edge for SpanResult, and the engine's own docstrings call the prior shape "a
+layering leak".
+
+-------------------------------------------------------------------------------
+DECIDED -- opaque absorption yields a general Leaf, parameterized by REFERENCE
+-------------------------------------------------------------------------------
+An opaque terminal in the tree is a DESCRIPTION of how to access opaque
+content -- the same leaf-nature as every terminal (disc-1). Its access kind is
+"opaque content, reached by <reference>". So it is a fourth Leaf derivation:
+
+    core/symbol/ast.py
+      Leaf
+       |- ConstantLeaf      inline value
+       |- ReferenceLeaf     by key / navigation    (resolution slot)
+       |- AnonymousLeaf     built in place
+       +- OpaqueLeaf        opaque content + mode; reference kind PARAMETERIZED
+
+OpaqueLeaf PARAMETERIZED BY how the content is referenced -- the generalization
+asked for: inline TEXT today; OFFSET+EXTENT, URL, ... derivable later WITHOUT
+touching the engine (Leaf is a base; add a reference kind when a terminal needs
+one). 'mode' rides as a carried parameter value (an oracle concept from world),
+NOT a constructed world type the engine names.
+
+PRODUCTION SITES (CRUCIAL -- the engine builds NO ast type):
+    ENGINE (ll2_engine.consume_span)    consumes the T.opaque terminal and
+                                        yields a NEUTRAL span result
+                                        (text, mode, begin). Names no ast type.
+                                        Does NOT build OpaqueLeaf.
+    APPLICATION (parser/ reduce action) lifts that neutral result into
+                                        ast.OpaqueLeaf. The parser is allowed to
+                                        import core/symbol; this is where it
+                                        happens.
+
+Consequence: the engine has NO edge into core/symbol. It keeps yielding a
+neutral triple, exactly as today. The ONLY engine-side question left is whether
+that triple stays the world.SpanResult type or becomes a barer neutral value
+(disc-2 does NOT force this; see fork note). world keeps SpanMode/SpanOracle
+(its own measurement vocabulary). OpaqueLeaf lives in core/symbol and is built
+application-side.
+
+This UNIFIES three things into one:
+    engine SpanResult-leak  +  parser OpaqueCode  ==>  OpaqueLeaf
+OpaqueLeaf.get_references(oracle) yields tuple[ReferenceLeaf] (disc-1): names
+found in opaque text are the SAME resolvable leaf the bracket grammar
+produces, lazily born. SpanReference (world) is the raw pre-tree finding,
+LIFTED to ReferenceLeaf at OpaqueLeaf.get_references -- the parser boundary,
+which is allowed to touch both world and core/symbol.
+
+-------------------------------------------------------------------------------
+DECIDED BY PRECEDENT -- the lazy reference cache
+-------------------------------------------------------------------------------
+OpaqueLeaf.get_references is a memoised accessor over one compare=False,
+repr=False slot, written once via object.__setattr__ -- exactly today's
+OpaqueCode.get_references. The oracle is an ARGUMENT per call; the leaf never
+holds a live oracle handle.
+
+-------------------------------------------------------------------------------
+DECIDED -- OpaqueLeaf takes the TEXT for now; OPEN to other reference kinds
+-------------------------------------------------------------------------------
+ast.OpaqueLeaf carries the span TEXT for now (inline content + mode + begin).
+This is the only reference kind that exists today.
+
+It is DELIBERATELY OPEN to other ways of referencing the content -- offset +
+extent into the source, a url, an external handle, ... -- added when a second
+kind actually appears. Leaf is a base; a new reference kind is a new field or
+derivation then, with no engine change (the engine yields the neutral triple
+regardless). The README records this openness so the inline-text shape is not
+mistaken for a closed decision.
+
+No tagged-union / discriminator machinery is built now: only TEXT exists, and
+building the union before a second kind exists is speculative apparatus.
+
+-------------------------------------------------------------------------------
+BLAST RADIUS (pre-code; verify GREEN before & after)
+-------------------------------------------------------------------------------
+  ll2_engine.py     delete SpanResult import (L11); consume_span (L530-567)
+                    builds OpaqueLeaf; docstrings (L33, L531-537) reworded.
+  ll2_grammar_spec  T.opaque(mode) gains reference-kind parameter (per fork);
+                    is_opaque / FIRST set unchanged.
+  parser/ast_nodes  OpaqueCode collapses into OpaqueLeaf (or becomes a thin
+                    parser alias); from_span / get_references move.
+  parser/ast_map    L29 + isinstance(value, SpanResult) (ast_nodes L370):
+                    raw-leaf-forward check moves to OpaqueLeaf. <-- easy to miss.
+  cst_nodes.py      L41 docstring mentions SpanResults -> OpaqueLeaf.
+  world/__init__    SpanResult export stays (world still defines it) OR is
+                    dropped if no one outside world constructs it -- decide at
+                    code time from final consumer set.
+  SpanReference     -> ReferenceLeaf at the lift point (disc-1 rename, still
+                    owed; world keeps the raw finding type under whatever name).
+
+  Span tests touched: oracle_handoff, source_map, malformed_fragment,
+  comments_ws, mismatch (core parser_generator TEST). NO GOOD edits expected;
+  if a GOOD prints "SpanResult"/"OpaqueCode" by repr, that print is the
+  contract and the rename is then a GOOD-affecting change -- CHECK FIRST.
+
+ENTRY CONDITION TO CODE:
+    fork picked; GREEN baseline re-verified; grep GOODs for "SpanResult" /
+    "OpaqueCode" / "SpanReference" repr appearances (if any, the rename is
+    GOOD-affecting and gets its own regen-with-provenance step). Only then
+    edit the engine.
+
+-------------------------------------------------------------------------------
+GOOD-GREP RESULT (entry condition discharged)
+-------------------------------------------------------------------------------
+SpanResult     0 GOOD appearances  -> FREE silent sweep.
+SpanReference  0 GOOD appearances  -> FREE silent sweep (-> ReferenceLeaf at
+                                      the lift point).
+OpaqueCode    13 GOOD files        -> GOOD-AFFECTING. OpaqueCode -> OpaqueLeaf
+                                      is NOT a silent sweep; it is a
+                                      regen-with-provenance step:
+   cover-syntax-tree positive   38x  AST tree-dump node label
+   test-ast-map-router routing   3x  TWO are tree labels (regen);
+                                     ONE is HAND-WRITTEN prose
+                                     ("opaque -> OpaqueCode", L11) -> deliberate
+                                     edit, a regen will NOT fix it.
+   monkey-fuzz (10 choices)      1x each  node-count histogram label.
+
+   PLAN at code time: rename the class -> regen the 12 dump/count GOODs on real
+   infrastructure (NOT fabricated) -> hand-edit the 1 router-prose line ->
+   document provenance (what was regenerated, on what infra, why) -> re-verify
+   GREEN. The two FREE renames need none of this.

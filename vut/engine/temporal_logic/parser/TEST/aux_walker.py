@@ -58,7 +58,7 @@ from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (t_
                                                           t_fr_eof,
                                                           t_fr_mismatch)
 from vut.engine.temporal_logic.parser.grammar import (
-        t_re_id, t_re_number, t_re_string, t_re_name_colon)
+        t_re_id, t_re_float, t_re_int, t_re_string, t_re_name_colon)
 
 
 # ==========================================================================
@@ -66,7 +66,8 @@ from vut.engine.temporal_logic.parser.grammar import (
 # ==========================================================================
 FILLER = {
     t_re_id:          "X",
-    t_re_number:      "1",
+    t_re_float:       "1.0",
+    t_re_int:         "1",
     t_re_string:      '"s"',
     t_re_name_colon:  "n:",
 }

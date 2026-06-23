@@ -1,36 +1,36 @@
 === monkey: wide ===
-tokens parsed:      839
+tokens parsed:      644
 top-level items:    6 (ok)
 diagnostics:        none
 
-total AST nodes: 635
+total AST nodes: 134
 
-  Arg                        4
-  ArgDecl                    2
-  BinOp                    280
+  Arg                        2
+  ArgDecl                    4
   Causality                  2
-  Cause                     11
+  Cause                     10
   CauseRef                   2
-  Clockwork                  1
-  Condition                  4
-  Decr                       1
-  DoSweep                    3
-  EffectDef                  1
+  Condition                  3
+  ConstantLeaf               4
+  DeclarationLeaf            5
+  DoSweep                    2
   EffectRef                  2
+  EventDef                   1
   HasRef                     2
   Import                     1
-  Incr                       1
+  Instant                    1
+  LeftFolding               24
   ListDecl                   1
   ListType                   1
-  Literal                  230
   Mode                       1
   ModeGroup                  1
-  Mutation                   2
-  Namespace                  1
-  OpaqueCode                63
+  Mutation                   1
+  OpaqueLeaf                 4
+  ReferenceLeaf             20
   ReportString               1
+  STAR_Node                 24
   Spawn                      1
   State                      1
   StateMachine               1
-  Trigger                   11
-  Unspawn                    3
+  Trigger                   10
+  Unspawn                    2

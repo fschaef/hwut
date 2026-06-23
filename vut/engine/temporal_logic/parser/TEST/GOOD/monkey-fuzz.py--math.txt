@@ -1,39 +1,46 @@
 === monkey: math ===
-tokens parsed:      5880
+tokens parsed:      13958
 top-level items:    5 (ok)
 diagnostics:        none
 
-total AST nodes: 3086
+total AST nodes: 353
 
-  Arg                        9
-  ArgDecl                    9
-  Assign                     2
-  BinOp                   1469
-  Causality                  1
-  Cause                      8
+  Arg                       14
+  ArgDecl                   31
+  Causality                  4
+  Cause                      9
+  CauseDef                   1
+  CauseRef                   2
   ClockDef                   1
-  Condition                  5
-  Decr                       2
+  Clockwork                  2
+  Condition                  6
+  ConstantLeaf              17
+  DeclarationLeaf           11
+  Decr                       1
   DefaultRef                 1
+  DictDecl                   1
+  DictType                   1
   DoSweep                    4
-  EffectRef                  7
+  EffectDef                  2
+  EffectRef                  2
   EventDef                   1
-  EventSpec                  2
-  Expr                       5
-  HasRef                     1
-  IfFrame                    4
+  EventSpec                  4
+  IfFrame                    1
   Import                     1
-  Incr                       5
-  Instant                    3
-  Literal                 1192
-  Mutation                   6
-  OpaqueCode               304
-  Recip                      2
-  ReportString               7
-  SelectFrame                2
-  Spawn                      4
+  Incr                       2
+  Instant                    1
+  LeftFolding               81
+  Mutation                   4
+  Namespace                  3
+  OpaqueLeaf                 8
+  ReferenceLeaf             31
+  ReportString               5
+  STAR_Node                 81
+  Spawn                      1
+  State                      1
   StateMachine               1
-  Trigger                    8
-  Unspawn                    9
-  WaitLine                   7
-  WhileFrame                 4
+  Trigger                    9
+  UnOp                       1
+  Unspawn                    5
+  WaitLine                   1
+  WhileFrame                 1

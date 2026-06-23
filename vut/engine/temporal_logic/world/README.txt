@@ -37,7 +37,7 @@ THE ABCs
 -------------------------------------------------------------------------------
 
     span_oracle.py   SpanOracle  -- find_close, collect_references, delimiters;
-                     plus the neutral vocabulary Reference / SpanResult /
+                     plus the neutral vocabulary Reference /
                      SpanMode and the errors SpanSyntaxError / SpanOracleError.
                      BUILT.
                      (SpanMode is the abstract base; E_SpanMode is the core

@@ -1,0 +1,66 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-5  ENGINE-SEAM INVERSION  --  OpaqueTerminal; world sheds SpanResult
+===============================================================================
+STATUS    DONE. 60/60 green, zero diffs.
+
+THE PROBLEM
+    ll2_engine (the GENERAL engine) ended consume_span by constructing
+    world.span_oracle.SpanResult -- a world type, named inside core. The sole
+    core->world edge for the carrier. SpanResult lived in world but NOTHING in
+    world used it; it was only the engine->parser carrier, misplaced.
+
+THE MODEL (Frank-Rene)
+    Opaque-span absorption produces an OPAQUE TERMINAL. The reduce action (the
+    task) makes ast.OpaqueLeaf out of it -- symmetric with: ordinary terminal
+    -> Token -> reduce action -> AST node. The opaque case stops being special.
+    The span FINDER has a minimalist API: it reports raw content (text now;
+    offset+length, url later) and knows nothing of OpaqueTerminal/OpaqueLeaf.
+    The opaque terminal comes from core/parser_generator -- the engine's own
+    layer -- so the engine names its OWN type, not a world type.
+
+WHAT WAS BUILT
+    - core/parser_generator/cst_nodes.py: new OpaqueTerminal(text, begin, mode),
+      beside Token (the captured-terminal concept). Frozen.
+        text:  content the finder reported (open to offset+length/url later --
+               the finder-boundary openness that mirrors OpaqueLeaf's).
+        begin: provenance (absolute offset, as Token.begin).
+        mode:  the terminal's span-mode ROLE -- which way the oracle parses the
+               content. Rides on the terminal DEFINITION (T.opaque(mode)),
+               DISTINCT from the positional role hint (D-18) the reduce-time
+               router reads: different attachment point, different consumer.
+               (mode is role-LIKE -- the spec already calls it "the Luau layer's
+               Role" -- but is NOT the positional role; it could not be carried
+               on the router channel without sending it to the wrong consumer.)
+               Kept language-neutral: any object with qualified_name()/name.
+    - ll2_engine: imports OpaqueTerminal from cst_nodes (its own layer), DROPS
+      the world.SpanResult import; consume_span returns OpaqueTerminal;
+      docstrings reworded.
+    - parser/ast_nodes _classify: isinstance(value, OpaqueTerminal) (was
+      SpanResult). OpaqueLeaf.from_span reads .text/.mode/.begin -- OpaqueTerminal
+      has all three, so from_span is UNCHANGED.
+    - world: SpanResult class DELETED, dropped from world/__init__ export. world
+      never used it.
+    - doc sweep: SpanResult -> OpaqueTerminal in parser RATIONALE/README, world
+      README, PARSER-CORE-MANUAL.
+
+WHY ZERO DIFFS
+    OpaqueTerminal carries the identical (text, mode, begin) the old SpanResult
+    did, and is consumed by the reduce action before any tree dump -- it never
+    reaches a GOOD. OpaqueLeaf (which DOES reach dumps) is produced exactly as
+    before. So the carrier swap is fully transparent to the oracles.
+
+CORRECTION RECORDED (mode vs role)
+    A first reading proposed dropping mode and treating it AS the (positional)
+    role. Rejected on evidence: mode is consumed by the ORACLE (find_close /
+    collect_references / _wrapper_for(mode)) to choose how to parse the span;
+    the positional role is consumed by the REDUCE-TIME router (ast_map,
+    node["key"]). Both are "roles" loosely, but merging the channels would feed
+    the oracle's instruction to the router's consumer. mode stays as carried
+    data on OpaqueTerminal.
+
+OPEN (later, unchanged by this)
+    The finder reporting offset+length/url instead of text: when that arrives,
+    OpaqueTerminal.text generalises to a content reference; OpaqueLeaf's same
+    openness (disc-2) follows. No engine change needed -- the point of the
+    minimalist finder API.

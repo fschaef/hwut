@@ -49,6 +49,7 @@ map-hosted (plain value or input-decided node kind):
   list-arg
   list-decl-arg
   name-dotted
+  number
   parens-arg
   parens-decl
   ref-member

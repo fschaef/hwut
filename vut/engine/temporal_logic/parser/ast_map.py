@@ -26,7 +26,7 @@ slot, optionals as OPT_Nodes whose presence is the 'present' flag ON the node
 (never inferred from the parent's child count).
 
 Single-terminal rules (<mutation>, <report-string>) have no
-operator node: their factory receives the raw leaf (SpanResult / Token) itself.
+operator node: their factory receives the raw leaf (OpaqueTerminal / Token) itself.
 
 validate_ast_map() is the load-time coverage guard (every grammar rule mapped);
 the shape correspondence (a SEQ rule's node IS SEQ_Interface, ...) is asserted
@@ -97,9 +97,9 @@ def _ref_member(node):
 
 # An optional ['by:', LVALUE] binding read off a child OPT_Node: present -> the
 # one-survivor SEQ around the LVALUE span ('by:' silent), wrapped into an
-# OpaqueCode; absent -> None. An OptMap used as a helper (D-19) -- the same
+# OpaqueLeaf; absent -> None. An OptMap used as a helper (D-19) -- the same
 # present/absent routing the family expresses, reused off a rule entry.
-_opt_by = OptMap({True:  lambda seq: ast.OpaqueCode.from_span(seq.children[0]),
+_opt_by = OptMap({True:  lambda seq: ast.OpaqueLeaf.from_span(seq.children[0]),
                   False: None})
 
 
@@ -209,7 +209,7 @@ def _cause_system(node):
     token; the trigger name is its single-segment list, is_keyword True.
     """
     tok = node.children[0].child
-    trigger = ast.Trigger(name=[tok.text], is_keyword=True, begin=tok.begin)
+    trigger = ast.Trigger(name=ast._ref([tok.text], tok.begin), is_keyword=True, begin=tok.begin)
     return ast.Cause(trigger=trigger, guard=_opt_guard(node.children[1]),
                      begin=tok.begin)
 
@@ -224,9 +224,9 @@ def _cause_named(node):
     name, opt_parens, opt_guard = node.children
     guard = _opt_guard(opt_guard)
     if opt_parens.present:
-        return ast.CauseRef(name=name, args=opt_parens.child, guard=guard,
+        return ast.CauseRef(name=ast._ref(name, node.begin), args=opt_parens.child, guard=guard,
                             begin=node.begin)
-    trigger = ast.Trigger(name=name, is_keyword=False, begin=node.begin)
+    trigger = ast.Trigger(name=ast._ref(name, node.begin), is_keyword=False, begin=node.begin)
     return ast.Cause(trigger=trigger, guard=guard, begin=node.begin)
 
 
@@ -239,28 +239,27 @@ def _effect_named(node):
     """
     name, opt_parens = node.children
     if opt_parens.present:
-        return ast.EventSpec(name=name, args=opt_parens.child, begin=node.begin)
-    return ast.EffectRef(name=name, begin=node.begin)
+        return ast.EventSpec(name=ast._ref(name, node.begin), args=opt_parens.child, begin=node.begin)
+    return ast.EffectRef(name=ast._ref(name, node.begin), begin=node.begin)
 
 
 # ---------------------------------------------------------------------------
 # Condition terms: the bare boolean stands (D-26).
 # ---------------------------------------------------------------------------
 def _left_fold(node):
-    """RETURN: BinOp | operand, a left-associative operator level (D-13).
+    """RETURN: LeftFolding | operand, a left-associative operator level (D-13).
 
     children = (head, STAR((op, operand))): the head operand, then the
-    repetition -- each item an anonymous SEQ (captured operator token, next
-    operand). An empty repetition forwards the bare head; otherwise the items
-    fold left into nested BinOp nodes, the operator read verbatim from each
-    token. Shared by every binary ladder rule (cond-or/-xor/-and, alg-shift/
-    -add/-mul).
+    repetition. An empty repetition forwards the bare head (a level with no
+    operator collapses to its operand); otherwise the head and the STAR_Node are
+    MOUNTED into a LeftFolding -- the star is not unrolled, it is carried whole,
+    and LeftFolding's type states the left grouping. Shared by every binary
+    ladder rule (cond-or/-xor/-and, alg-shift/-add/-mul).
     """
-    acc = node.children[0]
-    for item in node.children[1].items:
-        op_tok, operand = item.children
-        acc = ast.BinOp(op=op_tok.text, left=acc, right=operand, begin=op_tok.begin)
-    return acc
+    head, star = node.children
+    if not star.items:
+        return head
+    return ast.LeftFolding(head=head, star=star, begin=node.begin)
 
 
 def _un_fold(node):
@@ -284,7 +283,7 @@ def _comparison(node):
     children = (left, opt_tail): with a comparison tail -> a Comparison (the
     num->bool crossing); without one, a bare boolean expression -- a lone
     <name-dotted> becomes a BoolRef ('== true' in meaning, F-5), anything else
-    (a Literal, a nested expression) forwards unchanged.
+    (a ConstantLeaf, a nested expression) forwards unchanged.
     """
     left, opt_tail = node.children
     if opt_tail.present:
@@ -292,9 +291,35 @@ def _comparison(node):
         return ast.Comparison(left=left, op=op_tok.text, right=right,
                               begin=node.begin)
     if isinstance(left, list):
-        return ast.BoolRef(name=left, begin=node.begin)
+        return ast.BoolRef(name=ast._ref(left, node.begin), begin=node.begin)
     return left
 
+
+
+def _number(node):
+    """RETURN: ConstantLeaf, a numeric literal -- INT or FLOAT by which arm
+    matched (<number> = t_re_float OR t_re_int).
+
+    node is the OR_Node: triggered_index 0 -> FLOAT, 1 -> INT (the rule's arm
+    order). The CST-shape dispatch (which arm) lives here; construction
+    delegates to the general ConstantLeaf.from_text.
+    """
+    tok = node.child
+    kind = ast.E_ConstantKind.FLOAT if node.triggered_index == 0 \
+           else ast.E_ConstantKind.INT
+    return ast.ConstantLeaf.from_text(tok.text, kind, tok.begin)
+
+
+def _string_const(tok):
+    """RETURN: ConstantLeaf, a STRING literal (quotes included in text)."""
+    return ast.ConstantLeaf.from_text(tok.text, ast.E_ConstantKind.STRING,
+                                      tok.begin)
+
+
+def _bool_const(tok):
+    """RETURN: ConstantLeaf, a BOOL literal ('true'/'false')."""
+    return ast.ConstantLeaf.from_text(tok.text, ast.E_ConstantKind.BOOL,
+                                      tok.begin)
 
 
 def _operand(node):
@@ -359,11 +384,11 @@ def _clockwork_name_step(node):
     name, or_node = node.children
     tail = or_node.child
     if isinstance(tail, tuple) and tail and tail[0] == "recip":
-        return ast.Recip(lvalue=name, operand=tail[1], else_body=tail[2],
+        return ast.Recip(lvalue=ast._ref(name, node.begin), operand=tail[1], else_body=tail[2],
                          begin=node.begin)
     if isinstance(tail, list):
-        return ast.EventSpec(name=name, args=tail, begin=node.begin)
-    return ast.Assign(lvalue=name, rhs=tail, begin=node.begin)
+        return ast.EventSpec(name=ast._ref(name, node.begin), args=tail, begin=node.begin)
+    return ast.Assign(lvalue=ast._ref(name, node.begin), rhs=tail, begin=node.begin)
 
 
 # ---------------------------------------------------------------------------
@@ -442,13 +467,15 @@ AST_MAP = {
     "algebr/add":            _left_fold,
     "algebr/mul":            _left_fold,
     "algebr/un":             _un_fold,
-    # alg-atom (D-13): paren-algebra (0), bridge (1), operand (7) forward
-    # unchanged; an opaque expr span (6) -> OpaqueCode; the literals (2..5) ->
-    # Literal. OrMap collapses each group to one leaf -- the fan-out that was a
-    # hand-written 'i in (...)' ladder.
-    "algebr/atom":           OrMap({(0, 1, 7): PASS,
-                                    6: ast.OpaqueCode.from_span,
-                                    (2, 3, 4, 5): ast.Literal.from_token}),
+    # alg-atom (D-13): paren-algebra (0), bridge (1), <number> (2), operand (7)
+    # forward unchanged; an opaque expr span (6) -> OpaqueLeaf; string (3) and
+    # true/false (4,5) -> ConstantLeaf. <number> (2) is its own rule that already
+    # built a ConstantLeaf, so it just passes through here.
+    "algebr/atom":           OrMap({(0, 1, 2, 7): PASS,
+                                    6: ast.OpaqueLeaf.from_span,
+                                    3: _string_const,
+                                    (4, 5): _bool_const}),
+    "number":                _number,
     "algebr/operand":        _operand,
     "algebr/postfix":        _raw,
     "algebr/bridge":         ast.Bridge.from_seq,
@@ -458,7 +485,7 @@ AST_MAP = {
     "import":                ast.Import.from_seq,
     "causality":             ast.Causality.from_seq,
     "do-sweep":              ast.DoSweep.from_seq,
-    "code-block":            OrMap({0: ast.OpaqueCode.from_span, 1: PASS}),
+    "code-block":            OrMap({0: ast.OpaqueLeaf.from_span, 1: PASS}),
     "def-cause":             ast.CauseDef.from_seq,
     "def-effect":            ast.EffectDef.from_seq,
     "guard":                 ast.Condition.from_seq,

@@ -296,7 +296,7 @@ span leaf is a T.opaque(mode) terminal, where 'mode' is an E_SpanMode:
 
 When the lexer reaches a span opener it hands control to the SPAN ORACLE you
 supplied to EngineParser, passing the E_SpanMode the grammar position demanded;
-the oracle returns the matching-brace extent (a SpanResult: text, mode, begin),
+the oracle returns the matching-brace extent (text, mode, begin), wrapped by the engine into an OpaqueTerminal,
 and the lexer splices it in as one token. The oracle carries ALL knowledge of
 the embedded language; the core knows only "a span of this mode sits here."
 

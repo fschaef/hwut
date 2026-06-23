@@ -19,7 +19,7 @@ shape gate that pins a router to its rule's shape lives in the outer layer
 
 ROUTE LEAVES. A leaf is a factory (a callable receiving the routed value) OR a
 plain constant (returned as-is) OR the PASS sentinel (forward the routed value
-unchanged). So 'OptMap({True: OpaqueCode.from_span, False: None})' needs no
+unchanged). So 'OptMap({True: OpaqueLeaf.from_span, False: None})' needs no
 'lambda _: None'.
 
 WHAT ROUTERS DO NOT DO. They never inspect what a factory PRODUCES -- a routed

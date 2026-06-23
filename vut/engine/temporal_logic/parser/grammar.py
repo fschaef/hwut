@@ -15,7 +15,8 @@ from vut.engine.temporal_logic.world.span_oracle import E_SpanMode
 
 
 t_re_name_colon = T.regex(r'[a-zA-Z_]\w*:')
-t_re_number     = T.regex(r'\d+(?:\.\d+)?')
+t_re_float      = T.regex(r'\d+\.\d+')   # declared BEFORE int: maximal munch (5.0 -> float)
+t_re_int        = T.regex(r'\d+')
 t_re_string     = T.regex(r'"[^"]*"')
 t_re_id         = T.regex(r'[a-zA-Z_]\w*')
 
@@ -71,7 +72,8 @@ t_op_question   = T.captured("?")
 ROLES = {
     t_re_id:         ("event", "clock", "type", "name", "arg-name"),
     t_re_string:     ("filename", "report"),
-    t_re_number:     ("period",),
+    t_re_float:      ("period",),
+    t_re_int:        ("period",),
     t_re_name_colon: ("member",),
     "<name-dotted>": ("namespace", "event", "cause", "emission", "mode",
                       "aggregate", "container", "instance", "base", "member",
@@ -89,7 +91,8 @@ GRAMMAR = {
     "namespace":      ("open:", "<name-dotted(namespace)>", PLUS("<top-level>"), ":close"),
     
     "def-event":      ("event:", t_re_id("event"), "<parens-decl>"),
-    "def-clock":      ("clock:", t_re_id("clock"), t_re_number("period")),
+    "def-clock":      ("clock:", t_re_id("clock"), "<number>"),
+    "number":         (t_re_float, OR, t_re_int),
     "def-cause":      ("cause:", "<signature>", "for:", "<name-dotted(event)>", "&", "<guard>"),
     "def-effect":     ("effect:", "<signature>", PLUS(("=>", "<effect>"))),
     
@@ -182,7 +185,7 @@ GRAMMAR = {
         "add":      ("<mul>", STAR(("<op-add>",   "<mul>"))),
         "mul":      ("<un>",  STAR(("<op-mul>",   "<un>"))),
         "un":       ([t_op_sub], "<atom>"),
-        "atom":     ("<paren>", OR, "<bridge>", OR, t_re_number, OR, t_re_string,
+        "atom":     ("<paren>", OR, "<bridge>", OR, "<number>", OR, t_re_string,
                      OR, t_kw_true, OR, t_kw_false, OR, t_opq_expr,
                      OR, "<operand>"),
         "operand":  (t_re_id("receiver"), ["<parens-arg>"], STAR("<postfix>")),

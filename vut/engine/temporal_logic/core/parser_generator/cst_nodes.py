@@ -38,7 +38,7 @@ anonymous (name=None) inline node is interpreted by the enclosing rule's
 transformer from its own positional knowledge, so it needs no name of its own.
 
 Leaf values inside children/items/child are Tokens (captured terminals),
-SpanResults (opaque spans, span_oracle.py), or the already-reduced CST/AST nodes
+OpaqueTerminals (opaque spans), or the already-reduced CST/AST nodes
 of child rules. The nodes are frozen dataclasses, so a consumer may hold and
 compare them freely; they hold REFERENCES to already-reduced children (bottom-up
 reduction finishes a child before its parent is built), never copies.
@@ -48,6 +48,34 @@ from dataclasses import dataclass, field
 
 from vut.engine.temporal_logic.core.parser_generator.operator_interface import (OR_Interface, OPT_Interface, SEQ_Interface,
                                   PLUS_Interface, STAR_Interface)
+
+
+@dataclass(frozen=True)
+class OpaqueTerminal:
+    """A captured OPAQUE terminal: the engine's result of absorbing a '{ ... }'
+    span. The opaque counterpart to a Token -- where a Token captures an
+    ordinary terminal, this captures one the rule language does not parse.
+
+    'text' is the span content the finder reported (delimiters included). The
+    finder API is minimalist: it reports raw content -- text now, possibly an
+    offset+length or a url later -- and this terminal carries whatever it
+    reported, opening OpaqueLeaf's reference-kind openness at the finder
+    boundary without coupling the engine to any one form.
+
+    'begin' is provenance: the absolute source offset, as Token.begin is.
+
+    'mode' is the terminal's span-mode ROLE: which way the oracle parses the
+    content (e.g. EXPRESSION vs STATEMENT_BLOCK). It rides on the terminal
+    DEFINITION (T.opaque(mode)), distinct from the positional role hint (D-18)
+    that the reduce-time router reads -- different attachment point, different
+    consumer. Kept language-neutral: any object exposing qualified_name()/name.
+
+    The engine builds THIS (its own type); the reduce action makes ast.OpaqueLeaf
+    from it. No world type is named by the engine.
+    """
+    text:  str
+    begin: int
+    mode:  object
 
 
 class _Absent:

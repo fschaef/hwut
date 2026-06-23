@@ -63,6 +63,7 @@ mode-group                 SEQ
 mutation                   str
 name-dotted                SEQ
 namespace                  SEQ
+number                     OR
 parens-arg                 SEQ
 parens-decl                SEQ
 ref-has                    SEQ

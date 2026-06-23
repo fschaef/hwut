@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 from vut.engine.temporal_logic.lexer.lexer import Lexer
 from vut.engine.temporal_logic.core.diagnostic import Diagnostic, Phase, DiagnosticReporter
-from vut.engine.temporal_logic.world.span_oracle import SpanResult
 from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import t_fr_span_open, t_fr_eof
 
 
@@ -20,7 +19,7 @@ from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (Sp
                               collect_alt_conflicts, ELEM, REDUCE, LOOP,
                               CST_REDUCE, ROLE_STAMP)
 from dataclasses import replace as _dc_replace
-from vut.engine.temporal_logic.core.parser_generator.cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node
+from vut.engine.temporal_logic.core.parser_generator.cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, OpaqueTerminal
 
 _CST_NODE_TYPES = (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node)
 
@@ -30,7 +29,7 @@ def _is_cst_node(value):
 
     Used by the CST reduce to decide whether a rule's forwarded child can have a
     rule name stamped onto it (only the frozen CST nodes carry a 'name' field; a
-    bare Token or SpanResult forwarded by a single-terminal rule does not).
+    bare Token or OpaqueTerminal forwarded by a single-terminal rule does not).
     """
     return isinstance(value, _CST_NODE_TYPES)
 
@@ -528,13 +527,13 @@ class EngineParser:
         return None if term.silent else tok
 
     def consume_span(self, span_node):
-        """RETURN: SpanResult, the opaque span at the cursor (text, mode, begin).
+        """RETURN: OpaqueTerminal, the opaque span at the cursor (text, mode, begin).
 
         The grammar-agnostic counterpart of consuming a token: an opaque terminal
         position pulls a whole '{ ... }' span via the injected oracle and yields a
-        neutral SpanResult. The engine does NOT build any language-specific AST
+        neutral OpaqueTerminal. The engine does NOT build any language-specific AST
         node here (that was a layering leak); the rule's reduce action turns the
-        SpanResult into whatever the language wants. 'mode' rides from the opaque
+        OpaqueTerminal into whatever the language wants. 'mode' rides from the opaque
         terminal to the oracle unread.
 
         CRUCIAL ordering: tok1 is the SPAN_OPEN, but the 2-token window has ALREADY
@@ -564,7 +563,7 @@ class EngineParser:
         self.tok1 = self.lexer.next()
         self.tok2 = self.lexer.next()
         self._consumed += 1
-        return SpanResult(text=block.text, mode=mode, begin=block.begin)
+        return OpaqueTerminal(text=block.text, mode=mode, begin=block.begin)
 
     def choose_alt(self, alt_node):
         """RETURN: SpecNode, the OR branch whose FIRST_2 set admits the lookahead.

@@ -1,0 +1,53 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+todo-1  OPEN BACKLOG  (labour owed; decisions already implied)
+===============================================================================
+Snapshot of what is NOT yet built, as of the engine-seam-inversion checkpoint
+(60/60 green). None blocking. Ordered roughly by weight.
+
+-------------------------------------------------------------------------------
+LARGE -- the next real unit
+-------------------------------------------------------------------------------
+1. THE SYMBOL TABLE (disc-1's other half). SymbolTable / Access / ModuleRef /
+   Recipe are named in disc-1 but NOT built. The leaves exist
+   (ReferenceLeaf with its resolution slot, DeclarationLeaf as the registered
+   name) but nothing RESOLVES them yet. This is the load-bearing path toward
+   pass-2: declare -> elaborate -> link, declaration-first ordering,
+   worklist-to-fixpoint. DeclarationLeaf currently carries NO registration /
+   scope data on purpose; the table adds that BESIDE the AST when built.
+
+-------------------------------------------------------------------------------
+SMALL -- leaf vocabulary not yet fully wired
+-------------------------------------------------------------------------------
+2. ConstantLeaf -- literals ('number', 'string', true/false). DONE (disc-6):
+   Literal collapsed into ConstantLeaf (text + E_ConstantKind
+   INT/FLOAT/STRING/BOOL); grammar split t_re_number -> t_re_float + t_re_int.
+   60/60 green.
+3. AnonymousLeaf -- inline structures / literal aggregates. Dead: nothing
+   produces it.
+4. StateMachine.bases / ModeGroup.bases -- inheritance references (Bin A in
+   spirit, but list-of-names shaped, deferred from disc-4). Each base name is a
+   reference to a declared aggregate -> candidate ReferenceLeaf, list-shaped.
+5. MutableBranch -- placeholder only (by instruction: note, no deep dive).
+   A general branch a semantic pass may switch/replace. Undesigned.
+
+-------------------------------------------------------------------------------
+HOUSEKEEPING
+-------------------------------------------------------------------------------
+6. RATIONALE migration. disc-1..disc-5 are SETTLED; per the documentation
+   discipline, settled items migrate to RATIONALE.txt and the disc- entry is
+   deleted. Not yet done -- the decisions still live as disc- files.
+7. Two-tree divergence. tree/temporal_logic (dump target, now STALE) vs
+   tree/vut/engine/temporal_logic (importable, the SOURCE OF RECORD). They
+   diverge on every edit. Resolve to one tree for a clean handoff.
+8. test-ast-signals signal_match -- pre-existing TRUNCATED oracle: the GOOD is
+   4 lines, the run crashes on KeyError 'arming-mode' (an AST-node table entry
+   with no matching GRAMMAR rule). Green by contract (stdout==GOOD) but asserts
+   almost nothing. Decide: fix the arming-mode mismatch + regenerate a full
+   GOOD, or formally accept the truncation.
+
+-------------------------------------------------------------------------------
+NOTE
+-------------------------------------------------------------------------------
+The full test inventory is 60 choices (not 54). Any harness must enumerate
+choices from the GOOD dirs, never a hardcoded list.

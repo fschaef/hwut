@@ -177,7 +177,7 @@ THE ONE PRINCIPLED EXEMPTION
     Single-terminal rules (guard-luau -> OpaqueCode, mutation -> Mutation,
     report-string -> ReportString) derive from NO operator interface: their rule
     has no operator, so there is nothing to signal. They are also the rules whose
-    factory receives the raw leaf (SpanResult / Token) rather than an operator
+    factory receives the raw leaf (OpaqueTerminal / Token) rather than an operator
     node.
 WHY SIGNALS, NOT ACCESSORS  (the crux)
     A digested AST node does not retain a raw triggered_index -- the branch choice

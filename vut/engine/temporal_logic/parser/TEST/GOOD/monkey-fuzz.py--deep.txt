@@ -1,20 +1,17 @@
 === monkey: deep ===
-tokens parsed:      8047
+tokens parsed:      66
 top-level items:    3 (ok)
 diagnostics:        none
 
-total AST nodes: 7865
+total AST nodes: 28
 
-  BinOp                   3899
-  Bridge                     7
-  CauseDef                   1
+  ArgDecl                    2
+  Cause                      1
   ClockDef                   1
-  Comparison                 1
-  Condition                  1
-  EventDef                   1
-  Expr                       8
-  Literal                 3138
-  MethodCall                 1
-  Namespace                  6
-  OpaqueCode               784
-  UnOp                      17
+  DeclarationLeaf           10
+  Mode                       1
+  Namespace                  9
+  OpaqueLeaf                 1
+  ReferenceLeaf              1
+  StructDecl                 1
+  Trigger                    1

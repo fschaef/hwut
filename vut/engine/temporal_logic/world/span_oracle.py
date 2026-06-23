@@ -27,11 +27,11 @@ WHAT THE ENGINE -- AND, FOR REFERENCES, PASS 2 -- NEEDS FROM AN OPAQUE SPAN:
         infrastructure failure (a tool crash the author cannot fix).
 
     collect_references(source, open_offset, close_offset, mode)
-            -> tuple[Reference]
+            -> tuple[SpanReference]
         The names referenced inside one already-measured span, as neutral
         (segments, begin) pairs -- the vocabulary the semantic pass resolves.
         Lazy by design: nothing calls this during parsing; the opaque-code AST
-        node exposes it on demand (OpaqueCode.get_references).
+        node exposes it on demand (OpaqueLeaf.get_references).
 
     open_delimiter / close_delimiter
         The single characters that open and close a span ('{' and '}' for Luau).
@@ -49,7 +49,7 @@ from enum import Enum
 
 
 @dataclass(frozen=True)
-class Reference:
+class SpanReference:
     """One name referenced inside an opaque span: its segments and offset.
 
     The neutral pair pass 2 resolves: 'segments' is the dotted chain as a list
@@ -60,21 +60,6 @@ class Reference:
     """
     segments: "list[str]"
     begin:    int
-
-
-@dataclass(frozen=True)
-class SpanResult:
-    """The neutral outcome of consuming one opaque span.
-
-    What the engine yields at an opaque-terminal position: the raw span text
-    (delimiters included), the span 'mode' the grammar attached, and the source
-    'begin' offset. It carries NO language meaning -- the rule's reduce action
-    turns it into a language node (the rule grammar wraps it as ast.Luau). This
-    is what keeps the engine free of any embedded-language AST type.
-    """
-    text:  str
-    mode:  object
-    begin: int
 
 
 class SpanMode:
@@ -176,14 +161,14 @@ class SpanOracle(ABC):
 
     @abstractmethod
     def collect_references(self, source, open_offset, close_offset, mode):
-        """RETURN: tuple[Reference], the names referenced inside one span.
+        """RETURN: tuple[SpanReference], the names referenced inside one span.
 
         Raises SpanSyntaxError if the span content is malformed,
         SpanOracleError on infrastructure failure.
 
         'source' is the text containing the span; 'open_offset' /
         'close_offset' index its OPEN and CLOSE delimiters; 'mode' is the
-        span's mode tag. Reference begins are offsets INTO 'source'; a caller
+        span's mode tag. SpanReference begins are offsets INTO 'source'; a caller
         holding only the span text passes it as 'source' and rebases. WHAT
         counts as a reference is the concrete oracle's private knowledge.
         """

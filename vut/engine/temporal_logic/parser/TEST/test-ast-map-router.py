@@ -85,7 +85,7 @@ def run_routing():
         assert not rep.errors, (rule, src, rep.errors)
         return type(v).__name__ if not isinstance(v, (list, str)) else repr(v)
 
-    banner("code-block: branch 0 -> OpaqueCode, branch 1 -> DoSweep (PASS)")
+    banner("code-block: branch 0 -> OpaqueLeaf, branch 1 -> DoSweep (PASS)")
     print("{ x = 1 }              ->", product("code-block", "{ x = 1 }"))
     print("do: instant: X ( ) :end ->",
           product("code-block", "do: instant: X ( ) :end"))
@@ -95,7 +95,7 @@ def run_routing():
     print("MyStruct          ->", product("type", "MyStruct"))
     print("dict < int , int> ->", product("type", "dict < int , int >"))
 
-    banner("algebr/atom: literal group -> Literal; opaque -> OpaqueCode")
+    banner("algebr/atom: literal group -> ConstantLeaf; opaque -> OpaqueLeaf")
     print("42      ->", product("algebr/atom", "42"))
     print("\"hi\"    ->", product("algebr/atom", "\"hi\""))
     print("true    ->", product("algebr/atom", "true"))

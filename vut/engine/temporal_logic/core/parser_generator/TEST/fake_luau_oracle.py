@@ -22,7 +22,7 @@ candidate-search behaviour deterministic and subprocess-free in tests.
 ______________________________________________________________________________
 """
 from vut.engine.temporal_logic.world.span_oracle import (
-        Reference, SpanSyntaxError)
+        SpanReference, SpanSyntaxError)
 from vut.engine.temporal_logic.world.luau.luau_span_oracle import ParseResult, LuauOracle
 
 
@@ -56,7 +56,7 @@ class FakeLuauOracle(LuauOracle):
         return ParseResult(ok=True) if ok else ParseResult(ok=False, error=detail)
 
     def collect_references(self, source, open_offset, close_offset, mode):
-        """RETURN: tuple[Reference], the dotted identifier chains in the span
+        """RETURN: tuple[SpanReference], the dotted identifier chains in the span
                                    body the fake counts as references.
 
         Raises SpanSyntaxError when the body is not balance-clean (the same
@@ -97,7 +97,7 @@ class FakeLuauOracle(LuauOracle):
                     break
                 if segments[0] not in _RESERVED \
                         and (begin == 0 or body[begin - 1] not in ".:"):
-                    result.append(Reference(segments=segments,
+                    result.append(SpanReference(segments=segments,
                                             begin=open_offset + 1 + begin))
                 continue
             i += 1

@@ -64,9 +64,9 @@ framing:end-of-file [ 29:29 ] ''
 
 --- literals and identifiers ---
 regex:[a-zA-Z_]\w* [  0:6  ] 'Tick_3'
-regex:\d+(?:\.\d+)? [  7:9  ] '42'
+regex:\d+    [  7:9  ] '42'
 captured:-   [ 10:11 ] '-'
-regex:\d+(?:\.\d+)? [ 11:12 ] '7'
-regex:\d+(?:\.\d+)? [ 13:16 ] '3.5'
+regex:\d+    [ 11:12 ] '7'
+regex:\d+\.\d+ [ 13:16 ] '3.5'
 regex:"[^"]*" [ 17:30 ] '"hello world"'
 framing:end-of-file [ 30:30 ] ''

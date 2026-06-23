@@ -1,47 +1,51 @@
 === monkey: spread ===
-tokens parsed:      7889
+tokens parsed:      10316
 top-level items:    12 (ok)
 diagnostics:        none
 
-total AST nodes: 5456
+total AST nodes: 761
 
-  Arg                       39
-  ArgDecl                   45
+  Arg                       21
+  ArgDecl                   49
   Assign                     1
-  BinOp                   2540
-  Causality                  6
-  Cause                     19
-  CauseDef                   1
+  Causality                  7
+  Cause                     16
+  CauseDef                   2
   CauseRef                   6
   ClockDef                   1
   Clockwork                  2
-  Condition                 15
-  Decr                       1
-  DefaultRef                 2
-  DoSweep                   10
+  Condition                 18
+  ConstantLeaf              37
+  DeclarationLeaf           21
+  Decr                       3
+  DefaultRef                 1
+  DoSweep                    8
   EffectDef                  1
-  EffectRef                  5
-  EventDef                   2
-  EventSpec                  5
-  Expr                      25
+  EffectRef                  6
+  EventDef                   1
+  EventSpec                  2
+  Expr                       8
   HasRef                     2
-  IfFrame                    3
+  IfFrame                    1
   Import                     2
-  Incr                       3
+  Incr                       1
   Instant                    3
-  Literal                 2097
-  Mode                       2
+  LeftFolding              201
+  Mode                       3
   ModeGroup                  1
-  Mutation                  10
-  Namespace                  5
-  OpaqueCode               541
+  Mutation                   6
+  Namespace                  7
+  OpaqueLeaf                23
+  ReferenceLeaf             53
   ReportString               6
-  SelectFrame                4
+  STAR_Node                201
+  SelectFrame                2
   Spawn                      2
-  State                      2
-  StateMachine               3
-  Trigger                   19
-  Unspawn                   11
-  VariableDef                1
-  WaitLine                  10
+  State                      1
+  StateMachine               2
+  StructDecl                 1
+  Trigger                   16
+  UnOp                       1
+  Unspawn                    8
+  WaitLine                   4
   WhileFrame                 3

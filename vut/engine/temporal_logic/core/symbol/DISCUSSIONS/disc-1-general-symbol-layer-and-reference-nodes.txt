@@ -1,0 +1,118 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-1  THE GENERAL SYMBOL LAYER; REFERENCE/DECLARATION AST BASES;
+        SpanReference RENAME
+===============================================================================
+SCOPE     core/symbol (new package). The first DeclaredModule artifact -- the
+          symbol table and the AST bases it resolves -- pulled out of VUT
+          specifics into reusable compile-construction machinery.
+
+-------------------------------------------------------------------------------
+DECIDED -- the general/specific cut
+-------------------------------------------------------------------------------
+A general parser (core/parser_generator) must have NO dependency into
+semantics -- that is the close-coupling line it exists to hold. A SPECIFIC
+parser (parser/) is an APPLICATION: it chooses specifics and may rely on the
+semantic infrastructure built for the world it serves. The reaching-in is in
+the nature of an application parser; it is not a leak.
+
+That asymmetry places the layer:
+
+    core/parser_generator/   GENERAL ENGINE. zero edges into core/symbol.        (unchanged)
+    core/symbol/             GENERAL SYMBOL MACHINERY. reusable. (new)
+    parser/                  VUT APPLICATION. derives DOWN into core/symbol.
+    semantic/                VUT VOCABULARY. fills the tables.
+
+Dependency arrows, all one way (pipeline direction):
+
+    parser_generator  ◄──  symbol  ◄──  parser/ (app), semantic/ (kinds, scopes)
+       (engine)            (Reference,      (BoolRef(Reference), E_*Kind,
+                            Declaration,      event/sm/mg/mode scope rules)
+                            SymbolTable)
+
+WHY core/symbol, not a split (Reference low / SymbolTable high):
+    Reference and SymbolTable are TWO HALVES OF ONE MECHANISM -- a reference
+    exists to be resolved by the table; the table exists to resolve
+    references. Cohesion governs: they live together. The home is
+    semantic-leaning (an application/semantic dependency target), invisible to
+    the engine. "symbol" names the cohesive mechanism, reads honestly at every
+    call site (from ...core.symbol import Reference, SymbolTable).
+
+-------------------------------------------------------------------------------
+DECIDED -- "tables declared in core, filled by application"
+-------------------------------------------------------------------------------
+core/symbol declares the GENERAL forms; it does NOT know the VUT vocabulary.
+
+    GENERAL (core/symbol)            SPECIFIC (parser/, semantic/)
+    --------------------             -----------------------------
+    Reference     (AST base)         which nodes ARE references
+    Declaration   (AST base)         which nodes ARE declarations
+    SymbolTable   (interface)        the E_*Kind / scope vocabulary
+    Access, ModuleRef, Recipe        the four shallow bindings + scope rules
+    export-surface container         (event / sm / mg / mode enforcement)
+
+    Reference  -- a NODE that points at a declared name; carries the segment
+                  list, the source offset, and an unfilled RESOLUTION SLOT that
+                  elaborate writes (the Access/recipe). The parser constructs
+                  it knowing only segments+offset; the semantic layer completes
+                  it. Hence: a semantic concept the parser merely SEEDS.
+    Declaration -- the dual: a node that introduces a name into the export
+                  surface. VUT derivations: Causality, Mode, State,
+                  ReactorDecl, StructDecl.
+
+-------------------------------------------------------------------------------
+DECIDED BY PRECEDENT -- the resolution slot (was the only open sub-question)
+-------------------------------------------------------------------------------
+"Frozen AST vs a fillable slot" is already settled in-tree, not reopened here.
+parser/ast_nodes.py OpaqueCode carries:
+
+    _references: "tuple|None" = field(default=None, compare=False, repr=False)
+    ... object.__setattr__(self, "_references", rebased)
+
+A frozen dataclass with ONE compare=False, repr=False slot, written once via
+object.__setattr__, stays pure data in identity and print. Reference's
+resolution slot follows this exact pattern: frozen node, identity/print pure,
+the resolved Access written through object.__setattr__ at elaborate time.
+
+-------------------------------------------------------------------------------
+DECIDED -- SpanReference rename (name collision)
+-------------------------------------------------------------------------------
+world.span_oracle.Reference ALREADY EXISTS and is a DIFFERENT concept: one
+name FOUND inside an opaque span (segments+begin, no slot, no kind), produced
+by the span oracle. It is language-neutral and already lives in world/. It is
+a FINDING, not a resolvable AST node.
+
+    world.span_oracle.Reference  -->  world.span_oracle.SpanReference
+        a name found in a span. stays in world/. keeps segments+begin.
+
+This frees the bare name `Reference` for the resolvable AST base in
+core/symbol. Terminological invariance: the rename sweeps all 5 sites in
+lockstep (class def, imports, constructor calls, docstrings, comments):
+
+    world/span_oracle.py
+    world/__init__.py
+    world/luau/luau_span_oracle.py
+    parser/ast_nodes.py
+    core/parser_generator/TEST/fake_luau_oracle.py
+
+Blast radius is source-only: NO GOOD file prints the word "Reference", so the
+golden-master baseline is green across the rename by construction. Verify
+(1) GREEN baseline, (2) rename, (3) re-run SAME choices against UNCHANGED GOOD.
+
+-------------------------------------------------------------------------------
+OPEN -- labour owed before code (the node shape)
+-------------------------------------------------------------------------------
+  1. Reference base shape: which fields are general (segments, begin,
+     resolution slot) vs which the VUT subclasses add (is_keyword on Trigger,
+     is_void on HasRef). The base must not absorb VUT-specific flags.
+  2. Declaration base shape: what the export surface needs from every
+     declaration (name, kind-slot, scope-slot) without naming the kinds.
+  3. SymbolTable / Access / ModuleRef / Recipe payload types: still
+     prototypes. Defining them embeds the load-stage forks from the takeover
+     (Access.module_ref vs Recipe.base; ExportDB shape). Surface those, do not
+     pick them, when the payload types are drafted.
+
+ENTRY CONDITION TO CODE:
+    This entry migrated/confirmed; the SpanReference rename done and baseline
+    re-verified GREEN; the Reference/Declaration field sets settled (item 1-2).
+    Only then draft core/symbol/reference.py against real parser infrastructure.
