@@ -46,7 +46,7 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
 
-from vut.engine.temporal_logic.core.parser_generator.operator_interface import (OR_Interface, OPT_Interface, SEQ_Interface,
+from .operator_interface import (OR_Interface, OPT_Interface, SEQ_Interface,
                                   PLUS_Interface, STAR_Interface)
 
 

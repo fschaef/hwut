@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from enum        import Enum
 from typing      import List, Optional
 
-from vut.engine.temporal_logic.core.parser_generator.operator_interface import (OR_Interface, SEQ_Interface,
+from ..core.parser_generator.operator_interface import (OR_Interface, SEQ_Interface,
                                       PLUS_Interface, STAR_Interface)
 
 
@@ -88,7 +88,24 @@ class TopLevel(OR_Interface):
 # OpaqueLeaf is the general opaque-content leaf (core/symbol/ast.py): text +
 # mode + begin, lazy get_references -> ReferenceLeaf, from_span lift. It
 # replaces the former parser-local OpaqueLeaf node wholesale (disc-2).
-from vut.engine.temporal_logic.core.symbol.ast import OpaqueLeaf, Root, ReferenceLeaf, DeclarationLeaf, ConstantLeaf, E_ConstantKind, LeftFolding
+from ..core.symbol.ast import OpaqueLeaf, Root, ReferenceLeaf, DeclarationLeaf, ConstantLeaf, ConstantKind, LeftFolding
+
+
+class E_ConstantKind(ConstantKind, Enum):
+    """VUT's concrete constant kinds -- the application's literal vocabulary,
+    riding from the terminal a ConstantLeaf was born from (not re-derived from
+    text). Derives the general ConstantKind marker; core/symbol carries these
+    without naming them.
+
+    INT     an integer literal      (t_re_int:    \\d+)
+    FLOAT   a float literal         (t_re_float:  \\d+\\.\\d+)
+    STRING  a string literal        (t_re_string, quotes included)
+    BOOL    true / false
+    """
+    INT    = "int"
+    FLOAT  = "float"
+    STRING = "string"
+    BOOL   = "bool"
 
 
 
@@ -313,7 +330,7 @@ class Arg(OR_Interface):
         LITERAL; any other expression node -- LeftFolding, UnOp, Bridge, Comparison --
         is a compound EXPR carried whole.
         """
-        from vut.engine.temporal_logic.core.parser_generator.cst_nodes import OpaqueTerminal
+        from ..core.parser_generator.cst_nodes import OpaqueTerminal
         if isinstance(value, list):
             return cls(name=name, value=value, kind=E_ArgKind.NAME, begin=begin)
         if isinstance(value, OpaqueLeaf):

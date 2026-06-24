@@ -49,7 +49,6 @@ map-hosted (plain value or input-decided node kind):
   list-arg
   list-decl-arg
   name-dotted
-  number
   parens-arg
   parens-decl
   ref-member
@@ -60,4 +59,5 @@ map-hosted (plain value or input-decided node kind):
 router (branch-routed by OrMap/OptMap/StarMap):
   algebr/atom
   code-block
+  number
   type

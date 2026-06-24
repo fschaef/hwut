@@ -6,20 +6,20 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass
 
-from vut.engine.temporal_logic.lexer.lexer import Lexer
-from vut.engine.temporal_logic.core.diagnostic import Diagnostic, Phase, DiagnosticReporter
-from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import t_fr_span_open, t_fr_eof
+from ...lexer.lexer import Lexer
+from ..diagnostic import Diagnostic, Phase, DiagnosticReporter
+from .ll2_grammar_spec import t_fr_span_open, t_fr_eof
 
 
 # ---------------------------------------------------------------------------
 # Compiled grammar is a tree of ll2_grammar_spec.SpecNode objects
 # ---------------------------------------------------------------------------
-import vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec as nodes
-from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (SpecNode, Terminal_Spec, Rule_Spec,
+from . import ll2_grammar_spec as nodes
+from .ll2_grammar_spec import (SpecNode, Terminal_Spec, Rule_Spec,
                               collect_alt_conflicts, ELEM, REDUCE, LOOP,
                               CST_REDUCE, ROLE_STAMP)
 from dataclasses import replace as _dc_replace
-from vut.engine.temporal_logic.core.parser_generator.cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, OpaqueTerminal
+from .cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, OpaqueTerminal
 
 _CST_NODE_TYPES = (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node)
 
@@ -103,7 +103,7 @@ class Grammar:
         at compile time (RoleVocabularyError on an undeclared pattern or an
         unlisted role -- the typo guard). When None, role hints are not checked.
         """
-        import vut.engine.temporal_logic.core.parser_generator.combinators as support
+        from . import combinators as support
         if transformers is not None and actions is not None:
             raise ValueError("Grammar: 'actions' and 'transformers' are "
                              "mutually exclusive (legacy vs CST-overlay path)")
@@ -112,7 +112,7 @@ class Grammar:
         # QUALIFIED-named rule map plus each rule's body-resolution scope; a flat
         # grammar passes through unchanged (all rules at the root scope). The
         # engine compiles the flat map and resolves references scope-aware.
-        from vut.engine.temporal_logic.core.parser_generator.subspace import flatten
+        from .subspace import flatten
         flat, scope_of = flatten(grammar_dict)
         self.flat         = flat
         self.scope_of     = scope_of
@@ -135,7 +135,7 @@ class Grammar:
             self._current_scope = scope_of.get(name, ())
             self.rules[name].pattern = support.compile_element(pattern, self, nodes)
         self._current_scope = ()
-        from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
+        from .ll2_grammar_spec import T
         self.end_block = T.string(":end")   
         self._analyse()
         self._sealed = True       # FIRST_2 sets are now final -> memoise.
@@ -155,7 +155,7 @@ class Grammar:
         scoped independently -- a role may recur ACROSS different sequences, just
         not WITHIN one.
         """
-        from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import Tagged_Spec, SEQ_Spec
+        from .ll2_grammar_spec import Tagged_Spec, SEQ_Spec
         violations = []
         seen = set()
 
@@ -196,7 +196,7 @@ class Grammar:
         role outside its declared tuple is a violation; all are collected and
         raised together so one compile reports every typo.
         """
-        from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (Tagged_Spec, Terminal_Spec, Rule_Spec,
+        from .ll2_grammar_spec import (Tagged_Spec, Terminal_Spec, Rule_Spec,
                                         Operator_Spec, Branch_Spec)
         violations = []
         seen = set()
@@ -232,8 +232,8 @@ class Grammar:
             raise RoleVocabularyError(sorted(set(violations)))
 
     def compile_leaf(self, element):
-        from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import Terminal_Spec, Tagged_Spec, Ref, T
-        from vut.engine.temporal_logic.core.parser_generator.subspace import resolve
+        from .ll2_grammar_spec import Terminal_Spec, Tagged_Spec, Ref, T
+        from .subspace import resolve
         # Mutually-exclusive leaf kinds: a tagged terminal view, a bare terminal,
         # a Ref object, or a reference/keyword string. if/elif -- exactly one fires.
         if isinstance(element, Tagged_Spec):
@@ -411,11 +411,11 @@ class EngineParser:
                         items.append(item)
                 except _ResyncError:
                     self._resync()
-            from vut.engine.temporal_logic.core.parser_generator.cst_nodes import STAR_Node
+            from .cst_nodes import STAR_Node
             return STAR_Node(items=tuple(items), name="<file>")
         # SEAM: engine constructs parser.ast_nodes (Module/Luau). Neutrality
         # blocker for the standalone parser-generator. See DISCUSSIONS/seam-1.
-        from vut.engine.temporal_logic.parser import ast_nodes as ast
+        from ...parser import ast_nodes as ast
         module_node = ast.ModuleRoot()
         while self.tok1.kind is not t_fr_eof:
             try:

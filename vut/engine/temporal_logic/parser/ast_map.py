@@ -33,9 +33,9 @@ the shape correspondence (a SEQ rule's node IS SEQ_Interface, ...) is asserted
 by TEST/test-ast-signals.py.
 ______________________________________________________________________________
 """
-from vut.engine.temporal_logic.core.parser_generator.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
+from ..core.parser_generator.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
 from . import ast_nodes as ast
-from vut.engine.temporal_logic.core.parser_generator.ast_map_family import OrMap, OptMap, StarMap, PASS
+from ..core.parser_generator.ast_map_family import OrMap, OptMap, StarMap, PASS
 
 
 # ---------------------------------------------------------------------------
@@ -296,30 +296,15 @@ def _comparison(node):
 
 
 
-def _number(node):
-    """RETURN: ConstantLeaf, a numeric literal -- INT or FLOAT by which arm
-    matched (<number> = t_re_float OR t_re_int).
+def _const(kind):
+    """RETURN: callable, a tok -> ConstantLeaf builder that bakes in 'kind'.
 
-    node is the OR_Node: triggered_index 0 -> FLOAT, 1 -> INT (the rule's arm
-    order). The CST-shape dispatch (which arm) lives here; construction
-    delegates to the general ConstantLeaf.from_text.
+    The returned function takes the matched token and produces a ConstantLeaf of
+    the given E_ConstantKind, reading the verbatim text and source offset. Used
+    to route each literal terminal (by role/arm) to its kind without a per-kind
+    function; the kind rides from the terminal that matched.
     """
-    tok = node.child
-    kind = ast.E_ConstantKind.FLOAT if node.triggered_index == 0 \
-           else ast.E_ConstantKind.INT
-    return ast.ConstantLeaf.from_text(tok.text, kind, tok.begin)
-
-
-def _string_const(tok):
-    """RETURN: ConstantLeaf, a STRING literal (quotes included in text)."""
-    return ast.ConstantLeaf.from_text(tok.text, ast.E_ConstantKind.STRING,
-                                      tok.begin)
-
-
-def _bool_const(tok):
-    """RETURN: ConstantLeaf, a BOOL literal ('true'/'false')."""
-    return ast.ConstantLeaf.from_text(tok.text, ast.E_ConstantKind.BOOL,
-                                      tok.begin)
+    return lambda tok: ast.ConstantLeaf.from_text(tok.text, kind, tok.begin)
 
 
 def _operand(node):
@@ -445,8 +430,8 @@ AST_MAP = {
     # a nested dict<...> / list<...> (branches 1, 2) forward the already-reduced
     # type node. OrMap routes by branch index and by role -- the named-id branch
     # keyed by role so its position can shift without touching this entry.
-    "type":                  OrMap({(0, "type"): lambda v: v.text,
-                                    (1, 2): PASS}),
+    "type":                  OrMap({("built_in", "type"): lambda v: v.text,
+                                    ("dict", "list"): PASS}),
     "type-dict":             ast.DictType.from_seq,
     "type-list":             ast.ListType.from_seq,
     "declaration":           _declaration,
@@ -471,11 +456,12 @@ AST_MAP = {
     # forward unchanged; an opaque expr span (6) -> OpaqueLeaf; string (3) and
     # true/false (4,5) -> ConstantLeaf. <number> (2) is its own rule that already
     # built a ConstantLeaf, so it just passes through here.
-    "algebr/atom":           OrMap({(0, 1, 2, 7): PASS,
-                                    6: ast.OpaqueLeaf.from_span,
-                                    3: _string_const,
-                                    (4, 5): _bool_const}),
-    "number":                _number,
+    "algebr/atom":           OrMap({("paren", "bridge", "number", "operand"): PASS,
+                                    "opaque": ast.OpaqueLeaf.from_span,
+                                    "string": _const(ast.E_ConstantKind.STRING),
+                                    ("true", "false"): _const(ast.E_ConstantKind.BOOL)}),
+    "number":                OrMap({"float": _const(ast.E_ConstantKind.FLOAT),
+                                    "int":   _const(ast.E_ConstantKind.INT)}),
     "algebr/operand":        _operand,
     "algebr/postfix":        _raw,
     "algebr/bridge":         ast.Bridge.from_seq,
@@ -485,7 +471,7 @@ AST_MAP = {
     "import":                ast.Import.from_seq,
     "causality":             ast.Causality.from_seq,
     "do-sweep":              ast.DoSweep.from_seq,
-    "code-block":            OrMap({0: ast.OpaqueLeaf.from_span, 1: PASS}),
+    "code-block":            OrMap({"opaque": ast.OpaqueLeaf.from_span, "one-sweep": PASS}),
     "def-cause":             ast.CauseDef.from_seq,
     "def-effect":            ast.EffectDef.from_seq,
     "guard":                 ast.Condition.from_seq,
@@ -562,8 +548,8 @@ def validate_ast_map_shapes(grammar):
     additionally checked: its branch addresses must be valid for the OR (int in
     range, role actually tagged on a branch) and cover every branch.
     """
-    from vut.engine.temporal_logic.core.parser_generator.ast_map_family import OrMap, OptMap, StarMap
-    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (rule_shape, Tagged_Spec,
+    from ..core.parser_generator.ast_map_family import OrMap, OptMap, StarMap
+    from ..core.parser_generator.ll2_grammar_spec import (rule_shape, Tagged_Spec,
                                          SHAPE_OR, SHAPE_OPT, SHAPE_STAR)
     violations = []
     routers = (OrMap, OptMap, StarMap)
@@ -592,7 +578,7 @@ def _check_or_addresses(name, ormap, grammar):
     branches (no branch left unrouted). Reads the rule's OR_Spec branches and
     their Tagged_Spec roles.
     """
-    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import Tagged_Spec, OR_Spec
+    from ..core.parser_generator.ll2_grammar_spec import Tagged_Spec, OR_Spec
     p = grammar.rules[name].pattern
     while isinstance(p, Tagged_Spec):
         p = p.body

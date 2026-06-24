@@ -16,7 +16,7 @@ author wrote (OR / OPT / SEQ / PLUS / STAR), Spec and Node alike: each operator
 casts to its own node kind.
 ______________________________________________________________________________
 """
-from vut.engine.temporal_logic.core.parser_generator.cst_nodes import (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node,
+from .cst_nodes import (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node,
                         ABSENT)
 
 ELEM       = 0

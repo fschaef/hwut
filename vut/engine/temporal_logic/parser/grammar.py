@@ -9,9 +9,9 @@ source of truth for the rule-file syntax. Do not add explanatory comments
 here; document in grammar.txt.
 """
 
-from vut.engine.temporal_logic.core.parser_generator.combinators import OR, PLUS, STAR, TOP
-from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
-from vut.engine.temporal_logic.world.span_oracle import E_SpanMode
+from ..core.parser_generator.combinators import OR, PLUS, STAR, TOP
+from ..core.parser_generator.ll2_grammar_spec import T
+from ..world.span_oracle import E_SpanMode
 
 
 t_re_name_colon = T.regex(r'[a-zA-Z_]\w*:')
@@ -92,7 +92,7 @@ GRAMMAR = {
     
     "def-event":      ("event:", t_re_id("event"), "<parens-decl>"),
     "def-clock":      ("clock:", t_re_id("clock"), "<number>"),
-    "number":         (t_re_float, OR, t_re_int),
+    "number":         (t_re_float("float"), OR, t_re_int("int")),
     "def-cause":      ("cause:", "<signature>", "for:", "<name-dotted(event)>", "&", "<guard>"),
     "def-effect":     ("effect:", "<signature>", PLUS(("=>", "<effect>"))),
     
@@ -112,7 +112,7 @@ GRAMMAR = {
     "type-dict":      (t_kw_dict, t_op_lt, "<type(key)>", ",", "<type(value)>",
                        t_op_gt),
     "type-list":      (t_kw_list, t_op_lt, "<type(element)>", t_op_gt),
-    "type":           ("<type-built-in>", OR, "<type-dict>", OR, "<type-list>",
+    "type":           ("<type-built-in(built_in)>", OR, "<type-dict(dict)>", OR, "<type-list(list)>",
                        OR, t_re_id("type")),
     
     "causality":      ("on:", "<cause>", PLUS(("=>", "<effect>"))),
@@ -185,9 +185,10 @@ GRAMMAR = {
         "add":      ("<mul>", STAR(("<op-add>",   "<mul>"))),
         "mul":      ("<un>",  STAR(("<op-mul>",   "<un>"))),
         "un":       ([t_op_sub], "<atom>"),
-        "atom":     ("<paren>", OR, "<bridge>", OR, "<number>", OR, t_re_string,
-                     OR, t_kw_true, OR, t_kw_false, OR, t_opq_expr,
-                     OR, "<operand>"),
+        "atom":     ("<paren(paren)>", OR, "<bridge(bridge)>", OR, "<number(number)>",
+                     OR, t_re_string("string"), OR, t_kw_true("true"),
+                     OR, t_kw_false("false"), OR, t_opq_expr("opaque"),
+                     OR, "<operand(operand)>"),
         "operand":  (t_re_id("receiver"), ["<parens-arg>"], STAR("<postfix>")),
         "postfix":  (".", t_re_id("member"), ["<parens-arg>"]),
         "paren":    ("(", "<algebr>", ")"),
@@ -201,7 +202,7 @@ GRAMMAR = {
                        OR, "<report-string>", OR, "<effect-named>"),
     "effect-named":   ("<name-dotted(emission)>", ["<parens-arg>"]),
     "mutation":       "<code-block>",
-    "code-block":     (t_opq_stmts, OR, "<do-sweep(one-sweep)>"),
+    "code-block":     (t_opq_stmts("opaque"), OR, "<do-sweep(one-sweep)>"),
     "do-sweep":       ("do:", PLUS("<step>"), ":end"),
     "unspawn":        ("unspawn:", "<name-dotted(instance)>"),
     "report-string":  t_re_string("report"),

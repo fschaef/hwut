@@ -36,7 +36,7 @@ grammar_spec -- never on the parser engine -- and grammar.py depends only on thi
 vocabulary plus terminals.py.
 ______________________________________________________________________________
 """
-import vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec as _default_nodes
+from . import ll2_grammar_spec as _default_nodes
 
 # The node module is parameterisable: the engine compiles to ll2_grammar_spec
 # (the active LL(2) hierarchy, the default here). A node module exposes the node-

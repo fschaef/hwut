@@ -29,7 +29,7 @@ ITSELF carries (its fired branch / present flag / item count), never off the
 product.
 ================================================================================
 """
-from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (SHAPE_OR, SHAPE_OPT, SHAPE_STAR)
+from .ll2_grammar_spec import (SHAPE_OR, SHAPE_OPT, SHAPE_STAR)
 
 
 class _Pass:

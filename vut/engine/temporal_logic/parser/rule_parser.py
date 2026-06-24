@@ -21,9 +21,9 @@ a validated Grammar, and expose parse(). A different language would supply its
 own grammar/actions/ast_nodes and its own facade, reusing core unchanged.
 ______________________________________________________________________________
 """
-from vut.engine.temporal_logic.core.parser_generator.ll2_engine import Grammar, EngineParser
-from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
-from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from ..core.parser_generator.ll2_engine import Grammar, EngineParser
+from ..core.diagnostic import DiagnosticReporter
+from ..lexer.lexer import register_grammar
 
 from .grammar import GRAMMAR
 from .ast_map import AST_MAP, validate_ast_map, validate_ast_map_shapes

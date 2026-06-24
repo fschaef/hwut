@@ -42,9 +42,9 @@ import bisect
 from dataclasses  import dataclass
 from typing       import Optional
 
-from vut.engine.temporal_logic.world.span_oracle import SpanSyntaxError, SpanOracleError
+from ..world.span_oracle import SpanSyntaxError, SpanOracleError
 
-from vut.engine.temporal_logic.core.diagnostic import Diagnostic, Phase, DiagnosticReporter
+from ..core.diagnostic import Diagnostic, Phase, DiagnosticReporter
 
 
 # ---------------------------------------------------------------------------
@@ -111,8 +111,8 @@ def _walk_string_keywords(element, out):
     It is skipped here, so a rule reference never leaks a phantom '<name>' token
     into the lexer spec.
     """
-    from vut.engine.temporal_logic.core.parser_generator.combinators import _Combinator
-    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import Terminal_Spec as Terminal, Ref, T
+    from ..core.parser_generator.combinators import _Combinator
+    from ..core.parser_generator.ll2_grammar_spec import Terminal_Spec as Terminal, Ref, T
     if isinstance(element, _Combinator):
         for child in element.children:
             _walk_string_keywords(child, out)
@@ -146,7 +146,7 @@ def _generate_token_spec():
     The end-of-file and span-block framing terminals carry no scanner pattern
     (they are synthesized, not matched) and are omitted from the spec.
     """
-    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (TERMINAL_DB, T,
+    from ..core.parser_generator.ll2_grammar_spec import (TERMINAL_DB, T,
                             t_fr_span_open, t_fr_comment, t_fr_ws,
                             t_fr_mismatch)
 
@@ -212,7 +212,7 @@ def _generate_token_spec():
 
 def _span_block_term():
     """RETURN: Terminal, the framing terminal for a synthesized '{ ... }' span."""
-    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import t_fr_span_block
+    from ..core.parser_generator.ll2_grammar_spec import t_fr_span_block
     return t_fr_span_block
 
 
@@ -245,7 +245,7 @@ def register_grammar(grammar_dict):
     # Flatten a possibly-nested grammar (subspaces, D-21) so the token-spec walk
     # below sees every rule body, including those inside subspace dicts. A flat
     # grammar passes through unchanged.
-    from vut.engine.temporal_logic.core.parser_generator.subspace import flatten
+    from ..core.parser_generator.subspace import flatten
     flat, _ = flatten(grammar_dict)
     _GRAMMAR    = flat
     _TOKEN_SPEC = None
@@ -364,7 +364,7 @@ class Lexer:
         so the parser can resync. WS and '##' comments are consumed silently.
         """
         scanner = _scanner()
-        from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import t_fr_span_open, t_fr_comment, t_fr_ws, \
+        from ..core.parser_generator.ll2_grammar_spec import t_fr_span_open, t_fr_comment, t_fr_ws, \
             t_fr_mismatch, t_fr_eof
         skip = {t_fr_comment, t_fr_ws}
         while self.cursor < self.length:

@@ -32,7 +32,6 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass, field
 from abc         import ABC
-from enum        import Enum
 from typing      import List
 
 
@@ -49,20 +48,17 @@ class Leaf(ABC):
     begin: int
 
 
-class E_ConstantKind(Enum):
-    """The lexical kind of a ConstantLeaf, riding from the terminal it was born
-    from -- NOT re-derived from the text. The grammar already separates these
-    into distinct terminals; this records which one matched.
+class ConstantKind:
+    """Marker base for the lexical kind of a ConstantLeaf.
 
-    INT     an integer literal      (t_re_int:    \\d+)
-    FLOAT   a float literal         (t_re_float:  \\d+\\.\\d+)
-    STRING  a string literal        (t_re_string, quotes included)
-    BOOL    true / false
+    A concrete application defines its own kinds (the VUT layer's
+    E_ConstantKind -- INT/FLOAT/STRING/BOOL -- is one such set) and is the only
+    party that interprets them. core/symbol carries a kind on a ConstantLeaf and
+    never inspects it; it requires only that a kind has a stable identity. The
+    general layer must not name the application's literal vocabulary -- which
+    lexical classes exist is a language question.
     """
-    INT    = "int"
-    FLOAT  = "float"
-    STRING = "string"
-    BOOL   = "bool"
+    pass
 
 
 @dataclass(frozen=True)
@@ -71,8 +67,10 @@ class ConstantLeaf(Leaf):
     lookup needed. Marks the site as eligible for constant reduction.
 
     'text' is the verbatim lexeme (a number, a string WITH its quotes, or
-    'true'/'false'). 'kind' is the lexical kind it was born from
-    (E_ConstantKind), carried from the terminal -- not re-classified from text.
+    'true'/'false'). 'kind' is the lexical kind it was born from -- a
+    ConstantKind the application supplies (the concrete set, e.g. VUT's
+    E_ConstantKind, is NOT named here) -- carried from the terminal, not
+    re-classified from text.
 
     Interpretation (text -> a machine value: int, float, the unescaped string,
     a bool) is DEFERRED to the static layer, which decides against the compared
@@ -81,7 +79,7 @@ class ConstantLeaf(Leaf):
     real: a folding pass knows the lexical class without committing the value.
     """
     text: str
-    kind: E_ConstantKind
+    kind: ConstantKind
 
     @classmethod
     def from_text(cls, text, kind, begin):
