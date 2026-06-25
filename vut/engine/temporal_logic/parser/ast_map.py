@@ -33,9 +33,9 @@ the shape correspondence (a SEQ rule's node IS SEQ_Interface, ...) is asserted
 by TEST/test-ast-signals.py.
 ______________________________________________________________________________
 """
-from ..core.parser_generator.cst_nodes import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
+from ..core.parser_generator.cst_nodes      import OR_Node, SEQ_Node, PLUS_Node, STAR_Node
+from ..core.parser_generator.ast_map_family import OrMap, OptMap, PASS
 from . import ast_nodes as ast
-from ..core.parser_generator.ast_map_family import OrMap, OptMap, StarMap, PASS
 
 
 # ---------------------------------------------------------------------------
@@ -537,8 +537,7 @@ def validate_ast_map_shapes(grammar):
     range, role actually tagged on a branch) and cover every branch.
     """
     from ..core.parser_generator.ast_map_family import OrMap, OptMap, StarMap
-    from ..core.parser_generator.ll2_grammar_spec import (rule_shape, Tagged_Spec,
-                                         SHAPE_OR, SHAPE_OPT, SHAPE_STAR)
+    from ..core.parser_generator.ll2_grammar_spec import (rule_shape)
     violations = []
     routers = (OrMap, OptMap, StarMap)
     for name, entry in AST_MAP.items():
