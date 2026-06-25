@@ -1,6 +1,6 @@
 === monkey: sprites (massive example -- AST census) ===
 top-level items: 41 (DIAGNOSTICS)
-total AST nodes: 159
+total AST nodes: 169
    LEXER off=2106 unexpected character '!'
    PARSER off=2105 no alternative matches 2-token lookahead (captured:-, framing:mismatch)
    PARSER off=2108 no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:=>)
@@ -261,6 +261,6 @@ total AST nodes: 159
   Mutation                   5
   OpaqueLeaf                 7
   ReactorDecl                6
-  ReferenceLeaf             21
+  ReferenceLeaf             31
   ReportString               5
   Trigger                   13

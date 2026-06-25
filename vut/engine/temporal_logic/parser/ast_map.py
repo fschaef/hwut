@@ -42,24 +42,18 @@ from ..core.parser_generator.ast_map_family import OrMap, OptMap, StarMap, PASS
 # Plain-value rule factories (no node class to host them).
 # ---------------------------------------------------------------------------
 def _name_dotted(node):
-    """RETURN: list[str], the dotted name as its segment list ['A', 'B', 'C'].
+    """RETURN: Name, the dotted name as the <name-dotted> rule's product (A-11).
 
     children = (head_tok, STAR(('.', tok))): each repetition item is the
-    anonymous one-survivor SEQ around the next segment token ('.' is silent).
-    The list shape (not a joined string) keeps the segmentation pass-2 walks.
+    anonymous one-survivor SEQ around the next segment token ('.' silent). The
+    segments stay SEGMENTED (not joined) so pass-2 walks them without re-
+    splitting; they live as the Name's field, never returned as a bare list (a
+    name rule yields a NAME, not the name's debris). The reference-vs-declaration
+    VIEW is the consumer's, applied via _ref / _decl.
     """
     head = node.children[0]
-    return [head.text] + [s.children[0].text for s in node.children[1].items]
-
-
-def _signature(node):
-    """RETURN: (name, params), a reactor/aggregate signature.
-
-    children = (name_dotted, opt_params): the optional round-bracket parameter
-    list is an OPT_Node at a stable slot; absent and '()' both give []. One
-    signature value per rule slot, so no parent ever type-spots params.
-    """
-    return (node.children[0], node.children[1].or_else([]))
+    segments = tuple([head.text] + [s.children[0].text for s in node.children[1].items])
+    return ast.Name(segments=segments, begin=head.begin)
 
 
 def _head_and_rest(node):
@@ -84,17 +78,6 @@ def _parens(node):
     return node.children[0].or_else([])
 
 
-def _ref_member(node):
-    """RETURN: (list[str], bool), a <ref-member>: (segments, is_void).
-
-    children = (name_dotted, opt_void): the optional ('.', VOID) is an
-    OPT_Node at a stable slot; presence IS is_void ('.' silent, VOID captured
-    but its text is constant). The pair is consumed by HasRef / DefaultRef,
-    which rebase to their keyword offset.
-    """
-    return (node.children[0], node.children[1].present)
-
-
 # An optional ['by:', LVALUE] binding read off a child OPT_Node: present -> the
 # one-survivor SEQ around the LVALUE span ('by:' silent), wrapped into an
 # OpaqueLeaf; absent -> None. An OptMap used as a helper (D-19) -- the same
@@ -108,82 +91,79 @@ _opt_by = OptMap({True:  lambda seq: ast.OpaqueLeaf.from_span(seq.children[0]),
 # head across the kinds; each kind rule reduces to a dict tagged 'kind', and
 # the declaration dispatcher builds the matching node class.
 # ---------------------------------------------------------------------------
+# Kind factories and the declaration dispatch (D-21, A-11): the grammar shares
+# ONE head across the kinds; each kind rule yields a TYPED KIND-NODE (its
+# product), the <decl> OR carries it up, and the TOP assembler fans out on the
+# node's TYPE -- no 'kind' string, no dict, no match-on-string discriminator.
+# ---------------------------------------------------------------------------
 def _kind_reactor(node):
-    """RETURN: dict, {'kind': <keyword>} for mode/state/mode_group/state_machine.
+    """RETURN: ReactorKind, the matched reactor keyword as its product.
 
-    The rule is the OR of the four captured kind keywords; the matched token's
-    text IS the kind.
+    The rule is the OR of the five captured kind keywords; the matched token's
+    text is the keyword.
     """
-    return {"kind": node.child.text}
-
-
-def _kind_struct(node):
-    """RETURN: dict, {'kind': 'struct'} -- the single captured 'struct' keyword."""
-    return {"kind": "struct"}
+    return ast.ReactorKind(keyword=node.child.text)
 
 
 def _kind_dict(node):
-    """RETURN: dict, a dict-container kind: 'kind'/'dtype'/'by'.
+    """RETURN: DictKind, a dict-container kind product.
 
-    children = (type_dict, opt_by): the type slot is the already-reduced
-    DictType; 'by' the optional storage accessor (an LVALUE opaque span) per
-    _opt_by, hoisted to the declaration level so a nested 'dict<...>' type stays
-    by:-free.
+    children = (type_dict, opt_by): the type slot the already-reduced DictType;
+    'by' the optional storage accessor (an LVALUE opaque span) per _opt_by,
+    hoisted to declaration level so a nested 'dict<...>' type stays by:-free.
     """
-    return {"kind": "dict", "dtype": node.children[0],
-            "by": _opt_by(node.children[1])}
+    return ast.DictKind(dtype=node.children[0], by=_opt_by(node.children[1]))
 
 
 def _kind_list(node):
-    """RETURN: dict, a list-container kind: 'kind'/'dtype'/'by'.
+    """RETURN: ListKind, a list-container kind product.
 
-    children = (type_list, opt_by): the type slot is the already-reduced
-    ListType; 'by' per _opt_by (declaration-level, as for _kind_dict).
+    children = (type_list, opt_by): the type slot the already-reduced ListType;
+    'by' per _opt_by (declaration-level, as for _kind_dict).
     """
-    return {"kind": "list", "dtype": node.children[0],
-            "by": _opt_by(node.children[1])}
-
+    return ast.ListKind(dtype=node.children[0], by=_opt_by(node.children[1]))
 
 
 def _kind_variable(node):
-    """RETURN: dict, a variable kind: 'kind'/'type'/'args'/'by'.
+    """RETURN: VariableKind, a variable kind product.
 
-    children = (type_or, args, opt_by): the type slot is the inline OR
-    (built-in keyword | struct/class id) whose child is the token either way;
-    'args' is the already-reduced mandatory initialiser list.
+    children = (type_or, args, opt_by): the type slot the inline OR (built-in
+    keyword | struct/class id) whose child is the token either way; 'args' the
+    already-reduced mandatory initialiser list.
     """
-    return {"kind": "variable", "type": node.children[0].child.text,
-            "args": node.children[1], "by": _opt_by(node.children[2])}
+    return ast.VariableKind(type_name=node.children[0].child.text,
+                            args=node.children[1], by=_opt_by(node.children[2]))
 
 
 def _declaration(node):
     """RETURN: ReactorDecl | StructDecl | DictDecl | ListDecl | VariableDef.
 
-    children = (name_tok, opt_sig, kind_dict): the optional round-bracket head
-    signature is an OPT_Node at a stable slot (its child is the already-
-    reduced ArgDecl list when present); 'kind_dict' from <kind-decl> carries the
-    kind tag and the kind-specific payload. The kind keyword decides the class
-    (D-21); kind-vs-shape legality of the head signature is pass 2 (F-2) --
-    every class records what was written.
+    children = (name_tok, opt_sig, kind): the optional round-bracket head
+    signature is an OPT_Node at a stable slot (its child the already-reduced
+    ArgDecl list when present); 'kind' is the typed kind-node product from the
+    <decl> OR (A-11). The thin TOP assembler joins the shared head (name +
+    head_params) to the kind's payload, fanning out on the kind-node's TYPE --
+    no string discriminator. Kind-vs-shape legality of the head signature is
+    pass 2 (F-2); every class records what was written.
     """
     name_tok, opt_sig, kind = node.children
     head_params = opt_sig.child if opt_sig.present else []
     name, begin = name_tok.text, name_tok.begin
-    match kind["kind"]:
-        case "struct":
+    match kind:
+        case ast.StructKind():
             return ast.StructDecl(name=name, members=head_params, begin=begin)
-        case "dict":
-            return ast.DictDecl(name=name, dtype=kind["dtype"], by=kind["by"],
+        case ast.DictKind():
+            return ast.DictDecl(name=name, dtype=kind.dtype, by=kind.by,
                                 head_params=head_params, begin=begin)
-        case "list":
-            return ast.ListDecl(name=name, dtype=kind["dtype"], by=kind["by"],
+        case ast.ListKind():
+            return ast.ListDecl(name=name, dtype=kind.dtype, by=kind.by,
                                 head_params=head_params, begin=begin)
-        case "variable":
-            return ast.VariableDef(name=name, type_name=kind["type"],
-                                   args=kind["args"], by=kind["by"],
+        case ast.VariableKind():
+            return ast.VariableDef(name=name, type_name=kind.type_name,
+                                   args=kind.args, by=kind.by,
                                    head_params=head_params, begin=begin)
-        case reactor_kind:
-            return ast.ReactorDecl(kind=reactor_kind, name=name,
+        case ast.ReactorKind():
+            return ast.ReactorDecl(kind=kind.keyword, name=name,
                                    params=head_params, begin=begin)
 
 
@@ -282,16 +262,17 @@ def _comparison(node):
 
     children = (left, opt_tail): with a comparison tail -> a Comparison (the
     num->bool crossing); without one, a bare boolean expression -- a lone
-    <name-dotted> becomes a BoolRef ('== true' in meaning, F-5), anything else
-    (a ConstantLeaf, a nested expression) forwards unchanged.
+    operand reference (now a ReferenceLeaf from _operand) becomes a BoolRef
+    ('== true' in meaning, F-5), anything else (a ConstantLeaf, a nested
+    expression) forwards unchanged.
     """
     left, opt_tail = node.children
     if opt_tail.present:
         op_tok, right = opt_tail.child.children
         return ast.Comparison(left=left, op=op_tok.text, right=right,
                               begin=node.begin)
-    if isinstance(left, list):
-        return ast.BoolRef(name=ast._ref(left, node.begin), begin=node.begin)
+    if isinstance(left, ast.ReferenceLeaf):
+        return ast.BoolRef(name=left, begin=node.begin)
     return left
 
 
@@ -308,7 +289,7 @@ def _const(kind):
 
 
 def _operand(node):
-    """RETURN: list[str] | MethodCall, a base reference with postfixes (D-13, D-23).
+    """RETURN: ReferenceLeaf | MethodCall, a base reference with postfixes (D-13, D-23).
 
     children = (receiver_tok, opt_call, STAR(<postfix>)): each postfix is ('.',
     member, opt_parens). A leading 'opt_call' present means the receiver is
@@ -317,10 +298,12 @@ def _operand(node):
     ('.field') extend the current name-segment list; a '.member(args)' postfix
     becomes a MethodCall whose receiver is everything accumulated so far, after
     which further postfixes chain on that call. With NO call and NO method
-    postfix the result collapses to the segment list, so a bare reference stays
-    list[str] and the BoolRef path is preserved. The math-function catalogue
-    (which free names are valid) is a pass-2 concern; the grammar admits any
-    'name(args)'.
+    postfix the accumulated segment list is a bare reference -- an operand is a
+    PURE READ context (never an introduction), so it reduces to a ReferenceLeaf
+    at the operand's begin (= recv.begin; the operand rule has no leading marker,
+    so this is also node.begin). Consumers thus always receive a NODE -- no
+    isinstance(list) sniff. The math-function catalogue (which free names are
+    valid) is a pass-2 concern; the grammar admits any 'name(args)'.
     """
     recv = node.children[0]
     opt_call = node.children[1]
@@ -345,35 +328,39 @@ def _operand(node):
             # carrying args=None to mark a field read rather than a call.
             value = ast.MethodCall(receiver=value, method=member_tok.text,
                                    args=None, begin=recv.begin)
+    if is_list:
+        # Bare reference: wrap the segments into a ReferenceLeaf at the operand's
+        # begin. The operand never declares, so the leaf is always a reference.
+        return ast._ref(value, recv.begin)
     return value
 
 
-def _recip_rhs(node):
-    """RETURN: tuple ('recip', operand, else_body), a recip tail carrier.
+def _assign_rhs(node):
+    """RETURN: AssignRhs, a 'gets: <algebr>' right-hand side product (A-11).
 
-    children = (operand, PLUS(body)); 'recip:'/'else:'/':end' silent. A plain
-    carrier consumed by _clockwork_name_step, which has the lvalue to build the
-    Recip node.
+    children = (expr,): 'gets:' silent. Wrapping the bare expression in a typed
+    product makes the <name-step> arm distinguishable by TYPE, retiring the
+    isinstance(list) sum-sniff in _clockwork_name_step.
     """
-    return ("recip", node.children[0], list(node.children[1].items))
+    return ast.AssignRhs(expr=node.children[0])
 
 
 def _clockwork_name_step(node):
     """RETURN: EventSpec | Assign | Recip, a name-led clockwork step (D-13).
 
     children = (name, tail): the tail is the left-factored dispatch on the token
-    after the shared <name-dotted>. A parens-arg list -> a paced EventSpec
-    emission; the 'gets:' algebr (forwarded bare) -> an Assign; the 'recip:'
-    carrier -> a Recip with the lvalue filled in.
+    after the shared <name-dotted>, now distinguished purely BY TYPE (A-11) --
+    an AssignRhs -> an Assign; a Recip partial -> a Recip with the lvalue filled
+    in; otherwise the parens-arg list -> a paced EventSpec emission.
     """
     name, or_node = node.children
     tail = or_node.child
-    if isinstance(tail, tuple) and tail and tail[0] == "recip":
-        return ast.Recip(lvalue=ast._ref(name, node.begin), operand=tail[1], else_body=tail[2],
-                         begin=node.begin)
-    if isinstance(tail, list):
-        return ast.EventSpec(name=ast._ref(name, node.begin), args=tail, begin=node.begin)
-    return ast.Assign(lvalue=ast._ref(name, node.begin), rhs=tail, begin=node.begin)
+    if isinstance(tail, ast.Recip):
+        return ast.Recip(lvalue=ast._ref(name, node.begin), operand=tail.operand,
+                         else_body=tail.else_body, begin=node.begin)
+    if isinstance(tail, ast.AssignRhs):
+        return ast.Assign(lvalue=ast._ref(name, node.begin), rhs=tail.expr, begin=node.begin)
+    return ast.EventSpec(name=ast._ref(name, node.begin), args=tail, begin=node.begin)
 
 
 # ---------------------------------------------------------------------------
@@ -382,7 +369,7 @@ def _clockwork_name_step(node):
 _PASS_THROUGH = (
     "top-level", "cause", "cond", "cond/atom", "cond/bracket",
     "algebr/paren", "cond/op-cmp", "cond/op-or", "cond/op-xor", "cond/op-and",
-    "algebr/op-shift", "algebr/op-add", "algebr/op-mul", "step/assign-rhs",
+    "algebr/op-shift", "algebr/op-add", "algebr/op-mul",
     "effect", "declaration/decl", "type-built-in",
     "elm-mode", "elm-mode-group", "elm-state-machine",
     "elm-clockwork", "step",
@@ -412,16 +399,16 @@ def _raw(node):
 AST_MAP = {
     # plain-value rules (hosted here)
     "name-dotted":           _name_dotted,
-    "signature":             _signature,
+    "signature":             ast.Signature.from_seq,
     "list-arg":              _head_and_rest,
     "list-decl-arg":         _head_and_rest,
     "parens-arg":            _parens,
     "parens-decl":           _parens,
-    "ref-member":            _ref_member,
+    "ref-member":            ast.RefMember.from_seq,
 
     # kind family + declaration dispatch (D-21)
     "declaration/reactor":   _kind_reactor,
-    "declaration/struct":    _kind_struct,
+    "declaration/struct":    lambda node: ast.StructKind(),
     "declaration/dict":      _kind_dict,
     "declaration/list":      _kind_list,
     "declaration/variable":  _kind_variable,
@@ -496,7 +483,8 @@ AST_MAP = {
     # clockwork band (D-11) + mutations (D-13)
     "clockwork":                 ast.Clockwork.from_seq,
     "step/name-step":            _clockwork_name_step,
-    "step/recip-rhs":            _recip_rhs,
+    "step/recip-rhs":            ast.Recip.from_seq,
+    "step/assign-rhs":           _assign_rhs,
     "step/incr":                 ast.Incr.from_seq,
     "step/decr":                 ast.Decr.from_seq,
     "step/instant":              ast.Instant.from_seq,

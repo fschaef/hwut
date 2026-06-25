@@ -3,7 +3,7 @@ tokens parsed:      13958
 top-level items:    5 (ok)
 diagnostics:        none
 
-total AST nodes: 353
+total AST nodes: 355
 
   Arg                       14
   ArgDecl                   31
@@ -31,6 +31,7 @@ total AST nodes: 353
   Instant                    1
   LeftFolding               81
   Mutation                   4
+  Name                       2
   Namespace                  3
   OpaqueLeaf                 8
   ReferenceLeaf             31

@@ -20,7 +20,6 @@ pass-through (no dedicated node):
   elm-mode-group
   elm-state-machine
   step
-  step/assign-rhs
   top-level
   type-built-in
 single-terminal (no operator):
@@ -51,10 +50,8 @@ map-hosted (plain value or input-decided node kind):
   name-dotted
   parens-arg
   parens-decl
-  ref-member
-  signature
+  step/assign-rhs
   step/name-step
-  step/recip-rhs
   step/spawn/into
 router (branch-routed by OrMap/OptMap/StarMap):
   algebr/atom

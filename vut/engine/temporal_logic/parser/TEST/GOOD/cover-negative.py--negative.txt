@@ -3058,7 +3058,7 @@
 
 -- omit-required-2 --
    input: gets: ? [ 1.0 ] then: 1.0 else: 1.0 )
-   built:   Bridge
+   built:   AssignRhs
    consumed: 9 token(s); leftover: 1
    diag: (none; stopped early)
 
@@ -3448,7 +3448,7 @@
 
 -- omit-required-13 --
    input: recip: ( ? [ 1.0 ] then: 1.0 else: 1.0 ) else: X ( ) :end
-   built:   tuple
+   built:   Recip
    consumed: 16 token(s); leftover: 0
    diag: (none; stopped early)
 

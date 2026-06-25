@@ -153,7 +153,7 @@ def run_name_dotted_args():
 
     def _val(a):
         if a.kind is ast.E_ArgKind.NAME:
-            return ".".join(a.value)
+            return ".".join(a.value.segments)
         if a.kind is ast.E_ArgKind.LUAU:
             return a.value.text
         return a.value
@@ -284,6 +284,8 @@ def _render_cond(node):
         if node.args is None:
             return "%s.%s" % (recv, node.method)
         return "%s.%s(%d)" % (recv, node.method, len(node.args))
+    if n == "ReferenceLeaf":
+        return ".".join(node.segments)
     if n == "OpaqueLeaf":
         return node.text
     if isinstance(node, list):
@@ -351,10 +353,12 @@ def run_guards_and_inheritance():
                      ", ".join(type(e).__name__ for e in it.effects)))
         elif isinstance(it, ast.StateMachine):
             print("  StateMachine name=%s bases=%s states=%d"
-                  % (".".join(it.name.segments), it.bases, len(it.states)))
+                  % (".".join(it.name.segments),
+                     [".".join(b.segments) for b in it.bases], len(it.states)))
         elif isinstance(it, ast.ModeGroup):
             print("  ModeGroup name=%s bases=%s modes=%d"
-                  % (".".join(it.name.segments), it.bases, len(it.modes)))
+                  % (".".join(it.name.segments),
+                     [".".join(b.segments) for b in it.bases], len(it.modes)))
 
 
 def run_clockwork_shapes():

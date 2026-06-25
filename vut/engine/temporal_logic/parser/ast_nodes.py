@@ -26,28 +26,62 @@ from ..core.parser_generator.operator_interface import (OR_Interface, SEQ_Interf
 from abc import ABC
 
 
-def _ref(segments, begin):
-    """RETURN: ReferenceLeaf, the dotted-name segment list as a resolvable leaf,
-              or None if 'segments' is None (an absent optional reference).
+@dataclass(frozen=True)
+class Name:
+    """A dotted name as produced by the <name-dotted> rule -- the rule's PRODUCT.
 
-    The Bin A wrap point (disc-3): a name that REQUIRES ACCESS becomes a
-    ReferenceLeaf held by the node. 'segments' is the raw list from _name_dotted;
-    'begin' is the owning construct's offset (option A). Declarations (Bin B) and
-    the import path (Bin C) do NOT pass through here.
+    Per A-11 a <name-dotted> rule yields a NAME (its is-a), independent of the
+    slot's role: 'segments' is the dotted parts head-first, 'begin' the name's
+    offset. The reference-vs-declaration distinction is a VIEW the consumer
+    applies (via _ref / _decl), not a property of the name itself -- so the rule
+    commits to neither; it commits only to producing a name. A list of bare
+    segment strings would be the name's DEBRIS, not a name, and is what A-11
+    forbids a name rule from returning.
     """
+    segments: "tuple[str, ...]"
+    begin:    int
+
+
+def _segments(name):
+    """RETURN: tuple|None, the segment tuple of a name value.
+
+    Accepts a Name product (reads .segments), a raw segment list/tuple (a single-
+    token name assembled at a call site, e.g. [tok.text]), or None (an absent
+    optional name). The one place _ref/_decl normalise their input so the view
+    wrappers stay indifferent to whether the name came from <name-dotted> or a
+    lone token.
+    """
+    if name is None:
+        return None
+    if isinstance(name, Name):
+        return name.segments
+    return tuple(name)
+
+
+def _ref(name, begin):
+    """RETURN: ReferenceLeaf, a name VIEWED AS a reference (requires access),
+              or None if 'name' is None (an absent optional reference).
+
+    The Bin A view (disc-3, A-11): applying the REFERENCE view to a name product.
+    'name' is a Name (from <name-dotted>), a bare segment list (a lone-token
+    name), or None. 'begin' is the owning construct's offset (option A).
+    """
+    segments = _segments(name)
     if segments is None:
         return None
     return ReferenceLeaf(segments=tuple(segments), begin=begin)
 
 
-def _decl(segments, begin):
-    """RETURN: DeclarationLeaf, the introduced dotted name as a declaration leaf,
-              or None if 'segments' is None.
+def _decl(name, begin):
+    """RETURN: DeclarationLeaf, a name VIEWED AS a declaration (introduced here),
+              or None if 'name' is None.
 
-    The Bin B/C wrap point (disc-3, disc-4): a name INTRODUCED here -- a
-    definition name or an import mount point -- becomes a DeclarationLeaf the
-    symbol table registers. 'begin' is the owning construct's offset (option A).
+    The Bin B/C view (disc-3, disc-4, A-11): applying the DECLARATION view to a
+    name product -- a definition name or import mount the symbol table registers.
+    'name' is a Name, a bare segment list, or None. 'begin' is the construct
+    offset (option A).
     """
+    segments = _segments(name)
     if segments is None:
         return None
     return DeclarationLeaf(segments=tuple(segments), begin=begin)
@@ -301,6 +335,35 @@ class Cause(OR_Interface):
 
 
 @dataclass(frozen=True)
+class Signature(SEQ_Interface):
+    """The shared head of a definition: an introduced NAME and its parameter list.
+
+    The '(name, [params])' that prefixes every reactor/aggregate/clockwork
+    definition (D-21). 'name' is a DeclarationLeaf: a signature is always a
+    DECLARATION context -- the name it carries is the one being INTRODUCED, never
+    a reference (the dual of an operand, which is always a reference). So the
+    declaration wrap lives HERE, folded into the factory, not repeated at each of
+    the ~7 consuming definitions. 'params' is the optional round-bracket ArgDecl
+    list; absent and '()' both give []. Consumers read sig.name / sig.params.
+    """
+    name:   DeclarationLeaf
+    params: List["ArgDecl"]
+    begin:  int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Signature, a '<name-dotted> [parens-decl]' definition head.
+
+        children = (name_dotted, opt_params): the params an OPT_Node at a stable
+        slot, absent and '()' both []. The name is wrapped to a DeclarationLeaf
+        at the signature's begin (= each consumer's begin: the signature is the
+        consumer's first child, so folding the wrap here changes no offset).
+        """
+        return cls(name=_decl(node.children[0], node.begin),
+                   params=node.children[1].or_else([]), begin=node.begin)
+
+
+@dataclass(frozen=True)
 class Arg(OR_Interface):
     """One argument of an event-spec, mode-arming, or spawn: optional name, value.
 
@@ -312,12 +375,13 @@ class Arg(OR_Interface):
     'value' is the rvalue, one of three shapes discriminated by 'kind':
       - E_ArgKind.LITERAL  : a NUMBER/STRING/true/false lexeme as text (str).
       - E_ArgKind.LUAU     : an opaque EXPRESSION span (an OpaqueLeaf node).
-      - E_ArgKind.NAME     : a <name-dotted> segment list (list[str]) the
+      - E_ArgKind.NAME     : a <name-dotted> reference (a ReferenceLeaf) the
                              static layer resolves without opening the span --
                              'e.target', 'TIMEOUT', 'dict', 'tracker.pos.x'.
+                             (Read its .segments for the dotted parts.)
     """
     name:  Optional[str]
-    value: object            # str (literal) | OpaqueLeaf | list[str] | expr node
+    value: object            # str (literal) | OpaqueLeaf | ReferenceLeaf | expr node
     kind:  "E_ArgKind"
     begin: int
 
@@ -325,13 +389,13 @@ class Arg(OR_Interface):
     def _classify(cls, value, name, begin):
         """RETURN: Arg, classifying an <algebr> 'value' into its E_ArgKind (D-13).
 
-        A segment list is a NAME; an OpaqueLeaf (or raw opaque span) is LUAU; a
+        A ReferenceLeaf is a NAME; an OpaqueLeaf (or raw opaque span) is LUAU; a
         ConstantLeaf node (or value-bearing token / bare str) carries its text as a
         LITERAL; any other expression node -- LeftFolding, UnOp, Bridge, Comparison --
         is a compound EXPR carried whole.
         """
         from ..core.parser_generator.cst_nodes import OpaqueTerminal
-        if isinstance(value, list):
+        if isinstance(value, ReferenceLeaf):
             return cls(name=name, value=value, kind=E_ArgKind.NAME, begin=begin)
         if isinstance(value, OpaqueLeaf):
             return cls(name=name, value=value, kind=E_ArgKind.LUAU, begin=begin)
@@ -617,7 +681,7 @@ class Mode(SEQ_Interface, TopLevel):
         anonymous one-survivor SEQ around its Cause ('until:' is silent). The
         old trailing-run split is gone: the grammar slots are explicit.
         """
-        name, params = node.children[0]
+        sig = node.children[0]
         members      = node.children[1].items
         untils       = [s.children[0] for s in node.children[2].items]
         init = deinit = None
@@ -627,7 +691,7 @@ class Mode(SEQ_Interface, TopLevel):
                 case InitBlock():   init = m.body
                 case DeinitBlock(): deinit = m.body
                 case Causality():   causalities.append(m)
-        return cls(name=_decl(name, node.begin), params=params, init=init, deinit=deinit,
+        return cls(name=sig.name, params=sig.params, init=init, deinit=deinit,
                    causalities=causalities, untils=untils, begin=node.begin)
 
 
@@ -654,7 +718,7 @@ class State(SEQ_Interface):
 
         Same shape as Mode.from_seq with zero-or-more slots.
         """
-        name, params = node.children[0]
+        sig = node.children[0]
         members      = node.children[1].items
         untils       = [s.children[0] for s in node.children[2].items]
         init = deinit = None
@@ -664,8 +728,37 @@ class State(SEQ_Interface):
                 case InitBlock():   init = m.body
                 case DeinitBlock(): deinit = m.body
                 case Causality():   causalities.append(m)
-        return cls(name=_decl(name, node.begin), params=params, init=init, deinit=deinit,
+        return cls(name=sig.name, params=sig.params, init=init, deinit=deinit,
                    causalities=causalities, untils=untils, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class RefMember(SEQ_Interface):
+    """A '<name-dotted> [.VOID]' member reference, before its keyword context.
+
+    The shared <ref-member> production behind 'has:' and 'default:'. 'name' is
+    the dotted-name PRODUCT (a Name) -- bare ('GLOW'), qualified ('SM.Idle'), or
+    namespace-crossing ('NS.Other.Idle') -- the reference VIEW left unapplied
+    here: the consuming element (HasRef / DefaultRef) is the construct that
+    REQUIRES ACCESS, so it applies _ref rebased to its OWN keyword offset.
+    'is_void' True marks a trailing '.VOID', naming the implicit void member.
+    Carries 'begin' for completeness; the consumer's offset is what reaches the
+    leaf.
+    """
+    name:     "Name"
+    is_void:  bool
+    begin:    int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: RefMember, a <ref-member> '<name-dotted> [.VOID]'.
+
+        children = (name, opt_void): the Name product at the stable first slot;
+        the optional ('.', VOID) an OPT_Node whose PRESENCE is is_void ('.'
+        silent, VOID's text constant).
+        """
+        return cls(name=node.children[0], is_void=node.children[1].present,
+                   begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -684,10 +777,63 @@ class HasRef(SEQ_Interface):
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: HasRef -- children = (ref_member,): the (segments, is_void)
-        pair from the <ref-member> rule, rebased to the 'has:' offset."""
-        segments, is_void = node.children[0]
-        return cls(name=_ref(segments, node.begin), is_void=is_void, begin=node.begin)
+        """RETURN: HasRef -- children = (ref_member,): the RefMember node from
+        the <ref-member> rule, its segments rebased to the 'has:' offset."""
+        rm = node.children[0]
+        return cls(name=_ref(rm.name, node.begin), is_void=rm.is_void, begin=node.begin)
+
+
+@dataclass(frozen=True)
+class ReactorKind:
+    """The '<reactor>' arm product: a reactor declaration's kind keyword (A-11).
+
+    'keyword' is one of 'mode'/'state'/'mode_group'/'state_machine'/'clockwork'
+    (verbatim). Carries no head -- the shared name+signature live in the TOP
+    declaration rule and meet this kind there. A typed product, not a {'kind':..}
+    dict: the OR arm that fired names this thing by its TYPE, not by a string a
+    parent reads back.
+    """
+    keyword: str
+
+
+@dataclass(frozen=True)
+class StructKind:
+    """The '<struct>' arm product: the struct kind (A-11). Payload-free; the
+    member list is the shared head signature supplied at TOP."""
+
+
+@dataclass(frozen=True)
+class DictKind:
+    """The '<dict>' arm product: a dict container kind (A-11).
+
+    'dtype' the DictType (key/value); 'by' the optional LVALUE opaque-span script
+    binding, or None. The name+head_params are the shared head, supplied at TOP.
+    """
+    dtype: "DictType"
+    by:    Optional["OpaqueLeaf"]
+
+
+@dataclass(frozen=True)
+class ListKind:
+    """The '<list>' arm product: a list container kind (A-11).
+
+    'dtype' the ListType (element); 'by' the optional script binding. Head at TOP.
+    """
+    dtype: "ListType"
+    by:    Optional["OpaqueLeaf"]
+
+
+@dataclass(frozen=True)
+class VariableKind:
+    """The '<variable>' arm product: a variable kind (A-11).
+
+    'type_name' the verbatim type word (built-in keyword or struct name); 'args'
+    the mandatory round-bracket initialiser; 'by' the optional script binding.
+    Head at TOP.
+    """
+    type_name: str
+    args:      List["Arg"]
+    by:        Optional["OpaqueLeaf"]
 
 
 @dataclass(frozen=True)
@@ -840,10 +986,10 @@ class DefaultRef(SEQ_Interface):
 
     @classmethod
     def from_seq(cls, node):
-        """RETURN: DefaultRef -- children = (ref_member,): the (segments,
-        is_void) pair from the <ref-member> rule, rebased to 'default:'."""
-        segments, is_void = node.children[0]
-        return cls(name=_ref(segments, node.begin), is_void=is_void, begin=node.begin)
+        """RETURN: DefaultRef -- children = (ref_member,): the RefMember node
+        from the <ref-member> rule, its segments rebased to 'default:'."""
+        rm = node.children[0]
+        return cls(name=_ref(rm.name, node.begin), is_void=rm.is_void, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -876,7 +1022,7 @@ class StateMachine(SEQ_Interface, TopLevel):
         list-vs-node type-spotting boundary scan is gone: bases and members have
         their own grammar slots.
         """
-        name, params = node.children[0]
+        sig = node.children[0]
         bases        = [s.children[0] for s in node.children[1].items]
         members      = node.children[2].items
         init = deinit = default = None
@@ -888,7 +1034,7 @@ class StateMachine(SEQ_Interface, TopLevel):
                 case DefaultRef():          default = m
                 case State():               states.append(m)
                 case HasRef():              has_refs.append(m)
-        return cls(name=_decl(name, node.begin), params=params, bases=bases, states=states,
+        return cls(name=sig.name, params=sig.params, bases=bases, states=states,
                    has_refs=has_refs, default=default, init=init,
                    deinit=deinit, begin=node.begin)
 
@@ -915,7 +1061,7 @@ class ModeGroup(SEQ_Interface, TopLevel):
     def from_seq(cls, node):
         """RETURN: ModeGroup -- children = (signature, STAR(is-bases),
         PLUS(members)); ':end' silent. Same slot shape as StateMachine."""
-        name, params = node.children[0]
+        sig = node.children[0]
         bases        = [s.children[0] for s in node.children[1].items]
         members      = node.children[2].items
         init = deinit = None
@@ -926,7 +1072,7 @@ class ModeGroup(SEQ_Interface, TopLevel):
                 case DeinitBlock(): deinit = m.body
                 case Mode():        modes.append(m)
                 case HasRef():      has_refs.append(m)
-        return cls(name=_decl(name, node.begin), params=params, bases=bases, modes=modes,
+        return cls(name=sig.name, params=sig.params, bases=bases, modes=modes,
                    has_refs=has_refs, init=init, deinit=deinit,
                    begin=node.begin)
 
@@ -984,8 +1130,7 @@ class CauseDef(SEQ_Interface, TopLevel):
         """RETURN: CauseDef -- children = (signature, for_event, guard);
         'cause:', 'for:', '&' silent."""
         sig, for_event, guard = node.children
-        name, params = sig
-        return cls(name=_decl(name, node.begin), params=params,
+        return cls(name=sig.name, params=sig.params,
                    for_event=_ref(for_event, node.begin),
                    guard=guard, begin=node.begin)
 
@@ -1013,9 +1158,8 @@ class EffectDef(SEQ_Interface, TopLevel):
         ('=>' is silent), so the effects are read off the PLUS slot directly.
         """
         sig          = node.children[0]
-        name, params = sig
         effects      = [s.children[0] for s in node.children[1].items]
-        return cls(name=_decl(name, node.begin), params=params, effects=effects, begin=node.begin)
+        return cls(name=sig.name, params=sig.params, effects=effects, begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1104,6 +1248,18 @@ class Namespace(SEQ_Interface, TopLevel):
 
 
 @dataclass(frozen=True)
+class AssignRhs:
+    """The '<assign-rhs>' arm product: a 'gets: <algebr>' right-hand side (A-11).
+
+    A thin typed product wrapping the assigned expression, so the <name-step> OR
+    arm is distinguishable BY TYPE -- an assignment rhs is not a parens-arg list
+    nor a Recip. 'expr' is the algebraic expression. The lvalue is the shared
+    name-step head, joined at the consuming step factory.
+    """
+    expr: "object"
+
+
+@dataclass(frozen=True)
 class Assign(SEQ_Interface):
     """An assignment statement: '<lvalue> gets: <algebr>' (D-13).
 
@@ -1131,6 +1287,18 @@ class Recip(SEQ_Interface):
     operand:   "object"
     else_body: List["object"]
     begin:     int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Recip, a '<recip-rhs>' PARTIAL with lvalue=None.
+
+        children = (operand, PLUS(else_body)); 'recip:'/'else:'/':end' silent.
+        The assignment target is NOT in this rule -- it is the <name-dotted>
+        held by the parent <name-step>, which fills 'lvalue' (and rebases
+        'begin' to its own offset) once it receives this node.
+        """
+        return cls(lvalue=None, operand=node.children[0],
+                   else_body=list(node.children[1].items), begin=node.begin)
 
 
 @dataclass(frozen=True)
@@ -1329,7 +1497,7 @@ class Clockwork(SEQ_Interface, TopLevel):
         InitBlock/DeinitBlock; init/deinit are sorted out by type, the rest keep
         source order as the script.
         """
-        name, params = node.children[0]
+        sig = node.children[0]
         clock        = node.children[1]
         elements     = node.children[2].items
         init = deinit = None
@@ -1339,7 +1507,7 @@ class Clockwork(SEQ_Interface, TopLevel):
                 case InitBlock():   init = elm.body
                 case DeinitBlock(): deinit = elm.body
                 case _:             steps.append(elm)
-        return cls(name=_decl(name, node.begin), params=params, clock=clock, init=init,
+        return cls(name=sig.name, params=sig.params, clock=clock, init=init,
                    deinit=deinit, steps=steps, begin=node.begin)
 
 

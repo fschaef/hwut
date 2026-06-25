@@ -200,26 +200,63 @@ class SEQ_Node(SEQ_Interface):
         return self.children
 
     def __getitem__(self, address):
-        """RETURN: object, the child addressed positionally or by role.
+        """RETURN: object, the child at 'address' -- positional, role-asserted, or role-searched.
 
-        An int 'address' is POSITIONAL -- 'self.children[address]', raising
-        IndexError out of range exactly as the tuple does; a slot that does not
-        exist is a structural bug worth surfacing. A str 'address' is a ROLE:
-        the single surviving child whose grammar position carried that role, or
-        None if no position carries it (a wrong/absent role reads None, never
-        raises -- D-19). The two never blur: '.children[i]' and node["role"]
-        are one operator with two key types. An ABSENT OPTIONAL is NOT a None
-        return -- the optional position survives as an OPT_Node(present=False)
-        at its slot, returned normally; its absence is read off '.present',
-        never conflated with a missing-role None. ValueError if two positions
-        share a role (load-gated by Grammar._validate_role_uniqueness, so this
-        guards a hand-built node only).
+        Three address forms, ONE operator:
+          int i            POSITIONAL. 'self.children[i]', raising IndexError out
+                           of range as the tuple does; a missing slot is a
+                           structural bug worth surfacing. The default address:
+                           position is the natural identity of a sequence, and
+                           captured-terminal index drift is cured at source by
+                           SILENCING non-value tokens, not by routing around them.
+          (int i, str r)   POSITIONAL with a ROLE ASSERTION. Returns children[i]
+                           and ASSERTS slot i carried role r in the grammar; on
+                           mismatch raises AssertionError naming expected vs found,
+                           at the read, in grammar vocabulary. A drift smoke-
+                           detector: an inserted/removed token that shoves a
+                           different-role node into slot i fails LOUDLY here rather
+                           than silently corrupting the AST downstream. It catches
+                           the common, coarse drift (role-at-slot changed) and the
+                           same-TYPE transposition a type check misses, since
+                           distinct positions carry distinct roles even when their
+                           node classes coincide. It does NOT catch slots sharing a
+                           role, untagged slots (role None), or drift one level
+                           inside an OPT_Node -- 'sometimes', by design; the GOOD
+                           suite stays the total guard. Position still addresses;
+                           the role only VERIFIES -- so a role may repeat across
+                           slots (uniqueness is irrelevant to an assertion that
+                           names its own index).
+          str r            ROLE SEARCH. The single surviving child whose position
+                           carried role r, or None if none does (a wrong/absent
+                           role reads None, never raises -- D-19). Retained ONLY
+                           for the forced case where a value-bearing terminal
+                           cannot be silenced because its spelling is shared with a
+                           rule that reads its text (the container-type angle
+                           bracket '<'/'>', shared with the comparison operators):
+                           there the scaffolding stays captured and DictType/
+                           ListType locate key/value/element by role. Lenient on
+                           miss (None), OPPOSITE the assertion form's strict raise
+                           -- a search finding nothing is a legitimate absence; an
+                           assertion failing is a structural lie.
+        An ABSENT OPTIONAL is NOT a None return -- the optional position survives
+        as an OPT_Node(present=False) at its slot, returned normally; its absence
+        is read off '.present', never conflated with a missing-role None.
         """
         if isinstance(address, int):
             return self.children[address]
+        if isinstance(address, tuple):
+            index, role = address
+            child = self.children[index]
+            found = self.roles[index]
+            if found != role:
+                raise AssertionError(
+                    "role assertion failed at slot %d: expected %r, found %r"
+                    % (index, role, found))
+            return child
         if not isinstance(address, str):
-            raise TypeError("SEQ_Node index must be int (positional) or str "
-                            "(role); got %r" % type(address).__name__)
+            raise TypeError("SEQ_Node index must be int (positional), "
+                            "(int, str) (positional + role assertion), or str "
+                            "(role search); got %r" % type(address).__name__)
         hits = [v for v, r in zip(self.children, self.roles) if r == address]
         if not hits:
             return None

@@ -334,7 +334,9 @@ Token
 
 -- absent --
    input: X
-'X'
+ReferenceLeaf
+  begin = 0
+  segments = ('X',)
 
 -- present --
    input: X ( )
@@ -1413,81 +1415,190 @@ ReactorDecl
 
 -- alternative 0 --
    input: mode
-{'kind': 'mode'}
+ReactorKind
+  keyword = 'mode'
 
 -- alternative 1 --
    input: struct
-{'kind': 'struct'}
+StructKind
 
 -- alternative 2 --
    input: dict < int , int > by: { luau }
-{'kind': 'dict', 'dtype': DictType(key='int', value='int', begin=0), 'by': OpaqueLeaf(begin=0, text='{ luau }', mode=<E_SpanMode.LVALUE: 'lvalue'>)}
+DictKind
+  dtype:
+    DictType
+      key = 'int'
+      value = 'int'
+      begin = 0
+  by:
+    OpaqueLeaf
+      begin = 0
+      text = '{ luau }'
+      mode = <E_SpanMode.LVALUE: 'lvalue'>
 
 -- alternative 3 --
    input: list < int > by: { luau }
-{'kind': 'list', 'dtype': ListType(element='int', begin=0), 'by': OpaqueLeaf(begin=0, text='{ luau }', mode=<E_SpanMode.LVALUE: 'lvalue'>)}
+ListKind
+  dtype:
+    ListType
+      element = 'int'
+      begin = 0
+  by:
+    OpaqueLeaf
+      begin = 0
+      text = '{ luau }'
+      mode = <E_SpanMode.LVALUE: 'lvalue'>
 
 -- alternative 4 --
    input: int ( ( ? [ 1.0 ] then: 1.0 else: 1.0 ) )
-{'kind': 'variable', 'type': 'int', 'args': [Arg(name=None, value=Bridge(cond=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), then_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), else_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), begin=0), kind=<E_ArgKind.EXPR: 3>, begin=0)], 'by': None}
+VariableKind
+  type_name = 'int'
+  args:
+    Arg
+      name = None
+      value:
+        Bridge
+          cond:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          then_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          else_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          begin = 0
+      kind = <E_ArgKind.EXPR: 3>
+      begin = 0
+  by = None
 
 === declaration/dict ===
 
 -- absent --
    input: dict < int , int >
-{'kind': 'dict', 'dtype': DictType(key='int', value='int', begin=0), 'by': None}
+DictKind
+  dtype:
+    DictType
+      key = 'int'
+      value = 'int'
+      begin = 0
+  by = None
 
 -- present --
    input: dict < int , int > by: { luau }
-{'kind': 'dict', 'dtype': DictType(key='int', value='int', begin=0), 'by': OpaqueLeaf(begin=0, text='{ luau }', mode=<E_SpanMode.LVALUE: 'lvalue'>)}
+DictKind
+  dtype:
+    DictType
+      key = 'int'
+      value = 'int'
+      begin = 0
+  by:
+    OpaqueLeaf
+      begin = 0
+      text = '{ luau }'
+      mode = <E_SpanMode.LVALUE: 'lvalue'>
 
 === declaration/list ===
 
 -- absent --
    input: list < int >
-{'kind': 'list', 'dtype': ListType(element='int', begin=0), 'by': None}
+ListKind
+  dtype:
+    ListType
+      element = 'int'
+      begin = 0
+  by = None
 
 -- present --
    input: list < int > by: { luau }
-{'kind': 'list', 'dtype': ListType(element='int', begin=0), 'by': OpaqueLeaf(begin=0, text='{ luau }', mode=<E_SpanMode.LVALUE: 'lvalue'>)}
+ListKind
+  dtype:
+    ListType
+      element = 'int'
+      begin = 0
+  by:
+    OpaqueLeaf
+      begin = 0
+      text = '{ luau }'
+      mode = <E_SpanMode.LVALUE: 'lvalue'>
 
 === declaration/reactor ===
 
 -- alternative 0 --
    input: mode
-{'kind': 'mode'}
+ReactorKind
+  keyword = 'mode'
 
 -- alternative 1 --
    input: state
-{'kind': 'state'}
+ReactorKind
+  keyword = 'state'
 
 -- alternative 2 --
    input: mode_group
-{'kind': 'mode_group'}
+ReactorKind
+  keyword = 'mode_group'
 
 -- alternative 3 --
    input: state_machine
-{'kind': 'state_machine'}
+ReactorKind
+  keyword = 'state_machine'
 
 -- alternative 4 --
    input: clockwork
-{'kind': 'clockwork'}
+ReactorKind
+  keyword = 'clockwork'
 
 === declaration/struct ===
 
 -- default --
    input: struct
-{'kind': 'struct'}
+StructKind
 
 === declaration/variable ===
 
 -- absent --
    input: int ( )
-{'kind': 'variable', 'type': 'int', 'args': [], 'by': None}
+VariableKind
+  type_name = 'int'
+  args:
+    []
+  by = None
 
 -- present --
    input: int ( ( ? [ 1.0 ] then: 1.0 else: 1.0 ) )
-{'kind': 'variable', 'type': 'int', 'args': [Arg(name=None, value=Bridge(cond=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), then_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), else_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), begin=0), kind=<E_ArgKind.EXPR: 3>, begin=0)], 'by': None}
+VariableKind
+  type_name = 'int'
+  args:
+    Arg
+      name = None
+      value:
+        Bridge
+          cond:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          then_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          else_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          begin = 0
+      kind = <E_ArgKind.EXPR: 3>
+      begin = 0
+  by = None
 
 === def-cause ===
 
@@ -2651,18 +2762,21 @@ Mutation
 
 -- 0x --
    input: X
-'X'
+Name
+  segments = ('X',)
+  begin = 0
 
 -- 1x --
    input: X . X
-'X'
-'X'
+Name
+  segments = ('X', 'X')
+  begin = 0
 
 -- 2x --
    input: X . X . X
-'X'
-'X'
-'X'
+Name
+  segments = ('X', 'X', 'X')
+  begin = 0
 
 === namespace ===
 
@@ -2813,15 +2927,33 @@ HasRef
 
 -- 0x --
    input: X
-(['X'], False)
+RefMember
+  name:
+    Name
+      segments = ('X',)
+      begin = 0
+  is_void = False
+  begin = 0
 
 -- 1x --
    input: X . X
-(['X', 'X'], False)
+RefMember
+  name:
+    Name
+      segments = ('X', 'X')
+      begin = 0
+  is_void = False
+  begin = 0
 
 -- 2x --
    input: X . X . X
-(['X', 'X', 'X'], False)
+RefMember
+  name:
+    Name
+      segments = ('X', 'X', 'X')
+      begin = 0
+  is_void = False
+  begin = 0
 
 === report-string ===
 
@@ -2835,15 +2967,36 @@ ReportString
 
 -- 0x --
    input: X
-(['X'], [])
+Signature
+  name:
+    DeclarationLeaf
+      begin = 0
+      segments = ('X',)
+  params:
+    []
+  begin = 0
 
 -- 1x --
    input: X . X
-(['X', 'X'], [])
+Signature
+  name:
+    DeclarationLeaf
+      begin = 0
+      segments = ('X', 'X')
+  params:
+    []
+  begin = 0
 
 -- 2x --
    input: X . X . X
-(['X', 'X', 'X'], [])
+Signature
+  name:
+    DeclarationLeaf
+      begin = 0
+      segments = ('X', 'X', 'X')
+  params:
+    []
+  begin = 0
 
 === state ===
 
@@ -3190,29 +3343,8 @@ EventSpec
 
 -- absent --
    input: gets: ( ? [ 1.0 ] then: 1.0 else: 1.0 )
-Bridge
-  cond:
-    ConstantLeaf
-      begin = 0
-      text = '1.0'
-      kind = <E_ConstantKind.FLOAT: 'float'>
-  then_:
-    ConstantLeaf
-      begin = 0
-      text = '1.0'
-      kind = <E_ConstantKind.FLOAT: 'float'>
-  else_:
-    ConstantLeaf
-      begin = 0
-      text = '1.0'
-      kind = <E_ConstantKind.FLOAT: 'float'>
-  begin = 0
-
--- present --
-   input: gets: - ( ? [ 1.0 ] then: 1.0 else: 1.0 )
-UnOp
-  op = '-'
-  operand:
+AssignRhs
+  expr:
     Bridge
       cond:
         ConstantLeaf
@@ -3230,7 +3362,32 @@ UnOp
           text = '1.0'
           kind = <E_ConstantKind.FLOAT: 'float'>
       begin = 0
-  begin = 0
+
+-- present --
+   input: gets: - ( ? [ 1.0 ] then: 1.0 else: 1.0 )
+AssignRhs
+  expr:
+    UnOp
+      op = '-'
+      operand:
+        Bridge
+          cond:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          then_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          else_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          begin = 0
+      begin = 0
 
 === step/decr ===
 
@@ -3394,11 +3551,73 @@ EventSpec
 
 -- absent --
    input: recip: ( ? [ 1.0 ] then: 1.0 else: 1.0 ) else: instant: X ( ) :end
-('recip', Bridge(cond=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), then_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), else_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), begin=0), [Instant(name=ReferenceLeaf(begin=0, segments=('X',)), args=[], begin=0)])
+Recip
+  lvalue = None
+  operand:
+    Bridge
+      cond:
+        ConstantLeaf
+          begin = 0
+          text = '1.0'
+          kind = <E_ConstantKind.FLOAT: 'float'>
+      then_:
+        ConstantLeaf
+          begin = 0
+          text = '1.0'
+          kind = <E_ConstantKind.FLOAT: 'float'>
+      else_:
+        ConstantLeaf
+          begin = 0
+          text = '1.0'
+          kind = <E_ConstantKind.FLOAT: 'float'>
+      begin = 0
+  else_body:
+    Instant
+      name:
+        ReferenceLeaf
+          begin = 0
+          segments = ('X',)
+      args:
+        []
+      begin = 0
+  begin = 0
 
 -- present --
    input: recip: - ( ? [ 1.0 ] then: 1.0 else: 1.0 ) else: instant: X ( ) :end
-('recip', UnOp(op='-', operand=Bridge(cond=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), then_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), else_=ConstantLeaf(begin=0, text='1.0', kind=<E_ConstantKind.FLOAT: 'float'>), begin=0), begin=0), [Instant(name=ReferenceLeaf(begin=0, segments=('X',)), args=[], begin=0)])
+Recip
+  lvalue = None
+  operand:
+    UnOp
+      op = '-'
+      operand:
+        Bridge
+          cond:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          then_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          else_:
+            ConstantLeaf
+              begin = 0
+              text = '1.0'
+              kind = <E_ConstantKind.FLOAT: 'float'>
+          begin = 0
+      begin = 0
+  else_body:
+    Instant
+      name:
+        ReferenceLeaf
+          begin = 0
+          segments = ('X',)
+      args:
+        []
+      begin = 0
+  begin = 0
 
 === step/select ===
 
@@ -3511,7 +3730,7 @@ Spawn
 -- 0x --
    input: X
 SEQ_Node
-  children = (['X'], OPT_Node(present=False, child=ABSENT, name=None, begin=0))
+  children = (Name(segments=('X',), begin=0), OPT_Node(present=False, child=ABSENT, name=None, begin=0))
   roles = ('container', None)
   name = 'step/spawn/into'
   begin = 0
@@ -3519,7 +3738,7 @@ SEQ_Node
 -- 1x --
    input: X . X
 SEQ_Node
-  children = (['X', 'X'], OPT_Node(present=False, child=ABSENT, name=None, begin=0))
+  children = (Name(segments=('X', 'X'), begin=0), OPT_Node(present=False, child=ABSENT, name=None, begin=0))
   roles = ('container', None)
   name = 'step/spawn/into'
   begin = 0
@@ -3527,7 +3746,7 @@ SEQ_Node
 -- 2x --
    input: X . X . X
 SEQ_Node
-  children = (['X', 'X', 'X'], OPT_Node(present=False, child=ABSENT, name=None, begin=0))
+  children = (Name(segments=('X', 'X', 'X'), begin=0), OPT_Node(present=False, child=ABSENT, name=None, begin=0))
   roles = ('container', None)
   name = 'step/spawn/into'
   begin = 0

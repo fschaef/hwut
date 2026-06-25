@@ -639,6 +639,11 @@ no value wrapper (what the advisory-hint decision deliberately rejected); the
 role is a sidecar on the one node kind with sibling positions to disambiguate.
 Only SEQ carries roles (OR has one child; PLUS/STAR are homogeneous).
 
+SUPERSEDED (addressing) BY A-10: role-keyed access as the ADDRESS is withdrawn.
+The 'roles' sidecar SURVIVES -- A-10 reuses it as an ASSERTION axis, not an
+address. Role-as-address remains only in the one forced case A-10 names (the
+shared angle bracket, G-10/G-14).
+
 -------------------------------------------------------------------------------
 A-9  THE AST-MAP ROUTER FAMILY AND THE OPAQUE-PRODUCT LAW  (D-19)
 -------------------------------------------------------------------------------
@@ -658,6 +663,139 @@ rule's factory.
     interface: the marker tells which CST node a rule produces; the interface is
     a property of that node. Earlier sketches wired the two together; they are
     joined only by the interpretation step.
+
+-------------------------------------------------------------------------------
+A-10  ROLES CLASSIFY, POSITIONS ADDRESS; ROLE-AS-ADDRESS WITHDRAWN  (supersedes A-8/D-18 addressing; declines D-22 hedge)
+-------------------------------------------------------------------------------
+PROBLEM
+    A-8/D-18 made a SEQ factory ADDRESS a child by role name ('node["key"]') to
+    survive captured-terminal index drift. That conscripted the role axis into
+    addressing, and addressing and classification have OPPOSITE uniqueness
+    requirements. A role CLASSIFIES -- it names a kind shared across many
+    positions and rules (every reference, every left-fold operand); its value is
+    that it REPEATS, which is why an OrMap dispatches on it. An address LOCATES
+    one slot -- it must be UNIQUE. Using a role to address spends the role's
+    defining strength (sharing) to buy a uniqueness the position index already
+    gives for free, and the load gate enforces the theft: _validate_role_
+    uniqueness RAISES if two positions share a role, so the moment a role
+    addresses, that role may never again classify two slots in one rule. Two
+    references in one rule (spawn's container + key) could then not both be
+    tagged 'reference'; they were forced into bespoke per-slot tags (container,
+    key) that classify nothing -- addresses spelled in words, diluting the role
+    vocabulary and making a CLASSIFYING role indistinguishable on sight from an
+    ADDRESSING one.
+
+    The drift A-8 fought is real but its CAUSE is non-value tokens kept in the
+    children frame. The disciplined cure is to SILENCE what carries no value, so
+    the frame holds only values and the position index is stable and meaningful
+    again -- not to leave the scaffolding captured and route around it by role.
+
+DECISION
+    Position addresses; role classifies; role NEVER addresses. SEQ_Node.__getitem__
+    carries three forms, one operator:
+      node[i]          POSITIONAL -- the only locator. The natural identity of a
+                       sequence; drift is cured at source by silencing.
+      node[i, "role"]  POSITIONAL + ROLE ASSERTION -- returns children[i] and
+                       asserts slot i carried that role, else raises naming
+                       expected-vs-found in grammar vocabulary. This RECOVERS the
+                       sole good A-8/D-22 bought (drift protection) and improves
+                       it: a captured-terminal insert that shoves a different-role
+                       node into slot i now fails LOUDLY at the read instead of
+                       silently adapting (the old role-search "found it wherever
+                       it moved" HID the grammar change that most needed seeing).
+                       Role beats type for the assertion: more TELLING (the
+                       grammar's own word for the slot's meaning, not its Python
+                       class) and more STABLE (type is incidental -- two positions
+                       can share a node class; their roles differ, so role catches
+                       the same-type transposition a type check misses). A
+                       smoke-detector, not a proof: silent on slots sharing a
+                       role, untagged slots (role None), and drift one level inside
+                       an OPT_Node. The GOOD suite stays the total guard.
+                       Because position addresses and the role only VERIFIES, a
+                       role may freely REPEAT across asserted slots -- the
+                       classification axis is restored.
+      node["role"]     ROLE SEARCH (the old D-18 address), lenient (None on miss).
+                       RETAINED ONLY where a value-bearing terminal CANNOT be
+                       silenced because its spelling is shared with a rule that
+                       reads its text: the container-type angle bracket '<'/'>'
+                       (G-10, G-14) is captured for the comparison operator, so it
+                       stays in the dict/list frame as unsilenceable scaffolding,
+                       and DictType/ListType locate key/value/element by role.
+                       Lenient on miss, OPPOSITE the assertion form's strict raise:
+                       a search finding nothing is a legitimate absence; an
+                       assertion failing is a structural lie.
+
+    The D-22 hedge (role-keying a non-drifting slot to pre-absorb a FUTURE
+    discriminant) is DECLINED. Carrying standing frame noise and an addressing
+    role to absorb a change that may never come is the wrong trade; if a
+    discriminant is later prepended, the index is updated then, in the open. The
+    decl/reference leaf choice that motivated revisiting all this is unaffected:
+    it is made at the consumer (disc-3/disc-4, A-3), and where role should DRIVE
+    that choice the consumer asserts its slot's binding role (node[i,"role"]) and
+    a fixed role->kind table decides -- still classification, never addressing.
+
+AS BUILT
+    core/parser_generator/cst_nodes.py SEQ_Node.__getitem__: the (int, str)
+    assertion branch added; int and str-search paths byte-identical to before.
+    No call-site conversion -- check-and-pass-through is opt-in; existing
+    node["role"] reads (the dict/list angle-bracket case) keep working. 60/60
+    green, zero diffs (pure addition). The elective role-address sites (spawn's
+    aggregate/container) are LEFT as node["role"] for now; they MAY migrate to
+    node[i,"role"] when the guard is wanted, a mechanical follow-up, not a
+    behaviour change.
+
+-------------------------------------------------------------------------------
+A-11  A RULE HAS A PRODUCT; THE ROLE IS A VIEW ON IT (the is-a is invariant)
+-------------------------------------------------------------------------------
+PRINCIPLE (feature of clarity -- the law behind disc-8's "node, not a container")
+    A rule relates ALWAYS to some PRODUCT. The product the parser hands its
+    customer IS-A the rule's product type -- invariantly, independent of any
+    role. The ROLE does not name, replace, or mutate that product; it provides a
+    VIEW -- a specification, a lens -- onto it. Role and product are ORTHOGONAL
+    axes:
+      - PRODUCT (from the rule): WHAT the thing IS. Fixed by the rule. The is-a
+        holds at every occurrence. <name-dotted> is-a name; <signature> is-a
+        Signature; <ref-member> is-a RefMember -- everywhere, always.
+      - ROLE (from the consuming slot): HOW this occurrence is to be REGARDED.
+        <name-dotted(operand)> is that same name VIEWED AS an operand;
+        <name-dotted(base)> the same name viewed as a base. The view never
+        demotes the is-a: an operand-viewed name is still a name.
+
+    So there is no "role-named rule vs product-named rule" split to reconcile.
+    'operand', 'base', 'member', 'event' are not rival product identities -- they
+    are views on the product the rule already is. The product's TYPE comes from
+    the rule; the role annotates the lens. A reduce action therefore returns the
+    rule's product (a node of the rule's type), and the role rides beside it as
+    the customer's view -- it is never smuggled INTO the product as a string
+    discriminator the customer must read back.
+
+WHY THIS IS THE GENERATING RULE OF disc-8
+    Every disc-8 offender was a product DECLINING its rule's name: a tuple, a
+    list, or a {'kind': <str>} dict is a product that withheld its is-a so a
+    parent had to reconstruct WHAT it was (tuple-unpack, isinstance(list),
+    match on dict['kind']). "Return a node named for its rule" is the cure
+    because a node arrives ALREADY declaring its is-a; the customer reads a
+    product, not a container it must identify. The {'kind':...} dict is the
+    sharpest case: the kind string is the rule's identity smuggled as a FIELD
+    instead of borne as the product's TYPE -- the product refusing to be named.
+    Hence each kind rule (kind-dict, kind-list, kind-variable, ...) must yield a
+    product named for IT (a DictKind / ListKind / VariableKind node), not a dict
+    a parent switches on. (This decides O-3's sub-fork in favour of small typed
+    kind-nodes over roled-field carriers: only the kind-node gives each rule a
+    product that is-a its rule. A roled-field carrier is still the rule declining
+    to name its product.)
+
+CONSEQUENCE
+    Steps 1-4 are instances of this one law, not options chosen among
+    alternatives: ref-member -> RefMember, recip-rhs -> Recip, signature ->
+    Signature each give the customer the rule's product. operand -> a reference
+    leaf is consistent: 'operand' is a VIEW; the product an operand occurrence
+    carries is a name (a reference, here -- the read view), still a node, still
+    is-a its rule. Step 5 (name-dotted -> a name leaf) and step 6 (kind rules ->
+    kind nodes) are likewise DETERMINED by the law, not open: a rule named for a
+    name must yield a name; a list of segment strings is the name's debris, not
+    a name, and so breaks the rule's is-a regardless of whether any parent
+    happens to disassemble it.
 
 ===============================================================================
 END
