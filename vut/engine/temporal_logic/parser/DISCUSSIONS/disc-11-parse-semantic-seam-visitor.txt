@@ -1,0 +1,71 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+disc-11  THE PARSE -> SEMANTIC SEAM IS A VISITOR (shallow same-slot swap)
+===============================================================================
+
+STATUS: direction settled (visitor), details open. Records WHAT finalizes the
+        in-doubt parser nodes (Declaration, the '=> name' nodes, post-disc-9
+        literal leaves, the _comparison BoolRef case) into their semantic forms,
+        and -- equally -- what this mechanism must NOT do.
+
+THE DECISION
+    Finalization is a VISITOR OWNED BY THE SEMANTIC LAYER, dispatched on node
+    TYPE, returning a SHALLOW, SAME-SLOT replacement. The framework walks the ast
+    once; per node it calls the visitor; the returned node is dropped into the
+    SAME slot. Default case returns the node unchanged. Only in-doubt node types
+    have a finalizing case.
+
+    This matches the semantic README's elaborate contract verbatim: the node is
+    "replaced/mounted in place without affecting the remaining identities or
+    topologies of the AST ... the new node must be derived from the original
+    parser's AST node." Shallow. 1:1. Topology-preserving.
+
+WHY VISITOR, NOT A NODE METHOD (e.g. semanticate() on the node)
+    A node method that returns its own semantic replacement would make the PARSER
+    node import and construct SEMANTIC-LAYER types -- reconnecting, backwards,
+    exactly the dependency A-12 severed. The parser node must stay meaning-free.
+    The visitor keeps the node pure: it is READ, never self-transforming. The
+    "node knows its own replacement" locality is preserved as ONE VISITOR CASE
+    PER NODE TYPE -- the knowledge stays local to that case, just not physically
+    on the parser class. The NEW node is semantic; the OLD one stays parser-side
+    and is only read ("derived from the original parser's AST node").
+
+HARD BOUNDARIES (what the swap must NOT absorb)
+  N1  It does NOT mount dependents / resolve cross-references. That is the
+      WORKLIST-TO-FIXPOINT on the symbol table -- already the settled mechanism.
+      elaborate has TWO outputs: mutated ast (this visitor) and symbol_table of
+      Access/ModuleRef (the worklist). The visitor produces the first ONLY. A
+      visitor case may RECORD a demand ("I reference name N in module M") into
+      the worklist, but never resolves or mounts it inline. A self-mounting,
+      recursive swap would re-introduce the forward-reference ordering hazard the
+      worklist was chosen to avoid ((B)-entity bounded-forward refs).
+  N2  No binary-branching requirement. Mounting is about cross-references BETWEEN
+      nodes, not arity WITHIN a node; forcing the ast binary would distort
+      legitimately n-ary nodes (struct member lists, mode bodies) and buys
+      nothing -- the generic Root walk already mounts children arity-agnostically.
+
+WHAT THE VISITOR FINALIZES (the in-doubt set, current)
+    - Declaration{kind} -> ReactorDecl|StructDecl|DictDecl|ListDecl|VariableDef
+      (A-12; the five dormant targets are the codomain).
+    - '=> name' decoration nodes -> resolved name nodes (README elaborate).
+    - (post disc-9) literal leaves: hint -> E_ConstantKind via _DOMAIN, if a
+      typed-domain leaf is wanted rather than carrying the hint onward.
+    - (if disc-10 lever 3 adopted) the bare-reference comparison -> BoolRef.
+
+OPEN, SETTLE BEFORE BUILDING
+  O1  TOTALITY: verify EVERY in-doubt node is a 1:1 SAME-SLOT swap, not a
+      RESHAPE. The protocol is total only if no finalization splits one node into
+      two or reparents children. Declaration->*Decl and =>name are both 1:1, so
+      the known set is covered; sweep the full set before assuming the protocol
+      total. A node that needs reshaping breaks the "topology-preserving"
+      contract and must be handled outside the protocol.
+  O2  Visitor placement/dispatch form (registry by type vs. match) and where the
+      one-case-per-type table physically lives in the semantic unit.
+  O3  How a visitor case records a worklist demand (the hand-off shape between
+      the swap output and the symbol-table output).
+
+RELATES TO
+    A-12 (precedent + the Declaration codomain).  disc-9 (literal leaves, one of
+    the in-doubt inputs).  disc-10 (the _comparison BoolRef case this would
+    receive; the "carry uninterpreted, finalize here" principle).
+    semantic/README.txt (the elaborate contract this implements).
