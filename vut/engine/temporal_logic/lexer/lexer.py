@@ -45,6 +45,9 @@ from typing       import Optional
 from ..world.span_oracle import SpanSyntaxError, SpanOracleError
 
 from ..core.diagnostic import Diagnostic, Phase, DiagnosticReporter
+from ..core.parser_generator.combinators import _Combinator
+from ..core.parser_generator.ll2_grammar_spec import T
+
 
 
 # ---------------------------------------------------------------------------
@@ -90,12 +93,12 @@ def _keyword_pattern(spelling):
     """
     if spelling.startswith(":"):
         return r':' + spelling[1:] + r'\b'
-    if spelling.endswith(":"):
+    elif spelling.endswith(":"):
         return r'\b' + spelling
-    if _is_identifier(spelling):
+    elif _is_identifier(spelling):
         return r'\b' + spelling + r'\b'
-    return re.escape(spelling)
-
+    else:
+        return re.escape(spelling)
 
 def _walk_string_keywords(element, out):
     """RETURN: None. Routes every bare-string KEYWORD leaf under 'element' through T.string.
@@ -111,8 +114,6 @@ def _walk_string_keywords(element, out):
     It is skipped here, so a rule reference never leaks a phantom '<name>' token
     into the lexer spec.
     """
-    from ..core.parser_generator.combinators import _Combinator
-    from ..core.parser_generator.ll2_grammar_spec import Terminal_Spec as Terminal, Ref, T
     if isinstance(element, _Combinator):
         for child in element.children:
             _walk_string_keywords(child, out)
@@ -146,8 +147,7 @@ def _generate_token_spec():
     The end-of-file and span-block framing terminals carry no scanner pattern
     (they are synthesized, not matched) and are omitted from the spec.
     """
-    from ..core.parser_generator.ll2_grammar_spec import (TERMINAL_DB, T,
-                            t_fr_span_open, t_fr_comment, t_fr_ws,
+    from ..core.parser_generator.ll2_grammar_spec import (TERMINAL_DB, t_fr_span_open, t_fr_comment, t_fr_ws,
                             t_fr_mismatch)
 
     if _GRAMMAR is None:
@@ -364,7 +364,7 @@ class Lexer:
         so the parser can resync. WS and '##' comments are consumed silently.
         """
         scanner = _scanner()
-        from ..core.parser_generator.ll2_grammar_spec import t_fr_span_open, t_fr_comment, t_fr_ws, \
+        from ..core.parser_generator.ll2_grammar_spec import t_fr_comment, t_fr_ws, \
             t_fr_mismatch, t_fr_eof
         skip = {t_fr_comment, t_fr_ws}
         while self.cursor < self.length:

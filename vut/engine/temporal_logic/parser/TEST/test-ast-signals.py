@@ -95,9 +95,10 @@ from vut.engine.temporal_logic.parser import ast_nodes as A
 
 _RULE_NODE = {
     "namespace": A.Namespace, "import": A.Import, "causality": A.Causality,
+    "declaration": A.Declaration,
     "def-cause": A.CauseDef, "def-effect": A.EffectDef,
     "guard": A.Condition, "algebr/bridge": A.Bridge,
-    "step/spawn": A.Spawn, "unspawn": A.Unspawn, "arming-mode": A.ModeArming,
+    "step/spawn": A.Spawn, "unspawn": A.Unspawn,
     "step/incr": A.Incr, "step/decr": A.Decr,
     "arg": A.Arg, "mode": A.Mode,
     "init": A.InitBlock, "deinit": A.DeinitBlock, "state": A.State,
@@ -145,11 +146,11 @@ def run_exemptions():
                     and r not in M._PASS_THROUGH)
     for r in hosted:
         print("  %s" % r)
-    print("router (branch-routed by OrMap/OptMap/StarMap):")
+    print("router (branch-routed by OrMap/OptMap):")
     from vut.engine.temporal_logic.core.parser_generator.ast_map_family import (
-            OrMap, OptMap, StarMap)
+            OrMap, OptMap)
     routed = sorted(r for r, f in M.AST_MAP.items()
-                    if isinstance(f, (OrMap, OptMap, StarMap)))
+                    if isinstance(f, (OrMap, OptMap)))
     for r in routed:
         print("  %s" % r)
 

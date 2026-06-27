@@ -106,17 +106,19 @@ FILES
         kind dicts); dispatch functions here where the input decides the
         class -- the merged named tails (cause-named -> Cause | CauseRef,
         effect-named -> EventSpec | EffectRef, cond-term -> Comparison |
-        BoolRef: the parens / the comparison tail decide) and the
-        declaration family (the kind keyword decides: ReactorDecl /
-        StructDecl / ContainerDecl / VariableDef); _passthrough for OR
-        dispatch rules. validate_ast_map() guards full rule coverage at
-        load time.
+        BoolRef: the parens / the comparison tail decide); the declaration
+        rule emits ONE Declaration node (Declaration.from_seq) carrying the
+        opaque kind-node -- the kind fan-out is the semantic layer's, not a
+        parser dispatch (A-12). _passthrough for OR dispatch rules.
+        validate_ast_map() guards full rule coverage at load time.
 
     ast_nodes.py
         Frozen dataclasses; every node stores 'begin' (source offset).
         TopLevel is the abstract base for RuleFile items: Namespace, Import,
-        Causality, Mode, ModeGroup, StateMachine, ReactorDecl, StructDecl,
-        ContainerDecl, VariableDef, EventDef, ClockDef, CauseDef, EffectDef.
+        Causality, Mode, ModeGroup, StateMachine, Declaration, EventDef,
+        ClockDef, CauseDef, EffectDef. The five typed declaration nodes
+        (ReactorDecl, StructDecl, DictDecl, ListDecl, VariableDef) are dormant
+        pass-2 finalization targets, not parser-emitted (A-12).
 
     rule_parser.py
         compiled_grammar() / parse() / finalize_file(). finalize_file wraps
@@ -187,10 +189,13 @@ Token) to their factory.
     StateMachine   states, has_refs, default, init, deinit (':end')
     HasRef         'has: <ref-member>'        DefaultRef 'default: <ref-member>'
                    (name segments + is_void; the two share <ref-member>)
-    ReactorDecl    '<name> [sig] is: mode|state|mode_group|state_machine'
-    StructDecl     '<name>(members) is: struct'
-    ContainerDecl  '<name> is: container<cargs> [by: {lvalue}]'
-    VariableDef    '<name> is: <type>(args) [by: {lvalue}]'
+    Declaration    '<name> [sig] is: <kind>'  (one node; kind opaque, A-12)
+                   finalized in pass 2 by kind to one of the dormant targets:
+                     ReactorKind  -> ReactorDecl  (mode|state|mode_group|state_machine)
+                     StructKind   -> StructDecl   '<name>(members) is: struct'
+                     DictKind     -> DictDecl     '<name> is: dict<K,V> [by:]'
+                     ListKind     -> ListDecl     '<name> is: list<V> [by:]'
+                     VariableKind -> VariableDef  '<name> is: <type>(args) [by:]'
     EventDef / ClockDef / CauseDef / EffectDef
     Namespace      'open: <name-dotted> ... :close'
     Import         'import: "<file>" into: <name-dotted>' (recorded; mounted

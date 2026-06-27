@@ -38,7 +38,6 @@ map-hosted (plain value or input-decided node kind):
   cond/not
   cond/or
   cond/xor
-  declaration
   declaration/dict
   declaration/list
   declaration/reactor
@@ -53,7 +52,7 @@ map-hosted (plain value or input-decided node kind):
   step/assign-rhs
   step/name-step
   step/spawn/into
-router (branch-routed by OrMap/OptMap/StarMap):
+router (branch-routed by OrMap/OptMap):
   algebr/atom
   code-block
   number

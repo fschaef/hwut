@@ -62,8 +62,8 @@ The shape is read directly via interface type-matching to drive:
 2. LOAD-TIME VALIDATION:
    The AST-map shape gate (D-19, ast_map.validate_ast_map_shapes) pins each
    rule's map entry to the rule's OWN shape -- an OrMap only on an OR rule, an
-   OptMap on OPT, a StarMap on STAR; SEQ/PLUS take a single factory; a terminal
-   needs none. It checks the rule's shape, never the opaque product.
+   OptMap only on OPT; SEQ/STAR/PLUS take a single factory; a terminal needs
+   none. It checks the rule's shape, never the opaque product.
 
 3. SEMANTIC PASSES: 
    Walking constructs cleanly by their grammatical category.

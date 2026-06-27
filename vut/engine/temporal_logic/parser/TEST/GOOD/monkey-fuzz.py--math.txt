@@ -3,7 +3,7 @@ tokens parsed:      13958
 top-level items:    5 (ok)
 diagnostics:        none
 
-total AST nodes: 355
+total AST nodes: 356
 
   Arg                       14
   ArgDecl                   31
@@ -15,10 +15,11 @@ total AST nodes: 355
   Clockwork                  2
   Condition                  6
   ConstantLeaf              17
+  Declaration                1
   DeclarationLeaf           11
   Decr                       1
   DefaultRef                 1
-  DictDecl                   1
+  DictKind                   1
   DictType                   1
   DoSweep                    4
   EffectDef                  2

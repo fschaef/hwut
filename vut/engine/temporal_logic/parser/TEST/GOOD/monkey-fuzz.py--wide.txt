@@ -3,7 +3,7 @@ tokens parsed:      644
 top-level items:    6 (ok)
 diagnostics:        none
 
-total AST nodes: 138
+total AST nodes: 139
 
   Arg                        2
   ArgDecl                    4
@@ -12,6 +12,7 @@ total AST nodes: 138
   CauseRef                   2
   Condition                  3
   ConstantLeaf               4
+  Declaration                1
   DeclarationLeaf            5
   DoSweep                    2
   EffectRef                  2
@@ -20,7 +21,7 @@ total AST nodes: 138
   Import                     1
   Instant                    1
   LeftFolding               24
-  ListDecl                   1
+  ListKind                   1
   ListType                   1
   Mode                       1
   ModeGroup                  1

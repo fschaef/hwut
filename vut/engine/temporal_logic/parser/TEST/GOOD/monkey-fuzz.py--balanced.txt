@@ -3,7 +3,7 @@ tokens parsed:      359
 top-level items:    5 (ok)
 diagnostics:        none
 
-total AST nodes: 34
+total AST nodes: 35
 
   ArgDecl                    5
   Causality                  1
@@ -11,6 +11,7 @@ total AST nodes: 34
   CauseRef                   1
   Condition                  1
   ConstantLeaf               1
+  Declaration                1
   DeclarationLeaf            2
   EffectRef                  1
   EventDef                   1
@@ -20,4 +21,4 @@ total AST nodes: 34
   ReferenceLeaf              4
   STAR_Node                  6
   StateMachine               1
-  StructDecl                 1
+  StructKind                 1

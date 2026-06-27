@@ -2,12 +2,11 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: Test the AST-map ROUTER FAMILY (D-19): OrMap / OptMap / StarMap as
-         callable routers over CST nodes, the route-leaf forms (factory /
-         constant / PASS), and the load-time SHAPE GATE that pins each router to
-         its rule shape and validates an OrMap's branch addresses. The real
-         grammar is the fixture for routing; crafted bad entries exercise the
-         gate.
+PURPOSE: Test the AST-map ROUTER FAMILY (D-19): OrMap / OptMap as callable
+         routers over CST nodes, the route-leaf forms (factory / constant /
+         PASS), and the load-time SHAPE GATE that pins each router to its rule
+         shape and validates an OrMap's branch addresses. The real grammar is the
+         fixture for routing; crafted bad entries exercise the gate.
 
 CHOICES: routing, leaves, shape_gate, address_gate.
 
@@ -18,10 +17,10 @@ DESCRIPTION:
                   routes to the right product -- index routing, role routing
                   (type's named-id branch), and grouped-index routing
                   (algebr/atom's literal group).
-    leaves        OptMap / StarMap over hand-built CST nodes: a present optional
-                  routes its child through a factory; an absent one yields the
-                  constant leaf; a non-empty STAR folds, an empty one yields the
-                  constant. PASS forwards the routed value unchanged.
+    leaves        OptMap over hand-built CST nodes: a present optional routes its
+                  child through a factory or PASS; an absent one ALWAYS yields
+                  None, the absence signal -- never an author-supplied value
+                  (A-13).
     shape_gate    A router on the wrong shape (OrMap on a SEQ rule, OptMap on an
                   OR rule) is a MapShapeError at load, naming the rule -- the
                   gate reads the rule's OWN shape, never the product.
@@ -42,10 +41,10 @@ from vut.engine.temporal_logic.lexer.lexer import register_grammar
 from vut.engine.temporal_logic.core.parser_generator.ll2_engine import Grammar, EngineParser
 from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 from vut.engine.temporal_logic.core.parser_generator.cst_nodes import (
-        OR_Node, OPT_Node, STAR_Node, ABSENT)
+        OR_Node, OPT_Node, ABSENT)
 from vut.engine.temporal_logic.parser import ast_map as M
 from vut.engine.temporal_logic.core.parser_generator.ast_map_family import (
-        OrMap, OptMap, StarMap, PASS)
+        OrMap, OptMap, PASS)
 from fake_luau_oracle import FakeLuauOracle
 
 
@@ -102,25 +101,29 @@ def run_routing():
 
 
 def run_leaves():
-    banner("OptMap: present routes child through factory; absent -> constant")
-    om = OptMap({True: lambda c: ("got", c), False: []})
+    banner("OptMap: present routes child through the factory")
+    om = OptMap(lambda c: ("got", c))
     present = OPT_Node(present=True, child="X", begin=0)
     absent  = OPT_Node(present=False, child=ABSENT, begin=0)
     print("present ->", om(present))
     print("absent  ->", om(absent))
 
-    banner("OptMap default leaves: missing True -> PASS, missing False -> None")
-    om2 = OptMap({})
+    banner("OptMap default present-leaf is PASS (forward the child)")
+    om2 = OptMap()
     print("present (PASS) ->", om2(OPT_Node(present=True, child="Y", begin=0)))
     print("absent  (None) ->", om2(OPT_Node(present=False, child=ABSENT, begin=0)))
 
-    banner("StarMap: non-empty folds the node; empty -> constant")
-    sm = StarMap({True: lambda node: len(node.items), False: 0})
-    print("three items ->", sm(STAR_Node(items=(1, 2, 3), begin=0)))
-    print("empty       ->", sm(STAR_Node(items=(), begin=0)))
+    banner("ABSENT is ALWAYS None -- not author-supplied (A-13)")
+    # Whatever the present-leaf, an absent optional yields None; there is no
+    # absent parameter to override it. Named leaves keep the printout stable.
+    def _wrap(c):
+        return ("X", c)
+    for label, present_leaf in (("PASS", PASS), ("factory", _wrap), ("constant", 12345)):
+        out = OptMap(present_leaf)(OPT_Node(present=False, child=ABSENT, begin=0))
+        print("absent (present=%s) -> %r" % (label, out))
 
-    banner("PASS leaf forwards the routed value unchanged")
-    op = OptMap({True: PASS, False: None})
+    banner("PASS present-leaf forwards the child unchanged")
+    op = OptMap(PASS)
     print("present ->", op(OPT_Node(present=True, child="Z", begin=0)))
 
 
@@ -145,7 +148,7 @@ def run_shape_gate():
     _expect_shape_error("OrMap-on-SEQ", "step/spawn", OrMap({0: PASS}))
 
     banner("OptMap on an OR rule -> MapShapeError")
-    _expect_shape_error("OptMap-on-OR", "code-block", OptMap({True: PASS}))
+    _expect_shape_error("OptMap-on-OR", "code-block", OptMap(PASS))
 
 
 def run_address_gate():

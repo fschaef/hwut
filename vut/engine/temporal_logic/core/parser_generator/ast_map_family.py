@@ -3,12 +3,13 @@
                           AST-MAP ROUTER FAMILY (D-19)
 ================================================================================
 
-An AST_MAP value is applied to the CST node its rule reduced to. For SEQ and
-PLUS rules that value is a single factory receiving the node. For the BRANCHING
-shapes -- OR (which branch fired), OPT (present / absent), STAR (empty / non-
-empty) -- the value is a ROUTER: a small dict-shaped object that picks the
-factory for the case the node carries, replacing hand-written triggered_index /
-opt.present / 'if items' dispatch.
+An AST_MAP value is applied to the CST node its rule reduced to. For SEQ, STAR
+and PLUS rules that value is a single factory receiving the node. For the two
+BRANCHING shapes the value may be a ROUTER:
+
+    OR   the value is an OrMap: pick the leaf for the BRANCH that fired.
+    OPT  the value is an OptMap: transform the child when PRESENT; ABSENT is the
+         absence signal None, FIXED by the machinery and not author-supplied.
 
 A router is CALLABLE: applied as 'fn(node)' at the one transformer seam in the
 engine (Grammar._reduce), exactly like a plain factory, so the engine needs no
@@ -17,19 +18,33 @@ machinery (they name no rule; they route over CST node kinds); the load-time
 shape gate that pins a router to its rule's shape lives in the outer layer
 (ast_map.validate_ast_map_shapes), since only that layer holds the AST map.
 
-ROUTE LEAVES. A leaf is a factory (a callable receiving the routed value) OR a
-plain constant (returned as-is) OR the PASS sentinel (forward the routed value
-unchanged). So 'OptMap({True: OpaqueLeaf.from_span, False: None})' needs no
-'lambda _: None'.
+WHY NO StarMap / PlusMap (the production idiom, A-13). A STAR or PLUS produces
+ONE list-node whose CHILDREN are the matches: 0..n for STAR, 1..n for PLUS. The
+arity is just len(children); there is no per-arity PRODUCT TYPE to route, so
+there is no router for these shapes. A STAR/PLUS rule takes a plain factory that
+reads the node's children. Routing STAR/PLUS to different products by emptiness
+was a wrong turn (it manufactured a distinction the customer does not need); the
+customer reads children and handles however many there are.
+
+WHY OptMap IS ONE-ARMED (the OPT absence law, A-13). OPT means presence-or-
+absence. Absence has exactly ONE honest product: None, the absence signal. If
+the author could route the ABSENT case to a value of their choosing, the OPT
+would carry a second alternative -- it would behave as a two-armed OR, and the
+grammar's '[...]' syntax would no longer enforce its own meaning (a reader could
+not trust '[x]' to mean "x or nothing"). So OptMap exposes ONLY the PRESENT
+transform; ABSENT is hard-wired to None and has no parameter.
+
+ROUTE LEAVES (OrMap / OptMap-present). A leaf is a factory (a callable receiving
+the routed value) OR a plain constant (returned as-is) OR the PASS sentinel
+(forward the routed value unchanged).
 
 WHAT ROUTERS DO NOT DO. They never inspect what a factory PRODUCES -- a routed
-factory may build any node kind, opaque to its parent (an OR branch's product
-is branch-dependent and unknowable at load). Routing keys off what the CST node
-ITSELF carries (its fired branch / present flag / item count), never off the
-product.
+factory may build any node kind, opaque to its parent (an OR branch's product is
+branch-dependent and unknowable at load). Routing keys off what the CST node
+ITSELF carries (its fired branch / present flag), never off the product.
 ================================================================================
 """
-from .ll2_grammar_spec import (SHAPE_OR, SHAPE_OPT, SHAPE_STAR)
+from .ll2_grammar_spec import (SHAPE_OR, SHAPE_OPT)
 
 
 class _Pass:
@@ -59,10 +74,10 @@ class OrMap:
     """Router for an OR rule: pick the factory for the branch that fired (D-19).
 
     'routes' maps a branch ADDRESS to a leaf. An address is an int (the branch's
-    triggered_index), a str (the branch's advisory role), or a tuple of either
-    (several branches sharing one leaf -- the grouping that collapses a
-    triggered_index 'i in (0,1,7)' fan-out). The matched branch's reduced value
-    (or_node.child) is the routed value handed to the leaf.
+    triggered_index), a str (the branch's role -- usable only when the branch is
+    a PLAIN rule or terminal, the only thing nameable, A-13), or a tuple of
+    either (several branches sharing one leaf). The matched branch's reduced
+    value (or_node.child) is the routed value handed to the leaf.
     """
     shape = SHAPE_OR
 
@@ -98,50 +113,27 @@ class OrMap:
 
 
 class OptMap:
-    """Router for an OPT rule: pick by whether the optional fired (D-19).
+    """Router for an OPT rule: transform the child when PRESENT; ABSENT -> None.
 
-    'routes' maps True -> the present leaf (handed opt_node.child) and False ->
-    the absent leaf (a constant such as None or [], or a callable handed the
-    OPT_Node). Either key may be omitted -- a missing case defaults to PASS for
-    True (forward the child) and None for False.
+    ONE-ARMED by law (A-13): 'present' is the only thing the author controls -- a
+    leaf (factory or PASS) applied to opt_node.child when the optional fired. The
+    ABSENT case is FIXED to None, the absence signal, and has no parameter, so an
+    OPT can never be made to carry a second alternative. Default present-leaf is
+    PASS (forward the child unchanged).
     """
     shape = SHAPE_OPT
 
-    def __init__(self, routes):
-        self._routes = dict(routes)
+    def __init__(self, present=PASS):
+        self._present = present
 
     def __call__(self, opt_node):
-        """RETURN: object, the present-leaf on the child, or the absent-leaf."""
+        """RETURN: object, the present-leaf on the child, or None when absent.
+
+        ABSENT always yields None -- not author-supplied (A-13).
+        """
         if opt_node.present:
-            return _apply_leaf(self._routes.get(True, PASS), opt_node.child)
-        leaf = self._routes.get(False, None)
-        # An absent optional has no child value; a callable absent-leaf receives
-        # the OPT_Node itself (rare), a constant is returned as-is.
-        return leaf(opt_node) if callable(leaf) else leaf
+            return _apply_leaf(self._present, opt_node.child)
+        return None
 
     def __repr__(self):
-        return "OptMap(%r)" % (self._routes,)
-
-
-class StarMap:
-    """Router for a STAR rule: pick by empty vs non-empty repetition (D-19).
-
-    'routes' maps True -> the non-empty leaf (handed the STAR_Node to fold over
-    its items) and False -> the empty leaf (a constant such as [], or a callable
-    handed the STAR_Node). A missing True defaults to PASS (forward the node);
-    a missing False defaults to None.
-    """
-    shape = SHAPE_STAR
-
-    def __init__(self, routes):
-        self._routes = dict(routes)
-
-    def __call__(self, star_node):
-        """RETURN: object, the non-empty leaf on the node, or the empty-leaf."""
-        if star_node.items:
-            return _apply_leaf(self._routes.get(True, PASS), star_node)
-        leaf = self._routes.get(False, None)
-        return leaf(star_node) if callable(leaf) else leaf
-
-    def __repr__(self):
-        return "StarMap(%r)" % (self._routes,)
+        return "OptMap(%r)" % (self._present,)

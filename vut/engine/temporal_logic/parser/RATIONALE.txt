@@ -97,9 +97,11 @@ DECISION
     (Spawn.from_seq, HasRef.from_seq, ...). A rule producing a PLAIN VALUE (a
     dotted-name segment list, a signature tuple, an arg list, a kind dict, a
     ref-member pair) maps to a small function in ast_map.py -- there is no class
-    to host it. A rule whose node KIND the input decides (the merged named tails;
-    the declaration family) maps to a DISPATCH function in ast_map.py. A
-    PASS-THROUGH rule (an OR forwarding its single child) maps to _passthrough.
+    to host it. A rule whose node KIND the input decides (the merged named tails)
+    maps to a DISPATCH function in ast_map.py. (The declaration family WAS such a
+    dispatch; A-12 withdrew it -- the parser now emits one Declaration node and
+    the kind fan-out is the semantic layer's.) A PASS-THROUGH rule (an OR
+    forwarding its single child) maps to _passthrough.
     Every constructor reads the CST node's STRUCTURE: SEQ children by stable slot,
     OR branches by triggered_index, repetitions off the STAR/PLUS slot, optionals
     as OPT_Nodes whose 'present' flag is on the node. The dense-frame bridge is
@@ -796,6 +798,139 @@ CONSEQUENCE
     name must yield a name; a list of segment strings is the name's debris, not
     a name, and so breaks the rule's is-a regardless of whether any parent
     happens to disassemble it.
+
+-------------------------------------------------------------------------------
+A-12  THE PARSER EMITS ONE Declaration; KIND FAN-OUT IS SEMANTIC  (closes the
+      D-21 dispatch; extends A-11 across the declaration/semantic seam)
+-------------------------------------------------------------------------------
+PROBLEM
+    The 'declaration' TOP rule shares ONE head across five kinds (reactor /
+    struct / dict / list / variable), the kind distinguished by a typed kind-node
+    (A-11). The reduce action (_declaration in ast_map) read the kind-node's TYPE
+    and fanned out to one of five typed nodes (ReactorDecl / StructDecl /
+    DictDecl / ListDecl / VariableDef). That fan-out is the very dispatch-in-the-
+    parser shape A-3 retired everywhere else: a five-way match deciding WHICH
+    node to build. It is also a category error -- elaborating a shared head into
+    a specific typed declaration is the assignment of MEANING to a kind, not the
+    reading of SHAPE. The parser's job is shape; meaning is pass 2's.
+
+DECISION
+    The parser emits ONE node, Declaration(name, head_params, kind, begin), a
+    SEQ_Interface TopLevel built by Declaration.from_seq. 'kind' is carried
+    OPAQUE -- the already-typed kind-node (ReactorKind / StructKind / DictKind /
+    ListKind / VariableKind), unread by the parser. The five-way finalization
+    into the specific typed declaration moves to the SEMANTIC LAYER (elaborate),
+    a shallow interface-preserving node swap derived from the Declaration node --
+    the ModeArming precedent (D-36) applied to declarations. The five typed
+    classes stay defined in parser/ast_nodes.py as DORMANT finalization targets
+    (not in AST_MAP, not parse-time constructed); they are RELOCATED IN ROLE, not
+    in file, pending the semantic unit's own declaration-node design.
+
+    This is A-11 carried one step further: A-11 made each kind rule yield a typed
+    kind-node instead of a {'kind':str} dict; A-12 stops the TOP rule from then
+    switching on that node's type. The kind-node's is-a is honoured all the way
+    -- the parser carries it whole and hands it to pass 2, which is the customer
+    entitled to read it. A reduce action that match-es on a child's type to pick
+    its own product type is the same offence as a parent unpacking a dict.
+
+COST
+    1. Declaration adds one wrapper node per declaration: the AST gains a
+       Declaration above each kind-node (GOOD tree dumps and node-type
+       histograms shifted accordingly -- structural, regenerated, value-exact).
+    2. The five typed classes now live with no live constructor until the
+       semantic unit builds elaborate. Carried dormant (ModeArming pattern);
+       field designs preserved in place for that unit to lift.
+    3. 'declaration' is no longer an ast_map-hosted function -> it drops from the
+       map-hosted exemption list in test-ast-signals and BECAME eligible for the
+       signal-match check. Adding "declaration": Declaration to _RULE_NODE
+       exposed that signal_match was already DEAD: it iterates _RULE_NODE sorted
+       and died on a KeyError at 'arming-mode' -- a stale entry for the dormant
+       ModeArming node (no such grammar rule post-collapse, disc-7), capturing
+       only a TRUNCATED two-row GOOD. That truncation was the long-standing
+       "err=1 baseline contract"; it was never a contract, only an unnoticed
+       break. Removing the dormant 'arming-mode' entry (a dormant node has no
+       rule to signal-match) let the loop complete: 28 rules checked, mismatches
+       0, declaration -> Declaration OK, full GOOD regenerated. The tree baseline
+       moves from green=60 diff=0 err=1 to green=60 diff=0 err=0.
+
+GRAVEYARD
+    REJECTED keeping the fan-out in the parser "because the kind is already
+    known": knowing the kind at parse time does not make ASSIGNING it a parser
+    job. The kind-node is known; what it MEANS (which declaration it finalizes
+    to, whether its head signature is legal for that kind -- F-2) is pass 2.
+    REJECTED moving the five classes to a new semantic/ module now: the semantic
+    unit was trashed and is being redesigned on paper first; parking
+    consumerless classes in it pre-empts that design. Dormant-in-place matches
+    ModeArming and defers the shaping to when elaborate is actually built.
+
+-------------------------------------------------------------------------------
+A-13  THE PARSER'S PRODUCTION IDIOM: a rule names the product a customer expects
+      (supersedes the "one rule, one product type" phrasing of disc-10)
+-------------------------------------------------------------------------------
+PROBLEM
+    "Does a reduce action perform semantic work?" kept recurring (_left_fold,
+    _un_fold, the quantifier maps). The earlier answer -- "a rule yields exactly
+    ONE product type; anything that picks among types is semantic" -- was too
+    rigid. It mislabels legitimate structural choices (an empty repetition, an
+    absent optional) as violations and invites machinery to "fix" non-problems
+    (the E_Count / StarMap / PlusMap arity routers, since removed).
+
+DECISION (the production idiom -- the law, by shape)
+    A rule's NAME names the product its CUSTOMER expects on success. Each grammar
+    shape states the RANGE of that expectation; the customer reads the shape to
+    know the range and never inspects a child's CONTENT.
+
+      (1) The rule name describes the product expected on success.
+      (2) The customer may meet success OR failure.
+      (3) Failure is a PRODUCT, not an exception: a dead-end, None (the absence
+          signal). The customer is built to receive it.
+      (4a) SEQ -> a sequence (trivial).
+      (4b) OR  -> one of the alternatives, addressed by ROLE or by triggered
+           index. An OR is EXPRESSIVE only when its arms are PLAIN (a rule or a
+           terminal) and role-tagged -- only a plain arm is nameable. An inline-
+           composite arm has nothing to name, forcing brittle positional index;
+           that is a smell to be lifted to a named rule. Role is the expressive
+           form; index is the degenerate fallback.
+      (4c/d) STAR and PLUS do NOT differ at the product level. Each yields ONE
+           list-node whose CHILDREN are the matches -- 0..n for STAR, 1..n for
+           PLUS. Arity is just len(children). There is NO per-arity product type
+           to route; the customer reads children and handles however many there
+           are. ("A node of type list" = the quantifier node itself; children
+           are its payload -- the one sanctioned place a node holds a raw
+           sequence.)
+
+    OPT ABSENCE IS NON-NEGOTIABLE. OPT means presence-or-absence. Absence has
+    exactly ONE honest product: None. The author may control only the PRESENT
+    transform; the ABSENT case is fixed to None by the machinery, with no
+    parameter. Otherwise an author routes ABSENT to a value of choice, the OPT
+    carries a second alternative -- it becomes a two-armed OR -- and the
+    grammar's '[...]' syntax no longer enforces its own meaning (a reader could
+    not trust '[x]' to mean "x or nothing"). The syntax must enforce its meaning.
+
+COST
+    1. The E_Count / StarMap / PlusMap step (built earlier this session) is
+       RETRACTED: STAR/PLUS take a plain factory reading children; no arity
+       router exists. OptMap is reshaped to one-armed (present-leaf only; absent
+       -> None fixed). Family reduces to OrMap + OptMap.
+    2. _left_fold / _un_fold STAY as functions and are LAWFUL: a STAR/OPT child
+       hands them a list-node / present-or-None, and folding that against a head
+       is ordinary SEQ-customer work selecting a member of the rule's range
+       ({LeftFolding, bare-head} / {UnOp, operand}). They were never the
+       violation.
+    3. The genuine residual violation is unchanged: _comparison's
+       isinstance(left, ReferenceLeaf) reads a built child's CONTENT to pick
+       BoolRef. Content selection has no grammar-bounded range; it is the one
+       reduce that must move to pass 2 (disc-10 / disc-11).
+
+GRAVEYARD
+    REJECTED "one rule, one product type": too strong. A rule's product is a
+    BOUNDED SPECTRUM fixed by its shape (OR: one per arm; OPT: value|None; STAR/
+    PLUS: a list-node of 0..n / 1..n children). None and "single-or-list" are
+    legitimate members. What stays forbidden is selection on a child's CONTENT,
+    which alone has no bounded range.
+    REJECTED arity routers (StarMap/PlusMap) and a multi-value OPT absent route:
+    both let the map manufacture distinctions the shape does not carry, breaking
+    the rule that grammar syntax enforces grammar meaning.
 
 ===============================================================================
 END

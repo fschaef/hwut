@@ -3,7 +3,7 @@ tokens parsed:      5278
 top-level items:    6 (ok)
 diagnostics:        none
 
-total AST nodes: 623
+total AST nodes: 627
 
   Arg                       17
   ArgDecl                   29
@@ -13,10 +13,11 @@ total AST nodes: 623
   ClockDef                   1
   Condition                 10
   ConstantLeaf              30
+  Declaration                4
   DeclarationLeaf           17
   Decr                       3
   DefaultRef                 1
-  DictDecl                   1
+  DictKind                   1
   DictType                   1
   DoSweep                   10
   EffectDef                  2
@@ -35,7 +36,7 @@ total AST nodes: 623
   Name                       6
   Namespace                  8
   OpaqueLeaf                17
-  ReactorDecl                1
+  ReactorKind                1
   Recip                      1
   ReferenceLeaf             54
   ReportString               9
@@ -44,9 +45,9 @@ total AST nodes: 623
   Spawn                      2
   State                      1
   StateMachine               2
-  StructDecl                 1
+  StructKind                 1
   Trigger                   19
   UnOp                       1
   Unspawn                   10
-  VariableDef                1
+  VariableKind               1
   WaitLine                   9

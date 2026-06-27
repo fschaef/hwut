@@ -109,12 +109,14 @@ class E_ArgKind(Enum):
 class TopLevel(OR_Interface):
     """Abstract base for the constructs that may appear at rule-file top level.
 
-    Namespace, Import, Causality, Mode, ModeGroup, StateMachine, Clockwork, the
-    four declaration nodes (ReactorDecl, StructDecl, ContainerDecl, VariableDef),
-    EventDef, ClockDef, CauseDef and EffectDef derive from it, so
-    'ModuleRoot.items' is typed as list[TopLevel] and only these node kinds are
-    admissible there. A Namespace nests further TopLevel items. Carries no
-    fields; the concrete nodes hold their own.
+    Namespace, Import, Causality, Mode, ModeGroup, StateMachine, Clockwork,
+    Declaration (the single live declaration node the parser emits), EventDef,
+    ClockDef, CauseDef and EffectDef derive from it, so 'ModuleRoot.items' is
+    typed as list[TopLevel] and only these node kinds are admissible there. The
+    five dormant declaration finalization targets (ReactorDecl, StructDecl,
+    DictDecl, ListDecl, VariableDef) also derive from it but are produced by the
+    semantic layer, not the parser. A Namespace nests further TopLevel items.
+    Carries no fields; the concrete nodes hold their own.
     """
     pass
 
@@ -837,8 +839,55 @@ class VariableKind:
 
 
 @dataclass(frozen=True)
+class Declaration(SEQ_Interface, TopLevel):
+    """A declaration: '<name> [signature] is: <kind>' -- the shared head plus its kind.
+
+    'name' the declared name (verbatim); 'head_params' the optional round-bracket
+    head signature (a list of ArgDecl, empty when no parentheses were written);
+    'kind' the typed kind-node product from the <decl> OR (ReactorKind /
+    StructKind / DictKind / ListKind / VariableKind). The parser produces ONE
+    Declaration carrying the shared head and the opaque kind; the SEMANTIC LAYER
+    (declare) fans out on the kind-node's type to the specific typed declaration.
+    Kind-vs-shape legality of the head signature is pass 2 (F-2); the parser
+    records what was written.
+    """
+    name:        str
+    head_params: List["ArgDecl"]
+    kind:        object            # ReactorKind | StructKind | DictKind | ListKind | VariableKind
+    begin:       int
+
+    @classmethod
+    def from_seq(cls, node):
+        """RETURN: Declaration, the rule '<name> [<parens-decl>] is: <decl>'.
+
+        children = (name_tok, opt_sig, kind): the round-bracket head signature is
+        an OPT_Node at a stable slot (its child the already-reduced ArgDecl list
+        when present, else empty); 'kind' the typed kind-node from the <decl> OR;
+        'is:' silent. The kind is carried opaque -- no fan-out here; declare reads
+        it.
+        """
+        name_tok, opt_sig, kind = node.children
+        head_params = opt_sig.child if opt_sig.present else []
+        return cls(name=name_tok.text, head_params=head_params, kind=kind,
+                   begin=name_tok.begin)
+
+
+@dataclass(frozen=True)
+# ---------------------------------------------------------------------------
+# DORMANT declaration finalization targets (ModeArming precedent, D-36 / D-21).
+# The parser NO LONGER produces these. It emits ONE Declaration carrying the
+# shared head and the opaque kind-node; the SEMANTIC LAYER (elaborate) finalizes
+# a Declaration into the specific typed node below once the kind is known -- a
+# shallow, interface-preserving substitution derived from the Declaration node.
+# Kept as those finalization targets; not constructed at parse time, absent from
+# AST_MAP. (Relocated in ROLE from parser-product to pass-2 target; the field
+# designs are preserved here for the semantic unit to lift -- see semantic/.)
+# ---------------------------------------------------------------------------
 class ReactorDecl(TopLevel):
     """A reactor-kind forward declaration: '<name> [signature] is: <kind>'.
+
+    DORMANT: finalization target for Declaration{kind: ReactorKind}; not built by
+    the parser (see the dormant-targets banner above).
 
     Satisfies the (B.1) declare-by-name-and-kind gate of the (A)/(B) forward-
     reference rule; the matching definition follows later in the same scope
@@ -860,6 +909,9 @@ class ReactorDecl(TopLevel):
 class StructDecl(TopLevel):
     """A struct definition: '<name>( member: type; ... ) is: struct'.
 
+    DORMANT: finalization target for Declaration{kind: StructKind}; not built by
+    the parser (see the dormant-targets banner above).
+
     An aggregate VALUE type (D-23). 'members' is the head signature -- the SAME
     round-bracket form a reactor declaration carries, here it IS the member
     list and the declaration IS the definition: structs are (A)-strict, no
@@ -878,7 +930,7 @@ class DictType(SEQ_Interface):
 
     'key'/'value' are each a <type>: a built-in scalar word (str), a named user
     type (str), or a nested DictType/ListType. The type words' resolution is a
-    pass-2 concern. Used both as a declaration kind (DictDecl.dtype) and as a
+    pass-2 concern. Used both as a declaration kind (DictKind.dtype) and as a
     nested type parameter inside another container type.
     """
     key:   object            # str | DictType | ListType
@@ -904,7 +956,7 @@ class ListType(SEQ_Interface):
 
     'element' is a <type> (built-in scalar word, named type, or nested
     DictType/ListType), resolved in pass 2. Used as a declaration kind
-    (ListDecl.dtype) and as a nested type parameter.
+    (ListKind.dtype) and as a nested type parameter.
     """
     element: object          # str | DictType | ListType
     begin:   int
@@ -924,6 +976,9 @@ class ListType(SEQ_Interface):
 class DictDecl(TopLevel):
     """A dict declaration: '<name> is: dict<K,V> [by: {lvalue}]'.
 
+    DORMANT: finalization target for Declaration{kind: DictKind}; not built by
+    the parser (see the dormant-targets banner above).
+
     'dtype' is the DictType (key and value types). A container has no
     constructor signature -- the angle brackets say what it holds -- yet the
     grammar admits a head signature on the shared declaration head, so
@@ -942,6 +997,9 @@ class DictDecl(TopLevel):
 class ListDecl(TopLevel):
     """A list declaration: '<name> is: list<V> [by: {lvalue}]'.
 
+    DORMANT: finalization target for Declaration{kind: ListKind}; not built by
+    the parser (see the dormant-targets banner above).
+
     'dtype' is the ListType (element type). 'head_params'/'by' as on DictDecl.
     """
     name:        str
@@ -955,12 +1013,15 @@ class ListDecl(TopLevel):
 class VariableDef(TopLevel):
     """A variable definition: '<name> is: <type>(args) [by: {lvalue}]'.
 
+    DORMANT: finalization target for Declaration{kind: VariableKind}; not built by
+    the parser (see the dormant-targets banner above).
+
     'type_name' is the verbatim type word -- a built-in keyword ('int',
     'float', 'string', 'bool') or a struct name; which it is, is a pass-2
     resolution. 'args' is the MANDATORY round-bracket initialiser: one
     positional value for a built-in, member bindings for a struct, checked in
     pass 2 (F-4); evaluation is declaration-ordered at bootstrap. 'by' is the
-    optional script binding (as on ContainerDecl). 'head_params' records a
+    optional script binding (as on the dict/list decls). 'head_params' records a
     head signature should one be written (illegal, pass-2 F-2).
     """
     name:        str
@@ -1544,8 +1605,7 @@ class ModuleRoot(Root):
     Derives the general core/symbol Root (ordered, generically walkable); this
     concrete root NAMES the VUT construct kinds it carries. 'items' (inherited
     from Root) holds Namespace, Import, Causality, Mode, ModeGroup,
-    StateMachine, Clockwork, declaration
-    (ReactorDecl/StructDecl/ContainerDecl/VariableDef), EventDef, ClockDef,
+    StateMachine, Clockwork, Declaration, EventDef, ClockDef,
     CauseDef and EffectDef nodes in source order. A mutable container so the
     parser can append as it goes.
     """

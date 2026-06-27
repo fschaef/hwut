@@ -3,7 +3,7 @@ tokens parsed:      2342
 top-level items:    6 (ok)
 diagnostics:        none
 
-total AST nodes: 137
+total AST nodes: 138
 
   ArgDecl                    2
   Assign                     1
@@ -14,6 +14,7 @@ total AST nodes: 137
   Clockwork                  1
   Condition                  4
   ConstantLeaf               5
+  Declaration                1
   DeclarationLeaf            5
   Decr                       1
   DoSweep                    4
@@ -27,7 +28,7 @@ total AST nodes: 137
   Mutation                   4
   Namespace                  1
   OpaqueLeaf                 4
-  ReactorDecl                1
+  ReactorKind                1
   ReferenceLeaf             16
   ReportString               2
   STAR_Node                 27

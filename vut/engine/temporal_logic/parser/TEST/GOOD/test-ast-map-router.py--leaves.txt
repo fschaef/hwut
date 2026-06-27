@@ -1,15 +1,16 @@
 
---- OptMap: present routes child through factory; absent -> constant ---
+--- OptMap: present routes child through the factory ---
 present -> ('got', 'X')
-absent  -> []
+absent  -> None
 
---- OptMap default leaves: missing True -> PASS, missing False -> None ---
+--- OptMap default present-leaf is PASS (forward the child) ---
 present (PASS) -> Y
 absent  (None) -> None
 
---- StarMap: non-empty folds the node; empty -> constant ---
-three items -> 3
-empty       -> 0
+--- ABSENT is ALWAYS None -- not author-supplied (A-13) ---
+absent (present=PASS) -> None
+absent (present=factory) -> None
+absent (present=constant) -> None
 
---- PASS leaf forwards the routed value unchanged ---
+--- PASS present-leaf forwards the child unchanged ---
 present -> Z

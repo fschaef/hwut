@@ -1395,20 +1395,24 @@ ArgDecl
 
 -- absent --
    input: X is: mode
-ReactorDecl
-  kind = 'mode'
+Declaration
   name = 'X'
-  params:
+  head_params:
     []
+  kind:
+    ReactorKind
+      keyword = 'mode'
   begin = 0
 
 -- present --
    input: X ( ) is: mode
-ReactorDecl
-  kind = 'mode'
+Declaration
   name = 'X'
-  params:
+  head_params:
     []
+  kind:
+    ReactorKind
+      keyword = 'mode'
   begin = 0
 
 === declaration/decl ===
@@ -4214,11 +4218,13 @@ EffectDef
 
 -- alternative 11 --
    input: X ( ) is: mode
-ReactorDecl
-  kind = 'mode'
+Declaration
   name = 'X'
-  params:
+  head_params:
     []
+  kind:
+    ReactorKind
+      keyword = 'mode'
   begin = 0
 
 === type ===

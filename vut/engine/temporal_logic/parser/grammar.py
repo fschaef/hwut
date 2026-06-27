@@ -37,7 +37,7 @@ t_kw_state_machine = T.captured("state_machine")
 t_kw_struct        = T.captured("struct")
 t_kw_dict          = T.captured("dict")
 t_kw_list          = T.captured("list")
-t_kw_clockwork         = T.captured("clockwork")
+t_kw_clockwork     = T.captured("clockwork")
 
 t_kw_int        = T.captured("int")
 t_kw_float      = T.captured("float")

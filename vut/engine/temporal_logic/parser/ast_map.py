@@ -78,23 +78,18 @@ def _parens(node):
     return node.children[0].or_else([])
 
 
-# An optional ['by:', LVALUE] binding read off a child OPT_Node: present -> the
+# An optional ['by:', LVALUE] binding read off a child OPT_Node: PRESENT -> the
 # one-survivor SEQ around the LVALUE span ('by:' silent), wrapped into an
-# OpaqueLeaf; absent -> None. An OptMap used as a helper (D-19) -- the same
-# present/absent routing the family expresses, reused off a rule entry.
-_opt_by = OptMap({True:  lambda seq: ast.OpaqueLeaf.from_span(seq.children[0]),
-                  False: None})
+# OpaqueLeaf; ABSENT -> None (fixed, A-13). An OptMap helper (D-19) reused off a
+# rule entry.
+_opt_by = OptMap(lambda seq: ast.OpaqueLeaf.from_span(seq.children[0]))
 
 
 # ---------------------------------------------------------------------------
-# Kind factories and the declaration dispatch (D-21): the grammar shares ONE
-# head across the kinds; each kind rule reduces to a dict tagged 'kind', and
-# the declaration dispatcher builds the matching node class.
-# ---------------------------------------------------------------------------
-# Kind factories and the declaration dispatch (D-21, A-11): the grammar shares
-# ONE head across the kinds; each kind rule yields a TYPED KIND-NODE (its
-# product), the <decl> OR carries it up, and the TOP assembler fans out on the
-# node's TYPE -- no 'kind' string, no dict, no match-on-string discriminator.
+# Kind factories (D-21, A-11): the grammar shares ONE head across the kinds;
+# each kind rule yields a TYPED KIND-NODE (its product), and Declaration.from_seq
+# carries it opaque -- the fan-out on the kind-node's TYPE is the semantic layer's
+# (declare), not here. No 'kind' string, no dict, no match-on-string discriminator.
 # ---------------------------------------------------------------------------
 def _kind_reactor(node):
     """RETURN: ReactorKind, the matched reactor keyword as its product.
@@ -133,38 +128,6 @@ def _kind_variable(node):
     """
     return ast.VariableKind(type_name=node.children[0].child.text,
                             args=node.children[1], by=_opt_by(node.children[2]))
-
-
-def _declaration(node):
-    """RETURN: ReactorDecl | StructDecl | DictDecl | ListDecl | VariableDef.
-
-    children = (name_tok, opt_sig, kind): the optional round-bracket head
-    signature is an OPT_Node at a stable slot (its child the already-reduced
-    ArgDecl list when present); 'kind' is the typed kind-node product from the
-    <decl> OR (A-11). The thin TOP assembler joins the shared head (name +
-    head_params) to the kind's payload, fanning out on the kind-node's TYPE --
-    no string discriminator. Kind-vs-shape legality of the head signature is
-    pass 2 (F-2); every class records what was written.
-    """
-    name_tok, opt_sig, kind = node.children
-    head_params = opt_sig.child if opt_sig.present else []
-    name, begin = name_tok.text, name_tok.begin
-    match kind:
-        case ast.StructKind():
-            return ast.StructDecl(name=name, members=head_params, begin=begin)
-        case ast.DictKind():
-            return ast.DictDecl(name=name, dtype=kind.dtype, by=kind.by,
-                                head_params=head_params, begin=begin)
-        case ast.ListKind():
-            return ast.ListDecl(name=name, dtype=kind.dtype, by=kind.by,
-                                head_params=head_params, begin=begin)
-        case ast.VariableKind():
-            return ast.VariableDef(name=name, type_name=kind.type_name,
-                                   args=kind.args, by=kind.by,
-                                   head_params=head_params, begin=begin)
-        case ast.ReactorKind():
-            return ast.ReactorDecl(kind=kind.keyword, name=name,
-                                   params=head_params, begin=begin)
 
 
 # ---------------------------------------------------------------------------
@@ -418,10 +381,10 @@ AST_MAP = {
     # type node. OrMap routes by branch index and by role -- the named-id branch
     # keyed by role so its position can shift without touching this entry.
     "type":                  OrMap({("built_in", "type"): lambda v: v.text,
-                                    ("dict", "list"): PASS}),
+                                    ("dict", "list"):     PASS}),
     "type-dict":             ast.DictType.from_seq,
     "type-list":             ast.ListType.from_seq,
-    "declaration":           _declaration,
+    "declaration":           ast.Declaration.from_seq,
 
     # merged named tails (D-26): the input decides the class
     "cause-system":          _cause_system,
@@ -513,9 +476,9 @@ class MapShapeError(Exception):
     """Raised when an AST_MAP entry's form does not fit its rule's shape (D-19).
 
     A router belongs only on its shape: an OrMap on an OR rule, an OptMap on an
-    OPT rule, a StarMap on a STAR rule. A SEQ or PLUS rule takes a single plain
-    factory (no router). A bare-terminal rule needs no factory (a Token is the
-    value); a plain callable that transforms the Token is allowed, a router is
+    OPT rule. A SEQ/STAR/PLUS rule takes a single plain factory (no router). A
+    bare-terminal rule needs no factory (a Token is the value); a plain callable
+    that transforms the Token is allowed, a router is
     not. Like the LL(2) and role gates, all violations are collected and raised
     together, each naming the rule, so one compile reports every mismatch. The
     gate inspects only the rule's OWN shape -- never what a factory produces,
@@ -530,16 +493,16 @@ def validate_ast_map_shapes(grammar):
     """RETURN: None. Raises MapShapeError if any AST_MAP entry mismatches shape.
 
     'grammar' is the COMPILED Grammar (rule_shape needs the compiled patterns).
-    A router (OrMap/OptMap/StarMap) carries a '.shape'; it must sit on a rule of
-    that shape. A plain callable is accepted on any shape (SEQ/PLUS hand it the
+    A router (OrMap/OptMap) carries a '.shape'; it must sit on a rule of that
+    shape. A plain callable is accepted on any shape (SEQ/STAR/PLUS hand it the
     node; FORWARD/TERMINAL hand it the forwarded value / Token). An OrMap is
     additionally checked: its branch addresses must be valid for the OR (int in
     range, role actually tagged on a branch) and cover every branch.
     """
-    from ..core.parser_generator.ast_map_family import OrMap, OptMap, StarMap
+    from ..core.parser_generator.ast_map_family import OrMap, OptMap
     from ..core.parser_generator.ll2_grammar_spec import (rule_shape)
     violations = []
-    routers = (OrMap, OptMap, StarMap)
+    routers = (OrMap, OptMap)
     for name, entry in AST_MAP.items():
         if name not in grammar.rules:
             continue
