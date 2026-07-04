@@ -1,0 +1,5 @@
+
+--- OptMap: absent arm ALWAYS yields NodeAbsent (A-13, non-negotiable) ---
+absent, present=PASS         -> NodeAbsent
+absent, present=factory      -> NodeAbsent
+absent, present=constant     -> NodeAbsent

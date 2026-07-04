@@ -1,0 +1,5 @@
+
+--- OrMap: tuple address shares one leaf ---
+branch 0 -> shared tag       -> ('got', 'A')
+branch 2 -> shared tag       -> ('got', 'C')
+branch 1 -> PASS             -> 'B'

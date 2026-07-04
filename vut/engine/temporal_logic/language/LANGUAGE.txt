@@ -1,0 +1,474 @@
+==============================================================================
+LANGUAGE
+==============================================================================
+
+The rule-file language describes the behaviour of an entity as reactions to
+events. This document states each language element and shows it in an example.
+Rationale for every decision lives in RATIONALE.txt (entries R-1..R-21); this
+document carries mechanics only.
+
+Spine:
+
+                                 character
+                                     |
+            .------------------------+-------------------.
+            |                        |                   |
+         aspect                   aspect      ...      aspect
+            |                        |                   |
+      .-----+-----.             .----+----.          .--+--.
+   behavior   behavior       behavior  behavior   behavior  ...
+      |           |             |          |          |
+  causality   causality     causality  causality  causality
+
+Real change happens at the causality level. Behaviour aggregates causalities;
+an aspect governs which one behaviour is active; a character circumscribes all
+aspects.
+
+
+(1) Lexical laws
+================
+
+(1.1) Keywords end with a colon
+-------------------------------
+Every keyword is colon-terminated; the colon is part of the keyword.
+
+    cause:  behavior:  aspect:  character:  is:  has:  when:
+    if:  elif:  else:  match:  case:  foreach:  int:  float:  step:  from:
+    break:  continue:  dropto:  exit:  every:  as:  in:  with:
+    open:  import:  clockwork:  groove:  beat:
+    open:  import:
+
+(1.2) Blocks are brace-delimited
+--------------------------------
+Every block is "{ … }"; braces are mandatory at every depth. A colon-keyword
+introduces; a brace-pair delimits.
+
+    if: <condition> { … }
+
+(1.3) Comments
+--------------
+A comment runs from "#" to end of line. "#" is the sole comment delimiter.
+
+    c.count += 1;   # advance the counter
+
+
+(2) Causality (atomic behaviour)
+================================
+
+A causality links a cause to one or more effects: cause --> effects. It is
+anchored in an event — an ephemeral entity of receivable change.
+
+    button_pressed => light_on;
+
+GRAMMAR
+    "<causality>": ("<cause>", PLUS("<effect>"))
+
+(2.1) Cause
+-----------
+A cause is an event with an optional guard. The guard is a CONDITION (see 4)
+introduced by "when:". The cause is the SOLE place a guard attaches.
+
+    MOTOR_ON when: c.fuel == 0 => lighten_fuel_missing;
+
+GRAMMAR
+    "<cause-explicit>": ("<event>", ["when:", "<condition>"])
+
+A cause may be named, parameterised, and referenced. The default parameter type
+is float. A named cause CONTAINS its guard; a use site supplies arguments, not a
+second guard.
+
+    cause: OPERATION_IMPOSSIBLE(fuel_limit, battery_limit)
+        MOTOR_ON when: c.fuel <= fuel_limit or c.battery < battery_limit;
+
+    OPERATION_IMPOSSIBLE(0.1, 2) => SIGNAL_REFUSE_OPERATION;
+
+GRAMMAR
+    "<definition/cause>": ("cause:", "<signature>", "<cause-explicit>", ";")
+    "<cause>":            ("<cause-explicit>", OR, "<call>")
+
+(2.2) Effects
+-------------
+An effect is a marker followed by a target or a command-block.
+
+    "=>"    activate
+    "=x=>"  deactivate
+
+GRAMMAR
+    "<effect>":        ("<effect-marker>", ("<call>", OR, "<code(causality)>"))
+    "<effect-marker>": ("=>", OR, "=x=>")
+
+"=x=> X" is well-formed iff X is deactivable:
+
+    entity kind          deactivable
+    -------------------  -----------
+    event                no
+    command-block        no
+    behavior             yes
+    aspect               yes
+    character            yes
+    recurring-emission   yes        (the "as:" handle; see 2.4)
+
+"<call>" and "<code>" are disjoint: a command-block contains statements only; an
+entity target is a "<call>". An effect needing both a mutation and an entity
+target is written as two effects on one cause.
+
+(2.3) Reference and definition
+------------------------------
+"<signature>" is the declaration side (name + formal parameters); "<call>" is
+the use side (name + arguments). Both are single shared forms across cause,
+behaviour, aspect, and character. A "(role)" suffix on a reference — e.g.
+"<call(behavior)>" — is an advisory role hint walked by position; it is
+non-identity and resolved in the semantic pass.
+
+(2.4) Recurring emission
+------------------------
+An ordinary "=>" spawn becomes recurring with "every:"; an optional "as:" binds
+a cancellation handle.
+
+    => <call(event)> every: <numeric> [as: <name>]
+
+"every: <numeric>" emits the event once per <numeric> (seconds by convention).
+"as: <name>" names the emission so it can be cancelled with "=x=> <name>". The
+handle is a bare name scoped to the enclosing entity. A recurring emission runs
+only while its entity is active and is cancelled automatically at ~EXIT. "as:"
+requires "every:".
+
+    behavior: Polling {
+        ~ENTRY       => poll_sensors() every: 0.5 as: poller;
+        stop_pressed =x=> poller;
+    }
+
+
+(3) Behaviour
+=============
+
+A behaviour aggregates causalities: what happens, for a set of events, while
+that behaviour is active.
+
+    behavior: ClimateControlWhenActivated {
+        ac_button_pushed => toggle_compressor;
+        temp_dial_turned => set_target_temperature;
+        fan_dial_turned  => adjust_fan_speed;
+    }
+
+GRAMMAR
+    "<behavior>": (["~"], "behavior:", "<signature>",
+                   ["is:", "<call(behavior)>", STAR((",", "<call(behavior)>"))],
+                   ["has:", "<declaration-list>"],
+                   "{", PLUS("<causality>"), "}")
+
+The body opens directly with "{" (R-12). "is:" (inheritance) and "has:"
+(declarations) are optional sections before it. "~ behavior:" is abstract — it never instantiates
+alone and exists to be inherited.
+
+"~ENTRY" and "~EXIT" are reserved, non-externally-triggered events that run on
+activation and deactivation. They take no external trigger and no guard, and
+their effect is any causality effect (a spawn or a command-block, see 2/5) --
+e.g. a recurring "every:" spawn at ~ENTRY, auto-cancelled at ~EXIT (R-15). The
+signature parameters are available through the "s." binding during ~ENTRY/~EXIT
+and in "has:".
+
+
+(4) Values: three sorts, two operator worlds
+============================================
+
+Values come in three sorts: a number, a truth, and a collection. The number and
+truth sorts are operator worlds connected by exactly two bridges. The collection
+sort has no operators -- it is constructed and consumed only. Mutation (see 5) is
+a separate thing that yields no value.
+
+ALGEBRAIC — produces a number.
+    operators  + - * /        grouping ( )
+    primary    numeric literal | data-access | ternary
+
+CONDITION — produces a truth.
+    operators  and or not      grouping ( )
+    primary    bare condition-valued data-access | comparison | true | false
+
+COLLECTION — a value sort with no operators; constructed by a comprehension
+    (see 4.3) and consumed by foreach:, an index base, a comprehension from:,
+    an argument, or a mutation right-hand side. Never operated on.
+
+BRIDGES (the only crossings, between number and truth)
+    comparison   algebraic {== != < <= > >=} algebraic -> condition
+                 chaining allowed:  a < b < c  ==  a < b and b < c
+    ternary      condition ? algebraic : algebraic -> algebraic
+
+A guard ("when:"), an "if:"/"elif:" test, and a "match:" scrutinee comparison
+consume a CONDITION. Arguments and loop bounds consume an ALGEBRAIC value. A
+mutation right-hand side is any sort.
+
+(4.1) Bindings
+--------------
+Every member access names its binding; there is no leading-dot form.
+
+    e.<name>   member of the event that triggered the causality
+    b.<name>   member of the behaviour instance     (behaviour, causality)
+    a.<name>   member of the aspect instance         (aspect, behaviour, causality)
+    c.<name>   member of the character instance       (always)
+    s.<name>   argument passed to the entity's call    (everywhere in the entity)
+
+(4.2) Data-access
+-----------------
+Data-access reaches a value out of a structure: a binding-qualified name or a
+call, followed by zero or more index steps. It is the place layer the value
+worlds, the mutation lvalue, the foreach: source, and the comprehension from:
+all draw on. An lvalue is a data-access, so an indexed place is assignable.
+
+    c.fuel              base only
+    c.buf[i]            one index step
+    grid[i][j]          chained steps (multi-dimension)
+    f(x)[0]             call result, indexed
+    c.buf[i] = v ;      data-access as an assignment target
+
+Single index only; the index is an algebraic value; multi-dimension is chaining.
+
+(4.3) Comprehension
+-------------------
+A comprehension constructs a collection from one or more generators with optional
+filters. Generators chain left-to-right; each may carry an "if:" filter. Loop
+variables are bare locals scoped to the comprehension, and may destructure.
+
+    [ x*y   with: x, y from: pairs ]
+    [ x     with: x from: xs if: x > 0 ]
+    [ x + y with: x from: xs if: x > 0
+            with: y from: ys ]
+    [ [ a*b with: b from: row ] with: row from: matrix ]   nested
+
+The element and each source may be any sort; a collection element nests.
+
+
+(5) Command-block (imperative body)
+===================================
+
+A command-block is the "<code>" effect: it runs imperative statements and
+mutates hidden variables. It runs immediately and uninterrupted when its cause
+fires, is one atomic terminal leaf (no fan-out, no interleaving), and emits no
+events at any depth.
+
+    TRAVELLED_100KM => {
+        c.fuel -= 8.31;
+        if: c.fuel < 5.0   { c.warn = true; }
+        elif: c.fuel < 20.0 { c.warn = false; }
+        else:               { c.reserve = false; }
+        int: i = 1 .. c.cylinders { c.checks += i; }
+    }
+
+Statements:
+
+    mutation        <lvalue> {= += -= *= /=} <algebraic> ;
+                    lvalue is a binding-qualified member, head in {e. b. a. c.};
+                    "s." is the read-only inbound argument, never a target.
+
+    if:/elif:/else: if: <condition> { … } [elif: <condition> { … }]* [else: { … }]
+                    a statement brancher (NOT the value-world ternary).
+
+    match:/case:    match: <scrutinee> { case: <pattern> { … } ... [case: _ { … }] }
+                    scrutinee is an algebraic value; patterns are literal, range,
+                    or glob (string-wildcard); optional default "case: _".
+                    Unmatched with no default is a no-op.
+
+    foreach:        foreach: <var> in: <collection> { … }
+                    binds <var> to each element (element only, no index).
+
+    count loop      <count-type>: <var> = <algebraic> .. <algebraic> [step: <algebraic>] { … }
+                    declares a typed counter <var> inline; <count-type> is
+                    int: or float: (extensible). Inclusive bounds; ".." is the
+                    range operator; default step +1; "step:" sets it (negative
+                    counts down). The counter is a bare local.
+
+A loop variable (foreach:'s var, or the count loop's typed counter) is a bare local name, scoped to its loop
+body, never escaping it.
+
+(5.1) Loop control
+------------------
+    break:      exits the nearest enclosing loop (unlabelled).
+    continue:   next iteration of the nearest enclosing loop.
+
+(5.2) Exit regions
+------------------
+The outermost command-block body may end in a tail ladder of bare EXIT-LABELS.
+"exit: <label>" DEFINES a label (no body, C-label drop-through: control reaching
+it falls through to what follows). "dropto: <label>" is the forward-only JUMP to
+such an exit. This is the kernel "goto out:" cleanup idiom made safe -- "goto
+considered harmful" (Dijkstra) answered by allowing only forward drops to a
+declared exit.
+
+    SOMETHING => {
+        c.h = acquire_a();
+        if: not c.h.ok  { dropto: fail; }
+        c.g = acquire_b();
+        if: not c.g.ok  { dropto: free_a; }
+        dropto: done;
+
+      exit: free_a;   c.released_a = release_a(c.h);
+      exit: fail;     c.status = FAILED;
+      exit: done;
+    }
+
+"dropto:" requires a target and may jump only to an exit-label defined LATER in
+the body (forward-only, so it forms no loop). Exit-labels may be defined only at
+the outermost body -- never inside a loop, if/elif/else, match, or any nested
+block. Loops use the unlabelled "break:"/"continue:"; exit-regions use "dropto:"
+(jump) and "exit:" (define); the two never overlap.
+
+
+(6) Aspect
+==========
+
+An aspect governs the one behaviour active at a given time; its behaviours are
+mutually exclusive.
+
+    aspect: MotorActivity {
+        ~behavior: GENERAL {
+             gas_pedal_release => close_throttle;
+             battery_empty     => close_throttle;
+        }
+        behavior: ON is: GENERAL {
+             gas_pedal_push     => open_throttle;
+             on_off_button_push => OFF;
+        }
+        behavior: OFF is: GENERAL {
+             gas_pedal_push     => tone_notify_engine_off;
+             on_off_button_push => ON;
+        }
+    }
+
+GRAMMAR
+    "<aspect>": (["~"], "aspect:", "<signature>",
+                 ["is:", "<call(aspect)>", STAR((",", "<call(aspect)>"))],
+                 ["has:", "<declaration-list>"],
+                 "{", PLUS("<behavior>"), "}")
+
+"~ aspect:" is abstract. "is:" inherits. "~ENTRY"/"~EXIT" work as for behaviour.
+
+
+(7) Character
+=============
+
+A character aggregates aspects, which are concurrent: each aspect is
+independently activable (active/inactive), and two or more may co-exist. Aspects
+appear in the "has:" section.
+
+    ~character: sprite has: {
+        position:  2dvector;
+        speed:     2dvector;
+        resources: AspectResources(0, 0, 0);
+    }
+
+GRAMMAR
+    "<character>": (["~"], "character:", "<signature>",
+                    ["is:", "<call(character)>", STAR((",", "<call(character)>"))],
+                    ["has:", "<declaration-list>"])
+
+Composition has two layers, not two peer kinds: within an aspect, behaviours are
+mutually exclusive (the aspect governs which one is active); within a character,
+aspects are concurrent and each is independently activable.
+
+
+(8) Namespaces and imports
+==========================
+
+A namespace is a named scope holding nested declarations. It is re-openable and
+nests to any depth; names declared within are scoped to it.
+
+    open: graphics.sprites {
+        ~character: sprite has: { position: 2dvector; }
+        ...
+    }
+
+An import mounts a file or url under a namespace. The path is a quoted string.
+
+    import: "lib/physics.vut" as: physics
+    import: "https://example.org/shapes.vut" as: shapes
+
+A namespace path (graphics.sprites, physics) is a plain dotted name -- distinct
+from a binding-qualified member access (4.1), which always has an
+e./b./a./c./s. head. The parser records an import; the semantic pass mounts it
+and resolves names scope-aware, walking outward from the current scope.
+
+
+(9) Relation to other terminology
+=================================
+
+This section is the single place that relates the native spine to traditional
+statechart vocabulary. These terms are NOT used elsewhere in the language.
+
+    native       statechart
+    -----------  ------------------------------------------------
+    causality    transition / reaction
+    behavior     simple state
+    aspect       state machine / composite state, governing XOR
+    character    hierarchical composite state, AND / orthogonal
+
+AND-composition is modelled as a state machine per state (active/inactive), not
+as a peer of XOR: exclusivity lives inside an aspect; independent activation
+lives above it, at the character.
+
+
+(10) Aggregation types
+======================
+
+Declarations admit three plain VARIABLE-TYPED containers (no type parameters,
+no member functions):
+
+    buffer:  list;                 a sequence of anything
+    scores:  dict;                 a map of anything to anything
+    point:   struct { x; y; };     named slots
+
+A type is a built-in (int float string bool), one of these containers, or a
+named type. The containers are untyped for now; type constraints (a typed list,
+dict, or struct field) are a later addition.
+
+
+(11) Clockwork
+==============
+
+An aspect body is either the mutually-exclusive behaviour set (6) or a
+CLOCKWORK: a paced sequential script advanced by a tick cause. The mental model
+is a coroutine (asyncio): the clockwork runs on the engine's event loop and its
+steps "sleep on a resource available".
+
+    aspect: Poller {
+        clockwork: c.tick {
+            => sample()                    # emit, then await the next tick
+            => ~NONE                       # emit nothing, pass one tick
+            groove: {                      # keep reacting to whichever fires
+                c.button_pressed { => ack(); }
+                when: c.ready    { => go(); }   # tick-default: on the tick, if ready
+                c.data_ready     { => forward(); }
+                beat: 30         { => idle(); }   # every 30 ticks: a recurring pulse
+            }
+        }
+    }
+
+Suspension points (asyncio analogue in parentheses):
+    => <emit>   emit, then await the tick        (await queue.put; await tick)
+    => ~NONE    emit nothing, pass one tick        (await sleep(0) / yield)
+    groove:{..} await-and-repeat over causes         (async for / looping select)
+    beat: n     an arm firing every n ticks           (a recurring pulse)
+
+An ordinary statement (5) may appear inside a clockwork but is
+EMISSION-IMPOTENT: emission happens only through "=>". A "groove:" is a
+repeating blocking select: it keeps reacting to whichever arm fires. An arm is a
+cause (which may carry its own "when:"), "~ELSE" (the default arm -- fires when
+no other arm matched, like "case: _"), a tick-default "when: <cond>" (the groove
+is tick-paced, so a condition-only arm wakes on the tick), or a "beat: n" (a
+recurring pulse every n ticks); arms are implicitly or-ed. A one-shot wait is
+"groove: { ... break: }".
+
+Statements run IN SEQUENCE, and where a step both acts and suspends the EFFECT
+happens first, then the wait: "=> x" emits then awaits the tick; a groove arm
+runs its body then the groove resumes.
+
+Reserved-event names (like ~ENTRY/~EXIT): ~ELSE is the default/fallthrough arm
+(fires when no other arm matched -- so it never shadows a specific arm and is
+checked last); ~NONE is the null emit target ("=> ~NONE"), never a trigger.
+Within one groove:, only the tick-default "when: <cond>" arm may appear more than
+once (differently gated); every other arm cause, including ~ELSE, appears at most
+once.
+
+TIE-BREAK: when several arms are ready in the same tick, the arm defined FIRST
+(topmost in the block) wins -- precedence of definition. This is deterministic:
+source order is fixed. A "break:" in an arm leaves the groove; "continue:"
+resumes the select (a groove counts as an enclosing loop).

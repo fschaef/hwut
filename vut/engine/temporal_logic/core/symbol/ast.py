@@ -13,7 +13,6 @@ leaf kinds encode:
     ReferenceLeaf   reach it by key / navigation       -> symbol-table resolve
     DeclarationLeaf introduces a name                  -> registered, resolved against
     AnonymousLeaf   the object is built in place        -> no lookup
-    OpaqueLeaf      embedded-language content           -> oracle, on demand
 
 Beyond leaves, general OPERATOR-SEQUENCE nodes carry associativity as identity:
 
@@ -36,7 +35,50 @@ from typing      import List
 
 
 @dataclass(frozen=True)
-class Leaf(ABC):
+class Node(ABC):
+    """RETURN: never constructed directly -- the abstract base of every AST
+              product: a factory's output IS-A Node, always.
+
+    The one type the semantic unit can rely on for anything a rule produced:
+    leaves, named constructs, and NodeList all derive from it, so 'isinstance(x,
+    Node)' answers "is this an AST product" without knowing the application's
+    vocabulary. Carries nothing: position lives on Leaf (only terminals have an
+    exact source offset); structure lives in the derivations.
+    """
+
+
+@dataclass(frozen=True)
+class NodeList(Node):
+    """RETURN: NodeList, the uniform product of a STAR or PLUS rule -- the
+              item products in match order; EMPTY for a STAR that matched
+              nothing, never empty for a PLUS.
+
+    One product type regardless of arity: emptiness is a STATE read off the
+    list (falsey when empty), never a different product -- the consumer reads
+    the items and handles however many there are. Iterable, indexable, sized,
+    so it reads like the tuple it wraps.
+    """
+    items: tuple = ()
+
+    def __iter__(self):
+        """RETURN: iterator, over the item products in match order."""
+        return iter(self.items)
+
+    def __len__(self):
+        """RETURN: int, the number of item products."""
+        return len(self.items)
+
+    def __getitem__(self, index):
+        """RETURN: object, the item product at 'index' (tuple indexing rules)."""
+        return self.items[index]
+
+    def __bool__(self):
+        """RETURN: bool, True if any item product is present; False when empty."""
+        return bool(self.items)
+
+
+@dataclass(frozen=True)
+class Leaf(Node):
     """A terminal's place in the tree: a DESCRIPTION of how to access the one
     object the terminal stands for.
 
@@ -105,12 +147,11 @@ class ReferenceLeaf(Leaf):
     path into a seated access, is resolution's business and lands in the
     resolution slot, NOT here.
 
-    '_access' is that slot: empty at construction (the parser, or the oracle,
-    seats only the written name), written ONCE by the semantic pass via
+    '_access' is that slot: empty at construction (the parser seats only the
+    written name), written ONCE by the semantic pass via
     object.__setattr__. compare=False, repr=False -- the leaf stays pure data
     in identity and print; the slot is a resolution result cached on the
-    description, not a field of what was written. The same one-slot,
-    written-once pattern carries OpaqueLeaf's lazy reference cache below.
+    description, not a field of what was written.
     """
     segments: "tuple[str, ...]"
     _access:  "object|None" = field(default=None, compare=False, repr=False)
@@ -164,69 +205,6 @@ class AnonymousLeaf(Leaf):
     against the symbol table because it names nothing outside itself.
     """
     value: object
-
-
-@dataclass(frozen=True)
-class OpaqueLeaf(Leaf):
-    """A leaf standing for OPAQUE CONTENT in an embedded language: the rule
-    language does not parse it; an oracle does, on demand.
-
-    'text' is the verbatim span (delimiters included). 'mode' is the span mode
-    the grammar attached (an oracle concept, world.span_oracle.SpanMode); only
-    the concrete oracle interprets it.
-
-    REFERENCE KIND -- OPEN. The content is referenced BY INLINE TEXT for now.
-    This is deliberately one of several possible reference kinds (offset+extent
-    into the source, a url, an external handle, ...); a second kind is added as
-    a field or derivation when it appears, with no change to the engine, which
-    yields a neutral (text, mode, begin) triple regardless. Inline text is NOT
-    a closed decision.
-
-    PRODUCTION: the engine yields the neutral triple at a T.opaque position; the
-    concrete parser's reduce action builds this leaf. The engine never names
-    this type.
-
-    '_references' is the lazy cache: names found inside the opaque text, each a
-    ReferenceLeaf (the SAME resolvable leaf the bracket grammar produces, born
-    lazily). One compare=False, repr=False slot, written once via
-    object.__setattr__; the leaf stays pure data in identity and print.
-    """
-    text:        str
-    mode:        object
-    _references: "tuple|None" = field(default=None, compare=False, repr=False)
-
-    @classmethod
-    def from_span(cls, span):
-        """RETURN: OpaqueLeaf, lifting the engine's neutral span triple.
-
-        The engine yields a neutral (text, mode, begin) span value at an
-        opaque-terminal position (it names no language); this is the single
-        seam where the concrete parser turns it into this general leaf. 'mode'
-        is carried straight across. For a single-terminal rule the factory
-        receives the raw span value itself -- there is no operator node to
-        unwrap.
-        """
-        return cls(text=span.text, mode=span.mode, begin=span.begin)
-
-    def get_references(self, oracle):
-        """RETURN: tuple[ReferenceLeaf], the names referenced inside this opaque
-                   span, begins ABSOLUTE (rebased onto this leaf's position).
-
-        Raises whatever the oracle raises on malformed opaque content or
-        infrastructure failure.
-
-        LAZY: computed on the first call via the oracle, then cached. The oracle
-        is an ARGUMENT per call -- the leaf never holds a live oracle handle. A
-        memoised accessor, not behaviour.
-        """
-        if self._references is None:
-            raw = oracle.collect_references(
-                    self.text, 0, len(self.text) - 1, self.mode)
-            rebased = tuple(ReferenceLeaf(segments=tuple(r.segments),
-                                          begin=r.begin + self.begin)
-                            for r in raw)
-            object.__setattr__(self, "_references", rebased)
-        return self._references
 
 
 @dataclass(frozen=True)

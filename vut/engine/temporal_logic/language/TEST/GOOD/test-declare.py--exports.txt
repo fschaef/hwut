@@ -1,0 +1,12 @@
+
+--- export surface (declare-rich.vut) ---
+exports: 8
+  Rover                          character    scope=-
+  base                           import       scope=-
+  drive                          aspect       scope=-
+  physics                        namespace    scope=-
+  physics.motors                 namespace    scope=physics
+  physics.motors.engine_ready    declaration  scope=physics.motors
+  physics.motors.hot             cause        scope=physics.motors
+  physics.motors.spin_up         behavior     scope=physics.motors
+diagnostics: 0  (has_fatal: False)

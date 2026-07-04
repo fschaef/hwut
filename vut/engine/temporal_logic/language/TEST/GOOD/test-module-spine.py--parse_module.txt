@@ -1,0 +1,11 @@
+
+--- SourceModule -> ParsedModule ---
+state: ParsedModule
+origin: minimal.vut
+file_node: ModuleRoot [3 items]
+  item 0: Causality
+  item 1: Causality
+  item 2: Behavior
+origin is the given SourceModule object: True
+diagnostics: 0
+has_fatal: False

@@ -1,57 +1,78 @@
 SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ===============================================================================
-core/symbol  --  GENERAL AST VOCABULARY FOR THE SEMANTIC UNIT
+core/symbol  --  the general AST vocabulary: Node / NodeList / Leaf, the
+                 leaf kinds, and the recipe slot the semantic unit writes.
 ===============================================================================
 
-WHAT THIS LAYER DOES
-    Supplies the AST shapes the semantic unit walks without knowing the rule
-    language. A specific grammar (parser/) derives its named nodes and
-    terminals from these; the semantic unit then treats any such tree the same
-    way.
-
-WORKED EXAMPLE
-    Written in a rule file:        NS.Other.Idle
-    Parser builds:                 ReferenceLeaf(segments=('NS','Other','Idle'),
-                                                 begin=...)
-    Semantic pass resolves:        leaf.resolve(<seated access>)
-    Later read:                    leaf.access  -> the seated access
-
-    The SAME ReferenceLeaf is produced two ways:
-        bracket grammar   eager, held in a node      (parser builds it)
-        opaque Luau       lazy, OpaqueCode yields it  (oracle finds it)
-    One leaf type, one resolution mechanism, two birth sites.
-
 TOPOLOGY
-    ast.py
-        Root ............. ordered top-level items; walkable generically
-                            (parser ModuleRoot derives it)
-        Leaf (abstract) ... a terminal's description of HOW its object is reached
-          ConstantLeaf .... object inline             (const-fold license)
-          ReferenceLeaf ... reach by key/navigation   (carries resolution slot)
-          DeclarationLeaf . introduces a name         (registered; resolved against)
-          AnonymousLeaf ... object built in place
-          OpaqueLeaf ...... embedded-language content (oracle, on demand;
-                            referenced BY TEXT for now -- open to offset+extent,
-                            url, ...)
+-------------------------------------------------------------------------------
 
-LEAF NATURE
-    An AST describes; it is not the object. A leaf is a description of access:
+    Node (abstract base)
+      |
+      +-- NodeList                   uniform STAR/PLUS product
+      +-- Leaf (base: 'begin' offset)
+      |     +-- ConstantLeaf         object inline (text + ConstantKind)
+      |     +-- ReferenceLeaf        object reached by key ('_access' slot)
+      |     +-- DeclarationLeaf      introduces a name
+      |     +-- AnonymousLeaf        object built in place
+      |     +-- LeftFolding          left-grouping operator sequence
+      |     +-- RightFolding         right-grouping operator sequence
+      |
+    Root                             ordered top-level items (walk entry)
+    MutableBranch                    placeholder, not yet designed
+    ConstantKind                     marker base for a ConstantLeaf's kind
 
-        ConstantLeaf    value in hand            no lookup
-        ReferenceLeaf   segments + slot          symbol-table resolve
-        AnonymousLeaf   value built here         no lookup
+THE PARTS  (all in ast.py)
+-------------------------------------------------------------------------------
 
-    The slot lives on ReferenceLeaf alone -- only by-key access resolves.
-    Slot: one compare=False, repr=False field, written once via
-    object.__setattr__; identity and print stay pure.
+    Node            The abstract base of every AST product; a factory's
+                    output IS-A Node, always. Carries nothing.
+    NodeList        The uniform product of a STAR or PLUS rule: the item
+                    products in match order. Iterable, indexable, sized,
+                    falsey when empty. Empty for a STAR that matched
+                    nothing; never empty for a PLUS.
+    Leaf            A terminal's place in the tree: a description of HOW
+                    the object it stands for is accessed. Fixes 'begin',
+                    the absolute source offset.
+    ConstantLeaf    The object is inline. 'text' is the verbatim lexeme;
+                    'kind' is a ConstantKind carried from the terminal.
+                    Interpretation to a machine value is the static
+                    layer's job. Factory: from_text(text, kind, begin).
+    ReferenceLeaf   The object is reached by key. 'segments' is the
+                    dotted name as written, head first. '_access' is the
+                    recipe slot: empty at construction, seated once by
+                    resolve(access); the 'access' property answers the
+                    seated recipe, None while unresolved.
+    DeclarationLeaf Introduces a name. 'segments' as written. No recipe
+                    slot: a declaration is resolved against, never
+                    resolved.
+    AnonymousLeaf   The object is built in place; 'value' is the
+                    constructed description. Names nothing outside
+                    itself.
+    LeftFolding     A same-precedence operator sequence grouping left:
+                    'head' plus 'star', the engine's STAR_Node mounted,
+                    each item an (op_token, operand) pair in source
+                    order. Associativity is the node's type identity.
+    RightFolding    The dual: same shape, right grouping. Not produced by
+                    the current ladders.
+    Root            A mutable ordered list of top-level items; the
+                    generic walk entry. The application derives its own
+                    root type.
+    ConstantKind    Marker base; the application defines the concrete
+                    kind set. core carries a kind and never inspects it.
 
-DEPENDENCY DIRECTION
-    parser_generator  <--  symbol  <--  parser/ (app), semantic/ (vocabulary)
-       (engine)            (here)
-    The engine has NO edge here. The application and the semantic unit derive
-    DOWN into here. Arrows follow the pipeline.
+HOW TO RUN / TEST
+-------------------------------------------------------------------------------
 
-NOT HERE
-    Leaf KINDS specific to one language (parser/ derivations).
-    The symbol table's resolved-access payload types (filled by the
-    application; declared where the table is built).
+No TEST directory here. The vocabulary is exercised through
+../parser_generator/TEST (the map family produces NodeList) and
+../../language/TEST (typed products and recipes).
+
+POINTERS
+-------------------------------------------------------------------------------
+
+    ../README.txt                        core overview
+    ../parser_generator/README.txt       STAR_Node/NodeAbsent, the map
+                                         family producing NodeList
+    ../../language/README.txt            the application vocabulary
+                                         derived from these bases

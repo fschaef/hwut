@@ -1,0 +1,5 @@
+
+--- abstract-target remark (elab-warn17.vut) ---
+diagnostics: 1  (has_fatal: False)
+  WARN   [GUARD] effect targets ABSTRACT entity 'ghost' (SEMANTICS 17: well-formed; every occurrence must be visible)
+fatal-free: True

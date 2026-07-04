@@ -1,0 +1,4 @@
+behavior: b1 { E => F; }
+behavior: b1 { G => H; }
+speed: float;
+open: speed { x: int; }

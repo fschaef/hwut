@@ -1,0 +1,5 @@
+
+--- PlusMap: same product type, never empty (engine guarantees 1..n) ---
+1-item plus                  -> NodeList(items=(('got', 'A'),))
+2-item plus                  -> NodeList(items=(('got', 'A'), ('got', 'B')))
+truthy                       -> True

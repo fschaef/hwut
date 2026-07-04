@@ -3,48 +3,37 @@
                           AST-MAP ROUTER FAMILY (D-19)
 ================================================================================
 
-An AST_MAP value is applied to the CST node its rule reduced to. For SEQ, STAR
-and PLUS rules that value is a single factory receiving the node. For the two
-BRANCHING shapes the value may be a ROUTER:
+An AST_MAP value is applied to the CST node its rule reduced to. The family
+carries one TYPED wrapper per rule shape, so the outer layer's load-time shape
+gate can assert map-entry kind against rule shape (an OrMap on a SEQ rule is a
+load error, not a runtime surprise):
 
-    OR   the value is an OrMap: pick the leaf for the BRANCH that fired.
-    OPT  the value is an OptMap: transform the child when PRESENT; ABSENT is the
-         absence signal None, FIXED by the machinery and not author-supplied.
+    SEQ   the value is a SeqMap: ONE constructor receiving the finished node,
+          which is its own role-db ('node["role"]', strict).
+    OR    the value is an OrMap: pick the leaf for the BRANCH that fired.
+    OPT   the value is an OptMap: transform the child when PRESENT; NodeAbsent is
+          the typed absence value, FIXED by the machinery and not author-supplied.
+    STAR  the value is a StarMap: ONE item constructor applied uniformly over
+          the items; the product is a NodeList, EMPTY when nothing matched.
+    PLUS  the value is a PlusMap: as StarMap; the node guarantees 1..n items,
+          so the NodeList is never empty.
 
-A router is CALLABLE: applied as 'fn(node)' at the one transformer seam in the
-engine (Grammar._reduce), exactly like a plain factory, so the engine needs no
-new case. Its '.shape' names the rule shape it belongs on. The routers are core
-machinery (they name no rule; they route over CST node kinds); the load-time
-shape gate that pins a router to its rule's shape lives in the outer layer
+A map value is CALLABLE: applied as 'fn(node)' at the one transformer seam in
+the engine (Grammar._reduce), exactly like a plain factory, so the engine needs
+no new case. Its '.shape' names the rule shape it belongs on. The family is core
+machinery (it names no rule; it routes over CST node kinds); the load-time
+shape gate that pins a map entry to its rule's shape lives in the outer layer
 (ast_map.validate_ast_map_shapes), since only that layer holds the AST map.
 
-WHY NO StarMap / PlusMap (the production idiom, A-13). A STAR or PLUS produces
-ONE list-node whose CHILDREN are the matches: 0..n for STAR, 1..n for PLUS. The
-arity is just len(children); there is no per-arity PRODUCT TYPE to route, so
-there is no router for these shapes. A STAR/PLUS rule takes a plain factory that
-reads the node's children. Routing STAR/PLUS to different products by emptiness
-was a wrong turn (it manufactured a distinction the customer does not need); the
-customer reads children and handles however many there are.
-
-WHY OptMap IS ONE-ARMED (the OPT absence law, A-13). OPT means presence-or-
-absence. Absence has exactly ONE honest product: None, the absence signal. If
-the author could route the ABSENT case to a value of their choosing, the OPT
-would carry a second alternative -- it would behave as a two-armed OR, and the
-grammar's '[...]' syntax would no longer enforce its own meaning (a reader could
-not trust '[x]' to mean "x or nothing"). So OptMap exposes ONLY the PRESENT
-transform; ABSENT is hard-wired to None and has no parameter.
-
-ROUTE LEAVES (OrMap / OptMap-present). A leaf is a factory (a callable receiving
-the routed value) OR a plain constant (returned as-is) OR the PASS sentinel
-(forward the routed value unchanged).
-
-WHAT ROUTERS DO NOT DO. They never inspect what a factory PRODUCES -- a routed
-factory may build any node kind, opaque to its parent (an OR branch's product is
-branch-dependent and unknowable at load). Routing keys off what the CST node
-ITSELF carries (its fired branch / present flag), never off the product.
-================================================================================
+StarMap and PlusMap are APPLIERS: one item constructor, applied uniformly,
+one product type (NodeList) regardless of arity -- emptiness is a state read
+off the product, never a different product. (The historic A-13 arity-router
+idea is retired; this family is the ruling.)
 """
-from .ll2_grammar_spec import (SHAPE_OR, SHAPE_OPT)
+from .ll2_grammar_spec import (SHAPE_OR, SHAPE_OPT, SHAPE_SEQ,
+                               SHAPE_STAR, SHAPE_PLUS)
+from .cst_nodes import NodeAbsent
+from ..symbol.ast import NodeList
 
 
 class _Pass:
@@ -113,13 +102,13 @@ class OrMap:
 
 
 class OptMap:
-    """Router for an OPT rule: transform the child when PRESENT; ABSENT -> None.
+    """Router for an OPT rule: transform the child when PRESENT; absent -> NodeAbsent.
 
     ONE-ARMED by law (A-13): 'present' is the only thing the author controls -- a
     leaf (factory or PASS) applied to opt_node.child when the optional fired. The
-    ABSENT case is FIXED to None, the absence signal, and has no parameter, so an
-    OPT can never be made to carry a second alternative. Default present-leaf is
-    PASS (forward the child unchanged).
+    absent case is FIXED to NodeAbsent, the typed absence value, and has no
+    parameter, so an OPT can never be made to carry a second alternative. Default
+    present-leaf is PASS (forward the child unchanged).
     """
     shape = SHAPE_OPT
 
@@ -127,13 +116,86 @@ class OptMap:
         self._present = present
 
     def __call__(self, opt_node):
-        """RETURN: object, the present-leaf on the child, or None when absent.
+        """RETURN: object, the present-leaf on the child if the optional fired;
+                   NodeAbsent otherwise.
 
-        ABSENT always yields None -- not author-supplied (A-13).
+        The absent arm always yields NodeAbsent -- not author-supplied (A-13).
         """
         if opt_node.present:
             return _apply_leaf(self._present, opt_node.child)
-        return None
+        return NodeAbsent
 
     def __repr__(self):
         return "OptMap(%r)" % (self._present,)
+
+
+class SeqMap:
+    """Applier for a SEQ rule: ONE constructor over the finished sequence node.
+
+    The node is its own role-db: the constructor reads the children it means by
+    role ('node["cause"]', strict -- a role the rule does not carry raises), so
+    the factory line documents the rule it serves. 'ctor' may also be PASS
+    (forward the node unchanged: an explicit, typed passthrough that still
+    satisfies the coverage gate).
+    """
+    shape = SHAPE_SEQ
+
+    def __init__(self, ctor):
+        self._ctor = ctor
+
+    def __call__(self, seq_node):
+        """RETURN: object, the constructor's product for 'seq_node' -- the
+                  rule's AST node if 'ctor' builds one, or 'seq_node' itself
+                  under PASS.
+        """
+        return _apply_leaf(self._ctor, seq_node)
+
+    def __repr__(self):
+        return "SeqMap(%r)" % (self._ctor,)
+
+
+class StarMap:
+    """Applier for a STAR rule: ONE item constructor, uniformly, over 0..n items.
+
+    NOT a router (A-13): arity selects nothing. The product is always a
+    NodeList -- EMPTY when the star matched nothing -- so emptiness is a state
+    the consumer reads off the one product type, never a different product.
+    Default item leaf is PASS (collect the reduced items unchanged).
+    """
+    shape = SHAPE_STAR
+
+    def __init__(self, item_ctor=PASS):
+        self._item_ctor = item_ctor
+
+    def __call__(self, star_node):
+        """RETURN: NodeList, the item leaf applied to every matched item in
+                  match order -- empty if the star matched nothing.
+        """
+        return NodeList(tuple(_apply_leaf(self._item_ctor, it)
+                              for it in star_node.items))
+
+    def __repr__(self):
+        return "StarMap(%r)" % (self._item_ctor,)
+
+
+class PlusMap:
+    """Applier for a PLUS rule: as StarMap, over 1..n items.
+
+    The PLUS node guarantees at least one item by parse, so the produced
+    NodeList is never empty; no arity check is performed here -- the guarantee
+    is the engine's, not this applier's.
+    """
+    shape = SHAPE_PLUS
+
+    def __init__(self, item_ctor=PASS):
+        self._item_ctor = item_ctor
+
+    def __call__(self, plus_node):
+        """RETURN: NodeList, the item leaf applied to every matched item in
+                  match order -- never empty (PLUS matches at least once).
+        """
+        return NodeList(tuple(_apply_leaf(self._item_ctor, it)
+                              for it in plus_node.items))
+
+    def __repr__(self):
+        return "PlusMap(%r)" % (self._item_ctor,)

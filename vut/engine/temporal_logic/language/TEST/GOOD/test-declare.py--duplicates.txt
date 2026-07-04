@@ -1,0 +1,9 @@
+
+--- duplicate declarations rejected, first wins (declare-dup.vut) ---
+exports: 3
+  b1                             behavior     scope=-
+  speed                          declaration  scope=-
+  speed.x                        declaration  scope=speed
+diagnostics: 2  (has_fatal: True)
+  [NAME] duplicate declaration of 'b1' in this scope; the first declaration stays authoritative (SEMANTICS 18)
+  [NAME] duplicate declaration of 'speed' in this scope; the first declaration stays authoritative (SEMANTICS 18)

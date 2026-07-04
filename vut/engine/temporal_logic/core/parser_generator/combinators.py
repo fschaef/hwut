@@ -15,7 +15,7 @@ terminal/reference objects from terminals.py:
                      itself a sequence is grouped: (a, OR, (b, c))
     PLUS(x)          x one or more times
     STAR(x)          x zero or more times
-    t_...            a terminal object (T.regex/T.captured/T.opaque, terminals.py)
+    t_...            a terminal object (T.regex/T.captured/T.string, terminals.py)
     "<name>"         a reference to another GRAMMAR rule (a bare string in angle
                      brackets; matches the <name> spelling used in SYNTAX_DOC)
     "literal"        a bare-string keyword: a silent terminal spelled as written.

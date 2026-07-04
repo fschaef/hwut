@@ -1,0 +1,5 @@
+
+--- CST identity: bare vs tagged ---
+  @id                identical=True  (errs 0/0)
+  @id EQ @num        identical=True  (errs 0/0)
+  @id COMMA @num     identical=True  (errs 0/0)

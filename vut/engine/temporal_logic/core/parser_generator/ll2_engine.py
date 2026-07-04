@@ -6,9 +6,9 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass
 
-from ...lexer.lexer import Lexer
+from ..lexer.lexer import Lexer
 from ..diagnostic import Diagnostic, Phase, DiagnosticReporter
-from .ll2_grammar_spec import t_fr_span_open, t_fr_eof
+from .ll2_grammar_spec import t_fr_eof
 
 
 # ---------------------------------------------------------------------------
@@ -19,7 +19,7 @@ from .ll2_grammar_spec import (SpecNode, Terminal_Spec, Rule_Spec,
                               collect_alt_conflicts, ELEM, REDUCE, LOOP,
                               CST_REDUCE, ROLE_STAMP)
 from dataclasses import replace as _dc_replace
-from .cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, OpaqueTerminal
+from .cst_nodes import OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node
 
 _CST_NODE_TYPES = (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node)
 
@@ -29,7 +29,7 @@ def _is_cst_node(value):
 
     Used by the CST reduce to decide whether a rule's forwarded child can have a
     rule name stamped onto it (only the frozen CST nodes carry a 'name' field; a
-    bare Token or OpaqueTerminal forwarded by a single-terminal rule does not).
+    bare Token forwarded by a single-terminal rule does not).
     """
     return isinstance(value, _CST_NODE_TYPES)
 
@@ -245,7 +245,7 @@ class Grammar:
             # A terminal is already its own interned grammar leaf (D-7): the
             # lexeme spec and the SpecNode are one object, shared across every
             # position naming it, 'silent' derived from shape. Return it as-is.
-            if element.shape not in ("regex", "captured", "opaque", "string"):
+            if element.shape not in ("regex", "captured", "string"):
                 raise ValueError("terminal shape %r is not a grammar leaf"
                                  % (element.shape,))
             return element
@@ -329,21 +329,21 @@ class EngineParser:
     """Parses a rule file by interpreting a compiled Grammar with LL(2) lookahead."""
     _TOP_LEVEL = None       
 
-    def __init__(self, source_text, oracle, reporter, grammar, lexer=None):
-        """RETURN: None. Builds the parser and PRIMES the 2-token window.
+    def __init__(self, source_text, reporter, grammar, lexer=None):
+        """RETURN: None, always. Builds the parser and PRIMES the 2-token window.
 
         'lexer' may be supplied to drive a prebuilt token stream (a test
-        ListLexer) instead of lexing 'source_text'; when given, 'source_text' and
-        'oracle' are ignored. Whichever lexer is used, tok1/tok2 are primed here
-        and NOWHERE ELSE -- a caller must not construct via __new__ and prime by
-        hand, or the two-token window can be left half-initialised (the bug that
-        a single-token 'self.tok' priming reintroduced).
+        ListLexer) instead of lexing 'source_text'; when given, 'source_text' is
+        ignored. Whichever lexer is used, tok1/tok2 are primed here and NOWHERE
+        ELSE -- a caller must not construct via __new__ and prime by hand, or the
+        two-token window can be left half-initialised (the bug that a
+        single-token 'self.tok' priming reintroduced).
         """
         self.reporter = reporter
         self.grammar  = grammar
         self.cst_mode = grammar.cst
         self.transformers = grammar.transformers
-        self.lexer    = lexer if lexer is not None else Lexer(source_text, oracle, reporter)
+        self.lexer    = lexer if lexer is not None else Lexer(source_text, reporter)
         # Prime the 2-token lookahead window
         self.tok1     = self.lexer.next()
         self.tok2     = self.lexer.next()
@@ -413,7 +413,7 @@ class EngineParser:
                     self._resync()
             from .cst_nodes import STAR_Node
             return STAR_Node(items=tuple(items), name="<file>")
-        # SEAM: engine constructs parser.ast_nodes (Module/Luau). Neutrality
+        # SEAM: engine constructs parser.ast_nodes (Module). Neutrality
         # blocker for the standalone parser-generator. See DISCUSSIONS/seam-1.
         from ...parser import ast_nodes as ast
         module_node = ast.ModuleRoot()
@@ -525,45 +525,6 @@ class EngineParser:
             raise _ResyncError()
         tok = self._advance()
         return None if term.silent else tok
-
-    def consume_span(self, span_node):
-        """RETURN: OpaqueTerminal, the opaque span at the cursor (text, mode, begin).
-
-        The grammar-agnostic counterpart of consuming a token: an opaque terminal
-        position pulls a whole '{ ... }' span via the injected oracle and yields a
-        neutral OpaqueTerminal. The engine does NOT build any language-specific AST
-        node here (that was a layering leak); the rule's reduce action turns the
-        OpaqueTerminal into whatever the language wants. 'mode' rides from the opaque
-        terminal to the oracle unread.
-
-        CRUCIAL ordering: tok1 is the SPAN_OPEN, but the 2-token window has ALREADY
-        lexed tok2 from just inside the block (the first control-plane token after
-        '{'). We must NOT advance the window here -- advancing would call
-        lexer.next() to refill tok2 and lex deeper into the block interior as
-        control-plane, hitting a stray operator as a MISMATCH before the oracle
-        ever sees the span. Instead, rewind the lexer to the open delimiter, let
-        the oracle skip the whole block (which repositions the cursor past the
-        close), then re-prime the window from after the block.
-        """
-        mode = span_node.mode
-        if self.tok1.kind is not t_fr_span_open:
-            self._error("expected '{' opaque span, found %s"
-                        % self.tok1.kind._name())
-            raise _ResyncError()
-        open_tok = self.tok1
-        # Rewind: discard the lookahead lexed from inside the block, and put the
-        # lexer cursor back at the open delimiter so read_span measures the span
-        # from '{' and leaves the cursor just past the matching '}'.
-        self.lexer.cursor = open_tok.begin
-        block = self.lexer.read_span(open_tok, mode)
-        if block is None:
-            self._error("span oracle failed", fatal=True)
-            raise _ResyncError()
-        # Re-prime the 2-token lookahead window behind the skipped block.
-        self.tok1 = self.lexer.next()
-        self.tok2 = self.lexer.next()
-        self._consumed += 1
-        return OpaqueTerminal(text=block.text, mode=mode, begin=block.begin)
 
     def choose_alt(self, alt_node):
         """RETURN: SpecNode, the OR branch whose FIRST_2 set admits the lookahead.

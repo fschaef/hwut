@@ -4,7 +4,7 @@ SEQ name='decl' (3)
   OPT name=None
     LEAF '@b'
   LEAF '@c'
---- optional ABSENT: OPT_Node child = ABSENT; SEQ slot STILL there ---
+--- optional NodeAbsent: OPT_Node child = NodeAbsent; SEQ slot STILL there ---
 SEQ name='decl' (3)
   LEAF '@a'
   OPT name=None

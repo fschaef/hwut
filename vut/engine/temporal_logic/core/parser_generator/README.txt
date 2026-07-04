@@ -1,186 +1,219 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ===============================================================================
-REACTIVE RULE ENGINE  --  HWUT 2.0
-PARSER CORE  --  the grammar-agnostic LL(2) machinery
+core/parser_generator  --  THE PARSER CORE MANUAL: authoring combinators,
+                           compiled grammar spec, LL(2) engine, CST nodes,
+                           AST-map family, transformer seam, diagnostics.
 ===============================================================================
 
-   authoring          compile               analyse (load-time gates)
-   combinators  ----> *_Spec tree  ------->  FIRST_2  ->  LL(2) check
-   (a,OR,b) [x]       (Grammar.rules)                     ROLES check
-   PLUS STAR                                                  |
-        |                                                     v
-        |                                              .--------------.
-   tokens <--- Lexer <--- source                       | EngineParser |
-                 |                                      |  (stackless) |
-                 v  '{...}' spans                       '--------------'
-            SpanOracle                                         |
-           (E_SpanMode)                                        v
-                                                          CST node tree
-
-The core owns everything that does not depend on a particular grammar: the
-terminal and operator vocabulary, the compiler from authored rules to a uniform
-spec tree, the FIRST_2 / LL(2) analysis, the lexer, the span-oracle boundary,
-the stackless parse driver, and the canonical CST it builds. A grammar (the
-rule-file GRAMMAR dict, one level up) is data fed to this machinery; the core
-names no rule and no keyword of its own.
-
+TOPOLOGY
 -------------------------------------------------------------------------------
-DIAGNOSTICS  (diagnostic.py)
--------------------------------------------------------------------------------
-A DiagnosticReporter collects every lexer and parser Diagnostic of a run, each
-tagged with a Phase and a source offset. It is the one sink threaded through the
-lexer and the engine; nothing else carries error state.
 
--------------------------------------------------------------------------------
-SPAN ORACLE  (span_oracle.py)
--------------------------------------------------------------------------------
-SpanOracle is the abstract boundary for OPAQUE SPANS -- the '{ ... }' text the
-control plane does not parse. The lexer hands the oracle each span with the
-E_SpanMode the grammar position demands (CONDITION / EXPRESSION / LVALUE /
-STATEMENT_BLOCK); the oracle returns the matching-brace extent. E_SpanMode is a
-core-owned enum, so the core hard-codes no embedded language. A source with no
-spans never calls the oracle.
+    combinators.py          subspace.py
+    (authoring forms)       (flatten / resolve)
+          |                       |
+          | compile_element       | flat rule map, flattened names
+          v                       v
+    ll2_grammar_spec.py ----> ll2_engine.py <---- ../lexer/lexer.py
+    (Spec tree, FIRST_2,      (Grammar, EngineParser)   (Token stream)
+     terminal factory T)          |
+                                  | builds, bottom-up
+                                  v
+    operator_interface.py --> cst_nodes.py --> ast_map_family.py
+    (shape identity)          (five node kinds,  (SeqMap/OrMap/OptMap/
+                               NodeAbsent)        StarMap/PlusMap, PASS)
 
+THE PARTS
 -------------------------------------------------------------------------------
-TERMINALS AND THE SPEC TREE  (ll2_grammar_spec.py)
+
+combinators.py -- the authoring vocabulary a GRAMMAR dict is written in:
+
+    (a, b, ...)       a sequence (SEQ); a bare tuple
+    [a, b, ...]       an optional (OPT); a bare list
+    (a, OR, b, ...)   an alternation; OR is a sentinel between branches,
+                      a branch that is itself a sequence is a nested tuple
+    PLUS(x)           x one or more times
+    STAR(x)           x zero or more times
+    t_...             a terminal object (T.string / T.regex / T.captured)
+    "<name>"          a reference to another rule
+    "literal"         a bare-string keyword: a silent terminal
+    TOP               the key of a subspace's own pattern (see subspace.py)
+
+    compile_element(element, ctx) lowers an authored body to the Spec
+    tree; leaf resolution (terminal, reference, keyword) is delegated to
+    ctx, the engine, which owns the terminal database and the rule map.
+
+ll2_grammar_spec.py -- the compiled grammar as a uniform SpecNode tree:
+
+    Rule_Spec          one per rule (flattened name)
+    Terminal_Spec      one per terminal leaf
+    SEQ_Spec / OR_Spec / OPT_Spec / STAR_Spec / PLUS_Spec
+                       one per operator; each carries first2_set,
+                       nullable, the conflict scan, and expand
+    Tagged_Spec        a transparent wrapper holding one body element plus
+                       an advisory role string; FIRST_2, nullable, the
+                       conflict scan, and expand all delegate to the body.
+                       Authoring forms: a terminal call t("role") and a
+                       reference suffix '<name(role)>'.
+    TerminalFactory T  T.string / T.regex / T.captured / T.framing mint
+                       Terminal objects into TERMINAL_DB; the framing four
+                       are t_fr_comment, t_fr_ws, t_fr_mismatch, t_fr_eof.
+    rule_shape(rule)   SEQ / OR / OPT / STAR / PLUS / TERMINAL / FORWARD:
+                       the shape of a rule's top operator.
+
+    A Spec describes; it never holds a parse result. One Spec yields many
+    CST nodes across parses.
+
+subspace.py -- grammar subspaces and path namespaces:
+
+    A grammar value is a pattern, or a subspace: a dict whose TOP key
+    holds the rule's own pattern and whose other keys are member rules.
+    Every rule has a flattened name, its path joined by '/' ('algebr/
+    shift'); a root rule keeps its bare name. flatten() lowers a nested
+    grammar to the flat rule map keyed by flattened name, plus a scope
+    map; a
+    duplicate flattened name is a load error. resolve() binds a reference:
+    a path-spelled name resolves from any scope; a bare name resolves
+    against the writing rule's subspace first, then the enclosing
+    subspaces, then the root. Subspaces nest to arbitrary depth.
+
+ll2_engine.py -- the table-driven LL(2) engine:
+
+    Grammar(grammar_dict, actions=None, start=None, cst=False,
+            transformers=None, roles=None)
+        Flattens subspaces, compiles every rule body via combinators,
+        runs the FIRST_2 fixpoint (_analyse), seals the memo, then
+        validates role uniqueness and, when 'roles' is given, the role
+        vocabulary. Compile-time errors, each collecting every
+        violation before raising:
+            LL2ConflictError        the grammar is not LL(2)
+            RoleUniquenessError     one SEQ gives two positions the same
+                                    advisory role (D-18)
+            RoleVocabularyError     a role hint is outside the declared
+                                    ROLES vocabulary (D-10)
+        Three reduction modes, mutually exclusive:
+            actions        legacy per-rule hand-builders
+            cst=True       the canonical CST and nothing else
+            transformers   a PARTIAL dict rule-name -> callable; implies
+                           CST mode. Each rule with an entry has fn(node)
+                           called on its finished CST node and the result
+                           forwarded; a rule with no entry passes its CST
+                           node through untouched. There is no
+                           completeness check.
+        Grammar._reduce is THE TRANSFORMER SEAM: the single call site
+        'fn(node)' where a typed product replaces a CST node.
+
+    EngineParser(source_text, reporter, grammar)
+        Drives the Lexer pull-wise with two tokens of lookahead. Branch
+        choice consults the alternation's first2_set (choose_alt);
+        presence tests consult starts(). parse() runs the start rule to
+        end-of-file.
+
+    Frame  the engine's reduction stack record: collected values, their
+           roles, and the construct's begin offset.
+
+cst_nodes.py -- the canonical pruned CST, five frozen node kinds:
+
+    OR_Node    triggered_index (0-based fired branch), child (the
+               branch's reduced value, NodeAbsent for an all-silent
+               branch), role (the fired branch's advisory role or None).
+               route_key(address) answers int-against-triggered_index or
+               str-against-role.
+    OPT_Node   present (True iff the optional fired), child (the body's
+               surviving value, NodeAbsent when none survived). Presence
+               is a state on the node; a fired optional over an
+               all-silent body is present=True, child=NodeAbsent.
+               or_else(default) reads child-if-present, else default.
+    SEQ_Node   children: one reduced value per surviving grammar
+               position; roles rides parallel, one advisory role or None
+               per entry. node[i] is positional; node["role"] is STRICT
+               role access -- a role the sequence does not carry raises
+               AssertionError naming the carried roles. An absent
+               optional survives at its slot as OPT_Node(present=False).
+    PLUS_Node  items: the reduced repetitions, never empty.
+    STAR_Node  items: the reduced repetitions, possibly empty.
+
+    Every node carries 'name': the producing rule's name at a
+    rule-reduce site, None for an inline operator inside a rule body;
+    and 'begin': the construct's start offset. Silent terminals leave no
+    entry (the pruning); captured and regex terminals survive as Tokens.
+    NodeAbsent is a single falsey sentinel instance, a distinct type.
+
+operator_interface.py -- shape identity over the CST:
+
+    Operator_Interface and its five derivations OR_/OPT_/SEQ_/PLUS_/
+    STAR_Interface signal WHICH grammar operator built a node. The
+    generic CST nodes are the interface bearers; a typed AST product
+    carries no operator accessors. The interface asserts structural
+    identity, not a callable accessor contract.
+
+ast_map_family.py -- the typed map-entry wrappers (D-19), one per shape:
+
+    SeqMap(fn)               SEQ: one constructor receiving the finished
+                             SEQ_Node
+    OrMap({address: leaf})   OR: a route table, branch address (role,
+                             index, or tuple of either) -> leaf; the
+                             fired branch picks the leaf
+    OptMap(fn)               OPT: transform the child when present;
+                             NodeAbsent otherwise, fixed by the machinery
+    StarMap(item_fn)         STAR: an applier -- one item constructor
+                             applied uniformly; product NodeList, empty
+                             when nothing matched
+    PlusMap(item_fn)         PLUS: as StarMap; the NodeList is never
+                             empty
+    PASS                     a route leaf forwarding the routed value
+                             unchanged
+
+    A map value is callable and applied as fn(node) at the transformer
+    seam, exactly like a plain factory. Its '.shape' names the rule
+    shape it belongs on; the load-time shape gate lives in the outer
+    layer (language/ast_map.load_ast_map).
+
+DATA FLOW
 -------------------------------------------------------------------------------
-The compiled grammar is a uniform tree of frozen-in-practice '*_Spec' nodes.
-The leaves:
 
-  Terminal_Spec   a terminal: its lexeme specification AND its seat in the tree.
-                  IDENTITY is _name() -- shape plus every distinguishing field
-                  -- and the object is INTERNED on it (one Terminal_Spec per
-                  _name()), so the engine compares terminals by object identity
-                  and the lexer stamps the same object on Token.kind. The object
-                  is immutable after construction and content-hashed on _name(),
-                  so it serves as a value key (see the ROLES vocabulary below).
-                  Built through the T factory: T.regex / T.string / T.captured /
-                  T.opaque.
-  Rule_Spec       a non-terminal: its name, its compiled pattern, and (after
-                  analysis) its FIRST_2 set.
+Compile (once):
 
-The operators (one per authoring combinator):
+    GRAMMAR dict --flatten--> flat rule map --compile_element--> Spec tree
+        --_analyse (FIRST_2 fixpoint)--> sealed Grammar
+        --role uniqueness / role vocabulary checks--> ready
 
-  SEQ_Spec   a sequence of children.        OR_Spec   an alternation of branches.
-  OPT_Spec   zero-or-one body.              PLUS_Spec one-or-more body.
-  STAR_Spec  zero-or-more body.
+Parse (per source text):
 
-  Tagged_Spec  a TRANSPARENT wrapper carrying one body plus an advisory role
-               string (the role-hint facility). Its nullable / FIRST_2 / expand
-               delegate straight to the body, so it adds nothing to lexing, the
-               LL(2) analysis, or the value stream; the role is metadata read
-               off the spec by position. It additionally stamps the role onto
-               the slot its body fills in the built SEQ_Node, enabling role-
-               keyed child access (node["key"]); the value itself is unchanged.
-               See "ROLE HINTS" below.
+    Token stream --EngineParser (LL(2) branch choice, bottom-up reduce)-->
+    per rule: finished CST node --Grammar._reduce: transformer fn(node)-->
+    typed product (or the CST node itself where no transformer is
+    registered)
 
-FIRST_2 sets are computed by an iterative fixpoint over the tree (no recursion
-on grammar depth); merge_first2 combines a prefix set with a follower set under
-the two-token bound.
+Diagnostics:
 
+    lexer mismatch          non-fatal Diagnostic + mismatch Token
+    parse fault             fatal Diagnostic; _resync skips at least one
+                            token, then advances to the next top-level
+                            anchor, a consumed ':end', or end-of-file;
+                            parsing continues with the recovered items
+    phase boundary          the caller invokes reporter.abort_if_fatal()
+
+HOW TO RUN / TEST
 -------------------------------------------------------------------------------
-OPERATOR INTERFACES  (operator_interface.py)
--------------------------------------------------------------------------------
-Shape-identity signals (OR_Interface, SEQ_Interface, PLUS_Interface,
-STAR_Interface, OPT_Interface) shared by the generic CST nodes and the typed
-AST nodes one level up. A consumer asks "what shape is this node" by interface,
-independent of which hierarchy minted it.
 
--------------------------------------------------------------------------------
-AUTHORING COMBINATORS  (combinators.py)
--------------------------------------------------------------------------------
-The surface a grammar is written in: a bare tuple is a SEQUENCE, a bare list is
-an OPTIONAL, the OR sentinel between tuple elements is an ALTERNATION, PLUS(x)
-and STAR(x) are the repetitions, a terminal object is a leaf, and a bare
-'<name>' string is a rule reference. compile_element lowers an authored rule
-into the '*_Spec' tree, deferring leaf resolution (terminal object / '<name>'
-reference / '<name(role)>' tagged reference / bare-string keyword) to the
-engine, which owns the terminal table and the rule map.
+    cd TEST
+    python3 test-engine.py --hwut-info          engine: FIRST_2, LL(2)
+                                                conflicts, parse drive
+    python3 test-cst.py --hwut-info             CST shapes, strict roles,
+                                                overlay, signals
+    python3 test-ast-map-router.py --hwut-info  the map family per shape
+    python3 test-role-hint.py --hwut-info       Tagged_Spec transparency,
+                                                vocabulary check
+    python3 test-X.py <choice>                  diffs byte-exact against
+                                                GOOD/test-X.py--<choice>.txt
 
-A grammar VALUE may also be a SUBSPACE (subspace.py): a dict whose TOP key (a
-combinators sentinel) holds the rule's own pattern and whose other keys are
-member rules. A subspace is a NAMESPACE node: every rule has a QUALIFIED name --
-its path joined by '/' ('algebr/shift') -- and members may use SHORT names (the
-path supplies the category). flatten() lowers subspaces, nested arbitrarily, to
-the flat qualified-named rule map before compile; resolve() binds each reference
-SCOPE-AWARE -- a bare '<shift>' resolves within the writing rule's subspace then
-walks up to the root, a path-qualified '<algebr/shift>' resolves from anywhere.
-Privacy is a resolution property: a bare name does not reach a private member of
-an unrelated subspace (no separate wall), and reaching one requires its path.
+POINTERS
+-------------------------------------------------------------------------------
 
--------------------------------------------------------------------------------
-CST NODES  (cst_nodes.py)
--------------------------------------------------------------------------------
-Five frozen nodes -- OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node -- one
-per operator. The engine reduces every parse to a tree of these by default; this
-is a PRUNED CST (silent terminals contribute nothing). Each carries the
-producing rule's name, or None for an inline operator. The ABSENT sentinel marks
-a position that produced no surviving value. SEQ_Node also carries a 'roles'
-tuple parallel to 'children' (the advisory role per surviving position, or
-None); node["key"] reads the child whose position carried that role, immune to
-captured-terminal index drift, while children[i] positional access is unchanged.
-
--------------------------------------------------------------------------------
-AST-MAP ROUTER FAMILY  (ast_map_family.py)
--------------------------------------------------------------------------------
-OrMap / OptMap / StarMap: callable routers an outer AST map uses for the
-branching rule shapes -- an OR routes on its fired branch (by index or role), an
-OPT on present/absent, a STAR on empty/non-empty -- each picking a factory (or a
-constant, or the PASS sentinel). Grammar-agnostic: they route over CST node
-kinds and name no rule, so they live here, not in the outer layer. SEQ and PLUS
-rules take a single factory (no router); a terminal needs none. The load-time
-shape gate that pins a router to its rule's shape lives outer (it reads the AST
-map); the routers themselves are core.
-
--------------------------------------------------------------------------------
-LEXER  (lexer.py)
--------------------------------------------------------------------------------
-A single compiled regular expression, assembled from the terminal table in
-declaration-tier order, tokenizes the control plane. On reaching a span opener
-the lexer hands control to the SpanOracle, splices the returned span as one
-token, and resumes. Output is a token stream; each Token carries its Terminal
-kind (by identity) and source offsets.
-
--------------------------------------------------------------------------------
-ENGINE  (ll2_engine.py)
--------------------------------------------------------------------------------
-Grammar compiles the authored grammar dict into the Rule_Spec map, analyses it,
-and runs the load-time gates. Construction modes: 'actions' (legacy hand-builder
-reduce), 'cst=True' (canonical CST only), or 'transformers' (CST plus a partial
-rule-name -> callable overlay). Three gates run at compile time:
-
-    FIRST_2 / LL(2)   merge the sets, scan every alternation for a two-token
-                      collision; a clash raises LL2ConflictError, located by
-                      rule.
-    ROLE UNIQUENESS   no SEQ may give two positions the same advisory role
-                      (its role-keyed access would be ambiguous); a clash raises
-                      RoleUniquenessError, located by rule. Always run.
-    ROLES (optional)  validate every role hint against the supplied vocabulary
-                      (see below); a violation raises RoleVocabularyError.
-
-EngineParser is the driver: a STACKLESS interpreter over an explicit heap
-work-stack (ELEM / REDUCE / CST_REDUCE / ROLE_STAMP / LOOP items), so parse
-depth is bounded by memory, not the interpreter recursion limit. It primes a
-two-token lookahead window, expands each spec node into work items, consumes
-terminals and spans, reduces finished frames into CST nodes (then through the
-transformer overlay where one is registered), and runs the ROLE_STAMP item a
-tagged element schedules after its body to tag that value's frame slot.
-
--------------------------------------------------------------------------------
-ROLE HINTS AND THE ROLES VOCABULARY  (ll2_grammar_spec.py + ll2_engine.py)
--------------------------------------------------------------------------------
-A grammar position may carry an advisory ROLE: a plain string naming the kind a
-reference or terminal is expected to denote. Two authoring forms lower to a
-Tagged_Spec: a terminal CALL, t_re_id("event"), and a reference SUFFIX,
-'<name-dotted(event)>'. The tag is recorded on the spec and walked by position;
-it is OUTSIDE terminal identity and the value stream -- lexing, interning, the
-FIRST_2 analysis, and every reduced CST value are identical to the bare form.
-
-The allowed roles are declared once, in a ROLES vocabulary the grammar supplies
-to Grammar(roles=...): a dict mapping each role-bearing pattern -- a terminal
-object, or a '<name>' reference string -- to the tuple of roles it may carry.
-Terminals serve as keys directly (interned, immutable, content-hashed).
-_validate_roles walks the compiled grammar, resolves each Tagged_Spec to its key
-(the wrapped terminal, or '<rule-name>'), and checks the carried role against
-the declared tuple. An undeclared pattern or an unlisted role raises
-RoleVocabularyError at load time. The check is opt-in: with no roles dict, hints
-are not validated.
+    RATIONALE.txt                        core decisions (C-numbered)
+    ../README.txt                        core overview
+    ../lexer/README.txt                  the token stream feeding parse()
+    ../symbol/README.txt                 the Node/NodeList vocabulary the
+                                         appliers produce into
+    ../../language/README.txt            the outer layer supplying GRAMMAR,
+                                         AST_MAP, and ROLES

@@ -1,0 +1,9 @@
+
+--- namespace re-opening extends the scope (declare-reopen.vut) ---
+exports: 5
+  physics                        namespace    scope=-
+  physics.gravity                declaration  scope=physics
+  physics.motors                 namespace    scope=physics
+  physics.motors.engine_ready    declaration  scope=physics.motors
+  physics.motors.fuel_low        declaration  scope=physics.motors
+diagnostics: 0  (has_fatal: False)

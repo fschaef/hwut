@@ -1,0 +1,4 @@
+
+--- OrMap: fired branch index selects the leaf ---
+branch 0 (PASS) -> child     -> 'A'
+branch 1 (tag)  -> child     -> ('got', 'B')

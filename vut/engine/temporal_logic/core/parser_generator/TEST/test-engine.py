@@ -48,7 +48,7 @@ from vut.engine.temporal_logic.core.parser_generator import ll2_grammar_spec as 
 from vut.engine.temporal_logic.core.parser_generator.ll2_engine import (
         Grammar, EngineParser, LL2ConflictError)
 from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import merge_first2
-from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from vut.engine.temporal_logic.core.lexer.lexer import register_grammar
 from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
 
@@ -178,7 +178,7 @@ def run_choose_alt():
 
     for src, want in (("@id EQ @num", "named"), ("@id THEN", "positional")):
         rep = DiagnosticReporter()
-        p = EngineParser(src, _ToyOracle(), rep, g)
+        p = EngineParser(src, rep, g)
         chosen = p.choose_alt(alt)
         idx = list(alt.branches).index(chosen)
         got = "positional" if idx == 0 else "named"
@@ -214,19 +214,6 @@ def run_deep_alt():
             print("overflow:   YES -- the scan is still recursive")
     finally:
         sys.setrecursionlimit(saved)
-
-
-class _ToyOracle:
-    """A Luau oracle stub for toy grammars with no Luau (parse() never called).
-
-    The toy grammars here have no opaque '{...}' terminals, so the lexer never
-    hands a fragment to the oracle; this exists only to satisfy the parser's
-    constructor signature.
-    """
-    def parse(self, _text):
-        """RETURN: an object with .ok == True (toy grammars carry no Luau)."""
-        from types import SimpleNamespace
-        return SimpleNamespace(ok=True)
 
 
 # A reduce action for the toy 'arg' rule, recording each argument's shape so
@@ -274,7 +261,7 @@ def run_parse_disambiguation():
     banner("end-to-end LL(2) parse of an argument list")
     for src in ("@id", "@id EQ @num", "@id COMMA @id EQ @num", "@id EQ @num COMMA @num"):
         rep = DiagnosticReporter()
-        p = EngineParser(src, _ToyOracle(), rep, g)
+        p = EngineParser(src, rep, g)
         try:
             p._match(g.rules["args"])
             shown = _LAST_ARGS[:]
@@ -288,8 +275,7 @@ def run_parse_disambiguation():
 class _ListLexer:
     """A minimal lexer stand-in: serves a prebuilt token list, then EOF.
 
-    The two methods EngineParser uses are next() and read_span(); these
-    core tests carry no Luau, so only next() is exercised. This mirrors how the
+    The one method EngineParser uses on it is next(). This mirrors how the
     framework's aux_walker drives a rule over a synthetic token stream -- the
     path that a single-token priming regression breaks but the lexer-backed tests
     do not, because aux_walker injects its own lexer.
@@ -306,7 +292,7 @@ class _ListLexer:
             self.i += 1
             return t
         from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import t_fr_eof
-        from vut.engine.temporal_logic.lexer.lexer import Token
+        from vut.engine.temporal_logic.core.lexer.lexer import Token
         return Token(t_fr_eof, "", 0, 0)
 
 
@@ -321,7 +307,7 @@ def run_construct_primes_window():
     unset. The point is that priming lives in exactly one place (the constructor)
     and the window is always live before any match begins.
     """
-    from vut.engine.temporal_logic.lexer.lexer import Token, register_grammar
+    from vut.engine.temporal_logic.core.lexer.lexer import Token, register_grammar
     from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T, t_fr_eof
     from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
@@ -332,13 +318,13 @@ def run_construct_primes_window():
 
     banner("constructor primes tok1 and tok2")
     toks = [Token(t_a, "@a", 0, 2), Token(t_a, "@a", 3, 5)]
-    p = EngineParser(None, None, DiagnosticReporter(), g, lexer=_ListLexer(toks))
+    p = EngineParser(None, DiagnosticReporter(), g, lexer=_ListLexer(toks))
     print("tok1 set:", hasattr(p, "tok1"), "->", p.tok1.text)
     print("tok2 set:", hasattr(p, "tok2"), "->", p.tok2.text)
     print("no retired single 'tok':", not hasattr(p, "tok"))
 
     banner("one-token stream still leaves a live window (tok2 = EOF)")
-    p1 = EngineParser(None, None, DiagnosticReporter(), g,
+    p1 = EngineParser(None, DiagnosticReporter(), g,
                       lexer=_ListLexer([Token(t_a, "@a", 0, 2)]))
     print("tok1:", p1.tok1.text or "(empty)",
           "tok2 is EOF:", p1.tok2.kind is t_fr_eof)
@@ -354,7 +340,7 @@ def run_drive_token_list():
     both the happy path and recovery work through the driver, not only through a
     real Lexer.
     """
-    from vut.engine.temporal_logic.lexer.lexer import Token, register_grammar
+    from vut.engine.temporal_logic.core.lexer.lexer import Token, register_grammar
     from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
     from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
     from vut.engine.temporal_logic.core.parser_generator.ll2_engine import _ResyncError
@@ -366,7 +352,7 @@ def run_drive_token_list():
     g = Grammar(grammar, {"pair": None}, start="pair")
 
     def drive(tokens):
-        p = EngineParser(None, None, DiagnosticReporter(), g,
+        p = EngineParser(None, DiagnosticReporter(), g,
                          lexer=_ListLexer(tokens))
         try:
             p._match(g.rules["pair"])

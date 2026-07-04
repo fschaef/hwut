@@ -31,7 +31,7 @@ CORE PRINCIPLE: SIGNALLING OVER BEHAVIOUR
 The interface asserts structural identity, not a callable accessor contract.
 The deep reason (D-19): the product a rule's factory builds is NOT KNOWABLE
 before runtime -- an OR rule yields a different node kind per branch that fires
-(a ConstantLeaf, an OpaqueLeaf, a passed-through operand), so no single interface can
+(a ConstantLeaf, a passed-through operand), so no single interface can
 be promised upward. A parent therefore CANNOT query a child product through a
 shape accessor even in principle; it takes the product as an opaque typed value
 and reads its own fields. Forcing a universal accessor like 'triggered_index'

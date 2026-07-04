@@ -1,0 +1,12 @@
+
+--- declared vocabulary -> compiles clean ---
+compiled OK (every hint declared)
+
+--- undeclared ROLE on a declared pattern -> rejected (typo guard) ---
+   role 'event' on regex:@id\b: not in declared vocabulary ('evnet', 'clock')
+
+--- hint on a pattern with NO vocabulary entry -> rejected ---
+   role 'reference' on <a>: no vocabulary declared in ROLES
+
+--- no roles dict -> hints not checked (opt-out) ---
+compiled OK (validation skipped)

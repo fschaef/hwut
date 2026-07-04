@@ -1,0 +1,2 @@
+~behavior: vehicle(power, boost = 1) has: { top_speed: float; } { GO => move; }
+max_speed: float;

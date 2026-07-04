@@ -1,0 +1,16 @@
+
+--- state field inventory ---
+SourceModule     path
+ParsedModule     origin, file_node
+DeclaredModule   origin, file_node, export_db
+SemanticModule   origin, file_node, export_db, symbol_table
+
+--- IS-A: SemanticModule substitutes for DeclaredModule ---
+isinstance(sem, DeclaredModule): True
+isinstance(sem, ParsedModule):   False
+export_db peekable on the SemanticModule: True
+
+--- transition ownership (documented, not imported) ---
+parse     -> rule_parser.parse_module (this layer; tested here)
+declare   -> semantic unit (later pass)
+elaborate -> semantic unit (later pass)

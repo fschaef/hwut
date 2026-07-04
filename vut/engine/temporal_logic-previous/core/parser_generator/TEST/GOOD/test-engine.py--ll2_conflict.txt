@@ -1,0 +1,4 @@
+
+--- OR branches identical in two-token lookahead -> conflict ---
+rejected with 1 conflict(s):
+   rule top: 2-token lookahead (regex:@id\b, string:then) starts two OR branches

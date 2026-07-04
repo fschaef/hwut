@@ -1,0 +1,1063 @@
+RATIONALE — language scope
+==========================
+Settled decisions. Each entry: PROBLEM / DECISION / COST / GRAVEYARD.
+
+
+R-1: =x=> deactivation marker — admissibility
+---------------------------------------------
+PROBLEM
+  "=x=>" (deactivate) vs "=>" (activate). §2.2.1 states "=x=> on an event or
+  <code> is nonsense" but gives no positive admissibility rule, and no
+  per-target meaning is defined.
+
+DECISION
+  The marker carries no per-target semantics. Admissibility is a single
+  semantic-level predicate over the target entity:
+
+      "=x=> X"  well-formed  iff  deactivable(X)
+
+  Parser accepts "=x=>" everywhere; the semantic pass rejects it where
+  deactivable(X) is false.
+
+  Rule table:
+      entity kind        deactivable
+      -----------------  -----------
+      event              no
+      command-block      no
+      behavior           yes
+      aspect             yes
+      character          yes
+      recurring-emission yes   (the "as: <name>" handle; added by R-15)
+        handle
+
+  The entity kinds above are the effect-target / deactivable kinds. The
+  recurring-emission handle (R-15) is deactivable: "=x=> <name>" cancels it.
+
+COST
+  Ill-formed "=x=>" is not caught at parse time; it surfaces only in the
+  semantic pass. Accepted: the parser stays kind-agnostic, one predicate owns
+  the rule.
+
+GRAVEYARD
+  - Per-target deactivation semantics (unspawn-behavior vs deactivate-aspect
+    as distinct operations): rejected. The marker has one meaning; only
+    admissibility varies.
+  - "signal" as a distinct entity kind / target row: rejected. "signal_*" in
+    the examples are ordinary identifiers; the prefix is authorial convention.
+
+
+R-2: timing layer — absent; pacing deferred
+--------------------------------------------
+PROBLEM
+  Fork F-2 presumed a "clockwork/timing" layer to drop or defer. A full scan of
+  LANGUAGE.txt (clock|tick|timer|delay|after|wait|every|duration) found no
+  timing primitive.
+
+DECISION
+  The language defines no timing primitive. Time-ish phrasing in the source is
+  not timing grammar: §1.1 "temporal extend" is the conceptual cause-precedes-
+  effect point; "when:" is a value guard; "at the same time" is concurrency.
+
+  Two real constructs were separated out of the original fork:
+    - command blocks  -> their rules are settled under F-8, not here.
+    - clockwork       -> a paced state machine, semantically an aspect whose
+                         behaviors advance on a step event. NOT settled. Parked
+                         as a deferred fork (DISCUSSIONS/disc-clockwork-*.txt).
+
+  Pacing is therefore not a language primitive: a "clocked" program is an aspect
+  driven by a recurring step event. Whether convenience grammar is provided for
+  it is the deferred clockwork fork's question.
+
+COST
+  Clockwork sugar cannot be designed until the aspect forks (F-4, F-6, F-10)
+  are settled, since any sugar must desugar into the finalized aspect shape.
+  The verbose hand-written-aspect form is the only way to express pacing until
+  then.
+
+GRAVEYARD
+  - Timing as a new effect marker, guard dialect, or cause kind: rejected.
+    If timing ever enters, it enters as a host-injected event consumed through
+    an ordinary causality.
+    [OVERTURNED IN PART by R-15: timing enters as the "every:" EFFECT MODIFIER —
+     a recurring ordinary event consumed through an ordinary causality, which
+     keeps R-2's spirit. The clockwork deferral below is unaffected.]
+  - Clockwork as a distinct runtime concept: rejected. It is an aspect stepped
+    by an event; no new semantics.
+
+
+R-3: §1.4 terminology — statechart vocabulary confined; composition rule kept
+-----------------------------------------------------------------------------
+PROBLEM
+  §1.4 glosses each native spine noun against statechart vocabulary
+  (transition, simple/composite state, AND, XOR, orthogonal, mode). Left as-is,
+  two vocabularies circulate for one spine, violating one-noun-per-concept. Also
+  at stake: §1.4 lines 101-106 carry a load-bearing composition decision that
+  must not be discarded if the words are.
+
+DECISION
+  (a) §1.4 is retained as the SINGLE section relating native terms to outside
+      terminology — that is its job: the bridge. The statechart words are
+      permitted there and nowhere else.
+  (b) All synonyms are swept from the rest of the corpus — prose, node names,
+      examples, and programs. Native spine only: character / aspect / behavior
+      / causality. No "state machine" for aspect, "simple state" for behavior,
+      "transition" for causality, or "mode" outside §1.4.
+  (c) The §1.4 lines 101-106 assertion is preserved as a settled STRUCTURAL
+      rule, in native terms:
+
+        Within an aspect, behaviors are mutually exclusive — exactly one active
+        at a time; the aspect governs WHICH. Within a character, aspects are
+        concurrent and each is independently activable (active / inactive).
+        These are two distinct composition layers, not two peer kinds of one
+        construct: exclusivity lives INSIDE an aspect; independent activation
+        lives ABOVE it, at the character. This is why deactivable(aspect)=yes
+        (R-1), why behaviors compose exclusively and aspects inclusively, and
+        why a character AGGREGATES rather than selects its aspects (§5 has:).
+
+COST
+  Readers fluent in UML statecharts get the explicit bridge only in §1.4, not
+  inline throughout. Accepted: terminological invariance outranks cross-notation
+  familiarity.
+
+GRAVEYARD
+  - Statechart terms as living synonyms usable anywhere (Option B): rejected,
+    one-noun-per-concept violation.
+  - Inverting to statechart vocabulary as primary (Option C): rejected,
+    discards the deliberate native reframing (§1.2: active aggregate of reactive
+    rules, not a passive location).
+  - Treating AND and XOR composition as peer kinds of one composite construct:
+    rejected — they are two layers (within-aspect exclusivity; above-aspect
+    independent activation).
+
+
+R-4: native expression language — two worlds, two bridges
+---------------------------------------------------------
+PROBLEM
+  Luau was the implicit evaluator for every value position (guards, command-
+  block/procedure bodies, arguments). Dropped, the language must own its value
+  grammar. Question: one expression grammar with a boolean subset, or something
+  else.
+
+DECISION
+  Not one expression grammar. TWO value worlds, connected by exactly TWO
+  bridges, with mutation as a separate layer that yields no value.
+
+  ALGEBRAIC world — produces a number.
+      operators  + - * / ; grouping ( )
+      primary    numeric literal | binding-qualified name | call | ternary
+
+  CONDITION world — produces a truth. Truth values are the value sort OF
+  conditions; "boolean" is not a separate world and not part of algebra.
+      operators  and or not ; grouping ( )
+      primary    bare condition-valued term (binding-name | call) | comparison
+
+  The two worlds touch ONLY through two bridges; nothing else crosses:
+      B1 comparison:  algebraic {== != < <= > >=} algebraic -> condition.
+                      Chaining allowed:  a < b < c  ==  a < b and b < c.
+      B2 ternary:     condition ? algebraic : algebraic -> algebraic.
+                      A bridge: it selects a value by a condition. Arms are
+                      algebraic because the bridge delivers an algebraic value.
+
+  MUTATION — a separate layer, not a value world; produces nothing.
+      = += -= *= /= ; body-only; never a sub-expression. Specified under F-8.
+
+  A bare condition-valued term is a condition primary ("when: connected" is
+  legal, no comparison needed); a bare algebraic term is an algebraic primary.
+  The same binding-qualified name lands in the world of its value sort.
+
+COST
+  Per-world operator sets and the two bridge productions are fixed now and held
+  invariant across every value site. Specified once, per world.
+
+GRAVEYARD
+  - One expression core with a boolean-valued subset (Option B): rejected;
+    over-loads "expression", blurs the algebraic/condition distinction.
+  - "boolean world" distinct from "condition world": rejected wording; truth is
+    the value sort of conditions.
+  - Ternary as inline if-else / nested control flow: rejected; it is the
+    condition->algebraic bridge, selecting a value by a condition.
+    condition?condition:condition crosses nothing, so is not a bridge -> excluded
+    by the bridge definition itself.
+  - Assignment as a value-yielding nestable expression (2b): rejected; mutation
+    yields nothing and never nests.
+  - Comparison strictly binary, no chaining: rejected; a<b<c is and-of-adjacent.
+  - Host-passthrough escape hatch (Option C): rejected; reintroduces the dropped
+    dependency, leaks the transpile target into the source language.
+
+DEPENDENTS
+  F-9 supplies binding-qualified-name / leading-dot resolution as a primary.
+  F-8 consumes the MUTATION layer as command-block/procedure body.
+  F-5 guards are conditions from this grammar; F-5 settles only attachment.
+
+
+R-5: guard attachment — the cause is the sole guard site
+--------------------------------------------------------
+PROBLEM
+  R-4 settled what a condition is. Remaining: where a guard ("when:" + a
+  condition) may attach. The source shows one site (the cause); open whether
+  guards also attach per-effect or per-group, and how a named cause's guard
+  composes at use sites.
+
+DECISION
+  A guard attaches in exactly ONE place: the cause (<cause-explicit> =
+  (<event>, ["when:", <condition>])). One optional guard per cause.
+
+  - Effects are unguarded: every effect of a causality fires when the cause
+    fires. Differing per-effect conditions are expressed by splitting into
+    several causalities on the same event, each with its own cause guard.
+  - Multi-condition gating uses the R-4 condition algebra (and / or / not),
+    not multiple attachment points.
+  - A named cause CONTAINS its guard in its definition. A use site supplies
+    ARGUMENTS, not a second guard. No implicit two-guard merge at the use site.
+
+COST
+  A causality whose effects need different conditions must be written as several
+  causalities on the same event. Accepted: one guard site keeps the firing rule
+  legible — to know whether an effect fires, read its cause's single guard.
+
+GRAVEYARD
+  - Per-effect guard (Option B): rejected; equivalent to splitting causalities,
+    heavier grammar, no gain over A + condition algebra.
+  - Group-level standing guard on behaviour/aspect (Option C): rejected as a
+    guard. A standing precondition is an ACTIVATION concern (deactivable, R-1),
+    not a firing-gate; routed away from "when:" to avoid conflating the two. Any
+    such feature is a separate conditional-activation fork, not guard attachment.
+  - Two-guard and-merge at a named-cause use site: rejected; would hide one
+    condition at the definition, away from the use the reader is reading.
+
+
+R-6: command-block as effect — boundary and invariants
+------------------------------------------------------
+PROBLEM
+  Fix the command-block's status as an effect and the invariants holding over
+  its (control-flow-bearing) body, with the internal statement grammar split off
+  to F-12.
+
+DECISION
+  D1  <call> and <code> are disjoint effect alternatives. A block contains
+      statements only; an entity target is a <call>, never inside a block. An
+      effect needing both a mutation and an entity target is written as two
+      effects on the same cause.
+  D2  The emission ban is STRUCTURAL and an invariant F-12 must preserve: no
+      statement, in any branch or loop body at any nesting depth, may produce a
+      <call>-to-entity or an effect marker. Emission from a block is impossible
+      by construction.
+  D3  A block is one atomic terminal leaf effect: it runs to completion when its
+      cause fires, does not fan out into further causalities, and does not
+      interleave. Loop termination is an F-12 concern; atomic-leaf status is
+      fixed here.
+  D4  Marker legality is deferred to R-1: deactivable(command-block)=no already
+      makes "=x=> {…}" ill-formed; the grammar does not re-encode a "=>"-only
+      pairing. One rule per concept.
+
+COST
+  A block can never both mutate AND target an entity in one effect; the author
+  writes two effects on the one cause. Accepted: mutation and causation stay in
+  separate effects (the R-2 leaf rule).
+
+GRAVEYARD
+  - Calls allowed inside a block with a late semantic emission check: rejected;
+    lets the grammar express what R-2 forbids, guarantee becomes missable.
+  - Grammar special-casing "=>"-only pairing for <code>: rejected; duplicates
+    R-1's deactivable predicate.
+
+SPAWNS
+  F-12 — imperative statement grammar (the block body): if/elif/else,
+  match-case, while, foreach, foreachi, from:..to: counting loop, the mutation
+  leaf, loop-variable binding, termination. Bound by D2 (structural emission ban
+  at every depth) and D3 (atomic terminal leaf).
+
+
+R-7: section-keyword form is canonical; body opens with "{" (does: removed, see R-16)
+---------------------------------------------------------
+PROBLEM
+  One construct (behavior/aspect/character body) has two surfaces in the source:
+  a bare body (§1.2/§1.3 teaching examples) and the section-keyword form
+  (is:/has:/does:) used by the formal grammars §3/§4/§5. Both circulating leaves
+  the grammar ambiguous about whether section keywords are required.
+
+DECISION
+  The section-keyword form is canonical. "does:" is MANDATORY — it is the anchor
+  that opens the body. "is:" (inheritance) and "has:" (declaration list) remain
+  optional, written only when used.
+
+      [~] behavior: <signature> [is: <call> {, <call>}] [has: <decls>] does: <body>
+
+  The bare-body form is not legal source; the §1.2/§1.3 examples are rewritten to
+  the canonical form (a documentation fix, not a language change).
+
+  [AMENDED by R-16: "does:" is REMOVED. R-12 made every block "{ }" mandatory, so
+  the brace already anchors the body -- "does:" became pure redundancy doing the
+  same job as "{". A definition body now opens directly with "{". "is:" and
+  "has:" remain (they introduce non-brace / decl-block sections). When "has:" is
+  present, its decl-block and the body are two consecutive "{ }" blocks, which is
+  unambiguous (LL(2) takes the has: block first).]
+
+COST
+  The smallest teaching examples gain a "does:" line. Accepted: one canonical
+  surface, and a hard section anchor so the parser never infers a section from
+  content.
+
+GRAVEYARD
+  - Bare body canonical, keywords optional sugar (Option B): rejected; without a
+    keyword anchor the parser must distinguish a declaration-list from a
+    causality-list by content — fragile; and two blessed surfaces violate
+    surface invariance.
+  - Both forms permanently legal (Option C): rejected; maximal surface
+    ambiguity, invariance abandoned.
+
+UNBLOCKS
+  One of the two blockers on the parked clockwork fork (the other is F-10): the
+  clockwork sugar desugars into an aspect body, whose canonical surface is now
+  fixed.
+
+
+R-8: signature / call — NOT a fork; "(role)" is the established role-hint facility
+----------------------------------------------------------------------------------
+PROBLEM
+  Fork F-7 asked whether <signature>/<call> are one shared pair or four per-kind
+  variants, reading "<call(behavior)>" etc. as a possible syntactic split.
+
+DECISION
+  Not a language fork. <signature> and <call> are each ONE shared grammar
+  (declaration side / use side), as already stated. The "(K)" suffix is an
+  instance of the established parser role-hint facility, already settled in core
+  (D-10 role hint; D-18 role uniqueness; the ROLES vocabulary):
+
+    - a "(role)" suffix on a reference ("<call(behavior)>") or a call on a
+      terminal ('t_re_id("event")') is an optional, advisory role hint: a
+      per-position resolution expectation, walked by position.
+    - NON-IDENTITY: it never enters a terminal's _name(), never affects lexing,
+      interning, or FIRST_2, and adds nothing to the value stream.
+    - ADVISORY for pass-2: a declared role is a resolution expectation, never a
+      substitute for a kind check; a missing hint is not an error. The only
+      enforcement is the load-time spelling check against the ROLES vocabulary.
+    - AST-factory routing on role applies ONLY where the role is unique to one
+      grammatical position; otherwise the rule/position carries the AST-type
+      distinction (core R-53/R-54). Later routing to AST factories by role is
+      done where necessary.
+
+  Consequence: grammar references like "<call(behavior)>" are read as a shared
+  <call> bearing an advisory role hint, NOT as a distinct rule. <code(causality)>
+  is the command-block (R-6), unrelated to call kinds.
+
+COST
+  None new. F-7 over-opened a settled convention; closed by reference to the
+  parser manual and core RATIONALE.
+
+GRAVEYARD
+  - Four syntactically distinct call grammars per kind: rejected; no syntactic
+    basis, and it duplicates the role-hint facility that already carries the
+    per-position expectation.
+  - Baking the kind into the call node at parse time: rejected; the parser
+    cannot know resolution kind, and the hint is NON-IDENTITY by invariant.
+
+
+R-9: leading-dot ".member" — forbidden; every member access names its binding
+-----------------------------------------------------------------------------
+PROBLEM
+  §(*) defines five explicit scoped bindings (e./b./a./c./s.). The §1.3 example
+  writes ".fuel" — a member access with no binding letter. Its meaning was
+  unspecified.
+
+DECISION
+  The leading-dot form is FORBIDDEN. Every member access names its binding:
+  e.<name> / b.<name> / a.<name> / c.<name> / s.<name>. There is one way to
+  write a member access, and the binding (hence the scope) is always visible at
+  the use site. The dotted-name rule (core R-53) stays; it always carries a
+  binding letter as its head.
+
+  The §1.3 ".fuel" is a documentation slip, rewritten with its intended explicit
+  prefix (a documentation fix, not a language change).
+
+COST
+  Slightly more verbose than a bare ".x". Accepted: one form per concept, no
+  implicit-resolution machinery, every access's scope legible without walking
+  nesting shells.
+
+GRAVEYARD
+  - ".member" as sugar for a fixed binding (e.g. always "c."): rejected; hides a
+    letter the reader must memorise, and the choice is arbitrary against the
+    §1.3 intent.
+  - ".member" as implicit contextual lookup up the nesting shells
+    (e->b->a->c->s): rejected; reintroduces the implicit-scope resolution the
+    project forbids (scope is explicit and semantic) and breaks under refactor —
+    adding a "b.fuel" would silently recapture a ".fuel" that meant "c.fuel".
+
+
+R-10: "~" abstract marker + ~ENTRY/~EXIT lifecycle
+--------------------------------------------------
+PROBLEM
+  "~" carries two roles: an ABSTRACT marker (header prefix on
+  behavior/aspect/character) and a LIFECYCLE EVENT name (~ENTRY/~EXIT). Node
+  shapes for both were unspecified, and the codebase carried a parallel
+  init:/deinit: lifecycle spelling — two surfaces for one concept.
+
+DECISION
+  "~" stays as is, with both positional roles:
+    - ABSTRACT: "~" before "behavior:"/"aspect:"/"character:" sets an
+      is_abstract FLAG on the one entity node (never a separate node kind). An
+      abstract entity never instantiates alone; it is an inheritance base (is:).
+      The two roles never share a slot — a header prefix vs an event name in a
+      cause slot — so the parser disambiguates by position; one coherent
+      "reserved/special" reading of "~".
+    - LIFECYCLE: ~ENTRY and ~EXIT are reserved, non-externally-triggered event
+      names, usable only as the cause of a causality in the entity body. They
+      fire on activation / deactivation. They take NO external trigger and NO
+      guard ("when:"). Their body is an R-6 command-block and obeys the R-6
+      emission ban. The signature parameters (s. binding) are available during
+      ~ENTRY/~EXIT and in "has:" for initialisation.
+
+  init:/deinit: GOES. ~ENTRY/~EXIT is the single canonical lifecycle surface;
+  the init:/deinit: spelling (InitBlock/DeinitBlock) is retired tree-wide and
+  reconciled to ~ENTRY/~EXIT.
+
+COST
+  The built init:/deinit: surface is retired and its uses migrated to
+  ~ENTRY/~EXIT (InitBlock/DeinitBlock nodes fold into the lifecycle-causality
+  shape). Accepted: one lifecycle concept, one surface, uniform with the way
+  every other cause is written.
+
+GRAVEYARD
+  - Abstract as a distinct node kind: rejected; it is a flag on the existing
+    entity node (one-node, attribute carries the distinction).
+  - Re-spelling abstract to a keyword to free "~" (Option B): rejected;
+    positional disambiguation already makes "~" unambiguous, and a keyword is
+    heavier for the common abstract case.
+  - Keeping ~ENTRY/~EXIT AND init:/deinit: as distinct constructs (Option C):
+    rejected; one-noun-per-concept violation.
+  - ~ENTRY/~EXIT carrying a guard or an external trigger: rejected; they fire on
+    activation/deactivation, not on a condition or an external event.
+
+UNPARKS
+  Last blocker on disc-clockwork (with F-6, R-7) is cleared: the abstract /
+  lifecycle aspect shape is fixed, so the clockwork sugar's desugaring target is
+  fully specified. disc-clockwork may be unparked.
+
+
+R-11: keyword-colon law — every keyword is colon-terminated
+-----------------------------------------------------------
+PROBLEM
+  Keyword spelling was inconsistent across the draft: section/entity keywords
+  carried a trailing colon (cause:/behavior:/aspect:/character:/is:/has:/does:/
+  when:) but the statement keywords had no fixed convention.
+
+DECISION
+  Cross-cutting lexical law: EVERY keyword in the language is colon-terminated.
+  The trailing ":" is part of the keyword's lexeme — how it is recognised and
+  how it introduces what follows (a block, a value, a signature).
+
+  Confirmed set (not exhaustive): cause: behavior: aspect: character: is: has:
+  does: when: ; and the statement keywords if: elif: else: match: case:
+  foreach: from: to:.
+
+COST
+  None; regularises the surface. A keyword without its colon is not that keyword
+  (lexed as an ordinary identifier).
+
+GRAVEYARD
+  - Bare (colon-less) keywords for the statement grammar: rejected; one lexical
+    rule for all keywords.
+
+
+R-12: mandatory-brace law — every block is "{ … }"
+--------------------------------------------------
+PROBLEM
+  Block delimiting was unsettled: braces, colon+indentation, or structural-end
+  (codebase G-12 ends state blocks structurally). The statement grammar (F-12)
+  and the command-block (R-6) need one rule.
+
+DECISION
+  Cross-cutting law: EVERY block is brace-delimited "{ … }". Braces are
+  MANDATORY — never structural-end, never optional, at every nesting depth. A
+  colon-keyword INTRODUCES; a brace-pair DELIMITS:
+
+      if: <condition> { … }          foreach: x in: xs { … }
+      foreach: <var> in: <coll> { … }    does: { … }   (entity body, uniform)
+
+  The outer command-block "{ … }" (R-6) is this same rule at depth 0.
+
+COST
+  More punctuation than a structural-end or indentation style. Accepted: one
+  delimiting rule at every depth, no content-based block-end inference, no
+  indentation-significance. Overrides the G-12 structural-end precedent for
+  these blocks.
+
+GRAVEYARD
+  - Structural block end (next keyword / sibling / ":end"), per codebase G-12:
+    rejected for these blocks; braces are mandatory and explicit.
+  - Colon-introduced indented blocks: rejected; introduces indentation-
+    significance.
+  - Optional braces (braces-or-structural): rejected; one mandatory form.
+
+
+R-13: imperative statement grammar (command-block body)
+-------------------------------------------------------
+PROBLEM
+  The command-block body (R-6) needed its imperative statement grammar settled:
+  control constructs plus the mutation leaf, resting on R-4 (value worlds),
+  R-11 (keyword colon), R-12 (mandatory braces), under R-6 D2/D3.
+
+DECISION
+  A third world above R-4's two value worlds: it PRODUCES NO VALUE, it acts. It
+  CONSUMES the value worlds (condition -> tests; algebraic -> RHS, bounds,
+  collection, lvalue) and never crosses back. Forms and rulings:
+
+    mutation (leaf)   <lvalue> {= += -= *= /=} <algebraic> ;
+        lvalue is a binding-qualified member (R-9), head in {e. b. a. c.};
+        s. is the read-only inbound call argument, never a mutation target.
+
+    if: <condition> { … } [elif: <condition> { … }]* [else: { … }]
+        statement brancher; NOT the R-4 ternary (the ternary is the value-world
+        bridge and yields a value; if:/elif:/else: act and yield nothing).
+
+    match: <scrutinee> { case: <pattern> { … } ... [case: _ { … }] }
+        scrutinee is an algebraic value; patterns are literal, range, or GLOB
+        (string-wildcard) matches; optional default "case: _". Exhaustiveness is
+        NOT machine-checked (no closed member set); an unmatched scrutinee with
+        no default is a no-op.
+
+    (no while:) There is NO unbounded loop. Every loop is bounded by
+        definition — foreach: (finite collection) and from:/to: (fixed integer
+        bounds) — so a command-block always terminates. An unlimited while: is
+        forbidden; it has no form in the language. [AMENDED: an earlier draft
+        admitted while: with author-responsible termination; removed.]
+
+    foreach: <var> in: <collection> { … }
+        iterates the collection's elements, binding <var> to each. ELEMENT ONLY,
+        no index. Indexed / itertools-style variants are a possible future
+        iteration-helper facility, out of scope now.
+
+    <count-type>: <var> = <algebraic> .. <algebraic> [step: <algebraic>] { … }
+        Declares a TYPED counter <var> inline. <count-type> is "int:" or
+        "float:" -- a role-bearing colon keyword, EXTENSIBLE to further numeric
+        types later (factored as <count-type>, the loop's first element). ".."
+        is the inclusive range operator (two dots, distinct from the member
+        dot). Default step +1; optional "step:" sets it (negative counts down);
+        begin > end with +1 runs zero times. The counter is a bare local.
+        [AMENDED twice: the original "from:/to:" form did not name the counter;
+        a "count: <var>" form named but did not type it; this form declares a
+        typed counter inline (int:/float:), enabling float counting, and factors
+        the type as the extensible <count-type>.]
+
+  LOOP VARIABLE (foreach:/from:to:) is a LOCAL: a bare name (no binding head),
+  scoped to its loop body, never escaping it. This is the ONE carve-out to R-9
+  ("every member access names its binding") and does not reopen the R-9 hazard,
+  because a loop variable is a binding INTRODUCTION, not a member access — no
+  name is resolved up the nesting shells.
+
+  All bodies are "{ … }" (R-12) at every depth; all keywords colon-terminated
+  (R-11). The R-6 emission ban holds structurally inside every branch and loop
+  body.
+
+COST
+  A "collection" value notion (foreach: in:, match: ranges/globs) is used ahead
+  of a fully-settled value/type system; treated as an opaque iterable here. What
+  collections ARE (literals, types beyond §2.1 float-default) is a separate
+  value/type concern, not blocking this grammar.
+
+GRAVEYARD
+  - Splitting the grammar to defer match:/foreach: behind a type fork: rejected;
+    that split assumed an enumeration TYPE dependency. Enumeration is Python-
+    sense iteration over a collection value, not a declared type; no type-system
+    fork is summoned (the withdrawn "F-13").
+  - Machine-checked match exhaustiveness: rejected; no closed member set to
+    check against.
+  - foreachi / indexed iteration now: deferred to a future iteration-helper
+    facility.
+  - Loop variable carrying a binding head or requiring a marker: rejected; a
+    fresh local is a binding introduction, not a member access.
+  - while: with author-responsible termination: rejected and REMOVED. An
+    unbounded loop has no form in the language; bounded loops (foreach:,
+    from:/to:) suffice and guarantee command-block termination structurally.
+  - A safe/unsafe statement-tier split (a safe-block excluding while:/exit: to
+    keep regions terminating): rejected as unnecessary once while: is removed
+    and exit: is forward-only. One statement tier; one block.
+
+NOTE
+  A value/type-system fork (collection literals, declared types beyond float-
+  default) may arise on its own merits; it is NOT summoned by this grammar and
+  does not gate it. The "(role)" facility (R-8) and binding rules (R-9) carry
+  over unchanged.
+
+
+R-14: exit regions — structured cleanup ladder (kernel goto-label idiom)
+------------------------------------------------------------------------
+PROBLEM
+  A structured early-out / staged-cleanup construct was wanted: the Linux-kernel
+  "goto out:" cleanup-ladder idiom, made structured, with a termination
+  guarantee that needs no dataflow analysis. (New construct beyond LANGUAGE.txt.)
+
+DECISION
+  Admitted. The construct is a tail ladder of labelled cleanup regions; control
+  is forward-only.
+
+  THREE non-overlapping keywords, no overloading:
+    break:            exits the nearest enclosing loop. UNLABELLED.
+    continue:         next iteration of the nearest enclosing loop. Traditional.
+    dropto: <label>   the forward-only JUMP to an exit-label. LABEL MANDATORY.
+    exit: <label>     DEFINES a bare drop-through exit-label (no body, C-label
+                      semantics). Definable only at the outermost body.
+
+  [AMENDED — keyword roles SWAPPED from the first ratification. Originally
+   "exit: label" was the jump and "label: { … }" the region body. Now:
+     - "exit: <label>" DEFINES the target (a bare C-style label, drop-through, no
+       body) -- matching the kernel "out:" cleanup-label idiom literally.
+     - "dropto: <label>" is the JUMP ("drop to the given exit").
+   "dropto:" reads as a verb that REQUIRES a target and can only fall FORWARD/
+   downward to a defined exit -- which is exactly the discipline that prevents
+   spaghetti. It deliberately recalls "goto" (Dijkstra, "Go To Statement
+   Considered Harmful", 1968) while being the SAFE form: a goto that can only go
+   forward to a declared exit. The exit-region (never call it merely "region")
+   carries NO body; it is a bare label with drop-through character.]
+
+  D1 CONSTRUCT. The command-block's outermost body may end in a tail ladder of
+     bare exit-labels "exit: <label>". Control reaching a label falls THROUGH it
+     to whatever follows (C-label drop-through); a label has no body.
+  D2 KEYWORDS DISJOINT. Loops use break:/continue: (unlabelled); exit-regions use
+     dropto: (jump) and exit: (define). exit:/dropto: always carry a label;
+     break:/continue: never do.
+  D3 FORWARD-ONLY (termination). "dropto: L" may target ONLY an exit-label
+     defined LATER than the dropto in the same outermost body. A backward or self
+     target is a static error. Because dropto only ever jumps forward, it can
+     form no loop, so it is always allowed.
+       Forward-only is the termination guarantee: a straight-line drop-through
+       with no back-edge. Enforced in pass-2 (label-position ordering), since the
+       grammar cannot express label ordering.
+  D4 OUTERMOST-ONLY. An exit-label "exit: <label>" may be defined ONLY at the
+     outermost function/command-block body — never inside a loop, if/elif/else,
+     match, or any nested block. Pass-2 check (SEMANTICS.txt §7b).
+  D5 TARGET REQUIRED. "dropto: L" requires its target: L must be defined by some
+     "exit:" in the body; an unmatched label is an error. Local, not tree-wide.
+  D6 EMISSION BAN (R-6 D2) holds throughout the command-block as everywhere.
+  D7 CLOCKWORK INTERACTION. A clockwork's "steps:" (deferred fork) may not create
+     a back-edge into an exit-label; forward-only is preserved across any future
+     step construct.
+
+  Surface under R-11 (keyword colon) and R-12 (mandatory braces); statement
+  world R-13; value worlds R-4.
+
+COST
+  New statement forms (break:, continue:, dropto:) and the bare exit-label;
+  a local label-resolution check, a forward-only ordering check (dropto: targets
+  a later exit:), and an outermost-only placement check in the semantic pass.
+  Bounded and low; dropto: lowers to a forward step-cursor advance.
+
+GRAVEYARD
+  - General goto with arbitrary labels: rejected; back-edges, unstructured flow,
+    non-termination by construction.
+  - No-re-entry + no-free-while inside regions (the earlier D3/D4): SUPERSEDED.
+    Once unbounded while: is removed from the language (R-13) and exit: is made
+    forward-only, regions terminate without restricting their body, so the rule
+    pair and the safe/unsafe statement-tier split it required are dropped.
+  - exit: targeting an earlier or self label: rejected; exit: is forward-only
+    (targets a LATER label), which is what keeps it loop-free and always allowed.
+  - Unlabelled "exit:" as a loop break: rejected; loop exit is "break:". "exit:"
+    without a label is a static error. The two keywords stay disjoint.
+
+
+R-15: recurring event emission — "every:" / "as:" effect modifiers
+------------------------------------------------------------------
+PROBLEM
+  A periodic event emitter was wanted: send an event every x seconds, only while
+  activated, cancellable. Question of whether it is a standalone "clock:" entity
+  or something lighter.
+
+DECISION
+  A periodic emitter is an ORDINARY "=>" spawn effect with two trailing
+  modifiers — not a separate entity, not the deferred clockwork.
+
+      => <call(event)> every: <numeric> [as: <name>]
+
+  D1 FORM. A periodic variant of the ordinary spawn. "every: <numeric>" makes the
+     spawn recurring (emit once per <numeric>). "as: <name>" adds a cancellation
+     handle. No "clock:" keyword is required.
+  D2 HANDLE BINDING + SCOPE. "<name>" is a HANDLE — a third kind of introduced
+     name, distinct from a member access (R-9) and a loop local (R-13). A bare
+     name (no binding head), scoped to the enclosing ENTITY (behaviour/aspect),
+     so any causality in that entity may cancel it. An introduction, not a member
+     access — does not reopen the R-9 hazard.
+  D3 CANCELLATION. "=x=> <name>" cancels the recurring emission, reusing the
+     deactivation marker. deactivable(recurring-emission handle) = yes (R-1
+     amended). No new cancel keyword.
+  D4 MODIFIER INDEPENDENCE. "every:" without "as:" is legal — a fire-and-forget
+     recurring emission, endable only with its enclosing entity (D6). "as:"
+     without "every:" is ILLEGAL — a handle names a recurring emission; a one-
+     shot spawn has nothing to cancel.
+  D5 NUMERIC. <numeric> is a bare R-4 algebraic value, seconds by convention; no
+     unit annotation (F-3 dropped).
+  D6 ACTIVE LIFETIME. A recurring emission runs ONLY while its enclosing entity
+     is active; on entity deactivation (~EXIT) every recurring emission the
+     entity started is cancelled automatically, named or not. Explicit "=x=>
+     <name>" cancels early. This is what "works only when activated" means —
+     emissions are bound to the entity's active lifetime, not immortal.
+  D7 NOT A COMMAND BLOCK. A periodic effect emits an event; it is an EFFECT, not
+     a command-block body, so the R-6 emission ban (on block bodies) does not
+     apply. The only difference from an ordinary "=>" effect is one-shot vs
+     periodic.
+
+  Surface under R-11 (every:/as: colon keywords); <numeric> is R-4 algebraic;
+  <call(event)> uses the role-hint facility (R-8).
+
+AMENDS
+  R-2: overturns, in part, R-2's "timing as a new primitive: rejected" — timing
+       enters as the "every:" effect modifier (a recurring ordinary event). R-2's
+       clockwork deferral is unaffected (clockwork is a stepped aspect, not this).
+  R-1: adds the recurring-emission handle as a deactivable kind ("=x=> <name>").
+
+COST
+  Two effect modifiers, one new deactivable kind, one auto-cancel rule at ~EXIT.
+  Small. Recorded amendments to R-1 and R-2.
+
+GRAVEYARD
+  - Standalone "clock:" entity with its own declaration/lifecycle: rejected;
+    duplicates activation machinery the effect + handle already provide.
+  - Folding periodic emission into the deferred clockwork fork: rejected;
+    clockwork is an aspect stepped by events (a state machine), a periodic
+    emitter is a single recurring event — different constructs.
+  - "as:" naming a one-shot spawn: rejected; nothing to cancel.
+
+
+R-16: data-access — the place layer; index "[]"; "does:" removed
+----------------------------------------------------------------
+PROBLEM
+  Array/index access "[]" was wanted. Where does indexing live, what is
+  indexable, and is an indexed place assignable? Separately: with braces
+  mandatory (R-12), is "does:" still needed?
+
+DECISION
+  (a) DATA-ACCESS is its own layer BELOW the value worlds -- it reaches a value
+      out of a structure and produces a place. It is NOT a postfix glued into
+      algebraic.
+        data-access := <base> STAR(<step>)
+            base := <name-bound> (R-9 binding-qualified) | <call>
+            step := "[" <algebr> "]"          (single index; chains for n-dim)
+      The algebraic primary, the condition operand, the mutation lvalue, the
+      foreach: source, and the comprehension from: all CONSUME <data-access>.
+  (b) An LVALUE IS a data-access -- indexed assignment ("c.buf[i] = v") needs no
+      separate rule.
+  (c) SINGLE-INDEX only. No slices "[i:j]" (":" clashes with R-11 and the
+      ternary) and no comma-tuple "[i,j]". Multi-dimension is chaining "[i][j]".
+  (d) The index is an <algebr>; R-9 preserved (base is a bound name or call;
+      ".member" steps live in the bound name; only "[]" is new).
+  (e) "does:" is REMOVED from definitions. R-12 made every block "{ }" mandatory;
+      the "{" already anchors the body, so "does:" was redundant. A behaviour/
+      aspect body now opens directly with "{". (R-7 amended.)
+
+COST
+  Two terminals ("[" "]") and one subspace; the value worlds, the lvalue, and the
+  collection sources reference <data-access> rather than <name-bound>/<call>
+  directly. Removing "does:" yields two consecutive "{ }" when "has:" is present
+  (decl-block then body) -- unambiguous under LL(2).
+
+GRAVEYARD
+  - "[]" as a postfix inside algebraic only: rejected; data-access is reaching a
+    value, not computing one; condition operands and lvalues would re-spell it.
+  - Slices "[i:j]" / comma-tuples "[i,j]": rejected for now; ":" clashes with
+    R-11/ternary; chaining covers n-dim; slices are a deliberate future fork.
+  - Keeping "does:" mandatory (R-7 as first ratified): superseded; the brace is
+    the anchor once R-12 made braces mandatory.
+
+
+R-17: list comprehensions; collection as a third value SORT
+-----------------------------------------------------------
+PROBLEM
+  List comprehensions were wanted. They construct collections, forcing a position
+  on what a "collection" is (R-13 parked it as an opaque iterable).
+
+DECISION
+  (a) COLLECTION IS A THIRD VALUE SORT, NOT A THIRD OPERATOR WORLD. Values are of
+      three sorts: number (algebraic world), truth (condition world), and
+      COLLECTION. The first two are OPERATOR worlds with one bridge between them
+      (R-4, unchanged). A collection has NO operators and NO bridges -- it is
+      constructed and consumed only. A collection algebra (length, membership,
+      concat) is a deliberate FUTURE fork, not forced into being by naming the
+      sort.
+        constructed by: comprehension (and a future literal)
+        consumed by:    foreach: source, "[]" index base, comprehension from:,
+                        argument, mutation RHS
+  (b) COMPREHENSION shape:
+        "[" <element> PLUS("with:" <var-list> "from:" <source> ["if:" <cond>]) "]"
+      - separator is "with:" (R-11-clean; avoids the ternary ":").
+      - CHAINED generators, nested left-to-right (Python order).
+      - per-generator optional "if:" filter (Python-style).
+      - <var-list> = "x" | "x, y, z" (destructuring); loop vars are bare locals
+        (R-13 Q6), scoped to the comprehension.
+      - <element> and <source> are ANY sort; a collection element nests.
+  (c) BOUNDEDNESS: a comprehension iterates collections (bounded by definition),
+      so it always terminates -- consistent with "no unbounded loop" (R-13).
+  (d) "[" double duty: "[<algebr>]" after a base is a data-access index step
+      (R-16); "[<element> with: ...]" standing as a primary is a comprehension.
+      Disambiguated by content (a "[" not glued to a base, containing "with:").
+
+COST
+  Adds a value sort and a constructor; the collection algebra (operators,
+  bridges) is deferred. Two terminals shared with R-16 ("[" "]").
+
+AMENDS
+  R-13: answers in part its deferred "what is a collection" -- a value sort,
+  constructed by comprehension/literal and consumed, not operated on. The full
+  type system (element types, declared types beyond float-default) remains a
+  separate future concern.
+
+GRAVEYARD
+  - Collection as a full third OPERATOR world (operators + bridges now):
+    rejected; inventing a collection algebra with no driving need is confusing
+    and expands R-4 prematurely. Deferred to a future fork.
+  - Bare ":" separator ("[ <expr> : x,y,z from: ... ]"): rejected; clashes with
+    R-11 (keyword terminator) and the ternary ":". "with:" is unambiguous.
+
+
+R-18: namespaces and imports (open:, import:)
+---------------------------------------------
+PROBLEM
+  A scoping/module mechanism was wanted, taken over from the previous version's
+  precise scope behaviour, with current-law surface (R-11 colon keywords, R-12
+  braces).
+
+DECISION
+  (a) NAMESPACE. "open: <name-dotted> { ... }" opens a named scope holding nested
+      top-level declarations. Re-openable and nestable to any depth; names are
+      scoped to it. The body is brace-delimited (R-12), replacing the previous
+      version's "open: ... :close" structural close.
+  (b) IMPORT. "import: \"<path>\" as: <name-dotted>" mounts the quoted file/url
+      under the given namespace. The parser RECORDS the import; the semantic pass
+      MOUNTS it -- reading the imported unit's exported names (name -> kind,
+      scope) into the export table without touching references, so later
+      resolution reads from there. (Previous spelling was "into:"; changed to
+      "as:" per current instruction.)
+  (c) DOTTED PATH. "<name-dotted>" is a plain dotted name (segment.segment...),
+      NOT a binding-qualified member access (R-9): it has no e./b./a./c./s. head.
+      The two dotted-name notions are kept distinct.
+  (d) The import path is a QUOTED STRING (needed for urls).
+
+COST
+  Two keywords (open:, import:) plus "as:"; one dotted-path rule distinct from
+  the binding-qualified name. Scope/import SEMANTICS are documented in
+  SEMANTICS.txt §12 (re-openable scopes, scope-aware outward resolution, mount
+  reads exports only). Straightforward to implement.
+
+GRAVEYARD
+  - "open: ... :close" structural close (previous version): superseded by R-12
+    mandatory braces.
+  - "import: ... into: <ns>" (previous spelling): changed to "as:".
+  - Reusing the binding-qualified dotted name (R-9) for namespace paths:
+    rejected; a namespace path is not a member access and has no binding head.
+
+
+R-19: plain aggregation types — list, dict, struct
+--------------------------------------------------
+PROBLEM
+  The type grammar offered only int/float/string/bool and named types. There was
+  no way to DECLARE an aggregate (a list, a map, a record), though indexing
+  (R-16) and comprehensions (R-17) already produce/consume aggregate values.
+
+DECISION
+  Three plain VARIABLE-TYPED containers -- NO type parameters, NO member
+  functions. Element/key/value/field types are dynamic:
+      list                 a sequence of anything
+      dict                 a map of anything to anything
+      struct { x; y; ... } named slots, each a bare "name;" (R-12 braces)
+  A <type> is now: a built-in | list | dict | struct{...} | a named type.
+  Type constraints (a typed list<T>, dict<K,V>, typed struct fields) are a
+  deliberate FUTURE addition; for now the containers are untyped.
+
+COST
+  Three keywords (list, dict, struct) and four rules (type-list, type-dict,
+  type-struct, field). No "<" ">" reuse -- the containers carry no type
+  parameters, so there is no bracket-vs-comparison ambiguity.
+
+GRAVEYARD
+  - Member functions / methods on aggregates: rejected for now (explicitly "plain
+    aggregation, no member functions"). A future fork may add an aggregate
+    algebra; this only declares shape.
+  - Typed/templated aggregates (list<T>, dict<K,V>, typed struct fields):
+    deferred. Containers are variable-typed now; type constraints come later.
+  - A generic container<...> over one keyword: rejected; list, dict, struct are
+    distinct shapes (predecessor G-14).
+
+
+R-20: clockwork — an aspect body run as a paced coroutine
+---------------------------------------------------------
+PROBLEM
+  The parked clockwork fork came due: an aspect that runs as a paced sequential
+  script advanced by a tick, with suspension/resumption. A command-block (R-6)
+  is atomic and emission-banned; a clockwork step emits and suspends. The two
+  must not blur.
+
+MENTAL MODEL (asyncio)
+  A clockwork is a COROUTINE on the engine's event loop; its suspension points
+  are "sleep on a resource available" -- exactly asyncio's await / select():
+      => <emit>    emit, then AWAIT the tick     (await queue.put(x); await tick)
+      => ~         emit nothing, pass one tick   (await asyncio.sleep(0); yield)
+      groove:{...} AWAIT-and-repeat over causes   (async for; looping select)
+      beat: n      an arm firing every n TICKS    (a recurring pulse)
+  The engine already IS an event loop (it dispatches causes); a clockwork is a
+  coroutine registered on it, awaiting causes as a thread awaits a readable fd.
+
+DECISION
+  (D1) ASPECT BODY ALTERNATIVE. An aspect body is EITHER the mutually-exclusive
+       behaviour set (R-3) OR a clockwork:
+           aspect-body := behavior-list | clockwork
+       An aspect is behaviours-XOR OR a clockwork script, never both.
+  (D2) TICK CAUSE. "clockwork: <cause> { ... }" names the cause whose firing
+       ADVANCES the clockwork one step. An ordinary cause (host-fired or event-
+       driven); no new timing primitive (R-2). Inside the body, the tick is
+       referred to by "+".
+  (D3) EMISSION IS CLOCKWORK-ONLY. The "=>" step is the ONLY emit point. A
+       borrowed <statement> (R-13) is EMISSION-IMPOTENT inside a clockwork -- the
+       R-6 ban is not weakened. Emission and suspension live only in the step
+       constructs.
+  (D4) STEP CONSTRUCTS:
+       emit-step   "=> <call>"  emit + await tick;  "=> ~NONE"  emit nothing,
+                   pass a tick. (~NONE is the null emit TARGET; never a trigger.)
+       groove:     "groove: { <arm>+ }"  a repeating blocking select: keep
+                   reacting to whichever cause-arm fires, again and again (arms
+                   implicitly or-ed). Exited by break:/dropto:/exit: from within
+                   an arm. A ONE-SHOT wait is "groove: { ... break: }"
+                   -- an arm that breaks after running once; no separate wait
+                   construct is needed. TIE-BREAK: several arms ready in one tick
+                   -> the arm DEFINED FIRST wins (precedence of definition,
+                   deterministic).
+       arm         "<cause> { <steps> }" (R-5 cause, carries its own when:), or
+                   "~ELSE [when: <cond>] { <steps> }" (the default/fallthrough --
+                   fires when no other arm matched), or a tick-default
+                   "when: <cond> { <steps> }" (the groove is tick-paced, so a
+                   condition-only arm wakes on the tick), or
+                   "beat: <n> { <steps> }" (a metronome: fires every n TICKS; a
+                   recurring pulse, break: to leave the groove).
+                   Arms run their body THEN the groove resumes (effect before
+                   wait). Within one groove:, only the tick-default "when:" arm
+                   may recur (differently gated); every other arm cause appears
+                   at most once.
+  (D5) "~ELSE" (the default/fallthrough arm, R-22) -- named like ~ENTRY/~EXIT
+       (R-10) rather than a cryptic symbol -- is a groove: arm cause that fires
+       when no other arm matched. There is NO "~TICK" keyword: the groove is
+       already tick-paced, so a condition-only arm "when: <cond>" wakes on the
+       tick (the tick-default) -- naming the tick was redundant. "when: <cond>"
+       makes the wake policy explicit: the condition is checked WHEN the tick
+       fires. ~NONE is the null emit target only. Statements run in sequence,
+       effect before wait.
+
+COST
+  A clockwork subspace borrowing R-13's <statement> (kept emission-impotent) and
+  R-5's cause forms. groove: is one repeating select-block (arms or-ed); a
+  one-shot wait is groove: + break:. "+" and "~" are position-restricted (checked
+  in pass-2). The suspension semantics (a coroutine on the engine loop) are the
+  runtime's; the grammar fixes only the surface.
+
+GRAVEYARD
+  - Clockwork emissions from any <statement> (weaken R-6 inside clockwork):
+    rejected; the borrowed <statement> stays emission-impotent, emission only via
+    "=>".
+  - Clockwork as convenience SUGAR desugaring to a behaviour aspect: rejected;
+    suspension/resumption is a different control shape, not thin sugar over XOR
+    behaviours.
+  - "wait: X or wait: Y" chained selects: replaced by a select BLOCK (arms
+    implicitly or-ed), and "beat:" is just another arm.
+  - A separate "wait:" (select-once) construct: REMOVED. It is "groove:" with a
+    "break:" in the arm; one construct (groove:) covers both the repeating
+    event-loop and the one-shot wait. The name "groove" comes from the psyche
+    vocabulary (character/aspect/behaviour): an aspect keeps grooveing to
+    whichever cause fires.
+  - "while:" as the clockwork loop keyword: rejected; it collides with the
+    (removed, R-13) statement-world "while:" and misreads as a condition loop.
+    "groove:" says await-and-respond-repeatedly, on-theme with the language.
+  - "*" (any-event) trigger and a "gather"/all-of join: deferred; not specified
+    now.
+  - Cryptic clockwork symbols "+" (tick), "*" (any), bare "~" (null emit):
+    replaced by named reserved events (~ELSE default arm, see R-22; ~NONE null
+    emit), consistent with the ~ENTRY/~EXIT family (R-10) -- clearer than symbols.
+    ~NONE (null emit) is a target only, never a trigger.
+  - "timeout: <n>" (wall-clock seconds watchdog): replaced by "beat: <n>" -- a
+    metronome that fires every n TICKS. A groove is paced in the clockwork's
+    ticks, not wall-clock time, so a tick-based recurring pulse is the honest
+    construct; "beat" (a recurring strike) names the recurrence, pairs with the
+    musical "groove", and "break:" stops it.
+  - "~TICK" as a named tick arm: REMOVED as redundant. The groove is tick-paced,
+    so a condition-only arm "when: <cond>" already means "on the tick, gated by
+    cond" -- the tick is the implicit wake channel; naming it added nothing.
+  - Merging "when:" into "if:": rejected. "when:" GATES a trigger (no block
+    follows); "if:" BRANCHES (a block follows). They collide where a groove arm
+    or a guarded cause meets an if-statement -- the arm body { } and an if: block
+    { } become formally identical, and the reader loses the gate-vs-branch
+    signal the two keywords carry. Distinct keywords preserve one-noun-per-
+    concept (R-11).
+  - A bare-condition wait arm (no channel): rejected; a condition rides a cause
+    ("+ when: <cond>"), which fixes WHEN it is checked.
+
+
+R-21: an event type is a bare name (B1)
+---------------------------------------
+PROBLEM
+  The grammar's "event" rule resolved through <name-bound>, which REQUIRES a
+  binding head e./b./a./c./s. (R-9). Under that, bare-name events
+  ("button_pressed => light_on;") did not parse -- yet nearly every example
+  (LANGUAGE §2/§3/§6) writes events bare; only bound events (c.tick) parsed. The
+  examples reflect the intent (an event TYPE is a global signal name, not a
+  character member); the rule was too strict.
+
+DECISION
+  An event type is a BARE NAME (a free identifier in the event vocabulary), OR a
+  binding-qualified member for character-scoped events (c.tick), OR a lifecycle
+  event (~ENTRY/~EXIT):
+      event := <name> | <name-bound> | ~ENTRY | ~EXIT
+  Bare-name is the common form. R-9 is NOT weakened: it governs MEMBER ACCESS
+  (reaching a value out of an entity), which still needs a binding head. An event
+  type name is not a member access -- it names a signal, so it is a bare
+  identifier, exactly as a namespace path (R-18) is a bare dotted name and not a
+  binding-qualified access. The three "bare dotted/plain name, not a member
+  access" notions (event names, namespace paths, count/loop locals) are
+  consistent: only reaching INTO an entity needs the e./b./a./c./s. head.
+
+COST
+  The "event" rule gains a bare-identifier alternative beside the bound form.
+  Pass-2 resolves a bare event name against the event vocabulary; a bound event
+  (c.tick) resolves as a member (R-9). No example changes -- the bare-name
+  examples were correct; the rule is brought to them.
+
+GRAVEYARD
+  - (b) all events are character-members (rewrite every bare example bound):
+    rejected; an event type is a signal name, not a member -- forcing a binding
+    head on every event contradicts the model and the examples.
+
+
+R-20 (amendments, this pass)
+----------------------------
+  B2: SEMANTICS §16 dropped its stale "+"-as-tick-arm check (d). There is no "+"
+      or "~TICK" cause; a condition-only "when: <cond>" arm wakes on the tick.
+      The grammar already had no "+" production; the check was residue.
+  B3: the null emit target is spelled "~NONE" everywhere (SEMANTICS (c)/(d),
+      grammar comments, LANGUAGE §11) -- terminological invariance, one noun. The
+      transitional bare "~" spelling is retired.
+
+R-10 (amendment, this pass)
+---------------------------
+  B4: ~ENTRY/~EXIT admit ANY causality effect (a spawn or a command-block), not
+      a command-block only. R-15's recurring "every:" spawn at ~ENTRY (auto-
+      cancelled at ~EXIT) is the motivating case. LANGUAGE §3 wording corrected.
+
+
+R-22: ~ELSE (default arm) replaces ~ANY
+---------------------------------------
+PROBLEM
+  "~ANY" (match any event) shadows every specific arm: when a named event fires,
+  both its arm and the ~ANY arm are ready, so ~ANY either steals every event or
+  makes specific arms ambiguous. ~ANY cannot coexist with other arms in a groove.
+
+DECISION
+  "~ANY" is removed entirely. In its place, "~ELSE" is the DEFAULT/fallthrough
+  arm: it fires only when NO other arm matched this tick (like "case: _"). Because
+  it fires only in the absence of a match, it does NOT interfere -- it coexists
+  with specific arms as their default. ~ELSE is checked LAST regardless of
+  definition order, appears at most once per groove, and (being an ordinary
+  reserved event) may also be used anywhere an event may.
+
+COST
+  A terminal rename (~ANY -> ~ELSE) and one semantic rule (checked last, at most
+  once). Removes the shadowing hazard ~ANY carried.
+
+GRAVEYARD
+  - "~ANY" (any-event arm): removed; it shadows every specific arm and cannot
+    coexist with them. "~ELSE" (fires only when none matched) is the coherent
+    default. (~ANY itself descended from the earlier deferred "*" -- now closed.)

@@ -17,7 +17,7 @@ casts to its own node kind.
 ______________________________________________________________________________
 """
 from .cst_nodes import (OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node,
-                        ABSENT)
+                        NodeAbsent)
 
 ELEM       = 0
 REDUCE     = 1
@@ -68,7 +68,7 @@ class SpecNode:
 # TERMINALS  --  the lexeme specification, now a first-class SpecNode.
 #
 # (D-7) A terminal is one immutable specification: its shape and the fields that
-# shape implies (a regex pattern, a keyword spelling, an opaque span mode). It is
+# shape implies (a regex pattern or a keyword spelling). It is
 # also a SpecNode -- a citizen of the GRAMMAR tree walked exactly like OR_Spec /
 # SEQ_Spec, no special-cased bare leaf -- because the tree must be homogeneous.
 # So the lexical spec and the grammar leaf are ONE object: Terminal_Spec.
@@ -89,7 +89,7 @@ class SpecNode:
 TERMINAL_DB = []      # interned Terminal_Specs, in declaration order
 _BY_NAME    = {}      # _name() -> Terminal_Spec, for interning and reuse
 
-_SHAPE_SILENT = {"regex": False, "captured": False, "opaque": False,
+_SHAPE_SILENT = {"regex": False, "captured": False,
                  "string": True, "framing": True}
 
 
@@ -115,11 +115,10 @@ def _register_terminal(term):
 class Terminal_Spec(SpecNode):
     """A terminal: its lexeme specification AND its seat in the GRAMMAR tree.
 
-    'shape' is one of 'regex' / 'string' / 'captured' / 'opaque' / 'framing' --
+    'shape' is one of 'regex' / 'string' / 'captured' / 'framing' --
     the discriminant the lexer's pattern extractor and the engine switch on.
     Per shape: 'pattern' for a regex class; 'spelling' for a string/captured
-    keyword or a framing token's friendly tag; 'mode' (a span mode, see
-    world.span_oracle.SpanMode) for an opaque span. Irrelevant fields are None.
+    keyword or a framing token's friendly tag. Irrelevant fields are None.
     'silent' is derived from shape (see _SHAPE_SILENT): a string keyword is
     dropped as punctuation, every richer terminal is kept in the parse frame.
 
@@ -136,14 +135,13 @@ class Terminal_Spec(SpecNode):
     _name(), content equality and identity coincide. This lets a terminal be a
     key in the role vocabulary (ROLES, ll2_engine).
     """
-    __slots__ = ("shape", "pattern", "spelling", "mode", "silent",
+    __slots__ = ("shape", "pattern", "spelling", "silent",
                  "_name_str", "_hash")
 
-    def __init__(self, shape, pattern=None, spelling=None, mode=None):
+    def __init__(self, shape, pattern=None, spelling=None):
         self.shape    = shape
         self.pattern  = pattern
         self.spelling = spelling
-        self.mode     = mode
         self.silent   = _SHAPE_SILENT[shape]
         self._name_str = self._compute_name()
         self._hash     = hash(self._name_str)
@@ -153,10 +151,6 @@ class Terminal_Spec(SpecNode):
 
     def __eq__(self, other):
         return isinstance(other, Terminal_Spec) and self._name_str == other._name_str
-
-    @property
-    def is_opaque(self):
-        return self.shape == "opaque"
 
     def __call__(self, role):
         """RETURN: Tagged_Spec, a per-occurrence role-tagged VIEW of this terminal.
@@ -179,14 +173,12 @@ class Terminal_Spec(SpecNode):
 
         The distinctness key and the debug-trace id. Two terminals are the same
         iff their _name() is equal; the scheme includes every distinguishing
-        field. An opaque span's identity is 'opaque:' + the mode's qualified name
-        (oracle sub-language plus role), so core hard-codes no language.
+        field.
         """
         match self.shape:
             case "regex":    return "regex:" + self.pattern
             case "string":   return "string:" + self.spelling
             case "captured": return "captured:" + self.spelling
-            case "opaque":   return "opaque:" + self.mode.qualified_name()
             case "framing":  return "framing:" + self.spelling
             case _:          raise ValueError("unknown terminal shape %r" % (self.shape,))
 
@@ -196,23 +188,17 @@ class Terminal_Spec(SpecNode):
     def _compute_first2(self, grammar):
         """RETURN: set[tuple], the length-1 lookahead beginning this terminal.
 
-        An opaque span begins with the span-open framing token; every other
-        terminal begins with itself (the interned identity).
+        Every terminal begins with itself (the interned identity).
         """
-        if self.is_opaque:
-            return {(t_fr_span_open,)}
         return {(self,)}
 
     def nullable(self, grammar):
         return False
 
     def expand(self, parser, frames, work):
-        if self.is_opaque:
-            frames[-1].add(parser.consume_span(self))
-        else:
-            value = parser.consume_terminal(self)
-            if value is not None:
-                frames[-1].add(value)
+        value = parser.consume_terminal(self)
+        if value is not None:
+            frames[-1].add(value)
 
 
 class TerminalFactory:
@@ -254,30 +240,13 @@ class TerminalFactory:
         return _register_terminal(Terminal_Spec("captured", spelling=spelling))
 
     @staticmethod
-    def opaque(mode):
-        """RETURN: Terminal_Spec, an opaque span terminal carrying its span mode.
-
-        'mode' is a span mode (world.span_oracle.SpanMode) defined by whatever
-        oracle measures the span -- e.g. the Luau layer's Role. It rides on the
-        terminal, so a rule expresses "this position takes an opaque span of THIS
-        kind" by which 't_opq_...' it names; the engine passes the mode to the
-        oracle unread. The mode must expose qualified_name() (the identity) and
-        name (diagnostics); any object with those is accepted, keeping core free
-        of any one embedded language.
-        """
-        if not (hasattr(mode, "qualified_name") and hasattr(mode, "name")):
-            raise ValueError("opaque terminal needs a span mode "
-                             "(qualified_name()/name), got %r" % (mode,))
-        return _register_terminal(Terminal_Spec("opaque", mode=mode))
-
-    @staticmethod
     def framing(tag):
         """RETURN: Terminal_Spec, a framing token with no grammar spelling.
 
-        Lexer/engine machinery rather than a written terminal: the opaque-span
-        brace handoff (open and the synthesized block), the skip groups, and the
-        end-of-file and mismatch sentinels. 'tag' is its friendly name; framing
-        tokens reference through the same scheme and differ only in that tag.
+        Lexer/engine machinery rather than a written terminal: the skip groups
+        and the end-of-file and mismatch sentinels. 'tag' is its friendly name;
+        framing tokens reference through the same scheme and differ only in that
+        tag.
         """
         return _register_terminal(Terminal_Spec("framing", spelling=tag))
 
@@ -290,8 +259,6 @@ T = TerminalFactory()
 # are tokens like any other -- referenced by identity, named by the same scheme
 # -- special only in their friendly tags and in being created here, not from a
 # rule.
-t_fr_span_open  = T.framing("span-open")    # a bare '{'; handed to the oracle
-t_fr_span_block = T.framing("span-block")   # the synthesized '{ ... }' span
 t_fr_comment    = T.framing("comment")      # '## ...' skip group
 t_fr_ws         = T.framing("whitespace")   # whitespace skip group
 t_fr_mismatch   = T.framing("mismatch")     # illegal char; parser resyncs
@@ -469,10 +436,10 @@ class OR_Spec(Branch_Spec):
         'extra' is (index, role): the grammar index of the branch choose_alt
         selected and the advisory role it carried (None if untagged). A branch
         that produced no surviving value (all-silent, or an empty inline branch)
-        yields child=ABSENT.
+        yields child=NodeAbsent.
         """
         index, role = extra
-        child = frame.values[0] if frame.values else ABSENT
+        child = frame.values[0] if frame.values else NodeAbsent
         return OR_Node(triggered_index=index, child=child, role=role,
                        begin=frame.begin)
 
@@ -507,7 +474,7 @@ class OPT_Spec(Operator_Spec):
         present = parser.starts(self.body)
         if parser.cst_mode:
             # Reduce to an OPT_Node: child = the body's value when present,
-            # ABSENT else. Presence is a STATE of the node, marked on it, never
+            # NodeAbsent else. Presence is a STATE of the node, marked on it, never
             # inferred from a missing frame slot downstream.
             parser.open_frame(frames)
             work.append((CST_REDUCE, (self, present)))
@@ -516,9 +483,9 @@ class OPT_Spec(Operator_Spec):
 
     def cst_reduce(self, frame, present):
         """RETURN: OPT_Node, present = whether the optional fired,
-                             child   = the body's surviving value, ABSENT else.
+                             child   = the body's surviving value, NodeAbsent else.
         """
-        child = frame.values[0] if present and frame.values else ABSENT
+        child = frame.values[0] if present and frame.values else NodeAbsent
         return OPT_Node(present=present, child=child, begin=frame.begin)
 
 

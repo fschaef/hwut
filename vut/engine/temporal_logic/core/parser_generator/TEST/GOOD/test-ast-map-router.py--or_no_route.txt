@@ -1,0 +1,3 @@
+
+--- OrMap: unrouted fired branch raises KeyError ---
+KeyError                     -> "'OrMap: no route for branch index 1 / role None'"

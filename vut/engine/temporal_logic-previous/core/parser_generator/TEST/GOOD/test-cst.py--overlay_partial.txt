@@ -1,0 +1,4 @@
+--- no transformers => pure CST ---
+pure: OR_Node index 0
+--- partial map => mixed tree (same grammar, opt-in per rule) ---
+typed: TYPED

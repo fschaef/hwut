@@ -1,0 +1,4 @@
+
+--- roles walked off the compiled grammar ---
+  <a>                -> clock
+  regex:@id\b        -> name

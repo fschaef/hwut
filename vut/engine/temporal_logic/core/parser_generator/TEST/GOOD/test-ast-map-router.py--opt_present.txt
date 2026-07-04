@@ -1,0 +1,5 @@
+
+--- OptMap: present routes child through present-leaf ---
+PASS present                 -> 'X'
+PASS present (explicit)      -> 'Y'
+factory present              -> ('got', 'Z')

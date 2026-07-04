@@ -1,0 +1,12 @@
+--- fired over all-silent body: present=True, child=ABSENT ---
+SEQ name='tail' (2)
+  LEAF '@a'
+  OPT name=None
+    <fired, all-silent body>
+present: True  child is ABSENT: True
+--- absent: present=False, child=ABSENT ---
+SEQ name='tail' (2)
+  LEAF '@a'
+  OPT name=None
+    <absent>
+present: False  child is ABSENT: True

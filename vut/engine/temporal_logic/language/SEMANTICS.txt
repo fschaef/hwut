@@ -1,0 +1,287 @@
+==============================================================================
+SEMANTICS
+==============================================================================
+
+Semantic constraints -- the pass-2 checks the grammar does NOT enforce. The
+parser accepts a wider language; this document lists what the semantic unit must
+verify and reject. Authority: this file for the checks; RATIONALE.txt (R-n) for
+why; LANGUAGE.txt for mechanics; grammar.py for the accepted surface.
+
+Each entry: the CHECK, its SOURCE rule(s), and the rationale reference. Every
+entry carries an explicit SEVERITY in its title line:
+
+    [REJECT]  elaboration fails: the module cannot become a SemanticModule.
+    [WARN]    elaboration proceeds: the semantic unit emits a remark naming
+              the site and the reason; the produced SemanticModule is
+              unaffected.
+
+A WARN entry is a DELIBERATE non-fatal check -- not an unenforced rule and not
+an oversight. A missing severity marker is a format error, never an implicit
+default.
+
+
+(1) Deactivation admissibility                                  [REJECT, R-1]
+-----------------------------------------------------------------------------
+"=x=> X" is well-formed iff deactivable(X). The parser accepts "=x=>" before any
+target; the semantic unit rejects it where the target is not deactivable.
+    deactivable:  behavior yes, aspect yes, character yes,
+                  recurring-emission handle yes;  event no, command-block no.
+
+
+(2) Guard placement                                             [REJECT, R-5]
+-----------------------------------------------------------------------------
+A guard ("when:") attaches only to a cause. A named cause carries its own guard;
+a use site supplies arguments, not a second guard. (Grammar already restricts
+"when:" to <cause-explicit>; the no-second-guard rule on a cause-ref use is the
+pass-2 part.)
+
+
+(3) Command-block emission ban                                  [REJECT, R-6]
+-----------------------------------------------------------------------------
+A command-block (and every nested branch/loop body) emits no events: it contains
+no <call>-to-entity and no effect marker. (Structural in the grammar -- the
+statement world has no effect production -- so this is a confirming check, not a
+primary one.)
+
+
+(4) Scope of member bindings                              [REJECT, R-9, §4.1]
+-----------------------------------------------------------------------------
+Every member access names its binding (e./b./a./c./s.). Availability by site:
+    e.  inside a causality (the fired event's member)
+    b.  behaviour and causality
+    a.  aspect, behaviour, causality
+    c.  always
+    s.  everywhere in the entity (and in has: for initialisation; during
+        ~ENTRY/~EXIT)
+The semantic unit rejects a binding used outside its available scope, and
+aggregate-self access (a field reached via the aggregate's own binding, b./a.)
+used outside that aggregate's own definition body.
+
+
+(5) Lifecycle events                                           [REJECT, R-10]
+-----------------------------------------------------------------------------
+~ENTRY and ~EXIT are reserved, non-externally-triggered. They take no external
+trigger and no guard. They may appear only as the cause of a causality in an
+entity body. (Grammar admits them as events; the no-guard / reserved-use checks
+are pass-2.)
+
+
+(6) Loop-variable locality                                     [REJECT, R-13]
+-----------------------------------------------------------------------------
+A foreach: loop variable or a count-loop typed counter (int:/float: v = a .. b) is a bare local, scoped to its loop body; it
+does not escape and does not shadow a binding-qualified name (no e./b./a./c./s.
+head). A comprehension's destructuring variables are likewise local to the
+comprehension.
+
+
+(7) Exit-region discipline                                     [REJECT, R-14]
+-----------------------------------------------------------------------------
+The exit-region is the kernel goto-label idiom made safe ("goto considered
+harmful" -- Dijkstra -- answered by forward-only drop-through). Checks:
+  (a) "exit: <label>" DEFINES a bare drop-through label (no body, C-label
+      semantics: control falls through it to what follows).
+  (b) An exit-label may be defined ONLY at the OUTERMOST function/command-block
+      body -- never inside a loop, if/elif/else, match, or any nested block.
+  (c) "dropto: <label>" is the forward-only JUMP: it may target only an exit
+      defined LATER than the dropto in the same outermost body. A backward or
+      self target is an error.
+  (d) "dropto: <label>" requires a target: the label must be defined by some
+      "exit:" in the body; an undefined label is an error.
+  (e) break:/continue: are unlabelled and bind to the nearest enclosing loop.
+
+
+(8) Match patterns                                             [REJECT, R-13]
+-----------------------------------------------------------------------------
+Match scrutinee is an algebraic value; patterns are literal, range, or glob
+(string-wildcard), with an optional default "case: _". Exhaustiveness is NOT
+checked (no closed member set); an unmatched scrutinee with no default is a
+no-op.
+
+
+(9) Data-access and lvalues                                    [REJECT, R-16]
+-----------------------------------------------------------------------------
+A data-access is a binding-qualified name or call, then chained "[<algebr>]"
+index steps. An lvalue is a data-access (indexed assignment is well-formed).
+Single index only (no slices, no comma-tuples). Index is an algebraic value.
+PASS-4 HALF (the lvalue law): a mutation lvalue is a binding-qualified
+member, head in {e, b, a, c}; "s." is read-only (arguments are never
+written); a non-binding lvalue head is rejected. Every binding level has a
+DEFAULT INSTANCE in the currently open scope, so a binding never rejects on
+POSITION -- the recipe records binding and member; which concrete instance
+is link's business.
+
+
+(10) Collections                                               [REJECT, R-17]
+-----------------------------------------------------------------------------
+A collection is a value sort with no operators: constructed by a comprehension
+(or literal), consumed by foreach:, an index base, a comprehension from:, an
+argument, or a mutation RHS. The semantic unit rejects any attempt to operate on
+a collection (there is no collection algebra yet). A comprehension's generators
+chain left-to-right; each may carry an "if:" filter.
+
+"[" disambiguation: "[<algebr>]" glued after a base is a data-access index step;
+a standalone "[<element> with: ...]" is a comprehension. The parser separates
+them by content (LL(2)); confirm on real input.
+
+
+(11) Recurring emission                                        [REJECT, R-15]
+-----------------------------------------------------------------------------
+"=> ev(...) every: <numeric> [as: <name>]" is a recurring spawn. The "as:" name
+is a handle, a bare local scoped to the enclosing entity; any causality in that
+entity may cancel it with "=x=> <name>". "as:" requires "every:". A recurring
+emission runs only while its entity is active and is cancelled automatically at
+~EXIT. <numeric> is seconds by convention.
+
+
+(12) Namespaces and imports                                [REJECT, R-18, §8]
+-----------------------------------------------------------------------------
+"open: <dotted> { ... }" opens a named scope; it is re-openable and nests
+unrestricted; names declared within are scoped to it. A <name-dotted> is a plain
+dotted path, NOT a binding-qualified member access (no e./b./a./c./s. head); the
+two dotted-name notions must not be conflated.
+
+"import: \"<path>\" as: <dotted>" mounts the quoted file/url under the given
+namespace. The parser records the import; the semantic pass mounts it: it reads
+the imported unit's exported names (name -> kind, scope) into the export table
+WITHOUT touching references; later resolution reads from there. Names resolve
+scope-aware: a bare reference resolves within the current scope, then walks
+outward.
+
+
+(13) Route-by-role                                              [REJECT, R-8]
+-----------------------------------------------------------------------------
+Every grammar OR-alternation whose branches build different AST types tags each
+branch with a role; the semantic unit routes by that role to the matching AST
+factory. A role is advisory and non-identity (it never affects lexing/interning/
+FIRST_2) and is checked only for spelling against the ROLES vocabulary at load.
+A missing role on a same-node-kind alternation (operator-token choices) is not an
+error -- those build one node.
+
+
+(14) Aggregation types                                         [REJECT, R-19]
+-----------------------------------------------------------------------------
+list, dict, and struct { x; y; ... } are plain VARIABLE-TYPED containers: no
+type parameters, no member functions. Element/key/value/field types are dynamic
+-- the semantic unit performs no element-type check (there is no declared
+element type yet). Type constraints are a deliberate future addition. A struct
+field is a bare named slot.
+
+
+(15) Count loop                                                [REJECT, R-13]
+-----------------------------------------------------------------------------
+"<count-type>: <var> = <begin> .. <end> [step: <step>]" declares a typed bare-
+local counter. ".." is the range operator -- two dots, lexed by maximal munch
+distinct from the single member-access "." (so "1..10" and "c.x" do not
+collide); confirm on real input. <count-type> (int:/float:) is role-bearing and
+extensible. Bounds and step are algebraic; bounds inclusive; default step +1.
+The semantic unit gives the counter the declared numeric type and scopes it to
+the loop body.
+
+
+(16) Clockwork                                                 [REJECT, R-20]
+-----------------------------------------------------------------------------
+A clockwork is an aspect body run as a coroutine on the engine loop; its
+suspension points are "sleep on resource available" (asyncio await/select).
+Checks:
+  (a) A clockwork body may appear only as an aspect body (not a behaviour, not a
+      command-block). An aspect is a behaviour set XOR a clockwork, never both.
+  (b) Emission occurs only through the "=>" step. A borrowed <statement> (R-13)
+      inside a clockwork is EMISSION-IMPOTENT (R-6 ban intact).
+  (c) Suspension points: "=> <emit>" and "=> ~NONE" await the tick; a groove:
+      arm awaits its cause; a "beat: n" arm fires every n ticks. These are the
+      only suspension points.
+  (d) "~NONE" is the null emit target of "=>" only; it is never a trigger/cause.
+  (e) groove: is a repeating blocking select: it services whichever arm fires,
+      again and again, until a "break:"/dropto:/exit: leaves it. A
+      groove: COUNTS AS AN ENCLOSING LOOP for break:/continue: binding, so a
+      "break:" in an arm leaves the groove (the one-shot wait
+      "groove: { ... break: }") and a "continue:" resumes the select. Arms are
+      or-ed. TIE-BREAK: when
+      several arms are ready in the same tick, the arm DEFINED FIRST (topmost in
+      the block) wins -- precedence of definition. This is deterministic (source
+      order is fixed), consistent with the engine's no-run-to-run-variance
+      invariant.
+  (f) A tick-default "when: <cond>" arm checks <cond> WHEN the tick fires
+      (explicit wake policy); all arm causes resolve as ordinary causes (R-5).
+  (g) ARM CAUSES: a named event (gated by its own "when:"), "~ELSE" (the DEFAULT/
+      fallthrough arm -- fires when NO other arm matched this tick, like
+      "case: _"; it may carry a "when: <cond>" gate), or a TICK-DEFAULT arm
+      "when: <cond>" -- since the groove is tick-paced, a condition-only arm
+      wakes on the tick. ~ELSE does NOT shadow specific arms (it fires only when
+      none matched), so it coexists with them; it may appear at most once per
+      groove and is checked LAST regardless of definition order. ~NONE is the
+      null EMIT TARGET ("=> ~NONE" emits nothing, passes a tick); ~NONE is never
+      a trigger. (No ~TICK keyword: the tick is the implicit wake of a
+      condition-only arm.)
+  (h) ARM UNIQUENESS: within one groove:, only the TICK-DEFAULT "when: <cond>"
+      arm may appear more than once (several tick-gated conditions). Every other
+      arm cause -- a named event, ~ELSE -- appears AT MOST ONCE per groove, for
+      clarity and to keep the precedence-of-definition tie-break unambiguous.
+  (h2) BEAT: a "beat: n" arm is a metronome -- it fires every n TICKS of the
+      clockwork (n a positive integer, tick-based, NOT seconds). It recurs: after
+      it runs, the groove beats again in n ticks unless a "break:" leaves the
+      groove. "beat:" replaces the earlier wall-clock "timeout:" (a groove is
+      paced in ticks, not time).
+  (i) SEQUENCE / effect-before-wait: clockwork statements run IN SEQUENCE; where
+      a step both acts and suspends, the EFFECT happens FIRST, then the wait.
+      "=> x" emits, THEN awaits the tick; a groove arm runs its body, THEN the
+      groove resumes to await the next firing.
+
+(17) Abstract-target remark                                [WARN, R-10, F-3]
+-----------------------------------------------------------------------------
+An effect targeting an ABSTRACT entity -- "=> X" or "=x=> X" where X is
+defined with the "~" marker (R-10) -- is WELL-FORMED and elaboration proceeds.
+The semantic unit emits a remark naming the site and the abstract target. It
+is not yet known whether a variable may someday reference an abstract
+behaviour, so the language does not hard-block the construct structurally --
+but every occurrence must be visible: "even if it is to make ourselves aware
+when making design decisions related to abstract behaviors" (FR ruling on
+fork F-3, REACTIVE-ENGINE-REBUILD). This is the first WARN-severity entry;
+its non-fatality is deliberate, not an omission.
+
+(18) Duplicate declaration                              [REJECT, pass-3, F-6]
+-----------------------------------------------------------------------------
+The same name declared TWICE in the SAME scope is rejected: two definitions,
+a definition and a member declaration, an import alias shadowing either, or
+an "open:" whose path segment names something already declared as a
+non-namespace. The FIRST declaration stays authoritative -- the declare walk
+continues past the rejection (collect and continue), so every further
+duplicate in the file is reported in the same run, and later diagnostics keep
+their anchor. Re-opening a NAMESPACE path is NOT a duplicate: each link is
+published once and a re-open EXTENDS the scope (renewal decision, R-18).
+Severity is REJECT (fatal at the next phase boundary): an ambiguous export
+surface must never reach elaborate. Detected by the declare unit, which runs
+only behind the strict F-6 gate -- any parser diagnostic blocks declare, so
+this entry is judged over clean trees only.
+
+(19) Reference resolution                                   [REJECT, pass-4]
+-----------------------------------------------------------------------------
+EVERY reference resolves or rejects (the spine contract: access KNOWN,
+always). The resolution surface is the module's own declared surface plus
+every mounted peer's, scope-aware outward (12); declaration-first ordering
+guarantees the full surface exists before any module elaborates. The ONE
+place a name may resolve to nothing without rejection is a CAUSE TARGET or
+an EMISSION TARGET (an effect's spawn, a clockwork emit): there it IS a raw
+event (R-1) and the recipe records kind 'event' -- a known access, not an
+unresolved one. Bindings (e/b/a/c/s) are always known: each level has a
+default instance in the open scope (see 9). RESIDUE -- written segments
+beyond the matched name -- is verified as far as the declared surface
+reaches: its FIRST segment into a definition-kind or named-cause target must
+name a declared member (a parameter or a has: name), local and mounted
+alike; deeper residue (struct fields) and residue under a binding travel to
+link, recorded on the recipe.
+
+
+(20) Arguments -- the Python law                       [REJECT, pass-5, D-11]
+-----------------------------------------------------------------------------
+A parameter may carry a VALUE DEFAULT: "name [: type] [= <algebr>]" (D-11).
+A BARE use of a name is a REFERENCE, not a call -- no argument judgement
+attaches. A PARENTHESISED use of a resolved parameterised target (a
+definition or a named cause) is judged: positional arguments come first (a
+positional after a named argument is rejected); every parameter WITHOUT a
+default is supplied exactly once; no parameter is supplied twice
+(positional-plus-named double cover included); a named argument naming no
+declared parameter is rejected; more positionals than parameters is
+rejected. Targets without a declared surface -- raw events, bindings,
+locals, residue-navigated members -- are never judged here. Argument TYPES
+(the sort layer) are deliberately not this entry's.

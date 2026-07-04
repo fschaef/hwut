@@ -10,7 +10,7 @@ PURPOSE: Test the grammar-agnostic CST machinery (core/) in isolation, on small
          (bottom-up), and absent-optional carried as an OPT_Node state.
 
 CHOICES: cst_shapes, absent_optional, silent_optional, signals, overlay,
-         overlay_partial, children_first.
+         overlay_partial, children_first, role_strict.
 
 DESCRIPTION:
 
@@ -18,11 +18,11 @@ DESCRIPTION:
                       canonical CST node kinds, with rule names stamped on rule
                       nodes and None on inline operators.
     absent_optional   An inline optional is an OPT_Node: 'present' marks
-                      whether it fired, 'child' is the body's value or ABSENT;
+                      whether it fired, 'child' is the body's value or NodeAbsent;
                       the parent SEQ keeps a STABLE slot either way -- presence
                       is read off the node, never inferred from child count.
     silent_optional   An optional over an ALL-SILENT body keeps fired-ness:
-                      present=True with child=ABSENT (fired) is distinguishable
+                      present=True with child=NodeAbsent (fired) is distinguishable
                       from present=False (absent).
     signals           Every CST node derives from the operator interface matching
                       its shape (OR_Node IS OR_Interface, etc.); the interfaces
@@ -45,10 +45,10 @@ from config import HwutRunner
 from vut.engine.temporal_logic.core.parser_generator.combinators import OR, STAR, PLUS
 from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import T
 from vut.engine.temporal_logic.core.parser_generator.ll2_engine import Grammar, EngineParser
-from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from vut.engine.temporal_logic.core.lexer.lexer import register_grammar
 from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 from vut.engine.temporal_logic.core.parser_generator.cst_nodes import (
-        OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, ABSENT)
+        OR_Node, OPT_Node, SEQ_Node, PLUS_Node, STAR_Node, NodeAbsent)
 from vut.engine.temporal_logic.core.parser_generator.operator_interface import (
         OR_Interface, OPT_Interface, SEQ_Interface, PLUS_Interface,
         STAR_Interface)
@@ -61,12 +61,6 @@ t_b = T.regex(r'@b\b')
 t_c = T.regex(r'@c\b')
 
 
-class _ToyOracle:
-    """A no-op span oracle; the toy grammars contain no opaque spans."""
-    def measure(self, *a, **k):
-        return None
-
-
 def banner(title):
     print("--- %s ---" % title)
 
@@ -76,13 +70,13 @@ def _show(node, indent=0):
     pad = "  " * indent
     if isinstance(node, OR_Node):
         print("%sOR name=%r index=%d" % (pad, node.name, node.triggered_index))
-        if node.child is ABSENT:
+        if node.child is NodeAbsent:
             print("%s  <absent>" % pad)
         else:
             _show(node.child, indent + 1)
     elif isinstance(node, OPT_Node):
         print("%sOPT name=%r" % (pad, node.name))
-        if node.child is not ABSENT:
+        if node.child is not NodeAbsent:
             _show(node.child, indent + 1)
         elif node.present:
             print("%s  <fired, all-silent body>" % pad)
@@ -110,7 +104,7 @@ def _parse(grammar, start, src, transformers=None):
     else:
         g = Grammar(grammar, transformers=transformers, start=start)
     rep = DiagnosticReporter()
-    return EngineParser(src, _ToyOracle(), rep, g)._match(g.rules[start]), rep
+    return EngineParser(src, rep, g)._match(g.rules[start]), rep
 
 
 # --- choices ---------------------------------------------------------------
@@ -141,7 +135,7 @@ def run_absent_optional():
     banner("optional PRESENT: OPT_Node child = value; SEQ slot stable")
     node, _ = _parse(_OPT_GRAMMAR, "decl", "@a @b @c")
     _show(node)
-    banner("optional ABSENT: OPT_Node child = ABSENT; SEQ slot STILL there")
+    banner("optional NodeAbsent: OPT_Node child = NodeAbsent; SEQ slot STILL there")
     node2, _ = _parse(_OPT_GRAMMAR, "decl", "@a @c")
     _show(node2)
 
@@ -152,16 +146,16 @@ _SILENT_OPT_GRAMMAR = {
 
 
 def run_silent_optional():
-    banner("fired over all-silent body: present=True, child=ABSENT")
+    banner("fired over all-silent body: present=True, child=NodeAbsent")
     node, _ = _parse(_SILENT_OPT_GRAMMAR, "tail", "@a sep")
     _show(node)
     opt = node.children[1]
-    print("present:", opt.present, " child is ABSENT:", opt.child is ABSENT)
-    banner("absent: present=False, child=ABSENT")
+    print("present:", opt.present, " child is NodeAbsent:", opt.child is NodeAbsent)
+    banner("absent: present=False, child=NodeAbsent")
     node2, _ = _parse(_SILENT_OPT_GRAMMAR, "tail", "@a")
     _show(node2)
     opt2 = node2.children[1]
-    print("present:", opt2.present, " child is ABSENT:", opt2.child is ABSENT)
+    print("present:", opt2.present, " child is NodeAbsent:", opt2.child is NodeAbsent)
 
 
 def run_signals():
@@ -224,6 +218,44 @@ def run_children_first():
     print("outer received:", node)
 
 
+def run_role_strict():
+    """RETURN: None, always. Pins the STRICT role-access law on SEQ_Node.
+
+    Role meaning is rule-scoped and per-SEQ unique (RoleUniquenessError at
+    compile), so 'node["role"]' resolves 1:1 within its rule and a miss is a
+    factory bug, never a legitimate absence: it raises AssertionError naming
+    the requested role and the roles the node carries. Positional int access is
+    unchanged; any other address type is a TypeError (the removed positional-
+    plus-assertion tuple form included). An absent OPTIONAL is NOT a missing
+    role: its position survives at its slot, with its role, and is returned
+    normally.
+    """
+    node = SEQ_Node(children=("A", OPT_Node(present=False, child=NodeAbsent)),
+                    roles=("cause", "guard"), name="pair")
+
+    banner("strict role access: hit")
+    print('node["cause"]                ->', repr(node["cause"]))
+    print('node[0] (positional, as-is)  ->', repr(node[0]))
+
+    banner("strict role access: absent OPT still found by its role")
+    print('node["guard"]                ->', repr(node["guard"]))
+    print('node["guard"].present        ->', repr(node["guard"].present))
+
+    banner("strict role access: miss raises, naming carried roles")
+    try:
+        node["misspelled"]
+        print("UNEXPECTED: no error")
+    except AssertionError as e:
+        print("AssertionError:", e)
+
+    banner("strict role access: non-str/int address is a TypeError")
+    try:
+        node[(0, "cause")]
+        print("UNEXPECTED: no error")
+    except TypeError as e:
+        print("TypeError:", e)
+
+
 HwutRunner(
     argv       = sys.argv,
     title      = "Core CST + Overlay Machinery",
@@ -235,5 +267,6 @@ HwutRunner(
         "overlay":         run_overlay,
         "overlay_partial": run_overlay_partial,
         "children_first":  run_children_first,
+        "role_strict":     run_role_strict,
     },
 ).run()

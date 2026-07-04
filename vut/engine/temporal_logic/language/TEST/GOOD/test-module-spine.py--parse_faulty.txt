@@ -1,0 +1,9 @@
+
+--- faulty input: collect-and-continue ---
+state: ParsedModule
+origin: faulty.vut
+file_node: ModuleRoot [1 items]
+  item 0: Causality
+diagnostics: 1
+   no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, regex:[a-zA-Z_]\w*)
+has_fatal: False

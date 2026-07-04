@@ -42,7 +42,7 @@ from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec import (
         T, Terminal_Spec, Tagged_Spec, Rule_Spec)
 from vut.engine.temporal_logic.core.parser_generator.ll2_engine import (
         Grammar, EngineParser, RoleVocabularyError)
-from vut.engine.temporal_logic.lexer.lexer import register_grammar
+from vut.engine.temporal_logic.core.lexer.lexer import register_grammar
 from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
 
@@ -65,14 +65,6 @@ def _fmt_set(s):
     def show(tup):
         return "(" + ", ".join(t._name() for t in tup) + ")"
     return "{" + ", ".join(show(t) for t in sorted(s, key=key)) + "}"
-
-
-class _ToyOracle:
-    """A Luau oracle stub: the toy grammars carry no '{...}' spans."""
-    def parse(self, _text):
-        """RETURN: an object with .ok == True (toy grammars carry no Luau)."""
-        from types import SimpleNamespace
-        return SimpleNamespace(ok=True)
 
 
 def _render(node, indent=0):
@@ -224,8 +216,8 @@ def run_transparent_parse():
     banner("CST identity: bare vs tagged")
     for src in ("@id", "@id EQ @num", "@id COMMA @num"):
         rb = DiagnosticReporter(); rt = DiagnosticReporter()
-        nb = EngineParser(src, _ToyOracle(), rb, gb)._match(gb.rules["args"])
-        nt = EngineParser(src, _ToyOracle(), rt, gt)._match(gt.rules["args"])
+        nb = EngineParser(src, rb, gb)._match(gb.rules["args"])
+        nt = EngineParser(src, rt, gt)._match(gt.rules["args"])
         same = _render(nb) == _render(nt)
         print("  %-18s identical=%s  (errs %d/%d)"
               % (src, same, len(rb.errors), len(rt.errors)))

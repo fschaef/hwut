@@ -1,0 +1,5 @@
+
+--- SeqMap: one constructor over the finished sequence node ---
+factory ctor                 -> ('got', SEQ_Node(children=('A', 'B'), roles=('left', 'right'), name='pair', begin=0))
+PASS ctor                    -> True
+ctor reads by role           -> 'B'

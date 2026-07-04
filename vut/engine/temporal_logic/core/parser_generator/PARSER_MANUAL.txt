@@ -1,0 +1,437 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+===============================================================================
+PARSER_MANUAL  --  how a language layer uses the parser generator: write a
+                   grammar, compile it, parse, and receive typed products.
+===============================================================================
+
+Topology and per-file mechanics live in README.txt; settled decisions live
+in RATIONALE.txt. This manual is the usage path, start to finish. Every
+code fragment below was run against the engine as printed.
+
+Import prefix in the fragments: the tree's deployment path, as the TEST
+files spell it. Substitute your own root.
+
+    from vut.engine.temporal_logic.core.parser_generator.combinators \
+        import OR, STAR, PLUS, TOP
+    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec \
+        import T
+    from vut.engine.temporal_logic.core.parser_generator.ll2_engine \
+        import Grammar, EngineParser
+    from vut.engine.temporal_logic.core.parser_generator.ast_map_family \
+        import SeqMap, OrMap, OptMap, StarMap, PlusMap, PASS
+    from vut.engine.temporal_logic.core.lexer.lexer import register_grammar
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
+
+-------------------------------------------------------------------------------
+1. THE USAGE PATH IN ONE VIEW
+-------------------------------------------------------------------------------
+
+    declare terminals (T)                                   section 2
+        -> write GRAMMAR dict (combinators, roles,          sections 3-5
+           subspaces)
+        -> register_grammar(GRAMMAR)                        section 6
+        -> Grammar(GRAMMAR, transformers=..., start=...)    section 6
+        -> EngineParser(text, reporter, g).parse()          section 7
+        -> read the products / remaining CST nodes          sections 8-9
+        -> reporter.abort_if_fatal() at the phase boundary  section 10
+
+A complete runnable program is section 12.
+
+-------------------------------------------------------------------------------
+2. TERMINALS
+-------------------------------------------------------------------------------
+
+A token's identity is the Terminal object that produced it. There is no
+token-id enum and no precedence number to maintain. Declare terminals in a
+preamble; the variable name carries the debug name:
+
+    t_id  = T.regex(r'[A-Za-z_][A-Za-z0-9_]*')
+    t_num = T.regex(r'[0-9]+')
+
+The factory forms:
+
+    T.regex(pattern)      a character-class terminal; its Token survives
+                          into the frame (the factory reads its '.text').
+                          Declaration order fixes precedence among regex
+                          terminals (earlier wins).
+    T.string(spelling)    a silent keyword/symbol ('on:', '=>', ':end').
+                          Contributes NO value to the frame. A bare
+                          string in a rule body routes here automatically
+                          -- write "greet:" in the rule, no preamble
+                          entry needed.
+    T.captured(spelling)  a keyword whose Token IS kept in the frame --
+                          for keyword discriminants a factory must read.
+    T.framing(tag)        machinery tokens (comment, whitespace,
+                          mismatch, end-of-file); pre-declared as
+                          t_fr_comment / t_fr_ws / t_fr_mismatch /
+                          t_fr_eof. Never written in a grammar.
+
+Lexing needs no separate spec: the token scanner is generated from the
+terminal database plus the registered grammar's string keywords, in seven
+fixed tiers (README.txt, THE PARTS, token_spec()). '##' starts a comment;
+whitespace separates; '{' and '}' are ordinary tokens.
+
+-------------------------------------------------------------------------------
+3. WRITING THE GRAMMAR
+-------------------------------------------------------------------------------
+
+A grammar is a dict: rule name -> body. The authoring forms:
+
+    (a, b, ...)        SEQ      a bare tuple is a sequence
+    [a, b, ...]        OPT      a bare list is an optional; one element
+                                makes that element optional, several make
+                                an optional sequence
+    (a, OR, b, ...)    OR       OR is a sentinel BETWEEN branches; a
+                                branch that is itself a sequence is a
+                                nested tuple: (a, OR, (b, c))
+    PLUS(x)                     x one or more times
+    STAR(x)                     x zero or more times
+    t_...                       a terminal object from section 2
+    "<name>"                    a reference to rule 'name'
+    "literal"                   a bare-string keyword: a silent terminal
+                                spelled as written; a keyword genuinely
+                                spelled '<...>' is written explicitly as
+                                T.string("<...>")
+
+Example (the worked example's grammar):
+
+    GRAMMAR = {
+        "greet": ("greet:", t_id("who"), ["<count>"], ";"),
+        "count": (t_num("n"),),
+    }
+
+Every rule compiles to a top-level SHAPE: SEQ, OR, OPT, STAR, PLUS,
+TERMINAL (a bare terminal body), or FORWARD (a bare reference body). The
+shape decides which map-entry kind fits the rule (section 9).
+
+The grammar must be LL(2): at every alternation and every optional /
+repetition entry, two tokens of lookahead decide. Violations are collected
+and reported at compile, all at once (section 6).
+
+-------------------------------------------------------------------------------
+4. ROLE HINTS
+-------------------------------------------------------------------------------
+
+A grammar position may carry an advisory role -- the name a factory reads
+the slot by. Two authoring forms, both transparent to FIRST_2, the
+conflict scan, and the value stream:
+
+    t_id("who")         a terminal call: this position's value carries
+                        role "who"
+    "<count(times)>"    a reference suffix: the referenced rule's product
+                        carries role "times" at this position
+
+Law D-18: within one sequence, a role names exactly ONE position; a
+duplicate role in one SEQ is a compile-time error (RoleUniquenessError).
+The same role may recur across different sequences. Role meaning is
+rule-scoped; there is no global vocabulary. A misspelled role read
+surfaces at the factory's strict access (section 8).
+
+On an OR rule a role tags a BRANCH; the fired branch's role is the
+routing address an OrMap uses (section 9).
+
+-------------------------------------------------------------------------------
+5. SUBSPACES
+-------------------------------------------------------------------------------
+
+A rule's value may be a SUBSPACE: a dict whose TOP key holds the rule's
+own pattern and whose other keys are member rules.
+
+    t_w = T.regex(r'&[a-z]+')
+
+    GRAMMAR = {
+        "item": ("<word(word)>", OR, ("(", "<pack/list>", ")")),
+        "word": (t_w("w"),),
+        "pack": {
+            TOP:    ("<list>",),
+            "list": STAR("<item>"),
+        },
+    }
+
+Every rule's flattened name is its path joined by '/': the member above
+is 'pack/list'; a root rule keeps its bare name. AST-map entries and
+transformer keys use the flattened name. Reference resolution: a
+path-spelled reference '<pack/list>' binds from any scope; a bare
+reference '<list>' binds against the writing rule's subspace first, then
+the enclosing subspaces, then the root. Subspaces nest to arbitrary
+depth. A duplicate flattened name is a load error.
+
+-------------------------------------------------------------------------------
+6. REGISTER AND COMPILE
+-------------------------------------------------------------------------------
+
+Two calls, in this order, once:
+
+    register_grammar(GRAMMAR)             seeds the lexer's token spec
+                                          with the grammar's string
+                                          keywords; flattens subspaces
+                                          itself, pass the dict nested
+    g = Grammar(GRAMMAR,
+                transformers=TRANSFORMERS,   # or cst=True and no map
+                start="greet")
+
+Grammar() flattens, compiles every body, runs the FIRST_2 analysis, and
+validates. Compile-time errors, each collecting EVERY violation before
+raising:
+
+    LL2ConflictError        the grammar is not LL(2); each conflict names
+                            the rule and the clashing lookahead pairs
+    RoleUniquenessError     one SEQ gives two positions the same role
+    RoleVocabularyError     only with Grammar(..., roles=VOCAB): a role
+                            hint outside the declared vocabulary. VOCAB
+                            maps each role-bearing pattern (a terminal
+                            object, or a reference as '<name>') to the
+                            tuple of roles it may carry. Without 'roles',
+                            hints are not vocabulary-checked.
+
+Reduction modes, mutually exclusive:
+
+    cst=True                the canonical CST and nothing else
+    transformers=DICT       a PARTIAL dict, flattened rule name ->
+                            callable; implies CST mode. Rules with an
+                            entry reduce to fn(finished CST node); rules
+                            without pass their CST node through. There
+                            is no completeness check -- a forgotten entry
+                            is a CST node reaching the consumer. For a
+                            full-coverage contract, gate the map at load
+                            (section 9).
+    actions=DICT            the legacy per-rule hand-builders; not used
+                            by new layers.
+
+Compile once and cache; the language layer's pattern is a lazily-built
+module-global (language/rule_parser.py, compiled_grammar()). Importing a
+facade module must not compile as a side effect.
+
+-------------------------------------------------------------------------------
+7. PARSING
+-------------------------------------------------------------------------------
+
+    reporter  = DiagnosticReporter()
+    file_node = EngineParser(source_text, reporter, g).parse()
+    reporter.abort_if_fatal()
+
+parse() runs the start rule zero or more times to end-of-file and returns
+a STAR_Node named "<file>" whose items are the top-level products. The
+file node is built by the engine, not by a rule: transformers never touch
+it. The language layer's single conversion point from file node to typed
+root is one function (rule_parser.finalize_file); give your layer the
+same single exit.
+
+On a parse fault the engine records a Diagnostic and RESYNCS: it skips at
+least one token, then advances to the next top-level anchor token, a
+consumed ':end', or end-of-file, and continues. The returned file node
+carries every recovered item; reporter.has_fatal() answers whether a
+later phase may consume the result. abort_if_fatal() is the phase
+boundary: within the phase, everything fixable accumulates first.
+
+A lexer MISMATCH (illegal character) is reported non-fatal and surfaces
+as a token the parser resyncs over; recovery around it is automatic.
+
+-------------------------------------------------------------------------------
+8. READING THE CST
+-------------------------------------------------------------------------------
+
+Where no transformer is registered, a rule reduces to one of five frozen
+nodes -- and every factory receives such a node as its argument. The CST
+is PRUNED: silent terminals leave no entry; captured and regex terminals
+survive as Tokens (read '.text', '.begin', '.end'; the kind is the
+Terminal object itself).
+
+    SEQ_Node    node[i]        positional child (surviving positions
+                               only; inline operators keep a stable slot)
+                node["role"]   STRICT role access: the one position that
+                               carries the role. A role the sequence does
+                               not carry raises AssertionError naming the
+                               roles it DOES carry -- a miss is a factory
+                               bug, surfaced at the read.
+    OR_Node     .triggered_index (0-based fired branch), .role (the
+                fired branch's role or None), .child (the branch's value,
+                NodeAbsent for an all-silent branch),
+                .route_key(address)
+    OPT_Node    .present (True iff fired), .child (value or NodeAbsent),
+                .or_else(default) -- child if present, else default. An
+                absent optional SURVIVES at its SEQ slot with its role;
+                absence is read off '.present', never off a missing slot.
+    STAR_Node   .items, possibly empty
+    PLUS_Node   .items, never empty
+
+Every node carries '.name' (the producing rule's flattened name; None
+for an inline operator inside a body) and '.begin' (the construct's
+start offset -- stamp it onto your typed products for diagnostics; a
+SourceMap turns it into (line, column) at render time).
+
+-------------------------------------------------------------------------------
+9. TRANSFORMERS AND FACTORIES
+-------------------------------------------------------------------------------
+
+The engine has ONE transformer seam: for a rule with an entry, fn(node)
+is called on the finished CST node and the result forwarded. Reduction is
+bottom-up: a factory sees its rule-reference children ALREADY transformed
+into their products; inline operators (a nested tuple, [..], STAR/PLUS,
+an inline OR) stay CST nodes at their slots.
+
+Factory discipline (the language layer's four-way siting rule):
+
+    one rule -> one product      a 'from_cst' classmethod on the product,
+                                 or a small make_* function
+    several rules, one product   a shared function beside the map
+    OR routing                   an OrMap
+    passthrough                  PASS
+
+Write factories against strict role access; reserve positional access
+for inline operator slots (which carry no taggable name):
+
+    def make_greet(node):
+        """RETURN: Greet, the typed product of one 'greet' statement:
+                  its addressee text and its repeat count (1 when
+                  omitted).
+        """
+        return Greet(who   = node["who"].text,
+                     count = node[1].or_else(1))
+
+The map family -- one typed wrapper per rule shape, each callable at the
+seam like a plain factory:
+
+    SeqMap(fn)              SEQ: fn receives the finished SEQ_Node
+    OrMap({addr: leaf})     OR: route table; the fired branch's address
+                            (its role string, its index, or a tuple of
+                            either) picks the leaf -- a factory, PASS, or
+                            a constant
+    OptMap(fn)              OPT: fn(child) when present; NodeAbsent
+                            otherwise, fixed by the machinery
+    StarMap(item_fn)        STAR: an applier -- item_fn over every item;
+                            product NodeList, empty when nothing matched
+    PlusMap(item_fn)        PLUS: as StarMap; NodeList never empty
+    PASS                    forwards the routed value unchanged
+
+Verified fragment (grammar from section 5):
+
+    transformers = {
+        "item":      OrMap({"word": PASS, 1: lambda seq: seq[0]}),
+        "word":      make_word,
+        "pack":      lambda node: node[0],
+        "pack/list": StarMap(lambda item: item),
+    }
+
+    ( '( &a ( &b &c ) )' parses to NodeList('&a', NodeList('&b', '&c')) )
+
+Full-coverage authoring (the language layer's pattern, ast_map.py): write
+the map as RAW DATA -- callable entry = SEQ factory, dict entry = OR route
+table -- and normalise through a load gate before the engine holds it.
+The gate checks coverage in both directions (LookupError), entry kind
+against the rule's compiled shape (TypeError: dict on OR, callable on
+SEQ), and wraps raw entries into the family (dict -> OrMap, callable ->
+SeqMap). See language/ast_map.load_ast_map for the reference
+implementation; a factory's PRODUCT shape stays guarded by a GOOD suite
+(the ast_shape choice), not by the gate.
+
+-------------------------------------------------------------------------------
+10. DIAGNOSTICS
+-------------------------------------------------------------------------------
+
+One DiagnosticReporter is injected everywhere; nothing is global, two
+parses never bleed into each other.
+
+    Diagnostic(phase, message, source_offset, fatal=True, tag=None)
+    reporter.report(d)          always appends, never raises
+    reporter.has_fatal()        any fatal recorded?
+    reporter.abort_if_fatal()   raises FatalDiagnostics; the ONE place a
+                                phase boundary stops the run
+
+'source_offset' is an absolute character offset; SourceMap(source_text)
+.line_column(offset) renders it 1-based. 'tag' is a phase-owned
+classification slot (the semantic layer stringifies NAME / KIND /
+BINDING / CASCADE / GUARD / STRUCTURE / SWEEP into it); the lexer and
+parser leave it None. Severity of a phase's checks: a software violation
+raises; a content fault diagnoses through the reporter.
+
+-------------------------------------------------------------------------------
+11. TESTING A LANGUAGE LAYER
+-------------------------------------------------------------------------------
+
+Follow the HWUT pattern of the existing TEST dirs: a test file declares
+choices; each choice prints deterministically; output diffs byte-exact
+against GOOD/test-X.py--<choice>.txt.
+
+    python3 test-X.py --hwut-info      list the choices
+    python3 test-X.py <choice>         run one choice
+
+GOOD files are generated on real infrastructure, never written by hand.
+Keep one choice that locks every rule's PRODUCT shape (the language
+layer's 'ast_shape') -- that suite is the product-shape guard the load
+gate deliberately leaves open. Toy grammars in tests use marked lexemes
+('@a', '%a') so terminals interned by one test cannot collide with
+another's in the process-global terminal database.
+
+-------------------------------------------------------------------------------
+12. WORKED EXAMPLE  (complete; runs as printed)
+-------------------------------------------------------------------------------
+
+    from vut.engine.temporal_logic.core.parser_generator.ll2_grammar_spec \
+        import T
+    from vut.engine.temporal_logic.core.parser_generator.ll2_engine \
+        import Grammar, EngineParser
+    from vut.engine.temporal_logic.core.lexer.lexer import register_grammar
+    from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
+
+    t_id  = T.regex(r'[A-Za-z_][A-Za-z0-9_]*')
+    t_num = T.regex(r'[0-9]+')
+
+    GRAMMAR = {
+        "greet": ("greet:", t_id("who"), ["<count>"], ";"),
+        "count": (t_num("n"),),
+    }
+
+    class Greet:
+        def __init__(self, who, count):
+            self.who, self.count = who, count
+        def __repr__(self):
+            return "Greet(%r, count=%r)" % (self.who, self.count)
+
+    def make_greet(node):
+        """RETURN: Greet, the typed product of one 'greet' statement:
+                  its addressee text and its repeat count (1 when
+                  omitted).
+        """
+        return Greet(who   = node["who"].text,
+                     count = node[1].or_else(1))
+
+    def make_count(node):
+        """RETURN: int, the repeat count parsed from the 'count' rule."""
+        return int(node["n"].text)
+
+    register_grammar(GRAMMAR)
+    g = Grammar(GRAMMAR,
+                transformers={"greet": make_greet, "count": make_count},
+                start="greet")
+    reporter  = DiagnosticReporter()
+    file_node = EngineParser("greet: World 3 ; greet: Moon ;",
+                             reporter, g).parse()
+    reporter.abort_if_fatal()
+    for product in file_node.items:
+        print(product)
+
+Output:
+
+    Greet('World', count=3)
+    Greet('Moon', count=1)
+
+Reading the factory against the CST shape laws: "greet:" and ";" are
+silent and leave no entry; the surviving children are [Token(who),
+OPT_Node] -- role access reads the addressee, positional access reads the
+inline optional slot, or_else() supplies the default. The one-element
+optional ["<count>"] holds count's product (an int) directly.
+
+-------------------------------------------------------------------------------
+POINTERS
+-------------------------------------------------------------------------------
+
+    README.txt                           topology and per-file mechanics
+    RATIONALE.txt                        settled core decisions (C-)
+    ../../language/ast_map.py            the raw-map + load-gate pattern
+                                         at full scale
+    ../../language/rule_parser.py        a complete facade (compile-once,
+                                         no import side effects, single
+                                         file-root exit)
+    TEST/                                the HWUT pattern in use
+===============================================================================

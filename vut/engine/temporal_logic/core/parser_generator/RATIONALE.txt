@@ -55,6 +55,61 @@ COST (load-bearing, kept)
     every positional factory to unwrap); folding the role into terminal identity
     (breaks NON-IDENTITY above).
 
+
+===============================================================================
+A-NA  ABSENCE AS A TYPED SINGLETON (NodeAbsent)                     [RATIFIED FR]
+===============================================================================
+
+PROBLEM
+    OPT is the only grammar shape whose admissible, expected outcomes include
+    "no node at all". Present -> a node (possibly itself structureless). Absent
+    -> nothing, a legitimate result, not an error. OPT needs a value that MEANS
+    absence. The value was bare None (OptMap absent arm), while the CST reduce
+    used a separate ABSENT sentinel for "body produced no surviving value". Two
+    tokens for one idea, meeting in the present-but-empty OPT_Node where the
+    sentinel leaked into the AST. None is also overloaded (missing slot, failed
+    lookup) and carries no relation to the CST world.
+
+DISTINCTION
+    Absence and emptiness are different KINDS and must not be confusable:
+      - OPT: outcome is a node OR absence. Absence = the whole node is gone.
+      - STAR/PLUS and every node with children: outcome is ALWAYS a list (or the
+        node). Empty body -> empty list, length 0 -- present-and-empty, NOT
+        absent. A list of NodeAbsent elements is still a list of a certain
+        length. There is no "the whole list vanished" case.
+    Absence is an OPT-only phenomenon; emptiness is a STAR/PLUS/structured
+    phenomenon.
+
+DECISION
+    NodeAbsent: a singleton-like typed value meaning exactly "an OPT that did not
+    fire". Unlike bare None it carries the relation to the CST world, so wherever
+    it surfaces it is unambiguous.
+      - OptMap absent arm returns NodeAbsent (was None). A-13 restated: absent ->
+        the typed absence value, non-negotiable, no author parameter.
+      - ABSENT and None-for-OPT-absence unify into the ONE noun NodeAbsent
+        (terminological invariance). The CST-internal "empty body" marker and the
+        AST-level "OPT absent" value are the same typed singleton.
+      - OPT present arm UNCHANGED: presence gates, the leaf fires, and it now runs
+        on an unambiguous NodeAbsent when the body was empty (this is what makes
+        the present-but-silent case blessable -- opt_factory).
+      - STAR/PLUS/structured nodes UNTOUCHED: they never yield the absence
+        singleton at top level; it appears only as an OPT result or a child slot.
+
+COST
+    - test-ast-map-router opt_absent GOOD regenerated (absent -> NodeAbsent).
+    - test-ast-map-router opt_factory GOOD regenerated and blessed; disc-1
+      (opt-present-empty-body) closed.
+    - test-cst absent_optional / silent_optional GOOD regenerated (pure rename).
+    - A behaviour change (None -> NodeAbsent) plus a rename (_Absent/_NodeAbsent,
+      ABSENT/NodeAbsent) swept tree-wide, tests and docstrings included.
+
+GRAVEYARD
+    - Rejected: keep bare None for OPT absence. Overloaded; no CST relation;
+      forces every consumer to disambiguate None-the-absence from None-the-slot.
+    - Rejected: suppress the present arm when child is empty (collapse-to-None).
+      Wrong -- a fired optional IS present; the fix is a typed value, not hiding
+      the present arm.
+
 ===============================================================================
 END
 ===============================================================================

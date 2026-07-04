@@ -14,11 +14,11 @@ branch, how many repetitions -- is preserved.
 Five node kinds mirror the five authoring operators (combinators.py):
 
     OR_Node    an alternation. 'triggered_index' names which branch matched;
-               'child' is that branch's reduced value, or ABSENT when the
+               'child' is that branch's reduced value, or NodeAbsent when the
                matched branch produced no surviving value (an all-silent
                branch).
     OPT_Node   an optional. 'present' is True iff the optional fired; 'child'
-               is the body's surviving reduced value, or ABSENT when none
+               is the body's surviving reduced value, or NodeAbsent when none
                survived (not fired, or fired over an all-silent body).
                Presence is a STATE of the node, marked on it, never inferred
                from a missing slot downstream.
@@ -38,7 +38,7 @@ anonymous (name=None) inline node is interpreted by the enclosing rule's
 transformer from its own positional knowledge, so it needs no name of its own.
 
 Leaf values inside children/items/child are Tokens (captured terminals),
-OpaqueTerminals (opaque spans), or the already-reduced CST/AST nodes
+or the already-reduced CST/AST nodes
 of child rules. The nodes are frozen dataclasses, so a consumer may hold and
 compare them freely; they hold REFERENCES to already-reduced children (bottom-up
 reduction finishes a child before its parent is built), never copies.
@@ -50,43 +50,15 @@ from .operator_interface import (OR_Interface, OPT_Interface, SEQ_Interface,
                                   PLUS_Interface, STAR_Interface)
 
 
-@dataclass(frozen=True)
-class OpaqueTerminal:
-    """A captured OPAQUE terminal: the engine's result of absorbing a '{ ... }'
-    span. The opaque counterpart to a Token -- where a Token captures an
-    ordinary terminal, this captures one the rule language does not parse.
-
-    'text' is the span content the finder reported (delimiters included). The
-    finder API is minimalist: it reports raw content -- text now, possibly an
-    offset+length or a url later -- and this terminal carries whatever it
-    reported, opening OpaqueLeaf's reference-kind openness at the finder
-    boundary without coupling the engine to any one form.
-
-    'begin' is provenance: the absolute source offset, as Token.begin is.
-
-    'mode' is the terminal's span-mode ROLE: which way the oracle parses the
-    content (e.g. EXPRESSION vs STATEMENT_BLOCK). It rides on the terminal
-    DEFINITION (T.opaque(mode)), distinct from the positional role hint (D-18)
-    that the reduce-time router reads -- different attachment point, different
-    consumer. Kept language-neutral: any object exposing qualified_name()/name.
-
-    The engine builds THIS (its own type); the reduce action makes ast.OpaqueLeaf
-    from it. No world type is named by the engine.
-    """
-    text:  str
-    begin: int
-    mode:  object
-
-
-class _Absent:
+class _NodeAbsent:
     """The sentinel a node's 'child' holds when a position produced no value.
 
-    A single module-global instance, ABSENT, exported below. OPT_Node.child IS
-    ABSENT when the optional did not fire OR fired over an all-silent body
-    (read 'present' for which); OR_Node.child is ABSENT when the matched
+    A single module-global instance, NodeAbsent, exported below. OPT_Node.child IS
+    NodeAbsent when the optional did not fire OR fired over an all-silent body
+    (read 'present' for which); OR_Node.child is NodeAbsent when the matched
     branch was all-silent. A distinct type (not None) so a genuinely
     None-valued child -- should a transformer ever produce one -- is not
-    mistaken for absence. Truthy-falsy: ABSENT is falsey, so 'if node.child:'
+    mistaken for absence. Truthy-falsy: NodeAbsent is falsey, so 'if node.child:'
     reads as "the position produced a value".
     """
     __slots__ = ()
@@ -98,13 +70,13 @@ class _Absent:
         return cls._instance
 
     def __repr__(self):
-        return "ABSENT"
+        return "NodeAbsent"
 
     def __bool__(self):
         return False
 
 
-ABSENT = _Absent()
+NodeAbsent = _NodeAbsent()
 
 
 @dataclass(frozen=True)
@@ -112,7 +84,7 @@ class OR_Node(OR_Interface):
     """An alternation and the branch that matched.
 
     'triggered_index' is the 0-based index of the matched branch within the
-    grammar's alternation; 'child' is that branch's reduced value, or ABSENT
+    grammar's alternation; 'child' is that branch's reduced value, or NodeAbsent
     when the matched branch produced no surviving value (an all-silent branch).
     'role' is the advisory role string the matched branch carried (D-19), or
     None for an untagged branch -- the role-keyed routing address parallel to
@@ -128,7 +100,7 @@ class OR_Node(OR_Interface):
 
     @property
     def or_child(self):
-        """RETURN: object, the matched branch's reduced value (ABSENT if none)."""
+        """RETURN: object, the matched branch's reduced value (NodeAbsent if none)."""
         return self.child
 
     def route_key(self, address):
@@ -148,9 +120,9 @@ class OPT_Node(OPT_Interface):
     """An optional position and whether it fired.
 
     'present' is True iff the optional fired. 'child' is the body's surviving
-    reduced value, or ABSENT when none survived -- exactly OR_Node's child
+    reduced value, or NodeAbsent when none survived -- exactly OR_Node's child
     semantics, so a FIRED optional over an all-silent body is present=True,
-    child=ABSENT, distinguishable from absent. Presence is read off 'present',
+    child=NodeAbsent, distinguishable from absent. Presence is read off 'present',
     never inferred from the parent's child count -- the parent SEQ keeps a
     stable slot either way. 'name' is the rule name, or None for an inline
     optional. 'begin' is the construct's start offset (the frame's begin).
@@ -167,7 +139,7 @@ class OPT_Node(OPT_Interface):
         optional slot, named so the call site states intent ('params =
         node[1].or_else([])') instead of re-deriving 'present'/'child' (D-19).
         An optional that FIRED over an all-silent body is present with
-        child=ABSENT; callers wanting that distinction read '.present' directly.
+        child=NodeAbsent; callers wanting that distinction read '.present' directly.
         """
         return self.child if self.present else default
 
@@ -200,66 +172,40 @@ class SEQ_Node(SEQ_Interface):
         return self.children
 
     def __getitem__(self, address):
-        """RETURN: object, the child at 'address' -- positional, role-asserted, or role-searched.
+        """RETURN: object, the child at 'address' -- by position, or by role.
 
-        Three address forms, ONE operator:
-          int i            POSITIONAL. 'self.children[i]', raising IndexError out
-                           of range as the tuple does; a missing slot is a
-                           structural bug worth surfacing. The default address:
-                           position is the natural identity of a sequence, and
-                           captured-terminal index drift is cured at source by
-                           SILENCING non-value tokens, not by routing around them.
-          (int i, str r)   POSITIONAL with a ROLE ASSERTION. Returns children[i]
-                           and ASSERTS slot i carried role r in the grammar; on
-                           mismatch raises AssertionError naming expected vs found,
-                           at the read, in grammar vocabulary. A drift smoke-
-                           detector: an inserted/removed token that shoves a
-                           different-role node into slot i fails LOUDLY here rather
-                           than silently corrupting the AST downstream. It catches
-                           the common, coarse drift (role-at-slot changed) and the
-                           same-TYPE transposition a type check misses, since
-                           distinct positions carry distinct roles even when their
-                           node classes coincide. It does NOT catch slots sharing a
-                           role, untagged slots (role None), or drift one level
-                           inside an OPT_Node -- 'sometimes', by design; the GOOD
-                           suite stays the total guard. Position still addresses;
-                           the role only VERIFIES -- so a role may repeat across
-                           slots (uniqueness is irrelevant to an assertion that
-                           names its own index).
-          str r            ROLE SEARCH. The single surviving child whose position
-                           carried role r, or None if none does (a wrong/absent
-                           role reads None, never raises -- D-19). Retained ONLY
-                           for the forced case where a value-bearing terminal
-                           cannot be silenced because its spelling is shared with a
-                           rule that reads its text (the container-type angle
-                           bracket '<'/'>', shared with the comparison operators):
-                           there the scaffolding stays captured and DictType/
-                           ListType locate key/value/element by role. Lenient on
-                           miss (None), OPPOSITE the assertion form's strict raise
-                           -- a search finding nothing is a legitimate absence; an
-                           assertion failing is a structural lie.
-        An ABSENT OPTIONAL is NOT a None return -- the optional position survives
-        as an OPT_Node(present=False) at its slot, returned normally; its absence
-        is read off '.present', never conflated with a missing-role None.
+        Two address forms, ONE operator:
+          int i   POSITIONAL. 'self.children[i]', raising IndexError out of
+                  range as the tuple does; a missing slot is a structural bug
+                  worth surfacing. The machinery's address form (routers,
+                  generic walks): position is the natural identity of a
+                  sequence.
+          str r   BY ROLE. The single child whose position carried role r in
+                  the grammar -- the factory's address form. STRICT: a role the
+                  sequence does not carry raises AssertionError naming the
+                  requested role and the roles this node DOES carry. Role
+                  meaning is scoped to the rule, and per-SEQ role uniqueness is
+                  a compile-time law (RoleUniquenessError), so within its rule
+                  a role names exactly one position: a miss is never a
+                  legitimate absence, it is a misspelled or misplaced read --
+                  a factory bug, surfaced at the read, in grammar vocabulary.
+        An absent OPTIONAL is NOT a missing role -- the optional position
+        SURVIVES at its slot, with its role, as an OPT_Node(present=False),
+        and is returned normally by either form; absence is read off
+        '.present' (routed to NodeAbsent by OptMap), never conflated with a
+        role the rule does not have.
         """
         if isinstance(address, int):
             return self.children[address]
-        if isinstance(address, tuple):
-            index, role = address
-            child = self.children[index]
-            found = self.roles[index]
-            if found != role:
-                raise AssertionError(
-                    "role assertion failed at slot %d: expected %r, found %r"
-                    % (index, role, found))
-            return child
         if not isinstance(address, str):
-            raise TypeError("SEQ_Node index must be int (positional), "
-                            "(int, str) (positional + role assertion), or str "
-                            "(role search); got %r" % type(address).__name__)
+            raise TypeError("SEQ_Node index must be int (positional) or str "
+                            "(by role); got %r" % type(address).__name__)
         hits = [v for v, r in zip(self.children, self.roles) if r == address]
         if not hits:
-            return None
+            raise AssertionError(
+                "role %r is not carried by this %r sequence; it carries %r"
+                % (address, self.name,
+                   tuple(r for r in self.roles if r is not None)))
         if len(hits) > 1:
             raise ValueError("role %r is ambiguous: %d positions carry it"
                              % (address, len(hits)))

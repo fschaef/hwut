@@ -1,0 +1,9 @@
+open: physics.motors {
+    engine_ready: bool;
+}
+open: physics.motors {
+    fuel_low: bool;
+}
+open: physics {
+    gravity: float;
+}

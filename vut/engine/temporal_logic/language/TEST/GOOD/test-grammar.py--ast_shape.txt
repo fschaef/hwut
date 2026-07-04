@@ -1,0 +1,64 @@
+
+--- minimal causality ---
+source: 'button_pressed => light_on;'
+ModuleRoot
+  .items:
+    NodeList [1]
+      Causality
+        .cause:
+          Cause
+            .target:
+              ReferenceLeaf button_pressed
+            .args:
+              NodeAbsent
+            .guard:
+              NodeAbsent
+        .effects:
+          NodeList [1]
+            Effect marker='=>'
+              .action:
+                Spawn
+                  .call:
+                    Call
+                      .name:
+                        ReferenceLeaf light_on
+                      .args:
+                        NodeAbsent
+                  .every:
+                    NodeAbsent
+                  .handle:
+                    NodeAbsent
+
+--- guarded causality ---
+source: 'MOTOR_ON when: c.fuel == 0 => stop;'
+ModuleRoot
+  .items:
+    NodeList [1]
+      Causality
+        .cause:
+          Cause
+            .target:
+              ReferenceLeaf MOTOR_ON
+            .args:
+              NodeAbsent
+            .guard:
+              BinOp op='=='
+                .lhs:
+                  ReferenceLeaf c.fuel
+                .rhs:
+                  ConstantLeaf int '0'
+        .effects:
+          NodeList [1]
+            Effect marker='=>'
+              .action:
+                Spawn
+                  .call:
+                    Call
+                      .name:
+                        ReferenceLeaf stop
+                      .args:
+                        NodeAbsent
+                  .every:
+                    NodeAbsent
+                  .handle:
+                    NodeAbsent

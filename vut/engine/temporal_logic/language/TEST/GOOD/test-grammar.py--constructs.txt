@@ -1,0 +1,22 @@
+
+--- construct parse coverage ---
+causality        OK
+guarded          OK
+def_cause        OK
+cause_ref        OK
+behavior         OK
+recurring        OK
+aspect           OK
+character        OK
+namespace        OK
+import           OK
+command_block    OK
+match            OK
+foreach          OK
+exit_region      OK
+comprehension    OK
+data_access      OK
+ternary_chain    OK
+aggregates       OK
+clockwork        OK
+namespaced_ref   OK
