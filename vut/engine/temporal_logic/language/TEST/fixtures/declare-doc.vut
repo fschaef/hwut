@@ -1,0 +1,6 @@
+"""The demo module: one documented behaviour."""
+"""Drives the rover at a fixed gain."""
+behavior: drive(gain) { GO => move; }
+X => go;
+"""Documents nothing -- misplaced."""
+Y => stop;

@@ -1,0 +1,15 @@
+
+--- lifecycle (run-lifecycle.vut) ---
+enter  polling
+recur  poll every 0.5s
+enter  master
+event  start
+tick   0.5s poll
+event  poll
+tick   1.0s poll
+event  poll
+event  mute
+cancel poller
+event  start
+event  stop
+exit   polling

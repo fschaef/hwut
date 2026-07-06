@@ -68,8 +68,11 @@ The factory forms:
 
 Lexing needs no separate spec: the token scanner is generated from the
 terminal database plus the registered grammar's string keywords, in seven
-fixed tiers (README.txt, THE PARTS, token_spec()). '##' starts a comment;
-whitespace separates; '{' and '}' are ordinary tokens.
+fixed tiers (README.txt, THE PARTS, token_spec()). '#' comments to end of
+line; '#' + one-or-more non-newline whitespace + '{' opens a block comment
+closed by the BALANCING '}' (braces nest by counting; unterminated is
+reported at the opener). Whitespace separates; '{' and '}' outside
+comments are ordinary tokens.
 
 -------------------------------------------------------------------------------
 3. WRITING THE GRAMMAR

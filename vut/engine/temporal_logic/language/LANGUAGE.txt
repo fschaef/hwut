@@ -33,10 +33,31 @@ aspects.
 Every keyword is colon-terminated; the colon is part of the keyword.
 
     cause:  behavior:  aspect:  character:  is:  has:  when:
-    if:  elif:  else:  match:  case:  foreach:  int:  float:  step:  from:
+    if:  elif:  else:  match:  case:  for:  int:  float:  step:  from:  start:
     break:  continue:  dropto:  exit:  every:  as:  in:  with:
     open:  import:  clockwork:  groove:  beat:
-    open:  import:
+
+Exception -- operator and type words are BARE:
+
+    and  or  not  in  true  false  struct  list  dict
+
+"in" is therefore a taken word: no identifier may be named "in".
+
+(1.2) Docstrings
+-----------------------------------------------------------------------------
+A DOCSTRING is a triple-quoted string -- three double-quotes on each side --
+and may span lines. It PRECEDES what it documents:
+
+    """Watches the motor temperature and shuts down on overheat."""
+    behavior: guard(threshold = 90.0) {
+        hot(threshold) => shutdown;
+    }
+
+A docstring may document a character, an aspect, a behaviour, or a named
+cause. A docstring that precedes no definition is the MODULE docstring and
+stands as the very first item of the file -- anywhere else it is an error.
+Docstrings carry documentation only: they take no part in execution and do
+not enter the export surface.
 
 (1.2) Blocks are brace-delimited
 --------------------------------
@@ -61,7 +82,7 @@ anchored in an event — an ephemeral entity of receivable change.
     button_pressed => light_on;
 
 GRAMMAR
-    "<causality>": ("<cause>", PLUS("<effect>"))
+    "<causality>": ("<cause>", "<effects>")
 
 (2.1) Cause
 -----------
@@ -74,8 +95,15 @@ GRAMMAR
     "<cause-explicit>": ("<event>", ["when:", "<condition>"])
 
 A cause may be named, parameterised, and referenced. The default parameter type
-is float. A named cause CONTAINS its guard; a use site supplies arguments, not a
-second guard.
+is float. A parameter may carry a VALUE DEFAULT (Python behaviour):
+
+    <name> [: <type>] [= <algebraic>]
+
+A use supplies every parameter WITHOUT a default, each at most once,
+positionals before named arguments; a named argument names a declared
+parameter. A BARE name is a reference, not a call -- no argument judgement
+attaches. A named cause CONTAINS its guard; a use site supplies arguments,
+not a second guard.
 
     cause: OPERATION_IMPOSSIBLE(fuel_limit, battery_limit)
         MOTOR_ON when: c.fuel <= fuel_limit or c.battery < battery_limit;
@@ -94,8 +122,19 @@ An effect is a marker followed by a target or a command-block.
     "=x=>"  deactivate
 
 GRAMMAR
-    "<effect>":        ("<effect-marker>", ("<call>", OR, "<code(causality)>"))
+    "<effects>":       ("<effect-marker>",
+                        (("<code(causality)>", ["<effects>"]),
+                         OR,
+                         ("<spawn>", (";", OR, "<effects>"))))
     "<effect-marker>": ("=>", OR, "=x=>")
+
+TERMINATOR LAW: ";" terminates a statement or effect; "}" terminates itself
+-- never "};". The chain is right-recursive: the FINAL effect decides -- a
+block-final causality ends at its "}", a spawn-final causality takes ";".
+
+    E => go => stop;            spawn-final: ";"
+    E => { c.n += 1; }          block-final: ends at "}"
+    E => { c.n += 1; } => go;   block mid-chain, spawn-final: ";"
 
 "=x=> X" is well-formed iff X is deactivable:
 
@@ -185,13 +224,22 @@ CONDITION — produces a truth.
     operators  and or not      grouping ( )
     primary    bare condition-valued data-access | comparison | true | false
 
-COLLECTION — a value sort with no operators; constructed by a comprehension
-    (see 4.3) and consumed by foreach:, an index base, a comprehension from:,
-    an argument, or a mutation right-hand side. Never operated on.
+COLLECTION — a value sort with no arithmetic operators; constructed by a
+    comprehension (see 4.3) and consumed by for:, an index base, a
+    comprehension from:, an argument, or a mutation right-hand side.
+    Compared for equality (STRUCTURAL) and searched with "in".
 
-BRIDGES (the only crossings, between number and truth)
+STRING — a quoted literal ("…") or a string member; no operator world of its
+    own. Compared with == / != and searched with "in" (substring). A string
+    literal is an expression atom.
+
+BRIDGES (the only crossings into truth)
     comparison   algebraic {== != < <= > >=} algebraic -> condition
                  chaining allowed:  a < b < c  ==  a < b and b < c
+    equality     two like values {== !=} -> condition; collections and
+                 strings compare STRUCTURALLY (element-wise, character-wise)
+    membership   <value> {in | not in} <collection or string> -> condition
+                 element of a list, KEY of a dict, substring of a string
     ternary      condition ? algebraic : algebraic -> algebraic
 
 A guard ("when:"), an "if:"/"elif:" test, and a "match:" scrutinee comparison
@@ -212,7 +260,7 @@ Every member access names its binding; there is no leading-dot form.
 -----------------
 Data-access reaches a value out of a structure: a binding-qualified name or a
 call, followed by zero or more index steps. It is the place layer the value
-worlds, the mutation lvalue, the foreach: source, and the comprehension from:
+worlds, the mutation lvalue, the for: source, and the comprehension from:
 all draw on. An lvalue is a data-access, so an indexed place is assignable.
 
     c.fuel              base only
@@ -268,7 +316,7 @@ Statements:
                     or glob (string-wildcard); optional default "case: _".
                     Unmatched with no default is a no-op.
 
-    foreach:        foreach: <var> in: <collection> { … }
+    for:            for: <var> in: <collection> { … }
                     binds <var> to each element (element only, no index).
 
     count loop      <count-type>: <var> = <algebraic> .. <algebraic> [step: <algebraic>] { … }
@@ -277,7 +325,14 @@ Statements:
                     range operator; default step +1; "step:" sets it (negative
                     counts down). The counter is a bare local.
 
-A loop variable (foreach:'s var, or the count loop's typed counter) is a bare local name, scoped to its loop
+    enumeration     <count-type>: <i> with: <x> from: <iterable> [start: <i0>] { … }
+                    the count loop's enumeration arm: <i> counts in the
+                    counter's type from <i0> (default 0) while <x> walks the
+                    iterable -- index and element, paired. Both are bare
+                    locals.
+
+A loop variable (for:'s var, the count loop's typed counter, the
+enumeration's index and element) is a bare local name, scoped to its loop
 body, never escaping it.
 
 (5.1) Loop control

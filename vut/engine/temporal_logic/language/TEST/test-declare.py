@@ -7,7 +7,7 @@ PURPOSE: Test the DECLARE unit -- the ParsedModule -> DeclaredModule
          live in fixtures/; paths print as basenames so the dump is
          byte-stable across checkouts.
 
-CHOICES: gate, exports, reopen, duplicates.
+CHOICES: gate, exports, reopen, duplicates, docstrings.
 
            gate        A parsed module carrying parser diagnostics is REFUSED:
                        declare_module raises (F-6 strict, ratified (a));
@@ -118,6 +118,29 @@ def run_duplicates():
     dump(*declare_fixture("declare-dup.vut"))
 
 
+def run_docstrings():
+    """RETURN: None, always. Locks D-18/SEMANTICS 22 over declare-doc.vut:
+              the module docstring seats on the root, a documented
+              behaviour exports exactly as an undocumented one (docstrings
+              never enter the surface), and the one MISPLACED docstring --
+              preceding no definition, not first in the file -- draws the
+              rejection while declaration continues.
+    """
+    banner("docstrings (declare-doc.vut)")
+    reporter = DiagnosticReporter()
+    parsed = parse_module(
+        SourceModule(path=os.path.join(FIXTURES, "declare-doc.vut")),
+        reporter)
+    declared = declare_module(parsed, reporter)
+    print("module doc: %r" % parsed.file_node.doc.text)
+    for qualified, entry in declared.export_db:
+        print("  %-20s %s" % (".".join(qualified), entry.kind))
+    print("diagnostics: %d" % len(reporter.errors))
+    for d in reporter.errors:
+        print("  %s [%s] %s" % ("REJECT" if d.fatal else "WARN  ",
+                                d.tag, d.message))
+
+
 HwutRunner(
     argv       = sys.argv,
     title      = "Declare Unit (export_db, F-6 gate, SEMANTICS 18)",
@@ -126,5 +149,6 @@ HwutRunner(
         "exports":    run_exports,
         "reopen":     run_reopen,
         "duplicates": run_duplicates,
+        "docstrings": run_docstrings,
     },
 ).run()

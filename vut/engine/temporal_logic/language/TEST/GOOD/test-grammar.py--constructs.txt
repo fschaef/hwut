@@ -12,11 +12,14 @@ namespace        OK
 import           OK
 command_block    OK
 match            OK
-foreach          OK
+for_loop         OK
+enumeration      OK
 exit_region      OK
 comprehension    OK
 data_access      OK
 ternary_chain    OK
 aggregates       OK
+documented       OK
+strings_in       OK
 clockwork        OK
 namespaced_ref   OK

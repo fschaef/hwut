@@ -1,6 +1,6 @@
 
 --- all rejections (elab-rejects.vut; import peer NOT supplied) ---
-diagnostics: 14  (has_fatal: True)
+diagnostics: 16  (has_fatal: True)
   REJECT [NAME] import 'lib/gone.vut' cannot be mounted: no declared peer supplied for this path (declaration-first, SEMANTICS 12)
   REJECT [GUARD] a lifecycle cause (~ENTRY) takes no guard (SEMANTICS 5)
   REJECT [GUARD] a use of named cause 'hot' supplies arguments, not a second guard (SEMANTICS 2)
@@ -11,8 +11,10 @@ diagnostics: 14  (has_fatal: True)
   REJECT [STRUCTURE] lvalue head 's' is read-only: arguments are never written (SEMANTICS 9)
   REJECT [STRUCTURE] lvalue 'loose' is not binding-qualified: a mutation writes a member, head in {e, b, a, c} (SEMANTICS 9)
   REJECT [NAME] unresolved reference 'mystery': every reference resolves or rejects; a raw event is legitimate only as a cause or emission target (SEMANTICS 19)
+  REJECT [GUARD] division by a possibly-zero denominator requires an 'else:' fault handler (SEMANTICS 21; handler surface pending)
+  REJECT [GUARD] division by a possibly-zero denominator requires an 'else:' fault handler (SEMANTICS 21; handler surface pending)
   REJECT [NAME] required parameter 'threshold' of 'hot' not supplied (SEMANTICS 20)
   REJECT [NAME] too many arguments for 'hot': 1 parameter(s) declared (SEMANTICS 20)
   REJECT [NAME] 'level' names no parameter of 'hot' (parameters: threshold) (SEMANTICS 20)
   REJECT [NAME] unresolved reference 'mystery_type': every reference resolves or rejects; a raw event is legitimate only as a cause or emission target (SEMANTICS 19)
-elaboration stayed total: 25 recipes seated
+elaboration stayed total: 33 recipes seated

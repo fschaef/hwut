@@ -68,7 +68,7 @@ are pass-2.)
 
 (6) Loop-variable locality                                     [REJECT, R-13]
 -----------------------------------------------------------------------------
-A foreach: loop variable or a count-loop typed counter (int:/float: v = a .. b) is a bare local, scoped to its loop body; it
+A for: loop variable, a count-loop typed counter (int:/float: v = a .. b), or the enumeration arm's index-and-element pair (D-17) is a bare local, scoped to its loop body; it
 does not escape and does not shadow a binding-qualified name (no e./b./a./c./s.
 head). A comprehension's destructuring variables are likewise local to the
 comprehension.
@@ -114,7 +114,7 @@ is link's business.
 (10) Collections                                               [REJECT, R-17]
 -----------------------------------------------------------------------------
 A collection is a value sort with no operators: constructed by a comprehension
-(or literal), consumed by foreach:, an index base, a comprehension from:, an
+(or literal), consumed by for:, an index base, a comprehension from:, an
 argument, or a mutation RHS. The semantic unit rejects any attempt to operate on
 a collection (there is no collection algebra yet). A comprehension's generators
 chain left-to-right; each may carry an "if:" filter.
@@ -285,3 +285,22 @@ declared parameter is rejected; more positionals than parameters is
 rejected. Targets without a declared surface -- raw events, bindings,
 locals, residue-navigated members -- are never judged here. Argument TYPES
 (the sort layer) are deliberately not this entry's.
+
+(21) Division requires a fault handler                     [REJECT, pass-10]
+-----------------------------------------------------------------------------
+A division ("/" or "/=") whose denominator is not PROVABLY NONZERO -- a
+nonzero numeric constant, optionally negated -- may divide by zero at run
+time and therefore requires the "else:" fault handler (the let-else form,
+without the let). The handler SURFACE IS PENDING: until it lands in the
+grammar, such a division is rejected outright. A constant nonzero
+denominator ("x / 2", "x /= -4.0") needs no handler and passes silently.
+The check is elaborate's, over every algebraic expression and mutation.
+
+(22) Docstring placement                                   [REJECT, pass-11]
+-----------------------------------------------------------------------------
+A docstring (three-double-quote boundaries, multi-line) PRECEDES the
+definition it documents: a character, an aspect, a behaviour, or a named
+cause; it rides that definition's product. A docstring that precedes no
+definition is the MODULE docstring and is lawful only as the file's very
+first item. Anywhere else a bare docstring documents nothing and is
+rejected. Docstrings are inert to execution and to the export surface.

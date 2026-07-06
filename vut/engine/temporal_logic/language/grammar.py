@@ -71,6 +71,25 @@ D-12 Terminator law: ';' terminates a statement/effect; '}' terminates
 D-13 emit-step takes ';' (a clockwork statement among ';'-terminated
      statements) -- resolves the pass-1 doc mismatch in the DOCUMENT'S
      favour.
+D-14 String literals enter the expression grammar (an atom branch): guards
+     and mutations compare and carry strings.
+D-15 The membership operator: 'x in c' and 'x not in c' join the comparison
+     tier (op-cmp). Bare 'in' becomes a captured keyword string; 'not'
+     stays silent everywhere. Equality over containers is structural
+     (semantics side; the grammar was already sufficient).
+D-16 'foreach:' is renamed 'for:' (rule 'code/for', node For) -- one
+     iteration verb.
+D-17 The count loop gains the ENUMERATION arm:
+     '<type>: i with: x from: <iterable> [start: i0]' -- i counts in the
+     counter's type from i0 (default 0), x walks the iterable; the '='
+     range arm and the 'with:' arm split LL(2)-clean on the token after
+     the counter name.
+D-18 DOCSTRINGS: a triple-quoted string (three double-quotes on each
+     side, multi-line) PRECEDES the definition it documents (character,
+     aspect, behavior, named cause); a docstring followed by no definition
+     is the MODULE docstring, lawful only as the file's first item
+     (SEMANTICS 22). The terminal is declared before the plain string so a
+     triple quote lexes as one docstring token.
      Role meaning is scoped to the rule that applies it; per-SEQ uniqueness is
      the engine's compile-time law, and factory role access is STRICT (a role
      the rule does not carry raises at the read). A misspelled role therefore
@@ -100,6 +119,7 @@ from ..core.parser_generator.ll2_grammar_spec import T
 # Numeric literals: float BEFORE int (maximal munch, R-13/R-4).
 t_re_float   = T.regex(r'\d+\.\d+')
 t_re_int     = T.regex(r'\d+')
+t_re_doc     = T.regex(r'"""(?:[^"]|"(?!""))*"""')  # D-18: BEFORE t_re_string
 t_re_string  = T.regex(r'"[^"]*"')
 t_re_id      = T.regex(r'[a-zA-Z_]\w*')
 
@@ -173,6 +193,7 @@ t_kw_else    = T.captured("~ELSE")
 # null emit target (R-20): "=> ~NONE" emits nothing, passes one tick. ~NONE is
 # an emit TARGET only, never a trigger. Named like the ~ reserved-event family.
 t_kw_none    = T.captured("~NONE")
+t_kw_in      = T.captured("in")       # D-15: the membership operator
 
 # == built-in type keywords (declarations, has:) ==============================
 t_kw_int     = T.captured("int")
@@ -200,7 +221,19 @@ GRAMMAR = {
     "top-level":  ("<character(character)>", OR, "<aspect(aspect)>", OR, "<behavior(behavior)>",
                    OR, "<causality(causality)>", OR, "<causality/def-cause(cause-def)>",
                    OR, "<declaration(declaration)>",
-                   OR, "<namespace(namespace)>", OR, "<import(import)>"),
+                   OR, "<namespace(namespace)>", OR, "<import(import)>",
+                   OR, "<documented(documented)>"),                    # D-18
+
+    # == documented definition (D-18): a docstring PRECEDES its subject ======
+    # """...""" character:/aspect:/behavior:/cause: -- the docstring rides the
+    # subject's product ('doc' field). A docstring whose next token opens no
+    # definition is the MODULE docstring (first item of the file, by law
+    # SEMANTICS 22 -- the parser admits it anywhere top-level, the semantic
+    # layer holds the first-position law).
+    "documented": (t_re_doc("doc"),
+                   [("<character(character)>", OR, "<aspect(aspect)>",
+                     OR, "<behavior(behavior)>",
+                     OR, "<causality/def-cause(cause-def)>")]),
 
     # == namespace (R-18, §8): a named scope; nests unrestricted ==============
     # open: <dotted> { ... }  -- brace-delimited (R-12; replaces the prior :close).
@@ -294,11 +327,13 @@ GRAMMAR = {
         # (chaining allowed: a < b < c == a < b and b < c).
         "cmp":      ("<add>", STAR(("<op-cmp>", "<add>"))),
         "op-cmp":   (t_op_eq, OR, t_op_ne, OR, t_op_le,
-                     OR, t_op_ge, OR, t_op_lt, OR, t_op_gt),
+                     OR, t_op_ge, OR, t_op_lt, OR, t_op_gt,
+                     OR, t_kw_in, OR, (t_kw_not, t_kw_in)),  # D-15
         "add":      ("<mul>", STAR(("<op-add>", "<mul>"))),
         "mul":      ("<un>",  STAR(("<op-mul>", "<un>"))),
         "un":       ([t_op_sub], "<atom>"),
         "atom":     ("<group(group)>", OR, "<number(literal)>",
+                     OR, t_re_string("literal-string"),    # D-14
                      OR, t_kw_true, OR, t_kw_false,
                      OR, "<data-access(operand)>"),
         "group":    ("(", "<expr>", ")"),
@@ -317,7 +352,7 @@ GRAMMAR = {
     # == data-access (R-16, D-4): the place layer below the value worlds ======
     # Reaches a value out of a structure: a name (bare / dotted / bound), an
     # optional call-argument list, then chained index steps. Consumed by the
-    # value world, by the mutation lvalue, by the foreach: source, and by the
+    # value world, by the mutation lvalue, by the for: source, and by the
     # comprehension from:. An lvalue IS a data-access; pass-2 restricts the
     # lvalue head to a binding (SEMANTICS 9).
     "data-access": {
@@ -328,7 +363,7 @@ GRAMMAR = {
 
     # == collection (R-17): a third value SORT -- construct & consume only =====
     # No operators, no bridges (R-4 unchanged). Constructed by a comprehension
-    # (or a literal); consumed by foreach:/index-base/from:/argument/RHS.
+    # (or a literal); consumed by for:/index-base/from:/argument/RHS.
     "collection": {
         TOP:            ("<comprehension>",),
         # [ element  with: vars from: src [if: cond]  ... ]   (chained generators)
@@ -342,7 +377,7 @@ GRAMMAR = {
 
     # == command-block (R-6, R-13, R-14): imperative body; no event emission ==
     # Subspace: the statement world. TOP is the command-block. ONE statement
-    # tier: every loop is bounded by definition (foreach:, from:/to:) -- there is
+    # tier: every loop is bounded by definition (for:, from:/to:) -- there is
     # no unbounded while: -- and exit: is forward-only (targets a LATER label),
     # so no statement can diverge or form a back-edge. The command-block admits
     # statements and closes in an optional tail ladder of EXIT-LABELS.
@@ -358,7 +393,7 @@ GRAMMAR = {
         TOP:            ("{", STAR("<statement>"), "}"),
 
         "statement":    ("<mutation(mutation)>", OR, "<if(if)>", OR, "<match(match)>",
-                         OR, "<foreach(foreach)>", OR, "<count(count)>",
+                         OR, "<for(for)>", OR, "<count(count)>",
                          OR, "<break(break)>", OR, "<continue(continue)>", OR, "<dropto(dropto)>",
                          OR, "<exit-label>"),
 
@@ -386,17 +421,21 @@ GRAMMAR = {
         "pattern":      ("<number(literal)>", OR, "<range(range)>", OR, t_re_glob("glob"), OR, t_kw_wild),
         "range":        ("<number>", "to:", "<number>"),
 
-        # -- foreach (R-13, bounded): iterate a collection; var is a local --
-        "foreach":      ("foreach:", t_re_id("var"), "in:", "<coll-source>", "<block>"),
+        # -- for (R-13, bounded, D-16): iterate a collection; var is a local --
+        "for":          ("for:", t_re_id("var"), "in:", "<coll-source>", "<block>"),   # D-16
         "coll-source":  ("<data-access(access)>", OR, "<collection(comprehension)>"),
 
         # -- counting loop (R-13, bounded): a TYPED counter declared inline.
         #    <count-type>: <id> = <begin> .. <end> [step: <step>] { ... }
         #    The counter is a typed bare local; bounds/step are algebraic;
         #    inclusive; default step +1 (negative step counts down).
-        "count":        ("<count-type>", t_re_id("var"), t_op_assign,
-                         "<algebr>", t_op_range, "<algebr>",
-                         ["step:", "<algebr>"], "<block>"),
+        "count":        ("<count-type>", t_re_id("var"),
+                         ((t_op_assign, "<algebr>", t_op_range, "<algebr>",
+                           ["step:", "<algebr>"]),
+                          OR,                                          # D-17
+                          ("with:", t_re_id("item"), "from:",
+                           "<coll-source>", ["start:", "<algebr>"])),
+                         "<block>"),
         # -- count-type: the counter's type. Role-bearing so the semantic unit
         #    routes the counter type; extensible (more numeric types later).
         #    "int:"/"float:" (colon, R-11) are distinct from the bare type names

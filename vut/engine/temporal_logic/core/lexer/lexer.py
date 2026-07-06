@@ -162,7 +162,11 @@ def _generate_token_spec():
         # framing handled explicitly below
 
     spec = []
-    spec.append((t_fr_comment, r'##[^\n]*'))                          # tier 1
+    # Comment skip: the LINE form only. The BLOCK form ('#' + non-newline
+    # whitespace + '{', braces NESTING to the balancing '}') cannot be a
+    # regex group -- nesting counts -- and is intercepted by Lexer.next()
+    # BEFORE the scanner runs (see _BLOCK_OPEN / _block_comment_end).
+    spec.append((t_fr_comment, r'#[^\n]*'))                           # tier 1
     spec.append((t_fr_ws,      r'\s+'))
 
     for t in sorted(leading, key=order):                             # tier 2
@@ -303,6 +307,38 @@ class SourceMap:
         return line, column
 
 
+# Block-comment opener: '#', one or more NON-NEWLINE whitespace, '{'. A '#'
+# not fitting this shape comments to end of line (the tier-1 spec pattern).
+# Intercepted in Lexer.next() before the scanner: the block body needs BRACE
+# COUNTING (nesting), which no regex group expresses.
+_BLOCK_OPEN = re.compile(r'#[^\S\n]+\{')
+
+
+def _block_comment_end(source, brace_pos):
+    """RETURN: int, the index just past the '}' balancing the '{' at
+              'brace_pos' if the block closes within 'source',
+              -1, else (end of text reached with braces still open).
+
+    Braces NEST by counting: every '{' deepens, every '}' shallows; the block
+    ends where the depth returns to zero. Balanced rule-code inside the block
+    -- including further '# {' openers, whose '{' counts like any other --
+    is therefore commented out whole.
+    """
+    depth = 1
+    i     = brace_pos + 1
+    n     = len(source)
+    while i < n:
+        ch = source[i]
+        if ch == '{':
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0:
+                return i + 1
+        i += 1
+    return -1
+
+
 class Lexer:
     """Pull-driven tokenizer for one rule-file text under parser control.
 
@@ -326,14 +362,28 @@ class Lexer:
         RETURN: Token, the next token; END_OF_FILE at text end.
 
         '{' and '}' are ordinary tokens. A MISMATCH is reported non-fatal and
-        returned so the parser can resync. WS and '##' comments are consumed
-        silently.
+        returned so the parser can resync. WS and comments are consumed
+        silently; a BLOCK comment ('# {', braces nesting to the balancing
+        '}') is intercepted here, before the scanner. An UNTERMINATED block
+        comment is reported non-fatal at its opener and consumes to text end.
         """
         scanner = _scanner()
         from ..parser_generator.ll2_grammar_spec import t_fr_comment, t_fr_ws, \
             t_fr_mismatch, t_fr_eof
         skip = {t_fr_comment, t_fr_ws}
         while self.cursor < self.length:
+            opener = _BLOCK_OPEN.match(self.source, self.cursor)
+            if opener is not None:
+                end = _block_comment_end(self.source, opener.end() - 1)
+                if end < 0:
+                    self._report(self.cursor,
+                                 "unterminated block comment ('# {' without "
+                                 "a balancing '}')", fatal=False)
+                    self.cursor = self.length
+                    break
+                self.cursor = end
+                continue
+
             match = scanner.match(self.source, self.cursor)
             # mismatch ('.') matches any non-newline; whitespace ('\\s+') matches
             # newlines. A None match cannot occur while cursor < length.

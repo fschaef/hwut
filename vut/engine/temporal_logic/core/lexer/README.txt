@@ -30,7 +30,9 @@ THE PARTS  (all in lexer.py)
                    Terminal object that produced it; there is no
                    hand-maintained token-id enum and no author-supplied
                    precedence number. The tiers, in emission order:
-                     1. skip groups: '##' comment, whitespace framing
+                     1. skip groups: '#' line comment, whitespace
+                        framing ('# {' block comments are intercepted
+                        in Lexer.next(), not spec entries)
                      2. leading-colon string keywords (':end'), ':word\b'
                      3. trailing-colon string keywords ('mode:'),
                         '\bword', longest-first
@@ -56,7 +58,11 @@ THE PARTS  (all in lexer.py)
 DATA FLOW  (one next() call)
 -------------------------------------------------------------------------------
 
-    cursor --scanner.match--> matched group --_GROUP_OF--> Terminal
+    cursor --_BLOCK_OPEN.match--> '# {' opener?
+        yes: _block_comment_end counts braces to the balancing '}';
+             consume silently, continue (unterminated: non-fatal
+             Diagnostic at the opener, consume to text end)
+        no:  scanner.match --> matched group --_GROUP_OF--> Terminal
         skip group?        consume silently, continue
         mismatch?          report non-fatal Diagnostic, return the Token
         otherwise          return Token(kind, value, begin, end)

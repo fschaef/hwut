@@ -29,6 +29,7 @@ ______________________________________________________________________________
 """
 from dataclasses import dataclass
 
+from ..core.parser_generator.cst_nodes import NodeAbsent
 from ..core.symbol.ast import (Node, NodeList, ConstantLeaf, ConstantKind,
                                ReferenceLeaf, DeclarationLeaf)
 
@@ -166,9 +167,12 @@ class Spawn(Node):
 
 @dataclass(frozen=True)
 class DefCause(Node):
-    """A named cause definition (R-5): 'cause:' signature cause-explicit ';'."""
+    """A named cause definition (R-5): 'cause:' signature cause-explicit ';'.
+    'doc' carries the preceding docstring (D-18), NodeAbsent when none.
+    """
     signature: Node
     cause:     Node
+    doc:       object = NodeAbsent
 
 
 # == definitions (R-7, R-10) ==================================================
@@ -218,6 +222,7 @@ class Character(Node):
     signature: Signature
     is_:       NodeList
     has:       NodeList
+    doc:       object = NodeAbsent      # preceding docstring (D-18)
 
 
 @dataclass(frozen=True)
@@ -230,6 +235,7 @@ class Aspect(Node):
     is_:       NodeList
     has:       NodeList
     body:      Node
+    doc:       object = NodeAbsent      # preceding docstring (D-18)
 
 
 @dataclass(frozen=True)
@@ -240,6 +246,7 @@ class Behavior(Node):
     is_:         NodeList
     has:         NodeList
     causalities: NodeList
+    doc:         object = NodeAbsent    # preceding docstring (D-18)
 
 
 # == command block (R-6, R-13, R-14) ==========================================
@@ -307,9 +314,9 @@ class Wildcard(Node):
 
 
 @dataclass(frozen=True)
-class Foreach(Node):
-    """The bounded collection loop (R-13): 'var' is a DeclarationLeaf, local to
-    the loop (SEMANTICS 6).
+class For(Node):
+    """The bounded collection loop 'for: var in: source' (R-13, D-16): 'var'
+    is a DeclarationLeaf, local to the loop (SEMANTICS 6).
     """
     var:    DeclarationLeaf
     source: Node
@@ -318,8 +325,9 @@ class Foreach(Node):
 
 @dataclass(frozen=True)
 class Count(Node):
-    """The bounded counting loop (R-13): a TYPED counter ('type_' is 'int' or
-    'float'), inclusive bounds, optional 'step' (NodeAbsent -> +1).
+    """The bounded counting loop, range arm (R-13): a TYPED counter ('type_'
+    is 'int' or 'float'), inclusive bounds, optional 'step'
+    (NodeAbsent -> +1).
     """
     type_: str
     var:   DeclarationLeaf
@@ -327,6 +335,20 @@ class Count(Node):
     hi:    Node
     step:  object                       # Node | NodeAbsent
     block: CommandBlock
+
+
+@dataclass(frozen=True)
+class CountWith(Node):
+    """The counting loop's ENUMERATION arm (D-17): 'index' counts in the
+    counter's type from 'start' (NodeAbsent -> 0), 'var' walks the iterable
+    source; both are DeclarationLeafs, loop-local (SEMANTICS 6).
+    """
+    type_:  str
+    index:  DeclarationLeaf
+    var:    DeclarationLeaf
+    source: Node
+    start:  object                      # Node | NodeAbsent
+    block:  CommandBlock
 
 
 @dataclass(frozen=True)
@@ -479,6 +501,9 @@ class Import(Node):
 @dataclass(frozen=True)
 class ModuleRoot(Node):
     """The typed root of one rule-file: the top-level products in source order.
-    What finalize_file yields and ParsedModule.file_node holds.
+    What finalize_file yields and ParsedModule.file_node holds. 'doc' is the
+    MODULE docstring -- the file's first item when written (D-18,
+    SEMANTICS 22) -- NodeAbsent when none.
     """
     items: NodeList
+    doc:   object = NodeAbsent

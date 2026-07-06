@@ -49,6 +49,7 @@ from dataclasses import dataclass, field
 
 from ..core.diagnostic import DiagnosticReporter, Diagnostic, Phase
 from .module_states import ParsedModule, DeclaredModule
+from ..core.symbol.ast import ConstantLeaf
 from . import ast_nodes as A
 
 
@@ -182,6 +183,9 @@ def _declare_items(items, scope, db, reporter):
                 deep = deep + (segment,)
             _declare_items(item.items, scope=deep, db=db, reporter=reporter)
             continue
+        if isinstance(item, ConstantLeaf) and str(item.kind) == "docstring":
+            _reject_misplaced_doc(reporter, item)          # SEMANTICS 22
+            continue
         name, kind = _declared_name(item)
         if name is None:
             continue                       # anonymous (causality): no export
@@ -234,6 +238,22 @@ def _is_absent(value):
               (NodeAbsent) -- the one test the member harvest needs."""
     from ..core.parser_generator.cst_nodes import NodeAbsent
     return value is NodeAbsent
+
+
+def _reject_misplaced_doc(reporter, leaf):
+    """RETURN: None, always. The SEMANTICS-22 rejection: a docstring that
+              precedes no definition is the MODULE docstring and lawful only
+              as the file's very first item -- anywhere else it documents
+              nothing.
+    """
+    reporter.report(Diagnostic(
+        phase=Phase.SEMANTIC,
+        message="misplaced docstring: a docstring precedes the definition "
+                "it documents, or stands first in the file as the module "
+                "docstring (SEMANTICS 22)",
+        source_offset=leaf.begin,
+        fatal=True,
+        tag="STRUCTURE"))
 
 
 def _duplicate(reporter, qualified, item):

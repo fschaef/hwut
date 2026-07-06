@@ -42,6 +42,8 @@ CST SHAPE LAWS the factories are written against (probed, engine-verified):
     - Silent terminals leave no child; captured and regex terminals survive
       as Tokens at their slots.
 """
+import dataclasses
+
 from ..core.parser_generator.ast_map_family import (
     SeqMap, OrMap, OptMap, StarMap, PASS)
 from ..core.parser_generator.ll2_grammar_spec import SEQ_Spec
@@ -145,12 +147,37 @@ def make_command_block(seq_node):
     return A.CommandBlock(statements=_list(seq_node[0]))
 
 
+def make_documented(n):
+    """RETURN: Node, the documented subject with its docstring seated (a
+              definition product carrying the doc leaf, D-18), if the
+              docstring precedes a definition.
+              ConstantLeaf of kind 'docstring', else -- a candidate MODULE
+              docstring; finalize_file seats the file's FIRST one, declare
+              rejects any other placement (SEMANTICS 22).
+
+    The doc leaf's text is the string BETWEEN the triple quotes, verbatim;
+    its offset is the opening quote's.
+    """
+    token = n[0]
+    leaf = ConstantLeaf.from_text(text=token.text[3:-3], kind="docstring",
+                                  begin=token.begin)
+    subject_opt = n[1]
+    if not subject_opt.present:
+        return leaf
+    subject = subject_opt.child.child
+    return dataclasses.replace(subject, doc=leaf)
+
+
 def make_module_root(star_node):
     """RETURN: ModuleRoot, the typed file product over the engine's
               STAR_Node('<file>') -- finalize_file's input (the file loop is
               the engine's, not a rule: transformers never see it).
     """
-    return A.ModuleRoot(items=NodeList(tuple(star_node.items)))
+    items = tuple(star_node.items)
+    if items and isinstance(items[0], ConstantLeaf) \
+            and str(items[0].kind) == "docstring":
+        return A.ModuleRoot(items=NodeList(items[1:]), doc=items[0])
+    return A.ModuleRoot(items=NodeList(items))
 
 
 # == per-rule factories =======================================================
@@ -373,24 +400,36 @@ def make_range(n):
     return A.Range(lo=n[0], hi=n[1])
 
 
-def make_foreach(n):
-    """RETURN: Foreach, from 'foreach: var in: source block' -- the var
+def make_for(n):
+    """RETURN: For, from 'for: var in: source block' (D-16) -- the var
               DECLARES, loop-local (SEMANTICS 6).
     """
-    return A.Foreach(var=_decl_tok(n["var"]), source=n[1], block=n[2])
+    return A.For(var=_decl_tok(n["var"]), source=n[1], block=n[2])
 
 
 def make_count(n):
-    """RETURN: Count, from 'type: var = lo .. hi [step: s] block' -- the
-              count-type rule reduces to its fired Token ('int:'/'float:');
-              '=' and '..' are captured, so the slots run ct=0, var=1, '='=2,
-              lo=3, '..'=4, hi=5, step=6, block=7; the step-body is
-              SEQ(algebr,).
+    """RETURN: Count | CountWith, from the two counter arms (D-17): the '='
+              RANGE arm ('type: var = lo .. hi [step: s] block'; '=' and
+              '..' captured, so its branch slots run '='=0, lo=1, '..'=2,
+              hi=3, step=4) or the 'with:' ENUMERATION arm ('type: var
+              with: item from: source [start: i0] block'; 'with:'/'from:'
+              silent, so its slots run item=0, source=1, start=2). Each
+              optional body is SEQ(algebr,).
     """
-    return A.Count(type_=n[0].text.rstrip(":"), var=_decl_tok(n["var"]),
-                   lo=n[3], hi=n[5],
-                   step=_opt(n[6], ctor=lambda body: body[0]),
-                   block=n[7])
+    type_ = n[0].text.rstrip(":")
+    counter = _decl_tok(n["var"])
+    branch = n[2]
+    body = branch.child
+    if branch.triggered_index == 0:
+        return A.Count(type_=type_, var=counter,
+                       lo=body[1], hi=body[3],
+                       step=_opt(body[4], ctor=lambda b: b[0]),
+                       block=n[3])
+    return A.CountWith(type_=type_, index=counter,
+                       var=_decl_tok(body["item"]),
+                       source=body[1],
+                       start=_opt(body[2], ctor=lambda b: b[0]),
+                       block=n[3])
 
 
 def make_dropto(n):
@@ -505,6 +544,27 @@ def make_listing(n):
     return NodeList((n[0],) + tuple(it[0] for it in n[1].items))
 
 
+class _NotIn:
+    """RETURN: never constructed by callers directly -- the operator shim of
+              the 'not in' branch (D-15): 'not' is silent, so the fired
+              branch carries only the 'in' token; this shim presents the
+              chain folder the two-word operator text at the token's
+              position.
+    """
+
+    text = "not in"
+
+    def __init__(self, in_token):
+        self.begin = in_token.begin
+
+
+def make_not_in(child):
+    """RETURN: _NotIn, the operator value of a fired 'not in' branch -- the
+              branch body is SEQ(not-token, in-token), both captured (D-15).
+    """
+    return _NotIn(child[0])
+
+
 def make_named_arg(child):
     """RETURN: NamedArg, from the fired 'name = value' branch -- '='
               captured at slot 1.
@@ -550,7 +610,7 @@ AST_MAP = {
     # -- top level -------------------------------------------------------
     "top-level":     {("character", "aspect", "behavior", "causality",
                        "cause-def", "declaration", "namespace",
-                       "import"): PASS},
+                       "import", "documented"): PASS},
     "namespace":     make_namespace,
     "import":        make_import,
     "name-dotted":   make_name_dotted,
@@ -577,12 +637,14 @@ AST_MAP = {
     "expr/and":    _fold_chain,
     "expr/not":    make_not,
     "expr/cmp":    _fold_chain,
-    "expr/op-cmp": {(0, 1, 2, 3, 4, 5): PASS},
+    "expr/op-cmp": {(0, 1, 2, 3, 4, 5, 6): PASS,
+                    7: make_not_in},
     "expr/add":    _fold_chain,
     "expr/mul":    _fold_chain,
     "expr/un":     make_un,
     "expr/atom":   {("group", "literal", "operand"): PASS,
-                    (2, 3): (lambda t: _const(t, A.K_BOOL))},
+                    "literal-string": (lambda t: _const(t, A.K_STRING)),
+                    (3, 4): (lambda t: _const(t, A.K_BOOL))},
     "expr/group":  lambda n: n[0],
     "expr/op-add": {(0, 1): PASS},
     "expr/op-mul": {(0, 1): PASS},
@@ -606,7 +668,7 @@ AST_MAP = {
 
     # -- command block -----------------------------------------------------
     "code":            make_command_block,
-    "code/statement":  {("mutation", "if", "match", "foreach", "count",
+    "code/statement":  {("mutation", "if", "match", "for", "count",
                          "break", "continue", "dropto"): PASS,
                         8: PASS},
     "code/block":      make_command_block,
@@ -621,7 +683,8 @@ AST_MAP = {
                         "glob": (lambda t: _const(t, A.K_GLOB)),
                         3: (lambda t: A.Wildcard())},
     "code/range":       make_range,
-    "code/foreach":     make_foreach,
+    "documented":       make_documented,
+    "code/for":         make_for,
     "code/coll-source": {("access", "comprehension"): PASS},
     "code/count":       make_count,
     "code/count-type":  {(0, 1): PASS},

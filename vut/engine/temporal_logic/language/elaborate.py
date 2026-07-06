@@ -48,6 +48,10 @@ SETTLED CHECKS carried by the same walk (one descent, one context):
                    draws the WARN remark -- uniformly, local and mounted
                    (abstractness rides the export)
     SEMANTICS 19   unresolved reference / unknown first-level member
+    SEMANTICS 21   a DIVISION whose denominator is not provably nonzero (a
+                   nonzero constant, optionally negated) requires the
+                   'else:' fault handler; the handler surface is PENDING --
+                   until it lands, such a division REJECTS outright.
     SEMANTICS 20   the PYTHON ARGUMENT LAW (D-11): a PARENTHESISED use of a
                    resolved parameterised target supplies every parameter
                    without a default, exactly once, positionals before named,
@@ -418,6 +422,8 @@ class _Walk:
         """
         match node:
             case A.Mutation():
+                if node.op == "/=":
+                    self._division(node.rhs)
                 self.lvalue(node.lvalue)
                 self.expr(node.rhs)
             case A.If():
@@ -433,7 +439,7 @@ class _Walk:
                         self.expr(case.pattern.lo)
                         self.expr(case.pattern.hi)
                     self.block(case.block, outermost=False, exits=exits)
-            case A.Foreach():
+            case A.For():
                 self.expr(node.source)
                 with self._frame({node.var.segments[0]: "local"}):
                     self.block(node.block, outermost=False, exits=exits)
@@ -443,6 +449,13 @@ class _Walk:
                 if node.step is not NodeAbsent:
                     self.expr(node.step)
                 with self._frame({node.var.segments[0]: "local"}):
+                    self.block(node.block, outermost=False, exits=exits)
+            case A.CountWith():
+                self.expr(node.source)
+                if node.start is not NodeAbsent:
+                    self.expr(node.start)
+                with self._frame({node.index.segments[0]: "local",
+                                  node.var.segments[0]: "local"}):
                     self.block(node.block, outermost=False, exits=exits)
             case A.DropTo():
                 label = node.label.segments[0]
@@ -540,6 +553,8 @@ class _Walk:
         """
         match node:
             case A.BinOp():
+                if node.op == "/":
+                    self._division(node.rhs)
                 self.expr(node.lhs)
                 self.expr(node.rhs)
             case A.Not() | A.Neg():
@@ -685,6 +700,22 @@ class _Walk:
                                 "(SEMANTICS 20)"
                                 % (parameter.name, ".".join(access.target)))
 
+    def _division(self, denominator):
+        """RETURN: None, always. The SEMANTICS-21 check on one division: a
+                  denominator that is PROVABLY NONZERO -- a nonzero numeric
+                  constant, optionally negated -- passes; anything else may
+                  be zero at run time and requires the 'else:' fault
+                  handler, whose surface is pending: until it lands, the
+                  division REJECTS.
+        """
+        if _provably_nonzero(denominator):
+            return
+        offset = getattr(denominator, "begin", 0)
+        self._reject_at(offset, "GUARD",
+                        "division by a possibly-zero denominator requires an "
+                        "'else:' fault handler (SEMANTICS 21; handler "
+                        "surface pending)")
+
     def _local(self, segments):
         """RETURN: Access, a local-frame hit for the head segment (innermost
                   frame first) with the remaining segments as residue, if any
@@ -754,6 +785,19 @@ class _Walk:
     def _reject_at(self, offset, tag, message):
         """RETURN: None, always. One REJECT through the reporter."""
         _reject(self.reporter, offset, tag, message)
+
+
+def _provably_nonzero(node):
+    """RETURN: bool, True exactly when 'node' is a numeric constant whose
+              value is not zero, possibly under negation -- the one
+              denominator shape SEMANTICS 21 admits without a handler.
+    """
+    if isinstance(node, A.Neg):
+        return _provably_nonzero(node.operand)
+    from ..core.symbol.ast import ConstantLeaf
+    if isinstance(node, ConstantLeaf) and str(node.kind) in ("int", "float"):
+        return float(node.text) != 0.0
+    return False
 
 
 def _reject(reporter, offset, tag, message):

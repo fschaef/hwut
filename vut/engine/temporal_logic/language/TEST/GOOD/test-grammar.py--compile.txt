@@ -2,7 +2,7 @@
 --- load-time gates ---
 compiled: no LL(2) conflict; role uniqueness, AST-map coverage and AST-map kind gates passed (D-10)
 start symbol: top-level
-rule count: 87
+rule count: 88
 
 --- rule inventory (flattened, sorted) ---
    algebr
@@ -37,7 +37,7 @@ rule count: 87
    code/count-type
    code/dropto
    code/exit-label
-   code/foreach
+   code/for
    code/if
    code/lvalue
    code/match
@@ -60,6 +60,7 @@ rule count: 87
    decl-arg
    decl-block
    declaration
+   documented
    expr
    expr/add
    expr/and

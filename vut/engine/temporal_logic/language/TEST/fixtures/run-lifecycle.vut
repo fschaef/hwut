@@ -1,0 +1,8 @@
+behavior: polling {
+    ~ENTRY => poll() every: 0.5 as: poller;
+    mute =x=> poller;
+}
+behavior: master {
+    start => polling;
+    stop =x=> polling;
+}

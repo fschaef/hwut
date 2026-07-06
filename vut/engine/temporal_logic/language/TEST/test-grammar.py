@@ -79,7 +79,8 @@ SNIPPETS = [
                    "        case: 1 to: 5 { c.b = 2; }\n"
                    '        case: "ab*" { c.g = 3; }\n'
                    "        case: _ { c.d = 4; }\n    }\n}"),
- ("foreach",       "X => { foreach: v in: c.items { c.sum += v; } }"),
+ ("for_loop",      "X => { for: v in: c.items { c.sum += v; } }"),
+ ("enumeration",   "X => { int: i with: x from: c.items start: 2 { c.sum += i * x; } }"),
  ("exit_region",   "SOMETHING => {\n"
                    "    c.h = acquire_a();\n"
                    "    if: not c.h.ok  { dropto: fail; }\n"
@@ -99,6 +100,11 @@ SNIPPETS = [
  ("aggregates",    "X => { c.q = 1; }\nbehavior: B has: {\n"
                    "    buffer: list;\n    scores: dict;\n"
                    "    point: struct { x; y; };\n} { E => F; }"),
+ ("documented",    '"""Watches the motor and shuts down on overheat."""\n'
+                   'behavior: guard(threshold = 90.0) { hot => shutdown; }'),
+ ("strings_in",   'X when: e.tag == "sensor_7" => { c.hit = 1.0; }\n'
+                   'Y when: e.v in c.items => f;\n'
+                   'Z when: e.v not in c.items and "ens" in c.tag => g;'),
  ("clockwork",     "aspect: Poller {\n"
                    "    clockwork: c.tick {\n"
                    "        => sample();\n"

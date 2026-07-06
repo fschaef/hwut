@@ -1,0 +1,23 @@
+behavior: worker has: { total: float; label: float; items: list; } {
+    go => {
+        int: i = 1 .. 5 step: 2 { b.total += i; }
+        b.items[0] = 1.0;
+        b.items[1] = 2.0;
+        for: v in: [ x * 10.0 with: x from: b.items if: x > 1.5 ] {
+            b.total += v;
+        }
+        int: k with: x from: b.items start: 10 { b.total += k + x; }
+        if: e.n > 2 { b.total *= 2.0; } else: { b.total = 0.0; }
+        dropto: done;
+        b.total = 999.0;
+        exit: done;
+        b.label = 1.0;
+    }
+    classify => {
+        match: e.code {
+            case: 7 { b.label = 7.0; }
+            case: 10 to: 50 { b.label = 30.0; }
+            case: _ { b.label = 99.0; }
+        }
+    }
+}

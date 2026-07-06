@@ -1,0 +1,6 @@
+
+--- docstrings (declare-doc.vut) ---
+module doc: 'The demo module: one documented behaviour.'
+  drive                behavior
+diagnostics: 1
+  REJECT [STRUCTURE] misplaced docstring: a docstring precedes the definition it documents, or stands first in the file as the module docstring (SEMANTICS 22)
