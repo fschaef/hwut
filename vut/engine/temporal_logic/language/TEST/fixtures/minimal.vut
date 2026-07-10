@@ -1,7 +1,7 @@
 ## minimal rule file: one causality, one guarded causality, one behavior
 button_pressed => light_on;
 MOTOR_ON when: c.fuel == 0 => lighten_fuel_missing;
-behavior: Polling {
+Polling : behavior {
     ~ENTRY       => poll_sensors() every: 0.5 as: poller;
     stop_pressed =x=> poller;
 }

@@ -1,13 +1,13 @@
 import: "lib/gone.vut" as: gone
-cause: hot(threshold) temp_high when: e.value > threshold;
+hot : cause(threshold) temp_high when: e.value > threshold;
 ~ENTRY when: c.x > 0 => a;
 hot(5) when: c.y > 0 => b;
-behavior: bad(gain) is: nowhere {
-    F => { if: c.q > 0 { exit: inner; } dropto: later; exit: early; dropto: early; }
+bad : behavior(gain) is: nowhere {
+    F => { if: c.q > 0 { :inner: } dropto: later; :early: dropto: early; }
     G => { s.gain = 1; loose = 2; c.v = mystery; }
     K => { c.v = c.a / 2; c.v = c.a / c.b; c.v /= c.b; }
     H => hot();
     I => hot(1, 2);
-    J => hot(1, level = 3);
+    J => hot(1, level => 3);
 }
 z: mystery_type;

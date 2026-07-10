@@ -2,31 +2,24 @@
 --- load-time gates ---
 compiled: no LL(2) conflict; role uniqueness, AST-map coverage and AST-map kind gates passed (D-10)
 start symbol: top-level
-rule count: 88
+rule count: 83
 
 --- rule inventory (flattened, sorted) ---
    algebr
    arg
-   aspect
-   aspect-body
-   behavior
-   behavior-list
+   aspect-tail
+   behavior-def
+   behavior-tail
    call
    causality
    causality/cause
    causality/cause-explicit
-   causality/def-cause
    causality/effect-marker
    causality/effects
    causality/event
    causality/spawn
-   character
-   clockwork
-   clockwork/clock-arm
-   clockwork/clock-cause
-   clockwork/clockwork-statement
-   clockwork/emit-step
-   clockwork/groove
+   cause-tail
+   character-tail
    code
    code/block
    code/break
@@ -81,12 +74,14 @@ rule count: 88
    list-decl
    name-dotted
    name-ref
+   named-item
    namespace
    number
    numeric
+   panel
    parens-arg
    parens-decl
-   signature
+   signal-decl
    top-level
    type
    type-built-in

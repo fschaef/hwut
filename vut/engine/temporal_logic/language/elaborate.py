@@ -31,7 +31,7 @@ ALWAYS (the spine contract): the resolution law, first hit wins:
         and mounted alike; deeper residue and residue under a binding travel
         to link (SEMANTICS 19).
     (4) RAW EVENT -- only at a CAUSE TARGET or an EMISSION TARGET (an
-        effect's spawn, a clockwork emit): a name resolving to nothing there
+        effect's spawn): a name resolving to nothing there
         IS a raw event (R-1), recipe kind 'event', no diagnostic.
         ANYWHERE ELSE a name resolving to nothing is a REJECT (SEMANTICS 19):
         every reference resolves or rejects.
@@ -281,22 +281,13 @@ class _Walk:
         for decl in node.has:
             frame[decl.name.segments[0]] = "local"
             self.type_of(decl.type_)
-        if isinstance(body, A.Clockwork):
-            body_items = (body,)
-        elif body is None:
-            body_items = ()
-        else:
-            body_items = tuple(body)
+        body_items = () if body is None else tuple(body)
         for inner in body_items:            # nested definitions join the frame
             if isinstance(inner, (A.Character, A.Aspect, A.Behavior)):
                 frame[inner.signature.name.segments[0]] = "local"
         with self._frame(frame):
             for inner in body_items:
-                if isinstance(inner, (A.Character, A.Aspect, A.Behavior,
-                                      A.Causality, A.DefCause)):
-                    self.item(inner)
-                else:
-                    self.clockwork(inner)
+                self.item(inner)
 
     def _params_of(self, signature):
         """RETURN: dict, one local frame holding the signature's parameter
@@ -367,7 +358,7 @@ class _Walk:
 
     def emission_target(self, call):
         """RETURN: Access, the recipe seated on an emission target (an
-                  effect's spawn or a clockwork emit): a raw event is
+                  effect's spawn): a raw event is
                   legitimate; a target resolving to an ABSTRACT definition --
                   local or mounted, the flag rides the export -- draws the
                   SEMANTICS-17 WARN remark; arguments check against a
@@ -494,54 +485,6 @@ class _Walk:
                 self._args(node.args)
             for step in node.steps:
                 self.expr(step)
-
-    # -- clockwork -----------------------------------------------------------------
-
-    def clockwork(self, node):
-        """RETURN: None, always. Walks a clockwork body: the tick cause, then
-                  every clockwork statement.
-        """
-        if not isinstance(node, A.Clockwork):
-            return
-        self.cause(node.tick)
-        for statement in node.statements:
-            self.clock_statement(statement)
-
-    def clock_statement(self, node):
-        """RETURN: None, always. Walks one clockwork statement: an emit's
-                  target is an emission; a groove walks arm by arm; a plain
-                  statement is a command in a nested context.
-        """
-        match node:
-            case A.EmitStep():
-                if not isinstance(node.target, A.EmitNone):
-                    self.emission_target(node.target)
-            case A.Groove():
-                for arm in node.arms:
-                    self.clock_arm(arm)
-            case _:
-                self.statement(node, exits=[])
-
-    def clock_arm(self, arm):
-        """RETURN: None, always. Walks one groove arm: its cause (a
-                  cause-explicit, the ~ELSE arm, or the tick-default), then
-                  its body of clockwork statements.
-        """
-        match arm:
-            case A.ClockArm():
-                head = arm.cause
-                if isinstance(head, A.Cause):
-                    self.cause(head)
-                elif isinstance(head, A.ElseArm):
-                    if head.guard is not NodeAbsent:
-                        self.expr(head.guard)
-                elif isinstance(head, A.TickDefault):
-                    self.expr(head.cond)
-                for statement in arm.body:
-                    self.clock_statement(statement)
-            case A.BeatArm():
-                for statement in arm.body:
-                    self.clock_statement(statement)
 
     # -- expressions and types --------------------------------------------------------
 

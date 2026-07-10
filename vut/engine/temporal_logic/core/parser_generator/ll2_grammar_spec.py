@@ -296,9 +296,11 @@ def terminal_by_name(name):
 
 
 def merge_first2(set_a, set_b):
-    """Cross-multiplies two sets of lookahead tuples, capping length at 2.
-    
-    Handles partial token-sequence padding where short path sequences 
+    """RETURN: set, the FIRST_2 concatenation of 'set_a' then 'set_b': every
+              tuple of 'set_a' extended by tuples of 'set_b', capped at
+              length 2 (a length-2 tuple of 'set_a' passes through unchanged).
+
+    Handles partial token-sequence padding where short path sequences
     intersect with follow-up structures.
     """
     result = set()
@@ -327,7 +329,7 @@ class Rule_Spec(SpecNode):
     def __init__(self, name, action):
         self.name    = name
         self.action  = action
-        self.pattern = None        
+        self.pattern = None
         self.first   = set()       # Now holds tuples of lengths 1 and 2
 
     def __repr__(self):
@@ -585,7 +587,12 @@ class Tagged_Spec(Operator_Spec):
 # LL(2) conflict detection -- external worklist walk
 # ---------------------------------------------------------------------------
 def _first2_sets_iterative(pattern, grammar):
-    """Computes FIRST_2 sets iteratively without recursion to preserve C stack layers."""
+    """RETURN: dict, spec node -> its FIRST_2 set, for every node reachable
+              from 'pattern'.
+
+    Computed iteratively (an explicit worklist, no Python recursion), so a
+    pathologically deep grammar tree cannot overflow the interpreter stack.
+    """
     order = []
     work  = [pattern]
     while work:
@@ -601,7 +608,7 @@ def _first2_sets_iterative(pattern, grammar):
             first2[node] = node.first2_set(grammar)
             null[node]  = False
         elif isinstance(node, Rule_Spec):
-            first2[node] = set(node.first)        
+            first2[node] = set(node.first)
             null[node]  = node.nullable(grammar)
         elif isinstance(node, SEQ_Spec):
             if not node.branches:
@@ -625,7 +632,10 @@ def _first2_sets_iterative(pattern, grammar):
 
 
 def collect_alt_conflicts(pattern, rule_name, grammar):
-    """Detects distinct alternative paths that overlap on identical 2-token sequences."""
+    """RETURN: list, one conflict record per pair of alternation branches
+              (under 'rule_name') whose FIRST_2 sets share a 2-token
+              lookahead -- empty if the pattern is LL(2)-clean.
+    """
     first2 = _first2_sets_iterative(pattern, grammar)
     conflicts = []
     work = [pattern]
@@ -637,10 +647,10 @@ def collect_alt_conflicts(pattern, rule_name, grammar):
                 for lookahead_tuple in first2[branch]:
                     if not lookahead_tuple:
                         continue
-                    
+
                     # Pad out single dangling terminals to complete pair profiles
                     normalized = (lookahead_tuple[0], t_fr_eof) if len(lookahead_tuple) == 1 else lookahead_tuple
-                    
+
                     if normalized in seen:
                         conflicts.append(
                             "rule %s: 2-token lookahead (%s, %s) starts two OR branches"

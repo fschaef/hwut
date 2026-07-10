@@ -2,7 +2,7 @@
 
 RULE-FILE GRAMMAR -- formal spec of the settled language.
 
-Authority: LANGUAGE.txt (mechanics) and RATIONALE.txt (R-1..R-22, the why).
+Authority: LANGUAGE.txt (mechanics) and RATIONALE.txt (R-1..R-27, the why).
 This file is the formal grammar. Regions below carry ONE-LINE remarks naming the
 language element; full prose lives in LANGUAGE.txt, rationale in RATIONALE.txt.
 
@@ -36,8 +36,8 @@ D-3  Unified cause: (<name-ref> [args] | ~ENTRY | ~EXIT) [when: <condition>].
      DESIGN's cause = <cause-explicit> OR <call> shared arbitrary-length
      prefixes (both admit the same name tokens). One form now parses every
      cause; event-vs-cause-ref kind and the no-guard-on-a-cause-ref rule are
-     pass-2 (SEMANTICS 2, 5).  <cause-explicit> remains for the def-cause
-     body and the groove arm, where no <call> competes.
+     pass-2 (SEMANTICS 2, 5).  <cause-explicit> remains for the named-cause
+     tail (cause-tail, D-19), where no <call> competes.
 
 D-4  data-access base left-factored: <name-ref> [<parens-arg>].
      DESIGN's <name-bound> OR <call> made a bare bound name match both
@@ -90,6 +90,41 @@ D-18 DOCSTRINGS: a triple-quoted string (three double-quotes on each
      is the MODULE docstring, lawful only as the file's first item
      (SEMANTICS 22). The terminal is declared before the plain string so a
      triple quote lexes as one docstring token.
+D-19 NAME-FIRST definitions (F-4, ratified): '<name> : <kind-tail>' is the
+     ONE definition form -- 'ON : behavior { ... }', 'hot : cause(threshold)
+     ...', 'Rover : character(speed) is: ...'. The kind words character/
+     aspect/behavior/cause become BARE reserved words (the colon moved to the
+     head); the parameter list follows the kind word, so no name-led item
+     carries '(' before its ':' and the top level splits LL(2)-clean on token
+     two: ':' opens a named item (definition or declaration -- ONE factored
+     head, <named-item>, decided at the token after ':'), anything else is a
+     causality. '~' qualifies the kind word ('GENERAL : ~behavior'). The AST
+     is UNCHANGED: the factories reunite head name and tail parameters into
+     the same Signature product.
+D-20 A docstring before a top-level DECLARATION is parseable (a consequence
+     of D-19's factored head: the parser cannot split definition from
+     declaration at the docstring's optional). LANGUAGE 1.2 admits no such
+     subject; the semantic layer rejects it (SEMANTICS 22).
+D-21 The exit-label is spelled ':name:' (F-5 ruling, R-24): colon, name,
+     colon -- self-terminating (the second colon delimits, like '}'; no ';').
+     'dropto:' is unchanged; the keyword 'exit:' leaves the label duty and is
+     reserved for the work construct's fault egress. No lexer change: an
+     undeclared trailing-colon word falls apart into ID + bare ':', and the
+     bare ':' is the final-tier regex terminal.
+D-22 The tick-paced clockwork left the grammar (R-25): the aspect body is
+     behaviours-only again; the clockwork subspace (emit-step, groove,
+     clock-arm, beat:) and the reserved events ~ELSE/~NONE are removed.
+     'groove:' SURVIVES as a construct by ruling -- waiting is an essential
+     element of the forthcoming pull-driven clockwork -- and is reserved
+     (LANGUAGE 1.1) until that construct lands with the work integration.
+D-23 The aspect gains a PANEL (clockwork-style signature) in the kind
+     parens: '(knows: <decl-args> signals: <signal-decls>)' -- knows: are
+     the parameters (the former plain parens-decl), signals: the declared
+     fault set (recorded; checks land with the work construct).
+D-24 The named-argument binder is '=>' (C-1 ruling: 'port => value'), the
+     ONE direction-neutral port binder of the work construct's port-map
+     form -- '=' remains the declaration DEFAULT marker ('boost = 1' in a
+     parameter list). Supersedes D-11's call-site '='.
      Role meaning is scoped to the rule that applies it; per-SEQ uniqueness is
      the engine's compile-time law, and factory role access is STRICT (a role
      the rule does not carry raises at the read). A misspelled role therefore
@@ -184,15 +219,6 @@ t_op_colon   = T.regex(r':')
 t_kw_and     = T.captured("and")
 t_kw_or      = T.captured("or")
 t_kw_not     = T.captured("not")
-# clockwork reserved-event cause (R-20, R-22): named like ~ENTRY/~EXIT (R-10).
-# ~ELSE = the DEFAULT/fallthrough arm: fires when NO other arm matched (like
-# "case: _"), so it does not shadow specific arms. (No ~TICK: the groove is
-# already tick-paced, so a condition-only arm "when: <cond>" waking on the tick
-# is the tick-default; naming ~TICK was redundant.)
-t_kw_else    = T.captured("~ELSE")
-# null emit target (R-20): "=> ~NONE" emits nothing, passes one tick. ~NONE is
-# an emit TARGET only, never a trigger. Named like the ~ reserved-event family.
-t_kw_none    = T.captured("~NONE")
 t_kw_in      = T.captured("in")       # D-15: the membership operator
 
 # == built-in type keywords (declarations, has:) ==============================
@@ -218,22 +244,41 @@ GRAMMAR = {
 
     # == top level ============================================================
     # A rule-file is a sequence of definitions, causalities, scopes, and imports.
-    "top-level":  ("<character(character)>", OR, "<aspect(aspect)>", OR, "<behavior(behavior)>",
-                   OR, "<causality(causality)>", OR, "<causality/def-cause(cause-def)>",
-                   OR, "<declaration(declaration)>",
+    # D-19: every name-led ':' item (definition or declaration) parses through
+    # ONE factored rule, <named-item>; a top-level causality never carries ':'
+    # after its head name, so the two branches split LL(2)-clean on token two.
+    "top-level":  ("<named-item(named)>",
+                   OR, "<causality(causality)>",
                    OR, "<namespace(namespace)>", OR, "<import(import)>",
                    OR, "<documented(documented)>"),                    # D-18
 
-    # == documented definition (D-18): a docstring PRECEDES its subject ======
-    # """...""" character:/aspect:/behavior:/cause: -- the docstring rides the
-    # subject's product ('doc' field). A docstring whose next token opens no
-    # definition is the MODULE docstring (first item of the file, by law
-    # SEMANTICS 22 -- the parser admits it anywhere top-level, the semantic
-    # layer holds the first-position law).
-    "documented": (t_re_doc("doc"),
-                   [("<character(character)>", OR, "<aspect(aspect)>",
-                     OR, "<behavior(behavior)>",
-                     OR, "<causality/def-cause(cause-def)>")]),
+    # == named item (D-19, F-4): ONE definition form, name first =============
+    # <name> ':' <kind-tail>  -- "name is a <kind> about ...". The kind word is
+    # BARE (the colon moved to the head); parameters follow the kind word
+    # ('hot : cause(threshold) ...'), mirroring the has:-declaration
+    # 'name: type;', whose type-tail is the fifth branch: definition and
+    # top-level declaration are ONE head, decided at the token after ':'.
+    # '~' (abstract, R-10) qualifies the kind word; a named cause admits none.
+    "named-item": (t_re_id("name"), t_op_colon,
+                   ((["~"], "character", "<character-tail(character)>"),
+                    OR,
+                    (["~"], "aspect", "<aspect-tail(aspect)>"),
+                    OR,
+                    (["~"], "behavior", "<behavior-tail(behavior)>"),
+                    OR,
+                    ("cause", "<cause-tail(cause-def)>"),
+                    OR,
+                    ("<type(declaration)>", ";"))),
+
+    # == documented definition (D-18, D-20): a docstring PRECEDES its subject =
+    # """...""" <named-item> -- the docstring rides the subject's product
+    # ('doc' field). A docstring whose next token opens no named item is the
+    # MODULE docstring (first item of the file, by law SEMANTICS 22 -- the
+    # parser admits it anywhere top-level, the semantic layer holds the
+    # first-position law). D-20: the factored head makes a docstring before a
+    # top-level DECLARATION parseable; LANGUAGE 1.2 admits no such subject, so
+    # the semantic layer rejects it (SEMANTICS 22).
+    "documented": (t_re_doc("doc"), ["<named-item(named)>"]),
 
     # == namespace (R-18, §8): a named scope; nests unrestricted ==============
     # open: <dotted> { ... }  -- brace-delimited (R-12; replaces the prior :close).
@@ -249,28 +294,47 @@ GRAMMAR = {
     #    member access (R-9). It has no e./b./a./c./s. head.
     "name-dotted": (t_re_id("name"), STAR((".", t_re_id("name")))),
 
+    # == kind tails (D-19): what follows the kind word of a definition ========
+    # Each tail is the definition MINUS its head name: '(params)?' first (the
+    # parameter list rides the kind word: 'drive : behavior(gain) ...'), then
+    # the kind's own sections. The head name and '~' live in <named-item> /
+    # <behavior-def>; the factories reunite them into ONE Signature product
+    # (AST unchanged, D-19).
+
     # == character (R-7, R-10, §7): aggregates concurrent aspects in has: =====
-    "character":  (["~"], "character:", "<signature(signature)>",
+    "character-tail": (["<parens-decl>"],
                    ["is:", "<call(character)>", STAR((",", "<call(character)>"))],
                    ["has:", "<decl-block>"]),
 
-    # == aspect (R-7→R-16amend, R-10, R-20, §6): governs the one active behavior
+    # == aspect (R-7→R-16amend, R-10, R-25, §6): governs the one active behavior
     # No does:: the brace already delimits the body (R-12). An aspect body is
-    # EITHER the mutually-exclusive behaviour set OR a clockwork (R-20).
-    "aspect":     (["~"], "aspect:", "<signature(signature)>",
+    # the mutually-exclusive behaviour set (the tick-paced clockwork left the
+    # language, R-25/D-22; its successor rides the work construct). The panel
+    # (D-23) is the clockwork-style signature: "knows:" declares the
+    # parameters, "signals:" the declared fault set -- signals are RECORDED;
+    # their checks land with the work construct.
+    "aspect-tail": (["<panel>"],
                    ["is:", "<call(aspect)>", STAR((",", "<call(aspect)>"))],
                    ["has:", "<decl-block>"],
-                   "{", "<aspect-body(body)>", "}"),
-    # aspect-body: behaviours (XOR set) OR a clockwork (paced coroutine, R-20).
-    "aspect-body": ("<behavior-list(behaviors)>", OR, "<clockwork(clockwork)>"),
-    "behavior-list": (PLUS("<behavior>"),),
+                   "{", PLUS("<behavior-def>"), "}"),
+    # panel (D-23): sectioned signature -- both sections optional, order fixed.
+    "panel":       ("(", ["knows:", "<decl-arg>", STAR((",", "<decl-arg>"))],
+                         ["signals:", "<signal-decl>", STAR((",", "<signal-decl>"))],
+                    ")"),
+    "signal-decl": (t_re_id("name"), ["<parens-decl>"]),
 
     # == behavior (R-7→R-16amend, R-10, §3): aggregates causalities ===========
-    # No does:: the brace already delimits the body (R-12).
-    "behavior":   (["~"], "behavior:", "<signature(signature)>",
+    # No does:: the brace already delimits the body (R-12). <behavior-def> is
+    # the full name-first form (D-19), the shape an aspect body repeats.
+    "behavior-def": (t_re_id("name"), t_op_colon, ["~"],
+                     "behavior", "<behavior-tail(behavior)>"),
+    "behavior-tail": (["<parens-decl>"],
                    ["is:", "<call(behavior)>", STAR((",", "<call(behavior)>"))],
                    ["has:", "<decl-block>"],
                    "{", PLUS("<causality>"), "}"),
+
+    # == named cause (R-5, D-19): carries its own guard =======================
+    "cause-tail": (["<parens-decl>"], "<causality/cause-explicit>", ";"),
 
     # == causality (R-1, R-5, R-6, R-15, §2): cause --> one-or-more effects ===
     # Subspace: the cause/effect family. TOP is the causality; members carry the
@@ -291,9 +355,6 @@ GRAMMAR = {
         # event. Bare-name is the common form; the bound form (c.tick) names an
         # event carried on an entity.
         "event":        ("<name-dotted(event)>", OR, t_kw_entry, OR, t_kw_exit),
-
-        # -- named cause definition (R-5): carries its own guard -------------
-        "def-cause":    ("cause:", "<signature>", "<cause-explicit>", ";"),
 
         # -- effect (R-1, R-6, R-15): marker + (spawn | command-block) -------
         # call and code are disjoint (R-6 D1); periodic modifiers ride a spawn.
@@ -378,13 +439,15 @@ GRAMMAR = {
     # == command-block (R-6, R-13, R-14): imperative body; no event emission ==
     # Subspace: the statement world. TOP is the command-block. ONE statement
     # tier: every loop is bounded by definition (for:, from:/to:) -- there is
-    # no unbounded while: -- and exit: is forward-only (targets a LATER label),
-    # so no statement can diverge or form a back-edge. The command-block admits
-    # statements and closes in an optional tail ladder of EXIT-LABELS.
-    # Exit-region model (R-14, kernel goto-label idiom; "goto considered harmful"
-    # made safe): "exit: label" DEFINES a bare drop-through label (no body, C-label
-    # semantics -- control falls through it to what follows). "dropto: label" is
-    # the forward-only JUMP to such an exit.
+    # no unbounded while: -- and a drop is forward-only (targets a LATER
+    # label), so no statement can diverge or form a back-edge. The command-block
+    # admits statements and closes in an optional tail ladder of LABELS.
+    # Exit-region model (R-14, R-24, kernel goto-label idiom; "goto considered
+    # harmful" made safe): ":name:" DEFINES a bare drop-through label (no body,
+    # C-label semantics -- control falls through it to what follows;
+    # self-terminating: the second colon delimits, D-21). "dropto: label" is
+    # the forward-only JUMP to such a label. The keyword "exit:" is retired
+    # from this duty and reserved for the work construct's fault egress (F-5).
     # Pass-2 checks (see SEMANTICS.txt): exit-labels may be defined ONLY at the
     # outermost function body (not inside loops, if/elif/else, match, or any
     # nested block); "dropto: L" targets an exit defined LATER (forward-only);
@@ -450,52 +513,7 @@ GRAMMAR = {
         "dropto":       ("dropto:", t_re_id("label"), ";"),
         # -- exit-label (R-14): a bare drop-through label (no body, C-label);
         #    definable only at the outermost body (pass-2).
-        "exit-label":   ("exit:", t_re_id("label"), ";"),
-    },
-
-    # == clockwork (R-20, §11): an aspect body run as a paced coroutine ========
-    # Mental model: asyncio. A clockwork is a coroutine on the engine's event
-    # loop; its suspension points are "await on a resource available":
-    #   => <emit>   emit, then AWAIT the tick        (await queue.put; await tick)
-    #   => ~NONE    emit nothing, pass one tick      (await sleep(0) / yield)
-    #   groove:{..} AWAIT-and-repeat over causes      (async for / looping select)
-    #   beat: n     an arm that fires every n TICKS    (a recurring pulse)
-    # Arm causes: a named event (gated by its own when:), ~ELSE (default: fires
-    # when no other arm matched), or a
-    # tick-default arm "when: <cond>" (the groove is tick-paced, so a condition-
-    # only arm wakes on the tick). Statements run IN SEQUENCE; where a step both
-    # acts and suspends, the EFFECT happens first, then the wait ("=> x" emits,
-    # THEN awaits the tick; a groove arm runs its body, THEN the groove resumes).
-    # A borrowed <statement> (R-13) runs WITHIN a step and is EMISSION-IMPOTENT
-    # (R-6 ban untouched); emission lives ONLY in the "=>" step.
-    "clockwork": {
-        TOP:            ("clockwork:", "<causality/cause(tick)>",
-                         "{", PLUS("<clockwork-statement>"), "}"),
-
-        "clockwork-statement": ("<code/statement(statement)>",   # R-13, emission-impotent
-                         OR, "<emit-step(emit)>",
-                         OR, "<groove(groove)>"),
-
-        # -- emit-step: "=> <call>" emit + await tick; "=> ~NONE" pass a tick --
-        "emit-step":    (t_op_spawn, ("<call(emission)>", OR, t_kw_none),
-                         ";"),                     # D-13; ~NONE = emit nothing
-
-        # -- groove: a repeating blocking select over cause-arms (implicitly
-        #    or-ed): keep reacting to whichever cause fires, again and again.
-        #    Exited by break:/dropto:/exit: from within an arm. A one-shot wait
-        #    is "groove: { ... break: }" (an arm that breaks).
-        #    asyncio analogue: async-for / looping select() over channels.
-        "groove":       ("groove:", "{", PLUS("<clock-arm>"), "}"),
-
-        # -- clock-arm: a cause (R-5, carries when:), the ~ELSE default arm, a
-        #    tick-default "when: <cond>", or "beat: n" (every n ticks). Arms are
-        #    or-ed; each has a clockwork-code body. --------------------------
-        "clock-arm":    ("<clock-cause>", "{", STAR("<clockwork-statement>"), "}",
-                         OR, "beat:", t_re_int("beat"), "{", STAR("<clockwork-statement>"), "}"),
-        "clock-cause":  ("<causality/cause-explicit(cause)>",       # a named event, gated
-                         OR, (t_kw_else, ["when:", "<condition>"]),   # ~ELSE = default/fallthrough
-                         OR, ("when:", "<condition>")),               # tick-default: on the
-                                                                      # tick, gated by <cond>
+        "exit-label":   (t_op_colon, t_re_id("label"), t_op_colon),  # D-21
     },
 
     # == declarations (has:) ==================================================
@@ -517,11 +535,12 @@ GRAMMAR = {
     "type-struct": (t_kw_struct, "{", PLUS("<field>"), "}"), # struct { x; y; ... }
     "field":       (t_re_id("name"), ";"),                  # a named slot, untyped
 
-    # == reference and definition (R-8, D-1): shared signature / call pair ====
-    # A SIGNATURE declares a BARE name under the current scope (namespacing is
-    # the open: block's job, R-18). A CALL references a name: bare, dotted
-    # (namespace path), or binding-qualified (member), with optional arguments.
-    "signature":  (t_re_id("name"), ["<parens-decl>"]),
+    # == reference (R-8, D-1, D-19): the call form ============================
+    # A definition head declares a BARE name under the current scope
+    # (namespacing is the open: block's job, R-18); since D-19 the head lives
+    # in <named-item>/<behavior-def> and the Signature product is assembled
+    # there. A CALL references a name: bare, dotted (namespace path), or
+    # binding-qualified (member), with optional arguments.
     "call":       ("<name-ref>", ["<parens-arg>"]),
 
     # -- name-ref (D-1, D-8): every reference parses as ONE dotted-name shape.
@@ -534,7 +553,7 @@ GRAMMAR = {
 
     "parens-arg":  ("(", ["<list-arg>"], ")"),
     "list-arg":    ("<arg>", STAR((",", "<arg>"))),
-    "arg":         ("<algebr>", OR, (t_re_id("arg-name"), t_op_assign, "<algebr>")),
+    "arg":         ("<algebr>", OR, (t_re_id("arg-name"), t_op_spawn, "<algebr>")),  # D-24
 
     "parens-decl": ("(", ["<list-decl>"], ")"),
     "list-decl":   ("<decl-arg>", STAR((",", "<decl-arg>"))),

@@ -74,19 +74,20 @@ head). A comprehension's destructuring variables are likewise local to the
 comprehension.
 
 
-(7) Exit-region discipline                                     [REJECT, R-14]
+(7) Exit-region discipline                               [REJECT, R-14, R-24]
 -----------------------------------------------------------------------------
 The exit-region is the kernel goto-label idiom made safe ("goto considered
 harmful" -- Dijkstra -- answered by forward-only drop-through). Checks:
-  (a) "exit: <label>" DEFINES a bare drop-through label (no body, C-label
-      semantics: control falls through it to what follows).
+  (a) ":<label>:" DEFINES a bare drop-through label (no body, C-label
+      semantics: control falls through it to what follows; self-terminating,
+      R-24 -- the second colon delimits, no ";").
   (b) An exit-label may be defined ONLY at the OUTERMOST function/command-block
       body -- never inside a loop, if/elif/else, match, or any nested block.
   (c) "dropto: <label>" is the forward-only JUMP: it may target only an exit
       defined LATER than the dropto in the same outermost body. A backward or
       self target is an error.
   (d) "dropto: <label>" requires a target: the label must be defined by some
-      "exit:" in the body; an undefined label is an error.
+      ":<label>:" in the body; an undefined label is an error.
   (e) break:/continue: are unlabelled and bind to the nearest enclosing loop.
 
 
@@ -178,55 +179,18 @@ The semantic unit gives the counter the declared numeric type and scopes it to
 the loop body.
 
 
-(16) Clockwork                                                 [REJECT, R-20]
+(16) Clockwork                                             [RETIRED, R-25]
 -----------------------------------------------------------------------------
-A clockwork is an aspect body run as a coroutine on the engine loop; its
-suspension points are "sleep on resource available" (asyncio await/select).
-Checks:
-  (a) A clockwork body may appear only as an aspect body (not a behaviour, not a
-      command-block). An aspect is a behaviour set XOR a clockwork, never both.
-  (b) Emission occurs only through the "=>" step. A borrowed <statement> (R-13)
-      inside a clockwork is EMISSION-IMPOTENT (R-6 ban intact).
-  (c) Suspension points: "=> <emit>" and "=> ~NONE" await the tick; a groove:
-      arm awaits its cause; a "beat: n" arm fires every n ticks. These are the
-      only suspension points.
-  (d) "~NONE" is the null emit target of "=>" only; it is never a trigger/cause.
-  (e) groove: is a repeating blocking select: it services whichever arm fires,
-      again and again, until a "break:"/dropto:/exit: leaves it. A
-      groove: COUNTS AS AN ENCLOSING LOOP for break:/continue: binding, so a
-      "break:" in an arm leaves the groove (the one-shot wait
-      "groove: { ... break: }") and a "continue:" resumes the select. Arms are
-      or-ed. TIE-BREAK: when
-      several arms are ready in the same tick, the arm DEFINED FIRST (topmost in
-      the block) wins -- precedence of definition. This is deterministic (source
-      order is fixed), consistent with the engine's no-run-to-run-variance
-      invariant.
-  (f) A tick-default "when: <cond>" arm checks <cond> WHEN the tick fires
-      (explicit wake policy); all arm causes resolve as ordinary causes (R-5).
-  (g) ARM CAUSES: a named event (gated by its own "when:"), "~ELSE" (the DEFAULT/
-      fallthrough arm -- fires when NO other arm matched this tick, like
-      "case: _"; it may carry a "when: <cond>" gate), or a TICK-DEFAULT arm
-      "when: <cond>" -- since the groove is tick-paced, a condition-only arm
-      wakes on the tick. ~ELSE does NOT shadow specific arms (it fires only when
-      none matched), so it coexists with them; it may appear at most once per
-      groove and is checked LAST regardless of definition order. ~NONE is the
-      null EMIT TARGET ("=> ~NONE" emits nothing, passes a tick); ~NONE is never
-      a trigger. (No ~TICK keyword: the tick is the implicit wake of a
-      condition-only arm.)
-  (h) ARM UNIQUENESS: within one groove:, only the TICK-DEFAULT "when: <cond>"
-      arm may appear more than once (several tick-gated conditions). Every other
-      arm cause -- a named event, ~ELSE -- appears AT MOST ONCE per groove, for
-      clarity and to keep the precedence-of-definition tie-break unambiguous.
-  (h2) BEAT: a "beat: n" arm is a metronome -- it fires every n TICKS of the
-      clockwork (n a positive integer, tick-based, NOT seconds). It recurs: after
-      it runs, the groove beats again in n ticks unless a "break:" leaves the
-      groove. "beat:" replaces the earlier wall-clock "timeout:" (a groove is
-      paced in ticks, not time).
-  (i) SEQUENCE / effect-before-wait: clockwork statements run IN SEQUENCE; where
-      a step both acts and suspends, the EFFECT happens FIRST, then the wait.
-      "=> x" emits, THEN awaits the tick; a groove arm runs its body, THEN the
-      groove resumes to await the next firing.
+The tick-paced clockwork left the language (R-25): the aspect body is
+behaviours-only; the checks that lived here (aspect-body exclusivity, the
+emit-step, groove arm law, tie-break, tick-default, ~ELSE/~NONE) retire
+with it. The successor -- the pull-driven clockwork -- and its law land
+with the work construct. The number is kept as a tombstone.
 
+The aspect PANEL (D-23) is checked minimally in this version: "knows:"
+entries are the aspect's parameters (existing parameter law applies);
+"signals:" entries are recorded on the definition and not yet consumed --
+their checks land with the work construct.
 (17) Abstract-target remark                                [WARN, R-10, F-3]
 -----------------------------------------------------------------------------
 An effect targeting an ABSTRACT entity -- "=> X" or "=x=> X" where X is
@@ -303,4 +267,7 @@ definition it documents: a character, an aspect, a behaviour, or a named
 cause; it rides that definition's product. A docstring that precedes no
 definition is the MODULE docstring and is lawful only as the file's very
 first item. Anywhere else a bare docstring documents nothing and is
-rejected. Docstrings are inert to execution and to the export surface.
+rejected. A docstring before a top-level DECLARATION is parseable (grammar
+D-20, a consequence of the name-first factored head) but documents nothing
+this law admits: it is rejected; the declaration itself remains published.
+Docstrings are inert to execution and to the export surface.

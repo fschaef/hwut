@@ -1,5 +1,5 @@
-cause: hot(threshold) temp_high when: e.value > threshold;
-behavior: climate has: { target: float; on: bool; } {
+hot : cause(threshold) temp_high when: e.value > threshold;
+climate : behavior has: { target: float; on: bool; } {
     ac_button when: b.on == false => { b.on = true; b.target = 21.0; }
     ac_button when: b.on == true  => { b.on = false; }
     dial_turned => { b.target += e.delta; }

@@ -1,2 +1,2 @@
-~behavior: ghost { E => F; }
+ghost : ~behavior { E => F; }
 TRIGGER => ghost;

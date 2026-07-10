@@ -37,36 +37,36 @@ from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 
 # One representative snippet per LANGUAGE.txt construct. Each MUST parse with
 # zero diagnostics. Snippets are spelled to the grammar (ground truth): a
-# causality ends in ';'; a clockwork emit-step "=> call" takes no terminator.
+# causality ends in ';'.
 # Ordered so the printed report is stable regardless of dict iteration.
 SNIPPETS = [
  ("causality",     "button_pressed => light_on;"),
  ("guarded",       "MOTOR_ON when: c.fuel == 0 => lighten_fuel_missing;"),
- ("def_cause",     "cause: OPERATION_IMPOSSIBLE(fuel_limit, battery_limit)\n"
+ ("def_cause",     "OPERATION_IMPOSSIBLE : cause(fuel_limit, battery_limit)\n"
                    "    MOTOR_ON when: c.fuel <= fuel_limit or c.battery < battery_limit;"),
  ("cause_ref",     "OPERATION_IMPOSSIBLE(0.1, 2) => SIGNAL_REFUSE_OPERATION;"),
- ("behavior",      "behavior: ClimateControlWhenActivated {\n"
+ ("behavior",      "ClimateControlWhenActivated : behavior {\n"
                    "    ac_button_pushed => toggle_compressor;\n"
                    "    temp_dial_turned => set_target_temperature;\n"
                    "    fan_dial_turned  => adjust_fan_speed;\n}"),
- ("recurring",     "behavior: Polling {\n"
+ ("recurring",     "Polling : behavior {\n"
                    "    ~ENTRY       => poll_sensors() every: 0.5 as: poller;\n"
                    "    stop_pressed =x=> poller;\n}"),
- ("aspect",        "aspect: MotorActivity {\n"
-                   "    ~behavior: GENERAL {\n"
+ ("aspect",        "MotorActivity : aspect {\n"
+                   "    GENERAL : ~behavior {\n"
                    "         gas_pedal_release => close_throttle;\n"
                    "         battery_empty     => close_throttle;\n    }\n"
-                   "    behavior: ON is: GENERAL {\n"
+                   "    ON : behavior is: GENERAL {\n"
                    "         gas_pedal_push     => open_throttle;\n"
                    "         on_off_button_push => OFF;\n    }\n"
-                   "    behavior: OFF is: GENERAL {\n"
+                   "    OFF : behavior is: GENERAL {\n"
                    "         gas_pedal_push     => tone_notify_engine_off;\n"
                    "         on_off_button_push => ON;\n    }\n}"),
- ("character",     "~character: sprite has: {\n"
+ ("character",     "sprite : ~character has: {\n"
                    "    position:  vec2;\n    speed:     vec2;\n"
                    "    resources: AspectResources;\n}"),
  ("namespace",     "open: graphics.sprites {\n"
-                   "    ~character: sprite has: { position: vec2; }\n}"),
+                   "    sprite : ~character has: { position: vec2; }\n}"),
  ("import",        'import: "lib/physics.vut" as: physics'),
  ("command_block", "TRAVELLED_100KM => {\n"
                    "    c.fuel -= 8.31;\n"
@@ -87,9 +87,9 @@ SNIPPETS = [
                    "    c.g = acquire_b();\n"
                    "    if: not c.g.ok  { dropto: free_a; }\n"
                    "    dropto: done;\n"
-                   "  exit: free_a;   c.released_a = release_a(c.h);\n"
-                   "  exit: fail;     c.status = FAILED;\n"
-                   "  exit: done;\n}"),
+                   "  :free_a:   c.released_a = release_a(c.h);\n"
+                   "  :fail:     c.status = FAILED;\n"
+                   "  :done:\n}"),
  ("comprehension", "X => { c.pp = [ x*y   with: x, y from: pairs ];\n"
                    "        c.pos = [ x with: x from: xs if: x > 0 ];\n"
                    "        c.mix = [ x + y with: x from: xs if: x > 0\n"
@@ -97,25 +97,20 @@ SNIPPETS = [
                    "        c.nest = [ [ a*b with: b from: row ] with: row from: matrix ]; }"),
  ("data_access",   "X => { c.buf[i] = v; c.f = grid[i][j]; c.z = f(x)[0]; }"),
  ("ternary_chain", "X when: 1 < c.a < 9 => { c.v = c.cond ? c.x + 1 : c.y * 2; }"),
- ("aggregates",    "X => { c.q = 1; }\nbehavior: B has: {\n"
+ ("aggregates",    "X => { c.q = 1; }\nB : behavior has: {\n"
                    "    buffer: list;\n    scores: dict;\n"
                    "    point: struct { x; y; };\n} { E => F; }"),
  ("documented",    '"""Watches the motor and shuts down on overheat."""\n'
-                   'behavior: guard(threshold = 90.0) { hot => shutdown; }'),
+                   'guard : behavior(threshold = 90.0) { hot => shutdown; }'),
  ("strings_in",   'X when: e.tag == "sensor_7" => { c.hit = 1.0; }\n'
                    'Y when: e.v in c.items => f;\n'
                    'Z when: e.v not in c.items and "ens" in c.tag => g;'),
- ("clockwork",     "aspect: Poller {\n"
-                   "    clockwork: c.tick {\n"
-                   "        => sample();\n"
-                   "        => ~NONE;\n"
-                   "        groove: {\n"
-                   "            c.button_pressed { => ack(); }\n"
-                   "            when: c.ready    { => go(); }\n"
-                   "            c.data_ready     { => forward(); }\n"
-                   "            beat: 30         { => idle(); }\n"
-                   "            ~ELSE            { => rest(); }\n"
-                   "        }\n    }\n}"),
+ ("aspect_panel",  "Poller : aspect(knows: rate, retries = 3\n"
+                   "                signals: overrun, sensor_lost(port))\n"
+                   "{\n"
+                   "    IDLE : behavior { go => RUN; }\n"
+                   "    RUN  : behavior { stop => IDLE; }\n"
+                   "}"),
  ("namespaced_ref", "physics.tick_event => physics.apply_gravity;"),
 ]
 

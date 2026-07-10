@@ -1,6 +1,8 @@
 """The demo module: one documented behaviour."""
 """Drives the rover at a fixed gain."""
-behavior: drive(gain) { GO => move; }
+drive : behavior(gain) { GO => move; }
 X => go;
 """Documents nothing -- misplaced."""
 Y => stop;
+"""On a declaration -- parseable, unlawful (D-20)."""
+limit: float;

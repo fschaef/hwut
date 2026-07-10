@@ -136,7 +136,7 @@ class Grammar:
             self.rules[name].pattern = support.compile_element(pattern, self, nodes)
         self._current_scope = ()
         from .ll2_grammar_spec import T
-        self.end_block = T.string(":end")   
+        self.end_block = T.string(":end")
         self._analyse()
         self._sealed = True       # FIRST_2 sets are now final -> memoise.
         self._validate_role_uniqueness()
@@ -280,7 +280,11 @@ class Grammar:
                              "str: %r" % (element,))
 
     def _analyse(self):
-        """Computes FIRST_2 sets to a fixpoint, then validates LL(2)."""
+        """RETURN: None, always. Raises LL2ConflictError if any alternation's
+                  branches overlap on a 2-token lookahead.
+
+        Computes FIRST_2 sets to a fixpoint, then validates every alternation.
+        """
         changed = True
         while changed:
             changed = False
@@ -327,7 +331,7 @@ class _ResyncError(Exception):
 
 class EngineParser:
     """Parses a rule file by interpreting a compiled Grammar with LL(2) lookahead."""
-    _TOP_LEVEL = None       
+    _TOP_LEVEL = None
 
     def __init__(self, source_text, reporter, grammar, lexer=None):
         """RETURN: None, always. Builds the parser and PRIMES the 2-token window.
@@ -355,7 +359,10 @@ class EngineParser:
         self._top_first = self.grammar.rules[self.grammar.start].first
 
     def _advance(self):
-        """Advances the sliding window: tok1 gets tok2, tok2 fetches next."""
+        """RETURN: Token, the token just consumed (the pre-advance tok1).
+
+        Advances the sliding window: tok1 gets tok2, tok2 fetches the next.
+        """
         cur = self.tok1
         self.tok1 = self.tok2
         self.tok2 = self.lexer.next()
@@ -368,7 +375,8 @@ class EngineParser:
             source_offset=self.tok1.begin, fatal=fatal))
 
     def _resync(self):
-        """Skips tokens until a top-level anchor, ALWAYS consuming at least one.
+        """RETURN: None, always. The stream stands on a top-level anchor token
+                  (or EOF) afterwards; at least one token was consumed.
 
         Called after a _match raised _ResyncError. The first token is the one the
         failed match choked on, so it is skipped UNCONDITIONALLY before scanning:

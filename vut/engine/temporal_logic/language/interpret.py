@@ -18,10 +18,6 @@ SETTLED LAW EXECUTED (LANGUAGE.txt):
       a recurring emission runs only while its entity is ACTIVE and is
       auto-cancelled at ~EXIT (R-15).
     - ~ENTRY / ~EXIT run on activation / deactivation; no trigger, no guard.
-    - Clockwork (R-20/R-22): '=> emit' emits then awaits the tick; '=> ~NONE'
-      passes one tick; groove is a repeating blocking select over its arms;
-      'beat: n' fires every n ticks; '~ELSE' fires when no other arm
-      matched; 'when: cond' is the tick-default.
     - An aspect governs ONE active behaviour: activating a behaviour inside
       an aspect deactivates the previously active sibling.
 
@@ -47,13 +43,9 @@ PROVISIONAL RULINGS (P-n; each one line to correct -- report lists them):
     P-6  A named-cause use hot(v) matches its definition's event with the
          definition's guard evaluated under s.<param> bound to the use-site
          arguments.
-    P-7  The tick of a clockwork is its cause; each tick advances the
-         script by exactly one await. A GROOVE is a blocking select: while
-         the script rests in one, an ARM CAUSE wakes it on that cause's OWN
-         event (not the tick); 'beat:' counts ticks; the tick-default and
-         '~ELSE' evaluate on ticks only, '~ELSE' when no other arm matched
-         that tick. The groove repeats forever (statements after it never
-         run).
+    P-7  RETIRED (R-25): the tick-paced clockwork left the language; the
+         law of its successor (the pull-driven clockwork) lands with the
+         work construct.
 ______________________________________________________________________________
 """
 import fnmatch
@@ -86,7 +78,6 @@ class Instance:
     """RETURN: never a value itself -- the scope-default instance of one
               definition (or of one implicit level default): its member
               state, parameter values, activity, cancellation handles, and
-              -- for a clockwork aspect -- the script's resumable state.
     """
 
     def __init__(self, qualified, kind):
@@ -97,7 +88,6 @@ class Instance:
         self.active    = False
         self.handles   = {}          # handle name -> recurring emission
         self.active_child = None     # an aspect's one active behaviour
-        self.clock     = None        # generator of a clockwork script
 
 
 class Recurring:
@@ -254,8 +244,7 @@ class Machine:
                   against the state at event arrival (P-1b -- an effect of
                   this event never changes which of this event's guards
                   held); PHASE 2 runs the matched effects in declaration
-                  order. A clockwork whose tick matches advances one await
-                  (P-7).
+                  order.
         """
         fired = []
         for key in sorted(self.defs):
@@ -271,25 +260,9 @@ class Machine:
                     if self.cause_matches(causality.cause, event, payload,
                                           ctx):
                         fired.append(("fire", causality, ctx))
-            elif isinstance(node, A.Aspect) \
-                    and isinstance(node.body, A.Clockwork):
-                ctx = self._context_of(key, inst)
-                ctx.event_name = event
-                if self.cause_matches(node.body.tick, event, payload, ctx):
-                    fired.append(("tick", node.body, (inst, ctx)))
-                elif inst.clock is not None \
-                        and inst.clock["groove"] is not None:
-                    fired.append(("wake", node.body, (inst, ctx)))
         for kind, entry, carrier in fired:
-            if kind == "tick":
-                inst, ctx = carrier
-                self.clock_step(inst, entry, event, payload, ctx)
-            elif kind == "wake":
-                inst, ctx = carrier
-                self.clock_event(inst, entry, event, payload, ctx)
-            else:
-                for effect in entry.effects:
-                    self.run_effect(effect, carrier)
+            for effect in entry.effects:
+                self.run_effect(effect, carrier)
 
     def _context_of(self, key, inst):
         """RETURN: _Ctx, the binding context of one holder: b = the holder
@@ -417,10 +390,6 @@ class Machine:
         self.line("enter  %s" % ".".join(qualified))
         if node is not None and isinstance(node, A.Behavior):
             self._lifecycle(node, inst, "~ENTRY")
-        if node is not None and isinstance(node, A.Aspect) \
-                and isinstance(node.body, A.Clockwork):
-            inst.clock = None                  # fresh script on activation
-
     def deactivate(self, qualified):
         """RETURN: None, always. Deactivates the instance (a no-op when
                   inactive): ~EXIT causalities run, then every recurring
@@ -438,7 +407,6 @@ class Machine:
                 self.line("cancel (auto, ~EXIT) %s"
                           % ".".join(emission.event))
         inst.active = False
-        inst.clock = None
         self.line("exit   %s" % ".".join(qualified))
 
     def _lifecycle(self, node, inst, kind):
@@ -452,108 +420,6 @@ class Machine:
             if isinstance(target, A.Lifecycle) and target.kind == kind:
                 for effect in causality.effects:
                     self.run_effect(effect, ctx)
-
-    # -- clockwork ----------------------------------------------------------
-
-    def clock_step(self, inst, clockwork, event, payload, ctx):
-        """RETURN: None, always. Advances the instance's clockwork by one
-                  TICK (P-7): plain statements run without pausing; an
-                  emit-step emits then rests until the next tick; reaching a
-                  groove parks the script there forever -- each tick then
-                  evaluates beat/tick-default/~ELSE arms (an '~ELSE' fires
-                  when no arm matched this tick); the script restarts when
-                  its statement list is exhausted.
-        """
-        state = inst.clock
-        if state is None:
-            state = inst.clock = {"pc": 0, "groove": None, "beats": {}}
-        ctx.e = payload
-        ctx.event_name = event
-        if state["groove"] is not None:
-            self._groove_tick(state, ctx)
-            return
-        statements = list(clockwork.statements)
-        while state["pc"] < len(statements):
-            statement = statements[state["pc"]]
-            if isinstance(statement, A.EmitStep):
-                state["pc"] += 1
-                if not isinstance(statement.target, A.EmitNone):
-                    self._emit_call(statement.target, ctx)
-                return                          # rest until the next tick
-            if isinstance(statement, A.Groove):
-                state["groove"] = statement
-                self._groove_tick(state, ctx)
-                return                          # parked, forever
-            self.run_block_statement(statement, ctx)
-            state["pc"] += 1
-        state["pc"] = 0                         # exhausted: restart (R-20)
-
-    def clock_event(self, inst, clockwork, event, payload, ctx):
-        """RETURN: None, always. Wakes a groove-parked script on one of its
-                  ARM CAUSES' own events (the blocking-select half of P-7):
-                  the first cause-arm whose cause matches fires its body;
-                  ticks never arrive here and beat/default/~ELSE never fire
-                  here.
-        """
-        state = inst.clock
-        if state is None or state["groove"] is None:
-            return
-        ctx.e = payload
-        ctx.event_name = event
-        for arm in state["groove"].arms:
-            if isinstance(arm, A.BeatArm) \
-                    or not isinstance(arm.cause, A.Cause):
-                continue
-            if self.cause_matches(arm.cause, event, payload, ctx):
-                self._arm_body(arm, ctx)
-                return
-
-    def _groove_tick(self, state, ctx):
-        """RETURN: None, always. One TICK inside the groove: 'beat:' arms
-                  count and fire on their multiples; the tick-default fires
-                  when its condition holds; '~ELSE' fires when no arm of
-                  this tick matched (its optional guard permitting); source
-                  order decides among simultaneous claims.
-        """
-        groove = state["groove"]
-        for index, arm in enumerate(groove.arms):
-            if isinstance(arm, A.BeatArm):
-                state["beats"][index] = state["beats"].get(index, 0) + 1
-                if state["beats"][index] % arm.beat == 0:
-                    self._arm_body(arm, ctx)
-                    return
-            elif isinstance(arm.cause, A.TickDefault):
-                if _truthy(self.expr(arm.cause.cond, ctx)):
-                    self._arm_body(arm, ctx)
-                    return
-        for arm in groove.arms:
-            if not isinstance(arm, A.BeatArm) \
-                    and isinstance(arm.cause, A.ElseArm):
-                guard = arm.cause.guard
-                if guard is NodeAbsent or _truthy(self.expr(guard, ctx)):
-                    self._arm_body(arm, ctx)
-                return
-
-    def _arm_body(self, arm, ctx):
-        """RETURN: None, always. Runs one groove arm's body: emit-steps emit
-                  (the groove owns the pacing, so no extra rest), plain
-                  statements run.
-        """
-        for statement in arm.body:
-            if isinstance(statement, A.EmitStep):
-                if not isinstance(statement.target, A.EmitNone):
-                    self._emit_call(statement.target, ctx)
-            else:
-                self.run_block_statement(statement, ctx)
-
-    def _emit_call(self, call, ctx):
-        """RETURN: None, always. One clockwork emission: the call target
-                  routed exactly like an effect's spawn (raw event enqueued,
-                  definition activated).
-        """
-        self.run_effect(
-            A.Effect(marker="=>", action=A.Spawn(
-                call=call, every=NodeAbsent, handle=NodeAbsent)), ctx)
 
     # -- command blocks -----------------------------------------------------
 

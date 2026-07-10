@@ -7,7 +7,7 @@ PURPOSE: Test the INTERPRETER -- direct execution of the decorated AST over
          language's OPERATIONAL behaviour byte-exactly, making this suite
          the semantics ORACLE every future emitter must match.
 
-CHOICES: dispatch, lifecycle, blocks, clockwork, membership.
+CHOICES: dispatch, lifecycle, blocks, membership.
 
            dispatch   The synchronous-instant law (P-1/P-1b): FIFO queue,
                       guards fixed at event arrival (a toggle alternates,
@@ -29,10 +29,6 @@ CHOICES: dispatch, lifecycle, blocks, clockwork, membership.
                       guards, 'in' over lists (elements), dicts (keys) and
                       strings (substrings), 'not in' as its negation, and
                       STRUCTURAL container equality.
-           clockwork  The paced script (R-20/R-22, P-7): emit-then-await,
-                      '~NONE' passing a tick, the groove as a blocking
-                      select -- an arm cause waking on its OWN event, 'beat:'
-                      on tick multiples, '~ELSE' when nothing matched.
 ______________________________________________________________________________
 """
 import os
@@ -127,22 +123,6 @@ def run_blocks():
     print(m.trace())
 
 
-def run_clockwork():
-    """RETURN: None, always. Locks the paced script over
-              run-clockwork.vut: two plain ticks (emit, ~NONE), the groove
-              parking, an arm cause waking on its own event, the beat
-              firing on its third tick, '~ELSE' otherwise.
-    """
-    banner("clockwork (run-clockwork.vut)")
-    m = machine("run-clockwork.vut")
-    for _ in range(3):
-        m.post("tick")
-    m.post("button")
-    for _ in range(3):
-        m.post("tick")
-    print(m.trace())
-
-
 def run_membership():
     """RETURN: None, always. Locks D-14/D-15 over run-membership.vut: the
               string-equality guard holds, 'x in list' fires exactly on a
@@ -170,7 +150,6 @@ HwutRunner(
         "dispatch":  run_dispatch,
         "lifecycle": run_lifecycle,
         "blocks":    run_blocks,
-        "clockwork": run_clockwork,
         "membership": run_membership,
     },
 ).run()

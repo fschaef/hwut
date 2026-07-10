@@ -156,7 +156,10 @@ def make_documented(n):
               rejects any other placement (SEMANTICS 22).
 
     The doc leaf's text is the string BETWEEN the triple quotes, verbatim;
-    its offset is the opening quote's.
+    its offset is the opening quote's. The subject is a <named-item> product
+    (D-19, single-element optional: the product sits directly); a Declaration
+    subject is parseable but unlawful (D-20) -- the doc rides its product and
+    declare rejects the placement (SEMANTICS 22).
     """
     token = n[0]
     leaf = ConstantLeaf.from_text(text=token.text[3:-3], kind="docstring",
@@ -164,8 +167,7 @@ def make_documented(n):
     subject_opt = n[1]
     if not subject_opt.present:
         return leaf
-    subject = subject_opt.child.child
-    return dataclasses.replace(subject, doc=leaf)
+    return dataclasses.replace(subject_opt.child, doc=leaf)
 
 
 def make_module_root(star_node):
@@ -205,23 +207,119 @@ def make_name_dotted(n):
     return ReferenceLeaf(begin=head.begin, segments=segs)
 
 
-def make_character(n):
-    """RETURN: Character, from '~? character: sig is:? has:?'."""
-    return A.Character(abstract=n[0].present, signature=n["signature"],
-                       is_=_is_list(n[2]), has=_has_list(n[3]))
+def _tail_sig(opt_parens):
+    """RETURN: Signature, the HEADLESS signature of a kind tail (D-19) -- the
+              tail's parameter list under a placeholder name, completed by
+              the defining rule's factory (_complete_def), which seats the
+              head name.
+    """
+    return A.Signature(name=NodeAbsent, params=_opt(opt_parens))
 
 
-def make_aspect(n):
-    """RETURN: Aspect, from '~? aspect: sig is:? has:? { body }'."""
-    return A.Aspect(abstract=n[0].present, signature=n["signature"],
-                    is_=_is_list(n[2]), has=_has_list(n[3]), body=n["body"])
+def _complete_def(node, name_token, abstract=False):
+    """RETURN: Node, the tail product 'node' completed into the full
+              definition (D-19) -- the head name seated in the signature,
+              the abstract flag set.
+
+    Tails parse without their head ('<name> :' lives in named-item /
+    behavior-def); this reunion keeps the AST identical to the keyword-first
+    era: one Signature, name and parameters together.
+    """
+    sig = dataclasses.replace(node.signature, name=_decl_tok(name_token))
+    if abstract:
+        return dataclasses.replace(node, signature=sig, abstract=True)
+    return dataclasses.replace(node, signature=sig)
 
 
-def make_behavior(n):
-    """RETURN: Behavior, from '~? behavior: sig is:? has:? { causality* }'."""
-    return A.Behavior(abstract=n[0].present, signature=n["signature"],
-                      is_=_is_list(n[2]), has=_has_list(n[3]),
-                      causalities=_list(n[4]))
+def make_character_tail(n):
+    """RETURN: Character, HEADLESS, from '(params)? is:? has:?' (D-19) --
+              name and abstract seated by _complete_def at the defining rule.
+    """
+    return A.Character(abstract=False, signature=_tail_sig(n[0]),
+                       is_=_is_list(n[1]), has=_has_list(n[2]))
+
+
+def make_aspect_tail(n):
+    """RETURN: Aspect, HEADLESS, from '(panel)? is:? has:? { behavior-def+ }'
+              (D-19, D-23) -- name and abstract seated by _complete_def; the
+              panel optional carries (knows-params, signal-decls); the body
+              is the behaviour list.
+    """
+    panel = _opt(n[0])
+    knows, signals = ((), ()) if panel is NodeAbsent else panel
+    sig = A.Signature(name=NodeAbsent, params=knows)
+    return A.Aspect(abstract=False, signature=sig,
+                    is_=_is_list(n[1]), has=_has_list(n[2]),
+                    body=_list(n[3]), signals=signals)
+
+
+def make_panel(n):
+    """RETURN: tuple, (knows-params, signal-decls) of a panel (D-23) -- each
+              a NodeList; empty when its section is absent. The parens are
+              silent; slot 0 is the knows-optional, slot 1 the
+              signals-optional, each an OPT over SEQ(first, STAR-rest).
+    """
+    def entries(seq):
+        return (seq[0],) + tuple(_list(seq[1]))
+    knows   = _opt(n[0], ctor=entries)
+    signals = _opt(n[1], ctor=entries)
+    return (() if knows   is NodeAbsent else knows,
+            () if signals is NodeAbsent else signals)
+
+
+def make_signal_decl(n):
+    """RETURN: SignalDecl, from 'name [(decl-args)]' of a signals: section
+              (D-23) -- the name DECLARES; the single-element optional holds
+              the parens-decl NodeList directly.
+    """
+    return A.SignalDecl(name=_decl_tok(n["name"]), params=_opt(n[1]))
+
+
+def make_behavior_tail(n):
+    """RETURN: Behavior, HEADLESS, from '(params)? is:? has:? { causality* }'
+              (D-19) -- name and abstract seated by _complete_def.
+    """
+    return A.Behavior(abstract=False, signature=_tail_sig(n[0]),
+                      is_=_is_list(n[1]), has=_has_list(n[2]),
+                      causalities=_list(n[3]))
+
+
+def make_cause_tail(n):
+    """RETURN: DefCause, HEADLESS, from '(params)? cause-explicit ;' (D-19)
+              -- name seated by _complete_def (a named cause is never
+              abstract: the grammar admits no '~' on its branch).
+    """
+    return A.DefCause(signature=_tail_sig(n[0]), cause=n[1])
+
+
+def make_behavior_def(n):
+    """RETURN: Behavior, from '<name> : ~? behavior <behavior-tail>' (D-19)
+              -- the aspect body's repeated shape; the bare ':' (a regex
+              terminal) survives at slot 1, the '~' optional at 2, the
+              headless tail product at 3.
+    """
+    return _complete_def(n[3], n["name"], abstract=n[2].present)
+
+
+def make_named_item(n):
+    """RETURN: Node, the product of the factored '<name> : <tail>' head
+              (D-19): a Character / Aspect / Behavior / DefCause completed
+              from its kind tail, or a Declaration when the type branch
+              fired -- definition and top-level declaration are ONE head.
+
+    The alternation's fired branch is an inline SEQ: kind branches hold
+    ('~'? , tail) -- the kind word is silent -- except the cause branch
+    (tail only, no '~') and the declaration branch (the type product; ';'
+    silent).
+    """
+    name_token, head = n["name"], n[2]
+    branch = head.child
+    if head.triggered_index == 4:                            # declaration
+        return A.Declaration(name=_decl_tok(name_token), type_=branch[0])
+    if head.triggered_index == 3:                            # named cause
+        return _complete_def(branch[0], name_token)
+    return _complete_def(branch[1], name_token,              # entity kinds
+                         abstract=branch[0].present)
 
 
 def make_causality(n):
@@ -253,11 +351,6 @@ def make_cause_explicit(n):
     """
     return A.Cause(target=n[0], args=NodeAbsent,
                    guard=_opt(n[1], ctor=lambda body: body[0]))
-
-
-def make_def_cause(n):
-    """RETURN: DefCause, from 'cause: signature cause-explicit ;'."""
-    return A.DefCause(signature=n[0], cause=n[1])
 
 
 def make_effects(n):
@@ -438,48 +531,10 @@ def make_dropto(n):
 
 
 def make_exit_label(n):
-    """RETURN: ExitLabel, from 'exit: label ;' -- the label DECLARES."""
+    """RETURN: ExitLabel, from ':name:' (D-21) -- the label DECLARES; both
+              bare colons (regex terminals) survive as tokens beside it.
+    """
     return A.ExitLabel(label=_decl_tok(n["label"]))
-
-
-def make_clockwork(n):
-    """RETURN: Clockwork, from 'clockwork: cause { clockwork-statement+ }'."""
-    return A.Clockwork(tick=n["tick"], statements=_list(n[1]))
-
-
-def make_emit_step(n):
-    """RETURN: EmitStep, from '=> (call | ~NONE)': EmitNone on the ~NONE
-              branch, the call's product else.
-    """
-    fired = n[1]
-    target = A.EmitNone() if fired.triggered_index == 1 else fired.child
-    return A.EmitStep(target=target)
-
-
-def make_groove(n):
-    """RETURN: Groove, from 'groove: { clock-arm+ }'."""
-    return A.Groove(arms=_list(n[0]))
-
-
-def make_clock_arm_select(child):
-    """RETURN: ClockArm, from the fired '(clock-cause { body })' branch --
-              braces silent, so the branch SEQ is (cause, STAR).
-    """
-    return A.ClockArm(cause=child[0], body=_list(child[1]))
-
-
-def make_clock_arm_beat(child):
-    """RETURN: BeatArm, from the fired '(beat: n { body })' branch -- the
-              beat count read off the tagged integer token.
-    """
-    return A.BeatArm(beat=int(child["beat"].text), body=_list(child[1]))
-
-
-def make_clock_else(child):
-    """RETURN: ElseArm, from the fired '~ELSE [when: cond]' branch -- the
-              else-token survives at slot 0; the when-body is SEQ(cond,).
-    """
-    return A.ElseArm(guard=_opt(child[1], ctor=lambda body: body[0]))
 
 
 def make_decl_block(n):
@@ -509,14 +564,6 @@ def make_field(n):
               DECLARES.
     """
     return _decl_tok(n["name"])
-
-
-def make_signature(n):
-    """RETURN: Signature, from 'name [(decl-args)]' -- the name DECLARES
-              (D-1: a bare id under the current scope); the single-element
-              optional holds the parens-decl NodeList directly.
-    """
-    return A.Signature(name=_decl_tok(n["name"]), params=_opt(n[1]))
 
 
 def make_call(n):
@@ -608,17 +655,19 @@ AST_MAP = {
     "file":          lambda n: make_module_root(n[0]),
 
     # -- top level -------------------------------------------------------
-    "top-level":     {("character", "aspect", "behavior", "causality",
-                       "cause-def", "declaration", "namespace",
+    "top-level":     {("named", "causality", "namespace",
                        "import", "documented"): PASS},
     "namespace":     make_namespace,
     "import":        make_import,
     "name-dotted":   make_name_dotted,
-    "character":     make_character,
-    "aspect":        make_aspect,
-    "aspect-body":   {("behaviors", "clockwork"): PASS},
-    "behavior-list": lambda n: _list(n[0]),
-    "behavior":      make_behavior,
+    "named-item":    make_named_item,
+    "character-tail": make_character_tail,
+    "aspect-tail":   make_aspect_tail,
+    "panel":         make_panel,
+    "signal-decl":   make_signal_decl,
+    "behavior-def":  make_behavior_def,
+    "behavior-tail": make_behavior_tail,
+    "cause-tail":    make_cause_tail,
 
     # -- causality -------------------------------------------------------
     "causality":                make_causality,
@@ -626,7 +675,6 @@ AST_MAP = {
     "causality/cause-explicit": make_cause_explicit,
     "causality/event":          {"event": PASS,
                                  (1, 2): _lifecycle},
-    "causality/def-cause":      make_def_cause,
     "causality/effects":        make_effects,
     "causality/effect-marker":  {(0, 1): PASS},
     "causality/spawn":          make_spawn,
@@ -693,18 +741,6 @@ AST_MAP = {
     "code/dropto":      make_dropto,
     "code/exit-label":  make_exit_label,
 
-    # -- clockwork ----------------------------------------------------------
-    "clockwork":            make_clockwork,
-    "clockwork/clockwork-statement":
-                            {("statement", "emit", "groove"): PASS},
-    "clockwork/emit-step":  make_emit_step,
-    "clockwork/groove":     make_groove,
-    "clockwork/clock-arm":  {0: make_clock_arm_select,
-                             1: make_clock_arm_beat},
-    "clockwork/clock-cause": {0: PASS,
-                              1: make_clock_else,
-                              2: (lambda c: A.TickDefault(cond=c[0]))},
-
     # -- declarations / types -----------------------------------------------
     "decl-block":    make_decl_block,
     "declaration":   make_declaration,
@@ -717,7 +753,6 @@ AST_MAP = {
     "field":         make_field,
 
     # -- reference / definition ----------------------------------------------
-    "signature":     make_signature,
     "call":          make_call,
     "name-ref":      _fwd,
     "parens-arg":    make_parens,

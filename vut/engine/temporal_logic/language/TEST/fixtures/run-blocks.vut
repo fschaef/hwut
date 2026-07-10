@@ -1,4 +1,4 @@
-behavior: worker has: { total: float; label: float; items: list; } {
+worker : behavior has: { total: float; label: float; items: list; } {
     go => {
         int: i = 1 .. 5 step: 2 { b.total += i; }
         b.items[0] = 1.0;
@@ -10,7 +10,7 @@ behavior: worker has: { total: float; label: float; items: list; } {
         if: e.n > 2 { b.total *= 2.0; } else: { b.total = 0.0; }
         dropto: done;
         b.total = 999.0;
-        exit: done;
+        :done:
         b.label = 1.0;
     }
     classify => {

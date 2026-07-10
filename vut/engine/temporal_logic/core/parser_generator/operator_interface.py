@@ -55,8 +55,8 @@ APPLICATIONS OF THE SHAPE SIGNAL
 --------------------------------------------------------------------------------
 The shape is read directly via interface type-matching to drive:
 
-1. ERROR ANALYSIS: 
-   Uniform diagnostics across both node categories 
+1. ERROR ANALYSIS:
+   Uniform diagnostics across both node categories
    (e.g., "expected an OR-construct, got a SEQ-shaped node").
 
 2. LOAD-TIME VALIDATION:
@@ -65,7 +65,7 @@ The shape is read directly via interface type-matching to drive:
    OptMap only on OPT; SEQ/STAR/PLUS take a single factory; a terminal needs
    none. It checks the rule's shape, never the opaque product.
 
-3. SEMANTIC PASSES: 
+3. SEMANTIC PASSES:
    Walking constructs cleanly by their grammatical category.
 ================================================================================
 """

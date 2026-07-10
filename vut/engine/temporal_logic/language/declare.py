@@ -186,6 +186,8 @@ def _declare_items(items, scope, db, reporter):
         if isinstance(item, ConstantLeaf) and str(item.kind) == "docstring":
             _reject_misplaced_doc(reporter, item)          # SEMANTICS 22
             continue
+        if isinstance(item, A.Declaration) and not _is_absent(item.doc):
+            _reject_doc_on_declaration(reporter, item)     # SEMANTICS 22, D-20
         name, kind = _declared_name(item)
         if name is None:
             continue                       # anonymous (causality): no export
@@ -252,6 +254,22 @@ def _reject_misplaced_doc(reporter, leaf):
                 "it documents, or stands first in the file as the module "
                 "docstring (SEMANTICS 22)",
         source_offset=leaf.begin,
+        fatal=True,
+        tag="STRUCTURE"))
+
+
+def _reject_doc_on_declaration(reporter, item):
+    """RETURN: None, always. The SEMANTICS-22 rejection of D-20's widened
+              parse: a docstring may document a character, an aspect, a
+              behaviour, or a named cause (LANGUAGE 1.2) -- never a
+              declaration; the declaration itself remains published.
+    """
+    reporter.report(Diagnostic(
+        phase=Phase.SEMANTIC,
+        message="misplaced docstring: a docstring documents a character, "
+                "an aspect, a behaviour, or a named cause -- not a "
+                "declaration (SEMANTICS 22)",
+        source_offset=item.doc.begin,
         fatal=True,
         tag="STRUCTURE"))
 

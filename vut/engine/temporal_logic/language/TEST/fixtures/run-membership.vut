@@ -1,4 +1,4 @@
-behavior: w has: { tag: string; items: list; ok: bool; same: bool; ys: list; } {
+w : behavior has: { tag: string; items: list; ok: bool; same: bool; ys: list; } {
     setup => { b.items[0] = 3.0; b.items[1] = 7.0; b.ys[0] = 3.0; b.ys[1] = 7.0; b.tag = "sensor_7"; }
     q1 when: e.x in b.items => hit;
     q2 when: e.x not in b.items => miss;

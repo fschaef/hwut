@@ -1,9 +1,12 @@
 open: physics.motors {
     engine_ready: bool;
-    behavior: spin_up { MOTOR_ON => run; }
-    cause: hot temp_high when: t.value > 90;
+    spin_up : behavior { MOTOR_ON => run; }
+    hot : cause temp_high when: t.value > 90;
 }
 import: "lib/base.vut" as: base
-character: Rover(speed) is: base.vehicle
-aspect: drive { behavior: idle { ~ENTRY => halt; } }
+Rover : character(speed) is: base.vehicle
+drive : aspect { idle : behavior { ~ENTRY => halt; } }
 E => F;
+gauge : aspect(knows: rate = 10 signals: overrun, sensor_lost(port)) {
+    poll : behavior { sample => publish; }
+}

@@ -226,15 +226,26 @@ class Character(Node):
 
 
 @dataclass(frozen=True)
+class SignalDecl(Node):
+    """One entry of a panel's signals: section (D-23): the signal's name and
+    its payload parameter list ('params' NodeAbsent when bare).
+    """
+    name:   DeclarationLeaf
+    params: object                      # NodeList | NodeAbsent
+
+
+@dataclass(frozen=True)
 class Aspect(Node):
-    """An aspect definition (R-7, R-20): governs its one active behaviour; the
-    body is a NodeList of behaviours XOR a Clockwork.
+    """An aspect definition (R-7, R-25): governs its one active behaviour; the
+    body is a NodeList of behaviours. 'signals' is the panel's declared fault
+    set (D-23) -- recorded here; its checks land with the work construct.
     """
     abstract:  bool
     signature: Signature
     is_:       NodeList
     has:       NodeList
     body:      Node
+    signals:   NodeList = ()            # panel signals: section (D-23)
     doc:       object = NodeAbsent      # preceding docstring (D-18)
 
 
@@ -377,77 +388,17 @@ class ExitLabel(Node):
     label: DeclarationLeaf
 
 
-# == clockwork (R-20, R-22) ===================================================
-@dataclass(frozen=True)
-class Clockwork(Node):
-    """An aspect body run as a paced coroutine: 'tick' is its pacing cause;
-    'statements' the clockwork-statement sequence.
-    """
-    tick:       Node
-    statements: NodeList
-
-
-@dataclass(frozen=True)
-class EmitStep(Node):
-    """'=> target' -- emit then await the tick; 'target' is a Call, or
-    EmitNone for '=> ~NONE' (pass one tick, emit nothing).
-    """
-    target: Node
-
-
-@dataclass(frozen=True)
-class EmitNone(Node):
-    """The '~NONE' emit target: nothing emitted, one tick passed (R-20)."""
-
-
-@dataclass(frozen=True)
-class Groove(Node):
-    """A repeating blocking select over cause-arms (R-20): 'arms' in source
-    order, implicitly or-ed.
-    """
-    arms: NodeList
-
-
-@dataclass(frozen=True)
-class ClockArm(Node):
-    """One groove arm: 'cause' (a cause-explicit, an ElseArm, or a
-    TickDefault) with its clockwork-statement body.
-    """
-    cause: Node
-    body:  NodeList
-
-
-@dataclass(frozen=True)
-class BeatArm(Node):
-    """A 'beat: n { ... }' groove arm: fires every 'beat' ticks (R-22)."""
-    beat: int
-    body: NodeList
-
-
-@dataclass(frozen=True)
-class ElseArm(Node):
-    """The '~ELSE' default arm: fires when no other arm matched; optionally
-    guarded ('guard' NodeAbsent when bare).
-    """
-    guard: object                       # Node | NodeAbsent
-
-
-@dataclass(frozen=True)
-class TickDefault(Node):
-    """A condition-only arm 'when: cond': wakes on the tick, gated by 'cond'
-    (the tick-default; no ~TICK exists, R-22).
-    """
-    cond: Node
-
-
 # == declarations and types (R-19) ============================================
 @dataclass(frozen=True)
 class Declaration(Node):
     """A 'name: type;' member declaration (has: block or top level; D-5: no
-    parameter list).
+    parameter list). 'doc' exists only because D-19's factored head makes a
+    preceding docstring PARSEABLE on a top-level declaration; the placement
+    is unlawful (LANGUAGE 1.2) and declare rejects it (SEMANTICS 22, D-20).
     """
     name:  DeclarationLeaf
     type_: Node
+    doc:   object = NodeAbsent          # D-20: parseable, rejected in declare
 
 
 @dataclass(frozen=True)

@@ -1061,3 +1061,214 @@ GRAVEYARD
   - "~ANY" (any-event arm): removed; it shadows every specific arm and cannot
     coexist with them. "~ELSE" (fires only when none matched) is the coherent
     default. (~ANY itself descended from the earlier deferred "*" -- now closed.)
+
+
+R-23: Name-first definitions (F-4)
+----------------------------------
+PROBLEM
+  Two definition surfaces coexisted: keyword-first entities ("behavior: ON
+  ...") and name-first member declarations ("speed: float;"). Two shapes for
+  one act -- introducing a name -- and the entity keywords occupied the
+  colon-keyword class while carrying no sentence role beyond naming a kind.
+
+DECISION (Frank-Rene, ratified)
+  ONE definition form, name first: "<name> : [~] <kind>[(<parameters>)]
+  <kind sections>" -- "Polling : behavior { ... }", "hot : cause(threshold)
+  ...", "GENERAL : ~behavior { ... }". Read: "<name> is a <kind> about ...".
+  The kind words character/aspect/behavior/cause become BARE reserved words;
+  "~" qualifies the kind word; the parameter list rides the kind word.
+  Definition and member declaration are now the SAME head, and at top level
+  they parse through one factored rule, decided at the word after the colon.
+
+COST
+  Four reserved bare words (no identifier may be named character, aspect,
+  behavior, or cause). The parser's factored head makes a docstring before a
+  top-level declaration parseable; the semantic layer rejects the placement
+  (SEMANTICS 22, grammar D-20).
+
+PAYOFF
+  One form for every introduction of a name; the top level becomes LL(2)-
+  trivial (':' after the head name says "named item", anything else says
+  "causality"); parameters sit where the kind is stated, so the reading
+  order is uniform: who -- what kind -- how parameterised -- what content.
+
+GRAVEYARD
+  - keyword-first definitions ("behavior: ON", "cause: hot(t) ..."):
+    replaced by the one name-first form.
+  - the "<signature>" grammar rule: the head name is parsed by the defining
+    rule (named-item / behavior-def); the Signature AST product remains,
+    reunited by the factories -- the AST is unchanged.
+
+
+R-24: The label is ':name:' -- 'exit:' freed for the fault egress (F-5)
+-----------------------------------------------------------------------
+PROBLEM
+  The work construct (werk-draft 0.2) needs 'exit: <variant>' as its fault
+  egress; the engine already used 'exit: <label>' to DEFINE a drop-through
+  label in the exit-region tail ladder (R-14). Same keyword, same body
+  position, contradictory acts: fall THROUGH versus leave NOW. Coexistence
+  by operand class would give one keyword two opposite meanings; renaming
+  by another keyword would merely relocate the prediction.
+
+DECISION (Frank-Rene, ratified)
+  A label is written ':name:' -- colon, name, colon -- with no predicting
+  keyword at all. The form is SELF-TERMINATING: the second colon delimits,
+  as '}' delimits a block; no ';' follows. 'dropto:' is unchanged. The
+  keyword 'exit:' carries no duty in this language version; it is reserved
+  for the work construct's fault egress.
+
+COST
+  One spelling migration in the exit-region; a one-line extension of the
+  terminator law (':name:' terminates itself). No lexer change: an
+  undeclared trailing-colon word falls apart into ID + bare ':', and the
+  bare ':' is the final-tier regex terminal.
+
+PAYOFF
+  The F-5 keyword collision dissolves without prejudging the cascade
+  question (whether dropto: and the tail ladder retire when the routed
+  fault handling 'elseto:' lands -- a label region serves both; deferred
+  into the work-integration scope). ':name:' is visually distinct from the
+  keyword class ('word:') and from the definition head ('name :'); no
+  other statement begins with ':', so the statement alternation stays
+  LL(1)-distinct at token one. Canary-verified on the real grammar with
+  the prospective fault surface (else:/elseto:/handler arms) stacked on
+  top: LL(2)-clean, all probes zero-diagnostic, ternary ':' and the
+  count-loop 'int:' untouched.
+
+GRAVEYARD
+  - 'exit: <label>;' as the label definition: replaced by ':name:'.
+  - 'exit:' in keyword list 1.1: removed; returns with the work construct.
+  - NOTE: the NOUN 'exit-label' stays -- the region is still where control
+    exits the block; only the spelling lost its keyword.
+
+
+R-25: Aspect and clockwork part ways -- the tick-paced clockwork retires (F-6)
+------------------------------------------------------------------------------
+PROBLEM
+  Two clockwork notions collided: the implemented one (an aspect body paced
+  by a tick cause, R-20/R-22) and the work-family one (a pull-driven
+  producer consumed via next()). Pondering their nature showed both are
+  state machines -- the aspect an OPEN graph over behaviours-as-states, the
+  clockwork the SINGLE LINEARIZATION of such a machine. Opening the aspect
+  into a free production ("gearbox") was examined and rejected: free
+  behaviour-changing production is the goto-spaghetti nightmare on
+  steroids; the aspect's XOR-set discipline is the state pattern earning
+  its place.
+
+DECISION (Frank-Rene, ratified)
+  (1) Aspect and clockwork are SEPARATE constructs; the kinship (a
+      clockwork is a degenerate state machine) is noted, the surfaces do
+      not merge. The aspect body is behaviours-only.
+  (2) The tick-paced clockwork implementation is REMOVED NOW (dead
+      coupling: the pull-driven successor shares the noun and the model,
+      not the code). The successor: next() is the event that runs the
+      script -- the puller is the clock; tick: delivers and suspends until
+      the next pull; ordered program flow is the clockwork's place. It
+      lands with the work construct.
+  (3) groove: is NOT removed as a construct -- "the groove is a worthy
+      construct! waiting shall be an important element of a clockwork."
+      It survives as the clockwork's wait (suspension on causes), reserved
+      until its new host lands. No dead grammar stays behind meanwhile.
+  (4) Aspects gain the clockwork-style DEFINITION FORM: the panel (D-23) --
+      "knows:" parameters, "signals:" the declared fault set (recorded;
+      checks land with the work construct).
+
+COST
+  The R-20/R-22 machinery leaves: grammar subspace (emit-step, groove,
+  clock-arm, beat:), reserved events ~ELSE/~NONE, SEMANTICS 16 checks,
+  interpreter law P-7, the run-clockwork choice. Rule count 89 -> 83;
+  suite 60 -> 58 choices.
+
+PAYOFF
+  One clockwork notion instead of two; the aspect stays the disciplined
+  state pattern; the channel law of the converged model is on record --
+  events flow freely on the bus; non-ephemerals leave ONLY through the one
+  outward port next() (production is handover: responsibility and
+  ownership pass to the taker -- no diffuse spitting of objects); signals
+  flow through pipes wired at construction or the else: handler at the
+  pull site. Aspect-wound production is event-only.
+
+GRAVEYARD
+  - clockwork: as an aspect-body form; the tick cause as driver; the R-20
+    restart law; beat: (tick counting is meaningless without tick pacing);
+    ~ELSE/~NONE; SEMANTICS 16 (tombstoned); interpreter clock machinery
+    and P-7 (tombstoned).
+  - the "gearbox" (free open production): examined, rejected -- chaos.
+  - NOT in the graveyard: groove: (survives by ruling, reserved); the
+    noun "clockwork" (returns with the work construct).
+
+
+R-26: The clockwork settled -- pull many, known, pulled by one (F-9 partial)
+----------------------------------------------------------------------------
+PROBLEM
+  The forward model recorded in R-25 left the clockwork's outward topology
+  and its wait inventory as direction, not law; the werk documents settle
+  the construct's anatomy but are silent on multiplicity and on cause-
+  waiting.
+
+DECISION (Frank-Rene, ratified)
+  A clockwork PULLS MANY (inputs are clockworks consumed via next()),
+  KNOWS things, and IS PULLED BY EXACTLY ONE consumer through its single
+  outward port next(); its signals are received by the puller's else:.
+  One pull spelling -- next() is intrinsically potentially-suspending, no
+  wait-variant. groove: is the clockwork's wait construct (R-25(3)):
+  parked on causes, arms may deliver (tick:) or fault (exit:) from
+  within. Aspects operate DIFFERENTLY (pull from clockworks, hold several,
+  possibly a publish/subscribe face) -- deliberately left unsettled.
+  LANGUAGE (11) now states the construct as settled law; implementation
+  lands with the work construct.
+
+COST
+  Ten further reserved words (1.1). The suspension inventory (tick:,
+  groove:, next()-on-input) commits the runtime design to caller-
+  transparent suspension.
+
+PAYOFF
+  The clockwork is fully specified before any of it is built: panel,
+  egresses, waits, pull, consumption loop -- integration can proceed
+  against a fixed text instead of a moving conversation.
+
+GRAVEYARD
+  - 'wait next()' as a separate spelling: rejected -- blocking is the
+    nature of the act, not a syntactic mode.
+  - The 'gearbox'/free-production reading of the topology exchange:
+    already rejected in R-25; the aspect producer face stays OPEN.
+NOTE
+  The no-cycle sentence in 11.1 is the coordinator's soundness addition
+  (a cycle of pulls is mutual waiting); strike it if unwanted.
+
+
+R-27: The work construct migrates into LANGUAGE (F-9 partial; C-1/C-2)
+----------------------------------------------------------------------
+PROBLEM
+  The werk documents (draft 0.2 + examples) specified the work construct
+  outside the language's authoritative text; two spelling forks (disc-9
+  C-1, C-2) blocked a faithful migration.
+
+DECISION (coordinator lean, per Frank-Rene's instruction "migrate as you
+lean and I will review"; SUBJECT TO REVIEW)
+  C-1: the named-argument / port binder is "=>" ("port => value") -- the
+  ONE direction-neutral binder the port-map form requires; "=" remains
+  the declaration DEFAULT marker only. D-24 aligns the implementation
+  (arg rule, fixtures); supersedes D-11's call-site "=".
+  C-2: panel entries are COMMA-SEPARATED within a section; sections are
+  keyword-led and juxtaposed -- the form implemented for the aspect panel
+  (D-23) governs all panels.
+  LANGUAGE (12) states the work construct as settled law: panel, signal
+  scope, sum result, finish:/exit: terminals, call-site binding with
+  port-map / same-type rule / visible discard, the aware assignment and
+  handler-match law, elseto: routes with ":name:" regions, the "=="
+  common ground, elsewhile:, div_by_zero under SEMANTICS 21, specs and
+  references, forced translation, and the event unification (12.11).
+  Custody-bound elements carry explicit type-document markers.
+  LANGUAGE.txt is again the top-priority document.
+
+COST
+  D-11's call-site "=" migrates (one grammar branch, two fixture sites);
+  the reserved list grows by the else-family.
+
+GRAVEYARD
+  - call-site named arguments spelled "name = value" (D-11): replaced by
+    "name => value" (D-24). "=" survives as the default marker.
+  - the earlier coordinator lean to KEEP "=" (todo F-8 note): reversed
+    with reasons in disc-9 C-1.

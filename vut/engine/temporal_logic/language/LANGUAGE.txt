@@ -4,7 +4,7 @@ LANGUAGE
 
 The rule-file language describes the behaviour of an entity as reactions to
 events. This document states each language element and shows it in an example.
-Rationale for every decision lives in RATIONALE.txt (entries R-1..R-21); this
+Rationale for every decision lives in RATIONALE.txt (entries R-1..R-28); this
 document carries mechanics only.
 
 Spine:
@@ -25,6 +25,79 @@ an aspect governs which one behaviour is active; a character circumscribes all
 aspects.
 
 
+(0) Foundations: two natures, four relations, one law
+======================================================
+Everything the language speaks of has one of TWO NATURES, and every
+construct in this document is an instance of the relations below. This
+section is the design's spine; where mechanics await the type document
+they are marked, but the model here governs regardless.
+
+(0.1) The two natures
+---------------------
+PERSISTENT OBJECTS exist over time and occupy resources; their existence
+is a RESPONSIBILITY. They come into being by construction and leave it by
+destruction -- both are WORKS (12): construction hands a new debt to the
+caller through a gives-port; destruction receives a debt through a
+takes-port and ends it. Composing already-answered-for parts into a
+record is AGGREGATION, not work: it creates no new debt beyond its parts.
+
+EPHEMERALS -- events, and the signals built on them -- are defined on the
+fly and VAPORATE UPON CONSUMPTION. They may be known or taken, never had;
+consumption is their end -- no destruction, no giving onward, no ledger.
+Ephemerals are the language's channel of COMMUNICATION, including the
+communication of MISBEHAVIOUR: a signal is an ephemeral reporting
+malfunction (12.2), consumed by the handler arm that matches it.
+
+The two natures obey different laws throughout; a rule stated for one
+never silently applies to the other.
+
+(0.2) The four relations
+------------------------
+One verb, one relation, everywhere -- member declarations, panels, and
+transfers all speak the same four words:
+
+    is:      IDENTITY.  What a thing is; inheritance. Creates no
+             possession and no debt.
+    has:     CUSTODY.   Aggregation of persistent objects. To have is to
+             owe: the haver answers for the end of what it has.
+    knows:   ACQUAINTANCE.  Access without responsibility -- a view.
+             Knowing creates no debt and confers no destruction rights;
+             the known must outlive the knower's use. Only ephemerals
+             and knowledge are ever merely known.
+    give     TRANSFER.  Custody moves WHOLE: the giver's name dies, the
+             taker now has. Giving is moving, never copying -- one
+             object, one debt. (takes:/gives: are the panel spellings of
+             receiving and handing custody, 12.2.)
+
+(0.3) The law of ownership tracing
+----------------------------------
+    GIVE OR DESTRUCT WHAT YOU HAVE.
+
+On every path, every persistent object that is had is either GIVEN onward
+or DESTRUCTED by its haver before that haver's own end. Abandonment is
+the one crime. The trace of responsibility runs unbroken from the
+construction site to the destruction site, through every give between --
+statically checkable, because every step is one of the four relations
+written in the source. (The ledger's mechanics -- the checker, containers
+as collective debt, disposal policies -- bind the future type document;
+the law binds now.)
+
+(0.4) The line of thought
+-------------------------
+The language builds outward from this section, in this order:
+
+    natures and relations        (this section)
+    the class concept            characters and types: is/has/knows members
+    the work                     the act: panels speak the same verbs;
+                                 construction and destruction are works (12)
+    the clockwork                the temporal work (11)
+    connections                  pull, signals, pipelines (11.1)
+
+Persistent objects and ephemerals remain of different nature at every
+stage; whenever a construct touches both, its law says which nature each
+part addresses.
+
+
 (1) Lexical laws
 ================
 
@@ -32,24 +105,49 @@ aspects.
 -------------------------------
 Every keyword is colon-terminated; the colon is part of the keyword.
 
-    cause:  behavior:  aspect:  character:  is:  has:  when:
+    is:  has:  when:  knows:  signals:
     if:  elif:  else:  match:  case:  for:  int:  float:  step:  from:  start:
-    break:  continue:  dropto:  exit:  every:  as:  in:  with:
-    open:  import:  clockwork:  groove:  beat:
+    break:  continue:  dropto:  every:  as:  in:  with:
+    open:  import:
 
-Exception -- operator and type words are BARE:
+Exception -- operator, type, and definition-kind words are BARE:
 
     and  or  not  in  true  false  struct  list  dict
+    character  aspect  behavior  cause
 
-"in" is therefore a taken word: no identifier may be named "in".
+"in" is therefore a taken word: no identifier may be named "in"; the four
+definition-kind words are likewise taken (they follow a definition's colon,
+see 1.2).
 
-(1.2) Docstrings
+RESERVED -- specified in (11) and (12), implementation pending (R-24..
+R-27): the keywords "exit:", "groove:", "tick:", "ticks:", "takes:",
+"gives:", "finish:", "elsewhile:", "elseto:", the bare words "finish"
+(the jump to the finish: terminal), "finished" (the built-in exhaustion
+variant), "give", and the bare kind words "work", "clockwork".
+
+(1.2) Definitions are name-first
+--------------------------------
+Every definition follows ONE form -- the name leads, the kind follows the
+colon, the parameter list rides the kind word:
+
+    <name> : [~] <kind>[(<parameters>)] <kind sections>
+
+    Polling : behavior { ... }
+    hot : cause(threshold) temp_high when: e.value > threshold;
+    GENERAL : ~behavior { ... }
+
+Read: "<name> is a <kind> about ...". "~" qualifies the kind word (abstract,
+see 3/6/7). The form is shared with the member declaration "name: type;" --
+one head, and the word after the colon decides: a definition-kind word opens
+a definition, a type ends a top-level declaration.
+
+(1.3) Docstrings
 -----------------------------------------------------------------------------
 A DOCSTRING is a triple-quoted string -- three double-quotes on each side --
 and may span lines. It PRECEDES what it documents:
 
     """Watches the motor temperature and shuts down on overheat."""
-    behavior: guard(threshold = 90.0) {
+    guard : behavior(threshold = 90.0) {
         hot(threshold) => shutdown;
     }
 
@@ -59,14 +157,14 @@ stands as the very first item of the file -- anywhere else it is an error.
 Docstrings carry documentation only: they take no part in execution and do
 not enter the export surface.
 
-(1.2) Blocks are brace-delimited
+(1.4) Blocks are brace-delimited
 --------------------------------
 Every block is "{ … }"; braces are mandatory at every depth. A colon-keyword
 introduces; a brace-pair delimits.
 
     if: <condition> { … }
 
-(1.3) Comments
+(1.5) Comments
 --------------
 A comment runs from "#" to end of line. "#" is the sole comment delimiter.
 
@@ -100,19 +198,23 @@ is float. A parameter may carry a VALUE DEFAULT (Python behaviour):
     <name> [: <type>] [= <algebraic>]
 
 A use supplies every parameter WITHOUT a default, each at most once,
-positionals before named arguments; a named argument names a declared
-parameter. A BARE name is a reference, not a call -- no argument judgement
+positionals before named arguments; a named argument binds a declared
+parameter by name with the port binder: "name => value" (D-24; "=" is the
+declaration default marker only). A BARE name is a reference, not a call -- no argument judgement
 attaches. A named cause CONTAINS its guard; a use site supplies arguments,
 not a second guard.
 
-    cause: OPERATION_IMPOSSIBLE(fuel_limit, battery_limit)
+    OPERATION_IMPOSSIBLE : cause(fuel_limit, battery_limit)
         MOTOR_ON when: c.fuel <= fuel_limit or c.battery < battery_limit;
 
     OPERATION_IMPOSSIBLE(0.1, 2) => SIGNAL_REFUSE_OPERATION;
 
 GRAMMAR
-    "<definition/cause>": ("cause:", "<signature>", "<cause-explicit>", ";")
-    "<cause>":            ("<cause-explicit>", OR, "<call>")
+    "<cause-tail>": (["<parens-decl>"], "<cause-explicit>", ";")
+    "<cause>":      ("<cause-explicit>", OR, "<call>")
+
+(A named cause is defined through the one name-first form of 1.4:
+"<name> : cause(<parameters>) <cause-explicit> ;".)
 
 (2.2) Effects
 -------------
@@ -153,9 +255,11 @@ target is written as two effects on one cause.
 
 (2.3) Reference and definition
 ------------------------------
-"<signature>" is the declaration side (name + formal parameters); "<call>" is
-the use side (name + arguments). Both are single shared forms across cause,
-behaviour, aspect, and character. A "(role)" suffix on a reference — e.g.
+The declaration side is the name-first head of 1.4: the defined name, then
+":", then the kind word carrying the formal parameters -- one shared form
+across cause, behaviour, aspect, and character (the AST reunites head name
+and parameters into one signature product). "<call>" is the use side (name +
+arguments). A "(role)" suffix on a reference — e.g.
 "<call(behavior)>" — is an advisory role hint walked by position; it is
 non-identity and resolved in the semantic pass.
 
@@ -172,7 +276,7 @@ handle is a bare name scoped to the enclosing entity. A recurring emission runs
 only while its entity is active and is cancelled automatically at ~EXIT. "as:"
 requires "every:".
 
-    behavior: Polling {
+    Polling : behavior {
         ~ENTRY       => poll_sensors() every: 0.5 as: poller;
         stop_pressed =x=> poller;
     }
@@ -184,20 +288,21 @@ requires "every:".
 A behaviour aggregates causalities: what happens, for a set of events, while
 that behaviour is active.
 
-    behavior: ClimateControlWhenActivated {
+    ClimateControlWhenActivated : behavior {
         ac_button_pushed => toggle_compressor;
         temp_dial_turned => set_target_temperature;
         fan_dial_turned  => adjust_fan_speed;
     }
 
 GRAMMAR
-    "<behavior>": (["~"], "behavior:", "<signature>",
-                   ["is:", "<call(behavior)>", STAR((",", "<call(behavior)>"))],
-                   ["has:", "<declaration-list>"],
-                   "{", PLUS("<causality>"), "}")
+    "<behavior-def>":  (t_ID("name"), ":", ["~"], "behavior", "<behavior-tail>")
+    "<behavior-tail>": (["<parens-decl>"],
+                        ["is:", "<call(behavior)>", STAR((",", "<call(behavior)>"))],
+                        ["has:", "<declaration-list>"],
+                        "{", PLUS("<causality>"), "}")
 
 The body opens directly with "{" (R-12). "is:" (inheritance) and "has:"
-(declarations) are optional sections before it. "~ behavior:" is abstract — it never instantiates
+(declarations) are optional sections before it. ": ~behavior" is abstract — it never instantiates
 alone and exists to be inherited.
 
 "~ENTRY" and "~EXIT" are reserved, non-externally-triggered events that run on
@@ -343,11 +448,12 @@ body, never escaping it.
 (5.2) Exit regions
 ------------------
 The outermost command-block body may end in a tail ladder of bare EXIT-LABELS.
-"exit: <label>" DEFINES a label (no body, C-label drop-through: control reaching
-it falls through to what follows). "dropto: <label>" is the forward-only JUMP to
-such an exit. This is the kernel "goto out:" cleanup idiom made safe -- "goto
-considered harmful" (Dijkstra) answered by allowing only forward drops to a
-declared exit.
+":<label>:" DEFINES a label (no body, C-label drop-through: control reaching
+it falls through to what follows). The label is SELF-TERMINATING: the second
+colon delimits it, as "}" delimits a block -- no ";" follows (R-24).
+"dropto: <label>" is the forward-only JUMP to such an exit. This is the
+kernel "goto out:" cleanup idiom made safe -- "goto considered harmful"
+(Dijkstra) answered by allowing only forward drops to a declared exit.
 
     SOMETHING => {
         c.h = acquire_a();
@@ -356,16 +462,17 @@ declared exit.
         if: not c.g.ok  { dropto: free_a; }
         dropto: done;
 
-      exit: free_a;   c.released_a = release_a(c.h);
-      exit: fail;     c.status = FAILED;
-      exit: done;
+      :free_a:   c.released_a = release_a(c.h);
+      :fail:     c.status = FAILED;
+      :done:
     }
 
 "dropto:" requires a target and may jump only to an exit-label defined LATER in
 the body (forward-only, so it forms no loop). Exit-labels may be defined only at
 the outermost body -- never inside a loop, if/elif/else, match, or any nested
 block. Loops use the unlabelled "break:"/"continue:"; exit-regions use "dropto:"
-(jump) and "exit:" (define); the two never overlap.
+(jump) and ":<label>:" (define); the two never overlap. The keyword "exit:"
+carries no duty in this language version: it is reserved (R-24).
 
 
 (6) Aspect
@@ -374,28 +481,44 @@ block. Loops use the unlabelled "break:"/"continue:"; exit-regions use "dropto:"
 An aspect governs the one behaviour active at a given time; its behaviours are
 mutually exclusive.
 
-    aspect: MotorActivity {
-        ~behavior: GENERAL {
+    MotorActivity : aspect {
+        GENERAL : ~behavior {
              gas_pedal_release => close_throttle;
              battery_empty     => close_throttle;
         }
-        behavior: ON is: GENERAL {
+        ON : behavior is: GENERAL {
              gas_pedal_push     => open_throttle;
              on_off_button_push => OFF;
         }
-        behavior: OFF is: GENERAL {
+        OFF : behavior is: GENERAL {
              gas_pedal_push     => tone_notify_engine_off;
              on_off_button_push => ON;
         }
     }
 
 GRAMMAR
-    "<aspect>": (["~"], "aspect:", "<signature>",
+    "<aspect-tail>": (["<panel>"],
                  ["is:", "<call(aspect)>", STAR((",", "<call(aspect)>"))],
                  ["has:", "<declaration-list>"],
-                 "{", PLUS("<behavior>"), "}")
+                 "{", PLUS("<behavior-def>"), "}")
+    "<panel>":       ("(", ["knows:", <decl-args>], ["signals:", <signal-decls>], ")")
+    "<signal-decl>": (name, ["<parens-decl>"])
 
-"~ aspect:" is abstract. "is:" inherits. "~ENTRY"/"~EXIT" work as for behaviour.
+": ~aspect" is abstract. "is:" inherits. "~ENTRY"/"~EXIT" work as for behaviour.
+
+THE PANEL (D-23). An aspect's kind parens are a sectioned signature, the
+clockwork-style form: "knows:" declares the parameters (what the aspect is
+told at instantiation -- the former plain parameter list), "signals:" the
+declared fault set. Sections are keyword-led and juxtaposed without a
+separator; entries within a section are comma-separated; both sections are
+optional.
+
+    gauge : aspect(knows: rate = 10 signals: overrun, sensor_lost(port)) {
+        poll : behavior { sample => publish; }
+    }
+
+Signals are RECORDED on the definition; their checks and their consumption
+(pipes wired at the winding site) land with the work construct.
 
 
 (7) Character
@@ -405,14 +528,14 @@ A character aggregates aspects, which are concurrent: each aspect is
 independently activable (active/inactive), and two or more may co-exist. Aspects
 appear in the "has:" section.
 
-    ~character: sprite has: {
+    sprite : ~character has: {
         position:  2dvector;
         speed:     2dvector;
         resources: AspectResources(0, 0, 0);
     }
 
 GRAMMAR
-    "<character>": (["~"], "character:", "<signature>",
+    "<character-tail>": (["<parens-decl>"],
                     ["is:", "<call(character)>", STAR((",", "<call(character)>"))],
                     ["has:", "<declaration-list>"])
 
@@ -428,7 +551,7 @@ A namespace is a named scope holding nested declarations. It is re-openable and
 nests to any depth; names declared within are scoped to it.
 
     open: graphics.sprites {
-        ~character: sprite has: { position: 2dvector; }
+        sprite : ~character has: { position: 2dvector; }
         ...
     }
 
@@ -476,54 +599,334 @@ named type. The containers are untyped for now; type constraints (a typed list,
 dict, or struct field) are a later addition.
 
 
-(11) Clockwork
-==============
+(11) Clockwork              [SETTLED -- implementation lands with the work construct]
+===============================================================================
+A CLOCKWORK is the work family's temporal member: a pull-driven producer,
+the single linearization of a state machine (kin to the aspect, whose
+behaviours are free states; the kinship is noted, the constructs are
+separate, R-25).
 
-An aspect body is either the mutually-exclusive behaviour set (6) or a
-CLOCKWORK: a paced sequential script advanced by a tick cause. The mental model
-is a coroutine (asyncio): the clockwork runs on the engine's event loop and its
-steps "sleep on a resource available".
+(11.1) Topology
+---------------
+A clockwork may PULL MANY (its inputs are themselves clockworks, consumed
+via next()), may KNOW things, and is PULLED BY EXACTLY ONE consumer through
+its single outward port, next(). Its signals are received by the puller's
+"else:" handler. The winding relation admits no cycle. Pipelines are chains
+of clockworks in which only the final consumer pulls; each stage's
+exhaustion and faults translate upward through ordinary handlers -- forced
+translation, flowing through time.
 
-    aspect: Poller {
-        clockwork: c.tick {
-            => sample()                    # emit, then await the next tick
-            => ~NONE                       # emit nothing, pass one tick
-            groove: {                      # keep reacting to whichever fires
-                c.button_pressed { => ack(); }
-                when: c.ready    { => go(); }   # tick-default: on the tick, if ready
-                c.data_ready     { => forward(); }
-                beat: 30         { => idle(); }   # every 30 ticks: a recurring pulse
-            }
-        }
+(11.2) Panel
+------------
+The definition follows the one form (1.2) with the panel verbs:
+
+    knows:    inputs known for the run -- no responsibility taken
+    takes:    inputs received into custody at winding
+    ticks:    the per-tick outputs (in place of gives: -- panel and
+              terminal correspond: ticks: declares, tick: delivers)
+    signals:  the closed fault set
+
+    line_reader : clockwork(takes: f : file_handle
+                            ticks: line : string
+                            signals: io_error(code: int)) { ... }
+
+What a clockwork takes at winding it holds across ticks. (The custody
+ledger across ticks and the written early-disposal path "winddown:" bind
+the future type document.)
+
+(11.3) Egresses and waits
+-------------------------
+Three egresses close a body stretch:
+
+    tick:             deliver the declared ticks: bundle implicitly (as
+                      finish: does for gives:) and SUSPEND until the next
+                      pull; no operands -- the panel already named
+                      everything
+    finish:           orderly exhaustion; the unique success terminal
+    exit: <variant>   fault mid-stream, one of the own declared signals
+
+Three waits suspend a running clockwork, one law for all -- progress is
+guaranteed because each is crossed only when the outside world acts:
+
+    tick:             awaits the next pull from below
+    groove: { arms }  awaits causes (the clockwork's WAIT construct,
+                      R-25(3)): the script parks; a firing arm cause runs
+                      its arm and the script continues -- an arm may
+                      deliver (tick:) or fault (exit:) from within
+    next() on input   awaits delivery from above; EVERY next() is a
+                      suspension point of the caller
+
+(11.4) The pull
+---------------
+next() is the event that runs the clockwork: the puller is the clock.
+There is ONE spelling -- next() is intrinsically potentially-suspending;
+no wait-variant exists. Its match domain is the declared signals: set
+UNION the built-in variant "finished" (exhaustion is an event -- no
+option types, no sentinels):
+
+    v = cd.next() else: {
+        finished => break:;
     }
 
-Suspension points (asyncio analogue in parentheses):
-    => <emit>   emit, then await the tick        (await queue.put; await tick)
-    => ~NONE    emit nothing, pass one tick        (await sleep(0) / yield)
-    groove:{..} await-and-repeat over causes         (async for / looping select)
-    beat: n     an arm firing every n ticks           (a recurring pulse)
+Winding is an ordinary call -- no constructor: instantiation is calling
+the clockwork's name with construction arguments, an aware assignment
+with handled faults.
 
-An ordinary statement (5) may appear inside a clockwork but is
-EMISSION-IMPOTENT: emission happens only through "=>". A "groove:" is a
-repeating blocking select: it keeps reacting to whichever arm fires. An arm is a
-cause (which may carry its own "when:"), "~ELSE" (the default arm -- fires when
-no other arm matched, like "case: _"), a tick-default "when: <cond>" (the groove
-is tick-paced, so a condition-only arm wakes on the tick), or a "beat: n" (a
-recurring pulse every n ticks); arms are implicitly or-ed. A one-shot wait is
-"groove: { ... break: }".
+(11.5) Consumption loop
+-----------------------
+    for: v from: cd { ... } else: { ... }
 
-Statements run IN SEQUENCE, and where a step both acts and suspends the EFFECT
-happens first, then the wait: "=> x" emits then awaits the tick; a groove arm
-runs its body then the groove resumes.
+"from:" announces the pulled source as "elsewhile:" announces its
+backward edge; "finished" IS the loop's own end. The trailing else: must
+cover the remaining signal set and is omitted exactly when that set is
+empty. Custody flavours ("from: cd" borrows -- disposal stays with the
+consumer; "from: give cd" hands the instance to the loop, which disposes
+on every exit path) bind the future type document.
 
-Reserved-event names (like ~ENTRY/~EXIT): ~ELSE is the default/fallthrough arm
-(fires when no other arm matched -- so it never shadows a specific arm and is
-checked last); ~NONE is the null emit target ("=> ~NONE"), never a trigger.
-Within one groove:, only the tick-default "when: <cond>" arm may appear more than
-once (differently gated); every other arm cause, including ~ELSE, appears at most
-once.
+(11.6) A complete small clockwork
+---------------------------------
+    countdown : clockwork(knows: n : int
+                          ticks: value : int) {
+        int: i = 1 .. n {
+            value = n - i + 1;
+            tick:
+        }
+        finish:
+    }
 
-TIE-BREAK: when several arms are ready in the same tick, the arm defined FIRST
-(topmost in the block) wins -- precedence of definition. This is deterministic:
-source order is fixed. A "break:" in an arm leaves the groove; "continue:"
-resumes the select (a groove counts as an enclosing loop).
+    for: v from: countdown(10) { print(v); }
+
+
+(12) Work                   [SETTLED -- implementation lands in the F-9 passes]
+===============================================================================
+A WORK replaces the function/exception pair: a subroutine with named input
+and output PORTS (as an entity in VHDL) and a mandatory, non-reifiable
+FAULT CHANNEL. Everything that can leave a work -- outputs and malfunction
+signals alike -- stands on its face; the call site is statically obligated
+to handle every declared signal. Invoking a work is a CALL.
+
+(12.1) Definition forms
+-----------------------
+The one form of 1.2 conquers all three:
+
+    <name> : work( <panel> ) { <body> }     a defined work
+    <name> : work( <panel> )                a SPEC (panel without machine)
+    <name> : <spec-name> { <body> }         an IMPLEMENTATION of that spec
+
+(12.2) The panel
+----------------
+Panel verbs -- the relations of (0.2) spoken at a work's boundary
+(entries comma-separated within a section; sections keyword-led
+and juxtaposed; each entry "<name> [: <type>] [= <default>]"; "=" is the
+declaration DEFAULT marker -- the call-site binder is "=>", 12.5):
+
+    knows:    inputs known for the call, no responsibility taken; a
+              defaulted knows-entry may be omitted at the call site;
+              defaulted entries follow non-defaulted ones
+    takes:    inputs received into custody (never defaulted -- a default
+              would conjure custody from nowhere); custody law binds the
+              future type document
+    gives:    the outputs -- ordinary local variables of the body,
+              implicitly given at finish:; a default initializer counts
+              as assigned from the start
+    signals:  the closed fault set: each signal an on-the-fly enumeration
+              variant, optionally carrying named typed payload fields --
+              "no_convergence(residual: float)". A work without signals:
+              cannot signal; its call sites carry no handling obligation.
+
+    bundle_adjustment : work(knows: pc_a : cloud, pc_b : cloud,
+                                    eps : float = 1e-6
+                             gives: center : point2d, rotation : mat2
+                             signals: no_convergence(residual: float),
+                                      singular_matrix(rank: int)) { ... }
+
+SCOPE OF SIGNALS. A work's variants exist in exactly four places: its
+declaration, its body (as exit: targets), the else:-handlers at its call
+sites, and work specs (12.8). They are not types in the surrounding
+program. Two works may both declare "no_convergence"; these are unrelated
+and can never meet -- except measured against one spec, whose vocabulary
+then governs.
+
+(12.3) Result semantics
+-----------------------
+The result of a call is a SUM: either the complete bundle of all declared
+outputs, or exactly one signal. Never both, never neither, never a partial
+output set. After a successfully handled call, all bound outputs are
+unconditionally valid.
+
+(12.4) Body terminals
+---------------------
+    finish:                    the UNIQUE success terminal, exactly once;
+                               required iff gives-entries are declared.
+                               Every path reaching it must have every
+                               gives-entry definitely assigned; the
+                               declared giving happens implicitly, no
+                               operands. Bare "finish" elsewhere jumps to
+                               it, verified the same way.
+    exit: <variant>(<payload>) the fault egress -- anywhere, any number of
+                               times; leaves the work immediately with
+                               that one own signal; no outputs. Payload
+                               expressions evaluate at the exit:.
+
+Both directions are checked: every exit: names a declared variant; every
+self-declared variant is emitted by at least one reachable exit:.
+
+(12.5) Call-site binding
+------------------------
+INPUTS follow the Python argument pattern: positionals bind in declaration
+order; named arguments "port => value" bind by name; positionals precede
+named; no port bound twice; every non-defaulted input supplied.
+
+OUTPUTS bind in one of two forms:
+  - assignment form: targets left of "=" bind gives-entries in
+    declaration order -- "c, r = bundle_adjustment(pc1, pc2) else: ...";
+  - port-map form: inputs and outputs associated by name in ONE
+    parenthesis; argument/result dissolves into port DIRECTION and the
+    call reads as a wiring diagram:
+    "bundle_adjustment(pc_a => pc1, pc_b => pc2, center => c, rotation => r) else: ..."
+
+SAME-TYPE RULE (outputs only): positional output binding is refused when
+two gives-entries share a type; the port-map form is demanded.
+
+VISIBLE DISCARD: every gives-entry is bound or visibly discarded -- "_"
+positionally ("c, _ = ..."), or a trailing "_" in the port-map form for
+"the rest is deliberately dropped". A call binding neither all ports nor
+a discard does not compile.
+
+(12.6) The aware assignment and the handler
+-------------------------------------------
+    c, r = bundle_adjustment(pc1, pc2) else: {
+        no_convergence(res) => { log(res); exit: adjustment_failed(res); }
+        singular_matrix(_)  => exit: bad_input;
+    }
+
+A call of a signalling work MUST carry an else: block (a work without
+signals takes none). No signal object is bound -- "else: {", never
+"else: e {": the fault channel selects an arm; it is not a value.
+
+The else: block is a match over the signal set:
+  - arms carry variant patterns with payload destructuring; a bare "=>"
+    is the default arm (binds nothing, at most one, last);
+  - FIRST-MATCH precedence; a DEAD ARM is a hard error;
+  - EXHAUSTIVENESS over the closed set is mandatory;
+  - the minimal legal handler is the EMPTY BLOCK "else: {}" -- the written
+    shrug; silence does not compile, deliberate omission leaves a
+    searchable trace (legality constrained by the flow rule below);
+  - PAYLOAD SCOPING: a variant's fields materialize only inside the arm
+    that matched; the default arm can react but cannot inspect.
+
+WHAT AN ARM MUST DO -- each arm independently:
+  1. DIVERGE ("finish", "exit: <signal>", or a provably non-falling path);
+  2. PRODUCE SUBSTITUTES (assign the targets; ordinary definite
+     assignment); or
+  3. FALL THROUGH -- legal only where no invalid binding remains:
+     statement-form call, or every target pre-initialized (keeps its
+     prior value). Fresh bindings with a falling-through arm do not
+     compile.
+Code after an aware assignment sees fully valid outputs, unconditionally.
+
+(12.7) The handler family: elseto: and elsewhile:, and the common ground
+------------------------------------------------------------------------
+First morpheme names the channel, second the control flow: "else:" handle
+once; "elsewhile:" handle while it faults; "elseto:" handle over there.
+
+ROUTED HANDLING. "elseto: <label> with: <carrier>;" routes this site's
+fault wire to a label region further DOWN in the same body -- the honest
+form of the kernel unwind cascade:
+
+    f   = open_file(path)    else: { no_access(p) => exit: unreadable(p); }
+    buf = alloc(65536)       elseto: close_f with: otto;
+    n   = read_into(f, buf)  elseto: free_b  with: karl;
+    ...
+    finish:
+
+    :free_b: {
+        karl.short_read(got) => log(got);
+        karl.=>              => ;
+    }
+        free(buf);
+    :close_f:
+        close(f);
+    exit: unreadable("io");
+
+  - labels are spelled ":name:" (5.2); a LABEL REGION is the label, an
+    OPTIONAL match block, and statements; regions stack into the FAULT
+    SECTION;
+  - CARRIERS are labels, not values: "with: otto" names the arrival
+    channel; legal only as a pattern qualifier "otto.<variant>(...)" in
+    the label's match block; carriers are inferred from routes;
+  - match blocks are ARRIVAL-SPECIFIC, statements are SHARED: control
+    cascading down from above skips the block; a label with no match
+    block is the routed omission marker;
+  - exhaustiveness PER CARRIER when a block is present; "otto.=>" the
+    per-carrier default, a final bare "=>" the label-wide default;
+  - every path through the fault section ends deliberately: an
+    "exit: <own signal>" or a jump to "finish" (legal only with all
+    gives-entries assigned -- a recovered fault); no fall-off, no fall-IN
+    from the normal path;
+  - DOWNWARD ONLY, SAME BODY ONLY; definite assignment holds on every
+    route and cascade path.
+
+COMMON GROUND. An inline block may end in a ground opened by the divider
+"==": every non-diverging arm drops in; the flow obligation of 12.6 moves
+to the ground's end; payloads are dead below "=="; at most one "==",
+after all arms:
+
+    x, y = some_work(a, b) elsewhile: {
+        no_convergence(r) => { eps = eps * 10; }
+        hard_error(m)     => exit: broken(m);
+        ==
+        attempts = attempts + 1;
+        if: attempts >= 5 { exit: gave_up(attempts) }
+    }
+
+LOOPING CALL. "elsewhile:" re-executes the aware assignment at the
+block's end (arguments re-evaluated afresh); on success, outputs bind and
+control continues after the block. "break:" leaves without success,
+legal under the fall-through conditions of 12.6. "elsewhile: {}" is the
+visible retry-until-success loop. Inline form only: routed regions stay
+loop-free.
+
+(12.8) Specs and work references
+--------------------------------
+A SPEC is the panel without the machine (12.1). A work conforms by
+SPEC-TYPED DECLARATION ("name : spec_name { }": the spec supplies ports
+and signals wholesale) or by STRUCTURAL fit (ports match by direction,
+position, type; own signals a SUBSET of the spec's). A WORK REFERENCE is
+a value denoting a work answering to a spec; the spec name is its type --
+variables, ports, containers (dispatch tables). An indirect call is
+checked against the SPEC: handler mandatory and exhaustive over the
+spec's set; the spec's names govern; specs declare no input defaults. A
+spec-typed member need not emit every inherited variant (the spec is a
+promise for a family); the every-variant-emittable check of 12.4 applies
+to self-declared sets only.
+
+(12.9) Fallible primitives
+--------------------------
+Division and modulo may emit the built-in variant "div_by_zero"; a
+statement containing a fallible division carries a handler -- the same
+three forms. One handler per statement, over the UNION of the statement's
+fault sources; evaluation is left-to-right. Provably nonzero divisors are
+exempt (SEMANTICS 21 holds this check today). "div_by_zero" obeys every
+ordinary signal rule. The principle generalizes to any fallible primitive
+the language later defines.
+
+(12.10) Signals never travel
+----------------------------
+A variant is not nameable outside the four places of 12.2, so re-raising
+a foreign signal is INEXPRESSIBLE: a work reporting trouble upward exits
+with one of its OWN variants -- every level speaks of malfunction in its
+own vocabulary. Payloads may travel; tags may not. A signal can never be
+stored, collected, or re-raised at a distance: a branch taken, not a
+value.
+
+(12.11) Events on the data side
+-------------------------------
+The EVENT of section 2 and the mechanism behind signals: are ONE concept
+-- an ephemeral value. An event-typed knows-/takes-entry declares the
+variants that travel with the call ("knows: level : event(GRADE_5,
+FULL(v: int))"); the bare names are in scope exactly within the argument
+list. The EVENT MATCHER applies the handler-block anatomy to an event
+variable, all rules of 12.6 unchanged. Events may be known or taken,
+never had -- ephemeral is a law, not a mood (custody wording binds the
+future type document).

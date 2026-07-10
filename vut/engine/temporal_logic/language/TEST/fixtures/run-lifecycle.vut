@@ -1,8 +1,8 @@
-behavior: polling {
+polling : behavior {
     ~ENTRY => poll() every: 0.5 as: poller;
     mute =x=> poller;
 }
-behavior: master {
+master : behavior {
     start => polling;
     stop =x=> polling;
 }
