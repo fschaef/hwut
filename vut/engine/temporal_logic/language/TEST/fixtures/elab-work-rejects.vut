@@ -1,0 +1,38 @@
+bad_exit : work(gives: q signals: known) {
+    exit: unknown;
+    q = 1;
+    finish:
+}
+never_emits : work(gives: q signals: silent, loud) {
+    exit: loud;
+    q = 1;
+    finish:
+}
+stray_tick : work(gives: q) {
+    tick:
+    q = 1;
+    finish:
+}
+gadget : class has: { w: float; } {
+    forge : work
+    temper : work
+    anneal : work
+}
++gadget.forge : work(knows: metal gives: g : gadget) { g = 1; finish: }
++gadget.polish : work(knows: g gives: out : gadget) { out = g; finish: }
++gadget.temper : work(knows: g gives: out : widget) { out = g; finish: }
+-gadget : work(takes: g : gadget) { finish: }
++phantom.make : work(gives: p : phantom) { p = 1; finish: }
+widget : class has: { z: float; } {
+    from : work
+}
++widget.from : work(knows: a, b = 1 gives: w : widget) { w = a; finish: }
++widget.from : work(knows: a, y gives: w : widget) { w = a + y; finish: }
++widget.from : work(knows: r gives: w : widget) { w = r; finish: }
+W : behavior has: { v: float; } {
+    E => { b.v = widget.from(1, 2) else: { => ; }
+           b.v = widget.from(zz = 1) else: { => ; } }
+}
+cursed : class has: { c: float; } { from : work }
++cursed.from : work(knows: seed gives: c : cursed) { c = seed; finish: }
+-cursed : work(takes: c : cursed signals: refuse(code)) { exit: refuse(1); finish: }

@@ -161,6 +161,42 @@ class SymbolTable:
         return len(self._entries)
 
 
+def _is_semi(work):
+    """RETURN: bool, True exactly when 'work' is a SEMI-DECLARATION (D-27):
+              no body AND an entirely empty panel -- the brief class-body
+              listing whose complete definition must follow (SEMANTICS 25).
+    """
+    p = work.panel
+    return work.body is NodeAbsent and not (p.knows or p.takes or p.gives
+                                            or p.ticks or p.signals)
+
+
+def _collect(nodes, kinds):
+    """YIELD: [0] Node  every node of the given kinds, found by a full
+                       structural descent through dataclass fields, tuples,
+                       and NodeLists starting at 'nodes'.
+
+    Purely structural: no scoping, no order guarantees beyond depth-first.
+    Used for whole-body laws (LANGUAGE 12.4 emission coverage, 13.3 tick
+    hosting) that ordinary scoped walking would have to thread manually.
+    """
+    import dataclasses as _dc
+    seen = set()
+    stack = list(nodes)
+    while stack:
+        node = stack.pop()
+        if id(node) in seen:
+            continue
+        seen.add(id(node))
+        if isinstance(node, kinds):
+            yield node
+        if _dc.is_dataclass(node):
+            for f in _dc.fields(node):
+                stack.append(getattr(node, f.name))
+        elif isinstance(node, (tuple, list)):
+            stack.extend(node)
+
+
 def elaborate_module(declared: DeclaredModule, peers: dict,
                      reporter: DiagnosticReporter) -> SemanticModule:
     """RETURN: SemanticModule, the given module with every ReferenceLeaf
@@ -216,6 +252,13 @@ def _mount_imports(declared, peers, table, reporter):
 
 
 class _Walk:
+    _work_depth = 0        # >0 while inside a work/clockwork body (SEM 23)
+
+    def _init_completion_state(self):
+        self._semi = {}         # class -> {member: semi-Work}   (D-27)
+        self._completed = {}    # class -> {member}
+        self._overloads = {}    # (class, ext) -> [Work]         (R-32)
+    _handled = False       # True inside a handler-carrying statement (12.9)
     """RETURN: never a value itself -- the one tree walk of this pass: scope
               and local-frame state, recipe seating, and every settled check
               (unit header) in a single descent, so no construct is visited
@@ -233,10 +276,23 @@ class _Walk:
 
     def module(self, root):
         """RETURN: None, always. Walks every top-level item under the top
-                  scope.
+                  scope; afterwards the SEMANTICS-25 second direction: every
+                  semi-declared member work must have been completed by a
+                  '+class.ext' definition.
         """
+        self._init_completion_state()
         for item in root.items:
             self.item(item)
+        for key in sorted(self._overloads):
+            self._overload_disjoint(key, self._overloads[key])
+        for cname in sorted(self._semi):
+            done = self._completed.get(cname, set())
+            for member in sorted(set(self._semi[cname]) - done):
+                self._reject_at(
+                    self._semi[cname][member].signature.name.begin, "WORK",
+                    "member work '%s.%s' is semi-declared but never "
+                    "completed by '+%s.%s : work(...)' (SEMANTICS 25)"
+                    % (cname, member, cname, member))
 
     def item(self, item):
         """RETURN: None, always. Dispatches one top-level (or namespaced)
@@ -265,8 +321,259 @@ class _Walk:
                 self.definition(item, body=item.causalities)
             case A.Declaration():
                 self.type_of(item.type_)
+            case A.ClassDef():
+                self.class_def(item)
+            case A.Work() if len(item.signature.name.segments) == 2:
+                kind = "dtor" if item.signature.name.segments[1] == "-" \
+                       else "ctor"
+                self.completion(item, kind)
+            case A.Work() | A.ClockworkDef():
+                self.work_def(item)
             case _:
                 pass
+
+    def handler_arms(self, handler):
+        """RETURN: None, always. Walks a handler's arm actions (LANGUAGE
+                  12.6): block actions walk as nested statements; exit:
+                  actions are collected by the surrounding work walk;
+                  exhaustiveness over the callee's signal set is deferred
+                  (SEMANTICS 24, PARTIAL).
+        """
+        for arm in handler.arms:
+            if isinstance(arm.action, (A.ExitSignal,)) \
+                    or arm.action is NodeAbsent:
+                continue
+            self.block(arm.action, outermost=False)
+
+    def class_def(self, node):
+        """RETURN: None, always. Walks one class (LANGUAGE 11): is: targets
+                  seat; has:/knows: member types walk; FULL member works
+                  walk in the members' frame; SEMI-DECLARATIONS (D-27: no
+                  panel, no body) are recorded for the completion law
+                  (SEMANTICS 25) and walk nothing (SEMANTICS 23 -- PARTIAL:
+                  custody checks await the type document).
+        """
+        for call in node.is_:
+            self.seat(call.name)
+        frame = {}
+        for member in tuple(node.has) + tuple(node.knows):
+            self.type_of(member.type_)
+            frame[member.name.segments[0]] = "member"
+        cname = node.signature.name.segments[0]
+        with self._frame(frame):
+            for work in node.works:
+                if _is_semi(work):
+                    self._semi.setdefault(cname, {})[
+                        work.signature.name.segments[0]] = work
+                    continue
+                self.work_def(work)
+
+    def completion(self, node, kind):
+        """RETURN: None, always. One '+class.ext' / '-class' completion
+                  (D-27, SEMANTICS 25): the class must exist; a '+' must
+                  complete a SEMI-DECLARED member and its panel must GIVE
+                  the class; a '-' needs no semi-declaration, at most one
+                  per class, and its panel must TAKE the class; the body
+                  walks as an ordinary work. Marker/panel agreement is
+                  checked over TYPED entries only (untyped defer, PARTIAL).
+        """
+        cname, member = node.signature.name.segments
+        def _exact(key):
+            hit = self.table.longest_match(key)
+            return hit is not None and hit[0] == key
+        if not _exact(tuple(self.scope) + (cname,)) and not _exact((cname,)):
+            self._reject_at(node.signature.name.begin, "WORK",
+                            "completion names class %r -- no such class "
+                            "(SEMANTICS 25)" % cname)
+        if kind == "ctor":
+            self._overloads.setdefault((cname, member), []).append(node)
+            semi = self._semi.get(cname, {})
+            if member in semi:
+                self._completed.setdefault(cname, set()).add(member)
+            else:
+                self._reject_at(node.signature.name.begin, "WORK",
+                                "'+%s.%s' completes no semi-declared member "
+                                "work of %r (SEMANTICS 25)"
+                                % (cname, member, cname))
+            self._agree(node, cname, section=node.panel.gives,
+                        verb="gives", marker="+")
+        else:
+            # at most one '-class': held by declare's duplicate law already
+            # (the qualified name (class, '-') collides) -- no second check.
+            if node.panel.signals:
+                self._reject_at(
+                    node.signature.name.begin, "WORK",
+                    "'-%s' declares signals -- DESTRUCTION CANNOT FAIL "
+                    "(LANGUAGE 11.4, R-36): a disposal work's panel "
+                    "declares none" % cname)
+            self._agree(node, cname, section=node.panel.takes,
+                        verb="takes", marker="-")
+        self.work_def(node)
+
+    def _overload_disjoint(self, key, overloads):
+        """RETURN: None, always. The SEMANTICS-26 overload law (R-33):
+                  overloads of one '+class.ext' identify BY ARGUMENT NAME --
+                  their FIRST input entries carry pairwise DISTINCT names (a
+                  first-input-less overload cannot be identified: rejected);
+                  the call-site half lives in _check_overloaded_call.
+        """
+        if len(overloads) < 2:
+            return                       # a single completion needs no
+                                         # identification -- not an overload
+        seen = {}
+        for work in overloads:
+            entries = tuple(work.panel.knows) + tuple(work.panel.takes)
+            if not entries:
+                self._reject_at(
+                    work.signature.name.begin, "WORK",
+                    "constructor overload of '+%s.%s' has no input -- an "
+                    "overload identifies by its FIRST argument's name "
+                    "(SEMANTICS 26)" % key)
+                continue
+            first = entries[0].name.segments[0]
+            if first in seen:
+                self._reject_at(
+                    work.signature.name.begin, "WORK",
+                    "constructor overloads of '+%s.%s' share the first "
+                    "input name %r -- overloads identify by at least the "
+                    "first argument (SEMANTICS 26)"
+                    % (key[0], key[1], first))
+            seen[first] = work
+
+    def _check_overloaded_call(self, rhs):
+        """RETURN: None, always. The call-site half of SEMANTICS 26 (R-33):
+                  a call of an OVERLOADED extension leads with a NAMED
+                  argument -- the SELECTOR -- whose name is one overload's
+                  first input; non-overloaded calls pass untouched.
+        """
+        segs = getattr(getattr(rhs, "name", None), "segments", None)
+        if not segs or len(segs) != 2:
+            return
+        overloads = self._overloads.get(tuple(segs))
+        if not overloads or len(overloads) < 2:
+            return
+        args = () if rhs.args is NodeAbsent else tuple(rhs.args)
+        firsts = set()
+        for w in overloads:
+            entries = tuple(w.panel.knows) + tuple(w.panel.takes)
+            if entries:
+                firsts.add(entries[0].name.segments[0])
+        if not args or not isinstance(args[0], A.NamedArg):
+            self._reject_at(
+                rhs.name.begin, "WORK",
+                "call of overloaded '%s.%s' must lead with a NAMED "
+                "argument selecting the overload (one of: %s) "
+                "(SEMANTICS 26)"
+                % (segs[0], segs[1], ", ".join(sorted(firsts))))
+            return
+        selector = args[0].name
+        if selector not in firsts:
+            self._reject_at(
+                rhs.name.begin, "WORK",
+                "%r selects no overload of '%s.%s' (first-input names: %s) "
+                "(SEMANTICS 26)"
+                % (selector, segs[0], segs[1], ", ".join(sorted(firsts))))
+
+    def _agree(self, node, cname, section, verb, marker):
+        """RETURN: None, always. The marker/panel agreement of SEMANTICS 25:
+                  among the section's TYPED entries one must name the class;
+                  a section with only untyped entries defers (PARTIAL); a
+                  typed section without the class REJECTS.
+        """
+        typed = [e for e in section if e.type_ is not NodeAbsent]
+        if not typed:
+            return                          # untyped: deferred (PARTIAL)
+        for entry in typed:
+            t = entry.type_
+            name = getattr(getattr(t, "name", None), "segments", None) \
+                   or getattr(t, "segments", None)
+            if name and name[0] == cname:
+                return
+        self._reject_at(node.signature.name.begin, "WORK",
+                        "'%s%s' marker demands a %s: entry of type %r "
+                        "(SEMANTICS 25, role by panel R-30)"
+                        % (marker, cname, verb, cname))
+
+    def work_def(self, node):
+        """RETURN: None, always. Walks one work or clockwork (LANGUAGE 12/13;
+                  SEMANTICS 23, PARTIAL): panel entry types walk; the body --
+                  absent for a spec -- walks with all panel input and output
+                  names in frame; every exit: must name a declared signal
+                  variant and every declared variant must be emitted by some
+                  exit: (12.4, both directions); tick: is lawful only in a
+                  clockwork with a ticks: section.
+        """
+        panel = node.panel
+        frame = {}
+        for entry in (tuple(panel.knows) + tuple(panel.takes)
+                      + tuple(panel.gives) + tuple(panel.ticks)):
+            frame[entry.name.segments[0]] = "port"
+        declared = {sig.name.segments[0] for sig in panel.signals}
+        if node.body is NodeAbsent:
+            return                                # a SPEC: panel only
+        emitted = set()
+        self._work_depth += 1
+        try:
+            with self._frame(frame):
+                for statement in node.body:
+                    self.work_statement(statement, node, declared, emitted)
+                for found in _collect(node.body, (A.ExitSignal, A.Tick)):
+                    if isinstance(found, A.ExitSignal):
+                        self.check_exit(found, node, declared, emitted)
+                    else:
+                        self.check_tick(found, node)
+        finally:
+            self._work_depth -= 1
+        for name in sorted(declared - emitted):
+            self.reporter.report(Diagnostic(
+                phase=Phase.SEMANTIC,
+                message="signal '%s' is declared but no reachable exit: "
+                        "emits it (LANGUAGE 12.4)" % name,
+                source_offset=node.signature.name.begin,
+                fatal=True, tag="WORK"))
+
+    def work_statement(self, statement, node, declared, emitted):
+        """RETURN: None, always. Walks one work-body statement: exit:
+                  verified against the declared signal set; tick: verified
+                  against the ticks: section; plain statements walk as
+                  ordinary code (nested blocks descend through the same
+                  check).
+        """
+        match statement:
+            case A.ExitSignal() | A.Finish() | A.Tick():
+                pass                          # checked by the collection
+            case _:
+                self.statement(statement, exits=())
+
+    def check_exit(self, statement, node, declared, emitted):
+        """RETURN: None, always. One exit: against the declared signal set
+                  (LANGUAGE 12.4, first direction); a declared emission is
+                  recorded for the second direction.
+        """
+        name = statement.variant.segments[0]
+        if name not in declared:
+            self.reporter.report(Diagnostic(
+                phase=Phase.SEMANTIC,
+                message="exit: names '%s' -- not a declared signal of this "
+                        "%s (LANGUAGE 12.4)"
+                        % (name, "clockwork" if isinstance(
+                            node, A.ClockworkDef) else "work"),
+                source_offset=statement.variant.begin,
+                fatal=True, tag="WORK"))
+        else:
+            emitted.add(name)
+
+    def check_tick(self, statement, node):
+        """RETURN: None, always. One tick: against its host (LANGUAGE 13.3):
+                  lawful only in a clockwork with a ticks: section.
+        """
+        if not (isinstance(node, A.ClockworkDef) and node.panel.ticks):
+            self.reporter.report(Diagnostic(
+                phase=Phase.SEMANTIC,
+                message="tick: is lawful only in a clockwork with a "
+                        "ticks: section (LANGUAGE 13.3)",
+                source_offset=0,
+                fatal=True, tag="WORK"))
 
     def definition(self, node, body):
         """RETURN: None, always. Walks one definition: 'is:' targets are
@@ -412,6 +719,22 @@ class _Walk:
                   dropto below this point checks forward-only existence.
         """
         match node:
+            case A.Mutation() if node.handler is not NodeAbsent:
+                # LANGUAGE 12.9 (PARTIAL): the statement's handler covers the
+                # union of its fault sources, div_by_zero included; per-arm
+                # exhaustiveness over that union is deferred.
+                self.lvalue(node.lvalue)
+                for extra in node.extra_lvalues:
+                    self.lvalue(extra)
+                if isinstance(node.rhs, A.DataAccess):
+                    self._check_overloaded_call(node.rhs)   # SEMANTICS 26
+                saved, self._handled = self._handled, True
+                try:
+                    self.expr(node.rhs)
+                finally:
+                    self._handled = saved
+                self.handler_arms(node.handler)
+                return
             case A.Mutation():
                 if node.op == "/=":
                     self._division(node.rhs)
@@ -470,6 +793,20 @@ class _Walk:
         """
         leaf = node.name if isinstance(node, A.DataAccess) else node
         head = leaf.segments[0]
+        if self._work_depth > 0:
+            # SEMANTICS 23 (PARTIAL): inside a work body the targets are the
+            # panel's ports and body locals -- bare names; the reactive
+            # qualification law does not apply. A first ASSIGNMENT creates
+            # the body local: its name joins the work frame here, so later
+            # READS resolve (a read BEFORE any assignment still rejects --
+            # the definite-assignment temperament ahead of the full 12.4/
+            # 12.6 check, which stays deferred and marked in SEMANTICS).
+            if len(leaf.segments) == 1 and self.frames:
+                self.frames[-1].setdefault(head, "local")
+            if isinstance(node, A.DataAccess):
+                for step in node.steps:
+                    self.expr(step)
+            return
         if head not in BINDINGS:
             self._reject_at(leaf.begin, "STRUCTURE",
                             "lvalue %r is not binding-qualified: a mutation "
@@ -496,7 +833,7 @@ class _Walk:
         """
         match node:
             case A.BinOp():
-                if node.op == "/":
+                if node.op == "/" and not self._handled:
                     self._division(node.rhs)
                 self.expr(node.lhs)
                 self.expr(node.rhs)

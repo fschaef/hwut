@@ -1,0 +1,56 @@
+#{ ===========================================================================
+   LIFECYCLE -- die upon end of the have-relationship (0.3).
+
+   An object's life is bounded by its BEING HAD. When the having ends, the
+   object must already be given or destructed -- abandonment is the one
+   crime. A LOCAL VARIABLE IS HAD BY THE WORK THAT HAS IT: the work's
+   terminal (finish: or exit:) ends the having.
+
+   Three endings, one law:
+     1. GIVEN THROUGH A GIVES-PORT  -- the lawful end of having: custody
+        moves whole to the caller; the trace of responsibility continues.
+     2. DESTRUCTED before the terminal -- the disposal work receives it.
+     3. MEMORY EXEMPTION -- plain value locals simply end with the work.
+
+   HONESTY NOTE: the checker proving (1)/(2) on every path is the custody
+   ledger, bound to the type document (SEMANTICS 23, deferred). This file
+   narrates the law over value locals, where the exemption carries all.
+   =========================================================================== }
+
+reading : class has: { value: float; } {
+    from : work
+}
+
+#{ Inside this work, 'r' is HAD BY THE WORK from its first assignment. The
+   gives-port ends the having lawfully at finish:: custody moves to the
+   caller -- who now HAS it, and owes its end in turn. The trace of
+   responsibility runs unbroken: construction site -> every give -> the
+   destruction site. }
+
++reading.from : work(knows: raw
+                     gives: r : reading
+                     signals: implausible(v)) {
+    scaled = raw * 0.1;           # 'scaled': a value local -- had by this
+                                  # work; ends with it (memory exemption)
+    if: scaled > 1000 { exit: implausible(scaled); }
+                                  # exit: ends the having too -- a signal
+                                  # carries NO outputs (the sum, 12.3)
+    r = scaled;
+    finish:                       # the having of 'r' ends by GIVING: the
+                                  # gives-port hands custody to the caller
+}
+
+-reading : work(takes: r : reading) {
+    finish:                       # the caller's giving ends HERE one day:
+                                  # the disposal work is the trace's last
+                                  # station (call surface: type document)
+}
+
+Demo : behavior has: { shown: float; } {
+    SHOW => {
+        # the behavior instance now HAS the reading through b.shown's
+        # binding -- at this level the reactive engine owns the instance
+        # lifecycle; the give-or-destruct duty rides the b-member's end.
+        b.shown = reading.from(raw = 215) else: { implausible(v) => ; }
+    }
+}

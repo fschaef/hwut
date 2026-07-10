@@ -1,0 +1,16 @@
+
+--- work rejections (elab-work-rejects.vut) ---
+diagnostics: 13  (has_fatal: True)
+  REJECT [WORK] exit: names 'unknown' -- not a declared signal of this work (LANGUAGE 12.4)
+  REJECT [WORK] signal 'known' is declared but no reachable exit: emits it (LANGUAGE 12.4)
+  REJECT [WORK] signal 'silent' is declared but no reachable exit: emits it (LANGUAGE 12.4)
+  REJECT [WORK] tick: is lawful only in a clockwork with a ticks: section (LANGUAGE 13.3)
+  REJECT [WORK] '+gadget.polish' completes no semi-declared member work of 'gadget' (SEMANTICS 25)
+  REJECT [WORK] '+gadget' marker demands a gives: entry of type 'gadget' (SEMANTICS 25, role by panel R-30)
+  REJECT [WORK] completion names class 'phantom' -- no such class (SEMANTICS 25)
+  REJECT [WORK] '+phantom.make' completes no semi-declared member work of 'phantom' (SEMANTICS 25)
+  REJECT [WORK] call of overloaded 'widget.from' must lead with a NAMED argument selecting the overload (one of: a, r) (SEMANTICS 26)
+  REJECT [WORK] 'zz' selects no overload of 'widget.from' (first-input names: a, r) (SEMANTICS 26)
+  REJECT [WORK] '-cursed' declares signals -- DESTRUCTION CANNOT FAIL (LANGUAGE 11.4, R-36): a disposal work's panel declares none
+  REJECT [WORK] constructor overloads of '+widget.from' share the first input name 'a' -- overloads identify by at least the first argument (SEMANTICS 26)
+  REJECT [WORK] member work 'gadget.anneal' is semi-declared but never completed by '+gadget.anneal : work(...)' (SEMANTICS 25)

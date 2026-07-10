@@ -194,6 +194,12 @@ def _declare_items(items, scope, db, reporter):
         if not db.publish(scope, name.segments, kind,
                           abstract=getattr(item, "abstract", False),
                           members=_member_surface(item)):
+            if isinstance(item, A.Work) and len(name.segments) == 2 \
+                    and name.segments[1] != "-":
+                continue    # a CONSTRUCTOR OVERLOAD (R-32): several
+                            # '+class.ext' completions share one name; the
+                            # first publication stands, the set is checked
+                            # for arity disjointness by elaborate (SEM 26)
             _duplicate(reporter, tuple(scope) + tuple(name.segments), item)
 
 
@@ -210,6 +216,12 @@ def _declared_name(item):
         return item.signature.name, "behavior"
     if isinstance(item, A.DefCause):
         return item.signature.name, "cause"
+    if isinstance(item, A.ClassDef):
+        return item.signature.name, "class"
+    if isinstance(item, A.Work):
+        return item.signature.name, "work"
+    if isinstance(item, A.ClockworkDef):
+        return item.signature.name, "clockwork"
     if isinstance(item, A.Declaration):
         return item.name, "declaration"
     if isinstance(item, A.Import):

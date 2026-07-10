@@ -1,0 +1,46 @@
+#{ ===========================================================================
+   CONSTRUCT -- there is no constructor keyword, only works that give.
+
+   A class lists its construction works BRIEFLY (semi-declaration); the
+   complete definitions follow at top level, marked '+'. The marker asserts
+   what the panel must show: a '+' completion GIVES the class -- "a work
+   that gives and signals" IS the definition of a constructor (R-30/R-31).
+   'Class.from' is the canonical extension by convention (R-32).
+   =========================================================================== }
+
+temperature : class has: { celsius: float; } {
+    from #{celsius -> a reading; fahrenheit -> converted} : work
+}
+
+#{ Overloads of one extension identify BY ARGUMENT NAME (R-33): their FIRST
+   input names differ, and the call leads with that name -- the SELECTOR.
+   Construction can fail: the panel says so, the call site must answer. }
+
++temperature.from : work(knows: celsius
+                         gives: t : temperature
+                         signals: beneath_absolute_zero) {
+    if: celsius < -273.15 { exit: beneath_absolute_zero; }
+    t = celsius;
+    finish:                       # the gives-bundle leaves implicitly
+}
+
++temperature.from : work(knows: fahrenheit
+                         gives: t : temperature
+                         signals: beneath_absolute_zero) {
+    if: fahrenheit < -459.67 { exit: beneath_absolute_zero; }
+    t = (fahrenheit - 32) * 5 / 9;
+    finish:
+}
+
+Demo : behavior has: { room: float; oven: float; } {
+    SHOW => {
+        # the selector says WHICH construction is meant -- readable at the
+        # point of use; the else: block answers the declared fault set.
+        b.room = temperature.from(celsius = 21) else: {
+            beneath_absolute_zero => { b.room = 0; }
+        }
+        b.oven = temperature.from(fahrenheit = 392) else: {
+            beneath_absolute_zero => ;      # the written shrug
+        }
+    }
+}

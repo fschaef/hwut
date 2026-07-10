@@ -307,11 +307,11 @@ class SourceMap:
         return line, column
 
 
-# Block-comment opener: '#', one or more NON-NEWLINE whitespace, '{'. A '#'
+# Block-comment opener: '#', optional non-newline whitespace, '{'. A '#'
 # not fitting this shape comments to end of line (the tier-1 spec pattern).
 # Intercepted in Lexer.next() before the scanner: the block body needs BRACE
 # COUNTING (nesting), which no regex group expresses.
-_BLOCK_OPEN = re.compile(r'#[^\S\n]+\{')
+_BLOCK_OPEN = re.compile(r'#[^\S\n]*\{')   # D-27: '#{' opens directly too
 
 
 def _block_comment_end(source, brace_pos):

@@ -21,5 +21,11 @@ ternary_chain    OK
 aggregates       OK
 documented       OK
 strings_in       OK
+work_def         OK
+work_spec        OK
+clockwork_def    OK
+class_def        OK
+aware_forms      OK
+semi_and_completions OK
 aspect_panel     OK
 namespaced_ref   OK

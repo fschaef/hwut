@@ -1272,3 +1272,366 @@ GRAVEYARD
     "name => value" (D-24). "=" survives as the default marker.
   - the earlier coordinator lean to KEEP "=" (todo F-8 note): reversed
     with reasons in disc-9 C-1.
+
+
+R-28: The foundation written first -- two natures, four relations, one law
+--------------------------------------------------------------------------
+PROBLEM
+  The integration risked losing its line of thought in detail
+  discussions: the relationship vocabulary (is/has/knows/give), the
+  aggregation/construction/destruction triangle, and the ownership-
+  tracing idea lived scattered across the werk documents, R-25's channel
+  law, and (12)'s panel verbs -- essential, but nowhere stated as the
+  design's spine.
+
+DECISION (Frank-Rene: "crystalize ... documented clearly and prominently")
+  LANGUAGE gains section (0), positioned before everything: the TWO
+  NATURES (persistent objects: constructed, had, destructed -- existence
+  is responsibility; ephemerals: defined quickly, vaporate upon
+  consumption, never had, the channel of communication INCLUDING
+  MISBEHAVIOUR), the FOUR RELATIONS (is = identity, has = custody and
+  debt, knows = acquaintance without responsibility, give = whole
+  transfer; takes:/gives: their panel spellings), and the ONE LAW: GIVE
+  OR DESTRUCT WHAT YOU HAVE -- abandonment the one crime, the trace of
+  responsibility unbroken from construction to destruction. Aggregation
+  is composition of answered-for parts, not work; acquisition and
+  disposal ARE works. (0.4) fixes the build order: natures/relations ->
+  class concept -> work -> clockwork -> connections. Ledger mechanics
+  stay type-document-bound; the LAW binds now.
+
+COST
+  Section numbering admits a (0); one cross-link in 12.2.
+
+PAYOFF
+  Every later ruling has a fixed spine to be measured against; detail
+  discussions can no longer drift the design, only refine it.
+
+GRAVEYARD
+  - none removed; this entry ADDS the missing keystone.
+
+
+R-29: Class and ephemerals settled; the document marches the line (F-9)
+------------------------------------------------------------------------
+PROBLEM
+  The line of thought (0.4) named the class concept as the station after
+  the foundation, but the language had no class law -- custody-bearing
+  composites lived only in the werk documents' type sections -- and the
+  document's reading order (clockwork before work, ephemerals scattered)
+  contradicted the line it declared.
+
+DECISION (Frank-Rene: settle class, work, ephemerals with a clear
+understanding; character integration LATER)
+  LANGUAGE (11) CLASS: a named composite kind of persistent object;
+  members under the relations -- is: inheritance, has: custody (VALUE
+  members under the MEMORY EXEMPTION; OBLIGATION members owed), knows:
+  views. "is: obligation" marks tracked-debt classes; debt is TRANSITIVE
+  through custody. NO constructors: aggregation literals bind members
+  with ':' (relation), never '=>' (port wiring -- an act); obligation
+  parts enter only by give. Acquisition and disposal are WORKS; a
+  disposer discharges every obligation member.
+  LANGUAGE (14) EPHEMERALS: consolidates the second nature -- one
+  concept across bus events, event-typed entries, and signals (absorbing
+  old 12.11); the matcher inherits the handler anatomy; signals are the
+  misbehaviour ephemerals ("trouble is an occurrence to react to, never
+  an object to own").
+  READING ORDER now marches (0.4): (11) Class -> (12) Work ->
+  (13) Clockwork (renumbered from 11) -> (14) Ephemerals.
+  The noun is CLASS ("type" spans primitives, classes, specs) --
+  coordinator choice within the ruling, FLAGGED FOR REVIEW alongside the
+  ':' member-binder in aggregation literals.
+  CHARACTER INTEGRATION under the class concept: deliberately deferred
+  (marked in (11), tracked in disc-9).
+
+COST
+  Renumbering sweep (11->13 with subsections and cross-references);
+  three more reserved bare words (class, event, obligation).
+
+PAYOFF
+  Foundation, class, work, clockwork, ephemerals now read as one line;
+  implementation and semantic integration can proceed station by station
+  against fixed text.
+
+GRAVEYARD
+  - (12.11) as a work-section appendix: absorbed into (14).
+  - 'type:' as the composite definition keyword (werk-draft spelling,
+    disc-9 C-4): the composite kind word is 'class'; the draft slip is
+    thereby resolved.
+
+
+R-30: Constructor refined away -- role by panel; the slice runs (F-9)
+----------------------------------------------------------------------
+PROBLEM
+  LANGUAGE 11-14 were settled text with no machine behind them; and the
+  class concept still spoke of "instantiation is work" without saying
+  WHERE construction and disposal live.
+
+DECISION (Frank-Rene: "refine the name of constructor such that it is
+work that returns and signals; integrate constructor and destructor as
+work into class")
+  NO constructor keyword. A class body holds MEMBER WORKS and their role
+  is read off the panel: gives: naming the class = CONSTRUCTION WORK;
+  takes: naming the class = DISPOSAL WORK. "A work that gives and
+  signals" is the definition, not a name. Member works are called through
+  the class's dotted name (LANGUAGE 11.3).
+  IMPLEMENTED (D-25/D-26, the vertical slice): grammar (five-section
+  panel, class/work/clockwork definitions, member works, the aware
+  mutation, handler arms, for:-from: consumption, finish:/exit:/tick: as
+  depth-free statements), declare (three export kinds), elaborate
+  (SEMANTICS 23/24, PARTIAL as marked), interpret (work calls with
+  positional/named binding and the gives-bundle; signals as branches
+  matched first-match at the call site; runtime div_by_zero through the
+  handler; clockworks as GENERATIVE body walks so a tick: inside any
+  nested loop suspends without unwinding it; winding at the for:-from:
+  loop; 'finished' ending the loop; class member works dotted-callable).
+  Suite grows by the 'works' interpret choice (run-work.vut locks the
+  whole chain incl. forced translation div_by_zero -> by_zero -> call-
+  site substitute), the 'work_rejects' elaborate choice (12.4 both
+  directions, 13.3 hosting), and five grammar snippets.
+
+COST
+  SEMANTICS 23/24 carry an explicit DEFERRED list -- definite assignment,
+  exhaustiveness, mandatory-handler, same-type/discard, custody -- so the
+  partial checker never masquerades as the full law. The pre-handler
+  "division by zero yields 0.0" totality guard retires: division RAISES
+  into the handler path (its own comment declared it obsolete the day
+  handlers arrived).
+
+GRAVEYARD
+  - the noun "constructor" as a language construct: dissolved into role-
+    by-panel.
+  - '/' by zero yielding 0.0 (pre-handler totality): replaced by the
+    div_by_zero signal path.
+
+
+R-31: Semi-declared member works; '+class.ext' / '-class' completions (F-9)
+-----------------------------------------------------------------------------
+PROBLEM
+  R-30's role-by-panel put full member works inside the class body --
+  correct, but a class listing several construction works drowns its own
+  member declarations in panels and bodies.
+
+DECISION (Frank-Rene, ratified; coordinator interpretations flagged)
+  A class body may SEMI-DECLARE a member work -- 'DoSomething : work',
+  no panel, no body, optionally a '#{...}' block comment where the panel
+  will be -- for clean and brief class definitions. The complete
+  definition MUST follow at top level: '+class.ext : work(...) {...}'
+  are the construction works ("in the sense discussed": works that give
+  the class and signal), '-class : work(...) {...}' the one disposal
+  work. SEMANTICS 25 holds both directions (semi -> completed,
+  '+' -> semi-declared, class exists) and the marker/panel agreement
+  over typed entries; declare's duplicate law holds single-'-'.
+  INTERPRETATIONS (flag if wrong): (i) '#{...}' realised as the existing
+  block comment with the whitespace-before-brace made optional --
+  reversing a pinned lexer choice; (ii) '+'/'-' mark DEFINITION sites
+  only; construction calls stay 'class.ext(...)'; the disposal CALL
+  surface is deferred with the dispose primitive ('-class' in expression
+  position would collide with unary minus); (iii) the disposal work
+  needs no semi-declaration; (iv) inline full member works remain lawful.
+
+COST
+  A pinned lexer behaviour reverses (block_comment GOOD regenerated);
+  the work-tail panel turns optional, so an empty spec 'x : work' at top
+  level now parses -- rejected as an uncompleted nothing only when
+  class-hosted; top-level bare form's meaning is left to the spec law.
+
+GRAVEYARD
+  - "'#{' without whitespace is a LINE comment" (lexer, pinned): the
+    brace now opens the block directly.
+  - the elaborate-side double-destructor check, written and removed in
+    the same pass: declare's duplicate law already owns it -- one law,
+    one owner.
+
+
+R-32: 'Class.from' the canonical constructor; overloads by disjoint arity
+--------------------------------------------------------------------------
+PROBLEM
+  The constructor syntax needed a canonical, clear face; and one
+  extension name per construction shape ('make', 'clone', 'of_parts')
+  fragments what is conceptually ONE act -- building the class from
+  ingredients.
+
+DECISION (Frank-Rene: "Class.from(...) overload would be something that
+I would like")
+  'Class.from' is the CANONICAL constructor by convention -- an ordinary
+  extension ('from' bare is a name; only 'from:' is the keyword; the
+  name-first spacing keeps them apart). Constructor OVERLOADS: several
+  '+class.ext' completions may share one extension; one semi-declaration
+  lists it. LAW (SEMANTICS 26): overloads of one extension carry pairwise
+  DISJOINT arity intervals [required .. total inputs]; the call's
+  supplied-input count selects exactly one member -- resolution decidable
+  at the definition site, no runtime ambiguity possible.
+  Implemented end-to-end: declare stands aside for the overload shape
+  (narrow exception to SEMANTICS 18, documented there in 26), elaborate
+  checks pairwise disjointness module-wide, interpret keeps overload
+  SETS and selects by count. run-work.vut exercises 'pair.from(1, 2)'
+  and 'pair.from(4)' against two overloads; the rejects fixture locks an
+  overlapping pair ([1..2] vs [2..2]).
+
+COST
+  A narrow, shape-keyed exception inside declare's duplicate law -- the
+  one place two definitions may lawfully share a name. Named-port
+  refinement of resolution is deferred (SEMANTICS 26 PARTIAL).
+
+GRAVEYARD
+  - nothing removed; 'make' and every other extension remain lawful --
+    'from' is convention, not restriction.
+
+
+R-33: Overloads identify by argument name -- the first argument selects
+------------------------------------------------------------------------
+PROBLEM
+  R-32's arity-interval law resolved overloads by COUNT -- decidable, but
+  brittle (a defaulted parameter collapses the intervals) and mute at the
+  call site: 'pair.from(1, 2)' says nothing about WHICH construction is
+  meant.
+
+DECISION (Frank-Rene: "overloading shall be possible by argument name; a
+work that is overloaded requires identifying by at least the first
+argument" -- checked through the software process as directed)
+  DEFINITION SITE: overloads of one '+class.ext' (two or more) carry
+  pairwise DISTINCT first-input names; an input-less overload cannot be
+  identified and is rejected. CALL SITE: the call LEADS with a NAMED
+  argument -- the SELECTOR -- naming one overload's first input; the
+  remaining arguments bind against the selected panel (named claim
+  theirs, positionals fill unclaimed inputs in declaration order -- the
+  binder gained a cursor for exactly this). The call now SAYS which
+  construction it means: 'pair.from(bounds => 1, 2)' versus
+  'pair.from(center => 4)'.
+  Verified in the software process: definition-site distinctness, the
+  input-less rejection, the unnamed-lead rejection, and the unknown-
+  selector rejection all fire in the work_rejects choice; both live
+  selections run in the works choice.
+
+COST
+  A named lead is MANDATORY at overloaded call sites (deliberate: the
+  selector is documentation at the point of use). Call sites outside
+  aware mutations defer (SEMANTICS 26 PARTIAL).
+
+GRAVEYARD
+  - R-32's arity-interval disjointness law: superseded -- count said how
+    many, the name says WHICH.
+  - the strict "positionals before named" reading of 12.5 for overloaded
+    calls: the selector leads, positionals follow into unclaimed inputs.
+PROCESS NOTE
+  Mid-pass, a malformed edit script truncated elaborate.py to zero bytes
+  (open-for-write preceding a failing write). Restored byte-exact from
+  the staged component dump -- the dump discipline paid for itself; edit
+  scripts now assert their anchors AND their output length before any
+  write.
+
+
+R-34: Named arguments are 'name = value' -- the '=>' binder reverted
+---------------------------------------------------------------------
+PROBLEM
+  R-27's C-1 lean adopted '=>' as the one direction-neutral port binder
+  (D-24), motivated by the port-map form. Frank-Rene rules against it:
+  '=>' is not wanted for named arguments.
+
+DECISION (Frank-Rene, ratified)
+  Named arguments are 'name = value' (D-28, restoring D-11's surface).
+  '=' serves the declaration default AND the call-site named argument,
+  distinguished by position; '=>' keeps the effect marker and the handler
+  arm only. R-33's selector law is UNTOUCHED in substance -- an
+  overloaded call still leads with a named argument; only its spelling
+  moves: 'pair.from(bounds = 1, 2)'.
+
+COST
+  The port-map form loses its binder story: '=' cannot read as "flows
+  out to", so the OUTPUT association is an open question again --
+  returned to disc-9 (C-1 residual) rather than pre-decided here; the
+  port-map is marked RESERVED in 12.5 until it is answered.
+
+GRAVEYARD
+  - D-24, '=>' as the named-argument/port binder: reverted after one
+    ratification cycle -- the review process working as designed.
+
+
+R-35: The EXPLANATION bin -- concepts taught by checked example
+----------------------------------------------------------------
+PROBLEM
+  The three-bin model (README mechanics / RATIONALE why / DISCUSSIONS
+  forks) had no home for TEACHING: worked examples that explain one
+  concept in code with narrative -- and unchecked examples rot silently
+  as the language moves.
+
+DECISION (Frank-Rene: "an explanation directory... code files of
+examples that explain certain concepts; start with construct, destruct
+and lifecycle")
+  language/EXPLANATION/ is the FOURTH documentation bin: one .vut file
+  per concept, narrated in comments ('#{...}' earning its keep), under
+  two laws (its README): (1) every file is CHECKED -- test-explanations
+  takes each through the full front half, asserted fatal-free, then
+  drives its Demo behaviour and locks the trace byte-exact; a drifted
+  explanation FAILS THE SUITE; (2) narrative is welcome, and where a
+  narrated law is not yet enforced the text says so.
+  THE LIFECYCLE RULING seated in (0.3): DIE UPON END OF THE
+  HAVE-RELATIONSHIP -- an object's life is bounded by its being had; A
+  LOCAL VARIABLE IS HAD BY THE WORK THAT HAS IT: the work's terminal
+  ends the having; a gives-port is the lawful end of having; value
+  locals end under the memory exemption. One law, every scale.
+  First set: explain-construct.vut (role by panel, from-overloads,
+  selectors), explain-destruct.vut (the '-' completion; a disposal that
+  cannot fail declares no signals), explain-lifecycle.vut (the three
+  endings of having, honesty-noted where the ledger is deferred).
+
+PAYOFF
+  The suite caught both of its authors' first drafts: the destruct file
+  violated 12.4 (declared signal, no emitting exit:) -- fixed in the
+  FILE; the lifecycle file exposed a real ENGINE GAP -- work-body locals
+  created by first assignment were not readable (SEMANTICS 19 fired on
+  'scaled') -- fixed in ELABORATE: an assigned bare name joins the work
+  frame at its first assignment, so later reads resolve while a read
+  BEFORE any assignment still rejects (the definite-assignment
+  temperament ahead of the full deferred check). Checked teaching
+  debugging the teacher and the engine alike, in its first hour.
+
+COST
+  Three more suite choices to keep byte-exact; explanations must be
+  edited when settled surfaces change -- which is the point.
+
+
+R-36: Destruction cannot fail; three more explanations (F-9)
+-------------------------------------------------------------
+PROBLEM
+  The explanation bin's third commission -- "the philosophy of
+  destruction cannot fail" -- demanded that the philosophy be TRUE in
+  the language before a file could teach it; and R-31's examples still
+  showed disposal works with signal panels.
+
+DECISION (Frank-Rene: taking/giving/knowing, ephemerals, destruction-
+cannot-fail; law ratified as the coordinator's interpretation, flag if
+wrong)
+  A '-class' completion declares NO SIGNALS -- rejected otherwise
+  (SEMANTICS 25 extension; LANGUAGE 11.4). Grounds, in the file and the
+  law text: the give-or-destruct duty must be dischargeable on every
+  path (a refusable last resort demands handlers-inside-handlers without
+  ground); failure-during-cleanup shadows the original fault; trouble
+  during release is an OCCURRENCE to report on the bus, never a refusal
+  -- the having ended when custody arrived. Acquisition may refuse;
+  handing back cannot: the panels spell the asymmetry.
+  Three explanations join the bin (each front-half-asserted and trace-
+  locked): explain-take-give-know.vut (the custody relations at a work's
+  boundary), explain-ephemerals.vut (one concept, two coats -- an
+  ephemeral's whole life on one trace: emit, guarded consumption,
+  payload into a constructor, signal into an arm),
+  explain-destruction-cannot-fail.vut (the philosophy entire).
+
+  ENGINE FINDINGS the files forced, fixed alongside:
+  - a signal-less work is callable in EXPRESSION POSITION (12.6: no
+    signals -> no else: -> a value anywhere a value is) -- the plain-
+    mutation RHS now dispatches works;
+  - raw-event emission carries NAMED-ARG PAYLOAD ('=> dial_turned(delta
+    = 42)' reaches e.delta);
+  - top-level 'SHOW => Demo;' lines in the first three files were DEAD
+    SURFACE (top-level entities auto-activate; module-level causalities
+    do not dispatch -- a known reactive-engine boundary): dead surface
+    in teaching files is a lie, removed everywhere.
+
+COST
+  Disposal works lose the signal channel by law; release-time trouble
+  must travel the bus. run-work.vut's '-pair' theatre and one sentence
+  of explain-destruct.vut migrated.
+
+GRAVEYARD
+  - '-class : work(... signals: ...)': lawful for one ratification
+    cycle (R-31's example), now rejected.

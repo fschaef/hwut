@@ -246,7 +246,8 @@ def make_aspect_tail(n):
               is the behaviour list.
     """
     panel = _opt(n[0])
-    knows, signals = ((), ()) if panel is NodeAbsent else panel
+    knows = () if panel is NodeAbsent else panel.knows
+    signals = () if panel is NodeAbsent else panel.signals
     sig = A.Signature(name=NodeAbsent, params=knows)
     return A.Aspect(abstract=False, signature=sig,
                     is_=_is_list(n[1]), has=_has_list(n[2]),
@@ -254,17 +255,18 @@ def make_aspect_tail(n):
 
 
 def make_panel(n):
-    """RETURN: tuple, (knows-params, signal-decls) of a panel (D-23) -- each
-              a NodeList; empty when its section is absent. The parens are
-              silent; slot 0 is the knows-optional, slot 1 the
-              signals-optional, each an OPT over SEQ(first, STAR-rest).
+    """RETURN: Panel, the five sections (D-25) -- each a NodeList, empty
+              when absent; slots 0..4 are the section optionals, each an
+              OPT over SEQ(first, STAR-rest).
     """
     def entries(seq):
-        return (seq[0],) + tuple(_list(seq[1]))
-    knows   = _opt(n[0], ctor=entries)
-    signals = _opt(n[1], ctor=entries)
-    return (() if knows   is NodeAbsent else knows,
-            () if signals is NodeAbsent else signals)
+        # each STAR item is a one-child inline SEQ (the ',' is silent)
+        return (seq[0],) + tuple(it[0] for it in seq[1].items)
+    def sec(k):
+        v = _opt(n[k], ctor=entries)
+        return () if v is NodeAbsent else v
+    return A.Panel(knows=sec(0), takes=sec(1), gives=sec(2),
+                   ticks=sec(3), signals=sec(4))
 
 
 def make_signal_decl(n):
@@ -314,10 +316,10 @@ def make_named_item(n):
     """
     name_token, head = n["name"], n[2]
     branch = head.child
-    if head.triggered_index == 4:                            # declaration
+    if head.triggered_index == 7:                            # declaration
         return A.Declaration(name=_decl_tok(name_token), type_=branch[0])
-    if head.triggered_index == 3:                            # named cause
-        return _complete_def(branch[0], name_token)
+    if head.triggered_index in (3, 4, 5, 6):                 # cause/class/
+        return _complete_def(branch[0], name_token)          # work/clockwork
     return _complete_def(branch[1], name_token,              # entity kinds
                          abstract=branch[0].present)
 
@@ -460,10 +462,14 @@ def make_var_list(n):
 
 
 def make_mutation(n):
-    """RETURN: Mutation, from 'lvalue op rhs ;' -- the op-mut rule reduces to
-              its fired operator Token.
+    """RETURN: Mutation, from 'lvalue (, lvalue)* op rhs (; | else: handler)'
+              (D-26) -- slot 1 holds the extra targets STAR, the tail OR
+              fires ';' (index 0) or the handler branch (index 1).
     """
-    return A.Mutation(lvalue=n[0], op=n[1].text, rhs=n[2])
+    tail = n[4]
+    handler = tail.child[0] if tail.triggered_index == 1 else NodeAbsent
+    return A.Mutation(lvalue=n[0], op=n[2].text, rhs=n[3],
+                      extra_lvalues=_list(n[1]), handler=handler)
 
 
 def make_if(n):
@@ -494,10 +500,18 @@ def make_range(n):
 
 
 def make_for(n):
-    """RETURN: For, from 'for: var in: source block' (D-16) -- the var
-              DECLARES, loop-local (SEMANTICS 6).
+    """RETURN: For, from 'for: var (in: coll | from: [give] source) block
+              [else: handler]' (D-16, D-26) -- the var DECLARES, loop-local
+              (SEMANTICS 6); the source OR's index marks the from:-arm; a
+              fired give-optional marks the custody flavour.
     """
-    return A.For(var=_decl_tok(n["var"]), source=n[1], block=n[2])
+    head = n[1]
+    if head.triggered_index == 0:
+        pulls, give, source = False, False, head.child[0]
+    else:
+        pulls, give, source = True, head.child[0].present, head.child[1]
+    return A.For(var=_decl_tok(n["var"]), source=source, block=n[2],
+                 pulls=pulls, give=give, handler=_opt(n[3]))
 
 
 def make_count(n):
@@ -535,6 +549,131 @@ def make_exit_label(n):
               bare colons (regex terminals) survive as tokens beside it.
     """
     return A.ExitLabel(label=_decl_tok(n["label"]))
+
+
+def make_ctor_def(n):
+    """RETURN: Work, from '+<class>.<ext> : work <work-tail>' (D-27, R-31)
+              -- a CONSTRUCTION-WORK completion: the Work carries the
+              qualified name (class, ext); the '+' marker's role agreement
+              with the panel is SEMANTICS 25's check.
+    """
+    work = n[4]                     # the captured '+' survives at slot 0
+    sig = A.Signature(name=DeclarationLeaf(
+        begin=n["class"].begin,
+        segments=(n["class"].text, n["ext"].text)), params=NodeAbsent)
+    return dataclasses.replace(work, signature=sig)
+
+
+def make_dtor_def(n):
+    """RETURN: Work, from '-<class> : work <work-tail>' (D-27, R-31) -- THE
+              disposal-work completion: named by the class itself under the
+              reserved extension '-'; one per class (SEMANTICS 25).
+    """
+    work = n[3]                     # the captured '-' survives at slot 0
+    sig = A.Signature(name=DeclarationLeaf(
+        begin=n["class"].begin,
+        segments=(n["class"].text, "-")), params=NodeAbsent)
+    return dataclasses.replace(work, signature=sig)
+
+
+def make_class_tail(n):
+    """RETURN: ClassDef, HEADLESS, from 'is:? has:? knows:? { member-work* }?'
+              (R-29) -- name seated by _complete_def; a class takes no '~'
+              and no parameter list, so the signature carries the name only.
+    """
+    body = _opt(n[3])
+    return A.ClassDef(signature=A.Signature(name=NodeAbsent, params=NodeAbsent),
+                      is_=_is_list(n[0]), has=_has_list(n[1]),
+                      knows=_has_list(n[2]),
+                      works=() if body is NodeAbsent
+                            else tuple(_list(body[0])))
+
+
+def make_member_work(n):
+    """RETURN: Work, from '<name> : work <work-tail>' inside a class body
+              (R-30) -- the silent kind word is dropped, so the tail sits at
+              slot 2; completed with the member's name.
+    """
+    return _complete_def(n[2], n["name"])
+
+
+def make_work_tail(n):
+    """RETURN: Work, HEADLESS, from '[<panel>] [{ statement* }]' -- body
+              NodeAbsent = a SPEC (12.1); panel AND body absent = a class
+              body's SEMI-DECLARATION (D-27, empty panel stands in); name
+              seated by _complete_def.
+    """
+    panel = _opt(n[0])
+    body = _opt(n[1])
+    return A.Work(signature=A.Signature(name=NodeAbsent, params=NodeAbsent),
+                  panel=A.Panel(knows=(), takes=(), gives=(), ticks=(), signals=()) if panel is NodeAbsent else panel,
+                  body=body if body is NodeAbsent else _list(body[0]))
+
+
+def make_clockwork_tail(n):
+    """RETURN: ClockworkDef, HEADLESS, from '<panel> [{ statement* }]' with
+              the tick-capable body (LANGUAGE 13) -- a clockwork's panel is
+              MANDATORY (D-27's semi-declaration is a class-member-work
+              form); name seated by _complete_def.
+    """
+    body = _opt(n[1])
+    return A.ClockworkDef(signature=A.Signature(name=NodeAbsent, params=NodeAbsent),
+                          panel=n["panel"],
+                          body=body if body is NodeAbsent else _list(body[0]))
+
+
+def make_finish_stmt(n):
+    """RETURN: Finish, the 'finish:' terminal statement (LANGUAGE 12.4)."""
+    return A.Finish()
+
+
+def make_tick_stmt(n):
+    """RETURN: Tick, the 'tick:' delivery statement (LANGUAGE 13.3)."""
+    return A.Tick()
+
+
+def make_exit_stmt(n):
+    """RETURN: ExitSignal, from 'exit: <variant> [(args)] ;' -- the variant
+              REFERENCES its panel declaration; args optional.
+    """
+    return A.ExitSignal(variant=_ref_tok(n["variant"]), args=_opt(n[1]))
+
+
+def make_handler(n):
+    """RETURN: Handler, from '{ arm* }' (LANGUAGE 12.6)."""
+    return A.Handler(arms=_list(n[0]))
+
+
+def make_arm(n):
+    """RETURN: Arm, from '[<variant>[(fields)]] => action' -- an absent head
+              is the bare default arm (variant NodeAbsent, no fields); the
+              head's fields-optional holds the arm-fields tuple directly.
+    """
+    head = _opt(n[0])
+    if head is NodeAbsent:
+        return A.Arm(variant=NodeAbsent, fields=(), action=n[2])
+    fields = _opt(head[1])
+    return A.Arm(variant=_decl_tok(head[0]),
+                 fields=() if fields is NodeAbsent else fields,
+                 action=n[2])
+
+
+def make_arm_fields(n):
+    """RETURN: tuple, the field name Tokens of an arm pattern's parens --
+              empty for '()'.
+    """
+    inner = _opt(n[0])
+    if inner is NodeAbsent:
+        return ()
+    return (_decl_tok(inner[0]),) + tuple(_decl_tok(t)
+                                          for t in _list(inner[1]))
+
+
+def make_arm_shrug(n):
+    """RETURN: NodeAbsent, always -- the ';' arm action is the written
+              shrug: acknowledged, deliberately nothing (LANGUAGE 12.6).
+    """
+    return NodeAbsent
 
 
 def make_decl_block(n):
@@ -655,7 +794,7 @@ AST_MAP = {
     "file":          lambda n: make_module_root(n[0]),
 
     # -- top level -------------------------------------------------------
-    "top-level":     {("named", "causality", "namespace",
+    "top-level":     {("named", "ctor", "dtor", "causality", "namespace",
                        "import", "documented"): PASS},
     "namespace":     make_namespace,
     "import":        make_import,
@@ -665,6 +804,20 @@ AST_MAP = {
     "aspect-tail":   make_aspect_tail,
     "panel":         make_panel,
     "signal-decl":   make_signal_decl,
+    "class-tail":    make_class_tail,
+    "ctor-def":      make_ctor_def,
+    "dtor-def":      make_dtor_def,
+    "member-work":   make_member_work,
+    "work-tail":     make_work_tail,
+    "clockwork-tail": make_clockwork_tail,
+    "code/finish-stmt": make_finish_stmt,
+    "code/tick-stmt":   make_tick_stmt,
+    "code/exit-stmt":   make_exit_stmt,
+    "handler":       make_handler,
+    "arm":           make_arm,
+    "arm-fields":    make_arm_fields,
+    "arm-action":    {("block", "exit", "shrug"): PASS},
+    "arm-shrug":     make_arm_shrug,
     "behavior-def":  make_behavior_def,
     "behavior-tail": make_behavior_tail,
     "cause-tail":    make_cause_tail,
@@ -717,7 +870,8 @@ AST_MAP = {
     # -- command block -----------------------------------------------------
     "code":            make_command_block,
     "code/statement":  {("mutation", "if", "match", "for", "count",
-                         "break", "continue", "dropto"): PASS,
+                         "break", "continue", "dropto",
+                         "finish", "exit", "tick"): PASS,
                         8: PASS},
     "code/block":      make_command_block,
     "code/mutation":   make_mutation,

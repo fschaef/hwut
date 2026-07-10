@@ -196,7 +196,8 @@ class Call(Node):
 
 @dataclass(frozen=True)
 class NamedArg(Node):
-    """A keyword argument 'name = value' in a call's argument list."""
+    """A keyword argument 'name = value' in a call's argument list (D-28:
+    the same '=' marks a declaration default; position tells them apart)."""
     name:  str
     value: Node
 
@@ -223,6 +224,88 @@ class Character(Node):
     is_:       NodeList
     has:       NodeList
     doc:       object = NodeAbsent      # preceding docstring (D-18)
+
+
+@dataclass(frozen=True)
+class ClassDef(Node):
+    """A class definition (R-29, LANGUAGE 11): a named composite kind of
+    persistent object -- is: inheritance, has: custody members, knows: view
+    members, and a body of MEMBER WORKS. Role by panel (R-30): a member work
+    whose gives: names the class is its construction work; one whose takes:
+    names it is its disposal work.
+    """
+    signature: Signature
+    is_:       NodeList
+    has:       NodeList
+    knows:     NodeList
+    works:     NodeList
+    doc:       object = NodeAbsent
+
+
+@dataclass(frozen=True)
+class Panel(Node):
+    """A five-section panel (D-25, LANGUAGE 12.2/13.2): each section a
+    NodeList of decl-args (signals: of SignalDecl), empty when absent.
+    """
+    knows:   NodeList
+    takes:   NodeList
+    gives:   NodeList
+    ticks:   NodeList
+    signals: NodeList
+
+
+@dataclass(frozen=True)
+class Work(Node):
+    """A work definition (LANGUAGE 12): panel + body statements. 'body' is
+    NodeAbsent for a SPEC (panel without machine, 12.1).
+    """
+    signature: Signature
+    panel:     Panel
+    body:      object                   # NodeList | NodeAbsent (spec)
+    doc:       object = NodeAbsent
+
+
+@dataclass(frozen=True)
+class ClockworkDef(Node):
+    """A clockwork definition (LANGUAGE 13): a work whose body may tick:."""
+    signature: Signature
+    panel:     Panel
+    body:      object                   # NodeList | NodeAbsent
+    doc:       object = NodeAbsent
+
+
+@dataclass(frozen=True)
+class Finish(Node):
+    """The 'finish:' terminal statement (LANGUAGE 12.4)."""
+
+
+@dataclass(frozen=True)
+class Tick(Node):
+    """The 'tick:' delivery statement (LANGUAGE 13.3)."""
+
+
+@dataclass(frozen=True)
+class ExitSignal(Node):
+    """An 'exit: <variant>[(payload)];' fault egress (LANGUAGE 12.4)."""
+    variant: ReferenceLeaf
+    args:    object                     # NodeList | NodeAbsent
+
+
+@dataclass(frozen=True)
+class Handler(Node):
+    """An 'else: { arms }' handler block (LANGUAGE 12.6)."""
+    arms: NodeList
+
+
+@dataclass(frozen=True)
+class Arm(Node):
+    """One handler arm: variant pattern (name + field list) or the bare
+    default ('variant' is NodeAbsent), and its action. 'action' is a code
+    block NodeList, an ExitSignal, or NodeAbsent (the ';' shrug).
+    """
+    variant: object                     # DeclarationLeaf-ish | NodeAbsent
+    fields:  NodeList
+    action:  object
 
 
 @dataclass(frozen=True)
@@ -272,10 +355,16 @@ class CommandBlock(Node):
 
 @dataclass(frozen=True)
 class Mutation(Node):
-    """One mutation statement (R-13 leaf): 'lvalue op rhs;'."""
+    """One mutation statement (R-13 leaf, D-26): 'lvalues op rhs' closed by
+    ';' or by an aware handler. 'extra_lvalues' are the assignment form's
+    further targets (multi-output work call; empty otherwise, pass-2);
+    'handler' the else:-block or NodeAbsent.
+    """
     lvalue: DataAccess
     op:     str
     rhs:    Node
+    extra_lvalues: NodeList = ()
+    handler: object = NodeAbsent
 
 
 @dataclass(frozen=True)
@@ -326,12 +415,17 @@ class Wildcard(Node):
 
 @dataclass(frozen=True)
 class For(Node):
-    """The bounded collection loop 'for: var in: source' (R-13, D-16): 'var'
-    is a DeclarationLeaf, local to the loop (SEMANTICS 6).
+    """The bounded collection loop (R-13, D-16, D-26): 'for: var in: source'
+    over a collection, or 'for: var from: [give] source' consuming a
+    clockwork (LANGUAGE 13.5). 'pulls' marks the from:-arm; 'give' the
+    custody flavour; 'handler' the trailing else:-block or NodeAbsent.
     """
     var:    DeclarationLeaf
     source: Node
     block:  CommandBlock
+    pulls:  bool = False
+    give:   bool = False
+    handler: object = NodeAbsent
 
 
 @dataclass(frozen=True)

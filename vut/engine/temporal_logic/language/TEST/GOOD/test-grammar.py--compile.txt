@@ -2,11 +2,15 @@
 --- load-time gates ---
 compiled: no LL(2) conflict; role uniqueness, AST-map coverage and AST-map kind gates passed (D-10)
 start symbol: top-level
-rule count: 83
+rule count: 97
 
 --- rule inventory (flattened, sorted) ---
    algebr
    arg
+   arm
+   arm-action
+   arm-fields
+   arm-shrug
    aspect-tail
    behavior-def
    behavior-tail
@@ -20,6 +24,8 @@ rule count: 83
    causality/spawn
    cause-tail
    character-tail
+   class-tail
+   clockwork-tail
    code
    code/block
    code/break
@@ -30,6 +36,8 @@ rule count: 83
    code/count-type
    code/dropto
    code/exit-label
+   code/exit-stmt
+   code/finish-stmt
    code/for
    code/if
    code/lvalue
@@ -40,6 +48,7 @@ rule count: 83
    code/range
    code/rhs
    code/statement
+   code/tick-stmt
    collection
    collection/comprehension
    collection/element
@@ -47,6 +56,7 @@ rule count: 83
    collection/source
    collection/var-list
    condition
+   ctor-def
    data-access
    data-access/base
    data-access/step
@@ -54,6 +64,7 @@ rule count: 83
    decl-block
    declaration
    documented
+   dtor-def
    expr
    expr/add
    expr/and
@@ -69,9 +80,11 @@ rule count: 83
    expr/un
    field
    file
+   handler
    import
    list-arg
    list-decl
+   member-work
    name-dotted
    name-ref
    named-item
@@ -88,3 +101,4 @@ rule count: 83
    type-dict
    type-list
    type-struct
+   work-tail

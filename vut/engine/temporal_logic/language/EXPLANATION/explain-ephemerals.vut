@@ -1,0 +1,53 @@
+#{ ===========================================================================
+   EPHEMERALS -- the second nature (0.1): events.
+
+   An ephemeral is defined on the fly and VAPORATES UPON CONSUMPTION. It is
+   never had: no construction ceremony, no destruction, no ledger -- it is
+   an OCCURRENCE, not a possession. Ephemerals are the language's channel
+   of communication, and ONE concept wears two coats (14.1):
+
+     on the BUS:            an event fires, a cause consumes it -- the
+                            reaction runs, the event is gone;
+     on the FAULT CHANNEL:  a signal leaves a work through exit:, a handler
+                            arm consumes it -- the arm runs, the signal is
+                            gone. Payloads may travel; tags may not (12.10).
+
+   Consumption IS the ephemeral's end. There is nothing to clean up --
+   which is exactly why misbehaviour travels this way (see
+   explain-destruction-cannot-fail.vut).
+
+   HONESTY NOTE: the event-typed panel entry 'level : event(...)' (14.2)
+   is settled law, not yet built; this file demonstrates both coats over
+   implemented surface.
+   =========================================================================== }
+
+#{ COAT ONE -- the bus. 'dial_turned' below exists only between its firing
+   and the cause that consumes it; the payload rides along and is read as
+   e.<field> inside the reaction. After the instant: vaporated. }
+
+meter : class has: { v: float; } {
+    from : work
+}
++meter.from : work(knows: raw
+                   gives: m : meter
+                   signals: out_of_range(v)) {
+    if: raw > 100 { exit: out_of_range(raw); }
+    m = raw;
+    finish:
+}
+
+#{ Demo is active from load (top-level entities auto-activate); posting
+   SHOW fans out INSIDE it: the first causality EMITS the ephemeral, the
+   second CONSUMES it one instant later -- birth and death on the trace. }
+
+Demo : behavior has: { shown: float; } {
+    SHOW => dial_turned(delta = 42);
+    dial_turned when: e.delta > 0 => {
+        #{ COAT TWO -- the fault channel. The signal 'out_of_range' is an
+           ephemeral born at the exit:, consumed by the arm that matches;
+           its payload 'v' materialises inside that arm only (12.6). }
+        b.shown = meter.from(e.delta) else: {
+            out_of_range(v) => { b.shown = 100; }
+        }
+    }
+}

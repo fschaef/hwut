@@ -8,6 +8,6 @@ bad : behavior(gain) is: nowhere {
     K => { c.v = c.a / 2; c.v = c.a / c.b; c.v /= c.b; }
     H => hot();
     I => hot(1, 2);
-    J => hot(1, level => 3);
+    J => hot(1, level = 3);
 }
 z: mystery_type;

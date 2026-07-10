@@ -74,6 +74,68 @@ class _Continue(Exception):
     """RETURN: never a value -- 'continue:;' to the next iteration."""
 
 
+class _Signal(Exception):
+    """RETURN-note: not a value carrier in the language sense -- the Python
+    vehicle of an exit: (LANGUAGE 12.4): 'name' the variant, 'payload' the
+    evaluated argument tuple. Caught at the call site and matched against
+    the handler; a signal is a branch taken, not a value (12.10).
+    """
+    def __init__(self, name, payload):
+        super().__init__(name)
+        self.name, self.payload = name, payload
+
+
+class _Yield(Exception):
+    """The Python vehicle of tick: -- carries the ticks-bundle upward to the
+    generator driver (LANGUAGE 13.3)."""
+    def __init__(self, ticks):
+        super().__init__("tick")
+        self.ticks = ticks
+
+
+class _WorkContext:
+    """RETURN-note (class): the callee-side context of one work run --
+    'locals' the panel-bound frame plus body locals; quacks like the
+    reactive ctx for expr/mutate (no bindings, no event).
+    """
+    def __init__(self, engine, work, frame):
+        self.engine = engine
+        self.work = work
+        self.locals = frame
+        self.bindings = {}
+        self.event_name = None
+
+
+class _ClockworkRun:
+    """RETURN-note (class): one wound clockwork -- a resumable body walk.
+    next() runs the body until the following tick: (returning its bundle)
+    or its end/finish: (raising _Signal('finished')); an exit: raises its
+    own signal (LANGUAGE 13.4).
+    """
+    def __init__(self, engine, node, frame):
+        wctx = _WorkContext(engine, node, frame)
+        def drive():
+            try:
+                yield from engine.gen_statements(node.body, wctx)
+            except _Finished:
+                pass
+        self._gen = drive()
+
+    def next(self):
+        try:
+            return next(self._gen)
+        except StopIteration:
+            raise _Signal("finished", ())
+
+
+class _Finished(Exception):
+    """The Python vehicle of a work body reaching finish: -- carries the
+    gives-bundle (LANGUAGE 12.3/12.4)."""
+    def __init__(self, gives):
+        super().__init__("finish")
+        self.gives = gives
+
+
 class Instance:
     """RETURN: never a value itself -- the scope-default instance of one
               definition (or of one implicit level default): its member
@@ -137,9 +199,24 @@ class Machine:
             if isinstance(item, A.Namespace):
                 self._index(item.items, scope + tuple(item.name.segments))
             elif isinstance(item, (A.Character, A.Aspect, A.Behavior,
-                                   A.DefCause)):
+                                   A.DefCause, A.Work, A.ClockworkDef)):
+                key = scope + tuple(item.signature.name.segments)
+                if isinstance(item, A.Work) \
+                        and len(item.signature.name.segments) == 2 \
+                        and isinstance(self.defs.get(key), list):
+                    self.defs[key].append(item)     # overload joins (R-32)
+                elif isinstance(item, A.Work) \
+                        and len(item.signature.name.segments) == 2:
+                    self.defs[key] = [item]         # first of a set
+                else:
+                    self.defs[key] = item
+            elif isinstance(item, A.ClassDef):
                 key = scope + tuple(item.signature.name.segments)
                 self.defs[key] = item
+                for work in item.works:
+                    wkey = key + tuple(work.signature.name.segments)
+                    if wkey not in self.defs:      # a completion wins over
+                        self.defs[wkey] = work     # its semi-declaration
 
     def _activate_top(self, items, scope):
         """RETURN: None, always. Activates the scope-default instance of
@@ -350,7 +427,11 @@ class Machine:
             if spawn.handle is not NodeAbsent:
                 ctx.inst.handles[spawn.handle.segments[0]] = emission
         else:
-            self.queue.append((tuple(access.target), {}))
+            payload = {a.name: self.expr(a.value, ctx)
+                       for a in ([] if spawn.call.args is NodeAbsent
+                                 else spawn.call.args)
+                       if isinstance(a, A.NamedArg)}
+            self.queue.append((tuple(access.target), payload))
             self.line("emit   %s" % ".".join(access.target))
 
     def cancel(self, access, ctx):
@@ -448,6 +529,244 @@ class Machine:
                         break
             index += 1
 
+    # -- works and clockworks (LANGUAGE 12/13; SEMANTICS 23 PARTIAL) --------
+
+    def _resolve_work(self, access):
+        """RETURN: Node, the Work/ClockworkDef the dotted access names --
+                  None, else. Member works resolve through their class's
+                  qualified name.
+        """
+        node = self.defs.get(tuple(access))
+        if isinstance(node, list):
+            return node                       # a constructor overload set
+        if isinstance(node, (A.Work, A.ClockworkDef)):
+            return node
+        return None
+
+    def _bind_panel(self, work, args, ctx):
+        """RETURN: dict, the callee frame: knows-/takes-entries bound from
+                  the call's arguments -- positionals in declaration order,
+                  'name => value' by name, panel defaults filling the rest
+                  (LANGUAGE 12.5).
+        """
+        entries = tuple(work.panel.knows) + tuple(work.panel.takes)
+        frame, positional = {}, []
+        for arg in args:
+            if isinstance(arg, A.NamedArg):
+                frame[arg.name] = self.expr(arg.value, ctx)
+            else:
+                positional.append(self.expr(arg, ctx))
+        cursor = 0                       # positionals fill the UNCLAIMED
+        for entry in entries:            # inputs in declaration order (a
+            name = entry.name.segments[0]  # named selector may lead, R-33)
+            if name in frame:
+                continue
+            if cursor < len(positional):
+                frame[name] = positional[cursor]
+                cursor += 1
+            elif entry.default is not NodeAbsent:
+                frame[name] = self.expr(entry.default, ctx)
+        for entry in work.panel.gives:
+            name = entry.name.segments[0]
+            if entry.default is not NodeAbsent:
+                frame[name] = self.expr(entry.default, ctx)
+        return frame
+
+    def call_work(self, work, args, ctx):
+        """RETURN: tuple, the gives-bundle in declaration order after the
+                  body reached finish:. Raises _Signal when an exit: fires
+                  (LANGUAGE 12.3: the sum -- all outputs or one signal).
+        """
+        frame = self._bind_panel(work, args, ctx)
+        if isinstance(work, A.ClockworkDef):
+            return (_ClockworkRun(self, work, frame),)   # winding (13.4)
+        callee = _WorkContext(self, work, frame)
+        try:
+            for statement in work.body:
+                self.run_block_statement(statement, callee)
+        except _Finished as f:
+            return f.gives
+        raise _Signal("fell_off", ())          # unreachable under 12.4 law
+
+    def aware_mutation(self, statement, ctx):
+        """RETURN: None, always. The AWARE assignment (LANGUAGE 12.6): the
+                  RHS work call runs; on finish the targets bind in
+                  declaration order; on a signal the handler arms match
+                  first-match, payload fields scoped to the arm; an absent
+                  action is the shrug.
+        """
+        rhs = statement.rhs
+        work = self._resolve_work(rhs.name.segments) \
+               if isinstance(rhs, A.DataAccess) else None
+        if work is None:                       # fallible primitive (12.9)
+            try:
+                self.mutate(statement, ctx)
+            except ZeroDivisionError:
+                sig = _Signal("div_by_zero", ())
+                self.line("signal div_by_zero()")
+                self.run_handler(statement.handler, sig, ctx)
+            return
+        args = [] if rhs.args is NodeAbsent else list(rhs.args)
+        if isinstance(work, list):            # overload resolution (R-33):
+            selector = args[0].name \
+                       if args and isinstance(args[0], A.NamedArg) else None
+            work = _select_overload(work, selector)    # by the named FIRST
+                                              # argument, SEMANTICS 26
+        targets = (statement.lvalue,) + tuple(statement.extra_lvalues)
+        try:
+            bundle = self.call_work(work, args, ctx)
+        except _Signal as sig:
+            self.line("signal %s%r" % (sig.name, tuple(sig.payload)))
+            self.run_handler(statement.handler, sig, ctx)
+            return
+        for target, value in zip(targets, bundle):
+            self._assign(target, value, ctx)
+
+    def run_handler(self, handler, sig, ctx):
+        """RETURN: None, always. Matches one signal against the handler's
+                  arms, first-match (LANGUAGE 12.6): a named arm binds its
+                  payload fields as locals of the arm's action; the bare
+                  arm matches anything and binds nothing; an absent action
+                  is the written shrug. Re-raises the signal when no arm
+                  matches (exhaustiveness is elaborate's law; the runtime
+                  stays honest).
+        """
+        for arm in handler.arms:
+            if arm.variant is NodeAbsent:
+                matched = True
+            else:
+                matched = arm.variant.segments[0] == sig.name
+            if not matched:
+                continue
+            for field, value in zip(arm.fields, sig.payload):
+                ctx.locals[field.segments[0]] = value
+            action = arm.action
+            if action is NodeAbsent:
+                return                          # the shrug
+            if isinstance(action, A.ExitSignal):
+                payload = () if action.args is NodeAbsent else tuple(
+                    self.expr(a, ctx) for a in action.args)
+                raise _Signal(action.variant.segments[0], payload)
+            self.run_block(action, ctx)
+            return
+        raise sig
+
+    def gen_statements(self, statements, ctx):
+        """YIELD: [0] tuple  each tick-bundle a clockwork body delivers, in
+                            delivery order, walked GENERATIVELY so a tick:
+                            inside any nested block suspends WITHOUT
+                            unwinding its enclosing loops (LANGUAGE 13.3).
+
+        Non-suspending statements execute through the ordinary dispatcher
+        (whose Finish/ExitSignal raises propagate out untouched).
+        """
+        for statement in statements:
+            yield from self.gen_statement(statement, ctx)
+
+    def gen_statement(self, statement, ctx):
+        """YIELD: [0] tuple  the tick-bundles this one statement delivers --
+                            recursing generatively through if/match/for/
+                            count bodies; every other statement runs via
+                            run_block_statement and yields nothing.
+        """
+        match statement:
+            case A.Tick():
+                yield tuple(ctx.locals.get(e.name.segments[0])
+                            for e in ctx.work.panel.ticks)
+            case A.If():
+                for arm in statement.arms:
+                    if _truthy(self.expr(arm.cond, ctx)):
+                        yield from self.gen_statements(
+                            arm.block.statements, ctx)
+                        return
+                if statement.els is not NodeAbsent:
+                    yield from self.gen_statements(
+                        statement.els.statements, ctx)
+            case A.Match():
+                value = self.expr(statement.scrutinee, ctx)
+                for case_ in statement.cases:
+                    if self._pattern_matches(case_.pattern, value, ctx):
+                        yield from self.gen_statements(
+                            case_.block.statements, ctx)
+                        return
+            case A.For() if not statement.pulls:
+                for item in _iterable(self.expr(statement.source, ctx)):
+                    ctx.locals[statement.var.segments[0]] = item
+                    try:
+                        yield from self.gen_statements(
+                            statement.block.statements, ctx)
+                    except _Break:
+                        break
+                    except _Continue:
+                        continue
+            case A.Count():
+                lo = _number(self.expr(statement.lo, ctx))
+                hi = _number(self.expr(statement.hi, ctx))
+                step = 1.0 if statement.step is NodeAbsent \
+                       else _number(self.expr(statement.step, ctx))
+                if statement.type_ == "int":
+                    lo, hi, step = int(lo), int(hi), int(step)
+                value = lo
+                while value <= hi:
+                    ctx.locals[statement.var.segments[0]] = value
+                    try:
+                        yield from self.gen_statements(
+                            statement.block.statements, ctx)
+                    except _Break:
+                        break
+                    except _Continue:
+                        pass
+                    value = value + step
+            case _:
+                self.run_block_statement(statement, ctx)
+
+    def for_from(self, statement, ctx):
+        """RETURN: None, always. The consumption loop 'for: v from: cw'
+                  (LANGUAGE 13.5): each iteration pulls once; 'finished' IS
+                  the loop's own end; any other signal matches the trailing
+                  handler (absent handler re-raises -- exhaustiveness is
+                  elaborate's law).
+        """
+        source = statement.source
+        node = self._resolve_work(source.name.segments) \
+               if isinstance(source, A.DataAccess) else None
+        if isinstance(node, A.ClockworkDef):        # wind at the loop (13.5)
+            args = [] if source.args is NodeAbsent else list(source.args)
+            run = self.call_work(node, args, ctx)[0]
+        else:
+            run = self.expr(source, ctx)            # an already-wound run
+        if not isinstance(run, _ClockworkRun):
+            raise TypeError("for: ... from: expects a wound clockwork")
+        while True:
+            try:
+                bundle = run.next()
+            except _Signal as sig:
+                if sig.name == "finished":
+                    return
+                self.line("signal %s%r" % (sig.name, tuple(sig.payload)))
+                if statement.handler is NodeAbsent:
+                    raise
+                self.run_handler(statement.handler, sig, ctx)
+                return
+            value = bundle[0] if len(bundle) == 1 else bundle
+            ctx.locals[statement.var.segments[0]] = value
+            try:
+                self.run_block(statement.block, ctx)
+            except _Break:
+                return
+            except _Continue:
+                continue
+
+    def _assign(self, lvalue, value, ctx):
+        """RETURN: None, always. Binds one aware-assignment target: a bare
+                  name lands in the locals, a bound member through the
+                  ordinary mutation place.
+        """
+        leaf = lvalue.name if isinstance(lvalue, A.DataAccess) else lvalue
+        store, member = self._place_of(leaf, ctx)
+        store[member] = value
+        self.line("bind   %s = %r" % (".".join(leaf.segments), value))
+
     def run_block_statement(self, statement, ctx):
         """RETURN: None, always. Executes one statement of a command block --
                   the R-13 set plus the R-14 escapes ('dropto:' raises to the
@@ -455,6 +774,20 @@ class Machine:
                   loop).
         """
         match statement:
+            case A.Finish():                    # LANGUAGE 12.4: the gives-
+                raise _Finished(tuple(          # bundle leaves implicitly
+                    ctx.locals.get(e.name.segments[0])
+                    for e in ctx.work.panel.gives))
+            case A.Tick():                      # LANGUAGE 13.3: deliver,
+                raise _Yield(tuple(             # suspend until the pull
+                    ctx.locals.get(e.name.segments[0])
+                    for e in ctx.work.panel.ticks))
+            case A.ExitSignal():                # LANGUAGE 12.4: fault egress
+                raise _Signal(statement.variant.segments[0],
+                              () if statement.args is NodeAbsent else tuple(
+                                  self.expr(a, ctx) for a in statement.args))
+            case A.Mutation() if statement.handler is not NodeAbsent:
+                self.aware_mutation(statement, ctx)
             case A.Mutation():
                 self.mutate(statement, ctx)
             case A.If():
@@ -470,6 +803,8 @@ class Machine:
                     if self._pattern_matches(case.pattern, value, ctx):
                         self.run_block(case.block, ctx)
                         return
+            case A.For() if statement.pulls:
+                self.for_from(statement, ctx)
             case A.For():
                 for item in _iterable(self.expr(statement.source, ctx)):
                     ctx.locals[statement.var.segments[0]] = item
@@ -576,6 +911,8 @@ class Machine:
                   heads (SEMANTICS 9 admitted them; 's' was rejected at
                   elaborate and never reaches here).
         """
+        if isinstance(ctx, _WorkContext):
+            return ctx.locals, leaf.segments[0]   # work port / body local
         head = leaf.access.target[0]
         member = leaf.access.residue[0]
         store = {"e": ctx.e,
@@ -608,6 +945,14 @@ class Machine:
                     return self.expr(node.then, ctx)
                 return self.expr(node.els, ctx)
             case A.DataAccess():
+                # a signal-less work in expression position (12.6: no
+                # signals -> no else: -> callable anywhere a value is):
+                # dispatch the call, its single gives-value IS the value
+                if node.args is not NodeAbsent:
+                    target = self._resolve_work(node.name.segments)
+                    if target is not None and not isinstance(target, list):
+                        bundle = self.call_work(target, list(node.args), ctx)
+                        return bundle[0] if len(bundle) == 1 else bundle
                 value = self.read(node.name, ctx)
                 for step in node.steps:
                     index = self.expr(step, ctx)
@@ -634,6 +979,8 @@ class Machine:
                   owning instance; anything else 0.0.
         """
         access = leaf.access
+        if isinstance(ctx, _WorkContext):
+            return ctx.locals.get(leaf.segments[0], 0.0)
         if access.kind == "binding":
             head = access.target[0]
             if head == "s":
@@ -790,11 +1137,10 @@ def _apply_bin(op, lhs, rhs):
     numeric = {"<":  lambda a, b: a < b,   "<=": lambda a, b: a <= b,
                ">":  lambda a, b: a > b,   ">=": lambda a, b: a >= b,
                "+":  lambda a, b: a + b,   "-":  lambda a, b: a - b,
-               "*":  lambda a, b: a * b,   "/":  lambda a, b: a / b
-                                                 if b else 0.0}
-    # "/" by zero yields 0.0 -- pre-handler runtime only: SEMANTICS 21
-    # rejects every division that is not provably nonzero, so this branch
-    # serves nothing a clean front half admits; it keeps the machine total.
+               "*":  lambda a, b: a * b,   "/":  lambda a, b: a / b}
+    # "/" by zero RAISES (D-26): SEMANTICS 21 admits a division only when
+    # provably nonzero or handler-covered (LANGUAGE 12.9), so the raise is
+    # always caught by the aware assignment's div_by_zero path.
     return numeric[op](_number(lhs), _number(rhs))
 
 
@@ -819,6 +1165,19 @@ def _apply_op(op, old, rhs):
     if op == "=":
         return rhs
     return _apply_bin(op[0], old, rhs)
+
+
+def _select_overload(overloads, selector):
+    """RETURN: Work, the overload whose FIRST input carries the selector's
+              name (R-33, SEMANTICS 26) -- unique by the definition-site
+              distinctness law; the first member if none matches (the run
+              stays total; elaborate rejected the call shape already).
+    """
+    for work in overloads:
+        entries = tuple(work.panel.knows) + tuple(work.panel.takes)
+        if entries and entries[0].name.segments[0] == selector:
+            return work
+    return overloads[0]
 
 
 def _iterable(value):

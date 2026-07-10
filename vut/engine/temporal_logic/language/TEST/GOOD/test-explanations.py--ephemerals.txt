@@ -1,0 +1,9 @@
+
+--- explain-ephemerals.vut ---
+front half: clean
+enter  Demo
+event  SHOW
+emit   dial_turned
+event  dial_turned(delta=42)
+set    m = 42 -> 42
+bind   b.shown = 42

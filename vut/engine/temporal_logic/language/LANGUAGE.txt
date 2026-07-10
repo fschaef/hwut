@@ -4,7 +4,7 @@ LANGUAGE
 
 The rule-file language describes the behaviour of an entity as reactions to
 events. This document states each language element and shows it in an example.
-Rationale for every decision lives in RATIONALE.txt (entries R-1..R-28); this
+Rationale for every decision lives in RATIONALE.txt (entries R-1..R-36); this
 document carries mechanics only.
 
 Spine:
@@ -82,6 +82,15 @@ written in the source. (The ledger's mechanics -- the checker, containers
 as collective debt, disposal policies -- bind the future type document;
 the law binds now.)
 
+DIE UPON END OF THE HAVE-RELATIONSHIP. An object's life is bounded by its
+being had: when the having ends -- the haver's own end, or the object
+being given away -- the object must already be given or destructed. A
+LOCAL VARIABLE IS HAD BY THE WORK THAT HAS IT: the work's terminal
+(finish: or exit:) ends the having, so a had obligation local is given
+before it -- a gives-port is the lawful end of having -- or destructed;
+plain value locals end under the memory exemption (11.1). One law, every
+scale: member, local, aggregate part.
+
 (0.4) The line of thought
 -------------------------
 The language builds outward from this section, in this order:
@@ -90,8 +99,8 @@ The language builds outward from this section, in this order:
     the class concept            characters and types: is/has/knows members
     the work                     the act: panels speak the same verbs;
                                  construction and destruction are works (12)
-    the clockwork                the temporal work (11)
-    connections                  pull, signals, pipelines (11.1)
+    the clockwork                the temporal work (13)
+    connections                  pull, signals, pipelines (13.1)
 
 Persistent objects and ephemerals remain of different nature at every
 stage; whenever a construct touches both, its law says which nature each
@@ -119,11 +128,12 @@ Exception -- operator, type, and definition-kind words are BARE:
 definition-kind words are likewise taken (they follow a definition's colon,
 see 1.2).
 
-RESERVED -- specified in (11) and (12), implementation pending (R-24..
+RESERVED -- specified in (11)-(14), implementation pending (R-24..
 R-27): the keywords "exit:", "groove:", "tick:", "ticks:", "takes:",
 "gives:", "finish:", "elsewhile:", "elseto:", the bare words "finish"
 (the jump to the finish: terminal), "finished" (the built-in exhaustion
-variant), "give", and the bare kind words "work", "clockwork".
+variant), "give", and the bare kind words "work", "clockwork", "class", "event",
+"obligation".
 
 (1.2) Definitions are name-first
 --------------------------------
@@ -167,8 +177,11 @@ introduces; a brace-pair delimits.
 (1.5) Comments
 --------------
 A comment runs from "#" to end of line. "#" is the sole comment delimiter.
+"#{" (optional whitespace before the brace) opens a BLOCK comment, closed
+by the balancing "}", nesting by brace count -- usable inline:
 
     c.count += 1;   # advance the counter
+    make #{skin -> a fresh sprite} : work
 
 
 (2) Causality (atomic behaviour)
@@ -199,8 +212,8 @@ is float. A parameter may carry a VALUE DEFAULT (Python behaviour):
 
 A use supplies every parameter WITHOUT a default, each at most once,
 positionals before named arguments; a named argument binds a declared
-parameter by name with the port binder: "name => value" (D-24; "=" is the
-declaration default marker only). A BARE name is a reference, not a call -- no argument judgement
+parameter by name: "name = value" (D-28; the same "=" marks a declaration
+DEFAULT -- position tells them apart: panel entry vs argument list). A BARE name is a reference, not a call -- no argument judgement
 attaches. A named cause CONTAINS its guard; a use site supplies arguments,
 not a second guard.
 
@@ -596,105 +609,152 @@ no member functions):
 
 A type is a built-in (int float string bool), one of these containers, or a
 named type. The containers are untyped for now; type constraints (a typed list,
-dict, or struct field) are a later addition.
+dict, or struct field) are a later addition. A "struct" is an anonymous slot
+bundle of VALUES; a named composite kind under the relations of (0.2) is a
+CLASS (11) -- the struct carries no custody vocabulary and no debt.
 
 
-(11) Clockwork              [SETTLED -- implementation lands with the work construct]
+(11) Class                  [SETTLED -- implementation lands in the F-9 passes]
 ===============================================================================
-A CLOCKWORK is the work family's temporal member: a pull-driven producer,
-the single linearization of a state machine (kin to the aspect, whose
-behaviours are free states; the kinship is noted, the constructs are
-separate, R-25).
+A CLASS defines a KIND of persistent object (0.1): a named composite whose
+members are declared under the relations of (0.2). One noun -- CLASS -- for
+the composite kind; "type" remains the general word spanning primitives,
+classes, and specs. (The character (7) predates this section; its
+integration under the class concept is deliberately deferred.)
 
-(11.1) Topology
----------------
-A clockwork may PULL MANY (its inputs are themselves clockworks, consumed
-via next()), may KNOW things, and is PULLED BY EXACTLY ONE consumer through
-its single outward port, next(). Its signals are received by the puller's
-"else:" handler. The winding relation admits no cycle. Pipelines are chains
-of clockworks in which only the final consumer pulls; each stage's
-exhaustion and faults translate upward through ordinary handlers -- forced
-translation, flowing through time.
+(11.1) Members: is / has / knows
+--------------------------------
+    <name> : class [is: <class>, ...]
+                   [has:   { <name>: <type>; ... }]
+                   [knows: { <name>: <type>; ... }]
 
-(11.2) Panel
-------------
-The definition follows the one form (1.2) with the panel verbs:
+    is:     inheritance -- identity, no possession.
+    has:    CUSTODY members -- the instance's own. Two grades:
+              - VALUE members (numbers, strings, aggregates of values):
+                had under the MEMORY EXEMPTION -- their end is automatic
+                with the instance's end; no ceremony.
+              - OBLIGATION members (11.2): had for real -- the instance
+                owes their end.
+    knows:  VIEW members -- acquaintance, no debt, no destruction rights;
+            the known must outlive the knower's use.
 
-    knows:    inputs known for the run -- no responsibility taken
-    takes:    inputs received into custody at winding
-    ticks:    the per-tick outputs (in place of gives: -- panel and
-              terminal correspond: ticks: declares, tick: delivers)
-    signals:  the closed fault set
+    sprite : class has:   { pos: vec2; tex: gpu_texture; }
+                   knows: { atlas: texture_atlas; }
 
-    line_reader : clockwork(takes: f : file_handle
-                            ticks: line : string
-                            signals: io_error(code: int)) { ... }
-
-What a clockwork takes at winding it holds across ticks. (The custody
-ledger across ticks and the written early-disposal path "winddown:" bind
-the future type document.)
-
-(11.3) Egresses and waits
+(11.2) Obligation classes
 -------------------------
-Three egresses close a body stretch:
+"is: obligation" marks a class whose instances are TRACKED DEBTS under
+the (0.3) law:
 
-    tick:             deliver the declared ticks: bundle implicitly (as
-                      finish: does for gives:) and SUSPEND until the next
-                      pull; no operands -- the panel already named
-                      everything
-    finish:           orderly exhaustion; the unique success terminal
-    exit: <variant>   fault mid-stream, one of the own declared signals
+    file_handle : class is: obligation
 
-Three waits suspend a running clockwork, one law for all -- progress is
-guaranteed because each is crossed only when the outside world acts:
+Debt is TRANSITIVE through custody: a class with an obligation among its
+has-members is itself an obligation -- aggregation carries the debts of
+its parts. Value-only classes are debt-free and live entirely under the
+memory exemption. (The ledger's mechanics bind the future type document;
+the classification binds now.)
 
-    tick:             awaits the next pull from below
-    groove: { arms }  awaits causes (the clockwork's WAIT construct,
-                      R-25(3)): the script parks; a firing arm cause runs
-                      its arm and the script continues -- an arm may
-                      deliver (tick:) or fault (exit:) from within
-    next() on input   awaits delivery from above; EVERY next() is a
-                      suspension point of the caller
+(11.3) Construction and disposal are member works -- role by panel
+-------------------------------------------------------------------
+There is NO constructor keyword and no special form. A class body holds
+MEMBER WORKS; their ROLE is read off the panel:
 
-(11.4) The pull
----------------
-next() is the event that runs the clockwork: the puller is the clock.
-There is ONE spelling -- next() is intrinsically potentially-suspending;
-no wait-variant exists. Its match domain is the declared signals: set
-UNION the built-in variant "finished" (exhaustion is an event -- no
-option types, no sentinels):
+    a member work whose gives: names the class   is a CONSTRUCTION WORK
+    a member work whose takes: names the class   is a DISPOSAL WORK
 
-    v = cd.next() else: {
-        finished => break:;
+"A work that gives and signals" -- construction can fail, and its panel
+says so; disposal receives the debt and discharges it.
+
+SEMI-DECLARATION (for clean and brief class definitions). A class body may
+list a member work by name alone -- '<name> : work', no panel, no body,
+optionally a block comment where the panel will be -- and the COMPLETE
+definition must follow at top level, spelled with the role marker:
+
+    +<class>.<ext> : work( <panel> ) { <body> }     a CONSTRUCTION WORK
+    -<class>       : work( <panel> ) { <body> }     THE disposal work
+
+The marker asserts what the panel must show (role by panel): a '+'
+completion GIVES the class, the '-' completion TAKES it; '+' works are
+many (hence the extension), the disposal work is one (declare's duplicate
+law holds it) and needs no semi-declaration. Both directions are checked:
+every semi-declaration is completed, every '+' completion completes a
+semi-declared member.
+
+    pair : class has: { lo: float; hi: float; } {
+        make #{a, b -> the ordered pair} : work
+    }
+    +pair.make : work(knows: a, b
+                      gives: p : pair
+                      signals: disorder) { ... finish: }
+    -pair : work(takes: p : pair
+                 signals: never_fails) { ... finish: }
+
+THE CANONICAL CONSTRUCTOR is 'Class.from' -- an ordinary extension name
+by convention ('from' bare is a name; only 'from:' with the glued colon
+is the keyword -- name-first spacing '+pair.from : work' never meets it).
+CONSTRUCTOR OVERLOADS identify BY ARGUMENT NAME: several '+class.ext'
+completions may share one extension (one semi-declaration lists it once);
+their FIRST input entries carry pairwise DISTINCT names, and a call of an
+overloaded extension LEADS WITH A NAMED ARGUMENT -- the SELECTOR -- whose
+name picks the overload. The remaining arguments bind against the
+selected panel: named claim theirs, positionals fill the unclaimed inputs
+in declaration order. A non-overloaded extension calls as any work
+(12.5); an overload without inputs cannot be identified and is rejected.
+
+    pair : class has: { lo: float; hi: float; } {
+        from #{bounds, upper -> the pair; center -> around it} : work
+    }
+    +pair.from : work(knows: bounds, upper
+                      gives: p : pair signals: disorder) { ... }
+    +pair.from : work(knows: center
+                      gives: p : pair signals: disorder) { ... }
+
+    b.t = pair.from(bounds = 1, 2)  else: { disorder => ; }
+    b.u = pair.from(center = 4)     else: { disorder => ; }
+
+A full member work written inline in the class body remains lawful.
+Member works are called through the class's dotted name:
+
+    sprite : class has: { pos: vec2; tex: gpu_texture; } {
+        make : work(knows: skin
+                    gives: s : sprite
+                    signals: no_texture(path)) { ... finish: }
+        free : work(takes: s : sprite
+                    signals: free_failed(code)) { ... finish: }
     }
 
-Winding is an ordinary call -- no constructor: instantiation is calling
-the clockwork's name with construction arguments, an aware assignment
-with handled faults.
+    s = sprite.make("ghost") else: { no_texture(p) => exit: build_failed(p); }
 
-(11.5) Consumption loop
------------------------
-    for: v from: cd { ... } else: { ... }
+Composing already-answered-for parts remains AGGREGATION, written as a
+literal with member bindings:
 
-"from:" announces the pulled source as "elsewhile:" announces its
-backward edge; "finished" IS the loop's own end. The trailing else: must
-cover the remaining signal set and is omitted exactly when that set is
-empty. Custody flavours ("from: cd" borrows -- disposal stays with the
-consumer; "from: give cd" hands the instance to the loop, which disposes
-on every exit path) bind the future type document.
+    s = sprite{pos: vec2(0, 0), tex: give t};
 
-(11.6) A complete small clockwork
----------------------------------
-    countdown : clockwork(knows: n : int
-                          ticks: value : int) {
-        int: i = 1 .. n {
-            value = n - i + 1;
-            tick:
-        }
-        finish:
-    }
+The colon binds MEMBERS (a relation being established); "=>" binds PORTS
+at a call (an act being wired, 12.5) -- the two never mix. An obligation
+part enters the aggregate only by "give": the literal takes custody, the
+giver's name dies. Aggregation is not work; ACQUISITION is (0.1).
 
-    for: v from: countdown(10) { print(v); }
+(11.4) Destruction
+------------------
+An instance ends only by being GIVEN onward or DESTRUCTED (0.3).
+Destruction is a WORK: a disposer receives the instance through a
+takes-port and, in its body, discharges every obligation member --
+giving it onward or destructing it in turn; value members end under the
+memory exemption. A disposer for a debt-free class is legal and empty of
+duty.
+
+DESTRUCTION CANNOT FAIL (R-36): a disposal work declares NO signals --
+its call sites carry no handling obligation, ever. The give-or-destruct
+duty must be dischargeable on every path, fault paths included: a
+refusable last resort would demand handlers inside handlers without
+ground, and failure-during-cleanup would shadow the original fault.
+Trouble during release is an occurrence to report (an EVENT on the bus),
+never a refusal that re-obligates the caller: the having has ended the
+moment custody arrived. The asymmetry is deliberate -- acquisition may
+be refused, handing back cannot. (The philosophy in full:
+EXPLANATION/explain-destruction-cannot-fail.vut.) (Containers as collective debt, disposal policies bound at
+construction, and the dispose primitive bind the future type document.)
 
 
 (12) Work                   [SETTLED -- implementation lands in the F-9 passes]
@@ -774,16 +834,16 @@ self-declared variant is emitted by at least one reachable exit:.
 (12.5) Call-site binding
 ------------------------
 INPUTS follow the Python argument pattern: positionals bind in declaration
-order; named arguments "port => value" bind by name; positionals precede
-named; no port bound twice; every non-defaulted input supplied.
+order; named arguments "port = value" bind by name (D-28); positionals
+precede named (an overloaded extension's SELECTOR leads, 11.3); no port
+bound twice; every non-defaulted input supplied.
 
-OUTPUTS bind in one of two forms:
-  - assignment form: targets left of "=" bind gives-entries in
-    declaration order -- "c, r = bundle_adjustment(pc1, pc2) else: ...";
-  - port-map form: inputs and outputs associated by name in ONE
-    parenthesis; argument/result dissolves into port DIRECTION and the
-    call reads as a wiring diagram:
-    "bundle_adjustment(pc_a => pc1, pc_b => pc2, center => c, rotation => r) else: ..."
+OUTPUTS bind in the assignment form: targets left of "=" bind
+gives-entries in declaration order --
+"c, r = bundle_adjustment(pc1, pc2) else: ...". The PORT-MAP form (inputs
+and outputs associated by name in one parenthesis, the call read as a
+wiring diagram) is RESERVED: its output-association spelling is an open
+question (disc-9 C-1 residual) since "=" cannot say "flows out to".
 
 SAME-TYPE RULE (outputs only): positional output binding is refused when
 two gives-entries share a type; the port-map form is demanded.
@@ -920,13 +980,139 @@ own vocabulary. Payloads may travel; tags may not. A signal can never be
 stored, collected, or re-raised at a distance: a branch taken, not a
 value.
 
-(12.11) Events on the data side
--------------------------------
-The EVENT of section 2 and the mechanism behind signals: are ONE concept
--- an ephemeral value. An event-typed knows-/takes-entry declares the
-variants that travel with the call ("knows: level : event(GRADE_5,
-FULL(v: int))"); the bare names are in scope exactly within the argument
-list. The EVENT MATCHER applies the handler-block anatomy to an event
-variable, all rules of 12.6 unchanged. Events may be known or taken,
-never had -- ephemeral is a law, not a mood (custody wording binds the
-future type document).
+
+(13) Clockwork              [SETTLED -- implementation lands with the work construct]
+===============================================================================
+A CLOCKWORK is the work family's temporal member: a pull-driven producer,
+the single linearization of a state machine (kin to the aspect, whose
+behaviours are free states; the kinship is noted, the constructs are
+separate, R-25).
+
+(13.1) Topology
+---------------
+A clockwork may PULL MANY (its inputs are themselves clockworks, consumed
+via next()), may KNOW things, and is PULLED BY EXACTLY ONE consumer through
+its single outward port, next(). Its signals are received by the puller's
+"else:" handler. The winding relation admits no cycle. Pipelines are chains
+of clockworks in which only the final consumer pulls; each stage's
+exhaustion and faults translate upward through ordinary handlers -- forced
+translation, flowing through time.
+
+(13.2) Panel
+------------
+The definition follows the one form (1.2) with the panel verbs:
+
+    knows:    inputs known for the run -- no responsibility taken
+    takes:    inputs received into custody at winding
+    ticks:    the per-tick outputs (in place of gives: -- panel and
+              terminal correspond: ticks: declares, tick: delivers)
+    signals:  the closed fault set
+
+    line_reader : clockwork(takes: f : file_handle
+                            ticks: line : string
+                            signals: io_error(code: int)) { ... }
+
+What a clockwork takes at winding it holds across ticks. (The custody
+ledger across ticks and the written early-disposal path "winddown:" bind
+the future type document.)
+
+(13.3) Egresses and waits
+-------------------------
+Three egresses close a body stretch:
+
+    tick:             deliver the declared ticks: bundle implicitly (as
+                      finish: does for gives:) and SUSPEND until the next
+                      pull; no operands -- the panel already named
+                      everything
+    finish:           orderly exhaustion; the unique success terminal
+    exit: <variant>   fault mid-stream, one of the own declared signals
+
+Three waits suspend a running clockwork, one law for all -- progress is
+guaranteed because each is crossed only when the outside world acts:
+
+    tick:             awaits the next pull from below
+    groove: { arms }  awaits causes (the clockwork's WAIT construct,
+                      R-25(3)): the script parks; a firing arm cause runs
+                      its arm and the script continues -- an arm may
+                      deliver (tick:) or fault (exit:) from within
+    next() on input   awaits delivery from above; EVERY next() is a
+                      suspension point of the caller
+
+(13.4) The pull
+---------------
+next() is the event that runs the clockwork: the puller is the clock.
+There is ONE spelling -- next() is intrinsically potentially-suspending;
+no wait-variant exists. Its match domain is the declared signals: set
+UNION the built-in variant "finished" (exhaustion is an event -- no
+option types, no sentinels):
+
+    v = cd.next() else: {
+        finished => break:;
+    }
+
+Winding is an ordinary call -- no constructor: instantiation is calling
+the clockwork's name with construction arguments, an aware assignment
+with handled faults.
+
+(13.5) Consumption loop
+-----------------------
+    for: v from: cd { ... } else: { ... }
+
+"from:" announces the pulled source as "elsewhile:" announces its
+backward edge; "finished" IS the loop's own end. The trailing else: must
+cover the remaining signal set and is omitted exactly when that set is
+empty. Custody flavours ("from: cd" borrows -- disposal stays with the
+consumer; "from: give cd" hands the instance to the loop, which disposes
+on every exit path) bind the future type document.
+
+(13.6) A complete small clockwork
+---------------------------------
+    countdown : clockwork(knows: n : int
+                          ticks: value : int) {
+        int: i = 1 .. n {
+            value = n - i + 1;
+            tick:
+        }
+        finish:
+    }
+
+    for: v from: countdown(10) { print(v); }
+
+
+
+(14) Ephemerals             [SETTLED -- implementation lands in the F-9 passes]
+===============================================================================
+Ephemerals are the second nature (0.1): defined on the fly, VAPORATING
+UPON CONSUMPTION -- known or taken, never had; no construction ceremony,
+no destruction, no ledger. They are the language's channel of
+communication, including the communication of MISBEHAVIOUR.
+
+(14.1) One concept
+------------------
+The EVENT of section 2 (the causality's anchor) and the mechanism behind
+a work's signals (12.2) are ONE concept -- an ephemeral value carrying a
+variant and its payload. Section 2 is the event on the reactive bus;
+this section is the event as data; a SIGNAL is the same creature on the
+FAULT channel -- one mechanism, two channels.
+
+(14.2) Event-typed entries and the matcher
+------------------------------------------
+An event-typed knows-/takes-entry declares the variants that travel with
+the call; the bare variant names are in scope exactly within that
+argument list:
+
+    set_level : work(knows: level : event(GRADE_5, FULL(v: int))) { ... }
+    set_level(FULL(v = 3));
+
+The EVENT MATCHER applies the handler-block anatomy (12.6) to an event
+variable -- first-match, dead-arm error, exhaustiveness over the declared
+set, payload scoping per arm -- all rules unchanged. Consumption by a
+matching arm is the ephemeral's END.
+
+(14.3) Signals: the misbehaviour ephemerals
+-------------------------------------------
+A signal obeys every event rule and adds the fault-channel laws of (12):
+non-reifiable (12.10), scoped to exactly four places (12.2), consumed by
+the else:-handler arm that matches it. Payloads may travel; tags may
+not. That misbehaviour is spoken in ephemerals is by design: trouble is
+an occurrence to react to, never an object to own.

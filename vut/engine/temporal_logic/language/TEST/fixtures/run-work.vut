@@ -1,0 +1,46 @@
+divide : work(knows: a, b
+              gives: q
+              signals: by_zero) {
+    q = a / b else: { div_by_zero => exit: by_zero; }
+    finish:
+}
+countdown : clockwork(knows: n
+                      ticks: value
+                      signals: negative(v)) {
+    if: n < 0 { exit: negative(n); }
+    int: i = 1 .. n {
+        value = n - i + 1;
+        tick:
+    }
+    finish:
+}
+pair : class has: { lo: float; hi: float; } {
+    from #{a, b -> the ordered pair; a -> the degenerate pair} : work
+}
++pair.from : work(knows: bounds, upper
+                  gives: p : pair
+                  signals: disorder) {
+    if: bounds > upper { exit: disorder; }
+    p = bounds + upper;
+    finish:
+}
++pair.from : work(knows: center
+                  gives: p : pair
+                  signals: disorder) {
+    if: center < 0 { exit: disorder; }
+    p = center * 2;
+    finish:
+}
+-pair : work(takes: p : pair) {
+    finish:
+}
+B : behavior has: { q: float; r: float; s: float; t: float; u: float; } {
+    GO => {
+        b.q = divide(10, 2) else: { by_zero => ; }
+        b.r = divide(1, 0) else: { by_zero => { b.r = -1.0; } }
+        for: v from: countdown(3) { b.s = v; }
+        b.t = pair.from(bounds = 1, 2) else: { disorder => ; }
+        b.u = pair.from(center = 4) else: { disorder => ; }
+    }
+}
+GO => B;

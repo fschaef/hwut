@@ -271,3 +271,61 @@ rejected. A docstring before a top-level DECLARATION is parseable (grammar
 D-20, a consequence of the name-first factored head) but documents nothing
 this law admits: it is rejected; the declaration itself remains published.
 Docstrings are inert to execution and to the export surface.
+
+
+(23) Work, clockwork, and class bodies                    [REJECT, PARTIAL]
+-----------------------------------------------------------------------------
+The D-25/D-26 slice. CHECKED NOW: every "exit:" names a signal the
+enclosing panel declares, and every self-declared signal is emitted by at
+least one exit: (LANGUAGE 12.4, both directions, collected by full
+structural descent); "tick:" is lawful only inside a clockwork with a
+ticks: section (LANGUAGE 13.3); inside a work body the reactive lvalue
+qualification (SEMANTICS 9) does not apply -- targets are the panel's
+ports and body locals, bare names. DEFERRED, marked here so silence never
+passes for law: definite assignment of gives-ports at finish: (12.4);
+handler exhaustiveness and dead-arm detection over the callee's signal
+set (12.6); the same-type output rule and visible-discard obligation
+(12.5); binding-head shadowing by port names inside work bodies; the
+custody ledger entire (type document).
+
+(24) The aware statement                                  [REJECT, PARTIAL]
+-----------------------------------------------------------------------------
+A statement carrying an "else:" handler covers the UNION of its fault
+sources (LANGUAGE 12.9): within such a statement the SEMANTICS-21
+division rejection is suppressed -- the runtime raises div_by_zero into
+the handler instead. DEFERRED: verifying the handler actually covers that
+union (exhaustiveness), the mandatory-handler direction (a signalling
+work called WITHOUT else: is not yet rejected), and the flow obligations
+of 12.6 (diverge / produce substitutes / guarded fall-through).
+
+
+(25) Semi-declaration and completion                      [REJECT, PARTIAL]
+-----------------------------------------------------------------------------
+D-27. A class body's semi-declared member work ('name : work', empty
+panel, no body) MUST be completed by a top-level '+class.ext : work(...)'
+definition; a '+' completion MUST complete a semi-declared member of an
+EXISTING class; the marker/panel agreement of LANGUAGE 11.3 is checked
+over TYPED entries -- a '+' completion's gives:, a '-' completion's
+takes:, must name the class (untyped sections defer, PARTIAL). At most
+one '-class' per class -- held by declare's duplicate law (the qualified
+name (class, '-') collides), not re-checked here. A '-' completion with a
+signals: section is REJECTED: DESTRUCTION CANNOT FAIL (LANGUAGE 11.4,
+R-36). DEFERRED: namespaced
+completion resolution beyond the top scope; the disposal CALL surface
+(rides the dispose primitive, type document).
+
+
+(26) Constructor overloads identify by argument name      [REJECT, PARTIAL]
+-----------------------------------------------------------------------------
+R-33 (supersedes R-32's arity law). Several '+class.ext' completions may
+share one extension (declare's duplicate law stands aside for exactly
+this shape; the first publication carries the export entry). DEFINITION
+SITE: overloads of one extension (two or more) carry pairwise DISTINCT
+first-input names; an overload without inputs cannot be identified and
+is rejected. CALL SITE: a call of an overloaded extension leads with a
+NAMED argument -- the selector -- whose name is one overload's first
+input; an unnamed lead or an unknown selector is rejected (checked at
+aware-mutation walks). A single completion is not an overload and needs
+no identification. DEFERRED: call sites outside aware mutations
+(statement-form calls, for:-from: windings); overloads across module
+boundaries.

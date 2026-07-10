@@ -1,0 +1,7 @@
+
+--- explain-destruction-cannot-fail.vut ---
+front half: clean
+enter  Demo
+event  SHOW
+set    l = 25 -> 25
+bind   b.got = 25

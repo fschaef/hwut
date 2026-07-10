@@ -1,0 +1,9 @@
+
+--- explain-take-give-know.vut ---
+front half: clean
+enter  Demo
+event  SHOW
+set    s = 40 -> 40
+bind   b.s = 40
+set    total = 80 -> 80
+set    b.t = 80 -> 80

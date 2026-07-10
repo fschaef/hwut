@@ -1,0 +1,19 @@
+
+--- works (run-work.vut) ---
+enter  B
+event  GO
+set    q = 5.0 -> 5.0
+bind   b.q = 5.0
+signal div_by_zero()
+signal by_zero()
+set    b.r = -1.0 -> -1.0
+set    value = 3 -> 3
+set    b.s = 3 -> 3
+set    value = 2 -> 2
+set    b.s = 2 -> 2
+set    value = 1 -> 1
+set    b.s = 1 -> 1
+set    p = 3 -> 3
+bind   b.t = 3
+set    p = 8 -> 8
+bind   b.u = 8

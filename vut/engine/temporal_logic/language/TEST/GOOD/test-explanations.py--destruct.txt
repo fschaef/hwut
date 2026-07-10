@@ -1,0 +1,7 @@
+
+--- explain-destruct.vut ---
+front half: clean
+enter  Demo
+event  SHOW
+set    b = 1024 -> 1024
+bind   b.got = 1024

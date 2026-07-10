@@ -9,7 +9,7 @@ PURPOSE: Test the ELABORATE unit -- the DeclaredModule -> SemanticModule
          fixtures/; peer modules are declared inside the test through the
          same front half, so mounting reads a REAL export_db.
 
-CHOICES: gate, mount_recipes, rejects, warn17.
+CHOICES: gate, mount_recipes, rejects, warn17, work_rejects.
 
            gate           A reporter already carrying diagnostics makes
                           elaborate_module refuse by raising -- the F-6
@@ -187,6 +187,18 @@ def run_rejects():
                  if leaf.access is not None]))
 
 
+def run_work_rejects():
+    """RETURN: None, always. Locks the work-body REJECTs of SEMANTICS 23
+              over one fixture: an exit: naming an undeclared signal
+              (LANGUAGE 12.4, first direction), a declared signal no
+              reachable exit: emits (second direction), and a tick:
+              outside a clockwork's ticks: hosting (LANGUAGE 13.3).
+    """
+    banner("work rejections (elab-work-rejects.vut)")
+    semantic, reporter = front_half("elab-work-rejects.vut", peers={})
+    dump_diagnostics(reporter)
+
+
 def run_warn17():
     """RETURN: None, always. Pins SEMANTICS 17: an effect targeting a locally
               defined ABSTRACT entity draws the remark (fatal False) and
@@ -206,5 +218,6 @@ HwutRunner(
         "mount_recipes": run_mount_recipes,
         "rejects":       run_rejects,
         "warn17":        run_warn17,
+        "work_rejects": run_work_rejects,
     },
 ).run()

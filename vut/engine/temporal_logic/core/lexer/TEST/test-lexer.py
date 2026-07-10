@@ -150,8 +150,8 @@ def run_block_comment():
     tokens, _, _ = drive("#  \t  { a block } ( foo )\n")
     show_tokens(tokens)
 
-    banner("'#{' without whitespace: a LINE comment; next line lexes")
-    tokens, _, _ = drive("#{ this line vanishes } including the tail\n( foo )\n")
+    banner("'#{' without whitespace: opens the block directly (D-27)")
+    tokens, _, _ = drive("#{ a block } ( foo )\n")
     show_tokens(tokens)
 
     banner("newline before '{': a LINE comment; '{' '}' lex as tokens")

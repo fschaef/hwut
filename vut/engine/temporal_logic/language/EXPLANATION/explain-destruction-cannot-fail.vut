@@ -1,0 +1,58 @@
+#{ ===========================================================================
+   DESTRUCTION CANNOT FAIL -- the philosophy (11.4, R-36).
+
+   A disposal work declares NO signals. This is not an omission; it is the
+   keystone that keeps the ownership law (0.3) dischargeable:
+
+   1. THE DEBT MUST BE PAYABLE. "Give or destruct what you have" is a duty
+      on EVERY path -- including the fault paths. A haver inside its own
+      exit: cascade must still discharge; if destructing could fail, the
+      haver would need a handler inside the handler, and THAT failure a
+      handler in turn -- the regress never grounds. Total destruction
+      grounds it: the last resort that cannot refuse.
+
+   2. FAILURE-DURING-FAILURE CASCADES. The classic ruin: an error path
+      releases its resources, a release errs, and the original fault is
+      shadowed by the cleanup's fault. With signal-less disposal the
+      original fault is the ONLY fault -- the trace stays readable.
+
+   3. TROUBLE DURING RELEASE IS INFORMATION, NOT REFUSAL. A close() that
+      errs deep below does not resurrect the debt -- the having HAS ended.
+      What remains is a fact worth reporting: an EVENT on the bus (the
+      ephemeral channel exists precisely for occurrences that nobody owns,
+      explain-ephemerals.vut) -- never a signal that re-obligates the
+      caller of the end itself.
+
+   The checker holds the law: a '-class' completion with a signals:
+   section is REJECTED (SEMANTICS 25) -- locked in the suite's
+   work_rejects choice.
+   =========================================================================== }
+
+lease : class has: { held: float; } {
+    from : work
+}
+
++lease.from : work(knows: units
+                   gives: l : lease
+                   signals: exhausted) {
+    if: units > 100 { exit: exhausted; }    # ACQUISITION may fail -- and
+    l = units;                              # says so: that is its job
+    finish:
+}
+
+#{ The mirror is asymmetric ON PURPOSE: taking the world's resources can
+   be refused; handing them back cannot. The panel spells the asymmetry --
+   gives-and-signals above, takes-and-silence below. }
+
+-lease : work(takes: l : lease) {
+    # were the release to err deep below, this body would EMIT an event
+    # (occurrence, unowned) -- the caller's obligation is already met the
+    # moment custody arrived here.
+    finish:
+}
+
+Demo : behavior has: { got: float; } {
+    SHOW => {
+        b.got = lease.from(units = 25) else: { exhausted => { b.got = 0; } }
+    }
+}

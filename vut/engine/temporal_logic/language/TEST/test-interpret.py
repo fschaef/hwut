@@ -7,7 +7,7 @@ PURPOSE: Test the INTERPRETER -- direct execution of the decorated AST over
          language's OPERATIONAL behaviour byte-exactly, making this suite
          the semantics ORACLE every future emitter must match.
 
-CHOICES: dispatch, lifecycle, blocks, membership.
+CHOICES: dispatch, lifecycle, blocks, membership, works.
 
            dispatch   The synchronous-instant law (P-1/P-1b): FIFO queue,
                       guards fixed at event arrival (a toggle alternates,
@@ -143,6 +143,24 @@ def run_membership():
     print(m.trace())
 
 
+def run_works():
+    """RETURN: None, always. Locks the D-25/D-26 vertical slice over
+              run-work.vut: a work call binds positionally and gives; a
+              runtime div_by_zero translates through the work's own handler
+              into its declared signal (forced translation, LANGUAGE 12.10)
+              and the call site substitutes; a clockwork wound at the
+              for:-from: loop delivers three ticks and finishes; a class
+              member work in CONSTRUCTOR role (gives: the class, R-30) is
+              called through its class's dotted name.
+    """
+    banner("works (run-work.vut)")
+    m = machine("run-work.vut")
+    m.post("GO")
+    m.drain()
+    for line in m.lines:
+        print(line)
+
+
 HwutRunner(
     argv       = sys.argv,
     title      = "Interpreter (the semantics oracle)",
@@ -151,5 +169,6 @@ HwutRunner(
         "lifecycle": run_lifecycle,
         "blocks":    run_blocks,
         "membership": run_membership,
+        "works":     run_works,
     },
 ).run()

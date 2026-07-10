@@ -2,7 +2,7 @@
 
 RULE-FILE GRAMMAR -- formal spec of the settled language.
 
-Authority: LANGUAGE.txt (mechanics) and RATIONALE.txt (R-1..R-27, the why).
+Authority: LANGUAGE.txt (mechanics) and RATIONALE.txt (R-1..R-36, the why).
 This file is the formal grammar. Regions below carry ONE-LINE remarks naming the
 language element; full prose lives in LANGUAGE.txt, rationale in RATIONALE.txt.
 
@@ -125,6 +125,33 @@ D-24 The named-argument binder is '=>' (C-1 ruling: 'port => value'), the
      ONE direction-neutral port binder of the work construct's port-map
      form -- '=' remains the declaration DEFAULT marker ('boost = 1' in a
      parameter list). Supersedes D-11's call-site '='.
+D-25 The work-construct slice enters the grammar (LANGUAGE 11/12/13):
+     named-item gains the class/work/clockwork branches; the panel grows to
+     its five sections (knows/takes/gives/ticks/signals); class bodies hold
+     member works; work and clockwork bodies are code-statement sequences;
+     finish:/exit:/tick: are code STATEMENTS at any nesting depth, lawful
+     only inside work/clockwork bodies (SEMANTICS 23).
+D-26 The AWARE surface: a mutation's targets may be a comma list and its
+     terminator may be replaced by the handler "else: { arms }" (block-
+     final); an arm is '[variant[(fields)]] => (block | exit: | ;)'; the
+     for:-loop gains the consumption arm 'from: [give] <source>' with a
+     trailing handler (LANGUAGE 12.6/13.5).
+D-27 Semi-declaration and completion (LANGUAGE 11.3): the work-tail's
+     panel is OPTIONAL -- 'name : work' alone inside a class body is the
+     brief listing; the top level gains '+class.ext : work ...' and
+     '-class : work ...' completion heads (captured '+'/'-' operators,
+     LL(2)-clean beside expressions: statement position never opens with
+     an operator... at top level nothing else opens with one either). The
+     lexer's block-comment opener admits '#{' directly (whitespace now
+     optional), so a semi-declaration may carry '#{...}' where the panel
+     will be. Reverses the pinned lexer choice "'#{' without whitespace is
+     a line comment".
+D-28 Named arguments are 'name = value' again (FR ruling, R-34): D-24's
+     '=>' binder is REVERTED. '=>' keeps the effect marker and the handler
+     arm; '=' serves both the declaration default and the call-site named
+     argument, distinguished by position (panel vs parens-arg). The
+     port-map's OUTPUT association is an OPEN question again (disc-9 C-1
+     residual) -- it does not pre-decide here.
      Role meaning is scoped to the rule that applies it; per-SEQ uniqueness is
      the engine's compile-time law, and factory role access is STRICT (a role
      the rule does not carry raises at the read). A misspelled role therefore
@@ -248,6 +275,7 @@ GRAMMAR = {
     # ONE factored rule, <named-item>; a top-level causality never carries ':'
     # after its head name, so the two branches split LL(2)-clean on token two.
     "top-level":  ("<named-item(named)>",
+                   OR, "<ctor-def(ctor)>", OR, "<dtor-def(dtor)>",
                    OR, "<causality(causality)>",
                    OR, "<namespace(namespace)>", OR, "<import(import)>",
                    OR, "<documented(documented)>"),                    # D-18
@@ -268,7 +296,59 @@ GRAMMAR = {
                     OR,
                     ("cause", "<cause-tail(cause-def)>"),
                     OR,
+                    ("class", "<class-tail(class)>"),
+                    OR,
+                    ("work", "<work-tail(work)>"),
+                    OR,
+                    ("clockwork", "<clockwork-tail(clockwork)>"),
+                    OR,
                     ("<type(declaration)>", ";"))),
+
+    # == completion definitions (D-27, LANGUAGE 11.3): the marker asserts the
+    # role R-30 reads off the panel -- '+class.ext' a CONSTRUCTION WORK
+    # (several, hence the extension), '-class' THE disposal work (one, no
+    # extension); marker and panel must agree (SEMANTICS 25).
+    "ctor-def":   (t_op_add, t_re_id("class"), ".", t_re_id("ext"),
+                   t_op_colon, "work", "<work-tail(work)>"),
+    "dtor-def":   (t_op_sub, t_re_id("class"),
+                   t_op_colon, "work", "<work-tail(work)>"),
+
+    # == class (R-29, LANGUAGE 11; D-25) ======================================
+    # is: inheritance; has: custody members; knows: view members; the body
+    # holds MEMBER WORKS -- role by panel: a member work giving the class is
+    # its CONSTRUCTION WORK, one taking it its DISPOSAL WORK (R-30).
+    "class-tail": (["is:", "<call(class)>", STAR((",", "<call(class)>"))],
+                   ["has:", "<decl-block>"],
+                   ["knows:", "<decl-block>"],
+                   ["{", PLUS("<member-work>"), "}"]),
+    "member-work": (t_re_id("name"), t_op_colon, "work", "<work-tail(work)>"),
+
+    # == work (LANGUAGE 12; D-25) =============================================
+    # Panel, then the body: statements of the code subspace plus the work
+    # terminals. finish: and exit: are STATEMENTS of the work body only; the
+    # semantic layer holds their laws (SEMANTICS 23).
+    # D-27: the panel is OPTIONAL -- 'name : work' alone is a class body's
+    # SEMI-DECLARATION (brief listing; the complete definition must follow,
+    # SEMANTICS 25); panel without body remains the SPEC (12.1).
+    "work-tail":  (["<panel>"], ["{", STAR("<code/statement>"), "}"]),
+
+    # == handler (LANGUAGE 12.6; D-26): the else:-block is a match ===========
+    # Arms: '<variant>[(fields)] => <action>'; a bare '=>' is the default arm
+    # (at most one, last -- pass-2). Actions: a block, an exit:, or ';' (the
+    # arm-level shrug). Exhaustiveness/dead-arm are semantic (SEMANTICS 24).
+    "handler":    ("{", STAR("<arm>"), "}"),
+    # An arm's head is OPTIONAL: absent = the bare '=>' default arm.
+    "arm":        ([(t_re_id("variant"), ["<arm-fields>"])],
+                   t_op_spawn, "<arm-action(action)>"),
+    "arm-fields": ("(", [t_re_id("field"), STAR((",", t_re_id("field")))], ")"),
+    "arm-action": ("<code/block(block)>", OR, "<code/exit-stmt(exit)>",
+                   OR, "<arm-shrug(shrug)>"),
+    "arm-shrug":  (";",),
+
+    # == clockwork (LANGUAGE 13; D-25) ========================================
+    # A work body extended by tick: (deliver the ticks: bundle, suspend until
+    # the next pull). groove: awaits its host's rebuild (R-25(3)).
+    "clockwork-tail": ("<panel(panel)>", ["{", STAR("<code/statement>"), "}"]),
 
     # == documented definition (D-18, D-20): a docstring PRECEDES its subject =
     # """...""" <named-item> -- the docstring rides the subject's product
@@ -318,7 +398,13 @@ GRAMMAR = {
                    ["has:", "<decl-block>"],
                    "{", PLUS("<behavior-def>"), "}"),
     # panel (D-23): sectioned signature -- both sections optional, order fixed.
-    "panel":       ("(", ["knows:", "<decl-arg>", STAR((",", "<decl-arg>"))],
+    # panel (D-23, D-25): the five sections in fixed order, each optional.
+    # knows/takes are inputs (acquaintance / custody), gives the outputs,
+    # ticks the per-tick outputs (clockworks), signals the fault set.
+    "panel":       ("(", ["knows:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
+                         ["takes:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
+                         ["gives:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
+                         ["ticks:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
                          ["signals:", "<signal-decl>", STAR((",", "<signal-decl>"))],
                     ")"),
     "signal-decl": (t_re_id("name"), ["<parens-decl>"]),
@@ -455,10 +541,15 @@ GRAMMAR = {
     "code": {
         TOP:            ("{", STAR("<statement>"), "}"),
 
+        # D-25: the work terminals finish:/exit:/tick: are STATEMENTS here
+        # (any nesting depth inside a work body); unlawful outside work and
+        # clockwork bodies -- the semantic layer rejects (SEMANTICS 23).
         "statement":    ("<mutation(mutation)>", OR, "<if(if)>", OR, "<match(match)>",
                          OR, "<for(for)>", OR, "<count(count)>",
                          OR, "<break(break)>", OR, "<continue(continue)>", OR, "<dropto(dropto)>",
-                         OR, "<exit-label>"),
+                         OR, "<exit-label>",
+                         OR, "<finish-stmt(finish)>", OR, "<code/exit-stmt(exit)>",
+                         OR, "<tick-stmt(tick)>"),
 
         # -- the brace body (R-12: every block is "{ }") --------------------
         # Nested bodies admit no exit-label (outermost-only, pass-2).
@@ -467,7 +558,12 @@ GRAMMAR = {
         # -- mutation (R-13 leaf): lvalue OP value; lvalue is a data-access ---
         # RHS is any value sort (number / truth via <expr>, or a collection --
         # disjoint at "[", R-16/R-17).
-        "mutation":     ("<lvalue>", "<op-mut>", "<rhs>", ";"),
+        # D-26 (LANGUAGE 12.5/12.6): targets may be a comma list (assignment
+        # form of a multi-output work call; single elsewhere, pass-2) and the
+        # terminator may be replaced by the AWARE handler "else: { arms }" --
+        # block-final, ends at '}' (the earlier canary, verified LL(2)-clean).
+        "mutation":     ("<lvalue>", STAR((",", "<lvalue>")), "<op-mut>", "<rhs>",
+                         (";", OR, ("else:", "<handler(handler)>"))),
         "lvalue":       ("<data-access(operand)>",),
         "rhs":          ("<expr>", OR, "<collection(comprehension)>"),
         "op-mut":       (t_op_assign, OR, t_op_addeq, OR, t_op_subeq,
@@ -485,7 +581,12 @@ GRAMMAR = {
         "range":        ("<number>", "to:", "<number>"),
 
         # -- for (R-13, bounded, D-16): iterate a collection; var is a local --
-        "for":          ("for:", t_re_id("var"), "in:", "<coll-source>", "<block>"),   # D-16
+        "for":          ("for:", t_re_id("var"),
+                         (("in:", "<coll-source>"),
+                          OR,                                          # D-26
+                          ("from:", ["give"], "<data-access(source)>")),
+                         "<block>",
+                         ["else:", "<handler(handler)>"]),   # D-16, D-26
         "coll-source":  ("<data-access(access)>", OR, "<collection(comprehension)>"),
 
         # -- counting loop (R-13, bounded): a TYPED counter declared inline.
@@ -511,6 +612,11 @@ GRAMMAR = {
 
         # -- dropto (R-14): forward-only jump to a later exit-label ----------
         "dropto":       ("dropto:", t_re_id("label"), ";"),
+
+        # -- work terminals (D-25, LANGUAGE 12.4/13.3; SEMANTICS 23) ---------
+        "finish-stmt":  ("finish:",),
+        "exit-stmt":    ("exit:", t_re_id("variant"), ["<parens-arg>"], ";"),
+        "tick-stmt":    ("tick:",),
         # -- exit-label (R-14): a bare drop-through label (no body, C-label);
         #    definable only at the outermost body (pass-2).
         "exit-label":   (t_op_colon, t_re_id("label"), t_op_colon),  # D-21
@@ -553,7 +659,7 @@ GRAMMAR = {
 
     "parens-arg":  ("(", ["<list-arg>"], ")"),
     "list-arg":    ("<arg>", STAR((",", "<arg>"))),
-    "arg":         ("<algebr>", OR, (t_re_id("arg-name"), t_op_spawn, "<algebr>")),  # D-24
+    "arg":         ("<algebr>", OR, (t_re_id("arg-name"), t_op_assign, "<algebr>")),  # D-28
 
     "parens-decl": ("(", ["<list-decl>"], ")"),
     "list-decl":   ("<decl-arg>", STAR((",", "<decl-arg>"))),

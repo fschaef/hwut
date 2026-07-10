@@ -105,6 +105,34 @@ SNIPPETS = [
  ("strings_in",   'X when: e.tag == "sensor_7" => { c.hit = 1.0; }\n'
                    'Y when: e.v in c.items => f;\n'
                    'Z when: e.v not in c.items and "ens" in c.tag => g;'),
+ ("work_def",     "divide : work(knows: x, y\n"
+                   "               gives: q\n"
+                   "               signals: by_zero)\n"
+                   "{ q = x / y else: { div_by_zero => exit: by_zero; } finish: }"),
+ ("work_spec",    "on_event : work(knows: ev gives: consumed signals: failed(m))"),
+ ("clockwork_def", "line_reader : clockwork(takes: f\n"
+                   "                        ticks: line\n"
+                   "                        signals: io_error(code))\n"
+                   "{ tick: finish: }"),
+ ("class_def",    "sprite : class is: entity\n"
+                   "  has:   { pos: vec2; tex: gpu_texture; }\n"
+                   "  knows: { atlas: texture_atlas; }\n"
+                   "{\n"
+                   "  make : work(knows: skin gives: s : sprite signals: no_texture(path))\n"
+                   "  { s = 1; finish: }\n"
+                   "  free : work(takes: s : sprite signals: free_failed(code))\n"
+                   "  { finish: }\n"
+                   "}"),
+ ("aware_forms",  "E => { b.x = f(1) else: { bad(r) => { b.x = r; } => ; }\n"
+                   "       for: v from: give src(3) { b.y = v; } else: { worn => ; } }"),
+ ("semi_and_completions",
+                   "pair : class has: { lo: float; } {\n"
+                   "    make #{a, b -> the ordered pair} : work\n"
+                   "}\n"
+                   "+pair.make : work(knows: a, b gives: p : pair signals: disorder)\n"
+                   "{ p = a; finish: }\n"
+                   "-pair : work(takes: p : pair signals: never_fails)\n"
+                   "{ exit: never_fails; finish: }"),
  ("aspect_panel",  "Poller : aspect(knows: rate, retries = 3\n"
                    "                signals: overrun, sensor_lost(port))\n"
                    "{\n"
