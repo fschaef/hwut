@@ -1799,3 +1799,203 @@ COST
   A third flow-sensitive set threads the work walk (dead names beside
   known/narrowed); joins stay conservative. Two more documents to keep
   true -- OPEN.txt is a snapshot register and says so.
+
+R-41: The flat panel -- had implicit, known: marked; the terminal lists
+------------------------------------------------------------------------
+PROBLEM
+  Reopening the exiting/finishing surface (R-37's parked bare-jump fork)
+  cascaded: (a) the bare-jump spelling (bare 'give' collides with the
+  custody marker); (b) whether the terminal names what leaves; (c) how
+  ownership transfers once '=' was in question; (d) a built-in
+  'inappropriate result' signal; and the reframe -- (e) a call returns a
+  MIX of had and known outputs ('x_taken, y_known = work()') and the flat
+  five-verb panel (knows/takes/gives/ticks/signals) had NO spelling for
+  acquaintance-out.
+
+DECISION (Frank-Rene, ratified across this session; interpretations flagged)
+  1. THE PANEL IS FLAT AND DIRECTION-SECTIONED. 'in:'/'out:' speak
+     direction; relation rides a PER-ENTRY MARKER under one asymmetry:
+     HAVING IS IMPLICIT (unmarked = had; custody is the ground state,
+     0.3), KNOWN IS EXPLICIT ('known:' always written). 'had:' exists as
+     an OPTIONAL visibility marker -- asserts the default, never changes
+     it. 'signals:' stays flat and top-level: a signal is neither had nor
+     known -- an ephemeral on the fault channel (0.1/12.10).
+
+         panel := "(" [ "in:"  <entry> ("," <entry>)* ]
+                      [ "out:" <entry> ("," <entry>)* ]
+                      [ "signals:" <signal-decls> ]
+                  ")"
+         entry := [ "known:" | "had:" ] <name> [":" <type>] ["=" <default>]
+
+         bundle_adjust : work(in:  raw : cloud, known: eps : float = 1e-6
+                              out: center : point2d, known: rotation : mat2
+                              signals: no_convergence(residual: float))
+
+     The relation words are STATE NOUNS -- 'had:', 'known:' -- replacing
+     the verbs has:/knows: at the boundary. Retired into the form:
+     knows: -> in: known:; takes: -> in: (unmarked); gives: -> out:
+     (unmarked); ticks: -> out: (unmarked; the stream rides give:).
+  2. SITE MARKING: the same 'known:' marks a binding target receiving a
+     view -- one word, two positions (FR's examples):
+
+         known: entry = db.get("Henry Ford");
+         known: mood  = pac_man.psychic.mood;
+         x, y, known: rotation = bundle_adjust(raw, cloud, ...);
+
+     '=' is RELATION-NEUTRAL: it binds; marker (site) and panel
+     (declaration) carry the relation. The second example is a NEW
+     statement kind -- acquaintance-taking from a data access, a hub
+     operation (knower +1) under HAVE_KNOW_BE (3). Knownness propagates
+     without gating; the SEMANTICS-28 gates keep firing at the OPERATION,
+     and check (b) -- a had holder receiving an un-narrowed known --
+     stands.
+  3. CLASS MEMBERS SPEAK THE SAME PAIR (ratified: "uniform"), and the
+     has:/knows: SECTION BLOCKS DISSOLVE (ratified, "(i)"): the class
+     body is ONE brace whose items are member declarations
+     ('[known:|had:] name : type;', having implicit) and member works,
+     INTERLEAVING FREELY (ratified, "(A) absolutely" -- no ordering law;
+     the semi-declaration edge never arises). The entry shape is one
+     everywhere -- panel, class member, site target:
+
+         sprite : class {
+             pos: vec2;                      # had (implicit)
+             known: atlas: texture_atlas;    # the view, marked
+             make : work(in: skin
+                         out: s : sprite
+                         signals: no_texture(path)) { ... }
+         }
+  4. THE TERMINAL NAMES ITS PORTS, AND THE VOCABULARY IS FAMILY-SPLIT
+     (ratified: "work gives, clockworks tick"): in a WORK, 'give: r, s'
+     ends execution naming the leaving out-ports; checked against the
+     panel (all assigned; name/arity match -- SEMANTICS 23's deferred
+     definite-assignment duty gains its concrete surface). 'give:' is
+     UNLAWFUL in a clockwork: a clockwork DELIVERS with 'tick:' (suspend
+     until the next pull) and ENDS only through 'exit:' -- fault and
+     exhaustion both leave by the fault channel. R-37's one-keyword-for-
+     the-family reading is superseded: one fate, one spelling, per family.
+  5. SEPARATORS (C-2, confirms R-27): comma between entries within a
+     section; sections keyword-led, juxtaposed; trailing comma rejected
+     by construction.
+  6. 'elsewhile:' IS INTRA-INSTANT (C-3): body-level loop, sugar over a
+     frame-local while; no bus boundary, no scheduler hook. The three
+     suspension points stay clockwork-only (tick:/groove:/next()); P-1b
+     governs guard evaluation on the bus, not body iteration.
+
+  7. EXHAUSTION IS BARE 'exit:', AND ITS SIGNAL IS CATCHER-MANDATORY
+     (ratified, revised in-session): bare 'exit:' sends the built-in
+     "nothing more" signal. The TOLERATED-signal class, briefly ruled,
+     was REVERSED on argument (definite assignment: an ignored exhausted
+     pull leaves targets invalid): exhaustion is a signal that needs
+     catching, like any other. The ergonomics land in the LOOP instead:
+     'for: ... in: <generator>' catches exhaustion IMPLICITLY as the
+     loop's own end (13.5 stands) and gains an optional 'else:' block --
+     the exhaustion handler, Python-style (runs on orderly exhaustion;
+     skipped when the loop is left by dropto:). Manual next() pulls
+     must catch explicitly; a fresh target with no handler REJECTS
+     under 12.6 exactly as before.
+  8. 'dropto:' IS THE ONLY JUMP (ratified; supersedes R-14's
+     break:/continue:): no 'exit: <label>', no 'finish: <label>', no
+     'break:', no 'continue:' -- loop control is spelled by dropping.
+     PLACEMENT LAWS: a label may stand only (a) at the END of a block,
+     or (b) DIRECTLY AFTER a nested block's closing brace; 'dropto:'
+     may never target a label inside a nested block (never inward;
+     forward-only stands); and (c) NEVER INTO A SIGNAL HANDLER -- a
+     handler region is jump-proof from outside; dropping OUT of an arm
+     is lawful (and is the routing idiom, item 9); and (d) NO LABEL
+     INSIDE A RULE CONSTRUCT (ratified, "obviously") -- a label never
+     stands between the syntactic parts of one statement: not between a
+     loop body and its else:, not between a call and its handler. Hence
+     the break-label stands after the ENTIRE for/else construct, and
+     dropping out SKIPS the else: (Python-consistent); the loop's else:
+     fires on orderly exhaustion only, and is a PLAIN BLOCK (no arms --
+     the loop caught the one possible signal implicitly; manual next()
+     sites keep the arm'd handler). Continue == drop to the body-end label;
+     break == drop to the after-block label. Rationale: kills spaghetti
+     and forbids jump-into-loop, keeping loop-expansion optimizations
+     lawful.
+
+  9. 'elseto:' AND THE CATCH REGION ARE CANCELLED (ratified): the
+     ':label: => { ... }' spelling dies; R-39's two label accounts
+     collapse to ONE -- the dead address ':label:', dropto:'s target.
+     D-31 closes as cancelled; the deferred elseto: build (OPEN (1),
+     SEMANTICS 29's "next station") is VOID. Routing is spelled by
+     hand: handle in a normal 'else:' arm, copy wanted payload to an
+     outer name, 'dropto:' a shared label. Carriers, variant dispatch
+     at the region, and the routed-omission marker all die with the
+     construct -- the handler arm already does each job.
+
+  10. A BEHAVIOR IS A CLASS WITH REACTIVE ELEMENTS (ratified): the
+     old surface's 'has:'/'knows:' BLOCK-TAILS DISSOLVE EVERYWHERE,
+     behaviors included -- not renamed, not deferred. One body brace;
+     member declarations ('[known:|had:] name : type;', having
+     implicit), member works, and construct/destruct relationships all
+     exactly as the class speaks them (items 3, R-37); the behavior
+     body additionally admits its reactive elements (guard arms,
+     causalities), interleaving freely per the class interleave law.
+     The character-integration chapter, previously deferred, is hereby
+     ruled in principle: everything is like a class, except that it
+     contains reactive elements.
+
+  FLAGGED, NOT CLOSED (ruling needed):
+  - The built-in 'inappropriate-result' signal: name ('~nothing' /
+    '~inappropriate' / '~void') and pre-declared (coordinator's lean:
+    visible obligation) vs auto-injected.
+  - The built-in variant's NAME in the puller's match domain ('finished'
+    today, 13.4/13.5; FR's words "nothing more"/"no more").
+  - Whether bare 'exit:' is lawful in WORKS too (a no-result egress --
+    the 'inappropriate result' thread reborn) or clockwork-only.
+  - Whether 'tick:' carries the out-list ('tick: value') under the
+    names-its-ports rule, or stays bare (coordinator's lean: the list,
+    for uniformity with give:).
+  - The behavior's PARENS LIST ('~behavior(power, boost = 1)'):
+    construction arguments -- untouched this pass; whether it adopts
+    the in:/out: panel form rides the construction chapter.
+  - The site-marker/panel AGREEMENT LAW (coordinator's lean: checked both
+    directions, like '+'/'-' completions).
+  - Sweep scope over the OLD SURFACE's has:/knows: (character, aspect,
+    behavior tails; the four relations' prose in 0.2): rename to the
+    nouns, or leave the reactive layer untouched this pass.
+  ACCEPTED as interpretation: 'in:' overloads the for:-loop token
+  (context-disjoint, LL-clean).
+
+COST
+  A panel-vocabulary sweep tree-wide: grammar (panel rule; in:/out:
+  keywords; entry markers), ast_nodes (Panel/entry shape; Give gains a
+  port-list), declare (port registration by direction), elaborate (panel
+  walk; terminal-list check), interpret (binding by direction), fixtures,
+  LANGUAGE 12.2/13.2 + SEMANTICS 23 re-speak, GOOD re-baselines for
+  panel-bearing tests. 'in:' serves two grammatical positions.
+
+GRAVEYARD
+  - The has:/knows: block-tails of the OLD SURFACE (behaviors and kin):
+    dissolved into class-shaped bodies (item 10) -- the "leave the
+    reactive layer untouched" option was rejected; the unification is
+    now, not later.
+  - The braced GRID panel 'in: { has: ... knows: ... }' (this entry's
+    first draft): flattened -- direction by section, relation by marker,
+    having implicit.
+  - The boundary verbs has:/knows: as panel keywords: replaced by the
+    state nouns had:/known:.
+  - The flat five-verb panel (knows:/takes:/gives:/ticks:): retired.
+  - 'tick:' absorbed into 'give:' (the mid-session instinct): reversed
+    -- the ticks: PANEL section retired into out:, but the STATEMENT
+    tick: names a distinct fate (deliver-and-suspend) and stays; give:
+    leaves the clockwork entirely.
+  - 'finish:' revived as the terminal: proposed mid-session, dropped --
+    'give:' stays; the terminal simply gains its port-list.
+  - 'give: <x> to: <y>' as transfer-assignment and '='-means-knowing:
+    dropped -- the panel and the site marker carry the relation; '='
+    stays neutral.
+  - '~UNFINISHED' auto-synthesised from bare 'exit:': dropped mid-
+    session, then bare 'exit:' RETURNED by ruling as the nothing-more
+    egress (item 7) -- a built-in, catcher-mandatory signal (the brief
+    TOLERATED class was itself graveyarded within the session). The
+    'inappropriate-result' fork stays open for works.
+  - 'elseto: <label>' routing and the catch-region account ':label: =>'
+    (R-39, D-31, B-1; the lean in OPEN (1)): cancelled whole -- one
+    label account remains (the dead address); else:-arm + dropto: is
+    the routing idiom.
+  - break:/continue: (R-14): retired -- dropto: with the placement laws
+    (item 8) is the sole loop control.
+  - The bare-jump-to-terminal spelling: dissolved -- 'dropto: <label>'
+    is the sole in-body jump (forward-only); no bare 'give' jump exists.
