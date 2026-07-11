@@ -37,7 +37,7 @@ lease : class has: { held: float; } {
                    signals: exhausted) {
     if: units > 100 { exit: exhausted; }    # ACQUISITION may fail -- and
     l = units;                              # says so: that is its job
-    finish:
+    give:
 }
 
 #{ The mirror is asymmetric ON PURPOSE: taking the world's resources can
@@ -48,7 +48,7 @@ lease : class has: { held: float; } {
     # were the release to err deep below, this body would EMIT an event
     # (occurrence, unowned) -- the caller's obligation is already met the
     # moment custody arrived here.
-    finish:
+    give:
 }
 
 Demo : behavior has: { got: float; } {

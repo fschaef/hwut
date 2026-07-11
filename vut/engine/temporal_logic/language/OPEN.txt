@@ -1,0 +1,117 @@
+==============================================================================
+OPEN -- the by-subject register of everything not yet closed      (R-40)
+==============================================================================
+Consolidates disc-9, todo's F-entries, and the SEMANTICS deferral lists as
+of R-40. Structure: one subject per section; within each, RULING NEEDED
+(FR's word closes it) before BUILD (settled, awaiting implementation)
+before DEFERRED-BY-DESIGN (bound to a later phase, marked in SEMANTICS).
+
+(1) WORK CONSTRUCT
+------------------
+RULING NEEDED
+  - C-2: panel separators (commas ruled by lean R-27; unreviewed).
+  - C-3: 'while' in work bodies / instant transitivity (= parked
+    synchronous-functions CR-4). Blocks any unbounded work loop.
+  - C-1 residual: the port-map OUTPUT association spelling ('=' cannot
+    say "flows out to"); form RESERVED in 12.5.
+  - R-37 flags: blanket 'give:' incl. the clockwork terminal; the bare
+    jump to the terminal (bare 'give' collides with the custody marker).
+  - elseto: carriers -- what a catch region sees of the routed signal
+    (payload access? variant dispatch? plain variant-blind cleanup?);
+    region placement law (tail-position?).
+BUILD (settled)
+  - elseto: ROUTING (target form settled R-39; call-site spelling and
+    routing semantics next -- lean drafted: 'targets = call(...)
+    elseto: <label>;', any signal transfers, forward-only).
+  - elsewhile: (the looping call; FR's destruct example already uses it)
+    and the 'wait' construct (D-2 family).
+  - '==' common ground; specs and work references; indirect calls;
+    dispatch tables.
+DEFERRED-BY-DESIGN
+  - Definite assignment of gives-ports at give:; handler exhaustiveness
+    and dead arms; the mandatory-else direction; same-type/discard;
+    overload call-site checks beyond aware mutations; cross-module
+    overload sets; named-port overload refinement (SEM 24/26).
+
+(2) CLASS AND CUSTODY
+---------------------
+RULING NEEDED
+  - R-31 interpretation flags ('+/-' definition-only; disposal needs no
+    semi; inline member works stay lawful).
+  - R-29 flags: the aggregation-literal member binder ':'.
+BUILD (settled)
+  - The aggregation literal 'sprite{pos: v, tex: give t}' -- settled in
+    11.3, NO GRAMMAR YET.
+  - 'is: obligation' marker.
+  - The disposal DISPATCH at run time (destruct: currently traces and
+    ends the having; the '-' work body does not yet run).
+DEFERRED-BY-DESIGN (the type-flow phase)
+  - SEMANTICS 27's three path checks (explicit classes: all-paths
+    give-or-destruct; container remainder; aggregate members).
+  - The custody ledger entire; the call-site 'give' marker; the
+    give-half of SEMANTICS 30 (know-after-give); views; character
+    integration under the class concept (FR-deferred).
+
+(3) CONTAINERS (have/know)
+--------------------------
+RULING NEEDED
+  - Insertion/removal verbs of the have-container (insert takes 'give
+    x'; what removal reads as); iteration custody default (borrow?);
+    whether dict/struct get the pair or list leads.
+BUILD (settled)
+  - 'have list'/'know list' parse (D-30); semantics beyond the parse --
+    collective debt, 27(ii) linkage -- ride the type document.
+
+(4) NOTHING AND KNOWNNESS
+-------------------------
+RULING NEEDED
+  - The activation-scope fork (R-38 second flag): strict-everywhere vs
+    type-gated; activation-by-mention is the coordinator's bridge.
+  - The transposed-branches flag (R-38 first flag).
+BUILD (settled)
+  - The knowing model's runtime (known hubs: pointer + knower count;
+    binds the EMITTER -- HAVE_KNOW_BE (3)).
+DEFERRED-BY-DESIGN
+  - Compound gate conditions; deeper divergence shapes; knownness of
+    class members and reactive contexts (SEM 28).
+  - SEM 30 branch JOINS (destruct in all arms => dead after the if).
+
+(5) EPHEMERALS
+--------------
+BUILD (settled)
+  - The event-typed panel entry 'event(...)' and its matcher (14.2).
+DEFERRED-BY-DESIGN
+  - D-4: the event/causality terminology sweep.
+
+(6) CLOCKWORK
+-------------
+BUILD (settled)
+  - groove:; winddown:; multi-input pulls; pipelines.
+  - Enforcement: single-puller; no-cycle (the 13.1 sentence is a
+    coordinator addition -- RULING NEEDED on its wording).
+
+(7) LABELS AND ROUTING
+----------------------
+  (folded into (1): elseto: routing, carriers, placement.)
+
+(8) ENGINE BOUNDARIES (found en route; rule or accept)
+------------------------------------------------------
+  - Module-level causalities do not dispatch at run time (top-level
+    'X => Y;' is structural only; top-level entities auto-activate).
+  - Port-name shadowing of binding heads (e/b/a/c/s) is unruled.
+  - F-10 residue: works in GUARDS ('when:' has no handler position);
+    statement-form calls of signalling works.
+
+(9) THE BACK HALF (Luau)
+------------------------
+  - link/pack/emit entire. Staged mappings: the generative clockwork
+    walk ==> coroutine.yield (P-series); known hubs ==> the emitter's
+    weak-reference structure (HAVE_KNOW_BE (3)); give:/exit: ==> the
+    sum-return convention.
+
+(10) PROCESS AND DOCUMENTS
+--------------------------
+  - werk-documents errata (FR's own; post-R-33..R-40 updates).
+  - Explanation bin growth (candidates: signals/forced translation;
+    clockwork's three waits; overloads; Nothing gates).
+  - The ~35-docstring core backlog (awaits FR scope call).

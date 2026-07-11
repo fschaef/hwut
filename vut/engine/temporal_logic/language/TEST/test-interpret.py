@@ -7,7 +7,7 @@ PURPOSE: Test the INTERPRETER -- direct execution of the decorated AST over
          language's OPERATIONAL behaviour byte-exactly, making this suite
          the semantics ORACLE every future emitter must match.
 
-CHOICES: dispatch, lifecycle, blocks, membership, works.
+CHOICES: dispatch, lifecycle, blocks, membership, works, nothing.
 
            dispatch   The synchronous-instant law (P-1/P-1b): FIFO queue,
                       guards fixed at event arrival (a toggle alternates,
@@ -143,6 +143,24 @@ def run_membership():
     print(m.trace())
 
 
+def run_nothing():
+    """RETURN: None, always. Locks the R-38 Nothing law over
+              run-nothing.vut: the initial-gate idiom ('if: k == Nothing
+              { exit: unknown; }') narrows a known for the rest of the
+              body -- the gated arithmetic runs; passing Nothing takes
+              the unknown signal into the call site's substitute; the
+              branch gate ('!= Nothing' then / else) routes a known into
+              a had holder on the not-Nothing side and a had fallback on
+              the other.
+    """
+    banner("Nothing (run-nothing.vut)")
+    m = machine("run-nothing.vut")
+    m.post("GO")
+    m.drain()
+    for line in m.lines:
+        print(line)
+
+
 def run_works():
     """RETURN: None, always. Locks the D-25/D-26 vertical slice over
               run-work.vut: a work call binds positionally and gives; a
@@ -170,5 +188,6 @@ HwutRunner(
         "blocks":    run_blocks,
         "membership": run_membership,
         "works":     run_works,
+        "nothing":   run_nothing,
     },
 ).run()

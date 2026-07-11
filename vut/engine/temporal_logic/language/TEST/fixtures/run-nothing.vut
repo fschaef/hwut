@@ -1,0 +1,23 @@
+lookup : work(knows: cache, key
+              gives: out
+              signals: unknown) {
+    if: cache == Nothing { exit: unknown; }
+    if: key == Nothing { exit: unknown; }
+    out = cache + key;
+    give:
+}
+pick : work(knows: preferred
+            gives: chosen) {
+    fallback = 7;
+    if: preferred != Nothing { chosen = preferred; }
+    else: { chosen = fallback; }
+    give:
+}
+B : behavior has: { a: float; b: float; c: float; } {
+    GO => {
+        b.a = lookup(10, 5) else: { unknown => { b.a = -1; } }
+        b.b = lookup(Nothing, 5) else: { unknown => { b.b = -1; } }
+        b.c = pick(Nothing);
+    }
+}
+GO => B;

@@ -1,6 +1,6 @@
 
 --- work rejections (elab-work-rejects.vut) ---
-diagnostics: 13  (has_fatal: True)
+diagnostics: 16  (has_fatal: True)
   REJECT [WORK] exit: names 'unknown' -- not a declared signal of this work (LANGUAGE 12.4)
   REJECT [WORK] signal 'known' is declared but no reachable exit: emits it (LANGUAGE 12.4)
   REJECT [WORK] signal 'silent' is declared but no reachable exit: emits it (LANGUAGE 12.4)
@@ -11,6 +11,9 @@ diagnostics: 13  (has_fatal: True)
   REJECT [WORK] '+phantom.make' completes no semi-declared member work of 'phantom' (SEMANTICS 25)
   REJECT [WORK] call of overloaded 'widget.from' must lead with a NAMED argument selecting the overload (one of: a, r) (SEMANTICS 26)
   REJECT [WORK] 'zz' selects no overload of 'widget.from' (first-input names: a, r) (SEMANTICS 26)
-  REJECT [WORK] '-cursed' declares signals -- DESTRUCTION CANNOT FAIL (LANGUAGE 11.4, R-36): a disposal work's panel declares none
+  REJECT [WORK] '-cursed' declares signals without the explicit flag -- AUTOMATIC DESTRUCTION CANNOT FAIL (LANGUAGE 11.4, R-36/R-37): only '-cursed()' may signal, because every destruction of an explicit class is written (destruct:) and every signal answered
+  REJECT [WORK] destruct: is lawful only inside work and clockwork bodies (SEMANTICS 27)
+  REJECT [STRUCTURE] dropto: 'rescue' targets no exit-label defined LATER in the same outermost body (SEMANTICS 7c, forward-only)
+  REJECT [CUSTODY] 'bl2' was destructed on this path -- the having ended; the name knows nothing of existence (HAVE_KNOW_BE, SEMANTICS 30)
   REJECT [WORK] constructor overloads of '+widget.from' share the first input name 'a' -- overloads identify by at least the first argument (SEMANTICS 26)
   REJECT [WORK] member work 'gadget.anneal' is semi-declared but never completed by '+gadget.anneal : work(...)' (SEMANTICS 25)

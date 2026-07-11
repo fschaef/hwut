@@ -2,7 +2,7 @@
 
 RULE-FILE GRAMMAR -- formal spec of the settled language.
 
-Authority: LANGUAGE.txt (mechanics) and RATIONALE.txt (R-1..R-36, the why).
+Authority: LANGUAGE.txt (mechanics) and RATIONALE.txt (R-1..R-40, the why).
 This file is the formal grammar. Regions below carry ONE-LINE remarks naming the
 language element; full prose lives in LANGUAGE.txt, rationale in RATIONALE.txt.
 
@@ -146,6 +146,19 @@ D-27 Semi-declaration and completion (LANGUAGE 11.3): the work-tail's
      optional), so a semi-declaration may carry '#{...}' where the panel
      will be. Reverses the pinned lexer choice "'#{' without whitespace is
      a line comment".
+D-31 The catch-region form ':label: => { ... }' (B-1, R-39): the elseto:
+     target's own syntax, distinct from the bare drop-through label --
+     the two accounts of labels read differently at the definition site.
+D-30 'Nothing' enters as an expression atom (R-38): assignable to KNOWN
+     holders only -- the had world is Nothing-free by construction; the
+     narrowing law is SEMANTICS 28. The relation words prefix containers:
+     'have list'/'know list' (custody / views; bare = value container).
+D-29 The success terminal is 'give:' (R-37, renaming finish: -- the
+     keyword names the act: the gives-bundle leaves). 'destruct:' is a
+     statement ending a having explicitly: 'destruct: <object>()' calls
+     the object's disposal work, ';'-closed or with an else:-handler. A
+     dtor-def head may carry '()' after the class name: the EXPLICIT flag
+     (SEMANTICS 27).
 D-28 Named arguments are 'name = value' again (FR ruling, R-34): D-24's
      '=>' binder is REVERTED. '=>' keeps the effect marker and the handler
      arm; '=' serves both the declaration default and the call-site named
@@ -253,6 +266,9 @@ t_kw_int     = T.captured("int")
 t_kw_float   = T.captured("float")
 t_kw_string  = T.captured("string")
 t_kw_bool    = T.captured("bool")
+# D-30 (R-38): 'Nothing' -- the one noun for non-existence. Assignable to
+# KNOWN holders only; the had world is Nothing-free by construction (0.5).
+t_kw_nothing = T.captured("Nothing")
 t_kw_true    = T.captured("true")
 t_kw_false   = T.captured("false")
 # aggregate type keywords (R-19: plain aggregation, no member functions)
@@ -310,7 +326,10 @@ GRAMMAR = {
     # extension); marker and panel must agree (SEMANTICS 25).
     "ctor-def":   (t_op_add, t_re_id("class"), ".", t_re_id("ext"),
                    t_op_colon, "work", "<work-tail(work)>"),
-    "dtor-def":   (t_op_sub, t_re_id("class"),
+    # D-29: '()' after the class name is the EXPLICIT flag (R-37): the
+    # class's destruction is WRITTEN at every site ('destruct:'), so the
+    # disposal work MAY declare signals -- every site answers them.
+    "dtor-def":   (t_op_sub, t_re_id("class"), ["(", ")"],
                    t_op_colon, "work", "<work-tail(work)>"),
 
     # == class (R-29, LANGUAGE 11; D-25) ======================================
@@ -481,7 +500,7 @@ GRAMMAR = {
         "un":       ([t_op_sub], "<atom>"),
         "atom":     ("<group(group)>", OR, "<number(literal)>",
                      OR, t_re_string("literal-string"),    # D-14
-                     OR, t_kw_true, OR, t_kw_false,
+                     OR, t_kw_true, OR, t_kw_false, OR, t_kw_nothing,
                      OR, "<data-access(operand)>"),
         "group":    ("(", "<expr>", ")"),
         "op-add":   (t_op_add, OR, t_op_sub),
@@ -541,15 +560,16 @@ GRAMMAR = {
     "code": {
         TOP:            ("{", STAR("<statement>"), "}"),
 
-        # D-25: the work terminals finish:/exit:/tick: are STATEMENTS here
-        # (any nesting depth inside a work body); unlawful outside work and
-        # clockwork bodies -- the semantic layer rejects (SEMANTICS 23).
+        # D-25/D-29: the work terminals give:/exit:/tick: and the explicit
+        # destruct: are STATEMENTS here (any nesting depth inside a work
+        # body); unlawful outside work and clockwork bodies -- the semantic
+        # layer rejects (SEMANTICS 23, 27).
         "statement":    ("<mutation(mutation)>", OR, "<if(if)>", OR, "<match(match)>",
                          OR, "<for(for)>", OR, "<count(count)>",
                          OR, "<break(break)>", OR, "<continue(continue)>", OR, "<dropto(dropto)>",
                          OR, "<exit-label>",
-                         OR, "<finish-stmt(finish)>", OR, "<code/exit-stmt(exit)>",
-                         OR, "<tick-stmt(tick)>"),
+                         OR, "<give-stmt(give)>", OR, "<exit-stmt(exit)>",
+                         OR, "<tick-stmt(tick)>", OR, "<destruct-stmt(destruct)>"),
 
         # -- the brace body (R-12: every block is "{ }") --------------------
         # Nested bodies admit no exit-label (outermost-only, pass-2).
@@ -613,13 +633,24 @@ GRAMMAR = {
         # -- dropto (R-14): forward-only jump to a later exit-label ----------
         "dropto":       ("dropto:", t_re_id("label"), ";"),
 
-        # -- work terminals (D-25, LANGUAGE 12.4/13.3; SEMANTICS 23) ---------
-        "finish-stmt":  ("finish:",),
+        # -- work terminals (D-25, D-29, LANGUAGE 12.4/13.3; SEMANTICS 23) ---
+        # 'give:' names the act: the gives-bundle leaves implicitly (R-37,
+        # renaming finish:). 'destruct:' ends a having explicitly by calling
+        # the object's disposal work (R-37, SEMANTICS 27).
+        "give-stmt":    ("give:",),
         "exit-stmt":    ("exit:", t_re_id("variant"), ["<parens-arg>"], ";"),
         "tick-stmt":    ("tick:",),
+        "destruct-stmt": ("destruct:", "<data-access(object)>",
+                          (";", OR, ("else:", "<handler(handler)>"))),
         # -- exit-label (R-14): a bare drop-through label (no body, C-label);
         #    definable only at the outermost body (pass-2).
-        "exit-label":   (t_op_colon, t_re_id("label"), t_op_colon),  # D-21
+        # D-21/D-31 (B-1, R-39): labels operate on TWO ACCOUNTS. Bare
+        # ':name:' is the DEAD ADDRESS -- dropto:'s target, drop-throughable
+        # like a kernel-driver goto label. ':name: => { ... }' is the CATCH
+        # REGION -- the elseto: target that catches routed signals; normal
+        # flow SKIPS it (nobody falls into a handler).
+        "exit-label":   (t_op_colon, t_re_id("label"), t_op_colon,
+                         [t_op_spawn, "<block(region)>"]),
     },
 
     # == declarations (has:) ==================================================
@@ -628,9 +659,16 @@ GRAMMAR = {
     "declaration": (t_re_id("name"), t_op_colon, "<type>", ";"),
 
     # -- type (R-19): a built-in, a named type, or a plain aggregate ----------
+    # D-30 (R-38): the relation words prefix a container -- 'have list' HAS
+    # its elements (collective debt), 'know list' knows them (views). The
+    # bare container stays the VALUE container (10). Custody checks bind
+    # the type document (SEMANTICS 28, deferred).
     "type":       ("<type-built-in(type-builtin)>", OR, "<type-list(list)>",
                    OR, "<type-dict(dict)>", OR, "<type-struct(struct)>",
+                   OR, "<type-have(have)>", OR, "<type-know(know)>",
                    OR, t_re_id("type")),
+    "type-have":  ("have", ("<type-list(list)>", OR, "<type-dict(dict)>")),
+    "type-know":  ("know", ("<type-list(list)>", OR, "<type-dict(dict)>")),
     "type-built-in": (t_kw_int, OR, t_kw_float, OR, t_kw_string, OR, t_kw_bool),
 
     # -- aggregation types (R-19): plain VARIABLE-TYPED containers, NO type

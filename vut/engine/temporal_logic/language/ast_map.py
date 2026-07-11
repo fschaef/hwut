@@ -545,10 +545,14 @@ def make_dropto(n):
 
 
 def make_exit_label(n):
-    """RETURN: ExitLabel, from ':name:' (D-21) -- the label DECLARES; both
-              bare colons (regex terminals) survive as tokens beside it.
+    """RETURN: ExitLabel, from ':name: [=> { ... }]' (D-21, D-31) -- the
+              label DECLARES; both bare colons survive as tokens beside it.
+              With the arm-arrow tail: a CATCH REGION (B-1/R-39), the
+              elseto: target; 'region' carries its block, else NodeAbsent.
     """
-    return A.ExitLabel(label=_decl_tok(n["label"]))
+    tail = _opt(n[3])
+    region = tail if tail is NodeAbsent else tail[1]
+    return A.ExitLabel(label=_decl_tok(n["label"]), region=region)
 
 
 def make_ctor_def(n):
@@ -565,15 +569,17 @@ def make_ctor_def(n):
 
 
 def make_dtor_def(n):
-    """RETURN: Work, from '-<class> : work <work-tail>' (D-27, R-31) -- THE
-              disposal-work completion: named by the class itself under the
-              reserved extension '-'; one per class (SEMANTICS 25).
+    """RETURN: Work, from '-<class>[()] : work <work-tail>' (D-27, D-29) --
+              THE disposal-work completion, named by the class under the
+              reserved extension '-'; one per class (SEMANTICS 25); '()'
+              sets the EXPLICIT flag (R-37, SEMANTICS 27).
     """
-    work = n[3]                     # the captured '-' survives at slot 0
+    explicit = n[2].present         # the '()' flag (D-29, SEMANTICS 27)
+    work = n[4]                     # the captured '-' survives at slot 0
     sig = A.Signature(name=DeclarationLeaf(
         begin=n["class"].begin,
         segments=(n["class"].text, "-")), params=NodeAbsent)
-    return dataclasses.replace(work, signature=sig)
+    return dataclasses.replace(work, signature=sig, explicit=explicit)
 
 
 def make_class_tail(n):
@@ -622,9 +628,19 @@ def make_clockwork_tail(n):
                           body=body if body is NodeAbsent else _list(body[0]))
 
 
-def make_finish_stmt(n):
-    """RETURN: Finish, the 'finish:' terminal statement (LANGUAGE 12.4)."""
-    return A.Finish()
+def make_give_stmt(n):
+    """RETURN: Give, the 'give:' success terminal (LANGUAGE 12.4, R-37)."""
+    return A.Give()
+
+
+def make_destruct_stmt(n):
+    """RETURN: Destruct, from 'destruct: <object> (; | else: handler)'
+              (R-37) -- the tail OR fires ';' (index 0) or the handler
+              branch (index 1).
+    """
+    tail = n[1]
+    handler = tail.child[0] if tail.triggered_index == 1 else NodeAbsent
+    return A.Destruct(object=n["object"], handler=handler)
 
 
 def make_tick_stmt(n):
@@ -758,6 +774,21 @@ def make_named_arg(child):
     return A.NamedArg(name=child["arg-name"].text, value=child[2])
 
 
+def make_type_have(n):
+    """RETURN: RelContainer, from 'have (list|dict)' (R-38, LANGUAGE 10):
+              the container HAS its elements -- collective debt; the inner
+              OR's product passes through.
+    """
+    return A.RelContainer(rel="have", inner=n[0].child)
+
+
+def make_type_know(n):
+    """RETURN: RelContainer, from 'know (list|dict)' (R-38): the container
+              KNOWS its elements -- views, no debt.
+    """
+    return A.RelContainer(rel="know", inner=n[0].child)
+
+
 def make_decl_arg(n):
     """RETURN: DeclArg, from 'name [: type] [= default]' (D-11) -- the name
               DECLARES; each optional body is a two-slot SEQ (captured ':' or
@@ -810,7 +841,8 @@ AST_MAP = {
     "member-work":   make_member_work,
     "work-tail":     make_work_tail,
     "clockwork-tail": make_clockwork_tail,
-    "code/finish-stmt": make_finish_stmt,
+    "code/give-stmt":   make_give_stmt,
+    "code/destruct-stmt": make_destruct_stmt,
     "code/tick-stmt":   make_tick_stmt,
     "code/exit-stmt":   make_exit_stmt,
     "handler":       make_handler,
@@ -845,7 +877,8 @@ AST_MAP = {
     "expr/un":     make_un,
     "expr/atom":   {("group", "literal", "operand"): PASS,
                     "literal-string": (lambda t: _const(t, A.K_STRING)),
-                    (3, 4): (lambda t: _const(t, A.K_BOOL))},
+                    (3, 4): (lambda t: _const(t, A.K_BOOL)),
+                    5: (lambda t: A.NothingLeaf(begin=t.begin))},
     "expr/group":  lambda n: n[0],
     "expr/op-add": {(0, 1): PASS},
     "expr/op-mul": {(0, 1): PASS},
@@ -871,7 +904,7 @@ AST_MAP = {
     "code":            make_command_block,
     "code/statement":  {("mutation", "if", "match", "for", "count",
                          "break", "continue", "dropto",
-                         "finish", "exit", "tick"): PASS,
+                         "give", "exit", "tick", "destruct"): PASS,
                         8: PASS},
     "code/block":      make_command_block,
     "code/mutation":   make_mutation,
@@ -898,8 +931,11 @@ AST_MAP = {
     # -- declarations / types -----------------------------------------------
     "decl-block":    make_decl_block,
     "declaration":   make_declaration,
-    "type":          {("type-builtin", "list", "dict", "struct"): PASS,
+    "type":          {("type-builtin", "list", "dict", "struct",
+                       "have", "know"): PASS,
                       "type": (lambda t: A.NamedType(name=_ref_tok(t)))},
+    "type-have":     make_type_have,
+    "type-know":     make_type_know,
     "type-built-in": {(0, 1, 2, 3): (lambda t: A.BuiltinType(kind=t.text))},
     "type-list":     lambda n: A.ListType(),
     "type-dict":     lambda n: A.DictType(),

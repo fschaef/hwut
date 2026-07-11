@@ -20,7 +20,7 @@ buffer : class has: { size: float; } {
                     signals: too_large(limit)) {
     if: size > 65536 { exit: too_large(65536); }
     b = size;
-    finish:
+    give:
 }
 
 #{ The '-' completion is THE disposal work: its panel TAKES the class --
@@ -34,7 +34,7 @@ buffer : class has: { size: float; } {
     # value members (size) end under the memory exemption -- no ceremony;
     # an obligation member would be given or destructed HERE, before the
     # terminal ends this work's own having (explain-lifecycle.vut).
-    finish:
+    give:
 }
 
 Demo : behavior has: { got: float; } {

@@ -9,7 +9,8 @@ PURPOSE: Test the ELABORATE unit -- the DeclaredModule -> SemanticModule
          fixtures/; peer modules are declared inside the test through the
          same front half, so mounting reads a REAL export_db.
 
-CHOICES: gate, mount_recipes, rejects, warn17, work_rejects.
+CHOICES: gate, mount_recipes, rejects, warn17, work_rejects,
+nothing_rejects.
 
            gate           A reporter already carrying diagnostics makes
                           elaborate_module refuse by raising -- the F-6
@@ -187,6 +188,18 @@ def run_rejects():
                  if leaf.access is not None]))
 
 
+def run_nothing_rejects():
+    """RETURN: None, always. Locks the SEMANTICS-28 REJECTs over one
+              fixture: an operation on an un-narrowed known; a had holder
+              receiving an un-narrowed known; the Nothing literal assigned
+              to a had holder -- the had world stays Nothing-free by
+              construction (LANGUAGE 0.5).
+    """
+    banner("Nothing rejections (elab-nothing-rejects.vut)")
+    semantic, reporter = front_half("elab-nothing-rejects.vut", peers={})
+    dump_diagnostics(reporter)
+
+
 def run_work_rejects():
     """RETURN: None, always. Locks the work-body REJECTs of SEMANTICS 23
               over one fixture: an exit: naming an undeclared signal
@@ -219,5 +232,6 @@ HwutRunner(
         "rejects":       run_rejects,
         "warn17":        run_warn17,
         "work_rejects": run_work_rejects,
+        "nothing_rejects": run_nothing_rejects,
     },
 ).run()

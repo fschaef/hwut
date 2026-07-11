@@ -257,11 +257,13 @@ class Panel(Node):
 @dataclass(frozen=True)
 class Work(Node):
     """A work definition (LANGUAGE 12): panel + body statements. 'body' is
-    NodeAbsent for a SPEC (panel without machine, 12.1).
+    NodeAbsent for a SPEC (panel without machine, 12.1); 'explicit' marks a
+    '-class()' disposal (R-37, SEMANTICS 27).
     """
     signature: Signature
     panel:     Panel
     body:      object                   # NodeList | NodeAbsent (spec)
+    explicit:  bool = False
     doc:       object = NodeAbsent
 
 
@@ -275,8 +277,33 @@ class ClockworkDef(Node):
 
 
 @dataclass(frozen=True)
-class Finish(Node):
-    """The 'finish:' terminal statement (LANGUAGE 12.4)."""
+class NothingLeaf(Node):
+    """The 'Nothing' atom (R-38, LANGUAGE 0.5): non-existence as a value --
+    assignable to KNOWN holders only; never had."""
+    begin: int
+
+
+@dataclass(frozen=True)
+class RelContainer(Node):
+    """A relation-prefixed container type (R-38, LANGUAGE 10): 'have list' /
+    'know dict' -- 'rel' the relation word, 'inner' the container type."""
+    rel:   str
+    inner: Node
+
+
+@dataclass(frozen=True)
+class Give(Node):
+    """The 'give:' success terminal (LANGUAGE 12.4, R-37): the gives-bundle
+    leaves implicitly -- the keyword names the act."""
+
+
+@dataclass(frozen=True)
+class Destruct(Node):
+    """A 'destruct: <object>() ...' statement (R-37, SEMANTICS 27): ends a
+    having explicitly by calling the object's disposal work; 'handler' the
+    else:-block or NodeAbsent."""
+    object:  Node
+    handler: object = NodeAbsent
 
 
 @dataclass(frozen=True)
@@ -476,10 +503,14 @@ class DropTo(Node):
 
 @dataclass(frozen=True)
 class ExitLabel(Node):
-    """'exit: label;' -- a bare drop-through label (R-14), outermost-body-only
-    (SEMANTICS 7).
+    """':label:' -- the DEAD ADDRESS (R-24, B-1/R-39): dropto:'s target,
+    drop-throughable like a kernel-driver goto label; outermost-body-only
+    (SEMANTICS 7). 'region' NodeAbsent -- or the CATCH REGION's block
+    (':label: => { ... }'): the elseto: target that catches routed
+    signals; normal flow SKIPS the region.
     """
-    label: DeclarationLeaf
+    label:  DeclarationLeaf
+    region: object = NodeAbsent
 
 
 # == declarations and types (R-19) ============================================

@@ -2,7 +2,7 @@ divide : work(knows: a, b
               gives: q
               signals: by_zero) {
     q = a / b else: { div_by_zero => exit: by_zero; }
-    finish:
+    give:
 }
 countdown : clockwork(knows: n
                       ticks: value
@@ -12,7 +12,7 @@ countdown : clockwork(knows: n
         value = n - i + 1;
         tick:
     }
-    finish:
+    give:
 }
 pair : class has: { lo: float; hi: float; } {
     from #{a, b -> the ordered pair; a -> the degenerate pair} : work
@@ -22,25 +22,44 @@ pair : class has: { lo: float; hi: float; } {
                   signals: disorder) {
     if: bounds > upper { exit: disorder; }
     p = bounds + upper;
-    finish:
+    give:
 }
 +pair.from : work(knows: center
                   gives: p : pair
                   signals: disorder) {
     if: center < 0 { exit: disorder; }
     p = center * 2;
-    finish:
+    give:
 }
 -pair : work(takes: p : pair) {
-    finish:
+    give:
 }
-B : behavior has: { q: float; r: float; s: float; t: float; u: float; } {
+cleanly : work(knows: v
+               gives: out) {
+    dropto: done;
+    out = 0;
+    :done:
+    out = v;
+    give:
+}
+guarded : work(knows: v
+               gives: r
+               signals: trouble) {
+    r = v + 1;
+    give:
+    :failures: => {
+        exit: trouble;
+    }
+}
+B : behavior has: { q: float; r: float; s: float; t: float; u: float; w: float; x: float; } {
     GO => {
         b.q = divide(10, 2) else: { by_zero => ; }
         b.r = divide(1, 0) else: { by_zero => { b.r = -1.0; } }
         for: v from: countdown(3) { b.s = v; }
         b.t = pair.from(bounds = 1, 2) else: { disorder => ; }
         b.u = pair.from(center = 4) else: { disorder => ; }
+        b.w = guarded(5) else: { trouble => { b.w = -9; } }
+        b.x = cleanly(42);
     }
 }
 GO => B;

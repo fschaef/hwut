@@ -33,7 +33,7 @@ meter : class has: { v: float; } {
                    signals: out_of_range(v)) {
     if: raw > 100 { exit: out_of_range(raw); }
     m = raw;
-    finish:
+    give:
 }
 
 #{ Demo is active from load (top-level entities auto-activate); posting

@@ -161,6 +161,57 @@ class SymbolTable:
         return len(self._entries)
 
 
+def _mentions_nothing(body):
+    """RETURN: bool, True exactly when a NothingLeaf occurs anywhere under
+              'body' -- the SEM-28 activation switch (PARTIAL: activation
+              by mention bridges until type flow scopes the law).
+    """
+    import dataclasses as _dc
+    def scan(node):
+        if isinstance(node, A.NothingLeaf):
+            return True
+        if isinstance(node, (tuple, list, NodeList)):
+            return any(scan(x) for x in node)
+        if _dc.is_dataclass(node) and not isinstance(node, type):
+            return any(scan(getattr(node, f.name))
+                       for f in _dc.fields(node))
+        return False
+    return scan(body)
+
+
+def _nothing_gate(cond):
+    """RETURN: (name, op), when 'cond' is exactly '<bare-known> (==|!=)
+              Nothing' (either operand order) -- the recognized gate shapes
+              of SEMANTICS 28.
+              None, else.
+    """
+    if not isinstance(cond, A.BinOp) or cond.op not in ("==", "!="):
+        return None
+    lhs, rhs = cond.lhs, cond.rhs
+    if isinstance(rhs, A.NothingLeaf):
+        side = lhs
+    elif isinstance(lhs, A.NothingLeaf):
+        side = rhs
+    else:
+        return None
+    leaf = side.name if isinstance(side, A.DataAccess) \
+           and side.args is NodeAbsent and not side.steps else \
+           side if isinstance(side, ReferenceLeaf) else None
+    if leaf is not None and len(leaf.segments) == 1:
+        return leaf.segments[0], cond.op
+    return None
+
+
+def _diverges(block):
+    """RETURN: bool, True exactly when the block's LAST statement leaves
+              the body (exit: or give:) -- the divergence the initial-gate
+              narrowing of SEMANTICS 28 requires (conservative: deeper
+              divergence shapes defer).
+    """
+    stmts = tuple(block.statements)
+    return bool(stmts) and isinstance(stmts[-1], (A.ExitSignal, A.Give))
+
+
 def _is_semi(work):
     """RETURN: bool, True exactly when 'work' is a SEMI-DECLARATION (D-27):
               no body AND an entirely empty panel -- the brief class-body
@@ -253,6 +304,9 @@ def _mount_imports(declared, peers, table, reporter):
 
 class _Walk:
     _work_depth = 0        # >0 while inside a work/clockwork body (SEM 23)
+    _known = set()         # the body's knows:-names (SEM 28): may be Nothing
+    _narrowed = set()      # knowns proven not-Nothing at this walk point
+    _dead = set()          # names destructed on this path (SEM 30, R-40)
 
     def _init_completion_state(self):
         self._semi = {}         # class -> {member: semi-Work}   (D-27)
@@ -400,12 +454,14 @@ class _Walk:
         else:
             # at most one '-class': held by declare's duplicate law already
             # (the qualified name (class, '-') collides) -- no second check.
-            if node.panel.signals:
+            if node.panel.signals and not node.explicit:
                 self._reject_at(
                     node.signature.name.begin, "WORK",
-                    "'-%s' declares signals -- DESTRUCTION CANNOT FAIL "
-                    "(LANGUAGE 11.4, R-36): a disposal work's panel "
-                    "declares none" % cname)
+                    "'-%s' declares signals without the explicit flag -- "
+                    "AUTOMATIC DESTRUCTION CANNOT FAIL (LANGUAGE 11.4, "
+                    "R-36/R-37): only '-%s()' may signal, because every "
+                    "destruction of an explicit class is written "
+                    "(destruct:) and every signal answered" % (cname, cname))
             self._agree(node, cname, section=node.panel.takes,
                         verb="takes", marker="-")
         self.work_def(node)
@@ -513,10 +569,29 @@ class _Walk:
             return                                # a SPEC: panel only
         emitted = set()
         self._work_depth += 1
+        # SEM 28 activates BY MENTION (PARTIAL): a body that speaks of
+        # Nothing anywhere submits its knowns to the gate law; a silent
+        # body keeps pre-R-38 discipline until type flow scopes the law
+        # exactly (value-typed knowns exempt, Nothing-admitting types
+        # bound). FLAGGED fork: strict-everywhere vs type-gated.
+        if _mentions_nothing(node.body):
+            self._known = {e.name.segments[0] for e in panel.knows}
+        else:
+            self._known = set()
+        self._narrowed = set()
+        self._dead = set()
         try:
             with self._frame(frame):
+                labels = [st.label.segments[0] for st in node.body
+                          if isinstance(st, A.ExitLabel)
+                          and st.region is NodeAbsent]   # B-1: bare only
+                seen = 0
                 for statement in node.body:
-                    self.work_statement(statement, node, declared, emitted)
+                    if isinstance(statement, A.ExitLabel) \
+                            and statement.region is NodeAbsent:
+                        seen += 1
+                    self.work_statement(statement, node, declared, emitted,
+                                        exits=labels[seen:])
                 for found in _collect(node.body, (A.ExitSignal, A.Tick)):
                     if isinstance(found, A.ExitSignal):
                         self.check_exit(found, node, declared, emitted)
@@ -524,6 +599,9 @@ class _Walk:
                         self.check_tick(found, node)
         finally:
             self._work_depth -= 1
+            self._known = set()
+            self._narrowed = set()
+            self._dead = set()
         for name in sorted(declared - emitted):
             self.reporter.report(Diagnostic(
                 phase=Phase.SEMANTIC,
@@ -532,7 +610,7 @@ class _Walk:
                 source_offset=node.signature.name.begin,
                 fatal=True, tag="WORK"))
 
-    def work_statement(self, statement, node, declared, emitted):
+    def work_statement(self, statement, node, declared, emitted, exits=()):
         """RETURN: None, always. Walks one work-body statement: exit:
                   verified against the declared signal set; tick: verified
                   against the ticks: section; plain statements walk as
@@ -540,10 +618,13 @@ class _Walk:
                   check).
         """
         match statement:
-            case A.ExitSignal() | A.Finish() | A.Tick():
+            case A.ExitSignal() | A.Give() | A.Tick():
                 pass                          # checked by the collection
+            case A.Destruct():
+                self.statement(statement, exits=exits)   # the general
+                                              # walker owns SEM 27/30
             case _:
-                self.statement(statement, exits=())
+                self.statement(statement, exits=exits)
 
     def check_exit(self, statement, node, declared, emitted):
         """RETURN: None, always. One exit: against the declared signal set
@@ -697,7 +778,10 @@ class _Walk:
         """
         if outermost:
             exits = [s.label.segments[0] for s in node.statements
-                     if isinstance(s, A.ExitLabel)]
+                     if isinstance(s, A.ExitLabel)
+                     and s.region is NodeAbsent]    # B-1: only the DEAD
+                                                    # ADDRESS account is a
+                                                    # dropto: target
         seen = 0
         for statement in node.statements:
             if isinstance(statement, A.ExitLabel):
@@ -709,6 +793,13 @@ class _Walk:
                                     % statement.label.segments[0])
                 else:
                     seen += 1
+                if statement.region is not NodeAbsent:
+                    # B-1/R-39: the catch region's interior walks like any
+                    # code -- its exit:-signals already count toward 12.4's
+                    # emitted set via the deep collection; labels inside a
+                    # region reject through the nested-block law.
+                    self.block(statement.region, outermost=False,
+                               exits=exits if outermost else ())
                 continue
             self.statement(statement, exits=exits[seen:] if outermost
                            else (exits or []))
@@ -719,6 +810,27 @@ class _Walk:
                   dropto below this point checks forward-only existence.
         """
         match node:
+            case A.Destruct():
+                # SEMANTICS 27: lawful only inside work/clockwork bodies --
+                # an automatic (reactive) context cannot answer a disposal;
+                # the (i)-(iii) path checks await type flow (DEFERRED). The
+                # handler walks so its arms stay lawful.
+                if self._work_depth == 0:
+                    self._reject_at(
+                        (node.object.name.begin
+                         if isinstance(node.object, A.DataAccess)
+                         else node.object.begin), "WORK",
+                        "destruct: is lawful only inside work and "
+                        "clockwork bodies (SEMANTICS 27)")
+                if node.handler is not NodeAbsent:
+                    self.handler_arms(node.handler)
+                leaf = node.object.name \
+                       if isinstance(node.object, A.DataAccess) \
+                       else node.object
+                if isinstance(leaf, ReferenceLeaf) \
+                        and len(leaf.segments) == 1:
+                    self._dead.add(leaf.segments[0])   # SEM 30: the name
+                return                                 # dies with the having
             case A.Mutation() if node.handler is not NodeAbsent:
                 # LANGUAGE 12.9 (PARTIAL): the statement's handler covers the
                 # union of its fault sources, div_by_zero included; per-arm
@@ -738,14 +850,44 @@ class _Walk:
             case A.Mutation():
                 if node.op == "/=":
                     self._division(node.rhs)
+                self._nothing_assignment(node)          # SEMANTICS 28
                 self.lvalue(node.lvalue)
                 self.expr(node.rhs)
             case A.If():
-                for arm in node.arms:
-                    self.expr(arm.cond)
+                # SEMANTICS 28 narrowing (PARTIAL: exact-shape gates only).
+                # 'k != Nothing' narrows k in the then-block; 'k == Nothing'
+                # narrows k in the else-block; the initial-gate form -- a
+                # '== Nothing' then-block that DIVERGES (exit:/give:) --
+                # narrows k for the REST of the body.
+                dead_before = set(self._dead)          # SEM 30: branch-
+                for i, arm in enumerate(node.arms):    # local deaths do not
+                    self.expr(arm.cond)                # leak (joins defer)
+                    gate = _nothing_gate(arm.cond) if i == 0 else None
+                    added = None
+                    if gate and gate[1] == "!=" \
+                            and gate[0] not in self._narrowed:
+                        added = gate[0]
+                        self._narrowed.add(added)
                     self.block(arm.block, outermost=False, exits=exits)
+                    if added is not None:
+                        self._narrowed.discard(added)
+                    if gate and gate[1] == "==" and node.els is NodeAbsent \
+                            and len(node.arms) == 1 \
+                            and _diverges(arm.block):
+                        self._narrowed.add(gate[0])      # rest-of-body gate
+                    self._dead = set(dead_before)
                 if node.els is not NodeAbsent:
+                    gate = _nothing_gate(node.arms[0].cond) \
+                           if len(node.arms) == 1 else None
+                    added = None
+                    if gate and gate[1] == "==" \
+                            and gate[0] not in self._narrowed:
+                        added = gate[0]
+                        self._narrowed.add(added)
                     self.block(node.els, outermost=False, exits=exits)
+                    if added is not None:
+                        self._narrowed.discard(added)
+                    self._dead = set(dead_before)
             case A.Match():
                 self.expr(node.scrutinee)
                 for case in node.cases:
@@ -781,6 +923,12 @@ class _Walk:
                                     "(SEMANTICS 7c, forward-only)" % label)
             case A.Break() | A.Continue():
                 pass
+            case A.ExitLabel():
+                if node.region is not NodeAbsent:
+                    # B-1/R-39: the catch region's interior walks like any
+                    # code; its exit:-signals count toward 12.4's emitted
+                    # set via the deep collection.
+                    self.block(node.region, outermost=False, exits=exits)
             case _:
                 pass
 
@@ -835,6 +983,16 @@ class _Walk:
             case A.BinOp():
                 if node.op == "/" and not self._handled:
                     self._division(node.rhs)
+                # SEMANTICS 28: comparing a known WITH Nothing is the gate
+                # itself -- always lawful; any OTHER operation on an
+                # un-narrowed known is the inappropriate operation caught
+                # immediately.
+                nothing_compare = node.op in ("==", "!=") and (
+                    isinstance(node.lhs, A.NothingLeaf)
+                    or isinstance(node.rhs, A.NothingLeaf))
+                if not nothing_compare:
+                    self._known_operand(node.lhs)
+                    self._known_operand(node.rhs)
                 self.expr(node.lhs)
                 self.expr(node.rhs)
             case A.Not() | A.Neg():
@@ -979,6 +1137,75 @@ class _Walk:
                                 "required parameter %r of %r not supplied "
                                 "(SEMANTICS 20)"
                                 % (parameter.name, ".".join(access.target)))
+
+    def _known_operand(self, operand):
+        """RETURN: None, always. SEMANTICS 28's operand law: a knows:-name
+                  used as an operand must be NARROWED (proven not-Nothing by
+                  a dominating gate) -- the had world needs no check by
+                  construction (0.5).
+        """
+        if self._work_depth == 0:
+            return
+        leaf = operand.name if isinstance(operand, A.DataAccess) else operand
+        if not isinstance(leaf, ReferenceLeaf):
+            return
+        name = leaf.segments[0]
+        if len(leaf.segments) == 1 and name in self._dead:
+            self._reject_at(
+                leaf.begin, "CUSTODY",
+                "%r was destructed on this path -- the having ended; the "
+                "name knows nothing of existence (HAVE_KNOW_BE, "
+                "SEMANTICS 30)" % name)
+            return
+        if len(leaf.segments) == 1 and name in self._known \
+                and name not in self._narrowed:
+            self._reject_at(
+                leaf.begin, "NOTHING",
+                "operation on known %r without a Nothing-gate -- a known "
+                "holder may be Nothing; gate it ('if: %s != Nothing') or "
+                "operate on a had substitute (SEMANTICS 28)" % (name, name))
+
+    def _nothing_assignment(self, node):
+        """RETURN: None, always. SEMANTICS 28's assignment law inside work
+                  bodies: a HAD holder (local, takes-/gives-port) never
+                  receives Nothing -- neither the literal nor an un-narrowed
+                  known; KNOWN holders receive anything.
+        """
+        if self._work_depth == 0:
+            return
+        leaf = node.lvalue.name if isinstance(node.lvalue, A.DataAccess) \
+               else node.lvalue
+        target = leaf.segments[0]
+        if len(leaf.segments) != 1 or target in self._known:
+            return                        # known holders admit Nothing
+        rhs = node.rhs
+        rdead = (rhs.name if isinstance(rhs, A.DataAccess) else
+                 rhs if isinstance(rhs, ReferenceLeaf) else None)
+        if rdead is not None and len(rdead.segments) == 1 \
+                and rdead.segments[0] in self._dead:
+            self._reject_at(
+                rdead.begin, "CUSTODY",
+                "%r was destructed on this path -- the having ended; the "
+                "name knows nothing of existence (HAVE_KNOW_BE, "
+                "SEMANTICS 30)" % rdead.segments[0])
+        if isinstance(rhs, A.NothingLeaf):
+            self._reject_at(
+                leaf.begin, "NOTHING",
+                "Nothing assigned to had holder %r -- having requires "
+                "existence; only known holders admit Nothing "
+                "(LANGUAGE 0.5, SEMANTICS 28)" % target)
+        elif (rleaf := (rhs.name if isinstance(rhs, A.DataAccess)
+                        and rhs.args is NodeAbsent else
+                        rhs if isinstance(rhs, ReferenceLeaf) else None)) \
+                is not None \
+                and len(rleaf.segments) == 1 \
+                and rleaf.segments[0] in self._known \
+                and rleaf.segments[0] not in self._narrowed:
+            self._reject_at(
+                leaf.begin, "NOTHING",
+                "had holder %r receives known %r that may be Nothing -- "
+                "gate first (SEMANTICS 28)"
+                % (target, rleaf.segments[0]))
 
     def _division(self, denominator):
         """RETURN: None, always. The SEMANTICS-21 check on one division: a

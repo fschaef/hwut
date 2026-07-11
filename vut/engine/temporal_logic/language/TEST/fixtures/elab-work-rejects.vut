@@ -1,38 +1,62 @@
 bad_exit : work(gives: q signals: known) {
     exit: unknown;
     q = 1;
-    finish:
+    give:
 }
 never_emits : work(gives: q signals: silent, loud) {
     exit: loud;
     q = 1;
-    finish:
+    give:
 }
 stray_tick : work(gives: q) {
     tick:
     q = 1;
-    finish:
+    give:
 }
 gadget : class has: { w: float; } {
     forge : work
     temper : work
     anneal : work
 }
-+gadget.forge : work(knows: metal gives: g : gadget) { g = 1; finish: }
-+gadget.polish : work(knows: g gives: out : gadget) { out = g; finish: }
-+gadget.temper : work(knows: g gives: out : widget) { out = g; finish: }
--gadget : work(takes: g : gadget) { finish: }
-+phantom.make : work(gives: p : phantom) { p = 1; finish: }
++gadget.forge : work(knows: metal gives: g : gadget) { g = 1; give: }
++gadget.polish : work(knows: g gives: out : gadget) { out = g; give: }
++gadget.temper : work(knows: g gives: out : widget) { out = g; give: }
+-gadget : work(takes: g : gadget) { give: }
++phantom.make : work(gives: p : phantom) { p = 1; give: }
 widget : class has: { z: float; } {
     from : work
 }
-+widget.from : work(knows: a, b = 1 gives: w : widget) { w = a; finish: }
-+widget.from : work(knows: a, y gives: w : widget) { w = a + y; finish: }
-+widget.from : work(knows: r gives: w : widget) { w = r; finish: }
++widget.from : work(knows: a, b = 1 gives: w : widget) { w = a; give: }
++widget.from : work(knows: a, y gives: w : widget) { w = a + y; give: }
++widget.from : work(knows: r gives: w : widget) { w = r; give: }
 W : behavior has: { v: float; } {
     E => { b.v = widget.from(1, 2) else: { => ; }
            b.v = widget.from(zz = 1) else: { => ; } }
 }
 cursed : class has: { c: float; } { from : work }
-+cursed.from : work(knows: seed gives: c : cursed) { c = seed; finish: }
--cursed : work(takes: c : cursed signals: refuse(code)) { exit: refuse(1); finish: }
++cursed.from : work(knows: seed gives: c : cursed) { c = seed; give: }
+-cursed : work(takes: c : cursed signals: refuse(code)) { exit: refuse(1); give: }
+blessed : class has: { bv: float; } { from : work }
++blessed.from : work(knows: seed gives: bl : blessed) { bl = seed; give: }
+-blessed() : work(takes: bl : blessed signals: busy(t)) { exit: busy(9); give: }
+user_of : work(knows: seed gives: out) {
+    bl = blessed.from(seed);
+    destruct: bl else: { busy(t) => ; }
+    out = seed;
+    give:
+}
+R : behavior { E2 => { destruct: c.thing; } }
+misjump : work(knows: v gives: out signals: snag) {
+    dropto: rescue;
+    out = v;
+    give:
+    :rescue: => {
+        exit: snag;
+    }
+}
+after_life : work(knows: seed gives: out) {
+    bl2 = blessed.from(seed);
+    destruct: bl2 else: { busy(t) => ; }
+    out = bl2 + 1;
+    give:
+}

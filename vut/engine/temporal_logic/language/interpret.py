@@ -74,6 +74,21 @@ class _Continue(Exception):
     """RETURN: never a value -- 'continue:;' to the next iteration."""
 
 
+class _Nothing:
+    """RETURN-note (class): the runtime face of 'Nothing' (R-38) -- one
+    shared instance; equality only with itself; prints as 'Nothing'."""
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    def __repr__(self):
+        return "Nothing"
+
+
+NOTHING = _Nothing()
+
+
 class _Signal(Exception):
     """RETURN-note: not a value carrier in the language sense -- the Python
     vehicle of an exit: (LANGUAGE 12.4): 'name' the variant, 'payload' the
@@ -514,8 +529,10 @@ class Machine:
         while index < len(statements):
             statement = statements[index]
             if isinstance(statement, A.ExitLabel):
-                index += 1
-                continue
+                index += 1        # both accounts (B-1/R-39): the bare label
+                continue          # is a dead address; a catch region is
+                                  # SKIPPED by normal flow -- signals enter
+                                  # it via elseto: routing only (unbuilt)
             try:
                 self.run_block_statement(statement, ctx)
             except _DropTo as jump:
@@ -581,9 +598,26 @@ class Machine:
         if isinstance(work, A.ClockworkDef):
             return (_ClockworkRun(self, work, frame),)   # winding (13.4)
         callee = _WorkContext(self, work, frame)
+        statements = list(work.body)
+        index = 0
         try:
-            for statement in work.body:
-                self.run_block_statement(statement, callee)
+            while index < len(statements):
+                statement = statements[index]
+                if isinstance(statement, A.ExitLabel):
+                    index += 1        # B-1/R-39: bare = dead address; a
+                    continue          # catch region is SKIPPED by normal
+                                      # flow (elseto: routing unbuilt)
+                try:
+                    self.run_block_statement(statement, callee)
+                except _DropTo as jump:
+                    for ahead in range(index + 1, len(statements)):
+                        stmt = statements[ahead]
+                        if isinstance(stmt, A.ExitLabel) \
+                                and stmt.region is NodeAbsent \
+                                and stmt.label.segments[0] == jump.label:
+                            index = ahead
+                            break            # forward-only, bare only
+                index += 1
         except _Finished as f:
             return f.gives
         raise _Signal("fell_off", ())          # unreachable under 12.4 law
@@ -774,10 +808,19 @@ class Machine:
                   loop).
         """
         match statement:
-            case A.Finish():                    # LANGUAGE 12.4: the gives-
-                raise _Finished(tuple(          # bundle leaves implicitly
+            case A.Give():                      # LANGUAGE 12.4 (R-37): the
+                raise _Finished(tuple(          # gives-bundle leaves
                     ctx.locals.get(e.name.segments[0])
                     for e in ctx.work.panel.gives))
+            case A.Destruct():                  # R-37: the having ends HERE
+                obj = statement.object
+                leaf = obj.name if isinstance(obj, A.DataAccess) else obj
+                name = leaf.segments[0]
+                self.line("destruct %s" % ".".join(leaf.segments))
+                if isinstance(ctx, _WorkContext):
+                    ctx.locals.pop(name, None)  # the name dies with the
+                                                # having; disposal dispatch
+                                                # rides the type document
             case A.Tick():                      # LANGUAGE 13.3: deliver,
                 raise _Yield(tuple(             # suspend until the pull
                     ctx.locals.get(e.name.segments[0])
@@ -930,6 +973,8 @@ class Machine:
                   seated recipe, never by name.
         """
         match node:
+            case A.NothingLeaf():
+                return NOTHING
             case ConstantLeaf():
                 return self._constant(node)
             case A.BinOp():

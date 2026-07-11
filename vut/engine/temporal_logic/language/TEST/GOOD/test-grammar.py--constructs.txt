@@ -26,6 +26,8 @@ work_spec        OK
 clockwork_def    OK
 class_def        OK
 aware_forms      OK
+label_two_accounts OK
+explicit_destruct OK
 semi_and_completions OK
 aspect_panel     OK
 namespaced_ref   OK

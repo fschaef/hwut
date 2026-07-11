@@ -4,7 +4,7 @@
    An object's life is bounded by its BEING HAD. When the having ends, the
    object must already be given or destructed -- abandonment is the one
    crime. A LOCAL VARIABLE IS HAD BY THE WORK THAT HAS IT: the work's
-   terminal (finish: or exit:) ends the having.
+   terminal (give: or exit:) ends the having.
 
    Three endings, one law:
      1. GIVEN THROUGH A GIVES-PORT  -- the lawful end of having: custody
@@ -22,7 +22,7 @@ reading : class has: { value: float; } {
 }
 
 #{ Inside this work, 'r' is HAD BY THE WORK from its first assignment. The
-   gives-port ends the having lawfully at finish:: custody moves to the
+   gives-port ends the having lawfully at give:: custody moves to the
    caller -- who now HAS it, and owes its end in turn. The trace of
    responsibility runs unbroken: construction site -> every give -> the
    destruction site. }
@@ -36,12 +36,12 @@ reading : class has: { value: float; } {
                                   # exit: ends the having too -- a signal
                                   # carries NO outputs (the sum, 12.3)
     r = scaled;
-    finish:                       # the having of 'r' ends by GIVING: the
+    give:                       # the having of 'r' ends by GIVING: the
                                   # gives-port hands custody to the caller
 }
 
 -reading : work(takes: r : reading) {
-    finish:                       # the caller's giving ends HERE one day:
+    give:                       # the caller's giving ends HERE one day:
                                   # the disposal work is the trace's last
                                   # station (call surface: type document)
 }

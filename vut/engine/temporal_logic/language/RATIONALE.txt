@@ -1635,3 +1635,167 @@ COST
 GRAVEYARD
   - '-class : work(... signals: ...)': lawful for one ratification
     cycle (R-31's example), now rejected.
+
+
+R-37: 'give:' the terminal; explicit destructors and 'destruct:' (F-9)
+-----------------------------------------------------------------------
+PROBLEM
+  Three at once: (a) 'finish:' named a state, not the act -- the terminal
+  IS the giving; (b) the give-or-destruct COMPILATION CHECK was never
+  finalized (FR's direct question -- answer: no; it sat on SEMANTICS 23's
+  deferred list as "the ledger entire" with no concrete mechanism);
+  (c) R-36's blanket "destruction cannot fail" could not host FR's
+  'destruct: ... elsewhile: { wait 50; }' example, where a disposal
+  plainly signals and the site plainly answers.
+
+DECISION (Frank-Rene, ratified; interpretations flagged)
+  1. The success terminal is 'give:' (D-29), one keyword for the work
+     family -- in a work the gives-bundle leaves; in a clockwork the
+     stream ends (nothing left to give; the puller receives 'finished').
+     Blanket rename is the coordinator's reading -- flag if the clockwork
+     should keep its own word. The bare jump to the terminal (formerly
+     bare 'finish') awaits a spelling: bare 'give' is the custody marker.
+  2. THE EXPLICIT FLAG: '()' after the class name in the disposal
+     definition ('-tunnel() : work(...)'). An explicit class's
+     destruction is never automatic: every end is WRITTEN --
+     'destruct: <object>() (; | else: {...})' -- a normal work call whose
+     signals the site answers. R-36 REFINES rather than falls: AUTOMATIC
+     destruction cannot fail (non-explicit disposals still declare no
+     signals -- an auto-inserted site cannot answer); explicit disposals
+     may signal because no site is ever auto-inserted.
+  3. THE CHECKER, specced as SEMANTICS 27 (law now, implementation
+     staged for type flow): (i) had locals of explicit classes given or
+     destructed on all paths; (ii) containers destruct remaining
+     elements on their own destruction; (iii) aggregates destruct such
+     members in their disposal work.
+  Implemented in this pass: the rename tree-wide (grammar, AST node
+  Give, fixtures, explanations, documents); the '()' flag; 'destruct:'
+  as a statement (parse, handler arms, work-body-only law firing in
+  work_rejects; runtime traces it and ends the local's having in the
+  frame -- dispatch itself rides the type document); the refined
+  no-signals rejection with its exemption, both directions locked.
+
+COST
+  'finish:'/'finish' leave the reserved list; the explanation files and
+  11.3/11.4/12.4/13.3 re-speak. FR's example's 'elsewhile:' and 'wait'
+  remain register-deferred (D-2) -- the destruct: statement is ready to
+  host them when they land.
+
+GRAVEYARD
+  - 'finish:' as the terminal keyword: renamed -- the act, not the state.
+  - R-36's blanket form: refined to AUTOMATIC destruction cannot fail.
+
+
+R-38: Nothing -- never had, known-only; have/know containers ruled
+-------------------------------------------------------------------
+PROBLEM
+  The 'None/Null/Nihil thing': every language with a null value pays the
+  null-check tax on every dereference; and the ruled have/know container
+  pair (10) needed its custody story to say what absence means.
+
+DECISION (Frank-Rene, ratified)
+  Noun: 'Nothing'. LAW 1: Nothing can never be HAD -- having is a
+  relation that requires existence; the had world is Nothing-free BY
+  CONSTRUCTION, so nothing being had in the frame of a current operation
+  ever needs a check. LAW 2: Nothing is assignable to KNOWN holders
+  only; work relying on known things is naturally prone to an 'unknown'
+  signal -- initial gates carry the idiom. THE COMPILER CHECK: operations
+  on knowns are lawful only under a dominating Nothing-gate; gate once,
+  route into a had name, operate check-free below -- the potentiality of
+  an inappropriate operation caught immediately (SEMANTICS 28,
+  implemented over work bodies: three rejections and two narrowing
+  shapes live in the suite; joins/members/containers deferred).
+  'have list'/'know list' recorded as the ruled container spellings
+  ("for the moment"), written into (10) with custody checks deferred.
+  COORDINATOR FLAG: the ruling's example assigns the known INSIDE its
+  '== Nothing' branch ('if: k == Nothing { target = k; }') -- read as
+  transposed; the implemented law narrows the NOT-Nothing side ('!='
+  then-branch, '==' else-branch, '==' diverging initial gate). Flag if
+  the literal reading was intended.
+  SECOND FLAG (activation scope): strict-everywhere broke every numeric
+  work in the tree (all knows:-operands demanded gates); the pass
+  bridges with ACTIVATION BY MENTION -- bodies speaking of Nothing
+  submit their knowns to the law, silent bodies wait for type flow
+  (value-typed knowns exempt by type, Nothing-admitting types bound
+  unconditionally). The fork -- strict-everywhere vs type-gated -- is
+  yours; by-mention is the coordinator's bridge, not a ruling.
+
+COST
+  Every knows:-operand needs a gate -- deliberate friction: the tax paid
+  once per known per body, not once per dereference. Compound gate
+  conditions defer, so multi-known works gate serially for now.
+
+GRAVEYARD
+  - 'Null', 'None', 'Nihil' as the noun: one noun, one concept.
+  - checking hadness at USE sites: the property is established at
+    ASSIGNMENT sites once and for all -- construction over inspection.
+
+
+R-39: Labels on two accounts -- the catch region ':label: => { ... }' (B-1)
+-----------------------------------------------------------------------------
+PROBLEM
+  One spelling served two duties: the dropto: DEAD ADDRESS (kernel-goto
+  drop-through) and the future elseto: SIGNAL CATCHER -- opposite flow
+  behaviours (fall through vs never enter) under one face.
+
+DECISION (Frank-Rene, B-1)
+  Bare ':label:' stays the dead address -- potentially drop-throughable
+  like the goto labels in kernel drivers; dropto: targets this account
+  ONLY. The elseto: target gets its own syntax: ':label: => { ... }' --
+  the CATCH REGION; normal flow SKIPS it, nobody falls into a handler,
+  and the arm-arrow at the definition site tells the reader which
+  account a label is on. elseto: routing remains on the build list; its
+  target form is settled today, and a region's exit:-signals already
+  discharge the work's 12.4 obligations.
+
+PAYOFF (the exercise found two real gaps)
+  Probing the new law exposed that dropto: was UNUSABLE inside work
+  bodies on both layers: elaborate never assembled a work body's
+  outermost address list (every work-body dropto rejected), and the
+  runtime work runner had no _DropTo catch (the jump killed the call
+  silently). Both fixed: work bodies thread their bare-label list
+  through the walk, and the runner scans forward exactly as the
+  reactive block runner does. Locked live: 'cleanly' jumps over its
+  dead code (out = 42, the 0-assignment skipped); 'guarded' proves the
+  region skip (no signal in the trace); 'misjump' proves the account
+  separation (dropto: onto a catcher rejects -- a region is not an
+  address).
+
+COST
+  A grammar optional on the label rule (D-31); region placement laws
+  deferred to the elseto: build.
+
+
+R-40: The knowing model; have-nothing-after-give; the two documents
+--------------------------------------------------------------------
+PROBLEM
+  R-38 said a known holder MAY be Nothing without saying WHY or HOW the
+  runtime delivers that truth; and give-or-destruct said nothing about
+  the giver's name the instant after the give.
+
+DECISION (Frank-Rene, ratified)
+  THE KNOWING MODEL: one KNOWN HUB per known object -- a pointer to the
+  object and a knower count. Destruction zeroes the pointer: every
+  knower at once knows nothing of existence (reads Nothing); at zero
+  knowers the hub is re-usable. Binds the emitter; recorded in
+  HAVE_KNOW_BE (3). SEMANTICS 28's gates are the read-side of this
+  model -- checker and runtime are two faces of one law.
+  HAVE NOTHING AFTER GIVE: upon give the have-relationship becomes
+  'have nothing'; an immediate 'know that' through the dead name is
+  forbidden, rejected by the semantic layer following the path
+  (SEMANTICS 30). Implemented now: the destruct-half -- a destructed
+  name rejects at every later use on its path, branch-locally exact
+  (fires as [CUSTODY] in work_rejects); the give-half joins with the
+  call-site give marker.
+  TWO DOCUMENTS ruled and written: HAVE_KNOW_BE.txt -- the lifecycle
+  subject document (be/have/know end to end, the hub model, costs
+  stated honestly); OPEN.txt -- the by-subject register of everything
+  not yet closed (ruling-needed / build / deferred-by-design per
+  subject), consolidating disc-9, the F-entries, and the SEMANTICS
+  deferral lists, per the plan: next session closes the engine/compiler
+  on something practical -- HWUT is waiting.
+
+COST
+  A third flow-sensitive set threads the work walk (dead names beside
+  known/narrowed); joins stay conservative. Two more documents to keep
+  true -- OPEN.txt is a snapshot register and says so.

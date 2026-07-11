@@ -4,7 +4,7 @@ LANGUAGE
 
 The rule-file language describes the behaviour of an entity as reactions to
 events. This document states each language element and shows it in an example.
-Rationale for every decision lives in RATIONALE.txt (entries R-1..R-36); this
+Rationale for every decision lives in RATIONALE.txt (entries R-1..R-40); this
 document carries mechanics only.
 
 Spine:
@@ -82,11 +82,18 @@ written in the source. (The ledger's mechanics -- the checker, containers
 as collective debt, disposal policies -- bind the future type document;
 the law binds now.)
 
+THE GIVE LEAVES NOTHING BEHIND: upon give, the giver's have-relationship
+becomes HAVE NOTHING -- the name is dead, and an immediate 'know that'
+(keeping acquaintance with the given-away object through the dead name)
+is rejected on the path (SEMANTICS 30; likewise after destruct:). The
+lifecycle entire -- including the KNOWING MODEL of hubs that the emitter
+owes -- is the subject document HAVE_KNOW_BE.txt.
+
 DIE UPON END OF THE HAVE-RELATIONSHIP. An object's life is bounded by its
 being had: when the having ends -- the haver's own end, or the object
 being given away -- the object must already be given or destructed. A
 LOCAL VARIABLE IS HAD BY THE WORK THAT HAS IT: the work's terminal
-(finish: or exit:) ends the having, so a had obligation local is given
+(give: or exit:) ends the having, so a had obligation local is given
 before it -- a gives-port is the lawful end of having -- or destructed;
 plain value locals end under the memory exemption (11.1). One law, every
 scale: member, local, aggregate part.
@@ -106,6 +113,34 @@ Persistent objects and ephemerals remain of different nature at every
 stage; whenever a construct touches both, its law says which nature each
 part addresses.
 
+
+(0.5) Nothing
+-------------
+ONE noun for non-existence: "Nothing" (Null, None, Nihil: graveyarded).
+Two laws kill the null-check plague at the root (R-38):
+
+NOTHING IS NEVER HAD. Having is a relation that requires existence; a
+had holder (a has: member, a takes-port, a body local, a have-container
+element) can never be or become Nothing -- checked at every assignment.
+The had world is Nothing-free BY CONSTRUCTION: no check is ever needed
+on anything had in the frame of a current operation.
+
+NOTHING IS ASSIGNABLE TO KNOWN HOLDERS ONLY. A known holder (a knows:
+entry, a know-container element) is therefore potentially Nothing, and
+every OPERATION on a known demands a dominating Nothing-gate; the
+compiler rejects the ungated use -- the potentiality of an inappropriate
+operation is caught immediately (SEMANTICS 28). The gates:
+
+    if: k == Nothing { exit: unknown; }     # initial gate: a diverging
+    ...k narrowed for the rest...           # Nothing-branch narrows all
+                                            # that follows
+    if: k != Nothing { target = k; }        # branch gate: k narrowed in
+    else: { target = fallback; }            # the not-Nothing branch only
+
+Work that relies on known things is naturally prone to an 'unknown'
+signal -- the initial gate names that idiom. Once a gated known is
+assigned to a had holder, everything downstream operates on the had
+name, check-free.
 
 (1) Lexical laws
 ================
@@ -130,9 +165,9 @@ see 1.2).
 
 RESERVED -- specified in (11)-(14), implementation pending (R-24..
 R-27): the keywords "exit:", "groove:", "tick:", "ticks:", "takes:",
-"gives:", "finish:", "elsewhile:", "elseto:", the bare words "finish"
-(the jump to the finish: terminal), "finished" (the built-in exhaustion
-variant), "give", and the bare kind words "work", "clockwork", "class", "event",
+"gives:", "elsewhile:", "elseto:", the bare words "finished" (the
+built-in exhaustion variant), "Nothing" (0.5), "have" and "know" (the
+container prefixes, 10), "give", and the bare kind words "work", "clockwork", "class", "event",
 "obligation".
 
 (1.2) Definitions are name-first
@@ -460,13 +495,26 @@ body, never escaping it.
 
 (5.2) Exit regions
 ------------------
-The outermost command-block body may end in a tail ladder of bare EXIT-LABELS.
-":<label>:" DEFINES a label (no body, C-label drop-through: control reaching
-it falls through to what follows). The label is SELF-TERMINATING: the second
-colon delimits it, as "}" delimits a block -- no ";" follows (R-24).
-"dropto: <label>" is the forward-only JUMP to such an exit. This is the
-kernel "goto out:" cleanup idiom made safe -- "goto considered harmful"
-(Dijkstra) answered by allowing only forward drops to a declared exit.
+LABELS OPERATE ON TWO ACCOUNTS (B-1, R-39), and each account has its own
+face at the definition site:
+
+  THE DEAD ADDRESS -- ":<label>:" bare. No body; C-label drop-through:
+  control reaching it falls through to what follows, exactly like the
+  goto labels of kernel drivers. Self-terminating: the second colon
+  delimits it, as "}" delimits a block -- no ";" follows (R-24).
+  "dropto: <label>" is the forward-only JUMP to such an address -- the
+  kernel "goto out:" cleanup idiom made safe: "goto considered harmful"
+  (Dijkstra) answered by allowing only forward drops to a declared
+  address. dropto: targets THIS account only. Lawful in reactive bodies
+  and work bodies alike.
+
+  THE CATCH REGION -- ":<label>: => { ... }". The elseto: target: signals
+  ROUTED to the label enter the block; NORMAL FLOW SKIPS IT ENTIRELY --
+  nobody falls into a handler, and dropto: cannot address it. The arm-
+  arrow at the definition site is the reader's cue for which account a
+  label is on. (elseto: routing itself is on the build list; the target
+  form is settled law, and a region's exit:-signals already count toward
+  the work's 12.4 obligations.)
 
     SOMETHING => {
         c.h = acquire_a();
@@ -600,6 +648,17 @@ lives above it, at the character.
 (10) Aggregation types
 ======================
 
+THE RELATION WORDS PREFIX A CONTAINER (R-38, ruled "for the moment"):
+"have list" / "have dict" HAS its elements -- insertion is a give,
+removal gives out or destructs, the container carries collective debt
+(a container of obligations is an obligation; its destruction
+discharges the remainder -- explicitly for explicit classes, SEMANTICS
+27(ii)). "know list" / "know dict" KNOWS its elements -- views, no debt,
+the known must outlive the container's use; destruction trivial. The
+bare words stay the VALUE containers below -- the degenerate case where
+the memory exemption makes the relations coincide. Custody checks bind
+the type document (SEMANTICS 28, deferred).
+
 Declarations admit three plain VARIABLE-TYPED containers (no type parameters,
 no member functions):
 
@@ -685,9 +744,8 @@ semi-declared member.
     }
     +pair.make : work(knows: a, b
                       gives: p : pair
-                      signals: disorder) { ... finish: }
-    -pair : work(takes: p : pair
-                 signals: never_fails) { ... finish: }
+                      signals: disorder) { ... give: }
+    -pair : work(takes: p : pair) { ... give: }
 
 THE CANONICAL CONSTRUCTOR is 'Class.from' -- an ordinary extension name
 by convention ('from' bare is a name; only 'from:' with the glued colon
@@ -718,9 +776,9 @@ Member works are called through the class's dotted name:
     sprite : class has: { pos: vec2; tex: gpu_texture; } {
         make : work(knows: skin
                     gives: s : sprite
-                    signals: no_texture(path)) { ... finish: }
+                    signals: no_texture(path)) { ... give: }
         free : work(takes: s : sprite
-                    signals: free_failed(code)) { ... finish: }
+                    signals: free_failed(code)) { ... give: }
     }
 
     s = sprite.make("ghost") else: { no_texture(p) => exit: build_failed(p); }
@@ -744,8 +802,21 @@ giving it onward or destructing it in turn; value members end under the
 memory exemption. A disposer for a debt-free class is legal and empty of
 duty.
 
-DESTRUCTION CANNOT FAIL (R-36): a disposal work declares NO signals --
-its call sites carry no handling obligation, ever. The give-or-destruct
+AUTOMATIC DESTRUCTION CANNOT FAIL (R-36, refined R-37): a disposal work
+declares NO signals -- UNLESS the class is EXPLICIT. The explicit flag is
+'()' after the class name in the disposal definition ('-tunnel() : work
+(...)'): an explicit class's destruction is never automatic -- every end
+is WRITTEN with the 'destruct:' statement, so every signal is answered
+at its site, normal work-call discipline:
+
+    destruct: t else: { busy(when) => ; }
+
+For explicit classes the compiler owes THREE PATH CHECKS (SEMANTICS 27;
+staged for the type-flow phase): (i) every had local of the class is
+given or destructed on ALL paths; (ii) a container holding such objects
+explicitly destructs its remaining elements upon its own destruction;
+(iii) an aggregate having such a member explicitly destructs it in its
+disposal work. Non-explicit objects discharge automatically. The give-or-destruct
 duty must be dischargeable on every path, fault paths included: a
 refusable last resort would demand handlers inside handlers without
 ground, and failure-during-cleanup would shadow the original fault.
@@ -787,7 +858,7 @@ declaration DEFAULT marker -- the call-site binder is "=>", 12.5):
               would conjure custody from nowhere); custody law binds the
               future type document
     gives:    the outputs -- ordinary local variables of the body,
-              implicitly given at finish:; a default initializer counts
+              implicitly given at give:; a default initializer counts
               as assigned from the start
     signals:  the closed fault set: each signal an on-the-fly enumeration
               variant, optionally carrying named typed payload fields --
@@ -816,13 +887,16 @@ unconditionally valid.
 
 (12.4) Body terminals
 ---------------------
-    finish:                    the UNIQUE success terminal, exactly once;
+    give:                      the UNIQUE success terminal (R-37 -- the
+                               keyword names the act), exactly once;
                                required iff gives-entries are declared.
                                Every path reaching it must have every
                                gives-entry definitely assigned; the
                                declared giving happens implicitly, no
-                               operands. Bare "finish" elsewhere jumps to
-                               it, verified the same way.
+                               operands. (The bare jump to the terminal,
+                               formerly bare "finish", awaits a spelling:
+                               bare "give" is the custody marker --
+                               disc-9.)
     exit: <variant>(<payload>) the fault egress -- anywhere, any number of
                                times; leaves the work immediately with
                                that one own signal; no outputs. Payload
@@ -876,7 +950,7 @@ The else: block is a match over the signal set:
     that matched; the default arm can react but cannot inspect.
 
 WHAT AN ARM MUST DO -- each arm independently:
-  1. DIVERGE ("finish", "exit: <signal>", or a provably non-falling path);
+  1. DIVERGE ("give:", "exit: <signal>", or a provably non-falling path);
   2. PRODUCE SUBSTITUTES (assign the targets; ordinary definite
      assignment); or
   3. FALL THROUGH -- legal only where no invalid binding remains:
@@ -898,7 +972,7 @@ form of the kernel unwind cascade:
     buf = alloc(65536)       elseto: close_f with: otto;
     n   = read_into(f, buf)  elseto: free_b  with: karl;
     ...
-    finish:
+    give:
 
     :free_b: {
         karl.short_read(got) => log(got);
@@ -921,7 +995,7 @@ form of the kernel unwind cascade:
   - exhaustiveness PER CARRIER when a block is present; "otto.=>" the
     per-carrier default, a final bare "=>" the label-wide default;
   - every path through the fault section ends deliberately: an
-    "exit: <own signal>" or a jump to "finish" (legal only with all
+    "exit: <own signal>" or a jump to the give:-terminal (legal only with all
     gives-entries assigned -- a recovered fault); no fall-off, no fall-IN
     from the normal path;
   - DOWNWARD ONLY, SAME BODY ONLY; definite assignment holds on every
@@ -1005,7 +1079,8 @@ The definition follows the one form (1.2) with the panel verbs:
     knows:    inputs known for the run -- no responsibility taken
     takes:    inputs received into custody at winding
     ticks:    the per-tick outputs (in place of gives: -- panel and
-              terminal correspond: ticks: declares, tick: delivers)
+              terminal correspond: ticks: declares, tick: delivers,
+              give: ends the stream)
     signals:  the closed fault set
 
     line_reader : clockwork(takes: f : file_handle
@@ -1021,10 +1096,13 @@ the future type document.)
 Three egresses close a body stretch:
 
     tick:             deliver the declared ticks: bundle implicitly (as
-                      finish: does for gives:) and SUSPEND until the next
+                      give: does for gives:) and SUSPEND until the next
                       pull; no operands -- the panel already named
                       everything
-    finish:           orderly exhaustion; the unique success terminal
+    give:             orderly exhaustion; the unique success terminal
+                      (R-37: one terminal keyword for the work family --
+                      a clockwork has nothing left to give; the puller
+                      receives "finished")
     exit: <variant>   fault mid-stream, one of the own declared signals
 
 Three waits suspend a running clockwork, one law for all -- progress is
@@ -1073,7 +1151,7 @@ on every exit path) bind the future type document.
             value = n - i + 1;
             tick:
         }
-        finish:
+        give:
     }
 
     for: v from: countdown(10) { print(v); }

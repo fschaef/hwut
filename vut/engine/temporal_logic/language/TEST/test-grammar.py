@@ -108,31 +108,53 @@ SNIPPETS = [
  ("work_def",     "divide : work(knows: x, y\n"
                    "               gives: q\n"
                    "               signals: by_zero)\n"
-                   "{ q = x / y else: { div_by_zero => exit: by_zero; } finish: }"),
+                   "{ q = x / y else: { div_by_zero => exit: by_zero; } give: }"),
  ("work_spec",    "on_event : work(knows: ev gives: consumed signals: failed(m))"),
  ("clockwork_def", "line_reader : clockwork(takes: f\n"
                    "                        ticks: line\n"
                    "                        signals: io_error(code))\n"
-                   "{ tick: finish: }"),
+                   "{ tick: give: }"),
  ("class_def",    "sprite : class is: entity\n"
                    "  has:   { pos: vec2; tex: gpu_texture; }\n"
                    "  knows: { atlas: texture_atlas; }\n"
                    "{\n"
                    "  make : work(knows: skin gives: s : sprite signals: no_texture(path))\n"
-                   "  { s = 1; finish: }\n"
+                   "  { s = 1; give: }\n"
                    "  free : work(takes: s : sprite signals: free_failed(code))\n"
-                   "  { finish: }\n"
+                   "  { give: }\n"
                    "}"),
  ("aware_forms",  "E => { b.x = f(1) else: { bad(r) => { b.x = r; } => ; }\n"
                    "       for: v from: give src(3) { b.y = v; } else: { worn => ; } }"),
+ ("label_two_accounts",
+                   "w : work(knows: v gives: r signals: snag) {\n"
+                   "    dropto: done;\n"
+                   "    :cleanup:\n"
+                   "    r = 0;\n"
+                   "    :done:\n"
+                   "    give:\n"
+                   "    :failures: => {\n"
+                   "        exit: snag;\n"
+                   "    }\n"
+                   "}"),
+ ("explicit_destruct",
+                   "tunnel : class has: { fd: float; } { from : work }\n"
+                   "+tunnel.from : work(knows: host gives: t : tunnel signals: refused)\n"
+                   "{ t = host; give: }\n"
+                   "-tunnel() : work(takes: t : tunnel signals: busy(when))\n"
+                   "{ give: }\n"
+                   "shutdown : work(knows: t gives: done) {\n"
+                   "    destruct: t else: { busy(when) => ; }\n"
+                   "    done = 1;\n"
+                   "    give:\n"
+                   "}"),
  ("semi_and_completions",
                    "pair : class has: { lo: float; } {\n"
                    "    make #{a, b -> the ordered pair} : work\n"
                    "}\n"
                    "+pair.make : work(knows: a, b gives: p : pair signals: disorder)\n"
-                   "{ p = a; finish: }\n"
+                   "{ p = a; give: }\n"
                    "-pair : work(takes: p : pair signals: never_fails)\n"
-                   "{ exit: never_fails; finish: }"),
+                   "{ exit: never_fails; give: }"),
  ("aspect_panel",  "Poller : aspect(knows: rate, retries = 3\n"
                    "                signals: overrun, sensor_lost(port))\n"
                    "{\n"

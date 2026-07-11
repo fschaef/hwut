@@ -1,0 +1,6 @@
+
+--- Nothing rejections (elab-nothing-rejects.vut) ---
+diagnostics: 3  (has_fatal: True)
+  REJECT [NOTHING] operation on known 'k' without a Nothing-gate -- a known holder may be Nothing; gate it ('if: k != Nothing') or operate on a had substitute (SEMANTICS 28)
+  REJECT [NOTHING] had holder 'held' receives known 'k' that may be Nothing -- gate first (SEMANTICS 28)
+  REJECT [NOTHING] Nothing assigned to had holder 'held' -- having requires existence; only known holders admit Nothing (LANGUAGE 0.5, SEMANTICS 28)

@@ -1,0 +1,16 @@
+ungated : work(knows: k gives: out) {
+    probe = (k == Nothing);
+    out = k + 1;
+    give:
+}
+leaky : work(knows: k gives: out) {
+    seen = (k == Nothing);
+    held = k;
+    out = held;
+    give:
+}
+voider : work(gives: out) {
+    held = Nothing;
+    out = 1;
+    give:
+}

@@ -197,3 +197,8 @@ The line of thought governs; passes follow it and never run ahead of it:
    aspect producer face (E-2/E-4) is settled here, not before.
 Obligation-model MECHANICS (D-6) wait for the type document throughout;
 the (0.3) LAW binds from now.
+
+B-1  RULED (R-39): labels on two accounts -- bare ':label:' the dead
+     address (dropto: only, drop-through); ':label: => { ... }' the
+     catch region (elseto: target, skipped by normal flow). elseto:
+     ROUTING still on the build list; carriers/placement ride it.

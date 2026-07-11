@@ -21,7 +21,7 @@ temperature : class has: { celsius: float; } {
                          signals: beneath_absolute_zero) {
     if: celsius < -273.15 { exit: beneath_absolute_zero; }
     t = celsius;
-    finish:                       # the gives-bundle leaves implicitly
+    give:                       # the gives-bundle leaves implicitly
 }
 
 +temperature.from : work(knows: fahrenheit
@@ -29,7 +29,7 @@ temperature : class has: { celsius: float; } {
                          signals: beneath_absolute_zero) {
     if: fahrenheit < -459.67 { exit: beneath_absolute_zero; }
     t = (fahrenheit - 32) * 5 / 9;
-    finish:
+    give:
 }
 
 Demo : behavior has: { room: float; oven: float; } {

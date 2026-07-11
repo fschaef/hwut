@@ -1,0 +1,11 @@
+
+--- Nothing (run-nothing.vut) ---
+enter  B
+event  GO
+set    out = 15 -> 15
+bind   b.a = 15
+signal unknown()
+set    b.b = -1 -> -1
+set    fallback = 7 -> 7
+set    chosen = 7 -> 7
+set    b.c = 7 -> 7

@@ -2,7 +2,7 @@
 --- load-time gates ---
 compiled: no LL(2) conflict; role uniqueness, AST-map coverage and AST-map kind gates passed (D-10)
 start symbol: top-level
-rule count: 97
+rule count: 100
 
 --- rule inventory (flattened, sorted) ---
    algebr
@@ -34,11 +34,12 @@ rule count: 97
    code/continue
    code/count
    code/count-type
+   code/destruct-stmt
    code/dropto
    code/exit-label
    code/exit-stmt
-   code/finish-stmt
    code/for
+   code/give-stmt
    code/if
    code/lvalue
    code/match
@@ -99,6 +100,8 @@ rule count: 97
    type
    type-built-in
    type-dict
+   type-have
+   type-know
    type-list
    type-struct
    work-tail
