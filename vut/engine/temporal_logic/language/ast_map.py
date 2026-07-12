@@ -111,14 +111,22 @@ def _is_list(opt_node):
     return NodeList((body[0],) + tuple(it[0] for it in body[1].items))
 
 
-def _has_list(opt_node):
-    """RETURN: NodeList, the declarations of an optional 'has: { ... }' tail
-              -- empty when the tail is absent.
-
-    The fired body is SEQ(decl-block-product,) -- 'has:' silent -- and the
-    decl-block product is already a NodeList.
+def _body_items(opt_node):
+    """RETURN: tuple, the class-shaped body items of an optional
+              '{ <item>+ }' tail in source order -- empty when the tail is
+              absent (braces silent: the PLUS is the single surviving
+              child).
     """
-    return opt_node.child[0] if opt_node.present else NodeList(())
+    return () if not opt_node.present else tuple(_list(opt_node.child[0]))
+
+
+def _split_body(items, *kinds):
+    """RETURN: tuple of NodeLists, 'items' distributed over 'kinds' in
+              source order within each -- one NodeList per kind tuple, the
+              interleave law (R-41.3 (A)) making the split lossless.
+    """
+    return tuple(NodeList(tuple(it for it in items if isinstance(it, kind)))
+                 for kind in kinds)
 
 
 def _fold_chain(seq_node):
@@ -199,11 +207,16 @@ def make_import(n):
 
 def make_name_dotted(n):
     """RETURN: ReferenceLeaf, the dotted name as written, head first -- dots
-              silent, so the children are exactly the name tokens: the head,
-              then a STAR of one-token inline SEQs.
+              silent, so the children are the optional SELF dot (reactor
+              ruling: a leading '.' roots at this instance, recorded as an
+              EMPTY first segment -- prints naturally as '.x'), the head
+              token, then a STAR of one-token inline SEQs.
     """
-    head = n[0]
-    segs = (head.text,) + tuple(it[0].text for it in n[1].items)
+    self_dot = n[0].present
+    head = n[1]
+    segs = (head.text,) + tuple(it[0].text for it in n[2].items)
+    if self_dot:
+        segs = ("",) + segs
     return ReferenceLeaf(begin=head.begin, segments=segs)
 
 
@@ -231,33 +244,46 @@ def _complete_def(node, name_token, abstract=False):
     return dataclasses.replace(node, signature=sig)
 
 
-def make_character_tail(n):
-    """RETURN: Character, HEADLESS, from '(params)? is:? has:?' (D-19) --
-              name and abstract seated by _complete_def at the defining rule.
-    """
-    return A.Character(abstract=False, signature=_tail_sig(n[0]),
-                       is_=_is_list(n[1]), has=_has_list(n[2]))
-
-
-def make_aspect_tail(n):
-    """RETURN: Aspect, HEADLESS, from '(panel)? is:? has:? { behavior-def+ }'
-              (D-19, D-23) -- name and abstract seated by _complete_def; the
-              panel optional carries (knows-params, signal-decls); the body
-              is the behaviour list.
+def make_reactor_tail(n):
+    """RETURN: Reactor, HEADLESS and MODELESS, from '(channels)? is:?
+              { item+ }' (reactor + pipe rulings) -- name seated by
+              _complete_def, the mode ('single' | 'multi') seated by the
+              kind branch; ins/outs the channel-panel name tuples (empty
+              when absent); the body items split into member declarations,
+              member works, and behavior members (a behavior: only
+              causalities, grouped or ungrouped).
     """
     panel = _opt(n[0])
-    knows = () if panel is NodeAbsent else panel.knows
-    signals = () if panel is NodeAbsent else panel.signals
-    sig = A.Signature(name=NodeAbsent, params=knows)
-    return A.Aspect(abstract=False, signature=sig,
-                    is_=_is_list(n[1]), has=_has_list(n[2]),
-                    body=_list(n[3]), signals=signals)
+    ins, outs = ((), ()) if panel is NodeAbsent else panel
+    members, works, behaviors = _split_body(
+        tuple(_list(n[2])), A.Declaration, A.Work, A.Behavior)
+    return A.Reactor(signature=A.Signature(name=NodeAbsent, params=NodeAbsent),
+                     mode="", is_=_is_list(n[1]),
+                     members=members, works=works, behaviors=behaviors,
+                     ins=ins, outs=outs)
+
+
+def make_reactor_panel(n):
+    """RETURN: tuple, (ins, outs) -- each a tuple of DeclarationLeaf naming
+              the reactor's channels (pipe ruling: plain names, no types,
+              no markers; a channel is an object the reactor HAS). Consumed
+              whole by make_reactor_tail; each section optional's body is
+              SEQ(first-token, STAR-rest).
+    """
+    def names(seq):
+        toks = (seq[0],) + tuple(it[0] for it in seq[1].items)
+        return tuple(_decl_tok(t) for t in toks)
+    def sec(k):
+        v = _opt(n[k], ctor=names)
+        return () if v is NodeAbsent else v
+    return (sec(0), sec(1))
 
 
 def make_panel(n):
-    """RETURN: Panel, the five sections (D-25) -- each a NodeList, empty
-              when absent; slots 0..4 are the section optionals, each an
-              OPT over SEQ(first, STAR-rest).
+    """RETURN: Panel, the flat direction-sectioned panel (R-41.1) -- each
+              of in:/out:/signals: a NodeList, empty when absent; slots
+              0..2 are the section optionals, each an OPT over
+              SEQ(first, STAR-rest).
     """
     def entries(seq):
         # each STAR item is a one-child inline SEQ (the ',' is silent)
@@ -265,8 +291,19 @@ def make_panel(n):
     def sec(k):
         v = _opt(n[k], ctor=entries)
         return () if v is NodeAbsent else v
-    return A.Panel(knows=sec(0), takes=sec(1), gives=sec(2),
-                   ticks=sec(3), signals=sec(4))
+    return A.Panel(ins=sec(0), outs=sec(1), signals=sec(2))
+
+
+def make_panel_entry(n):
+    """RETURN: DeclArg, one panel entry '[known:|had:] name [: type]
+              [= default]' (R-41.1) -- the decl-arg product with the
+              relation marker seated as written ('' when unmarked: having
+              implicit); the marker optional's child is the fired inline
+              OR holding the captured keyword token.
+    """
+    marker = _opt(n[0])
+    text = "" if marker is NodeAbsent else marker.child.text.rstrip(":")
+    return dataclasses.replace(n[1], marker=text)
 
 
 def make_signal_decl(n):
@@ -277,13 +314,44 @@ def make_signal_decl(n):
     return A.SignalDecl(name=_decl_tok(n["name"]), params=_opt(n[1]))
 
 
-def make_behavior_tail(n):
-    """RETURN: Behavior, HEADLESS, from '(params)? is:? has:? { causality* }'
-              (D-19) -- name and abstract seated by _complete_def.
+def make_reactor_member(n):
+    """RETURN: Behavior / Work / Declaration, the reactor body's name-led
+              item (reactor ruling): after 'name :' the fired branch
+              decides -- 'behavior' completes a behavior member (ONLY
+              causalities, GROUPED by in-channel or bare -- pipe ruling;
+              the braces silent, the PLUS the surviving child), 'work' a
+              member work, a type an unmarked declaration.
     """
-    return A.Behavior(abstract=False, signature=_tail_sig(n[0]),
-                      is_=_is_list(n[1]), has=_has_list(n[2]),
-                      causalities=_list(n[3]))
+    branch = n[2]
+    body = branch.child
+    if branch.triggered_index == 0:
+        sig = A.Signature(name=_decl_tok(n["name"]), params=NodeAbsent)
+        items = tuple(_list(body[0]))
+        groups      = tuple(i for i in items if isinstance(i, A.ChannelGroup))
+        causalities = NodeList(tuple(i for i in items
+                                     if not isinstance(i, A.ChannelGroup)))
+        return A.Behavior(signature=sig, causalities=causalities,
+                          groups=groups)
+    if branch.triggered_index == 1:
+        return _complete_def(body[0], n["name"])
+    return A.Declaration(name=_decl_tok(n["name"]), type_=body[0])
+
+
+def make_channel_group(n):
+    """RETURN: ChannelGroup, from '(<channel> | .) : { causality+ }' (pipe
+              ruling) -- 'channel' the in-channel name, '.' when the SELF
+              channel fired (the head OR's dot branch is all-silent:
+              triggered_index 1, child NodeAbsent); 'begin' the colon
+              token's offset when the head is the dot (no head token to
+              anchor on), the head token's else.
+    """
+    head = n[0]
+    if head.triggered_index == 0:
+        channel, begin = head.child.text, head.child.begin
+    else:
+        channel, begin = ".", n[1].begin
+    return A.ChannelGroup(channel=channel, causalities=_list(n[2]),
+                          begin=begin)
 
 
 def make_cause_tail(n):
@@ -294,34 +362,50 @@ def make_cause_tail(n):
     return A.DefCause(signature=_tail_sig(n[0]), cause=n[1])
 
 
-def make_behavior_def(n):
-    """RETURN: Behavior, from '<name> : ~? behavior <behavior-tail>' (D-19)
-              -- the aspect body's repeated shape; the bare ':' (a regex
-              terminal) survives at slot 1, the '~' optional at 2, the
-              headless tail product at 3.
+def make_marked_member(n):
+    """RETURN: Declaration, from '(known:|had:) name : type ;' (R-41.3) --
+              a marker-led item is a member declaration by construction;
+              the fired marker OR holds the captured keyword token at
+              slot 0.
     """
-    return _complete_def(n[3], n["name"], abstract=n[2].present)
+    return A.Declaration(name=_decl_tok(n["name"]), type_=n[3],
+                         marker=n[0].child.text.rstrip(":"))
+
+
+def make_plain_member(n):
+    """RETURN: Work, the member work completed with its name, if the
+              factored head's 'work' branch fired (R-41.3, D-20
+              precedent: 'name :' consumed, the next token decided).
+              Declaration (unmarked: having implicit), else.
+    """
+    branch = n[2]
+    if branch.triggered_index == 0:
+        return _complete_def(branch.child[0], n["name"])
+    return A.Declaration(name=_decl_tok(n["name"]), type_=branch.child[0])
+
 
 
 def make_named_item(n):
     """RETURN: Node, the product of the factored '<name> : <tail>' head
-              (D-19): a Character / Aspect / Behavior / DefCause completed
-              from its kind tail, or a Declaration when the type branch
-              fired -- definition and top-level declaration are ONE head.
-
-    The alternation's fired branch is an inline SEQ: kind branches hold
-    ('~'? , tail) -- the kind word is silent -- except the cause branch
-    (tail only, no '~') and the declaration branch (the type product; ';'
-    silent).
+              (D-19, reactor ruling): a Reactor (mode seated from the
+              kind word -- 'reactor' the state machine, 'reactor++' the
+              mode group), a DefCause / ClassDef / Work / ClockworkDef
+              completed from its kind tail, or a Declaration when the
+              type branch fired -- definition and top-level declaration
+              are ONE head. Kind words are silent; every branch holds the
+              tail product only.
     """
     name_token, head = n["name"], n[2]
     branch = head.child
-    if head.triggered_index == 7:                            # declaration
+    if head.triggered_index == 6:                            # declaration
         return A.Declaration(name=_decl_tok(name_token), type_=branch[0])
-    if head.triggered_index in (3, 4, 5, 6):                 # cause/class/
-        return _complete_def(branch[0], name_token)          # work/clockwork
-    return _complete_def(branch[1], name_token,              # entity kinds
-                         abstract=branch[0].present)
+    if head.triggered_index == 0:              # reactor++ (captured kind
+        node = _complete_def(branch[1], name_token)   # word survives at 0)
+        return dataclasses.replace(node, mode="multi")
+    node = _complete_def(branch[0], name_token)
+    if head.triggered_index == 1:                            # reactor
+        return dataclasses.replace(node, mode="single")
+    return node                                # cause/class/work/clockwork
 
 
 def make_causality(n):
@@ -382,18 +466,42 @@ def make_effects(n):
 
 
 def make_spawn(n):
-    """RETURN: Spawn, from 'call [every: period [as: name]]' -- the recurrence
-              tail is SEQ(period, OPT(as-name)); the as-body is SEQ(name-token,)
+    """RETURN: Spawn, from 'call [to channel] [every: period [as: name]]'
+              (R-15, pipe ruling) -- the 'to' suffix routes the emission
+              onto the named out-channel (a ReferenceLeaf; NodeAbsent =
+              suffix-less, the send FANS); the recurrence tail is
+              SEQ(period, OPT(as-name)); the as-body is SEQ(name-token,)
               and the handle DECLARES.
     """
+    to_channel = NodeAbsent
+    routed = n[1]
+    if routed.present:
+        to_channel = _ref_tok(routed.child[0])
     every, handle = NodeAbsent, NodeAbsent
-    tail = n[1]
+    tail = n[2]
     if tail.present:
         every = tail.child[0]
         inner = tail.child[1]
         if inner.present:
             handle = _decl_tok(inner.child[0])
-    return A.Spawn(call=n[0], every=every, handle=handle)
+    return A.Spawn(call=n[0], every=every, handle=handle,
+                   to_channel=to_channel)
+
+
+def make_wire(n):
+    """RETURN: Wire, from 'source ----> dest;' / 'source --[ ch ]--> dest;'
+              (pipe ruling: WIRING IS WORK) -- 'channel' the written name,
+              '' for the plain arrow; the middle OR's open form carries
+              [open-token, channel-token, close-token, arrow-token], the
+              plain form the bare arrow token.
+    """
+    middle = n[1]
+    if middle.triggered_index == 0:
+        channel = middle.child[1].text
+    else:
+        channel = ""
+    return A.Wire(source=_ref_tok(n["source"]), dest=_ref_tok(n["dest"]),
+                  channel=channel)
 
 
 def make_ternary_top(n):
@@ -461,6 +569,14 @@ def make_var_list(n):
                     + tuple(_decl_tok(it[0]) for it in n[1].items))
 
 
+def make_site_target(n):
+    """RETURN: KnownSite over the lvalue, if the 'known:' site marker fired
+              (R-41.2) -- the marker recorded, no check invented.
+              The lvalue product unchanged, else.
+    """
+    return A.KnownSite(target=n[1]) if n[0].present else n[1]
+
+
 def make_mutation(n):
     """RETURN: Mutation, from 'lvalue (, lvalue)* op rhs (; | else: handler)'
               (D-26) -- slot 1 holds the extra targets STAR, the tail OR
@@ -500,18 +616,15 @@ def make_range(n):
 
 
 def make_for(n):
-    """RETURN: For, from 'for: var (in: coll | from: [give] source) block
-              [else: handler]' (D-16, D-26) -- the var DECLARES, loop-local
-              (SEMANTICS 6); the source OR's index marks the from:-arm; a
-              fired give-optional marks the custody flavour.
+    """RETURN: For, from 'for: var (in: coll | from: source) block
+              [else: handler]' (D-16, D-26; the give flavour retired by
+              ruling) -- the var DECLARES, loop-local (SEMANTICS 6); the
+              source OR's index marks the from:-arm.
     """
     head = n[1]
-    if head.triggered_index == 0:
-        pulls, give, source = False, False, head.child[0]
-    else:
-        pulls, give, source = True, head.child[0].present, head.child[1]
-    return A.For(var=_decl_tok(n["var"]), source=source, block=n[2],
-                 pulls=pulls, give=give, handler=_opt(n[3]))
+    pulls = (head.triggered_index == 1)
+    return A.For(var=_decl_tok(n["var"]), source=head.child[0], block=n[2],
+                 pulls=pulls, handler=_opt(n[3]))
 
 
 def make_count(n):
@@ -583,24 +696,16 @@ def make_dtor_def(n):
 
 
 def make_class_tail(n):
-    """RETURN: ClassDef, HEADLESS, from 'is:? has:? knows:? { member-work* }?'
-              (R-29) -- name seated by _complete_def; a class takes no '~'
-              and no parameter list, so the signature carries the name only.
+    """RETURN: ClassDef, HEADLESS, from 'is:? { item+ }?' (R-29, R-41.3)
+              -- name seated by _complete_def; a class takes no '~' and no
+              parameter list, so the signature carries the name only; the
+              body items split into member declarations and member works
+              (interleave (A): lossless).
     """
-    body = _opt(n[3])
+    members, works = _split_body(_body_items(n[1]),
+                                 A.Declaration, A.Work)
     return A.ClassDef(signature=A.Signature(name=NodeAbsent, params=NodeAbsent),
-                      is_=_is_list(n[0]), has=_has_list(n[1]),
-                      knows=_has_list(n[2]),
-                      works=() if body is NodeAbsent
-                            else tuple(_list(body[0])))
-
-
-def make_member_work(n):
-    """RETURN: Work, from '<name> : work <work-tail>' inside a class body
-              (R-30) -- the silent kind word is dropped, so the tail sits at
-              slot 2; completed with the member's name.
-    """
-    return _complete_def(n[2], n["name"])
+                      is_=_is_list(n[0]), members=members, works=works)
 
 
 def make_work_tail(n):
@@ -612,7 +717,7 @@ def make_work_tail(n):
     panel = _opt(n[0])
     body = _opt(n[1])
     return A.Work(signature=A.Signature(name=NodeAbsent, params=NodeAbsent),
-                  panel=A.Panel(knows=(), takes=(), gives=(), ticks=(), signals=()) if panel is NodeAbsent else panel,
+                  panel=A.Panel(ins=(), outs=(), signals=()) if panel is NodeAbsent else panel,
                   body=body if body is NodeAbsent else _list(body[0]))
 
 
@@ -629,8 +734,16 @@ def make_clockwork_tail(n):
 
 
 def make_give_stmt(n):
-    """RETURN: Give, the 'give:' success terminal (LANGUAGE 12.4, R-37)."""
-    return A.Give()
+    """RETURN: Give, from 'give [port (, port)*];' (LANGUAGE 12.4, R-37,
+              R-41.4) -- the ports REFERENCE the panel's out: entries;
+              empty for the bare terminal (no out: declared).
+    """
+    tail = _opt(n[0])
+    if tail is NodeAbsent:
+        return A.Give(ports=NodeList(()))
+    ports = (_ref_tok(tail[0]),) + tuple(_ref_tok(it[0])
+                                         for it in tail[1].items)
+    return A.Give(ports=NodeList(ports))
 
 
 def make_destruct_stmt(n):
@@ -649,10 +762,14 @@ def make_tick_stmt(n):
 
 
 def make_exit_stmt(n):
-    """RETURN: ExitSignal, from 'exit: <variant> [(args)] ;' -- the variant
-              REFERENCES its panel declaration; args optional.
+    """RETURN: ExitSignal, from 'exit [<variant> [(args)]];' (R-41.7) --
+              the variant REFERENCES its panel declaration; a bare 'exit;'
+              yields the typed absences (the nothing-more egress).
     """
-    return A.ExitSignal(variant=_ref_tok(n["variant"]), args=_opt(n[1]))
+    head = _opt(n[0])
+    if head is NodeAbsent:
+        return A.ExitSignal(variant=NodeAbsent, args=NodeAbsent)
+    return A.ExitSignal(variant=_ref_tok(head[0]), args=_opt(head[1]))
 
 
 def make_handler(n):
@@ -692,17 +809,11 @@ def make_arm_shrug(n):
     return NodeAbsent
 
 
-def make_decl_block(n):
-    """RETURN: NodeList, the declarations of a '{ declaration+ }' block --
-              braces silent, the PLUS is the single surviving child.
-    """
-    return _list(n[0])
-
-
 def make_declaration(n):
-    """RETURN: Declaration, from 'name : type ;' -- the name DECLARES; the
-              bare ':' (D-9, a regex terminal) survives at slot 1, the type
-              product at 2.
+    """RETURN: Declaration, from the TOP-LEVEL 'name : type ;' branch --
+              the name DECLARES; the bare ':' (D-9, a regex terminal)
+              survives at slot 1, the type product at 2; unmarked (the
+              relation markers belong to class-shaped bodies, R-41.3).
     """
     return A.Declaration(name=_decl_tok(n["name"]), type_=n[2])
 
@@ -831,14 +942,21 @@ AST_MAP = {
     "import":        make_import,
     "name-dotted":   make_name_dotted,
     "named-item":    make_named_item,
-    "character-tail": make_character_tail,
-    "aspect-tail":   make_aspect_tail,
+    "reactor-tail":   make_reactor_tail,
+    "reactor-panel":  make_reactor_panel,
+    "reactor-item":   {("marked", "member"): PASS},
+    "reactor-member": make_reactor_member,
+    "behavior-item":  {("group", "causality"): PASS},
+    "channel-group":  make_channel_group,
     "panel":         make_panel,
+    "panel-entry":   make_panel_entry,
     "signal-decl":   make_signal_decl,
     "class-tail":    make_class_tail,
+    "class-item":    {("marked", "plain"): PASS},
+    "marked-member": make_marked_member,
+    "plain-member":  make_plain_member,
     "ctor-def":      make_ctor_def,
     "dtor-def":      make_dtor_def,
-    "member-work":   make_member_work,
     "work-tail":     make_work_tail,
     "clockwork-tail": make_clockwork_tail,
     "code/give-stmt":   make_give_stmt,
@@ -850,8 +968,6 @@ AST_MAP = {
     "arm-fields":    make_arm_fields,
     "arm-action":    {("block", "exit", "shrug"): PASS},
     "arm-shrug":     make_arm_shrug,
-    "behavior-def":  make_behavior_def,
-    "behavior-tail": make_behavior_tail,
     "cause-tail":    make_cause_tail,
 
     # -- causality -------------------------------------------------------
@@ -902,12 +1018,14 @@ AST_MAP = {
 
     # -- command block -----------------------------------------------------
     "code":            make_command_block,
-    "code/statement":  {("mutation", "if", "match", "for", "count",
+    "code/statement":  {("wire", "mutation", "if", "match", "for", "count",
                          "break", "continue", "dropto",
                          "give", "exit", "tick", "destruct"): PASS,
-                        8: PASS},
+                        9: PASS},
+    "code/wire":       make_wire,
     "code/block":      make_command_block,
     "code/mutation":   make_mutation,
+    "code/site-target": make_site_target,
     "code/lvalue":     _fwd,
     "code/rhs":        {(0, 1): PASS},
     "code/op-mut":     {(0, 1, 2, 3, 4): PASS},
@@ -929,7 +1047,6 @@ AST_MAP = {
     "code/exit-label":  make_exit_label,
 
     # -- declarations / types -----------------------------------------------
-    "decl-block":    make_decl_block,
     "declaration":   make_declaration,
     "type":          {("type-builtin", "list", "dict", "struct",
                        "have", "know"): PASS,
@@ -949,6 +1066,8 @@ AST_MAP = {
     "list-arg":      make_listing,
     "arg":           {0: PASS, 1: make_named_arg},
     "parens-decl":   make_parens,
+    "parens-payload": make_parens,
+    "list-payload":  make_listing,
     "list-decl":     make_listing,
     "decl-arg":      make_decl_arg,
 }

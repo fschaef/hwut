@@ -3,66 +3,20 @@
 source: 'button_pressed => light_on;'
 ModuleRoot
   .items:
-    NodeList [1]
-      Causality
-        .cause:
-          Cause
-            .target:
-              ReferenceLeaf button_pressed
-            .args:
-              NodeAbsent
-            .guard:
-              NodeAbsent
-        .effects:
-          NodeList [1]
-            Effect marker='=>'
-              .action:
-                Spawn
-                  .call:
-                    Call
-                      .name:
-                        ReferenceLeaf light_on
-                      .args:
-                        NodeAbsent
-                  .every:
-                    NodeAbsent
-                  .handle:
-                    NodeAbsent
+    NodeList [0]
   .doc:
     NodeAbsent
+  DIAG: no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:=>)
+  DIAG: no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:;)
 
 --- guarded causality ---
 source: 'MOTOR_ON when: c.fuel == 0 => stop;'
 ModuleRoot
   .items:
-    NodeList [1]
-      Causality
-        .cause:
-          Cause
-            .target:
-              ReferenceLeaf MOTOR_ON
-            .args:
-              NodeAbsent
-            .guard:
-              BinOp op='=='
-                .lhs:
-                  ReferenceLeaf c.fuel
-                .rhs:
-                  ConstantLeaf int '0'
-        .effects:
-          NodeList [1]
-            Effect marker='=>'
-              .action:
-                Spawn
-                  .call:
-                    Call
-                      .name:
-                        ReferenceLeaf stop
-                      .args:
-                        NodeAbsent
-                  .every:
-                    NodeAbsent
-                  .handle:
-                    NodeAbsent
+    NodeList [0]
   .doc:
     NodeAbsent
+  DIAG: no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:when:)
+  DIAG: no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:.)
+  DIAG: no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, captured:==)
+  DIAG: no alternative matches 2-token lookahead (regex:[a-zA-Z_]\w*, string:;)

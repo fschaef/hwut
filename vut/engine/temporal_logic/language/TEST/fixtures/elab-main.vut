@@ -2,9 +2,14 @@ import: "lib/base.vut" as: base
 open: fleet {
     limit: float;
 }
-drive : behavior(gain) is: base.vehicle(5) has: { speed: float; } {
-    MOTOR_ON when: b.speed > gain => go;
-    STOP => { b.speed = base.max_speed; c.cap = fleet.limit; dropto: done; :done: }
-    HOT => base.vehicle(9, boost = 2);
-    COLD => base.vehicle.top_speed;
+drive : reactor is: base.vehicle {
+    speed: float;
+    gain: float;
+    cap: float;
+    main : behavior {
+        MOTOR_ON when: .speed > .gain => go;
+        STOP => { .speed = base.max_speed; .cap = fleet.limit; dropto done; :done: }
+        HOT => base.vehicle;
+        COLD => base.vehicle.top_speed;
+    }
 }

@@ -117,6 +117,9 @@ def _generate_token_spec():
         1. skip groups (comment, whitespace framing) -- fixed framing.
         2. leading-colon string keywords  (':end')  -> ':word\\b'.
         3. trailing-colon string keywords ('mode:') -> '\\bword', LONGEST-FIRST.
+        3b. EARLY regex class terminals (T.regex(..., early=True)) in
+           DECLARATION order -- for classes whose lexemes contain characters
+           that are themselves symbol terminals (the wire arrows' dashes).
         4. bare keywords -- captured (ANY) and bare-identifier strings -> '\\bword\\b'.
         5. symbols (string keywords that are not identifiers, '=>', '{', '}')
            -> re.escape, LONGEST-FIRST.
@@ -143,10 +146,10 @@ def _generate_token_spec():
     def order(t):
         return decl_index[t]
 
-    leading, trailing, bare, symbols, regexes = [], [], [], [], []
+    leading, trailing, bare, symbols, regexes, early = [], [], [], [], [], []
     for t in TERMINAL_DB:
         if t.shape == "regex":
-            regexes.append(t)
+            (early if t.early else regexes).append(t)
         elif t.shape == "captured":
             bare.append(t)
         elif t.shape == "string":
@@ -175,6 +178,15 @@ def _generate_token_spec():
     trailing.sort(key=lambda t: (-len(t.spelling), order(t)))        # tier 3
     for t in trailing:
         spec.append((t, _keyword_pattern(t.spelling)))
+
+    for t in early:                                                  # tier 3b
+        spec.append((t, t.pattern))    # EARLY regex classes (T.regex early):
+                                       # lexemes containing characters that are
+                                       # themselves symbol terminals (the wire
+                                       # arrows' dashes) must be tried before
+                                       # the bare keywords and symbols; the
+                                       # LATE tier below keeps the bare-':'
+                                       # design (after every colon keyword).
 
     bare.sort(key=order)                                             # tier 4
     for t in bare:

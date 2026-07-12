@@ -30,8 +30,9 @@ EXPLANATION = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 def check(basename):
     """RETURN: None, always. Takes one explanation file through the full
               front half (asserted fatal-free -- a drifted explanation
-              fails loudly) and drives its Demo behaviour's SHOW event;
-              the trace prints, locking the explanation's claims.
+              fails loudly) and runs its PLANT (pipe ruling: a script
+              feeder wired to the Demo reactor replays SHOW); the trace
+              prints, locking the explanation's claims.
     """
     print("\n--- %s ---" % basename)
     reporter = DiagnosticReporter()
@@ -43,8 +44,8 @@ def check(basename):
         [d.message for d in reporter.errors]
     print("front half: clean")
     machine = Machine([semantic])
-    machine.post("SHOW")
-    machine.drain()
+    machine.run("plant")
+    machine.play()
     for line in machine.lines:
         print(line)
 

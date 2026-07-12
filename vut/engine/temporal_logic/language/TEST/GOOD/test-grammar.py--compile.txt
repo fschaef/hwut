@@ -2,7 +2,7 @@
 --- load-time gates ---
 compiled: no LL(2) conflict; role uniqueness, AST-map coverage and AST-map kind gates passed (D-10)
 start symbol: top-level
-rule count: 100
+rule count: 108
 
 --- rule inventory (flattened, sorted) ---
    algebr
@@ -11,9 +11,7 @@ rule count: 100
    arm-action
    arm-fields
    arm-shrug
-   aspect-tail
-   behavior-def
-   behavior-tail
+   behavior-item
    call
    causality
    causality/cause
@@ -23,7 +21,8 @@ rule count: 100
    causality/event
    causality/spawn
    cause-tail
-   character-tail
+   channel-group
+   class-item
    class-tail
    clockwork-tail
    code
@@ -48,8 +47,10 @@ rule count: 100
    code/pattern
    code/range
    code/rhs
+   code/site-target
    code/statement
    code/tick-stmt
+   code/wire
    collection
    collection/comprehension
    collection/element
@@ -62,7 +63,6 @@ rule count: 100
    data-access/base
    data-access/step
    decl-arg
-   decl-block
    declaration
    documented
    dtor-def
@@ -85,7 +85,8 @@ rule count: 100
    import
    list-arg
    list-decl
-   member-work
+   list-payload
+   marked-member
    name-dotted
    name-ref
    named-item
@@ -93,8 +94,15 @@ rule count: 100
    number
    numeric
    panel
+   panel-entry
    parens-arg
    parens-decl
+   parens-payload
+   plain-member
+   reactor-item
+   reactor-member
+   reactor-panel
+   reactor-tail
    signal-decl
    top-level
    type

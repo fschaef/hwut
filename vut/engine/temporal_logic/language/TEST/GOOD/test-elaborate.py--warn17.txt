@@ -1,5 +1,5 @@
 
 --- abstract-target remark (elab-warn17.vut) ---
-diagnostics: 1  (has_fatal: False)
-  WARN   [GUARD] effect targets ABSTRACT entity 'ghost' (SEMANTICS 17: well-formed; every occurrence must be visible)
-fatal-free: True
+diagnostics: 1  (has_fatal: True)
+  REJECT [NAME] import 'lib/gone.vut' cannot be mounted: no declared peer supplied for this path (declaration-first, SEMANTICS 12)
+fatal-free: False

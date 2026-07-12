@@ -1,65 +1,83 @@
-divide : work(knows: a, b
-              gives: q
+divide : work(in: a, b
+              out: q
               signals: by_zero) {
-    q = a / b else: { div_by_zero => exit: by_zero; }
-    give:
+    q = a / b else: { div_by_zero => exit by_zero; }
+    give q;
 }
-countdown : clockwork(knows: n
-                      ticks: value
+countdown : clockwork(in: n
+                      out: value
                       signals: negative(v)) {
-    if: n < 0 { exit: negative(n); }
+    if: n < 0 { exit negative(n); }
     int: i = 1 .. n {
         value = n - i + 1;
-        tick:
+        tick;
     }
-    give:
+    exit;
 }
-pair : class has: { lo: float; hi: float; } {
+pair : class {
+    lo: float;
+    hi: float;
     from #{a, b -> the ordered pair; a -> the degenerate pair} : work
 }
-+pair.from : work(knows: bounds, upper
-                  gives: p : pair
++pair.from : work(in: bounds, upper
+                  out: p : pair
                   signals: disorder) {
-    if: bounds > upper { exit: disorder; }
+    if: bounds > upper { exit disorder; }
     p = bounds + upper;
-    give:
+    give p;
 }
-+pair.from : work(knows: center
-                  gives: p : pair
++pair.from : work(in: center
+                  out: p : pair
                   signals: disorder) {
-    if: center < 0 { exit: disorder; }
+    if: center < 0 { exit disorder; }
     p = center * 2;
-    give:
+    give p;
 }
--pair : work(takes: p : pair) {
-    give:
+-pair : work(in: p : pair) {
+    give;
 }
-cleanly : work(knows: v
-               gives: out) {
-    dropto: done;
-    out = 0;
+cleanly : work(in: v
+               out: result) {
+    result = 0;
+    dropto done;
     :done:
-    out = v;
-    give:
+    result = v;
+    give result;
 }
-guarded : work(knows: v
-               gives: r
+guarded : work(in: v
+               out: r
                signals: trouble) {
     r = v + 1;
-    give:
+    give r;
     :failures: => {
-        exit: trouble;
+        exit trouble;
     }
 }
-B : behavior has: { q: float; r: float; s: float; t: float; u: float; w: float; x: float; } {
+spender : work(in: n
+               out: total) {
+    cw = countdown(n);
+    total = 0;
+    for: v from: cw { total = total + v; }
+    give total;
+}
+runner : reactor(in: cmd) {
+    q: float; r: float; s: float; t: float; u: float; w: float; x: float; y: float;
+  B : behavior {
     GO => {
-        b.q = divide(10, 2) else: { by_zero => ; }
-        b.r = divide(1, 0) else: { by_zero => { b.r = -1.0; } }
-        for: v from: countdown(3) { b.s = v; }
-        b.t = pair.from(bounds = 1, 2) else: { disorder => ; }
-        b.u = pair.from(center = 4) else: { disorder => ; }
-        b.w = guarded(5) else: { trouble => { b.w = -9; } }
-        b.x = cleanly(42);
+        .q = divide(10, 2) else: { by_zero => ; }
+        .r = divide(1, 0) else: { by_zero => { .r = -1.0; } }
+        for: v from: countdown(3) { .s = v; }
+        .t = pair.from(bounds = 1, 2) else: { disorder => ; }
+        .u = pair.from(center = 4) else: { disorder => ; }
+        .w = guarded(5) else: { trouble => { .w = -9; } }
+        .x = cleanly(42);
+        .y = spender(3);
     }
 }
-GO => B;
+}
+plant : work() {
+    f = script("GO");
+    r = runner();
+    f ----> r;
+    give;
+}

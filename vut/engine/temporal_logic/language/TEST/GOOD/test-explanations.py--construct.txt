@@ -1,9 +1,14 @@
 
 --- explain-construct.vut ---
 front half: clean
-enter  Demo
-event  SHOW
+run    plant
+wind   f : script
+make   d : Demo
+enter  d.show
+wire   f --[cmd]--> d
+feed   f SHOW
+event  d.cmd SHOW
 set    t = 21 -> 21
-bind   b.room = 21
+bind   .room = 21
 set    t = 200.0 -> 200.0
-bind   b.oven = 200.0
+bind   .oven = 200.0

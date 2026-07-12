@@ -1,20 +1,28 @@
 
 --- blocks (run-blocks.vut) ---
-enter  worker
-event  go(n=3.0)
-set    b.total += 1 -> 1.0
-set    b.total += 3 -> 4.0
-set    b.total += 5 -> 9.0
-set    b.items[0] = 1.0
-set    b.items[1] = 2.0
-set    b.total += 20.0 -> 29.0
-set    b.total += 11.0 -> 40.0
-set    b.total += 13.0 -> 53.0
-set    b.total *= 2.0 -> 106.0
-set    b.label = 1.0 -> 1.0
-event  classify(code=42.0)
-set    b.label = 30.0 -> 30.0
-event  classify(code=7.0)
-set    b.label = 7.0 -> 7.0
-event  classify(code=500.0)
-set    b.label = 99.0 -> 99.0
+run    plant
+wind   f : script
+make   w : worker
+enter  w.crunch
+wire   f --[cmd]--> w
+feed   f go
+event  w.cmd go(n=3.0)
+set    .total += 1 -> 1.0
+set    .total += 3 -> 4.0
+set    .total += 5 -> 9.0
+set    .items[0] = 1.0
+set    .items[1] = 2.0
+set    .total += 20.0 -> 29.0
+set    .total += 11.0 -> 40.0
+set    .total += 13.0 -> 53.0
+set    .total *= 2.0 -> 106.0
+set    .label = 1.0 -> 1.0
+feed   f classify
+event  w.cmd classify(code=42.0)
+set    .label = 30.0 -> 30.0
+feed   f classify
+event  w.cmd classify(code=7.0)
+set    .label = 7.0 -> 7.0
+feed   f classify
+event  w.cmd classify(code=500.0)
+set    .label = 99.0 -> 99.0

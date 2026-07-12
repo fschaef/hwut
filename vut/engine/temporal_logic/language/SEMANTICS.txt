@@ -24,7 +24,8 @@ default.
 -----------------------------------------------------------------------------
 "=x=> X" is well-formed iff deactivable(X). The parser accepts "=x=>" before any
 target; the semantic unit rejects it where the target is not deactivable.
-    deactivable:  behavior yes, aspect yes, character yes,
+    deactivable:  behavior (member of this reactor) yes,
+                  reactor / reactor++ yes,
                   recurring-emission handle yes;  event no, command-block no.
 
 
@@ -46,16 +47,15 @@ primary one.)
 
 (4) Scope of member bindings                              [REJECT, R-9, §4.1]
 -----------------------------------------------------------------------------
-Every member access names its binding (e./b./a./c./s.). Availability by site:
-    e.  inside a causality (the fired event's member)
-    b.  behaviour and causality
-    a.  aspect, behaviour, causality
-    c.  always
-    s.  everywhere in the entity (and in has: for initialisation; during
-        ~ENTRY/~EXIT)
-The semantic unit rejects a binding used outside its available scope, and
-aggregate-self access (a field reached via the aggregate's own binding, b./a.)
-used outside that aggregate's own definition body.
+Every member access names its binding (reactor ruling; b/a/c/s died):
+    e.       inside a causality (the fired event's member)
+    . (bare) THE SELF -- the reactor's member inside behavior code and
+             reactor member works; the class's member inside class
+             member works
+The semantic unit rejects a binding used outside its available scope;
+the refinement of self-availability (a bare-dot in a free work, say)
+is PARTIAL -- the head is admitted structurally, deeper placement law
+lands with the type document.
 
 
 (5) Lifecycle events                                           [REJECT, R-10]
@@ -69,7 +69,7 @@ are pass-2.)
 (6) Loop-variable locality                                     [REJECT, R-13]
 -----------------------------------------------------------------------------
 A for: loop variable, a count-loop typed counter (int:/float: v = a .. b), or the enumeration arm's index-and-element pair (D-17) is a bare local, scoped to its loop body; it
-does not escape and does not shadow a binding-qualified name (no e./b./a./c./s.
+does not escape and does not shadow a binding-qualified name (no e. or bare-dot
 head). A comprehension's destructuring variables are likewise local to the
 comprehension.
 
@@ -83,10 +83,10 @@ harmful" -- Dijkstra -- answered by forward-only drop-through). Checks:
       R-24 -- the second colon delimits, no ";").
   (b) An exit-label may be defined ONLY at the OUTERMOST function/command-block
       body -- never inside a loop, if/elif/else, match, or any nested block.
-  (c) "dropto: <label>" is the forward-only JUMP: it may target only an exit
+  (c) "dropto <label>" is the forward-only JUMP: it may target only an exit
       defined LATER than the dropto in the same outermost body. A backward or
       self target is an error.
-  (d) "dropto: <label>" requires a target: the label must be defined by some
+  (d) "dropto <label>" requires a target: the label must be defined by some
       ":<label>:" in the body; an undefined label is an error.
   (e) break:/continue: are unlabelled and bind to the nearest enclosing loop.
 
@@ -138,7 +138,7 @@ emission runs only while its entity is active and is cancelled automatically at
 -----------------------------------------------------------------------------
 "open: <dotted> { ... }" opens a named scope; it is re-openable and nests
 unrestricted; names declared within are scoped to it. A <name-dotted> is a plain
-dotted path, NOT a binding-qualified member access (no e./b./a./c./s. head); the
+dotted path, NOT a binding-qualified member access (no e. or bare-dot head); the
 two dotted-name notions must not be conflated.
 
 "import: \"<path>\" as: <dotted>" mounts the quoted file/url under the given
@@ -181,16 +181,12 @@ the loop body.
 
 (16) Clockwork                                             [RETIRED, R-25]
 -----------------------------------------------------------------------------
-The tick-paced clockwork left the language (R-25): the aspect body is
-behaviours-only; the checks that lived here (aspect-body exclusivity, the
-emit-step, groove arm law, tie-break, tick-default, ~ELSE/~NONE) retire
-with it. The successor -- the pull-driven clockwork -- and its law land
-with the work construct. The number is kept as a tombstone.
-
-The aspect PANEL (D-23) is checked minimally in this version: "knows:"
-entries are the aspect's parameters (existing parameter law applies);
-"signals:" entries are recorded on the definition and not yet consumed --
-their checks land with the work construct.
+The tick-paced clockwork left the language (R-25); the successor -- the
+pull-driven clockwork -- landed with the work construct. The aspect that
+once hosted this section DIED with the reactor ruling (the reactor of
+LANGUAGE 3 unifies aspect and character); reactors take NO panel --
+they are classes, constructed by works. The number is kept as a
+tombstone.
 (17) Abstract-target remark                                [WARN, R-10, F-3]
 -----------------------------------------------------------------------------
 An effect targeting an ABSTRACT entity -- "=> X" or "=x=> X" where X is
@@ -201,7 +197,10 @@ behaviour, so the language does not hard-block the construct structurally --
 but every occurrence must be visible: "even if it is to make ourselves aware
 when making design decisions related to abstract behaviors" (FR ruling on
 fork F-3, REACTIVE-ENGINE-REBUILD). This is the first WARN-severity entry;
-its non-fatality is deliberate, not an omission.
+its non-fatality is deliberate, not an omission. NOTE (reactor ruling):
+'~' abstractness left the surface with the old kinds, so this warning
+currently has NO TRIGGER -- it stands dormant until the abstract-reactor
+question is ruled.
 
 (18) Duplicate declaration                              [REJECT, pass-3, F-6]
 -----------------------------------------------------------------------------
@@ -231,7 +230,8 @@ unresolved one. Bindings (e/b/a/c/s) are always known: each level has a
 default instance in the open scope (see 9). RESIDUE -- written segments
 beyond the matched name -- is verified as far as the declared surface
 reaches: its FIRST segment into a definition-kind or named-cause target must
-name a declared member (a parameter or a has: name), local and mounted
+name a declared member (a parameter or a declared member name), local
+and mounted
 alike; deeper residue (struct fields) and residue under a binding travel to
 link, recorded on the recipe.
 
@@ -263,8 +263,7 @@ The check is elaborate's, over every algebraic expression and mutation.
 (22) Docstring placement                                   [REJECT, pass-11]
 -----------------------------------------------------------------------------
 A docstring (three-double-quote boundaries, multi-line) PRECEDES the
-definition it documents: a character, an aspect, a behaviour, or a named
-cause; it rides that definition's product. A docstring that precedes no
+definition it documents: a reactor or a named cause; it rides that definition's product. A docstring that precedes no
 definition is the MODULE docstring and is lawful only as the file's very
 first item. Anywhere else a bare docstring documents nothing and is
 rejected. A docstring before a top-level DECLARATION is parseable (grammar
@@ -275,14 +274,20 @@ Docstrings are inert to execution and to the export surface.
 
 (23) Work, clockwork, and class bodies                    [REJECT, PARTIAL]
 -----------------------------------------------------------------------------
-The D-25/D-26 slice. CHECKED NOW: every "exit:" names a signal the
-enclosing panel declares, and every self-declared signal is emitted by at
-least one exit: (LANGUAGE 12.4, both directions, collected by full
-structural descent); "tick:" is lawful only inside a clockwork with a
-ticks: section (LANGUAGE 13.3); inside a work body the reactive lvalue
-qualification (SEMANTICS 9) does not apply -- targets are the panel's
-ports and body locals, bare names. DEFERRED, marked here so silence never
-passes for law: definite assignment of gives-ports at give: (12.4);
+The D-25/D-26 slice, re-spoken over the flat panel (R-41). CHECKED NOW:
+every variant-carrying "exit" names a signal the enclosing panel
+declares, and every self-declared signal is emitted by at least one
+exit (LANGUAGE 12.4, both directions, collected by full structural
+descent) -- a BARE "exit;" (R-41.7, the nothing-more egress) names no
+variant and passes, its lawfulness in plain works an OPEN fork; "tick"
+is lawful only inside a clockwork with an out: section (LANGUAGE 13.3);
+"give" is UNLAWFUL in a clockwork, and in a work its port list must
+name the panel's out: ports -- each exactly once, none foreign, none
+missing, and in DECLARATION ORDER (name, arity, and order -- the order
+ruling: one order everywhere; the bundle leaves in that order, 12.5); inside a work body the reactive lvalue qualification
+(SEMANTICS 9) does not apply -- targets are the panel's ports and body
+locals, bare names. DEFERRED, marked here so silence never passes for
+law: definite assignment of out: ports at give (12.4);
 handler exhaustiveness and dead-arm detection over the callee's signal
 set (12.6); the same-type output rule and visible-discard obligation
 (12.5); binding-head shadowing by port names inside work bodies; the
@@ -305,8 +310,9 @@ D-27. A class body's semi-declared member work ('name : work', empty
 panel, no body) MUST be completed by a top-level '+class.ext : work(...)'
 definition; a '+' completion MUST complete a semi-declared member of an
 EXISTING class; the marker/panel agreement of LANGUAGE 11.3 is checked
-over TYPED entries -- a '+' completion's gives:, a '-' completion's
-takes:, must name the class (untyped sections defer, PARTIAL). At most
+over TYPED CUSTODY entries -- a '+' completion's out:, a '-'
+completion's in: (a 'known:' view is never the product nor the debt,
+R-41.1), must name the class (untyped sections defer, PARTIAL). At most
 one '-class' per class -- held by declare's duplicate law (the qualified
 name (class, '-') collides), not re-checked here. A '-' completion with a
 signals: section is REJECTED unless it carries the EXPLICIT flag '()'
@@ -336,7 +342,7 @@ boundaries.
 R-37. THE LAW, ratified now; the CHECKER awaits type flow. A class whose
 disposal carries the explicit flag ('-class() : work(...)') is EXPLICIT:
 its destruction is never automatic -- every end is written with
-'destruct: <object>() (; | else: { arms })', a normal work call whose
+'destruct <object>() (; | else: { arms })', a normal work call whose
 signals the site answers. The compiler owes three path checks over
 explicit classes:
   (i)   every had local of the class is either given or destructed
@@ -346,7 +352,7 @@ explicit classes:
   (iii) an aggregate having such a member explicitly destructs it in its
         disposal work.
 Non-explicit objects discharge automatically (and their disposal cannot
-signal, SEMANTICS 25). CHECKED NOW: 'destruct:' is lawful only inside
+signal, SEMANTICS 25). CHECKED NOW: 'destruct' is lawful only inside
 work/clockwork bodies (an automatic context cannot answer a disposal);
 the statement parses with its handler; the explicit flag lifts the
 no-signals rejection. DEFERRED: the three path checks entire (type
@@ -357,16 +363,33 @@ the wait construct at destruct sites (the register's D-2 family).
 
 (28) Nothing and knownness                                [REJECT, PARTIAL]
 -----------------------------------------------------------------------------
-R-38. Inside work bodies: the knows:-names are the KNOWN set (potentially
-Nothing); everything else in frame is HAD (never Nothing, by 0.5's
-construction). CHECKED NOW, three rejections: (a) an operation (any
+R-38, surface per R-41. Inside work bodies: the 'known:'-marked in:
+names are the KNOWN set (potentially Nothing), and a 'known:'-marked
+binding SITE (R-41.2) joins it -- knownness propagates without gating,
+the gates keep firing at the OPERATION; everything else in frame is HAD
+(never Nothing, by 0.5's construction). The law is ALWAYS ACTIVE and
+FLOW-SENSITIVE (ruled): the checker complains ONLY about UNGATED access
+-- where the flow makes Nothing impossible (a dominating gate narrowed
+the name), the access is fine; no mention-gating, no activation switch.
+GATE EQUIVALENCE (ruled): 'm != Nothing', 'm != 0', and bare 'm' are
+ONE gate (Nothing is the absent value, zero its numeric face; at
+runtime Nothing compares as 0 and reads false); the '=='-forms narrow
+the else-side likewise.
+The site-vs-panel AGREEMENT law is
+RULED: known and had are part of the TYPE -- each binding target's site
+marker must match the corresponding out: entry's marker, both
+directions, targets against outs in declaration order (12.5); checked
+where the callee resolves here (top-level works, selector-resolved
+overloads; the rest defers to the type document). Corollary (ruled):
+NOTHING CAN NEVER BE GIVEN -- giving moves custody, a known is never
+had, so 'give' on a known rejects. CHECKED NOW, three rejections: (a) an operation (any
 BinOp operand other than a Nothing-compare) on an un-narrowed known;
 (b) a had holder receiving an un-narrowed known; (c) the Nothing literal
 assigned to a had holder. Nothing-compares ('k == Nothing' / '!=', either
 operand order) are always lawful -- they ARE the gates. NARROWING, two
 recognized shapes over exact bare-name gates: a '!= Nothing' condition
 narrows its then-block ('== Nothing' its else-block); an '== Nothing'
-then-block that DIVERGES (last statement exit: or give:, no else:)
+then-block that DIVERGES (last statement exit or give, no else:)
 narrows the rest of the body -- the initial-gate idiom. ACTIVATION BY MENTION
 (PARTIAL, flagged fork): the checks run in bodies that speak of Nothing
 anywhere (a gate, a compare, the literal); silent bodies keep pre-R-38
@@ -382,13 +405,13 @@ document's chapter.
 
 (29) The two label accounts                                [REJECT, PARTIAL]
 -----------------------------------------------------------------------------
-B-1/R-39. Bare ':label:' is the DEAD ADDRESS: dropto:'s only lawful
+B-1/R-39. Bare ':label:' is the DEAD ADDRESS: dropto's only lawful
 target, drop-throughable; the forward-only law (7c) holds by position in
 reactive AND work bodies (work bodies now assemble their outermost
 address list and thread it through the walk). ':label: => { ... }' is
-the CATCH REGION: invisible to dropto: (excluded from the address list),
+the CATCH REGION: invisible to dropto (excluded from the address list),
 SKIPPED by normal flow at run time, its interior walked by every check,
-its exit:-signals counted toward 12.4's emitted set. DEFERRED: elseto:
+its exit-signals counted toward 12.4's emitted set. DEFERRED: elseto:
 routing into regions (the build's next station); region placement laws
 (tail-position?) ride that build.
 
@@ -396,14 +419,49 @@ routing into regions (the build's next station); region placement laws
 (30) Have nothing after give or destruct                  [REJECT, PARTIAL]
 -----------------------------------------------------------------------------
 R-40. Upon give, the giver's have-relationship becomes HAVE NOTHING; the
-same upon destruct:. Any later use of the dead name on that path --
+same upon destruct. Any later use of the dead name on that path --
 operand, copy, acquaintance -- REJECTS: the name knows nothing of
 existence (HAVE_KNOW_BE (2)). CHECKED NOW: the destruct-half over work
 bodies, path-sensitively (branch-local deaths do not leak out of their
-arm; joins are conservative toward NOT-dead and defer). DEFERRED: the
-give-half (rides the call-site give marker); branch joins (destructed in
-ALL arms => dead after); reactive contexts. The KNOWING MODEL (one hub
+arm; joins are conservative toward NOT-dead and defer). RULED, awaiting
+its surface: the give leaves Nothing behind -- the giver holds Nothing
+in the given thing's place, access to the given is impossible, and
+NOTHING CAN NEVER BE GIVEN (a known is never had, so never given); the
+checks land with the written give sites (the call-site give marker and
+the aggregation literal; the 'for: ... from: give' flavour was retired
+by ruling -- from: takes the wound generator plainly). DEFERRED
+further: branch joins (destructed in ALL arms => dead after); reactive
+contexts. The KNOWING MODEL (one hub
 per known object: pointer + knower count; destruction zeroes the
 pointer, all knowers read Nothing; the hub re-usable at zero knowers)
 binds the EMITTER and is recorded in HAVE_KNOW_BE (3) -- SEMANTICS 28's
 gates are its read-side.
+
+
+(31) The pipe laws                            [REJECT, PARTIAL, pipe ruling]
+-----------------------------------------------------------------------------
+LANGUAGE 15. Four laws, one tag [PIPE]:
+
+  (i)   GROUP LAW: a channel group's head stands in the reactor's in:
+        panel; '.' (the self channel) is always lawful. Ungrouped
+        causalities are lawful with at most ONE in-channel (they belong
+        to it; with none declared, to the self channel); ungrouped
+        beside SEVERAL in-channels REJECTS.
+  (ii)  ROUTED EMISSION: a spawn's 'to <channel>' names an out: channel
+        of the enclosing reactor; anything else REJECTS.
+  (iii) WIRE PLACEMENT: a wire is a WORK statement (WIRING IS WORK);
+        in a reactive command-block it REJECTS. Both ends resolve as
+        body locals.
+  (iv)  WIRE ENDS (PARTIAL): where an end's construction is visible in
+        the SAME body ('x = <reactor>(...)' above the wire), the named
+        channel must stand in the source's out: AND the destination's
+        in:; the plain arrow resolves to the source's SINGLE out:
+        channel -- several or none REJECT (interim law, flagged). A
+        feeder end's channel surface is provided and skips its panel
+        side. Cross-body typing -- an end arriving through a panel, a
+        member, or a give -- joins the type document (DEFERRED).
+
+The provided FEEDER kind 'script' resolves without declaration (an
+event source, LANGUAGE 15.6); its siblings and the drain are unbuilt.
+The SEMANTICS 1 deactivable table awaits its reactor-row re-speak
+(activation machinery died; OPEN (8)).

@@ -1,3 +1,7 @@
 ## faulty rule file: the first causality lacks its terminating ';'
-button_pressed => light_on
-MOTOR_ON => stop;
+R : reactor {
+    B : behavior {
+        button_pressed => light_on
+        MOTOR_ON => stop;
+    }
+}

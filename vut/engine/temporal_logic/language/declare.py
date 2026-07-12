@@ -22,7 +22,7 @@ and no downstream unit inherits cascade artefacts.
 
 THE EXPORT SURFACE (what is published, and what deliberately is not):
 
-    published    Character / Aspect / Behavior   signature name, its kind
+    published    Reactor (reactor / reactor++)  signature name, its kind
                  DefCause                        signature name, kind 'cause'
                  Declaration                     member name, kind 'declaration'
                  Import                          alias name, kind 'import'
@@ -56,13 +56,18 @@ from . import ast_nodes as A
 @dataclass(frozen=True)
 class Member:
     """RETURN: Member, one name of a definition's DECLARED surface: a
-              signature parameter ('param', with the D-11 default flag) or a
-              has: member ('member', never defaulted) -- the name and two
-              booleans a caller-side check needs, nothing of any body.
+              signature parameter ('param', with the D-11 default flag), a
+              body member declaration ('member', never defaulted), or a
+              panel PORT registered by direction ('in' / 'out', R-41.1) --
+              the name, the category, the default flag, and the RELATION as
+              written ('known' explicit, 'had' the ground state) -- the
+              HOMOGENEITY RULING: one marker-admitting entry shape in
+              every parens, params included.
     """
     name:        str
-    category:    str                    # 'param' | 'member'
+    category:    str                    # 'param' | 'member' | 'in' | 'out'
     has_default: bool = False
+    relation:    str  = ""              # 'known' | 'had' | '' (R-41.1/3)
 
 
 @dataclass(frozen=True)
@@ -208,12 +213,9 @@ def _declared_name(item):
               kind, for every publishing construct.
               (None, None), for a construct that declares nothing (causality).
     """
-    if isinstance(item, A.Character):
-        return item.signature.name, "character"
-    if isinstance(item, A.Aspect):
-        return item.signature.name, "aspect"
-    if isinstance(item, A.Behavior):
-        return item.signature.name, "behavior"
+    if isinstance(item, A.Reactor):
+        return item.signature.name, \
+               "reactor" if item.mode == "single" else "reactor++"
     if isinstance(item, A.DefCause):
         return item.signature.name, "cause"
     if isinstance(item, A.ClassDef):
@@ -231,8 +233,10 @@ def _declared_name(item):
 
 def _member_surface(item):
     """RETURN: tuple, the item's declared Member surface in declaration order
-              -- signature parameters (with the D-11 default flag), then has:
-              members -- for every definition kind and named cause; empty for
+              -- signature parameters (with the D-11 default flag), body
+              member declarations (relation from the written marker, having
+              implicit), then panel PORTS by direction+relation (R-41.1) --
+              for every definition kind and named cause; empty for
               declarations, imports, and anything without a surface.
     """
     members = []
@@ -241,9 +245,19 @@ def _member_surface(item):
         for arg in signature.params:
             members.append(Member(name=arg.name.segments[0],
                                   category="param",
-                                  has_default=not _is_absent(arg.default)))
-    for decl in getattr(item, "has", ()):
-        members.append(Member(name=decl.name.segments[0], category="member"))
+                                  has_default=not _is_absent(arg.default),
+                                  relation=arg.marker or "had"))
+    for decl in getattr(item, "members", ()):
+        members.append(Member(name=decl.name.segments[0], category="member",
+                              relation=decl.marker or "had"))
+    panel = getattr(item, "panel", None)
+    if panel is not None:
+        for direction, section in (("in", panel.ins), ("out", panel.outs)):
+            for entry in section:
+                members.append(Member(
+                    name=entry.name.segments[0], category=direction,
+                    has_default=not _is_absent(entry.default),
+                    relation=entry.marker or "had"))
     return tuple(members)
 
 

@@ -3,12 +3,14 @@
 
    A class lists its construction works BRIEFLY (semi-declaration); the
    complete definitions follow at top level, marked '+'. The marker asserts
-   what the panel must show: a '+' completion GIVES the class -- "a work
-   that gives and signals" IS the definition of a constructor (R-30/R-31).
-   'Class.from' is the canonical extension by convention (R-32).
+   what the panel must show: a '+' completion carries the class on an out:
+   custody entry -- "a work that gives and signals" IS the definition of a
+   constructor (R-30/R-31). 'Class.from' is the canonical extension by
+   convention (R-32).
    =========================================================================== }
 
-temperature : class has: { celsius: float; } {
+temperature : class {
+    celsius: float;
     from #{celsius -> a reading; fahrenheit -> converted} : work
 }
 
@@ -16,31 +18,44 @@ temperature : class has: { celsius: float; } {
    input names differ, and the call leads with that name -- the SELECTOR.
    Construction can fail: the panel says so, the call site must answer. }
 
-+temperature.from : work(knows: celsius
-                         gives: t : temperature
++temperature.from : work(in: celsius
+                         out: t : temperature
                          signals: beneath_absolute_zero) {
-    if: celsius < -273.15 { exit: beneath_absolute_zero; }
+    if: celsius < -273.15 { exit beneath_absolute_zero; }
     t = celsius;
-    give:                       # the gives-bundle leaves implicitly
+    give t;                     # the out-bundle leaves, named
 }
 
-+temperature.from : work(knows: fahrenheit
-                         gives: t : temperature
++temperature.from : work(in: fahrenheit
+                         out: t : temperature
                          signals: beneath_absolute_zero) {
-    if: fahrenheit < -459.67 { exit: beneath_absolute_zero; }
+    if: fahrenheit < -459.67 { exit beneath_absolute_zero; }
     t = (fahrenheit - 32) * 5 / 9;
-    give:
+    give t;
 }
 
-Demo : behavior has: { room: float; oven: float; } {
+Demo : reactor(in: cmd) {
+    room: float; oven: float;
+  show : behavior {
     SHOW => {
         # the selector says WHICH construction is meant -- readable at the
         # point of use; the else: block answers the declared fault set.
-        b.room = temperature.from(celsius = 21) else: {
-            beneath_absolute_zero => { b.room = 0; }
+        .room = temperature.from(celsius = 21) else: {
+            beneath_absolute_zero => { .room = 0; }
         }
-        b.oven = temperature.from(fahrenheit = 392) else: {
+        .oven = temperature.from(fahrenheit = 392) else: {
             beneath_absolute_zero => ;      # the written shrug
         }
     }
+}
+}
+
+#{ The demonstration runs as a small PLANT (pipe ruling): a script feeder
+   wired to the Demo reactor; the harness replays SHOW. }
+
+plant : work() {
+    f = script("SHOW");
+    d = Demo();
+    f ----> d;
+    give;
 }

@@ -1,8 +1,16 @@
-polling : behavior {
-    ~ENTRY => poll() every: 0.5 as: poller;
-    mute =x=> poller;
+station : reactor++(in: cmd) {
+    polling : behavior {
+        ~ENTRY => poll() every: 0.5 as: poller;
+        mute =x=> poller;
+    }
+    master : behavior {
+        start => polling;
+        stop =x=> polling;
+    }
 }
-master : behavior {
-    start => polling;
-    stop =x=> polling;
+plant : work() {
+    f = script("start; mute; start; stop");
+    s = station();
+    f ----> s;
+    give;
 }

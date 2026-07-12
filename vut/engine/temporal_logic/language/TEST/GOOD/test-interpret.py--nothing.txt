@@ -1,11 +1,32 @@
 
 --- Nothing (run-nothing.vut) ---
-enter  B
-event  GO
-set    out = 15 -> 15
-bind   b.a = 15
+run    plant
+wind   f : script
+make   r : runner
+enter  r.B
+wire   f --[cmd]--> r
+feed   f GO
+event  r.cmd GO
+set    result = 15 -> 15
+bind   .a = 15
 signal unknown()
-set    b.b = -1 -> -1
+set    .b = -1 -> -1
 set    fallback = 7 -> 7
 set    chosen = 7 -> 7
-set    b.c = 7 -> 7
+set    .c = 7 -> 7
+set    m = 8 -> 8
+set    fallback = 3 -> 3
+set    result = 8 -> 8
+set    .d = 8 -> 8
+set    view = 4 -> 4
+set    m = 4 -> 4
+set    fallback = 0 -> 0
+set    r = 4 -> 4
+set    .e = 4 -> 4
+set    fallback = 7 -> 7
+set    chosen = 9 -> 9
+set    m = 9 -> 9
+set    r = 9 -> 9
+set    .f = 9 -> 9
+set    r = 5 -> 5
+set    .g = 5 -> 5

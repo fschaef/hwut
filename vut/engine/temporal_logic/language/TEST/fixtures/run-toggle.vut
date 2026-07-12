@@ -1,7 +1,18 @@
 hot : cause(threshold) temp_high when: e.value > threshold;
-climate : behavior has: { target: float; on: bool; } {
-    ac_button when: b.on == false => { b.on = true; b.target = 21.0; }
-    ac_button when: b.on == true  => { b.on = false; }
-    dial_turned => { b.target += e.delta; }
-    hot(90) => alarm;
+climate : reactor(in: cmd) {
+    target: float; on: bool;
+    control : behavior {
+        ac_button when: .on == false => { .on = true; .target = 21.0; }
+        ac_button when: .on == true  => { .on = false; }
+        dial_turned => { .target += e.delta; }
+        hot(90) => alarm;
+    }
+}
+plant : work() {
+    f = script("ac_button; ac_button; ac_button;
+                dial_turned(delta = 2.5);
+                temp_high(value = 95.0); temp_high(value = 50.0)");
+    c = climate();
+    f ----> c;
+    give;
 }

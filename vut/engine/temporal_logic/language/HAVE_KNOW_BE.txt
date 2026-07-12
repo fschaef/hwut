@@ -11,29 +11,33 @@ Settled by R-28..R-40; open forks live in OPEN.txt.
 "is" is the relation of identity: a rule's product IS-A its product type
 (A-11); a class IS what its is: line says, transitively. Being is not a
 lifecycle event -- it is true for the whole life, from the constructor's
-give: to the disposal work's last statement. Identity never dangles: no
+give to the disposal work's last statement. Identity never dangles: no
 object outlives its being.
 
 (2) HAVE -- custody and debt
 ----------------------------
 Having is EXISTENCE-BEARING: the had thing exists, always (0.5 -- Nothing
-is never had). Custody begins at a constructor's gives-port, moves WHOLE
+is never had). Custody begins at a constructor's out: custody entry
+(the flat panel of LANGUAGE 12.2, R-41.1), moves WHOLE
 along give-steps (one object, one debt, one haver at a time), and ends in
 exactly one of two ways: GIVEN onward, or DESTRUCTED (0.3). A local
-variable is had by the work that has it: the terminal (give:/exit:) ends
+variable is had by the work that has it: the terminal (give/exit) ends
 the having.
 
 THE GIVE LEAVES NOTHING BEHIND. Upon give, the giver's have-relationship
 becomes HAVE NOTHING: the name is dead. An immediate 'know that' -- any
 attempt to keep an acquaintance with the given-away object through the
 dead name -- is FORBIDDEN and rejected on the path (SEMANTICS 30; today's
-checker covers the destruct-half: a name destructed on a path rejects at
-every later use; the give-half joins when the call-site give marker
-lands). The same holds after destruct:: the name knows nothing of
-existence.
+checker covers the destruct-half -- a name destructed on a path rejects
+at every later use; the give-half joins when the written give sites
+land: the call-site give marker and the aggregation literal. The LAW
+stands ruled: the give leaves Nothing behind -- the giver holds Nothing
+in the given thing's place, access to the given is impossible, and
+NOTHING CAN NEVER BE GIVEN, for a known is never had). The same holds
+after a destruct: the name knows nothing of existence.
 
 EXPLICIT CLASSES ('-class()', R-37): destruction is never automatic;
-every end is written 'destruct: <object>()' and every disposal signal
+every end is written 'destruct <object>()' and every disposal signal
 answered at its site. The compiler owes the three path checks of
 SEMANTICS 27: (i) every had local given or destructed on all paths;
 (ii) containers destruct remaining elements upon their own destruction;
@@ -74,7 +78,7 @@ path -- the model and the checker are two faces of one law.
     give-steps              custody moves whole; old names die (HAVE
                             NOTHING; knowing-through-them rejected)
     know                    hubs open; knowers count up and down freely
-    destruct: x() / auto    the end: explicit (written, answerable) or
+    destruct x() / auto    the end: explicit (written, answerable) or
                             automatic (silent, total); hubs zero their
                             pointer -- knowers see Nothing
     hub reuse               when the last knower departs

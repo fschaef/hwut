@@ -1,23 +1,65 @@
-lookup : work(knows: cache, key
-              gives: out
+lookup : work(in: known: cache, known: key
+              out: result
               signals: unknown) {
-    if: cache == Nothing { exit: unknown; }
-    if: key == Nothing { exit: unknown; }
-    out = cache + key;
-    give:
+    if: cache == Nothing { exit unknown; }
+    if: key == Nothing { exit unknown; }
+    result = cache + key;
+    give result;
 }
-pick : work(knows: preferred
-            gives: chosen) {
+pick : work(in: known: preferred
+            out: chosen) {
     fallback = 7;
     if: preferred != Nothing { chosen = preferred; }
     else: { chosen = fallback; }
-    give:
+    give chosen;
 }
-B : behavior has: { a: float; b: float; c: float; } {
+relay : work(in: known: source
+             out: result) {
+    known: m = source;
+    fallback = 3;
+    if: m != Nothing { result = m; }
+    else: { result = fallback; }
+    give result;
+}
+peek : work(in: a out: known: view) {
+    view = a;
+    give view;
+}
+consume : work(in: a out: r) {
+    known: m = peek(a);
+    fallback = 0;
+    if: m != Nothing { r = m; }
+    else: { r = fallback; }
+    give r;
+}
+adopt : work(in: a out: r) {
+    known: m = pick(a);
+    if: m { r = m; }
+    else: { r = 0; }
+    give r;
+}
+zerogate : work(in: known: k out: r) {
+    if: k != 0 { r = k; }
+    else: { r = 5; }
+    give r;
+}
+runner : reactor(in: cmd) {
+    a: float; b: float; c: float; d: float; e: float; f: float; g: float;
+  B : behavior {
     GO => {
-        b.a = lookup(10, 5) else: { unknown => { b.a = -1; } }
-        b.b = lookup(Nothing, 5) else: { unknown => { b.b = -1; } }
-        b.c = pick(Nothing);
+        .a = lookup(10, 5) else: { unknown => { .a = -1; } }
+        .b = lookup(Nothing, 5) else: { unknown => { .b = -1; } }
+        .c = pick(Nothing);
+        .d = relay(8);
+        .e = consume(4);
+        .f = adopt(9);
+        .g = zerogate(Nothing);
     }
 }
-GO => B;
+}
+plant : work() {
+    f = script("GO");
+    r = runner();
+    f ----> r;
+    give;
+}

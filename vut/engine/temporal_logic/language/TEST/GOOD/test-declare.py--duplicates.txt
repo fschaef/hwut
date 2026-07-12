@@ -1,7 +1,7 @@
 
 --- duplicate declarations rejected, first wins (declare-dup.vut) ---
 exports: 3
-  b1                             behavior     scope=-
+  b1                             reactor      scope=-
   speed                          declaration  scope=-
   speed.x                        declaration  scope=speed
 diagnostics: 2  (has_fatal: True)

@@ -156,13 +156,33 @@ class Effect(Node):
 
 @dataclass(frozen=True)
 class Spawn(Node):
-    """A spawned call (R-15): optionally recurring ('every' period, NodeAbsent
-    when one-shot) and optionally named ('handle' a DeclarationLeaf, NodeAbsent
-    when anonymous; entity-local per SEMANTICS 11).
+    """A spawned call (R-15): optionally ROUTED ('to_channel' the named
+    out-channel of the enclosing reactor, a DeclarationLeaf-free plain
+    token leaf -- NodeAbsent when suffix-less: the send FANS to all
+    out-channels plus self, pipe ruling), optionally recurring ('every'
+    period, NodeAbsent when one-shot) and optionally named ('handle' a
+    DeclarationLeaf, NodeAbsent when anonymous; entity-local per
+    SEMANTICS 11).
     """
-    call:   Node
-    every:  object                      # Node | NodeAbsent
-    handle: object                      # DeclarationLeaf | NodeAbsent
+    call:       Node
+    every:      object                  # Node | NodeAbsent
+    handle:     object                  # DeclarationLeaf | NodeAbsent
+    to_channel: object = NodeAbsent     # ReferenceLeaf | NodeAbsent
+
+
+@dataclass(frozen=True)
+class Wire(Node):
+    """A wire statement of a work body (pipe ruling: WIRING IS WORK):
+    'source ----> dest;' / 'source --[ channel ]--> dest;' -- creates a
+    PIPE: the destination subscribes to the source's out-channel.
+    'channel' is the written name, or '' for the plain arrow (elaborate
+    resolves it to the source's single out-channel where the type is
+    visible; flagged open beyond that). 'source'/'dest' are
+    ReferenceLeaf heads over bare locals.
+    """
+    source:  ReferenceLeaf
+    dest:    ReferenceLeaf
+    channel: str = ""
 
 
 @dataclass(frozen=True)
@@ -204,53 +224,68 @@ class NamedArg(Node):
 
 @dataclass(frozen=True)
 class DeclArg(Node):
-    """One declared parameter 'name [: type] [= default]' of a signature (D-11,
-    Python behaviour): 'type_' NodeAbsent means float (LANGUAGE 2.1);
-    'default' NodeAbsent means the parameter is REQUIRED at every call.
+    """One declared entry '[known:|had:] name [: type] [= default]' of a
+    signature or panel (D-11, R-41.1): 'type_' NodeAbsent means float
+    (LANGUAGE 2.1); 'default' NodeAbsent means the entry is REQUIRED at
+    every call. 'marker' carries the relation as WRITTEN: 'known' (a view),
+    'had' (the optional visibility marker), or '' (unmarked -- having is
+    implicit, custody is the ground state, LANGUAGE 0.3).
     """
     name:    DeclarationLeaf
     type_:   object                     # Node | NodeAbsent
     default: object                     # Node | NodeAbsent
+    marker:  str = ""                   # 'known' | 'had' | '' (R-41.1)
 
 
 @dataclass(frozen=True)
-class Character(Node):
-    """A character definition (R-7): concurrent aspects via has:. 'abstract'
-    per R-10 ('~'); 'is_' the NodeList of inherited references (empty when
-    none); 'has' the NodeList of declarations (empty when none).
+class Reactor(Node):
+    """A reactor definition (reactor ruling): a CLASS with behavior
+    content -- and an event recipient. 'mode' is 'single' (the kind word
+    'reactor': a STATE MACHINE, one behavior active) or 'multi'
+    ('reactor++': a MODE GROUP, several active at once). 'members'/'works'
+    are the class-shaped body items; 'behaviors' the behavior members.
+    State lives HERE: behaviors own no members -- their code reaches the
+    reactor through the bare-dot self binding ('.x'). 'ins'/'outs' name
+    the reactor's CHANNELS (pipe ruling: publish/subscribe objects the
+    reactor HAS, created and destructed with it) -- tuples of
+    DeclarationLeaf, empty when the panel or a section is absent.
     """
-    abstract:  bool
     signature: Signature
+    mode:      str
     is_:       NodeList
-    has:       NodeList
+    members:   NodeList
+    works:     NodeList
+    behaviors: NodeList
+    ins:       tuple = ()
+    outs:      tuple = ()
     doc:       object = NodeAbsent      # preceding docstring (D-18)
 
 
 @dataclass(frozen=True)
 class ClassDef(Node):
-    """A class definition (R-29, LANGUAGE 11): a named composite kind of
-    persistent object -- is: inheritance, has: custody members, knows: view
-    members, and a body of MEMBER WORKS. Role by panel (R-30): a member work
-    whose gives: names the class is its construction work; one whose takes:
-    names it is its disposal work.
+    """A class definition (R-29, LANGUAGE 11; R-41.3): a named composite kind
+    of persistent object -- is: inheritance, and ONE body brace whose items
+    are member declarations ('[known:|had:] name : type;', having implicit)
+    and member works, interleaving freely. Role by panel (R-30/R-41.1): a
+    member work whose out: names the class is its construction work; one
+    whose in: names it is its disposal work.
     """
     signature: Signature
     is_:       NodeList
-    has:       NodeList
-    knows:     NodeList
+    members:   NodeList
     works:     NodeList
     doc:       object = NodeAbsent
 
 
 @dataclass(frozen=True)
 class Panel(Node):
-    """A five-section panel (D-25, LANGUAGE 12.2/13.2): each section a
-    NodeList of decl-args (signals: of SignalDecl), empty when absent.
+    """The flat, direction-sectioned panel (R-41.1, LANGUAGE 12.2/13.2):
+    'ins'/'outs' the in:/out: entries (DeclArg, each carrying its relation
+    marker -- unmarked = had, custody the ground state), 'signals' the
+    SignalDecl fault set; each a NodeList, empty when absent.
     """
-    knows:   NodeList
-    takes:   NodeList
-    gives:   NodeList
-    ticks:   NodeList
+    ins:     NodeList
+    outs:    NodeList
     signals: NodeList
 
 
@@ -293,8 +328,11 @@ class RelContainer(Node):
 
 @dataclass(frozen=True)
 class Give(Node):
-    """The 'give:' success terminal (LANGUAGE 12.4, R-37): the gives-bundle
-    leaves implicitly -- the keyword names the act."""
+    """The 'give: [port (, port)*]' success terminal (LANGUAGE 12.4, R-37,
+    R-41.4): 'ports' the named leaving out-ports as written (ReferenceLeafs,
+    empty when bare) -- elaborate checks the list against the panel's out:
+    section; the out-bundle leaves in declaration order (12.5)."""
+    ports: NodeList = ()
 
 
 @dataclass(frozen=True)
@@ -313,8 +351,12 @@ class Tick(Node):
 
 @dataclass(frozen=True)
 class ExitSignal(Node):
-    """An 'exit: <variant>[(payload)];' fault egress (LANGUAGE 12.4)."""
-    variant: ReferenceLeaf
+    """An 'exit: [<variant>[(payload)]];' fault egress (LANGUAGE 12.4,
+    R-41.7): 'variant' NodeAbsent is the BARE egress -- the nothing-more
+    exhaustion signal of a clockwork (catcher-mandatory; the built-in
+    variant's name in the puller's match domain stays 'finished',
+    rename flagged)."""
+    variant: object                     # ReferenceLeaf | NodeAbsent
     args:    object                     # NodeList | NodeAbsent
 
 
@@ -345,29 +387,30 @@ class SignalDecl(Node):
 
 
 @dataclass(frozen=True)
-class Aspect(Node):
-    """An aspect definition (R-7, R-25): governs its one active behaviour; the
-    body is a NodeList of behaviours. 'signals' is the panel's declared fault
-    set (D-23) -- recorded here; its checks land with the work construct.
-    """
-    abstract:  bool
-    signature: Signature
-    is_:       NodeList
-    has:       NodeList
-    body:      Node
-    signals:   NodeList = ()            # panel signals: section (D-23)
-    doc:       object = NodeAbsent      # preceding docstring (D-18)
+class Behavior(Node):
+    """A behavior member of a reactor (reactor ruling): ONLY causalities
+    -- no members, no works, no parameters, no instances; it exists
+    nowhere but inside a reactor body. Its code's self is the REACTOR.
+    'causalities' are the UNGROUPED ones (lawful exactly when at most
+    one in-channel stands in the panel -- the group law, elaborate);
+    'groups' the channel groups (pipe ruling), source order kept within
+    each tuple."""
+    signature:   Signature
+    causalities: NodeList
+    groups:      tuple = ()
+    doc:         object = NodeAbsent    # preceding docstring (D-18)
 
 
 @dataclass(frozen=True)
-class Behavior(Node):
-    """A behaviour definition (R-7): aggregates causalities."""
-    abstract:    bool
-    signature:   Signature
-    is_:         NodeList
-    has:         NodeList
+class ChannelGroup(Node):
+    """One receive-routing group of a behavior body (pipe ruling):
+    '<channel>: { causality+ }' -- 'channel' the in-channel name, or '.'
+    for the SELF channel (the bare-dot binding as group head); the
+    grouped causalities fire only for events delivered on that channel.
+    """
+    channel:     str
     causalities: NodeList
-    doc:         object = NodeAbsent    # preceding docstring (D-18)
+    begin:       int = 0
 
 
 # == command block (R-6, R-13, R-14) ==========================================
@@ -385,13 +428,24 @@ class Mutation(Node):
     """One mutation statement (R-13 leaf, D-26): 'lvalues op rhs' closed by
     ';' or by an aware handler. 'extra_lvalues' are the assignment form's
     further targets (multi-output work call; empty otherwise, pass-2);
-    'handler' the else:-block or NodeAbsent.
+    'handler' the else:-block or NodeAbsent. A target may arrive wrapped in
+    KnownSite (R-41.2: the site marker).
     """
-    lvalue: DataAccess
+    lvalue: Node
     op:     str
     rhs:    Node
     extra_lvalues: NodeList = ()
     handler: object = NodeAbsent
+
+
+@dataclass(frozen=True)
+class KnownSite(Node):
+    """A 'known:'-marked binding target (R-41.2, site marking): the target
+    receives a VIEW -- one word, two positions (panel entry and site). '='
+    stays relation-neutral; marker and panel carry the relation. The
+    site-vs-panel agreement law is flagged open: the marker is recorded,
+    no check invented."""
+    target: Node
 
 
 @dataclass(frozen=True)
@@ -443,15 +497,15 @@ class Wildcard(Node):
 @dataclass(frozen=True)
 class For(Node):
     """The bounded collection loop (R-13, D-16, D-26): 'for: var in: source'
-    over a collection, or 'for: var from: [give] source' consuming a
-    clockwork (LANGUAGE 13.5). 'pulls' marks the from:-arm; 'give' the
-    custody flavour; 'handler' the trailing else:-block or NodeAbsent.
+    over a collection, or 'for: var from: source' consuming a wound
+    clockwork (LANGUAGE 13.5; the give flavour retired by ruling).
+    'pulls' marks the from:-arm; 'handler' the trailing else:-block or
+    NodeAbsent.
     """
     var:    DeclarationLeaf
     source: Node
     block:  CommandBlock
     pulls:  bool = False
-    give:   bool = False
     handler: object = NodeAbsent
 
 
@@ -516,14 +570,18 @@ class ExitLabel(Node):
 # == declarations and types (R-19) ============================================
 @dataclass(frozen=True)
 class Declaration(Node):
-    """A 'name: type;' member declaration (has: block or top level; D-5: no
-    parameter list). 'doc' exists only because D-19's factored head makes a
-    preceding docstring PARSEABLE on a top-level declaration; the placement
-    is unlawful (LANGUAGE 1.2) and declare rejects it (SEMANTICS 22, D-20).
+    """A '[known:|had:] name: type;' member declaration (class-shaped body
+    or top level; D-5: no parameter list). 'marker' carries the relation as
+    WRITTEN (R-41.3): 'known' (a view member), 'had' (optional visibility
+    marker), or '' (unmarked -- having implicit). 'doc' exists only because
+    D-19's factored head makes a preceding docstring PARSEABLE on a
+    top-level declaration; the placement is unlawful (LANGUAGE 1.2) and
+    declare rejects it (SEMANTICS 22, D-20).
     """
-    name:  DeclarationLeaf
-    type_: Node
-    doc:   object = NodeAbsent          # D-20: parseable, rejected in declare
+    name:   DeclarationLeaf
+    type_:  Node
+    marker: str = ""                    # 'known' | 'had' | '' (R-41.3)
+    doc:    object = NodeAbsent         # D-20: parseable, rejected in declare
 
 
 @dataclass(frozen=True)

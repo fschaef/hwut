@@ -40,129 +40,164 @@ from vut.engine.temporal_logic.core.diagnostic import DiagnosticReporter
 # causality ends in ';'.
 # Ordered so the printed report is stable regardless of dict iteration.
 SNIPPETS = [
- ("causality",     "button_pressed => light_on;"),
- ("guarded",       "MOTOR_ON when: c.fuel == 0 => lighten_fuel_missing;"),
+ ("causality",     "R : reactor { B : behavior { button_pressed => light_on; } }"),
+ ("guarded",       "R : reactor { fuel: float; B : behavior {\n"
+                   "    MOTOR_ON when: .fuel == 0 => lighten_fuel_missing;\n} }"),
  ("def_cause",     "OPERATION_IMPOSSIBLE : cause(fuel_limit, battery_limit)\n"
-                   "    MOTOR_ON when: c.fuel <= fuel_limit or c.battery < battery_limit;"),
- ("cause_ref",     "OPERATION_IMPOSSIBLE(0.1, 2) => SIGNAL_REFUSE_OPERATION;"),
- ("behavior",      "ClimateControlWhenActivated : behavior {\n"
-                   "    ac_button_pushed => toggle_compressor;\n"
-                   "    temp_dial_turned => set_target_temperature;\n"
-                   "    fan_dial_turned  => adjust_fan_speed;\n}"),
- ("recurring",     "Polling : behavior {\n"
+                   "    MOTOR_ON when: .fuel <= fuel_limit or .battery < battery_limit;"),
+ ("cause_ref",     "R : reactor { B : behavior {\n"
+                   "    OPERATION_IMPOSSIBLE(0.1, 2) => SIGNAL_REFUSE_OPERATION;\n} }"),
+ ("reactor_single", "ClimateControl : reactor {\n"
+                   "    target: float;\n"
+                   "    control : behavior {\n"
+                   "        ac_button_pushed => toggle_compressor;\n"
+                   "        temp_dial_turned => set_target_temperature;\n"
+                   "        fan_dial_turned  => adjust_fan_speed;\n    }\n}"),
+ ("recurring",     "Station : reactor {\n"
+                   "  Polling : behavior {\n"
                    "    ~ENTRY       => poll_sensors() every: 0.5 as: poller;\n"
-                   "    stop_pressed =x=> poller;\n}"),
- ("aspect",        "MotorActivity : aspect {\n"
-                   "    GENERAL : ~behavior {\n"
-                   "         gas_pedal_release => close_throttle;\n"
-                   "         battery_empty     => close_throttle;\n    }\n"
-                   "    ON : behavior is: GENERAL {\n"
+                   "    stop_pressed =x=> poller;\n  }\n}"),
+ ("state_machine", "MotorActivity : reactor {\n"
+                   "    ON : behavior {\n"
                    "         gas_pedal_push     => open_throttle;\n"
                    "         on_off_button_push => OFF;\n    }\n"
-                   "    OFF : behavior is: GENERAL {\n"
+                   "    OFF : behavior {\n"
                    "         gas_pedal_push     => tone_notify_engine_off;\n"
                    "         on_off_button_push => ON;\n    }\n}"),
- ("character",     "sprite : ~character has: {\n"
+ ("mode_group",    "sprite : reactor++ {\n"
                    "    position:  vec2;\n    speed:     vec2;\n"
-                   "    resources: AspectResources;\n}"),
+                   "    move : behavior { tickle => wiggle; }\n"
+                   "    draw : behavior { frame => blit; }\n}"),
  ("namespace",     "open: graphics.sprites {\n"
-                   "    sprite : ~character has: { position: vec2; }\n}"),
+                   "    sprite : reactor { position: vec2;\n"
+                   "        idle : behavior { poke => wake; } }\n}"),
  ("import",        'import: "lib/physics.vut" as: physics'),
- ("command_block", "TRAVELLED_100KM => {\n"
-                   "    c.fuel -= 8.31;\n"
-                   "    if: c.fuel < 5.0   { c.warn = true; }\n"
-                   "    elif: c.fuel < 20.0 { c.warn = false; }\n"
-                   "    else:               { c.reserve = false; }\n"
-                   "    int: i = 1 .. c.cylinders { c.checks += i; }\n}"),
- ("match",         "X => {\n    match: c.state {\n"
-                   "        case: 3 { c.a = 1; }\n"
-                   "        case: 1 to: 5 { c.b = 2; }\n"
-                   '        case: "ab*" { c.g = 3; }\n'
-                   "        case: _ { c.d = 4; }\n    }\n}"),
- ("for_loop",      "X => { for: v in: c.items { c.sum += v; } }"),
- ("enumeration",   "X => { int: i with: x from: c.items start: 2 { c.sum += i * x; } }"),
- ("exit_region",   "SOMETHING => {\n"
-                   "    c.h = acquire_a();\n"
-                   "    if: not c.h.ok  { dropto: fail; }\n"
-                   "    c.g = acquire_b();\n"
-                   "    if: not c.g.ok  { dropto: free_a; }\n"
-                   "    dropto: done;\n"
-                   "  :free_a:   c.released_a = release_a(c.h);\n"
-                   "  :fail:     c.status = FAILED;\n"
-                   "  :done:\n}"),
- ("comprehension", "X => { c.pp = [ x*y   with: x, y from: pairs ];\n"
-                   "        c.pos = [ x with: x from: xs if: x > 0 ];\n"
-                   "        c.mix = [ x + y with: x from: xs if: x > 0\n"
+ ("command_block", "Car : reactor { fuel: float; warn: bool; reserve: bool;\n"
+                   "  cylinders: float; checks: float;\n"
+                   "  drive : behavior { TRAVELLED_100KM => {\n"
+                   "    .fuel -= 8.31;\n"
+                   "    if: .fuel < 5.0   { .warn = true; }\n"
+                   "    elif: .fuel < 20.0 { .warn = false; }\n"
+                   "    else:               { .reserve = false; }\n"
+                   "    int: i = 1 .. .cylinders { .checks += i; }\n} } }"),
+ ("match",         "R : reactor { state: float; a: float; b: float; g: float; d: float;\n"
+                   "  B : behavior { X => {\n    match: .state {\n"
+                   "        case: 3 { .a = 1; }\n"
+                   "        case: 1 to: 5 { .b = 2; }\n"
+                   '        case: "ab*" { .g = 3; }\n'
+                   "        case: _ { .d = 4; }\n    }\n} } }"),
+ ("for_loop",      "R : reactor { items: list; sum: float;\n"
+                   "  B : behavior { X => { for: v in: .items { .sum += v; } } } }"),
+ ("enumeration",   "R : reactor { items: list; sum: float;\n"
+                   "  B : behavior { X => { int: i with: x from: .items start: 2"
+                   " { .sum += i * x; } } } }"),
+ ("exit_region",   "R : reactor { h: float; g: float; released_a: float; status: float;\n"
+                   "  B : behavior { SOMETHING => {\n"
+                   "    .h = acquire_a();\n"
+                   "    if: not .h.ok  { dropto fail; }\n"
+                   "    .g = acquire_b();\n"
+                   "    if: not .g.ok  { dropto free_a; }\n"
+                   "    dropto done;\n"
+                   "  :free_a:   .released_a = release_a(.h);\n"
+                   "  :fail:     .status = FAILED;\n"
+                   "  :done:\n} } }"),
+ ("comprehension", "R : reactor { pp: list; pos: list; mix: list; nest: list;\n"
+                   "  B : behavior { X => { .pp = [ x*y   with: x, y from: pairs ];\n"
+                   "        .pos = [ x with: x from: xs if: x > 0 ];\n"
+                   "        .mix = [ x + y with: x from: xs if: x > 0\n"
                    "                        with: y from: ys ];\n"
-                   "        c.nest = [ [ a*b with: b from: row ] with: row from: matrix ]; }"),
- ("data_access",   "X => { c.buf[i] = v; c.f = grid[i][j]; c.z = f(x)[0]; }"),
- ("ternary_chain", "X when: 1 < c.a < 9 => { c.v = c.cond ? c.x + 1 : c.y * 2; }"),
- ("aggregates",    "X => { c.q = 1; }\nB : behavior has: {\n"
+                   "        .nest = [ [ a*b with: b from: row ] with: row from: matrix ]; } } }"),
+ ("data_access",   "R : reactor { buf: list; f: float; z: float;\n"
+                   "  B : behavior { X => { .buf[i] = v; .f = grid[i][j]; .z = f(x)[0]; } } }"),
+ ("ternary_chain", "R : reactor { a: float; v: float; cond: bool; x: float; y: float;\n"
+                   "  B : behavior { X when: 1 < .a < 9 => { .v = .cond ? .x + 1 : .y * 2; } } }"),
+ ("aggregates",    "R : reactor {\n"
                    "    buffer: list;\n    scores: dict;\n"
-                   "    point: struct { x; y; };\n} { E => F; }"),
+                   "    point: struct { x; y; };\n    q: float;\n"
+                   "    B : behavior { X => { .q = 1; }\n    E => F;\n}\n}"),
  ("documented",    '"""Watches the motor and shuts down on overheat."""\n'
-                   'guard : behavior(threshold = 90.0) { hot => shutdown; }'),
- ("strings_in",   'X when: e.tag == "sensor_7" => { c.hit = 1.0; }\n'
-                   'Y when: e.v in c.items => f;\n'
-                   'Z when: e.v not in c.items and "ens" in c.tag => g;'),
- ("work_def",     "divide : work(knows: x, y\n"
-                   "               gives: q\n"
+                   'guard : reactor { threshold: float;\n'
+                   '  watch : behavior { hot => shutdown; } }'),
+ ("strings_in",   'R : reactor { hit: float; items: list; tag: string;\n'
+                   '  B : behavior {\n'
+                   '    X when: e.tag == "sensor_7" => { .hit = 1.0; }\n'
+                   "    Y when: e.v in .items => f;\n"
+                   '    Z when: e.v not in .items and "ens" in .tag => g;\n} }'),
+ ("work_def",     "divide : work(in: x, y\n"
+                   "               out: q\n"
                    "               signals: by_zero)\n"
-                   "{ q = x / y else: { div_by_zero => exit: by_zero; } give: }"),
- ("work_spec",    "on_event : work(knows: ev gives: consumed signals: failed(m))"),
- ("clockwork_def", "line_reader : clockwork(takes: f\n"
-                   "                        ticks: line\n"
+                   "{ q = x / y else: { div_by_zero => exit by_zero; } give q; }"),
+ ("work_spec",    "on_event : work(in: known: ev out: consumed signals: failed(m))"),
+ ("clockwork_def", "line_reader : clockwork(in: f\n"
+                   "                        out: line\n"
                    "                        signals: io_error(code))\n"
-                   "{ tick: give: }"),
+                   "{ tick; exit; }"),
+ ("panel_flat",   "bundle : work(in: raw : cloud, known: eps : float = 0.5\n"
+                   "              out: center : point2d, known: rotation : mat2\n"
+                   "              signals: no_convergence(residual: float))\n"
+                   "{ center = raw; rotation = eps; give center, rotation; }"),
  ("class_def",    "sprite : class is: entity\n"
-                   "  has:   { pos: vec2; tex: gpu_texture; }\n"
-                   "  knows: { atlas: texture_atlas; }\n"
                    "{\n"
-                   "  make : work(knows: skin gives: s : sprite signals: no_texture(path))\n"
-                   "  { s = 1; give: }\n"
-                   "  free : work(takes: s : sprite signals: free_failed(code))\n"
-                   "  { give: }\n"
+                   "  pos: vec2;\n"
+                   "  known: atlas: texture_atlas;\n"
+                   "  make : work(in: skin out: s : sprite signals: no_texture(path))\n"
+                   "  { s = 1; give s; }\n"
+                   "  had: tex: gpu_texture;\n"
+                   "  free : work(in: s : sprite signals: free_failed(code))\n"
+                   "  { give; }\n"
                    "}"),
- ("aware_forms",  "E => { b.x = f(1) else: { bad(r) => { b.x = r; } => ; }\n"
-                   "       for: v from: give src(3) { b.y = v; } else: { worn => ; } }"),
+ ("param_marking", "hot : cause(known: threshold) t_high when: e.v > threshold;"),
+ ("self_binding",  "counter : reactor { n: float;\n"
+                   "  step : work(in: d out: done) { .n = .n + d; done = 1; give done; }\n"
+                   "  tick_b : behavior { bump => { .n = .n + 1; } }\n}"),
+ ("float_exponent", "w : work(in: a, known: eps = 1e-6 out: q)\n"
+                   "{ q = a * 2.5e3 + 1E+10; give q; }"),
+ ("site_marking", "W : work(in: a out: m) {\n"
+                   "    known: entry = db.get(1);\n"
+                   "    known: m = a.b.c;\n"
+                   "    x, known: r = bundle(1, 2);\n"
+                   "    give m;\n}"),
+ ("aware_forms",  "R : reactor { x: float; y: float;\n"
+                   "  B : behavior { E => { .x = f(1) else: { bad(r) => { .x = r; } => ; }\n"
+                   "       for: v from: src(3) { .y = v; } else: { worn => ; } } } }"),
  ("label_two_accounts",
-                   "w : work(knows: v gives: r signals: snag) {\n"
-                   "    dropto: done;\n"
+                   "w : work(in: v out: r signals: snag) {\n"
+                   "    dropto done;\n"
                    "    :cleanup:\n"
                    "    r = 0;\n"
                    "    :done:\n"
-                   "    give:\n"
+                   "    give r;\n"
                    "    :failures: => {\n"
-                   "        exit: snag;\n"
+                   "        exit snag;\n"
                    "    }\n"
                    "}"),
  ("explicit_destruct",
-                   "tunnel : class has: { fd: float; } { from : work }\n"
-                   "+tunnel.from : work(knows: host gives: t : tunnel signals: refused)\n"
-                   "{ t = host; give: }\n"
-                   "-tunnel() : work(takes: t : tunnel signals: busy(when))\n"
-                   "{ give: }\n"
-                   "shutdown : work(knows: t gives: done) {\n"
-                   "    destruct: t else: { busy(when) => ; }\n"
+                   "tunnel : class { fd: float; from : work }\n"
+                   "+tunnel.from : work(in: host out: t : tunnel signals: refused)\n"
+                   "{ t = host; give t; }\n"
+                   "-tunnel() : work(in: t : tunnel signals: busy(when))\n"
+                   "{ give; }\n"
+                   "shutdown : work(in: t out: done) {\n"
+                   "    destruct t else: { busy(when) => ; }\n"
                    "    done = 1;\n"
-                   "    give:\n"
+                   "    give done;\n"
                    "}"),
  ("semi_and_completions",
-                   "pair : class has: { lo: float; } {\n"
+                   "pair : class { lo: float;\n"
                    "    make #{a, b -> the ordered pair} : work\n"
                    "}\n"
-                   "+pair.make : work(knows: a, b gives: p : pair signals: disorder)\n"
-                   "{ p = a; give: }\n"
-                   "-pair : work(takes: p : pair signals: never_fails)\n"
-                   "{ exit: never_fails; give: }"),
- ("aspect_panel",  "Poller : aspect(knows: rate, retries = 3\n"
-                   "                signals: overrun, sensor_lost(port))\n"
-                   "{\n"
-                   "    IDLE : behavior { go => RUN; }\n"
-                   "    RUN  : behavior { stop => IDLE; }\n"
-                   "}"),
- ("namespaced_ref", "physics.tick_event => physics.apply_gravity;"),
+                   "+pair.make : work(in: a, b out: p : pair signals: disorder)\n"
+                   "{ p = a; give p; }\n"
+                   "-pair : work(in: p : pair signals: never_fails)\n"
+                   "{ exit never_fails; give; }"),
+ ("reactor_inherit", "Base : reactor { speed: float;\n"
+                   "    idle : behavior { go => run; } }\n"
+                   "Rover : reactor is: Base { gain: float;\n"
+                   "    drive : behavior { MOTOR_ON => go_fast; } }"),
+ ("namespaced_ref", "R : reactor { v: float;\n"
+                   "  B : behavior { E => { .v = physics.motors.rpm_limit; } } }"),
 ]
+
 
 
 def banner(label):

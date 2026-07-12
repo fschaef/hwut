@@ -1,9 +1,14 @@
 
 --- explain-ephemerals.vut ---
 front half: clean
-enter  Demo
-event  SHOW
-emit   dial_turned
-event  dial_turned(delta=42)
+run    plant
+wind   f : script
+make   d : Demo
+enter  d.show
+wire   f --[cmd]--> d
+feed   f SHOW
+event  d.cmd SHOW
+emit   d.* dial_turned
+event  d.. dial_turned(delta=42)
 set    m = 42 -> 42
-bind   b.shown = 42
+bind   .shown = 42

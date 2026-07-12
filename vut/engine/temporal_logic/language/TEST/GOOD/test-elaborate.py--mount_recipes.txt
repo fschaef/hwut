@@ -2,28 +2,27 @@
 --- symbol table (own + mounted) ---
   base                     import      
   base.max_speed           declaration   <- lib/base.vut
-  base.vehicle             behavior     ~  (power,boost=,top_speed)  <- lib/base.vut
-  drive                    behavior      (gain,speed)
+  base.vehicle             reactor       (top_speed,power)  <- lib/base.vut
+  drive                    reactor       (speed,gain,cap)
   fleet                    namespace   
   fleet.limit              declaration 
 
 --- recipes ---
-  base.vehicle       -> behavior:base.vehicle  origin=lib/base.vut
+  base.vehicle       -> reactor:base.vehicle  origin=lib/base.vut
   MOTOR_ON           -> event:MOTOR_ON
-  b.speed            -> binding:b  residue=speed
-  gain               -> local:gain
+  .speed             -> binding:  residue=speed
+  .gain              -> binding:  residue=gain
   go                 -> event:go
   STOP               -> event:STOP
-  b.speed            -> binding:b  residue=speed
+  .speed             -> binding:  residue=speed
   base.max_speed     -> declaration:base.max_speed  origin=lib/base.vut
-  c.cap              -> binding:c  residue=cap
+  .cap               -> binding:  residue=cap
   fleet.limit        -> declaration:fleet.limit
   done               -> local:done
   HOT                -> event:HOT
-  base.vehicle       -> behavior:base.vehicle  origin=lib/base.vut
+  base.vehicle       -> reactor:base.vehicle  origin=lib/base.vut
   COLD               -> event:COLD
-  base.vehicle.top_speed -> behavior:base.vehicle  residue=top_speed  origin=lib/base.vut
+  base.vehicle.top_speed -> reactor:base.vehicle  residue=top_speed  origin=lib/base.vut
 
 --- diagnostics ---
-diagnostics: 1  (has_fatal: False)
-  WARN   [GUARD] effect targets ABSTRACT entity 'base.vehicle' (SEMANTICS 17: well-formed; every occurrence must be visible)
+diagnostics: 0  (has_fatal: False)

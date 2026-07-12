@@ -1,16 +1,34 @@
-ungated : work(knows: k gives: out) {
+ungated : work(in: known: k out: result) {
     probe = (k == Nothing);
-    out = k + 1;
-    give:
+    result = k + 1;
+    give result;
 }
-leaky : work(knows: k gives: out) {
+leaky : work(in: known: k out: result) {
     seen = (k == Nothing);
     held = k;
-    out = held;
-    give:
+    result = held;
+    give result;
 }
-voider : work(gives: out) {
+voider : work(out: result) {
     held = Nothing;
-    out = 1;
-    give:
+    result = 1;
+    give result;
+}
+silent : work(in: known: k out: r) {
+    r = k + 1;
+    give r;
+}
+viewer : work(in: a out: known: view) {
+    view = a;
+    give view;
+}
+take_view : work(in: a out: r) {
+    r = viewer(a);
+    give r;
+}
+site_ungated : work(in: known: k out: result) {
+    seen = (k == Nothing);
+    known: m = k;
+    result = m + 1;
+    give result;
 }

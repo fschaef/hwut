@@ -1,12 +1,32 @@
 open: physics.motors {
     engine_ready: bool;
-    spin_up : behavior { MOTOR_ON => run; }
+    spin_up : reactor { run : behavior { MOTOR_ON => run_fast; } }
     hot : cause temp_high when: t.value > 90;
 }
 import: "lib/base.vut" as: base
-Rover : character(speed) is: base.vehicle
-drive : aspect { idle : behavior { ~ENTRY => halt; } }
-E => F;
-gauge : aspect(knows: rate = 10 signals: overrun, sensor_lost(port)) {
+Rover : reactor is: base.vehicle {
+    speed: float;
+    known: hub: net;
+    idle : behavior { ~ENTRY => halt; }
+}
+gauge : reactor++ {
+    rate: float;
     poll : behavior { sample => publish; }
+    report : behavior { publish_done => archived; }
+}
+bundle : work(in: raw, known: eps = 0.5
+              out: center, known: rotation
+              signals: no_convergence(residual)) {
+    center = raw + eps;
+    rotation = 0;
+    give center, rotation;
+}
+sprite : class {
+    pos: vec2;
+    known: atlas: texture_atlas;
+    make : work
+}
++sprite.make : work(in: skin out: s : sprite signals: no_texture(path)) {
+    s = 1;
+    give s;
 }

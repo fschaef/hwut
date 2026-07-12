@@ -1,62 +1,97 @@
-bad_exit : work(gives: q signals: known) {
-    exit: unknown;
+bad_exit : work(out: q signals: known) {
     q = 1;
-    give:
+    if: q > 2 { exit unknown; }
+    give q;
 }
-never_emits : work(gives: q signals: silent, loud) {
-    exit: loud;
+never_emits : work(out: q signals: silent, loud) {
     q = 1;
-    give:
+    if: q > 2 { exit loud; }
+    give q;
 }
-stray_tick : work(gives: q) {
-    tick:
+stray_tick : work(out: q) {
+    tick;
     q = 1;
-    give:
+    give q;
 }
-gadget : class has: { w: float; } {
+gadget : class {
+    w: float;
     forge : work
     temper : work
     anneal : work
 }
-+gadget.forge : work(knows: metal gives: g : gadget) { g = 1; give: }
-+gadget.polish : work(knows: g gives: out : gadget) { out = g; give: }
-+gadget.temper : work(knows: g gives: out : widget) { out = g; give: }
--gadget : work(takes: g : gadget) { give: }
-+phantom.make : work(gives: p : phantom) { p = 1; give: }
-widget : class has: { z: float; } {
++gadget.forge : work(in: metal out: g : gadget) { g = 1; give g; }
++gadget.polish : work(in: g out: result : gadget) { result = g; give result; }
++gadget.temper : work(in: g out: result : widget) { result = g; give result; }
+-gadget : work(in: g : gadget) { give; }
++phantom.make : work(out: p : phantom) { p = 1; give p; }
+widget : class {
+    z: float;
     from : work
 }
-+widget.from : work(knows: a, b = 1 gives: w : widget) { w = a; give: }
-+widget.from : work(knows: a, y gives: w : widget) { w = a + y; give: }
-+widget.from : work(knows: r gives: w : widget) { w = r; give: }
-W : behavior has: { v: float; } {
-    E => { b.v = widget.from(1, 2) else: { => ; }
-           b.v = widget.from(zz = 1) else: { => ; } }
-}
-cursed : class has: { c: float; } { from : work }
-+cursed.from : work(knows: seed gives: c : cursed) { c = seed; give: }
--cursed : work(takes: c : cursed signals: refuse(code)) { exit: refuse(1); give: }
-blessed : class has: { bv: float; } { from : work }
-+blessed.from : work(knows: seed gives: bl : blessed) { bl = seed; give: }
--blessed() : work(takes: bl : blessed signals: busy(t)) { exit: busy(9); give: }
-user_of : work(knows: seed gives: out) {
-    bl = blessed.from(seed);
-    destruct: bl else: { busy(t) => ; }
-    out = seed;
-    give:
-}
-R : behavior { E2 => { destruct: c.thing; } }
-misjump : work(knows: v gives: out signals: snag) {
-    dropto: rescue;
-    out = v;
-    give:
-    :rescue: => {
-        exit: snag;
++widget.from : work(in: a, b = 1 out: w : widget) { w = a; give w; }
++widget.from : work(in: a, y out: w : widget) { w = a + y; give w; }
++widget.from : work(in: r out: w : widget) { w = r; give w; }
+W : reactor {
+    v: float;
+    caller : behavior {
+        E => { .v = widget.from(1, 2) else: { => ; }
+               .v = widget.from(zz = 1) else: { => ; } }
     }
 }
-after_life : work(knows: seed gives: out) {
+cursed : class { c: float; from : work }
++cursed.from : work(in: seed out: c : cursed) { c = seed; give c; }
+-cursed : work(in: c : cursed signals: refuse(code)) { if: c > 0 { exit refuse(1); } give; }
+blessed : class { bv: float; from : work }
++blessed.from : work(in: seed out: bl : blessed) { bl = seed; give bl; }
+-blessed() : work(in: bl : blessed signals: busy(t)) { if: bl > 0 { exit busy(9); } give; }
+user_of : work(in: seed out: result) {
+    bl = blessed.from(seed);
+    destruct bl else: { busy(t) => ; }
+    result = seed;
+    give result;
+}
+R : reactor { thing: float;
+    ender : behavior { E2 => { destruct .thing; } }
+}
+misjump : work(in: v out: result signals: snag) {
+    if: v > 0 { dropto rescue; }
+    result = v;
+    give result;
+    :rescue: => {
+        exit snag;
+    }
+}
+after_life : work(in: seed out: result) {
     bl2 = blessed.from(seed);
-    destruct: bl2 else: { busy(t) => ; }
-    out = bl2 + 1;
-    give:
+    destruct bl2 else: { busy(t) => ; }
+    result = bl2 + 1;
+    give result;
+}
+deadcode : work(in: a out: q) {
+    q = a;
+    give q;
+    q = 2;
+}
+ticker_gives : clockwork(in: n out: v) {
+    v = n;
+    tick;
+    give;
+}
+port_foreign : work(in: a out: q) {
+    q = a;
+    give stranger;
+}
+port_missing : work(in: a out: q, r) {
+    q = a;
+    r = a;
+    give q;
+}
+port_disorder : work(in: a out: q, r) {
+    q = a;
+    r = a;
+    give r, q;
+}
+port_doubled : work(in: a out: q) {
+    q = a;
+    give q, q;
 }

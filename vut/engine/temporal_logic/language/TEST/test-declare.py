@@ -59,14 +59,20 @@ def declare_fixture(basename):
 
 def dump(declared, reporter):
     """RETURN: None, always. Prints the export_db (sorted, qualified name /
-              kind / scope) and every diagnostic (tag and message) -- the
-              byte-stable summary each choice locks.
+              kind / scope, then the declared Member surface: category,
+              relation, and the D-11 default flag per entry) and every
+              diagnostic (tag and message) -- the byte-stable summary each
+              choice locks.
     """
     print("exports: %d" % len(declared.export_db))
     for qualified, entry in declared.export_db:
         print("  %-30s %-12s scope=%s"
               % (".".join(qualified), entry.kind,
                  ".".join(entry.scope) or "-"))
+        for m in entry.members:
+            print(("      %-24s %-7s %-6s%s"
+                   % (m.name, m.category, m.relation or "-",
+                      "  =default" if m.has_default else "")).rstrip())
     print("diagnostics: %d  (has_fatal: %s)"
           % (len(reporter.errors), reporter.has_fatal()))
     for d in reporter.errors:

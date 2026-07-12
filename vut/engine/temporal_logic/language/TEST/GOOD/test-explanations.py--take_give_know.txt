@@ -1,9 +1,14 @@
 
 --- explain-take-give-know.vut ---
 front half: clean
-enter  Demo
-event  SHOW
+run    plant
+wind   f : script
+make   d : Demo
+enter  d.show
+wire   f --[cmd]--> d
+feed   f SHOW
+event  d.cmd SHOW
 set    s = 40 -> 40
-bind   b.s = 40
+bind   .s = 40
 set    total = 80 -> 80
-set    b.t = 80 -> 80
+bind   .t = 80

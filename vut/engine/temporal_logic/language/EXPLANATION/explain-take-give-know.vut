@@ -1,55 +1,82 @@
 #{ ===========================================================================
-   TAKING, GIVING, KNOWING -- the custody relations at a work's boundary.
+   HAVING AND KNOWING AT THE PANEL -- direction and relation, said apart.
 
-   One verb, one relation, everywhere (0.2):
+   The flat panel (12.2) says WHERE with its sections and WHAT with its
+   markers -- two questions, two words, never one word answering both:
 
-     knows:  ACQUAINTANCE. The work may read what it is told; it takes no
-             responsibility and confers none. Knowing creates no debt --
-             the known must simply outlive the knower's use.
-     takes:  CUSTODY IN.  The work RECEIVES the object; the giver's name
-             dies; the taker now HAS -- and owes the end of what it has
-             (give onward or destruct, 0.3).
-     gives:  CUSTODY OUT. The lawful end of having: at give: the
-             gives-bundle moves WHOLE to the caller, who has it now.
+     in: / out:   DIRECTION. An in: entry arrives with the call; an out:
+                  entry leaves at give. That is all the section says.
+     (unmarked)   HAVING -- the ground state. An unmarked in: entry is
+                  CUSTODY IN: the giver's name dies, this work now HAS --
+                  and owes the end of what it has (give onward or
+                  destruct, 0.3). An unmarked out: entry is CUSTODY OUT:
+                  at give it; moves WHOLE to the caller, who has it now.
+     known:       ACQUAINTANCE. The entry is a VIEW: the work may read
+                  what it is told; it takes no responsibility and confers
+                  none. A known may be Nothing -- so every OPERATION on
+                  it demands a dominating gate (0.5, SEMANTICS 28); where
+                  the flow makes Nothing impossible, the access is fine.
+     had:         the optional VISIBILITY marker -- having spelled out
+                  loud; it adds nothing the ground state does not say.
 
    Giving is moving, never copying: one object, one debt, one haver at a
-   time. The trace of responsibility is the chain of these three verbs.
+   time -- and THE GIVE LEAVES NOTHING BEHIND: the giver holds Nothing in
+   the given thing's place; access to the given is impossible
+   (HAVE_KNOW_BE (2)). The trace of responsibility is the chain of
+   havings; the knowns stand beside it, reading.
 
    HONESTY NOTE: the call-site 'give' marker and the ledger that PROVES
    the chain bind the future type document (SEMANTICS 23, deferred); the
    for:-from: loop already spells its two custody flavours (13.5).
    =========================================================================== }
 
-score : class has: { points: float; } {
+score : class {
+    points: float;
     from : work
 }
 
-+score.from : work(knows: start          #{ told, not owned: acquaintance }
-                   gives: s : score      #{ custody OUT: the caller will HAVE }
++score.from : work(in: start                #{ a value, had by copy }
+                   out: s : score           #{ custody OUT: the caller will HAVE }
                    signals: negative) {
-    if: start < 0 { exit: negative; }
+    if: start < 0 { exit negative; }
     s = start;
-    give:                              # the give happens HERE, implicitly
+    give s;                    # the out-bundle leaves HERE, named
 }
 
 #{ A disposal work is the mirror: custody IN, and the debt ends inside. }
 
--score : work(takes: s : score) {        #{ custody IN: the debt arrives }
-    give:
+-score : work(in: s : score) {              #{ unmarked: the debt arrives }
+    give;
 }
 
-#{ knows: never carries debt -- 'bonus' below reads its inputs and gives a
-   fresh value; nothing is taken, nothing is owed, nothing to discharge. }
+#{ known: is the VIEW -- and the view may be Nothing, so the body GATES
+   before it operates: the gate narrows, the operation stands on narrowed
+   ground. No gate, no operation -- the checker holds the law. }
 
-bonus : work(knows: base, factor
-             gives: total) {
+bonus : work(in: known: base, factor
+             out: total
+             signals: unknown) {
+    if: base == Nothing { exit unknown; }
     total = base * factor;
-    give:
+    give total;
 }
 
-Demo : behavior has: { s: float; t: float; } {
+Demo : reactor(in: cmd) {
+    s: float; t: float;
+  show : behavior {
     SHOW => {
-        b.s = score.from(start = 40) else: { negative => ; }
-        b.t = bonus(b.s, 2);
+        .s = score.from(start = 40) else: { negative => ; }
+        .t = bonus(.s, 2) else: { unknown => ; }
     }
+}
+}
+
+#{ The demonstration runs as a small PLANT (pipe ruling): a script feeder
+   wired to the Demo reactor; the harness replays SHOW. }
+
+plant : work() {
+    f = script("SHOW");
+    d = Demo();
+    f ----> d;
+    give;
 }

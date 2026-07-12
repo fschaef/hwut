@@ -1,24 +1,36 @@
 
 --- membership and strings (run-membership.vut) ---
-enter  w
-event  setup
-set    b.items[0] = 3.0
-set    b.items[1] = 7.0
-set    b.ys[0] = 3.0
-set    b.ys[1] = 7.0
-set    b.tag = sensor_7 -> sensor_7
-event  q1(x=7.0)
-emit   hit
-event  hit
-event  q1(x=9.0)
-event  q2(x=9.0)
-emit   miss
-event  miss
-event  q2(x=7.0)
-event  q3
-set    b.ok = true -> true
-event  q4
-set    b.same = true -> true
-event  q5
-emit   substr_hit
-event  substr_hit
+run    plant
+wind   f : script
+make   p : w
+enter  p.probe
+wire   f --[cmd]--> p
+feed   f setup
+event  p.cmd setup
+set    .items[0] = 3.0
+set    .items[1] = 7.0
+set    .ys[0] = 3.0
+set    .ys[1] = 7.0
+set    .tag = sensor_7 -> sensor_7
+feed   f q1
+event  p.cmd q1(x=7.0)
+emit   p.* hit
+event  p.. hit
+feed   f q1
+event  p.cmd q1(x=9.0)
+feed   f q2
+event  p.cmd q2(x=9.0)
+emit   p.* miss
+event  p.. miss
+feed   f q2
+event  p.cmd q2(x=7.0)
+feed   f q3
+event  p.cmd q3
+set    .ok = true -> true
+feed   f q4
+event  p.cmd q4
+set    .same = true -> true
+feed   f q5
+event  p.cmd q5
+emit   p.* substr_hit
+event  p.. substr_hit

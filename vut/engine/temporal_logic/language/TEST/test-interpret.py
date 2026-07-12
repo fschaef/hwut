@@ -14,11 +14,11 @@ CHOICES: dispatch, lifecycle, blocks, membership, works, nothing.
                       never double-fires), 'e.' payload reads, named-cause
                       matching with use-site arguments (P-6), emission
                       cascade in breadth order.
-           lifecycle  Activation and deactivation (P-2): '=> behaviour'
+           lifecycle  Behavior arming and disarming: '=> behavior'
                       enters (running ~ENTRY), '=x=>' exits (running ~EXIT);
                       a recurring 'every:' emission fires on virtual time
-                      (P-3), cancels by handle, and auto-cancels at ~EXIT
-                      (R-15).
+                      (P-3) and cancels by handle; construction is
+                      STANDING (pipe ruling -- no on/off switch).
            blocks     The command-block set: mutations with all operators,
                       if/elif/else, match over literal/range/glob/wildcard,
                       a filtered comprehension driving for:, count with
@@ -69,20 +69,17 @@ def machine(basename):
 
 
 def run_dispatch():
-    """RETURN: None, always. Locks the dispatch laws over run-toggle.vut:
-              the toggle alternates across three presses (P-1b), payload
-              guards select (P-4), the named cause matches with its
-              use-site threshold (P-6), and the emitted alarm cascades in
-              breadth order (P-1).
+    """RETURN: None, always. Locks the dispatch laws over run-toggle.vut,
+              a PLANT (pipe ruling: script feeder ----> climate): the
+              toggle alternates across three fed presses (P-1b), payload
+              guards select over R-42 feed payloads (P-4), the named
+              cause matches with its use-site threshold (P-6), and the
+              emitted alarm fans through the self channel (P-1).
     """
     banner("dispatch (run-toggle.vut)")
     m = machine("run-toggle.vut")
-    m.post("ac_button")
-    m.post("ac_button")
-    m.post("ac_button")
-    m.post("dial_turned", delta=2.5)
-    m.post("temp_high", value=95.0)
-    m.post("temp_high", value=50.0)
+    m.run("plant")
+    m.play()
     print(m.trace())
 
 
@@ -96,13 +93,14 @@ def run_lifecycle():
     """
     banner("lifecycle (run-lifecycle.vut)")
     m = machine("run-lifecycle.vut")
-    m.post("start")
+    m.run("plant")
+    m.step()                    # start
     m.advance(1.2)
-    m.post("mute")
+    m.step()                    # mute
     m.advance(1.0)
-    m.post("start")
+    m.step()                    # start
     m.advance(0.6)
-    m.post("stop")
+    m.step()                    # stop
     m.advance(1.0)
     print(m.trace())
 
@@ -116,10 +114,8 @@ def run_blocks():
     """
     banner("blocks (run-blocks.vut)")
     m = machine("run-blocks.vut")
-    m.post("go", n=3.0)
-    m.post("classify", code=42.0)
-    m.post("classify", code=7.0)
-    m.post("classify", code=500.0)
+    m.run("plant")
+    m.play()
     print(m.trace())
 
 
@@ -132,14 +128,8 @@ def run_membership():
     """
     banner("membership and strings (run-membership.vut)")
     m = machine("run-membership.vut")
-    m.post("setup")
-    m.post("q1", x=7.0)
-    m.post("q1", x=9.0)
-    m.post("q2", x=9.0)
-    m.post("q2", x=7.0)
-    m.post("q3")
-    m.post("q4")
-    m.post("q5")
+    m.run("plant")
+    m.play()
     print(m.trace())
 
 
@@ -155,8 +145,8 @@ def run_nothing():
     """
     banner("Nothing (run-nothing.vut)")
     m = machine("run-nothing.vut")
-    m.post("GO")
-    m.drain()
+    m.run("plant")
+    m.play()
     for line in m.lines:
         print(line)
 
@@ -173,8 +163,8 @@ def run_works():
     """
     banner("works (run-work.vut)")
     m = machine("run-work.vut")
-    m.post("GO")
-    m.drain()
+    m.run("plant")
+    m.play()
     for line in m.lines:
         print(line)
 

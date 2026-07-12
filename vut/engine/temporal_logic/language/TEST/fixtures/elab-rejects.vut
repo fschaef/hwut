@@ -1,13 +1,15 @@
-import: "lib/gone.vut" as: gone
 hot : cause(threshold) temp_high when: e.value > threshold;
-~ENTRY when: c.x > 0 => a;
-hot(5) when: c.y > 0 => b;
-bad : behavior(gain) is: nowhere {
-    F => { if: c.q > 0 { :inner: } dropto: later; :early: dropto: early; }
-    G => { s.gain = 1; loose = 2; c.v = mystery; }
-    K => { c.v = c.a / 2; c.v = c.a / c.b; c.v /= c.b; }
-    H => hot();
-    I => hot(1, 2);
-    J => hot(1, level = 3);
+bad : reactor is: nowhere {
+    q: float; v: float; a: float; y: float;
+    lonely : behavior {
+        ~ENTRY when: .x > 0 => a;
+        hot(5) when: .y > 0 => b;
+        F => { if: .q > 0 { :inner: } dropto later; :early: dropto early; }
+        G => { loose = 2; .v = mystery; }
+        K => { .v = .a / 2; .v = .a / .b; .v /= .b; }
+        H => hot();
+        I => hot(1, 2);
+        J => hot(1, level = 3);
+    }
 }
 z: mystery_type;

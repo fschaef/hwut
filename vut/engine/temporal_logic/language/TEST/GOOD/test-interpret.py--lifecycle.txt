@@ -1,15 +1,25 @@
 
 --- lifecycle (run-lifecycle.vut) ---
-enter  polling
+run    plant
+wind   f : script
+make   s : station
+enter  s.polling
 recur  poll every 0.5s
-enter  master
-event  start
+enter  s.master
+wire   f --[cmd]--> s
+feed   f start
+event  s.cmd start
 tick   0.5s poll
-event  poll
+emit   s.* poll
+event  s.. poll
 tick   1.0s poll
-event  poll
-event  mute
+emit   s.* poll
+event  s.. poll
+feed   f mute
+event  s.cmd mute
 cancel poller
-event  start
-event  stop
-exit   polling
+feed   f start
+event  s.cmd start
+feed   f stop
+event  s.cmd stop
+leave  s.polling

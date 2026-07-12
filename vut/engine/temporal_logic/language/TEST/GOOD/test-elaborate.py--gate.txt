@@ -1,5 +1,5 @@
 
 --- boundary gate: prior diagnostics block elaborate ---
-parse diagnostics: 1
-declare refused: F-6 strict gate: 1 parser diagnostic(s) block declare -- declare only ever sees a clean tree
-elaborate refused: gate: 1 diagnostic(s) block elaborate -- elaborate only ever starts from a clean declare (driver contract, F-6 discipline)
+parse diagnostics: 3
+declare refused: F-6 strict gate: 3 parser diagnostic(s) block declare -- declare only ever sees a clean tree
+elaborate refused: gate: 3 diagnostic(s) block elaborate -- elaborate only ever starts from a clean declare (driver contract, F-6 discipline)

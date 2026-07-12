@@ -1999,3 +1999,40 @@ GRAVEYARD
     (item 8) is the sole loop control.
   - The bare-jump-to-terminal spelling: dissolved -- 'dropto: <label>'
     is the sole in-body jump (forward-only); no bare 'give' jump exists.
+
+
+R-42: Feeder event payload -- the D-28 named-argument form
+----------------------------------------------------------
+PROBLEM
+  The harness feeder script("e1; e2; ...") replays bare event names; the
+  runtime fixtures fire payload-carrying events (e.delta, e.value read
+  through the 'e.' binding). The written spelling of a payload inside
+  the script string was unruled -- blocking the plant re-shape of every
+  payload-driven fixture.
+
+DECISION
+  One form across the language: a feeder entry is an event name with an
+  OPTIONAL parenthesised D-28 named-argument list; entries ';'-separated.
+
+      f = script("dial_turned(delta = 2.5); temp_high(value = 95); go");
+
+  Each entry is one drain step; the fields travel as the event's payload
+  and read through 'e.' exactly as a posted event's members did. Values
+  are literals of the lexical laws: bare digits int, dot or exponent
+  marks float (exponent ruling), quoted "..." a string. Numeric and
+  string literals are both admitted.
+
+COST
+  The feeder carries a miniature literal reader (name, '=', literal) --
+  a second, tiny reading of forms the lexer already owns. Accepted: the
+  script string is DATA to the provided kind, not source text; routing
+  it through the full lexer would couple the harness feeder to the
+  compiler front end.
+
+GRAVEYARD
+  - Positional payload ('dial_turned(2.5)'): rejected -- an event's
+    fields are named members; position names nothing.
+  - A brace form ('dial_turned{delta: 2.5}'): rejected -- a second
+    spelling for a form D-28 already writes.
+  - Bare-only feeder with a separate payload mechanism: rejected -- one
+    driver for golden masters, or the trace splits its sources.

@@ -10,36 +10,39 @@ re-resolved here, no unit-internal surface is touched. Every future emitter
 earns its green by matching this interpreter's event traces, not by being
 read carefully.
 
-SETTLED LAW EXECUTED (LANGUAGE.txt):
-    - '=x=>' deactivates exactly the deactivable kinds (behaviour, aspect,
-      character, recurring-emission handle); events and blocks are not
-      deactivable (R-6 table).
+SETTLED LAW EXECUTED (LANGUAGE.txt, pipe ruling):
+    - '=x=>' deactivates exactly the deactivable kinds (behavior member,
+      recurring-emission handle); events and blocks are not deactivable
+      (SEMANTICS 1; the reactor row's re-speak is flagged in OPEN --
+      construction is standing, destruct is the end).
     - 'every: n' emits once per n (seconds, virtual); 'as:' binds a handle;
-      a recurring emission runs only while its entity is ACTIVE and is
-      auto-cancelled at ~EXIT (R-15).
-    - ~ENTRY / ~EXIT run on activation / deactivation; no trigger, no guard.
-    - An aspect governs ONE active behaviour: activating a behaviour inside
-      an aspect deactivates the previously active sibling.
+      ownership is the constructing reactor's -- destruct auto-cancels
+      (R-15).
+    - ~ENTRY / ~EXIT run on a behavior's arming / disarming; no trigger,
+      no guard.
+    - THE PIPE MODEL: a channel is a publish/subscribe object the reactor
+      HAS; wiring subscribes; emission publishes ('to <chan>' one channel,
+      suffix-less FANS: all outs plus self); delivery walks live
+      subscribers (a destructed one reads Nothing, skipped); zero live
+      subscribers is the 'drop <chan> <event>' line. The bus is no more.
 
 PROVISIONAL RULINGS (P-n; each one line to correct -- report lists them):
-    P-1  Dispatch: ONE FIFO queue. An event is processed to completion --
-         every matching causality of every active holder, in declaration
-         order -- before the next event; effects run left to right; emitted
-         events APPEND to the queue (breadth, no re-entrant dispatch).
-    P-1b Guards of one event evaluate against the state AT EVENT ARRIVAL:
+    P-1  Dispatch: ONE FIFO queue of routed deliveries. A delivery is
+         processed to completion -- every matching causality of the
+         receiver's armed behaviors, in declaration order -- before the
+         next; effects run left to right; emitted events APPEND to the
+         queue (breadth, no re-entrant dispatch).
+    P-1b Guards of one delivery evaluate against the state AT ARRIVAL:
          the matched set is fixed FIRST, effects then run in declaration
-         order -- an effect of this event never changes which of this
-         event's guards held (the synchronous-instant law).
-    P-2  '=> X' with X resolving to a definition ACTIVATES X's scope-default
-         instance; a raw event target ENQUEUES. Activating the active, or
-         deactivating the inactive, is a no-op.
+         order -- an effect of this delivery never changes which of its
+         guards held (the synchronous-instant law).
     P-3  Time is VIRTUAL: the driver calls advance(seconds); recurring
          emissions fire at their multiples, oldest due first.
     P-4  Guards evaluate at dispatch time over current member state; 'e.'
          reads the fired event's payload; an unknown member reads 0.0.
     P-5  Members initialise per declared type: float 0.0, int 0, bool False,
          string "", list [], dict {}, struct all-0.0; parameters take the
-         activation call's arguments, else their D-11 default, else 0.0.
+         construction call's arguments, else their D-11 default, else 0.0.
     P-6  A named-cause use hot(v) matches its definition's event with the
          definition's guard evaluated under s.<param> bound to the use-site
          arguments.
@@ -49,6 +52,7 @@ PROVISIONAL RULINGS (P-n; each one line to correct -- report lists them):
 ______________________________________________________________________________
 """
 import fnmatch
+import re
 from collections import deque
 
 from ..core.parser_generator.cst_nodes import NodeAbsent
@@ -101,11 +105,11 @@ class _Signal(Exception):
 
 
 class _Yield(Exception):
-    """The Python vehicle of tick: -- carries the ticks-bundle upward to the
-    generator driver (LANGUAGE 13.3)."""
-    def __init__(self, ticks):
+    """The Python vehicle of tick: -- carries the per-tick out-bundle upward
+    to the generator driver (LANGUAGE 13.3, R-41.1)."""
+    def __init__(self, outs):
         super().__init__("tick")
-        self.ticks = ticks
+        self.outs = outs
 
 
 class _WorkContext:
@@ -125,9 +129,10 @@ class _ClockworkRun:
     """RETURN-note (class): one wound clockwork -- a resumable body walk.
     next() runs the body until the following tick: (returning its bundle)
     or its end/finish: (raising _Signal('finished')); an exit: raises its
-    own signal (LANGUAGE 13.4).
+    own signal (LANGUAGE 13.4). repr is byte-stable (traces print it).
     """
     def __init__(self, engine, node, frame):
+        self._name = ".".join(node.signature.name.segments)
         wctx = _WorkContext(engine, node, frame)
         def drive():
             try:
@@ -142,13 +147,16 @@ class _ClockworkRun:
         except StopIteration:
             raise _Signal("finished", ())
 
+    def __repr__(self):
+        return "<clockwork %s wound>" % self._name
+
 
 class _Finished(Exception):
-    """The Python vehicle of a work body reaching finish: -- carries the
-    gives-bundle (LANGUAGE 12.3/12.4)."""
-    def __init__(self, gives):
-        super().__init__("finish")
-        self.gives = gives
+    """The Python vehicle of a work body reaching give: -- carries the
+    out-bundle in declaration order (LANGUAGE 12.3/12.4, R-41.4)."""
+    def __init__(self, outs):
+        super().__init__("give")
+        self.outs = outs
 
 
 class Instance:
@@ -163,6 +171,7 @@ class Instance:
         self.members   = {}
         self.params    = {}
         self.active    = False
+        self.active_behaviors = set()   # reactor ruling: the armed set
         self.handles   = {}          # handle name -> recurring emission
         self.active_child = None     # an aspect's one active behaviour
 
@@ -170,38 +179,187 @@ class Instance:
 class Recurring:
     """RETURN: never a value itself -- one 'every:' emission: what to emit,
               its period, its next due time, and the owning instance (whose
-              deactivation auto-cancels it, R-15).
+              deactivation auto-cancels it, R-15); 'to_channel' the routed
+              suffix of the spawn ('' = suffix-less: the send FANS, pipe
+              ruling) -- honoured when the owner is a CONSTRUCTED reactor.
     """
 
-    def __init__(self, event, payload, period, owner, now):
-        self.event   = event
-        self.payload = payload
-        self.period  = period
-        self.due     = now + period
-        self.owner   = owner
-        self.alive   = True
+    def __init__(self, event, payload, period, owner, now, to_channel=""):
+        self.event      = event
+        self.payload    = payload
+        self.period     = period
+        self.due        = now + period
+        self.owner      = owner
+        self.alive      = True
+        self.to_channel = to_channel
+
+
+class Channel:
+    """RETURN: never a value itself -- one PUBLISH/SUBSCRIBE object (pipe
+              ruling): the reactor HAS it (created and destructed with it,
+              named in its panel); it KNOWS its subscribers -- (instance,
+              in-channel-name) pairs; delivery walks them (known-hub law:
+              a destructed subscriber is skipped); zero subscribers is the
+              'drop' trace line.
+    """
+
+    def __init__(self, name, owner):
+        self.name        = name
+        self.owner       = owner
+        self.subscribers = []           # [(instance, in_channel_name)]
+
+
+class ReactorInstance(Instance):
+    """RETURN: never a value itself -- one CONSTRUCTED reactor (pipe
+              ruling): 'a = lamp(...);' builds it STANDING -- no on/off
+              switch; a 'reactor' arms its FIRST declared behavior, a
+              'reactor++' ALL of them. It owns its out channels and its
+              self channel (they die with it); 'destructed' is the
+              known-hub face delivery reads.
+    """
+
+    def __init__(self, label, node):
+        super().__init__(qualified=(label,), kind=node.mode)
+        self.label      = label
+        self.node       = node
+        self.destructed = False
+        self.outs = {c.segments[0]: Channel(c.segments[0], self)
+                     for c in node.outs}
+        self.self_channel = Channel(".", self)
+        # pipe ruling: the self channel is how the reactor hears its OWN
+        # emissions -- its one standing subscriber is the reactor itself,
+        # receive-routed to the '.' groups.
+        self.self_channel.subscribers.append((self, "."))
+
+
+class FeederInstance:
+    """RETURN: never a value itself -- one wound harness FEEDER (pipe
+              ruling, provided kind): 'f = script("...")' holds the
+              written event sequence and ONE out channel; play() replays
+              one event per drain step. An entry is an event name with an
+              OPTIONAL D-28 named-argument payload (R-42) --
+              'dial_turned(delta = 2.5)' -- whose fields travel as the
+              event's payload and read through 'e.'; values are literals
+              of the lexical laws (bare digits int, dot or exponent marks
+              float, quoted "..." a string). A malformed entry refuses
+              loudly at winding: a golden master never guesses.
+    """
+
+    def __init__(self, label, text):
+        self.label      = label
+        self.destructed = False
+        self.out        = Channel("", self)
+        self.events     = []            # [(event name, payload dict)]
+        for entry in (s.strip() for s in _split_entries(text)):
+            if not entry:
+                continue
+            self.events.append(_parse_feed_entry(entry))
+
+
+def _split_entries(text):
+    """RETURN: list, the script string cut at every ';' standing OUTSIDE a
+              quoted "..." literal -- a payload string may carry ';'
+              without ending its entry (R-42).
+    """
+    parts, current, quoted = [], [], False
+    for ch in text:
+        if ch == '"':
+            quoted = not quoted
+            current.append(ch)
+        elif ch == ";" and not quoted:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    parts.append("".join(current))
+    return parts
+
+
+def _parse_feed_entry(entry):
+    """RETURN: (str, dict), the event name and its payload from one script
+              entry (R-42): 'name' bare, or 'name(field = literal, ...)'.
+
+    Raises RuntimeError on any malformed entry -- unclosed parens, a
+    missing '=', an unreadable literal -- naming the entry verbatim.
+    """
+    m = re.fullmatch(r'([A-Za-z_]\w*)\s*(\((.*)\))?', entry, re.DOTALL)
+    if m is None:
+        raise RuntimeError("feeder entry %r is not "
+                           "'name' or 'name(field = literal, ...)' (R-42)"
+                           % entry)
+    name, payload = m.group(1), {}
+    if m.group(2) is not None:
+        body = m.group(3).strip()
+        for field in (_split_fields(body) if body else ()):
+            fm = re.fullmatch(r'\s*([A-Za-z_]\w*)\s*=\s*(.+?)\s*', field,
+                              re.DOTALL)
+            if fm is None:
+                raise RuntimeError("feeder payload field %r is not "
+                                   "'field = literal' (R-42, D-28)" % field)
+            payload[fm.group(1)] = _feed_literal(fm.group(2), entry)
+    return name, payload
+
+
+def _split_fields(body):
+    """RETURN: list, the payload body cut at every ',' standing outside a
+              quoted "..." literal.
+    """
+    parts, current, quoted = [], [], False
+    for ch in body:
+        if ch == '"':
+            quoted = not quoted
+            current.append(ch)
+        elif ch == "," and not quoted:
+            parts.append("".join(current))
+            current = []
+        else:
+            current.append(ch)
+    parts.append("".join(current))
+    return parts
+
+
+def _feed_literal(text, entry):
+    """RETURN: str, the unquoted string of a quoted "..." literal.
+              int, for bare digits (optional sign).
+              float, where the dot or the exponent marks it (the
+              exponent-floats ruling: '1e-6', '2.5e3', '1E+10').
+
+    Raises RuntimeError where none of the three literal laws reads it.
+    """
+    if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
+        return text[1:-1]
+    if re.fullmatch(r'[+-]?\d+', text):
+        return int(text)
+    if re.fullmatch(r'[+-]?(\d+\.\d*|\.\d+|\d+)([eE][+-]?\d+)?', text) \
+            and (("." in text) or ("e" in text) or ("E" in text)):
+        return float(text)
+    raise RuntimeError("feeder payload value %r in %r is no literal of "
+                       "the lexical laws (int, float, or \"string\") "
+                       "(R-42)" % (text, entry))
 
 
 class Machine:
     """RETURN: never a value itself -- one executable world over a list of
-              SemanticModules: instances per definition, the event queue,
-              virtual time, recurring emissions, and the trace.
+              SemanticModules: the definition index, the routed event
+              queue, virtual time, recurring emissions, and the trace.
 
-    Drive it with post() and advance(); read the behaviour off trace() --
-    the byte-stable line list the GOOD suite locks.
+    Drive it as a PLANT (pipe ruling): run('<wiring work>') constructs,
+    wires, and winds; step()/play() replay the feeders; advance() moves
+    virtual time. Read the behaviour off trace() -- the byte-stable line
+    list the GOOD suite locks. The bus is no more: every event travels a
+    channel.
     """
 
     def __init__(self, modules):
         self.defs      = {}          # qualified -> (definition node, module)
-        self.instances = {}          # qualified -> Instance
-        self.queue     = deque()
+        self.queue     = deque()     # routed deliveries:
+                                     # (instance, in_channel, event, payload)
+        self.feeders   = []          # wound feeders, construction order
         self.now       = 0.0
         self.recurring = []
         self.lines     = []
         for module in modules:
             self._index(module.file_node.items, scope=())
-        for module in modules:
-            self._activate_top(module.file_node.items, scope=())
 
     # -- construction -------------------------------------------------------
 
@@ -213,7 +371,7 @@ class Machine:
         for item in items:
             if isinstance(item, A.Namespace):
                 self._index(item.items, scope + tuple(item.name.segments))
-            elif isinstance(item, (A.Character, A.Aspect, A.Behavior,
+            elif isinstance(item, (A.Reactor,
                                    A.DefCause, A.Work, A.ClockworkDef)):
                 key = scope + tuple(item.signature.name.segments)
                 if isinstance(item, A.Work) \
@@ -233,43 +391,13 @@ class Machine:
                     if wkey not in self.defs:      # a completion wins over
                         self.defs[wkey] = work     # its semi-declaration
 
-    def _activate_top(self, items, scope):
-        """RETURN: None, always. Activates the scope-default instance of
-                  every non-abstract top-level definition and registers each
-                  top-level causality as always-active (owned by the scope's
-                  implicit level defaults).
-        """
-        for item in items:
-            if isinstance(item, A.Namespace):
-                self._activate_top(item.items,
-                                   scope + tuple(item.name.segments))
-            elif isinstance(item, (A.Character, A.Aspect, A.Behavior)):
-                if not item.abstract:
-                    self.activate(scope + tuple(item.signature.name.segments),
-                                  args=())
-
-    def instance(self, qualified):
-        """RETURN: Instance, the scope-default instance for 'qualified',
-                  created on first touch (an implicit level default when no
-                  definition of that name exists -- the ruling: every level
-                  has a default instance in the open scope).
-        """
-        key = tuple(qualified)
-        if key not in self.instances:
-            node = self.defs.get(key)
-            kind = type(node).__name__.lower() if node else "default"
-            inst = Instance(key, kind)
-            if node is not None:
-                self._init_members(inst, node)
-            self.instances[key] = inst
-        return self.instances[key]
-
     def _init_members(self, inst, node):
         """RETURN: None, always. Initialises the instance's members from the
-                  definition's has: declarations (P-5 zero values per type)
-                  and its parameters from the D-11 defaults.
+                  definition body's member declarations (R-41.10; P-5 zero
+                  values per type) and its parameters from the D-11
+                  defaults.
         """
-        for decl in getattr(node, "has", ()):
+        for decl in getattr(node, "members", ()):
             inst.members[decl.name.segments[0]] = _zero_of(decl.type_)
         signature = getattr(node, "signature", None)
         if signature is not None and signature.params is not NodeAbsent:
@@ -281,14 +409,6 @@ class Machine:
                     inst.params[arg.name.segments[0]] = 0.0
 
     # -- driving ------------------------------------------------------------
-
-    def post(self, name, **payload):
-        """RETURN: None, always. Enqueues one external event (its name as a
-                  dotted string) with keyword payload members readable
-                  through 'e.'.
-        """
-        self.queue.append((tuple(name.split(".")), dict(payload)))
-        self.drain()
 
     def advance(self, seconds):
         """RETURN: None, always. Moves virtual time forward, firing every due
@@ -304,19 +424,26 @@ class Machine:
             self.now = nxt.due
             nxt.due += nxt.period
             self.line("tick   %.1fs %s" % (self.now, ".".join(nxt.event)))
-            self.queue.append((nxt.event, dict(nxt.payload)))
+            # pipe ruling: every owner is a constructed reactor; the due
+            # emission routes like any of its emissions (fan or 'to').
+            self.routed_emit(nxt.owner, nxt.event, dict(nxt.payload),
+                             nxt.to_channel)
             self.drain()
         self.now = target
 
     def drain(self):
         """RETURN: None, always. Processes the queue to exhaustion: one event
                   fully dispatched -- every matching causality of every
-                  active holder, declaration order -- before the next (P-1).
+                  subscriber's in-channel, declaration order within the
+                  receiver, before the next entry (P-1); every entry is a
+                  ROUTED delivery -- the bus died with the pipe build.
         """
         while self.queue:
-            event, payload = self.queue.popleft()
-            self.line("event  %s%s" % (".".join(event), _fmt_payload(payload)))
-            self.dispatch(event, payload)
+            inst, in_channel, event, payload = self.queue.popleft()
+            self.line("event  %s.%s %s%s"
+                      % (inst.label, in_channel, ".".join(event),
+                         _fmt_payload(payload)))
+            self.dispatch_routed(inst, in_channel, event, payload)
 
     def trace(self):
         """RETURN: str, the full trace, one line per observable step -- the
@@ -330,48 +457,164 @@ class Machine:
 
     # -- dispatch -----------------------------------------------------------
 
-    def dispatch(self, event, payload):
-        """RETURN: None, always. Fires 'event' at every ACTIVE causality
-                  holder in registry order: PHASE 1 fixes the matched set
-                  against the state at event arrival (P-1b -- an effect of
-                  this event never changes which of this event's guards
-                  held); PHASE 2 runs the matched effects in declaration
-                  order.
+    def _context_of(self, key, inst):
+        """RETURN: _Ctx, the binding context of one reactor holder: the
+                  bare-dot self binding reaches the reactor's own members
+                  (reactor ruling -- behaviors own no state).
         """
+        return _Ctx(self, inst, e={}, self_=inst, s=inst.params)
+
+    # -- the pipe model (pipe ruling) ----------------------------------------
+
+    def construct_reactor(self, label, node, args, ctx):
+        """RETURN: ReactorInstance, built STANDING (pipe ruling: no on/off
+                  switch -- construction is activation): members
+                  initialised, channels created, and the standing default
+                  armed ('reactor' its FIRST declared behavior, 'reactor++'
+                  ALL) with ~ENTRY running.
+        """
+        inst = ReactorInstance(label, node)
+        self._init_members(inst, node)
+        self.line("make   %s : %s" % (label,
+                                      ".".join(node.signature.name.segments)))
+        names = [b.signature.name.segments[0] for b in node.behaviors]
+        initial = names[:1] if node.mode == "single" else names
+        for name in initial:
+            self.activate_behavior(inst, node, name)
+        return inst
+
+    def wire(self, statement, ctx):
+        """RETURN: None, always. Executes one wire statement (WIRING IS
+                  WORK): the destination subscribes to the source's out
+                  channel -- the named one, or the source's single one for
+                  the plain arrow (a feeder's single out for a feeder
+                  source); the subscriber entry carries the DESTINATION
+                  in-channel name the routed delivery selects.
+        """
+        source = ctx.locals.get(statement.source.segments[0])
+        dest   = ctx.locals.get(statement.dest.segments[0])
+        if isinstance(source, FeederInstance):
+            channel = source.out
+        else:
+            name = statement.channel \
+                   or next(iter(source.outs), "")
+            channel = source.outs.get(name)
+        in_channel = statement.channel
+        if not in_channel:
+            ins = tuple(c.segments[0] for c in dest.node.ins) \
+                  if isinstance(dest, ReactorInstance) else ()
+            in_channel = ins[0] if len(ins) == 1 else \
+                         (channel.name if channel is not None else "")
+        channel.subscribers.append((dest, in_channel))
+        self.line("wire   %s --[%s]--> %s"
+                  % (statement.source.segments[0],
+                     channel.name or in_channel,
+                     statement.dest.segments[0]))
+
+    def publish(self, channel, event, payload):
+        """RETURN: None, always. Delivers one event through a channel: every
+                  subscriber receives it as a routed queue entry
+                  (breadth, P-1; synchronously in the deliverer's thread --
+                  the drain IS that thread); a DESTRUCTED subscriber reads
+                  Nothing and is skipped (known-hub law); zero live
+                  subscribers is the ruled trace line 'drop <chan> <event>'.
+        """
+        alive = [(inst, in_ch) for inst, in_ch in channel.subscribers
+                 if not inst.destructed]
+        if not alive:
+            self.line("drop   %s %s" % (channel.name or ".",
+                                        ".".join(event)))
+            return
+        for inst, in_channel in alive:
+            self.queue.append((inst, in_channel, event, payload))
+
+    def routed_emit(self, inst, event, payload, to_channel):
+        """RETURN: None, always. One emission out of a constructed reactor
+                  (pipe ruling): 'to <channel>' publishes on that one out
+                  channel; suffix-less FANS -- every out channel plus the
+                  self channel.
+        """
+        if to_channel:
+            self.line("emit   %s.%s %s" % (inst.label, to_channel,
+                                           ".".join(event)))
+            self.publish(inst.outs[to_channel], event, payload)
+            return
+        self.line("emit   %s.* %s" % (inst.label, ".".join(event)))
+        for name in inst.outs:
+            self.publish(inst.outs[name], event, payload)
+        self.publish(inst.self_channel, event, payload)
+
+    def dispatch_routed(self, inst, in_channel, event, payload):
+        """RETURN: None, always. Fires one delivered event at one
+                  subscriber: the armed behaviors' causalities of the
+                  matching CHANNEL GROUP -- '.' for the self channel; bare
+                  (ungrouped) causalities belong to the panel's single
+                  in-channel, or to the self channel where none is
+                  declared. PHASE 1 fixes the matched set (P-1b), PHASE 2
+                  runs the effects in declaration order.
+        """
+        if inst.destructed:
+            return                       # known-hub law: reads Nothing
+        node = inst.node
+        ins = tuple(c.segments[0] for c in node.ins)
+        bare_channel = ins[0] if len(ins) == 1 else "."  # group law:
+                                         # several ins have no bare form
+                                         # (elaborate rejected it)
+        ctx = self._context_of(inst.qualified, inst)
+        ctx.e = payload
+        ctx.event_name = event
         fired = []
-        for key in sorted(self.defs):
-            node = self.defs[key]
-            inst = self.instances.get(key)
-            if inst is None or not inst.active:
+        for behavior in node.behaviors:
+            if behavior.signature.name.segments[0] \
+                    not in inst.active_behaviors:
                 continue
-            if isinstance(node, A.Behavior):
-                ctx = self._context_of(key, inst)
-                ctx.e = payload
-                ctx.event_name = event
-                for causality in node.causalities:
-                    if self.cause_matches(causality.cause, event, payload,
-                                          ctx):
-                        fired.append(("fire", causality, ctx))
-        for kind, entry, carrier in fired:
-            for effect in entry.effects:
+            pools = [g.causalities for g in behavior.groups
+                     if g.channel == in_channel]
+            if in_channel == bare_channel:
+                pools.append(behavior.causalities)
+            for pool in pools:
+                for causality in pool:
+                    if self.cause_matches(causality.cause, event,
+                                          payload, ctx):
+                        fired.append((causality, ctx))
+        for causality, carrier in fired:
+            for effect in causality.effects:
                 self.run_effect(effect, carrier)
 
-    def _context_of(self, key, inst):
-        """RETURN: _Ctx, the binding context of one holder: b = the holder
-                  when it is a behaviour, a = the enclosing (or scope-default)
-                  aspect, c = the scope-default character of the holder's
-                  scope -- the default-instance-per-level ruling made
-                  concrete.
+    def run(self, name, args=()):
+        """RETURN: None, always. The harness verb driving a PLANT: the
+                  statement-form call of the named top-level work (the
+                  wiring work); its constructions, wires, and feeders stand
+                  afterwards, ready for play().
         """
-        scope = key[:-1]
-        if inst.kind == "behavior":
-            b = inst
-            a = self.instance(scope + ("<aspect>",))
-        else:
-            b = self.instance(scope + ("<behavior>",))
-            a = inst
-        c = self.instance(scope + ("<character>",))
-        return _Ctx(self, inst, e={}, b=b, a=a, c=c, s=inst.params)
+        work = self.defs[tuple(name.split("."))]
+        self.line("run    %s" % name)
+        self.call_work(work, list(args), _Ctx(self, None))
+
+    def step(self):
+        """RETURN: bool, True when a feeder replayed -- ONE feeder round
+                  (the harness step law): each wound, live feeder replays
+                  ONE event onto its out channel, the queue drained to
+                  exhaustion after each; False when every feeder stands
+                  exhausted or destructed.
+        """
+        fed = False
+        for feeder in self.feeders:
+            if feeder.destructed or not feeder.events:
+                continue
+            event, payload = feeder.events.pop(0)
+            self.line("feed   %s %s" % (feeder.label, event))
+            self.publish(feeder.out, (event,), dict(payload))
+            self.drain()
+            fed = True
+        return fed
+
+    def play(self):
+        """RETURN: None, always. Replays every wound feeder to exhaustion,
+                  one step() round at a time.
+        """
+        while self.step():
+            pass
 
     def cause_matches(self, cause, event, payload, ctx):
         """RETURN: bool, True exactly when the cause names the fired event
@@ -430,24 +673,38 @@ class Machine:
         if effect.marker == "=x=>":
             self.cancel(access, ctx)
             return
-        if access.kind in ("character", "aspect", "behavior"):
-            self.activate(access.target, args)
+        if access.kind == "behavior":
+            # reactor ruling: 'A => Name' activates the behavior member in
+            # THIS reactor -- resolved through the firing context, never a
+            # global position.
+            node = getattr(ctx.inst, "node", None) \
+                   or self.defs.get(tuple(ctx.inst.qualified))
+            if isinstance(node, A.Reactor):
+                self.activate_behavior(ctx.inst, node, access.target[-1])
         elif spawn.every is not NodeAbsent:
             period = _number(self.expr(spawn.every, ctx))
+            to_channel = "" if spawn.to_channel is NodeAbsent \
+                         else spawn.to_channel.segments[0]
             emission = Recurring(event=tuple(access.target), payload={},
-                                 period=period, owner=ctx.inst, now=self.now)
+                                 period=period, owner=ctx.inst, now=self.now,
+                                 to_channel=to_channel)
             self.recurring.append(emission)
             self.line("recur  %s every %.1fs"
                       % (".".join(access.target), period))
             if spawn.handle is not NodeAbsent:
                 ctx.inst.handles[spawn.handle.segments[0]] = emission
         else:
+            # pipe ruling: an emission is ROUTED -- 'to <channel>'
+            # publishes on that out channel, suffix-less FANS to all out
+            # channels plus self. The bus is no more.
             payload = {a.name: self.expr(a.value, ctx)
                        for a in ([] if spawn.call.args is NodeAbsent
                                  else spawn.call.args)
                        if isinstance(a, A.NamedArg)}
-            self.queue.append((tuple(access.target), payload))
-            self.line("emit   %s" % ".".join(access.target))
+            to_channel = "" if spawn.to_channel is NodeAbsent \
+                         else spawn.to_channel.segments[0]
+            self.routed_emit(ctx.inst, tuple(access.target), payload,
+                             to_channel)
 
     def cancel(self, access, ctx):
         """RETURN: None, always. '=x=>': a handle cancels its recurring
@@ -460,56 +717,65 @@ class Machine:
             emission = ctx.inst.handles[access.target[0]]
             emission.alive = False
             self.line("cancel %s" % access.target[0])
-        elif access.kind in ("character", "aspect", "behavior"):
-            self.deactivate(access.target)
+        elif access.kind == "behavior":
+            node = getattr(ctx.inst, "node", None) \
+                   or self.defs.get(tuple(ctx.inst.qualified))
+            if isinstance(node, A.Reactor):
+                self.deactivate_behavior(ctx.inst, node, access.target[-1])
+        # (reactor activation/deactivation by name DIED with the pipe
+        # build: construction is standing, destruct is the end; the
+        # SEMANTICS 1 deactivable-table re-speak is flagged in OPEN.)
 
-    def activate(self, qualified, args):
-        """RETURN: None, always. Activates the scope-default instance of
-                  'qualified' (a no-op when already active, P-2): parameters
-                  take the call's arguments; inside an aspect the previously
-                  active sibling behaviour deactivates first (one active
-                  behaviour per aspect); ~ENTRY causalities then run.
+    def activate_behavior(self, inst, node, name):
+        """RETURN: None, always. Activates the named behavior member in a
+                  reactor instance (reactor ruling): a no-op when already
+                  armed; in a 'reactor' (state machine) the previously
+                  active behavior deactivates FIRST -- one state at a time;
+                  in a 'reactor++' (mode group) the set simply grows.
+                  ~ENTRY causalities of the entered behavior run.
         """
-        inst = self.instance(qualified)
-        if inst.active:
+        if name in inst.active_behaviors:
             return
-        node = self.defs.get(tuple(qualified))
-        if node is not None and getattr(node, "abstract", False):
-            return
-        if node is not None:
-            signature = node.signature
-            if signature.params is not NodeAbsent:
-                names = [p.name.segments[0] for p in signature.params]
-                for name, value in zip(names, args):
-                    inst.params[name] = value
-        inst.active = True
-        self.line("enter  %s" % ".".join(qualified))
-        if node is not None and isinstance(node, A.Behavior):
-            self._lifecycle(node, inst, "~ENTRY")
-    def deactivate(self, qualified):
-        """RETURN: None, always. Deactivates the instance (a no-op when
-                  inactive): ~EXIT causalities run, then every recurring
-                  emission it owns is auto-cancelled (R-15).
-        """
-        inst = self.instance(qualified)
-        if not inst.active:
-            return
-        node = self.defs.get(tuple(qualified))
-        if node is not None and isinstance(node, A.Behavior):
-            self._lifecycle(node, inst, "~EXIT")
-        for emission in self.recurring:
-            if emission.owner is inst and emission.alive:
-                emission.alive = False
-                self.line("cancel (auto, ~EXIT) %s"
-                          % ".".join(emission.event))
-        inst.active = False
-        self.line("exit   %s" % ".".join(qualified))
+        if node.mode == "single":
+            for other in tuple(inst.active_behaviors):
+                self.deactivate_behavior(inst, node, other)
+        inst.active_behaviors.add(name)
+        self.line("enter  %s.%s" % (".".join(inst.qualified), name))
+        behavior = self._behavior_of(node, name)
+        if behavior is not None:
+            self._lifecycle_behavior(behavior, inst, "~ENTRY")
 
-    def _lifecycle(self, node, inst, kind):
-        """RETURN: None, always. Runs every causality of 'node' whose cause
-                  is the lifecycle event 'kind' -- no trigger, no guard
-                  (LANGUAGE 3).
+    def deactivate_behavior(self, inst, node, name):
+        """RETURN: None, always. Disarms the named behavior member (a no-op
+                  when inactive): its ~EXIT causalities run, then every
+                  recurring emission the reactor owns... stays -- ownership
+                  is the REACTOR's; auto-cancel rides reactor deactivation
+                  (R-15), not the behavior flip.
         """
+        if name not in inst.active_behaviors:
+            return
+        behavior = self._behavior_of(node, name)
+        if behavior is not None:
+            self._lifecycle_behavior(behavior, inst, "~EXIT")
+        inst.active_behaviors.discard(name)
+        self.line("leave  %s.%s" % (".".join(inst.qualified), name))
+
+    def _behavior_of(self, node, name):
+        """RETURN: Behavior, the reactor's behavior member of that name, if
+                  declared. None, else.
+        """
+        for behavior in node.behaviors:
+            if behavior.signature.name.segments[0] == name:
+                return behavior
+        return None
+
+    def _lifecycle_behavior(self, behavior, inst, kind):
+        """RETURN: None, always. Runs every causality of the behavior member
+                  whose cause is the lifecycle event 'kind' -- no trigger,
+                  no guard; the context is the REACTOR instance (reactor
+                  ruling: behaviors own no state).
+        """
+        node = behavior
         ctx = self._context_of(inst.qualified, inst)
         for causality in node.causalities:
             target = causality.cause.target
@@ -561,12 +827,12 @@ class Machine:
         return None
 
     def _bind_panel(self, work, args, ctx):
-        """RETURN: dict, the callee frame: knows-/takes-entries bound from
-                  the call's arguments -- positionals in declaration order,
-                  'name => value' by name, panel defaults filling the rest
-                  (LANGUAGE 12.5).
+        """RETURN: dict, the callee frame: in: entries bound from the call's
+                  arguments BY DIRECTION (R-41.1) -- positionals in
+                  declaration order, 'name = value' by name, panel defaults
+                  filling the rest (LANGUAGE 12.5).
         """
-        entries = tuple(work.panel.knows) + tuple(work.panel.takes)
+        entries = tuple(work.panel.ins)
         frame, positional = {}, []
         for arg in args:
             if isinstance(arg, A.NamedArg):
@@ -583,15 +849,15 @@ class Machine:
                 cursor += 1
             elif entry.default is not NodeAbsent:
                 frame[name] = self.expr(entry.default, ctx)
-        for entry in work.panel.gives:
+        for entry in work.panel.outs:
             name = entry.name.segments[0]
             if entry.default is not NodeAbsent:
                 frame[name] = self.expr(entry.default, ctx)
         return frame
 
     def call_work(self, work, args, ctx):
-        """RETURN: tuple, the gives-bundle in declaration order after the
-                  body reached finish:. Raises _Signal when an exit: fires
+        """RETURN: tuple, the out-bundle in declaration order after the
+                  body reached give:. Raises _Signal when an exit: fires
                   (LANGUAGE 12.3: the sum -- all outputs or one signal).
         """
         frame = self._bind_panel(work, args, ctx)
@@ -619,7 +885,7 @@ class Machine:
                             break            # forward-only, bare only
                 index += 1
         except _Finished as f:
-            return f.gives
+            return f.outs
         raise _Signal("fell_off", ())          # unreachable under 12.4 law
 
     def aware_mutation(self, statement, ctx):
@@ -706,7 +972,7 @@ class Machine:
         match statement:
             case A.Tick():
                 yield tuple(ctx.locals.get(e.name.segments[0])
-                            for e in ctx.work.panel.ticks)
+                            for e in ctx.work.panel.outs)
             case A.If():
                 for arm in statement.arms:
                     if _truthy(self.expr(arm.cond, ctx)):
@@ -796,6 +1062,8 @@ class Machine:
                   name lands in the locals, a bound member through the
                   ordinary mutation place.
         """
+        if isinstance(lvalue, A.KnownSite):
+            lvalue = lvalue.target              # R-41.2: marker unwraps
         leaf = lvalue.name if isinstance(lvalue, A.DataAccess) else lvalue
         store, member = self._place_of(leaf, ctx)
         store[member] = value
@@ -808,24 +1076,48 @@ class Machine:
                   loop).
         """
         match statement:
-            case A.Give():                      # LANGUAGE 12.4 (R-37): the
-                raise _Finished(tuple(          # gives-bundle leaves
-                    ctx.locals.get(e.name.segments[0])
-                    for e in ctx.work.panel.gives))
+            case A.Give():                      # LANGUAGE 12.4 (R-37,
+                raise _Finished(tuple(          # R-41.4): the out-bundle
+                    ctx.locals.get(e.name.segments[0])   # leaves in
+                    for e in ctx.work.panel.outs))       # declaration
+                                                         # order (12.5);
+                                                         # the written list
+                                                         # is elaborate's
+                                                         # check
+            case A.Wire():                      # pipe ruling: WIRING IS WORK
+                self.wire(statement, ctx)
             case A.Destruct():                  # R-37: the having ends HERE
                 obj = statement.object
                 leaf = obj.name if isinstance(obj, A.DataAccess) else obj
                 name = leaf.segments[0]
                 self.line("destruct %s" % ".".join(leaf.segments))
                 if isinstance(ctx, _WorkContext):
-                    ctx.locals.pop(name, None)  # the name dies with the
+                    held = ctx.locals.pop(name, None)
+                                                # the name dies with the
                                                 # having; disposal dispatch
                                                 # rides the type document
+                    if isinstance(held, (ReactorInstance, FeederInstance)):
+                        held.destructed = True  # the hub's pointer zeroes:
+                                                # every knower -- channel
+                                                # subscriber lists included
+                                                # -- reads Nothing from this
+                                                # instant (HAVE_KNOW_BE (3))
+                        for emission in self.recurring:
+                            if emission.owner is held and emission.alive:
+                                emission.alive = False   # R-15: ownership
+                                self.line(                # ends with the
+                                    "cancel (auto, destruct) %s"  # owner
+                                    % ".".join(emission.event))
             case A.Tick():                      # LANGUAGE 13.3: deliver,
                 raise _Yield(tuple(             # suspend until the pull
                     ctx.locals.get(e.name.segments[0])
-                    for e in ctx.work.panel.ticks))
+                    for e in ctx.work.panel.outs))
             case A.ExitSignal():                # LANGUAGE 12.4: fault egress
+                if statement.variant is NodeAbsent:
+                    # R-41.7: bare exit: -- the nothing-more egress; the
+                    # puller receives the built-in variant ('finished'
+                    # today; the rename rides a flagged fork).
+                    raise _Signal("finished", ())
                 raise _Signal(statement.variant.segments[0],
                               () if statement.args is NodeAbsent else tuple(
                                   self.expr(a, ctx) for a in statement.args))
@@ -920,10 +1212,43 @@ class Machine:
     def mutate(self, statement, ctx):
         """RETURN: None, always. Executes one mutation: the lvalue place
                   (binding member, optionally indexed) receives the
-                  operator-combined value; the write is traced.
+                  operator-combined value; the write is traced. A KnownSite
+                  wrapper (R-41.2) unwraps -- the marker has no runtime
+                  effect until the knowing model's runtime lands
+                  (HAVE_KNOW_BE (3)).
         """
         lvalue = statement.lvalue
+        if isinstance(lvalue, A.KnownSite):
+            lvalue = lvalue.target
         leaf = lvalue.name if isinstance(lvalue, A.DataAccess) else lvalue
+        # -- pipe ruling: 'a = TrafficLight(...);' is already a mutation +
+        #    call -- SEMANTICS recognises reactor construction (no new
+        #    grammar); 'f = script("...")' winds the harness feeder. Both
+        #    build STANDING and store the instance in the body local; no
+        #    'set' line -- construction traces as construction.
+        if statement.op == "=" and not statement.extra_lvalues \
+                and isinstance(ctx, _WorkContext) \
+                and len(leaf.segments) == 1 \
+                and isinstance(statement.rhs, A.DataAccess) \
+                and statement.rhs.args is not NodeAbsent \
+                and not statement.rhs.steps:
+            label = leaf.segments[0]
+            head = tuple(statement.rhs.name.segments)
+            definition = self.defs.get(head)
+            if isinstance(definition, A.Reactor):
+                args = [self.expr(a.value if isinstance(a, A.NamedArg)
+                                  else a, ctx)
+                        for a in statement.rhs.args]
+                ctx.locals[label] = self.construct_reactor(
+                    label, definition, args, ctx)
+                return
+            if head == ("script",):
+                text = str(self.expr(tuple(statement.rhs.args)[0], ctx))
+                feeder = FeederInstance(label, text)
+                ctx.locals[label] = feeder
+                self.feeders.append(feeder)
+                self.line("wind   %s : script" % label)
+                return
         store, member = self._place_of(leaf, ctx)
         rhs = self.expr(statement.rhs, ctx)
         if isinstance(lvalue, A.DataAccess) and lvalue.steps:
@@ -959,9 +1284,7 @@ class Machine:
         head = leaf.access.target[0]
         member = leaf.access.residue[0]
         store = {"e": ctx.e,
-                 "b": ctx.b.members if ctx.b else {},
-                 "a": ctx.a.members if ctx.a else {},
-                 "c": ctx.c.members if ctx.c else {}}[head]
+                 "": ctx.self_.members}[head]   # '' = the bare-dot self
         return store, member
 
     # -- expressions --------------------------------------------------------
@@ -1028,12 +1351,8 @@ class Machine:
             return ctx.locals.get(leaf.segments[0], 0.0)
         if access.kind == "binding":
             head = access.target[0]
-            if head == "s":
-                return ctx.params.get(access.residue[0], 0.0)
             store = {"e": ctx.e,
-                     "b": ctx.b.members if ctx.b else {},
-                     "a": ctx.a.members if ctx.a else {},
-                     "c": ctx.c.members if ctx.c else {}}[head]
+                     "": ctx.self_.members}[head]   # '' = bare-dot self
             return store.get(access.residue[0], 0.0)
         if access.kind == "local":
             name = access.target[0]
@@ -1096,20 +1415,18 @@ class Machine:
 
 
 class _Ctx:
-    """RETURN: never a value itself -- one execution context: the level
-              instances behind the bindings (e as the fired payload dict, b/
-              a/c as Instances, s as the parameter dict), the local frame of
-              loops and comprehensions, and the event currently dispatched.
+    """RETURN: never a value itself -- one execution context (reactor
+              ruling): 'e' the fired payload dict, 'self_' the REACTOR
+              instance behind the bare-dot binding, 'params' the
+              named-cause parameter frame (P-6), the local frame of loops
+              and comprehensions, and the event currently dispatched.
     """
 
-    def __init__(self, machine, inst, e=None, b=None, a=None, c=None,
-                 s=None):
+    def __init__(self, machine, inst, e=None, self_=None, s=None):
         self.machine    = machine
         self.inst       = inst
         self.e          = e if e is not None else {}
-        self.b          = b
-        self.a          = a
-        self.c          = c
+        self.self_      = self_ if self_ is not None else inst
         self.params     = s if s is not None else {}
         self.locals     = {}
         self.event_name = ()
@@ -1119,8 +1436,8 @@ class _Ctx:
                   named-cause evaluation context (P-6), everything else
                   shared.
         """
-        clone = _Ctx(self.machine, self.inst, e=self.e, b=self.b, a=self.a,
-                     c=self.c, s=frame)
+        clone = _Ctx(self.machine, self.inst, e=self.e, self_=self.self_,
+                     s=frame)
         clone.locals = self.locals
         clone.event_name = self.event_name
         return clone
@@ -1145,11 +1462,22 @@ def _zero_of(type_node):
     return 0.0
 
 
-def _truthy(value):
-    """RETURN: bool, the truth of a guard value: bools as they are, numbers
-              non-zero, strings non-empty, collections non-empty.
+def _absence_norm(value):
+    """RETURN: object, 'value' with Nothing read as its numeric face 0 --
+              the EQUIVALENCE ruling: 'm != Nothing', 'm != 0', and bare
+              'm' are one gate, so Nothing compares as zero. (Both runtime
+              faces of absence normalise: the NOTHING sentinel and an
+              unbound None.)
     """
-    return bool(value)
+    return 0 if value is NOTHING or value is None else value
+
+
+def _truthy(value):
+    """RETURN: bool, the truth of a guard value: Nothing and zero are
+              false (the equivalence ruling: one absence), bools as they
+              are, strings non-empty, collections non-empty.
+    """
+    return bool(_absence_norm(value))
 
 
 def _number(value):
@@ -1173,9 +1501,9 @@ def _apply_bin(op, lhs, rhs):
     if op == "or":
         return _truthy(lhs) or _truthy(rhs)
     if op == "==":
-        return lhs == rhs                  # structural over containers
-    if op == "!=":
-        return lhs != rhs
+        return _absence_norm(lhs) == _absence_norm(rhs)  # structural over
+    if op == "!=":                                       # containers;
+        return _absence_norm(lhs) != _absence_norm(rhs)  # Nothing reads 0
     if op in ("in", "not in"):
         held = _contains(rhs, lhs)
         return held if op == "in" else not held
@@ -1219,7 +1547,7 @@ def _select_overload(overloads, selector):
               stays total; elaborate rejected the call shape already).
     """
     for work in overloads:
-        entries = tuple(work.panel.knows) + tuple(work.panel.takes)
+        entries = tuple(work.panel.ins)
         if entries and entries[0].name.segments[0] == selector:
             return work
     return overloads[0]

@@ -192,7 +192,11 @@ from ..core.parser_generator.ll2_grammar_spec import T
 
 # == terminals ================================================================
 # Numeric literals: float BEFORE int (maximal munch, R-13/R-4).
-t_re_float   = T.regex(r'\d+\.\d+')
+# float (Q9 ruling: the EXPONENT MARKS FLOAT, like the dot does): a
+# fraction, an exponent, or both -- '1e-6', '2.5e3', '1E+10' are floats;
+# a bare '\d+' stays the int. Python and Luau both read the lexeme
+# natively.
+t_re_float   = T.regex(r'\d+\.\d+(?:[eE][+-]?\d+)?|\d+[eE][+-]?\d+')
 t_re_int     = T.regex(r'\d+')
 t_re_doc     = T.regex(r'"""(?:[^"]|"(?!""))*"""')  # D-18: BEFORE t_re_string
 t_re_string  = T.regex(r'"[^"]*"')
@@ -230,6 +234,22 @@ t_op_range   = T.captured("..")
 # type names "int"/"float" and before ":", so "int:" lexes as one token.
 t_kw_int_loop   = T.captured("int:")
 t_kw_float_loop = T.captured("float:")
+# relation markers (R-41.1/2): the STATE NOUNS spoken at panel entries,
+# member declarations, and binding sites -- captured (which marker was
+# written matters); colon-terminated (R-11), so they lex in the
+# leading-colon tier before any bare id.
+t_kw_known   = T.captured("known:")
+t_kw_had     = T.captured("had:")
+# reactor kind words (reactor ruling): 'reactor++' MUST lex before the
+# bare 'reactor' (longest first -- the '++' is part of the kind word,
+# not an operator), so it is declared as an explicit captured terminal.
+t_kw_reactor_multi = T.captured("reactor++")
+# wire arrows (pipe ruling): dash law >= 2 BY REGEX -- 'a --> b' and
+# 'a ----> b' are the same arrow, 'a-> b' is not one. EARLY tier: the
+# dashes are themselves the '-' terminal, so these classes must be
+# tried before the bare keywords and symbols (lexer tier 3b).
+t_op_wire_arrow = T.regex(r'--+>',  early=True)
+t_op_wire_open  = T.regex(r'--+\[', early=True)
 
 # -- single-character operators ------------------------------------------------
 t_op_lt      = T.captured("<")
@@ -286,13 +306,13 @@ GRAMMAR = {
     "file":       (STAR("<top-level>"),),
 
     # == top level ============================================================
-    # A rule-file is a sequence of definitions, causalities, scopes, and imports.
-    # D-19: every name-led ':' item (definition or declaration) parses through
-    # ONE factored rule, <named-item>; a top-level causality never carries ':'
-    # after its head name, so the two branches split LL(2)-clean on token two.
+    # A rule-file is a sequence of definitions, scopes, and imports.
+    # REACTOR RULING (i): causalities appear ONLY inside behaviors inside
+    # reactors -- the top-level causality died with the free-standing
+    # behavior. D-19: every name-led ':' item (definition or declaration)
+    # parses through ONE factored rule, <named-item>.
     "top-level":  ("<named-item(named)>",
                    OR, "<ctor-def(ctor)>", OR, "<dtor-def(dtor)>",
-                   OR, "<causality(causality)>",
                    OR, "<namespace(namespace)>", OR, "<import(import)>",
                    OR, "<documented(documented)>"),                    # D-18
 
@@ -304,11 +324,9 @@ GRAMMAR = {
     # top-level declaration are ONE head, decided at the token after ':'.
     # '~' (abstract, R-10) qualifies the kind word; a named cause admits none.
     "named-item": (t_re_id("name"), t_op_colon,
-                   ((["~"], "character", "<character-tail(character)>"),
+                   ((t_kw_reactor_multi, "<reactor-tail(reactor_multi)>"),
                     OR,
-                    (["~"], "aspect", "<aspect-tail(aspect)>"),
-                    OR,
-                    (["~"], "behavior", "<behavior-tail(behavior)>"),
+                    ("reactor", "<reactor-tail(reactor_single)>"),
                     OR,
                     ("cause", "<cause-tail(cause-def)>"),
                     OR,
@@ -327,24 +345,34 @@ GRAMMAR = {
     "ctor-def":   (t_op_add, t_re_id("class"), ".", t_re_id("ext"),
                    t_op_colon, "work", "<work-tail(work)>"),
     # D-29: '()' after the class name is the EXPLICIT flag (R-37): the
-    # class's destruction is WRITTEN at every site ('destruct:'), so the
+    # class's destruction is WRITTEN at every site ('destruct'), so the
     # disposal work MAY declare signals -- every site answers them.
     "dtor-def":   (t_op_sub, t_re_id("class"), ["(", ")"],
                    t_op_colon, "work", "<work-tail(work)>"),
 
-    # == class (R-29, LANGUAGE 11; D-25) ======================================
-    # is: inheritance; has: custody members; knows: view members; the body
-    # holds MEMBER WORKS -- role by panel: a member work giving the class is
-    # its CONSTRUCTION WORK, one taking it its DISPOSAL WORK (R-30).
+    # == class (R-29, LANGUAGE 11; R-41.3) ====================================
+    # is: inheritance; then ONE body brace whose items are member
+    # declarations ('[known:|had:] name : type;', having implicit) and
+    # member works, INTERLEAVING FREELY (R-41.3, interleave (A)). Role by
+    # panel: a member work whose out: names the class is its CONSTRUCTION
+    # WORK, one whose in: names it its DISPOSAL WORK (R-30/R-41.1).
     "class-tail": (["is:", "<call(class)>", STAR((",", "<call(class)>"))],
-                   ["has:", "<decl-block>"],
-                   ["knows:", "<decl-block>"],
-                   ["{", PLUS("<member-work>"), "}"]),
-    "member-work": (t_re_id("name"), t_op_colon, "work", "<work-tail(work)>"),
+                   ["{", PLUS("<class-item>"), "}"]),
+    # -- class-shaped body items (R-41.3, factored head per the D-20
+    #    precedent): a marker-led item is a DECLARATION by construction; a
+    #    name-led item consumes 'name :' and decides on the token after --
+    #    'work' opens a member work, anything else is the declared type.
+    "class-item":    ("<marked-member(marked)>", OR, "<plain-member(plain)>"),
+    "marked-member": ((t_kw_known, OR, t_kw_had),
+                      t_re_id("name"), t_op_colon, "<type>", ";"),
+    "plain-member":  (t_re_id("name"), t_op_colon,
+                      (("work", "<work-tail(work)>"),
+                       OR,
+                       ("<type>", ";"))),
 
     # == work (LANGUAGE 12; D-25) =============================================
     # Panel, then the body: statements of the code subspace plus the work
-    # terminals. finish: and exit: are STATEMENTS of the work body only; the
+    # terminals. give and exit are STATEMENTS of the work body only; the
     # semantic layer holds their laws (SEMANTICS 23).
     # D-27: the panel is OPTIONAL -- 'name : work' alone is a class body's
     # SEMI-DECLARATION (brief listing; the complete definition must follow,
@@ -353,7 +381,7 @@ GRAMMAR = {
 
     # == handler (LANGUAGE 12.6; D-26): the else:-block is a match ===========
     # Arms: '<variant>[(fields)] => <action>'; a bare '=>' is the default arm
-    # (at most one, last -- pass-2). Actions: a block, an exit:, or ';' (the
+    # (at most one, last -- pass-2). Actions: a block, an exit, or ';' (the
     # arm-level shrug). Exhaustiveness/dead-arm are semantic (SEMANTICS 24).
     "handler":    ("{", STAR("<arm>"), "}"),
     # An arm's head is OPTIONAL: absent = the bare '=>' default arm.
@@ -364,9 +392,10 @@ GRAMMAR = {
                    OR, "<arm-shrug(shrug)>"),
     "arm-shrug":  (";",),
 
-    # == clockwork (LANGUAGE 13; D-25) ========================================
-    # A work body extended by tick: (deliver the ticks: bundle, suspend until
-    # the next pull). groove: awaits its host's rebuild (R-25(3)).
+    # == clockwork (LANGUAGE 13; D-25, R-41.1) ================================
+    # A work body extended by tick: (deliver the per-tick out: bundle, suspend
+    # until the next pull); ended only through exit (bare = nothing-more,
+    # R-41.7). groove: awaits its host's rebuild (R-25(3)).
     "clockwork-tail": ("<panel(panel)>", ["{", STAR("<code/statement>"), "}"]),
 
     # == documented definition (D-18, D-20): a docstring PRECEDES its subject =
@@ -391,7 +420,12 @@ GRAMMAR = {
 
     # -- dotted namespace path: a plain dotted name, NOT a binding-qualified
     #    member access (R-9). It has no e./b./a./c./s. head.
-    "name-dotted": (t_re_id("name"), STAR((".", t_re_id("name")))),
+    # SELF BINDING (reactor ruling): a LEADING bare dot roots the access
+    # at the instance itself -- '.x' is this-instance's member x, for
+    # classes and reactors alike; the factory records it as an EMPTY
+    # first segment (prints naturally as '.x'). Where self is senseless
+    # (imports, is:-targets, namespace heads) the semantic unit rejects.
+    "name-dotted": (["."], t_re_id("name"), STAR((".", t_re_id("name")))),
 
     # == kind tails (D-19): what follows the kind word of a definition ========
     # Each tail is the definition MINUS its head name: '(params)?' first (the
@@ -400,43 +434,62 @@ GRAMMAR = {
     # <behavior-def>; the factories reunite them into ONE Signature product
     # (AST unchanged, D-19).
 
-    # == character (R-7, R-10, §7): aggregates concurrent aspects in has: =====
-    "character-tail": (["<parens-decl>"],
-                   ["is:", "<call(character)>", STAR((",", "<call(character)>"))],
-                   ["has:", "<decl-block>"]),
+    # == reactor (REACTOR RULING): a CLASS with behavior content ==============
+    # 'reactor' acts as a STATE MACHINE (single active behavior),
+    # 'reactor++' as a MODE GROUP (several active at once). The body is
+    # class-shaped -- member declarations and member works -- plus
+    # BEHAVIOR MEMBERS; a behavior holds ONLY causalities, has no members,
+    # no works, no instances, and exists nowhere else. The factored head
+    # (D-20 precedent): a marker-led item declares; after 'name :' the
+    # token decides -- 'work' a member work, 'behavior' a behavior member,
+    # anything else the declared type.
+    "reactor-tail": (["<reactor-panel(panel)>"],
+                   ["is:", "<call(reactor)>", STAR((",", "<call(reactor)>"))],
+                   "{", PLUS("<reactor-item>"), "}"),
+    # -- channel panel (PIPE RULING): in:/out: name the reactor's CHANNELS,
+    #    plain names -- a channel is a publish/subscribe OBJECT the reactor
+    #    HAS (created and destructed with it), not a data port; no types,
+    #    no markers. The wire's channel must stand in the source's out: AND
+    #    the destination's in: (both ends checked, elaborate).
+    "reactor-panel": ("(", ["in:",  t_re_id("channel"),
+                                    STAR((",", t_re_id("channel")))],
+                           ["out:", t_re_id("channel"),
+                                    STAR((",", t_re_id("channel")))],
+                      ")"),
+    "reactor-item":   ("<marked-member(marked)>", OR, "<reactor-member(member)>"),
+    "reactor-member": (t_re_id("name"), t_op_colon,
+                      (("behavior", "{", PLUS("<behavior-item>"), "}"),
+                       OR,
+                       ("work", "<work-tail(work)>"),
+                       OR,
+                       ("<type>", ";"))),
+    # -- behavior body (PIPE RULING): causalities GROUP by in-channel --
+    #    '<channel>: { causality+ }'; the SELF channel group is the bare
+    #    dot as group head ('. :' / '.:'). Ungrouped causalities remain
+    #    lawful exactly when ONE in-channel stands in the panel (they
+    #    belong to it) or none does (self only) -- elaborate holds the
+    #    group law. LL(2)-clean: a group head carries ':' at token 2; a
+    #    causality head never does.
+    "behavior-item":  ("<channel-group(group)>", OR, "<causality(causality)>"),
+    "channel-group":  ((t_re_id("channel"), OR, "."), t_op_colon,
+                       "{", PLUS("<causality>"), "}"),
 
-    # == aspect (R-7→R-16amend, R-10, R-25, §6): governs the one active behavior
-    # No does:: the brace already delimits the body (R-12). An aspect body is
-    # the mutually-exclusive behaviour set (the tick-paced clockwork left the
-    # language, R-25/D-22; its successor rides the work construct). The panel
-    # (D-23) is the clockwork-style signature: "knows:" declares the
-    # parameters, "signals:" the declared fault set -- signals are RECORDED;
-    # their checks land with the work construct.
-    "aspect-tail": (["<panel>"],
-                   ["is:", "<call(aspect)>", STAR((",", "<call(aspect)>"))],
-                   ["has:", "<decl-block>"],
-                   "{", PLUS("<behavior-def>"), "}"),
-    # panel (D-23): sectioned signature -- both sections optional, order fixed.
-    # panel (D-23, D-25): the five sections in fixed order, each optional.
-    # knows/takes are inputs (acquaintance / custody), gives the outputs,
-    # ticks the per-tick outputs (clockworks), signals the fault set.
-    "panel":       ("(", ["knows:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
-                         ["takes:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
-                         ["gives:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
-                         ["ticks:",   "<decl-arg>", STAR((",", "<decl-arg>"))],
+    # (aspect and character DIED with the reactor ruling -- the reactor
+    # unifies them: 'reactor' the state machine, 'reactor++' the mode
+    # group.)
+    # panel (R-41.1): FLAT and DIRECTION-SECTIONED -- 'in:'/'out:' speak
+    # direction, the per-entry marker the relation (having implicit,
+    # 'known:' explicit, 'had:' the optional visibility marker); 'signals:'
+    # stays flat and top-level (a signal is neither had nor known). Comma
+    # between entries within a section; sections keyword-led, juxtaposed;
+    # trailing comma rejected by construction (C-2, R-41.5). 'in:'
+    # overloads the for:-loop token -- contexts disjoint, LL-clean.
+    "panel":       ("(", ["in:",      "<panel-entry>", STAR((",", "<panel-entry>"))],
+                         ["out:",     "<panel-entry>", STAR((",", "<panel-entry>"))],
                          ["signals:", "<signal-decl>", STAR((",", "<signal-decl>"))],
                     ")"),
-    "signal-decl": (t_re_id("name"), ["<parens-decl>"]),
-
-    # == behavior (R-7→R-16amend, R-10, §3): aggregates causalities ===========
-    # No does:: the brace already delimits the body (R-12). <behavior-def> is
-    # the full name-first form (D-19), the shape an aspect body repeats.
-    "behavior-def": (t_re_id("name"), t_op_colon, ["~"],
-                     "behavior", "<behavior-tail(behavior)>"),
-    "behavior-tail": (["<parens-decl>"],
-                   ["is:", "<call(behavior)>", STAR((",", "<call(behavior)>"))],
-                   ["has:", "<decl-block>"],
-                   "{", PLUS("<causality>"), "}"),
+    "panel-entry": ([(t_kw_known, OR, t_kw_had)], "<decl-arg>"),
+    "signal-decl": (t_re_id("name"), ["<parens-payload>"]),
 
     # == named cause (R-5, D-19): carries its own guard =======================
     "cause-tail": (["<parens-decl>"], "<causality/cause-explicit>", ";"),
@@ -472,8 +525,13 @@ GRAMMAR = {
                           ("<spawn(spawn)>", (";", OR, "<effects>")))),
         "effect-marker": (t_op_spawn, OR, t_op_cancel),
 
-        # -- spawn (R-15): an entity/event call, optionally recurring + named -
-        "spawn":        ("<call>", ["every:", "<numeric>", ["as:", t_re_id("name")]]),
+        # -- spawn (R-15, pipe ruling): an entity/event call, optionally
+        #    ROUTED ('to <channel>' -- bare word, a suffix: the emission
+        #    publishes on the named out-channel of the enclosing reactor;
+        #    suffix-less send FANS: all out-channels plus self), optionally
+        #    recurring and named.
+        "spawn":        ("<call>", ["to", t_re_id("channel")],
+                         ["every:", "<numeric>", ["as:", t_re_id("name")]]),
     },
 
     # == values (R-4, D-2): ONE parse grammar; sorts are pass-2 views =========
@@ -550,26 +608,45 @@ GRAMMAR = {
     # Exit-region model (R-14, R-24, kernel goto-label idiom; "goto considered
     # harmful" made safe): ":name:" DEFINES a bare drop-through label (no body,
     # C-label semantics -- control falls through it to what follows;
-    # self-terminating: the second colon delimits, D-21). "dropto: label" is
+    # self-terminating: the second colon delimits, D-21). "dropto label;" is
     # the forward-only JUMP to such a label. The keyword "exit:" is retired
     # from this duty and reserved for the work construct's fault egress (F-5).
     # Pass-2 checks (see SEMANTICS.txt): exit-labels may be defined ONLY at the
     # outermost function body (not inside loops, if/elif/else, match, or any
-    # nested block); "dropto: L" targets an exit defined LATER (forward-only);
+    # nested block); "dropto L;" targets an exit defined LATER (forward-only);
     # the label exists.
     "code": {
         TOP:            ("{", STAR("<statement>"), "}"),
 
         # D-25/D-29: the work terminals give:/exit:/tick: and the explicit
-        # destruct: are STATEMENTS here (any nesting depth inside a work
+        # destruct are STATEMENTS here (any nesting depth inside a work
         # body); unlawful outside work and clockwork bodies -- the semantic
         # layer rejects (SEMANTICS 23, 27).
-        "statement":    ("<mutation(mutation)>", OR, "<if(if)>", OR, "<match(match)>",
+        "statement":    ("<wire(wire)>",
+                         OR, "<mutation(mutation)>", OR, "<if(if)>", OR, "<match(match)>",
                          OR, "<for(for)>", OR, "<count(count)>",
                          OR, "<break(break)>", OR, "<continue(continue)>", OR, "<dropto(dropto)>",
                          OR, "<exit-label>",
                          OR, "<give-stmt(give)>", OR, "<exit-stmt(exit)>",
                          OR, "<tick-stmt(tick)>", OR, "<destruct-stmt(destruct)>"),
+
+        # -- wire (PIPE RULING): WIRING IS WORK -- a work statement creating
+        #    a PIPE: 'a ----> b;' the plain arrow, 'a --[ statusx ]--> b;'
+        #    the channel-named arrow (dash law >= 2 by regex, arrow tokens
+        #    in the lexer's early tier). Ends are BARE locals holding the
+        #    constructed instances (LL(2): the decision against a mutation
+        #    falls at token 2 -- an arrow, never an op-mut; a dotted end
+        #    would push the decision to token 3, so the member-held end is
+        #    not admitted here). Wiring registers the destination as
+        #    subscriber of the source's out-channel; both-end panel checks
+        #    are elaborate's (PARTIAL: where the ends' reactor types are
+        #    visible in the same body).
+        "wire":         (t_re_id("source"),
+                         ((t_op_wire_open, t_re_id("channel"), t_br_close,
+                           t_op_wire_arrow),
+                          OR,
+                          t_op_wire_arrow),
+                         t_re_id("dest"), ";"),
 
         # -- the brace body (R-12: every block is "{ }") --------------------
         # Nested bodies admit no exit-label (outermost-only, pass-2).
@@ -582,8 +659,15 @@ GRAMMAR = {
         # form of a multi-output work call; single elsewhere, pass-2) and the
         # terminator may be replaced by the AWARE handler "else: { arms }" --
         # block-final, ends at '}' (the earlier canary, verified LL(2)-clean).
-        "mutation":     ("<lvalue>", STAR((",", "<lvalue>")), "<op-mut>", "<rhs>",
+        # R-41.2 SITE MARKING: each target takes an optional 'known:' -- the
+        # binding receives a VIEW; '=' stays relation-neutral. The
+        # acquaintance-take from a data access ('known: m = a.b.c;') parses
+        # through this same shape; the site-vs-panel agreement law is
+        # FLAGGED OPEN -- the marker is recorded, no check invented.
+        "mutation":     ("<site-target>", STAR((",", "<site-target>")),
+                         "<op-mut>", "<rhs>",
                          (";", OR, ("else:", "<handler(handler)>"))),
+        "site-target":  ([t_kw_known], "<lvalue>"),
         "lvalue":       ("<data-access(operand)>",),
         "rhs":          ("<expr>", OR, "<collection(comprehension)>"),
         "op-mut":       (t_op_assign, OR, t_op_addeq, OR, t_op_subeq,
@@ -604,9 +688,12 @@ GRAMMAR = {
         "for":          ("for:", t_re_id("var"),
                          (("in:", "<coll-source>"),
                           OR,                                          # D-26
-                          ("from:", ["give"], "<data-access(source)>")),
+                          ("from:", "<data-access(source)>")),
                          "<block>",
                          ["else:", "<handler(handler)>"]),   # D-16, D-26
+        # (the 'from: give <src>' custody flavour is RETIRED by ruling --
+        # from: takes the wound generator plainly; the call-site give
+        # marker, when it lands, is where giving speaks)
         "coll-source":  ("<data-access(access)>", OR, "<collection(comprehension)>"),
 
         # -- counting loop (R-13, bounded): a TYPED counter declared inline.
@@ -631,21 +718,31 @@ GRAMMAR = {
         "continue":     ("continue:", ";"),
 
         # -- dropto (R-14): forward-only jump to a later exit-label ----------
-        "dropto":       ("dropto:", t_re_id("label"), ";"),
+        # COMMAND SPELLING RULING: commands are BARE words (the ':' died),
+        # and every simple statement ends with ';'.
+        "dropto":       ("dropto", t_re_id("label"), ";"),
 
-        # -- work terminals (D-25, D-29, LANGUAGE 12.4/13.3; SEMANTICS 23) ---
-        # 'give:' names the act: the gives-bundle leaves implicitly (R-37,
-        # renaming finish:). 'destruct:' ends a having explicitly by calling
-        # the object's disposal work (R-37, SEMANTICS 27).
-        "give-stmt":    ("give:",),
-        "exit-stmt":    ("exit:", t_re_id("variant"), ["<parens-arg>"], ";"),
-        "tick-stmt":    ("tick:",),
-        "destruct-stmt": ("destruct:", "<data-access(object)>",
+        # -- work terminals (D-25, D-29, LANGUAGE 12.4/13.3; SEMANTICS 23;
+        # R-41.4/7; command-spelling ruling) -- commands are BARE words,
+        # every simple statement ends with ';'. 'give <ports>;' names the
+        # leaving out-ports (elaborate checks the list against the panel's
+        # out: section; unlawful in clockworks); bare 'give;' stands where
+        # no out: is declared -- the ';' terminates the list, so the old
+        # greedy-OPT corner is GONE. 'exit' takes an OPTIONAL variant
+        # (R-41.7): bare 'exit;' is the nothing-more egress. 'destruct'
+        # ends a having explicitly by calling the object's disposal work
+        # (R-37, SEMANTICS 27).
+        "give-stmt":    ("give", [t_re_id("port"),
+                                  STAR((",", t_re_id("port")))], ";"),
+        "exit-stmt":    ("exit", [(t_re_id("variant"), ["<parens-arg>"])],
+                         ";"),
+        "tick-stmt":    ("tick", ";"),
+        "destruct-stmt": ("destruct", "<data-access(object)>",
                           (";", OR, ("else:", "<handler(handler)>"))),
         # -- exit-label (R-14): a bare drop-through label (no body, C-label);
         #    definable only at the outermost body (pass-2).
         # D-21/D-31 (B-1, R-39): labels operate on TWO ACCOUNTS. Bare
-        # ':name:' is the DEAD ADDRESS -- dropto:'s target, drop-throughable
+        # ':name:' is the DEAD ADDRESS -- dropto's target, drop-throughable
         # like a kernel-driver goto label. ':name: => { ... }' is the CATCH
         # REGION -- the elseto: target that catches routed signals; normal
         # flow SKIPS it (nobody falls into a handler).
@@ -653,8 +750,10 @@ GRAMMAR = {
                          [t_op_spawn, "<block(region)>"]),
     },
 
-    # == declarations (has:) ==================================================
-    "decl-block": ("{", PLUS("<declaration>"), "}"),
+    # == declarations =========================================================
+    # The has:-block died with R-41's dissolution (class-shaped bodies own
+    # member declarations through <class-item>); this rule serves the
+    # TOP-LEVEL declaration branch of <named-item> only.
     # D-5: no [<parens-decl>] on a declaration (see the delta ledger).
     "declaration": (t_re_id("name"), t_op_colon, "<type>", ";"),
 
@@ -699,10 +798,21 @@ GRAMMAR = {
     "list-arg":    ("<arg>", STAR((",", "<arg>"))),
     "arg":         ("<algebr>", OR, (t_re_id("arg-name"), t_op_assign, "<algebr>")),  # D-28
 
-    "parens-decl": ("(", ["<list-decl>"], ")"),
-    "list-decl":   ("<decl-arg>", STAR((",", "<decl-arg>"))),
+    # HOMOGENEITY RULING (R-41 follow-up): ONE marker-admitting entry
+    # shape in EVERY parens -- kind parameters (behavior, character,
+    # cause) speak the same '[known:|had:] name [: type] [= default]'
+    # entry as panel sections and member declarations; unmarked = had.
+    # The one EXCEPTION is the signal payload (a signal is neither had
+    # nor known): <parens-payload> keeps the plain entry.
+    "parens-decl":    ("(", ["<list-decl>"], ")"),
+    "list-decl":      ("<panel-entry>", STAR((",", "<panel-entry>"))),
+    "parens-payload": ("(", ["<list-payload>"], ")"),
+    "list-payload":   ("<decl-arg>", STAR((",", "<decl-arg>"))),
+    # decl-arg (D-11; default type float, §2.1): the ONE entry shape --
+    # 'name [: type] [= default]' -- marker-prefixed through
+    # <panel-entry> everywhere a relation may speak.
     "decl-arg":    (t_re_id("arg-name"), [t_op_colon, "<type>"],
-                    [t_op_assign, "<algebr>"]),  # D-11; default type float (§2.1)
+                    [t_op_assign, "<algebr>"]),
 
 }
 # R-9 (no leading-dot form; every member access names its binding) is enforced

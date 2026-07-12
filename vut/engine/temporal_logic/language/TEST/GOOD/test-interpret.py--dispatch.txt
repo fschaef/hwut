@@ -1,17 +1,27 @@
 
 --- dispatch (run-toggle.vut) ---
-enter  climate
-event  ac_button
-set    b.on = true -> true
-set    b.target = 21.0 -> 21.0
-event  ac_button
-set    b.on = false -> false
-event  ac_button
-set    b.on = true -> true
-set    b.target = 21.0 -> 21.0
-event  dial_turned(delta=2.5)
-set    b.target += 2.5 -> 23.5
-event  temp_high(value=95.0)
-emit   alarm
-event  alarm
-event  temp_high(value=50.0)
+run    plant
+wind   f : script
+make   c : climate
+enter  c.control
+wire   f --[cmd]--> c
+feed   f ac_button
+event  c.cmd ac_button
+set    .on = true -> true
+set    .target = 21.0 -> 21.0
+feed   f ac_button
+event  c.cmd ac_button
+set    .on = false -> false
+feed   f ac_button
+event  c.cmd ac_button
+set    .on = true -> true
+set    .target = 21.0 -> 21.0
+feed   f dial_turned
+event  c.cmd dial_turned(delta=2.5)
+set    .target += 2.5 -> 23.5
+feed   f temp_high
+event  c.cmd temp_high(value=95.0)
+emit   c.* alarm
+event  c.. alarm
+feed   f temp_high
+event  c.cmd temp_high(value=50.0)

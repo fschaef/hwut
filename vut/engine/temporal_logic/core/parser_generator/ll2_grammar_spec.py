@@ -135,14 +135,15 @@ class Terminal_Spec(SpecNode):
     _name(), content equality and identity coincide. This lets a terminal be a
     key in the role vocabulary (ROLES, ll2_engine).
     """
-    __slots__ = ("shape", "pattern", "spelling", "silent",
+    __slots__ = ("shape", "pattern", "spelling", "silent", "early",
                  "_name_str", "_hash")
 
-    def __init__(self, shape, pattern=None, spelling=None):
+    def __init__(self, shape, pattern=None, spelling=None, early=False):
         self.shape    = shape
         self.pattern  = pattern
         self.spelling = spelling
         self.silent   = _SHAPE_SILENT[shape]
+        self.early    = early
         self._name_str = self._compute_name()
         self._hash     = hash(self._name_str)
 
@@ -176,7 +177,8 @@ class Terminal_Spec(SpecNode):
         field.
         """
         match self.shape:
-            case "regex":    return "regex:" + self.pattern
+            case "regex":    return ("regex(early):" if self.early
+                                     else "regex:") + self.pattern
             case "string":   return "string:" + self.spelling
             case "captured": return "captured:" + self.spelling
             case "framing":  return "framing:" + self.spelling
@@ -210,14 +212,20 @@ class TerminalFactory:
     lexer's pattern table from TERMINAL_DB, and the lexer compiles that.
     """
     @staticmethod
-    def regex(pattern):
+    def regex(pattern, early=False):
         """RETURN: Terminal_Spec, a character-class terminal matching 'pattern'.
 
         No name argument: the 't_re_...' variable it is bound to carries the
         name, and its line position in the preamble fixes the class precedence
-        the extractor emits (earlier line wins).
+        the extractor emits (earlier line wins). 'early' seats the class in
+        the lexer's EARLY-regex tier -- before the bare keywords and symbols
+        -- for a class whose lexemes contain characters that are themselves
+        single-character terminals (the wire-arrow dash law); the default
+        keeps the class in the LAST tier (the bare-':' design depends on
+        lexing after every colon-terminated keyword).
         """
-        return _register_terminal(Terminal_Spec("regex", pattern=pattern))
+        return _register_terminal(Terminal_Spec("regex", pattern=pattern,
+                                                early=early))
 
     @staticmethod
     def string(spelling):

@@ -1,7 +1,12 @@
 
 --- explain-destruct.vut ---
 front half: clean
-enter  Demo
-event  SHOW
+run    plant
+wind   f : script
+make   d : Demo
+enter  d.show
+wire   f --[cmd]--> d
+feed   f SHOW
+event  d.cmd SHOW
 set    b = 1024 -> 1024
-bind   b.got = 1024
+bind   .got = 1024
