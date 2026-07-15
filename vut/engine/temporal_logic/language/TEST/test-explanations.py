@@ -8,7 +8,7 @@ behaviour, drives its SHOW event through the interpreter and prints the
 trace -- the explanation's claims, executed.
 
 CHOICES: construct, destruct, lifecycle, take_give_know,
-ephemerals, destruction_cannot_fail.
+ephemerals, destruction_cannot_fail, no_exceptions.
 """
 import os
 import sys
@@ -58,6 +58,7 @@ HwutRunner(
         "destruct":  lambda: check("explain-destruct.vut"),
         "lifecycle": lambda: check("explain-lifecycle.vut"),
         "take_give_know": lambda: check("explain-take-give-know.vut"),
+        "no_exceptions": lambda: check("explain-no-exceptions.vut"),
         "ephemerals": lambda: check("explain-ephemerals.vut"),
         "destruction_cannot_fail":
             lambda: check("explain-destruction-cannot-fail.vut"),

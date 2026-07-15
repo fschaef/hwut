@@ -218,6 +218,8 @@ def _declared_name(item):
                "reactor" if item.mode == "single" else "reactor++"
     if isinstance(item, A.DefCause):
         return item.signature.name, "cause"
+    if isinstance(item, A.EventDef):
+        return item.signature.name, "event"
     if isinstance(item, A.ClassDef):
         return item.signature.name, "class"
     if isinstance(item, A.Work):

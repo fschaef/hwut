@@ -4,7 +4,7 @@
    An object's life is bounded by its BEING HAD. When the having ends, the
    object must already be given or destructed -- abandonment is the one
    crime. A LOCAL VARIABLE IS HAD BY THE WORK THAT HAS IT: the work's
-   terminal (give or exit) ends the having.
+   terminal (give or signal) ends the having.
 
    Three endings, one law:
      1. GIVEN THROUGH AN OUT: PORT   -- the lawful end of having: custody
@@ -33,8 +33,8 @@ reading : class {
                      signals: implausible(v)) {
     scaled = raw * 0.1;           # 'scaled': a value local -- had by this
                                   # work; ends with it (memory exemption)
-    if: scaled > 1000 { exit implausible(scaled); }
-                                  # exit ends the having too -- a signal
+    if: scaled > 1000 { signal implausible(scaled); }
+                                  # a signal ends the having too -- it
                                   # carries NO outputs (the sum, 12.3)
     r = scaled;
     give r;                     # the having of 'r' ends by GIVING: the
@@ -54,7 +54,7 @@ Demo : reactor(in: cmd) {
         # the behavior instance now HAS the reading through .shown's
         # binding -- at this level the reactive engine owns the instance
         # lifecycle; the give-or-destruct duty rides the b-member's end.
-        .shown = reading.from(raw = 215) else: { implausible(v) => ; }
+        .shown = reading.from(raw = 215) else: { implausible => ; }
     }
 }
 }

@@ -20,13 +20,20 @@ an oversight. A missing severity marker is a format error, never an implicit
 default.
 
 
-(1) Deactivation admissibility                                  [REJECT, R-1]
+(1) Deactivation admissibility                            [REJECT, R-1/R-46]
 -----------------------------------------------------------------------------
 "=x=> X" is well-formed iff deactivable(X). The parser accepts "=x=>" before any
 target; the semantic unit rejects it where the target is not deactivable.
-    deactivable:  behavior (member of this reactor) yes,
-                  reactor / reactor++ yes,
-                  recurring-emission handle yes;  event no, command-block no.
+    deactivable:  behavior yes -- in a reactor++ ONLY; in a 'reactor'
+                  (state machine) REJECT [REACTOR]: the machine may never
+                  stand stateless, transitions spell '=!=>' (R-46);
+                  reactor / reactor++ NO (died with the pipe build);
+                  recurring-emission handle -- DIED with R-49;
+                  event no, command-block no.
+    THE THREE-ARROW LAWS (R-46, checked): a behavior target under '=>'
+    REJECTS (activation spells '=!=>'); '=!=>' demands a behavior of
+    this reactor; '=!=>'/'=x=>' take a bare target (no 'to', no
+    'every:' -- R-49 then retired 'every:' from the language).
 
 
 (2) Guard placement                                             [REJECT, R-5]
@@ -83,8 +90,8 @@ harmful" -- Dijkstra -- answered by forward-only drop-through). Checks:
       R-24 -- the second colon delimits, no ";").
   (b) An exit-label may be defined ONLY at the OUTERMOST function/command-block
       body -- never inside a loop, if/elif/else, match, or any nested block.
-  (c) "dropto <label>" is the forward-only JUMP: it may target only an exit
-      defined LATER than the dropto in the same outermost body. A backward or
+  (c) "dropto <label>" is the forward-only JUMP: it may target only an
+      exit-label defined LATER than the dropto in the same outermost body. A backward or
       self target is an error.
   (d) "dropto <label>" requires a target: the label must be defined by some
       ":<label>:" in the body; an undefined label is an error.
@@ -125,13 +132,11 @@ a standalone "[<element> with: ...]" is a comprehension. The parser separates
 them by content (LL(2)); confirm on real input.
 
 
-(11) Recurring emission                                        [REJECT, R-15]
+(11) Recurring emission                                      [RETIRED, R-49]
 -----------------------------------------------------------------------------
-"=> ev(...) every: <numeric> [as: <name>]" is a recurring spawn. The "as:" name
-is a handle, a bare local scoped to the enclosing entity; any causality in that
-entity may cancel it with "=x=> <name>". "as:" requires "every:". A recurring
-emission runs only while its entity is active and is cancelled automatically at
-~EXIT. <numeric> is seconds by convention.
+The recurring spawn and its handle LEFT THE LANGUAGE (R-49 -- lack of
+orthogonality); the timer concern is a plant-side feeder's (held
+discussion).
 
 
 (12) Namespaces and imports                                [REJECT, R-18, §8]
@@ -275,10 +280,13 @@ Docstrings are inert to execution and to the export surface.
 (23) Work, clockwork, and class bodies                    [REJECT, PARTIAL]
 -----------------------------------------------------------------------------
 The D-25/D-26 slice, re-spoken over the flat panel (R-41). CHECKED NOW:
-every variant-carrying "exit" names a signal the enclosing panel
+every variant-carrying "signal" names a signal the enclosing panel
 declares, and every self-declared signal is emitted by at least one
-exit (LANGUAGE 12.4, both directions, collected by full structural
-descent) -- a BARE "exit;" (R-41.7, the nothing-more egress) names no
+signal statement (LANGUAGE 12.4, both directions, collected by full
+structural descent; R-43: 'exit' renamed 'signal', the 'to' routing
+suffix REJECTS in normal work code -- a work's signal travels the fault
+channel, never a pipe) -- a BARE "signal;" (R-41.7, the nothing-more
+egress) names no
 variant and passes, its lawfulness in plain works an OPEN fork; "tick"
 is lawful only inside a clockwork with an out: section (LANGUAGE 13.3);
 "give" is UNLAWFUL in a clockwork, and in a work its port list must
@@ -298,10 +306,27 @@ custody ledger entire (type document).
 A statement carrying an "else:" handler covers the UNION of its fault
 sources (LANGUAGE 12.9): within such a statement the SEMANTICS-21
 division rejection is suppressed -- the runtime raises div_by_zero into
-the handler instead. DEFERRED: verifying the handler actually covers that
-union (exhaustiveness), the mandatory-handler direction (a signalling
-work called WITHOUT else: is not yet rejected), and the flow obligations
-of 12.6 (diverge / produce substitutes / guarded fall-through).
+the handler instead.
+
+THE ARM (R-44/R-45): '(<event> | ~ANY) [when: <cond>] => <action>' --
+the arm IS a causality in form; the pattern names an EVENT of the
+callee's fault set; payload reads 'e.<field>' (names from the event's
+declaration, carried to the catch by the raise); first-match; under
+~ANY, 'e' is Nothing. CHECKED TODAY: guard expressions walk; an arm
+after an UNGUARDED ~ANY is dead -- REJECT [STRUCTURE]; at most that one
+blanket ends the list.
+
+COVERAGE IS TESTIMONY (R-44, the law) -- CHECKED over RESOLVED
+callees (the F-9 slice): for a call of a resolved top-level signalling
+work, every event of its declared fault set must be met by an
+UNGUARDED arm naming it or ~ANY present -- a guard-hole REJECTS; an
+arm naming a NON-fault of the callee REJECTS; the MANDATORY-HANDLER
+direction REJECTS (a signalling work called without else:, and a
+signalling work buried in EXPRESSION POSITION -- its faults have no
+arm there, 12.6); a PRIMITIVE statement's arms may name only the
+built-ins (div_by_zero, unit_mismatch). DEFERRED with the remaining
+PARTIAL: unresolved/namespaced callees, and the flow obligations of
+12.6 (diverge / produce substitutes / guarded fall-through).
 
 
 (25) Semi-declaration and completion                      [REJECT, PARTIAL]
@@ -389,7 +414,7 @@ assigned to a had holder. Nothing-compares ('k == Nothing' / '!=', either
 operand order) are always lawful -- they ARE the gates. NARROWING, two
 recognized shapes over exact bare-name gates: a '!= Nothing' condition
 narrows its then-block ('== Nothing' its else-block); an '== Nothing'
-then-block that DIVERGES (last statement exit or give, no else:)
+then-block that DIVERGES (last statement signal or give, no else:)
 narrows the rest of the body -- the initial-gate idiom. ACTIVATION BY MENTION
 (PARTIAL, flagged fork): the checks run in bodies that speak of Nothing
 anywhere (a gate, a compare, the literal); silent bodies keep pre-R-38
@@ -411,7 +436,7 @@ reactive AND work bodies (work bodies now assemble their outermost
 address list and thread it through the walk). ':label: => { ... }' is
 the CATCH REGION: invisible to dropto (excluded from the address list),
 SKIPPED by normal flow at run time, its interior walked by every check,
-its exit-signals counted toward 12.4's emitted set. DEFERRED: elseto:
+its signal statements counted toward 12.4's emitted set. DEFERRED: elseto:
 routing into regions (the build's next station); region placement laws
 (tail-position?) ride that build.
 
@@ -448,7 +473,12 @@ LANGUAGE 15. Four laws, one tag [PIPE]:
         to it; with none declared, to the self channel); ungrouped
         beside SEVERAL in-channels REJECTS.
   (ii)  ROUTED EMISSION: a spawn's 'to <channel>' names an out: channel
-        of the enclosing reactor; anything else REJECTS.
+        of the enclosing reactor; anything else REJECTS. The STATEMENT
+        FORM (R-43) joins the law: 'signal <event> [to <channel>];' in
+        behavior work code is the same emission -- its 'to' checks here,
+        its target seats like a spawn's, a bare 'signal;' REJECTS there
+        (the emission names its event); in normal work code the 'to'
+        suffix REJECTS (SEMANTICS 23 -- the fault egress, no pipe).
   (iii) WIRE PLACEMENT: a wire is a WORK statement (WIRING IS WORK);
         in a reactive command-block it REJECTS. Both ends resolve as
         body locals.
@@ -465,3 +495,27 @@ The provided FEEDER kind 'script' resolves without declaration (an
 event source, LANGUAGE 15.6); its siblings and the drain are unbuilt.
 The SEMANTICS 1 deactivable table awaits its reactor-row re-speak
 (activation machinery died; OPEN (8)).
+
+(32) The physical unit algebra                            [REJECT, PARTIAL, R-50]
+-----------------------------------------------------------------------------
+CHECKED TODAY: an unknown unit name in a physical type or literal
+REJECTS [UNIT] (UNITS.txt is the glossary); a division's SEM-21 gate
+sees through a physical literal (the unit changes nothing about
+zeroness). AT RUN TIME the unit is CARRIED (algebra B): '+'/'-'/
+comparison demand equal vectors, '*'/'/' derive, a bare number scales,
+the zero vector collapses to a plain number, and a mismatched write
+into a declared-physical member raises the built-in fault
+'unit_mismatch' (payload: the two canonical displays) -- catchable at
+an aware statement exactly as div_by_zero (SEMANTICS 21). THE STATIC
+NET (F-9 slice, built): unit vectors INFER through literals,
+declared-physical members and ports, negation, and every operator;
+a provable mismatch under '+'/'-' and a provable WRITE-SEAM mismatch
+into a declared-physical place REJECT [UNIT] -- unless the statement
+carries a handler (the SEMANTICS-21 suppression mirrored: the runtime
+unit_mismatch path then answers). DEFERRED: argument and give seams,
+inference through calls and event fields. REPRESENTATION (R-51): the unit is part
+of the value's TYPE; vector carriage is the REFERENCE interpreter's
+strategy, not a semantic obligation -- the Luau emitter erases
+statically-proven paths and tags variants; erasure's reach equals the
+static net's reach.
+

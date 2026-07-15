@@ -5,7 +5,7 @@ guarded          OK
 def_cause        OK
 cause_ref        OK
 reactor_single   OK
-recurring        OK
+shrug_effect     OK
 state_machine    OK
 mode_group       OK
 namespace        OK
@@ -24,6 +24,10 @@ strings_in       OK
 work_def         OK
 work_spec        OK
 clockwork_def    OK
+physical         OK
+three_arrows     OK
+event_def        OK
+signal_routed    OK
 panel_flat       OK
 class_def        OK
 param_marking    OK

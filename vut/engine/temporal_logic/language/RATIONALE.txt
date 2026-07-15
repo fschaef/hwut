@@ -2036,3 +2036,476 @@ GRAVEYARD
     spelling for a form D-28 already writes.
   - Bare-only feeder with a separate payload mechanism: rejected -- one
     driver for golden masters, or the trace splits its sources.
+
+R-43: The signal statement -- exit renamed, one emission creature
+------------------------------------------------------------------
+PROBLEM
+  The fault egress spoke 'exit' (12.4/13.3) while the behavior effect
+  emitted through the arrow ('=> Event() [to <channel>]'); two words for
+  one creature -- the travelling signal -- and 'exit' said leaving where
+  a clockwork's bare form says nothing-more. The signal-flow harmonisation
+  (an effect takes a signal, possibly emits signals) needed one word.
+
+DECISION (Frank-Rene)
+  ONE statement -- 'signal <variant>[(<payload>)] [to <channel>];' --
+  equivalent to the arrow emission '=> Event() [to <channel>]'; the
+  POSITION decides the channel spec:
+    - BEHAVIOR WORK CODE (an effect's command block): the optional
+      'to <channel>' stands; the statement is an EMISSION -- suffix-less
+      FANS (all out channels plus self), flow CONTINUES.
+    - NORMAL WORK CODE (work, clockwork, member work): NO channel spec;
+      the statement is the fault egress of old -- it leaves immediately
+      on the fault channel; bare 'signal;' the clockwork's nothing-more
+      egress; the unreachability law follows.
+  The arrow form and the statement form COEXIST (equivalence, not
+  replacement). The word 'exit' leaves the language.
+
+COST
+  One word, two flow semantics by position (egress in works, emission in
+  behaviors). Accepted: the creature is one -- a signal travels; only
+  the channel differs (the caller's fault channel vs a pipe channel) --
+  and the position is never ambiguous to the reader.
+
+GRAVEYARD
+  - Keeping 'exit' beside 'signal': rejected -- two words, one concept
+    (terminological invariance).
+  - 'to' admitted in normal works (a work publishing on pipes): rejected
+    by the ruling's words -- normal work does not; a work speaks to its
+    caller.
+
+  Coordinator flags (OPEN (8)): the internal noun 'exit-label' (the
+  ':name:' jump target -- the concrete syntax never spoke 'exit');
+  'every:'/'as:' on the statement form (the ruling quoted only the
+  channel spec); bare-'signal' lawfulness in plain works (SEM 23 fork,
+  unchanged).
+
+R-44: The arm IS a causality -- uniform first-match, ~ANY, testimony
+------------------------------------------------------------------
+PROBLEM
+  The else:/elsewhile: arm ('<variant>[(bindings)] => <action>') and the
+  causality ('<cause> [when:] => <effect>') rhymed but differed in every
+  particular: binding surface (bare destructure vs e.field), guards
+  (none vs when:), dispatch (first-match vs ALL-match), catch-all
+  (none vs none). Two constructs, one shape -- the reader pays twice.
+
+DECISION (Frank-Rene, ruled across the merge session)
+  ONE construct. The arm IS a causality:
+  1. FORM: '<pattern> [when: <expr>] => <action>' everywhere. The arm's
+     parens-binding form ('bad(m) => ...') RETIRES; payload reads
+     'e.<field>' with names from the callee's signal DECLARATION.
+     'when:' guards are lawful in arms.
+  2. DISPATCH IS FIRST-MATCH, UNIFORMLY -- behaviors change from
+     all-match to first-match (ruled twice, confirmed over the
+     coordinator's collision flag). SCOPE RULED (FR, closing the
+     coordinator's flag): the reactor++ ROUTES an incoming channel
+     event to ALL live behaviors, by default in the order of their
+     textual position -- and that is enough for the moment, no more
+     flexibility. ALL behaviors fire (in a reactor++ every behavior is
+     supposed to be active/alive, if it is; a dead one is skipped).
+     First-match lives INSIDE one behavior's list only: routing
+     between behaviors, switching within one -- the two levels never
+     mix.
+  3. '~ANY' matches ANY event that comes, in both worlds; its scope is
+     where it sits (a channel group: any event on that channel; an
+     else block: any fault of that call). Under ~ANY, 'e' IS NOTHING --
+     strict: an author wanting details names the cause.
+  4. THE CHANNELS STAY DISTINCT (12.10 stands, now stated as
+     mechanism): a work's signal is a RETURN-WITH-TAG -- an execution
+     branch upon return, synchronous, in the caller's thread; the
+     else:/elsewhile: block is the switch on that tag, its one
+     anonymous receiver. No pub/sub, no event object, no travel beyond
+     the branch; the fault is spawned in the work and DIES with the
+     else block (12.2 stands: ephemeral, work-local, never a channel
+     creature). Emission through named channels remains a BEHAVIOR
+     power (R-43). 12.9 stands entire.
+  5. COVERAGE-BY-TESTIMONY (the design point, into the language
+     explanations beside the omission of exceptions): the author
+     testifies awareness of every possible outcome of a work by
+     writing a reaction to each. A guard-hole (a variant met only by
+     guarded arms) is a FAILURE TO TESTIFY -- compile error. '~ANY' is
+     testimony by explicit blanket. Behaviors stay NON-exhaustive
+     (events are open; ~ANY there is convenience, not obligation).
+     This is WHY the language has no exceptions: no invisible
+     propagation path exists; every outcome is met by an author who
+     named it.
+
+COST
+  First-match reverses the reactor's built ALL-match dispatch -- green
+  traces change wherever several causalities of one behavior matched
+  one event; audited and re-baselined in this pass. The arm's bare
+  destructure retires (fixture sweep). Ordering becomes significant in
+  behaviors (it already was in else blocks).
+
+GRAVEYARD
+  - The full repeal (a fault becomes a program-wide pub/sub event;
+    12.2/12.9/12.10 fall): rejected by FR in the round -- the fault is
+    ephemeral, call-local, a control-flow branch, never channel cargo.
+  - Arm-surface-only merge, dispatch disciplines kept split (all-match
+    behaviors, first-match arms): rejected -- FR ruled first-match in
+    any case; the causality behaviour is uniform.
+  - Else-blocks becoming all-match: never in question -- one outcome,
+    one reaction is the testimony.
+  - '~ANY' binding e to the arrived event: rejected -- e is Nothing
+    under ~ANY; specificity requires naming the cause.
+  - A behavior-level ~ANY beside channel groups: dissolved -- ~ANY
+    inherits the scope it sits in; per-group is the whole rule.
+
+R-45: Signals ARE events -- the event definition, signals: unified
+------------------------------------------------------------------
+PROBLEM
+  R-44 made the arm a causality in form, but the arm's '<variant>'
+  still read as a creature of its own. LANGUAGE 14.1 had already
+  settled the concept (event and signal: ONE ephemeral, a variant and
+  its payload -- one mechanism, two channels), yet no freestanding
+  event DEFINITION existed; a work's signals: entries declared
+  structures nothing else could speak of.
+
+DECISION (Frank-Rene)
+  Unify the notion. Causalities deal with EVENTS; a signal IS an event
+  (identical structure) travelling the fault channel. Event structures
+  are defined by 'event' definitions:
+
+      blink : event(v, kind);
+
+  and a signals: entry of a work/clockwork panel IS the same
+  definition in panel position -- 'signals: too_small(gap)' declares
+  the event 'too_small(gap)', scoped as the work's fault set (12.2
+  scoping unchanged). One noun: EVENT (the ephemeral); 'signal' the
+  VERB (R-43: the emitting statement) and the fault-channel ROLE of an
+  event. The arm's pattern names an event, exactly as a cause does.
+
+COST
+  A new named-item branch (the event definition). The deep machinery
+  of section 14 (event-typed entries, the matcher, structure checks on
+  emission/catch) STAYS with the F-9 passes as documented -- this pass
+  lands the definition form, the table entry, and the unified
+  vocabulary, not the type flow.
+
+GRAVEYARD
+  - '<variant>' as its own grammatical creature: dissolved into event.
+  - Renaming the signals: panel section: not touched -- the section
+    names the fault SET; its entries are event definitions.
+  - Building 14.2's inline 'event(...)' entry type now: deferred with
+    F-9 (the definition form does not pre-empt its factoring).
+
+R-46: Three arrows -- semantic differentiation of spawn and activation
+------------------------------------------------------------------
+PROBLEM
+  The spawn arrow did double duty: 'A => alarm' emitted an event while
+  'A => IDLE' (IDLE a behavior) activated a state -- one arrow, two
+  meanings, the reader disambiguating by resolving the target. The
+  causality also had no way to SAY "reckoned, ignored" (the arm's
+  shrug), and the arm/causality action spaces stood unruled after the
+  R-44 merge.
+
+DECISION (Frank-Rene)
+  SEMANTIC DIFFERENTIATION by arrow -- the spawning of a behavior is a
+  different act from the spawning of an event:
+
+      =>     spawns EVENT, runs work code   (the happening arrow)
+      =!=>   ACTIVATES a behavior           (standing up)
+      =x=>   DEACTIVATES a behavior         (standing down)
+
+  THE MODE SPLIT: in a 'reactor' (state machine) '=!=>' deactivates
+  the current behavior and activates the target -- the transition, an
+  atomic leave/enter pair; '=x=>' on a behavior is a SEMANTIC ERROR
+  there (the machine may never stand stateless). In a 'reactor++'
+  (mode group) '=!=>' activates WITHOUT deactivating (the set grows);
+  '=x=>' shrinks it.
+
+  THE SHRUG ENTERS THE CAUSALITY: '<cause> => ;' is lawful -- pure
+  documentation: we do nothing upon that event; we know it may happen,
+  we ignore it. Under first-match it CONSUMES the event for this
+  behavior (arms below, ~ANY included, stay silent).
+
+  RECURRENCE: 'every:' has no meaning whatsoever in else:/elsewhile:
+  arms, nor in groove: -- it stays a behavior-causality power.
+
+  Corollary built (one arrow, one meaning): '=>' with a behavior
+  target REJECTS -- activation spells '=!=>'.
+
+  Coordinator interpretation, FLAGGED: '=x=> <recurring handle>'
+  (cancel) stays lawful in BOTH modes -- the state-machine error is
+  standing down a BEHAVIOR, not stopping an emission (keeps the ruled
+  Station example lawful: a single-mode reactor cancelling 'poller').
+
+COST
+  Every state-machine transition in the corpus respells '=>' as
+  '=!=>' (fixture sweep, FR-confirmed; enter/leave traces unchanged --
+  only source spelling moves). A new captured operator enters the
+  lexer ordering.
+
+GRAVEYARD
+  - Full action-space unification (arms gain chains/recurrence/
+    cancel): rejected by the ruling's shape -- differentiation, not
+    merger; arms keep (block | signal | shrug).
+  - The arm gaining 'every:': ruled meaningless there.
+  - '=>' silently MEANING '=!=>' on a behavior target: rejected --
+    a category error must be spoken, not repaired.
+
+R-47: The name-only signals: entry -- adoption and the shadow
+------------------------------------------------------------------
+PROBLEM
+  R-45 made a signals: entry an event definition, but a work naming an
+  already-defined event had to respell its fields -- the structure
+  twice, drift possible, the relation unstated.
+
+DECISION (Frank-Rene)
+  A signals: entry MAY relate to a defined event -- and naturally
+  SHADOWS it:
+
+      blink : event(v, kind);
+      meter : work(... signals: blink) { ... }     # name-only
+
+  ADOPTION: the name-only entry takes the definition's field structure
+  (e.v, e.kind at the catch) -- no respelling. THE SHADOW: within the
+  work's fault places (12.2) the name means THIS WORK'S FAULT; the
+  outer event is hidden there. 12.2 and 12.10 STAND ENTIRE: the fault
+  stays ephemeral and work-local, never channel cargo; two works
+  adopting 'blink' own two separate faults; a behavior's routed
+  'signal blink to note' (outside the fault scope) still emits the
+  GLOBAL event. Structure adopted, identity local.
+
+COST
+  A name-only entry's meaning now depends on whether an event of that
+  name is defined (fields adopted) or not (bare, as ever). Accepted:
+  the catch reads e.<field> either way; a bare raise carries nothing.
+
+GRAVEYARD
+  - The panel entry BECOMING the global event (identity merge):
+    rejected -- that repeals 12.2/12.10, refused in the R-44 round.
+  - Mandatory respelling forever: the drift it invites is the problem.
+  - Coordinator flags (F-9 with the structure checks): a RESPELLED
+    entry mismatching the definition ('signals: blink(gap)' against
+    'event(v, kind)') -- unify, reject, or shadow-with-own-shape.
+
+R-48: Idempotent standing-down; the restart
+------------------------------------------------------------------
+PROBLEM
+  R-46 left two edges unruled: '=x=>' on an already-inactive behavior,
+  and '=!=>' on one previously stood down.
+
+DECISION (Frank-Rene)
+  '=x=>' TWICE IS LAWFUL -- why not? -- and IDEMPOTENT: the second
+  does not trigger the ~EXIT effect, of course. '=!=>' on a behavior
+  is the RESTART in a mode group (an off behavior re-enters; ~ENTRY
+  fires again) and the TRANSITION in a state machine (R-46 restated).
+  '=x=>' in a state machine stays forbidden.
+
+  (Matches the built dispatch: deactivate_behavior returns early on an
+  inactive name -- no second ~EXIT; activate_behavior on an off member
+  of a ++ re-enters. What was incidental is now ruled.)
+
+COST
+  None in code; the edges are law rather than accident.
+
+GRAVEYARD / AWAITING THE NEXT SESSION'S OPENING WORD (flagged in
+OPEN (8), NOT built in any reading):
+  - The SCOPE of "=x=> in state machine forbidden": behavior targets
+    only (as built) vs wholesale (handle-cancel included -- then the
+    2.4 Station example moves to reactor++ and a single-mode reactor
+    stops recurrences only via ~EXIT auto-cancel).
+  - The IMPLICIT '~off' BEHAVIOR of a reactor++ ("behavior being
+    turned off"): a lawful all-off pseudo-state vs an authorable hook
+    behavior running while members are off.
+  - '=!=> <recurring handle>' as restart of a CANCELLED emission:
+    possibly answered by the restart wording, possibly behaviors-only;
+    currently a REJECT.
+
+R-49: The recurrence syntax dies -- orthogonality
+------------------------------------------------------------------
+PROBLEM
+  The recurring emission ('=> poll() every: 0.5 as: poller;' plus
+  '=x=> poller') bolted a lifecycle onto the SPAWN: the emission
+  gained a name and could be stood down, yet had no panel, no
+  definition, no ~ENTRY/~EXIT -- a third kind of standing thing
+  beside behaviors and reactors, obeying neither's laws. The Q-A/Q-C
+  clarification round exposed it: every answer needed a special case
+  for the handle. Lack of orthogonality.
+
+DECISION (Frank-Rene)
+  REMOVE the poller syntax in total: the spawn tail 'every:'/'as:',
+  the handle namespace, '=x=> <handle>', the ~EXIT auto-cancel, and
+  the recur/tick/cancel trace lines. The recurrence CONCERN moves out
+  of the causality: "we might have something like a feeder, that does
+  this" -- a plant-side timer component ticking events into a channel
+  as script(...) feeds them. DIRECTION NOTED, NOT DESIGNED -- the
+  timer feeder joins the feeder-family held discussion.
+
+  Ancillary closures from the same round: '=x=>' is BEHAVIOR-only in
+  meaning and remains forbidden in a state machine (R-46); the
+  '~off' implicit behavior thought is RETRACTED ('=!=>'/'=x=>'
+  already carry the on/off story; a reactor++ standing dark is
+  simply lawful -- arriving events drop).
+
+COST
+  run-lifecycle.vut loses its subject and is re-shaped into the
+  activation-lifecycle test (transitions, restart, idempotent
+  stand-down -- the R-46/R-48 surface it lacked). The 2.4 doc section
+  and the deactivable table's recurrence row die. Machine.advance()
+  stays as the virtual-time mover (the future timer feeder will need
+  it) but nothing ticks today.
+
+GRAVEYARD
+  - '=!=> <handle>' as restart (Q-C reading 1): dissolved with the
+    handle itself.
+  - Keeping 'every:' for behaviors while arms/groove lack it: the
+    partial law WAS the smell.
+  - The implicit '~off' behavior of a reactor++ (Q-B): retracted.
+
+R-50: The physical unit type -- full unit algebra
+------------------------------------------------------------------
+PROBLEM
+  Physical quantities travelled as bare floats; nothing caught a
+  distance handed to a speed. The proposal stood blessed in outline
+  since the pipe sessions; the clarification round fixed it.
+
+DECISION (Frank-Rene, the here-and-now round)
+  THE LITERAL:  <number> "[" <unit> "]"        e.g.  3.14 [m/s^2]
+  THE TYPE:     <name> : physical[<unit>];     e.g.  speed : physical[m/s];
+
+  THE UNIT GRAMMAR (Q1): a PRODUCT/QUOTIENT of physical units --
+      <unit>    : <uprod> ("/" <uprod>)*       left-assoc: J/kg/K == J/(kg*K)
+      <uprod>   : <ufactor> (("*" | WS) <ufactor>)*   asterisk AND
+                                                       whitespace multiply
+      <ufactor> : <uname> [<upower>]
+      <upower>  : "^" <signed-int>             m^2, s^-2
+                | "^(" <int> "/" <int> ")"     m^(1/2) -- rationals parenthesise
+                | <unicode-superscript>        m², s⁻² -- lifted signed
+                                               integers (no superscript
+                                               fraction convention exists)
+  THE NAMES (Q2): the seven SI base units AND the derived units --
+  UNITS.txt is the glossary; a derived name expands to its base vector.
+
+  THE REPRESENTATION (FR's quotient insight, placed):
+      SURFACE   what the author writes (any spelling);
+      CANONICAL the RATIONAL EXPONENT VECTOR over the seven SI bases
+                (product = vector add, quotient = subtract, power =
+                scale, equality = vector equality -- one normal form,
+                no cancellation algorithm);
+      DISPLAY   the QUOTIENT of nominator to denominator: positive
+                powers left of the bar, negative right, sorted -- two
+                authors' spellings of one unit always print identically.
+
+  THE ALGEBRA (Q3 = B): the unit is CARRIED -- part of the value,
+  computed through EVERY expression, not merely checked at seams:
+      +  -            same vector required, REJECT else
+      *  /            vectors add / subtract (units derive)
+      comparison      same vector required
+      bare number     DIMENSIONLESS (the zero vector); scalar scaling
+                      lawful (2 * speed : m/s); assigning a bare
+                      number to a physical REJECTS (and vice versa)
+      sqrt/powers     vector scales -- the RATIONAL exponents earn
+                      their keep (sqrt(area) : m)
+      seams           assignment / argument / give check the derived
+                      vector against the declared physical[...]
+
+COST
+  Every operator in the evaluator learns the vector; the lexer learns
+  Unicode superscripts; '[' after a number gains a meaning (LL(2)
+  audited). Static full-flow checking through unresolved calls joins
+  the F-9 typing pass (PARTIAL discipline); the runtime carries the
+  algebra completely.
+
+GRAVEYARD
+  - (A) check-at-seams-only: rejected -- B ruled; A survives inside B
+    as the seam check that B also performs.
+  - One product separator only: rejected -- '*' and whitespace both.
+  - Surface rationals via superscript fractions: no convention exists;
+    rationals spell '^(p/q)'.
+
+R-51: Units are TYPE; carriage is an implementation strategy
+------------------------------------------------------------------
+PROBLEM
+  R-50 (algebra B) said "the unit is CARRIED" -- a phrasing that welded
+  the SEMANTIC law (units participate in every operation) to one
+  IMPLEMENTATION (a runtime vector on every value). Reconsidering:
+  wherever the unit is statically known, runtime carriage buys nothing;
+  it is necessary exactly where the type itself travels (variants --
+  untyped locals, event payload fields, heterogeneous containers).
+
+DECISION (Frank-Rene: option ii -- "gives us the chance of semantic
+pondering")
+  ONE LAW: the unit is part of the value's TYPE. The R-50 algebra
+  (derive on * /, same-vector on + -/comparison, scalar scaling,
+  dimensionless collapse, the unit_mismatch fault at unprovable
+  seams) is the OBSERVABLE semantics of that law -- unchanged.
+
+  TWO STRATEGIES, both conforming:
+    - the PYTHON REFERENCE INTERPRETER carries the rational-exponent
+      vector on values -- its job is validation; thoroughness is
+      cost-free there; the trace oracle (set .speed = 3.0 [m/s])
+      is ITS voice and stays byte-valid;
+    - the LUAU EMITTER erases units on statically-proven paths (a
+      typed member's arithmetic compiles to bare numbers) and tags
+      only VARIANTS -- values whose type travels at run time --
+      checking at the boundary where a variant meets a typed place.
+
+  The reach of erasure is therefore set by the reach of the STATIC
+  typing net -- which keeps the semantic question deliberately OPEN:
+  how far F-9 extends typed ports/locals/inference decides how much
+  the emitter may erase. Nothing in the language surface moves.
+
+COST
+  None in code today; the discipline cost is doc precision -- LANGUAGE
+  16 must say "type" where it said "value", and SEMANTICS 32 must name
+  the two-strategy freedom, so future passes do not mistake the
+  reference interpreter's carriage for a semantic obligation.
+
+GRAVEYARD
+  - Option (i), the immediate two-tier re-plumb of the interpreter:
+    rejected -- it conscripts the F-9 typing pass now and re-plumbs a
+    green reference for zero observable gain.
+  - "Erasure everywhere" (units purely compile-time, F#-style):
+    rejected -- variants exist in VUT (untyped locals, event payloads);
+    a unit that vanishes there is a check that silently never happens.
+
+R-52: The F-9 slice -- the call-site laws and the static unit net
+------------------------------------------------------------------
+PROBLEM
+  Four ruled laws stood runtime-only or unenforced: coverage-by-
+  testimony (R-44/SEM-24) over resolved callees; the mandatory-handler
+  and expression-position directions of 12.6; event arity (R-45/R-47);
+  and the static unit flow R-51 made load-bearing (erasure's reach
+  equals the static net's reach).
+
+DECISION (Frank-Rene: "implement as much as possible, backed by tests")
+  Built, all inside ruled law, no new rulings taken:
+
+  1. THE STATIC UNIT NET (R-50/R-51): vectors infer through literals,
+     declared-physical members ('.x') and ports, negation, and every
+     operator; provable '+'/'-' mismatches and provable WRITE-SEAM
+     mismatches REJECT [UNIT]; a handler on the statement SUPPRESSES
+     (SEMANTICS 21 mirrored) -- the runtime unit_mismatch path answers.
+  2. MANDATORY HANDLER + EXPRESSION POSITION (12.6): a resolved
+     signalling work called without else: REJECTS; buried inside an
+     expression it REJECTS (its faults have no arm there); the lawful
+     cascade -- with the buried call banned, the statement's fault
+     union is primitives-only.
+  3. TESTIMONY over resolved callees (SEM-24): arm names must be
+     faults of the callee; every declared fault met by an UNGUARDED
+     arm or ~ANY -- a guard-hole REJECTS; primitive statements' arms
+     may name only the built-ins (div_by_zero, unit_mismatch).
+  4. ARITY (R-45/R-47): a signal carries exactly its entry's fields --
+     respelled or ADOPTED; an emission of a defined event carries only
+     declared field names.
+
+  TESTS: twelve new reject lines across elab-rejects (UNIT statics:
+  bare seam and operator mismatches reject; the DERIVATION and the
+  HANDLED write stay silent) and elab-work-rejects (all four call-site
+  laws); every pre-existing runtime GOOD unchanged -- the positive
+  proof that no lawful program trips the new net.
+
+COST
+  The elaborate walker gains an inference engine and per-owner unit
+  maps; resolution is PARTIAL by design: top-level single-segment
+  callees only (namespaced/extension callees stay deferred, stated in
+  SEMANTICS 24/32).
+
+GRAVEYARD
+  - The respelled-signals:-mismatch check: still a FLAGGED FORK
+    (unify/reject/shadow-with-own-shape) -- not invented here.
+  - Inference through call results and event payload fields: deferred
+    -- needs the typing ambition question (typed ports? inference?)
+    that R-51 deliberately left open.
+

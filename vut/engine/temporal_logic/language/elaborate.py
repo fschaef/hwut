@@ -220,12 +220,12 @@ def _nothing_gate(cond):
 
 def _diverges(block):
     """RETURN: bool, True exactly when the block's LAST statement leaves
-              the body (exit: or give:) -- the divergence the initial-gate
+              the body (signal or give) -- the divergence the initial-gate
               narrowing of SEMANTICS 28 requires (conservative: deeper
               divergence shapes defer).
     """
     stmts = tuple(block.statements)
-    return bool(stmts) and isinstance(stmts[-1], (A.ExitSignal, A.Give))
+    return bool(stmts) and isinstance(stmts[-1], (A.Signal, A.Give))
 
 
 def _is_semi(work):
@@ -370,10 +370,21 @@ class _Walk:
         self._reactor_defs = {}     # qualified -> Reactor node (wire checks)
         self._reactor_ins  = None   # in-channel names, reactor under walk
         self._reactor_outs = None   # out-channel names, reactor under walk
+        self._reactor_mode = None   # 'single'|'multi' under walk (R-46)
         self._local_pipe   = {}     # work-body local -> (kind, qualified):
                                     # kind 'reactor'/'reactor++'/'feeder' --
                                     # the PARTIAL visibility for wire-end
                                     # checks (same-body constructions only)
+        self._member_units = {}     # R-50/51 static net: member -> vector
+        self._port_units   = {}     # R-50/51 static net: port -> vector
+        self._works_by_name = {}    # single-segment name -> Work (12.6/SEM-24)
+        self._event_defs   = {}     # event name -> field-name tuple (R-45/47)
+        self._allowed_call = None   # the ONE call node a handled statement
+                                    # covers (12.6 expression-position law)
+        self._effect_block = False  # R-43 position law: True while walking
+                                    # BEHAVIOR WORK CODE (an effect's command
+                                    # block) -- there 'signal' is the routed
+                                    # emission, not the fault egress
 
     # -- module and definitions ----------------------------------------------
 
@@ -385,6 +396,16 @@ class _Walk:
         """
         self._init_completion_state()
         self._scan_reactors(root.items, ())
+        for item in root.items:            # F-9 slice: top-level works and
+            match item:                    # event definitions, by bare name
+                case A.Work():             # (namespaced resolution stays
+                    self._works_by_name[   # with the deferred PARTIAL)
+                        item.signature.name.segments[0]] = item
+                case A.EventDef():
+                    params = item.signature.params
+                    self._event_defs[item.signature.name.segments[0]] = \
+                        () if params is NodeAbsent \
+                        else tuple(p.name.segments[0] for p in params)
         for item in root.items:        # pre-scan: the agreement law (ruled:
             match item:                # known/had are part of the TYPE)
                 case A.Work() | A.ClockworkDef():   # needs the callee's
@@ -457,18 +478,170 @@ class _Walk:
             case _:
                 pass
 
-    def handler_arms(self, handler):
-        """RETURN: None, always. Walks a handler's arm actions (LANGUAGE
-                  12.6): block actions walk as nested statements; exit:
-                  actions are collected by the surrounding work walk;
-                  exhaustiveness over the callee's signal set is deferred
-                  (SEMANTICS 24, PARTIAL).
+    # -- R-50/R-51: the STATIC unit net -----------------------------------
+
+    _ZEROV = None                       # the dimensionless vector, lazily
+
+    def _unit_infer(self, node):
+        """RETURN: tuple, the unit vector of 'node' where the static net can
+                  prove one (R-50/R-51: literals, declared-physical members
+                  and ports, and every operator over proven operands).
+                  None, else -- unknown stays unknown; the runtime carry is
+                  the reference interpreter's (16.5).
+
+        Provable MISMATCHES under '+', '-', and comparison REJECT [UNIT]
+        here -- unless the statement carries a handler (self._handled),
+        the SEMANTICS-21 suppression mirrored: the fault then travels the
+        runtime unit_mismatch path into the arms.
         """
+        from . import units
+        if _Walk._ZEROV is None:
+            _Walk._ZEROV = (units.Fraction(0),) * 7
+        match node:
+            case A.PhysicalLiteral():
+                return node.vector
+            case A.Neg():
+                return self._unit_infer(node.operand)
+            case A.BinOp():
+                lhs = self._unit_infer(node.lhs)
+                rhs = self._unit_infer(node.rhs)
+                if lhs is None or rhs is None:
+                    return None
+                if node.op == "*":
+                    return units.mul(lhs, rhs)
+                if node.op == "/":
+                    return units.div(lhs, rhs)
+                if lhs != rhs and not self._handled:
+                    self._reject_at(
+                        0, "UNIT",
+                        "provable unit mismatch under '%s': %s vs %s -- "
+                        "fix the units, or cover with an else: handler "
+                        "for the runtime unit_mismatch path (R-50/R-51)"
+                        % (node.op, units.display(lhs), units.display(rhs)))
+                if node.op in ("+", "-"):
+                    return lhs
+                return None                       # comparison: a bool
+            case A.DataAccess() if node.args is NodeAbsent:
+                return self._declared_unit(node.name.segments)
+            case ReferenceLeaf():
+                return self._declared_unit(node.segments)
+            case _:
+                pass
+        from ..core.symbol.ast import ConstantLeaf
+        if isinstance(node, ConstantLeaf) \
+                and str(node.kind) in ("int", "float"):
+            return _Walk._ZEROV
+        return None
+
+    def _declared_unit(self, segs):
+        """RETURN: tuple, the declared vector of a bare-dot member
+                  (('', name) -- the self binding) or a single-segment
+                  port/local of the walk's current owner.
+                  None, else (the static net's edge; runtime carries).
+        """
+        if len(segs) == 2 and segs[0] == "":
+            return self._member_units.get(segs[1])
+        if len(segs) == 1:
+            return self._port_units.get(segs[0])
+        return None
+
+    def _unit_seam(self, statement, rhs_vector):
+        """RETURN: None, always. The R-50 write seam, statically: an
+                  UNHANDLED mutation into a declared-physical place whose
+                  rhs vector is proven DIFFERENT rejects [UNIT] (a handled
+                  one travels the runtime unit_mismatch path instead --
+                  SEMANTICS 21 mirrored).
+        """
+        from . import units
+        leaf = getattr(statement.lvalue, "name", statement.lvalue)
+        segs = getattr(leaf, "segments", None)
+        if not segs:
+            return
+        declared = self._declared_unit(tuple(segs))
+        if declared is None:
+            return
+        rhs = rhs_vector
+        if rhs is not None and rhs != declared:
+            self._reject_at(
+                leaf.begin, "UNIT",
+                "provable unit mismatch on write: %s := %s -- fix the "
+                "units, or cover with an else: handler for the runtime "
+                "unit_mismatch path (R-50/R-51)"
+                % (units.display(declared), units.display(rhs)))
+
+    # -- 12.6 / SEMANTICS 24: the call-site laws over resolved callees ------
+
+    def _resolved_signalling(self, rhs):
+        """RETURN: (str, set), the callee's bare name and its declared
+                  signal-name set -- for a call of a resolved TOP-LEVEL
+                  work that declares signals.
+                  (None, None), else (unresolved callees stay with the
+                  deferred PARTIAL; a signal-less work needs no handler).
+        """
+        segs = getattr(getattr(rhs, "name", None), "segments", None)
+        if not segs or len(segs) != 1 \
+                or getattr(rhs, "args", NodeAbsent) is NodeAbsent:
+            return None, None
+        work = self._works_by_name.get(segs[0])
+        if work is None or not work.panel.signals:
+            return None, None
+        return segs[0], {s.name.segments[0] for s in work.panel.signals}
+
+    def handler_arms(self, handler, callee=None, signals=None,
+                     builtin_only=False):
+        """RETURN: None, always. Walks a handler's arms (LANGUAGE 12.6,
+                  R-44: the arm IS a causality in form): guard expressions
+                  walk; an UNGUARDED ~ANY must be the LAST arm (first-match
+                  makes everything after it dead -- REJECT) and at most one
+                  may stand; block actions walk as nested statements;
+                  signal actions are collected by the surrounding work
+                  walk. COVERAGE-BY-TESTIMONY over the callee's signal set
+                  (every variant met by an unguarded arm or ~ANY) joins the
+                  deferred SEMANTICS-24 PARTIAL -- the law stands, the
+                  resolved-callee check lands with type flow.
+        """
+        blanket_seen = False
+        met = set()
         for arm in handler.arms:
-            if isinstance(arm.action, (A.ExitSignal,)) \
+            is_any = arm.variant is NodeAbsent
+            unguarded = arm.guard is NodeAbsent
+            if not is_any:
+                name = arm.variant.segments[0]
+                if signals is not None and name not in signals:
+                    self._reject_at(
+                        arm.variant.begin, "WORK",
+                        "arm names '%s' -- not a fault of callee '%s' "
+                        "(LANGUAGE 12.6)" % (name, callee))
+                elif builtin_only \
+                        and name not in ("div_by_zero", "unit_mismatch"):
+                    self._reject_at(
+                        arm.variant.begin, "WORK",
+                        "arm names '%s' -- not a fault of this primitive "
+                        "statement (built-ins: div_by_zero, unit_mismatch; "
+                        "SEMANTICS 21/24)" % name)
+                if unguarded:
+                    met.add(name)
+            if blanket_seen:
+                begin = arm.variant.begin if not is_any else 0
+                self._reject_at(
+                    begin, "STRUCTURE",
+                    "arm after an unguarded ~ANY is dead -- first-match "
+                    "never reaches it (R-44)")
+            if is_any and unguarded:
+                blanket_seen = True
+            if arm.guard is not NodeAbsent:
+                self.expr(arm.guard)
+            if isinstance(arm.action, (A.Signal,)) \
                     or arm.action is NodeAbsent:
                 continue
             self.block(arm.action, outermost=False)
+        if signals is not None and not blanket_seen:
+            for s in sorted(signals - met):
+                self._reject_at(
+                    0, "WORK",
+                    "failure to testify: '%s' of callee '%s' meets no "
+                    "unguarded arm and no ~ANY -- a guard-hole (R-44, "
+                    "SEMANTICS 24)" % (s, callee))
 
     def class_def(self, node):
         """RETURN: None, always. Walks one class (LANGUAGE 11, R-41.3): is:
@@ -630,9 +803,10 @@ class _Walk:
         """RETURN: None, always. Walks one work or clockwork (LANGUAGE 12/13;
                   SEMANTICS 23, PARTIAL): panel entry types walk; the body --
                   absent for a spec -- walks with all panel port names in
-                  frame; every variant-carrying exit: must name a declared
+                  frame; every variant-carrying signal must name a declared
                   signal variant and every declared variant must be emitted
-                  by some exit: (12.4, both directions); tick: is lawful only
+                  by some signal (12.4, both directions; R-43: 'exit' renamed
+                  'signal', the 'to' suffix unlawful here); tick: is lawful only
                   in a clockwork with an out: section; give: is UNLAWFUL in a
                   clockwork and, in a work, its port list must name the
                   panel's out: ports (R-41.4, SEMANTICS 23).
@@ -641,6 +815,11 @@ class _Walk:
         frame = {}
         for entry in (tuple(panel.ins) + tuple(panel.outs)):
             frame[entry.name.segments[0]] = "port"
+        self._member_units = {}
+        self._port_units = {
+            e.name.segments[0]: e.type_.vector
+            for e in (tuple(panel.ins) + tuple(panel.outs))
+            if isinstance(getattr(e, "type_", None), A.PhysicalType)}
         declared = {sig.name.segments[0] for sig in panel.signals}
         if node.body is NodeAbsent:
             return                                # a SPEC: panel only
@@ -677,18 +856,18 @@ class _Walk:
                         self._reject_at(
                             _first_begin(statement) or 0, "STRUCTURE",
                             "unreachable statement -- the path above "
-                            "already left through give/exit/dropto; "
+                            "already left through give/signal/dropto; "
                             "unreachable code is an error (ruling)")
                         reachable = True     # report ONCE per dead run
                     if isinstance(statement,
-                                  (A.Give, A.ExitSignal, A.DropTo)):
+                                  (A.Give, A.Signal, A.DropTo)):
                         reachable = False
                     self.work_statement(statement, node, declared, emitted,
                                         exits=labels[seen:])
                 for found in _collect(node.body,
-                                      (A.ExitSignal, A.Tick, A.Give)):
-                    if isinstance(found, A.ExitSignal):
-                        self.check_exit(found, node, declared, emitted)
+                                      (A.Signal, A.Tick, A.Give)):
+                    if isinstance(found, A.Signal):
+                        self.check_signal(found, node, declared, emitted)
                     elif isinstance(found, A.Tick):
                         self.check_tick(found, node)
                     else:
@@ -703,20 +882,20 @@ class _Walk:
         for name in sorted(declared - emitted):
             self.reporter.report(Diagnostic(
                 phase=Phase.SEMANTIC,
-                message="signal '%s' is declared but no reachable exit "
-                        "emits it (LANGUAGE 12.4)" % name,
+                message="signal '%s' is declared but no reachable signal "
+                        "statement emits it (LANGUAGE 12.4)" % name,
                 source_offset=node.signature.name.begin,
                 fatal=True, tag="WORK"))
 
     def work_statement(self, statement, node, declared, emitted, exits=()):
-        """RETURN: None, always. Walks one work-body statement: exit:
+        """RETURN: None, always. Walks one work-body statement: signal
                   verified against the declared signal set; tick: verified
                   against the out: section; plain statements walk as
                   ordinary code (nested blocks descend through the same
                   check).
         """
         match statement:
-            case A.ExitSignal() | A.Give() | A.Tick():
+            case A.Signal() | A.Give() | A.Tick():
                 pass                          # checked by the collection
             case A.Destruct():
                 self.statement(statement, exits=exits)   # the general
@@ -724,21 +903,51 @@ class _Walk:
             case _:
                 self.statement(statement, exits=exits)
 
-    def check_exit(self, statement, node, declared, emitted):
-        """RETURN: None, always. One exit: against the declared signal set
-                  (LANGUAGE 12.4, first direction); a declared emission is
-                  recorded for the second direction. A BARE exit: (R-41.7,
-                  the nothing-more egress) names no variant and passes --
-                  its lawfulness in WORKS rides a flagged fork, so no check
-                  is invented here.
+    def check_signal(self, statement, node, declared, emitted):
+        """RETURN: None, always. One signal statement against the declared
+                  signal set (LANGUAGE 12.4, first direction); a declared
+                  emission is recorded for the second direction. A BARE
+                  'signal;' (R-41.7, the nothing-more egress) names no
+                  variant and passes -- its lawfulness in WORKS rides a
+                  flagged fork, so no check is invented here. THE POSITION
+                  LAW (R-43): in normal work code the 'to' suffix is
+                  UNLAWFUL -- a work's signal travels the fault channel to
+                  the caller, never a pipe (SEMANTICS 23).
         """
+        if statement.to_channel is not NodeAbsent:
+            self._reject_at(
+                statement.to_channel.begin, "PIPE",
+                "'to %s' on a signal in normal work code -- the routing "
+                "suffix stands only in behavior work code; a work's "
+                "signal travels the fault channel to the caller "
+                "(R-43, SEMANTICS 23)"
+                % statement.to_channel.segments[0])
         if statement.variant is NodeAbsent:
             return                               # bare: the built-in egress
         name = statement.variant.segments[0]
+        entry = next((s for s in node.panel.signals
+                      if s.name.segments[0] == name), None)
+        if entry is not None:
+            # R-45/R-47 arity: a respelled entry declares its own fields; a
+            # name-only entry ADOPTS the like-named event definition's; bare
+            # with no definition carries nothing.
+            if entry.params is not NodeAbsent:
+                fields = tuple(p.name.segments[0] for p in entry.params)
+            else:
+                fields = self._event_defs.get(name, ())
+            carried = 0 if statement.args is NodeAbsent \
+                      else len(tuple(statement.args))
+            if carried != len(fields):
+                self._reject_at(
+                    statement.variant.begin, "EVENT",
+                    "signal '%s' carries %d argument(s) -- its event "
+                    "declares %d (%s) (R-45/R-47)"
+                    % (name, carried, len(fields),
+                       ", ".join(fields) if fields else "bare"))
         if name not in declared:
             self.reporter.report(Diagnostic(
                 phase=Phase.SEMANTIC,
-                message="exit names '%s' -- not a declared signal of this "
+                message="signal names '%s' -- not a declared signal of this "
                         "%s (LANGUAGE 12.4)"
                         % (name, "clockwork" if isinstance(
                             node, A.ClockworkDef) else "work"),
@@ -763,7 +972,7 @@ class _Walk:
     def check_give(self, statement, node):
         """RETURN: None, always. One give: against its host (R-41.4,
                   SEMANTICS 23): UNLAWFUL in a clockwork (a clockwork
-                  delivers with tick: and ends only through exit:); in a
+                  delivers with tick: and ends only through signal); in a
                   work the port list must name the panel's out: ports --
                   each exactly once, none foreign, none missing (name and
                   arity; the out-bundle leaves in declaration order, 12.5).
@@ -772,7 +981,7 @@ class _Walk:
             self._reject_at(
                 node.signature.name.begin, "WORK",
                 "give is unlawful in a clockwork -- it delivers with "
-                "tick and ends only through exit (LANGUAGE 13.3, "
+                "tick and ends only through signal (LANGUAGE 13.3, "
                 "R-41.4)")
             return
         declared = [e.name.segments[0] for e in node.panel.outs]
@@ -835,6 +1044,12 @@ class _Walk:
             self.type_of(decl.type_)
         ins  = {c.segments[0] for c in node.ins}
         outs = {c.segments[0] for c in node.outs}
+        self._reactor_mode = node.mode      # R-46: the =!=>/=x=> mode laws
+        self._member_units = {
+            m.name.segments[0]: m.type_.vector
+            for m in node.members
+            if isinstance(m, A.Declaration)
+            and isinstance(m.type_, A.PhysicalType)}   # R-50/51 static net
         frame = {b.signature.name.segments[0]: "behavior"
                  for b in node.behaviors}
         self._reactor_ins, self._reactor_outs = ins, outs
@@ -866,6 +1081,7 @@ class _Walk:
                         self.causality(causality)
         finally:
             self._reactor_ins, self._reactor_outs = None, None
+            self._reactor_mode = None
 
     def _params_of(self, signature):
         """RETURN: dict, one local frame holding the signature's parameter
@@ -902,6 +1118,13 @@ class _Walk:
                   expression walks.
         """
         guarded = node.guard is not NodeAbsent
+        if isinstance(node.target, A.AnyPattern):
+            # R-44: the ~ANY catch-all -- matches any event on its group's
+            # channel; nothing to seat; a guard is lawful (it reads members;
+            # e is Nothing under ~ANY at run time).
+            if node.guard is not NodeAbsent:
+                self.expr(node.guard)
+            return
         if isinstance(node.target, A.Lifecycle):
             if guarded:
                 self._reject_at(0, "GUARD",
@@ -921,14 +1144,69 @@ class _Walk:
             self.expr(node.guard)
 
     def effect(self, node):
-        """RETURN: None, always. Walks one effect: a spawn seats its emission
-                  target; a routed spawn's 'to' channel must stand in the
-                  enclosing reactor's out: panel (pipe ruling, SEMANTICS
-                  31); a command block walks as an outermost body.
+        """RETURN: None, always. Walks one effect under the three-arrow law
+                  (R-46): a '=>' spawn seats its emission target -- a
+                  BEHAVIOR target there REJECTS (activation spells '=!=>');
+                  '=!=>' demands a behavior target; '=x=>' takes a behavior
+                  (REJECT in a state machine -- it may never stand
+                  stateless; R-49: handles died with the recurrence tail);
+                  activation/deactivation ride a BARE target (no 'to');
+                  the shrug
+                  (action NodeAbsent) walks nothing; a routed spawn's 'to'
+                  channel must stand in the enclosing reactor's out: panel
+                  (pipe ruling, SEMANTICS 31); a command block walks as an
+                  outermost body.
         """
+        if node.action is NodeAbsent:
+            return                          # R-46: reckoned, ignored
+        if node.marker in ("=!=>", "=x=>") \
+                and isinstance(node.action, A.Spawn):
+            spawn = node.action
+            access = self.seat(spawn.call.name, event_ok=True)
+            begin = spawn.call.name.begin
+            if spawn.to_channel is not NodeAbsent:
+                self._reject_at(
+                    begin, "REACTOR",
+                    "'%s' takes a bare target -- no 'to' "
+                    "(R-46; R-49 retired 'every:')" % node.marker)
+            if node.marker == "=!=>":
+                if access.kind != "behavior":
+                    self._reject_at(
+                        begin, "REACTOR",
+                        "'=!=>' activates a behavior -- %r is not a "
+                        "behavior of this reactor (R-46)"
+                        % ".".join(spawn.call.name.segments))
+            else:
+                if access.kind == "behavior" \
+                        and self._reactor_mode == "single":
+                    self._reject_at(
+                        begin, "REACTOR",
+                        "'=x=>' on a behavior in a state machine -- the "
+                        "machine may never stand stateless; transitions "
+                        "spell '=!=>' (R-46)")
+            return
         if isinstance(node.action, A.Spawn):
             spawn = node.action
-            self.emission_target(spawn.call)
+            access = self.emission_target(spawn.call.name, spawn.call.args)
+            ev = spawn.call.name.segments[-1]
+            if ev in self._event_defs \
+                    and spawn.call.args is not NodeAbsent:
+                fields = self._event_defs[ev]
+                for a in spawn.call.args:
+                    if isinstance(a, A.NamedArg) and a.name not in fields:
+                        # R-45: an emission of a DEFINED event carries only
+                        # its declared fields.
+                        self._reject_at(
+                            spawn.call.name.begin, "EVENT",
+                            "emission '%s' carries field '%s' -- its event "
+                            "declares (%s) (R-45)"
+                            % (ev, a.name, ", ".join(fields)))
+            if access.kind == "behavior":
+                self._reject_at(
+                    spawn.call.name.begin, "REACTOR",
+                    "'=>' spawns an event -- activation of behavior %r "
+                    "spells '=!=>' (R-46)"
+                    % ".".join(spawn.call.name.segments))
             if spawn.to_channel is not NodeAbsent:
                 channel = spawn.to_channel.segments[0]
                 spawn.to_channel.resolve(Access(kind="channel",
@@ -941,22 +1219,24 @@ class _Walk:
                         "(out: %s) (SEMANTICS 31)"
                         % (channel,
                            ", ".join(sorted(self._reactor_outs)) or "-"))
-            if spawn.every is not NodeAbsent:
-                self.expr(spawn.every)
-            if spawn.handle is not NodeAbsent:
-                self._top_frame()[spawn.handle.segments[0]] = "local"
         else:
-            self.block(node.action, outermost=True)
+            was = self._effect_block
+            self._effect_block = True   # R-43: behavior work code -- the
+            try:                        # signal statement is the emission
+                self.block(node.action, outermost=True)
+            finally:
+                self._effect_block = was
 
-    def emission_target(self, call):
+    def emission_target(self, name, args):
         """RETURN: Access, the recipe seated on an emission target (an
-                  effect's spawn): a raw event is
+                  effect's spawn or a behavior signal statement, R-43): a
+                  raw event is
                   legitimate; a target resolving to an ABSTRACT definition --
                   local or mounted, the flag rides the export -- draws the
                   SEMANTICS-17 WARN remark; arguments check against a
                   resolved surface (SEMANTICS 20).
         """
-        access = self.seat(call.name, event_ok=True)
+        access = self.seat(name, event_ok=True)
         entry = self.table.entry_of(access.target)
         if entry is not None and entry.abstract and not access.residue:
             self.reporter.report(Diagnostic(
@@ -964,11 +1244,11 @@ class _Walk:
                 message="effect targets ABSTRACT entity %r (SEMANTICS 17: "
                         "well-formed; every occurrence must be visible)"
                         % ".".join(access.target),
-                source_offset=call.name.begin,
+                source_offset=name.begin,
                 fatal=False,
                 tag="GUARD"))
-        self.check_arguments(access, call.args, call.name.begin)
-        self._args(call.args)
+        self.check_arguments(access, args, name.begin)
+        self._args(args)
         return access
 
     # -- command block (SEMANTICS 7 and 9 live here) --------------------------------
@@ -998,10 +1278,14 @@ class _Walk:
                 self._reject_at(
                     _first_begin(statement) or 0, "STRUCTURE",
                     "unreachable statement -- the path above already left "
-                    "through give/exit/dropto; unreachable code is an "
+                    "through give/signal/dropto; unreachable code is an "
                     "error (ruling)")
                 reachable = True             # report ONCE per dead run
-            if isinstance(statement, (A.Give, A.ExitSignal, A.DropTo)):
+            diverging = (A.Give, A.DropTo) if self._effect_block \
+                        else (A.Give, A.Signal, A.DropTo)
+            if isinstance(statement, diverging):
+                # R-43: in behavior work code 'signal' is an EMISSION --
+                # flow continues; in normal work code it is the egress.
                 reachable = False
             if isinstance(statement, A.ExitLabel):
                 if not outermost:
@@ -1014,7 +1298,7 @@ class _Walk:
                     seen += 1
                 if statement.region is not NodeAbsent:
                     # B-1/R-39: the catch region's interior walks like any
-                    # code -- its exit:-signals already count toward 12.4's
+                    # code -- its signal statements already count toward 12.4's
                     # emitted set via the deep collection; labels inside a
                     # region reject through the nested-block law.
                     self.block(statement.region, outermost=False,
@@ -1051,9 +1335,11 @@ class _Walk:
                     self._dead.add(leaf.segments[0])   # SEM 30: the name
                 return                                 # dies with the having
             case A.Mutation() if node.handler is not NodeAbsent:
-                # LANGUAGE 12.9 (PARTIAL): the statement's handler covers the
-                # union of its fault sources, div_by_zero included; per-arm
-                # exhaustiveness over that union is deferred.
+                # LANGUAGE 12.9: the statement's handler covers the union of
+                # its fault sources -- div_by_zero and unit_mismatch for the
+                # primitives, the declared signal set for a resolved work
+                # callee (SEMANTICS 24: arm names and coverage-by-testimony
+                # checked HERE; unresolved callees stay with the PARTIAL).
                 self._site_markers(node)                # R-41.2
                 self._receive_agreement(node)           # known/had typing
                 self.lvalue(node.lvalue)
@@ -1062,11 +1348,20 @@ class _Walk:
                 if isinstance(node.rhs, A.DataAccess):
                     self._check_overloaded_call(node.rhs)   # SEMANTICS 26
                 saved, self._handled = self._handled, True
+                saved_call, self._allowed_call = self._allowed_call, node.rhs
                 try:
                     self.expr(node.rhs)
-                finally:
-                    self._handled = saved
-                self.handler_arms(node.handler)
+                    self._unit_infer(node.rhs)          # R-50/51: walks and
+                finally:                                # stays silent under
+                    self._handled = saved               # the handler
+                    self._allowed_call = saved_call
+                callee, signals = self._resolved_signalling(node.rhs)
+                is_call = isinstance(node.rhs, A.DataAccess) \
+                          and getattr(node.rhs, "args",
+                                      NodeAbsent) is not NodeAbsent
+                self.handler_arms(node.handler, callee=callee,
+                                  signals=signals,
+                                  builtin_only=not is_call)
                 return
             case A.Wire():
                 self.wire_statement(node)
@@ -1077,13 +1372,29 @@ class _Walk:
                 self._receive_agreement(node)           # known/had typing
                 self._nothing_assignment(node)          # SEMANTICS 28
                 self.lvalue(node.lvalue)
-                self.expr(node.rhs)
+                callee, _ = self._resolved_signalling(node.rhs)
+                if callee is not None:
+                    # 12.6, the mandatory-handler direction (SEM-24): a
+                    # signalling work's call MUST carry an else: block.
+                    self._reject_at(
+                        node.rhs.name.begin, "WORK",
+                        "call of signalling work '%s' without an else: "
+                        "handler -- its faults have no arm here "
+                        "(LANGUAGE 12.6, SEMANTICS 24)" % callee)
+                saved_call, self._allowed_call = self._allowed_call, node.rhs
+                try:
+                    self.expr(node.rhs)
+                finally:
+                    self._allowed_call = saved_call
+                self._unit_seam(node,                   # R-50/51: ONE
+                                self._unit_infer(node.rhs))  # inference,
+                                                        # rejects + seam
                 self._record_pipe_local(node)           # SEMANTICS 31
             case A.If():
                 # SEMANTICS 28 narrowing (PARTIAL: exact-shape gates only).
                 # 'k != Nothing' narrows k in the then-block; 'k == Nothing'
                 # narrows k in the else-block; the initial-gate form -- a
-                # '== Nothing' then-block that DIVERGES (exit:/give:) --
+                # '== Nothing' then-block that DIVERGES (signal/give) --
                 # narrows k for the REST of the body.
                 dead_before = set(self._dead)          # SEM 30: branch-
                 given_before = set(self._given)        # local deaths/gives
@@ -1156,10 +1467,41 @@ class _Walk:
                                     "(SEMANTICS 7c, forward-only)" % label)
             case A.Break() | A.Continue():
                 pass
+            case A.Signal() if self._effect_block:
+                # R-43: BEHAVIOR WORK CODE -- the signal statement is the
+                # routed emission, equivalent to '=> Event() [to <chan>]':
+                # the target seats like a spawn's (raw event legitimate);
+                # 'to <channel>' stands in the enclosing reactor's out:
+                # (SEMANTICS 31 (ii)); suffix-less fans. A bare 'signal;'
+                # names no event to emit -- rejected here.
+                if node.variant is NodeAbsent:
+                    self._reject_at(
+                        _first_begin(node) or 0, "PIPE",
+                        "bare 'signal;' in behavior work code -- the "
+                        "emission names its event; the nothing-more "
+                        "egress belongs to the clockwork (R-43)")
+                    return
+                self.emission_target(node.variant, node.args)
+                if node.to_channel is not NodeAbsent:
+                    channel = node.to_channel.segments[0]
+                    node.to_channel.resolve(Access(kind="channel",
+                                                   target=(channel,)))
+                    if self._reactor_outs is not None \
+                            and channel not in self._reactor_outs:
+                        self._reject_at(
+                            node.to_channel.begin, "PIPE",
+                            "'to %s' names no out: channel of this reactor "
+                            "(out: %s) (SEMANTICS 31)"
+                            % (channel,
+                               ", ".join(sorted(self._reactor_outs)) or "-"))
+            case A.Signal():
+                pass                    # normal work code: the fault egress
+                                        # -- the collection of the work walk
+                                        # owns its laws (check_signal)
             case A.ExitLabel():
                 if node.region is not NodeAbsent:
                     # B-1/R-39: the catch region's interior walks like any
-                    # code; its exit:-signals count toward 12.4's emitted
+                    # code; its signal statements count toward 12.4's emitted
                     # set via the deep collection.
                     self.block(node.region, outermost=False, exits=exits)
             case _:
@@ -1324,6 +1666,9 @@ class _Walk:
                     self._known_operand(node.rhs)
                 self.expr(node.lhs)
                 self.expr(node.rhs)
+            case A.PhysicalLiteral():
+                self._unit_names(node.written, node.begin)
+                self.expr(node.number)
             case A.Not() | A.Neg():
                 self.expr(node.operand)
             case A.Ternary():
@@ -1333,6 +1678,17 @@ class _Walk:
             case A.DataAccess():
                 self.seat(node.name)
                 if node.args is not NodeAbsent:
+                    if node is not self._allowed_call:
+                        # 12.6: a SIGNALLING work is callable only as the
+                        # rhs of a statement whose else: can answer it --
+                        # buried in an expression its faults have no arm.
+                        callee, _ = self._resolved_signalling(node)
+                        if callee is not None:
+                            self._reject_at(
+                                node.name.begin, "WORK",
+                                "signalling work '%s' in expression "
+                                "position -- its faults have no arm here "
+                                "(LANGUAGE 12.6)" % callee)
                     self._args(node.args)
                 for step in node.steps:
                     self.expr(step)
@@ -1358,11 +1714,27 @@ class _Walk:
 
     def type_of(self, node):
         """RETURN: None, always. Walks one type: a named type must resolve
-                  (SEMANTICS 19); a struct's fields declare, the plain
+                  (SEMANTICS 19); a physical type's unit names must stand
+                  in UNITS.txt (R-50 -- the map marks an unknown name with
+                  a leading '?'); a struct's fields declare, the plain
                   aggregates carry nothing.
         """
         if isinstance(node, A.NamedType):
             self.seat(node.name)
+        elif isinstance(node, A.PhysicalType):
+            self._unit_names(node.written, node.begin)
+
+    def _unit_names(self, written, begin):
+        """RETURN: None, always. Rejects every '?'-marked unit name of a
+                  written unit spelling (R-50): the name is neither an SI
+                  base nor a UNITS.txt derived unit.
+        """
+        for part in written.replace("/", "*").split("*"):
+            if part.startswith("?"):
+                self._reject_at(
+                    begin, "UNIT",
+                    "unknown unit name %r -- neither an SI base nor a "
+                    "derived unit of UNITS.txt (R-50)" % part[1:])
 
     # -- resolution ----------------------------------------------------------------
 
@@ -1646,6 +2018,9 @@ class _Walk:
                   handler, whose surface is pending: until it lands, the
                   division REJECTS.
         """
+        if isinstance(denominator, A.PhysicalLiteral):
+            denominator = denominator.number    # R-50: the unit changes
+                                                # nothing about zeroness
         if _provably_nonzero(denominator):
             return
         offset = getattr(denominator, "begin", 0)

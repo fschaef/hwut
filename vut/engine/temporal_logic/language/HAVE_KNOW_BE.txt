@@ -21,7 +21,7 @@ is never had). Custody begins at a constructor's out: custody entry
 (the flat panel of LANGUAGE 12.2, R-41.1), moves WHOLE
 along give-steps (one object, one debt, one haver at a time), and ends in
 exactly one of two ways: GIVEN onward, or DESTRUCTED (0.3). A local
-variable is had by the work that has it: the terminal (give/exit) ends
+variable is had by the work that has it: the terminal (give/signal) ends
 the having.
 
 THE GIVE LEAVES NOTHING BEHIND. Upon give, the giver's have-relationship

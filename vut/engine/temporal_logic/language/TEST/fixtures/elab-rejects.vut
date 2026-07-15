@@ -13,3 +13,34 @@ bad : reactor is: nowhere {
     }
 }
 z: mystery_type;
+
+wrong_arrows : reactor(in: cmd) {
+    n: float;
+    IDLE : behavior {
+        go => RUN;
+        halt =x=> IDLE;
+        rise =!=> nowhere_event;
+        spin =!=> RUN to cmd;
+    }
+    RUN : behavior { back =!=> IDLE; }
+}
+
+#{ R-50/R-51, the STATIC unit net: provable mismatches reject at
+   compile time; a handler on the statement suppresses (SEM-21
+   mirrored) -- the runtime unit_mismatch path then answers. }
+metrics : reactor(in: cmd) {
+    dist  : physical[m];
+    speed : physical[m/s];
+    B : behavior {
+        probe => {
+            .speed = .dist;
+            #{ ^ WRITE SEAM, unhandled: m/s := m -- REJECT [UNIT] }
+            .dist = .dist + 2.0 [s];
+            #{ ^ OPERATOR, unhandled: m + s -- REJECT [UNIT] }
+            .speed = .dist / 2.0 [s];
+            #{ ^ derivation: PROVEN LAWFUL, no reject }
+            .speed = .dist else: { unit_mismatch => { .speed = .speed; } }
+            #{ ^ handled: SUPPRESSED -- the runtime path answers }
+        }
+    }
+}

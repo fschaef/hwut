@@ -1,15 +1,20 @@
 station : reactor++(in: cmd) {
     polling : behavior {
-        ~ENTRY => poll() every: 0.5 as: poller;
-        mute =x=> poller;
+        ~ENTRY => armed;
+        ~EXIT  => disarmed;
     }
     master : behavior {
-        start => polling;
-        stop =x=> polling;
+        start =!=> polling;
+        stop  =x=> polling;
     }
 }
 plant : work() {
-    f = script("start; mute; start; stop");
+    f = script("start; start; stop; stop; start");
+    #{ start   -> enter (~ENTRY -> armed)
+       start   -> no-op (already active, R-48)
+       stop    -> leave (~EXIT -> disarmed)
+       stop    -> no-op (already off, R-48 -- no second ~EXIT)
+       start   -> RESTART: re-enter, ~ENTRY fires again (R-48) }
     s = station();
     f ----> s;
     give;

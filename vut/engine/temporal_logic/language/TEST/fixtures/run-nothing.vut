@@ -1,8 +1,8 @@
 lookup : work(in: known: cache, known: key
               out: result
               signals: unknown) {
-    if: cache == Nothing { exit unknown; }
-    if: key == Nothing { exit unknown; }
+    if: cache == Nothing { signal unknown; }
+    if: key == Nothing { signal unknown; }
     result = cache + key;
     give result;
 }

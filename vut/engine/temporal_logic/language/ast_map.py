@@ -44,6 +44,8 @@ CST SHAPE LAWS the factories are written against (probed, engine-verified):
 """
 import dataclasses
 
+from . import units
+
 from ..core.parser_generator.ast_map_family import (
     SeqMap, OrMap, OptMap, StarMap, PASS)
 from ..core.parser_generator.ll2_grammar_spec import SEQ_Spec
@@ -397,7 +399,7 @@ def make_named_item(n):
     """
     name_token, head = n["name"], n[2]
     branch = head.child
-    if head.triggered_index == 6:                            # declaration
+    if head.triggered_index == 7:                            # declaration
         return A.Declaration(name=_decl_tok(name_token), type_=branch[0])
     if head.triggered_index == 0:              # reactor++ (captured kind
         node = _complete_def(branch[1], name_token)   # word survives at 0)
@@ -405,7 +407,16 @@ def make_named_item(n):
     node = _complete_def(branch[0], name_token)
     if head.triggered_index == 1:                            # reactor
         return dataclasses.replace(node, mode="single")
-    return node                                # cause/class/work/clockwork
+    return node                          # cause/event/class/work/clockwork
+
+
+def make_event_tail(n):
+    """RETURN: EventDef, HEADLESS, from '(fields)? ;' (R-45/D-34) -- the
+              payload NodeList rides the signature's params (name seated
+              by _complete_def); an empty parens is the bare event.
+    """
+    params = n[0] if n[0] else NodeAbsent
+    return A.EventDef(signature=A.Signature(name=NodeAbsent, params=params))
 
 
 def make_causality(n):
@@ -425,6 +436,10 @@ def make_cause(n):
     if head.triggered_index == 0:
         pair = head.child
         target, args = pair[0], _opt(pair[1])
+    elif head.triggered_index == 3:
+        # R-44/D-33: the ~ANY catch-all cause -- matches any event on the
+        # group's channel; e is Nothing under it.
+        target, args = A.AnyPattern(begin=head.child.begin), NodeAbsent
     else:
         target, args = A.Lifecycle(kind=head.child.text), NodeAbsent
     return A.Cause(target=target, args=args,
@@ -457,35 +472,127 @@ def make_effects(n):
         tail = _opt(body[1])
         if tail is NodeAbsent:
             tail = NodeList(())
+    elif branch.triggered_index == 1:
+        # R-46: the causality shrug -- 'action' NodeAbsent, chain-final.
+        return NodeList((A.Effect(marker=marker, action=NodeAbsent),))
     else:
         body = branch.child
         effect = A.Effect(marker=marker, action=body[0])
         chain_or = body[1]
-        tail = chain_or.child if chain_or.triggered_index == 1                else NodeList(())
+        tail = chain_or.child if chain_or.triggered_index == 1 \
+               else NodeList(())
     return NodeList((effect,) + tuple(tail))
 
 
+def make_upower(n):
+    """RETURN: Fraction, the exponent one <upower> spells (R-50): the
+              inner OR's branch 0 is the folded caret form, branch 1 a
+              Unicode superscript run through units.super_int.
+    """
+    head = n[0]
+    if head.triggered_index == 1:                         # superscript
+        return units.Fraction(units.super_int(head.child.text))
+    return head.child                                     # caret, folded
+
+
+def make_upower_caret(n):
+    """RETURN: Fraction, the '^' exponent -- '^<int>' (optionally signed)
+              or '^(<p>/<q>)' (rationals parenthesise, R-50).
+    """
+    body = n[1]
+    if body.triggered_index == 0:
+        pair = body.child
+        p = int(pair[1].text)
+        return units.Fraction(-p if pair[0].present else p)
+    inner = body.child          # silent parens drop: [sign?, p, '/', q]
+    frac = units.Fraction(int(inner[1].text), int(inner[3].text))
+    return -frac if inner[0].present else frac
+
+
+def make_ufactor(n):
+    """RETURN: (tuple, str), one <ufactor>'s vector and written name
+              (R-50) -- the unit name's vector raised to its power (1
+              when the power is absent); an UNKNOWN name folds as the
+              zero vector and keeps its spelling for the semantic
+              reject (elaborate rejects by the written form).
+    """
+    name = n["uname"].text
+    p = n[1].child if n[1].present else units.Fraction(1)
+    # the id pattern swallows a trailing DIGIT superscript into the name
+    # ('m\u00b2' is ONE token; sign-led runs like 's\u207b\u00b2' split into
+    # id + super token and arrive through n[1]) -- peel it here (R-50).
+    core = name.rstrip("\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079")
+    if core != name:
+        p = p * units.Fraction(units.super_int(name[len(core):]))
+        name = core
+    base = units.lookup(name)
+    if base is None:
+        base = (units.Fraction(0),) * 7
+        name = "?" + name                    # the reject marker
+    return units.power(base, p), name
+
+
+def make_uprod(n):
+    """RETURN: (tuple, str), one <uprod> folded -- factors MULTIPLY
+              (exponents add); the written form joins by '*'.
+    """
+    vec, name = n[0]
+    names = [name]
+    for link in n[1].rep_items():
+        fvec, fname = link[1]
+        vec = units.mul(vec, fvec)
+        names.append(fname)
+    return vec, "*".join(names)
+
+
+def make_unit(n):
+    """RETURN: (tuple, str), one <unit> folded -- quotients SUBTRACT
+              (left-assoc: a/b/c == a/(b*c)); the written form joins
+              by '/'.
+    """
+    vec, name = n[0]
+    names = [name]
+    for link in n[1].rep_items():
+        qvec, qname = link[1]
+        vec = units.div(vec, qvec)
+        names.append(qname)
+    return vec, "/".join(names)
+
+
+def make_type_physical(n):
+    """RETURN: PhysicalType, from 'physical [ <unit> ]' (R-50) -- the
+              canonical vector plus the author's written spelling
+              ('?'-marked names are unknown; elaborate rejects them).
+    """
+    vec, written = n[1]
+    return A.PhysicalType(vector=vec, written=written,
+                          begin=n[0].begin)
+
+
+def make_physical_literal(n):
+    """RETURN: PhysicalLiteral, from '<number> [ <unit> ]' -- or the bare
+              number node itself when the bracket is absent (R-50: the
+              dimensionless case stays a plain number).
+    """
+    opt = n[1]
+    if not opt.present:
+        return n[0]
+    vec, written = opt.child[1]
+    return A.PhysicalLiteral(number=n[0], vector=vec, written=written,
+                             begin=opt.child[0].begin)
+
+
 def make_spawn(n):
-    """RETURN: Spawn, from 'call [to channel] [every: period [as: name]]'
-              (R-15, pipe ruling) -- the 'to' suffix routes the emission
+    """RETURN: Spawn, from 'call [to channel]' (pipe ruling; R-49: the
+              recurrence tail died) -- the 'to' suffix routes the emission
               onto the named out-channel (a ReferenceLeaf; NodeAbsent =
-              suffix-less, the send FANS); the recurrence tail is
-              SEQ(period, OPT(as-name)); the as-body is SEQ(name-token,)
-              and the handle DECLARES.
+              suffix-less, the send FANS).
     """
     to_channel = NodeAbsent
     routed = n[1]
     if routed.present:
         to_channel = _ref_tok(routed.child[0])
-    every, handle = NodeAbsent, NodeAbsent
-    tail = n[2]
-    if tail.present:
-        every = tail.child[0]
-        inner = tail.child[1]
-        if inner.present:
-            handle = _decl_tok(inner.child[0])
-    return A.Spawn(call=n[0], every=every, handle=handle,
-                   to_channel=to_channel)
+    return A.Spawn(call=n[0], to_channel=to_channel)
 
 
 def make_wire(n):
@@ -761,15 +868,24 @@ def make_tick_stmt(n):
     return A.Tick()
 
 
-def make_exit_stmt(n):
-    """RETURN: ExitSignal, from 'exit [<variant> [(args)]];' (R-41.7) --
-              the variant REFERENCES its panel declaration; a bare 'exit;'
-              yields the typed absences (the nothing-more egress).
+def make_signal_stmt(n):
+    """RETURN: Signal, from 'signal [<variant> [(args)] [to <channel>]];'
+              (R-41.7, R-43) -- the variant REFERENCES its declaration (a
+              panel signal in work code, a raw event in behavior code); a
+              bare 'signal;' yields the typed absences (the nothing-more
+              egress); 'to <channel>' a ReferenceLeaf (NodeAbsent =
+              suffix-less; the position law is semantic, SEMANTICS 23/31).
     """
     head = _opt(n[0])
     if head is NodeAbsent:
-        return A.ExitSignal(variant=NodeAbsent, args=NodeAbsent)
-    return A.ExitSignal(variant=_ref_tok(head[0]), args=_opt(head[1]))
+        return A.Signal(variant=NodeAbsent, args=NodeAbsent,
+                        to_channel=NodeAbsent)
+    to_channel = NodeAbsent
+    routed = head[2]
+    if routed.present:
+        to_channel = _ref_tok(routed.child[0])
+    return A.Signal(variant=_ref_tok(head[0]), args=_opt(head[1]),
+                    to_channel=to_channel)
 
 
 def make_handler(n):
@@ -778,22 +894,24 @@ def make_handler(n):
 
 
 def make_arm(n):
-    """RETURN: Arm, from '[<variant>[(fields)]] => action' -- an absent head
-              is the bare default arm (variant NodeAbsent, no fields); the
-              head's fields-optional holds the arm-fields tuple directly.
+    """RETURN: Arm, from '(<variant> | ~ANY) [when: <cond>] => action'
+              (R-44, D-33) -- the head is an inline OR: branch 0 the
+              variant token, branch 1 the ~ANY keyword (variant
+              NodeAbsent: the catch-all; e is Nothing under it); 'guard'
+              the when: condition or NodeAbsent.
     """
-    head = _opt(n[0])
-    if head is NodeAbsent:
-        return A.Arm(variant=NodeAbsent, fields=(), action=n[2])
-    fields = _opt(head[1])
-    return A.Arm(variant=_decl_tok(head[0]),
-                 fields=() if fields is NodeAbsent else fields,
-                 action=n[2])
+    head = n[0]
+    variant = _decl_tok(head.child) if head.triggered_index == 0 \
+              else NodeAbsent
+    return A.Arm(variant=variant,
+                 guard=_opt(n[1], ctor=lambda body: body[0]),
+                 action=n[3])
 
 
-def make_arm_fields(n):
-    """RETURN: tuple, the field name Tokens of an arm pattern's parens --
-              empty for '()'.
+def _retired_make_arm_fields(n):
+    """RETURN: tuple, RETIRED (R-44/D-33: the parens-binding arm head left
+              the grammar) -- kept dead one pass for the diff reader,
+              never routed.
     """
     inner = _opt(n[0])
     if inner is NodeAbsent:
@@ -942,6 +1060,7 @@ AST_MAP = {
     "import":        make_import,
     "name-dotted":   make_name_dotted,
     "named-item":    make_named_item,
+    "event-tail":    make_event_tail,
     "reactor-tail":   make_reactor_tail,
     "reactor-panel":  make_reactor_panel,
     "reactor-item":   {("marked", "member"): PASS},
@@ -962,12 +1081,19 @@ AST_MAP = {
     "code/give-stmt":   make_give_stmt,
     "code/destruct-stmt": make_destruct_stmt,
     "code/tick-stmt":   make_tick_stmt,
-    "code/exit-stmt":   make_exit_stmt,
+    "code/signal-stmt": make_signal_stmt,
     "handler":       make_handler,
     "arm":           make_arm,
-    "arm-fields":    make_arm_fields,
-    "arm-action":    {("block", "exit", "shrug"): PASS},
+    "arm-action":    {("block", "signal", "shrug"): PASS},
     "arm-shrug":     make_arm_shrug,
+    "type-physical":       make_type_physical,
+    "unit":                make_unit,
+    "uprod":               make_uprod,
+    "ufactor":             make_ufactor,
+    "upower":              make_upower,
+    "upower-caret":        make_upower_caret,
+    "expr/physical-literal": make_physical_literal,
+    "causality/shrug": make_arm_shrug,   # R-46: same written shrug
     "cause-tail":    make_cause_tail,
 
     # -- causality -------------------------------------------------------
@@ -977,7 +1103,7 @@ AST_MAP = {
     "causality/event":          {"event": PASS,
                                  (1, 2): _lifecycle},
     "causality/effects":        make_effects,
-    "causality/effect-marker":  {(0, 1): PASS},
+    "causality/effect-marker":  {(0, 1, 2): PASS},   # R-46: =!=> joins
     "causality/spawn":          make_spawn,
 
     # -- expressions (D-2: one grammar, sorts are pass-2 views) -----------
@@ -991,7 +1117,7 @@ AST_MAP = {
     "expr/add":    _fold_chain,
     "expr/mul":    _fold_chain,
     "expr/un":     make_un,
-    "expr/atom":   {("group", "literal", "operand"): PASS,
+    "expr/atom":   {("group", "literal", "operand", "physical"): PASS,
                     "literal-string": (lambda t: _const(t, A.K_STRING)),
                     (3, 4): (lambda t: _const(t, A.K_BOOL)),
                     5: (lambda t: A.NothingLeaf(begin=t.begin))},
@@ -1020,7 +1146,7 @@ AST_MAP = {
     "code":            make_command_block,
     "code/statement":  {("wire", "mutation", "if", "match", "for", "count",
                          "break", "continue", "dropto",
-                         "give", "exit", "tick", "destruct"): PASS,
+                         "give", "signal", "tick", "destruct"): PASS,
                         9: PASS},
     "code/wire":       make_wire,
     "code/block":      make_command_block,
@@ -1049,7 +1175,7 @@ AST_MAP = {
     # -- declarations / types -----------------------------------------------
     "declaration":   make_declaration,
     "type":          {("type-builtin", "list", "dict", "struct",
-                       "have", "know"): PASS,
+                       "have", "know", "physical"): PASS,
                       "type": (lambda t: A.NamedType(name=_ref_tok(t)))},
     "type-have":     make_type_have,
     "type-know":     make_type_know,

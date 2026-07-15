@@ -1,18 +1,18 @@
 divide : work(in: a, b
               out: q
               signals: by_zero) {
-    q = a / b else: { div_by_zero => exit by_zero; }
+    q = a / b else: { div_by_zero => signal by_zero; }
     give q;
 }
 countdown : clockwork(in: n
                       out: value
                       signals: negative(v)) {
-    if: n < 0 { exit negative(n); }
+    if: n < 0 { signal negative(n); }
     int: i = 1 .. n {
         value = n - i + 1;
         tick;
     }
-    exit;
+    signal;
 }
 pair : class {
     lo: float;
@@ -22,14 +22,14 @@ pair : class {
 +pair.from : work(in: bounds, upper
                   out: p : pair
                   signals: disorder) {
-    if: bounds > upper { exit disorder; }
+    if: bounds > upper { signal disorder; }
     p = bounds + upper;
     give p;
 }
 +pair.from : work(in: center
                   out: p : pair
                   signals: disorder) {
-    if: center < 0 { exit disorder; }
+    if: center < 0 { signal disorder; }
     p = center * 2;
     give p;
 }
@@ -50,7 +50,7 @@ guarded : work(in: v
     r = v + 1;
     give r;
     :failures: => {
-        exit trouble;
+        signal trouble;
     }
 }
 spender : work(in: n
@@ -60,8 +60,25 @@ spender : work(in: n
     for: v from: cw { total = total + v; }
     give total;
 }
+off_beat : event(gap, badly);
+tempo : work(in: t
+             out: bpm
+             signals: off_beat) {
+    if: t > 200 { signal off_beat(t - 200, 1); }
+    bpm = t;
+    give bpm;
+}
+grade : work(in: v
+             out: g
+             signals: off_scale(amount, kind)) {
+    if: v > 100 { signal off_scale(v, 2); }
+    if: v < 0   { signal off_scale(v, 1); }
+    g = v / 10;
+    give g;
+}
 runner : reactor(in: cmd) {
     q: float; r: float; s: float; t: float; u: float; w: float; x: float; y: float;
+    hi: float; lo: float; other: float; beat: float;
   B : behavior {
     GO => {
         .q = divide(10, 2) else: { by_zero => ; }
@@ -72,6 +89,19 @@ runner : reactor(in: cmd) {
         .w = guarded(5) else: { trouble => { .w = -9; } }
         .x = cleanly(42);
         .y = spender(3);
+        .hi = grade(150) else: {
+            off_scale when: e.kind == 2 => { .hi = e.amount; }
+            off_scale                   => { .hi = 0; }
+        }
+        .lo = grade(0 - 5) else: {
+            off_scale when: e.kind == 2 => { .lo = e.amount; }
+            ~ANY                        => { .lo = 0 - 1; }
+        }
+        .other = grade(50) else: { ~ANY => { .other = 0 - 2; } }
+        .beat = tempo(260) else: {
+            off_beat when: e.badly == 1 => { .beat = e.gap; }
+            ~ANY                        => { .beat = 0 - 3; }
+        }
     }
 }
 }

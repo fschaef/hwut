@@ -7,7 +7,7 @@ PURPOSE: Test the INTERPRETER -- direct execution of the decorated AST over
          language's OPERATIONAL behaviour byte-exactly, making this suite
          the semantics ORACLE every future emitter must match.
 
-CHOICES: dispatch, lifecycle, blocks, membership, works, nothing.
+CHOICES: dispatch, lifecycle, blocks, membership, works, nothing, units.
 
            dispatch   The synchronous-instant law (P-1/P-1b): FIFO queue,
                       guards fixed at event arrival (a toggle alternates,
@@ -84,24 +84,31 @@ def run_dispatch():
 
 
 def run_lifecycle():
-    """RETURN: None, always. Locks activation over run-lifecycle.vut:
-              polling auto-activates at load (~ENTRY spawning the
-              recurring poll; P-2 top-level),
-              virtual time fires it at its multiples, the handle cancels
-              it, a second start restarts it, and stop's ~EXIT
-              auto-cancels (R-15).
+    """RETURN: None, always. Locks the ACTIVATION lifecycle over
+              run-lifecycle.vut (R-46/R-48; the recurrence machinery died
+              with R-49): '=!=>' enters (~ENTRY fires), a second '=!=>'
+              is a no-op, '=x=>' leaves (~EXIT fires), a second '=x=>'
+              is a no-op WITHOUT a second ~EXIT, and a later '=!=>' is
+              the RESTART -- ~ENTRY fires again.
     """
     banner("lifecycle (run-lifecycle.vut)")
     m = machine("run-lifecycle.vut")
     m.run("plant")
-    m.step()                    # start
-    m.advance(1.2)
-    m.step()                    # mute
-    m.advance(1.0)
-    m.step()                    # start
-    m.advance(0.6)
-    m.step()                    # stop
-    m.advance(1.0)
+    m.play()
+    print(m.trace())
+
+
+def run_units():
+    """RETURN: None, always. Locks the R-50 unit algebra over
+              run-units.vut: the united zero, derivation across the
+              declared seam, scalar scaling, unit-aware comparison,
+              the dimensionless collapse, and the seam fault caught by
+              the aware mutation's unit_mismatch arm.
+    """
+    banner("units (run-units.vut)")
+    m = machine("run-units.vut")
+    m.run("plant")
+    m.play()
     print(m.trace())
 
 
@@ -136,7 +143,7 @@ def run_membership():
 def run_nothing():
     """RETURN: None, always. Locks the R-38 Nothing law over
               run-nothing.vut: the initial-gate idiom ('if: k == Nothing
-              { exit: unknown; }') narrows a known for the rest of the
+              { signal unknown; }') narrows a known for the rest of the
               body -- the gated arithmetic runs; passing Nothing takes
               the unknown signal into the call site's substitute; the
               branch gate ('!= Nothing' then / else) routes a known into
@@ -176,6 +183,7 @@ HwutRunner(
         "dispatch":  run_dispatch,
         "lifecycle": run_lifecycle,
         "blocks":    run_blocks,
+        "units":     run_units,
         "membership": run_membership,
         "works":     run_works,
         "nothing":   run_nothing,

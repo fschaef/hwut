@@ -1,0 +1,30 @@
+#{ R-50: the physical unit type -- the CARRIED algebra (Q3 = B).
+   The trace locks: the united zero of a physical member; DERIVATION
+   (m / s -> m/s crossing the declared seam cleanly); scalar SCALING;
+   a unit-aware comparison; the dimensionless COLLAPSE (m/m -> plain);
+   and the seam FAULT (an 'm' value into an 'm/s' member) caught by
+   an aware mutation's unit_mismatch arm -- the div_by_zero precedent
+   (SEMANTICS 21). }
+gauge : reactor(in: cmd) {
+    dist  : physical[m];
+    speed : physical[m/s];
+    flag  : float;
+    B : behavior {
+        probe => {
+            .dist  = 6.0 [m];
+            .speed = .dist / 2.0 [s];
+            .speed = .speed * 3.0;
+            if: .speed > 4.0 [m/s] { .flag = 1.0; }
+            .flag  = .dist / .dist else: { ~ANY => { .flag = 9.0; } }
+            .speed = .dist else: {
+                unit_mismatch => { .flag = 0.0 - 1.0; }
+            }
+        }
+    }
+}
+plant : work() {
+    f = script("probe");
+    g = gauge();
+    f ----> g;
+    give;
+}

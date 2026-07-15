@@ -53,17 +53,17 @@ SNIPPETS = [
                    "        ac_button_pushed => toggle_compressor;\n"
                    "        temp_dial_turned => set_target_temperature;\n"
                    "        fan_dial_turned  => adjust_fan_speed;\n    }\n}"),
- ("recurring",     "Station : reactor {\n"
+ ("shrug_effect",  "Station : reactor {\n"
                    "  Polling : behavior {\n"
-                   "    ~ENTRY       => poll_sensors() every: 0.5 as: poller;\n"
-                   "    stop_pressed =x=> poller;\n  }\n}"),
+                   "    ~ENTRY       => poll_sensors();\n"
+                   "    stop_pressed => ;\n  }\n}"),
  ("state_machine", "MotorActivity : reactor {\n"
                    "    ON : behavior {\n"
                    "         gas_pedal_push     => open_throttle;\n"
-                   "         on_off_button_push => OFF;\n    }\n"
+                   "         on_off_button_push =!=> OFF;\n    }\n"
                    "    OFF : behavior {\n"
                    "         gas_pedal_push     => tone_notify_engine_off;\n"
-                   "         on_off_button_push => ON;\n    }\n}"),
+                   "         on_off_button_push =!=> ON;\n    }\n}"),
  ("mode_group",    "sprite : reactor++ {\n"
                    "    position:  vec2;\n    speed:     vec2;\n"
                    "    move : behavior { tickle => wiggle; }\n"
@@ -126,12 +126,30 @@ SNIPPETS = [
  ("work_def",     "divide : work(in: x, y\n"
                    "               out: q\n"
                    "               signals: by_zero)\n"
-                   "{ q = x / y else: { div_by_zero => exit by_zero; } give q; }"),
+                   "{ q = x / y else: { div_by_zero => signal by_zero; } give q; }"),
  ("work_spec",    "on_event : work(in: known: ev out: consumed signals: failed(m))"),
  ("clockwork_def", "line_reader : clockwork(in: f\n"
                    "                        out: line\n"
                    "                        signals: io_error(code))\n"
-                   "{ tick; exit; }"),
+                   "{ tick; signal; }"),
+ ("physical",      "speed : physical[m/s];\n"
+                   "force : physical[kg*m/s^2];\n"
+                   "dens  : physical[kg m^-3];\n"
+                   "area  : physical[m\u00b2];\n"
+                   "root  : physical[m^(1/2)];\n"
+                   "power_use : work(in: t out: p : physical[W]) {\n"
+                   "    p = 3.14 [kg*m\u00b2/s\u00b3];\n"
+                   "    q = 9.81 [m/s^2];\n"
+                   "    give p;\n}"),
+ ("three_arrows",  "lamp : reactor(in: cmd out: note) {\n"
+                   "  RED   : behavior { cmd: { go => blink to note =!=> GREEN;\n"
+                   "                            hush => ; } }\n"
+                   "  GREEN : behavior { cmd: { go =!=> RED; } }\n}"),
+ ("event_def",     "blink : event(v, kind);\n"
+                   "heartbeat : event();"),
+ ("signal_routed", "R : reactor(in: cmd out: note) { n: float;\n"
+                   "  B : behavior { go => { .n += 1; signal blink(v = .n) to note;\n"
+                   "                         signal fanned; } } }"),
  ("panel_flat",   "bundle : work(in: raw : cloud, known: eps : float = 0.5\n"
                    "              out: center : point2d, known: rotation : mat2\n"
                    "              signals: no_convergence(residual: float))\n"
@@ -158,7 +176,7 @@ SNIPPETS = [
                    "    x, known: r = bundle(1, 2);\n"
                    "    give m;\n}"),
  ("aware_forms",  "R : reactor { x: float; y: float;\n"
-                   "  B : behavior { E => { .x = f(1) else: { bad(r) => { .x = r; } => ; }\n"
+                   "  B : behavior { E => { .x = f(1) else: { bad when: e.r > 0 => { .x = e.r; } ~ANY => ; }\n"
                    "       for: v from: src(3) { .y = v; } else: { worn => ; } } } }"),
  ("label_two_accounts",
                    "w : work(in: v out: r signals: snag) {\n"
@@ -168,7 +186,7 @@ SNIPPETS = [
                    "    :done:\n"
                    "    give r;\n"
                    "    :failures: => {\n"
-                   "        exit snag;\n"
+                   "        signal snag;\n"
                    "    }\n"
                    "}"),
  ("explicit_destruct",
@@ -178,7 +196,7 @@ SNIPPETS = [
                    "-tunnel() : work(in: t : tunnel signals: busy(when))\n"
                    "{ give; }\n"
                    "shutdown : work(in: t out: done) {\n"
-                   "    destruct t else: { busy(when) => ; }\n"
+                   "    destruct t else: { busy => ; }\n"
                    "    done = 1;\n"
                    "    give done;\n"
                    "}"),
@@ -189,7 +207,7 @@ SNIPPETS = [
                    "+pair.make : work(in: a, b out: p : pair signals: disorder)\n"
                    "{ p = a; give p; }\n"
                    "-pair : work(in: p : pair signals: never_fails)\n"
-                   "{ exit never_fails; give; }"),
+                   "{ signal never_fails; give; }"),
  ("reactor_inherit", "Base : reactor { speed: float;\n"
                    "    idle : behavior { go => run; } }\n"
                    "Rover : reactor is: Base { gain: float;\n"

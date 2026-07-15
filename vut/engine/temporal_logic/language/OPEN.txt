@@ -34,11 +34,12 @@ S1 SURFACE  [BUILT -- 68/68 green; fixtures + EXPLANATION rewritten,
     known:-marked site; a custody out: entry MAY be received known
     (unclaimed custody is had elsewhere or destructed; the hub hands
     readers Nothing).
-  - COMMAND SPELLING: give/tick/exit/destruct/dropto are BARE words;
+  - COMMAND SPELLING: give/tick/signal/destruct/dropto are BARE words
+    (R-43 renamed the ruled 'exit' to 'signal');
     EVERY simple statement ends with ';'. (break:/continue: untouched
     here -- they die in S2.) Bare 'give' being the statement, the
     call-site custody marker of disc-9 needs a NEW spelling -- open.
-  - UNREACHABLE CODE IS AN ERROR: after give/exit/dropto, flow resumes
+  - UNREACHABLE CODE IS AN ERROR: after give/signal/dropto, flow resumes
     only at an exit-label; give is always the last statement on its
     path (REJECT [STRUCTURE]).
   - GIVE-LIST ORDER: the written list MIRRORS the panel's declaration
@@ -67,6 +68,57 @@ S1 SURFACE  [BUILT -- 68/68 green; fixtures + EXPLANATION rewritten,
     duplicate wires/channels, the drain and feeder siblings, the
     SEMANTICS-1 reactor-row re-speak, destruct auto-cancel, harness
     verbs, the early-regex lexer tier, wire ends bare-locals-only.
+  - THE SIGNAL STATEMENT -- RULED AND BUILT (R-43, the signal-flow
+    pass): 'exit' renamed 'signal'; ONE statement, the position decides
+    the channel spec -- behavior work code takes the optional
+    'to <channel>' and is the EMISSION (equivalent to the arrow,
+    suffix-less fans, flow continues); normal work code takes none and
+    is the fault egress (LANGUAGE 12.4/15.3, SEMANTICS 23/31 (ii)).
+    The word 'exit' left the language; the internal noun 'exit-label'
+    (the ':name:' form -- its concrete syntax never spoke 'exit')
+    survives, rename flagged in (8).
+  - THE ARM/CAUSALITY MERGE -- RULED AND BUILT (R-44, R-45): the arm
+    IS a causality in form ('(<event> | ~ANY) [when:] => <action>',
+    e.<field> payload, parens-destructure and bare default arm
+    RETIRED); dispatch FIRST-MATCH uniformly (behaviors converted from
+    all-match; scope: per active behavior -- coordinator
+    interpretation, flagged); '~ANY' in both worlds, 'e' Nothing under
+    it; coverage-by-testimony the SEM-24 law (dead-arm-after-blanket
+    checked; resolved-callee coverage deferred with the PARTIAL);
+    signals ARE events (R-45): 'name : event(fields);' the
+    freestanding definition, a signals: entry the same creature in
+    panel position; explain-no-exceptions.vut carries the design
+    point (the suite is 69 choices).
+  - THREE ARROWS -- RULED AND BUILT (R-46): '=>' spawns event/work
+    code; '=!=>' activates a behavior ('reactor': the transition, an
+    atomic leave/enter; 'reactor++': the set grows); '=x=>'
+    deactivates (reactor++ only for behaviors -- a state machine may
+    never stand stateless: REJECT; the recurring handle stays
+    cancellable in both modes -- coordinator interpretation, flagged);
+    a behavior target under '=>' REJECTS; '=!=>'/'=x=>' take a bare
+    target; the causality gains the SHRUG ('=> ;' -- reckoned,
+    ignored, consumes under first-match); 'every:' ruled meaningless
+    in else:/elsewhile: arms and in groove:. SEMANTICS 1 deactivable
+    table re-spoken (the reactor row DIED -- retires the standing
+    fork). Docs: two-'go'-causalities examples re-drawn as CHAINS
+    ('go => blink to note =!=> GREEN;') -- the first-match idiom.
+  - THE PHYSICAL UNIT TYPE -- RULED AND BUILT (R-50, the here-and-now
+    round): literal '<number> [<unit>]'; type 'physical[<unit>]'; the
+    unit a product/quotient ('*' AND whitespace multiply, '/' left-
+    assoc, exponents '^int' / '^(p/q)' / Unicode superscripts);
+    SURFACE -> CANONICAL rational-exponent vector over the seven SI
+    bases -> DISPLAY as the quotient of nominator to denominator;
+    derived names via UNITS.txt; algebra B -- the unit is CARRIED
+    (derive on * /, same-vector law on + - and comparison, scalar
+    scaling, dimensionless collapse, united P-5 zero, runtime
+    'unit_mismatch' built-in fault beside div_by_zero); suite 70.
+  - THE F-9 SLICE -- BUILT (R-52, no new rulings): the static unit
+    net (inference + [UNIT] rejects, handler-suppressed per SEM-21);
+    mandatory-handler and expression-position (12.6); testimony over
+    resolved callees + primitive built-in arm law (SEM-24); signal/
+    emission arity (R-45/R-47). Twelve reject lines of test coverage;
+    all prior runtime GOODs byte-unchanged. Resolution PARTIAL:
+    top-level single-segment callees.
   - EXPONENT FLOATS (Q9, ruled): the exponent marks float like the dot
     does -- '1e-6', '2.5e3', '1E+10' lex as floats; bare digits stay int.
   - Freshly OPEN by this ruling: abstract reactors / behavior
@@ -90,8 +142,8 @@ S1 SURFACE  [BUILT -- 68/68 green; fixtures + EXPLANATION rewritten,
     behavior content.
   - Terminals: 'give <ports>;' in works (names the out-ports; checked
     against panel); 'give' UNLAWFUL in clockworks; clockworks tick and
-    end by exit; bare 'exit;' = the nothing-more egress (R-41.4/7,
-    command-spelling ruling).
+    end by signal; bare 'signal;' = the nothing-more egress (R-41.4/7,
+    command-spelling ruling; R-43 renamed 'exit' to 'signal').
 S2 CONTROL
   - break:/continue: retired (supersedes R-14); dropto the sole jump.
   - Placement laws (a) block-end label (b) after-brace label (c) never
@@ -108,9 +160,10 @@ After both: fixtures rewritten, GOOD re-baselines audited, LANGUAGE
 RULING NEEDED
   - The built-in exhaustion variant's NAME in the puller's match domain
     ('finished' today; FR's words "nothing more"/"no more").
-  - Bare 'exit;' in WORKS (a no-result egress; the 'inappropriate
+  - Bare 'signal;' in WORKS (a no-result egress; the 'inappropriate
     result' thread) or clockwork-only; if works: the built-in's name
-    and pre-declared vs auto-injected.
+    and pre-declared vs auto-injected. (R-43: in BEHAVIOR work code a
+    bare 'signal;' REJECTS -- the emission names its event.)
   - Whether 'tick' carries the out-list ('tick value;') under the
     names-its-ports rule (coordinator lean: yes) or stays bare.
   - The site-marker/panel AGREEMENT LAW -- RULED AND BUILT (Q&A
@@ -120,8 +173,9 @@ RULING NEEDED
     selector-resolved overloads; the rest joins the type document).
     Corollary ruled and built: NOTHING CAN NEVER BE GIVEN -- 'give' on
     a known rejects (a known is never had, so never given).
-  - Bare exit concrete spelling -- SETTLED by the command-spelling
-    ruling: 'exit;' (every simple statement ends ';').
+  - Bare-egress concrete spelling -- SETTLED by the command-spelling
+    ruling, renamed by R-43: 'signal;' (every simple statement
+    ends ';').
   - C-1 residual: the port-map OUTPUT association spelling; form
     RESERVED in 12.5 (touched by the in:/out: re-speak).
 BUILD (settled)
@@ -205,7 +259,8 @@ DEFERRED-BY-DESIGN
 -------------
 BUILD (settled)
   - Family-split terminals ride the sweep (no give in clockworks;
-    tick delivers; bare exit exhausts; for-else -- R-41.4/7, S1/S2).
+    tick delivers; bare signal exhausts; for-else -- R-41.4/7, S1/S2,
+    R-43).
   - groove:; winddown:; multi-input pulls; pipelines.
   - Enforcement: single-puller; no-cycle (the 13.1 sentence is a
     coordinator addition -- RULING NEEDED on its wording).
@@ -252,15 +307,45 @@ BUILD (settled)
       wire/feed/drop, 'event <label>.<chan> <name>' routed delivery,
       'emit <label>.<chan>|<label>.* <name>', 'event <label>.. <name>'
       the self channel. FR sees the surface in the staged GOODs.
-    * '=> <reactor-def>' / '=x=> <reactor-def>' EFFECTS: the
-      activation machinery died (construction standing, destruct the
-      end); the runtime now treats such a target as an event emission.
-      SEMANTICS 1's deactivable table needs its reactor-row re-speak
-      -- confirm '=x=> <reactor>' is henceforth unlawful.
-    * DESTRUCT of a constructed reactor auto-cancels its recurring
-      emissions (R-15 ownership ends with the owner); trace line
-      'cancel (auto, destruct) <event>' -- coordinator addition,
-      confirm.
+    * '=> <reactor-def>' / '=x=> <reactor-def>': ANSWERED by R-46 --
+      the deactivable table re-spoken (SEMANTICS 1): the reactor row
+      DIED; '=x=>' stands down behaviors (reactor++ only) and
+      recurring handles. Retired.
+    * (destruct auto-cancel of recurring emissions: DIED with R-49 --
+      no recurrences exist to cancel.)
+  - SIGNAL-FLOW FLAGS (R-43 build, rule or accept):
+    * The internal noun 'exit-label' (grammar rule, node class, doc
+      prose): rename or keep -- the ':name:' surface never spoke
+      'exit'; nothing user-facing changes either way.
+    * R-48/R-49 CLOSED IN-SESSION: Q-A -- '=x=>' was always about
+      BEHAVIORS (FR); Q-B -- the '~off' thought RETRACTED
+      ('=!=>'/'=x=>' carry the on/off story; a dark reactor++ is
+      lawful, events drop); Q-C -- DISSOLVED: R-49 removed the
+      recurrence syntax in total ('every:'/'as:'/handles/'=x=>
+      <handle>') -- lack of orthogonality; the timer concern is a
+      plant-side FEEDER's (held discussion: the timer feeder,
+      strawman 't = timer(period = 0.5, event = "poll"); t ----> s;').
+    * Event definitions (R-45/R-47): structure checks on emission/
+      catch with F-9 as documented -- now including the RESPELLED
+      signals: entry mismatching its definition ('signals: blink(gap)'
+      against 'event(v, kind)'): unify, reject, or shadow-with-own-
+      shape. (The name-only entry itself is RULED AND BUILT, R-47:
+      adoption + shadow; namespaced adoption also joins F-9.)
+    * R-50/R-51 residue with F-9: the full STATIC unit flow
+      (expressions over declared members, argument and give seams --
+      today: name check static, algebra carried at run time in the
+      REFERENCE interpreter, member-write seam runtime-checked).
+      R-51 raises the stakes deliberately: the unit is TYPE; the Luau
+      emitter erases what the static net proves and tags variants --
+      so F-9's typing reach (typed ports/locals? inference?) now
+      also DECIDES the emitter's erasure reach. Magnitude PREFIXES
+      and scale factors stay OUT OF SCOPE by ruling (dimension only;
+      'g' aliases the kg dimension); 'sqrt'/root builtins to exercise
+      the rational exponents when a numeric-function surface lands;
+      the EMITTER obligations (erase/tag/boundary-check) queue for
+      the Luau emitter session.
+    * '~EXIT' the lifecycle pseudo-event (distinct token '~EXIT'):
+      untouched by R-43 -- confirm the tilde word stands.
   - Module-level causalities do not dispatch at run time (top-level
     'X => Y;' is structural only; top-level entities auto-activate).
   - Port-name shadowing of binding heads (e/b/a/c/s) is unruled.
@@ -271,7 +356,7 @@ BUILD (settled)
 ------------------------
   - link/pack/emit entire. Staged mappings: the generative clockwork
     walk ==> coroutine.yield (P-series); known hubs ==> the emitter's
-    weak-reference structure (HAVE_KNOW_BE (3)); give/exit ==> the
+    weak-reference structure (HAVE_KNOW_BE (3)); give/signal ==> the
     sum-return convention.
 
 (10) PROCESS AND DOCUMENTS

@@ -21,7 +21,7 @@ temperature : class {
 +temperature.from : work(in: celsius
                          out: t : temperature
                          signals: beneath_absolute_zero) {
-    if: celsius < -273.15 { exit beneath_absolute_zero; }
+    if: celsius < -273.15 { signal beneath_absolute_zero; }
     t = celsius;
     give t;                     # the out-bundle leaves, named
 }
@@ -29,7 +29,7 @@ temperature : class {
 +temperature.from : work(in: fahrenheit
                          out: t : temperature
                          signals: beneath_absolute_zero) {
-    if: fahrenheit < -459.67 { exit beneath_absolute_zero; }
+    if: fahrenheit < -459.67 { signal beneath_absolute_zero; }
     t = (fahrenheit - 32) * 5 / 9;
     give t;
 }

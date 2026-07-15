@@ -202,10 +202,12 @@ def run_nothing_rejects():
 
 def run_work_rejects():
     """RETURN: None, always. Locks the work-body REJECTs of SEMANTICS 23
-              over one fixture: an exit: naming an undeclared signal
-              (LANGUAGE 12.4, first direction), a declared signal no
-              reachable exit: emits (second direction), and a tick:
-              outside a clockwork's ticks: hosting (LANGUAGE 13.3).
+              over one fixture: a signal statement naming an undeclared
+              signal (LANGUAGE 12.4, first direction), a declared signal
+              no reachable signal statement emits (second direction), a
+              'to' suffix in normal work code (R-43, the position law),
+              and a tick: outside a clockwork's ticks: hosting
+              (LANGUAGE 13.3).
     """
     banner("work rejections (elab-work-rejects.vut)")
     semantic, reporter = front_half("elab-work-rejects.vut", peers={})

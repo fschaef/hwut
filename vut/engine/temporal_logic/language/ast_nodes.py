@@ -11,7 +11,7 @@ kinds where the grammar already decides the classification:
 
     DeclarationLeaf  a site that INTRODUCES a name (signature, declaration,
                      namespace, import alias, loop/comprehension vars, the
-                     spawn handle, an exit-label definition)
+                     an exit-label definition)
     ReferenceLeaf    a site that NAMES something declared elsewhere (name-ref,
                      an event, a dropto target)
     ConstantLeaf     a literal (number, string path, glob, true/false)
@@ -147,26 +147,47 @@ class Causality(Node):
 
 @dataclass(frozen=True)
 class Effect(Node):
-    """One effect: 'marker' is '=>' (spawn) or '=x=>' (cancel); 'action' is a
-    Spawn or a CommandBlock (disjoint by R-6).
+    """One effect (R-46, three arrows): 'marker' is '=>' (spawn event /
+    work code), '=!=>' (activate behavior), or '=x=>' (deactivate a
+    behavior, R-49: handles died with the recurrence tail); 'action' is a Spawn, a
+    CommandBlock (disjoint by R-6), or NodeAbsent -- the SHRUG
+    ('<cause> => ;': reckoned, ignored; chain-final).
     """
     marker: str
-    action: Node
+    action: object
+
+
+@dataclass(frozen=True)
+class PhysicalType(Node):
+    """The 'physical[<unit>]' type (R-50): 'vector' the canonical rational
+    exponent tuple over the seven SI bases (units.BASES); 'written' the
+    author's spelling for diagnostics."""
+    vector:  tuple
+    written: str
+    begin:   int
+
+
+@dataclass(frozen=True)
+class PhysicalLiteral(Node):
+    """A unit-carrying literal '<number> [<unit>]' (R-50): 'number' the
+    magnitude node, 'vector'/'written' as PhysicalType. A bare number is
+    NOT this node -- the optional bracket absent passes the number
+    through (the dimensionless case)."""
+    number:  Node
+    vector:  tuple
+    written: str
+    begin:   int
 
 
 @dataclass(frozen=True)
 class Spawn(Node):
-    """A spawned call (R-15): optionally ROUTED ('to_channel' the named
-    out-channel of the enclosing reactor, a DeclarationLeaf-free plain
-    token leaf -- NodeAbsent when suffix-less: the send FANS to all
-    out-channels plus self, pipe ruling), optionally recurring ('every'
-    period, NodeAbsent when one-shot) and optionally named ('handle' a
-    DeclarationLeaf, NodeAbsent when anonymous; entity-local per
-    SEMANTICS 11).
+    """A spawned call: optionally ROUTED ('to_channel' the named
+    out-channel of the enclosing reactor -- NodeAbsent when suffix-less:
+    the send FANS to all out-channels plus self, pipe ruling). The
+    recurrence tail DIED with R-49 -- the timer concern is a plant-side
+    feeder's.
     """
     call:       Node
-    every:      object                  # Node | NodeAbsent
-    handle:     object                  # DeclarationLeaf | NodeAbsent
     to_channel: object = NodeAbsent     # ReferenceLeaf | NodeAbsent
 
 
@@ -350,14 +371,19 @@ class Tick(Node):
 
 
 @dataclass(frozen=True)
-class ExitSignal(Node):
-    """An 'exit: [<variant>[(payload)]];' fault egress (LANGUAGE 12.4,
-    R-41.7): 'variant' NodeAbsent is the BARE egress -- the nothing-more
+class Signal(Node):
+    """A 'signal [<variant>[(payload)] [to <channel>]];' statement
+    (LANGUAGE 12.4/15.3, R-43 -- one emission creature): in NORMAL work
+    code the fault egress ('to_channel' unlawful there, SEMANTICS 23);
+    in BEHAVIOR work code the routed emission, equivalent to the arrow
+    '=> Event() [to <channel>]' -- suffix-less FANS, flow continues.
+    'variant' NodeAbsent is the BARE egress (R-41.7) -- the nothing-more
     exhaustion signal of a clockwork (catcher-mandatory; the built-in
     variant's name in the puller's match domain stays 'finished',
     rename flagged)."""
-    variant: object                     # ReferenceLeaf | NodeAbsent
-    args:    object                     # NodeList | NodeAbsent
+    variant:    object                  # ReferenceLeaf | NodeAbsent
+    args:       object                  # NodeList | NodeAbsent
+    to_channel: object                  # ReferenceLeaf | NodeAbsent
 
 
 @dataclass(frozen=True)
@@ -367,14 +393,38 @@ class Handler(Node):
 
 
 @dataclass(frozen=True)
+class AnyPattern(Node):
+    """The '~ANY' catch-all pattern (R-44): as a CAUSE it matches any event
+    arriving on its group's channel; as an ARM head it matches any fault of
+    the call. Under it, 'e' is Nothing -- an author wanting event details
+    names the cause."""
+    begin: int
+
+
+@dataclass(frozen=True)
 class Arm(Node):
-    """One handler arm: variant pattern (name + field list) or the bare
-    default ('variant' is NodeAbsent), and its action. 'action' is a code
-    block NodeList, an ExitSignal, or NodeAbsent (the ';' shrug).
+    """One handler arm (R-44: the arm IS a causality in form):
+    '(<variant> | ~ANY) [when: <guard>] => <action>'. 'variant' NodeAbsent
+    is the ~ANY catch-all (matches any fault of the call; e is Nothing
+    under it). 'guard' is the when: condition or NodeAbsent. Payload
+    reads 'e.<field>' -- names bound from the callee's signal
+    declaration at the catch (no destructure fields on the arm).
+    'action' is a code block NodeList, a Signal, or NodeAbsent (the ';'
+    shrug).
     """
-    variant: object                     # DeclarationLeaf-ish | NodeAbsent
-    fields:  NodeList
+    variant: object                     # DeclarationLeaf-ish | NodeAbsent(~ANY)
+    guard:   object                     # condition Node | NodeAbsent
     action:  object
+
+
+@dataclass(frozen=True)
+class EventDef(Node):
+    """A freestanding event definition (R-45): 'name : event(<fields>);' --
+    the same creature a signals: entry declares in panel position (14.1:
+    one ephemeral concept; a signal IS an event on the fault channel).
+    'signature.params' the payload field declarations (NodeAbsent when
+    bare)."""
+    signature: Signature
 
 
 @dataclass(frozen=True)

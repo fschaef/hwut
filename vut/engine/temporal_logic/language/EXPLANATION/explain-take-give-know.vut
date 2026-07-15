@@ -38,7 +38,7 @@ score : class {
 +score.from : work(in: start                #{ a value, had by copy }
                    out: s : score           #{ custody OUT: the caller will HAVE }
                    signals: negative) {
-    if: start < 0 { exit negative; }
+    if: start < 0 { signal negative; }
     s = start;
     give s;                    # the out-bundle leaves HERE, named
 }
@@ -56,7 +56,7 @@ score : class {
 bonus : work(in: known: base, factor
              out: total
              signals: unknown) {
-    if: base == Nothing { exit unknown; }
+    if: base == Nothing { signal unknown; }
     total = base * factor;
     give total;
 }

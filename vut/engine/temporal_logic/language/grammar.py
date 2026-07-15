@@ -146,6 +146,41 @@ D-27 Semi-declaration and completion (LANGUAGE 11.3): the work-tail's
      optional), so a semi-declaration may carry '#{...}' where the panel
      will be. Reverses the pinned lexer choice "'#{' without whitespace is
      a line comment".
+D-37 The physical unit type enters (R-50): 'physical[<unit>]' the
+     type, '<number> [<unit>]' the literal; <unit> a product/quotient
+     of unit names ('*' AND whitespace multiply; '/' left-assoc);
+     exponents '^<int>', '^(<int>/<int>)', or Unicode superscripts.
+     The full unit ALGEBRA (Q3 = B) is semantic/runtime; names
+     validate against UNITS.txt.
+D-36 The recurrence tail dies (R-49): 'every:'/'as:' leave the spawn;
+     the handle namespace and '=x=> <handle>' with them -- lack of
+     orthogonality; the timer concern moves to a plant-side feeder
+     (held discussion). 'as:' survives only on import:.
+D-35 Three arrows (R-46): the activation arrow '=!=>' enters the
+     effect markers ('=>' spawn event/work code, '=!=>' activate
+     behavior, '=x=>' deactivate); the causality gains the SHRUG
+     ('<cause> => ;' -- reckoned, ignored; chain-final). Mode laws
+     ('=!=>' the transition in a state machine; '=x=>' on a behavior
+     a semantic error there) are pass-2 (SEMANTICS 1/2, R-46).
+D-34 The event definition enters (R-45): named-item gains the branch
+     'name : event(<decl-args>);' -- the freestanding form of a
+     signals: entry (signals ARE events, one ephemeral creature,
+     LANGUAGE 14.1). Structure checks and the inline entry type of
+     14.2 stay with the F-9 passes.
+D-33 The arm IS a causality (R-44): the handler arm becomes
+     '(<variant> | ~ANY) [when: <condition>] => <action>' -- the
+     parens-binding head ('bad(m)') and the bare '=>' default arm are
+     REMOVED; payload reads 'e.<field>' (semantic binding from the
+     callee's declaration); '~ANY' is a new captured keyword, also
+     admitted as a CAUSE form (the catch-all in a behavior's group).
+     Dispatch (first-match, uniform) and coverage-by-testimony are
+     pass-2 (SEMANTICS 24, R-44).
+D-32 The fault egress speaks 'signal' (R-43): 'exit-stmt' becomes
+     'signal-stmt' -- 'signal [<variant>[(<args>)] [to <channel>]];'. The
+     'to' suffix is admitted by GRAMMAR everywhere (one statement world);
+     the position law is semantic (behavior work code only, SEMANTICS
+     23/31). The word 'exit' leaves the keyword set; the exit-label rule
+     (':name:', D-21) is untouched -- its surface never spoke 'exit'.
 D-31 The catch-region form ':label: => { ... }' (B-1, R-39): the elseto:
      target's own syntax, distinct from the bare drop-through label --
      the two accounts of labels read differently at the definition site.
@@ -205,6 +240,9 @@ t_re_id      = T.regex(r'[a-zA-Z_]\w*')
 # == reserved events (R-10: lifecycle; non-external) ==========================
 t_kw_entry   = T.captured("~ENTRY")
 t_kw_exit    = T.captured("~EXIT")
+t_kw_any     = T.captured("~ANY")     # R-44: the catch-all pattern -- any
+                                      # event/fault that comes, in the scope
+                                      # it sits in; e is Nothing under it
 
 # == operator terminals =======================================================
 # LEXING ORDER LAW: captured terminals lex in DECLARATION order (the lexer's
@@ -216,6 +254,7 @@ t_kw_exit    = T.captured("~EXIT")
 # -- multi-character operators, longest first ---------------------------------
 # effect markers (R-1, §2.2): captured so they precede "=" in the scan order
 t_op_cancel  = T.captured("=x=>")
+t_op_activate = T.captured("=!=>")    # R-46: activates a behavior
 t_op_spawn   = T.captured("=>")
 # bridge B1 (comparison: algebraic -> condition, R-4)
 t_op_eq      = T.captured("==")
@@ -266,6 +305,10 @@ t_op_quest   = T.captured("?")
 # bracket index (R-16: data-access)
 t_br_open    = T.captured("[")
 t_br_close   = T.captured("]")
+# R-50 (the physical unit type): the caret exponent and the Unicode
+# lifted-number run (signed superscript integers: m², s⁻²)
+t_op_caret   = T.captured("^")
+t_re_super   = T.regex(r'[\u207b\u207a\u2070\u00b9\u00b2\u00b3\u2074-\u2079]+')
 # bare colon (declaration "name: type", decl-arg, the ternary's ":"). REGEX,
 # not captured/string: a ":" string keyword lands in the lexer's leading-colon
 # tier, whose pattern (":word\b") demands a word char after the colon and so
@@ -330,6 +373,8 @@ GRAMMAR = {
                     OR,
                     ("cause", "<cause-tail(cause-def)>"),
                     OR,
+                    ("event", "<event-tail(event-def)>"),
+                    OR,
                     ("class", "<class-tail(class)>"),
                     OR,
                     ("work", "<work-tail(work)>"),
@@ -372,29 +417,32 @@ GRAMMAR = {
 
     # == work (LANGUAGE 12; D-25) =============================================
     # Panel, then the body: statements of the code subspace plus the work
-    # terminals. give and exit are STATEMENTS of the work body only; the
+    # terminals. give and signal are STATEMENTS of the work body only; the
     # semantic layer holds their laws (SEMANTICS 23).
     # D-27: the panel is OPTIONAL -- 'name : work' alone is a class body's
     # SEMI-DECLARATION (brief listing; the complete definition must follow,
     # SEMANTICS 25); panel without body remains the SPEC (12.1).
     "work-tail":  (["<panel>"], ["{", STAR("<code/statement>"), "}"]),
 
-    # == handler (LANGUAGE 12.6; D-26): the else:-block is a match ===========
-    # Arms: '<variant>[(fields)] => <action>'; a bare '=>' is the default arm
-    # (at most one, last -- pass-2). Actions: a block, an exit, or ';' (the
-    # arm-level shrug). Exhaustiveness/dead-arm are semantic (SEMANTICS 24).
+    # == handler (LANGUAGE 12.6; D-26, D-33/R-44): the else:-block is a =====
+    # first-match switch whose ARM IS A CAUSALITY in form:
+    # '(<variant> | ~ANY) [when: <condition>] => <action>'. Payload reads
+    # 'e.<field>' (names from the callee's signal declaration); the old
+    # parens-binding form and the bare '=>' default arm RETIRED (the
+    # catch-all is the explicit ~ANY, e is Nothing under it). Actions: a
+    # block, a signal, or ';' (the arm-level shrug). Coverage-by-testimony
+    # and dead-arm are semantic (SEMANTICS 24, R-44).
     "handler":    ("{", STAR("<arm>"), "}"),
-    # An arm's head is OPTIONAL: absent = the bare '=>' default arm.
-    "arm":        ([(t_re_id("variant"), ["<arm-fields>"])],
+    "arm":        ((t_re_id("variant"), OR, t_kw_any),
+                   ["when:", "<condition>"],
                    t_op_spawn, "<arm-action(action)>"),
-    "arm-fields": ("(", [t_re_id("field"), STAR((",", t_re_id("field")))], ")"),
-    "arm-action": ("<code/block(block)>", OR, "<code/exit-stmt(exit)>",
+    "arm-action": ("<code/block(block)>", OR, "<code/signal-stmt(signal)>",
                    OR, "<arm-shrug(shrug)>"),
     "arm-shrug":  (";",),
 
     # == clockwork (LANGUAGE 13; D-25, R-41.1) ================================
     # A work body extended by tick: (deliver the per-tick out: bundle, suspend
-    # until the next pull); ended only through exit (bare = nothing-more,
+    # until the next pull); ended only through signal (bare = nothing-more,
     # R-41.7). groove: awaits its host's rebuild (R-25(3)).
     "clockwork-tail": ("<panel(panel)>", ["{", STAR("<code/statement>"), "}"]),
 
@@ -494,6 +542,13 @@ GRAMMAR = {
     # == named cause (R-5, D-19): carries its own guard =======================
     "cause-tail": (["<parens-decl>"], "<causality/cause-explicit>", ";"),
 
+    # == event definition (R-45): 'name : event(<decl-args>);' -- the =======
+    # freestanding form of a signals: entry (14.1: one concept; a work's
+    # signals: declares the same creature in panel position). Parens
+    # REQUIRED (the inline entry TYPE of 14.2 stays with the F-9 passes
+    # and factors then).
+    "event-tail": ("<parens-payload>", ";"),
+
     # == causality (R-1, R-5, R-6, R-15, §2): cause --> one-or-more effects ===
     # Subspace: the cause/effect family. TOP is the causality; members carry the
     # cause forms, the named-cause definition, and the effect forms.
@@ -505,7 +560,7 @@ GRAMMAR = {
         #    (raw event vs cause-ref) and the no-guard-on-a-cause-ref rule
         #    are pass-2 (SEMANTICS 2, 5).
         "cause":        (("<name-ref>", ["<parens-arg>"],
-                          OR, t_kw_entry, OR, t_kw_exit),
+                          OR, t_kw_entry, OR, t_kw_exit, OR, t_kw_any),
                          ["when:", "<condition>"]),
         "cause-explicit": ("<event>", ["when:", "<condition>"]),
         # event (R-21): an event TYPE is a bare name (a global signal name), OR a
@@ -522,16 +577,22 @@ GRAMMAR = {
         "effects":      ("<effect-marker>",
                          (("<code(causality)>", ["<effects>"]),
                           OR,
+                          ("<shrug(shrug)>",),
+                          OR,
                           ("<spawn(spawn)>", (";", OR, "<effects>")))),
-        "effect-marker": (t_op_spawn, OR, t_op_cancel),
+        "effect-marker": (t_op_spawn, OR, t_op_cancel, OR, t_op_activate),
+        # R-46: the causality shrug -- '<cause> => ;' says "reckoned,
+        # ignored"; under first-match it consumes the event for this
+        # behavior. Chain-final by shape (nothing may follow).
+        "shrug":        (";",),
 
-        # -- spawn (R-15, pipe ruling): an entity/event call, optionally
-        #    ROUTED ('to <channel>' -- bare word, a suffix: the emission
-        #    publishes on the named out-channel of the enclosing reactor;
-        #    suffix-less send FANS: all out-channels plus self), optionally
-        #    recurring and named.
-        "spawn":        ("<call>", ["to", t_re_id("channel")],
-                         ["every:", "<numeric>", ["as:", t_re_id("name")]]),
+        # -- spawn (pipe ruling; R-49: the recurrence tail DIED -- the
+        #    timer concern is a plant-side feeder's): an entity/event
+        #    call, optionally ROUTED ('to <channel>' -- bare word, a
+        #    suffix: the emission publishes on the named out-channel of
+        #    the enclosing reactor; suffix-less send FANS: all
+        #    out-channels plus self).
+        "spawn":        ("<call>", ["to", t_re_id("channel")]),
     },
 
     # == values (R-4, D-2): ONE parse grammar; sorts are pass-2 views =========
@@ -556,11 +617,15 @@ GRAMMAR = {
         "add":      ("<mul>", STAR(("<op-add>", "<mul>"))),
         "mul":      ("<un>",  STAR(("<op-mul>", "<un>"))),
         "un":       ([t_op_sub], "<atom>"),
-        "atom":     ("<group(group)>", OR, "<number(literal)>",
+        "atom":     ("<group(group)>", OR, "<physical-literal(physical)>",
                      OR, t_re_string("literal-string"),    # D-14
                      OR, t_kw_true, OR, t_kw_false, OR, t_kw_nothing,
                      OR, "<data-access(operand)>"),
         "group":    ("(", "<expr>", ")"),
+        # R-50: '<number> [ <unit> ]' -- the unit-carrying literal; the
+        # bare number is the DIMENSIONLESS case (the zero vector).
+        "physical-literal": ("<number(literal)>",
+                             [t_br_open, "<unit>", t_br_close]),
         "op-add":   (t_op_add, OR, t_op_sub),
         "op-mul":   (t_op_mul, OR, t_op_div),
     },
@@ -613,12 +678,12 @@ GRAMMAR = {
     # from this duty and reserved for the work construct's fault egress (F-5).
     # Pass-2 checks (see SEMANTICS.txt): exit-labels may be defined ONLY at the
     # outermost function body (not inside loops, if/elif/else, match, or any
-    # nested block); "dropto L;" targets an exit defined LATER (forward-only);
+    # nested block); "dropto L;" targets an exit-label defined LATER (forward-only);
     # the label exists.
     "code": {
         TOP:            ("{", STAR("<statement>"), "}"),
 
-        # D-25/D-29: the work terminals give:/exit:/tick: and the explicit
+        # D-25/D-29: the work terminals give/signal/tick and the explicit
         # destruct are STATEMENTS here (any nesting depth inside a work
         # body); unlawful outside work and clockwork bodies -- the semantic
         # layer rejects (SEMANTICS 23, 27).
@@ -627,7 +692,7 @@ GRAMMAR = {
                          OR, "<for(for)>", OR, "<count(count)>",
                          OR, "<break(break)>", OR, "<continue(continue)>", OR, "<dropto(dropto)>",
                          OR, "<exit-label>",
-                         OR, "<give-stmt(give)>", OR, "<exit-stmt(exit)>",
+                         OR, "<give-stmt(give)>", OR, "<signal-stmt(signal)>",
                          OR, "<tick-stmt(tick)>", OR, "<destruct-stmt(destruct)>"),
 
         # -- wire (PIPE RULING): WIRING IS WORK -- a work statement creating
@@ -728,13 +793,18 @@ GRAMMAR = {
         # leaving out-ports (elaborate checks the list against the panel's
         # out: section; unlawful in clockworks); bare 'give;' stands where
         # no out: is declared -- the ';' terminates the list, so the old
-        # greedy-OPT corner is GONE. 'exit' takes an OPTIONAL variant
-        # (R-41.7): bare 'exit;' is the nothing-more egress. 'destruct'
+        # greedy-OPT corner is GONE. 'signal' (R-43: the exit rename --
+        # one emission creature) takes an OPTIONAL variant (R-41.7: bare
+        # 'signal;' is the nothing-more egress) and an OPTIONAL routing
+        # suffix 'to <channel>' -- grammar admits it EVERYWHERE (one
+        # statement world); the semantic layer holds the position law
+        # (behavior work code only, SEMANTICS 23/31). 'destruct'
         # ends a having explicitly by calling the object's disposal work
         # (R-37, SEMANTICS 27).
         "give-stmt":    ("give", [t_re_id("port"),
                                   STAR((",", t_re_id("port")))], ";"),
-        "exit-stmt":    ("exit", [(t_re_id("variant"), ["<parens-arg>"])],
+        "signal-stmt":  ("signal", [(t_re_id("variant"), ["<parens-arg>"],
+                                     ["to", t_re_id("channel")])],
                          ";"),
         "tick-stmt":    ("tick", ";"),
         "destruct-stmt": ("destruct", "<data-access(object)>",
@@ -765,7 +835,21 @@ GRAMMAR = {
     "type":       ("<type-built-in(type-builtin)>", OR, "<type-list(list)>",
                    OR, "<type-dict(dict)>", OR, "<type-struct(struct)>",
                    OR, "<type-have(have)>", OR, "<type-know(know)>",
+                   OR, "<type-physical(physical)>",
                    OR, t_re_id("type")),
+    # R-50: the physical unit type -- 'physical[<unit>]'; the unit is a
+    # product/quotient of unit names with integer, rational, or Unicode
+    # superscript exponents. Names validate against UNITS.txt (semantic).
+    "type-physical": ("physical", t_br_open, "<unit>", t_br_close),
+    "unit":          ("<uprod>", STAR((t_op_div, "<uprod>"))),
+    "upower-caret":  (t_op_caret,
+                      ([t_op_sub], t_re_int("power"),
+                       OR,
+                       ("(", [t_op_sub], t_re_int("p"), t_op_div,
+                        t_re_int("q"), ")"))),
+    "uprod":         ("<ufactor>", STAR(([t_op_mul], "<ufactor>"))),
+    "ufactor":       (t_re_id("uname"), ["<upower>"]),
+    "upower":        (("<upower-caret>", OR, t_re_super("lifted")),),
     "type-have":  ("have", ("<type-list(list)>", OR, "<type-dict(dict)>")),
     "type-know":  ("know", ("<type-list(list)>", OR, "<type-dict(dict)>")),
     "type-built-in": (t_kw_int, OR, t_kw_float, OR, t_kw_string, OR, t_kw_bool),

@@ -12,7 +12,7 @@ read carefully.
 
 SETTLED LAW EXECUTED (LANGUAGE.txt, pipe ruling):
     - '=x=>' deactivates exactly the deactivable kinds (behavior member,
-      recurring-emission handle); events and blocks are not deactivable
+      R-49: recurrence handles died); events and blocks are not deactivable
       (SEMANTICS 1; the reactor row's re-speak is flagged in OPEN --
       construction is standing, destruct is the end).
     - 'every: n' emits once per n (seconds, virtual); 'as:' binds a handle;
@@ -36,8 +36,8 @@ PROVISIONAL RULINGS (P-n; each one line to correct -- report lists them):
          the matched set is fixed FIRST, effects then run in declaration
          order -- an effect of this delivery never changes which of its
          guards held (the synchronous-instant law).
-    P-3  Time is VIRTUAL: the driver calls advance(seconds); recurring
-         emissions fire at their multiples, oldest due first.
+    P-3  Time is VIRTUAL: the driver calls advance(seconds). (R-49: the
+         recurrence machinery died; nothing ticks until the timer feeder.)
     P-4  Guards evaluate at dispatch time over current member state; 'e.'
          reads the fired event's payload; an unknown member reads 0.0.
     P-5  Members initialise per declared type: float 0.0, int 0, bool False,
@@ -58,6 +58,7 @@ from collections import deque
 from ..core.parser_generator.cst_nodes import NodeAbsent
 from ..core.symbol.ast import ReferenceLeaf, ConstantLeaf
 from . import ast_nodes as A
+from . import units
 
 
 class _DropTo(Exception):
@@ -95,13 +96,16 @@ NOTHING = _Nothing()
 
 class _Signal(Exception):
     """RETURN-note: not a value carrier in the language sense -- the Python
-    vehicle of an exit: (LANGUAGE 12.4): 'name' the variant, 'payload' the
-    evaluated argument tuple. Caught at the call site and matched against
-    the handler; a signal is a branch taken, not a value (12.10).
+    vehicle of a signal egress (LANGUAGE 12.4, R-43): 'name' the variant, 'payload' the
+    evaluated argument tuple, 'fields' the declared payload names from the
+    signalling work's panel (R-44: the arm reads 'e.<field>'; the raise
+    site carries the names so the catch needs no resolution). Caught at
+    the call site and matched against the handler; a signal is a branch
+    taken, not a value (12.10).
     """
-    def __init__(self, name, payload):
+    def __init__(self, name, payload, fields=()):
         super().__init__(name)
-        self.name, self.payload = name, payload
+        self.name, self.payload, self.fields = name, payload, fields
 
 
 class _Yield(Exception):
@@ -110,6 +114,46 @@ class _Yield(Exception):
     def __init__(self, outs):
         super().__init__("tick")
         self.outs = outs
+
+
+def _signal_fields(ctx, statement, defs=None):
+    """RETURN: tuple, the declared payload field names of the variant the
+              statement raises -- from the enclosing work's panel signals:
+              (R-44: the arm binds 'e.<field>' from these); a NAME-ONLY
+              entry ADOPTS the fields of the like-named top-level event
+              definition when one stands in 'defs' (R-47 -- structure
+              adopted, identity local; namespaced adoption joins F-9);
+              empty when the context carries no work, the variant is
+              undeclared (the elaborate law already rejected that path),
+              or the entry is bare with no definition to adopt.
+    """
+    work = getattr(ctx, "work", None)
+    if work is None or statement.variant is NodeAbsent:
+        return ()
+    name = statement.variant.segments[0]
+    for sig in work.panel.signals:
+        if sig.name.segments[0] == name:
+            if sig.params is NodeAbsent:
+                return _adopted_fields(name, defs)
+            return tuple(p.name.segments[0] for p in sig.params)
+    return ()
+
+
+def _adopted_fields(name, defs):
+    """RETURN: tuple, the field names of the top-level event definition
+              named 'name' (R-47 adoption), if one stands in 'defs'.
+              (), else -- the bare signal of old.
+    """
+    if not defs:
+        return ()
+    entry = defs.get((name,))
+    if isinstance(entry, list) and entry:
+        entry = entry[0]
+    if isinstance(entry, A.EventDef) \
+            and entry.signature.params is not NodeAbsent:
+        return tuple(p.name.segments[0]
+                     for p in entry.signature.params)
+    return ()
 
 
 class _WorkContext:
@@ -128,8 +172,8 @@ class _WorkContext:
 class _ClockworkRun:
     """RETURN-note (class): one wound clockwork -- a resumable body walk.
     next() runs the body until the following tick: (returning its bundle)
-    or its end/finish: (raising _Signal('finished')); an exit: raises its
-    own signal (LANGUAGE 13.4). repr is byte-stable (traces print it).
+    or its end/finish: (raising _Signal('finished')); a signal egress raises
+    its own signal (LANGUAGE 13.4). repr is byte-stable (traces print it).
     """
     def __init__(self, engine, node, frame):
         self._name = ".".join(node.signature.name.segments)
@@ -162,7 +206,7 @@ class _Finished(Exception):
 class Instance:
     """RETURN: never a value itself -- the scope-default instance of one
               definition (or of one implicit level default): its member
-              state, parameter values, activity, cancellation handles, and
+              state, parameter values, activity, and
     """
 
     def __init__(self, qualified, kind):
@@ -172,26 +216,63 @@ class Instance:
         self.params    = {}
         self.active    = False
         self.active_behaviors = set()   # reactor ruling: the armed set
-        self.handles   = {}          # handle name -> recurring emission
         self.active_child = None     # an aspect's one active behaviour
 
 
-class Recurring:
-    """RETURN: never a value itself -- one 'every:' emission: what to emit,
-              its period, its next due time, and the owning instance (whose
-              deactivation auto-cancels it, R-15); 'to_channel' the routed
-              suffix of the spawn ('' = suffix-less: the send FANS, pipe
-              ruling) -- honoured when the owner is a CONSTRUCTED reactor.
+class Physical:
+    """RETURN-note: a unit-carrying VALUE (R-50, algebra B): 'mag' the
+    magnitude, 'vec' the canonical rational exponent vector. A zero
+    vector never survives construction -- 'make' collapses it to the
+    bare magnitude (the dimensionless case IS the plain number).
+    repr is byte-stable for the traces: '<mag> [<canonical display>]'.
     """
 
-    def __init__(self, event, payload, period, owner, now, to_channel=""):
-        self.event      = event
-        self.payload    = payload
-        self.period     = period
-        self.due        = now + period
-        self.owner      = owner
-        self.alive      = True
-        self.to_channel = to_channel
+    __slots__ = ("mag", "vec")
+
+    def __init__(self, mag, vec):
+        self.mag, self.vec = mag, vec
+
+    @staticmethod
+    def make(mag, vec):
+        """RETURN: Physical, carrying 'vec' if any exponent is non-zero.
+                  float, the bare magnitude else (dimensionless collapse).
+        """
+        if units.dimensionless(vec):
+            return mag
+        return Physical(mag, vec)
+
+    def __repr__(self):
+        return "%s [%s]" % (_fmt(self.mag), units.display(self.vec))
+
+
+def _unit_of(value):
+    """RETURN: tuple, the unit vector of any value -- a Physical's own; the
+              ZERO vector for every plain value (dimensionless, R-50).
+    """
+    if isinstance(value, Physical):
+        return value.vec
+    return (units.Fraction(0),) * 7
+
+
+def _mag_of(value):
+    """RETURN: float|int, the magnitude -- a Physical's 'mag', everything
+              else through _number.
+    """
+    if isinstance(value, Physical):
+        return value.mag
+    return _number(value)
+
+
+def _unit_fault(op, lhs, rhs):
+    """RETURN: never -- raises _Signal('unit_mismatch', ...) (R-50): the
+              runtime twin of the static seam reject, catchable at an
+              aware statement exactly as div_by_zero (SEMANTICS 21
+              precedent); payload carries the two canonical displays.
+    """
+    raise _Signal("unit_mismatch",
+                  (units.display(_unit_of(lhs)),
+                   units.display(_unit_of(rhs))),
+                  fields=("left", "right"))
 
 
 class Channel:
@@ -341,7 +422,7 @@ def _feed_literal(text, entry):
 class Machine:
     """RETURN: never a value itself -- one executable world over a list of
               SemanticModules: the definition index, the routed event
-              queue, virtual time, recurring emissions, and the trace.
+              queue, virtual time, and the trace.
 
     Drive it as a PLANT (pipe ruling): run('<wiring work>') constructs,
     wires, and winds; step()/play() replay the feeders; advance() moves
@@ -356,7 +437,6 @@ class Machine:
                                      # (instance, in_channel, event, payload)
         self.feeders   = []          # wound feeders, construction order
         self.now       = 0.0
-        self.recurring = []
         self.lines     = []
         for module in modules:
             self._index(module.file_node.items, scope=())
@@ -371,7 +451,7 @@ class Machine:
         for item in items:
             if isinstance(item, A.Namespace):
                 self._index(item.items, scope + tuple(item.name.segments))
-            elif isinstance(item, (A.Reactor,
+            elif isinstance(item, (A.Reactor, A.EventDef,
                                    A.DefCause, A.Work, A.ClockworkDef)):
                 key = scope + tuple(item.signature.name.segments)
                 if isinstance(item, A.Work) \
@@ -411,25 +491,11 @@ class Machine:
     # -- driving ------------------------------------------------------------
 
     def advance(self, seconds):
-        """RETURN: None, always. Moves virtual time forward, firing every due
-                  recurring emission in due order (P-3) and draining the
-                  queue after each.
+        """RETURN: None, always. Moves virtual time forward (P-3). Nothing
+                  ticks today -- the recurrence machinery died with R-49;
+                  the mover stays for the timer feeder to come.
         """
-        target = self.now + seconds
-        while True:
-            due = [r for r in self.recurring if r.alive and r.due <= target]
-            if not due:
-                break
-            nxt = min(due, key=lambda r: r.due)
-            self.now = nxt.due
-            nxt.due += nxt.period
-            self.line("tick   %.1fs %s" % (self.now, ".".join(nxt.event)))
-            # pipe ruling: every owner is a constructed reactor; the due
-            # emission routes like any of its emissions (fan or 'to').
-            self.routed_emit(nxt.owner, nxt.event, dict(nxt.payload),
-                             nxt.to_channel)
-            self.drain()
-        self.now = target
+        self.now += seconds
 
     def drain(self):
         """RETURN: None, always. Processes the queue to exhaustion: one event
@@ -572,14 +638,25 @@ class Machine:
                      if g.channel == in_channel]
             if in_channel == bare_channel:
                 pools.append(behavior.causalities)
-            for pool in pools:
-                for causality in pool:
-                    if self.cause_matches(causality.cause, event,
-                                          payload, ctx):
-                        fired.append((causality, ctx))
+            # R-44: FIRST-MATCH, uniform with the handler arm -- within
+            # one behavior the first matching causality fires and
+            # suppresses the rest; each ACTIVE behavior of a mode group
+            # fires its own first match (coordinator interpretation,
+            # flagged in RATIONALE). Under a fired ~ANY, e is Nothing.
+            for causality in (c for pool in pools for c in pool):
+                if self.cause_matches(causality.cause, event,
+                                      payload, ctx):
+                    fired.append((causality, ctx))
+                    break
         for causality, carrier in fired:
-            for effect in causality.effects:
-                self.run_effect(effect, carrier)
+            e_for_run = NOTHING if isinstance(
+                causality.cause.target, A.AnyPattern) else payload
+            saved, carrier.e = carrier.e, e_for_run
+            try:
+                for effect in causality.effects:
+                    self.run_effect(effect, carrier)
+            finally:
+                carrier.e = saved
 
     def run(self, name, args=()):
         """RETURN: None, always. The harness verb driving a PLANT: the
@@ -623,6 +700,16 @@ class Machine:
                   the use-site guard holds.
         """
         target = cause.target
+        if isinstance(target, A.AnyPattern):
+            # R-44: ~ANY matches ANY event that comes (on this group's
+            # channel); its guard evaluates with e = Nothing (strict).
+            if cause.guard is NodeAbsent:
+                return True
+            saved, ctx.e = ctx.e, NOTHING
+            try:
+                return _truthy(self.expr(cause.guard, ctx))
+            finally:
+                ctx.e = saved
         if isinstance(target, A.Lifecycle):
             return False                       # lifecycle fires internally
         access = target.access
@@ -656,12 +743,17 @@ class Machine:
     # -- effects ------------------------------------------------------------
 
     def run_effect(self, effect, ctx):
-        """RETURN: None, always. Executes one effect: '=>' activates a
-                  definition target or enqueues a raw event (P-2), with
-                  'every:' turning the emission recurring (R-15); '=x=>'
-                  deactivates a deactivable target or cancels a handle; a
-                  command block runs as an outermost body.
+        """RETURN: None, always. Executes one effect under the three-arrow
+                  law (R-46; R-49: the recurrence branch died -- the timer
+                  concern is a plant-side feeder's): '=>' enqueues an
+                  event; '=!=>' activates the named behavior (in a state
+                  machine the standing one leaves first -- the transition);
+                  '=x=>' deactivates a behavior; the shrug (action
+                  NodeAbsent) does deliberately nothing; a command block
+                  runs as an outermost body.
         """
+        if effect.action is NodeAbsent:
+            return                          # R-46: reckoned, ignored
         if isinstance(effect.action, A.CommandBlock):
             self.run_block(effect.action, ctx, outermost=True)
             return
@@ -673,58 +765,37 @@ class Machine:
         if effect.marker == "=x=>":
             self.cancel(access, ctx)
             return
-        if access.kind == "behavior":
-            # reactor ruling: 'A => Name' activates the behavior member in
-            # THIS reactor -- resolved through the firing context, never a
-            # global position.
+        if effect.marker == "=!=>":
+            # R-46: the activation arrow -- resolved through the firing
+            # context, never a global position.
             node = getattr(ctx.inst, "node", None) \
                    or self.defs.get(tuple(ctx.inst.qualified))
             if isinstance(node, A.Reactor):
                 self.activate_behavior(ctx.inst, node, access.target[-1])
-        elif spawn.every is not NodeAbsent:
-            period = _number(self.expr(spawn.every, ctx))
-            to_channel = "" if spawn.to_channel is NodeAbsent \
-                         else spawn.to_channel.segments[0]
-            emission = Recurring(event=tuple(access.target), payload={},
-                                 period=period, owner=ctx.inst, now=self.now,
-                                 to_channel=to_channel)
-            self.recurring.append(emission)
-            self.line("recur  %s every %.1fs"
-                      % (".".join(access.target), period))
-            if spawn.handle is not NodeAbsent:
-                ctx.inst.handles[spawn.handle.segments[0]] = emission
-        else:
-            # pipe ruling: an emission is ROUTED -- 'to <channel>'
-            # publishes on that out channel, suffix-less FANS to all out
-            # channels plus self. The bus is no more.
-            payload = {a.name: self.expr(a.value, ctx)
-                       for a in ([] if spawn.call.args is NodeAbsent
-                                 else spawn.call.args)
-                       if isinstance(a, A.NamedArg)}
-            to_channel = "" if spawn.to_channel is NodeAbsent \
-                         else spawn.to_channel.segments[0]
-            self.routed_emit(ctx.inst, tuple(access.target), payload,
-                             to_channel)
+            return
+        # pipe ruling: an emission is ROUTED -- 'to <channel>'
+        # publishes on that out channel, suffix-less FANS to all out
+        # channels plus self. The bus is no more.
+        payload = {a.name: self.expr(a.value, ctx)
+                   for a in ([] if spawn.call.args is NodeAbsent
+                             else spawn.call.args)
+                   if isinstance(a, A.NamedArg)}
+        to_channel = "" if spawn.to_channel is NodeAbsent \
+                     else spawn.to_channel.segments[0]
+        self.routed_emit(ctx.inst, tuple(access.target), payload,
+                         to_channel)
 
     def cancel(self, access, ctx):
-        """RETURN: None, always. '=x=>': a handle cancels its recurring
-                  emission; a definition target deactivates its instance;
-                  anything else is a no-op at run time (the R-6 deactivable
-                  table was elaborate's to reject).
+        """RETURN: None, always. '=x=>' stands a behavior down (R-46;
+                  idempotent -- R-48: no second ~EXIT); anything else is a
+                  no-op at run time (the deactivable table is elaborate's
+                  to reject; R-49: handles died with the recurrence tail).
         """
-        if access.kind == "local" \
-                and access.target[0] in ctx.inst.handles:
-            emission = ctx.inst.handles[access.target[0]]
-            emission.alive = False
-            self.line("cancel %s" % access.target[0])
-        elif access.kind == "behavior":
+        if access.kind == "behavior":
             node = getattr(ctx.inst, "node", None) \
                    or self.defs.get(tuple(ctx.inst.qualified))
             if isinstance(node, A.Reactor):
                 self.deactivate_behavior(ctx.inst, node, access.target[-1])
-        # (reactor activation/deactivation by name DIED with the pipe
-        # build: construction is standing, destruct is the end; the
-        # SEMANTICS 1 deactivable-table re-speak is flagged in OPEN.)
 
     def activate_behavior(self, inst, node, name):
         """RETURN: None, always. Activates the named behavior member in a
@@ -747,10 +818,8 @@ class Machine:
 
     def deactivate_behavior(self, inst, node, name):
         """RETURN: None, always. Disarms the named behavior member (a no-op
-                  when inactive): its ~EXIT causalities run, then every
-                  recurring emission the reactor owns... stays -- ownership
-                  is the REACTOR's; auto-cancel rides reactor deactivation
-                  (R-15), not the behavior flip.
+                  when inactive -- R-48: no second ~EXIT): its ~EXIT
+                  causalities run, then the name leaves the armed set.
         """
         if name not in inst.active_behaviors:
             return
@@ -857,7 +926,7 @@ class Machine:
 
     def call_work(self, work, args, ctx):
         """RETURN: tuple, the out-bundle in declaration order after the
-                  body reached give:. Raises _Signal when an exit: fires
+                  body reached give:. Raises _Signal when a signal egress fires
                   (LANGUAGE 12.3: the sum -- all outputs or one signal).
         """
         frame = self._bind_panel(work, args, ctx)
@@ -905,6 +974,14 @@ class Machine:
                 sig = _Signal("div_by_zero", ())
                 self.line("signal div_by_zero()")
                 self.run_handler(statement.handler, sig, ctx)
+            except _Signal as sig:
+                # R-50: unit_mismatch off the primitive operators -- the
+                # second built-in fault beside div_by_zero (SEMANTICS 21
+                # precedent); payload carries the two canonical displays.
+                self.line("signal %s(%s)"
+                          % (sig.name, ", ".join(_fmt(p)
+                                                 for p in sig.payload)))
+                self.run_handler(statement.handler, sig, ctx)
             return
         args = [] if rhs.args is NodeAbsent else list(rhs.args)
         if isinstance(work, list):            # overload resolution (R-33):
@@ -916,7 +993,8 @@ class Machine:
         try:
             bundle = self.call_work(work, args, ctx)
         except _Signal as sig:
-            self.line("signal %s%r" % (sig.name, tuple(sig.payload)))
+            self.line("signal %s(%s)" % (
+                    sig.name, ", ".join(repr(v) for v in sig.payload)))
             self.run_handler(statement.handler, sig, ctx)
             return
         for target, value in zip(targets, bundle):
@@ -924,31 +1002,45 @@ class Machine:
 
     def run_handler(self, handler, sig, ctx):
         """RETURN: None, always. Matches one signal against the handler's
-                  arms, first-match (LANGUAGE 12.6): a named arm binds its
-                  payload fields as locals of the arm's action; the bare
-                  arm matches anything and binds nothing; an absent action
-                  is the written shrug. Re-raises the signal when no arm
-                  matches (exhaustiveness is elaborate's law; the runtime
-                  stays honest).
+                  arms, first-match (LANGUAGE 12.6, R-44: the arm IS a
+                  causality in form): a named arm binds 'e' to the fault's
+                  payload dict (field names from the raise site); ~ANY
+                  matches anything with e = Nothing (strict -- details
+                  require naming the variant); a when: guard must hold for
+                  the arm to fire; an absent action is the written shrug.
+                  Re-raises the signal when no arm matches (coverage is
+                  elaborate's testimony law; the runtime stays honest).
         """
         for arm in handler.arms:
             if arm.variant is NodeAbsent:
-                matched = True
+                e = NOTHING                     # ~ANY: e is Nothing (R-44)
+            elif arm.variant.segments[0] == sig.name:
+                e = dict(zip(sig.fields, sig.payload))
             else:
-                matched = arm.variant.segments[0] == sig.name
-            if not matched:
                 continue
-            for field, value in zip(arm.fields, sig.payload):
-                ctx.locals[field.segments[0]] = value
-            action = arm.action
-            if action is NodeAbsent:
-                return                          # the shrug
-            if isinstance(action, A.ExitSignal):
-                payload = () if action.args is NodeAbsent else tuple(
-                    self.expr(a, ctx) for a in action.args)
-                raise _Signal(action.variant.segments[0], payload)
-            self.run_block(action, ctx)
-            return
+            had_e = hasattr(ctx, "e")
+            saved_e = getattr(ctx, "e", None)
+            ctx.e = e
+            try:
+                if arm.guard is not NodeAbsent \
+                        and not _truthy(self.expr(arm.guard, ctx)):
+                    continue
+                action = arm.action
+                if action is NodeAbsent:
+                    return                      # the shrug
+                if isinstance(action, A.Signal):
+                    payload = () if action.args is NodeAbsent else tuple(
+                        self.expr(a, ctx) for a in action.args)
+                    raise _Signal(action.variant.segments[0], payload,
+                                  fields=_signal_fields(ctx, action,
+                                                        self.defs))
+                self.run_block(action, ctx)
+                return
+            finally:
+                if had_e:
+                    ctx.e = saved_e
+                elif hasattr(ctx, "e"):
+                    del ctx.e
         raise sig
 
     def gen_statements(self, statements, ctx):
@@ -958,7 +1050,7 @@ class Machine:
                             unwinding its enclosing loops (LANGUAGE 13.3).
 
         Non-suspending statements execute through the ordinary dispatcher
-        (whose Finish/ExitSignal raises propagate out untouched).
+        (whose Finish/Signal raises propagate out untouched).
         """
         for statement in statements:
             yield from self.gen_statement(statement, ctx)
@@ -1043,7 +1135,8 @@ class Machine:
             except _Signal as sig:
                 if sig.name == "finished":
                     return
-                self.line("signal %s%r" % (sig.name, tuple(sig.payload)))
+                self.line("signal %s(%s)" % (
+                    sig.name, ", ".join(repr(v) for v in sig.payload)))
                 if statement.handler is NodeAbsent:
                     raise
                 self.run_handler(statement.handler, sig, ctx)
@@ -1102,25 +1195,38 @@ class Machine:
                                                 # subscriber lists included
                                                 # -- reads Nothing from this
                                                 # instant (HAVE_KNOW_BE (3))
-                        for emission in self.recurring:
-                            if emission.owner is held and emission.alive:
-                                emission.alive = False   # R-15: ownership
-                                self.line(                # ends with the
-                                    "cancel (auto, destruct) %s"  # owner
-                                    % ".".join(emission.event))
             case A.Tick():                      # LANGUAGE 13.3: deliver,
                 raise _Yield(tuple(             # suspend until the pull
                     ctx.locals.get(e.name.segments[0])
                     for e in ctx.work.panel.outs))
-            case A.ExitSignal():                # LANGUAGE 12.4: fault egress
+            case A.Signal():                    # LANGUAGE 12.4/15.3, R-43
+                inst = getattr(ctx, "inst", None)
+                if not isinstance(ctx, _WorkContext) and inst is not None:
+                    # BEHAVIOR WORK CODE: the routed emission, equivalent
+                    # to '=> Event() [to <channel>]' -- suffix-less FANS
+                    # (every out channel plus self); flow CONTINUES.
+                    access = getattr(statement.variant, "access", None)
+                    event = tuple(access.target) if access is not None \
+                            else tuple(statement.variant.segments)
+                    payload = {a.name: self.expr(a.value, ctx)
+                               for a in ([] if statement.args is NodeAbsent
+                                         else statement.args)
+                               if isinstance(a, A.NamedArg)}
+                    to_channel = "" if statement.to_channel is NodeAbsent \
+                                 else statement.to_channel.segments[0]
+                    self.routed_emit(inst, event, payload, to_channel)
+                    return
+                # NORMAL WORK CODE: the fault egress of old.
                 if statement.variant is NodeAbsent:
-                    # R-41.7: bare exit: -- the nothing-more egress; the
+                    # R-41.7: bare 'signal;' -- the nothing-more egress; the
                     # puller receives the built-in variant ('finished'
                     # today; the rename rides a flagged fork).
                     raise _Signal("finished", ())
                 raise _Signal(statement.variant.segments[0],
                               () if statement.args is NodeAbsent else tuple(
-                                  self.expr(a, ctx) for a in statement.args))
+                                  self.expr(a, ctx) for a in statement.args),
+                              fields=_signal_fields(ctx, statement,
+                                                    self.defs))
             case A.Mutation() if statement.handler is not NodeAbsent:
                 self.aware_mutation(statement, ctx)
             case A.Mutation():
@@ -1268,6 +1374,11 @@ class Machine:
                          _fmt(rhs)))
             return
         old = store.get(member, 0.0)
+        if isinstance(old, Physical) and _unit_of(rhs) != old.vec:
+            # R-50 seam: the declared unit rides the member's united zero;
+            # a mismatched write is the runtime twin of the static reject,
+            # catchable exactly as div_by_zero (SEMANTICS 21).
+            _unit_fault(statement.op, old, rhs)
         store[member] = _apply_op(statement.op, old, rhs)
         self.line("set    %s %s %s -> %s"
                   % (".".join(leaf.segments), statement.op, _fmt(rhs),
@@ -1300,6 +1411,9 @@ class Machine:
                 return NOTHING
             case ConstantLeaf():
                 return self._constant(node)
+            case A.PhysicalLiteral():
+                return Physical.make(self.expr(node.number, ctx),
+                                     node.vector)
             case A.BinOp():
                 return _apply_bin(node.op,
                                   self.expr(node.lhs, ctx),
@@ -1307,7 +1421,10 @@ class Machine:
             case A.Not():
                 return not _truthy(self.expr(node.operand, ctx))
             case A.Neg():
-                return -_number(self.expr(node.operand, ctx))
+                value = self.expr(node.operand, ctx)
+                if isinstance(value, Physical):
+                    return Physical(-value.mag, value.vec)
+                return -_number(value)
             case A.Ternary():
                 if _truthy(self.expr(node.cond, ctx)):
                     return self.expr(node.then, ctx)
@@ -1348,11 +1465,20 @@ class Machine:
         """
         access = leaf.access
         if isinstance(ctx, _WorkContext):
+            if leaf.segments[0] == "e" and len(leaf.segments) > 1:
+                # R-44: inside a handler arm, 'e' is the fault's payload
+                # (or Nothing under ~ANY -- any read of it IS Nothing).
+                store = getattr(ctx, "e", NOTHING)
+                if store is NOTHING:
+                    return NOTHING
+                return store.get(leaf.segments[1], 0.0)
             return ctx.locals.get(leaf.segments[0], 0.0)
         if access.kind == "binding":
             head = access.target[0]
             store = {"e": ctx.e,
                      "": ctx.self_.members}[head]   # '' = bare-dot self
+            if store is NOTHING:
+                return NOTHING                  # R-44: e under ~ANY
             return store.get(access.residue[0], 0.0)
         if access.kind == "local":
             name = access.target[0]
@@ -1453,6 +1579,8 @@ def _zero_of(type_node):
     if isinstance(type_node, A.BuiltinType):
         return {"int": 0, "float": 0.0, "bool": False,
                 "string": ""}[type_node.kind]
+    if isinstance(type_node, A.PhysicalType):
+        return Physical(0.0, type_node.vector)   # R-50: the united zero
     if isinstance(type_node, A.ListType):
         return []
     if isinstance(type_node, A.DictType):
@@ -1507,6 +1635,28 @@ def _apply_bin(op, lhs, rhs):
     if op in ("in", "not in"):
         held = _contains(rhs, lhs)
         return held if op == "in" else not held
+    if isinstance(lhs, Physical) or isinstance(rhs, Physical):
+        # R-50 (algebra B): the unit is CARRIED --
+        #   + -           same vector required, unit_mismatch else;
+        #   * /           vectors add / subtract (units DERIVE); a bare
+        #                 number is dimensionless -- scalar scaling;
+        #   comparisons   same vector required;
+        #   ==/!= above already compared structurally (a Physical never
+        #                 equals a plain number: the vectors differ).
+        lu, ru = _unit_of(lhs), _unit_of(rhs)
+        lm, rm = _mag_of(lhs), _mag_of(rhs)
+        if op == "*":
+            return Physical.make(lm * rm, units.mul(lu, ru))
+        if op == "/":
+            return Physical.make(lm / rm, units.div(lu, ru))
+        if lu != ru:
+            _unit_fault(op, lhs, rhs)
+        if op == "+":
+            return Physical.make(lm + rm, lu)
+        if op == "-":
+            return Physical.make(lm - rm, lu)
+        return {"<":  lm < rm,  "<=": lm <= rm,
+                ">":  lm > rm,  ">=": lm >= rm}[op]
     numeric = {"<":  lambda a, b: a < b,   "<=": lambda a, b: a <= b,
                ">":  lambda a, b: a > b,   ">=": lambda a, b: a >= b,
                "+":  lambda a, b: a + b,   "-":  lambda a, b: a - b,
@@ -1571,6 +1721,8 @@ def _fmt(value):
     """
     if isinstance(value, bool):
         return "true" if value else "false"
+    if isinstance(value, Physical):
+        return repr(value)
     if isinstance(value, float):
         return "%.1f" % value
     if isinstance(value, list):

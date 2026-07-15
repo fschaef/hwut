@@ -1,0 +1,40 @@
+UNITS -- the physical unit glossary (R-50)
+==========================================
+The admitted unit NAMES. Every name expands to a rational exponent
+vector over the seven SI base units; two spellings of one unit always
+display identically (the canonical quotient print: positive powers left
+of the bar, negative right, sorted; '1' the dimensionless nominator).
+
+R-50 scopes DIMENSION, not scale: magnitude prefixes (k, m, c, ...) are
+NOT modelled; 'g' aliases the kg dimension.
+
+THE SEVEN SI BASES (display order)
+----------------------------------
+    kg      mass
+    m       length
+    s       time
+    A       electric current
+    K       thermodynamic temperature
+    mol     amount of substance
+    cd      luminous intensity
+
+DERIVED (dimension expansions)
+------------------------------
+    g       kg                      (dimension alias; scale unmodelled)
+    Hz      1/s
+    N       kg*m/s^2
+    Pa      kg/(m*s^2)
+    J       kg*m^2/s^2
+    W       kg*m^2/s^3
+    C       A*s
+    V       kg*m^2/(s^3*A)
+    Ohm     kg*m^2/(s^3*A^2)
+    F       s^4*A^2/(kg*m^2)
+    T       kg/(s^2*A)
+    Wb      kg*m^2/(s^2*A)
+    lm      cd                      (the steradian is 1)
+    lx      cd/m^2
+
+The executable twin is language/units.py (GLOSSARY); a name admitted
+there and not here -- or here and not there -- is a documentation
+fault.

@@ -2,14 +2,13 @@
 --- load-time gates ---
 compiled: no LL(2) conflict; role uniqueness, AST-map coverage and AST-map kind gates passed (D-10)
 start symbol: top-level
-rule count: 108
+rule count: 116
 
 --- rule inventory (flattened, sorted) ---
    algebr
    arg
    arm
    arm-action
-   arm-fields
    arm-shrug
    behavior-item
    call
@@ -19,6 +18,7 @@ rule count: 108
    causality/effect-marker
    causality/effects
    causality/event
+   causality/shrug
    causality/spawn
    cause-tail
    channel-group
@@ -36,7 +36,6 @@ rule count: 108
    code/destruct-stmt
    code/dropto
    code/exit-label
-   code/exit-stmt
    code/for
    code/give-stmt
    code/if
@@ -47,6 +46,7 @@ rule count: 108
    code/pattern
    code/range
    code/rhs
+   code/signal-stmt
    code/site-target
    code/statement
    code/tick-stmt
@@ -66,6 +66,7 @@ rule count: 108
    declaration
    documented
    dtor-def
+   event-tail
    expr
    expr/add
    expr/and
@@ -78,6 +79,7 @@ rule count: 108
    expr/op-cmp
    expr/op-mul
    expr/or
+   expr/physical-literal
    expr/un
    field
    file
@@ -111,5 +113,11 @@ rule count: 108
    type-have
    type-know
    type-list
+   type-physical
    type-struct
+   ufactor
+   unit
+   upower
+   upower-caret
+   uprod
    work-tail

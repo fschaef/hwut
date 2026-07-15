@@ -36,3 +36,11 @@ set    total = 5 -> 5
 set    value = 1 -> 1
 set    total = 6 -> 6
 set    .y = 6 -> 6
+signal off_scale(150, 2)
+set    .hi = 150 -> 150
+signal off_scale(-5, 1)
+set    .lo = -1 -> -1
+set    g = 5.0 -> 5.0
+bind   .other = 5.0
+signal off_beat(60, 1)
+set    .beat = 60 -> 60

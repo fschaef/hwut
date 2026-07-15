@@ -20,7 +20,7 @@ buffer : class {
 +buffer.from : work(in: size
                     out: b : buffer
                     signals: too_large(limit)) {
-    if: size > 65536 { exit too_large(65536); }
+    if: size > 65536 { signal too_large(65536); }
     b = size;
     give b;
 }
@@ -44,7 +44,7 @@ Demo : reactor(in: cmd) {
     got: float;
   show : behavior {
     SHOW => {
-        .got = buffer.from(size = 1024) else: { too_large(limit) => ; }
+        .got = buffer.from(size = 1024) else: { too_large => ; }
     }
 }
 }

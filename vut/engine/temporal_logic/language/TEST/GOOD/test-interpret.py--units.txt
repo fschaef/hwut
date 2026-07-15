@@ -1,0 +1,16 @@
+
+--- units (run-units.vut) ---
+run    plant
+wind   f : script
+make   g : gauge
+enter  g.B
+wire   f --[cmd]--> g
+feed   f probe
+event  g.cmd probe
+set    .dist = 6.0 [m] -> 6.0 [m]
+set    .speed = 3.0 [m/s] -> 3.0 [m/s]
+set    .speed = 9.0 [m/s] -> 9.0 [m/s]
+set    .flag = 1.0 -> 1.0
+set    .flag = 1.0 -> 1.0
+signal unit_mismatch(m/s, m)
+set    .flag = -1.0 -> -1.0

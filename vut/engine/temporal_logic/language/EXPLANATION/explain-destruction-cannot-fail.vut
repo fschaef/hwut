@@ -6,7 +6,7 @@
 
    1. THE DEBT MUST BE PAYABLE. "Give or destruct what you have" is a duty
       on EVERY path -- including the fault paths. A haver inside its own
-      exit cascade must still discharge; if destructing could fail, the
+      fault cascade must still discharge; if destructing could fail, the
       haver would need a handler inside the handler, and THAT failure a
       handler in turn -- the regress never grounds. Total destruction
       grounds it: the last resort that cannot refuse.
@@ -36,7 +36,7 @@ lease : class {
 +lease.from : work(in: units
                    out: l : lease
                    signals: exhausted) {
-    if: units > 100 { exit exhausted; }    # ACQUISITION may fail -- and
+    if: units > 100 { signal exhausted; }    # ACQUISITION may fail -- and
     l = units;                              # says so: that is its job
     give l;
 }

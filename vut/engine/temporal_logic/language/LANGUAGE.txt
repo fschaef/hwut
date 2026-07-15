@@ -101,7 +101,7 @@ DIE UPON END OF THE HAVE-RELATIONSHIP. An object's life is bounded by its
 being had: when the having ends -- the haver's own end, or the object
 being given away -- the object must already be given or destructed. A
 LOCAL VARIABLE IS HAD BY THE WORK THAT HAS IT: the work's terminal
-(give or exit) ends the having, so a had obligation local is given
+(give or signal) ends the having, so a had obligation local is given
 before it -- an out: custody entry is the lawful end of having -- or
 destructed;
 plain value locals end under the memory exemption (11.1). One law, every
@@ -144,7 +144,7 @@ every OPERATION on a known demands a dominating Nothing-gate; the
 compiler rejects the ungated use -- the potentiality of an inappropriate
 operation is caught immediately (SEMANTICS 28). The gates:
 
-    if: k == Nothing { exit unknown; }     # initial gate: a diverging
+    if: k == Nothing { signal unknown; }   # initial gate: a diverging
     ...k narrowed for the rest...           # Nothing-branch narrows all
                                             # that follows
     if: k != Nothing { target = k; }        # branch gate: k narrowed in
@@ -172,14 +172,15 @@ Every keyword is colon-terminated; the colon is part of the keyword.
 
     is:  when:  known:  had:  in:  out:  signals:
     if:  elif:  else:  match:  case:  for:  int:  float:  step:  from:  start:
-    break:  continue:  dropto  every:  as:  in:  with:
+    break:  continue:  dropto  as:  in:  with:
+    (R-49: 'every:' left the language; 'as:' survives on import: only)
     open:  import:
 
 Exception -- operator, type, and definition-kind words are BARE:
 
     and  or  not  in  true  false  struct  list  dict
     reactor  reactor++  behavior  cause  work  clockwork  class
-    give  tick  exit  destruct  dropto
+    give  tick  signal  destruct  dropto
 
 "in" is therefore a taken word: no identifier may be named "in"; the
 definition-kind words and the command words are likewise taken.
@@ -296,17 +297,33 @@ GRAMMAR
 
 (2.2) Effects
 -------------
-An effect is a marker followed by a target or a command-block.
+An effect is a marker followed by a target, a command-block, or the
+shrug. THREE ARROWS, three meanings (R-46 -- the spawning of a
+behavior is semantically different from the spawning of an event):
 
-    "=>"    activate
-    "=x=>"  deactivate
+    "=>"    spawns an EVENT / runs work code   (the happening arrow)
+    "=!=>"  ACTIVATES a behavior               (standing up)
+    "=x=>"  DEACTIVATES a behavior             (standing down;
+            R-48: idempotent -- a second '=x=>' is
+            a lawful no-op, no second ~EXIT)
+
+THE SHRUG: '<cause> => ;' is a lawful effect -- pure documentation: we
+do nothing upon that event; we know it may happen, we ignore it. Under
+first-match it CONSUMES the event for this behavior (causalities below,
+~ANY included, stay silent). Chain-final by shape.
 
 GRAMMAR
     "<effects>":       ("<effect-marker>",
                         (("<code(causality)>", ["<effects>"]),
                          OR,
+                         ("<shrug>",),
+                         OR,
                          ("<spawn>", (";", OR, "<effects>"))))
-    "<effect-marker>": ("=>", OR, "=x=>")
+    "<effect-marker>": ("=>", OR, "=x=>", OR, "=!=>")
+    "<shrug>":         (";",)
+
+'=!=>' and '=x=>' take a BARE target -- no 'to'; a behavior target
+under '=>' REJECTS (activation spells '=!=>').
 
 TERMINATOR LAW: ";" terminates a statement or effect; "}" terminates itself
 -- never "};". The chain is right-recursive: the FINAL effect decides -- a
@@ -316,15 +333,20 @@ block-final causality ends at its "}", a spawn-final causality takes ";".
     E => { c.n += 1; }          block-final: ends at "}"
     E => { c.n += 1; } => go;   block mid-chain, spawn-final: ";"
 
-"=x=> X" is well-formed iff X is deactivable:
+"=x=> X" is well-formed iff X is deactivable (R-46; the reactor row
+DIED with the pipe build -- construction is standing, destruct the end):
 
     entity kind          deactivable
     -------------------  -----------
     event                no
     command-block        no
-    behavior             yes  (a member of THIS reactor: '=x=> Name')
-    reactor / reactor++  yes
-    recurring-emission   yes        (the "as:" handle; see 2.4)
+    behavior             yes -- in a reactor++ only; in a 'reactor'
+                                (state machine) a SEMANTIC ERROR: the
+                                machine may never stand stateless;
+                                transitions spell '=!=>'
+    reactor / reactor++  no   (died with the pipe build)
+    recurring-emission   --   (R-49: the machinery died; the timer
+                              concern is a plant-side feeder's)
 
 "<call>" and "<code>" are disjoint: a command-block contains statements only; an
 entity target is a "<call>". An effect needing both a mutation and an entity
@@ -340,25 +362,14 @@ arguments). A "(role)" suffix on a reference — e.g.
 "<call(behavior)>" — is an advisory role hint walked by position; it is
 non-identity and resolved in the semantic pass.
 
-(2.4) Recurring emission
+(2.4) Recurring emission                                 [RETIRED, R-49]
 ------------------------
-An ordinary "=>" spawn becomes recurring with "every:"; an optional "as:" binds
-a cancellation handle.
-
-    => <call(event)> every: <numeric> [as: <name>]
-
-"every: <numeric>" emits the event once per <numeric> (seconds by convention).
-"as: <name>" names the emission so it can be cancelled with "=x=> <name>". The
-handle is a bare name scoped to the enclosing entity. A recurring emission runs
-only while its entity is active and is cancelled automatically at ~EXIT. "as:"
-requires "every:".
-
-    Station : reactor {
-        Polling : behavior {
-            ~ENTRY       => poll_sensors() every: 0.5 as: poller;
-            stop_pressed =x=> poller;
-        }
-    }
+The 'every:'/'as:' spawn tail, the handle namespace, and '=x=> <handle>'
+LEFT THE LANGUAGE -- the recurrence bolted a lifecycle onto the spawn
+(a named, cancellable thing with no panel, no definition, no
+~ENTRY/~EXIT): lack of orthogonality. The timer concern moves to a
+PLANT-SIDE FEEDER (the feeder-family discussion) ticking events into a
+channel as script(...) feeds them.
 
 
 (3) The reactor and its behaviors
@@ -369,18 +380,19 @@ CLASS with behavior content, and an event recipient. The old character,
 aspect, and free-standing behaviour DISSOLVED into it:
 
     'reactor'    a STATE MACHINE  -- one behavior active at a time;
-                 activating one deactivates the previously active
+                 '=!=>' deactivates the current and activates the
+                 target: the TRANSITION, an atomic leave/enter pair
     'reactor++'  a MODE GROUP     -- several behaviors active at once
 
     MotorActivity : reactor {
         rpm: float;                       # state lives on the REACTOR
         ON : behavior {
             gas_pedal_push     => open_throttle;
-            on_off_button_push => OFF;    # A => Name ACTIVATES Name
+            on_off_button_push =!=> OFF;  # '=!=>' the TRANSITION (R-46)
         }
         OFF : behavior {
             gas_pedal_push     => tone_notify_engine_off;
-            on_off_button_push => ON;
+            on_off_button_push =!=> ON;
         }
     }
 
@@ -400,8 +412,9 @@ GRAMMAR
 A BEHAVIOR is ONLY causalities: no members, no works, no parameters, no
 instances -- it exists nowhere but inside a reactor body, and its code's
 SELF is the reactor: the bare-dot binding '.x' reaches the reactor's
-member x (4.1). 'A => <behavior-name>' as an effect activates that
-behavior IN THIS REACTOR; '=x=>' deactivates it. Causalities appear
+member x (4.1). 'A =!=> <behavior-name>' as an effect activates that
+behavior IN THIS REACTOR (R-46); '=x=>' deactivates it (reactor++
+only). Causalities appear
 ONLY inside behaviors inside reactors (ruled) -- the top-level causality
 died with the free-standing behaviour. Within a behavior body the
 causalities GROUP by in-channel (15.4); the reactor's channel panel and
@@ -419,8 +432,7 @@ is 'destruct'; there is nothing in between.
 "~ENTRY" and "~EXIT" are reserved, non-externally-triggered events that run on
 a behavior's activation and deactivation. They take no external trigger and no
 guard, and their effect is any causality effect (a spawn or a command-block,
-see 2/5) -- e.g. a recurring "every:" spawn at ~ENTRY, auto-cancelled at ~EXIT
-(R-15).
+see 2/5).
 
 
 (4) Values: three sorts, two operator worlds
@@ -576,7 +588,7 @@ face at the definition site:
   nobody falls into a handler, and dropto cannot address it. The arm-
   arrow at the definition site is the reader's cue for which account a
   label is on. (elseto: routing itself is on the build list; the target
-  form is settled law, and a region's exit-signals already count toward
+  form is settled law, and a region's signal statements already count toward
   the work's 12.4 obligations.)
 
     SOMETHING => {
@@ -595,8 +607,10 @@ face at the definition site:
 the body (forward-only, so it forms no loop). Exit-labels may be defined only at
 the outermost body -- never inside a loop, if/elif/else, match, or any nested
 block. Loops use the unlabelled "break:"/"continue:"; exit-regions use "dropto"
-(jump) and ":<label>:" (define); the two never overlap. The keyword "exit"
-carries no duty in this language version: it is reserved (R-24).
+(jump) and ":<label>:" (define); the two never overlap. The word "exit"
+is no keyword of this language (R-24 reserved it; R-43 retired it -- the
+fault egress speaks "signal"). The noun EXIT-LABEL survives as the
+internal name of the ':<label>:' form only.
 
 
 (6) Aspect -- DISSOLVED into the reactor
@@ -805,7 +819,7 @@ Member works are called through the class's dotted name:
                     signals: free_failed(code)) { ... give; }
     }
 
-    s = sprite.make("ghost") else: { no_texture(p) => exit build_failed(p); }
+    s = sprite.make("ghost") else: { no_texture(p) => signal build_failed(p); }
 
 Composing already-answered-for parts remains AGGREGATION, written as a
 literal with member bindings:
@@ -907,7 +921,7 @@ relation-neutral: the marker and the section carry the relation.
                                       singular_matrix(rank: int)) { ... }
 
 SCOPE OF SIGNALS. A work's variants exist in exactly four places: its
-declaration, its body (as exit targets), the else:-handlers at its call
+declaration, its body (at signal statements), the else:-handlers at its call
 sites, and work specs (12.8). They are not types in the surrounding
 program. Two works may both declare "no_convergence"; these are unrelated
 and can never meet -- except measured against one spec, whose vocabulary
@@ -923,7 +937,7 @@ unconditionally valid.
 (12.4) Body terminals
 ---------------------
 COMMAND SPELLING (ruled): commands are BARE words -- the ':' died on
-give/tick/exit/destruct/dropto -- and EVERY simple statement ends with
+give/tick/signal/destruct/dropto -- and EVERY simple statement ends with
 ';'.
 
     give <port>, ...;         the UNIQUE success terminal (R-37 -- the
@@ -944,18 +958,25 @@ give/tick/exit/destruct/dropto -- and EVERY simple statement ends with
                                statement itself, the call-site custody
                                marker of disc-9 awaits a DIFFERENT
                                spelling -- flagged.)
-    exit <variant>(<payload>); the fault egress -- anywhere, any number
-                               of times; leaves the work immediately with
-                               that one own signal; no outputs; the same
+    signal <variant>(<payload>); the fault egress (R-43: 'exit'
+                               renamed) -- anywhere, any number of times;
+                               leaves the work immediately with that one
+                               own signal; no outputs; the same
                                unreachability law follows it. Payload
-                               expressions evaluate at the exit. A BARE
-                               "exit;" is the nothing-more egress of a
-                               clockwork (13.3, R-41.7).
+                               expressions evaluate at the signal. A BARE
+                               "signal;" is the nothing-more egress of a
+                               clockwork (13.3, R-41.7). In NORMAL work
+                               code the statement takes NO routing
+                               suffix -- a work's signal travels the
+                               fault channel to the caller; the routed
+                               form belongs to behavior work code
+                               (15.3, R-43).
 
-Both directions are checked: every variant-carrying exit names a
+Both directions are checked: every variant-carrying signal names a
 declared variant; every self-declared variant is emitted by at least one
-reachable exit. UNREACHABLE CODE IS AN ERROR (ruled): after give, exit,
-or dropto, flow only resumes at an exit-label (the jump target).
+reachable signal statement. UNREACHABLE CODE IS AN ERROR (ruled): after
+give, signal, or dropto, flow only resumes at an exit-label (the jump
+target).
 
 (12.5) Call-site binding
 ------------------------
@@ -984,27 +1005,48 @@ a discard does not compile.
 (12.6) The aware assignment and the handler
 -------------------------------------------
     c, r = bundle_adjustment(pc1, pc2) else: {
-        no_convergence(res) => { log(res); exit adjustment_failed(res); }
-        singular_matrix(_)  => exit bad_input;
+        no_convergence when: e.residual > 0.5
+                        => { log(e.residual);
+                             signal adjustment_failed(e.residual); }
+        no_convergence  => { c = last_c; r = last_r; }
+        singular_matrix => signal bad_input;
     }
 
 A call of a signalling work MUST carry an else: block (a work without
 signals takes none). No signal object is bound -- "else: {", never
 "else: e {": the fault channel selects an arm; it is not a value.
 
-The else: block is a match over the signal set:
-  - arms carry variant patterns with payload destructuring; a bare "=>"
-    is the default arm (binds nothing, at most one, last);
-  - FIRST-MATCH precedence; a DEAD ARM is a hard error;
-  - EXHAUSTIVENESS over the closed set is mandatory;
-  - the minimal legal handler is the EMPTY BLOCK "else: {}" -- the written
-    shrug; silence does not compile, deliberate omission leaves a
-    searchable trace (legality constrained by the flow rule below);
-  - PAYLOAD SCOPING: a variant's fields materialize only inside the arm
-    that matched; the default arm can react but cannot inspect.
+THE ARM IS A CAUSALITY (R-44), and what it names is an EVENT (R-45,
+14.1: a signal IS an event on the fault channel):
+
+    (<event> | ~ANY) [when: <condition>] => <action>
+
+  - the pattern names one event of the callee's declared fault set;
+    payload reads 'e.<field>' -- the field names of the event's
+    declaration (a signals: entry IS an event definition, R-45); no
+    destructure rides the pattern;
+  - 'when:' guards the arm exactly as it guards a cause;
+  - FIRST-MATCH down the list -- uniform with dispatch everywhere
+    (R-44); an arm after an unguarded ~ANY is DEAD (hard error);
+  - '~ANY' matches any event of the set; under it 'e' IS NOTHING --
+    an author wanting details names the event;
+  - <action> is a block, a signal, or ';' (the arm-level shrug);
+  - the minimal legal handler is the EMPTY BLOCK "else: {}" -- the
+    written shrug; silence does not compile, deliberate omission
+    leaves a searchable trace (legality constrained by the flow rule
+    below).
+
+COVERAGE IS TESTIMONY (R-44, the design point; see
+explain-no-exceptions): the author testifies awareness of every
+possible outcome by writing a reaction to each -- every declared
+event met by an unguarded arm, or ~ANY present as the signed blanket
+clause. A guard-hole (an event met only by guarded arms, no ~ANY) is
+a FAILURE TO TESTIFY -- a compile error. This is why the language has
+no exceptions: no outcome can travel an invisible path past an author
+who never named it.
 
 WHAT AN ARM MUST DO -- each arm independently:
-  1. DIVERGE ("give", "exit <signal>", or a provably non-falling path);
+  1. DIVERGE ("give", "signal <event>", or a provably non-falling path);
   2. PRODUCE SUBSTITUTES (assign the targets; ordinary definite
      assignment); or
   3. FALL THROUGH -- legal only where no invalid binding remains:
@@ -1022,7 +1064,7 @@ ROUTED HANDLING. "elseto: <label> with: <carrier>;" routes this site's
 fault wire to a label region further DOWN in the same body -- the honest
 form of the kernel unwind cascade:
 
-    f   = open_file(path)    else: { no_access(p) => exit unreadable(p); }
+    f   = open_file(path)    else: { no_access(p) => signal unreadable(p); }
     buf = alloc(65536)       elseto: close_f with: otto;
     n   = read_into(f, buf)  elseto: free_b  with: karl;
     ...
@@ -1035,7 +1077,7 @@ form of the kernel unwind cascade:
         free(buf);
     :close_f:
         close(f);
-    exit unreadable("io");
+    signal unreadable("io");
 
   - labels are spelled ":name:" (5.2); a LABEL REGION is the label, an
     OPTIONAL match block, and statements; regions stack into the FAULT
@@ -1049,7 +1091,7 @@ form of the kernel unwind cascade:
   - exhaustiveness PER CARRIER when a block is present; "otto.=>" the
     per-carrier default, a final bare "=>" the label-wide default;
   - every path through the fault section ends deliberately: an
-    "exit <own signal>" or a jump to the give-terminal (legal only with all
+    "signal <own variant>" or a jump to the give-terminal (legal only with all
     out: entries assigned -- a recovered fault); no fall-off, no fall-IN
     from the normal path;
   - DOWNWARD ONLY, SAME BODY ONLY; definite assignment holds on every
@@ -1062,10 +1104,10 @@ after all arms:
 
     x, y = some_work(a, b) elsewhile: {
         no_convergence(r) => { eps = eps * 10; }
-        hard_error(m)     => exit broken(m);
+        hard_error(m)     => signal broken(m);
         ==
         attempts = attempts + 1;
-        if: attempts >= 5 { exit gave_up(attempts); }
+        if: attempts >= 5 { signal gave_up(attempts); }
     }
 
 LOOPING CALL. "elsewhile:" re-executes the aware assignment at the
@@ -1102,8 +1144,8 @@ the language later defines.
 (12.10) Signals never travel
 ----------------------------
 A variant is not nameable outside the four places of 12.2, so re-raising
-a foreign signal is INEXPRESSIBLE: a work reporting trouble upward exits
-with one of its OWN variants -- every level speaks of malfunction in its
+a foreign signal is INEXPRESSIBLE: a work reporting trouble upward
+signals with one of its OWN variants -- every level speaks of malfunction in its
 own vocabulary. Payloads may travel; tags may not. A signal can never be
 stored, collected, or re-raised at a distance: a branch taken, not a
 value.
@@ -1133,7 +1175,7 @@ The definition follows the one form (1.2) with the flat panel of 12.2:
     in:       entries arriving at winding -- unmarked into custody,
               'known:' a view for the run
     out:      the PER-TICK outputs (panel and terminal correspond:
-              out: declares, tick delivers, exit ends the stream)
+              out: declares, tick delivers, signal ends the stream)
     signals:  the closed fault set
 
     line_reader : clockwork(in: f : file_handle
@@ -1152,13 +1194,13 @@ Three egresses close a body stretch:
                       SUSPEND until the next pull; no operands -- the
                       panel already named everything (a per-tick delivery
                       names nothing anew, so tick stays bare, R-41.4)
-    exit;            orderly exhaustion -- the BARE, nothing-more egress
-                      (R-41.7): the puller receives the built-in variant
-                      "finished". A clockwork never speaks give -- it
-                      has nothing to give, only ticks to deliver and an
-                      end to announce (checked, R-41.4); bare exit is
+    signal;          orderly exhaustion -- the BARE, nothing-more egress
+                      (R-41.7, R-43): the puller receives the built-in
+                      variant "finished". A clockwork never speaks give --
+                      it has nothing to give, only ticks to deliver and an
+                      end to announce (checked, R-41.4); bare signal is
                       catcher-mandatory at the pull site (13.4).
-    exit <variant>   fault mid-stream, one of the own declared signals
+    signal <variant> fault mid-stream, one of the own declared signals
 
 Three waits suspend a running clockwork, one law for all -- progress is
 guaranteed because each is crossed only when the outside world acts:
@@ -1167,7 +1209,7 @@ guaranteed because each is crossed only when the outside world acts:
     groove: { arms }  awaits causes (the clockwork's WAIT construct,
                       R-25(3)): the script parks; a firing arm cause runs
                       its arm and the script continues -- an arm may
-                      deliver (tick) or fault (exit) from within
+                      deliver (tick) or fault (signal) from within
     next() on input   awaits delivery from above; EVERY next() is a
                       suspension point of the caller
 
@@ -1206,7 +1248,7 @@ Disposal of the consumed run binds the future type document.
             value = n - i + 1;
             tick;
         }
-        exit;
+        signal;
     }
 
     for: v from: countdown(10) { print(v); }
@@ -1228,6 +1270,38 @@ variant and its payload. Section 2 is the event on the reactive bus;
 this section is the event as data; a SIGNAL is the same creature on the
 FAULT channel -- one mechanism, two channels.
 
+THE EVENT DEFINITION (R-45) is the freestanding form:
+
+    blink : event(v, kind);
+    heartbeat : event();
+
+and a signals: entry of a work/clockwork panel IS this same definition
+in panel position -- 'signals: too_small(gap)' declares the event
+'too_small(gap)', scoped as the work's fault set (the 12.2 scoping).
+
+THE NAME-ONLY ENTRY (R-47): a signals: entry may RELATE to a defined
+event -- and naturally SHADOWS it:
+
+    blink : event(v, kind);
+    meter : work(... signals: blink) { ... }    # name-only
+
+ADOPTION: the entry takes the definition's field structure -- the
+catch reads e.v, e.kind; no respelling. THE SHADOW: within the work's
+fault places (12.2) the name means THIS WORK'S FAULT; the outer event
+is hidden there. 12.2 and 12.10 stand entire -- the fault stays
+ephemeral and work-local, never channel cargo; two works adopting
+'blink' own two separate faults; a behavior's routed 'signal blink to
+note' (outside the fault scope) still emits the GLOBAL event.
+Structure adopted, identity local. A name-only entry resolving to no
+definition is the bare signal of old.
+
+One noun -- EVENT, the ephemeral; 'signal' names the VERB (the emitting
+statement, R-43) and the fault-channel ROLE. ARITY is checked (the F-9
+slice): a signal statement carries exactly its entry's fields --
+respelled or ADOPTED (R-47) -- and an emission of a defined event
+carries only declared field names. The RESPELLED entry mismatching its
+definition stays a flagged fork.
+
 (14.2) Event-typed entries and the matcher
 ------------------------------------------
 An event-typed in: entry declares the variants that travel with the
@@ -1244,9 +1318,10 @@ matching arm is the ephemeral's END.
 
 (14.3) Signals: the misbehaviour ephemerals
 -------------------------------------------
-A signal obeys every event rule and adds the fault-channel laws of (12):
-non-reifiable (12.10), scoped to exactly four places (12.2), consumed by
-the else:-handler arm that matches it. Payloads may travel; tags may
+A signal IS an event (R-45) and adds the fault-channel laws of (12):
+non-reifiable (12.10), scoped to exactly four places (12.2), consumed
+first-match by the else:-arm -- itself a causality in form (R-44) --
+that matches it. Payloads may travel; tags may
 not. That misbehaviour is spoken in ephemerals is by design: trouble is
 an occurrence to react to, never an object to own.
 
@@ -1306,9 +1381,22 @@ the emitter's out: channels:
 Suffix-less send FANS: the event publishes on EVERY out channel PLUS the
 self channel. Fan-out at a channel is deliver-to-all subscribers.
 
+THE STATEMENT FORM (R-43): inside BEHAVIOR WORK CODE (an effect's
+command block) the signal statement is the same emission --
+
+    <cause> => { ...; signal <event-spec> [to <channel>]; ... }
+
+-- equivalent to the arrow '=> <event-spec> [to <channel>]': 'to' names
+an out: channel, suffix-less FANS, flow CONTINUES (an emission, not an
+egress). The arrow form and the statement form coexist. In NORMAL work
+code the same word is the fault egress and takes no routing suffix
+(12.4); the position is never ambiguous.
+
 GRAMMAR
-    "<spawn>": ("<call>", ["to", name],
-                ["every:", "<numeric>", ["as:", name]])
+    "<spawn>":       ("<call>", ["to", name],
+                      ["every:", "<numeric>", ["as:", name]])
+    "<signal-stmt>": ("signal", [(name, ["<parens-arg>"],
+                                  ["to", name])], ";")
 
 (15.4) Receive routing: channel groups
 --------------------------------------
@@ -1317,7 +1405,7 @@ is the channel name, or the bare dot for the SELF channel:
 
     RED : behavior {
         cmd: {                       # events arriving on 'cmd'
-            go => GREEN;
+            go =!=> GREEN;
         }
         .: {                         # the reactor's own emissions
             self_check => { .n += 1; }
@@ -1329,6 +1417,19 @@ always lawful). With ONE in-channel the grouping may be omitted -- bare
 causalities belong to that channel; with none declared they belong to
 the self channel. Ungrouped causalities beside SEVERAL in-channels are
 UNLAWFUL -- messy interfering namespaces (SEMANTICS 31).
+
+'~ANY' AS A CAUSE (R-44): any event that comes -- in a group, any event
+arriving on that group's channel. Under ~ANY, 'e' IS NOTHING; behaviors
+stay NON-exhaustive -- ~ANY here is convenience, never obligation (the
+testimony law belongs to the else: block, 12.6).
+
+TWO LEVELS, NEVER MIXED (R-44, scope ruling): a reactor++ ROUTES an
+incoming channel event to ALL live behaviors, in the order of their
+textual position (a dead behavior is skipped); INSIDE one behavior the
+arm-list is a first-match switch -- one causality fires, the rest of
+that list stands suppressed (so an unguarded ~ANY reads as "everything
+the causalities above did not take"). Routing between behaviors,
+switching within one.
 
 (15.5) Delivery
 ---------------
@@ -1363,10 +1464,12 @@ sink) -- follows; the TRACE is conceptually the built-in drain.
 (15.7) A complete small plant
 -----------------------------
     lamp : reactor(in: cmd out: note) {
-        RED   : behavior { cmd: { go => blink to note;
-                                  go => GREEN; } }
-        GREEN : behavior { cmd: { go => RED; } }
+        RED   : behavior { cmd: { go => blink to note =!=> GREEN; } }
+        GREEN : behavior { cmd: { go =!=> RED; } }
     }
+    (One causality, a CHAIN of two effects -- emit, then transition:
+    under first-match (R-44) two separate 'go' causalities would fire
+    only the first; the chain is the idiom for "both".)
     horn : reactor(in: note) {
         count: float;
         LOUD : behavior { blink => { .count += 1; } }
@@ -1379,3 +1482,96 @@ sink) -- follows; the TRACE is conceptually the built-in drain.
         a --[ note ]--> h;
         give;
     }
+
+(16) The physical unit type                       [RULED AND BUILT -- R-50]
+===========================================================================
+
+(16.1) The literal and the type
+-------------------------------
+    <number> "[" <unit> "]"          the unit-carrying literal
+    <name> : physical[<unit>];       the declared type
+
+    .dist  = 6.0 [m];
+    speed : physical[m/s];
+
+A bare number is DIMENSIONLESS (the zero vector); the dimensionless
+case costs nothing -- a plain number stays a plain number.
+
+(16.2) The unit grammar
+-----------------------
+A <unit> is a PRODUCT/QUOTIENT of unit names:
+
+    <unit>    : <uprod> ("/" <uprod>)*        left-assoc: J/kg/K == J/(kg*K)
+    <uprod>   : <ufactor> (("*" | WS) <ufactor>)*   asterisk AND
+                                                    whitespace multiply
+    <ufactor> : <uname> [<upower>]
+    <upower>  : "^" <signed-int>              m^2, s^-2
+              | "^(" <int> "/" <int> ")"      m^(1/2) -- rationals
+                                              parenthesise ('m^1/2'
+                                              would collide with the bar)
+              | <unicode-superscript>         m², s⁻² -- lifted signed
+                                              integers
+
+Names are the seven SI bases or the derived units of UNITS.txt
+(N, J, W, Hz, ...); an unknown name REJECTS [UNIT].
+
+(16.3) The representation -- surface, canonical, display
+--------------------------------------------------------
+    SURFACE    the author's spelling -- any of them;
+    CANONICAL  the RATIONAL EXPONENT VECTOR over (kg, m, s, A, K,
+               mol, cd): product = vector ADD, quotient = SUBTRACT,
+               power = SCALE, equality = vector EQUALITY -- one
+               normal form, no cancellation algorithm;
+    DISPLAY    the QUOTIENT of nominator to denominator: positive
+               powers left of the bar, negative right, sorted; '1'
+               the dimensionless nominator; a multi-term denominator
+               parenthesises.
+
+    [N] and [kg m/s^2] are ONE unit and PRINT identically: kg*m/s^2.
+    [J/kg/K] displays m^2/(s^2*K).    [s⁻²] displays 1/s^2.
+
+(16.4) The algebra -- the unit is part of the TYPE (R-51)
+----------------------------------------------------------
+The unit is part of the value's TYPE, and the algebra below is that
+law's observable meaning in every expression:
+
+    + -           same vector required -- unit_mismatch else;
+    * /           vectors add / subtract: units DERIVE
+                  (.dist / 2.0 [s] IS an m/s);
+    comparison    same vector required;
+    scalar        a bare number scales: 3.0 * .speed stays m/s;
+    collapse      a derived ZERO vector is a plain number again
+                  (.dist / .dist is 1.0, no unit);
+    zero value    a physical member's P-5 zero is the UNITED zero
+                  (0.0 [m/s]) -- the declaration's unit rides it.
+
+THE SEAM: a write into a declared-physical place checks the value's
+vector against the declaration -- statically where both are known
+(F-9 carries the full static flow), and at RUN TIME as the built-in
+fault 'unit_mismatch' beside div_by_zero (SEMANTICS 21): catchable at
+an aware statement, payload e.left / e.right the two canonical
+displays.
+
+    .speed = .dist else: {
+        unit_mismatch => { log(e.left); }     # 'm/s', 'm'
+    }
+
+(16.5) Representation freedom (R-51)
+------------------------------------
+HOW an implementation represents the unit is a codegen concern, not a
+semantic one. Two conforming strategies:
+
+    the REFERENCE INTERPRETER (Python) carries the rational-exponent
+    vector on values -- validation is its job, thoroughness is free
+    there, and the trace oracle ('set .speed = 3.0 [m/s]') is its
+    voice;
+
+    the LUAU EMITTER erases units on statically-proven paths (a typed
+    member's arithmetic compiles to bare numbers) and tags only
+    VARIANTS -- values whose type travels at run time (untyped locals,
+    event payload fields, heterogeneous containers) -- checking at the
+    boundary where a variant meets a typed place.
+
+The reach of erasure equals the reach of the static typing net: what
+F-9 proves, the emitter may drop.
+
