@@ -706,10 +706,20 @@ character deferred: a reactor IS a class with behavior content.)
 
 (11.1) Members: one brace, marked relations
 -------------------------------------------
-    <name> : class [is: <class>, ...]
+    <name> : class [is: <target>, ...]
                    [{ <class-item>+ }]
     <class-item>: [known:|had:] <name> : <type>;    a member declaration
                 | <name> : work ...                 a member work (11.3)
+
+The is:-list names AT MOST ONE concrete class, ANY NUMBER of abstract
+kinds (11.5), and optionally the debt marker 'obligation' (11.2).
+Concrete bases chain; the concrete spine is a path. In the RESOLVED
+ancestry of any kind no '~' kind is reachable twice -- the diamond
+shape REJECTS. Names are DISJOINT across the entire resolved ancestry:
+a name declared twice anywhere in it REJECTS -- member, work, or
+signature alike, identical panels included. A child only ever ADDS
+(pure extension); there is no override and no merge; every name has
+exactly one declaration and at most one body in the whole ancestry.
 
 ONE body brace (R-41.3): member declarations and member works interleave
 freely; the marker on a declaration is the relation, having implicit.
@@ -740,7 +750,12 @@ the (0.3) law:
 
 Debt is TRANSITIVE through custody: a class with an obligation among its
 custody members is itself an obligation -- aggregation carries the debts of
-its parts. Value-only classes are debt-free and live entirely under the
+its parts. Debt rides the spine the same way (R-60): the base slice's
+custody members are the instance's custody members -- a class whose
+concrete base is an obligation is itself an obligation. '~' kinds
+carry no state and never classify. Complete law: a class is an
+obligation iff marked 'is: obligation', or an obligation stands among
+its own custody members, or its concrete base is an obligation. Value-only classes are debt-free and live entirely under the
 memory exemption. (The ledger's mechanics bind the future type document;
 the classification binds now.)
 
@@ -757,6 +772,36 @@ constructed product nor the received debt, R-41.1)
 
 "A work that gives and signals" -- construction can fail, and its panel
 says so; disposal receives the debt and discharges it.
+
+CONSTRUCTION WORKS OPERATE ON SELF. The machinery allocates self; the
+body initialises it through the bare-dot binding ('.member') and ends
+with 'give:'. The body never allocates and never names the out-port
+object; the out: entry is the panel's custody declaration. Position
+splits the call:
+
+    VALUE POSITION      c = car.from(...) else: { ... }
+        a fresh self is allocated, the from initialises it, custody
+        arrives at the target.
+
+    LONESTANDING        engine.from(p = give p) else: { ... };
+        the from runs on the CURRENT self. Lawful only inside a
+        construction body, and only naming the DIRECT base's from --
+        the base slice initialises one level per body, the chain
+        recurses. Any other lonestanding use REJECTS.
+
+THE TWO-BLOCK FORM (R-65): a from may carry two blocks --
+'{ <provider> } { <initialiser> }'. The PROVIDER is invoked when self
+must be provided; it always gives (implicitly -- it gives the self);
+an empty provider is the default operation, ALLOCATION. The
+INITIALISER is the body above: works on self, bare-dot. Circumstance
+applies them: value position runs provider then initialiser;
+lonestanding skips the provider and runs the initialiser on the
+current self. The one-block form means default provider + that block
+as initialiser. A pool-consulting provider makes the flyweight
+sayable.
+
+The aggregate literal (10) binds a class's OWN members only; inherited
+members enter through the direct base's from.
 
 SEMI-DECLARATION (for clean and brief class definitions). A class body may
 list a member work by name alone -- '<name> : work', no panel, no body,
@@ -844,16 +889,24 @@ giving it onward or destructing it in turn; value members end under the
 memory exemption. A disposer for a debt-free class is legal and empty of
 duty.
 
-AUTOMATIC DESTRUCTION CANNOT FAIL (R-36, refined R-37): a disposal work
-declares NO signals -- UNLESS the class is EXPLICIT. The explicit flag is
-'()' after the class name in the disposal definition ('-tunnel() : work
-(...)'): an explicit class's destruction is never automatic -- every end
+THE SPINE TEARS DOWN IN REVERSE (R-59): a spined class's disposal work
+discharges its OWN obligation members, then lonestanding '-<base>'
+runs on the current self as the LAST act -- direct base only, one
+level per body, the chain recursing to the root. A spined disposal
+lacking the call REJECTS; the call outside a direct child's disposal
+body REJECTS. Each level discharges exactly the members it declared.
+
+AUTOMATIC DESTRUCTION CANNOT FAIL (R-36; end mode by panel, R-61): a
+disposal is an ordinary work; any class may define one. Its PANEL
+decides the end mode. A disposal that declares NO signals discharges
+silently; automatic ends are lawful. A disposal that DECLARES SIGNALS
+makes the class EXPLICIT: destruction is never automatic -- every end
 is WRITTEN with the 'destruct' statement, so every signal is answered
 at its site, normal work-call discipline:
 
     destruct t else: { busy(when) => ; }
 
-For explicit classes the compiler owes THREE PATH CHECKS (SEMANTICS 27;
+For explicit classes -- signalling disposals -- the compiler owes THREE PATH CHECKS (SEMANTICS 27;
 staged for the type-flow phase): (i) every had local of the class is
 given or destructed on ALL paths; (ii) a container holding such objects
 explicitly destructs its remaining elements upon its own destruction;
@@ -870,6 +923,33 @@ EXPLANATION/explain-destruction-cannot-fail.vut.) (Containers as collective debt
 construction, and the dispose primitive bind the future type document.)
 
 
+(11.5) The tilde law: ideal kinds
+---------------------------------
+A '~' prefix on the DEFINED NAME declares an IDEAL kind (name-first,
+1.2 -- the kind word is never prefixed), for every kind word: class,
+reactor, reactor++, clockwork, work. The ideal is shape without
+flesh -- semantic level only, never in the objective world. The
+concrete provides the flesh: classes and reactors by is:-composition,
+works by conformance (12.8). For the class:
+
+    ~drivable : class {
+        steer : work(in: angle : float
+                     signals: bad_angle);        a SIGNATURE -- panel
+                                                 entire, no body
+        honk  : work() { ... give: }             a DEFAULT BODY
+    }
+
+An abstract kind carries WORK SIGNATURES and optionally DEFAULT
+BODIES. It carries NO state members. It never instantiates; it stands
+only as an is:-target. A default body may call the kind's other works
+and emit its declared signals; SEM-24 testimony holds over it as over
+any body. A composing class answers every bodiless signature with a
+work in its OWN brace; the R-56 disjointness law (11.1) governs every
+name it brings.
+
+'~x : reactor' is the abstract form of the reactor (3); its
+contribution law binds a later section.
+
 (12) Work                   [SETTLED -- implementation lands in the F-9 passes]
 ===============================================================================
 A WORK replaces the function/exception pair: a subroutine with named input
@@ -883,8 +963,9 @@ to handle every declared signal. Invoking a work is a CALL.
 The one form of 1.2 conquers all three:
 
     <name> : work( <panel> ) { <body> }     a defined work
-    <name> : work( <panel> )                a SPEC (panel without machine)
-    <name> : <spec-name> { <body> }         an IMPLEMENTATION of that spec
+    ~<name> : work( <panel> );              a WORK TYPE (12.8): the
+                                            ideal -- panel without
+                                            machine, tilde law 11.5
 
 (12.2) The panel
 ----------------
@@ -922,10 +1003,10 @@ relation-neutral: the marker and the section carry the relation.
 
 SCOPE OF SIGNALS. A work's variants exist in exactly four places: its
 declaration, its body (at signal statements), the else:-handlers at its call
-sites, and work specs (12.8). They are not types in the surrounding
+sites, and work types (12.8). They are not types in the surrounding
 program. Two works may both declare "no_convergence"; these are unrelated
-and can never meet -- except measured against one spec, whose vocabulary
-then governs.
+and can never meet -- except measured against one work type, whose
+vocabulary then governs.
 
 (12.3) Result semantics
 -----------------------
@@ -1117,19 +1198,32 @@ legal under the fall-through conditions of 12.6. "elsewhile: {}" is the
 visible retry-until-success loop. Inline form only: routed regions stay
 loop-free.
 
-(12.8) Specs and work references
---------------------------------
-A SPEC is the panel without the machine (12.1). A work conforms by
-SPEC-TYPED DECLARATION ("name : spec_name { }": the spec supplies ports
-and signals wholesale) or by STRUCTURAL fit (ports match by direction,
-position, type; own signals a SUBSET of the spec's). A WORK REFERENCE is
-a value denoting a work answering to a spec; the spec name is its type --
-variables, ports, containers (dispatch tables). An indirect call is
-checked against the SPEC: handler mandatory and exhaustive over the
-spec's set; the spec's names govern; specs declare no input defaults. A
-spec-typed member need not emit every inherited variant (the spec is a
-promise for a family); the every-variant-emittable check of 12.4 applies
-to self-declared sets only.
+(12.8) Work types and work references (R-64; 'spec' retired)
+-------------------------------------------------------------
+A WORK TYPE is an ideal work -- the panel without the machine:
+
+    ~event_handler : work(in: event_id : int, content : str,
+                          time : float);
+
+The tilde law (11.5) governs: shape without flesh, semantic level
+only, never in the objective world; work types declare no input
+defaults. A work CONFORMS by structural fit: ports match by
+direction, position, type; its own signals a SUBSET of the type's.
+A work type stands wherever types stand -- members, ports,
+containers:
+
+    dict<int, ~event_handler>            a dispatch table
+    known: p : ~event_handler;           a typed acquaintance
+
+A WORK REFERENCE is a VALUE of a work type, assigned to a real work
+at some time; from binding onward it stands in the objective world.
+It is held as acquaintance (known:) -- no custody, no debt; the
+known must outlive the use. An indirect call is checked against the
+work type: handler mandatory and exhaustive over the type's signals
+set; the type's names govern. A work-type-typed member need not emit
+every variant of the type's set (the type is a promise for a
+family); the every-variant-emittable check of 12.4 applies to
+self-declared sets only.
 
 (12.9) Fallible primitives
 --------------------------

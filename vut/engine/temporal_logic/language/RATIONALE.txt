@@ -2509,3 +2509,526 @@ GRAVEYARD
     -- needs the typing ambition question (typed ports? inference?)
     that R-51 deliberately left open.
 
+R-53: Abstract kinds ('~class', '~reactor') -- traits without state,
+      and the diamond BANNED
+----------------------------------------------------------------------
+PROBLEM
+  'is:' grammatically admits a list, but multi-inheritance was
+  semantically unruled; '~' abstractness died with the old kinds
+  (R-10's flag has no bearer); SEM 17 stands dormant. Three natures
+  were on the table: A pure contract (signatures only), B abstract
+  base (state and flesh, uninstantiable), C contract with optional
+  default bodies and NO state. Under B the state diamond forces
+  virtual bases, linearisation, or a shape fence; under C a flesh
+  diamond remains; the literature (Schaerli et al., Traits, ECOOP
+  2003; Java 8 default methods) resolves it by explicit override at
+  the composition site.
+
+DECISION (FR)
+  Nature C: a '~' kind carries WORK SIGNATURES (panel entire) and
+  optionally DEFAULT BODIES; it carries NO state members; it never
+  instantiates; it exists to stand in an 'is:' list.
+
+  THE DIAMOND SHAPE IS BANNED OUTRIGHT: in the resolved 'is:' graph
+  of any kind, no '~' kind may be reachable by more than one path.
+  Ground (FR): MRO and interference resolution are IMPLICIT machinery,
+  structurally divergent from the textual representation -- the text
+  no longer carries the meaning; too confusing. The written form must
+  say everything; no resolver runs in the reader's head.
+
+  The ban is a compile-time REJECT. Its home is the semantic layer
+  (the resolved 'is:' graph exists only there); textually it behaves
+  as parse-time law -- the shape never elaborates.
+
+COST
+  Funnel hierarchies die: two '~' kinds cannot share a common '~'
+  ancestor and later meet. A shared base contract must be restructured
+  or respelled per branch. Accepted: readability of the flat text
+  outranks hierarchy economy.
+
+GRAVEYARD
+  - A (pure contract): rejected -- every implementor writes every
+    body; the nine-of-ten shared default becomes mandatory noise.
+  - B (abstract base with state): rejected -- debt would flow through
+    IDENTITY (0.3 leak), construction order becomes law, bare-dot
+    recapture (R-9's wound) re-opens, and the state diamond arrives.
+  - C-prime (shape lawful, same-origin dedup, explicit-override on
+    conflict -- the traits/Java law): rejected -- conflict resolution
+    is implicit and structurally divergent from the text; same ground
+    as the ban.
+  - Linearisation of any kind (C3/MRO, Scala trait order): rejected,
+    same ground.
+
+R-54: Composition names are DISJOINT -- any same-name meeting rejects
+----------------------------------------------------------------------
+PROBLEM
+  R-53 bans the diamond, but two UNRELATED '~' kinds in one 'is:'
+  list can still meet on a work name: identical abstract signatures,
+  differing panels, abstract-meets-default, default-meets-default.
+
+DECISION (FR)
+  TOTAL DISJOINTNESS. A name declared in two kinds of one resolved
+  'is:' list REJECTS -- all four meetings, including two byte-
+  identical abstract signatures. One name, one origin, ever. Nothing
+  merges, nothing shadows, no override resolves. The reader never
+  compares two declarations to decide they are one.
+
+COST
+  Two independent contracts that both name 'close' can never be
+  co-implemented; a foreign-interface pair may be unadoptable as-is.
+  Accepted: the sting is visible at the reject site; the alternative
+  stings invisibly at every read site.
+
+GRAVEYARD
+  - Merging identical abstract signatures (option 2): rejected -- the
+    merge is an act of resolution, however small; panels drift apart
+    silently over versions and the merge law becomes a diff oracle.
+  - Resolution by an own-body override in the composer (option 3):
+    rejected -- admits defaults that never run (dead flesh the reader
+    must notice), and re-imports precedence, the thing R-53 buried.
+
+R-55: One concrete base permitted beside the '~' kinds
+----------------------------------------------------------------------
+PROBLEM
+  R-53/54 fixed the '~' composition law; whether 'is:' may also name
+  a CONCRETE class remained open: '~'-targets-only (reuse by
+  composition) vs the Java shape (at most one concrete base).
+
+DECISION (FR)
+  AT MOST ONE CONCRETE BASE: 'is:' may name one concrete class plus
+  any number of '~' kinds (plus the 11.2 debt marker 'obligation').
+  Concrete bases may chain (base's own 'is:' applies recursively);
+  the spine is a path, so no concrete diamond can form; the R-53 ban
+  holds over the ENTIRE resolved ancestry -- a '~' kind reachable
+  twice through the chain rejects.
+
+COST
+  State now flows through identity along one edge per level. The
+  B-graveyard consequences arrive fenced but real, and each demands
+  its own ruling before code: debt inheritance (does an obligation
+  base make every descendant an obligation; who discharges the
+  base's debts and in what order), construction order (base members
+  before child construction logic), bare-dot reach into inherited
+  members (the R-9 recapture wound), and whether R-54 disjointness
+  sweeps the concrete spine (override lawful or banned).
+
+GRAVEYARD
+  - '~'-targets-only (composition for all flesh reuse): rejected --
+    the forwarding-work noise outweighed the fence's comfort.
+
+UNPARKS / FRESHLY OPENED
+  The R-55 cluster: spine disjointness & override law; construction
+  order; debt-through-identity mechanics; bare-dot reach. Ruled one
+  at a time before any build.
+
+R-56: Disjointness sweeps the spine -- inheritance is PURE EXTENSION
+----------------------------------------------------------------------
+PROBLEM
+  R-55 admits a concrete spine; three name populations now meet in
+  one resolved ancestry (base members/works, child's own, '~'
+  signatures). Does R-54 disjointness sweep the spine, and is there
+  an override?
+
+DECISION (FR: "all reject")
+  TOTAL SWEEP, NO EXCEPTIONS. One name, one origin, across the
+  ENTIRE resolved ancestry -- member redeclaration, work
+  re-fleshing, and abstract-meets-spine-flesh all REJECT. A child
+  only ever ADDS. There is NO override and NO satisfaction-by-
+  spine: a '~' contract is answered by the composer's OWN brace,
+  and only under names the ancestry does not already use.
+
+  Consequence carried with the ruling: "what runs" needs no law --
+  every name has exactly one body anywhere in the ancestry; dynamic
+  dispatch never exists as a question.
+
+COST
+  A base's flesh can never sit beside a contract naming the same
+  work (engine{start} + ~startable{start} are uncombinable); the
+  cure is a rename at the source. Accepted: the collision is loud
+  at one reject site; dispatch ambiguity would be silent at every
+  call site.
+
+GRAVEYARD
+  - Spine satisfaction of abstract signatures (option 2): rejected --
+    the identical-panel comparison is the merge R-54 buried, now
+    between abstract and flesh.
+  - Explicit override marker (option 3): rejected -- imports virtual
+    dispatch entire; implicit, text-divergent machinery (R-53
+    ground).
+
+R-57: 'Class.from' is position-split -- value form creates, lonestanding
+      form applies to the current object's self
+----------------------------------------------------------------------
+PROBLEM
+  R-55's spine needs a construction seam: how does '+car.from' fill
+  the inherited engine slice -- flat literal over disjoint names
+  (base invariants unprotected), or construct-an-engine-then-absorb
+  (a move-and-extend plus an 'is:' literal entry)?
+
+DECISION (FR: "let class.from have two meanings")
+  Position decides -- the R-43 pattern again:
+
+  1. VALUE POSITION (right-hand side of a has-assignment):
+         c = car.from(...) else: { ... }
+     CREATE/ALLOCATE + INITIALISE -- the standing R-32 meaning,
+     a fresh object, custody arrives at the assignment target.
+
+  2. LONESTANDING (statement position, no target):
+         engine.from(p = give p) else: { ... };
+     applies to the CURRENT OBJECT'S SELF -- inside a construction
+     body it initialises the base slice of the object under
+     construction IN PLACE. No intermediate engine object exists;
+     no move-and-extend; the aggregate literal stays untouched.
+     INAPPROPRIATE USE REJECTS.
+
+  Faults compose unchanged: the lonestanding call is a signalling
+  work call in statement position -- SEM-24 testimony and the
+  mandatory-handler law apply as written.
+
+INTERPRETATIONS (coordinator, flag if wrong)
+  (i)   lonestanding 'X.from(...)' is lawful only inside a
+        '+class.from' construction body, and only for an X on that
+        class's concrete spine; everywhere else REJECTS.
+  (ii)  the value form stays lawful everywhere it is today.
+  (iii) lonestanding 'car.from(...)' inside '+car.from' itself
+        (self-delegation) is NOT covered by this ruling -- treated
+        as inappropriate until ruled otherwise.
+  (iv)  no ordering law is stated (base-from before member touches);
+        definite-assignment remains on the R-30 DEFERRED list.
+
+COST
+  One surface, two meanings by position -- the reader must know the
+  statement/value split (precedent: R-43 'signal'). The elaborator
+  gains the appropriateness check.
+
+GRAVEYARD
+  - The literal 'is: give <base>' entry (construct-then-absorb):
+    rejected -- an intermediate object and a move-and-extend for
+    what is conceptually one in-place initialisation.
+  - Flat-literal-only construction over disjoint names: rejected as
+    the ONLY seam -- the base's invariants and fault surface would
+    protect nobody; whether the flat literal REMAINS LAWFUL beside
+    the lonestanding form is a flagged fork, not closed here.
+
+R-58: 'from' works on self through plain '.'; self is allocated by the
+      machinery; the flyweight seam stays OPEN
+----------------------------------------------------------------------
+PROBLEM
+  R-57 split 'from' by position but left the body's addressing model
+  unstated (assemble-a-literal vs write-the-object), the lonestanding
+  call's target range loose ("on the spine"), and FORK 6 (may the
+  flat literal bypass the base's from) pending.
+
+DECISION (FR)
+  FROM FUNCTIONS ALWAYS WORK ON SELF, through the plain bare-dot
+  binding ('.member'). They ASSUME SELF IS ALLOCATED: allocation is
+  the machinery's act, never the body's. Hence:
+  - VALUE position ('c = car.from(...)'): the machinery allocates a
+    fresh self, the from initialises it, custody arrives at the
+    target.
+  - LONESTANDING position: the from runs on the CURRENT self -- the
+    base-slice initialisation. The call names the DIRECT base's from;
+    the chain recurses one level per body ("explicit call to the
+    direct base class' from").
+  Everything above enters LANGUAGE.txt (FR directive: note
+  everything).
+
+INTERPRETATIONS (coordinator, flag if wrong)
+  (i)  the lonestanding call is spelled bare -- 'engine.from(...)' --
+       the class name being no member, the dot binding untouched.
+  (ii) FORK 6 closes as option 1: the flat aggregate literal cannot
+       bind INHERITED members; a spined class initialises its slice
+       only through the direct base's from.
+  (iii) R-57's interpretation (i) narrows: not "any spine ancestor"
+       -- the DIRECT base only.
+
+OPEN (registered, not solved)
+  THE FLYWEIGHT SEAM (FR: "no idea how to provide a new operator for
+  flyweight patterns"): from-on-allocated-self cannot express
+  construction that yields an EXISTING instance (interning, caches,
+  flyweight). No surface exists; wants its own discussion.
+
+COST
+  'from' bodies never name their out-port object; they write '.'
+  members and 'give:' -- the out: entry remains the panel's custody
+  declaration while the body addresses self. The elaborator carries
+  the allocated-self assumption into the lonestanding check.
+
+GRAVEYARD
+  - The from body as literal-assembler ('c = car{...}; give: c'):
+    dissolved into write-on-self.
+
+R-59: The disposal mirror -- reverse order, direct-base call last,
+      chain checked (textbook transcription, FR-delegated)
+----------------------------------------------------------------------
+PROBLEM
+  R-58 fixed the construction chain (lonestanding direct-base from,
+  one level per body). The mirror stood open: who tears down the
+  base slice of a spined instance, and when.
+
+DECISION (FR: "you can answer this question from textbook")
+  The textbook law is uniform across every language with
+  deterministic destruction (C++ destructor order the archetype):
+  DESTRUCTION RUNS IN REVERSE ORDER OF CONSTRUCTION -- the child's
+  duty first, the base slice after, so that the child's disposal
+  still stands on intact base members; and THE CHAIN IS GUARANTEED
+  -- a skipped base teardown is a leak, never an option.
+
+  Transcribed into the house forms (coordinator spelling, mirroring
+  R-58's explicit-and-checked construction seam; flag if the
+  implicit-chaining alternative is preferred):
+  - '-car' discharges car's OWN debts, then lonestanding '-engine'
+    runs on the current self as the LAST act -- direct base only,
+    the chain recurses one level per body.
+  - The elaborator REJECTS a spined class's disposal work that
+    lacks the direct-base lonestanding call, and rejects the call
+    anywhere but a disposal body of the direct child.
+  - Each level discharges exactly the obligation members it
+    declared; no level reaches into another's duty (R-56
+    disjointness makes the duties non-overlapping by name).
+  - R-36 unchanged: the base disposal declares no signals unless
+    its class is explicit; an explicit class anywhere on the spine
+    makes the spined teardown site answer per 11.4 as written.
+
+GRAVEYARD
+  - Implicit machinery-run base teardown (the C++ automatic form):
+    set aside, not buried -- the explicit checked call keeps the
+    text carrying the whole story (R-53 ground); one word from FR
+    flips it.
+
+R-60: Debt rides the members -- an obligation base makes every
+      descendant an obligation (textbook transcription, FR-delegated)
+----------------------------------------------------------------------
+PROBLEM
+  11.2 states transitivity through CUSTODY ("a class with an
+  obligation among its custody members is itself an obligation").
+  The spine is IDENTITY -- does an obligation concrete base classify
+  its descendants?
+
+DECISION (FR: "again, you can answer this from textbook")
+  The textbook is unanimous (RAII under inheritance, the C++
+  non-trivial-destructor rule; Liskov substitution): a derived
+  instance CONTAINS the base subobject -- the slice's custody
+  members ARE the instance's custody members. Debt is a property of
+  the full layout, and it rides the MEMBERS, not the is: edge.
+  Substitution seals it: a car IS an engine; where engines are
+  tracked debts, everything standing in an engine's place must be
+  trackable as one, or the ledger breaks at every seam.
+
+  The classification law, complete: a class is an OBLIGATION iff
+    (a) marked 'is: obligation', or
+    (b) an obligation stands among its own custody members, or
+    (c) its concrete base is an obligation.
+  '~' kinds carry no state (R-53) and never contribute -- composing
+  any number of interfaces classifies nothing.
+
+  Discharge already falls out of R-59: each level's disposal
+  discharges exactly the members it declared; the chain reaching
+  the root discharges the layout entire.
+
+COST
+  None new; (0.3) tracing gains clause (c) and the '~'-exemption.
+
+R-61: Disposal is a work, independent of resource-hood; the explicit
+      '()' flag dies -- END MODE BY PANEL
+----------------------------------------------------------------------
+PROBLEM
+  R-36/R-37 hung explicitness on a '()' flag at the disposal head --
+  an identity-level claim dangling at a member definition, and
+  redundant: what forces written ends is the disposal's OWN panel.
+
+DECISION (FR: "a destructor should be work and defined independently
+of the class being a resource or not")
+  A disposal is an ORDINARY WORK by the R-30 role-by-panel law; any
+  class may define one, resource or not (a debt-free disposal is
+  legal and empty of duty, as 11.4 always said). The '()' flag DIES.
+  END MODE IS COMPUTED FROM THE DISPOSAL PANEL:
+    signals: absent   automatic ends lawful; discharge silent.
+    signals: present  every end WRITTEN ('destruct ... else:'),
+                      answered at site; the SEM-27 path checks owe
+                      exactly these classes.
+  Mode by panel -- the same pattern as role by panel (R-30):
+  confess only what structure cannot show; compute what it does.
+
+COST
+  Voluntary explicitness (written ends although disposal cannot
+  fail) loses its spelling; wanted only if argued. Build debt: the
+  grammar's dtor-def '()' bracket, one fixture spelling
+  (elab-work-rejects.vut), and the SEM-27 wording -- a later pass.
+
+GRAVEYARD
+  - '~explicit' as an attribute pole: redundant (computable) and
+    mis-homed (identity claim at a member site).
+  - The '()' flag (R-37 surface): same grounds.
+
+R-62: Grammar poles are not attributes -- the behavioural kinds STAND
+----------------------------------------------------------------------
+PROBLEM
+  The reflection path had reactor/reactor++/clockwork dissolving into
+  hyper-abstract poles ('~reactor, ~concurrent', '~clockwork').
+
+DECISION (FR)
+  REJECTED. Those words select WHICH LANGUAGE THE BRACE SPEAKS --
+  they span no space; as attributes they are "perfect for generating
+  a semantic chaos". The kind words STAND as ruled (R-41): 'reactor'
+  the mono behaviour-container (one active), 'reactor++' the multi
+  (several active), 'clockwork' the pulling loop -- special types
+  with special syntax for their descriptions, affirmed great as they
+  are. 'behavior' remains a dependent part inside the container,
+  never a free creature.
+
+  What SURVIVES of the attribute reflection: hyper-abstracts are for
+  GENUINE CLASSIFICATION only -- duties structure cannot show. One
+  candidate stands: the resource confession (surface still open:
+  kind word vs '~resource' in the is:-list).
+
+GRAVEYARD
+  - '~reactor'/'~concurrent'/'~clockwork' as poles; the three-valued
+    drive axis; the pole-exclusion sentence they would have needed.
+  - The tilde collision dissolves with them: '~reactor' keeps its
+    single 11.5 meaning (the abstract reactor).
+
+R-63: The tilde marks the NAME (R-53 spelling clarified)
+----------------------------------------------------------------------
+PROBLEM
+  R-53/LANGUAGE 11.5 spoke of "'~' on the kind word" ('~class',
+  '~reactor') while the examples already put the tilde on the name.
+
+DECISION (FR)
+  The tilde marks the DEFINED NAME: '~drivable : class', '~x :
+  reactor' -- name-first discipline (1.2): abstractness is a property
+  of the name being defined, declared where the name is. The kind
+  word is never prefixed. R-53's substance (nature C, diamond ban)
+  is untouched; 11.5 sweeps.
+
+R-64: The tilde law complete -- ideal kinds across class, reactor,
+      reactor++, clockwork, and work; the spec retired
+----------------------------------------------------------------------
+PROBLEM
+  12.8's spec doubled 11.5's abstractness in the work world under a
+  second word; the work-pointer thought ('~x : work') first yoked
+  the ideal to a binding, then FR split the pair correctly.
+
+DECISION (FR)
+  Two creatures, cleanly distinct:
+
+  1. THE WORK TYPE (ideal): '~event_handler : work(<panel>);'
+     a signature to be complied with -- a work specified, never
+     implemented. No flesh in itself; the flesh is provided by
+     conforming works. A type wherever types stand:
+         dict<int, ~event_handler>        a dispatch table
+         known: p : ~event_handler;       a typed acquaintance
+  2. THE WORK REFERENCE (objective): a VALUE of a work-type,
+     assigned to a REAL work at some time; from binding onward it
+     stands in the objective world. Held as acquaintance (known:)
+     -- no custody, no debt; the known-outlives-use law and the
+     known-hub skip apply unchanged. Indirect calls are checked
+     against the work type: handler mandatory and exhaustive over
+     its signals set (12.8's substance, relocated).
+
+  THE TILDE LAW, COMPLETE: '~name : <kind>' for kind in {class,
+  reactor, reactor++, clockwork, work} declares the IDEAL -- shape
+  without flesh, semantic-level only, never in the objective world.
+  The concrete provides flesh: classes/reactors by is:-composition
+  (R-53 machinery), works by conformance. Tilde on the name,
+  name-first (R-63).
+
+  THE SPEC IS RETIRED -- word and form; 12.8 rewrites to carry work
+  types and references under the tilde law.
+
+INTERPRETATIONS (coordinator, flag if wrong)
+  (i)  panels in work types are spelled by the 12.2 direction
+       sections (in:/out:/signals:) -- FR's sketch 'event_id : in'
+       normalised to the ruled panel grammar.
+  (ii) conformance for works is STRUCTURAL (panel fits, own signals
+       a subset), 12.8's fit law surviving; a DECLARED conformance
+       form ("this work is a ~event_handler", FR's 'derived' in
+       quotes) is not established here -- flagged.
+
+COST
+  Sweep of 12.8, SEM's mention, OPEN's build line. 'spec' leaves the
+  vocabulary. The 14.2 inline event-type flag gains its sibling: the
+  inline 'work(...)' type -- one future ruling may seat both.
+
+GRAVEYARD
+  - 'spec' the word and the 'name : spec_name { }' defining form.
+  - '~x : work' as a POINTER reading: the tilde never binds; it
+    names the ideal only.
+  - The spec-becomes-known: reduction (previous step): 'known:'
+    remains the HOLDING relation; the type dimension needed the
+    tilde. Both survive in their lanes.
+
+R-65: The two-block 'from' -- provider and initialiser; the flyweight
+      seam closes
+----------------------------------------------------------------------
+PROBLEM
+  R-58 left the seam open: from-on-allocated-self cannot express
+  construction that yields an EXISTING instance (interning, caches,
+  flyweight).
+
+DECISION (FR)
+  'from' works are special: they receive TWO work blocks --
+
+      +glyph.from : work(in: code : int
+                         out: g : glyph signals: ...)
+          { <provider> }        invoked when self must be PROVIDED
+                                (the allocator operation); ALWAYS
+                                GIVES, implicitly -- it gives the
+                                self. EMPTY block = the default
+                                operation, plain ALLOCATION.
+          { <initialiser> }     the R-58 body: works on self,
+                                bare-dot, gives at its end.
+
+  THE SEMANTICS APPLIES THE OPERATIONS UPON CIRCUMSTANCE:
+      value position        provider (self must be provided),
+                            then initialiser.
+      lonestanding          self already stands (R-58 assumption
+                            made explicit machinery) -- the
+                            provider is SKIPPED; the initialiser
+                            runs on the current self.
+  The flyweight is now sayable: a provider that looks up a pool and
+  gives an existing instance instead of allocating.
+
+INTERPRETATIONS (coordinator, flag if wrong)
+  (i)   the one-block form stays lawful and means: default
+        provider (allocation) + that block as initialiser -- every
+        existing from unchanged.
+  (ii)  both blocks see the from's in: panel (a pool keys on the
+        inputs); the provider sees NO self (bare-dot meaningless
+        until it gives one).
+  (iii) block order is fixed: provider first, initialiser second.
+
+OPEN (registered, not solved)
+  - THE HIT PATH: when the provider gives an EXISTING (already
+    initialised) instance, does the initialiser run regardless
+    (author writes it idempotent), or does the provider's give
+    carry a fresh/existing distinction that skips it? The
+    flyweight's correctness turns on this.
+  - THE ALLOCATION PRIMITIVE: a custom provider that allocates on
+    pool-miss needs the default operation by name -- its surface.
+
+COST
+  A second brace on one definition form; the elaborator learns the
+  circumstance dispatch. Grammar and build later, law first.
+
+R-66: The thing is a RESOURCE; the duty stays an obligation (noun
+      ruling recorded at the seal)
+----------------------------------------------------------------------
+PROBLEM
+  'obligation' named both the KIND OF THING and the DUTY it induces;
+  the strain showed in the law's own prose.
+
+DECISION (FR: "'resource' is much better than obligation")
+  The THING-noun is RESOURCE -- the frontier creature whose layout
+  is innocent but whose end is owed. The DUTY vocabulary stays with
+  the ledger: obligation, debt, give-or-destruct, discharge.
+
+  THE SURFACE STAYS OPEN at the freeze: kind word
+  ('file_handle : resource {...}') vs the one hyper-abstract
+  ('is: ~resource', composable with reactor kinds). The 'is:
+  obligation' spelling in 11.2 stands UNTIL that fork closes; the
+  prose sweep rides the same pass.
+
+COST
+  A known, registered inconsistency window: ruled noun, unswept
+  surface. Accepted at the freeze; OPEN carries it first.

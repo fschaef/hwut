@@ -1,6 +1,0 @@
-
---- end-to-end LL(2) parse of an argument list ---
-  @id                    -> pos  (err=0)
-  @id EQ @num            -> named  (err=0)
-  @id COMMA @id EQ @num  -> pos, named  (err=0)
-  @id EQ @num COMMA @num -> named, pos  (err=0)

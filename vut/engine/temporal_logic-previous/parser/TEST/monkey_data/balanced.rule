@@ -1,7 +1,0 @@
-X1 is: struct
-state_machine: X5 . X7 ( n9: X10 ; n12: int ; n15: bool ) is: X19 . X21
-has: X23 . X25
-:end cause: X28 . X30 for: X32 . X34 & [ true * 1.0 - false / "s" shr: { x } / "s" + { x{ y }{ y } } * 1 and true / false - false * true shl: "s" / { x{ y } } + 1.0 * 1 nand "s" / { x } - true * false shr: "s" * true + 1.0 / { x } nxor false / 1 + false * true shl: { x } / "s" - false * { x{ y }{ y } } and "s" * true - 1.0 / true shr: false / 1 + "s" * { x{ y }{ y } } xor { x } * "s" - 1.0 / true shl: false * true + 1 / false nand "s" * { x{ y }{ y } } + true / false shl: { x{ y }{ y } } * "s" - 1.0 / 1 nand "s" / { x{ y } } - true * false shr: 1.0 / false + "s" * true nor { x } / { x{ y }{ y } } + 1 * "s" shl: true / false - { x{ y } } * "s" and false * true + 1.0 / true shr: false / { x } - 1 * "s" nxor true * 1.0 + "s" / { x{ y } } shl: false / false - { x } * true nand "s" * 1 + false / true shr: { x } / 1 - "s" * true and 1.0 / false - "s" * { x{ y } } shr: "s" * true + false / { x{ y }{ y } } or 1 / "s" + false * true shl: { x{ y } } / 1.0 - false * true and 1 * { x } + "s" / true shr: 1.0 * "s" - { x } / false xor 1.0 / false - { x } * "s" shl: true * true + 1 / false nand { x } * "s" + true / "s" shl: false / 1 - { x } * true xor { x{ y } } / "s" + false * 1.0 shr: { x{ y }{ y } } / false - 1 * true and "s" * false + { x{ y }{ y } } / "s" shl: 1.0 / true - false * true ]
-event: X312 ( n314: X315 ; n317: string )
-on: X321 . X323 ( )
-=> X327 . X329

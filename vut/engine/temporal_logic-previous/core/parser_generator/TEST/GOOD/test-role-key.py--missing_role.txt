@@ -1,9 +1,0 @@
---- node['bogus'] on a node without that role reads None ---
-node['bogus'] is None: True
-node['key'] present:   SEQ_Node
---- an int address is POSITIONAL ---
-node[0]: Token(captured:@open) (== children[0]) True
-node[1] is node['key']: True
---- int out of range -> IndexError; bad address type -> TypeError ---
-IndexError: tuple index out of range
-TypeError: SEQ_Node index must be int (positional) or str (role); got 'float'

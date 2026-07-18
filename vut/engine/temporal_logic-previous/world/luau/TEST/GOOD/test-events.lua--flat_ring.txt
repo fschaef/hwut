@@ -1,9 +1,0 @@
-
---- record four occurrences into a ring bounded at 3 ---
-after t=1 : ring times = 1
-after t=2 : ring times = 1, 2
-after t=3 : ring times = 1, 2, 3
-after t=4 : ring times = 2, 3, 4
-
---- oldest dropped ---
-retained count = 3

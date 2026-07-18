@@ -1,9 +1,0 @@
---- an untagged sequence carries all-None roles, length == children ---
-errors:         0
-children kinds: ['Token(captured:@open)', 'SEQ_Node', 'Token(captured:@close)']
-roles:          (None, None, None)
-len equal:      True
---- positional access unchanged; every role reads None ---
-children[0]: Token(captured:@open)
-children[1]: SEQ_Node
-node['key'] is None: True

@@ -1,9 +1,0 @@
-
---- program ---
---!strict
-local function f(x: number) end
-f("wrong")
-
-
---- diagnostics ---
-rules.tl:42:2: TypeError: Expected this to be 'number', but got 'string'

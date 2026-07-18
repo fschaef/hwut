@@ -1,9 +1,0 @@
-
---- event class identity ---
-className          = PING
-derives EventBase  = yes
-
---- instance stamps intrinsic fields ---
-ip   = 8.8.8.8
-time = 10.5
-dt   = 0.5

@@ -365,7 +365,8 @@ boundaries.
 (27) Explicit destruction -- the give-or-destruct checker      [DEFERRED]
 -----------------------------------------------------------------------------
 R-37. THE LAW, ratified now; the CHECKER awaits type flow. A class whose
-disposal carries the explicit flag ('-class() : work(...)') is EXPLICIT:
+disposal DECLARES SIGNALS is EXPLICIT (end mode by panel, R-61 -- the
+'()' flag is retired):
 its destruction is never automatic -- every end is written with
 'destruct <object>() (; | else: { arms })', a normal work call whose
 signals the site answers. The compiler owes three path checks over

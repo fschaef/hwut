@@ -1,9 +1,0 @@
-
---- tagged reference '<a(event)>' ---
-type:            Tagged_Spec
-role:            event
-body is rule a:  True
-
---- bare reference '<a>' ---
-type:            Rule_Spec
-is rule a:       True

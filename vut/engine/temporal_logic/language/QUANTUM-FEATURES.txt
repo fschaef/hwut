@@ -1,0 +1,83 @@
+QUANTUM SUPPORT -- OPEN LANGUAGE FEATURES (translated to house law)
+=======================================================================
+Source: an external requirements sketch, respelled into the language's
+own nouns (tilde law 11.5/R-64, ledger 0.3/R-60/R-66, end mode R-61,
+give-law 0.2). Nothing here is ruled; everything is discussion stock.
+OPEN.txt (10) carries the fork register.
+
+THE AXIOM (physics, not ours to rule)
+  Observation is destruction. A coherent value cannot be read, copied,
+  or referenced -- only transformed or consumed.
+
+THE FEATURES, IN HOUSE TERMS
+
+  Q-1  '~coherent', A SECOND CLASSIFICATION. An ideal kind standing
+       beside the resource confession: composed via 'is:', carrying
+       LAW only (no signatures, no bodies). It fits the sealed
+       principle exactly -- a duty structure cannot show, confessed at
+       the frontier. NOTE: it presses the R-66 surface fork (kind word
+       vs '~resource') toward the hyper-abstract answer, since laws
+       must compose ('is: ~resource, ~coherent' or an is:-chain).
+
+  Q-2  KNOWN:-EXCLUSION. A ~coherent object admits no known: relation
+       -- acquaintance is access without discharge, and no such access
+       exists. Custody (has:/had:) is the only lawful relation. New
+       reject species at the declare/elaborate layer.
+
+  Q-3  VALUE-CONTEXT EXCLUSION. A ~coherent name appears in no
+       expression position: no conditions, no algebra, no event
+       payloads. Lawful positions only: operand of a transform,
+       operand of its end, object of give. Branching happens on
+       MEASUREMENT RESULTS (classical values) alone.
+
+  Q-4  TRANSFORMS CONSUME. Every transforming work takes its
+       ~coherent operands by give-in and gives new objects out; an
+       entangling work takes n objects and gives ONE joint object --
+       state and custody never diverge. The 0.2 give-law (name dies
+       at give) already says most of this; the missing half is the
+       COMPILE-TIME binding-death check (SEM-27 kin, staged).
+
+  Q-5  THE END REPERTOIRE NARROWS. ~coherent restricts lawful ends to
+       two forms: MEASURE (consumption giving a classical result) and
+       RELEASE (lawful only for an undone transform history, Q-7). No
+       bare destruct. This is R-61's end-mode-by-panel gaining a
+       classification-driven restriction -- a new interaction between
+       the ledger and the disposal law.
+
+  Q-6  OPERAND DISTINCTNESS. Multi-operand transforms need pairwise
+       distinct objects. Likely FREE under Q-4 binding death (a name
+       given once is dead; no second path exists) -- to be CONFIRMED
+       against member access and container paths; else an identity
+       check at application.
+
+  Q-7  REVERSIBLE WORKS. A work markable reversible/unitary; verified
+       (no measure, no classical write in the body); the inverse
+       derived mechanically (reverse order, invert each transform).
+       v1 scope rule: a scope may not end with a live ~coherent
+       object -- the author discharges explicitly. (Automatic
+       uncomputation: non-goal.)
+
+  Q-8  SPLIT/JOIN OF CUSTODY (optional; distributed entanglement).
+       'x, y, z = split: q' / 'q = join: x, y, z'. Each share
+       move-only, own discharge duty, measure-only while separated.
+       A share's measurement posts a classical fact; other holders
+       react through ordinary events -- the engine's delivery IS the
+       classical channel (pipe model unchanged). Needs multi-target
+       binding and a per-object discharge ledger.
+
+  Q-9  BOUNDARY LAW (only with a foreign bridge). No ~coherent object
+       crosses the language boundary; classical parameters in,
+       measurement results out. Kin to the Luau-emitter variant
+       boundary (R-51).
+
+THE GENERALISATION WORTH RULING FIRST
+  Q-2..Q-5 may not be quantum at all: '~consumable' (one-shot
+  channels, session endpoints, read-once secrets) could carry them as
+  a CLASSICAL intermediate classification, with ~coherent adding only
+  Q-6/Q-7 on top. If so, the classification LATTICE (resource ->
+  consumable -> coherent) becomes the design object, not one kind.
+
+NON-GOALS (v1)
+  Automatic uncomputation (Q-7 second half); split/join (Q-8);
+  foreign bridge (Q-9); gate sets and circuit optimisation.
+=======================================================================

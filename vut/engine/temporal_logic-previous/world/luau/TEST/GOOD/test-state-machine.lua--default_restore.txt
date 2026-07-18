@@ -1,6 +1,0 @@
-
---- active member ceases by its own until ---
-active is ACTIVE  = yes
-ACTIVE empty      = yes
-default restored  = yes
-active is VOID    = yes

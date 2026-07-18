@@ -1,3 +1,0 @@
---- bottom-up: the inner transformer runs before the outer sees it ---
-call order: ['inner', 'outer']
-outer received: ('outer-sees', ('inner-done', 0))

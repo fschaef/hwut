@@ -1,5 +1,0 @@
-
---- signal into space 1 only ---
-space 1 count = 2
-space 2 count = 0
-space 2 empty = yes

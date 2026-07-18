@@ -1,8 +1,0 @@
-
---- arm twice with identical parameters ---
-same instance     = yes
-live count        = 1
-init calls so far = 1
-
---- arm a different parameter set ---
-live count        = 2

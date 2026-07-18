@@ -1,9 +1,0 @@
-
---- '{ e.temp > limit }': one chain, one bare global ---
-     2  e.temp
-    11  limit
-
---- local shadow, computed index, call base ---
-    12  e.k
-    23  tbl
-    34  f

@@ -1,6 +1,0 @@
-
---- queries on an untraced type ---
-empty()        = yes
-any()          = no
-list() count   = 0
-last() is nil  = yes

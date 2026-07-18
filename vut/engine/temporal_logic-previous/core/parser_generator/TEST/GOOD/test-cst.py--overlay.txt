@@ -1,4 +1,0 @@
---- partial overlay: 'orr' transformed, 'seqr'/'starr' left as CST ---
-root type: SEQ_Node
-orr slot : ('CHOSE', 1)
-star slot type: STAR_Node

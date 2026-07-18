@@ -1,6 +1,0 @@
-
---- OrMap on a SEQ rule -> MapShapeError ---
-  rule 'step/spawn' is SEQ but its entry is OrMap
-
---- OptMap on an OR rule -> MapShapeError ---
-  rule 'code-block' is OR but its entry is OptMap

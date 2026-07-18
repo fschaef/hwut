@@ -181,8 +181,8 @@ RULING NEEDED
 BUILD (settled)
   - elsewhile: (intra-instant, R-41.6 -- a frame-local loop, no bus
     boundary) and the 'wait' construct (D-2 family).
-  - '==' common ground; specs and work references; indirect calls;
-    dispatch tables.
+  - '==' common ground; work types and references (R-64); indirect
+    calls; dispatch tables.
 DEFERRED-BY-DESIGN
   - Handler exhaustiveness and dead arms; the mandatory-else direction;
     same-type/discard; overload call-site checks beyond aware
@@ -369,3 +369,73 @@ BUILD (settled)
   - SESSION NOTE (R-41): an unattributed mid-session write to
     RATIONALE.txt was detected, diffed against the canonical dump,
     and reverted; the register keeps the fact on record.
+
+(9) THE R-53..R-66 CLUSTER -- register at the FREEZE (all law, no build)
+---------------------------------------------------------------------------
+- R-65 MECHANICS (the two-block from): the HIT PATH (does the
+  initialiser run when the provider gives an EXISTING instance --
+  idempotence vs a fresh/existing distinction on the provider's give);
+  the ALLOCATION PRIMITIVE's surface inside a custom provider.
+- R-59's transcription awaiting FR sweep: explicit checked '-<base>'
+  call vs implicit machinery chaining.
+- THE '~reactor' CONTRIBUTION LAW: panel, named events, causalities /
+  behaviors -- what an abstract reactor may declare (LANGUAGE 11.5 stub).
+- SEM-17 WAKE-UP WORDING: abstract targets in activation positions.
+- R-64 MECHANICS: a DECLARED conformance form for works (beside the
+  structural fit) -- wanted or not; the inline 'work(...)' entry type
+  as the 14.2 sibling (one ruling may seat both).
+- R-61 BUILD DEBT: retire the '()' bracket from the grammar's dtor-def,
+  sweep the one fixture spelling (elab-work-rejects.vut '-blessed()'),
+  audit affected GOODs -- one pass, after the resource surface closes.
+- THE RESOURCE SURFACE: kind word ('file_handle : resource {...}') vs
+  the one hyper-abstract ('is: ~resource') -- composability with
+  reactor kinds decides (a resource-reactor is sayable only under the
+  hyper-abstract).
+- COORDINATOR INTERPRETATIONS awaiting FR sweep: R-57/58 (bare
+  lonestanding spelling; literal binds own members only; direct-base
+  only), R-59 (explicit checked '-<base>' vs implicit chaining), R-64
+  ((i) panel normalisation, (ii) structural-only conformance), R-65
+  ((i) one-block form unchanged, (ii) provider sees panel not self,
+  (iii) block order fixed).
+- THE BUILD DEBT ENTIRE: R-53..R-66 are LAW ONLY -- nothing of the
+  abstract/inheritance/from/work-type round is implemented (grammar,
+  declare, elaborate, interpret, tests). The next build session starts
+  here, one attributable pass per ruling.
+- R-66 NOUN WINDOW: 'resource' ruled as the thing-noun; 11.2 still
+  spells 'is: obligation' until the resource-surface fork closes; the
+  prose sweep rides that pass.
+- '<event-spec>' the grammar-production name wears the retired word
+  'spec' (different concept) -- rename candidate, cosmetic.
+
+(10) QUANTUM SUPPORT -- discussion register (see language/QUANTUM-
+     FEATURES.txt for the full translated sketch; nothing ruled)
+---------------------------------------------------------------------
+To discuss, in dependency order:
+- THE LATTICE QUESTION FIRST: is '~consumable' (one-shot channels,
+  session endpoints, read-once secrets) the real creature, with
+  '~coherent' = ~consumable + distinctness + reversibility? Rules the
+  shape of everything below.
+- THE R-66 SURFACE FORK GAINS WEIGHT: a second (and third)
+  classification must COMPOSE -- presses toward the hyper-abstract
+  'is: ~resource' answer over the kind word.
+- NEW REJECT SPECIES: known:-exclusion (Q-2); value-context exclusion
+  (Q-3); the narrowed end repertoire (Q-5) as a classification-driven
+  restriction on R-61's end-mode-by-panel.
+- GIVE-LAW EXTENSIONS: compile-time binding death (SEM-27 kin);
+  n-into-one joint custody at entangling works (Q-4); whether operand
+  distinctness (Q-6) is free under binding death or needs an identity
+  check.
+- THE REVERSIBLE MARKER (Q-7): its noun (must not collide with the
+  settled vocabulary), its verification, mechanical inversion; the v1
+  no-live-coherent-at-scope-end rule.
+- CONCURRENCY SEAM (external O-1, respelled): where has: of a
+  ~coherent object lives when a reactor++ has several live behaviors
+  -- cross-behavior access to one object must be excluded (linearity
+  across the live set) or possession made behavior-local. Touches
+  R-44 dispatch law.
+- TYPE FAMILY (external O-4): qubit / qudit / register under
+  ~coherent; whether the classification parameterises its measure
+  result type.
+- DEFERRED WITH THE SKETCH: split/join custody + per-object discharge
+  ledger (Q-8); the boundary law (Q-9, kin to R-51's variant
+  boundary); automatic uncomputation.
