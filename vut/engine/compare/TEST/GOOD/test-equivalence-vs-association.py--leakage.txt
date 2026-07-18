@@ -23,9 +23,8 @@ Define ((A))                   | Define ((1))
 Use ((A))                      | Use ((2))                     
 ||||                           | ||||                          
 ------------------------------------------------------------
-Judge (is_equivalent): False
-Lawyer (associate):    False
-  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
+Judge (is_equivalent): True
+Lawyer (associate):    True
 Consistency:         OK
 Expectation:         MATCH
 
@@ -52,8 +51,7 @@ Define ((A))                   | Define ((1))
 ||||                           | ||||                          
 Use ((A))                      | Use ((2))                     
 ------------------------------------------------------------
-Judge (is_equivalent): False
-Lawyer (associate):    False
-  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
+Judge (is_equivalent): True
+Lawyer (associate):    True
 Consistency:         OK
 Expectation:         MATCH

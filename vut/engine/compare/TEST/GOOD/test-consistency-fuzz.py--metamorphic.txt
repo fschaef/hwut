@@ -1,6 +1,9 @@
 === METAMORPHIC (seed=12648430, cases=300) ===
-  permute  preserved/flipped: 127/127
-  rename   preserved/flipped: 244/244
-  in_tol   preserved/flipped: 251/251
-  out_tol  preserved/flipped: 251/251
+  permute  preserved/flipped: 135/135
+  rename   preserved/flipped: 289/289
+  in_tol   preserved/flipped: 241/241
+  out_tol  preserved/flipped: 241/241
+  vn_line  preserved/flipped: 255/255
+  pot_rename preserved/flipped: 112/112
+  seq_conflict preserved/flipped: 54/54
 result: PASS

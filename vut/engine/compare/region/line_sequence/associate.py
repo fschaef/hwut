@@ -36,14 +36,16 @@ def do(subject, nominal, analogy_db):
                 assert edit.id != E_EditId.SUBSTITUTE_TYPE   # pragma: no cover
                 assert False                                 # pragma: no cover
 
-            yield subject_seq, nominal_seq, edit.edit_list, edit.cost
+            yield subject_seq, nominal_seq, edit.edit_list, edit.cost, edit.id
             s_incr, n_incr = edit_operations_line_sequence.position_increment_db[edit.id]
             si += s_incr
             ni += n_incr
 
     result = [
-        LinePair(subject_seq, nominal_seq, edit_list, cost = cost)
-        for subject_seq, nominal_seq, edit_list, cost in iterable(editions.edit_list)
+        LinePair(subject_seq, nominal_seq, edit_list, cost = cost,
+                 seq_edit_id = seq_edit_id)
+        for subject_seq, nominal_seq, edit_list, cost, seq_edit_id
+        in iterable(editions.edit_list)
     ]
     return result, editions.analogy_db.to_AnalogyDb()
 

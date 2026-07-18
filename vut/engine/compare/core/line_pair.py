@@ -13,8 +13,10 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from    vut.engine.compare.engine.enums           import (E_ToleranceId, 
+from    vut.engine.compare.engine.enums           import (E_ToleranceId,
                                                           E_PotpourriBorder)
+from    vut.engine.compare.engine.semantics       import GOOD_EDIT_ID_SET, \
+                                                          is_good_edit
 from    vut.engine.compare.engine.line            import Line
 from    vut.engine.compare.core.edit_operations.edit   import E_EditId, Edit
 from    vut.engine.compare.core.edit_operations.line   import position_increment_db
@@ -70,6 +72,14 @@ E_SubjectRelationId.db = {
     E_EditId.SUBSTITUTE:      E_SubjectRelationId.BAD_NOMINAL_DIFFERS,
     E_EditId.SUBSTITUTE_TYPE: E_SubjectRelationId.BAD_NOMINAL_TYPE_DIFFERS
 }
+
+# The relations that PRESERVE equivalence -- derived from the single source
+# 'semantics.GOOD_EDIT_ID_SET' through the maps above, so the Lawyer's notion
+# of 'equal' cannot drift from the Judge's BY CONSTRUCTION.
+GOOD_NOMINAL_RELATION_SET = frozenset(E_NominalRelationId.db[edit_id]
+                                      for edit_id in GOOD_EDIT_ID_SET)
+GOOD_SUBJECT_RELATION_SET = frozenset(E_SubjectRelationId.db[edit_id]
+                                      for edit_id in GOOD_EDIT_ID_SET)
 
 @dataclass(frozen=True)
 class Cell(ABC):
@@ -173,15 +183,29 @@ class LinePair:
     """An association of a line from the subject input stream and a line
     from the nominal input stream.
     """
-    @typechecked 
-    def __init__(self, 
-                 subject:          Line|None, 
-                 nominal:          Line|None, 
-                 edit_list         = tuple(), 
+    @typechecked
+    def __init__(self,
+                 subject:          Line|None,
+                 nominal:          Line|None,
+                 edit_list         = tuple(),
                  potpourri_border: E_PotpourriBorder = E_PotpourriBorder.NONE,
-                 cost:             float = 0.0):
+                 cost:             float = 0.0,
+                 seq_edit_id:      E_EditId | None = None):
         # Store ingredients in the raw container
         self._raw = LinePairRaw(subject, nominal, edit_list)
+
+        # A pair made ONLY of lines the Judge never sees (blank/ignored
+        # display filler) is NEUTRAL for equivalence. Captured here, because
+        # '.expand()' reclaims the raw 'Line' objects later.
+        self._insignificant_f = (    (subject is None or subject.is_insignificant())
+                                 and (nominal is None or nominal.is_insignificant()))
+
+        # The sequence-level edit class that created this pair (None, if the
+        # creator does not operate through sequence-level edits, e.g. the
+        # potpourri matcher). Some sequence-level edits carry NO element
+        # edit list (separator-merged SUBSTITUTE-s, one-sided pairs) -- then
+        # the cells alone cannot testify, but this id can.
+        self._seq_edit_id = seq_edit_id
         
         # JIT Cache
         self._subject_cell_list = None
@@ -214,8 +238,43 @@ class LinePair:
         self._ensure_expanded()
         return self._nominal_cell_list
 
+    def is_equivalent(self):
+        """RETURNS: True, if every cell of the pair carries an equivalence-
+                          preserving relation (the GOOD family of
+                          'engine/semantics.py'), i.e. the associated subject
+                          and nominal line count as EQUAL.
+                    False, else.
+
+        NOT a cost test (see 'engine/semantics.py'): a visible-nothing skip
+        carries cost 1e-10 yet preserves equivalence; a one-sided pair
+        carries cost 0.0 yet does not.
+
+        A pair of purely insignificant lines (blank/ignored display filler,
+        which the Judge never sees) is neutral: True.
+
+        JUDGMENT ORDER:
+          1. insignificance neutralizes (even a BAD sequence edit on filler);
+          2. the sequence-level edit class, where known -- a bad class damns
+             the pair even if it expands to no cells; a one-sided GOOD class
+             (visible-nothing skip) clears it even though its cells cannot;
+          3. the cells -- catches element-level damage inside pairs whose
+             sequence-level class is GOOD (e.g. zero-cost separator edits).
+        """
+        if self._insignificant_f:
+            return True
+        if self._seq_edit_id is not None:
+            if not is_good_edit(self._seq_edit_id):
+                return False
+            if self._seq_edit_id in (E_EditId.GOOD_INSERT,
+                                     E_EditId.GOOD_DELETE):
+                return True
+        return (    all(c.relation_id in GOOD_SUBJECT_RELATION_SET
+                        for c in self.subject_list())
+                and all(c.relation_id in GOOD_NOMINAL_RELATION_SET
+                        for c in self.nominal_list()))
+
     def __lt__(self, other):
-        def adapt(x): 
+        def adapt(x):
             return sys.float_info.max if x == -1 else x
         return adapt(self.subject_line_n) < adapt(other.subject_line_n)
 

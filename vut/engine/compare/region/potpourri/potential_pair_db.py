@@ -1,5 +1,6 @@
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 from vut.engine.compare.engine.analogy_db        import AnalogyDb
+from vut.engine.compare.engine.semantics         import analogy_commitment
 from vut.engine.compare.engine.input.line_element       import structural_hash
 from collections import defaultdict
 from typeguard   import typechecked
@@ -47,6 +48,13 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
                     if abort_early_f:
                         raise ValueError
                 else:
+                    # Least-committal candidates FIRST (see 'semantics.
+                    # analogy_commitment'): the solvers explore in list order,
+                    # so among equal-cost matchings the one imposing the
+                    # fewest non-trivial analogies wins -- for the Judge and
+                    # the Lawyer alike.
+                    mate_list.sort(key=lambda mate: (analogy_commitment(mate[1]),
+                                                     mate[0]))
                     yield subject_le_seq.line_n, mate_list
 
         # abort construction -- attributes are set by caller (see '.from_iterable()')

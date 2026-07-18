@@ -8,6 +8,8 @@ strings, lexemes which match some pattern, whitespace etc.
 ________________________________________________________________________________
 """
 import vut.engine.compare.core.edit_operations.line   as     edit_operations_line
+from   vut.engine.compare.engine.semantics             import is_plainly_equivalent_verdict, \
+                                                              is_insignificant_line
 from   vut.engine.compare.engine.input.pattern_finder     import PatternFinder
 from   vut.engine.compare.engine.enums             import (E_Verdict, 
                                                            E_ToleranceId)
@@ -78,6 +80,32 @@ class Line:
                 if le.tolerance_id != E_ToleranceId.VISIBLE_NOTHING 
             ]
         return self.__sequence_v
+
+    def is_insignificant(self):
+        """RETURNS: True, if the line has no significance for the equivalence
+                          consideration (blank or ignored-marker line; the
+                          equivalence pipe drops such lines entirely).
+                    False, else.
+        """
+        return is_insignificant_line(self._string,
+                                     self.lexer.ignored_line_begin_marker,
+                                     self.lexer.ignored_line_end_marker)
+
+    def is_visible_nothing(self):
+        """RETURNS: True, if the line consists exclusively of VISIBLE_NOTHING
+                          elements (or is empty) -- it counts as EQUAL TO NO
+                          LINE AT ALL in a line sequence.
+                    False, else.
+
+        THE shared definition of whole-line skippability: the Lawyer's
+        sequence search classifies such lines as GOOD_INSERT/GOOD_DELETE
+        (equivalence-preserving, see 'engine/semantics.py'); the Judge's
+        equivalence pipe skips them up-front. Both faces MUST use this
+        predicate, or THE LAW breaks.
+        """
+        return (   not self.sequence
+                or all(le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING
+                       for le in self.sequence))
 
     def character_n(self):
         """RETURNS: Number of characters in present in the line.
@@ -154,7 +182,9 @@ class Line:
         analogy_list = []
         for subject_le, nominal_le in zip(self_sequence, nominal_sequence):
             verdict, analogy = subject_le.compare(nominal_le)
-            if verdict != E_Verdict.EQUIVALENT:
+            # Strict reduction is valid here: 'sequence_v' filters
+            # VISIBLE_NOTHING, so the collapse variants cannot arise.
+            if not is_plainly_equivalent_verdict(verdict):
                 return False, []
             elif analogy:
                 analogy_list.append(analogy)

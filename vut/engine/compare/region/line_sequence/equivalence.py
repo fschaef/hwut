@@ -1,5 +1,6 @@
 from __future__ import annotations
 from vut.engine.compare.engine.analogy_db  import AnalogyDb
+from vut.engine.compare.engine.semantics   import commit_analogies
 
 def do(subject:    InputChunk,    #noqa F821
        nominal:    InputChunk,    #noqa F821
@@ -20,7 +21,7 @@ def do(subject:    InputChunk,    #noqa F821
     if verdict:
         # if lines are textually equal, the analogies must hold
         # if not => definitely not equivalent in the global frame
-        verdict = analogy_db.extend_if_consistent(analogy_list)
+        verdict = commit_analogies(analogy_db, analogy_list)
         return verdict, analogy_db
 
     analogy_list = []
@@ -33,7 +34,7 @@ def do(subject:    InputChunk,    #noqa F821
 
     # subject line is equivalent to nominal line under the constraint
     # of the given analogies
-    verdict = analogy_db.extend_if_consistent(analogy_list)
+    verdict = commit_analogies(analogy_db, analogy_list)
     return verdict, analogy_db
     
 

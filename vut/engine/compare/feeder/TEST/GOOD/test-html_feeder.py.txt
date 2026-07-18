@@ -1,409 +1,247 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>VUT Comparison Report</title>
-    <style>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+    <title>VUT Report</title><style>
         :root {
-            /* Fonts & Layout */
-            --font-stack: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-            --font-size: 13px;
-            --line-height: 20px;
-            --gutter-width: 50px;
-            
-            /* Backgrounds */
-            --bg-body: #0d1117; 
-            --bg-gutter: #161b22;
-            --bg-row-hover: #1f2428;
-            --bg-header: #21262d;
-            
-            /* Text Colors */
-            --text-main: #c9d1d9;
-            --text-muted: #8b949e;
-            --text-gutter: #6e7681;
-            
-            /* Heatmap */
-            --heatmap-color: #f85149;
+            --lh: 24px; 
+            --gw: 40px;
+            --bg: #0d1117; --fg: #c9d1d9;
+            --border: #30363d; --gutter: #161b22;
         }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: var(--font-stack);
-            font-size: var(--font-size);
-            margin: 0; padding: 20px;
-            overflow-y: scroll;
-        }
-
-        .container {
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            overflow: hidden;
-            background: var(--bg-body);
-            display: flex;
-            flex-direction: column;
-        }
+        body { background: var(--bg); color: var(--fg); font-family: 'SFMono-Regular', Consolas, monospace; margin: 0; padding: 20px; font-size: 13px; }
+        .container { border: 1px solid var(--border); border-radius: 6px; background: var(--bg); overflow: hidden; }
+        .scroll-wrap { overflow-x: auto; }
         
-        .scroll-wrapper {
-            overflow-x: auto;
-            width: 100%;
-        }
-
-        /* --- Config Bar --- */
-        .config-bar {
-            background: var(--bg-gutter);
-            padding: 8px 12px;
-            border-bottom: 1px solid #30363d;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-family: sans-serif;
-        }
-
-        /* --- Section Header --- */
-        .section-header {
-            background: var(--bg-header);
-            color: #58a6ff;
-            padding: 6px 12px;
-            border-top: 1px solid #30363d;
-            border-bottom: 1px solid #30363d;
-            font-weight: bold;
-            position: sticky;
-            left: 0;
-        }
-
-        /* --- Grid Layout --- */
-        .row {
-            display: grid;
-            /* Gutter | Subject | Gutter | Nominal */
-            grid-template-columns: var(--gutter-width) minmax(0, 1fr) var(--gutter-width) minmax(0, 1fr);
-            border-bottom: 1px solid #21262d;
-            line-height: var(--line-height);
-        }
-        .row:hover { background-color: var(--bg-row-hover); }
-
-        /* Line Number Gutter */
-        .ln {
-            background-color: var(--bg-gutter);
-            color: var(--text-gutter);
-            text-align: right;
-            padding-right: 8px;
-            border-right: 1px solid #30363d;
-            user-select: none;
-            position: relative;
-        }
-
-        /* Heatmap Marker */
-        .heatmap-marker {
-            position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-            background-color: var(--heatmap-color);
-        }
-
-        /* Content Side */
-        .side {
-            padding: 0 8px;
-            white-space: pre; 
-            overflow: hidden; 
-        }
-
-        /* --- Token Styling --- */
-        .tok {
-            display: inline-block;
-            border-radius: 2px;
-            padding: 0 1px;
-            margin: 0 1px;
-            cursor: help;
-            border: 1px solid transparent; /* default transparent border */
-        }
+        /* Layout Grid */
+        .row { display: grid; grid-template-columns: var(--gw) 1fr 20px var(--gw) 1fr; border-bottom: 1px solid #21262d; height: var(--lh); }
+        .row:hover { background: rgba(255,255,255,0.03); }
         
-        /* --- DYNAMIC STYLES BELOW --- */
-
-.OK_GOOD {
-    color: #c9d1d9;
-}
-.OK_TOLERATED {
-    color: #e3b341;
-    background-color: rgba(210, 153, 34, 0.15);
-    border: 1px dotted #d29922;
-}
-.VISIBLE_NOTHING {
-    color: #484f58;
-}
-.BAD_SUBJECT_DIFFERS {
-    color: #ff7b72;
-    background-color: rgba(248, 81, 73, 0.2);
-    border: 1px solid #f85149;
-}
-.BAD_NOMINAL_DIFFERS {
-    color: #ff7b72;
-    background-color: rgba(248, 81, 73, 0.2);
-    border: 1px solid #f85149;
-}
-.BAD_SUBJECT_HAS_NOT {
-    color: #7ee787;
-    background-color: rgba(63, 185, 80, 0.15);
-    border: 1px solid #3fb950;
-}
-.BAD_SUBJECT_HAS {
-    color: #ff7b72;
-    background-color: rgba(248, 81, 73, 0.2);
-    border: 1px solid #f85149;
-}
-.BAD_TRANSPOSE {
-    color: #d2a8ff;
-    background-color: rgba(188, 140, 255, 0.15);
-    border: 1px solid #bc8cff;
-}
-.BAD_SUBJECT_TYPE_DIFFERS {
-    color: #ff7b72;
-    background-color: rgba(248, 81, 73, 0.2);
-    border: 1px solid #f85149;
-}
-    </style>
-</head>
-<body>
-    <div class="container">
-<div class="scroll-wrapper">
-
-        <div class="config-bar">
-            <strong>CONFIG:</strong> 
-            Numeric Tolerance: 0 | 
-            Analogies:         ON |
-            Whitespace Strip:  True
-        </div>
+        /* Columns */
+        .ln { background: var(--gutter); color: #6e7681; text-align: right; padding-right: 8px; line-height: var(--lh); font-size: 11px; user-select: none; border-right: 1px solid var(--border); }
+        .side { padding: 0 8px; white-space: pre; line-height: var(--lh); overflow: hidden; }
+        .mid { background: var(--gutter); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
         
-<div class="section-header">:: LINE_SEQUENCE/LINE_SEQUENCE <span style="opacity:0.5">(ChunkPair)</span></div>
+        /* Potpourri */
+        .potpourri-frame { border: 1px solid #30363d; margin: 10px 0; background: #0d1117; position: relative; }
+        .potpourri-marker { background: #161b22; color: #8b949e; text-align: center; font-size: 10px; letter-spacing: 2px; padding: 2px; border-bottom: 1px solid var(--border); font-weight: bold; }
+        .tangle-grid { display: grid; grid-template-columns: var(--gw) minmax(200px, 1fr) 60px var(--gw) minmax(200px, 1fr); position: relative; }
+        .svg-col { position: relative; overflow: visible; }
+        svg.connectors { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        path.curve { fill: none; stroke-width: 1.5; opacity: 0.6; transition: stroke-width 0.2s, opacity 0.2s; }
+        path.curve:hover { stroke-width: 3; opacity: 1.0; z-index: 99; }
+
+        /* Tokens */
+        .tok { display: inline-block; padding: 0 2px; border-radius: 2px; border: 1px solid transparent; cursor: help; }
+        
+        /* Generated Styles */
+        .OK_GOOD { color: inherit; }
+.OK_TOLERATED { color: #e3b341; text-decoration: underline dotted #d29922; font-style: italic; }
+.VISIBLE_NOTHING { color: #484f58; }
+.BAD_SUBJECT_DIFFERS { color: #ff7b72; background-color: rgba(248, 81, 73, 0.15); border: 1px solid #8e1519; }
+.BAD_SUBJECT_HAS { color: #ff7b72; background-color: rgba(248, 81, 73, 0.15); text-decoration: line-through; }
+.BAD_SUBJECT_HAS_NOT { color: #484f58; border: 1px dashed #484f58; }
+.BAD_NOMINAL_DIFFERS { color: #58a6ff; background-color: rgba(56, 139, 253, 0.1); border: 1px solid #1f6feb; }
+.BAD_NOMINAL_HAS { color: #58a6ff; background-color: rgba(56, 139, 253, 0.1); font-weight: bold; }
+.BAD_TRANSPOSE { color: #d2a8ff; background-color: rgba(163, 113, 247, 0.1); border: 1px solid #8957e5; }
+    </style></head><body><div class="container"><div class="scroll-wrap">
+    
+<div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: LINE_SEQUENCE/LINE_SEQUENCE</div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>1</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
 <div class="ln">1</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div>
+<div class="mid"></div>
+<div class="ln">1</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>2</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">There</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">once</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">was</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 2 / Nominal Line 2">((mouse))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">made</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">of</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 2 / Nominal Line 2">((Glass))</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">,</span></div>
 <div class="ln">2</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">There</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">once</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">was</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 2 / Nominal Line 2">((Object))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">made</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">of</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 2 / Nominal Line 2">((Material))</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">,</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">There</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">once</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">was</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:2 / N:2">((mouse))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">made</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">of</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:2 / N:2">((Glass))</span><span class="tok OK_GOOD" title="Perfect Match">,</span></div>
+<div class="mid"></div>
+<div class="ln">2</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">There</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">once</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">was</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:2 / N:2">((Object))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">made</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">of</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:2 / N:2">((Material))</span><span class="tok OK_GOOD" title="Perfect Match">,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>3</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Who</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">pondered</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">things</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">that</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">said.</span></div>
 <div class="ln">3</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Who</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">pondered</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">things</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">that</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">said.</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Who</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">pondered</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">things</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">that</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">said.</span></div>
+<div class="mid"></div>
+<div class="ln">3</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Who</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">pondered</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">things</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">that</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">said.</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>4</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;Even</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">largest</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">fahrt,&quot;</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">began</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">with</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">roar,</span></div>
 <div class="ln">4</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;Even</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">largest</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">fahrt,&quot;</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">began</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">with</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">roar,</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;Even</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">largest</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">fahrt,&quot;</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">began</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">with</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">roar,</span></div>
+<div class="mid"></div>
+<div class="ln">4</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;Even</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">largest</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">fahrt,&quot;</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">began</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">with</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">roar,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.03125"></div>5</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;Starts</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">with</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">1.05</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">gas</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">atom</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">leaving</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">door.&quot;</span></div>
 <div class="ln">5</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;Starts</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">with</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">1.0</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">gas</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">atom</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">leaving</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">door.&quot;</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;Starts</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">with</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">1.05</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">gas</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">atom</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">leaving</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">door.&quot;</span></div>
+<div class="mid"></div>
+<div class="ln">5</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;Starts</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">with</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">1.0</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">gas</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">atom</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">leaving</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">door.&quot;</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>6</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Then</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">dissolved</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">into</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">raindrops</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">of</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">bread.</span></div>
 <div class="ln">6</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Then</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">dissolved</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">into</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">raindrops</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">of</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">bread.</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">dissolved</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">into</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">raindrops</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">of</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">bread.</span></div>
+<div class="mid"></div>
+<div class="ln">6</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">dissolved</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">into</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">raindrops</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">of</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">bread.</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>7</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
 <div class="ln">7</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div>
+<div class="mid"></div>
+<div class="ln">7</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>8</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">A</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 8 / Nominal Line 8">((Monk))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 8 / Nominal Line 8">((Monastery))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">maze,</span></div>
 <div class="ln">8</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">A</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 8 / Nominal Line 8">((Persona))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 8 / Nominal Line 8">((Location))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">maze,</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">A</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:8 / N:8">((Monk))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:8 / N:8">((Monastery))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">maze,</span></div>
+<div class="mid"></div>
+<div class="ln">8</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">A</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:8 / N:8">((Persona))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:8 / N:8">((Location))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">maze,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.041666666666666664"></div>9</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Observed</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">electric</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">0.51</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">blue</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">haze.</span></div>
 <div class="ln">9</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Observed</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">electric</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">0.5</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">blue</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">haze.</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Observed</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">electric</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">0.51</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">blue</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">haze.</span></div>
+<div class="mid"></div>
+<div class="ln">9</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Observed</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">electric</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">0.5</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">blue</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">haze.</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>10</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;I</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">think,</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">therefore</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">I</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">am...</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">not</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">quite</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sure,&quot;</span></div>
 <div class="ln">10</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;I</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">think,</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">therefore</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">I</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">am...</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">not</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">quite</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sure,&quot;</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;I</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">think,</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">therefore</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">I</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">am...</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">not</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">quite</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sure,&quot;</span></div>
+<div class="mid"></div>
+<div class="ln">10</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;I</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">think,</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">therefore</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">I</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">am...</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">not</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">quite</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sure,&quot;</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.5"></div>-</div>
-<div class="side subject-col"></div>
+<div class="ln"></div>
+<div class="side"></div>
+<div class="mid"></div>
 <div class="ln">11</div>
-<div class="side nominal-col"><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">He</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">whispered</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">while</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">scrubbing</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">the</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">floor</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">of</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">the</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">pure,</span></div>
-</div>
+<div class="side"><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">He</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">whispered</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">while</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">scrubbing</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">the</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">floor</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">of</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">the</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">pure,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.022222222222222223"></div>11</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;For</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">bug</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">code</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">ends</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">102.0</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">days.&quot;</span></div>
+<div class="ln">11</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;For</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">bug</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">code</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">ends</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">102.0</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">days.&quot;</span></div>
+<div class="mid"></div>
 <div class="ln">12</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;For</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">bug</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">code</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">ends</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">100.0</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">days.&quot;</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;For</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">bug</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">code</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">ends</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">100.0</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">days.&quot;</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>12</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
+<div class="ln">12</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div>
+<div class="mid"></div>
 <div class="ln">13</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
-</div>
-<div class="section-header">:: POTPOURRI/POTPOURRI <span style="opacity:0.5">(ChunkPair)</span></div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div></div>
+<div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: POTPOURRI/POTPOURRI</div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.022727272727272728"></div>14</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;That</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">which</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">does</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">not</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">kill</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">us</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">makes</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">us</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">42.1</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">percent</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">strange,&quot;</span></div>
+<div class="ln">14</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;That</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">which</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">does</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">not</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">kill</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">us</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">makes</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">us</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">42.1</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">percent</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">strange,&quot;</span></div>
+<div class="mid"></div>
 <div class="ln">17</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;That</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">which</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">does</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">not</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">kill</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">us</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">makes</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">us</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">42.0</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">percent</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">strange,&quot;</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;That</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">which</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">does</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">not</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">kill</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">us</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">makes</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">us</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">42.0</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">percent</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">strange,&quot;</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>15</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">The</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 15 / Nominal Line 15">((Animal))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">desert</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">was</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">dry,</span></div>
 <div class="ln">15</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">The</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 15 / Nominal Line 15">((Animal))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">desert</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">was</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">dry,</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">The</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:15 / N:15">((Animal))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">desert</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">was</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">dry,</span></div>
+<div class="mid"></div>
+<div class="ln">15</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">The</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:15 / N:15">((Animal))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">desert</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">was</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">dry,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>16</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">With</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">telescope</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">aimed</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">at</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sky.</span></div>
 <div class="ln">16</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">With</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">telescope</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">aimed</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">at</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sky.</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">With</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">telescope</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">aimed</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">at</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sky.</span></div>
+<div class="mid"></div>
+<div class="ln">16</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">With</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">telescope</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">aimed</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">at</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sky.</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.14285714285714285"></div>17</div>
-<div class="side subject-col"><span class="tok BAD_NOMINAL_HAS_NOT" title="STRING [BAD_NOMINAL_HAS_NOT]">A</span><span class="tok BAD_NOMINAL_HAS_NOT" title="SEPERATOR [BAD_NOMINAL_HAS_NOT]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 2 / Nominal Line 2">((mouse))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">noted</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">while</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">rearranging</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">range,</span></div>
+<div class="ln">17</div>
+<div class="side"><span class="tok BAD_NOMINAL_HAS_NOT" title="BAD_NOMINAL_HAS_NOT">A</span><span class="tok BAD_NOMINAL_HAS_NOT" title="BAD_NOMINAL_HAS_NOT">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:2 / N:2">((mouse))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">noted</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">while</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">rearranging</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">range,</span></div>
+<div class="mid"></div>
 <div class="ln">18</div>
-<div class="side nominal-col"><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]"></span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]"></span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 2 / Nominal Line 2">((Object))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">noted</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">while</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">rearranging</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">range,</span></div>
-</div>
+<div class="side"><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion"></span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion"></span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:2 / N:2">((Object))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">noted</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">while</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">rearranging</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">range,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>18</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Then</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">ate</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">gold</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">watch</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">and</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">started</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">to</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">fly.</span></div>
+<div class="ln">18</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">ate</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">gold</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">watch</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">and</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">started</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">to</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">fly.</span></div>
+<div class="mid"></div>
 <div class="ln">19</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Then</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">ate</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">gold</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">watch</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">and</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">started</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">to</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">fly.</span></div>
-</div>
-<div class="section-header">:: LINE_SEQUENCE/LINE_SEQUENCE <span style="opacity:0.5">(ChunkPair)</span></div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">ate</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">gold</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">watch</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">and</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">started</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">to</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">fly.</span></div></div>
+<div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: LINE_SEQUENCE/LINE_SEQUENCE</div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>20</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
+<div class="ln">20</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div>
+<div class="mid"></div>
 <div class="ln">21</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
-</div>
-<div class="section-header">:: POTPOURRI/POTPOURRI <span style="opacity:0.5">(ChunkPair)</span></div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div></div>
+<div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: POTPOURRI/POTPOURRI</div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.14285714285714285"></div>22</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">A</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="ANALOGY [BAD_NOMINAL_DIFFERS]">((Object))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sat</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">down</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">on</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">chair,</span></div>
+<div class="ln">22</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">A</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference">((Object))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sat</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">down</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">on</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">chair,</span></div>
+<div class="mid"></div>
 <div class="ln">23</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">A</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="ANALOGY [BAD_SUBJECT_DIFFERS]
---------------------------------
-Conflict! Previously established at:
-Subject Line 2 / Nominal Line 2">((Object))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sat</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">down</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">on</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">chair,</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">A</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:2 / N:2">((Object))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sat</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">down</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">on</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">chair,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>23</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">To</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">contemplate</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">why</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">was</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">there.</span></div>
+<div class="ln">23</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">To</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">contemplate</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">why</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">was</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">there.</span></div>
+<div class="mid"></div>
 <div class="ln">24</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">To</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">contemplate</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">why</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">was</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">there.</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">To</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">contemplate</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">why</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">was</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">there.</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>24</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;To</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">be,</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">or</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">not</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">to</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">be...</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">small</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">grape,&quot;</span></div>
+<div class="ln">24</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;To</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">be,</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">or</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">not</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">to</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">be...</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">small</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">grape,&quot;</span></div>
+<div class="mid"></div>
 <div class="ln">25</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;To</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">be,</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">or</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">not</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">to</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">be...</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">small</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">grape,&quot;</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;To</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">be,</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">or</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">not</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">to</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">be...</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">small</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">grape,&quot;</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>25</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;Is</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">question</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">that</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">leaves</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">me</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">quite</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">bare.&quot;</span></div>
+<div class="ln">25</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;Is</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">question</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">that</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">leaves</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">me</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">quite</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">bare.&quot;</span></div>
+<div class="mid"></div>
 <div class="ln">27</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;Is</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">question</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">that</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">leaves</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">me</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">quite</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">bare.&quot;</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;Is</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">question</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">that</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">leaves</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">me</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">quite</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">bare.&quot;</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.047619047619047616"></div>26</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">It</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sighed</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">as</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">shifted</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">its</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">3.14</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">geological</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">shape,</span></div>
 <div class="ln">26</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">It</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sighed</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">as</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">it</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">shifted</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">its</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">3.14159</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">geological</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">shape,</span></div>
-</div>
-<div class="section-header">:: LINE_SEQUENCE/LINE_SEQUENCE <span style="opacity:0.5">(ChunkPair)</span></div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">It</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sighed</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">as</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">shifted</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">its</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">3.14</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">geological</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">shape,</span></div>
+<div class="mid"></div>
+<div class="ln">26</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">It</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sighed</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">as</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">it</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">shifted</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">its</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">3.14159</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">geological</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">shape,</span></div></div>
+<div class="row" style="background:var(--gutter); color:#58a6ff; font-weight:bold; height:auto; padding:4px;"><div style="grid-column:1/-1">:: LINE_SEQUENCE/LINE_SEQUENCE</div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="display:none"></div>28</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
+<div class="ln">28</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div>
+<div class="mid"></div>
 <div class="ln">29</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="VISIBLE_NOTHING [OK_GOOD]"></span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match"></span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.1142857142857143"></div>29</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">A</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 29 / Nominal Line 30">((Window))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">looked</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">out</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">at</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">its</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">glas,</span></div>
+<div class="ln">29</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">A</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:29 / N:30">((Window))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">looked</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">out</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">at</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">its</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">glas,</span></div>
+<div class="mid"></div>
 <div class="ln">30</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">A</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_TOLERATED" title="ANALOGY [OK_TOLERATED]
---------------------------------
-Established at:
-Subject Line 29 / Nominal Line 30">((hole&nbsp;in&nbsp;the&nbsp;wall))</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">looked</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">out</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">at</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">its</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">arse,</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">A</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_TOLERATED" title="Tolerated Difference
+Analogy established at S:29 / N:30">((hole&nbsp;in&nbsp;the&nbsp;wall))</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">looked</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">out</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">at</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">its</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">arse,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.5"></div>-</div>
-<div class="side subject-col"></div>
+<div class="ln"></div>
+<div class="side"></div>
+<div class="mid"></div>
 <div class="ln">31</div>
-<div class="side nominal-col"><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">And</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">watched</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">the</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">transparent</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">10.0</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">years</span><span class="tok BAD_SUBJECT_HAS" title="SEPERATOR [BAD_SUBJECT_HAS]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]">pass.</span></div>
-</div>
+<div class="side"><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">And</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">watched</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">the</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">transparent</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">10.0</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">years</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion">pass.</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.018518518518518517"></div>30</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;The</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">unexamined</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">life</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">is</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">pane</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">heck,&quot;</span></div>
+<div class="ln">30</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;The</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">unexamined</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">life</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">is</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">pane</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">heck,&quot;</span></div>
+<div class="mid"></div>
 <div class="ln">32</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">&quot;The</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">unexamined</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">life</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">is</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">pane</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">in</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">neck,&quot;</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">&quot;The</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">unexamined</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">life</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">is</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">pane</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">in</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">neck,&quot;</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.225"></div>31</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">It</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">muttered</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_HAS_NOT" title="STRING [BAD_NOMINAL_HAS_NOT]">pendant</span><span class="tok BAD_NOMINAL_HAS_NOT" title="SEPERATOR [BAD_NOMINAL_HAS_NOT]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">que</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">counting</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">solitary</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">speck,</span></div>
+<div class="ln">31</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">It</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">muttered</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_HAS_NOT" title="BAD_NOMINAL_HAS_NOT">pendant</span><span class="tok BAD_NOMINAL_HAS_NOT" title="BAD_NOMINAL_HAS_NOT">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">que</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">counting</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">solitary</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">speck,</span></div>
+<div class="mid"></div>
 <div class="ln">33</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">It</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">muttered</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]"></span><span class="tok BAD_SUBJECT_HAS" title="STRING [BAD_SUBJECT_HAS]"></span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">while</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">counting</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">a</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">solitary</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">speck,</span></div>
-</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">It</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">muttered</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion"></span><span class="tok BAD_SUBJECT_HAS" title="Unexpected Insertion"></span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">while</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">counting</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">a</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">solitary</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">speck,</span></div></div>
 <div class="row">
-<div class="ln"><div class="heatmap-marker" style="opacity:0.1111111111111111"></div>32</div>
-<div class="side subject-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Then</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">turned</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">into</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="STRING [BAD_NOMINAL_DIFFERS]">butter</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">and</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sat</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">on</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">grass.</span></div>
+<div class="ln">32</div>
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">turned</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">into</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_NOMINAL_DIFFERS" title="BAD_NOMINAL_DIFFERS">butter</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">and</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sat</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">on</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">grass.</span></div>
+<div class="mid"></div>
 <div class="ln">34</div>
-<div class="side nominal-col"><span class="tok OK_GOOD" title="STRING [OK_GOOD]">Then</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">turned</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">into</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="STRING [BAD_SUBJECT_DIFFERS]">liquid</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">and</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">sat</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">on</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">the</span><span class="tok OK_GOOD" title="SEPERATOR [OK_GOOD]">&nbsp;</span><span class="tok OK_GOOD" title="STRING [OK_GOOD]">grass.</span></div>
-</div>
-
-        </div> <!-- end scroll-wrapper -->
-    </div> <!-- end container -->
-</body>
-</html>
-
+<div class="side"><span class="tok OK_GOOD" title="Perfect Match">Then</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">turned</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">into</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok BAD_SUBJECT_DIFFERS" title="Content Mismatch">liquid</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">and</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">sat</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">on</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">the</span><span class="tok OK_GOOD" title="Perfect Match">&nbsp;</span><span class="tok OK_GOOD" title="Perfect Match">grass.</span></div></div>
+</div></div></body></html>
+<!-- terminated -->

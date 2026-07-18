@@ -28,6 +28,7 @@ from vut.engine.compare.engine.input.input_chunk        import InputChunk,      
                                                         InputChunkTerminal, \
                                                         InputChunk_factory
 from vut.engine.compare.engine.input.pattern_finder     import PatternFinder
+from vut.engine.compare.engine.semantics         import is_insignificant_line
 from vut.engine.compare.configuration            import Configuration
 
 from itertools import count
@@ -87,15 +88,22 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
                 if chunk_type is E_Chunk.LINE: chunk_type = E_Chunk.POTPOURRI
                 else:                          chunk_type = E_Chunk.LINE
                 start_line_n = line_n
-            elif not (stripped := line.strip()):
-                continue
-            elif stripped.startswith(ignored_begin) or stripped.endswith(ignored_end):
+            elif is_insignificant_line(line, ignored_begin, ignored_end):
+                # THE single definition of insignificance: 'engine/semantics.py'.
                 continue
             else:
-                processed_line = Line(line_n, line, self.pf) 
-                
+                processed_line = Line(line_n, line, self.pf)
+
                 if chunk_type is E_Chunk.LINE:
-                    yield InputChunk_factory(chunk_type, line_n, line_n, 
+                    if processed_line.is_visible_nothing():
+                        # A whole-line VISIBLE_NOTHING equals NO line at all
+                        # (see 'Line.is_visible_nothing'); the Lawyer's
+                        # sequence search skips it as GOOD_INSERT/GOOD_DELETE
+                        # -- the Judge must skip it likewise (THE LAW).
+                        # NOTE: potpourri keeps such lines; both faces
+                        # count them there.
+                        continue
+                    yield InputChunk_factory(chunk_type, line_n, line_n,
                                             [processed_line], self.configuration)
                 else:
                     line_list.append(processed_line)

@@ -86,29 +86,13 @@ ANALOGY         = E_ToleranceId.ANALOGY
 SEPERATOR       = E_ToleranceId.SEPERATOR
 VISIBLE_NOTHING = E_ToleranceId.VISIBLE_NOTHING
 
-cost_db = {
-    GOOD:             0,       # good
-    GOOD_TOLERATED:   0,       # good, tolerated is bettern than good insert + delete delete
-    GOOD_INSERT:      1e-10,   # good insert visible nothing (slightly worse than 'good')
-    GOOD_DELETE:      1e-10,   # good delete visible nothing (slightly worse than 'good')
-    TRANSPOSE:        0.5,     # good, when swapped elements (--> cost_TRANSPOSE)
-    SUBSTITUTE:       1,       # good, when content is substituted
-    INSERT:           1,       # bad, need to insert element
-    DELETE:           1,       # bad, need to remove element
-    SUBSTITUTE_TYPE:  1        # bad, need to substitute type and content of element
-}
+# The cost table and transposition cost are part of the shared comparison
+# semantics -- see 'engine/semantics.py' (single source for Judge and Lawyer).
+import vut.engine.compare.engine.semantics as semantics
+from vut.engine.compare.engine.semantics import element_cost_db as cost_db
+from vut.engine.compare.engine.semantics import cost_TRANSPOSE
 
 cost_INSERT_DELETE = cost_db[INSERT]
-
-def cost_TRANSPOSE(si, transpose_ai):
-    """ Distance:       Cost:
-        1 (adjacent) -> 1 - 1/2 = 0.5
-        2            -> 1 - 1/3 = 0.66
-        10           -> 1 - 1/11 = 0.909
-        infinity     -> 1.0
-    """
-    # distance is the physical offset between the subject and nominal indices
-    return 1.0 - (1.0 / (1 + abs(si - transpose_ai)))
 
 @lru_cache(maxsize=65536)
 @typechecked
@@ -238,34 +222,25 @@ class WorkItem(WorkListBase):
         # => more expensive paths are cut early.
         good_id = None
 
-        match verdict_id:
-            case E_Verdict.MISFIT:
-                yield self._step_standard(SUBSTITUTE_TYPE)
-            case E_Verdict.DIFFERENT:
-                yield self._step_standard(SUBSTITUTE,
-                                          cost_factor = subject_le.edit_distance_relative(nominal_le))
-            case E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING:
-                good_id = GOOD_DELETE
-            case E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING:
-                good_id = GOOD_INSERT
-            case E_Verdict.EQUIVALENT:
-                if not self.edit_list.analogy_db.is_consistent(analogy):
-                    yield self._step_standard(SUBSTITUTE)
-                elif subject_le._string      != nominal_le._string:  
-                    good_id = GOOD_TOLERATED
-                elif subject_le.tolerance_id == ANALOGY: 
-                    good_id = GOOD_TOLERATED
-                else:                                                     
-                    good_id = GOOD
-            case _:
-                assert False
+        # THE verdict -> edit-class mapping is shared semantics -- see
+        # 'engine/semantics.py'. Only the step mechanics remain here.
+        edit_id = semantics.verdict_to_edit_id(verdict_id, subject_le, nominal_le,
+                                               self.edit_list.analogy_db, analogy)
+        if   edit_id in semantics.GOOD_EDIT_ID_SET:
+            good_id = edit_id
+        elif verdict_id is E_Verdict.DIFFERENT:
+            yield self._step_standard(edit_id,
+                                      cost_factor = subject_le.edit_distance_relative(nominal_le))
+        else:
+            # SUBSTITUTE_TYPE (from MISFIT) or SUBSTITUTE (analogy inconsistency)
+            yield self._step_standard(edit_id)
 
         if good_id is None:
             for candidate_ai in range(self.si + 1, len(subject)):
                 candidate_le = subject[candidate_ai]
                 # 1. Get the specific analogy required for this candidate to match the nominal
                 verdict_id, analogy = candidate_le.compare(nominal_le)
-                if verdict_id is not E_Verdict.EQUIVALENT: continue
+                if not semantics.is_plainly_equivalent_verdict(verdict_id): continue
                 # 2. Check consistency with CURRENT DB
                 elif not self.edit_list.analogy_db.is_consistent(analogy): continue
                 # 3. Pass the NEW analogy to the step function

@@ -62,6 +62,28 @@ class ChunkPair(list):
     def types(self):
         return self.__subject_type_id, self.__nominal_type_id
 
+    def is_equivalent(self):
+        """RETURNS: True, if the chunk pair as a whole preserves equivalence:
+                          every contained 'LinePair' is equivalent (and, where
+                          both sides exist, the chunk types agree).
+                    False, else.
+
+        This is the Lawyer's side of THE LAW (see 'engine/semantics.py'):
+
+            is_equivalent(subject, nominal) is True
+                <=>  every ChunkPair of associate(subject, nominal)
+                     '.is_equivalent()'.
+
+        NOTE: a type 'mismatch' involving E_Chunk.NONE only means the chunk is
+        one-sided; whether that hurts is decided by its line pairs (a chunk of
+        purely insignificant lines is display filler, hence neutral).
+        """
+        if (    self.__subject_type_id != self.__nominal_type_id
+            and E_Chunk.NONE not in (self.__subject_type_id,
+                                     self.__nominal_type_id)):
+            return False
+        return all(line_pair.is_equivalent() for line_pair in self)
+
     def analogy_db(self):
         return self.__analogy_db
 

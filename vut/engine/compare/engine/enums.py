@@ -15,9 +15,15 @@ class E_Verdict(Enum):
 
     @staticmethod
     def is_equivalent(x):
-        return x in (E_Verdict.EQUIVALENT, 
-                     E_Verdict.EQUIVALENT_SUBJECT_VISIBLE_NOTHING,
-                     E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING)
+        """RETURNS: True, if 'x' expresses equivalence (incl. VISIBLE_NOTHING
+                          collapse).
+                    False, else.
+
+        Delegates to 'engine/semantics.py' -- the single source of the
+        comparison semantics (late import avoids a module cycle).
+        """
+        from vut.engine.compare.engine.semantics import is_equivalent_verdict
+        return is_equivalent_verdict(x)
 
 class E_PotpourriBorder(Enum):
     NONE  = auto()

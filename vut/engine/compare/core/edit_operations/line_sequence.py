@@ -42,12 +42,9 @@ DELETE          = E_EditId.DELETE
 INSERT          = E_EditId.INSERT
 SUBSTITUTE      = E_EditId.SUBSTITUTE     
 
-cost_db = {
-   GOOD:       0.0,
-   SUBSTITUTE: 1.0,
-   INSERT:     0.5,
-   DELETE:     0.5
-}
+# The cost table is part of the shared comparison semantics -- see
+# 'engine/semantics.py' (single source for Judge and Lawyer).
+from vut.engine.compare.engine.semantics import line_cost_db as cost_db
 
 cost_GOOD          = cost_db[GOOD]
 cost_SUBSTITUTION  = cost_db[SUBSTITUTE]
@@ -100,19 +97,17 @@ class LineSequenceSeparatorAdaptor(SeparatorAdaptor):
         (GOOD_INSERT, DELETE):  SUBSTITUTE
     }
     def _is_separator(self, line):
-        """RETURN: True, if 'line' is considered a separator. 
+        """RETURN: True, if 'line' is considered a separator.
                    False, else.
 
         A separator is an element that matches a pattern which is equivalent
         whenever it occurs, i.e. comparison delivers 'True' with any other
         seperator. It can be taken out of the sequence and re-inserted.
+
+        Delegates to 'Line.is_visible_nothing' -- THE shared definition of
+        whole-line skippability (the Judge's pipe skips the same lines).
         """
-        if not line.sequence: # empty line
-            return True
-        elif all(le.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for le in line.sequence):
-            return True
-        else:
-            return False
+        return line.is_visible_nothing()
 
     def _insert_Edit(self, ni):
         if all(x.tolerance_id == E_ToleranceId.VISIBLE_NOTHING for x in self.nominal_sequence[ni]):

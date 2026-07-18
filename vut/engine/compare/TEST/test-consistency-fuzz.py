@@ -64,6 +64,7 @@ TOLERANCE = 0.1
 STRINGS   = ["alpha", "beta", "gamma", "delta", "epsilon"]
 ANALOGIES = ["A", "B", "C", "D"]
 EQUIVS    = ["happy", "glad"]
+VISNOTS   = ["nothing", "nix"]
 
 
 # --- Structured stream model --------------------------------------------------
@@ -74,10 +75,11 @@ EQUIVS    = ["happy", "glad"]
 #     ("STR", str) ("NUM", float-as-str) ("ANA", symbol) ("EQV", str)
 
 def gen_token(rng):
-    kind = rng.select(["STR", "STR", "NUM", "ANA", "EQV"])
+    kind = rng.select(["STR", "STR", "NUM", "ANA", "EQV", "VIS"])
     if   kind == "STR": return ("STR", rng.select(STRINGS))
     elif kind == "NUM": return ("NUM", str(rng.next_int(100, 900)))
     elif kind == "ANA": return ("ANA", rng.select(ANALOGIES))
+    elif kind == "VIS": return ("VIS", rng.select(VISNOTS))
     else:               return ("EQV", rng.select(EQUIVS))
 
 def gen_line(rng, min_tok=1, max_tok=4):
@@ -157,13 +159,81 @@ def permute_potpourri(stream, rng):
 
 def rename_analogies(stream):
     """RETURNS: new stream with every analogy symbol mapped through a fixed
-                bijection. A consistent renaming must preserve equivalence.
+                bijection, every equivalence-pattern word swapped for its
+                partner, and every visible-nothing word swapped for its
+                partner. All three transformations must preserve equivalence.
     """
     bijection = {"A": "W", "B": "X", "C": "Y", "D": "Z"}
+    eqv_swap  = {"happy": "glad", "glad": "happy"}
+    vis_swap  = {"nothing": "nix", "nix": "nothing"}
     def fix_token(t):
-        return ("ANA", bijection[t[1]]) if t[0] == "ANA" else t
+        if   t[0] == "ANA": return ("ANA", bijection[t[1]])
+        elif t[0] == "EQV": return ("EQV", eqv_swap[t[1]])
+        elif t[0] == "VIS": return ("VIS", vis_swap[t[1]])
+        else:               return t
     return [(k, [[fix_token(t) for t in line] for line in lines])
             for k, lines in stream]
+
+def insert_vn_line(stream, rng):
+    """RETURNS: new stream with one VISIBLE-NOTHING-ONLY line inserted into a
+                'seq' block, or None if the stream has no 'seq' block.
+
+    A whole-line visible nothing equals NO line at all in a line sequence
+    (see 'Line.is_visible_nothing') -- insertion must preserve equivalence.
+    """
+    seqs = [i for i, (k, ls) in enumerate(stream) if k == "seq"]
+    if not seqs:
+        return None
+    i = rng.select(seqs)
+    k, lines = stream[i]
+    vn_line  = [("VIS", rng.select(["nothing", "nix"]))]
+    at       = rng.next_int(0, len(lines))
+    return stream[:i] + [(k, lines[:at] + [vn_line] + lines[at:])] + stream[i+1:]
+
+def rename_analogies_in_one_pot(stream, rng):
+    """RETURNS: new stream with the analogy symbols of ONE potpourri block
+                mapped through a fixed bijection, or None if no pot block
+                carries an analogy.
+
+    ANALOGY SCOPE RULE: every region has its own analogy db (nothing
+    propagates in or out) -- so renaming symbols inside one region MUST
+    preserve equivalence, even when the same symbols appear outside.
+    """
+    bijection = {"A": "W", "B": "X", "C": "Y", "D": "Z"}
+    pots = [i for i, (k, ls) in enumerate(stream)
+            if k == "pot" and any(t[0] == "ANA" for l in ls for t in l)]
+    if not pots:
+        return None
+    i = rng.select(pots)
+    k, lines = stream[i]
+    renamed = [[("ANA", bijection[t[1]]) if t[0] == "ANA" else t for t in l]
+               for l in lines]
+    return stream[:i] + [(k, renamed)] + stream[i+1:]
+
+def conflict_rename_seq(stream, rng):
+    """RETURNS: new stream where ONE occurrence of an analogy symbol that
+                appears >= 2 times in the OUTER (seq) scope is renamed, or
+                None if no symbol recurs there.
+
+    The global db develops sequentially over the outer text: the first
+    occurrence binds the symbol, the renamed later occurrence contradicts
+    the binding -> equivalence MUST flip to False.
+    """
+    sites = {}
+    for bi, (k, lines) in enumerate(stream):
+        if k != "seq": continue
+        for li, line in enumerate(lines):
+            for ti, tok in enumerate(line):
+                if tok[0] == "ANA":
+                    sites.setdefault(tok[1], []).append((bi, li, ti))
+    recurring = sorted(sym for sym, occ in sites.items() if len(occ) >= 2)
+    if not recurring:
+        return None
+    sym = rng.select(recurring)
+    bi, li, ti = sites[sym][-1]          # rename the LAST occurrence
+    new = [(k, [list(l) for l in lines]) for k, lines in stream]
+    new[bi][1][li][ti] = ("ANA", "Q")    # 'Q' is outside the generator vocabulary
+    return new
 
 def jitter_numeric(stream, factor, rng):
     """RETURNS: (new stream, changed_f). Multiplies ONE numeric token by
@@ -232,7 +302,9 @@ async def run_reflexive(seed, cases):
 async def run_metamorphic(seed, cases):
     rng      = DeterministicStream(seed=seed)
     checks   = {"permute": [0, 0], "rename": [0, 0],
-                "in_tol": [0, 0], "out_tol": [0, 0]}   # [pass, total]
+                "in_tol": [0, 0], "out_tol": [0, 0],
+                "vn_line": [0, 0], "pot_rename": [0, 0],
+                "seq_conflict": [0, 0]}                # [pass, total]
     failures = []
     for i in range(cases):
         s     = gen_stream(rng)
@@ -270,8 +342,36 @@ async def run_metamorphic(seed, cases):
             if v is False: checks["out_tol"][0] += 1
             else: failures.append((i, "out_tol", False, v, [], s_txt, render_stream(jout)))
 
+        # a visible-nothing-only line inserted into a sequence block equals
+        # no line at all -> preserves equivalence
+        vns = insert_vn_line(s, rng)
+        if vns is not None:
+            checks["vn_line"][1] += 1
+            v = await judge(s_txt, render_stream(vns))
+            if v is True: checks["vn_line"][0] += 1
+            else: failures.append((i, "vn_line", True, v, [], s_txt, render_stream(vns)))
+
+        # region-local analogy scope: renaming symbols inside ONE potpourri
+        # block preserves equivalence (nothing propagates in or out)
+        pr = rename_analogies_in_one_pot(s, rng)
+        if pr is not None:
+            checks["pot_rename"][1] += 1
+            v = await judge(s_txt, render_stream(pr))
+            if v is True: checks["pot_rename"][0] += 1
+            else: failures.append((i, "pot_rename", True, v, [], s_txt, render_stream(pr)))
+
+        # sequential global db: renaming ONE recurring symbol occurrence in
+        # the outer scope contradicts its established binding -> False
+        cr = conflict_rename_seq(s, rng)
+        if cr is not None:
+            checks["seq_conflict"][1] += 1
+            v = await judge(s_txt, render_stream(cr))
+            if v is False: checks["seq_conflict"][0] += 1
+            else: failures.append((i, "seq_conflict", False, v, [], s_txt, render_stream(cr)))
+
     print("=== METAMORPHIC (seed=%d, cases=%d) ===" % (seed, cases))
-    for name in ("permute", "rename", "in_tol", "out_tol"):
+    for name in ("permute", "rename", "in_tol", "out_tol", "vn_line",
+                 "pot_rename", "seq_conflict"):
         p, t = checks[name]
         print("  %-8s preserved/flipped: %d/%d" % (name, p, t))
     _report_failures(failures)

@@ -164,11 +164,16 @@ async def test_leakage():
     async def test_leakage_case(direction, nom_val_2, expected_verdict):
         """
         Constructs a leakage scenario based on direction and consistency.
-        
+
+        ANALOGY SCOPE RULE (see region/potpourri/equivalence.py): every
+        region has its own analogy db; nothing is propagated in or out.
+        => there is NO leakage between a region and the outer text, in
+        EITHER direction. The 'conflicting' cases are therefore EQUIVALENT.
+
         Logic:
           1. Step 1 always defines: Subject=((A)) <-> Nominal=1
           2. Step 2 always uses:    Subject=((A)) <-> Nominal={nom_val_2}
-        
+
         Args:
             direction: "line->pot" (Line defines, Potpourri uses)
                        "pot->line" (Potpourri defines, Line uses)
@@ -208,14 +213,16 @@ async def test_leakage():
     # Case 1: Line defines ((A))=1, Potpourri matches ((A))=1
     await test_leakage_case(direction="line->pot", nom_val_2="1", expected_verdict=True)
 
-    # Case 2: Line defines ((A))=1, Potpourri expects ((A))=2 (Violation)
-    await test_leakage_case(direction="line->pot", nom_val_2="2", expected_verdict=False)
+    # Case 2: Line defines ((A))=1, Potpourri binds ((A))=2 LOCALLY
+    #         -> no leakage into the region: EQUIVALENT
+    await test_leakage_case(direction="line->pot", nom_val_2="2", expected_verdict=True)
 
     # Case 3: Potpourri defines ((A))=1, Line matches ((A))=1
     await test_leakage_case(direction="pot->line", nom_val_2="1", expected_verdict=True)
 
-    # Case 4: Potpourri defines ((A))=1, Line expects ((A))=2 (Violation)
-    await test_leakage_case(direction="pot->line", nom_val_2="2", expected_verdict=False)
+    # Case 4: Potpourri binds ((A))=1 LOCALLY, Line binds ((A))=2 globally
+    #         -> no leakage out of the region: EQUIVALENT
+    await test_leakage_case(direction="pot->line", nom_val_2="2", expected_verdict=True)
 
 async def test_all():
     await test_numeric()

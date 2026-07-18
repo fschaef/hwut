@@ -20,6 +20,7 @@ ________________________________________________________________________________
 """
 import vut.engine.compare.core.edit_operations.string as     edit_distance_string
 from   vut.engine.compare.engine.enums                              import E_Verdict, E_ToleranceId
+from   vut.engine.compare.engine.semantics                          import is_plainly_equivalent_verdict
 
 import regex       as re
 from   dataclasses import dataclass
@@ -111,7 +112,7 @@ class LineElement:
         verdict_id, _ = self.compare(nominal)
         # LineElementAnalogy implements 'is_equivalent()' completely self
         # NOT: 'if analogy_db and not analogy_db.is_consistent(analogy): return False'
-        return verdict_id == E_Verdict.EQUIVALENT
+        return is_plainly_equivalent_verdict(verdict_id)
 
     def _is_equivalent(self, nominal):
         raise NotImplementedError

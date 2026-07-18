@@ -231,10 +231,17 @@ class PatternFinder:
         return bool(self._analogy_extractor_re.search(line))
 
     def extract_analogy_strings(self, line: str) -> Iterable[str]:
-        """RETURNS: List of strings found inside analogy markers.
-        Example: "A ((quick)) brown ((fox))" -> ['quick', 'fox']
+        """RETURNS: List of analogy strings INCLUDING their markers.
+        Example: "A ((quick)) brown ((fox))" -> ['((quick))', '((fox))']
+
+        THE canonical analogy-db key form is the full marker-wrapped string
+        -- identical to the '_string' of an ANALOGY LineElement. Every commit
+        into the sequential global db must use this form; a second (bare)
+        vocabulary would silently escape consistency checking (see
+        'semantics.commit_analogies').
         """
         if self._analogy_extractor_re is None: return []
-        # .findall() returns the contents of the capturing group (.*?)
-        return self._analogy_extractor_re.findall(line)
+        # group(0): the FULL match, markers included (canonical key form)
+        return [m.group(0)
+                for m in self._analogy_extractor_re.finditer(line)]
 

@@ -110,7 +110,8 @@ async def run_isolation_test(mode):
         reasons = []
         if same_instance:  reasons.append("Same registry instance reused")
         if heavy_in_light: reasons.append("Data leaked between sessions")
-        if light_id >= limit: reasons.append(f"ID poisoned ({light_id} >= {limit})")
+        if light_id is not None and light_id >= limit:
+            reasons.append(f"ID poisoned ({light_id} >= {limit})")
         print("\nVERDICT: FAIL")
         print(f"DETAILS: {' & '.join(reasons)}")
     else:

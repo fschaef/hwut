@@ -5,6 +5,8 @@ PURPOSE: Configuration of the compar module.
 ________________________________________________________________________________
 """
 
+import os
+
 from dataclasses import dataclass, field
 
 @dataclass
@@ -24,10 +26,17 @@ class ConfigurationPatternFinder:
         
 class Configuration(object):
     __slots__ = ("pattern_finder",
-                 "potpourri_max_comparison_count")
+                 "potpourri_max_comparison_count",
+                 "cross_check_f")
 
     def __init__(self):
         self.pattern_finder = ConfigurationPatternFinder()
         self.potpourri_max_comparison_count = 128
+        # Debug mode: every 'is_equivalent' call ALSO derives the verdict via
+        # the Lawyer's full association and asserts agreement (THE LAW, see
+        # 'engine/semantics.py'). Costly; buffers input streams entirely.
+        # Never enable in production.
+        self.cross_check_f = os.environ.get("VUT_COMPARE_CROSS_CHECK",
+                                            "") in ("1", "true", "yes")
 
 
