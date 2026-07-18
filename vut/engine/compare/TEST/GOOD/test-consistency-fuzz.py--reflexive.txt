@@ -1,0 +1,3 @@
+=== REFLEXIVE (seed=48879, cases=300) ===
+is_equivalent(s, s) is True and association clean: 300/300
+result: PASS
