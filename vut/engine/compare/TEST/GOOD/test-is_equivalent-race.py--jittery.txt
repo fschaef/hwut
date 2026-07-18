@@ -5,28 +5,18 @@ NOMINAL timeline: |2111   11 11  222  22212 12 1121111 211  1    11 2   12   2 1
 [2] SUBJECT: => (1) 'Line 0'
 [2] NOMINAL: => (3) 'Line 2'
 [3] SUBJECT: => (2) 'Line 1'
-##COMPARE: 001: [STRING 'Line'], [SEPERATOR ' '], [STRING '0'] 001: [STRING 'Line'], [SEPERATOR ' '], [STRING '0']
 [3] NOMINAL: => (4) 'Line 3'
 [4] SUBJECT: => (3) 'Line 2'
 [6] SUBJECT: => (4) 'Line 3'
-##COMPARE: 002: [STRING 'Line'], [SEPERATOR ' '], [STRING '1'] 002: [STRING 'Line'], [SEPERATOR ' '], [STRING '1']
 [7] NOMINAL: => (5) 'SWEET'
 [8] NOMINAL: => (6) 'SWEET 1'
 [10] SUBJECT: => (5) 'SALTY'
-##COMPARE: 003: [STRING 'Line'], [SEPERATOR ' '], [STRING '2'] 003: [STRING 'Line'], [SEPERATOR ' '], [STRING '2']
 [10] NOMINAL: => (7) 'SWEET 2'
 [11] SUBJECT: => (6) 'SALTY 1'
 [11] NOMINAL: => (8) 'SWEET 3'
-##COMPARE: 004: [STRING 'Line'], [SEPERATOR ' '], [STRING '3'] 004: [STRING 'Line'], [SEPERATOR ' '], [STRING '3']
 [12] SUBJECT: => (7) 'SALTY 2'
 [14] NOMINAL: => (9) 'SWEET 4'
 [15] NOMINAL: => (10) 'SWEET 5'
-##COMPARE: 005: [STRING 'SALTY'] 005: [STRING 'SWEET']
 [16] NOMINAL: => (11) 'SWEET 6'
 Verdict: False
 Lines Consumed - Subject: 7, Nominal: 11
-##COMPARE: 005: [STRING 'SALTY'] 005: [STRING 'SWEET']
-
-
-
-

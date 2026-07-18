@@ -1,7 +1,7 @@
 from   vut.engine.compare.engine.frozen_analogy_db                         import FrozenAnalogyDb
-from   vut.engine.compare.associate.line_pair                     import LinePair
-import vut.engine.compare.associate.edit_operations.line_sequence as     edit_operations_line_sequence
-from   vut.engine.compare.associate.edit_operations.edit          import (E_EditId, 
+from   vut.engine.compare.core.line_pair                     import LinePair
+import vut.engine.compare.core.edit_operations.line_sequence as     edit_operations_line_sequence
+from   vut.engine.compare.core.edit_operations.edit          import (E_EditId, 
                                                                                    EditSequence)
 
 def do(subject, nominal, analogy_db):

@@ -6,7 +6,7 @@ CHOICES: transpose, visible-nothing;
 import sys
 from   config import HwutRunner # noqa F401
 
-import vut.engine.compare.associate.edit_operations.line as edit_distance_line
+import vut.engine.compare.core.edit_operations.line as edit_distance_line
 from vut.engine.compare.TEST.common import prepare
 
 if "--hwut-info" in sys.argv:

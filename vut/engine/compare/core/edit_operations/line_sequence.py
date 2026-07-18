@@ -18,15 +18,15 @@ operations on 'Line's (see edit_operations/line.py) and strings (see
 Levenshtein Distance).
 _______________________________________________________________________________
 """
-from   vut.engine.compare.associate.edit_operations.edit  import (E_EditId, 
+from   vut.engine.compare.core.edit_operations.edit  import (E_EditId, 
                                                                            Edit, 
                                                                            EditSequence, 
                                                                            list_EditGOOD_line_sequence, 
                                                                            list_EditGOOD_line)
-from   vut.engine.compare.associate.edit_operations.core  import (WorkListBase, 
+from   vut.engine.compare.core.edit_operations.core  import (WorkListBase, 
                                                                            WorkItemBase, 
                                                                            position_increment_db)
-from   vut.engine.compare.associate.edit_operations.separator_adaptor import SeparatorAdaptor
+from   vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
 
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 from   vut.engine.compare.engine.input.pattern_finder     import E_ToleranceId

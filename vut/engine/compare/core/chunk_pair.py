@@ -6,7 +6,7 @@ A chunk of 'LinePair'-s either belongs to a block of 'LineSequences'
 or 'Potpourri'.
 ________________________________________________________________________________
 """
-from   vut.engine.compare.associate.line_pair      import LinePair
+from   vut.engine.compare.core.line_pair      import LinePair
 from   vut.engine.compare.engine.enums                      import E_Chunk
 from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db          import FrozenAnalogyDb

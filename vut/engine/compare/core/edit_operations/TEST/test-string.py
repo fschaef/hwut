@@ -19,7 +19,7 @@ import sys
 
 from   config import HwutRunner # noqa F401
 
-import vut.engine.compare.associate.edit_operations.string as     edit_distance_string
+import vut.engine.compare.core.edit_operations.string as     edit_distance_string
 
 if "--hwut-info" in sys.argv:
     print("Strings;")

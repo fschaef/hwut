@@ -1,4 +1,4 @@
-from vut.engine.compare.engine.potpourri.result         import Result
+from vut.engine.compare.region.potpourri.result         import Result
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 def do(db):

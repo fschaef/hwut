@@ -13,7 +13,7 @@ as a complete solution is impossible. Such a quick abort means, that the two
 Potpourri cannot be equivalent (compare() --> False).
 ________________________________________________________________________________
 """
-import vut.engine.compare.engine.potpourri.matching as m
+import vut.engine.compare.region.potpourri.matching as m
 from   vut.engine.compare.engine.analogy_db import AnalogyDb
 from   typeguard import typechecked
 

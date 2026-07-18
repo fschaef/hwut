@@ -22,8 +22,8 @@ import sys
 
 from   config import HwutRunner # noqa F401
 
-import vut.engine.compare.associate.edit_operations.line_sequence  as     edit_distance_line_sequence
-from   vut.engine.compare.associate.edit_operations.edit           import E_EditId
+import vut.engine.compare.core.edit_operations.line_sequence  as     edit_distance_line_sequence
+from   vut.engine.compare.core.edit_operations.edit           import E_EditId
 from   vut.engine.compare.TEST.common          import prepare, print_match_sequences_lists, prepare_line_up
 from   vut.engine.compare.engine.line          import Line
 from   vut.engine.compare.engine.input.pattern_finder import PatternFinder

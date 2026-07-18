@@ -35,7 +35,7 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 import vut.engine.compare.engine.frozen_analogy_db      as     frozen_analogy_db
-from   vut.engine.compare.associate.chunk_pair import ChunkPair
+from   vut.engine.compare.core.chunk_pair import ChunkPair
 from   vut.engine.compare.engine.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
                                                                AssociationChunkPipe
 from   vut.engine.compare.engine.input.input_chunk_zip         import generate_chunk_pairs, \

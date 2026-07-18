@@ -271,7 +271,8 @@ class HtmlReportGenerator:
         self.potpourri_buffer = []
 
     def _render_cell(self, cell):
-        txt = html.escape(cell.subject or cell.nominal or "").replace(" ", "&nbsp;")
+        content = getattr(cell, "subject", None) or getattr(cell, "nominal", None) or ""
+        txt = html.escape(content).replace(" ", "&nbsp;")
         rid = cell.relation_id.name
         
         # Tooltip generation

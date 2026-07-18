@@ -1,7 +1,7 @@
 # You likely need to install this: pip install pyrsistent
 from pyrsistent import pmap, pset
 from functools import lru_cache
-from vut.engine.compare.engine.potpourri.result  import Result
+from vut.engine.compare.region.potpourri.result  import Result
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 
 from typeguard import typechecked

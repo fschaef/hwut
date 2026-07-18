@@ -1,4 +1,4 @@
-import vut.engine.compare.engine.potpourri.association  as     potpourri_association
+import vut.engine.compare.region.potpourri.best_match  as     potpourri_association
 
 
 def do(subject, nominal, analogy_db):

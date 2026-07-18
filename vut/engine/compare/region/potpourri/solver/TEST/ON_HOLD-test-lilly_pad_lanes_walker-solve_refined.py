@@ -16,7 +16,7 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../../")
 sys.path.insert(0, this_directory)
 
-from vut.engine.compare.engine.potpourri.solver.csp_arc_consistency import ( #noqa E402
+from vut.engine.compare.region.potpourri.solver.csp_arc_consistency import ( #noqa E402
                                                                      solve_refined, 
                                                                      pad_ids_to_bitmask)
 

@@ -8,8 +8,8 @@ import sys
 sys.path.insert(0, "../../../../../")
 
 from vut.engine.compare.engine.line                                           import Line
-from vut.engine.compare.associate.edit_operations.edit import E_EditId, Edit
-from vut.engine.compare.associate.line_pair                          import LinePair
+from vut.engine.compare.core.edit_operations.edit import E_EditId, Edit
+from vut.engine.compare.core.line_pair                          import LinePair
 
 from vut.engine.compare.engine.input.line_element   import E_ToleranceId
 from vut.engine.compare.engine.input.pattern_finder import PatternFinder

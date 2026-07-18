@@ -34,7 +34,7 @@ import os
 this_directory = os.path.join(os.path.dirname(sys.argv[0]), "../../../../../..")
 sys.path.insert(0, this_directory)
 
-from   vut.engine.compare.engine.potpourri.matching import (PotentialPairDb,           #noqa E402
+from   vut.engine.compare.region.potpourri.matching import (PotentialPairDb,           #noqa E402
                                                      PairedGraph,
                                                      Result,
                                                      extract_ultimates_and_hopeless,

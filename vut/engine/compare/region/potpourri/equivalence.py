@@ -1,6 +1,6 @@
 from   __future__ import annotations
 from   vut.engine.compare.engine.analogy_db        import AnalogyDb
-import vut.engine.compare.engine.potpourri.pairing as     pairing
+import vut.engine.compare.region.potpourri.pairing as     pairing
 
 
 def do(subject:    InputChunk,    #noqa F821

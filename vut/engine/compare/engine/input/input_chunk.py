@@ -22,11 +22,11 @@ from   vut.engine.compare.engine.line           import Line
 from   vut.engine.compare.engine.input.pattern_finder  import E_ToleranceId
 from   vut.engine.compare.engine.analogy_db     import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
-import vut.engine.compare.equivalence.line      as equivalence_check_line
-import vut.engine.compare.equivalence.potpourri as equivalence_check_potpourri
-from   vut.engine.compare.associate.line_pair       import LinePair
-import vut.engine.compare.associate.line_sequence   as association_line_sequence
-import vut.engine.compare.associate.potpourri       as association_potpourri
+import vut.engine.compare.region.line_sequence.equivalence      as equivalence_check_line
+import vut.engine.compare.region.potpourri.equivalence as equivalence_check_potpourri
+from   vut.engine.compare.core.line_pair       import LinePair
+import vut.engine.compare.region.line_sequence.associate   as association_line_sequence
+import vut.engine.compare.region.potpourri.associate       as association_potpourri
 
 from   abc       import ABC
 from   typing    import Iterable
