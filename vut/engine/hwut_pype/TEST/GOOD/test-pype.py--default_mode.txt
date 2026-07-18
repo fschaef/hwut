@@ -1,0 +1,50 @@
+
+--- default mode starts; leaving it is one-way ---
+SCRIPT: {
+    on: <entry> => {
+        print("default begin")
+    }
+    on: "tick" => {
+        print("default tick")
+    }
+    on: "leave" => goto NAMED;
+    on: <exit> => {
+        print("default end")
+    }
+    NAMED/on: "tick" => {
+        print("NAMED tick")
+    }
+    on: <else> => ignore;
+    NAMED/on: <else> => ignore;
+}
+INPUT: {
+    tick
+    leave
+    tick
+}
+OUTPUT: {
+default begin
+default tick
+default end
+NAMED tick
+}
+
+--- default mode precedes named modes as start mode ---
+SCRIPT: {
+    NAMED/on: "x" => {
+        print("NAMED (not active at start)")
+    }
+    on: "x" => {
+        print("default handles it")
+    }
+    on: <else> => ignore;
+}
+INPUT: {
+    x
+}
+OUTPUT: {
+default handles it
+}
+
+--- no way back: mode('<default>') rejected ---
+PypeError (expected): pype.goto('<default>'): the default mode cannot be entered

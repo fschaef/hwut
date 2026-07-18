@@ -1,0 +1,58 @@
+#! /usr/bin/env hwut.pype
+# Watch a temperature trace. Above 80.0 the script enters ALERT and
+# reports the excursion when the value drops back to normal. The
+# statistics print once, from an 'EOF' handler inherited by every mode.
+
+STATS/on: <else> => ignore;
+STATS/on: <eof> => {
+    print("-" * 44)
+    print("readings: %d, mean %.2f C, peak %.1f C" % (n, total / n, peak))
+}
+
+is: STATS
+on: <entry> => {
+    n = 0
+    total = 0.0
+    peak = -273.15
+}
+on: "T =" <t = number> "C" => {
+    n += 1
+    total += t
+    if t > peak: peak = t
+    if t > 80.0:
+        alert_start_n = n
+        alert_peak = t
+        pype.goto("ALERT")
+}
+on: "T =" "sensor-fault" => {
+    print("reading %d: sensor fault, ignored" % (n + 1))
+}
+
+ALERT is: STATS
+ALERT/on: <entry> => {
+    print("ALERT entered at reading %d (%.1f C)" % (alert_start_n, alert_peak))
+}
+ALERT/on: "T =" <t = number> "C" => {
+    n += 1
+    total += t
+    if t > peak: peak = t
+    if t > alert_peak: alert_peak = t
+    if t <= 80.0:
+        print("ALERT cleared at reading %d, excursion peak %.1f C"
+              % (n, alert_peak))
+        pype.goto("NORMAL")
+}
+
+NORMAL is: STATS
+NORMAL/on: "T =" <t = number> "C" => {
+    n += 1
+    total += t
+    if t > peak: peak = t
+    if t > 80.0:
+        alert_start_n = n
+        alert_peak = t
+        pype.goto("ALERT")
+}
+NORMAL/on: "T =" "sensor-fault" => {
+    print("reading %d: sensor fault, ignored" % (n + 1))
+}

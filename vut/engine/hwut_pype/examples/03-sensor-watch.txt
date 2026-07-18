@@ -1,0 +1,7 @@
+T = 71.5 C
+T = 74.0 C
+T = sensor-fault
+T = 82.5 C
+T = 85.0 C
+T = 79.0 C
+T = 76.5 C

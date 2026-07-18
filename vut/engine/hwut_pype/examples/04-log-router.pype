@@ -1,0 +1,45 @@
+#! /usr/bin/env hwut.pype
+# Route a mixed application log. COMMON carries the shared handlers,
+# including one '<exit>' section summary that every component inherits.
+# ENGINE and NETWORK inherit COMMON and add their own DISJOINT
+# vocabularies -- shadowing is forbidden, so the shared and the
+# component-specific patterns never overlap.
+
+COMMON/on: "component:" "engine"  => goto ENGINE;
+COMMON/on: "component:" "network" => goto NETWORK;
+COMMON/on: "ERROR" => {
+    error_n += 1
+    print("!! %s error: %s" % (component, pype.line().split("ERROR", 1)[1].strip()))
+}
+COMMON/on: "heartbeat" <k = int> => {
+    print("   %s heartbeat %d" % (component, k))
+}
+COMMON/on: <else> => ignore;
+COMMON/on: <exit> => {
+    print("-- section '%s' done: %d error(s) so far, %d packet drop(s)"
+          % (component, error_n, drop_n))
+}
+
+is: COMMON
+on: <entry> => {
+    component = "boot"
+    error_n = 0
+    drop_n = 0
+}
+
+ENGINE is: COMMON
+ENGINE/on: <entry> => {
+    component = "engine"
+}
+ENGINE/on: "rpm" <r = int> => {
+    print("   engine at %d rpm" % r)
+}
+
+NETWORK is: COMMON
+NETWORK/on: <entry> => {
+    component = "network"
+}
+NETWORK/on: "drop" <n = int> "packets" => {
+    drop_n += n
+    print("   network dropped %d packet(s)" % n)
+}

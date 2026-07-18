@@ -1,0 +1,56 @@
+#! /usr/bin/env hwut.pype
+# A build log is divided into phases. Each phase is a mode inheriting the
+# shared handlers of ANY (phase markers, warning counter). A phase's 'end'
+# handler prints its summary the moment the phase is left -- strictly in
+# input order.
+
+ANY/on: "=== CONFIGURE ===" => goto CONFIGURE;
+ANY/on: "=== COMPILE ==="   => goto COMPILE;
+ANY/on: "=== LINK ==="      => goto LINK;
+ANY/on: <else> => ignore;
+ANY/on: "warning:" => {
+    warning_n += 1
+    phase_warning_n += 1
+}
+
+is: ANY
+on: <entry> => {
+    warning_n = 0
+    phase_warning_n = 0
+}
+
+CONFIGURE is: ANY
+CONFIGURE/on: <entry> => {
+    phase_warning_n = 0
+}
+CONFIGURE/on: "checking" <what = "*"> "... yes" => {
+    print("configure: %s available" % what)
+}
+CONFIGURE/on: <exit> => {
+    print("configure done, %d warning(s)" % phase_warning_n)
+}
+
+COMPILE is: ANY
+COMPILE/on: <entry> => {
+    phase_warning_n = 0
+    object_n = 0
+}
+COMPILE/on: "CC" <f = "*.c"> => {
+    object_n += 1
+}
+COMPILE/on: <exit> => {
+    print("compile done, %d object(s), %d warning(s)"
+          % (object_n, phase_warning_n))
+}
+
+LINK is: ANY
+LINK/on: <entry> => {
+    phase_warning_n = 0
+}
+LINK/on: "LD" <exe = "*"> => {
+    print("link: produced %s" % exe)
+}
+LINK/on: <exit> => {
+    print("link done, %d warning(s)" % phase_warning_n)
+    print("build total: %d warning(s)" % warning_n)
+}

@@ -1,0 +1,137 @@
+
+--- else fires only on unmatched lines ---
+SCRIPT: {
+    on: "known" <n = int> => {
+        print("known:", n)
+    }
+    on: <else> => {
+        print("unmatched: %r" % pype.line())
+    }
+}
+INPUT: {
+    known 7
+    something odd
+    known 8
+}
+OUTPUT: {
+known: 7
+unmatched: 'something odd'
+known: 8
+}
+
+--- pass-through filter: transform known lines, FLUSH the rest ---
+SCRIPT: {
+    on: "T =" <t = number> "C" => {
+        print("T = %.1f F" % (t * 9 / 5 + 32))
+    }
+    on: <else> => flush;
+}
+INPUT: {
+    # header kept verbatim
+    T = 100.0 C
+    T = 0.0 C
+    trailer kept verbatim
+}
+OUTPUT: {
+# header kept verbatim
+T = 212.0 F
+T = 32.0 F
+trailer kept verbatim
+}
+
+--- FLUSH on a match handler, chained after a block ---
+SCRIPT: {
+    on: "ERROR" => {
+        error_n = error_n + 1 if 'error_n' in dir() else 1
+        print(">> error number %d:" % error_n)
+    }
+    and: flush;
+    on: <else> => ignore;
+}
+INPUT: {
+    ERROR disk full
+    fine line
+    ERROR again
+}
+OUTPUT: {
+>> error number 1:
+ERROR disk full
+>> error number 2:
+ERROR again
+}
+
+--- <else> is the one shadowable handler: own before inherited ---
+SCRIPT: {
+    BASE/on: <else> => {
+        print("BASE else: %r" % pype.line())
+    }
+    BASE/on: "b" => ignore;
+    STRICT is: BASE
+    STRICT/on: "ok" => {
+        print("STRICT ok")
+    }
+    STRICT/on: <else> => {
+        print("STRICT else (shadows BASE): %r" % pype.line())
+    }
+    on: "go" => goto STRICT;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    ok
+    mystery
+}
+OUTPUT: {
+STRICT ok
+STRICT else (shadows BASE): 'mystery'
+}
+
+--- one inherited <else> serves the whole hierarchy ---
+SCRIPT: {
+    BASE/on: <else> => {
+        print("BASE else: %r" % pype.line())
+    }
+    is: BASE
+    on: "go" => goto STRICT;
+    STRICT is: BASE
+    STRICT/on: "ok" => {
+        print("STRICT ok")
+    }
+}
+INPUT: {
+    mystery in default
+    go
+    ok
+    mystery in STRICT
+}
+OUTPUT: {
+BASE else: 'mystery in default'
+STRICT ok
+BASE else: 'mystery in STRICT'
+}
+
+--- two inherited <else>: first base of the list wins ---
+SCRIPT: {
+    B1/on: <else> => {
+        print("B1 else fires")
+    }
+    B2/on: <else> => ignore;
+    SUB is: B1, B2
+    SUB/on: "x" => ignore;
+    on: "go" => goto SUB;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    mystery
+}
+OUTPUT: {
+B1 else fires
+}
+
+--- first <else> of the effective list fires: MID over ROOT ---
+parse succeeded: SUB's effective <else> is MID's (own before inherited); ROOT's flush is shadowed
+
+--- effect-command words are lawful mode names; unknown ones err ---
+parse succeeded: mode 'FLUSH' defined and targeted via goto
+PypeError (expected): pype.goto('FLUSH'): no such mode

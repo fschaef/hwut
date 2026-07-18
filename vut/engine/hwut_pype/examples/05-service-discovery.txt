@@ -1,0 +1,8 @@
+booting test rig
+request: all service-providers respond
+response from  storage-service
+response from  auth-service
+response from  metrics-service
+response from  gateway-service
+registration finished
+all checks passed

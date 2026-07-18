@@ -1,0 +1,10 @@
+heartbeat 1
+component: engine
+rpm 3200
+heartbeat 2
+ERROR overheat detected
+component: network
+heartbeat 3
+drop 4 packets
+ERROR socket reset
+rpm 9999

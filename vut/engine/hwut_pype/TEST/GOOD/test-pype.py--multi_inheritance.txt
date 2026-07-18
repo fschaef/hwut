@@ -1,0 +1,103 @@
+
+--- two bases: handlers of both received ---
+SCRIPT: {
+    NUM/on: "n" <x = int> => {
+        print("NUM:", x)
+    }
+    TXT/on: "t" <s = "*"> => {
+        print("TXT:", s)
+    }
+    SUB is: NUM, TXT
+    SUB/on: <else> => ignore;
+    on: "go" => goto SUB;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    n 5
+    t hello
+}
+OUTPUT: {
+NUM: 5
+TXT: hello
+}
+
+--- diamond: shared root handler enters once, no interference ---
+SCRIPT: {
+    ROOT/on: "r" => {
+        print("ROOT handler")
+    }
+    LEFT is: ROOT
+    LEFT/on: "l" => {
+        print("LEFT handler")
+    }
+    RIGHT is: ROOT
+    RIGHT/on: "q" => {
+        print("RIGHT handler")
+    }
+    ROOT/on: <else> => ignore;
+    SUB is: LEFT, RIGHT
+    on: "go" => goto SUB;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    r
+    l
+    q
+}
+OUTPUT: {
+ROOT handler
+LEFT handler
+RIGHT handler
+}
+
+--- interference: equal patterns across two bases (trivial intersection) ---
+PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:4) carry intersecting patterns; shadowing is forbidden
+
+--- own override does not cure base interference ---
+PypeError (expected): <test>: interference in mode 'SUB': handlers from 'SUB' (<test>:4) and 'B1' (<test>:1) carry intersecting patterns; shadowing is forbidden
+
+--- interference across depth: base and base-of-base ---
+PypeError (expected): <test>: interference in mode 'SUB': handlers from 'ROOT' (<test>:1) and 'OTHER' (<test>:3) carry intersecting patterns; shadowing is forbidden
+
+--- intersection, not identity: <int> against <number> ---
+PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:2) carry intersecting patterns; shadowing is forbidden
+
+--- intersection of globs: *.txt against * ---
+PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:2) carry intersecting patterns; shadowing is forbidden
+
+--- disjoint languages are lawful across bases ---
+SCRIPT: {
+    B1/on: <f = "*.txt"> => {
+        print("txt file:", f)
+    }
+    B2/on: <g = "*.log"> => {
+        print("log file:", g)
+    }
+    B3/on: "abc" "def" => {
+        print("two-token constant, disjoint from both globs")
+    }
+    SUB is: B1, B2, B3
+    SUB/on: <else> => ignore;
+    on: "go" => goto SUB;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    report.txt
+    trace.log
+    abc def
+}
+OUTPUT: {
+txt file: report.txt
+log file: trace.log
+two-token constant, disjoint from both globs
+}
+
+--- interference decides glob classes exactly ---
+PypeError (expected): <test>: interference in mode 'SUB': handlers from 'B1' (<test>:1) and 'B2' (<test>:2) carry intersecting patterns; shadowing is forbidden
+disjoint classes lawful: '[abc]' vs 'd'
+
+--- effect-command words in a base list: plain unknown-mode law ---
+PypeError (expected): <test>:2: 'is:' names unknown mode 'IGNORE'

@@ -1,0 +1,81 @@
+
+--- 01-test-report ---
+GENERATED (exit 0): {
+    [PASS] 1.5 s sample
+    [FAIL] 2.5 s sample
+}
+ROUND TRIP (exit 0): {
+    ok   sample           (1.50 s)
+    FAIL sample           (2.50 s)
+    ----------------------------------
+    total: 1 passed, 1 failed
+      failed: sample
+}
+
+--- 02-build-phases ---
+GENERATED (exit 0): {
+    warning:
+    === CONFIGURE ===
+    checking sample ... yes
+    === COMPILE ===
+    CC sample.c
+    === LINK ===
+    LD sample
+}
+ROUND TRIP (exit 0): {
+    configure: sample available
+    configure done, 0 warning(s)
+    compile done, 1 object(s), 0 warning(s)
+    link: produced sample
+    link done, 0 warning(s)
+    build total: 1 warning(s)
+}
+
+--- 03-sensor-watch ---
+GENERATED (exit 0): {
+    T = 1.5 C
+    T = sensor-fault
+}
+ROUND TRIP (exit 0): {
+    reading 2: sensor fault, ignored
+    --------------------------------------------
+    readings: 1, mean 1.50 C, peak 1.5 C
+}
+
+--- 04-log-router ---
+GENERATED (exit 0): {
+    ERROR
+    heartbeat 1
+    component: engine
+    rpm 2
+    component: network
+    drop 3 packets
+}
+ROUND TRIP (exit 0): {
+    !! boot error: 
+       boot heartbeat 1
+    -- section 'boot' done: 1 error(s) so far, 0 packet drop(s)
+       engine at 2 rpm
+    -- section 'engine' done: 1 error(s) so far, 0 packet drop(s)
+       network dropped 3 packet(s)
+    -- section 'network' done: 1 error(s) so far, 3 packet drop(s)
+}
+
+--- 05-service-discovery ---
+GENERATED (exit 0): {
+    request: all service-providers respond
+    response from sample
+    registration finished
+}
+ROUND TRIP (exit 0): {
+    discovery request observed
+    a provider responded (1 so far)
+    registered services, alphabetical:
+        sample
+}
+
+--- walk skips pure-IGNORE handlers and mode()-only switches ---
+visible 1
+go
+deep sample.log
+hidden

@@ -1,0 +1,33 @@
+#! /usr/bin/env hwut.pype
+# THE motivating example: deterministicalise a timing-dependent test.
+#
+# A service-discovery test broadcasts 'all service-providers respond'.
+# Providers answer in an order that depends on timing -- printing their
+# names as they arrive would break byte-exact comparison. The script
+# therefore records arrivals and reports only order-independent facts:
+# a running COUNT per arrival, and the full list ALPHABETICALLY at the
+# settlement point 'registration finished'.
+
+on: "request: all service-providers respond" => {
+    registered = []
+    print("discovery request observed")
+}
+and: goto DISCOVERY;
+on: <else> => ignore;
+
+DISCOVERY/on: "response from" <name = "*"> => {
+    registered.append(name)
+    print("a provider responded (%d so far)" % len(registered))
+}
+DISCOVERY/on: "registration finished" => {
+    print("registered services, alphabetical:")
+    for name in sorted(registered):
+        print("    " + name)
+}
+and: goto DONE;
+DISCOVERY/on: if ( pype.time() > 30.0 ) => {
+    print("wait guard: discovery exceeded 30 s at line %d" % pype.line_n())
+}
+DISCOVERY/on: <else> => ignore;
+
+DONE/on: <else> => flush;

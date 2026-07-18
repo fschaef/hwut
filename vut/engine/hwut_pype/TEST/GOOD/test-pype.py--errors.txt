@@ -1,0 +1,12 @@
+
+--- missing arrow ---
+PypeError (expected): <err>:1: missing '=> EFFECT'
+
+--- unclosed block ---
+PypeError (expected): <err>:1: block opened here is never closed by '}'
+
+--- 'and:' without handler ---
+PypeError (expected): <err>:1: 'and:' without preceding handler
+
+--- switch to unknown mode ---
+PypeError (expected): pype.goto('GHOST'): no such mode

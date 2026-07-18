@@ -1,0 +1,12 @@
+=== CONFIGURE ===
+checking stdio.h ... yes
+checking pthread ... yes
+warning: cross compilation not tested
+=== COMPILE ===
+CC main.c
+CC lexer.c
+warning: unused variable 'tmp'
+CC parser.c
+warning: implicit conversion
+=== LINK ===
+LD vut-engine

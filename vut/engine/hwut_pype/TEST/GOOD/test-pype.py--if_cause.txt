@@ -1,0 +1,81 @@
+
+--- if-cause fires on condition; dispatch order holds ---
+SCRIPT: {
+    M/on: "known" => {
+        print("pattern first")
+    }
+    M/on: if ( pype.line_n() >= 3 ) => {
+        print("late line %d: %r" % (pype.line_n(), pype.line()))
+    }
+    M/on: <else> => {
+        print("early unmatched: %r" % pype.line())
+    }
+}
+INPUT: {
+    stray
+    known
+    stray again
+    known
+}
+OUTPUT: {
+early unmatched: 'stray'
+pattern first
+late line 3: 'stray again'
+pattern first
+}
+
+--- condition reads the shared namespace ---
+SCRIPT: {
+    M/on: <entry> => {
+        budget = 2
+    }
+    M/on: "spend" => {
+        budget -= 1
+        print("spent; budget", budget)
+    }
+    M/on: if ( budget <= 0 ) => {
+        print("budget exhausted at %r" % pype.line())
+    }
+    M/on: <else> => ignore;
+}
+INPUT: {
+    spend
+    idle
+    spend
+    idle
+}
+OUTPUT: {
+spent; budget 1
+spent; budget 0
+budget exhausted at 'idle'
+}
+
+--- 'if' causes are conditions, not patterns: exempt from disjointness ---
+SCRIPT: {
+    M/on: "known" => {
+        print("pattern handler")
+    }
+    M/on: if ( pype.line_n() % 2 == 0 ) => {
+        print("even line condition")
+    }
+    M/on: if ( True ) => {
+        print("catch-any condition, later in order")
+    }
+    M/on: <else> => ignore;
+}
+INPUT: {
+    known
+    anything
+    odd again
+}
+OUTPUT: {
+pattern handler
+even line condition
+catch-any condition, later in order
+}
+
+--- a mode containing 'if' cannot be inherited from ---
+PypeError (expected): <test>:3: mode 'B' contains an 'if' cause and cannot be inherited from
+
+--- broken condition rejected at parse ---
+PypeError (expected): <test>:1: cannot compile 'if' condition: invalid syntax (<test>:1, line 1)

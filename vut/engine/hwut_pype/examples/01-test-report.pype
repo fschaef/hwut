@@ -1,0 +1,24 @@
+#! /usr/bin/env hwut.pype
+# Count PASS/FAIL lines of a test-suite log; grand summary at end of input.
+
+on: <entry> => {
+    pass_n = 0
+    fail_n = 0
+    fail_list = []
+}
+on: "[PASS]" <t = number> "s" <name = "*"> => {
+    pass_n += 1
+    print("ok   %-16s (%.2f s)" % (name, t))
+}
+on: "[FAIL]" <t = number> "s" <name = "*"> => {
+    fail_n += 1
+    fail_list.append(name)
+    print("FAIL %-16s (%.2f s)" % (name, t))
+}
+on: <else> => ignore;
+on: <exit> => {
+    print("-" * 34)
+    print("total: %d passed, %d failed" % (pass_n, fail_n))
+    for name in fail_list:
+        print("  failed: %s" % name)
+}

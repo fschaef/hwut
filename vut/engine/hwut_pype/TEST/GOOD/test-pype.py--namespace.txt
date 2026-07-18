@@ -1,0 +1,29 @@
+
+--- counter survives handlers and mode switches ---
+SCRIPT: {
+    A/on: <entry> => {
+        n = 0
+    }
+    A/on: "tick" => {
+        n += 1
+        print("A tick, n =", n)
+    }
+    A/on: "over" => goto B;
+    B/on: "tick" => {
+        n += 1
+        print("B tick, n =", n)
+    }
+    A/on: <else> => ignore;
+    B/on: <else> => ignore;
+}
+INPUT: {
+    tick
+    tick
+    over
+    tick
+}
+OUTPUT: {
+A tick, n = 1
+A tick, n = 2
+B tick, n = 3
+}

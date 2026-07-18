@@ -1,0 +1,122 @@
+
+--- 01-test-report ---
+INPUT: {
+    test session starts
+    [PASS]  0.12 s  test-parser
+    [PASS]  1.50 s  test-declare
+    [FAIL]  0.03 s  test-elaborate
+    random noise that matches nothing
+    [PASS]  0.77 s  test-interpret
+    [FAIL]  2.10 s  test-compare
+    session done
+}
+EXIT: 0
+OUTPUT: {
+    ok   test-parser      (0.12 s)
+    ok   test-declare     (1.50 s)
+    FAIL test-elaborate   (0.03 s)
+    ok   test-interpret   (0.77 s)
+    FAIL test-compare     (2.10 s)
+    ----------------------------------
+    total: 3 passed, 2 failed
+      failed: test-elaborate
+      failed: test-compare
+}
+
+--- 02-build-phases ---
+INPUT: {
+    === CONFIGURE ===
+    checking stdio.h ... yes
+    checking pthread ... yes
+    warning: cross compilation not tested
+    === COMPILE ===
+    CC main.c
+    CC lexer.c
+    warning: unused variable 'tmp'
+    CC parser.c
+    warning: implicit conversion
+    === LINK ===
+    LD vut-engine
+}
+EXIT: 0
+OUTPUT: {
+    configure: stdio.h available
+    configure: pthread available
+    configure done, 1 warning(s)
+    compile done, 3 object(s), 2 warning(s)
+    link: produced vut-engine
+    link done, 0 warning(s)
+    build total: 3 warning(s)
+}
+
+--- 03-sensor-watch ---
+INPUT: {
+    T = 71.5 C
+    T = 74.0 C
+    T = sensor-fault
+    T = 82.5 C
+    T = 85.0 C
+    T = 79.0 C
+    T = 76.5 C
+}
+EXIT: 0
+OUTPUT: {
+    reading 3: sensor fault, ignored
+    ALERT entered at reading 3 (82.5 C)
+    ALERT cleared at reading 5, excursion peak 85.0 C
+    --------------------------------------------
+    readings: 6, mean 78.08 C, peak 85.0 C
+}
+
+--- 04-log-router ---
+INPUT: {
+    heartbeat 1
+    component: engine
+    rpm 3200
+    heartbeat 2
+    ERROR overheat detected
+    component: network
+    heartbeat 3
+    drop 4 packets
+    ERROR socket reset
+    rpm 9999
+}
+EXIT: 0
+OUTPUT: {
+       boot heartbeat 1
+    -- section 'boot' done: 0 error(s) so far, 0 packet drop(s)
+       engine at 3200 rpm
+       engine heartbeat 2
+    !! engine error: overheat detected
+    -- section 'engine' done: 1 error(s) so far, 0 packet drop(s)
+       network heartbeat 3
+       network dropped 4 packet(s)
+    !! network error: socket reset
+    -- section 'network' done: 2 error(s) so far, 4 packet drop(s)
+}
+
+--- 05-service-discovery ---
+INPUT: {
+    booting test rig
+    request: all service-providers respond
+    response from  storage-service
+    response from  auth-service
+    response from  metrics-service
+    response from  gateway-service
+    registration finished
+    all checks passed
+}
+EXIT: 0
+OUTPUT: {
+    discovery request observed
+    a provider responded (1 so far)
+    a provider responded (2 so far)
+    a provider responded (3 so far)
+    a provider responded (4 so far)
+    registered services, alphabetical:
+        auth-service
+        gateway-service
+        metrics-service
+        storage-service
+    all checks passed
+}

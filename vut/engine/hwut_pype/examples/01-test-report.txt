@@ -1,0 +1,8 @@
+test session starts
+[PASS]  0.12 s  test-parser
+[PASS]  1.50 s  test-declare
+[FAIL]  0.03 s  test-elaborate
+random noise that matches nothing
+[PASS]  0.77 s  test-interpret
+[FAIL]  2.10 s  test-compare
+session done

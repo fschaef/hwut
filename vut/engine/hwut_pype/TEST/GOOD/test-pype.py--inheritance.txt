@@ -1,0 +1,94 @@
+
+--- inherited match and <entry>/<exit> handlers ---
+SCRIPT: {
+    BASE/on: <entry> => {
+        print("BASE begin")
+    }
+    BASE/on: "common" => {
+        print("BASE handles 'common'")
+    }
+    BASE/on: <exit> => {
+        print("BASE end")
+    }
+    BASE/on: <else> => ignore;
+    SUB is: BASE
+    SUB/on: "extra" => {
+        print("SUB handles 'extra'")
+    }
+    on: "go" => goto SUB;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    common
+    extra
+}
+OUTPUT: {
+BASE begin
+BASE handles 'common'
+SUB handles 'extra'
+BASE end
+}
+
+--- shadowing is forbidden: own against inherited ---
+PypeError (expected): <test>: interference in mode 'SUB': handlers from 'SUB' (<test>:4) and 'BASE' (<test>:1) carry intersecting patterns; shadowing is forbidden
+
+--- shadowing is forbidden: own against own ---
+PypeError (expected): <test>: interference in mode '<default>': handlers from '<default>' (<test>:1) and '<default>' (<test>:2) carry intersecting patterns; shadowing is forbidden
+
+--- disjoint vocabularies inherit cleanly; no shadowing needed ---
+SCRIPT: {
+    BASE/on: "data" <n = int> => {
+        print("BASE data", n)
+    }
+    BASE/on: <else> => ignore;
+    SUB is: BASE
+    SUB/on: "extra" => {
+        print("SUB extra")
+    }
+    on: "go" => goto SUB;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    data 7
+    extra
+}
+OUTPUT: {
+BASE data 7
+SUB extra
+}
+
+--- transitive inheritance: C is: B is: A ---
+SCRIPT: {
+    A/on: "a" => {
+        print("from A")
+    }
+    A/on: <else> => ignore;
+    B is: A
+    B/on: "b" => {
+        print("from B")
+    }
+    C is: B
+    on: "go" => goto C;
+    on: <else> => ignore;
+}
+INPUT: {
+    go
+    a
+    b
+}
+OUTPUT: {
+from A
+from B
+}
+
+--- inheritance cycle rejected ---
+PypeError (expected): <test>: inheritance cycle: A is: B is: A
+
+--- unknown base rejected ---
+PypeError (expected): <test>:1: 'is:' names unknown mode 'GHOST'
+
+--- IGNORE reserved as mode name ---
+PypeError (expected): <test>:1: cannot read EFFECT '{ }'
+PypeError (expected): <test>:1: 'is:' names unknown mode 'IGNORE'

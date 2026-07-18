@@ -1,0 +1,91 @@
+
+--- constants, number, int, glob; named and unnamed ---
+SCRIPT: {
+    M/on: "value" <x = number> => {
+        print("number ->", repr(x))
+    }
+    M/on: "count" <k = int> => {
+        print("int    ->", repr(k))
+    }
+    M/on: "file" <f = "*.txt"> => {
+        print("glob   ->", repr(f))
+    }
+    M/on: "flag" <int> => {
+        print("unnamed int matched; line:", pype.line())
+    }
+    M/on: <else> => ignore;
+}
+INPUT: {
+    value -3.25
+    count 42
+    file report.txt
+    flag 7
+    this line matches nothing
+}
+OUTPUT: {
+number -> -3.25
+int    -> 42
+glob   -> 'report.txt'
+unnamed int matched; line: flag 7
+}
+
+--- glob character classes: '[seq]', '[!seq]', ranges ---
+SCRIPT: {
+    on: "f" <name = "log[0-9].txt"> => {
+        print("numbered log:", name)
+    }
+    on: "g" <word = "[!p]*"> => {
+        print("not p-initial:", word)
+    }
+    on: <else> => {
+        print("rejected: %r" % pype.line())
+    }
+}
+INPUT: {
+    f log7.txt
+    f logX.txt
+    g quiet
+    g pond
+}
+OUTPUT: {
+numbered log: log7.txt
+not p-initial: X.txt
+not p-initial: quiet
+rejected: 'g pond'
+}
+
+--- class edge law: leading ']' literal; unclosed '[' literal ---
+SCRIPT: {
+    on: <x = "[]]end"> => {
+        print("leading ] literal:", x)
+    }
+    on: <y = "a[b"> => {
+        print("unclosed [ literal:", y)
+    }
+    on: <else> => ignore;
+}
+INPUT: {
+    ]end
+    a[b
+}
+OUTPUT: {
+leading ] literal: ]end
+unclosed [ literal: a[b
+}
+
+--- first-match dispatch: earlier handler wins ---
+SCRIPT: {
+    M/on: "abc" => {
+        print("first")
+    }
+    M/on: "abc" "def" => {
+        print("second (never reached for 'abc def')")
+    }
+    M/on: <else> => ignore;
+}
+INPUT: {
+    abc def
+}
+OUTPUT: {
+first
+}

@@ -1,0 +1,216 @@
+
+--- <bof> and <eof> fire once at the file boundaries ---
+SCRIPT: {
+    on: <bof> => {
+        print("<bof> at line_n", pype.line_n())
+    }
+    on: "x" => {
+        print("x at line_n", pype.line_n())
+    }
+    on: <else> => ignore;
+    on: <eof> => {
+        print("<eof> at line_n", pype.line_n(),
+              "; pype.time() >= 0:", pype.time() >= 0.0)
+    }
+}
+INPUT: {
+    x
+    noise
+    x
+}
+OUTPUT: {
+<bof> at line_n 0
+x at line_n 1
+x at line_n 3
+<eof> at line_n 3 ; pype.time() >= 0: True
+}
+
+--- PUSH suspends, POP returns; <entry>/<exit> fire on both ---
+SCRIPT: {
+    on: <entry> => {
+        print("default <entry>")
+    }
+    on: "dig" => push DETAIL;
+    on: "x" => {
+        print("default x")
+    }
+    on: <else> => ignore;
+    DETAIL/on: <entry> => {
+        print("  DETAIL <entry>")
+    }
+    DETAIL/on: "up" => pop;
+    DETAIL/on: "x" => {
+        print("  DETAIL x")
+    }
+    DETAIL/on: <else> => ignore;
+    DETAIL/on: <exit> => {
+        print("  DETAIL <exit>")
+    }
+}
+INPUT: {
+    x
+    dig
+    x
+    up
+    x
+}
+OUTPUT: {
+default <entry>
+default x
+  DETAIL <entry>
+  DETAIL x
+  DETAIL <exit>
+default <entry>
+default x
+}
+
+--- POP may return into the nameless default mode ---
+SCRIPT: {
+    on: "call" => push SUB;
+    on: "x" => {
+        print("default x")
+    }
+    on: <else> => ignore;
+    SUB/on: "ret" => pop;
+    SUB/on: <else> => ignore;
+}
+INPUT: {
+    call
+    ret
+    x
+}
+OUTPUT: {
+default x
+}
+
+--- pop with an empty stack is a runtime error ---
+PypeError (expected): pop with empty mode stack
+
+--- no reserved mode names: 'goto NAME;' cannot collide ---
+SCRIPT: {
+    on: "go" => goto IGNORE;
+    on: <else> => ignore;
+    IGNORE/on: "x" => {
+        print("a mode named IGNORE, lawfully addressed by goto")
+    }
+    IGNORE/on: <else> => ignore;
+}
+INPUT: {
+    go
+    x
+}
+OUTPUT: {
+a mode named IGNORE, lawfully addressed by goto
+}
+
+--- malformed effects rejected: missing ';', missing argument ---
+PypeError (expected): <test>:1: cannot read EFFECT 'goto B'
+PypeError (expected): <test>:1: cannot read EFFECT 'push;'
+
+--- released: cause words and anything else are lawful mode names ---
+SCRIPT: {
+    on: "go" => goto WHEN_THE_SUN_SHINES;
+    on: <else> => ignore;
+    WHEN_THE_SUN_SHINES/on: "x" => {
+        print("shining")
+    }
+    WHEN_THE_SUN_SHINES/on: "visit" => goto ENTRY;
+    WHEN_THE_SUN_SHINES/on: <else> => ignore;
+    ENTRY/on: "x" => {
+        print("a mode named ENTRY, lawfully")
+    }
+    ENTRY/on: <else> => ignore;
+}
+INPUT: {
+    go
+    x
+    visit
+    x
+}
+OUTPUT: {
+shining
+a mode named ENTRY, lawfully
+}
+
+--- pype.bindings(): the current line's pattern bindings ---
+SCRIPT: {
+    M/on: "p" +( i : <x[i] = int> ) => {
+        print("bindings:", dict(sorted(pype.bindings().items())))
+    }
+    M/on: if ( True ) => {
+        print("if fire, bindings:", pype.bindings())
+    }
+    M/on: <else> => ignore;
+}
+INPUT: {
+    p 4 5
+    anything else
+}
+OUTPUT: {
+bindings: {'i': 2, 'x': {0: 4, 1: 5}}
+if fire, bindings: {}
+}
+
+--- --trace: gcc-style 'file:line:' diagnostics on stderr ---
+EXIT: 0
+STDOUT (the clean filter stream): {
+    seen 7
+    x 7
+}
+TRACE, gcc style (default) (stderr): {
+    tmp-trace.pype: mode active: <default>
+    <stdin>:1: input: 'x 7'
+    tmp-trace.pype:2: bindings: [('n', 7)]
+    tmp-trace.pype:2: fire: <default>/on: "x" <n = int>
+    tmp-trace.pype:3: py: print("seen", n)
+    tmp-trace.pype:2: effect: flush ;
+    <stdin>:2: input: 'go'
+    tmp-trace.pype:6: fire: <default>/on: "go"
+    tmp-trace.pype:6: effect: push DEEP ;
+    tmp-trace.pype: mode active: DEEP
+    <stdin>:3: input: 'mystery'
+    tmp-trace.pype:9: fire: DEEP/on: <else>
+    <stdin>:4: input: 'up'
+    tmp-trace.pype:8: fire: DEEP/on: "up"
+    tmp-trace.pype:8: effect: pop ;
+    tmp-trace.pype: mode active: <default>
+}
+EXIT: 0
+STDOUT (the clean filter stream): {
+    seen 7
+    x 7
+}
+TRACE, plain style (stderr): {
+    TRACE| mode active: <default>
+    TRACE| [1] 'x 7'
+    TRACE|     bindings: [('n', 7)]
+    TRACE|     fire <default>/on: "x" <n = int>   (tmp-trace.pype:2)
+    TRACE|         py 3: print("seen", n)
+    TRACE|         effect: flush ;
+    TRACE| [2] 'go'
+    TRACE|     fire <default>/on: "go"   (tmp-trace.pype:6)
+    TRACE|         effect: push DEEP ;
+    TRACE| mode active: DEEP
+    TRACE| [3] 'mystery'
+    TRACE|     fire DEEP/on: <else>   (tmp-trace.pype:9)
+    TRACE| [4] 'up'
+    TRACE|     fire DEEP/on: "up"   (tmp-trace.pype:8)
+    TRACE|         effect: pop ;
+    TRACE| mode active: <default>
+}
+
+--- --trace with mode-name filters traces only those modes ---
+TRACE, filtered to DEEP (stderr): {
+    tmp-trace-filter.pype: mode active: DEEP
+    <stdin>:3: input: 'mystery'
+    tmp-trace-filter.pype:6: fire: DEEP/on: <else>
+    <stdin>:4: input: 'up'
+    tmp-trace-filter.pype:5: fire: DEEP/on: "up"
+    tmp-trace-filter.pype:5: effect: pop ;
+}
+
+--- --dry-run checks the script and reads no input ---
+EXIT: 0
+STDOUT: dry run ok: 1 mode(s), 2 handler(s)
+EXIT: 1
+STDERR: pype: tmp-dry-bad.pype: mode '<default>' has no <else> handler in its effective list; every activatable mode must state what happens to unmatched lines

@@ -1,0 +1,90 @@
+
+--- bol distinguishes line-start from mid-line ---
+SCRIPT: {
+    M/on: <bol> "#" => {
+        print("comment line")
+    }
+    M/on: <else> => {
+        print("no line-start hash: %r" % pype.line())
+    }
+}
+INPUT: {
+    # starts here
+    value # trailing
+}
+OUTPUT: {
+comment line
+no line-start hash: 'value # trailing'
+}
+
+--- anchors are transparent to interference: languages decide ---
+PypeError (expected): <test>: interference in mode 'M': handlers from 'M' (<test>:1) and 'M' (<test>:2) carry intersecting patterns; shadowing is forbidden
+
+--- eol demands the pattern reaches line end ---
+SCRIPT: {
+    M/on: "done" <eol> => {
+        print("line ends in done")
+    }
+    M/on: <else> => {
+        print("no: %r" % pype.line())
+    }
+}
+INPUT: {
+    all done
+    done deal
+}
+OUTPUT: {
+line ends in done
+no: 'done deal'
+}
+
+--- repeat: one or more; counter and indexed dictionary bindings ---
+SCRIPT: {
+    M/on: "sum" +( i : <x[i] = number> ";" ) "end" => {
+        print("n =", i, "values =", [x[k] for k in sorted(x)],
+              "sum =", sum(x.values()))
+    }
+    M/on: <else> => {
+        print("rejected: %r" % pype.line())
+    }
+}
+INPUT: {
+    sum 1.5 ; 2.5 ; 3.5 ; end
+    sum end
+}
+OUTPUT: {
+n = 3 values = [1.5, 2.5, 3.5] sum = 7.5
+rejected: 'sum end'
+}
+
+--- offset expressions in the index brackets ---
+SCRIPT: {
+    M/on: "pair" +( i : <a[i + 2] = int> <b[i - 1] = int> ) => {
+        print("i =", i, "a =", dict(sorted(a.items())),
+              "b =", dict(sorted(b.items())))
+    }
+    M/on: <else> => ignore;
+}
+INPUT: {
+    pair 10 11 20 21
+}
+OUTPUT: {
+i = 2 a = {2: 10, 3: 20} b = {-1: 11, 0: 21}
+}
+
+--- mandatory else: activatable mode without else is an error ---
+PypeError (expected): <test>: mode 'M' has no <else> handler in its effective list; every activatable mode must state what happens to unmatched lines
+
+--- mixin without else is exempt; activation via mode() is checked ---
+parse succeeded (MIXIN is no static target)
+PypeError (expected): mode 'MIXIN' cannot be activated: no <else> handler in its effective list
+
+--- indexed binding outside a repeat group rejected ---
+PypeError (expected): <test>:1: indexed binding 'x[i...]' outside a repeat group
+
+--- repeat groups do not nest ---
+PypeError (expected): <test>:1: repeat groups do not nest
+
+--- index expressions are offsets only: '+'/'-' integers ---
+PypeError (expected): <test>:1: cannot read pattern at '<x[i * 2] = int> )'
+PypeError (expected): <test>:1: index 'j' does not name the repeat counter 'i'

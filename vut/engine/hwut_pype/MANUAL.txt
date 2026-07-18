@@ -1,0 +1,566 @@
+                                pype -- MANUAL
+______________________________________________________________________________
+
+1  PURPOSE
+______________________________________________________________________________
+
+Some tests are non-deterministic with respect to time: the output they
+produce arrives in varying sequential order, depending on timing
+constraints or on the resources they interact with. Byte-exact
+comparison against a golden reference is impossible on such output.
+
+The purpose of a pype script is to DETERMINISTICALIZE the sequence. The
+script sits in the pipe between the test and the compare engine:
+
+    my-test | ./report.pype        --> deterministic text
+
+    +------------------+       +------------------+       +--------------+
+    | test application |       | pype script      |       | hwut.compare |
+    |                  | lines | records, waits,  | lines |              |
+    | provokes the     |------>| settles; reports |------>| judges       |
+    | unit under test; |       | ORDER-INDEPENDENT|       | equivalence  |
+    | REPORTS what     |       | facts: counts,   |       | against the  |
+    | happens, as it   |       | sorted summaries |       | GOOD file,   |
+    | happens          |       |                  |       | byte-exact   |
+    +------------------+       +------------------+       +--------------+
+      non-deterministic          deterministicalizes        deterministic
+      sequence                   the sequence               judgement
+
+SEPARATION OF CONCERNS. The test application PROVOKES the unit's
+behaviour and REPORTS it, only -- it does not order, filter or judge.
+The pype script ANALYZES the reports: it records arrivals, may hold
+wait guards, and prints results solely in forms independent of arrival
+order. hwut.compare JUDGES equivalence upon that description of the
+underlying behaviour, which is deterministically comparable. Each stage
+does one thing; none reaches into another's concern.
+
+Two runs of the same test may report in different orders; behind the
+pype script they are one text:
+
+    run 1:  request  B-responds  A-responds  C-responds  finished
+    run 2:  request  C-responds  B-responds  A-responds  finished
+                              |
+                              |  pype: count per arrival,
+                              v  alphabetical at settlement
+    both:   request observed
+            a provider responded (1 so far)  (2 so far)  (3 so far)
+            registered services, alphabetical:  A  B  C
+
+Worked illustration (examples/05-service-discovery.pype): a service
+discovery test broadcasts 'all service-providers respond'. The
+providers answer in timing-dependent order; printing their names as
+they arrive would break comparison. The pype script notes the request,
+registers each response while reporting only the running COUNT, and at
+the settlement point 'registration finished' prints the registered
+services ALPHABETICALLY:
+
+    on: "request: all service-providers respond" => {
+        registered = []
+        print("discovery request observed")
+    }
+    and: goto DISCOVERY;
+    on: <else> => ignore;
+
+    DISCOVERY/on: "response from" <name = "*"> => {
+        registered.append(name)
+        print("a provider responded (%d so far)" % len(registered))
+    }
+    DISCOVERY/on: "registration finished" => {
+        print("registered services, alphabetical:")
+        for name in sorted(registered):
+            print("    " + name)
+    }
+    and: goto DONE;
+    DISCOVERY/on: if ( pype.time() > 30.0 ) => {
+        print("wait guard: discovery exceeded 30 s")
+    }
+    DISCOVERY/on: <else> => ignore;
+
+    DONE/on: <else> => flush;
+
+Whatever order the providers answer in, the output is byte-identical.
+
+
+2  MODEL
+______________________________________________________________________________
+
+A pype script defines MODES. A mode carries HANDLERS. A handler pairs a
+CAUSE with one or more EFFECTS. Input lines arrive on stdin; per line,
+the handlers of the single ACTIVE mode are tried in definition order
+and the first whose cause holds fires. All Python blocks of all
+handlers share ONE namespace.
+
+    script
+      |
+      +-- MODE ---------------------+     one mode ACTIVE at a time
+      |     +-- HANDLER:  CAUSE => EFFECT { and: EFFECT }
+      |     +-- HANDLER:  ...
+      |     +-- is: BASE, ...             inherit handlers
+      |
+      +-- MODE ...
+                                    shared Python namespace: bindings
+                                    + the 'pype' object, across all
+                                    modes, all handlers, all lines
+
+
+3  INVOCATION
+______________________________________________________________________________
+
+Direct:
+
+    hwut.pype SCRIPT < input.txt
+
+As a she-bang interpreter -- the script's first line names the
+interpreter, the script is executable, 'hwut.pype' is on PATH:
+
+    #! /usr/bin/env hwut.pype
+    ...
+
+    producer | ./script.pype
+
+'--pype-dir DIR', repeatable, adds directories searched by 'import:'
+lines (section 4).
+
+Script check, reading no input:
+
+    hwut.pype --dry-run SCRIPT
+
+parses and checks the script -- syntax, inheritance, interference,
+mandatory 'else' -- and reports 'dry run ok' with mode and handler
+counts, or the error.
+
+Trace mode, for developing a script:
+
+    producer | hwut.pype --trace SCRIPT
+
+'--trace' shows, on STDERR, every input line against the handler it
+triggered -- mode, cause, bindings -- plus mode activations, effects,
+and the EXECUTED LINES INSIDE PYTHON BLOCKS. The default format is
+gcc-style compiler diagnostics, 'file:line: message', so editors and
+IDEs can jump to the location; input lines carry '<stdin>:n':
+
+    <stdin>:3: input: 'response from  auth-service'
+    f.pype:18: bindings: [('name', 'auth-service')]
+    f.pype:18: fire: DISCOVERY/on: "response from" <name = "*">
+    f.pype:19: py: registered.append(name)
+    f.pype:20: py: print("a provider responded ...")
+
+'--trace-plain' emits the same trace with a plain 'TRACE|' line
+starter and indentation instead:
+
+    TRACE| [3] 'response from  auth-service'
+    TRACE|     fire DISCOVERY/on: "response from" <name = "*">  (f:18)
+
+Mode-name arguments between the trace flag and the script restrict the
+trace to those modes ('hwut.pype --trace DISCOVERY script.pype'); the
+word 'default' names the default mode; no names means all modes.
+
+stdout remains the clean, deterministic filter stream in both styles,
+so tracing never disturbs the compared output.
+
+Generated example input, to play without a real producer:
+
+    hwut.pype --example SCRIPT > play.txt
+    hwut.pype SCRIPT < play.txt
+
+'--example' prints an input that triggers the script's handlers: one
+sample line per pattern handler, with deterministic sample values
+(integers 1, 2, 3, ...; numbers 1.5, 2.5, ...; '*' in a glob becomes
+'sample', '?' becomes 'x'). The generator walks the modes along the
+statically visible switch actions ('goto', 'push');
+'if(...)' causes and 'mode()' calls inside blocks are not followed.
+
+Exit status: 0 after the whole stream is processed; 1 on a script
+error. Errors go to stderr with 'file:line'. A Python exception inside
+a block terminates with a traceback pointing into the pype script.
+
+
+4  GRAMMAR
+______________________________________________________________________________
+
+Line-oriented. '#' at the start of a (stripped) line begins a comment.
+Blank lines are insignificant.
+
+    HANDLER  :=  [ MODE "/" ] "on:" CAUSE "=>" EFFECT { "and:" EFFECT }
+    INHERIT  :=  [ MODE ] "is:" BASE { "," BASE }
+    IMPORT   :=  "import:" '"' FILE-PATH '"'
+
+    CAUSE    :=  PATTERN                match handler (section 5)
+              |  "if" "(" python-condition ")"
+                                        fires when the condition is true
+              |  "<else>"               fires when every match handler
+                                        of the active mode failed
+              |  "<entry>" | "<exit>"   mode is activated / deactivated
+              |  "<bof>"   | "<eof>"    once, before the first / after
+                                        the last input line
+    EFFECT   :=  "{" python block "}"   run the block
+              |  "goto" OTHERMODE ";"   switch mode
+              |  "push" OTHERMODE ";"   stack the active mode, switch
+              |  "pop" ";"              return to the stacked mode
+              |  "ignore" ";"           nothing (consume the line)
+              |  "flush" ";"            emit the line unchanged
+
+A missing MODE before 'on:' or 'is:' addresses the DEFAULT MODE. Each
+'and:' appends one further EFFECT to the preceding handler; a handler's
+effects run in definition order.
+
+'import: "FILE-PATH"' pulls in another pype file: its modes merge into
+the same mode map, so a library file can provide base modes to inherit
+from. The path stands in QUOTES; environment variables inside it are
+expanded before resolution, so 'import: "$HOME/my/project/base.pype"'
+is lawful. A RELATIVE path is resolved against the importing file's
+directory, then against each '--pype-dir' directory in command-line
+order; an absolute path stands alone. A file already imported is
+entered once; an import cycle is an error.
+
+A Python block EFFECT opens with '{' at the end of its line and closes
+with '}' alone on a line; the body is dedented before compilation.
+
+NO WORD IS RESERVED as a mode name. Every command EFFECT is a
+lowercase word terminated by ';', and a mode name occurs only as the
+second argument of 'goto'/'push' -- mode names and commands cannot
+collide grammatically. The bracketed cause keywords cannot collide
+with identifiers either. Semantic traps beyond grammatical collision
+-- a mode named 'IGNORE' or 'WHEN_THE_SUN_SHINES' -- are the script
+author's business; the parser polices only the grammar.
+
+
+5  PATTERNS
+______________________________________________________________________________
+
+A pattern is a whitespace-separated sequence of tokens:
+
+    "text"                      constant string ('\"' escapes a quote)
+    <name = number>             floating point number, bound as float
+    <name = int>                integer, bound as int
+    <name = "GLOB">             glob over one token, bound as str
+    <number> <int> <"GLOB">     unnamed variants: match, no binding
+    <bol> <eol>                 demand line start / line end here
+    +( i : ... )                repeat group (below)
+
+Between tokens any amount of whitespace (including none) is accepted.
+The pattern matches ANYWHERE in the line unless anchored; lines that
+match no handler meet the mode's 'else:'.
+
+'number' accepts '42', '-3.5', '.5', '1e-9', '2.5E+3'. 'int' accepts an
+optional sign and digits. GLOBS follow fnmatch syntax, restricted to
+one token: '*' matches any run of non-whitespace characters, '?' one
+non-whitespace character, '[seq]' one character of the sequence and
+'[!seq]' one character outside it, with 'a-b' ranges inside the
+brackets ('log[0-9].txt', '[!p]*'). A ']' first in the sequence is
+literal, an unclosed '[' is literal. A glob never crosses a whitespace
+boundary -- '*' and '?' exclude whitespace, and whitespace is excluded
+from every sequence. Interference detection (section 8) decides
+character classes exactly.
+
+ANCHORS. '<bol>' and '<eol>' demand line start and line end at their
+position:
+
+    on: <bol> "#" => { ... }            a line STARTING with '#'
+    on: "done" <eol> => { ... }         a line ENDING in 'done'
+
+REPEAT GROUPS. '+( counter : sub-pattern )' matches the sub-pattern
+ONE OR MORE times; 'counter' names the variable that counts the
+repetitions. A binding indexed with the counter collects one value per
+repetition into a DICTIONARY keyed by the repetition index 0, 1, 2, ...
+The index bracket admits OFFSET EXPRESSIONS -- the counter followed by
+'+'/'-' integer terms, nothing more complicated:
+
+    on: "sum" +( i : <x[i] = number> ";" ) "end" => {
+        print(i, "values, total", sum(x.values()))
+    }
+    on: "pair" +( i : <a[i + 2] = int> <b[i - 1] = int> ) => { ... }
+
+'sum 1.5 ; 2.5 ; end' gives i = 2 and x = {0: 1.5, 1: 2.5};
+'pair 10 11 20 21' gives a = {2: 10, 3: 20} and b = {-1: 11, 0: 21}.
+After the match the counter holds the count. Repetition is GREEDY and
+does not backtrack; zero repetitions fail the whole pattern. Repeat
+groups do not nest. A plain (unindexed) binding inside a repeat keeps
+the last repetition's value.
+
+
+6  DISPATCH AND THE NAMESPACE
+______________________________________________________________________________
+
+Per input line, the effective handlers of the active mode are tried in
+order. A pattern cause fires on a matching line; an 'if(...)' cause
+fires when its condition evaluates true in the shared namespace. The
+FIRST cause that holds fires; the rest are not consulted. If every
+match handler fails, the first <else> handler fires. The firing handler's
+effects run in definition order.
+
+'=> flush;' emits the input line unchanged on stdout. The pass-through
+filter is one 'else' line:
+
+    on: "T =" <t = number> "C" => {
+        print("T = %.1f F" % (t * 9 / 5 + 32))
+    }
+    on: <else> => flush;
+
+Known lines are transformed; everything else is forwarded verbatim.
+FLUSH chains like any other EFFECT: 'and: flush;' after a block prints
+the commentary first and the original line after it.
+
+All Python blocks of all handlers of all modes execute in ONE shared
+namespace, persisting across lines and mode switches. It contains:
+
+    <bindings>    the pattern's named captures, converted; indexed
+                  repeat bindings arrive as dictionaries, repeat
+                  counters as integers
+    pype          the information and action object (below)
+
+Anything a block assigns stays: counters, lists, functions, imports.
+Initialise shared state in the start mode's '<entry>' handler.
+
+THE 'pype' OBJECT is the one place for runtime information:
+
+    pype.time()         seconds (float) since start of reading
+    pype.file_name()    name of the running pype script
+    pype.line()         current input line, newline stripped
+    pype.line_n()       current input line number, 1-based
+    pype.mode_name()    name of the active mode
+    pype.stack_depth()  depth of the push/pop mode stack
+    pype.bindings()     dictionary of the current line's pattern
+                        bindings; empty when an 'if' cause, an <else>
+                        handler, or no handler fired
+    pype.goto(NAME)     request a mode switch (section 7)
+    pype.push(NAME)     request a stack push (section 7)
+    pype.pop()          request a stack pop (section 7)
+
+MANDATORY <else>. Every ACTIVATABLE mode -- the start mode and every mode
+named as a switch or push target -- must carry an <else> handler in its
+effective list (own or inherited): a mode must state what happens to
+unmatched lines, if only 'on: <else> => ignore;'. Violations are parse
+errors; for modes reached only through 'pype.goto()'/'pype.push()'
+calls the check fires at activation. Pure mixin modes, inherited from
+but never activated, are exempt.
+
+<exit> STATUS. The interpreter exits 0 after the whole stream and 1 on a
+script error. A block may terminate the run itself with 'sys.exit(n)'
+-- the process exits IMMEDIATELY with status n, skipping any pending
+<eof> and <exit> handlers -- the idiom for gating a CI pipeline on counted
+failures.
+
+
+7  MODES
+______________________________________________________________________________
+
+Exactly one mode is active at any time.
+
+WHAT MODES ARE FOR. A mode is a VOCABULARY: the set of lines the script
+currently cares about, and the meaning it gives them. Switching mode
+switches vocabulary. Typical uses: the PHASES of a protocol, where the
+same report means different things in different phases (a build log's
+configure/compile/link); SKIPPING regions of no interest (below);
+NESTED sub-dialogues entered and left with 'push'/'pop', returning to
+whatever context was interrupted.
+
+SKIPPING LINES. To drop a region of input, give the region its own mode
+whose '<else>' ignores everything, and switch on the region's markers:
+
+    REPORT/on: "begin verbose dump" => goto SKIP;
+    REPORT/on: <else> => flush;
+
+    SKIP/on: "end verbose dump" => goto REPORT;
+    SKIP/on: <else> => ignore;
+
+    lines:   a   b   begin...  x   y   z   end...   c
+    mode:    REPORT REPORT   [ SKIP SKIP SKIP SKIP ] REPORT
+    output:  a   b                                   c
+
+The criterion need not be a marker pair: 'on: if ( ... )' switches on
+any Python condition, and a single mode's '<else> => ignore;' with a
+few match handlers is itself the simplest skip -- keep what is named,
+drop the rest. When skippable regions can begin inside SEVERAL modes,
+put the begin-marker handler into a shared base and 'push SKIP;'
+instead, so 'pop;' returns to whichever mode was interrupted.
+
+DEFAULT MODE. Bare 'on:'/'is:' lines address the default mode.
+When it exists it is the start mode, wherever its handlers appear in
+the file; otherwise the first-defined named mode starts. The default
+mode has no name: once left, it cannot be switched into again
+('pop ;' can return into it).
+
+SWITCHING. '=> goto OTHERMODE;' as an effect, or
+'pype.goto("OTHERMODE")' inside a block, requests a switch. The
+request is applied after the current handler's effects have completed;
+the last request wins. A switch to
+the already-active mode is a no-operation.
+
+<entry> / <exit>. On a switch, '<exit>' handlers of the old mode fire, then
+'<entry>' handlers of the new mode. The start mode's '<entry>' fires before
+the first input line; at end of input the active mode's '<exit>' fires.
+'<exit>' fires on EVERY deactivation; for end-of-input-only actions use
+'<eof>'.
+
+<bof> / <eof>. 'on: <bof>' fires once, after the start mode's '<entry>' and
+before the first input line; 'on: <eof>' fires once, after the last input
+line and before the final '<exit>'. Both belong to the mode active at the
+respective boundary and inherit like any handler; all effective
+<bof>/<eof> handlers fire in order. The nesting over a whole run:
+
+    <entry>                    start mode activated
+      <bof>                    once, before the first line
+        line 1 ... line N      per-line dispatch (any mode switches)
+      <eof>                    once, after the last line
+    <exit>                     the then-active mode deactivated
+
+PUSH / POP. '=> push OTHERMODE;' (or 'pype.push("OTHERMODE")')
+remembers the active mode on a stack and switches; '=> pop;' (or
+'pype.pop()') returns to the most recently stacked mode:
+
+         push B;              push C;              pop;         pop;
+    [A] --------> [B]    [B] --------> [C]    [C] -----> [B] -----> [A]
+    stack: -          stack: A            stack: A B     stack: A   stack: -
+
+'<exit>' and '<entry>' fire on push and pop exactly as on a plain
+switch -- returning re-runs the target's '<entry>'. 'pop' with an empty
+stack is a runtime error. A plain switch ('goto') leaves the stack
+untouched.
+
+
+8  INHERITANCE
+______________________________________________________________________________
+
+    SUB is: BASE1, BASE2
+
+gives SUB all handlers of every named base -- <entry>, <exit>, <bof>,
+<eof>, match and <else> -- transitively.
+
+         SUB                  effective list of SUB:
+        /   \                     1. SUB's own handlers
+    BASE1   BASE2                 2. BASE1's effective list
+      |                           3. BASE2's effective list
+    ROOT                      (ROOT entered once over the diamond)
+
+SHADOWING IS FORBIDDEN. Any two distinct pattern handlers in one
+effective list whose pattern languages INTERSECT -- some line matches
+both -- are a hard error, wherever the pair comes from: own against
+own, own against inherited, inherited against inherited. No handler may
+pre-empt another by order; there is no need to shadow. Consequently
+pattern dispatch is ORDER-FREE: at most one pattern can match a line,
+and a mode's meaning is readable from its handlers alone, without
+tracing precedence. Interference is decided EXACTLY on the pattern
+automata:
+
+    <n = int>        and  <x = number>        interfere ('5' matches both)
+    <"*.txt">        and  <"*">               interfere ('a.txt')
+    <"*.txt">        and  <"*.log">           disjoint, lawful
+    "abc"            and  "abc" "def"         disjoint, lawful
+
+'if(...)' causes are CONDITIONS, not patterns; they are exempt from
+the disjointness law and fire in definition order. To keep things
+clean they never travel: A MODE CONTAINING AN 'if' CAUSE CANNOT BE
+INHERITED FROM -- conditions stay where they are written. <entry>,
+<exit>, <bof> and <eof> handlers ALL fire and cannot interfere.
+
+THE <else> EXCEPTION. <else> is the one handler that CAN and MUST be
+shadowed: every <else> triggers on the same condition (no match
+handler fired), so disjointness is impossible and precedence is the
+law instead. The FIRST <else> of the effective list fires -- own
+before inherited, bases in declaration order. A base's <else> serves
+the whole hierarchy beneath it; a deriving mode overrides that default
+by giving its own.
+
+Bases therefore hold the SHARED vocabulary; a deriving mode adds a
+DISJOINT vocabulary of its own. If a mode must react differently to a
+line a base already handles, the handler does not belong in that base
+-- restructure, rather than override. A handler arriving twice over a
+diamond (two bases sharing a root) is entered once. Inheritance cycles
+and unknown bases are parse errors. The default mode may inherit
+('is: BASE'); having no name, it cannot be inherited from. The error
+names the mode, both defining modes, and both script locations.
+
+
+9  EXAMPLES
+______________________________________________________________________________
+
+The examples/ directory holds five runnable scripts, each with a
+matching input file. Run any of them as:
+
+    hwut.pype examples/NN-name.pype < examples/NN-name.txt
+
+All output is produced strictly in input order by a single sequential
+pass -- no buffering, no concurrency.
+
+01-test-report      Count '[PASS]'/'[FAIL]' lines of a test-suite log;
+                    running commentary per test, grand summary in the
+                    '<exit>' handler at end of input. Single default mode.
+
+02-build-phases     A build log divided into CONFIGURE/COMPILE/LINK
+                    phases. Each phase is a mode inheriting the shared
+                    ANY handlers (phase markers, warning counter). A
+                    phase's '<exit>' handler prints its summary the moment
+                    the phase is left.
+
+03-sensor-watch     Temperature trace with an ALERT mode above 80.0 C;
+                    excursion messages on entry and clearance; the
+                    statistics print from an '<eof>' handler inherited by
+                    every mode.
+
+04-log-router       A mixed application log routed to component modes.
+                    COMMON carries the shared vocabulary, including one
+                    inherited '<exit>' section summary; ENGINE and
+                    NETWORK add disjoint vocabularies of their own.
+
+05-service-discovery  The purpose of the language in one script
+                    (section 1): non-deterministic response order in,
+                    deterministic counts and an alphabetical settlement
+                    report out; an 'if' wait guard on pype.time().
+
+
+10  COMPATIBILITY
+______________________________________________________________________________
+
+pype is implemented in a Python-version independent code format: only
+features available across the widest practical range of Python 3
+versions are used -- no f-strings, no type annotations, no keyword-only
+arguments, nothing that requires a recent version and nothing that only
+worked in Python 2. The test suite enforces this statically: the
+'compat' choice audits the interpreter's syntax tree for forbidden
+constructs. A single Python interpreter suffices for that audit; it
+checks syntax range, not runtime behaviour on every version.
+
+PYPY3. The same property makes the engine run unmodified under pypy3,
+whose just-in-time compiler rewards exactly the per-line loop a pipe
+filter executes. For long streams, point the she-bang at pypy3 (or run
+'pypy3 $(command -v hwut.pype) SCRIPT') for a further multiple on top
+of the engine's own optimisations. '--trace' is slower under a JIT;
+tracing is a development aid, not a production mode.
+
+
+11  ERROR MESSAGES
+______________________________________________________________________________
+
+    <file>:<n>: expected 'MODE/on:', 'on:', 'MODE is:' or 'and:'
+    <file>:<n>: missing '=> EFFECT'
+    <file>:<n>: missing EFFECT after 'and:'
+    <file>:<n>: cannot read EFFECT '...'
+    <file>:<n>: block opened here is never closed by '}'
+    <file>:<n>: cannot read pattern at '...'
+    <file>:<n>: empty pattern
+    <file>:<n>: cannot compile 'if' condition: ...
+    <file>:<n>: 'and:' without preceding handler
+    <file>:<n>: 'is:' names unknown mode '...'
+    <file>:<n>: mode '...' contains an 'if' cause and cannot be
+            inherited from
+    <file>:<n>: indexed binding '...' outside a repeat group
+    <file>:<n>: index '...' does not name the repeat counter '...'
+    <file>:<n>: repeat groups do not nest
+    <file>:<n>: repeat group is never closed by ')'
+    <file>: inheritance cycle: A is: B is: A
+    <file>: interference in mode '...': ... carry intersecting
+            patterns; shadowing is forbidden
+    <file>: interference in mode '...': ... an 'if' condition is opaque
+            and assumed to intersect
+    <file>: mode '...' has no <else> handler in its effective list; ...
+    <file>:<n>: cannot find import '...' (searched: ...)
+    <file>:<n>: import cycle via '...'
+    <file>:<n>: import path must be a quoted string: import: "PATH"
+    <file>: script defines no mode
+    mode '...' cannot be activated: no <else> handler in its
+            effective list
+    pype.goto('...'): no such mode
+    pype.goto('<default>'): the default mode cannot be entered
+    pop with empty mode stack
+______________________________________________________________________________

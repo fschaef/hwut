@@ -1,0 +1,61 @@
+
+--- arrow switch with <entry>/<exit> ---
+SCRIPT: {
+    A/on: <entry> => {
+        print("A begin")
+    }
+    A/on: "go" => goto B;
+    A/on: <exit> => {
+        print("A end")
+    }
+    B/on: <entry> => {
+        print("B begin")
+    }
+    B/on: "back" => {
+        print("returning via mode() call")
+        pype.goto("A")
+    }
+    B/on: <exit> => {
+        print("B end")
+    }
+    A/on: <else> => ignore;
+    B/on: <else> => ignore;
+}
+INPUT: {
+    go
+    ignored while in B
+    back
+}
+OUTPUT: {
+A begin
+A end
+B begin
+returning via mode() call
+B end
+A begin
+A end
+}
+
+--- 'and:' continuation: block then switch ---
+SCRIPT: {
+    A/on: "x" => {
+        print("block one")
+    }
+    and: {
+        print("block two")
+    }
+    and: goto B;
+    B/on: <entry> => {
+        print("now in B")
+    }
+    A/on: <else> => ignore;
+    B/on: <else> => ignore;
+}
+INPUT: {
+    x
+}
+OUTPUT: {
+block one
+block two
+now in B
+}

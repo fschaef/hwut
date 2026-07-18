@@ -1,0 +1,23 @@
+
+--- import resolved via --pype-dir; inherited library mode ---
+EXIT: 0
+    own handler
+    shared handler from the library
+
+--- environment variables expand inside the quoted path ---
+EXIT: 0
+    own via env import
+    shared handler from the library
+
+--- unquoted import path rejected ---
+PypeError (expected): WORK/unquoted.pype:1: import path must be a quoted string: import: "PATH"
+
+--- missing import reported with the searched paths ---
+PypeError (expected): WORK/broken.pype:1: cannot find import 'no-such-file.pype' (searched: WORK/no-such-file.pype)
+
+--- import cycle rejected ---
+PypeError (expected): WORK/b.pype:1: import cycle via 'WORK/a.pype'
+
+--- sys.exit(n) inside a block gates the exit status ---
+with a failure: exit 3, stdout 'gating: 1 failure(s)\n'
+clean: exit 0, stdout ''

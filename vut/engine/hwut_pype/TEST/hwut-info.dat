@@ -1,0 +1,8 @@
+Testing the pype line-matching language: parser, pattern tokens, mode
+transitions, single shared namespace, she-bang pipe operation.
+---------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py
+--not hwut_runner.py
