@@ -44,7 +44,7 @@ class Line:
         return self.__uniform_string
 
     def analogy_strings(self):
-        if self.__analogy_strings is not None: 
+        if self.__analogy_strings is None: 
             self.__analogy_strings = self.lexer.extract_analogy_strings(self._string)
         return self.__analogy_strings
 
