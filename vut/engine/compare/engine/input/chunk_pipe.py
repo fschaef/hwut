@@ -28,7 +28,9 @@ from vut.engine.compare.engine.input.input_chunk        import InputChunk,      
                                                         InputChunkTerminal, \
                                                         InputChunk_factory
 from vut.engine.compare.engine.input.pattern_finder     import PatternFinder
-from vut.engine.compare.engine.semantics         import is_insignificant_line
+from vut.engine.compare.engine.input.line_scanner       import E_LineClass,       \
+                                                        INSIGNIFICANT_LINE_CLASS_SET, \
+                                                        classify
 from vut.engine.compare.configuration            import Configuration
 
 from itertools import count
@@ -65,43 +67,51 @@ class ChunkPipe:
             raise
 
 class EquivalenceCheckChunkPipe(ChunkPipe):
+    """PACKAGING POLICY (classification: 'engine/input/line_scanner.py'):
+
+        REGION_DELIMITER   flush + toggle region framing
+        BLANK / IGNORED    DROP -- the Judge never sees insignificant lines
+        CONTENT            emit; in LINE context, a whole-line
+                           VISIBLE_NOTHING is additionally skipped
+                           (equals NO line at all -- see
+                           'Line.is_visible_nothing'; the Lawyer's sequence
+                           search skips it as GOOD_INSERT/GOOD_DELETE, so
+                           the Judge must skip it likewise, THE LAW).
+                           Potpourri keeps such lines; both faces count
+                           them there.
+    """
     @typechecked
     async def yield_input_chunks(self) -> InputChunk:
         chunk_type   = E_Chunk.LINE
         line_list    = []
         start_line_n = 1
-        ignored_begin = self.configuration.pattern_finder.ignored_line_begin_marker
-        ignored_end   = self.configuration.pattern_finder.ignored_line_end_marker
-        
+
         for line_n in count(1):
             line = await self.line_provider.readline()
             if not line:
                 break
-            elif self.pf.is_region_delimiter(line):
+
+            line_class = classify(line, self.pf)
+
+            if line_class is E_LineClass.REGION_DELIMITER:
                 if chunk_type is E_Chunk.POTPOURRI and line_list:
-                    # Flush buffered Potpourri 
-                    yield InputChunk_factory(chunk_type, start_line_n, line_n, 
+                    # Flush buffered Potpourri
+                    yield InputChunk_factory(chunk_type, start_line_n, line_n,
                                             line_list, self.configuration)
-                
+
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
                 if chunk_type is E_Chunk.LINE: chunk_type = E_Chunk.POTPOURRI
                 else:                          chunk_type = E_Chunk.LINE
                 start_line_n = line_n
-            elif is_insignificant_line(line, ignored_begin, ignored_end):
-                # THE single definition of insignificance: 'engine/semantics.py'.
+            elif line_class in INSIGNIFICANT_LINE_CLASS_SET:
                 continue
             else:
+                assert line_class is E_LineClass.CONTENT
                 processed_line = Line(line_n, line, self.pf)
 
                 if chunk_type is E_Chunk.LINE:
                     if processed_line.is_visible_nothing():
-                        # A whole-line VISIBLE_NOTHING equals NO line at all
-                        # (see 'Line.is_visible_nothing'); the Lawyer's
-                        # sequence search skips it as GOOD_INSERT/GOOD_DELETE
-                        # -- the Judge must skip it likewise (THE LAW).
-                        # NOTE: potpourri keeps such lines; both faces
-                        # count them there.
                         continue
                     yield InputChunk_factory(chunk_type, line_n, line_n,
                                             [processed_line], self.configuration)
@@ -114,6 +124,14 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
                                     line_list, self.configuration)
 
 class AssociationChunkPipe(ChunkPipe):
+    """PACKAGING POLICY (classification: 'engine/input/line_scanner.py'):
+
+        REGION_DELIMITER   flush + toggle region framing
+        BLANK / IGNORED    KEEP -- the Lawyer displays every input line;
+                           insignificant lines become neutral filler pairs
+                           (see 'LinePair.is_equivalent')
+        CONTENT            keep
+    """
     @typechecked
     async def yield_input_chunks(self) -> InputChunk:
         """YIELDS: Chunks of input useful for association.
@@ -125,10 +143,10 @@ class AssociationChunkPipe(ChunkPipe):
             line = await self.line_provider.readline()
             if not line:
                 break
-            elif self.pf.is_region_delimiter(line):
+            elif classify(line, self.pf) is E_LineClass.REGION_DELIMITER:
                 if line_list or chunk_type is not E_Chunk.LINE_SEQUENCE:
-                    yield InputChunk_factory(chunk_type, start_line_n, line_n, 
-                                            line_list, 
+                    yield InputChunk_factory(chunk_type, start_line_n, line_n,
+                                            line_list,
                                             self.configuration)
                 line_list = []
                 # switch 'Potpourri' <-> 'LineSequence'
@@ -136,6 +154,7 @@ class AssociationChunkPipe(ChunkPipe):
                 else:                                   chunk_type = E_Chunk.LINE_SEQUENCE
                 start_line_n = line_n
             else:
+                # BLANK / IGNORED / CONTENT alike: kept for display.
                 line_list.append(Line(line_n, line, self.pf))
 
         if line_list:

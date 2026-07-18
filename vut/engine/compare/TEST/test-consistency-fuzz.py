@@ -118,26 +118,30 @@ async def judge(subject_txt, nominal_txt):
 
 async def lawyer(subject_txt, nominal_txt):
     """RETURNS: (bool, set), the association verdict (the Lawyer) and the set
-                of BAD_ relation names that made it negative (empty if clean).
+                of BAD_ relation names encountered (empty if clean).
 
-    Verdict is False as soon as any LinePair has cost > 0 or any cell carries
-    a BAD_ relation -- the same criterion the display feeder uses to mark a
-    line as non-matching.
+    Verdict is the canonical Lawyer-side reduction of THE LAW:
+    'ChunkPair.is_equivalent()' for every chunk (see DOC/SEMANTICS.txt).
+    DECIDED (Stage 3): the test delegates instead of keeping an independent
+    'cost > 0'-based criterion -- cost is deliberately NOT the equivalence
+    criterion (visible-nothing skips cost 1e-10 yet preserve equivalence),
+    so an 'independent' reformulation was wrong in exactly the margins the
+    net exists to probe. The fuzz net's value is the JUDGE-vs-LAWYER
+    cross-face comparison, not a third notion of equality. The BAD_ set is
+    still collected from the cells for diagnostics.
     """
     verdict = True
     bad     = set()
     async for chunk in main.associate(CONFIG, StringIO(subject_txt),
                                               StringIO(nominal_txt)):
         st, nt = chunk.types()
-        if st != nt:
+        if not chunk.is_equivalent():
             verdict = False
-            bad.add("CHUNK_TYPE_%s_vs_%s" % (st.name, nt.name))
+            if st != nt:
+                bad.add("CHUNK_TYPE_%s_vs_%s" % (st.name, nt.name))
         for lp in chunk:
-            if lp.cost > 0:
-                verdict = False
             for c in lp.subject_list() + lp.nominal_list():
                 if "BAD_" in c.relation_id.name:
-                    verdict = False
                     bad.add(c.relation_id.name)
     return verdict, bad
 

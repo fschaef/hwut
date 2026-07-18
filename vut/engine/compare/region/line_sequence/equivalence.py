@@ -5,9 +5,8 @@ from vut.engine.compare.engine.semantics   import commit_analogies
 def do(subject:    InputChunk,    #noqa F821
        nominal:    InputChunk,    #noqa F821
        analogy_db: AnalogyDb) -> tuple[bool, AnalogyDb]:
-    """RETURNS: [0] True, subject and nominal a definitely equal => equivalent
-                    False, subject and nominal are definitely not equivalent
-                    None, undecided
+    """RETURNS: [0] True, subject and nominal are equal => equivalent
+                    False, subject and nominal are not equivalent
                 [1] equivalent => the required updated analogy_db,
                     else       => some analogy_db
     """

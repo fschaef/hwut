@@ -43,56 +43,69 @@ position, and from there the path forks based on the requested mode.
 MODULE MAP
 ==========
 
-    /input/                  Lexical and structural front end
-        line_element.py      Atomic units of comparison (one per token type)
-        pattern_finder.py    Regex master pattern; text -> LineElement[]
-        input_chunk.py       LineSequence / Potpourri / Line containers
-        chunk_pipe.py        async producer: line stream -> InputChunk stream
-        input_chunk_zip.py   async pairer: subject + nominal -> chunk pairs
+The tree is REGION-MAJOR: region kinds are the OPEN axis (each a package
+under region/), the two faces (equivalence 'Judge' / associate 'Lawyer')
+are the CLOSED axis -- an interface contract each region package fulfills.
 
-    /engine/                 Comparison logic
+    /region/                 Region-handler packages (one per region kind)
+        /line_sequence/      The core-language region (ordered lines)
+            equivalence.py   Judge face: line-level fast-fail check
+            associate.py     Lawyer face: order-respecting alignment
+        /potpourri/          Unordered blocks ('||||'-framed)
+            equivalence.py   Judge face: complete-matching verdict
+            associate.py     Lawyer face: best-effort alignment
+            best_match.py    Similarity pairing for the display
+            pairing.py       Strict (exact-equivalence) pairing driver
+            matching.py      Matching state machine (ultimates, feasibility)
+            potential_pair_db.py    Candidate pairs + analogy constraints
+            result.py        Solver result container
+            solver/
+                maximum_bipartite_matching.py    Augmenting-path matcher
+                csp_backtracking_mrv.py          MRV-heuristic CSP solver
+
+    /core/                   Shared association machinery
+        chunk_pair.py        ChunkPair: outer container of LinePairs
+        line_pair.py         LinePair: aligned (or one-sided) line pair
+        edit_operations/     Edit-distance machinery
+            core.py          Work-list search base classes
+            line.py          Line-level edits over LineElement sequences
+            line_sequence.py Sequence-level edits over Line lists
+            string.py        Levenshtein for raw character runs
+            edit.py          Edit primitives, EditSequence
+            separator_adaptor.py  Strip/reinsert separators around a search
+
+    /engine/                 Shared substrate
+        semantics.py         THE single source of comparison semantics:
+                             edit classes, cost tables, verdict reductions,
+                             insignificance, analogy commit protocol
+                             (see DOC/SEMANTICS.txt)
         enums.py             E_Verdict, E_Chunk, E_ToleranceId
         line.py              Line as a sequence of LineElements
         analogy_db.py        Mutable bidirectional analogy mapping
         frozen_analogy_db.py Flyweight immutable variant for hot paths
-
-        /equivalence_check/  Fast-fail equivalence (the Judge)
-            line.py          Line-level equivalence check
-            potpourri.py     Set-equivalence over unordered blocks
-
-        /association/        Exhaustive alignment (the Lawyer)
-            chunk_pair.py    ChunkPair: outer container of LinePairs
-            line_pair.py     LinePair: aligned (or one-sided) line pair
-            line_sequence.py Order-respecting alignment driver
-            potpourri.py     Order-free alignment driver
-            edit_operations/ Edit-distance machinery
-                core.py      A*-style work-list search base classes
-                line.py      Line-level edits over LineElement sequences
-                line_sequence.py  Sequence-level edits over Line lists
-                string.py    Levenshtein for raw character runs
-                edit.py      Edit primitives, EditSequence, cost model
-
-        /potpourri/          CSP / matching for unordered blocks
-            association.py   Top-level associate-the-best-we-can routine
-            matching.py      Maximum bipartite matching driver
-            pairing.py       Pre-pair generation
-            potential_pair_db.py    Pre-computed candidate pairs
-            solver/
-                maximum_bipartite_matching.py    Augmenting-path matcher
-                csp_backtracking_mrv.py          MRV-heuristic CSP solver
+        /input/              Lexical and structural front end
+            line_element.py  Atomic units of comparison (one per token type)
+            pattern_finder.py Regex master pattern; text -> LineElement[]
+            line_scanner.py  THE raw-line classification (delimiter/blank/
+                             ignored/content) shared by both pipes
+            input_chunk.py   LineSequence / Potpourri / Line containers
+            chunk_pipe.py    async producer: line stream -> InputChunk stream
+            input_chunk_zip.py async pairer: subject + nominal -> chunk pairs
 
     /feeder/                 Output adaptors
         ui.py                ChunkPair stream -> DisplayInst protocol
         html_feeder.py       Side-by-side HTML diff renderer
 
-    main.py                  Public API: is_equivalent(), associate()
+    main.py                  Public API: is_equivalent(), associate(),
+                             is_equivalent_by_association (reference Judge);
+                             cross-check mode (VUT_COMPARE_CROSS_CHECK=1)
     configuration.py         Configuration dataclass
 
 
 DATA TYPES
 ==========
 
-LineElement (input/line_element.py)
+LineElement (engine/input/line_element.py)
     The atomic unit of comparison. Each LineElement carries a tolerance class
     (STRING, NUMERIC, ANALOGY, VISIBLE_NOTHING, EQUIVALENCE_PATTERN, SEPARATOR)
     and the matched content. Tolerance dictates how '.compare()' decides
@@ -114,7 +127,7 @@ Line (engine/line.py)
       .edit_operations(other, analogy_db)   produces an EditSequence
       .compare_quickly(other)               cheap structural similarity score
 
-InputChunk (input/input_chunk.py)
+InputChunk (engine/input/input_chunk.py)
     A region of one stream classified by structure:
       InputChunkLine          single line (used in equivalence mode)
       InputChunkLineSequence  ordered group of lines (used in association mode)
@@ -128,16 +141,18 @@ InputChunk (input/input_chunk.py)
     type is meaningful in that mode (e.g. Potpourri inherits both, Line
     inherits only equivalence).
 
-ChunkPair (engine/association/chunk_pair.py)
+ChunkPair (core/chunk_pair.py)
     The output unit of association: a list of LinePairs plus a snapshot of
     the analogy_db that holds for them. A ChunkPair carries the chunk-type
     tags of both sides; if subject or nominal is missing, the corresponding
     type is NONE. The 'feeder' subsystem consumes ChunkPair streams.
 
-LinePair (engine/association/line_pair.py)
+LinePair (core/line_pair.py)
     One row of the alignment: a subject line, a nominal line, optionally
     None on either side, plus the cell-level edit results showing how
-    individual LineElements were aligned.
+    individual LineElements were aligned. Carries its own equivalence
+    reduction ('.is_equivalent()', derived from semantics.GOOD_EDIT_ID_SET)
+    -- the Lawyer's side of THE LAW (see DOC/SEMANTICS.txt).
 
 AnalogyDb / FrozenAnalogyDb (engine/analogy_db.py, frozen_analogy_db.py)
     Bidirectional mapping between subject-side and nominal-side analogy
@@ -156,8 +171,11 @@ Both modes share the lexer ('PatternFinder'), the line representation
    --------------------   --------------------------   --------------------------
    ChunkPipe              EquivalenceCheckChunkPipe    AssociationChunkPipe
                           emits InputChunkLine per     emits InputChunkLineSequence
-                          line; ignores blank lines    blocks; preserves whitespace
-                          and ##-marked lines
+                          line; DROPS insignificant    blocks; KEEPS every line
+                          lines and whole-line         for display
+                          visible-nothing (both pipes
+                          classify via the shared
+                          engine/input/line_scanner)
    chunk_zip              generate_chunk_pairs         generate_chunk_pairs_type_aligned
                           one-shot pair-and-yield      look-ahead realignment when
                                                        subject and nominal chunk
@@ -174,7 +192,7 @@ data can be consumed while the test process is still producing it.
 KEY ALGORITHMS
 ==============
 
-Edit-distance search (engine/association/edit_operations/)
+Edit-distance search (core/edit_operations/)
     A work-list search over the (si, ni) index space, where si and ni are
     indices into the subject and nominal LineElement sequences. From any
     position, six-or-so edit operations are possible (GOOD, GOOD_TOLERATED,
@@ -191,7 +209,7 @@ Edit-distance search (engine/association/edit_operations/)
     'do()' for line-level edits is wrapped in lru_cache: many Lines repeat
     in large tests, and recomputing their edit sequence is wasteful.
 
-Bipartite matching (engine/potpourri/solver/maximum_bipartite_matching.py)
+Bipartite matching (region/potpourri/solver/maximum_bipartite_matching.py)
     For Potpourri chunks the order is irrelevant; the question is whether
     a complete subject-to-nominal pairing exists. The solver uses Berge's
     augmenting-path algorithm (Ford-Fulkerson family) to find the maximum
@@ -199,7 +217,7 @@ Bipartite matching (engine/potpourri/solver/maximum_bipartite_matching.py)
     bound: if it cannot find a complete matching, no analogy-respecting
     matching exists either.
 
-CSP backtracking with MRV (engine/potpourri/solver/csp_backtracking_mrv.py)
+CSP backtracking with MRV (region/potpourri/solver/csp_backtracking_mrv.py)
     Once structural feasibility is confirmed, the actual matching that
     satisfies analogy consistency is found by backtracking search ordered
     by Minimum Remaining Values - the most-constrained subject is matched
@@ -276,11 +294,13 @@ This component is itself tested under HWUT (the older generation), with
 test files at multiple levels:
 
     TEST/                        whole-engine tests via main.py API
+                                 (incl. test-consistency-fuzz.py, the
+                                 generative Judge/Lawyer consistency net)
     engine/TEST/                 engine-internal contract tests
-    engine/potpourri/TEST/       potpourri-specific scenarios
-    engine/potpourri/solver/TEST/  solver micro-benchmarks
+    region/potpourri/TEST/       potpourri-specific scenarios
+    region/potpourri/solver/TEST/  solver micro-benchmarks
     feeder/TEST/                 output formatting tests
-    input/TEST/                  pattern_finder, chunk_pipe tests
+    engine/input/TEST/           pattern_finder, chunk_pipe tests
 
 Each test directory has the standard HWUT layout: 'hwut-info.dat' lists
 test files and exclusions; each '<test>.py' responds to '--hwut-info' with
@@ -305,20 +325,21 @@ New tolerance class
     PatternFinder. The new class participates automatically in the rest
     of the pipeline.
 
-New chunk class
-    Define a subclass of either EquivalenceRelatedInputChunk or
-    AssociationRelatedInputChunk (or both). Implement the corresponding
-    private hook ('_is_equivalent_to_nominal' / '_associate_with_nominal').
-    Register a delimiter in PatternFinder.is_region_delimiter and
-    extend the ChunkPipe state machine if a new structural framing is
-    introduced.
+New region kind
+    Create a package under region/ providing the two faces --
+    equivalence.py (Judge) and associate.py (Lawyer) -- which must satisfy
+    THE LAW and the region-handler contract (no analogy state in or out;
+    see DOC/SEMANTICS.txt section 7). Register the framing in the line
+    scanner / PatternFinder and extend the ChunkPipe packaging if a new
+    structural framing is introduced. Acceptance gate: full corpus + fuzz
+    net under VUT_COMPARE_CROSS_CHECK=1.
 
 New solver
-    Place under engine/potpourri/solver/. Solvers consume a
+    Place under region/potpourri/solver/. Solvers consume a
     'PotentialPairDb' and an 'AnalogyDb' and return either a
     matching-or-None or a verdict-plus-couples pair, depending on the
     expected interface. The active solver choice is wired in
-    engine/potpourri/association.py and matching.py.
+    region/potpourri/matching.py.
 
 New output feeder
     Subscribe to the 'associate' coroutine output (an async iterator of
@@ -330,7 +351,11 @@ New output feeder
 SEE ALSO
 ========
 
+    DOC/SEMANTICS.txt                     WHAT the engine means: the
+                                          authoritative comparison
+                                          semantics + decision log
+                                          (source for the manual)
     README.txt                            user-facing introduction
-    engine/potpourri/solver/README.txt    solver comparison & benchmarks
+    region/potpourri/solver/README.txt    solver comparison & benchmarks
     DOC/api.odp                           older API presentation slides
     DOC/history.txt                       changelog and review checkpoints
