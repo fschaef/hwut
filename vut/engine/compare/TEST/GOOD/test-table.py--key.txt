@@ -1,0 +1,5 @@
+## key=<col>: rows matched by key cell (implies unordered).
+key-matched, reordered:                    judge: True  lawyer: True  [ok]
+unknown subject key:                       judge: False lawyer: False [ok]
+nominal key uncovered:                     judge: False lawyer: False [ok]
+duplicate subject key:                     judge: False lawyer: False [ok]

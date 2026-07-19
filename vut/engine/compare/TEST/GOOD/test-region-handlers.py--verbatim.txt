@@ -1,0 +1,13 @@
+## Outer text tolerates; 'verbatim' does not.
+equal:                                     judge: True  lawyer: True  [ok]
+numeric jitter:                            judge: False lawyer: False [ok]
+whitespace width:                          judge: False lawyer: False [ok]
+visible nothing:                           judge: False lawyer: False [ok]
+analogy symbols:                           judge: False lawyer: False [ok]
+order swap:                                judge: False lawyer: False [ok]
+count mismatch:                            judge: False lawyer: False [ok]
+## Insignificant lines stay insignificant (shared substrate):
+blank line extra:                          judge: True  lawyer: True  [ok]
+## comment extra:                          judge: True  lawyer: True  [ok]
+## Reference: the same jitter in OUTER text is tolerated:
+outer numeric jitter:                      judge: True  lawyer: True  [ok]

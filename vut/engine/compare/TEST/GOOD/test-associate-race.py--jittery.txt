@@ -4,9 +4,9 @@ NOMINAL timeline: |23  213  231221 3|
 [0] SUBJECT: => (1) 'heidi'
 [1] SUBJECT: => (2) 'heinz'
 [1] NOMINAL: => (2) 'hein'
-[2] SUBJECT: => (3) '||||'
+[2] SUBJECT: => (3) '##! potpourri'
 [4] SUBJECT: => (4) 'albert'
-[4] NOMINAL: => (3) '||||'
+[4] NOMINAL: => (3) '##! potpourri'
 [5] SUBJECT: => (5) 'berta'
 [5] NOMINAL: => (4) 'karlos'
 [6] SUBJECT: => (6) 'carlos'
@@ -27,8 +27,8 @@ YIELD 1: LINE_SEQUENCE <-> LINE_SEQUENCE
 [9] NOMINAL: => (6) 'adelbert'
 [10] SUBJECT: => (7) 'damian'
 [10] NOMINAL: => (7) 'berta'
-[11] NOMINAL: => (8) '||||'
-[11] SUBJECT: => (8) '||||'
+[11] NOMINAL: => (8) '####'
+[11] SUBJECT: => (8) '####'
 [12] SUBJECT: => (9) 'kasper'
 [12] NOMINAL: => (9) 'crisper'
 YIELD 2: POTPOURRI <-> POTPOURRI
@@ -47,11 +47,11 @@ YIELD 2: POTPOURRI <-> POTPOURRI
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'adelbert']
 .   .   .   .cost: 0.8750
 .   .   [LinePair]
-
 .   .   .   .subject: [OK_GOOD:STRING(0) 'damian']
 .   .   .   .nominal: [OK_GOOD:STRING(0) 'damian']
 .   .   .   .cost: 0.0000
 .   .analogy_db: AnalogyDb
+
 [13] NOMINAL: => (10) 'friedolin'
 [13] SUBJECT: => (10) 'friedrich'
 [14] NOMINAL: => (11) ''
@@ -60,7 +60,6 @@ YIELD 3: LINE_SEQUENCE <-> LINE_SEQUENCE
 [ChunkPair:LINE_SEQUENCE]
 .   .<base>: <list>
 .   .   [LinePair]
-
 .   .   .   .subject: [BAD_NOMINAL_DIFFERS:STRING(0) 'kasper']
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:STRING(0) 'crisper']
 .   .   .   .cost: 0.4286

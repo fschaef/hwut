@@ -173,8 +173,8 @@ async def test_potpourri_mismatch():
     # Nominal has A, D
     # Expect: A matches A. B, C are orphans (BAD_SUBJECT_HAS). D is orphan (BAD_NOMINAL_HAS).
     
-    s = "||||\nCommon\nSubjectOnly_1\nSubjectOnly_2\n||||"
-    n = "||||\nNominalOnly_1\nCommon\n||||"
+    s = "##! potpourri\nCommon\nSubjectOnly_1\nSubjectOnly_2\n####"
+    n = "##! potpourri\nNominalOnly_1\nCommon\n####"
     
     await run_feeder("Potpourri Mismatch", s, n, cfg)
 

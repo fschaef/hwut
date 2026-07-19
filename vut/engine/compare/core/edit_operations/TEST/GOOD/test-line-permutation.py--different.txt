@@ -47,6 +47,14 @@
       nominal:  
       => edits: DELETE
 --(7)------------------------------------------------------------------
+      subject:  
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: INSERT
+
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  
+      => edits: DELETE
+--(8)------------------------------------------------------------------
       subject:  STRING:4711
       nominal:  VISIBLE_NOTHING:4711
       => edits: GOOD_INSERT, DELETE
@@ -54,7 +62,7 @@
       subject:  VISIBLE_NOTHING:4711
       nominal:  STRING:4711
       => edits: GOOD_DELETE, INSERT
---(8)------------------------------------------------------------------
+--(9)------------------------------------------------------------------
       subject:  STRING:4711
       nominal:  ANALOGY:4711
       => edits: SUBSTITUTE_TYPE
@@ -62,7 +70,7 @@
       subject:  ANALOGY:4711
       nominal:  STRING:4711
       => edits: SUBSTITUTE_TYPE
---(9)------------------------------------------------------------------
+--(10)------------------------------------------------------------------
       subject:  STRING:4711
       nominal:  NUMERIC:4711
       => edits: SUBSTITUTE_TYPE
@@ -70,7 +78,7 @@
       subject:  NUMERIC:4711
       nominal:  STRING:4711
       => edits: SUBSTITUTE_TYPE
---(10)------------------------------------------------------------------
+--(11)------------------------------------------------------------------
       subject:  STRING:4711
       nominal:  EQUIVALENCE_PATTERN:4711
       => edits: SUBSTITUTE_TYPE
@@ -78,7 +86,7 @@
       subject:  EQUIVALENCE_PATTERN:4711
       nominal:  STRING:4711
       => edits: SUBSTITUTE_TYPE
---(11)------------------------------------------------------------------
+--(12)------------------------------------------------------------------
       subject:  STRING:4711
       nominal:  SEPERATOR:4711
       => edits: SUBSTITUTE_TYPE
@@ -86,7 +94,15 @@
       subject:  SEPERATOR:4711
       nominal:  STRING:4711
       => edits: SUBSTITUTE_TYPE
---(12)------------------------------------------------------------------
+--(13)------------------------------------------------------------------
+      subject:  STRING:4711
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  STRING:4711
+      => edits: SUBSTITUTE_TYPE
+--(14)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  ANALOGY:4711
       => edits: GOOD_DELETE, INSERT
@@ -94,7 +110,7 @@
       subject:  ANALOGY:4711
       nominal:  VISIBLE_NOTHING:4711
       => edits: GOOD_INSERT, DELETE
---(13)------------------------------------------------------------------
+--(15)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  NUMERIC:4711
       => edits: GOOD_DELETE, INSERT
@@ -102,7 +118,7 @@
       subject:  NUMERIC:4711
       nominal:  VISIBLE_NOTHING:4711
       => edits: GOOD_INSERT, DELETE
---(14)------------------------------------------------------------------
+--(16)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  EQUIVALENCE_PATTERN:4711
       => edits: GOOD_DELETE, INSERT
@@ -110,7 +126,7 @@
       subject:  EQUIVALENCE_PATTERN:4711
       nominal:  VISIBLE_NOTHING:4711
       => edits: GOOD_INSERT, DELETE
---(15)------------------------------------------------------------------
+--(17)------------------------------------------------------------------
       subject:  VISIBLE_NOTHING:4711
       nominal:  SEPERATOR:4711
       => edits: INSERT, GOOD_DELETE
@@ -118,39 +134,55 @@
       subject:  SEPERATOR:4711
       nominal:  VISIBLE_NOTHING:4711
       => edits: DELETE, GOOD_INSERT
---(16)------------------------------------------------------------------
-      subject:  ANALOGY:4711
-      nominal:  NUMERIC:4711
-      => edits: SUBSTITUTE_TYPE
-
-      subject:  NUMERIC:4711
-      nominal:  ANALOGY:4711
-      => edits: SUBSTITUTE_TYPE
---(17)------------------------------------------------------------------
-      subject:  ANALOGY:4711
-      nominal:  EQUIVALENCE_PATTERN:4711
-      => edits: SUBSTITUTE_TYPE
-
-      subject:  EQUIVALENCE_PATTERN:4711
-      nominal:  ANALOGY:4711
-      => edits: SUBSTITUTE_TYPE
 --(18)------------------------------------------------------------------
-      subject:  ANALOGY:4711
-      nominal:  SEPERATOR:4711
-      => edits: SUBSTITUTE_TYPE
+      subject:  VISIBLE_NOTHING:4711
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: GOOD_DELETE, INSERT
 
-      subject:  SEPERATOR:4711
-      nominal:  ANALOGY:4711
-      => edits: SUBSTITUTE_TYPE
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  VISIBLE_NOTHING:4711
+      => edits: GOOD_INSERT, DELETE
 --(19)------------------------------------------------------------------
-      subject:  NUMERIC:4711
-      nominal:  EQUIVALENCE_PATTERN:4711
+      subject:  ANALOGY:4711
+      nominal:  NUMERIC:4711
       => edits: SUBSTITUTE_TYPE
 
-      subject:  EQUIVALENCE_PATTERN:4711
-      nominal:  NUMERIC:4711
+      subject:  NUMERIC:4711
+      nominal:  ANALOGY:4711
       => edits: SUBSTITUTE_TYPE
 --(20)------------------------------------------------------------------
+      subject:  ANALOGY:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  ANALOGY:4711
+      => edits: SUBSTITUTE_TYPE
+--(21)------------------------------------------------------------------
+      subject:  ANALOGY:4711
+      nominal:  SEPERATOR:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  SEPERATOR:4711
+      nominal:  ANALOGY:4711
+      => edits: SUBSTITUTE_TYPE
+--(22)------------------------------------------------------------------
+      subject:  ANALOGY:4711
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  ANALOGY:4711
+      => edits: SUBSTITUTE_TYPE
+--(23)------------------------------------------------------------------
+      subject:  NUMERIC:4711
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  NUMERIC:4711
+      => edits: SUBSTITUTE_TYPE
+--(24)------------------------------------------------------------------
       subject:  NUMERIC:4711
       nominal:  SEPERATOR:4711
       => edits: SUBSTITUTE_TYPE
@@ -158,11 +190,35 @@
       subject:  SEPERATOR:4711
       nominal:  NUMERIC:4711
       => edits: SUBSTITUTE_TYPE
---(21)------------------------------------------------------------------
+--(25)------------------------------------------------------------------
+      subject:  NUMERIC:4711
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  NUMERIC:4711
+      => edits: SUBSTITUTE_TYPE
+--(26)------------------------------------------------------------------
       subject:  EQUIVALENCE_PATTERN:4711
       nominal:  SEPERATOR:4711
       => edits: SUBSTITUTE_TYPE
 
       subject:  SEPERATOR:4711
       nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE
+--(27)------------------------------------------------------------------
+      subject:  EQUIVALENCE_PATTERN:4711
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  EQUIVALENCE_PATTERN:4711
+      => edits: SUBSTITUTE_TYPE
+--(28)------------------------------------------------------------------
+      subject:  SEPERATOR:4711
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: SUBSTITUTE_TYPE
+
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  SEPERATOR:4711
       => edits: SUBSTITUTE_TYPE

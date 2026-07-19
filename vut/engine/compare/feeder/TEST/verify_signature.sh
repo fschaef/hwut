@@ -8,7 +8,7 @@ fi
 
 # File paths
 UI_FILE="../ui.py"
-FEEDER_FILE="test-ui_feeder.py"
+FEEDER_FILE="test-html_feeder.py"
 GLOBAL_SIG_FILE="../../../../SIGNATURE_UI_PROTOCOL.txt"
 
 # 1. Extraction: currently produced signature (from running ui.py)

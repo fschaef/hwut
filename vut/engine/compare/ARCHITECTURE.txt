@@ -48,10 +48,24 @@ under region/), the two faces (equivalence 'Judge' / associate 'Lawyer')
 are the CLOSED axis -- an interface contract each region package fulfills.
 
     /region/                 Region-handler packages (one per region kind)
+        registry.py          THE registry: shebang name -> handler; grammar
+                             '##! <handler> [<param>|<param>=<value>]*',
+                             parameter resolution, loud RegionSyntaxError
         /line_sequence/      The core-language region (ordered lines)
             equivalence.py   Judge face: line-level fast-fail check
             associate.py     Lawyer face: order-respecting alignment
-        /potpourri/          Unordered blocks ('||||'-framed)
+        /verbatim/           Byte-exact ordered region (no tolerance)
+        /ignore/             Contents-exempt region
+        /point_cloud/        n-dim points: coverage/pair matching within
+                             'limit', distance functions, constraint
+                             properties; safe expression evaluator
+                             (expression.py); shared decision core
+                             (core.py) feeds BOTH faces; fixed-radius
+                             grid index (spatial.py) for built-in metrics
+        /table/              columnar rows: positional / bag / key-matched;
+                             per-column ignore + relative numeric tolerance;
+                             shared decision core (core.py) feeds BOTH faces
+        /potpourri/          Unordered blocks
             equivalence.py   Judge face: complete-matching verdict
             associate.py     Lawyer face: best-effort alignment
             best_match.py    Similarity pairing for the display
@@ -83,11 +97,18 @@ are the CLOSED axis -- an interface contract each region package fulfills.
         line.py              Line as a sequence of LineElements
         analogy_db.py        Mutable bidirectional analogy mapping
         frozen_analogy_db.py Flyweight immutable variant for hot paths
+        constraints.py       Stateful constraints: '((name: value))'
+                             bindings feed a per-run constraint space;
+                             check-on-entry against Configuration.
+                             constraint_db (AST-whitelisted expressions);
+                             ContextVar-threaded like the flyweight
+                             registry (see DOC/SEMANTICS.txt sec. 10)
         /input/              Lexical and structural front end
             line_element.py  Atomic units of comparison (one per token type)
             pattern_finder.py Regex master pattern; text -> LineElement[]
-            line_scanner.py  THE raw-line classification (delimiter/blank/
-                             ignored/content) shared by both pipes
+            line_scanner.py  THE raw-line classification (region begin/
+                             end, blank, ignored, content) shared by both
+                             pipes; '##!'/'####' precedence over '##'
             input_chunk.py   LineSequence / Potpourri / Line containers
             chunk_pipe.py    async producer: line stream -> InputChunk stream
             input_chunk_zip.py async pairer: subject + nominal -> chunk pairs
@@ -95,6 +116,9 @@ are the CLOSED axis -- an interface contract each region package fulfills.
     /feeder/                 Output adaptors
         ui.py                ChunkPair stream -> DisplayInst protocol
         html_feeder.py       Side-by-side HTML diff renderer
+
+    /tool/                   Maintenance utilities
+        migrate_region_syntax.py   one-shot '||||' -> shebang migration
 
     main.py                  Public API: is_equivalent(), associate(),
                              is_equivalent_by_association (reference Judge);
@@ -131,7 +155,11 @@ InputChunk (engine/input/input_chunk.py)
     A region of one stream classified by structure:
       InputChunkLine          single line (used in equivalence mode)
       InputChunkLineSequence  ordered group of lines (used in association mode)
-      InputChunkPotpourri     unordered group, framed by '||||' delimiters
+      InputChunkPotpourri     unordered region ('##! potpourri' .. '####')
+      InputChunkVerbatim      byte-exact region  ('##! verbatim'  .. '####')
+      InputChunkIgnore        contents-exempt region ('##! ignore' .. '####')
+      InputChunkPointCloud    n-dim point region  ('##! point-cloud' .. '####')
+      InputChunkTable         columnar region     ('##! table' .. '####')
       InputChunkTerminal      end-of-stream sentinel
       InputChunkVoid          padding for the zip stage
     Two role-tagged base classes split the contract:
@@ -224,6 +252,15 @@ CSP backtracking with MRV (region/potpourri/solver/csp_backtracking_mrv.py)
     first. This is the workhorse for Potpourri association in production;
     other solvers (chronological backtracking, AC-3 / lilly-pad) are
     retained in the source tree for benchmarking but are not active.
+
+Fixed-radius grid index (region/point_cloud/spatial.py)
+    The point-cloud queries are fixed-radius ("who is within 'limit'?"),
+    never k-nearest -- so a uniform grid with cell edge = limit beats
+    tree structures: any within-limit neighbour lies in one of the 3^d
+    adjacent cells (L-inf <= L1, L2). Build O(n), query O(1) expected,
+    exact, deterministic; used for built-in metrics with dimension <= 6.
+    Expression metrics carry no guaranteed triangle inequality and are
+    therefore scanned exactly (nothing may prune them).
 
 Flyweight FrozenAnalogyDb (engine/frozen_analogy_db.py)
     The hottest inner-loop operation is "given two analogy databases, are
@@ -326,13 +363,15 @@ New tolerance class
     of the pipeline.
 
 New region kind
-    Create a package under region/ providing the two faces --
-    equivalence.py (Judge) and associate.py (Lawyer) -- which must satisfy
-    THE LAW and the region-handler contract (no analogy state in or out;
-    see DOC/SEMANTICS.txt section 7). Register the framing in the line
-    scanner / PatternFinder and extend the ChunkPipe packaging if a new
-    structural framing is introduced. Acceptance gate: full corpus + fuzz
-    net under VUT_COMPARE_CROSS_CHECK=1.
+    Create a package under region/ providing the chunk class with the two
+    faces -- '_is_equivalent_to_nominal' (Judge) and
+    '_associate_with_nominal' (Lawyer) -- which must satisfy THE LAW and
+    the region-handler contract (no analogy state in or out; substrate
+    rules untouched; see DOC/SEMANTICS.txt section 7). Then ONE
+    registration in region/registry.py (name, chunk class, parameter
+    spec) plus an E_Chunk display tag. Acceptance gate: full corpus +
+    fuzz net under VUT_COMPARE_CROSS_CHECK=1. 'verbatim' and 'ignore'
+    are the reference examples.
 
 New solver
     Place under region/potpourri/solver/. Solvers consume a

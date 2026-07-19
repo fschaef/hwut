@@ -4,10 +4,10 @@ SCENARIO: Potpourri: Shuffle + Analogy
 ------------------------------------------------------------
 SUBJECT                        | NOMINAL                       
 ------------------------------------------------------------
-||||                           | ||||                          
+##! potpourri                  | ##! potpourri                 
 Item ((A))                     | Item ((2))                    
 Item ((B))                     | Item ((1))                    
-||||                           | ||||                          
+####                           | ####                          
 ------------------------------------------------------------
 Judge (is_equivalent): True
 Lawyer (associate):    True

@@ -1,13 +1,21 @@
 from   vut.engine.compare.engine.frozen_analogy_db                         import FrozenAnalogyDb
+from   vut.engine.compare.engine                             import constraints
 from   vut.engine.compare.core.line_pair                     import LinePair
 import vut.engine.compare.core.edit_operations.line_sequence as     edit_operations_line_sequence
-from   vut.engine.compare.core.edit_operations.edit          import (E_EditId, 
+from   vut.engine.compare.core.edit_operations.edit          import (E_EditId,
                                                                                    EditSequence)
 
 def do(subject, nominal, analogy_db):
     """RETURNS: list 'LinePair'-s
 
     See 'InputChunk.line_pairs()' for further explanations.
+
+    STATEFUL CONSTRAINTS ('engine/constraints.py'): pairs are walked in
+    line order, exactly as the Judge steps. An equivalent pair enters its
+    bindings; a subject-side violation REWRITES the pair to a mismatch
+    (seq_edit_id SUBSTITUTE -- the red cell) and kills the space; a
+    nominal-side violation raises loudly. The first non-equivalent pair
+    kills the space -- mirroring the Judge's abort point (THE LAW).
     """
     editions: EditSequence = edit_operations_line_sequence.do(subject.line_list,
                                                               nominal.line_list,
@@ -41,11 +49,22 @@ def do(subject, nominal, analogy_db):
             si += s_incr
             ni += n_incr
 
-    result = [
-        LinePair(subject_seq, nominal_seq, edit_list, cost = cost,
-                 seq_edit_id = seq_edit_id)
-        for subject_seq, nominal_seq, edit_list, cost, seq_edit_id
-        in iterable(editions.edit_list)
-    ]
+    context = constraints.context_get()
+    result  = []
+    for subject_seq, nominal_seq, edit_list, cost, seq_edit_id \
+            in iterable(editions.edit_list):
+        pair = LinePair(subject_seq, nominal_seq, edit_list, cost = cost,
+                        seq_edit_id = seq_edit_id)
+        if context is not None and context.alive:
+            if not pair.is_equivalent():
+                context.kill()
+            elif not constraints.enter_line(context, subject_seq,
+                                            nominal_seq):
+                # Subject-side constraint violation: THE red cell. The
+                # space is already killed by 'enter_line'.
+                pair = LinePair(subject_seq, nominal_seq, edit_list,
+                                cost = cost,
+                                seq_edit_id = E_EditId.SUBSTITUTE)
+        result.append(pair)
     return result, editions.analogy_db.to_AnalogyDb()
 

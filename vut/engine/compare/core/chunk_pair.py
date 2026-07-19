@@ -75,13 +75,20 @@ class ChunkPair(list):
                      '.is_equivalent()'.
 
         NOTE: a type 'mismatch' involving E_Chunk.NONE only means the chunk is
-        one-sided; whether that hurts is decided by its line pairs (a chunk of
-        purely insignificant lines is display filler, hence neutral).
+        one-sided. For OUTER text that is decided by the line pairs (a chunk
+        of purely insignificant lines is display filler, hence neutral). A
+        one-sided REGION however is a FRAMING mismatch: a region must find
+        its counterpart -- even an empty one (see DOC/SEMANTICS.txt sec. 7).
         """
-        if (    self.__subject_type_id != self.__nominal_type_id
-            and E_Chunk.NONE not in (self.__subject_type_id,
-                                     self.__nominal_type_id)):
-            return False
+        if self.__subject_type_id != self.__nominal_type_id:
+            if E_Chunk.NONE not in (self.__subject_type_id,
+                                    self.__nominal_type_id):
+                return False
+            present = (self.__subject_type_id
+                       if self.__nominal_type_id is E_Chunk.NONE
+                       else self.__nominal_type_id)
+            if present not in (E_Chunk.LINE, E_Chunk.LINE_SEQUENCE):
+                return False           # one-sided REGION: framing mismatch
         return all(line_pair.is_equivalent() for line_pair in self)
 
     def analogy_db(self):

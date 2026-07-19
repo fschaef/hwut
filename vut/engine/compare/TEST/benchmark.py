@@ -59,9 +59,9 @@ def generate_streams(n_lines):
         
         if mode == 'potpourri' and i + POTPOURRI_BLOCK_SIZE < n_lines:
             # --- Potpourri Region (Shuffled Lines) ---
-            # Both streams get |||| markers
-            subject_lines.append("||||")
-            nominal_lines.append("||||")
+            # Both streams get the region framing
+            subject_lines.append("##! potpourri")
+            nominal_lines.append("##! potpourri")
             
             block_content = []
             for _ in range(POTPOURRI_BLOCK_SIZE):
@@ -78,8 +78,8 @@ def generate_streams(n_lines):
             n_block = rng.sample(block_content, len(block_content))
             nominal_lines.extend(n_block)
             
-            subject_lines.append("||||")
-            nominal_lines.append("||||")
+            subject_lines.append("####")
+            nominal_lines.append("####")
             i += POTPOURRI_BLOCK_SIZE
             
         elif mode == 'numeric':

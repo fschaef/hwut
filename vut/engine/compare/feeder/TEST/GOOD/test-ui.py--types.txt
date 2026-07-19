@@ -1,5 +1,5 @@
 --- TEST: All Types (GOOD vs TOLERATED) ---
-Packet: HEADER (Signature: ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE)) )
+Packet: HEADER (Signature: ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8)) )
 Packet: CONFIG
 Packet: SECTION 'LINE_SEQUENCE/LINE_SEQUENCE' Type: ChunkPair
 Packet: ROW S:01 | N:01 (Cost: 0.25)
@@ -36,5 +36,5 @@ Packet: ROW S:06 | N:06 (Cost: 0.00)
 
 Packet: EOS
 ----
-Signature in 'SIGNATURE_UI_PROTOCOL.txt': ((DrJTiY_AoJUI4g9dolIFp6REbalbECBCBhcsGuXGjuE))
+Signature in 'SIGNATURE_UI_PROTOCOL.txt': ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 ----

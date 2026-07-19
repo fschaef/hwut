@@ -1,0 +1,14 @@
+## Check-on-entry: the moment a variable enters, its constraints run.
+no bindings at all:                            judge: True                      lawyer: True                      [ok]
+binding holds:                                 judge: True                      lawyer: True                      [ok]
+subject violates:                              judge: False                     lawyer: False                     [ok]
+value free if legal:                           judge: True                      lawyer: True                      [ok]
+name mismatch:                                 judge: False                     lawyer: False                     [ok]
+binding vs plain:                              judge: False                     lawyer: False                     [ok]
+## An unconstrained variable enters freely (it may serve as input).
+unconstrained var:                             judge: True                      lawyer: True                      [ok]
+## Empty constraint_db: bindings still compare by name, no checks.
+no db, names equal:                            judge: True                      lawyer: True                      [ok]
+no db, names differ:                           judge: False                     lawyer: False                     [ok]
+## Sequentiality: entries after the abort point are not processed.
+mismatch shields late binding:                 judge: False                     lawyer: False                     [ok]

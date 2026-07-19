@@ -4,10 +4,10 @@ SCENARIO: Sudoku: Pigeonhole (2 items into 1 slot)
 ------------------------------------------------------------
 SUBJECT                        | NOMINAL                       
 ------------------------------------------------------------
-||||                           | ||||                          
+##! potpourri                  | ##! potpourri                 
 Val ((A))                      | Val ((1))                     
 Val ((A))                      | Val ((2))                     
-||||                           | ||||                          
+####                           | ####                          
 ------------------------------------------------------------
 Judge (is_equivalent): False
 Lawyer (associate):    False

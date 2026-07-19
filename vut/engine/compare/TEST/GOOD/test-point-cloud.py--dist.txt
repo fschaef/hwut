@@ -1,0 +1,7 @@
+## Distance functions: built-ins and whitelisted expressions.
+Linf tolerates the diagonal:               judge: True  lawyer: True  [ok]
+L2 rejects the same diagonal:              judge: False lawyer: False [ok]
+L1 sums components:                        judge: True  lawyer: True  [ok]
+expression: first component only:          judge: True  lawyer: True  [ok]
+## Nominal is authoritative: the subject's limit is ignored.
+subject declares limit=0.0001:             judge: True  lawyer: True  [ok]

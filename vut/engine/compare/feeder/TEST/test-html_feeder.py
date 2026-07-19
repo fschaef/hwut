@@ -11,7 +11,7 @@ import vut.engine.compare.feeder.html_feeder as html_feeder
 from   vut.engine.compare.configuration      import Configuration
 
 
-SIGNATURE = 'PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc'
+SIGNATURE = 'mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8'
 
 nominal = """
 There once was a ((Object)) made of ((Material)),
@@ -26,21 +26,21 @@ Observed the electric 0.5 blue haze.
 He whispered while scrubbing the floor of the pure,
 "For a bug in the code ends 100.0 days."
 
-||||
+##! potpourri
 The ((Animal)) in the desert was dry,
 With a telescope aimed at the sky.
 "That which does not kill us makes us 42.0 percent strange,"
 ((Object)) noted while rearranging the range,
 Then ate a gold watch and started to fly.
-||||
+####
 
-||||
+##! potpourri
 A ((Object)) sat down on a chair,
 To contemplate why it was there.
 "To be, or not to be... a small grape,"
 It sighed as it shifted its 3.14159 geological shape,
 "Is a question that leaves me quite bare."
-||||
+####
 
 A ((hole in the wall)) looked out at its arse,
 And watched the transparent 10.0 years pass.
@@ -61,21 +61,21 @@ Observed the electric 0.51 blue haze.
 "I think, therefore I am... not quite sure,"
 "For a bug in the code ends 102.0 days."
 
-||||
+##! potpourri
 "That which does not kill us makes us 42.1 percent strange,"
 The ((Animal)) in the desert was dry,
 With a telescope aimed at the sky.
 A ((mouse)) noted while rearranging the range,
 Then ate a gold watch and started to fly.
-||||
+####
 
-||||
+##! potpourri
 A ((Object)) sat down on a chair,
 To contemplate why it was there.
 "To be, or not to be... a small grape,"
 "Is a question that leaves me quite bare."
 It sighed as it shifted its 3.14 geological shape,
-||||
+####
 
 A ((Window)) looked out at its glas,
 "The unexamined life is a pane in the heck,"

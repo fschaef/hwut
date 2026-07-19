@@ -32,6 +32,10 @@ class E_Chunk(Enum):
     LINE_SEQUENCE = auto()
     LINE          = auto()
     POTPOURRI     = auto()
+    VERBATIM      = auto()
+    IGNORE        = auto()
+    POINT_CLOUD   = auto()
+    TABLE         = auto()
     TERMINAL      = auto()
     VOID          = auto()
     NONE          = auto()
@@ -43,4 +47,5 @@ class E_ToleranceId(int, Enum):
     NUMERIC             = 4
     EQUIVALENCE_PATTERN = 5
     SEPERATOR           = 6
+    CONSTRAINT_BINDING  = 7
 

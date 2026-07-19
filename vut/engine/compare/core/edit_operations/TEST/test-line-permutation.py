@@ -47,7 +47,7 @@ if "--hwut-info" in sys.argv:
     print("CHOICES: different, different-2, different-good-2, different-void-2, same;")
     sys.exit()
 
-E_ToleranceId_member_list              = ['STRING', 'VISIBLE_NOTHING', 'ANALOGY', 'NUMERIC', 'EQUIVALENCE_PATTERN', 'SEPERATOR']
+E_ToleranceId_member_list              = ['STRING', 'VISIBLE_NOTHING', 'ANALOGY', 'NUMERIC', 'EQUIVALENCE_PATTERN', 'SEPERATOR', 'CONSTRAINT_BINDING']
 E_ToleranceId_when_tests_where_written = set(E_ToleranceId_member_list)
 E_ToleranceId_current                  = set(E_ToleranceId.__members__.keys())
 assert E_ToleranceId_current == E_ToleranceId_when_tests_where_written
@@ -57,6 +57,9 @@ def get_example(tolerance_id, example_str="4711"):
 
     if tolerance_id == E_ToleranceId.STRING:
         return LineElementString(example_str)
+    elif tolerance_id == E_ToleranceId.CONSTRAINT_BINDING:
+        # binding elements carry the '((name: value))' shape
+        return LineElement.from_match(tolerance_id, "((v: %s))" % example_str, 0.1, {1,2,3})
     else:
         # Simulate a match and use the new from_match factory
         return LineElement.from_match(tolerance_id, example_str, 0.1, {1,2,3})
@@ -67,7 +70,8 @@ tolerance_db = {
    2: E_ToleranceId.ANALOGY,
    3: E_ToleranceId.NUMERIC,
    4: E_ToleranceId.EQUIVALENCE_PATTERN,
-   5: E_ToleranceId.SEPERATOR
+   5: E_ToleranceId.SEPERATOR,
+   6: E_ToleranceId.CONSTRAINT_BINDING
 }
 
 def stringy(x):

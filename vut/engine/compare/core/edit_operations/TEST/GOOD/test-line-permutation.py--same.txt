@@ -54,3 +54,11 @@
       subject:  SEPERATOR:4711
       nominal:  SEPERATOR:4711
       => edits: GOOD
+--(8)------------------------------------------------------------------
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: GOOD
+
+      subject:  CONSTRAINT_BINDING:((v: 4711))
+      nominal:  CONSTRAINT_BINDING:((v: 4711))
+      => edits: GOOD

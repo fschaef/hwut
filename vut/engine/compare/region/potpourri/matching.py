@@ -40,17 +40,20 @@ from   .result             import PairedGraph, Result
 
 from   typeguard import typechecked
 
-def get_initial_state(subject_line_list, nominal_line_list, analogy_db, abort_early_f: bool) -> Result:
-    potential_pair_db = PotentialPairDb.from_raw(subject_line_list, 
-                                                 nominal_line_list, 
-                                                 abort_early_f)
+def get_initial_state(subject_line_list, nominal_line_list, analogy_db,
+                      abort_early_f: bool, subset_f: bool = False) -> Result:
+    potential_pair_db = PotentialPairDb.from_raw(subject_line_list,
+                                                 nominal_line_list,
+                                                 abort_early_f, subset_f)
     subject_n = 0 if not subject_line_list else len(subject_line_list)
     nominal_n = 0 if not nominal_line_list else len(nominal_line_list)
 
-    return Result(potential_pair_db     = potential_pair_db, 
-                  pair_db               = PairedGraph(), 
+    # subset: only the SUBJECT side must be completely matched.
+    required = subject_n if subset_f else max(subject_n, nominal_n)
+    return Result(potential_pair_db     = potential_pair_db,
+                  pair_db               = PairedGraph(),
                   analogy_constraint_db = analogy_db if analogy_db is not None else AnalogyDb,
-                  required_pair_n       = max(subject_n, nominal_n), 
+                  required_pair_n       = required,
                   aborted_f             = potential_pair_db is None)
 
 def complete_pairing_is_possible(state: Result) -> bool:
@@ -63,14 +66,18 @@ def complete_pairing_is_possible(state: Result) -> bool:
     pair_n          = len(state.pair_db)
     db              = state.potential_pair_db
     required_pair_n = state.required_pair_n
-    # every subject has a counterpart?
-    if   pair_n + len(db)             != required_pair_n: return False 
-    # every nominal has a counterpart?
-    elif pair_n + db.count_nominals() != required_pair_n: return False 
-    # else: there may be a solution where all lines are matched
-    else:                                                 return True
+    # '<' (not '!='): availability may EXCEED the requirement in subset
+    # mode (surplus nominals are legal there); in standard mode the sums
+    # can never exceed 'required', so '<' is behavior-identical.
+    # enough subjects with candidates?
+    if   pair_n + len(db)             < required_pair_n: return False
+    # enough distinct nominals available?
+    elif pair_n + db.count_nominals() < required_pair_n: return False
+    # else: there may be a solution where all required lines are matched
+    else:                                                return True
 
-def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result:
+def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool,
+                                   subset_f: bool = False) -> Result:
     db         = state.potential_pair_db
     pair_db    = state.pair_db
     analogy_db = state.analogy_constraint_db
@@ -88,9 +95,12 @@ def extract_ultimates_and_hopeless(state: Result, abort_early_f: bool) -> Result
         if not ok_f:
             if abort_early_f: break
 
-        ok_f, analogy_db = db.extract_ultimate_nominal_partners(pair_db, analogy_db, abort_early_f)
-        if not ok_f:
-            if abort_early_f: break
+        if not subset_f:
+            # In subset mode a nominal with a single possible partner is
+            # NOT forced -- it may legitimately remain unmatched.
+            ok_f, analogy_db = db.extract_ultimate_nominal_partners(pair_db, analogy_db, abort_early_f)
+            if not ok_f:
+                if abort_early_f: break
 
         pair_n = len(pair_db)
 

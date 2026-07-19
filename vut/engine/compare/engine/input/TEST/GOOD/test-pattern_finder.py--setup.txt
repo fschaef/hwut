@@ -1,29 +1,36 @@
 
-size: 1;
-None -> STRING
-
 size: 2;
 None -> STRING
-\(\((?:.|\n)+?\)\) -> ANALOGY
-
-size: 2;
-None -> STRING
-\s+ -> SEPERATOR
-
-size: 2;
-None -> STRING
-[\\/]+ -> EQUIVALENCE_PATTERN
-
-size: 2;
-None -> STRING
-(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w) -> NUMERIC
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 
 size: 3;
 None -> STRING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
+\(\((?:.|\n)+?\)\) -> ANALOGY
+
+size: 3;
+None -> STRING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
+\s+ -> SEPERATOR
+
+size: 3;
+None -> STRING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
+[\\/]+ -> EQUIVALENCE_PATTERN
+
+size: 3;
+None -> STRING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
+(?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w) -> NUMERIC
+
+size: 4;
+None -> STRING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 hallo -> EQUIVALENCE_PATTERN
 welt -> EQUIVALENCE_PATTERN
 
-size: 3;
+size: 4;
 None -> STRING
 nothing -> VISIBLE_NOTHING
 error -> VISIBLE_NOTHING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING

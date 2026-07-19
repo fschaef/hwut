@@ -1,0 +1,3 @@
+## subset + duplicates combine.
+collapsed subject subset:                    judge: True  lawyer: True  [ok]
+violation still detected:                    judge: False lawyer: False [ok]

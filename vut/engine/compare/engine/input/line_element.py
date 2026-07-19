@@ -77,6 +77,8 @@ class LineElement:
                 return LineElementAnalogy(content)
             case E_ToleranceId.SEPERATOR:
                 return LineElementSeparator(content)
+            case E_ToleranceId.CONSTRAINT_BINDING:
+                return LineElementConstraintBinding(content)
             case _:
                 assert False # pragma: no cover
 
@@ -217,6 +219,66 @@ class LineElementAnalogy(LineElement):
 
     # NOTE: '__hash__' cannot be overwritten here.
     #       Equivalence is derived later as a function of consistency.
+
+class LineElementConstraintBinding(LineElement):
+    """A CONSTRAINT BINDING '(( <name> : <number>|<quoted-string> ))' -- the
+    variable '<name>' enters the constraint space with the given value (see
+    'engine/constraints.py').
+
+    EQUIVALENCE is decided by the NAME alone: the value is free -- whether
+    it is ACCEPTABLE is the constraint space's judgment (check-on-entry),
+    not a textual one. A name mismatch is DIFFERENT; a kind mismatch is
+    MISFIT.
+    """
+    __slots__ = ('name', 'value')
+
+    _PARSE_RE = re.compile(
+        r'([A-Za-z_]\w*)\s*:\s*'
+        r'(-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|"[^"]*")')
+
+    def __init__(self, content):
+        LineElement.__init__(self, E_ToleranceId.CONSTRAINT_BINDING, content)
+        m = self._PARSE_RE.search(content)
+        assert m is not None  # the master regex guaranteed the shape
+        self.name = m.group(1)
+        raw       = m.group(2)
+        if raw.startswith('"'):
+            self.value = raw[1:-1]
+        else:
+            try:               self.value = int(raw)
+            except ValueError: self.value = float(raw)
+
+    def compare(self, nominal):
+        """RETURNS: [0] MISFIT,     if 'other' is of another class.
+                        DIFFERENT,  if 'other' binds another variable NAME.
+                        EQUIVALENT, if 'other' binds the same variable NAME
+                                    (the VALUE is free -- the constraint
+                                    space judges it, not the text).
+                    [1] None, no analogy required.
+        """
+        if nominal.tolerance_id == E_ToleranceId.VISIBLE_NOTHING:
+            return E_Verdict.EQUIVALENT_NOMINAL_VISIBLE_NOTHING, None
+        elif self.tolerance_id != nominal.tolerance_id:
+            return E_Verdict.MISFIT, None
+        elif self.name == nominal.name:
+            return E_Verdict.EQUIVALENT, None
+        else:
+            return E_Verdict.DIFFERENT, None
+
+    def edit_distance_relative(self, nominal):
+        if (nominal.tolerance_id == self.tolerance_id
+                and nominal.name == self.name):
+            return 0
+        return LineElement.edit_distance_relative(self, nominal)
+
+    def __pretty__(self):
+        """RETURNS: Representation of object state formatted by 'vut.engine.pretty.do()'.
+        """
+        return "LineElement:%s(\"%s:%s\")" % (self.tolerance_id.name,
+                                              self.name, self.value), []
+
+    # NOTE: '__hash__' cannot be overwritten here; equivalence is decided by
+    #       the NAME alone while '_string' carries the value too.
 
 class LineElementNumber(LineElement):
     __slots__ = ('number', 'epsilon')

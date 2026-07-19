@@ -1,0 +1,6 @@
+## max_comparisons: shebang > config section > default.
+default:                                   judge: True  lawyer: True  [ok]
+shebang param:                             judge: True  lawyer: True  [ok]
+## config section:
+tight section:                             judge: True  lawyer: True  [ok]
+shebang overrides:                         judge: True  lawyer: True  [ok]

@@ -55,8 +55,8 @@ async def test(subject_timeline, nominal_timeline):
     config = Configuration()
     
     # Test Data: A mix of standard lines and potpourri regions
-    subject_content = ["heidi", "heinz", "||||", "albert", "berta",  "carlos",   "damian", "||||", "kasper", "friedrich"]
-    nominal_content = ["trudi", "hein",  "||||", "karlos", "damian", "adelbert", "berta",  "||||", "crisper", "friedolin"]
+    subject_content = ["heidi", "heinz", "##! potpourri", "albert", "berta",  "carlos",   "damian", "####", "kasper", "friedrich"]
+    nominal_content = ["trudi", "hein",  "##! potpourri", "karlos", "damian", "adelbert", "berta",  "####", "crisper", "friedolin"]
     
     subject, nominal, \
     dispatcher_handle = racing.prepare_dispatcher(subject_timeline, subject_content,

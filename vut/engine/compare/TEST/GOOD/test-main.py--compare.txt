@@ -35,31 +35,31 @@
 --------------------------------------------------
 
 
-   [01] Hallo      Hallo
-   [02] ||||       ||||
-   [03] Welt       Welt
-   [04]            ||||
+   [01] Hallo         Hallo
+   [02] ##! potpourri ##! potpourri
+   [03] Welt          Welt
+   [04] ####          ####
 
 => verdict: True
 
 --------------------------------------------------
 
 
-   [01] Hallo      Hallo
-   [02] ||||       ||||
-   [03] Welt       Welt
-   [04] ||||       
+   [01] Hallo         Hallo
+   [02] ##! potpourri ##! potpourri
+   [03] Welt          Welt
+   [04] ####          ####
 
 => verdict: True
 
 --------------------------------------------------
 
 
-   [01] Hallo      Hallo
-   [02] ||||       ||||
-   [03] Welt       Le Monde
-   [04] Le Monde   Welt
-   [05] ||||       ||||
+   [01] Hallo         Hallo
+   [02] ##! potpourri ##! potpourri
+   [03] Welt          Le Monde
+   [04] Le Monde      Welt
+   [05] ####          ####
 
 => verdict: True
 
@@ -75,31 +75,31 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hallo##    ##Hello
-   [03] ##Welt     World##
-   [04] Good       Good
-   [05] ||||       ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hallo##       ##Hello
+   [03] ##Welt        World##
+   [04] Good          Good
+   [05] ####          ####
 
 => verdict: True
 
 --------------------------------------------------
 
 
-   [01] Hallo      ||||
+   [01] Hallo      ##! potpourri
    [02] Welt       Hello
    [03]            World
-   [04]            ||||
+   [04]            ####
 
 => verdict: False
 
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] Le Monde   World
-   [04] ||||       ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] Le Monde      World
+   [04] ####          ####
 
 => verdict: False
 

@@ -31,7 +31,8 @@ DEFAULT_CONFIG = {
         "show_nominal_gap": True, # Show empty space on nominal side if subject inserts text
         "line_height_px": 24,     # Fixed height for SVG alignment
         "gutter_width_px": 40,
-        "potpourri_marker": "||||"
+        "region_begin_marker": "##!",
+        "region_end_marker": "####"
     },
     "labels": {
         "OK_GOOD":                    "Perfect Match",
@@ -140,7 +141,7 @@ class HtmlReportGenerator:
                 self._flush_potpourri() # Close previous if open
                 if "Potpourri" in inst.chunk_type:
                     self.in_potpourri = True
-                    self._print(f'<div class="potpourri-frame"><div class="potpourri-marker">{self.opts["potpourri_marker"]} REGION START</div>')
+                    self._print(f'<div class="potpourri-frame"><div class="potpourri-marker">{self.opts["region_begin_marker"]} REGION START</div>')
                 else:
                     self.in_potpourri = False
                     # Standard header for Line Sequence
@@ -199,7 +200,7 @@ class HtmlReportGenerator:
     def _flush_potpourri(self):
         if not self.potpourri_buffer:
             if self.in_potpourri: 
-                self._print(f'<div class="potpourri-marker">{self.opts["potpourri_marker"]} END</div></div>')
+                self._print(f'<div class="potpourri-marker">{self.opts["region_end_marker"]} END</div></div>')
             return
 
         # 1. Sort visuals independently
@@ -266,7 +267,7 @@ class HtmlReportGenerator:
         self._print('</div>')
 
         self._print('</div>') # End Tangle Grid
-        self._print(f'<div class="potpourri-marker">{self.opts["potpourri_marker"]} END</div></div>')
+        self._print(f'<div class="potpourri-marker">{self.opts["region_end_marker"]} END</div></div>')
         
         self.potpourri_buffer = []
 

@@ -1,0 +1,3 @@
+=== CONSTRAINTS (seed=49239, cases=300) ===
+Judge == Lawyer (verdict AND loudness): 300/300 agree
+result: PASS

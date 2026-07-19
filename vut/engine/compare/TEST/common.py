@@ -51,7 +51,7 @@ def get_LineSequence(pattern_finder, line_text_list, configuration):
 
 
 def frame_with_potpourri_borders(line_list):
-    return ["||||"] + line_list + ["||||"]
+    return ["##! potpourri"] + line_list + ["####"]
 
 
 line_element_db = {

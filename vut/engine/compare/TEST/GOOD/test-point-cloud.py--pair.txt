@@ -1,0 +1,5 @@
+## 'pair': bijective matching, every pair <= limit, equal counts.
+clean bijection, permuted:                 judge: True  lawyer: True  [ok]
+duplicate cannot pair twice:               judge: False lawyer: False [ok]
+contended points resolved:                 judge: True  lawyer: True  [ok]
+count mismatch:                            judge: False lawyer: False [ok]

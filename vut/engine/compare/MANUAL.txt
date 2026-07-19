@@ -1,0 +1,522 @@
+================================================================================
+VUT-COMPARE: USER MANUAL
+================================================================================
+
+This manual explains how to write GOOD (reference) files so that HWUT's
+comparison accepts the output you consider correct and rejects the output
+you do not. It is written for test authors.
+
+For the precise semantics and the rationale behind every rule, see
+DOC/SEMANTICS.txt (the authoritative specification). For the internal
+organisation of the engine, see ARCHITECTURE.txt. This manual is the
+practical, example-driven view of the same material.
+
+
+--------------------------------------------------------------------------------
+CONTENTS
+--------------------------------------------------------------------------------
+
+  1. What the comparison does
+  2. The GOOD file and tolerant lines
+  3. Ignoring lines and blank lines
+  4. Numbers, whitespace, and slashes
+  5. Analogies -- placeholders that must stay consistent
+  6. Equivalence words
+  7. Regions -- letting a block declare its own rules
+  8. Region: potpourri (unordered lines)
+  9. Region: verbatim (byte-exact)
+ 10. Region: ignore (skip the contents)
+ 11. Region: point-cloud (numeric vectors)
+ 12. Region: table (columns)
+ 13. Stateful constraints -- values that must obey rules
+ 14. When something is wrong: error messages
+ 15. Migrating old '||||' files
+ 16. Quick reference
+
+
+--------------------------------------------------------------------------------
+1. WHAT THE COMPARISON DOES
+--------------------------------------------------------------------------------
+
+HWUT runs your program and captures its output -- the SUBJECT. It compares
+the subject against a stored reference -- the NOMINAL, i.e. your GOOD file.
+If the two are EQUIVALENT the test passes; otherwise HWUT shows you a
+side-by-side diff of where they part ways.
+
+"Equivalent" is not "byte-identical". A test's output almost always carries
+detail that is correct but not meaningful: a timestamp, a run-time in
+milliseconds, a memory address, lines that arrive in an unpredictable
+order. If the comparison insisted on exact equality, every such detail
+would be a false alarm. The GOOD file is therefore not just a recording --
+it is a description of what "correct" means for this test, written in a
+small, deliberate vocabulary that this manual teaches.
+
+Two rules hold everywhere and are worth stating once:
+
+  - The verdict you get (pass/fail) and the diff you are shown ALWAYS
+    agree. If the diff shows no problem, the test passed; if it shows a
+    red line, the test failed. They are two views of one decision.
+
+  - The GOOD file is authoritative. When a rule can be stated on either
+    side, it is the GOOD file's statement that governs. Your program's
+    output is data to be judged, never a source of rules.
+
+
+--------------------------------------------------------------------------------
+2. THE GOOD FILE AND TOLERANT LINES
+--------------------------------------------------------------------------------
+
+By default, output is compared line by line, in order. Two lines are equal
+when their text agrees -- but "agrees" already tolerates a few things out
+of the box (whitespace runs, and -- where your test configuration enables
+them -- numeric precision, analogies, and equivalence words; sections 4-6).
+
+The features in sections 4-6 are governed by the test's comparison
+CONFIGURATION (numeric tolerance ratio, the analogy on/off switch, the
+lists of equivalence and visible-nothing words). Your HWUT setup chooses
+these; this manual shows what each does when it is on. The REGION features
+(sections 7-12) need no configuration -- a region carries its own rules in
+the GOOD file itself, so they always work.
+
+
+--------------------------------------------------------------------------------
+3. IGNORING LINES AND BLANK LINES
+--------------------------------------------------------------------------------
+
+A line whose stripped text starts or ends with '##' is a COMMENT: it takes
+no part in the comparison. Blank lines are likewise insignificant.
+
+    ## This note is for the reader of the GOOD file only.
+    Hello, world
+
+You may add, remove, or reorder comment and blank lines freely on either
+side without affecting the verdict. Use them to annotate a GOOD file.
+
+(The '##' marker is configurable; '##' is the default.)
+
+
+--------------------------------------------------------------------------------
+4. NUMBERS, WHITESPACE, AND SLASHES
+--------------------------------------------------------------------------------
+
+WHITESPACE. Runs of spaces and tabs are treated as structure, not content:
+a single space and a run of spaces compare equal. So
+
+    Column A     Column B
+
+matches the same line written with different spacing. (Leading and
+trailing whitespace on a line is stripped.)
+
+NUMBERS. When numeric tolerance is configured (a ratio such as 0.1 for
+10%), two numbers compare equal when they are within that RELATIVE
+tolerance of each other. With a 10% tolerance, a nominal "100.0" accepts a
+subject "95.0" but not "80.0". This is how you tolerate run-times,
+measured quantities, and last-digit rounding.
+
+SLASHES. When slash tolerance is on, runs of '/' and '\' are
+interchangeable, so a path printed with backslashes on one platform
+matches the same path with forward slashes on another.
+
+
+--------------------------------------------------------------------------------
+5. ANALOGIES -- PLACEHOLDERS THAT MUST STAY CONSISTENT
+--------------------------------------------------------------------------------
+
+An analogy is a token written in double parentheses, '((...))'. It marks a
+value that need not match literally across runs, as long as the SAME value
+always corresponds to the SAME counterpart in the SAME place.
+
+IMPORTANT: the markers appear on BOTH sides. Your program's output wraps
+the unpredictable value in '(( ))', and the GOOD file wraps its own token
+in '(( ))'. The comparison then binds the subject's marked value to the
+nominal's. (A bare, unmarked value in the output is ordinary text and is
+NOT treated as an analogy -- it would simply have to match.)
+
+Suppose your program prints an object id that changes every run, but the
+same id must appear twice. The program emits it as '((<id>))':
+
+    GOOD file (nominal):        a possible run (subject):
+        created ((obj))            created ((0x7f3a))
+        using   ((obj))            using   ((0x7f3a))    <- PASS
+
+The token '((obj))' binds to '((0x7f3a))' on the first line; the second
+line must carry the same value. Had it printed 'using ((0x9999))' the test
+would FAIL.
+
+The binding is one-to-one. If '((obj))' stands for '((0x1))', then nothing
+else may stand for '((0x1))' and '((obj))' may not later stand for
+something else.
+
+The names on the two sides need not match: the GOOD file may say '((a))'
+where the subject prints '((b))' -- what matters is that the
+correspondence is consistent throughout. A token whose value never recurs
+is unconstrained: any value is accepted (a "free" analogy).
+
+Analogies established in ordinary text develop over the whole file, in
+order. A REGION (section 7) has its own private analogy world: placeholders
+inside a region neither see nor affect placeholders outside it.
+
+
+--------------------------------------------------------------------------------
+6. EQUIVALENCE WORDS
+--------------------------------------------------------------------------------
+
+Your test configuration may declare sets of words that count as equal --
+for example "happy" and "glad", or locale spellings like "colour" and
+"color". Where such a set is configured, either word matches either word.
+
+Separately, "visible-nothing" words may be configured -- words such as
+"nothing" or "nix" that the program prints where, logically, there is
+nothing. A visible-nothing token counts as absent: a whole line made only
+of visible-nothing words equals no line at all, so it may appear on one
+side and not the other (in ordinary text; inside a potpourri region such
+lines are counted).
+
+
+--------------------------------------------------------------------------------
+7. REGIONS -- LETTING A BLOCK DECLARE ITS OWN RULES
+--------------------------------------------------------------------------------
+
+Sometimes a block of output needs a comparison rule that the surrounding
+line-by-line rule cannot express: lines that may arrive in any order,
+numeric vectors, a table with a volatile column, a block that must match
+byte-for-byte. A REGION marks such a block and names the handler that
+should interpret it:
+
+    ##! <handler> [<parameter> | <parameter>=<value> | <parameter>={...}]
+    ...the block's lines...
+    ####
+
+The opening line is a "shebang": '##!' followed by the handler name and
+its parameters. The closing line is exactly '####'. (A line of five or
+more '#' is an ordinary comment, not a closing marker.)
+
+Rules that hold for every region:
+
+  - The framing must MATCH on both sides. A region on one side with no
+    region -- or a different handler -- on the other is a mismatch, even
+    when the region is empty.
+
+  - Parameters are read from the GOOD file. A parameter may also carry a
+    value in braces, '{...}', which may contain spaces (used for
+    expressions, sections 11). The GOOD file's parameters govern; the
+    subject need only open the same handler.
+
+  - A region's placeholders are private to it (section 5).
+
+  - Comment and blank lines stay insignificant inside a region, exactly
+    as outside. A handler decides how CONTENT lines compare, not which
+    lines take part.
+
+The following sections describe each built-in handler.
+
+
+--------------------------------------------------------------------------------
+8. REGION: potpourri (unordered lines)
+--------------------------------------------------------------------------------
+
+Use 'potpourri' when the SAME lines must appear on both sides but their
+ORDER is unpredictable (a hash-map dump, parallel workers' log lines):
+
+    ##! potpourri
+    started worker B
+    started worker A
+    ####
+
+matches a subject that prints A before B. Each line must have a distinct
+equivalent partner; a leftover line on either side fails the test. The
+tolerant line rules (sections 4-6) and analogies apply within the block.
+
+Flags:
+
+    subset       The subject need only be a SUBSET of the GOOD file: every
+                 subject line must find a distinct partner, but the GOOD
+                 file may list more lines than appear. Use this when your
+                 program emits some unpredictable selection from a known
+                 set.
+
+    duplicates   Repeated identical lines collapse to one before matching
+                 (set semantics). Without this flag, a line printed twice
+                 must appear twice on both sides.
+
+The flags combine: '##! potpourri subset duplicates'.
+
+    ##! potpourri subset          matches a subject that prints only
+    apple                         "cherry" (a subset of the three), but
+    banana                        fails one that prints "durian".
+    cherry
+    ####
+
+
+--------------------------------------------------------------------------------
+9. REGION: verbatim (byte-exact)
+--------------------------------------------------------------------------------
+
+Use 'verbatim' when a block must match EXACTLY -- no numeric tolerance, no
+whitespace folding, no analogies, no equivalence words. Every content line
+must be identical, in order, with equal counts:
+
+    ##! verbatim
+    -----BEGIN KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFA
+    -----END KEY-----
+    ####
+
+Comment and blank lines remain insignificant even here (that is a property
+of the input, not of the comparison). Everything else is literal.
+
+
+--------------------------------------------------------------------------------
+10. REGION: ignore (skip the contents)
+--------------------------------------------------------------------------------
+
+Use 'ignore' for a block whose contents are irrelevant but whose PRESENCE
+matters -- a banner, a build stamp, a licence header:
+
+    ##! ignore
+    Build 2026-07-18T09:31:02 on host farnsworth
+    ####
+
+Any contents on either side are accepted, including different line counts.
+The framing itself is still compared: an 'ignore' region with no region
+opposite it is a mismatch. Only the contents are exempt.
+
+
+--------------------------------------------------------------------------------
+11. REGION: point-cloud (numeric vectors)
+--------------------------------------------------------------------------------
+
+Use 'point-cloud' when each line is a point in n dimensions -- a list of
+whitespace-separated numbers -- and you want a geometric comparison rather
+than a textual one. The i-th component of a point is written p[i]; the
+first valid line sets the dimension.
+
+    ##! point-cloud limit=0.05
+    0.1  0.2
+    0.3  0.4
+    ####
+
+Parameters:
+
+    limit=<number>    The distance criterion. In the default mode, every
+                      point on either side must have a neighbour on the
+                      other side no farther than 'limit' (so order and
+                      duplicates do not matter, only coverage).
+
+    pair              Require a one-to-one pairing instead of mere
+                      coverage: each subject point pairs with exactly one
+                      nominal point within 'limit', counts equal.
+
+    dist=<name|expr>  The distance function: 'euclidean' (default), 'L1',
+                      'L2', 'Linf', or an expression over the two points
+                      x[] and y[], e.g. dist={abs(x[0]-y[0])}.
+
+    constraint={expr} A property that EVERY point must satisfy, written
+                      over p[] with the aliases x, y, z, w for
+                      p[0], p[1], p[2], p[3]. Used alone (without 'limit')
+                      it checks a property rather than comparing to
+                      recorded points -- the GOOD file becomes a
+                      SPECIFICATION:
+
+    ##! point-cloud constraint={abs(y - sin(x)/x) < 0.01}
+    0.5  0.9589
+    1.0  0.8415
+    ####
+
+    Here the recorded points need not be reproduced; the subject passes if
+    each of its points lies on the curve y = sin(x)/x within 0.01. Provide
+    just one nominal point (any point that itself satisfies the property)
+    so the region is non-empty.
+
+At least one of 'limit' or 'constraint' must be given. Expressions may use
+the arithmetic operators, comparisons, and the common math functions
+(abs, min, max, sqrt, exp, log, sin, cos, tan, floor, ceil, hypot, ...);
+anything else is rejected when the GOOD file is read.
+
+Distances use 'limit' units in every dimension; for built-in distance
+functions large clouds are compared efficiently. An expression distance is
+compared exactly but without that speed-up.
+
+
+--------------------------------------------------------------------------------
+12. REGION: table (columns)
+--------------------------------------------------------------------------------
+
+Use 'table' when each line is a row of columns and different columns need
+different rules -- a report where one column is a volatile timestamp,
+another a number good to a few percent, the rest exact. Columns are
+numbered from 0; cells split on whitespace by default.
+
+    ##! table ignore=2 numeric={3:0.05}
+    alpha   42   2026-07-18T09:31:02   0.981
+    beta    17   2026-07-18T09:31:05   1.204
+    ####
+
+Here column 2 (the timestamp) is ignored and column 3 is compared to 5%
+relative tolerance; columns 0 and 1 must match exactly.
+
+Parameters:
+
+    ignore=<cols>      Comma-separated column indices to skip entirely,
+                       e.g. ignore=2,4.
+
+    numeric={c:t,...}  Per-column RELATIVE numeric tolerance, e.g.
+                       numeric={3:0.05, 1:0.1}.
+
+    key=<col>          Match rows by this column's value instead of by
+                       position (implies unordered). Rows may then appear
+                       in any order; each subject row is checked against
+                       the nominal row with the same key.
+
+    unordered          Match rows as a bag (any order) without a key: a
+                       one-to-one pairing of equal rows must exist.
+
+    sep={<string>}     Split cells on a literal separator instead of
+                       whitespace, e.g. sep={;} for semicolon-separated
+                       rows. Cells are stripped of surrounding spaces.
+
+    ##! table key=0 numeric={1:0.1}      matches the subject regardless of
+    apple   1.00                         row order; each fruit's number is
+    banana  2.00                         checked to 10%.
+    ####
+
+
+--------------------------------------------------------------------------------
+13. STATEFUL CONSTRAINTS -- VALUES THAT MUST OBEY RULES
+--------------------------------------------------------------------------------
+
+An analogy (section 5) says "this value is free, but must stay
+consistent". A CONSTRAINT BINDING says more: "this value is free, but must
+obey a rule" -- possibly a rule involving values seen EARLIER in the file.
+
+A binding is written with the analogy markers, a name, a colon, and a
+value (a number or a quoted string):
+
+    start ((t: 12.5))
+    mode  ((m: "run-fast"))
+
+The rules live in the configuration as a plain dictionary, variable name
+-> constraint expression (or a list of expressions):
+
+    constraint_db = {
+        "y": "y >= x",
+        "t": "t > 0 and t < 100",
+    }
+
+THE MOMENT a variable enters -- the line carrying its binding is reached --
+all constraints defined for it are checked. Constraints may refer to other
+variables; those must have entered on EARLIER lines. Values develop in
+line order, which is why bindings are only allowed where line order is
+maintained: the ordinary text of the file. They are NOT allowed inside a
+'potpourri' or an unordered/keyed 'table' (a binding in such a GOOD region
+is reported as a specification error).
+
+    GOOD file (nominal):        a possible run (subject):
+        start ((t: 1))              start ((t: 55))
+        level ((x: 2))              level ((x: 3))
+        value ((y: 5))              value ((y: 7))       <- PASS
+
+The subject's values differ from the GOOD file's -- that is fine, the
+textual comparison only requires the NAME to match. What the values must
+do is satisfy the rules: t=55 is between 0 and 100, and y=7 >= x=3. Had
+the run printed 'value ((y: 2))', the y-line would be shown red and the
+test would FAIL.
+
+Failure is always the quiet kind (section 14): a constraint that is
+false, a rule needing a variable that never entered, a division by zero --
+any trouble evaluating a rule over the SUBJECT's values marks that line
+red. The one exception follows the usual asymmetry: if the GOOD FILE's own
+values violate the GOOD file's own rules, the specification is broken and
+HWUT stops with a message naming the line.
+
+Expressions are ordinary Python-style conditions: arithmetic, comparisons,
+'and'/'or'/'not', math functions (sqrt, sin, abs, min, max, ...), and
+string methods for quoted-string values:
+
+    constraint_db = {
+        "mode": "mode.startswith(\"run-\") and len(mode) < 12",
+    }
+
+Rules may depend on each other, but not in a circle: a dependency cycle
+between different variables is reported before the comparison starts.
+(A rule for 'y' mentioning 'y' itself is normal, not a cycle.)
+
+
+--------------------------------------------------------------------------------
+14. WHEN SOMETHING IS WRONG: ERROR MESSAGES
+--------------------------------------------------------------------------------
+
+There are two very different kinds of "not passing".
+
+A TEST FAILURE means the subject did not match the GOOD file: a line
+differs, a point is out of range, a required row is missing. HWUT shows the
+diff and the test fails. This is the normal, expected signal.
+
+A SPECIFICATION ERROR means the GOOD file itself is broken, and HWUT stops
+with a message naming the line. Because the GOOD file is authoritative, a
+defect in it cannot be silently tolerated. Examples:
+
+    line 12: unknown region handler 'potpouri'; known handlers: ignore,
+             point-cloud, potpourri, table, verbatim
+    line 20: '####' without an open region
+    line 33: end of stream inside an open region ('##! potpourri' from
+             line 30) -- '####' missing
+    line  8: table NOMINAL key 'a' appears twice (also line 5)
+    line  4: point-cloud NOMINAL data violates its own constraint
+             {x < 1}: '2.0'
+
+The distinction is deliberate: the same defect in your PROGRAM's output is
+a test failure (shown red), while in the GOOD file it is a specification
+error (named and stopped). Fix the GOOD file and re-run.
+
+A note on region markers: because a broken region declaration is reported
+rather than guessed at, a line that begins like a shebang ('##! ...') is
+always treated as one. If you need a literal '##! ...' line in compared
+output, put it inside a 'verbatim' or 'ignore' region.
+
+
+--------------------------------------------------------------------------------
+15. MIGRATING OLD '||||' FILES
+--------------------------------------------------------------------------------
+
+Earlier versions framed potpourri blocks with '||||' delimiters. That
+syntax has been retired in favour of the shebang framing. To convert your
+GOOD files, run:
+
+    tool/migrate_region_syntax.py  <file> ...
+
+It rewrites each '||||' ... '||||' block to '##! potpourri' ... '####',
+preserving indentation, and reports any file that ended with a block left
+open. A literal '||||' now has no special meaning; it is ordinary content.
+
+
+--------------------------------------------------------------------------------
+16. QUICK REFERENCE
+--------------------------------------------------------------------------------
+
+Comment / blank line ................. '## ...' or empty; ignored anywhere
+Analogy placeholder .................. ((name))       consistent value
+Constraint binding ................... ((name: value)) rule-checked value
+                                       (rules: constraint_db in the config;
+                                        ordinary text only, in line order)
+Region open / close .................. ##! <handler> <params>   ...   ####
+
+  potpourri [subset] [duplicates]           same lines, any order
+  verbatim                                  byte-exact, ordered
+  ignore                                    contents exempt, framing kept
+  point-cloud limit=<n> [pair]              numeric vectors, by distance
+              [dist=euclidean|L1|L2|Linf|{expr}]
+              [constraint={expr over p[], x y z w}]
+  table [key=<c>] [unordered] [ignore=<c,..>]   columnar rows
+        [numeric={c:t,..}] [sep={<s>}]
+
+Rules of thumb:
+  - The GOOD file describes what "correct" means; keep it as tolerant as
+    the test truly allows, and no more.
+  - A region's parameters and placeholders belong to the GOOD file and to
+    that region alone.
+  - A broken GOOD file is reported with a line number; a mismatching
+    program output is shown as a diff.
+
+For exact semantics and the reasoning behind every rule, see
+DOC/SEMANTICS.txt.

@@ -13,7 +13,8 @@ provided by a stream is interpreted in two ways:
                    in the same sequence.
 
 A stream can consist of multiple blocks of line sequences and potpourris.
-Potpourris are marked by '||||' delimiters around the concerned lines.
+Regions are framed as "##! <handler> [<param>|<param>=<value>]*" ... "####"
+lines; e.g. "##! potpourri" opens an order-free block ('region/registry.py').
 
 API:
 
@@ -35,6 +36,7 @@ ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 import vut.engine.compare.engine.frozen_analogy_db      as     frozen_analogy_db
+from   vut.engine.compare.engine                        import constraints
 from   vut.engine.compare.core.chunk_pair import ChunkPair
 from   vut.engine.compare.engine.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
                                                                AssociationChunkPipe
@@ -93,7 +95,10 @@ async def _is_equivalent_fast(config,
     assert hasattr(nominal_line_provider, "readline")
 
     # Ensure that the flyweight-required registry is context-local (thread/asyncio task)
-    token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry()) 
+    token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry())
+    # Stateful constraints: fresh space per run; static checks are LOUD here
+    # (before any line is read) -- see 'engine/constraints.py'.
+    token_constraints = constraints.context_new(config)
 
     try:
         analogy_db = AnalogyDb()
@@ -111,6 +116,7 @@ async def _is_equivalent_fast(config,
         else:
             return True
     finally:
+        constraints.context_constraint_context.reset(token_constraints)
         frozen_analogy_db.context_frozen_analogy_db_registry.reset(token)
 
 @typechecked
@@ -221,7 +227,10 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     assert hasattr(nominal_line_provider, "readline")
 
     # Ensure that the flyweight-required registry is context-local (thread/asyncio task)
-    token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry()) 
+    token = frozen_analogy_db.context_frozen_analogy_db_registry.set(frozen_analogy_db.FrozenAnalogyRegistry())
+    # Stateful constraints: fresh space per run; static checks are LOUD here
+    # (before any line is read) -- see 'engine/constraints.py'.
+    token_constraints = constraints.context_new(config)
 
     try:
         analogy_db = AnalogyDb()
@@ -234,7 +243,17 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
 
             result = ChunkPair.from_input_chunks(subject, nominal, analogy_db)
             analogy_db = result.analogy_db()
+
+            # Stateful constraints: a non-equivalent chunk (of ANY type) is
+            # the Judge's abort point -- the Lawyer kills the space so no
+            # later binding is processed either (THE LAW).
+            context = constraints.context_get()
+            if (context is not None and context.alive
+                    and not result.is_equivalent()):
+                context.kill()
+
             yield result
 
     finally:
+        constraints.context_constraint_context.reset(token_constraints)
         frozen_analogy_db.context_frozen_analogy_db_registry.reset(token)

@@ -23,55 +23,56 @@ line2##
 001: [STRING 'line1']
 002: [VISIBLE_NOTHING 'line2##']
 ----------------------------------
-<potpourri>
+##! potpourri
 line2##
-<potpourri>
+####
 ----------------------------------
 =>
 002| [VISIBLE_NOTHING 'line2##']
 ----------------------------------
-<potpourri>
+##! potpourri
 ##line2
-<potpourri>
+####
 ----------------------------------
 =>
 002| [VISIBLE_NOTHING '##line2']
 ----------------------------------
-<potpourri>
+##! potpourri
 ##line 2
 line 3
-<potpourri>
+####
 ----------------------------------
 =>
 002| [VISIBLE_NOTHING '##line 2']
 003| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '3']
 ----------------------------------
-<potpourri>
+##! potpourri
 line 2
 ##line 3
-<potpourri>
+####
 ----------------------------------
 =>
 002| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '2']
 003| [VISIBLE_NOTHING '##line 3']
 ----------------------------------
-##<potpourri>
+#####
 line1
-<potpourri>
+##! potpourri
 line2
+####
 ----------------------------------
 =>
-001: [VISIBLE_NOTHING '##||||']
+001: [VISIBLE_NOTHING '#####']
 002: [STRING 'line1']
 004| [STRING 'line2']
 ----------------------------------
-<potpourri>
+##! potpourri
 line1
-<potpourri>##
+####x
 line2
-<potpourri>
+####
 ----------------------------------
 =>
 002| [STRING 'line1']
-003| [VISIBLE_NOTHING '||||##']
+003| [VISIBLE_NOTHING '####x']
 004| [STRING 'line2']

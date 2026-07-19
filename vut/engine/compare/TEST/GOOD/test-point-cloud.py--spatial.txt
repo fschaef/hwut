@@ -1,0 +1,7 @@
+## Grid index (built-in metrics) vs brute force (expression
+## metrics) must produce IDENTICAL verdicts -- same clouds are
+## compared under 'euclidean'/'Linf' (grid path) and their
+## expression twins (brute path).
+  euclidean  grid == brute (and judge == lawyer): 50/50
+  Linf       grid == brute (and judge == lawyer): 50/50
+result: PASS

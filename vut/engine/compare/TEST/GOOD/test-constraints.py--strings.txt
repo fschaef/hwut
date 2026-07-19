@@ -1,0 +1,6 @@
+## Quoted-string values; Python string functions in constraints.
+strings hold:                                  judge: True                      lawyer: True                      [ok]
+prefix violated:                               judge: False                     lawyer: False                     [ok]
+cross-var string dep violated:                 judge: False                     lawyer: False                     [ok]
+## Number vs string in the same variable: evaluation failure = red.
+kind drift:                                    judge: False                     lawyer: False                     [ok]

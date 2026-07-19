@@ -1,0 +1,13 @@
+## Constraints in terms of each other; values develop in line order.
+dep satisfied:                                 judge: True                      lawyer: True                      [ok]
+dep violated:                                  judge: False                     lawyer: False                     [ok]
+## Missing dependency on the NOMINAL side: broken spec (loud).
+dep missing in nominal too:                    judge: ConstraintSpecError!      lawyer: ConstraintSpecError!      [ok]
+## Missing dependency hit by the SUBJECT alone (short-circuit): red.
+dep missing, subject only:                     judge: False                     lawyer: False                     [ok]
+## Later entries see updated values (monotonic steps).
+monotone ok:                                   judge: True                      lawyer: True                      [ok]
+monotone broken:                               judge: False                     lawyer: False                     [ok]
+## ANY evaluation failure is red, never loud (subject side):
+division by zero:                              judge: False                     lawyer: False                     [ok]
+type clash:                                    judge: False                     lawyer: False                     [ok]

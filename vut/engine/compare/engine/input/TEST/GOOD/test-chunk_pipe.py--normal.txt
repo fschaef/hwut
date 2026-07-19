@@ -11,17 +11,17 @@ line2
 001: [STRING 'line1']
 002: [STRING 'line2']
 ----------------------------------
-<potpourri>
+##! potpourri
 line2
-<potpourri>
+####
 ----------------------------------
 =>
 002| [STRING 'line2']
 ----------------------------------
-<potpourri>
+##! potpourri
 line 2
 line 3
-<potpourri>
+####
 line 5
 ----------------------------------
 =>
@@ -30,10 +30,10 @@ line 5
 005: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '5']
 ----------------------------------
 line 1
-<potpourri>
+##! potpourri
 line 3
 line 4
-<potpourri>
+####
 ----------------------------------
 =>
 001: [STRING 'line'], [SEPERATOR ' '], [NUMERIC '1']
@@ -41,9 +41,9 @@ line 4
 004| [STRING 'line'], [SEPERATOR ' '], [NUMERIC '4']
 ----------------------------------
 line 1
-<potpourri>
+##! potpourri
 line 3
-<potpourri>
+####
 line 5
 ----------------------------------
 =>

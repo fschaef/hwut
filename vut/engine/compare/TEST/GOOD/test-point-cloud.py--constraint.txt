@@ -1,0 +1,5 @@
+## constraint={...}: a property every point must satisfy;
+## aliases x, y, z, w = p[0..3]. Counts are irrelevant.
+points on the curve y=sin(x)/x:            judge: True  lawyer: True  [ok]
+a point off the curve:                     judge: False lawyer: False [ok]
+combined with limit:                       judge: True  lawyer: True  [ok]

@@ -1,0 +1,8 @@
+## Broken specifications fail LOUDLY.
+no criterion                         -> line 1: point-cloud region declares neither 'limit' nor 'constraint' -- nothing to compare
+nominal line is not a point          -> line 2: point-cloud NOMINAL data is not a n-dimensional point: 'banana'
+nominal violates own constraint      -> line 2: point-cloud NOMINAL data violates its own constraint {x < 1}: '2.0'
+forbidden name in expression         -> line 1: expression '__import__': unknown name '__import__' (allowed: abs, acos, asin, atan, atan2, ceil, cos, e, exp, floor, hypot, inf, log, max, min, p, pi, round, sin, sqrt, tan, w, x, y, z)
+forbidden construct in expression    -> line 1: expression '[i for i in p]': 'ListComp' is not allowed
+unbalanced braces                    -> line 1: unbalanced '{...}' in region parameter: 'constraint={x < 1'
+unknown parameter                    -> line 1: region handler 'point-cloud' knows no parameter 'radius'; known: constraint, dist, limit, pair

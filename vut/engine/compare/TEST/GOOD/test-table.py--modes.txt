@@ -1,0 +1,9 @@
+## Ordered (default) vs unordered (bag with bijective matching).
+ordered equal:                             judge: True  lawyer: True  [ok]
+ordered swapped:                           judge: False lawyer: False [ok]
+unordered swapped:                         judge: True  lawyer: True  [ok]
+row surplus:                               judge: False lawyer: False [ok]
+row missing:                               judge: False lawyer: False [ok]
+both empty:                                judge: True  lawyer: True  [ok]
+## Malformed subject data is a test failure (red), not an error:
+subject width clash:                       judge: False lawyer: False [ok]

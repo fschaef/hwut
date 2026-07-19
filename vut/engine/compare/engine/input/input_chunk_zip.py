@@ -51,6 +51,11 @@ async def generate_chunk_pairs(config:        Configuration,
             # Wait in parallel for subject and nominal queue
             s_item, n_item = await asyncio.gather(coro_s, coro_n)
 
+            # A producer-side error (e.g. RegionSyntaxError) must surface
+            # HERE, in the consumer's context -- never look like EOF.
+            if s_item.is_error(): raise s_item.error
+            if n_item.is_error(): raise n_item.error
+
             # Termination Check
             if s_item.is_terminal() and n_item.is_terminal(): break
 
@@ -76,9 +81,16 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
     tasks = [ subject_pipe.create_producer_task(q_s),
               nominal_pipe.create_producer_task(q_n) ]
 
+    async def _get_checked(q):
+        # A producer-side error (e.g. RegionSyntaxError) must surface HERE,
+        # in the consumer's context -- never look like EOF.
+        item = await q.get()
+        if item.is_error(): raise item.error
+        return item
+
     try:
         # Initial Fetch
-        s_prev, n_prev = await asyncio.gather(q_s.get(), q_n.get())
+        s_prev, n_prev = await asyncio.gather(_get_checked(q_s), _get_checked(q_n))
 
         # Loop while BOTH are valid (not EOF)
         while not s_prev.is_terminal() and not n_prev.is_terminal():
@@ -86,22 +98,22 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
             if s_prev.type() == n_prev.type():
                 # MATCH
                 yield (s_prev, n_prev)
-                s_prev, n_prev = await asyncio.gather(q_s.get(), q_n.get())
+                s_prev, n_prev = await asyncio.gather(_get_checked(q_s), _get_checked(q_n))
 
             else:
                 # MISMATCH
-                s_next, n_next = await asyncio.gather(q_s.get(), q_n.get())
+                s_next, n_next = await asyncio.gather(_get_checked(q_s), _get_checked(q_n))
 
                 if not n_next.is_terminal() and n_next.type() == s_prev.type():
                     yield (None, n_prev)     # Flush the extra Nominal
                     yield (s_prev, n_next)   # Pair held Subject with next Nominal
                     s_prev = s_next
-                    n_prev = await q_n.get() # fill the slot of the consumed n_prev
+                    n_prev = await _get_checked(q_n) # fill the slot of the consumed n_prev
 
                 elif not s_next.is_terminal() and s_next.type() == n_prev.type():
                     yield (s_prev, None)     # pair extra subject with nominal 'None'
                     yield (s_next, n_prev)   # pair matching next subject with previous nominal
-                    s_prev = await q_s.get() # fill the slot of the consumed 's_prev'
+                    s_prev = await _get_checked(q_s) # fill the slot of the consumed 's_prev'
                     n_prev = n_next
 
                 else: # No way to heal a mismatch of subject and nominal by one look-ahead
@@ -113,11 +125,11 @@ async def generate_chunk_pairs_type_aligned(config:       Configuration,
         # If Nominal still has data (Subject hit EOF)
         while not n_prev.is_terminal():
             yield (None, n_prev)
-            n_prev = await q_n.get()
+            n_prev = await _get_checked(q_n)
         # If Subject still has data (Nominal hit EOF)
         while not s_prev.is_terminal():
             yield (s_prev, None)
-            s_prev = await q_s.get()
+            s_prev = await _get_checked(q_s)
 
     finally:
         for t in tasks:

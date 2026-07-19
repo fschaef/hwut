@@ -1,7 +1,8 @@
 
-size: 6;
+size: 7;
 None -> STRING
 nothing -> VISIBLE_NOTHING
+\(\(\s*[A-Za-z_]\w*\s*:\s*(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?|\"[^\"]*\")\s*\)\) -> CONSTRAINT_BINDING
 \(\((?:.|\n)+?\)\) -> ANALOGY
 (?<!\w)-?(\d+(\.\d*)?|\.\d+)([eE][-+]?\d+)?(?!\w) -> NUMERIC
 \s+ -> SEPERATOR

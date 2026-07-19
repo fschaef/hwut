@@ -44,7 +44,7 @@ def string_stream(n=10000, complexity=0.5, seed=0x42):
         gen_number,
         gen_whitespace,
         gen_slashes,
-        lambda: "||||",
+        lambda: "##! potpourri",
         lambda: "## ignored content ##",
         gen_text
     ]

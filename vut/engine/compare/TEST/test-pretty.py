@@ -69,12 +69,12 @@ if "line-sequence" in sys.argv:
     ]))
 else:
     asyncio.run(test([
-         ["||||",                       "||||"],
+         ["##! potpourri",              "##! potpourri"],
          ["((A)) is good.",             "4712 ((ist)) ((eine)) Zahl."],
          ["9.9 is good.",               "((1)) is good."],
          ["((A)) is bad.",              "((1)) is not so good."],
          ["0.815 ((is)) ((a)) number.",  "9.99 good."],
-         ["||||",                       "||||"],
+         ["####",                       "####"],
     ]))
 
 

@@ -1,0 +1,672 @@
+================================================================================
+VUT-COMPARE: COMPARISON SEMANTICS
+================================================================================
+
+This document is the AUTHORITATIVE description of what the comparison engine
+considers equivalent and why. It is the source from which the user manual's
+comparison chapter is to be written, and the reference against which the
+implementation is audited. Where code and this document disagree, one of the
+two has a bug -- file it.
+
+Section 10 is a decision log: every semantic ruling, its date, its rationale,
+and where it is implemented and verified.
+
+ARCHITECTURE.txt describes HOW the engine is built; this document describes
+WHAT the engine means.
+
+
+1. THE TWO FACES AND THE LAW
+============================
+
+The engine answers the same question in two ways:
+
+    is_equivalent(subject, nominal)    the JUDGE -- a fast-fail boolean.
+    associate(subject, nominal)        the LAWYER -- a full alignment of
+                                       both streams, for diff display.
+
+THE LAW (the engine's central invariant):
+
+    is_equivalent(subject, nominal) is True
+        <=>  associate(subject, nominal) yields only equivalent pairs
+             (ChunkPair.is_equivalent() for every chunk).
+
+The Judge is an optimization of the Lawyer, never an independent authority.
+What the user sees in the diff display and what the boolean verdict says can
+never disagree; any divergence is a bug by definition.
+
+The LAW is machine-checkable. With the environment variable
+
+    VUT_COMPARE_CROSS_CHECK=1        (or Configuration.cross_check_f)
+
+every 'is_equivalent' call additionally derives the verdict through the
+Lawyer ('is_equivalent_by_association') and raises 'CrossCheckError' with
+the complete input on divergence. The mode is off by default and free when
+off. It buffers both streams up-front, so the fast path's early-abort
+economy is suspended under the flag; tests that instrument stream reading
+(consumption logs, registry spies) are meaningful without the flag only.
+
+
+2. LINE CLASSIFICATION
+======================
+
+Every raw input line is classified ONCE, by 'engine/input/line_scanner.py',
+identically for both faces:
+
+    REGION_BEGIN       region opening: '##! <handler> <params...>'.
+    REGION_END         region closing: the line '####', EXACTLY. A run of
+                       five or more '#' is NOT a region end -- it stays an
+                       IGNORED commentary bar.
+    BLANK              only whitespace.
+    IGNORED            carries the ignored-line markers: the stripped line
+                       begins with '##' or ends with '##' (configurable).
+    CONTENT            everything else -- subject to comparison.
+
+Precedence is fixed and load-bearing: REGION_BEGIN before REGION_END before
+BLANK before IGNORED before CONTENT. A region marker must never be
+swallowed by the generic ignored-line rule -- the shebang framing '##!'
+itself begins with the ignored marker '##'.
+
+BLANK and IGNORED together are the INSIGNIFICANT lines -- "the Judge does
+not see this line". The single definition is
+'semantics.is_insignificant_line'; the scanner refines it into two classes
+without ever disagreeing with it. The two faces treat insignificance
+differently but CONSISTENTLY:
+
+    Judge    drops insignificant lines entirely; they can neither match
+             nor mismatch anything.
+    Lawyer   keeps them for display; in the alignment they appear as
+             one-sided filler pairs which are NEUTRAL for equivalence
+             (LinePair.is_equivalent() returns True for pairs made purely
+             of insignificant lines).
+
+Consequence for test authors: '##'-marked commentary and blank lines may be
+added, removed, or reordered freely without affecting any verdict.
+
+
+3. TOLERANCE CLASSES
+====================
+
+Inside a CONTENT line, the lexer decomposes text into 'LineElement's, each
+with a tolerance class that defines its notion of "equal":
+
+    STRING               byte-equal.
+    NUMERIC              equal within the configured relative tolerance
+                         ('numeric_tolerance_ratio'; 0 = exact).
+    ANALOGY              '((...))'-wrapped placeholder; equal under a
+                         consistent analogy binding (section 5).
+    EQUIVALENCE_PATTERN  words declared mutually equivalent (e.g.
+                         'happy' ~ 'glad'); equal iff both sides match the
+                         same pattern set.
+    VISIBLE_NOTHING      a token that means "nothing" (e.g. 'nothing',
+                         'nix'); see section 4.
+    SEPARATOR            whitespace runs; equal as structure, tolerated in
+                         width when whitespace tolerance is on.
+
+A line whose text is insignificant (section 2) lexes into a single
+VISIBLE_NOTHING element covering the whole line. (Edge, documented: this
+lexer-level judgment assumes 'strip_whitespace_f=True', the default; with
+stripping disabled, indented or trailing-marker lines are classified
+insignificant by the pipes but lexed as content -- an untested
+configuration, see decision log D-14.)
+
+
+4. VISIBLE NOTHING
+==================
+
+A VISIBLE_NOTHING token is printable text that counts as NOTHING for the
+comparison. Two rules, deliberately different in scope:
+
+WHOLE-LINE RULE (line sequences): a line consisting exclusively of
+VISIBLE_NOTHING elements equals NO LINE AT ALL. The single definition is
+'Line.is_visible_nothing'. The Judge's pipe skips such lines in sequence
+context; the Lawyer's sequence search classifies them GOOD_INSERT /
+GOOD_DELETE (equivalence-preserving skips). Hence:
+
+    subject:  alpha            nominal:  alpha
+              nothing                    beta
+              beta
+                               =>  EQUIVALENT.
+
+POTPOURRI EXCEPTION: inside a potpourri region, VN-only lines are COUNTED
+like any other line (both faces). A potpourri with an extra 'nothing' line
+is NOT equivalent to one without it.
+
+IN-LINE LIMIT: a VISIBLE_NOTHING token INSIDE a line does not make its
+surrounding separators disappear. 'alpha nothing beta' is NOT equivalent
+to 'alpha beta': after removing the token, the first line still carries
+two separator runs where the second has one. Both faces agree (cross-check
+verified). Widening this would be a deliberate feature change requiring
+matched edits on both faces (decision log D-10).
+
+
+5. ANALOGY SEMANTICS
+====================
+
+An analogy '((X))' is a placeholder: the subject may print a different
+token than the nominal recorded, as long as the correspondence is
+CONSISTENT. If '((B))' appears in the subject where '((A))' appears in the
+nominal, then B is the representative of A; the binding is one-to-one in
+both directions (a bidict): B cannot also stand for something else, and
+nothing else can stand for A.
+
+5.1 The global analogy db -- sequential, outer scope
+----------------------------------------------------
+
+The global analogy db belongs to the OUTER text (the line sequences between
+regions). It develops SEQUENTIALLY over the complete run, in stream order:
+the first occurrence establishes the binding; every later outer occurrence
+must honor it, or the streams are not equivalent. There is no lookahead and
+no solving across the stream -- a later line cannot retroactively change an
+established binding.
+
+    subject:  x ((B))          nominal:  x ((A))     -> binds B = A
+              ((B))                      ((B))       -> B already stands
+                                                        for A; NOT
+                                                        equivalent.
+
+Canonical key form: bindings are stored under the full marker-wrapped
+string ('((B))', never bare 'B') -- one vocabulary for every commit path
+('PatternFinder.extract_analogy_strings' is the single source). A second
+vocabulary would fragment consistency checking silently (this was a real
+bug; decision log D-12).
+
+5.2 Region-local isolation
+--------------------------
+
+EVERY REGION HAS ITS OWN ANALOGY DB. The global db is not propagated into
+a region, and a region's local frame is not propagated out. The global db
+develops over the complete run independent of any region's local frame.
+
+Consequences, all deliberate:
+
+  - A binding established in the outer text does NOT constrain how a
+    potpourri matches its lines, and vice versa. There is NO leakage in
+    either direction.
+  - Two regions are independent of each other: '((B))' may stand for
+    '((A))' inside one region and for '((B))' inside the next.
+  - Region-internal ambiguity can never poison any verdict outside the
+    region.
+
+5.3 Intra-region matching -- CSP with backtracking
+--------------------------------------------------
+
+Within one potpourri, lines pair by full constraint search: the region is
+equivalent iff a complete subject-to-nominal matching exists under an
+internally consistent local frame (starting empty). The CSP backtracks
+freely -- if an early pairing choice makes a later line unmatchable, the
+solver revises it. Crossed frames (B standing for A while A stands for B)
+are legal and found whenever the region's content forces them.
+
+TIE RULE: when several complete matchings are equally valid, the
+LEAST-COMMITTAL one is chosen deterministically -- a symbol stands for
+itself whenever it can ('semantics.analogy_commitment' orders candidates;
+remaining ties break by lowest nominal line number). This replaces
+hash-order luck; it does not prune the search. Since regions are isolated
+(5.2), the choice only determines the DISPLAYED pairing, never a verdict
+outside the region.
+
+LUCKY DAY: if a tie binds ((B))=((A)) locally and neither symbol recurs,
+any choice was fine. This is deliberately unproblematic.
+
+
+6. EQUIVALENCE IS EDIT-CLASS MEMBERSHIP, NEVER A COST TEST
+==========================================================
+
+The Lawyer's alignment assigns every edit an edit class; the classes that
+PRESERVE equivalence are exactly the GOOD family:
+
+    GOOD             byte-equal match
+    GOOD_TOLERATED   match under tolerance (numeric, analogy, pattern,
+                     whitespace)
+    GOOD_INSERT      visible-nothing appears on the nominal side only
+    GOOD_DELETE      visible-nothing appears on the subject side only
+
+('semantics.GOOD_EDIT_ID_SET' / 'is_good_edit()' -- the single source.)
+
+Costs exist ONLY to rank alternative alignments; they are never the
+equivalence criterion. The two deliberately disagree in the margins:
+
+  - a visible-nothing skip costs 1e-10 (so a plain GOOD wins when both
+    exist) yet PRESERVES equivalence;
+  - a separator INSERT/DELETE can cost 0 after separator normalization
+    yet BREAKS equivalence;
+  - a one-sided line pair carries cost 0.0 yet is not equivalent.
+
+The display's cell relations (OK_*/BAD_*) are derived mechanically from
+the edit classes, so "green in the display" and "counts as equal" cannot
+drift apart.
+
+
+7. REGIONS
+==========
+
+A region declares its own interpretation through a shebang line:
+
+    ##! <handler> [<param> | <param>=<value>]*
+    ...region lines...
+    ####
+
+The registry ('region/registry.py') maps the handler name to its
+implementation -- the OPEN axis: a new region kind is a new package under
+region/ plus one registration, no shared machinery is touched.
+
+7.1 Framing rules (all violations are LOUD RegionSyntaxErrors with line
+    numbers -- an input that looks like a region declaration is never
+    silently degraded to content):
+
+  - unknown handler name; unknown or malformed parameter;
+  - '##!' inside an open region (nesting is forbidden);
+  - '####' outside any region;
+  - end of stream inside an open region ('####' missing).
+
+7.2 Framing must MATCH between subject and nominal: a region on one side
+with no region (or a different handler) on the other is NOT equivalent --
+EVEN IF THE REGION IS EMPTY. Only a handler's contents are governed by the
+handler; the framing is structural.
+
+7.3 Parameters resolve with precedence: shebang parameter > handler-scoped
+configuration section (Configuration.region['<handler>']) > the handler's
+spec default. Example: '##! potpourri max_comparisons=64'. A BRACED value
+'{...}' may contain whitespace (expression parameters):
+'constraint={abs(y - sin(x)/x) < 0.01}'.
+
+NOMINAL IS AUTHORITATIVE: the comparison semantics are governed by the
+NOMINAL side's resolved parameters. The subject's shebang need only name
+the same handler; its parameters are syntax-checked but never applied --
+and expression parameters from the subject are NEVER evaluated (the
+subject is untrusted test output).
+
+7.4 The REGION-HANDLER CONTRACT:
+
+  - a handler receives the region's lines of both streams and returns the
+    equivalence verdict (Judge face) or the line alignment (Lawyer face);
+  - both faces of one handler must satisfy THE LAW (section 1) -- the
+    cross-check over corpus and fuzz net is the acceptance gate;
+  - a handler receives NO analogy state and exports NONE (section 5.2);
+  - insignificant-line handling and lexing come from the shared substrate
+    (sections 2, 3) -- a handler governs how CONTENT lines compare, never
+    which lines take part.
+
+7.5 Built-in handlers:
+
+POTPOURRI: the same lines must occur on both sides, in ANY order.
+Precisely: analogy-carrying lines and non-analogy lines are counted
+separately and must agree in number (VN-only lines included, section 4);
+non-analogy lines must admit a perfect matching of equivalent lines
+(maximum bipartite matching); analogy lines must admit a complete matching
+under a consistent local frame (CSP, section 5.3).
+Parameters (nominal-authoritative):
+    max_comparisons=<int>  complexity cap of the similarity pairing
+                           (default 128).
+    subset (flag)          only the SUBJECT lines must each find a
+                           DISTINCT equivalent partner; surplus nominal
+                           lines are legal (subject-as-subset-of-nominal),
+                           shown neutrally in the display.
+    duplicates (flag)      repeated lines COLLAPSE before matching (set
+                           semantics). Collapse is LITERAL -- by the
+                           whitespace-normalized uniform string; two lines
+                           that are merely tolerantly-equal do NOT
+                           collapse. Collapsed repetitions are display-
+                           neutral. Combines with subset.
+
+VERBATIM: byte-exact, ordered. NO tolerance of any kind applies to content
+lines -- no numeric epsilon, no analogies, no visible-nothing, no
+equivalence patterns, no whitespace normalization; line counts and order
+must agree. Blank and '##'-marked lines REMAIN insignificant (contract
+7.4: the handler does not redefine which lines take part).
+
+IGNORE: contents are exempt from judgment -- any content, any count, on
+either side. The framing itself must still match (7.2).
+
+POINT-CLOUD: every line is one point p[] in n dimensions (whitespace-
+separated floats; the region's first valid point sets the dimension).
+Parameters (nominal-authoritative; at least one of limit/constraint):
+
+    limit=<float>       distance criterion. Default mode: SYMMETRIC
+                        COVERAGE -- every point of either stream has a
+                        nearest neighbour in the other at distance <=
+                        limit (counts free, duplicates collapse). With
+                        'pair': a BIJECTIVE matching must exist with all
+                        pairs <= limit (equal counts; each point pairs
+                        exactly once; maximum-bipartite-matching decides).
+    dist=<spec>         'euclidean' (default), 'L1', 'L2', 'Linf', or an
+                        expression over x[] and y[].
+    constraint={expr}   property every point of BOTH streams must satisfy;
+                        over p[] with aliases x,y,z,w = p[0..3]. Alone
+                        (without limit): pure property check, counts
+                        irrelevant -- the GOOD file acts as a
+                        SPECIFICATION, not a recording.
+
+PERFORMANCE (internal, semantics-neutral): for built-in metrics the
+fixed-radius queries run over a uniform grid with cell edge = limit
+(candidates = the 3^d adjacent cells; results byte-identical to the
+brute-force scan, verified by a grid-vs-brute property family in the
+test). Expression metrics have no guaranteed triangle inequality, so
+nothing may prune them -- they use the exact O(n*m) scan.
+
+TABLE: every line is a row of columns (0-based). Cells split on whitespace,
+or on a literal 'sep={<string>}'. Parameters (nominal-authoritative; the
+nominal's first row sets the column count):
+
+    key=<col>          rows matched by equality of this column (implies
+                       unordered). Duplicate keys in the NOMINAL are a
+                       broken specification (loud).
+    ignore=<cols>      comma-separated column indices excluded from the
+                       comparison (timestamps, PIDs, ...).
+    numeric={c:t,...}  per-column RELATIVE numeric tolerance:
+                       |s - n| <= t * |n|.
+    unordered (flag)   rows form a bag: a bijective matching of rule-equal
+                       rows must exist (maximum bipartite matching).
+    sep={<string>}     split cells on a literal separator (cells stripped).
+
+Without key/unordered rows compare positionally and counts must agree.
+Malformed data is asymmetric (7.4 spirit): nominal defects (inconsistent
+column count, out-of-range column reference, unparsable numeric cell,
+duplicate key) are broken specifications -> loud RegionSyntaxError; the
+same defects on the subject side are test failures -> not equivalent,
+shown red.
+
+Expressions are SAFE: parsed and validated against a strict AST whitelist
+(vectors, arithmetic, comparisons, boolean ops, fixed math functions);
+anything else is rejected loudly at parse time; raw eval never runs on
+input text ('region/point_cloud/expression.py'). Malformed data is
+ASYMMETRIC: nominal defects (non-point line, dimension clash, data
+violating its own constraint) are broken specifications -> loud error;
+the same defects on the subject side are test failures -> not equivalent,
+shown red.
+
+7.6 Migration: 'tool/migrate_region_syntax.py' rewrites the historical
+'||||' toggle framing to '##! potpourri' ... '####'. The legacy syntax is
+GONE (clean break): '||||' in input is ordinary content now. Note one
+tightening: the legacy toggle silently flushed a region left open at end
+of stream; the shebang framing makes that a loud error (7.1).
+
+
+8. VERDICTS AND THE DISPLAY
+===========================
+
+The element-level comparison verdict ('E_Verdict') carries five values:
+MISFIT (incomparable kinds), DIFFERENT, EQUIVALENT, and the two
+EQUIVALENT_*_VISIBLE_NOTHING variants (transparent token on one side).
+The VN variants are propagated, not collapsed, so downstream stages can
+account for noise without losing information; reduction to booleans
+happens only at the top ('semantics.is_equivalent_verdict', strict variant
+'is_plainly_equivalent_verdict' where a transparent token may not stand in
+for content).
+
+The Judge->Lawyer vocabulary mapping ('semantics.verdict_to_edit_id') is
+the single translation between verdicts and edit classes. The Lawyer's
+verdict reduction is code, not convention: 'LinePair.is_equivalent()'
+(insignificance neutralizes -> sequence-level edit class damns or clears ->
+cells decide) and 'ChunkPair.is_equivalent()' (chunk types agree where both
+sides exist; one-sided chunks are judged by their pairs).
+
+
+9. WHAT THE ENGINE DOES NOT DO
+==============================
+
+Stated explicitly, because each was considered and ruled out:
+
+  - NO cross-region or whole-file analogy solving. The global db is
+    sequential; regions are isolated. A "globally satisfiable" file whose
+    outer text contradicts its own established bindings is not equivalent.
+  - NO analogy leakage between regions and outer text, in either
+    direction.
+  - NO in-line visible-nothing collapse of separators (section 4).
+  - NO cost-threshold equivalence. Cost ranks; classes decide.
+
+
+10. STATEFUL CONSTRAINTS
+========================
+
+An element of the SEQUENTIAL outer text matching
+
+    (( <variable-name> : <number>|<quoted-string> ))
+
+is a CONSTRAINT BINDING: the variable enters the run's CONSTRAINT SPACE
+with the given value. Constraints live in the configuration as a plain
+dictionary, variable name -> expression (or list of expressions):
+
+    Configuration.constraint_db = {
+        "y": "y >= x",
+        "t": "t > 0 and t < 100",
+    }
+
+10.1 CHECK-ON-ENTRY. The moment a variable enters the space, ALL
+     constraints defined for it are checked against the CURRENT space.
+     Each input side (subject, nominal) has its OWN space; values develop
+     in line order. A variable without constraints of its own enters
+     freely -- it may serve as input to other constraints ('x' above).
+
+10.2 TEXTUAL EQUIVALENCE of two binding elements is decided by the NAME
+     alone; the VALUE is free. Whether a value is ACCEPTABLE is the
+     constraint space's judgment, not a textual one. Name mismatch =
+     DIFFERENT; kind mismatch (binding vs. plain text) = MISFIT.
+
+10.3 VERDICTS follow the malformed-data asymmetry (sections 7.5, D-21):
+       - SUBJECT-side violation -- constraint false, dependency not (yet)
+         in the space, division by zero, ANY evaluation failure -- makes
+         the test FAIL; the binding's cell is a MISMATCH (red). Never loud.
+       - NOMINAL-side violation is a BROKEN SPECIFICATION: the GOOD file
+         breaking its own law -> LOUD ConstraintSpecError. Within a pair
+         the nominal's bindings are processed FIRST (specification
+         validation precedes judgment).
+
+10.4 SEQUENTIALITY IS THE PRECONDITION. Bindings are active ONLY in the
+     sequential outer text. In order-free scopes "the value before" is
+     undefined by construction, so a NOMINAL binding there is a LOUD
+     RegionSyntaxError: potpourri, 'table unordered', 'table key'.
+     Scopes that never tolerance-lex are inert: verbatim, ignore, ordered
+     tables (a binding there is plain text). A subject-side binding in a
+     potpourri is a plain mismatch (kind MISFIT against any nominal line).
+
+10.5 REACHABILITY IS MIRRORED (THE LAW). Both faces process bindings in
+     the same line order and STOP at the first non-equivalent pair: the
+     Judge aborts; the Lawyer kills the space. Hence a loud nominal
+     violation behind a mismatch is raised by BOTH faces or by NEITHER.
+     Bindings on insignificant lines (blank/ignored) never enter: the
+     Judge's pipe drops those lines before it sees them.
+
+10.6 EXPRESSIONS are inspected as AST elements against a strict whitelist
+     (arithmetic, comparisons, boolean logic, the math function set,
+     string constants, Python string methods) and executed by Python with
+     empty builtins -- the same safety envelope as region parameter
+     expressions (D-22). Only PRESENT variables are bound at evaluation:
+     short-circuit logic ("y == 2 or y >= x") may pass without 'x'; a
+     missing variable raises exactly when actually needed (-> red).
+
+10.7 STATIC PRE-CHECKS are LOUD at ConstraintDb build time, before any
+     line is read: unparseable or non-whitelisted expressions, and the
+     CIRCULARITY test over the dependency graph (a cycle between
+     DIFFERENT variables; self-reference is natural and legal). A name
+     that is no known constraint variable is NOT a static error -- it is
+     a free input whose existence is a runtime question (10.6).
+
+     Implemented in engine/constraints.py; bindings lexed by
+     engine/input/pattern_finder.py (registered BEFORE the analogy
+     pattern -- same markers, more specific shape wins); faces wired in
+     region/line_sequence/{equivalence,associate}.py and main.py.
+     Verified by TEST/test-constraints.py and the 'constraints' family of
+     TEST/test-consistency-fuzz.py.
+
+
+11. DECISION LOG
+================
+
+Format: D-n (date) DECISION -- rationale. [implemented in / verified by]
+
+D-1  (2026-07-18) Region-major directory layout: region kinds are the OPEN
+     axis (directories), Judge/Lawyer the CLOSED axis (an interface each
+     region package fulfills). -- New region kinds must be addable without
+     touching shared machinery. [Stage M; whole tree]
+
+D-2  (2026-07-18) All shared comparison semantics live in ONE module,
+     engine/semantics.py; both faces import from it. -- Judge/Lawyer
+     consistency by construction, not by discipline. [Stage 1]
+
+D-3  (2026-07-18) Equivalence is edit-class membership (GOOD family),
+     never a cost-value test. -- Cost and equivalence deliberately diverge
+     in the margins (VN skip 1e-10; zero-cost separator edits).
+     [Stage 1b; semantics.GOOD_EDIT_ID_SET; section 6]
+
+D-4  (2026-07-18) THE LAW is continuously checkable: cross-check mode runs
+     both faces and asserts agreement per call. -- An invariant that is
+     not checked will drift. [Stage 2a; main._is_equivalent_cross_checked]
+
+D-5  (2026-07-18) The Lawyer's verdict reduction is code on the data
+     model (LinePair/ChunkPair.is_equivalent), derived from
+     GOOD_EDIT_ID_SET. -- The display's notion of "equal" must be the
+     Judge's, mechanically. [Stage 2a; core/line_pair.py, chunk_pair.py]
+
+D-6  (2026-07-18) Intra-region tie rule: least-committal matching wins,
+     deterministically; a symbol stands for itself whenever it can. --
+     Replaces hash-order nondeterminism; does not prune the CSP.
+     [Stage 2a-4; semantics.analogy_commitment; section 5.3]
+
+D-7  (2026-07-18) A whole-line VISIBLE_NOTHING equals no line at all in
+     sequences; potpourri counts it. -- The Lawyer already skipped such
+     lines as GOOD_INSERT/GOOD_DELETE; the Judge had to follow (LAW).
+     BEHAVIOR CHANGE, user-reviewed. [Stage 2c-1; Line.is_visible_nothing;
+     section 4]
+
+D-8  (2026-07-18) Keep the hand-tuned fast path; no collapse into the
+     Lawyer. -- Benchmark: fast path 0.36-0.45s vs degenerate Judge
+     2.4-2.6x slower on the same workload; Stage-1 indirection cost
+     unmeasurable. Cross-check remains the opt-in guard. [Stage 2b]
+
+D-9  (2026-07-18) The sequence-level cost==0.0 gate stays. -- Switching to
+     is_good_edit-family would accept in-line VN skips on the Lawyer side
+     while the Judge (separator asymmetry) rejects them: it would BREAK
+     the LAW. [Stage 2b; core/edit_operations/line_sequence.py]
+
+D-10 (2026-07-18) In-line visible-nothing does not collapse separators;
+     both faces reject 'alpha nothing beta' vs 'alpha beta'. -- Consistent
+     today; widening is a two-faced feature decision, not a fix.
+     [section 4; cross-check verified]
+
+D-11 (2026-07-18) NO solving across regions or across the stream (ruled
+     out: two-phase evaluation, feasible-frame deferral). -- "Regions are
+     considered sequentially; implications develop sequentially; no value
+     add" (user ruling). [superseded in strength by D-13]
+
+D-12 (2026-07-18) One canonical analogy-key vocabulary: full
+     marker-wrapped strings. -- The literal-equality shortcut committed
+     bare names, the element path wrapped ones; the two never collided and
+     sequential consistency silently fragmented (found by cross-check).
+     [Stage 2.5b; PatternFinder.extract_analogy_strings]
+
+D-13 (2026-07-18) REGION-LOCAL ANALOGY ISOLATION (user ruling, final):
+     every region has its own analogy db; nothing propagates in or out;
+     the global db belongs to the outer text alone. -- A region's
+     ambiguity must never poison the future; regions interpret
+     themselves. Inverted the historical 'leakage' test expectations.
+     [Stage 2.5a; region/potpourri/{equivalence,associate}.py; section 5.2]
+
+D-14 (2026-07-18) Line classification is single-sourced in
+     engine/input/line_scanner.py with fixed precedence REGION_DELIMITER >
+     BLANK > IGNORED > CONTENT; pipes keep only packaging. -- The '##!'
+     shebang begins with the ignored marker '##'; precedence must be
+     explicit before Stage 4. KNOWN EDGE (documented, not fixed): the
+     lexer's 'PatternFinder.is_irrelevant' agrees with the pipe-level
+     insignificance only under 'strip_whitespace_f=True' (default; no test
+     exercises False) -- unify if that configuration ever becomes real.
+     [Stage 3; sections 2, 3]
+
+D-15 (2026-07-18) The fuzz net is part of the semantics: every ruling
+     above is pinned by a generative test family (consistency, reflexive,
+     metamorphic: permute, rename, in_tol, out_tol, vn_line, pot_rename,
+     seq_conflict). A semantics change without a matching fuzz family is
+     incomplete. [TEST/test-consistency-fuzz.py]
+
+D-16 (2026-07-18) Region framing is the shebang syntax, dispatched through
+     THE registry; every framing violation is a LOUD error with a line
+     number -- a region marker is never silently degraded to content.
+     Only the EXACT '####' closes (5+ '#' stay commentary); precedence
+     over the generic '##' rule is fixed in the scanner. [Stage 4-1;
+     region/registry.py; section 7.1]
+
+D-17 (2026-07-18) Region framing must MATCH between the streams, even for
+     EMPTY regions; a one-sided region chunk is a framing mismatch in the
+     Lawyer's reduction too (found by cross-check while building 'ignore').
+     [Stage 4-3; ChunkPair.is_equivalent; section 7.2]
+
+D-18 (2026-07-18) Handlers govern HOW content compares, never WHICH lines
+     take part: blank/'##' insignificance and lexing stay with the shared
+     substrate even inside 'verbatim'. [Stage 4-3; section 7.4]
+
+D-19 (2026-07-18) CLEAN BREAK: the '||||' toggle is gone -- no dual
+     syntax. tool/migrate_region_syntax.py rewrites user GOOD files; the
+     corpus was migrated with verdict-preservation review. Tightening:
+     legacy flush-at-EOF for unclosed regions became a loud error.
+     [Stage 4-4/4-5; section 7.6]
+
+D-20 (2026-07-18) UI protocol: ConfigInst lost potpourri_begin_end_marker
+     -> new protocol signature (ui.py header, html_feeder SIGNATURE,
+     SIGNATURE_UI_PROTOCOL.txt -- the last lives outside compare/ and must
+     be regenerated on the real machine). [Stage 4-5]
+
+D-21 (2026-07-18) NOMINAL IS AUTHORITATIVE for region parameters (user
+     ruling): the GOOD file's parameters govern the comparison; subject
+     parameters are syntax-checked, never applied, subject expressions
+     never evaluated. Applied uniformly (incl. potpourri
+     max_comparisons). Security consequence: only nominal-declared
+     expressions ever run. [Stage 5-1; region/registry.py; section 7.3]
+
+D-22 (2026-07-18) POINT-CLOUD region (user-designed): coverage default =
+     nearest neighbour within 'limit' both ways (user ruling; 'limit',
+     not 'max_dist'); 'pair' = bijective; constraint = property over
+     BOTH streams; expressions carried in braces {...} (user ruling);
+     evaluated ONLY through the AST-whitelist evaluator; malformed-data
+     asymmetry per D-21's spirit (nominal loud, subject red).
+     [Stage 5; region/point_cloud/; section 7.5]
+
+D-23 (2026-07-18) Point-cloud fixed-radius queries accelerate via a
+     uniform grid (cell edge = limit; the query is fixed-radius, never
+     k-nearest -- a grid beats k-d/BVH here) for BUILT-IN metrics and
+     dimension <= 6; byte-identical to brute force (property-tested,
+     grid==brute 100/100; ~160x at N=3000). Expression metrics stay
+     brute BY PRINCIPLE: without a triangle inequality no structure can
+     prune correctly. [Stage 5b; region/point_cloud/spatial.py]
+
+D-24 (2026-07-18) TABLE region (user-requested): columnar rows matched
+     positionally / as a bag ('unordered') / by a key column; per-column
+     'ignore' and RELATIVE 'numeric' tolerance; custom 'sep'. Nominal-
+     authoritative; malformed-data asymmetry (nominal loud, subject red).
+     One decision core feeds both faces. [Stage 6; region/table/;
+     section 7.5]
+
+D-25 (2026-07-18) POTPOURRI variants (user-requested): 'subset' (subject
+     is a subset of the nominal; surplus nominal lines legal, neutral) and
+     'duplicates' (LITERAL collapse by uniform string before matching;
+     collapsed repetitions neutral). Both nominal-authoritative, combine.
+     Threaded through the existing matcher via a VariantView, with
+     subset-aware count/availability/ultimates rules; plain-potpourri
+     behavior unchanged (all pre-existing goldens byte-identical).
+     [Stage 6; region/potpourri/variants.py; section 7.5]
+
+
+D-26 (2026-07-19) STATEFUL CONSTRAINTS (user-designed, complete ruling;
+     settles DISCUSSIONS/disc-stateful-constraints.txt): binding elements
+     '((name: number|"string"))' in the SEQUENTIAL outer text enter a
+     constraint space; check-on-entry against Configuration.constraint_db
+     (plain dictionary, name -> expression(s)); constraints may depend on
+     each other; subject-side violation / missing dependency / division
+     by zero / any evaluation failure = red cell mismatch (never loud);
+     nominal-side violation = loud (asymmetry); basic circularity test
+     precedes the run (loud); expressions are AST-inspected and executed
+     by Python (math + string functions, empty builtins); FORBIDDEN in
+     order-free scopes (potpourri, unordered/keyed tables: nominal loud).
+     Textual equivalence of bindings is by NAME; the value is judged by
+     the space. Reachability of loud errors is mirrored between the faces
+     by killing the space at the first non-equivalent pair. [Stage 7;
+     engine/constraints.py; section 10; TEST/test-constraints.py;
+     fuzz family 'constraints']
+
+
+SEE ALSO
+========
+
+    ARCHITECTURE.txt      how the engine is built (modules, pipelines,
+                          algorithms, extension points)
+    engine/semantics.py   the executable form of sections 1, 5, 6
+    TEST/test-consistency-fuzz.py   the generative pinning of this document

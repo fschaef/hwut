@@ -131,7 +131,7 @@ elif sys.argv[1].endswith("-2"):
     if "associate-2" in sys.argv: test = test_line_associations
 
     CONFIGURATION_print_only_chunk_type = True
-    p = "||||\nHello\n||||\n"
+    p = "##! potpourri\nHello\n####\n"
     q = "Hello\n"
 
     asyncio.run(test(p,          "",         both_f=True))
@@ -159,13 +159,13 @@ else:
     asyncio.run(test("Welt X", "Welt Y"))
     asyncio.run(test("Hallo\nWorld", "Hallo\nWelt"))
     asyncio.run(test("Hallo\nWelt 1\nWelt 2", "Hallo\n\nWelt 1\n   \nWelt  2"))
-    asyncio.run(test("Hallo\n||||\nWelt", "Hallo\n||||\nWelt\n||||"))
-    asyncio.run(test("Hallo\n||||\nWelt\n||||", "Hallo\n||||\nWelt"))
-    asyncio.run(test("Hallo\n||||\nWelt\nLe Monde\n||||", "Hallo\n||||\nLe Monde\nWelt\n||||"))
+    asyncio.run(test("Hallo\n##! potpourri\nWelt\n####", "Hallo\n##! potpourri\nWelt\n####"))
+    asyncio.run(test("Hallo\n##! potpourri\nWelt\n####", "Hallo\n##! potpourri\nWelt\n####"))
+    asyncio.run(test("Hallo\n##! potpourri\nWelt\nLe Monde\n####", "Hallo\n##! potpourri\nLe Monde\nWelt\n####"))
                  
     asyncio.run(test("Hallo##\n##Welt\nGood", "##Hello\nWorld##\nGood"))
-    asyncio.run(test("||||\nHallo##\n##Welt\nGood\n||||", "||||\n##Hello\nWorld##\nGood\n||||"))
+    asyncio.run(test("##! potpourri\nHallo##\n##Welt\nGood\n####", "##! potpourri\n##Hello\nWorld##\nGood\n####"))
                  
-    asyncio.run(test("Hallo\nWelt",                 "||||\nHello\nWorld\n||||"))
-    asyncio.run(test("||||\nHello\nLe Monde\n||||", "||||\nHello\nWorld\n||||"))
+    asyncio.run(test("Hallo\nWelt",                 "##! potpourri\nHello\nWorld\n####"))
+    asyncio.run(test("##! potpourri\nHello\nLe Monde\n####", "##! potpourri\nHello\nWorld\n####"))
 

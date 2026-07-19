@@ -70,7 +70,7 @@ VISNOTS   = ["nothing", "nix"]
 # --- Structured stream model --------------------------------------------------
 # A stream is a list of blocks. A block is a tuple:
 #     ("seq", [line, ...])   ordered line sequence
-#     ("pot", [line, ...])   unordered potpourri (rendered inside '||||')
+#     ("pot", [line, ...])   unordered potpourri ('##! potpourri'..'####')
 # A line is a list of tokens; a token is a tuple (kind, value):
 #     ("STR", str) ("NUM", float-as-str) ("ANA", symbol) ("EQV", str)
 
@@ -104,9 +104,9 @@ def render_line(line):
 def render_stream(stream):
     out = []
     for kind, lines in stream:
-        if kind == "pot": out.append("||||")
+        if kind == "pot": out.append("##! potpourri")
         out.extend(render_line(l) for l in lines)
-        if kind == "pot": out.append("||||")
+        if kind == "pot": out.append("####")
     return "\n".join(out) + "\n"
 
 
@@ -382,6 +382,77 @@ async def run_metamorphic(seed, cases):
     print("result: %s" % ("PASS" if not failures else "FAIL"))
 
 
+# --- Constraint-space family --------------------------------------------------
+async def run_constraints(seed, cases):
+    """Differential oracle over STATEFUL CONSTRAINTS ('engine/constraints.py'):
+    Judge and Lawyer must agree on the verdict AND on LOUDNESS -- a nominal-
+    side constraint violation must raise 'ConstraintSpecError' on both faces
+    or on neither (reachability mirroring is exactly what this hammers).
+    Streams are seq-only: bindings are forbidden in order-free scopes.
+    """
+    from vut.engine.compare.engine.constraints import ConstraintSpecError
+
+    rng    = DeterministicStream(seed=seed)
+    config = make_config()
+    config.constraint_db = {
+        "t": "t > 0 and t < 100",
+        "y": "y >= x",
+        "m": "m == 2 or m >= t",
+    }
+    NAMES = ["t", "x", "y", "m", "free"]
+
+    def gen_cline(rng):
+        line = [gen_token(rng) for _ in range(rng.next_int(1, 2))]
+        if rng.next_int(0, 2):   # 2 of 3 lines carry a binding
+            name  = rng.select(NAMES)
+            value = rng.next_int(-20, 120)
+            line.append(("CBD", "((%s: %d))" % (name, value)))
+        return line
+
+    def gen_cstream(rng):
+        return [("seq", [gen_cline(rng)
+                         for _ in range(rng.next_int(2, 6))])]
+
+    def mutate(stream, rng):
+        new = [(k, [list(line) for line in lines]) for k, lines in stream]
+        sites = [(bi, li, ti)
+                 for bi, (k, lines) in enumerate(new)
+                 for li, line in enumerate(lines)
+                 for ti, tok in enumerate(line) if tok[0] == "CBD"]
+        if not sites: return new
+        bi, li, ti = rng.select(sites)
+        name  = rng.select(NAMES)
+        value = rng.next_int(-20, 120)
+        new[bi][1][li][ti] = ("CBD", "((%s: %d))" % (name, value))
+        return new
+
+    async def face(f, s_txt, n_txt):
+        try:
+            return await f(config, StringIO(s_txt), StringIO(n_txt))
+        except ConstraintSpecError:
+            return "LOUD"
+
+    agree    = 0
+    failures = []
+    for i in range(cases):
+        n = gen_cstream(rng)
+        strategy = rng.select(["copy", "mutate", "mutate", "independent"])
+        if   strategy == "copy":        subj = n
+        elif strategy == "mutate":      subj = mutate(n, rng)
+        else:                           subj = gen_cstream(rng)
+        s_txt, n_txt = render_stream(subj), render_stream(n)
+        jv = await face(main.is_equivalent, s_txt, n_txt)
+        lv = await face(main.is_equivalent_by_association, s_txt, n_txt)
+        if jv == lv:
+            agree += 1
+        else:
+            failures.append((i, strategy, jv, lv, set(), s_txt, n_txt))
+    print("=== CONSTRAINTS (seed=%d, cases=%d) ===" % (seed, cases))
+    print("Judge == Lawyer (verdict AND loudness): %d/%d agree" % (agree, cases))
+    _report_failures(failures)
+    print("result: %s" % ("PASS" if not failures else "FAIL"))
+
+
 def _report_failures(failures):
     if not failures:
         return
@@ -396,13 +467,14 @@ def _report_failures(failures):
 # --- HWUT entry ---------------------------------------------------------------
 if "--hwut-info" in sys.argv:
     print("Generative Judge/Lawyer consistency net;")
-    print("CHOICES: consistency, reflexive, metamorphic;")
+    print("CHOICES: consistency, reflexive, metamorphic, constraints;")
     sys.exit()
 
 CHOICE = sys.argv[1] if len(sys.argv) > 1 else "consistency"
 if   CHOICE == "consistency": asyncio.run(run_consistency(seed=0x51EED, cases=400))
 elif CHOICE == "reflexive":   asyncio.run(run_reflexive(seed=0xBEEF,   cases=300))
 elif CHOICE == "metamorphic": asyncio.run(run_metamorphic(seed=0xC0FFEE, cases=300))
+elif CHOICE == "constraints": asyncio.run(run_constraints(seed=0xC057, cases=300))
 else:
     print("unknown choice: %s" % CHOICE)
     sys.exit(1)

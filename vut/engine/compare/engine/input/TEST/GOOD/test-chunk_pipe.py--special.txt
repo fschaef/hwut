@@ -13,18 +13,38 @@
 =>
 001: [VISIBLE_NOTHING '']
 ----------------------------------
-<potpourri>
+##! potpourri
 ----------------------------------
 =>
+RegionSyntaxError: line 2: end of stream inside an open region ('##! potpourri' from line 1) -- '####' missing
 ----------------------------------
-<potpourri>
+##! potpourri
 line
 ----------------------------------
 =>
-002| [STRING 'line']
+RegionSyntaxError: line 3: end of stream inside an open region ('##! potpourri' from line 1) -- '####' missing
 ----------------------------------
-<potpourri>
-<potpourri>
-
+##! potpourri
+####
 ----------------------------------
 =>
+
+----------------------------------
+line
+####
+----------------------------------
+=>
+RegionSyntaxError: line 2: '####' without an open region
+----------------------------------
+##! potpourri
+##! potpourri
+####
+----------------------------------
+=>
+RegionSyntaxError: line 2: region shebang inside an open region ('##! potpourri' from line 1) -- nesting is forbidden
+----------------------------------
+##! quacksalber
+####
+----------------------------------
+=>
+RegionSyntaxError: line 1: unknown region handler 'quacksalber'; known handlers: ignore, point-cloud, potpourri, table, verbatim

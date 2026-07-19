@@ -1,0 +1,5 @@
+## Metamorphic families over generated clouds (seed-stable).
+  permute    expected-verdict (judge==lawyer): 60/60
+  jitter_in  expected-verdict (judge==lawyer): 60/60
+  jitter_out expected-verdict (judge==lawyer): 60/60
+result: PASS

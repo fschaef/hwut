@@ -11,12 +11,14 @@ ________________________________________________________________________________
 from typeguard import typechecked
 
 import vut.engine.compare.core.edit_operations.line as     edit_operations_line
-from   vut.engine.compare.core.line_pair            import LinePair
+from   vut.engine.compare.core.line_pair            import LinePair, display_twin
+from   vut.engine.compare.core.edit_operations.edit import Edit, E_EditId
 import vut.engine.compare.region.potpourri.pairing                as     pairing
 from   vut.engine.compare.engine.analogy_db                       import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db                import FrozenAnalogyDb
 
-def do(subject, nominal, analogy_db, max_comparison_count):
+def do(subject, nominal, analogy_db, max_comparison_count,
+       subset_f=False):
     """RETURNS: [0] list of (subject line number, nominal line number)
                 [1] required analogy db 
 
@@ -30,40 +32,47 @@ def do(subject, nominal, analogy_db, max_comparison_count):
 
     # pair non-analogy lines
     first_result, \
-    _             = _core_non_analogy(subject.non_analogy_line_list, 
-                                      nominal.non_analogy_line_list, 
-                                      max_comparison_count, 
-                                      abort_early_f=False) 
+    _             = _core_non_analogy(subject.non_analogy_line_list,
+                                      nominal.non_analogy_line_list,
+                                      max_comparison_count,
+                                      abort_early_f=False,
+                                      subset_f=subset_f)
 
     # pair analogy lines
     second_result, \
-    analogy_db     = _core(subject.analogy_line_list, 
-                           nominal.analogy_line_list, 
-                           analogy_db, 
-                           max_comparison_count, 
-                           abort_early_f=False, 
-                           analogies_involved_f = True)
+    analogy_db     = _core(subject.analogy_line_list,
+                           nominal.analogy_line_list,
+                           analogy_db,
+                           max_comparison_count,
+                           abort_early_f=False,
+                           analogies_involved_f = True,
+                           subset_f=subset_f)
 
     return first_result + second_result, analogy_db
 
-def _core_non_analogy(subject_line_list, nominal_line_list, 
-                      max_comparison_count, 
-                      abort_early_f=False):
+def _core_non_analogy(subject_line_list, nominal_line_list,
+                      max_comparison_count,
+                      abort_early_f=False, subset_f=False):
 
     verdict, couples = pairing._core_non_analogy(subject_line_list,
                                                  nominal_line_list,
-                                                 abort_early_f = abort_early_f) 
-              
+                                                 abort_early_f = abort_early_f)
+
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
     nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object
 
-    verdict = (len(couples) == len(nominal_line_list) == len(subject_line_list))
-    return _get_line_pairs(verdict, couples, subject_db, nominal_db, FrozenAnalogyDb(), max_comparison_count)
+    if subset_f:
+        verdict = (len(couples) == len(subject_line_list)
+                   and len(subject_line_list) <= len(nominal_line_list))
+    else:
+        verdict = (len(couples) == len(nominal_line_list) == len(subject_line_list))
+    return _get_line_pairs(verdict, couples, subject_db, nominal_db,
+                           FrozenAnalogyDb(), max_comparison_count, subset_f)
 
-def _core(subject_line_list, 
-          nominal_line_list, 
-          analogy_db, max_comparison_count, 
-          abort_early_f=False, analogies_involved_f = True):
+def _core(subject_line_list,
+          nominal_line_list,
+          analogy_db, max_comparison_count,
+          abort_early_f=False, analogies_involved_f = True, subset_f=False):
     """RETURNS: sorted list of LinePair objects.
         
     Sort order: sorted by line number of subject. 
@@ -82,15 +91,23 @@ def _core(subject_line_list,
     verdict, couples, analogy_db = pairing._core(subject_line_list,
                                                  nominal_line_list,
                                                  analogy_db,
-                                                 abort_early_f=abort_early_f, 
-                                                 analogies_involved_f = analogies_involved_f)
+                                                 abort_early_f=abort_early_f,
+                                                 analogies_involved_f = analogies_involved_f,
+                                                 subset_f=subset_f)
 
     subject_db = dict((x.line_n, x) for x in subject_line_list)  # helper dictionaries:
     nominal_db = dict((x.line_n, x) for x in nominal_line_list)  # line_n -> 'Line' object
 
-    return _get_line_pairs(verdict, couples, subject_db, nominal_db, FrozenAnalogyDb(analogy_db), max_comparison_count)
+    if subset_f:
+        verdict = (verdict
+                   and len(couples) == len(subject_line_list)
+                   and len(subject_line_list) <= len(nominal_line_list))
+    return _get_line_pairs(verdict, couples, subject_db, nominal_db,
+                           FrozenAnalogyDb(analogy_db), max_comparison_count,
+                           subset_f)
 
-def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_comparison_count):
+def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db,
+                    max_comparison_count, subset_f=False):
     result = []
     
     # 2. INTEGRATE STRICT MATCHES
@@ -124,7 +141,14 @@ def _get_line_pairs(verdict, couples, subject_db, nominal_db, analogy_db, max_co
         # Associate with 'None' what has no counterpart.
         # Use sys.maxsize for sorting stability later
         result.extend(LinePair(subject_db[ia], None, cost=1.0) for ia in sorted(subjects_remaining))
-        result.extend(LinePair(None, nominal_db[ib], cost=1.0) for ib in sorted(nominals_remaining))
+        if subset_f:
+            # surplus nominal lines are LEGAL in subset mode: neutral.
+            result.extend(LinePair(None, display_twin(nominal_db[ib]),
+                                   (Edit(E_EditId.GOOD_INSERT),),
+                                   seq_edit_id=E_EditId.GOOD_INSERT)
+                          for ib in sorted(nominals_remaining))
+        else:
+            result.extend(LinePair(None, nominal_db[ib], cost=1.0) for ib in sorted(nominals_remaining))
 
     # Final Sort: Restore document order
     def sort_key(lp): return (lp.subject_line_n, lp.nominal_line_n)

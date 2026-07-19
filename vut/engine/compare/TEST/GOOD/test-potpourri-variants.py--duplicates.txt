@@ -1,0 +1,8 @@
+## duplicates: repetitions collapse LITERALLY before matching
+## (set semantics); the collapsed lines are display-neutral.
+subject repetitions collapse:                judge: True  lawyer: True  [ok]
+nominal repetitions collapse:                judge: True  lawyer: True  [ok]
+sets must still agree:                       judge: False lawyer: False [ok]
+whitespace-normalized collapse:              judge: True  lawyer: True  [ok]
+## Without the flag, duplicates count (unchanged):
+plain potpourri:                             judge: False lawyer: False [ok]

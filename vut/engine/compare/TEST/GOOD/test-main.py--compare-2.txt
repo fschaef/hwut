@@ -2,9 +2,9 @@
 --------------------------------------------------
 
 
-   [01] ||||       
-   [02] Hello      
-   [03] ||||       
+   [01] ##! potpourri 
+   [02] Hello         
+   [03] ####          
 
 => verdict: False
 
@@ -12,9 +12,9 @@
 --------------------------------------------------
 
 
-   [01]            ||||
+   [01]            ##! potpourri
    [02]            Hello
-   [03]            ||||
+   [03]            ####
 
 => verdict: False
 
@@ -38,10 +38,10 @@
 --------------------------------------------------
 
 
-   [01] Hello      
-   [02] ||||       
-   [03] Hello      
-   [04] ||||       
+   [01] Hello         
+   [02] ##! potpourri 
+   [03] Hello         
+   [04] ####          
 
 => verdict: False
 
@@ -50,31 +50,31 @@
 
 
    [01]            Hello
-   [02]            ||||
+   [02]            ##! potpourri
    [03]            Hello
-   [04]            ||||
+   [04]            ####
 
 => verdict: False
 
 (1)
+--------------------------------------------------
+
+
+   [01] Hello         Hello
+   [02] ##! potpourri 
+   [03] Hello         
+   [04] ####          
+
+=> verdict: False
+
+(2)
 --------------------------------------------------
 
 
    [01] Hello      Hello
-   [02] ||||       
-   [03] Hello      
-   [04] ||||       
-
-=> verdict: False
-
-(2)
---------------------------------------------------
-
-
-   [01] Hello      Hello
-   [02]            ||||
+   [02]            ##! potpourri
    [03]            Hello
-   [04]            ||||
+   [04]            ####
 
 => verdict: False
 
@@ -82,10 +82,10 @@
 --------------------------------------------------
 
 
-   [01] Hello      ||||
-   [02] ||||       Hello
-   [03] Hello      ||||
-   [04] ||||       
+   [01] Hello         ##! potpourri
+   [02] ##! potpourri Hello
+   [03] Hello         ####
+   [04] ####          
 
 => verdict: False
 
@@ -93,10 +93,10 @@
 --------------------------------------------------
 
 
-   [01] ||||       Hello
-   [02] Hello      ||||
-   [03] ||||       Hello
-   [04]            ||||
+   [01] ##! potpourri Hello
+   [02] Hello         ##! potpourri
+   [03] ####          Hello
+   [04]               ####
 
 => verdict: False
 
@@ -104,10 +104,10 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         
 
 => verdict: False
 
@@ -115,10 +115,10 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04]            Hello
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04]               Hello
 
 => verdict: False
 
@@ -126,10 +126,10 @@
 --------------------------------------------------
 
 
-   [01] ||||       Hello
-   [02] Hello      
-   [03] ||||       
-   [04] Hello      
+   [01] ##! potpourri Hello
+   [02] Hello         
+   [03] ####          
+   [04] Hello         
 
 => verdict: False
 
@@ -137,9 +137,9 @@
 --------------------------------------------------
 
 
-   [01] Hello      ||||
+   [01] Hello      ##! potpourri
    [02]            Hello
-   [03]            ||||
+   [03]            ####
    [04]            Hello
 
 => verdict: False
@@ -148,12 +148,12 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] ||||       Hello
-   [05] Hello      
-   [06] ||||       
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] ##! potpourri Hello
+   [05] Hello         
+   [06] ####          
 
 => verdict: False
 
@@ -161,12 +161,12 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      ||||
-   [05]            Hello
-   [06]            ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         ##! potpourri
+   [05]               Hello
+   [06]               ####
 
 => verdict: False
 
@@ -174,12 +174,12 @@
 --------------------------------------------------
 
 
-   [01] ||||       Hello
-   [02] Hello      ||||
-   [03] ||||       Hello
-   [04] ||||       ||||
-   [05] Hello      
-   [06] ||||       
+   [01] ##! potpourri Hello
+   [02] Hello         ##! potpourri
+   [03] ####          Hello
+   [04] ##! potpourri ####
+   [05] Hello         
+   [06] ####          
 
 => verdict: False
 
@@ -187,12 +187,12 @@
 --------------------------------------------------
 
 
-   [01] Hello      ||||
-   [02] ||||       Hello
-   [03] Hello      ||||
-   [04] ||||       ||||
-   [05]            Hello
-   [06]            ||||
+   [01] Hello         ##! potpourri
+   [02] ##! potpourri Hello
+   [03] Hello         ####
+   [04] ####          ##! potpourri
+   [05]               Hello
+   [06]               ####
 
 => verdict: False
 
@@ -200,13 +200,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      
-   [05] ||||       
-   [06] Hello      
-   [07] ||||       
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         
+   [05] ##! potpourri 
+   [06] Hello         
+   [07] ####          
 
 => verdict: False
 
@@ -214,13 +214,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04]            Hello
-   [05]            ||||
-   [06]            Hello
-   [07]            ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04]               Hello
+   [05]               ##! potpourri
+   [06]               Hello
+   [07]               ####
 
 => verdict: False
 
@@ -228,13 +228,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      Hello
-   [05] ||||       
-   [06] Hello      
-   [07] ||||       
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         Hello
+   [05] ##! potpourri 
+   [06] Hello         
+   [07] ####          
 
 => verdict: False
 
@@ -242,13 +242,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      Hello
-   [05]            ||||
-   [06]            Hello
-   [07]            ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         Hello
+   [05]               ##! potpourri
+   [06]               Hello
+   [07]               ####
 
 => verdict: False
 
@@ -256,13 +256,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       Hello
-   [02] Hello      
-   [03] ||||       
-   [04] Hello      
-   [05] ||||       
-   [06] Hello      
-   [07] ||||       
+   [01] ##! potpourri Hello
+   [02] Hello         
+   [03] ####          
+   [04] Hello         
+   [05] ##! potpourri 
+   [06] Hello         
+   [07] ####          
 
 => verdict: False
 
@@ -270,13 +270,13 @@
 --------------------------------------------------
 
 
-   [01] Hello      ||||
+   [01] Hello      ##! potpourri
    [02]            Hello
-   [03]            ||||
+   [03]            ####
    [04]            Hello
-   [05]            ||||
+   [05]            ##! potpourri
    [06]            Hello
-   [07]            ||||
+   [07]            ####
 
 => verdict: False
 
@@ -284,13 +284,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       Hello
-   [02] Hello      ||||
-   [03] ||||       Hello
-   [04] Hello      ||||
-   [05] ||||       
-   [06] Hello      
-   [07] ||||       
+   [01] ##! potpourri Hello
+   [02] Hello         ##! potpourri
+   [03] ####          Hello
+   [04] Hello         ####
+   [05] ##! potpourri 
+   [06] Hello         
+   [07] ####          
 
 => verdict: False
 
@@ -298,13 +298,13 @@
 --------------------------------------------------
 
 
-   [01] Hello      ||||
-   [02] ||||       Hello
-   [03] Hello      ||||
-   [04] ||||       Hello
-   [05]            ||||
-   [06]            Hello
-   [07]            ||||
+   [01] Hello         ##! potpourri
+   [02] ##! potpourri Hello
+   [03] Hello         ####
+   [04] ####          Hello
+   [05]               ##! potpourri
+   [06]               Hello
+   [07]               ####
 
 => verdict: False
 
@@ -312,13 +312,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       Hello
-   [02] Hello      ||||
-   [03] ||||       Hello
-   [04] Hello      ||||
-   [05] ||||       Hello
-   [06] Hello      
-   [07] ||||       
+   [01] ##! potpourri Hello
+   [02] Hello         ##! potpourri
+   [03] ####          Hello
+   [04] Hello         ####
+   [05] ##! potpourri Hello
+   [06] Hello         
+   [07] ####          
 
 => verdict: False
 
@@ -326,13 +326,13 @@
 --------------------------------------------------
 
 
-   [01] Hello      ||||
-   [02] ||||       Hello
-   [03] Hello      ||||
-   [04] ||||       Hello
-   [05] Hello      ||||
-   [06]            Hello
-   [07]            ||||
+   [01] Hello         ##! potpourri
+   [02] ##! potpourri Hello
+   [03] Hello         ####
+   [04] ####          Hello
+   [05] Hello         ##! potpourri
+   [06]               Hello
+   [07]               ####
 
 => verdict: False
 
@@ -340,13 +340,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      ||||
-   [05] ||||       Hello
-   [06] Hello      ||||
-   [07] ||||       Hello
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         ##! potpourri
+   [05] ##! potpourri Hello
+   [06] Hello         ####
+   [07] ####          Hello
 
 => verdict: False
 
@@ -354,13 +354,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] ||||       Hello
-   [05] Hello      ||||
-   [06] ||||       Hello
-   [07] Hello      ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] ##! potpourri Hello
+   [05] Hello         ##! potpourri
+   [06] ####          Hello
+   [07] Hello         ####
 
 => verdict: False
 
@@ -368,13 +368,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      Hello
-   [05] ||||       ||||
-   [06] Hello      Hello
-   [07] ||||       ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         Hello
+   [05] ##! potpourri ##! potpourri
+   [06] Hello         Hello
+   [07] ####          ####
 
 => verdict: True
 
@@ -382,13 +382,13 @@
 --------------------------------------------------
 
 
-   [01] ||||       ||||
-   [02] Hello      Hello
-   [03] ||||       ||||
-   [04] Hello      Hello
-   [05] ||||       ||||
-   [06] Hello      Hello
-   [07] ||||       ||||
+   [01] ##! potpourri ##! potpourri
+   [02] Hello         Hello
+   [03] ####          ####
+   [04] Hello         Hello
+   [05] ##! potpourri ##! potpourri
+   [06] Hello         Hello
+   [07] ####          ####
 
 => verdict: True
 

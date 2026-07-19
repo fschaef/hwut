@@ -1,7 +1,7 @@
 """
 PURPOSE:   Implementation of feeds for UIs in terms of DisplayInst objects.
 
-SIGNATURE: PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc
+SIGNATURE: mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8
 
    This signature identifies the structure of the protocol. A receiver 
    may check the ProtocolHeader for this signature in order to be safe
@@ -88,7 +88,6 @@ class ConfigInst(DisplayInst):
     numeric_tolerance_ratio:    float
     ignored_line_begin_marker:  str
     ignored_line_end_marker:    str
-    potpourri_begin_end_marker: str
     analogy_begin_marker:       str
     analogy_end_marker:         str
 
@@ -127,7 +126,6 @@ async def feed(config, subject_stream, nominal_stream) -> AsyncIterable[DisplayI
                      numeric_tolerance_ratio    = pf.numeric_tolerance_ratio,
                      ignored_line_begin_marker  = pf.ignored_line_begin_marker,
                      ignored_line_end_marker    = pf.ignored_line_end_marker,
-                     potpourri_begin_end_marker = pf.potpourri_begin_end_marker,
                      analogy_begin_marker       = pf.analogy_begin_marker,
                      analogy_end_marker         = pf.analogy_end_marker)
 

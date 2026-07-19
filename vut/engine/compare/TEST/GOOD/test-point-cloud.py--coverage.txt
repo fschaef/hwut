@@ -1,0 +1,10 @@
+## Default: every point has a nearest neighbour <= limit, both ways.
+identical, permuted:                       judge: True  lawyer: True  [ok]
+jitter within limit:                       judge: True  lawyer: True  [ok]
+jitter beyond limit:                       judge: False lawyer: False [ok]
+duplicate subject point (counts free):     judge: True  lawyer: True  [ok]
+uncovered nominal point:                   judge: False lawyer: False [ok]
+both regions empty:                        judge: True  lawyer: True  [ok]
+## Malformed data is asymmetric (nominal is authoritative):
+subject line is not a point:               judge: False lawyer: False [ok]
+subject dimension clash:                   judge: False lawyer: False [ok]

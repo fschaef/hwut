@@ -5,9 +5,9 @@ SCENARIO: Leakage (Line -> Pot): Consistent (1->1)
 SUBJECT                        | NOMINAL                       
 ------------------------------------------------------------
 Define ((A))                   | Define ((1))                  
-||||                           | ||||                          
+##! potpourri                  | ##! potpourri                 
 Use ((A))                      | Use ((1))                     
-||||                           | ||||                          
+####                           | ####                          
 ------------------------------------------------------------
 Judge (is_equivalent): True
 Lawyer (associate):    True
@@ -19,9 +19,9 @@ SCENARIO: Leakage (Line -> Pot): Conflicting (1->2)
 SUBJECT                        | NOMINAL                       
 ------------------------------------------------------------
 Define ((A))                   | Define ((1))                  
-||||                           | ||||                          
+##! potpourri                  | ##! potpourri                 
 Use ((A))                      | Use ((2))                     
-||||                           | ||||                          
+####                           | ####                          
 ------------------------------------------------------------
 Judge (is_equivalent): True
 Lawyer (associate):    True
@@ -32,9 +32,9 @@ SCENARIO: Leakage (Pot -> Line): Consistent (1->1)
 ------------------------------------------------------------
 SUBJECT                        | NOMINAL                       
 ------------------------------------------------------------
-||||                           | ||||                          
+##! potpourri                  | ##! potpourri                 
 Define ((A))                   | Define ((1))                  
-||||                           | ||||                          
+####                           | ####                          
 Use ((A))                      | Use ((1))                     
 ------------------------------------------------------------
 Judge (is_equivalent): True
@@ -46,9 +46,9 @@ SCENARIO: Leakage (Pot -> Line): Conflicting (1->2)
 ------------------------------------------------------------
 SUBJECT                        | NOMINAL                       
 ------------------------------------------------------------
-||||                           | ||||                          
+##! potpourri                  | ##! potpourri                 
 Define ((A))                   | Define ((1))                  
-||||                           | ||||                          
+####                           | ####                          
 Use ((A))                      | Use ((2))                     
 ------------------------------------------------------------
 Judge (is_equivalent): True

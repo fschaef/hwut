@@ -179,6 +179,20 @@ class LinePairRaw:
         return subject_list, nominal_list
 
 
+def display_twin(line):
+    """RETURNS: Line, a twin of 'line' whose element sequence is ONE string
+                      element covering the raw text -- for region handlers
+                      whose display shows whole lines, never tolerance-
+                      lexed tokens.
+    """
+    from vut.engine.compare.engine.line               import Line
+    from vut.engine.compare.engine.input.line_element import LineElementString
+    raw    = line._string.rstrip("\n")
+    result = Line(line.line_n, raw, line.lexer)
+    result._UT_set_sequence((LineElementString(raw),))
+    return result
+
+
 class LinePair:
     """An association of a line from the subject input stream and a line
     from the nominal input stream.

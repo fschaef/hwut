@@ -125,15 +125,15 @@ async def test_potpourri():
     print("=== AXIS: STRUCTURE (Potpourri) ===")
     
     # Shuffled lines test
-    sub = """||||
+    sub = """##! potpourri
     Item ((A))
     Item ((B))
-    ||||"""
+    ####"""
     
-    nom = """||||
+    nom = """##! potpourri
     Item ((2))
     Item ((1))
-    ||||"""
+    ####"""
     
     # Should Pass: A maps to 2, B maps to 1 (or vice versa).
     # Since they are in a potpourri, the engine aligns them to find a consistent mapping.
@@ -146,15 +146,15 @@ async def test_sudoku():
     # Constraint: ((A)) can map to ((1)) OR ((2)), but NOT both simultaneously.
     # Result: Pigeonhole violation.
     
-    sub = """||||
+    sub = """##! potpourri
     Val ((A))
     Val ((A))
-    ||||"""
+    ####"""
     
-    nom = """||||
+    nom = """##! potpourri
     Val ((1))
     Val ((2))
-    ||||"""
+    ####"""
     
     await verify("Sudoku: Pigeonhole (2 items into 1 slot)", sub, nom, False)
 
@@ -184,7 +184,7 @@ async def test_leakage():
         use_s, use_n = "Use ((A))",    f"Use (({nom_val_2}))"
         
         # 2. Wrap segments based on direction
-        def pot_wrapper(s): return f"||||\n{s}\n||||"
+        def pot_wrapper(s): return f"##! potpourri\n{s}\n####"
         
         if direction == "line->pot":
             # Line region defines state -> Potpourri must respect it

@@ -11,11 +11,11 @@ and 'Potpourri' objects.
 
 By default, a chunk pipe is in the 'LineSequence' generation mode, that is
 any incoming line is pushed into a 'LineSequence' object where the sequence
-of appearance matters. A line starting with a Porpourri marker (i.e. '||||')
-sets the chunk pipe into 'Potpourri' mode. In that mode all incoming lines
-are pushed into a 'Potpourri' object, where the actual sequence of appearance
-does not matter. When in Potpourri mode, the occurrence of a marker, again,
-sets the chunk pipe back into the 'LineSequence' mode.
+of appearance matters. A region shebang '##! <handler>' opens a region whose
+lines are collected for the named handler (e.g. 'potpourri', where the
+sequence of appearance does not matter); the line '####' closes it and the
+pipe returns to 'LineSequence' mode. Broken framing (missing '####', stray
+'####', nesting) raises a loud 'RegionSyntaxError'.
 ______________________________________________________________________________
 """
 import sys
@@ -26,6 +26,7 @@ from   config import HwutRunner # noqa F401
 from   vut.engine.compare.configuration    import Configuration
 from   vut.auxiliary.async_helper          import AsyncIterator_ensured
 from   vut.engine.compare.engine.input.chunk_pipe import AssociationChunkPipe
+from   vut.engine.compare.region.registry         import RegionSyntaxError
 import asyncio
 
 if "--hwut-info" in sys.argv:
@@ -42,11 +43,14 @@ async def test_core(line_list):
     text = "\n".join(line_list)
     chunk_pipe = AssociationChunkPipe(config, AsyncIterator_ensured(StringIO(text)))
     print("----------------------------------")
-    print(text.replace("||||", "<potpourri>"))
+    print(text)
     print("----------------------------------")
     print("=>")
-    async for x in chunk_pipe.yield_input_chunks():
-        print(x)
+    try:
+        async for x in chunk_pipe.yield_input_chunks():
+            print(x)
+    except RegionSyntaxError as e:
+        print("RegionSyntaxError: %s" % e)
 
 def test(line_list):
     asyncio.run(test_core(line_list))
@@ -54,31 +58,39 @@ def test(line_list):
 if "normal" in sys.argv:
     test(["line1"])
     test(["line1", "line2"])
-    test(["||||", "line2", "||||"])
-    test(["||||", "line 2", "line 3", "||||",
+    test(["##! potpourri", "line2", "####"])
+    test(["##! potpourri", "line 2", "line 3", "####",
           "line 5"])
     test(["line 1",
-          "||||", "line 3", "line 4", "||||"])
+          "##! potpourri", "line 3", "line 4", "####"])
     test(["line 1",
-          "||||", "line 3", "||||",
+          "##! potpourri", "line 3", "####",
           "line 5"])
 
 if "special" in sys.argv:
     test([])
     test([""])
     test(["", ""])
-    test(["||||"])
-    test(["||||", "line"])
-    test(["||||", "||||"])
+    # strict framing: EOF inside an open region is a LOUD error
+    test(["##! potpourri"])
+    test(["##! potpourri", "line"])
+    # an empty region is legal and yields an empty chunk
+    test(["##! potpourri", "####"])
+    # stray region end and nesting are LOUD errors
+    test(["line", "####"])
+    test(["##! potpourri", "##! potpourri", "####"])
+    # unknown handler is a LOUD error
+    test(["##! quacksalber", "####"])
 
 if "comment" in sys.argv:
     test(["##line1"])
     test(["line1##"])
     test(["##line1", "line2"])
     test(["line1", "line2##"])
-    test(["||||", "line2##", "||||"])
-    test(["||||", "##line2", "||||"])
-    test(["||||", "##line 2", "line 3", "||||"])
-    test(["||||", "line 2", "##line 3", "||||"])
-    test(["##||||", "line1", "||||", "line2"])
-    test(["||||", "line1", "||||##", "line2", "||||"])
+    test(["##! potpourri", "line2##", "####"])
+    test(["##! potpourri", "##line2", "####"])
+    test(["##! potpourri", "##line 2", "line 3", "####"])
+    test(["##! potpourri", "line 2", "##line 3", "####"])
+    # '#####' (5+) is commentary, NOT a region end; '####x' likewise
+    test(["#####", "line1", "##! potpourri", "line2", "####"])
+    test(["##! potpourri", "line1", "####x", "line2", "####"])

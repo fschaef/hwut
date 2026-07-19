@@ -36,13 +36,13 @@ class SpyStream(io.StringIO):
 
 def generate_potpourri(n, prefix="sym"):
     """Generates strings for a potpourri block with n analogies."""
-    s = ["||||"]
-    n_list = ["||||"]
+    s = ["##! potpourri"]
+    n_list = ["##! potpourri"]
     for i in range(n):
         s.append(f"{i} (({prefix}_{i}))") # add some unique 'i' to prevent to liberal analogies
         n_list.append(f"{i} ((val_{i}))") # add some unique 'i' to prevent to liberal analogies
-    s.append("||||")
-    n_list.append("||||")
+    s.append("####")
+    n_list.append("####")
     return "\n".join(s), "\n".join(n_list)
 
 async def run_monitored_session(mode, subject_str, nominal_str):

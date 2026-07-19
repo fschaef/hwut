@@ -1,8 +1,8 @@
-currently produced signature:                     ((yq6GZ598J4F-l2S8sKTkCecs4w-Lgt6QgNISKpJ88v4))
+currently produced signature:                     ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 ## --> produced by 'python ui.py'
-signature announced in ui.py:                     ((PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc))
+signature announced in ui.py:                     ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 ## --> see file header 'SIGNATURE: ...
-signature used in test-ui_feeder.py:              ((PINlmBykR6RHn-GsYqZNbDJpcdYgmese_FAukpt54bc))
+signature used in test-ui_feeder.py:              ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 ## --> see SIGNATURE = ...
-signature announced in SIGNATURE_UI_PROTOCOL.txt: ((yq6GZ598J4F-l2S8sKTkCecs4w-Lgt6QgNISKpJ88v4))
+signature announced in SIGNATURE_UI_PROTOCOL.txt: ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 ## --> call 'python ui.py -w'

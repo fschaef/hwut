@@ -1,0 +1,13 @@
+## subset: every SUBJECT line needs a distinct partner; surplus
+## nominal lines are legal.
+proper subset:                               judge: True  lawyer: True  [ok]
+equal sets:                                  judge: True  lawyer: True  [ok]
+subject line unmatched:                      judge: False lawyer: False [ok]
+superset is NOT subset:                      judge: False lawyer: False [ok]
+duplicate needs two partners:                judge: False lawyer: False [ok]
+with analogies:                              judge: True  lawyer: True  [ok]
+with numeric tolerance:                      judge: True  lawyer: True  [ok]
+## Nominal is authoritative -- subject need not repeat the flag:
+flag on nominal only:                        judge: True  lawyer: True  [ok]
+## Without the flag, counts must agree (unchanged):
+plain potpourri:                             judge: False lawyer: False [ok]

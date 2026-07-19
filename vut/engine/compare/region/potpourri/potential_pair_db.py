@@ -15,7 +15,8 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
     need to hold in order to mate 'subject index' to 'nominal index'.
     """
     @staticmethod
-    def from_raw(subject_line_list, nominal_line_list, abort_early_f):
+    def from_raw(subject_line_list, nominal_line_list, abort_early_f,
+                 subset_f=False):
         """RETURNS: PotentialPairDb, if successful.
                     None,                   else.
 
@@ -64,8 +65,10 @@ class PotentialPairDb(dict): # dict[int, list[tuple(int, Optional[AnalogyDb])]]
         L_subject = 0 if not subject_line_list else len(subject_line_list)
         L_nominal = 0 if not nominal_line_list else len(nominal_line_list)
 
-        # sizes of the sets differ => complete matching is impossible.
-        if L_subject != L_nominal: 
+        # standard: sizes must agree; subset: subject may be smaller.
+        impossible_f = (L_subject > L_nominal) if subset_f \
+                       else (L_subject != L_nominal)
+        if impossible_f:
             if abort_early_f: return None
 
         # Hash bucket => find comparison candidates quickly.

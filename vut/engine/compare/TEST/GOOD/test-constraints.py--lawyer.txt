@@ -1,0 +1,8 @@
+## The Lawyer's cells: a violating binding is a red MISMATCH row.
+-- subject violation on line 2 (red), line 3 shielded (space dead):
+   equivalent=True   subject_line_n= 1 nominal_line_n= 1
+   equivalent=False  subject_line_n= 2 nominal_line_n= 2
+   equivalent=True   subject_line_n= 3 nominal_line_n= 3
+-- all constraints hold (all rows green):
+   equivalent=True   subject_line_n= 1 nominal_line_n= 1
+   equivalent=True   subject_line_n= 2 nominal_line_n= 2

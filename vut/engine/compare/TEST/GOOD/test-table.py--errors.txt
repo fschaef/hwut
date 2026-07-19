@@ -1,0 +1,7 @@
+## Broken NOMINAL specifications fail LOUDLY.
+nominal width clash                  -> line 3: table NOMINAL row has 3 columns where the first row has 2
+parameter column out of range        -> line 1: table parameter references column 5; the table has columns 0..1
+duplicate nominal key                -> line 3: table NOMINAL key 'a' appears twice (also line 2)
+nominal numeric cell not a number    -> line 2: table NOMINAL cell in numeric column 1 is not a number: 'xyz'
+malformed numeric spec               -> line 1: parameter 'numeric' of region handler 'table': cannot interpret value '1'
+unknown parameter                    -> line 1: region handler 'table' knows no parameter 'frobnicate'; known: ignore, key, numeric, sep, unordered

@@ -49,7 +49,10 @@ class InputChunk(ABC):
         self._chunk_type  = chunk_type
         self.__line_list   = tuple(line_list)
 
-    def is_terminal(self): 
+    def is_terminal(self):
+        return False
+
+    def is_error(self):
         return False
 
     @property
@@ -115,9 +118,32 @@ class InputChunkTerminal(EquivalenceRelatedInputChunk):
         return True, analogy_db
     def __repr__(self):    return "InputChunkTerminal"
 
+class InputChunkError(InputChunkTerminal):
+    """Terminal that CARRIES AN ERROR (e.g. RegionSyntaxError) out of the
+    async producer. The zip stage re-raises it in the consumer's context --
+    a broken region framing must fail LOUDLY, never look like end-of-stream.
+    """
+    def __init__(self, error):
+        self._chunk_type = E_Chunk.TERMINAL
+        self.error       = error
+    def is_error(self): return True
+    def __repr__(self): return "InputChunkError(%r)" % (self.error,)
+
 class InputChunkPotpourri(AssociationRelatedInputChunk, EquivalenceRelatedInputChunk):
-    def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line], config):
+    def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line],
+                 config, params=None):
         super().__init__(E_Chunk.POTPOURRI, start_line_n, end_line_n, line_list, config)
+
+        # 'params' arrives fully resolved from the registry (shebang >
+        # Configuration.region['potpourri'] > spec default). 'params=None'
+        # happens only on DIRECT construction (unit tests, legacy factory)
+        # -- then the spec default applies.
+        if params is not None and params.get("max_comparisons") is not None:
+            self.max_comparison_count = params["max_comparisons"]
+        else:
+            self.max_comparison_count = 128
+        self.subset_f     = bool(params and params.get("subset"))
+        self.duplicates_f = bool(params and params.get("duplicates"))
 
         # partition line list: lines with and without analogies
         self.analogy_line_list = []

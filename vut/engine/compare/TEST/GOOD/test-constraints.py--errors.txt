@@ -1,0 +1,21 @@
+## Static checks are LOUD at build time (broken specification).
+unparseable:                                   ConstraintSpecError: constraint for 'a': 'a >== 1' is not parseable (invalid syntax)
+free input name is NOT static:                 -no error-
+forbidden call:                                ConstraintSpecError: constraint for 'a': '__import__("os")': only calls to abs, acos, asin, atan, atan2, ceil, cos, exp, float, floor, hypot, int, len, log, max, min, round, sin, sqrt, str, tan or string methods are allowed
+forbidden node:                                ConstraintSpecError: constraint for 'a': '[a for a in (1,)]': 'ListComp' is not allowed
+bad attribute:                                 ConstraintSpecError: constraint for 'a': 'a.__class__': attribute '__class__' is not allowed (string methods: count, endswith, find, isalnum, isalpha, isdigit, islower, isspace, isupper, lower, lstrip, replace, rfind, rstrip, split, startswith, strip, upper)
+cycle a->b->a:                                 ConstraintSpecError: constraint dependency cycle: a -> b -> a
+cycle 3-long:                                  ConstraintSpecError: constraint dependency cycle: a -> b -> c -> a
+self-ref is ok:                                -no error-
+list of constraints:                           -no error-
+## Nominal violating its OWN constraint: loud (asymmetry rule).
+nominal violates:                              judge: ConstraintSpecError!      lawyer: ConstraintSpecError!      [ok]
+## ... but not if it sits BEHIND the abort point (reachability):
+nominal violation shielded:                    judge: False                     lawyer: False                     [ok]
+## Order-free scopes reject NOMINAL bindings loudly.
+potpourri nominal binding:                     judge: RegionSyntaxError!        lawyer: RegionSyntaxError!        [ok]
+potpourri subject binding = red:               judge: False                     lawyer: False                     [ok]
+unordered table nominal binding:               judge: RegionSyntaxError!        lawyer: RegionSyntaxError!        [ok]
+key table nominal binding:                     judge: RegionSyntaxError!        lawyer: RegionSyntaxError!        [ok]
+## Ordered tables never tolerance-lex: a binding is inert text.
+ordered table binding inert:                   judge: True                      lawyer: True                      [ok]

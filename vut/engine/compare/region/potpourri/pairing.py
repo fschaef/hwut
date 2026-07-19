@@ -17,10 +17,13 @@ import vut.engine.compare.region.potpourri.matching as m
 from   vut.engine.compare.engine.analogy_db import AnalogyDb
 from   typeguard import typechecked
 
-def do(subject, nominal, analogy_db, abort_early_f):
+def do(subject, nominal, analogy_db, abort_early_f, subset_f=False):
     """RETURNS: [0] True, if equivalent; False, if not.
                 [1] map: subject line number --> nominal line number
                 [2] required analogy db, if True.
+
+    'subset_f': only the SUBJECT side must be completely matched; surplus
+    nominal lines are legal.
     """
     # non-analogy lines can never match with analogy lines, and vice versa.
     # => treat them separately
@@ -28,10 +31,11 @@ def do(subject, nominal, analogy_db, abort_early_f):
     # pair non-analogy lines
     first_verdict, \
     first_pair_db, \
-    _              = _core(subject.non_analogy_line_list, 
-                           nominal.non_analogy_line_list, 
+    _              = _core(subject.non_analogy_line_list,
+                           nominal.non_analogy_line_list,
                            AnalogyDb(), abort_early_f,
-                           analogies_involved_f = False)
+                           analogies_involved_f = False,
+                           subset_f             = subset_f)
 
     if first_verdict is False and abort_early_f:
         return False, first_pair_db, analogy_db
@@ -39,14 +43,20 @@ def do(subject, nominal, analogy_db, abort_early_f):
     # pair analogy lines
     second_verdict, \
     second_pair_db, \
-    analogy_db      = _core(subject.analogy_line_list, 
-                            nominal.analogy_line_list, 
+    analogy_db      = _core(subject.analogy_line_list,
+                            nominal.analogy_line_list,
                             analogy_db, abort_early_f,
-                            analogies_involved_f = True)
+                            analogies_involved_f = True,
+                            subset_f             = subset_f)
 
-    verdict  = first_verdict and second_verdict
-    verdict &=     (len(first_pair_db)  == len(subject.non_analogy_line_list) == len(nominal.non_analogy_line_list)) \
-               and (len(second_pair_db) == len(subject.analogy_line_list)     == len(nominal.analogy_line_list))
+    verdict = first_verdict and second_verdict
+    if subset_f:
+        # only the subject side must be completely matched
+        verdict &=     len(first_pair_db)  == len(subject.non_analogy_line_list) \
+                   and len(second_pair_db) == len(subject.analogy_line_list)
+    else:
+        verdict &=     (len(first_pair_db)  == len(subject.non_analogy_line_list) == len(nominal.non_analogy_line_list)) \
+                   and (len(second_pair_db) == len(subject.analogy_line_list)     == len(nominal.analogy_line_list))
     pair_db = first_pair_db | second_pair_db
 
     return verdict, pair_db, analogy_db
@@ -68,7 +78,8 @@ def _core_non_analogy(subject_line_list,
     return verdict, state.pair_db
 
 @typechecked
-def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False, analogies_involved_f=True):
+def _core(subject_line_list, nominal_line_list, analogy_db,
+          abort_early_f=False, analogies_involved_f=True, subset_f=False):
     """RETURNS: [0] verdict
                 [1] map: subject line number --> nominal line number
                 [2] analogy_db
@@ -81,7 +92,9 @@ def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False,
         return pair_n
         
     aborted_f = False
-    if (state := m.get_initial_state(subject_line_list, nominal_line_list, analogy_db, abort_early_f)).aborted_f:
+    if (state := m.get_initial_state(subject_line_list, nominal_line_list,
+                                     analogy_db, abort_early_f,
+                                     subset_f)).aborted_f:
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
 
@@ -94,7 +107,8 @@ def _core(subject_line_list, nominal_line_list, analogy_db, abort_early_f=False,
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
     
-    if (state := m.extract_ultimates_and_hopeless(state, abort_early_f)).aborted_f:
+    if (state := m.extract_ultimates_and_hopeless(state, abort_early_f,
+                                                  subset_f)).aborted_f:
         if abort_early_f: return False, state.pair_db, state.analogy_constraint_db
         else:             aborted_f = True
 

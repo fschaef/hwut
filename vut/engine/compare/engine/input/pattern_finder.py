@@ -92,9 +92,24 @@ class PatternFinder:
         # 1. Base String (Metadata only)
         self._group_map["BASE"] = TolerancePattern(E_ToleranceId.STRING, None, None)
 
-        # 1. Register patterns 
+        # 1. Register patterns
         for pattern in config.visible_nothing_pattern_list:
             _register(E_ToleranceId.VISIBLE_NOTHING, pattern)
+
+        # CONSTRAINT BINDING '((name: number|"string"))' -- registered
+        # BEFORE the analogy pattern: both use the same markers and regex
+        # alternation prefers the earlier alternative, so the more specific
+        # binding shape wins ('engine/constraints.py').
+        self._constraint_binding_re = None
+        if config.constraint_f:
+            b = re.escape(config.analogy_begin_marker)
+            e = re.escape(config.analogy_end_marker)
+            binding_re_str = (
+                b + r"\s*[A-Za-z_]\w*\s*:\s*"
+                    r"(?:-?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+                    r"|\"[^\"]*\")\s*" + e)
+            self._constraint_binding_re = re.compile(binding_re_str)
+            _register(E_ToleranceId.CONSTRAINT_BINDING, binding_re_str)
 
         if config.analogy_f:
             b, e = re.escape(config.analogy_begin_marker), re.escape(config.analogy_end_marker)
@@ -128,7 +143,6 @@ class PatternFinder:
         self.numeric_tolerance_ratio    = config.numeric_tolerance_ratio
         self.ignored_line_begin_marker  = config.ignored_line_begin_marker
         self.ignored_line_end_marker    = config.ignored_line_end_marker
-        self.potpourri_begin_end_marker = config.potpourri_begin_end_marker
 
         # Master Regex Compilation
         # <= One master regular expression where particular
@@ -217,18 +231,22 @@ class PatternFinder:
         if line.endswith(self.ignored_line_end_marker): return True
         return False
 
-    def is_region_delimiter(self, line: str) -> bool:
-        """RETURNS: True, if current 'line' marks the begin/end of potpourri.
-        """
-        line = line.strip()
-        return line.startswith(self.potpourri_begin_end_marker) and len(set(line)) == 1
-
     def has_analogy(self, line: str) -> bool:
         """RETURNS: True, if line contains an analogy.
                     False, else.
         """
         if self._analogy_extractor_re is None: return False
         return bool(self._analogy_extractor_re.search(line))
+
+    def has_constraint_binding(self, line: str) -> bool:
+        """RETURNS: True, if line contains a constraint binding
+                          '((name: number|"string"))'.
+                    False, else.
+        Used by scopes that do NOT tolerance-lex their lines (e.g. tables)
+        to enforce the order-free guard of 'engine/constraints.py'.
+        """
+        if self._constraint_binding_re is None: return False
+        return bool(self._constraint_binding_re.search(line))
 
     def extract_analogy_strings(self, line: str) -> Iterable[str]:
         """RETURNS: List of analogy strings INCLUDING their markers.
