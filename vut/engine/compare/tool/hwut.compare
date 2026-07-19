@@ -1,0 +1,9 @@
+#!/bin/sh
+# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+#
+# Thin wrapper so the tool can be invoked as 'hwut.compare' (put this
+# directory on PATH, or symlink this file onto PATH). All it does is call
+# 'hwut_compare.py' next to it, forwarding args and stdin unchanged -- see
+# that file for the actual implementation and full usage/options.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec python3 "$DIR/hwut_compare.py" "$@"

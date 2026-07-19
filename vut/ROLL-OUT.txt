@@ -1,0 +1,139 @@
+================================================================================
+HWUT 2.0: ROLLOUT MANIFEST -- STAGED STEPS TOWARD ADOPTION
+================================================================================
+Status: PROPOSAL, 2026-07-19. Written down to be reconsidered later; nothing
+here is committed work. Update STATE markers as decisions fall.
+
+Companion documents:
+    claude/PLAN-compare-region-refactoring.txt   engine work (DONE thru Stage 7)
+    DOC/SEMANTICS.txt (in repo)                  the authoritative semantics
+    MANUAL.txt        (in repo)                  the user-facing front door
+
+GUIDING RULE (the one honest sentence)
+======================================
+Every stage that only builds infrastructure must be followed by a stage
+that tests whether anyone cares. Plumbing first is the comfortable order;
+it is not the order that finds out whether the market does.
+
+The strategic positioning to test (from review, 2026-07-19): HWUT's
+tolerant-comparison semantics as the DETERMINISTIC ORACLE LAYER for fuzzy
+output -- classical golden-file testing AND AI/agent-output evaluation --
+differentiated from exact-match (too brittle) and LLM-as-judge (costly,
+unreproducible) alike.
+
+
+STAGE R-1: RUNNER CORE (discovery + build-as-test)        STATE: PROPOSED
+================================================================================
+User's step, confirmed as the right start; well-understood, weeks not months.
+    - Recurse directory trees for TEST/ dirs; read the --hwut-info protocol
+      (title, CHOICES); execute language-agnostically: .py via interpreter,
+      everything else as-is via shebang (rule already proven in the sandbox
+      runner and by tool/TEST/test-hwut-compare-tool.sh).
+    - MAKE/BUILD IS PART OF THE TEST: a failing build is a FAILING TEST,
+      not an error outside the system. Capture the build log as a
+      first-class artifact on failure. Consider incremental-build caching
+      across choices (build time dominates suite time in C/C++ shops --
+      the audience this feature serves).
+    - Parallel execution with deterministic output ordering. Isolation is
+      free (black-box model); take the parallelism.
+    - PRIORITY WITHIN THE STAGE: the RE-RECORD WORKFLOW over traversal
+      depth. Daily UX is "a golden drifted -- show the semantic diff,
+      accept/reject per test, per choice." This loop is where users decide
+      whether they love the tool. Budget accordingly.
+
+STAGE R-2: REACH BEFORE FEATURES (packaging that tests adoption)  STATE: PROPOSED
+================================================================================
+Replaces "deb/rpm" as the packaging target; reach-ordered for the current
+world:
+    1. PyPI: 'pipx install hwut' -- one-command trial for strangers.
+    2. CI integration: a GitHub Action + GitLab CI template ('run HWUT,
+       fail the pipeline on red, attach the diff report').
+    3. Container image.
+    4. deb/rpm LAST -- for the embedded/regulated shops that genuinely
+       require OS packages. They will ask; that is the moment to build it.
+Consider a pytest-plugin face (invoke HWUT dirs from pytest) -- adoption
+is ecosystem-driven; meet developers inside their ecosystem rather than
+beside it.
+GATE: after R-2, watch for organic adoption signal (installs, issues,
+questions from strangers). The gate decides how much conviction the later
+stages deserve.
+
+STAGE R-3: THE CONCEPT, NAMED AND PUBLISHED                STATE: PROPOSED
+================================================================================
+Concepts get established by a memorable NAME + a WRITTEN SEMANTICS + a
+REFERENCE IMPLEMENTATION. Two of three exist (SEMANTICS.txt, the engine).
+    - Name the discipline (working candidates: "tolerant oracles",
+      "lawful comparison" -- decide deliberately, it is the brand).
+    - One long-form concept piece written FROM SEMANTICS.txt: equivalence
+      as edit-class membership; analogies as consistency obligations;
+      nominal-authoritative asymmetry; THE LAW (two faces, one verdict,
+      machine-checked). Conference-talk version of the same.
+    - NOT an HWUT manual, NOT a book-for-money (reviewed 2026-07-19:
+      books market tools at a loss; they do not monetize them).
+
+STAGE R-4: THE DIFFERENTIATOR DEMO (AI at the edges)       STATE: PROPOSED
+================================================================================
+AI belongs at the EDGES of the framework, never in the verdict -- the
+engine's value IS the deterministic, lawful verdict.
+    - GOLDEN GENERALIZER: from N sample runs of the same test, infer the
+      tolerance annotations (varying hex/ids -> analogies; wobbling
+      numbers -> numeric tolerance; reordered blocks -> potpourri;
+      trace rules -> constraint_db). Turns hand-annotation into review.
+      This is the demo that makes people lean forward.
+    - RE-RECORD REVIEWER: when a golden drifts, classify the semantic
+      diff (benign drift vs. behavioral change). Directly attacks the
+      "change-detector test" stigma -- the concept's biggest cultural
+      liability.
+    - Optional, architecture-ready: an '##! semantic' region handler
+      whose equivalence is judged by a model, framed and bounded by the
+      deterministic engine (region kinds are the OPEN axis; one package +
+      one registry entry, by design).
+
+STAGE R-5: COVERAGE -- DEFERRED, AND SCOPED IF EVER        STATE: DEFERRED
+================================================================================
+Original step "generalized coverage storage" (parse a wide range of
+coverage data, unify in an hwut-common format) is NOT recommended as
+stated: format-parsing is a maintenance treadmill, interchange formats
+already exist, and coverage aggregation is not why anyone chooses HWUT.
+    - IF built: consume lcov info + Cobertura XML ONLY (~90% of the
+      ecosystem exports one of these) -- never N native formats.
+    - The strategically interesting version: PER-TEST coverage storage
+      feeding TEST-IMPACT SELECTION ("this diff touches these files; run
+      only tests whose coverage intersects"). Turns coverage from
+      reporting into daily-felt speed. Build it for THAT, or not at all.
+    - ENTRY CONDITION: a real user asks, or R-2's gate shows adoption.
+
+STAGE R-6: MONETIZATION -- ONLY BEHIND THE GATE            STATE: PROPOSED
+================================================================================
+If (and only if) the R-2 gate shows signal:
+    - Paying niches, in order of fit: (a) regulated/embedded verification
+      (black-box output testing with a written semantics + machine-checked
+      consistency maps onto certification needs); (b) AI-agent output
+      evaluation (deterministic evals, cheaper + reproducible vs.
+      LLM-as-judge).
+    - Monetize via consulting, training, enterprise support -- not books,
+      not licenses on the engine (openness IS the adoption strategy).
+
+
+RECONSIDER-LATER LIST (open, deliberately undecided)
+====================================================
+    - CLI UX design (user's step 3): agreed necessary; design it around
+      the re-record loop (R-1) rather than as a separate stage.
+    - The concept name (R-3) -- decide once, early, deliberately.
+    - Whether the pytest-plugin face compromises the language-agnostic
+      identity or amplifies it (lean: amplifies -- it is a door, not a home).
+    - Multi-run golden capture protocol for the generalizer (R-4): does
+      the runner re-run tests N times, or collect across CI history?
+    - Where the AI features live: core, plugin, or paid tier.
+
+
+ORDERING SUMMARY (proposed vs. user's original)
+===============================================
+    user:      discovery/build -> coverage unification -> CLI -> deb/rpm
+    proposed:  R-1 discovery/build (+re-record UX, CLI folded in)
+               R-2 PyPI/CI reach                        <- GATE: adoption?
+               R-3 concept named + published
+               R-4 AI golden-generalizer demo
+               R-5 coverage (deferred; per-test/impact-scoped if ever)
+               R-6 monetization (behind the gate)
+================================================================================

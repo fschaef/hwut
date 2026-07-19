@@ -1,0 +1,16 @@
+## --config overrides: equivalence pattern, visible-nothing,
+## numeric OFF, analogy markers '[[' ']]'.
+::::: with config (pattern green/grey, 'nix' dim, 42 plain, [[Q]] analogy) (exit 0)
+mood\e[2m \e[0m\e[38;5;34m\e[48;5;240mhappy\e[0m
+mood\e[2m \e[0m\e[38;5;34m\e[48;5;240mglad\e[0m
+\e[2mnix\e[0m
+value\e[2m \e[0m42
+\e[38;5;208m\e[48;5;255m[[Q]]\e[0m\e[2m \e[0mand\e[2m \e[0m\e[38;5;208m\e[48;5;255m[[Q]]\e[0m
+
+::::: same input, preview defaults (patterns plain, 42 blue, [[Q]] plain) (exit 0)
+mood\e[2m \e[0mhappy
+mood\e[2m \e[0mglad
+nix
+value\e[2m \e[0m\e[38;5;33m42\e[0m
+[[Q]]\e[2m \e[0mand\e[2m \e[0m[[Q]]
+

@@ -1,0 +1,11 @@
+## Error paths exit 1 with a one-line message -- NO traceback.
+::::: missing input file (exit 1)
+STDERR: error: cannot read '<tmp>/hct-no-such-file.txt': [Errno 2] No such file or directory: '<tmp>/hct-no-such-file.txt'
+
+::::: missing config file (exit 1)
+STDERR: error: cannot read config '<tmp>/hct-no-such-cfg.py': [Errno 2] No such file or directory: '<tmp>/hct-no-such-cfg.py'
+
+## --help prints the module docstring (PURPOSE line shown).
+help exit: 0; PURPOSE: Colorized preview of how the compare engine's TOLERANCE LEXER
+## Broken pipe (| head -2) is quiet -- no traceback on stderr.
+head output lines: 2; stderr empty: True
