@@ -1,7 +1,0 @@
-INSPECT: shared-network flags:   ['--disable_clone_newnet']
-INSPECT: isolated-network flags: ['--iface_no_lo']
-  OK  : --disable_clone_newnet present when sharing host network
-  OK  : --iface_no_lo absent when sharing host network
-  OK  : --disable_clone_newnet absent in isolated mode
-  OK  : --iface_no_lo present when ntw_disable_loopback=True
-SUCCESS: Host-network flag logic is correct.

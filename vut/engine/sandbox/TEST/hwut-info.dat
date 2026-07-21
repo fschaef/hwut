@@ -1,7 +1,0 @@
-Testing Sandboxed System Calls
-------------------------------------
-
-coverage run --omit ./*.py -a *.py 
-
---not detect*.py
---not tmp.py

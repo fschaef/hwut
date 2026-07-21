@@ -1,4 +1,0 @@
-MOCK: Non-keyword 'custom_tool' in /sbin (mode 0o100711)
-RESULT: Forbidden binaries found:
-  - /sbin/custom_tool
-SUCCESS: sbin executable policy enforced.

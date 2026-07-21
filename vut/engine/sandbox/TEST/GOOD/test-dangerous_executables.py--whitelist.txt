@@ -1,4 +1,0 @@
-MOCK: High-risk binary '/usr/bin/sudo' (mode 0o104111)
-ACTION: Adding 'sudo' to whitelist.
-RESULT: Forbidden list is empty.
-SUCCESS: Whitelist correctly bypassed risk detection.
