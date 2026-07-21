@@ -1,0 +1,6 @@
+INSPECT: containment = COMPLETED
+  OK  : test app completed cleanly
+  OK  : matching file judged equivalent
+  OK  : mismatching file judged NOT equivalent
+  OK  : absent file judged NOT equivalent
+SUCCESS: output file judged post-exit against the nominal.
