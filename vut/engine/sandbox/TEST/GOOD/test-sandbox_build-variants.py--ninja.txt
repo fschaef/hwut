@@ -1,0 +1,7 @@
+INSPECT: good: built = ['beta.out', 'alpha.out'], report = ok
+INSPECT: bad:  exit = 1, report = build-failed
+  OK  : ninja targets built -- accounted in request order
+  OK  : verdict True; brief report 'ok'
+  OK  : failing rule -> 'build-failed'
+  OK  : no True verdict for the failing build
+SUCCESS: ninja variant: build and failure, both attributed.

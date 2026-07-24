@@ -1,0 +1,7 @@
+INSPECT: tail:
+    | * BANANA
+    | * APPLE
+    | * CHERRY
+  OK  : both stages completed -- one record each
+  OK  : recorded input traversed the whole pipeline
+SUCCESS: the first stage drinks from a pipe like any other.

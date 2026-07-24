@@ -32,24 +32,37 @@ DESCRIPTION
 
 MECHANISMS
        preexec hook     os.setsid (own process group) + rlimits for
-                        CPU time, file size, process count (NPROC set
-                        relative to the current per-user count).
+                        CPU time and file size.
        watchdog task    polls beside the stream readers: enforces
                         wall-clock and RSS caps over the whole process
-                        group, counts group members against max_pids,
+                        group, counts group members against max_pids
+                        (THE process-count cap -- per-call, own group),
                         records peaks for attribution, and reaps
                         stragglers that outlive the test process.
        kill ladder      SIGTERM -> grace -> SIGKILL, applied to the
                         process GROUP; post-mortem sweep of any
                         observed descendant that escaped the group.
+       anti-leak        cleanup is CANCELLATION-PROOF: an interrupted
+                        run (Ctrl-C, logout) still kills and sweeps its
+                        group; a module-level atexit backstop killpg's
+                        any group a dying harness left behind.
 
        RLIMIT_AS is deliberately NOT used: it breaks interpreters that
        reserve large virtual address spaces. Memory containment is
        watchdog-based (RSS) -- adequate against accidents; adversaries
        are out of scope.
+
+       RLIMIT_NPROC is deliberately NOT used: it caps processes per
+       REAL USER ID -- system-wide, not per-call. Derived from a
+       point-in-time snapshot it STARVES a legitimate build the moment
+       unrelated processes of the same user push the global count past
+       the snapshot (a busy desktop: build fork -> EAGAIN, "Resource
+       temporarily unavailable"). The per-call process-count cap is the
+       watchdog's group-member count, which is correctly scoped.
 ______________________________________________________________________________
 """
 import asyncio
+import atexit
 import os
 import shlex
 import signal
@@ -70,6 +83,34 @@ except ImportError: psutil = None        # degradable, reported
 _WATCHDOG_PERIOD_SEC  = 0.25   # poll period: RSS, pid count, wall clock
 _KILL_GRACE_SEC       = 2.0    # SIGTERM -> SIGKILL escalation delay
 _STRAGGLER_GRACE_SEC  = 1.0    # children outliving the exited test process
+
+_SIGKILL              = getattr(signal, "SIGKILL", signal.SIGTERM)
+
+# THE ANTI-LEAK BACKSTOP. Every live supervised call registers its
+# process-group id (== the child pid: it setsid'd) here, and clears it
+# on cleanup. A child that setsid'd into its own session would NOT die
+# with the harness -- so if the harness exits with groups still live
+# (an unhandled exception, sys.exit, an interpreter teardown), this
+# atexit hook killpg's them. It cannot fire on SIGKILL of the harness
+# (no process can); that residue is the outer boundary's concern.
+_ACTIVE_GROUP_PIDS: set = set()
+
+
+def _reap_active_groups():
+    """
+    RETURN: None. Best-effort SIGKILL of every still-registered process
+            group -- the harness is exiting; nothing else would reap a
+            setsid'd child.
+    """
+    if os.name != "posix":
+        return
+    for pid in list(_ACTIVE_GROUP_PIDS):
+        with suppress(ProcessLookupError, PermissionError, OSError):
+            os.killpg(pid, _SIGKILL)
+    _ACTIVE_GROUP_PIDS.clear()
+
+
+atexit.register(_reap_active_groups)
 
 
 class SandboxPipe:
@@ -92,6 +133,89 @@ class SandboxPipe:
         """RETURN: None. Upstream ended: downstream sees EOF."""
         with suppress(Exception):
             self.reader.feed_eof()
+
+
+class SandboxTee:
+    """RETURN: --. THE TWO-WAY TEE ADAPTER: the interaction point of a
+                   supervised call. One direction EAVESDROPS the
+                   process's stdout -- every chunk flows BOTH to the
+                   original consumer AND to the '.tap' pipe; the other
+                   direction may INJECT into the process's stdin
+                   through the '.inject' pipe.
+
+        original consumer <---tee---- process stdout
+                              |
+                        .tap  v   (the eavesdropper reads)
+                    +--------------------+
+                    |    eavesdropper    |  a coroutine -- or a pype
+                    |                    |  script in its OWN sandbox
+                    +--------------------+
+                     .inject  |   (the eavesdropper writes)
+                              v
+                              +-------> process stdin
+
+    THE TEE IS THE WHOLE FEATURE -- no further function needed;
+    everything is pipe composition. Wiring into the ground:
+
+        tee    = SandboxTee(stdout_handler=...)   # None: tap only
+        result = await sandbox.run(cmd,
+                                   stdout_handler=tee.stdout_handler,
+                                   stdin_reader  =tee.stdin_reader)
+
+    TWO SANDBOXES IN A LOOP -- e.g. a CONTROLLER providing control
+    signals for the process under test, each in its own supervised
+    call, while the tee's downstream consumer keeps judging or
+    pype-ing undisturbed:
+
+        async def run_subject():
+            try:
+                return await subject.run(cmd,
+                    stdout_handler=tee.stdout_handler,
+                    stdin_reader  =tee.stdin_reader)
+            finally:
+                tee.tap.close()      # subject gone -> controller EOF
+
+        async def run_controller():
+            try:
+                return await controller.run(ctrl_cmd,
+                    stdin_reader   =tee.tap.reader,
+                    stdout_handler =tee.inject.feed)
+            finally:
+                tee.inject.close()   # controller gone -> stdin EOF
+
+        subject_result, controller_result = await asyncio.gather(
+            run_subject(), run_controller())
+
+    RULES OF THE TEE: the eavesdropper MUST consume '.tap.reader' (an
+    unread tap buffers without bound), and '.inject' MUST be closed
+    when the dialogue is over -- the process then sees stdin EOF (the
+    'finally' closers above do exactly that, whichever end finishes
+    first). A supervised eavesdropper must answer UNBUFFERED (e.g.
+    'python3 -u'): a buffered answer never arrives. A dialogue where
+    both sides wait for each other is an accident like any other: the
+    wall clocks contain it.
+    """
+    def __init__(self, stdout_handler=None):
+        self.tap         = SandboxPipe()   # process stdout, the copy
+        self.inject      = SandboxPipe()   # process stdin, the feed
+        self._downstream = stdout_handler
+
+    async def stdout_handler(self, data: bytes):
+        """
+        RETURN: None. The tee itself: one chunk to the '.tap' AND to
+                the original consumer -- eavesdrop, never steal.
+        """
+        await self.tap.feed(data)
+        if self._downstream is not None:
+            await self._downstream(data)
+
+    @property
+    def stdin_reader(self):
+        """
+        RETURN: asyncio.StreamReader, the process's stdin source --
+                what the eavesdropper injected.
+        """
+        return self.inject.reader
 
 
 class SandboxSequence:
@@ -118,16 +242,30 @@ class SandboxSequence:
     that ends while an UPSTREAM stage still runs stops the sequence:
     SIGPIPE semantics, supervised.
     """
-    def __init__(self, stage_list, stop_event=None):
+    def __init__(self, stage_list, stop_event=None, err_pipe_f=False,
+                 stdin_reader=None):
+        """
+        'err_pipe_f': expose the FIRST stage's stderr as '.err' (a
+        SandboxPipe) -- stderr is a channel like any other; nominal
+        behavior may be defined on it. Without the flag, stage-0
+        stderr follows the ground's default (tail capture). The
+        caller of an '.err' pipe MUST consume or drain it.
+
+        'stdin_reader': stdin source of the FIRST stage -- recorded
+        input fed through the pipeline, or a SandboxTee's '.inject'
+        side driving an interactive sequence. None: the first stage
+        sees immediate stdin EOF.
+        """
         assert stage_list
         self.stop_event   = stop_event if stop_event is not None \
                             else asyncio.Event()
         self.tail         = SandboxPipe()
+        self.err          = SandboxPipe() if err_pipe_f else None
         self.sandbox_list = [sandbox for sandbox, _ in stage_list]
 
         self._task_list = []
         pipe_list       = []
-        upstream_reader = None
+        upstream_reader = stdin_reader
         last_i          = len(stage_list) - 1
         for i, (sandbox, command_line) in enumerate(stage_list):
             out_pipe = self.tail if i == last_i else SandboxPipe()
@@ -135,6 +273,9 @@ class SandboxSequence:
                 sandbox.run(command_line,
                             stdin_reader   = upstream_reader,
                             stdout_handler = out_pipe.feed,
+                            stderr_handler = self.err.feed
+                                             if i == 0 and self.err
+                                             else None,
                             stop_event     = self.stop_event)))
             pipe_list.append(out_pipe)
             upstream_reader = out_pipe.reader
@@ -151,6 +292,8 @@ class SandboxSequence:
         """
         await asyncio.shield(self._task_list[i])
         out_pipe.close()
+        if i == 0 and self.err is not None:
+            self.err.close()
         if any(not task.done() for task in self._task_list[:i]):
             self.stop_event.set()
 
@@ -223,6 +366,15 @@ class SandboxResult:
     cpu_time_sec:   Optional[float]      # None if not measurable
     peak_memory_mb: Optional[float]      # None without psutil
     unenforced:     tuple[str, ...]      # caps the platform cannot enforce
+    stderr_tail:    str = ""             # last 4 KiB of stderr, captured
+                                         # when NO stderr_handler was given
+                                         # -- the WHY for the report (a
+                                         # nonzero exit without it is a
+                                         # riddle); "" when a handler
+                                         # consumed the channel
+    peak_pids:      Optional[int] = None # peak process-group member count
+                                         # observed (None without psutil);
+                                         # the WHY beside a PIDS_EXCEEDED
 
     @property
     def ok(self) -> bool:
@@ -303,6 +455,28 @@ class Sandbox:
             return SandboxResult(E_Containment.LAUNCH_FAILED, None,
                                  time.monotonic() - t0, None, None,
                                  unenforced)
+        except OSError:
+            # e.g. EAGAIN ("Resource temporarily unavailable"): the
+            # per-user process table is full -- the SYSTEM is out of
+            # processes, not a fault of THIS call. A clean, attributed
+            # result, never a raw traceback out of the harness.
+            return SandboxResult(E_Containment.LAUNCH_FAILED, None,
+                                 time.monotonic() - t0, None, None,
+                                 unenforced)
+
+        # Register the group for the anti-leak backstop (POSIX: the child
+        # setsid'd, so its group id equals its pid).
+        if os.name == "posix":
+            _ACTIVE_GROUP_PIDS.add(process.pid)
+
+        # Without a caller handler, stderr is CAPTURED (last 4 KiB)
+        # instead of blindly drained: a nonzero exit without its stderr
+        # is a riddle; the tail lands in SandboxResult.stderr_tail.
+        stderr_tail_buf = bytearray()
+        if stderr_handler is None:
+            async def stderr_handler(data):
+                stderr_tail_buf.extend(data)
+                del stderr_tail_buf[:-4096]
 
         out_task  = asyncio.create_task(
             self._pump(process.stdout, stdout_handler))
@@ -317,39 +491,63 @@ class Sandbox:
         exit_task = asyncio.create_task(process.wait())
 
         harness_error = None
+        cancelled     = False
         try:
             # Completes when (a) process exited AND both output pipes hit
             # EOF, or (b) a pump raised (harness fault in a handler).
             await asyncio.wait({exit_task, out_task, err_task},
                                return_when=asyncio.FIRST_EXCEPTION)
+        except asyncio.CancelledError:
+            cancelled = True          # interrupt: still clean up below
         finally:
-            if process.returncode is None:
-                await self._kill_ladder(process)
+            # THE ANTI-LEAK GUARANTEE. A run interrupted at ANY point still
+            # kills its process group and sweeps -- a cancelled run must
+            # NEVER orphan its children (they setsid into their own group,
+            # so nobody else would reap them).
             all_tasks = (out_task, err_task, in_task, dog_task,
                          stop_task, exit_task)
+            if cancelled:
+                # Interrupted (Ctrl-C, logout): no graceful shutdown owed,
+                # only a guarantee of no leak. Kill the group AND the
+                # leader directly, SYNCHRONOUSLY -- no await can be stolen,
+                # and the direct kill covers the pre-setsid window where
+                # the group id does not yet exist.
+                self._hard_kill(process)
+            elif process.returncode is None:
+                await self._kill_ladder(process)      # normal: be graceful
             for task in all_tasks:
                 if not task.done(): task.cancel()
-            results = await asyncio.gather(*all_tasks,
-                                           return_exceptions=True)
+            results = []
+            with suppress(asyncio.CancelledError, Exception):
+                results = await asyncio.gather(*all_tasks,
+                                               return_exceptions=True)
             harness_error = next(
                 (r for r in results[:2]
                  if isinstance(r, Exception)
                  and not isinstance(r, asyncio.CancelledError)),
                 None)
-            await self._close_stdin_transport(process)
-            self._sweep(state)
+            with suppress(asyncio.CancelledError, Exception):
+                await self._close_stdin_transport(process)
+            self._sweep(state)                        # synchronous: always
+            _ACTIVE_GROUP_PIDS.discard(process.pid)
 
+        if cancelled:
+            # Group is dead and swept; now honour the cancellation.
+            raise asyncio.CancelledError
         if harness_error is not None:
             raise harness_error
 
         wall = time.monotonic() - t0
         cpu  = self._cpu_time(rusage_before, state)
         return self._make_result(process.returncode, state, wall, cpu,
-                                 unenforced)
+                                 unenforced,
+                                 bytes(stderr_tail_buf)
+                                 .decode("utf-8", errors="replace"))
 
     # ------------------------------------------------------- result shaping
 
-    def _make_result(self, returncode, state, wall, cpu, unenforced):
+    def _make_result(self, returncode, state, wall, cpu, unenforced,
+                     stderr_tail):
         """
         RETURN: SandboxResult, containment cause derived from the recorded
                 watchdog/stop cause first, else from the death signal
@@ -369,7 +567,9 @@ class Sandbox:
                              wall_clock_sec = wall,
                              cpu_time_sec   = cpu,
                              peak_memory_mb = state.peak_memory_mb,
-                             unenforced     = unenforced)
+                             unenforced     = unenforced,
+                             stderr_tail    = stderr_tail,
+                             peak_pids      = state.peak_pids)
 
     def _cpu_time(self, rusage_before, state):
         """
@@ -421,7 +621,8 @@ class Sandbox:
         """
         unenforced = []
         if psutil is None:
-            # No RSS watchdog; and NPROC needs the current per-user count.
+            # No watchdog: no RSS cap, and no process-count cap either
+            # (max_pids is the watchdog's group-member count).
             unenforced += ["max_memory_mb", "max_pids"]
         if resource is None:
             unenforced += ["max_cpu_time_sec", "max_file_size_mb"]
@@ -429,44 +630,21 @@ class Sandbox:
 
         cpu_sec    = self.config.max_cpu_time_sec
         fsize_byte = self.config.max_file_size_mb * 1024 * 1024
-        nproc      = self._nproc_limit()
 
         def preexec():
             # Child context, post-fork pre-exec: keep it minimal; a cap
             # the kernel refuses is skipped (kernel ceilings vary).
+            # NOTE: RLIMIT_NPROC is NOT set here -- it is a per-REAL-USER
+            # cap, not per-call, and starves legitimate builds on a busy
+            # machine (module header). max_pids is the watchdog's job.
             with suppress(ValueError, OSError):
                 resource.setrlimit(resource.RLIMIT_CPU,
                                    (cpu_sec, cpu_sec + 1))
             with suppress(ValueError, OSError):
                 resource.setrlimit(resource.RLIMIT_FSIZE,
                                    (fsize_byte, fsize_byte))
-            if nproc is not None:
-                with suppress(ValueError, OSError):
-                    resource.setrlimit(resource.RLIMIT_NPROC,
-                                       (nproc, nproc))
 
         return preexec, tuple(unenforced)
-
-    def _nproc_limit(self):
-        """
-        RETURN: int,  RLIMIT_NPROC value: current per-user process count
-                      plus max_pids. NPROC counts the USER's processes, so
-                      the limit must ride on top of what already runs.
-                None, if the current count cannot be determined (no
-                      psutil) -- NPROC is then left alone; the watchdog's
-                      group count still enforces max_pids.
-        """
-        if psutil is None or not hasattr(os, "getuid"):
-            return None
-        uid = os.getuid()
-        n   = 0
-        for proc in psutil.process_iter(attrs=("uids",)):
-            with suppress(Exception):
-                uids = proc.info["uids"]
-                if uids is not None and uids.real == uid:
-                    n += 1
-        if n == 0: return None
-        return n + self.config.max_pids
 
     # ------------------------------------------------------------- watchdog
 
@@ -590,6 +768,23 @@ class Sandbox:
                                                 signal.SIGTERM))
         with suppress(Exception):
             await process.wait()
+
+    def _hard_kill(self, process):
+        """
+        RETURN: None. SYNCHRONOUS, unconditional group teardown for the
+                interrupted path: SIGKILL the process GROUP and the leader
+                DIRECTLY. Runs even if the leader was already reaped -- its
+                group id stays valid while any child lives, so the group
+                kill still reaps a surviving grandchild. The direct leader
+                kill covers the window before the child setsid'd (its group
+                id does not exist yet, so a group kill alone would miss it).
+                No await -- a cancellation cannot steal this step, so an
+                interrupted run can never leak its child.
+        """
+        self._signal_group(process, _SIGKILL)
+        if os.name == "posix":
+            with suppress(ProcessLookupError, PermissionError, OSError):
+                os.kill(process.pid, _SIGKILL)
 
     @staticmethod
     def _signal_group(process, sig):

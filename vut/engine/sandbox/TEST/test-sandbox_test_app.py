@@ -45,24 +45,45 @@ CHOICES:
                          -> ((MEMORY_EXCEEDED,), False); the sequence
                          unwinds cleanly on the kill.        [Judge]
   output_file:           an output FILE judged post-exit.    [Judge]
-  spec_channel_and_files: THE RUN SPECIFICATION: channel vs.
-                         comparator -- stdout judged LIVE, two output
-                         files judged POST-EXIT, one judgement record
-                         per subject; a mismatching file turns the
-                         overall verdict False and is NAMED; the
-                         Lawyer over the same spec labels every
-                         ChunkPair with its subject and reduces to the
-                         same verdicts (THE LAW).   [Judge + Lawyer]
+  spec_channel_and_files: THE INTERFACE: input = configuration
+                         (SandboxConfigTestRun), output = result
+                         (SandboxResultTestRun), via 'run_test_app()' --
+                         stdout judged LIVE, two output files judged
+                         POST-EXIT, one judgement record per subject;
+                         a mismatching file turns the overall verdict
+                         False and is NAMED; the Lawyer over the SAME
+                         configuration labels every ChunkPair with its
+                         subject and reduces to the same verdicts (THE
+                         LAW).                      [Judge + Lawyer]
   spec_file_pype:        a file with non-deterministic line order,
                          deterministicalized POST-EXIT by a pype
                          comparator (a one-stage sequence reading the
                          file) -> True; pype's own record accounted.
                                                              [Judge]
+  stderr_channel:        stderr is a CHANNEL like any other: nominal
+                         behavior may be defined on it. Judged LIVE
+                         and concurrently with stdout
+                         (config.error_channel; the err pipe follows
+                         the configuration); a stderr mismatch is
+                         NAMED and fast-fails the run.      [Judge]
+  resource_usage:        the result carries the run's RESOURCE USAGE:
+                         cpu time (summed over stages -- work adds),
+                         wall clock (elapsed), peak memory (high-water
+                         mark). Presence/sign asserted, never
+                         magnitudes: GOOD stable across machines.
+  result_classification: E_TestRunResult, THE BRIEF REPORT: one
+                         provoked reason per case -- ok,
+                         not-equivalent-with-nominal,
+                         test-app-no-output, test-app-contained,
+                         nominal-file-not-found,
+                         output-file-not-found,
+                         pype-interpreter-not-found,
+                         pype-file-not-found, pype-file-syntax-error.
+                                                             [Judge]
 
 AUTHOR: Frank-Rene Schaefer
 """
 
-import asyncio
 import io
 import logging
 import os
@@ -76,14 +97,14 @@ from   vut.engine.sandbox.sandbox      import (Sandbox,             # noqa E402
                                                SandboxConfig,
                                                SandboxSequence,
                                                E_Containment)
-from   vut.engine.sandbox.run_test_app import (judge_equivalence,   # noqa E402
+from   vut.engine.sandbox.sandbox_test_app import (judge_equivalence,   # noqa E402
                                                judge_association,
                                                judge_output_file,
-                                               judge_test_run,
-                                               associate_test_run,
+                                               run_test_app,
                                                Comparator,
-                                               TestRunSpec)
+                                               SandboxConfigTestRun)
 from   vut.engine.compare.configuration import Configuration        # noqa E402
+from   vut.auxiliary.test_run_result    import E_TestRunResult      # noqa E402
 
 # Child-reap races between the harness's kill discipline and asyncio's
 # child watcher may emit spurious warnings ("Unknown child process ...")
@@ -93,7 +114,39 @@ logging.getLogger("asyncio").setLevel(logging.ERROR)
 PY        = shlex.quote(sys.executable)
 ROOT_DIR  = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          "..", "..", "..", ".."))
-HWUT_PYPE = os.path.join(ROOT_DIR, "tools", "hwut_pype", "hwut_pype.py")
+
+
+HWUT_PYPE = os.path.abspath("../../hwut_pype/hwut_pype.py")
+
+
+def _require_hwut_pype() -> bool:
+    """
+    RETURN: True,  the pype interpreter is present.
+            False, else -- with an ACTIONABLE report: this is an
+                   environment defect, not a code defect.
+    """
+    if os.path.exists(HWUT_PYPE):
+        return True
+    print(f"FAIL: pype interpreter not found: '{HWUT_PYPE}'")
+    print("      undump component-hwut_pype.txt so that hwut_pype.py")
+    print("      lies at <project root>/tools/hwut_pype/, or set the")
+    print("      environment variable VUT_HWUT_PYPE to its path.")
+    return False
+
+
+def _print_stage_diagnostics(label, record):
+    """
+    RETURN: None. On a failed stage: prints exit code and the captured
+            stderr tail -- the WHY. (Failure paths only; the GOOD file
+            never sees this.)
+    """
+    if record.containment is E_Containment.COMPLETED \
+       and record.exit_code == 0:
+        return
+    print(f"DIAGNOSTIC: {label}: containment={record.containment.name}, "
+          f"exit_code={record.exit_code}")
+    for line in record.stderr_tail.splitlines():
+        print(f"DIAGNOSTIC: {label} stderr| {line}")
 
 
 def _cmd(app_code: str) -> str:
@@ -287,6 +340,7 @@ async def test_pype_deterministicalize():
                "    cherry\n"
                "    durian\n")
 
+    if not _require_hwut_pype(): return
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
         script_path = os.path.join(work_dir, "settle.pype")
         with open(script_path, "w") as fh:
@@ -316,6 +370,7 @@ async def test_pype_deterministicalize():
         (verdict is True,
          "non-deterministic order judged equivalent BEHIND the pype stage"),
     ])
+    _print_stage_diagnostics("pype", pype_result)
     _verdict(ok, "pype deterministicalized the sequence; compare agreed.")
 
 
@@ -374,6 +429,7 @@ async def test_output_file():
     print(f"INSPECT: containment = {result.containment.name}")
     ok = _check([
         (result.ok,                "test app completed cleanly"),
+        (result.stderr_tail == "", "clean run: empty stderr tail"),
         (verdict_good is True,     "matching file judged equivalent"),
         (verdict_bad is False,     "mismatching file judged NOT equivalent"),
         (verdict_absent is False,  "absent file judged NOT equivalent"),
@@ -394,9 +450,13 @@ async def test_spec_channel_and_files():
            "    fh.write('total: 7 items\\n')\n"
            "print('run ends')\n")
 
-    def spec(report_nominal):
-        """RETURN: TestRunSpec, stdout + two files vs. comparators."""
-        return TestRunSpec(
+    def config(work_dir, report_nominal):
+        """RETURN: SandboxConfigTestRun, THE COMPLETE INPUT: the run and its
+                   subjects -- stdout + two files vs. comparators."""
+        return SandboxConfigTestRun(
+            command_line = _cmd(app),
+            sandbox      = Sandbox(SandboxConfig(max_wall_clock_sec=10.0),
+                                   work_dir),
             channel = Comparator(io.StringIO("run begins\nrun ends\n"),
                                  Configuration()),
             file_db = {
@@ -406,23 +466,15 @@ async def test_spec_channel_and_files():
                                          Configuration()),
             })
 
-    def sequence(work_dir):
-        """RETURN: SandboxSequence, one-stage run of the app."""
-        return SandboxSequence(
-            [(Sandbox(SandboxConfig(max_wall_clock_sec=10.0), work_dir),
-              _cmd(app))])
-
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
-        good = await judge_test_run(sequence(work_dir),
-                                    spec("total: 7 items\n"))
+        good = await run_test_app(config(work_dir, "total: 7 items\n"))
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
-        bad  = await judge_test_run(sequence(work_dir),
-                                    spec("total: 999 items\n"))
+        bad  = await run_test_app(config(work_dir, "total: 999 items\n"))
 
     label_set = set()
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
-        lawyer = await associate_test_run(
-            sequence(work_dir), spec("total: 999 items\n"),
+        lawyer = await run_test_app(
+            config(work_dir, "total: 999 items\n"),
             consumer=lambda subject, chunk_pair: label_set.add(subject))
 
     print(f"INSPECT: good verdicts = "
@@ -488,12 +540,16 @@ async def test_spec_file_pype():
                "    cherry\n"
                "    durian\n")
 
+    if not _require_hwut_pype(): return
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
         script_path = os.path.join(work_dir, "settle.pype")
         with open(script_path, "w") as fh:
             fh.write(pype_script)
 
-        spec = TestRunSpec(
+        config = SandboxConfigTestRun(
+            command_line = _cmd(app),
+            sandbox      = Sandbox(SandboxConfig(max_wall_clock_sec=15.0),
+                                   work_dir),
             channel = None,          # stdout drained, unjudged
             file_db = {
                 "trace.txt": Comparator(
@@ -503,10 +559,7 @@ async def test_spec_file_pype():
                     pype_command_line = f"{PY} {shlex.quote(HWUT_PYPE)} "
                                         f"{shlex.quote(script_path)}"),
             })
-        sequence = SandboxSequence(
-            [(Sandbox(SandboxConfig(max_wall_clock_sec=15.0), work_dir),
-              _cmd(app))])
-        judgement = await judge_test_run(sequence, spec)
+        judgement = await run_test_app(config)
 
     pype_record, = judgement.file_stage_db["trace.txt"]
     print(f"INSPECT: verdicts = "
@@ -521,7 +574,206 @@ async def test_spec_file_pype():
         (judgement.verdict is True,
          "overall verdict True"),
     ])
+    _print_stage_diagnostics("post-exit pype", pype_record)
     _verdict(ok, "file deterministicalized post-exit, never during the run.")
+
+
+async def test_stderr_channel():
+    """stderr is a CHANNEL like any other -- nominal behavior may be
+    defined on it. The spec's 'error_channel' comparator judges it
+    LIVE, concurrently with stdout; both feed the fast-fail; a stderr
+    mismatch is NAMED like any other subject."""
+
+    async def run(app, subject_db, wall=10.0):
+        """RETURN: SandboxResultTestRun of 'app' under the subjects (the err
+                   pipe follows the configuration automatically)."""
+        with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
+            return await run_test_app(SandboxConfigTestRun(
+                command_line = _cmd(app),
+                sandbox      = Sandbox(SandboxConfig(max_wall_clock_sec=wall),
+                                       work_dir),
+                **subject_db))
+
+    def subjects_both(err_nominal):
+        """RETURN: dict, subject fields -- stdout AND stderr judged."""
+        return dict(
+            channel       = Comparator(io.StringIO("to stdout\n"),
+                                       Configuration()),
+            error_channel = Comparator(io.StringIO(err_nominal),
+                                       Configuration()))
+
+    app_ok = ("import sys\n"
+              "print('to stdout')\n"
+              "print('warning: tolerated', file=sys.stderr)\n")
+
+    good = await run(app_ok, subjects_both("warning: tolerated\n"))
+    bad  = await run(app_ok, subjects_both("warning: expected\n"))
+
+    app_hang = ("import sys, time\n"
+                "print('to stdout', flush=True)\n"
+                "print('warning: WRONG', file=sys.stderr, flush=True)\n"
+                "time.sleep(30)\n")
+    fast = await run(app_hang, subjects_both("warning: expected\n"),
+                     wall=20.0)
+
+    only_err = await run(
+        app_ok, dict(error_channel=Comparator(
+            io.StringIO("warning: tolerated\n"), Configuration())))
+
+    print(f"INSPECT: good verdicts = "
+          f"{sorted(good.subject_verdict_db.items())}")
+    print(f"INSPECT: bad  verdicts = "
+          f"{sorted(bad.subject_verdict_db.items())}")
+    ok = _check([
+        (good.verdict is True and str(good.report) == "ok",
+         "matching stdout AND stderr -> ok"),
+        (bad.subject_verdict_db["stdout"] is True
+         and bad.subject_verdict_db["stderr"] is False,
+         "stderr mismatch NAMED; stdout stays True"),
+        (str(bad.report) == "not-equivalent-with-nominal",
+         "brief report: not-equivalent-with-nominal"),
+        (fast.stage_result_list[0].containment
+             is E_Containment.STOPPED
+         and fast.stage_result_list[0].wall_clock_sec < 10.0,
+         "stderr mismatch FAST-FAILS the run (long before 30 s)"),
+        (only_err.verdict is True,
+         "stderr-only specification: stdout drained, stderr judged"),
+    ])
+    _verdict(ok, "stderr judged as a channel, symmetric with stdout.")
+
+
+async def test_result_classification():
+    """E_TestRunResult, THE BRIEF REPORT: 'ok' or the reason of
+    failure, one token. Each case provokes one classification;
+    test-app reasons outrank pype reasons outrank subject/nominal
+    reasons. The pype classifications rest on the captured stderr
+    tail of the pype stage's own attribution record."""
+
+    async def classify(app, subjects_of, wall=10.0):
+        """RETURN: E_TestRunResult, brief report of one judged run."""
+        with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
+            result = await run_test_app(SandboxConfigTestRun(
+                command_line = _cmd(app),
+                sandbox      = Sandbox(SandboxConfig(max_wall_clock_sec=wall),
+                                       work_dir),
+                **subjects_of(work_dir)))
+            return result.report
+
+    def channel(nominal):
+        """RETURN: callable(work_dir) -> dict, channel-only subjects."""
+        return lambda work_dir: dict(
+            channel=Comparator(io.StringIO(nominal), Configuration()))
+
+    app_alpha = "print('alpha')\n"
+    app_file  = "open('trace.txt', 'w').write('item x\\ndone\\n')\n"
+
+    def file_pype_spec(pype_command_line_of):
+        """RETURN: callable(work_dir) -> dict, one file subject with a
+                   post-exit pype comparator."""
+        def make(work_dir):
+            return dict(file_db={"trace.txt": Comparator(
+                io.StringIO("irrelevant\n"), Configuration(),
+                pype_sandbox      = Sandbox(
+                    SandboxConfig(max_wall_clock_sec=10.0), work_dir),
+                pype_command_line = pype_command_line_of(work_dir))})
+        return make
+
+    def script_pype_spec(script_txt):
+        """RETURN: callable(work_dir) -> dict, file subject with a
+                   REAL pype interpreter running 'script_txt'."""
+        def pype_command_line_of(work_dir):
+            path = os.path.join(work_dir, "s.pype")
+            with open(path, "w") as fh:
+                fh.write(script_txt)
+            return f"{PY} {shlex.quote(HWUT_PYPE)} {shlex.quote(path)}"
+        return file_pype_spec(pype_command_line_of)
+
+    case_list = [
+        ("ok",
+         await classify(app_alpha, channel("alpha\n")),
+         E_TestRunResult.OK),
+        ("mismatching line",
+         await classify("print('WRONG')\n", channel("alpha\n")),
+         E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL),
+        ("silent test app",
+         await classify("pass\n", channel("alpha\n")),
+         E_TestRunResult.TEST_APP_NO_OUTPUT),
+        ("hanging test app (wall cap 1 s)",
+         await classify("import time; time.sleep(30)\n",
+                        channel("alpha\n"), wall=1.0),
+         E_TestRunResult.TEST_APP_CONTAINED),
+        ("nominal path absent",
+         await classify(app_alpha, lambda work_dir: dict(
+             channel=Comparator("/no/such/nominal.txt", Configuration()))),
+         E_TestRunResult.NOMINAL_FILE_NOT_FOUND),
+        ("output file absent",
+         await classify("pass\n", lambda work_dir: dict(
+             file_db={"result.txt":
+                      Comparator(io.StringIO("x\n"), Configuration())})),
+         E_TestRunResult.OUTPUT_FILE_NOT_FOUND),
+        ("pype interpreter absent",
+         await classify(app_file, file_pype_spec(
+             lambda work_dir: "python3 /no/such/hwut_pype.py s.pype")),
+         E_TestRunResult.PYPE_INTERPRETER_NOT_FOUND),
+    ]
+    if _require_hwut_pype():
+        case_list += [
+            ("pype script with missing import",
+             await classify(app_file, script_pype_spec(
+                 'import: "no-such-lib.pype"\n'
+                 'on: <else> => ignore;\n')),
+             E_TestRunResult.PYPE_FILE_NOT_FOUND),
+            ("pype script with syntax error",
+             await classify(app_file, script_pype_spec("garbage line\n")),
+             E_TestRunResult.PYPE_FILE_SYNTAX_ERROR),
+        ]
+
+    ok = True
+    for label, got, expected in case_list:
+        good_f = (got is expected)
+        print(f"  {'OK  ' if good_f else 'FAIL'}: {label:<32} -> {got}")
+        ok = ok and good_f
+    _verdict(ok, "the brief report names the reason, one token each.")
+
+
+async def test_resource_usage():
+    """The result carries the run's RESOURCE USAGE: cpu time (SUMMED
+    over every stage -- WORK adds up), wall clock (elapsed), and peak
+    memory (high-water mark). Values are machine-dependent, so the
+    checks assert PRESENCE and SIGN only, never magnitudes -- the GOOD
+    file stays stable across machines. The application holds memory
+    across a watchdog poll so the measurement is deterministic."""
+    app = ("import time\n"
+           "hold = bytearray(16 * 1024 * 1024)  # 16 MiB held below\n"
+           "s = 0\n"
+           "for i in range(2_000_000): s += i    # burn a little cpu\n"
+           "print('value', s % 7)\n"
+           "time.sleep(0.6)  # >= 2 watchdog polls while memory is held\n"
+           "print(len(hold))\n")
+
+    with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
+        # No judged channel: the run is driven to its natural end and
+        # its resource usage is read off the result (stdout drained).
+        result = await run_test_app(SandboxConfigTestRun(
+            command_line = _cmd(app),
+            sandbox      = Sandbox(SandboxConfig(max_wall_clock_sec=10.0),
+                                   work_dir)))
+
+    print(f"INSPECT: cpu_measured   = {result.cpu_time_sec is not None}")
+    print(f"INSPECT: wall_positive  = {result.wall_clock_sec > 0.0}")
+    print(f"INSPECT: mem_measured   = {result.peak_memory_mb is not None}")
+    ok = _check([
+        (result.cpu_time_sec is not None and result.cpu_time_sec >= 0.0,
+         "cpu_time_sec reported -- total WORK, summed over stages"),
+        (result.wall_clock_sec > 0.0,
+         "wall_clock_sec reported -- elapsed time"),
+        (result.peak_memory_mb is not None and result.peak_memory_mb > 0.0,
+         "peak_memory_mb reported -- high-water mark (psutil present)"),
+        (result.cpu_time_sec is None
+         or result.cpu_time_sec <= result.wall_clock_sec + 5.0,
+         "cpu time is sane against wall clock (single stage)"),
+    ])
+    _verdict(ok, "the result carries the run's time and memory.")
 
 
 # ---------------------------------------------------------------------------
@@ -539,6 +791,9 @@ if __name__ == "__main__":
             "output_file":             test_output_file,
             "spec_channel_and_files":  test_spec_channel_and_files,
             "spec_file_pype":          test_spec_file_pype,
+            "stderr_channel":          test_stderr_channel,
+            "result_classification":   test_result_classification,
+            "resource_usage":          test_resource_usage,
         },
         happy      = "SUCCESS.*",
     ).run()

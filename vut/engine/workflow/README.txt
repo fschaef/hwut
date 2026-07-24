@@ -117,8 +117,13 @@ ArtifactHandling (per E_Artifact value)
         (host_root, user, machine_id, ...). Returns the type the task
         consumes: pathlib path, connected socket, process handle.
 
-  The two operations are duals: canonicalise at workload construction,
-  on the recipe side; resolve at execution time, on the launcher side.
+  The two operations are duals: 
+
+  -- canonicalise() at workload construction, on the recipe side; 
+     => distinct description indepedent of locality
+
+  -- resolve() at execution time, on the launcher side.
+     => concrete description meaningful in local context.
 
   Handlers are registered per E_Artifact in an ArtifactHandlingRegistry.
   The WorkflowManager owns one registry ('.artifact_handling_registry');

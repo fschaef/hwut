@@ -18,10 +18,15 @@ CHOICES:
   memory:      growing allocation -> MEMORY_EXCEEDED, peak recorded.
   file_size:   oversized write -> FILE_SIZE_EXCEEDED (RLIMIT_FSIZE),
                file stopped near the cap.
-  pids:        fork storm -> contained (PIDS_EXCEEDED or NPROC-failure
-               self-abort); no straggling children survive the run.
+  pids:        fork storm -> contained by the watchdog's group count
+               (PIDS_EXCEEDED); no straggling children survive the run.
   no_psutil:   psutil absent -> memory/pid caps reported in .unenforced,
                wall clock still enforced.
+  cancelled_run: an INTERRUPTED run (Ctrl-C, a logout killing the
+               harness) leaks NO child -- the cleanup is
+               cancellation-proof; the accident that exhausts the
+               per-user process table (and logs a developer out) is
+               prevented.
 
 AUTHOR: Frank-Rene Schaefer
 """
@@ -186,10 +191,12 @@ async def test_file_size():
 
 
 async def test_pids():
-    """A fork storm is contained by NPROC (fork fails inside the test) or
-    by the watchdog's group count -- either way the storm dies and no
-    child survives the run. The marker string tags storm children so the
-    post-run scan can prove extinction."""
+    """A fork storm is contained by the watchdog's group-member count
+    (PIDS_EXCEEDED): the storm dies and no child survives the run.
+    RLIMIT_NPROC is deliberately not used -- it is a per-REAL-USER cap
+    that starves legitimate builds; max_pids is the watchdog's job. The
+    marker string tags storm children so the post-run scan can prove
+    extinction."""
     import psutil
     marker = "VUT_SANDBOX_PIDBOMB_MARKER"
     config = SandboxConfig(max_pids=8, max_wall_clock_sec=15.0)
@@ -208,21 +215,63 @@ async def test_pids():
                  if proc.info["cmdline"]
                  and any(marker in arg for arg in proc.info["cmdline"])]
 
-    # NOTE: whether the NPROC rlimit (fork fails inside the test) or the
-    # watchdog's group count fires first is a race -- the printed output
-    # only asserts the NORMALIZED outcome, so the GOOD file is stable.
+    # A storm that raced the watchdog to its own end (all forks done, the
+    # parent sleeping) reads COMPLETED nonzero; the printed output asserts
+    # only the NORMALIZED outcome, so the GOOD file is stable.
     contained_f = (result.containment is E_Containment.PIDS_EXCEEDED) \
                   or (result.containment is E_Containment.COMPLETED
                       and result.exit_code != 0)
     ok = _check([
         (contained_f,
-         "storm contained (PIDS_EXCEEDED or NPROC-failure self-abort)"),
+         "storm contained (PIDS_EXCEEDED, watchdog group count)"),
         (result.wall_clock_sec < 10.0,
          "containment came well before the storm's natural end"),
         (len(survivors) == 0,
          "no straggling storm children survive the run"),
     ])
     _verdict(ok, "fork storm contained, all children reaped.")
+
+
+async def test_cancelled_run():
+    """An INTERRUPTED run (Ctrl-C, or a logout that tears the harness
+    down mid-test) must leak NO child. The child setsid's into its own
+    session, so nobody else would ever reap it -- the sandbox's cleanup
+    is CANCELLATION-PROOF: it kills the child's group synchronously even
+    as the run coroutine unwinds. A leak here silently consumes the
+    per-user process table across runs -- the very accident that
+    eventually logs a developer out."""
+    import os, psutil
+    marker = f"VUT_SANDBOX_CANCEL_MARKER_{os.getpid()}"
+    config = SandboxConfig(max_wall_clock_sec=30.0)
+    app    = (f"import sys, time\n"
+              f"sys.argv.append('{marker}')\n"
+              f"time.sleep(30)\n")
+
+    with tempfile.TemporaryDirectory(prefix="vut_sandbox_test_") as work_dir:
+        run_task = asyncio.create_task(
+            Sandbox(config, work_dir).run(_cmd(app)))
+        await asyncio.sleep(0.8)     # let it launch and setsid
+        run_task.cancel()            # <-- interrupt the run mid-flight
+        reraised = False
+        try:
+            await run_task
+        except asyncio.CancelledError:
+            reraised = True          # honoured -- AFTER the group is dead
+
+    await asyncio.sleep(0.5)         # give the OS a moment to reap
+    survivors = [proc for proc in psutil.process_iter(attrs=("cmdline",))
+                 if proc.info["cmdline"]
+                 and any(marker in arg for arg in proc.info["cmdline"])]
+
+    print(f"INSPECT: survivors after cancel = {len(survivors)}")
+    ok = _check([
+        (reraised,
+         "cancellation is honoured (CancelledError re-raised)"),
+        (len(survivors) == 0,
+         "no child survives the interrupted run -- group reaped"),
+    ])
+    _verdict(ok, "an interrupted run leaks nothing; logout-by-leak "
+                 "prevented.")
 
 
 async def test_no_psutil():
@@ -265,6 +314,7 @@ if __name__ == "__main__":
             "file_size":  test_file_size,
             "pids":       test_pids,
             "no_psutil":  test_no_psutil,
+            "cancelled_run": test_cancelled_run,
         },
         happy      = "SUCCESS.*",
     ).run()
