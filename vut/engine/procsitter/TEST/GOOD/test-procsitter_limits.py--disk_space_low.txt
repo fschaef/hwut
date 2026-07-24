@@ -1,0 +1,5 @@
+INSPECT: containment = FAIL_DISK_SPACE_LOW
+  OK  : containment is FAIL_DISK_SPACE_LOW
+  OK  : floor fired on an early disk poll, well before 30 s
+  OK  : exit_code is None (the procsitter ended it, not the test)
+SUCCESS: free-space floor keeps the operating system operable.

@@ -1,0 +1,5 @@
+INSPECT: configure = OK_COMPLETED, built = ['app'], report = ok
+  OK  : configure step: supervised call completed
+  OK  : the executable target is accounted post-exit
+  OK  : verdict True; brief report 'ok'
+SUCCESS: cmake variant: configure supervised, build through the door.

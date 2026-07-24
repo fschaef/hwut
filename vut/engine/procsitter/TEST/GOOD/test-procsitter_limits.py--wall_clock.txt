@@ -1,0 +1,6 @@
+INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
+  OK  : containment is WALL_CLOCK_EXCEEDED
+  OK  : wall clock between cap and cap + kill overhead
+  OK  : exit_code is None (the procsitter ended it, not the test)
+  OK  : no caps unenforced on this platform
+SUCCESS: hang contained by wall clock, attributed.

@@ -1,0 +1,12 @@
+INSPECT: transcript:
+    | ask: capital-of-france
+    | got paris
+    | ask: six-times-seven
+    | got 42
+    | dialogue-done
+  OK  : app: own attribution record, clean
+  OK  : pype controller: OWN attribution record, clean
+  OK  : first answer injected by pype
+  OK  : second answer injected by pype
+  OK  : the dialogue reached its end
+SUCCESS: a pype script drives the dialogue -- same wiring, supervised on both ends.

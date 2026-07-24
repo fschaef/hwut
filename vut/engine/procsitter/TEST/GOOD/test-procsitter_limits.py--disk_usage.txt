@@ -1,0 +1,6 @@
+INSPECT: containment = FAIL_DISK_USAGE_EXCEEDED
+  OK  : containment is FAIL_DISK_USAGE_EXCEEDED
+  OK  : recorded peak exceeds the 20 MB cap
+  OK  : kill came before the flood grew unbounded (< 512 MB)
+  OK  : containment well before the 30 s natural end
+SUCCESS: many-files flood contained by the disk-usage cap.

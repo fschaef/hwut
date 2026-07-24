@@ -1,0 +1,16 @@
+  OK  : ok                               -> ok
+  OK  : mismatching line                 -> not-equivalent-with-nominal
+  OK  : silent test app                  -> test-app-no-output
+  OK  : hanging test app (wall cap 1 s)  -> test-app-contained
+  OK  : nominal path absent              -> nominal-file-not-found
+  OK  : output file absent               -> output-file-not-found
+  OK  : test app cannot launch           -> test-app-launch-failed
+  OK  : live channel pype stage fails    -> pype-failed
+  OK  : file nominal path absent         -> nominal-file-not-found
+  OK  : pype interpreter absent          -> pype-interpreter-not-found
+  OK  : pype interpreter binary missing (launch fails) -> pype-interpreter-not-found
+  OK  : pype stage resource-capped       -> pype-contained
+  OK  : pype generic nonzero exit        -> pype-failed
+  OK  : pype script with missing import  -> pype-file-not-found
+  OK  : pype script with syntax error    -> pype-file-syntax-error
+SUCCESS: the brief report names the reason, one token each.

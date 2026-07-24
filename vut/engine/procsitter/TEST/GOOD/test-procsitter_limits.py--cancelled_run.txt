@@ -1,0 +1,4 @@
+INSPECT: survivors after cancel = 0
+  OK  : cancellation is honoured (CancelledError re-raised)
+  OK  : no child survives the interrupted run -- group reaped
+SUCCESS: an interrupted run leaks nothing; logout-by-leak prevented.

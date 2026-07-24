@@ -1,0 +1,7 @@
+INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
+INSPECT: unenforced  = ['max_memory_mb', 'max_pids']
+  OK  : wall clock still enforced without psutil
+  OK  : memory cap reported as unenforced
+  OK  : pid cap reported as unenforced
+  OK  : no fabricated memory measurement
+SUCCESS: degradation without psutil is loud, never silent.

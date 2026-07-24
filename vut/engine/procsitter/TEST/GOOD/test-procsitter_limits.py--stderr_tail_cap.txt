@@ -1,0 +1,5 @@
+INSPECT: kept 100 lines [err 50 .. err 149]; long line len = 4096
+  OK  : exactly the LAST 100 lines kept (150 emitted)
+  OK  : the kept window is the TAIL, not the head
+  OK  : a newline-less 5000-char line trimmed to its 4096-byte tail
+SUCCESS: the stderr tail is bounded, by line count and by length.

@@ -1,0 +1,4 @@
+  OK  : flood contained (SIGXFSZ death or EFBIG self-abort)
+  OK  : flood file stopped at the 1 MB cap
+  OK  : containment came well before the flood's natural end
+SUCCESS: disk flooding contained by file-size cap.

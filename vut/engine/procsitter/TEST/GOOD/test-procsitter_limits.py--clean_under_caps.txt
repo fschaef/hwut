@@ -1,0 +1,8 @@
+INSPECT: containment = OK_COMPLETED, exit = 0
+  OK  : clean completion -- OK_COMPLETED, no cap fired
+  OK  : exit code 0
+  OK  : every cap enforced, none skipped
+  OK  : the file was written intact (0.5 MB)
+  OK  : peak memory stayed under the cap -- no false memory kill
+  OK  : peak disk stayed under the cap -- no false disk kill
+SUCCESS: a real workload under every cap completes untouched.

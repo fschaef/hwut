@@ -1,0 +1,6 @@
+INSPECT: producer = FAIL_STOPPED (0.1s), consumer = OK_COMPLETED
+  OK  : consumer read its fill and exited cleanly -- own record
+  OK  : producer STOPPED by rule 2 (downstream died first)
+  OK  : producer stopped PROMPTLY -- nowhere near its 20 s wall cap
+  OK  : the consumer produced nothing; the tail saw a clean EOF
+SUCCESS: a chain bounds itself: early death upstream-stops the rest.
