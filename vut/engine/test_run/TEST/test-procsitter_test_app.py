@@ -9,7 +9,7 @@ PURPOSE: Verify the judged test application run: a CHAIN
 DESCRIPTION:
 
 RUNNING and JUDGING are separate concerns. RUNNING is the general
-chain (launch_chain, procsitter.py): supervised calls connected stdout ->
+chain (chain, procsitter.py): supervised calls connected stdout ->
 stdin, one attribution record per stage. PIPE-CONSTRUCTION IS THE
 INTERFACE in both directions -- between the stages, and toward
 compare, which reads the chain's tail. JUDGING is the two axes:
@@ -36,9 +36,9 @@ CHOICES:
                          natural end, no fast-fail); the reduction over
                          ChunkPair.is_equivalent() must equal the
                          Judge's verdict -- THE LAW.  [Judge + Lawyer]
-  pype_deterministicalize: a two-stage chain: test app emitting
+  pype_canonicalise: a two-stage chain: test app emitting
                          lines in RANDOM order | pype stage (its OWN
-                         supervised call) deterministicalizing them ->
+                         supervised call) canonicalising them ->
                          verdict True whatever the order was; BOTH
                          stage records COMPLETED.            [Judge]
   contained_run:         a memory bomb under judgement
@@ -56,7 +56,7 @@ CHOICES:
                          subject and reduces to the same verdicts (THE
                          LAW).                      [Judge + Lawyer]
   spec_file_pype:        a file with non-deterministic line order,
-                         deterministicalized POST-EXIT by a pype
+                         canonicalised POST-EXIT by a pype
                          comparator (a one-stage chain reading the
                          file) -> True; pype's own record accounted.
                                                              [Judge]
@@ -92,11 +92,11 @@ import tempfile
 
 from   config import HwutRunner                                     # noqa F401
 
-from   vut.engine.procsitter.procsitter      import (Procsitter,             # noqa E402
-                                               ProcsitterConfig,
-                                               launch_chain,
-                                               E_Containment)
-from   vut.engine.procsitter.procsitter_test_app import (judge_equivalence,   # noqa E402
+from   vut.engine.procsitter.procsitter   import (Procsitter,        # noqa E402
+                                                  ProcsitterConfig,
+                                                  E_Containment)
+from   vut.engine.procsitter.construction import chain              # noqa E402
+from   vut.engine.test_run.procsitter_test_app import (judge_equivalence,   # noqa E402
                                                judge_association,
                                                judge_output_file,
                                                run_test_app,
@@ -181,11 +181,11 @@ async def test_equivalence_ok():
     nominal = "alpha\nvalue 42\nomega\n"
 
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
-        chain = launch_chain(
+        c = chain(
             [(Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir),
               _argv(app))])
         result_list, verdict = await judge_equivalence(
-            chain, io.StringIO(nominal), Configuration())
+            c, io.StringIO(nominal), Configuration())
         result, = result_list
 
     print(f"INSPECT: containment = {result.containment.name}, "
@@ -210,11 +210,11 @@ async def test_equivalence_fail_fast():
     nominal = "alpha\nbeta\ngamma\n"
 
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
-        chain = launch_chain(
+        c = chain(
             [(Procsitter(ProcsitterConfig(max_wall_clock_sec=20.0), work_dir),
               _argv(app))])
         result_list, verdict = await judge_equivalence(
-            chain, io.StringIO(nominal), Configuration())
+            c, io.StringIO(nominal), Configuration())
         result, = result_list
 
     print(f"INSPECT: containment = {result.containment.name}, "
@@ -244,8 +244,8 @@ async def test_association():
     nominal       = "alpha\nbeta\ngamma\n"
 
     def chain_of(app, work_dir):
-        """RETURN: ChainRun, one-stage run of 'app'."""
-        return launch_chain(
+        """RETURN: ProcsitterChain, one-stage run of 'app'."""
+        return chain(
             [(Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir),
               _argv(app))])
 
@@ -294,12 +294,12 @@ async def test_association():
     _verdict(ok, "Judge and Lawyer agree; the alignment reaches the consumer.")
 
 
-async def test_pype_deterministicalize():
+async def test_pype_canonicalise():
     """The purpose of pype, end to end: the test app PROVOKES and
     REPORTS -- its items arrive in RANDOM order (unseeded shuffle,
-    genuinely non-deterministic). The pype stage ANALYZES: it records
+    genuinely non-deterministic). The pype stage CANONICALISES: it records
     arrivals, reports only the running count, and prints the settled
-    SORTED summary. compare JUDGES the deterministicalized stream
+    SORTED summary. compare JUDGES the canonicalised stream
     against one fixed nominal. The run is a TWO-STAGE chain;
     the verdict demands BOTH stage records accounted for."""
     app = ("import random\n"
@@ -341,14 +341,14 @@ async def test_pype_deterministicalize():
 
         # THE GROUND: test app AND pype are supervised system calls --
         # each stage of the chain in its OWN procsitter.
-        chain = launch_chain([
+        c = chain([
             (Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
              _argv(app)),
             (Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
              [sys.executable, HWUT_PYPE, script_path]),
         ])
         result_list, verdict = await judge_equivalence(
-            chain, io.StringIO(nominal), Configuration())
+            c, io.StringIO(nominal), Configuration())
         test_result, pype_result = result_list
 
     print(f"INSPECT: stage records = "
@@ -364,7 +364,7 @@ async def test_pype_deterministicalize():
          "non-deterministic order judged equivalent BEHIND the pype stage"),
     ])
     _print_stage_diagnostics("pype", pype_result)
-    _verdict(ok, "pype deterministicalized the chain; compare agreed.")
+    _verdict(ok, "pype canonicalised the chain; compare agreed.")
 
 
 async def test_contained_run():
@@ -380,12 +380,12 @@ async def test_contained_run():
     nominal = "starting\nfinished\n"
 
     with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
-        chain = launch_chain(
+        c = chain(
             [(Procsitter(ProcsitterConfig(max_memory_mb=96,
                                     max_wall_clock_sec=20.0), work_dir),
               _argv(app))])
         result_list, verdict = await judge_equivalence(
-            chain, io.StringIO(nominal), Configuration())
+            c, io.StringIO(nominal), Configuration())
         result, = result_list
 
     print(f"INSPECT: containment = {result.containment.name}, "
@@ -494,7 +494,7 @@ async def test_spec_channel_and_files():
 
 
 async def test_spec_file_pype():
-    """Files can only be deterministicalized AFTER the test terminated
+    """Files can only be canonicalised AFTER the test terminated
     -- filtering during the run would fail on transients. The file's
     comparator carries a pype stage: post-exit, a one-stage chain
     reads the file (pype INPUT-FILE argument), and compare judges its
@@ -567,7 +567,7 @@ async def test_spec_file_pype():
          "overall verdict True"),
     ])
     _print_stage_diagnostics("post-exit pype", pype_record)
-    _verdict(ok, "file deterministicalized post-exit, never during the run.")
+    _verdict(ok, "file canonicalised post-exit, never during the run.")
 
 
 async def test_stderr_channel():
@@ -646,7 +646,7 @@ async def test_result_classification():
         """RETURN: E_TestRunResult, brief report of one judged run.
         'command' overrides the argv (to provoke a launch failure);
         'pype_command' adds a LIVE channel pype stage (to provoke a
-        failing determinizer)."""
+        failing canonicaliser)."""
         with tempfile.TemporaryDirectory(prefix="vut_run_") as work_dir:
             extra = {}
             if pype_command is not None:
@@ -827,7 +827,7 @@ async def test_stdout_logging():
     the pype. A log is a plain consumer on a production port (tee); it
     does not touch the verdict. The test app emits items in RANDOM
     order; the pype settles them. So 'before' must hold the raw random
-    stream and 'after' the determinized one -- the very stream that is
+    stream and 'after' the canonicalised one -- the very stream that is
     judged (identical to it) -- and the two must differ."""
     app = ("import random\n"
            "items = ['cherry', 'apple', 'durian', 'banana']\n"
@@ -900,16 +900,16 @@ async def test_stdout_logging():
          and "done" in raw_lines,
          "'before' log holds the app's RAW stdout (all items + done)"),
         (before_text != after_text,
-         "raw and determinized streams differ -- the pype did work"),
+         "raw and canonicalised streams differ -- the pype did work"),
     ])
-    _verdict(ok, "stdout tapped raw and determinized, verdict untouched.")
+    _verdict(ok, "stdout tapped raw and canonicalised, verdict untouched.")
 
 
 async def test_associate_full():
     """THE LAWYER over the WHOLE specification at once: a live pype
-    channel (stdout determinized before judging), the stderr channel,
-    AND a file determinized POST-EXIT -- every subject aligned into
-    ChunkPairs by an ASYNC consumer. The determinizers are plain
+    channel (stdout canonicalised before judging), the stderr channel,
+    AND a file canonicalised POST-EXIT -- every subject aligned into
+    ChunkPairs by an ASYNC consumer. The canonicalisers are plain
     'sort' one-liners (no hwut_pype needed). Random input, fixed
     nominals: the Lawyer's per-subject reductions must all be True and
     every subject must be labelled."""
@@ -1019,7 +1019,7 @@ if __name__ == "__main__":
             "equivalence_ok":          test_equivalence_ok,
             "equivalence_fail_fast":   test_equivalence_fail_fast,
             "association":             test_association,
-            "pype_deterministicalize": test_pype_deterministicalize,
+            "pype_canonicalise": test_pype_canonicalise,
             "contained_run":           test_contained_run,
             "output_file":             test_output_file,
             "spec_channel_and_files":  test_spec_channel_and_files,

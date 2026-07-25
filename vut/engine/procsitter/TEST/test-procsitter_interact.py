@@ -15,7 +15,7 @@ production and control ports of supervised calls -- no further class:
 
   fan-out    tee(b.feed, c.feed)      consumers ADD
   loop       A -> C, C -> A           the man in the middle
-  chain      launch_chain(stages)     the three chain rules
+  chain      chain(stages)     the three chain rules
 
 CHOICES:
 
@@ -31,7 +31,7 @@ CHOICES:
                    procsitter ('python3 -u': unbuffered, else the
                    answer never arrives) -- the same wiring, nothing
                    special.
-  chain_stdin:     launch_chain(stdin_reader=...): recorded input
+  chain_stdin:     chain(stdin_reader=...): recorded input
                    fed into the FIRST stage's control port,
                    transformed along the chain, read at the tail.
   chain_stop_early:CHAIN RULE 2 -- a downstream stage that ends while
@@ -52,12 +52,12 @@ import tempfile
 
 from   config import HwutRunner                                     # noqa F401
 
-from   vut.engine.procsitter.procsitter import (Procsitter,        # noqa E402
-                                                ProcsitterConfig,
-                                                Link,
-                                                launch_chain,
-                                                tee,
-                                                E_Containment)
+from   vut.engine.procsitter.procsitter   import (Procsitter,      # noqa E402
+                                                  ProcsitterConfig,
+                                                  E_Containment)
+from   vut.engine.procsitter.construction import (Link,            # noqa E402
+                                                  chain,
+                                                  tee)
 
 logging.getLogger("asyncio").setLevel(logging.ERROR)
 
@@ -174,22 +174,19 @@ async def test_tee_copy():
         return await _read_all(listen.reader)
 
     with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
-        procsitter  = Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0),
-                                 work_dir)
+        procsitter  = Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir)
         listen_task = asyncio.create_task(listener())
-        result      = await procsitter.run(
-            _argv(app), stdout_handler=tee(consumer, listen.feed))
-        listen.close()           # producer gone -> listener EOF
+        result      = await procsitter.run(_argv(app), stdout_handler=tee(consumer, listen.feed))
+        listen.close() # producer gone -> listener EOF
         listened    = await listen_task
 
     expected = b"alpha\nbeta\ngamma\n"
     print(f"INSPECT: consumer = {bytes(consumer_box)!r}")
     print(f"INSPECT: listener = {listened!r}")
     ok = _check([
-        (result.containment is E_Containment.OK_COMPLETED,
-         "supervised call completed"),
-        (bytes(consumer_box) == expected, "original consumer: complete"),
-        (listened            == expected, "added listener: complete"),
+        (result.containment is E_Containment.OK_COMPLETED, "supervised call completed"),
+        (bytes(consumer_box) == expected,                  "original consumer: complete"),
+        (listened            == expected,                  "added listener: complete"),
     ])
     _verdict(ok, "the tee copies; nobody is robbed.")
 
@@ -305,7 +302,7 @@ async def test_pype_interactor():
 
 async def test_chain_stdin():
     """The chain's control hook: recorded input fed into the FIRST
-    stage's control port ('launch_chain(stdin_reader=...)'),
+    stage's control port ('chain(stdin_reader=...)'),
     transformed along the chain, read at the tail."""
     app_upper  = ("import sys\n"
                   "for line in sys.stdin:\n"
@@ -319,14 +316,14 @@ async def test_chain_stdin():
     source.close()
 
     with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
-        chain = launch_chain(
+        c = chain(
             [(Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir),
               _argv(app_upper)),
              (Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir),
               _argv(app_prefix))],
             stdin_reader=source.reader)
-        tail_bytes  = await _read_all(chain.tail.reader)
-        record_list = await asyncio.gather(*chain.task_tuple)
+        tail_bytes  = await _read_all(c.tail.reader)
+        record_list = await asyncio.gather(*c.task_tuple)
 
     text = tail_bytes.decode()
     print("INSPECT: tail:")
@@ -363,14 +360,14 @@ async def test_chain_stop_early():
                 "        break\n")
 
     with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
-        chain = launch_chain([
+        c = chain([
             (Procsitter(ProcsitterConfig(max_wall_clock_sec=20.0), work_dir),
              _argv(producer)),
             (Procsitter(ProcsitterConfig(max_wall_clock_sec=20.0), work_dir),
              _argv(consumer))])
         # tail carries the consumer's (empty) production to EOF.
-        tail_bytes  = await _read_all(chain.tail.reader)
-        prod_record, cons_record = await asyncio.gather(*chain.task_tuple)
+        tail_bytes  = await _read_all(c.tail.reader)
+        prod_record, cons_record = await asyncio.gather(*c.task_tuple)
 
     print(f"INSPECT: producer = {prod_record.containment.name} "
           f"({prod_record.wall_clock_sec:.1f}s), "

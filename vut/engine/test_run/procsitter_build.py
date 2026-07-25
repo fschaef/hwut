@@ -68,7 +68,9 @@ from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Optional
 
-from   .procsitter import Procsitter, ProcsitterResult, E_Containment
+from   vut.engine.procsitter.procsitter import (Procsitter,
+                                                ProcsitterResult,
+                                                E_Containment)
 
 from   vut.auxiliary.test_run_result import E_TestRunResult
 

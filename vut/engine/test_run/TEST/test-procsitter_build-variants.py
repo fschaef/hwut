@@ -51,7 +51,7 @@ from   config import HwutRunner                                     # noqa F401
 from   vut.engine.procsitter.procsitter       import (Procsitter,            # noqa E402
                                                 ProcsitterConfig,
                                                 E_Containment)      # noqa F401
-from   vut.engine.procsitter.procsitter_build import (E_BuildSystem,      # noqa E402
+from   vut.engine.test_run.procsitter_build import (E_BuildSystem,      # noqa E402
                                                 ProcsitterConfigBuild,
                                                 run_build)
 from   vut.auxiliary.test_run_result    import E_TestRunResult      # noqa E402
@@ -116,7 +116,7 @@ async def test_argv():
     GENERATOR never receives the targets (accounting contract only).
     A target with a space is simply ONE element -- the escaping that
     a string command line would demand does not exist. No execution."""
-    from vut.engine.procsitter.procsitter_build import _make_argv
+    from vut.engine.test_run.procsitter_build import _make_argv
 
     def argv(build_system, target_list, tool=None, argument_list=()):
         """RETURN: list[str], the constructed argv (no run)."""

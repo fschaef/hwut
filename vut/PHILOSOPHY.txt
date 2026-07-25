@@ -1,0 +1,176 @@
+                            HWUT -- PHILOSOPHY
+______________________________________________________________________________
+
+                    H W  U  T
+                         |  '---- tolerance      compare
+                         '------- understanding  pype
+
+    BEHAVIOUR            the object of judgement; never available directly
+        |
+        |  expression, measurement, perception
+        |  THE CHANNEL -- adds order scramble, interleaving, timing,
+        v                addresses, paths, numeric noise
+    PERCEPTION           two of them: the subject, and the frozen nominal
+        |
+        |  FREEING -- understanding first, tolerance only after
+        v
+    JUDGEMENT            green if and only if the behaviour was admissible
+
+
+1  THE OBJECT
+______________________________________________________________________________
+
+Behaviour is what is judged. A green light is owed exactly when the
+behaviour was admissible -- both directions of the "if and only if" carry
+weight, and section 7 shows that they fail differently.
+
+The behaviour belongs to a UNIT: a causal system with a causal contract and
+a consistency contract. A TEST is one complete arc of that unit --
+compilation, run, termination -- observed from outside the process. A CHOICE
+is one scenario of that arc.
+
+
+2  THE CHANNEL
+______________________________________________________________________________
+
+Behaviour is never inspected. It is expressed, measured, perceived, and only
+the perception arrives. The path from the one to the other adds distortion:
+the same behaviour, run twice, is perceived differently.
+
+The channel cannot be removed. It can only be compensated for. Every
+mechanism in HWUT exists for that single purpose.
+
+
+3  THE TWO ARMS
+______________________________________________________________________________
+
+Judgement compares two perceptions, not a perception against truth:
+
+    admissible behaviour --> channel --> perception --> freeing --> NOMINAL
+                                                          ^
+                                                     THE SAME MAP
+                                                          |
+    current behaviour ----> channel --> perception --> freeing --> SUBJECT
+
+The nominal -- the GOOD file -- is one more perception, distorted by the
+same channel, then frozen. It is evidence, not authority.
+
+THE LAW OF THE ARMS: the freeing map is identical on both arms. Applied to
+the subject alone, it compares an interpretation against a raw perception,
+and the comparison means nothing.
+
+Its corollary, where the nominal is stored already freed:
+
+    free(NOMINAL) == NOMINAL          -- IDEMPOTENCE
+
+A freeing that is not idempotent makes the arms asymmetric silently.
+
+
+4  FREEING IS A QUOTIENT
+______________________________________________________________________________
+
+Compensating for the channel means declaring which differences are channel
+and which are behaviour. Perceptions are thereby collected into classes, and
+the classes -- not the perceptions -- are compared.
+
+There are exactly two ways to build such a class.
+
+
+5  THE TWO MEANS
+______________________________________________________________________________
+
+    UNDERSTANDING       sees the invariant behind the varying appearance.
+                        Picks one CANONICAL REPRESENTATIVE of the class,
+                        then compares BYTE-EXACT.
+                        Equality after a function: reflexive, symmetric,
+                        TRANSITIVE.
+                        Carried by pype.
+
+    TOLERANCE           compares pairwise within a band; no representative.
+                        Reflexive, symmetric, NOT transitive --
+                            a ~ b,  b ~ c,  yet  a !~ c
+                        (two values each within epsilon of a third, two
+                        epsilons apart). This is the mathematical tolerance
+                        relation: congruence with transitivity removed.
+                        Carried by compare.
+
+Understanding loosens nothing. It changes the object, then judges it
+exactly. Seeing through the disorder is what buys the strictness.
+Tolerance loosens the criterion itself.
+
+
+6  THE HIERARCHY
+______________________________________________________________________________
+
+    Understand what can be understood.
+    Tolerate only what cannot.
+
+A transitive quotient composes: classes may be built, nested and reasoned
+about. A tolerance relation does not compose, so nothing can be built on top
+of it. Choosing tolerance where understanding was available is therefore a
+strict loss, not a matter of taste.
+
+A suite heavy in tolerances and light in pype scripts is a suite whose
+author declined to understand the output and bought a looser verdict
+instead.
+
+
+7  THE ASYMMETRY OF ERROR
+______________________________________________________________________________
+
+    admissible, but RED     a nuisance. Visible. Someone investigates.
+
+    inadmissible, but GREEN the real failure, invisible by construction:
+                            a passing test reports nothing, and the
+                            evidence was discarded before the comparison.
+
+Every tolerance and every canonicalisation is therefore a CLAIM: what is
+absorbed here is channel distortion, not behaviour. A wrong claim swallows a
+real difference and the light stays green.
+
+Hence: absorb the least that works.
+
+
+8  DECLARATION
+______________________________________________________________________________
+
+A claim that is written down can be reviewed, argued with, and withdrawn. A
+pype script and a stated tolerance are on the record. A matcher that absorbs
+variation by inference makes the same claims invisibly, and no reader can
+attack what no reader can see.
+
+This, not superior leniency, is the argument for HWUT's shape.
+
+
+9  DIRECTNESS
+______________________________________________________________________________
+
+The freeing happens in the mind of the tester. HWUT supplies the tools for
+that mind, and is measured by the distance between what the tester knows and
+what the tester must write:
+
+    knows    "these six lines are a set, not a sequence"
+    writes    potpourri                              -- distance ~ 0
+
+    knows    "this timestamp is not behaviour"
+    writes    a regex over the line shape            -- distance > 0:
+                                                        mechanism, not meaning
+
+THE CRITERION: the artefact is isomorphic to the thought.
+
+Wherever the tester must speak in terms of the mechanism rather than the
+meaning, the tool has failed -- however capable that mechanism is. This is
+the review question to put to every construct in the language.
+
+
+10  THE NAME
+______________________________________________________________________________
+
+Understanding and Tolerance are the differentiator. Every golden-master
+framework has some tolerance mechanism; almost none declares an
+understanding stage in front of the comparison, and so most buy leniency by
+giving up exactness. HWUT buys exactness by understanding first.
+
+"Unit test" names a category with a thousand members and hides all of the
+above. U and T say what the thing is for; the letter order is also the
+data flow and the epistemic order.

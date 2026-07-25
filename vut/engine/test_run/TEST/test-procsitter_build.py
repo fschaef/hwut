@@ -48,7 +48,7 @@ from   config import HwutRunner                                     # noqa F401
 from   vut.engine.procsitter.procsitter       import (Procsitter,            # noqa E402
                                                 ProcsitterConfig,
                                                 E_Containment)
-from   vut.engine.procsitter.procsitter_build import (E_BuildSystem,      # noqa E402
+from   vut.engine.test_run.procsitter_build import (E_BuildSystem,      # noqa E402
                                                 ProcsitterConfigBuild,
                                                 ProcsitterResultBuild,  # noqa F401
                                                 run_build)

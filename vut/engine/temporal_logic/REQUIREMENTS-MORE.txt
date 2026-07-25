@@ -1,0 +1,129 @@
+LANGUAGE ADDITION — ~coherent AND SUPPORTING RULES
+(quantum-capable resource discipline; abstract requirement)
+
+PREMISE
+  A single axiom generates the whole addition:
+
+    AXIOM (coherence): a coherent value cannot be observed without being
+    destroyed. There is no read, no copy, no inspection — only a total
+    consume that trades the whole value for a classical result and ends it.
+
+  Everything below is a consequence, not an independent feature. Nothing
+  here introduces new MECHANISM; the addition is one hyper-class that LOCKS
+  operations off a type, plus the disciplines that lock implies.
+
+-------------------------------------------------------------------------
+A — THE HYPER-CLASS
+
+  A1  ~coherent, derived from ~resource.
+      Inherits: explicit destruction (with else: catch), move-on-give:,
+      guaranteed-not-silently-dropped. Adds no procedures — it is a LOCK,
+      not an interface, in the manner of ~resource.
+
+  A2  The lock. For any type deriving ~coherent the compiler FORBIDS the
+      definition of:
+        - any read / known: projection
+        - any copy
+        - any operation returning a PART of the value (decomposition)
+      i.e. no known: relation may target a ~coherent value, and no
+      sub-handle may be obtained from one. Enforced at type-definition
+      time, the way ~resource enforces "destructor must exist."
+
+-------------------------------------------------------------------------
+B — WHAT THE LOCK MAKES FOLLOW (no separate machinery)
+
+  B1  No-copy. With no read, there is no read-then-reconstruct path;
+      combined with inherited move-only, the value cannot be duplicated.
+
+  B2  Total consume. The only way to extract information is a constructor
+      that takes the WHOLE value as give: and returns a classical
+      (knowable) object — destruction and observation are one act.
+      Partial consumption is unspellable: there is no sub-handle to pass.
+
+  B3  Fusion. An operation may consume N coherent values (give: ...) and
+      return ONE coherent value. Because give: kills each source binding
+      and the result exposes no part (A2), the N inputs leave no surviving
+      handle and the joint result has no addressable "ends." This models
+      physical inseparability with no new mechanism — it is a give:-
+      consuming constructor whose output type is ~coherent.
+
+      Requirement carried by this point: give: MUST provably kill the
+      source binding (binding-death tracking). Fusion's safety rests
+      entirely on that guarantee.
+
+-------------------------------------------------------------------------
+C — DISCHARGE DISCIPLINE (narrows ~resource's destructor)
+
+  C1  A ~coherent value's explicit destruction has exactly two forms:
+        (a) MEASURE  — consuming constructor; gives: a classical result.
+        (b) RELEASE  — permitted only after the value's construction
+                       history has been reversed (see D). No bare free.
+
+  C2  Involuntary loss (environmental destruction) is possible in the
+      domain but is NOT a language operation; it is precisely why
+      ~coherent must inherit ~resource's "never silently dropped" — so
+      that every intended lifetime is explicit and any loss is visibly
+      external, never a leak in the code.
+
+-------------------------------------------------------------------------
+D — REVERSIBILITY (the one genuinely new COMPILER capability; deferrable)
+
+  D1  A procedure may be marked reversible. Verified: its body contains no
+      measure and no classical write. Only such procedures may participate
+      in RELEASE-discharge.
+
+  D2  Adjoint synthesis. The compiler derives a reversible procedure's
+      inverse mechanically (reverse statement order; invert each step).
+      Hand-maintained inverses are thereby eliminated.
+
+  D3  DEFERRABLE: automatic reverse-synthesis to discharge temporaries at
+      scope end. v1 rule instead: a scope MAY NOT end with a live
+      ~coherent value; the author discharges explicitly (D2 assists).
+
+-------------------------------------------------------------------------
+E — OPTIONAL: PARTITIONED OBLIGATION (distributed case only)
+
+  E1  Syntax:   x, y, z = split: q        q = join: x, y, z
+      split: partitions one destruct obligation into N shares; join:
+      reunites them into the whole. NOTE: for ~coherent this is
+      obligation PARTITION (no share holds the whole); for classical
+      shared resources the same surface means counted access (references).
+      The hyper-class distinguishes the two semantics.
+
+  E2  A separated share discharges by MEASURE only (release needs the
+      whole → join: first). A share's measurement posts its classical
+      result as a fact; other shareholders' reactive rules fire on it.
+      Requires: multi-target binding introduction; a classical
+      discharge ledger per split object.
+
+-------------------------------------------------------------------------
+F — BOUNDARY (only if a foreign linkage exists)
+
+  F1  No ~coherent value crosses a language boundary. Classical values
+      in, classical (measurement) results out. This is A2 applied at the
+      border — a foreign reference would be a forbidden known:.
+
+-------------------------------------------------------------------------
+MINIMAL CORE vs DEFERRABLE
+  Core (earns the hyper-class):  A1, A2, B1–B3, C1(a), C2.
+  Deferrable:                    C1(b)+D (reversible release/adjoint),
+                                 E (split/join), F (boundary).
+
+  Net: the core adds ONE hyper-class (a read/copy/projection lock over
+  ~resource) and relies on binding-death tracking the language already
+  intends. No new grammar. Everything else is existing has:/give:/
+  ~resource plus constructors.
+
+OPEN QUESTIONS FOR SPECIALIST REVIEW
+  O-1  Spine level of has: for a ~coherent value under concurrent aspects
+       — must exclude cross-aspect access to one value (linearity across
+       AND-composition) or make such possessions aspect-local.
+  O-2  Category noun for the reversible marker (must not collide with
+       reserved spine nouns: character/aspect/behavior/causality).
+  O-3  Whether A2's lock generalizes to an intermediate hyper-class
+       (classical "observation-is-consumption" resources: one-shot
+       channels, session endpoints, read-once secrets), with
+       ~coherent = that class + D (reversibility).
+  O-4  Does ~coherent parameterize its measure-result type, to admit a
+       family (single value / joint value / continuous-mode) whose
+       classical shadow differs?

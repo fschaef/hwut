@@ -21,7 +21,7 @@ THE INTERFACE
 
 DESCRIPTION
        THE GROUND is the supervised system call, 'Procsitter.run()';
-       COMPOSITION is the CHAIN (launch_chain) -- supervised calls
+       COMPOSITION is the CHAIN (chain) -- supervised calls
        stdout -> stdin (both in procsitter.py). This module adds ONLY the
        JUDGING: a test application run is an ordinary chain
        whose tail is read by compare.
@@ -47,7 +47,7 @@ DESCRIPTION
        one concern per stage:
 
            the test app PROVOKES and REPORTS,
-           pype ANALYZES (deterministicalizes),
+           pype CANONICALISES,
            compare JUDGES.
 
         ------------- RUNNING --------------      ------ JUDGING ------
@@ -55,12 +55,11 @@ DESCRIPTION
          supervised call      supervised call
         +--------------+     +--------------+       +--------------+
         | test app     |     | pype         | lines | compare      |
-        | [Procsitter]    |---->| [Procsitter]    |------>| Judge or     |
-        | PROVOKES,    |pipe | ANALYZES:    |       | Lawyer       |
-        | REPORTS      |     | DETERMINIST- | .tail |              |
-        +--------------+     | ICALIZES     |       +--------------+
-                             +--------------+
-         \____________ launch_chain _________/        judge_equivalence
+        | [Procsitter] |---->| [Procsitter] |------>| Judge or     |
+        | PROVOKES,    |pipe | CANONICALISES|       | Lawyer       |
+        | REPORTS      |     | the stream   | .tail |              |
+        +--------------+     +--------------+       +--------------+
+         \________________ chain ____________/  judge_equivalence
                                                      judge_association
 
        Test applications are judged on TWO AXES, the terms of
@@ -96,8 +95,11 @@ import os
 from   dataclasses import dataclass, field
 from   typing      import Optional, Sequence
 
-from   .procsitter import (Procsitter, ProcsitterResult, E_Containment,
-                           Link, ChainRun, launch_chain, tee)
+from   vut.engine.procsitter.procsitter   import (Procsitter,
+                                                  ProcsitterResult,
+                                                  E_Containment)
+from   vut.engine.procsitter.construction import (Link, ProcsitterChain,
+                                                  chain, tee)
 
 from   vut.auxiliary.test_run_result import E_TestRunResult
 
@@ -157,30 +159,30 @@ def _all_stages_accounted(result_list) -> bool:
     return all(r.containment in _ACCOUNTED for r in result_list)
 
 
-def _running(chain: ChainRun) -> bool:
+def _running(c: ProcsitterChain) -> bool:
     """
     RETURN: True,  some stage of the chain still executes.
             False, else.
     """
-    return any(not task.done() for task in chain.task_tuple)
+    return any(not task.done() for task in c.task_tuple)
 
 
-async def _collect(chain: ChainRun) -> tuple:
+async def _collect(c: ProcsitterChain) -> tuple:
     """
     RETURN: tuple[ProcsitterResult, ...], one attribution record per
             stage, in chain order.
     """
-    return tuple(await asyncio.gather(*chain.task_tuple))
+    return tuple(await asyncio.gather(*c.task_tuple))
 
 
-async def judge_equivalence(chain: ChainRun,
+async def judge_equivalence(c: ProcsitterChain,
                             nominal_provider,
                             compare_config
                             ) -> tuple[tuple[ProcsitterResult, ...], bool]:
     """
     RETURN: [0] tuple[ProcsitterResult, ...], one attribution record per
                 stage of the sequence, in pipeline order (for the
-                pype-deterministicalized run: [test app, pype]).
+                pype-canonicalised run: [test app, pype]).
             [1] True,  subject stream equivalent to nominal AND every
                        stage accounted for.
                 False, else.
@@ -194,22 +196,22 @@ async def judge_equivalence(chain: ChainRun,
     verdict = False
     try:
         verdict = await compare_main.is_equivalent(
-            compare_config, _TextLineReader(chain.tail.reader),
+            compare_config, _TextLineReader(c.tail.reader),
             nominal_provider)
     finally:
         # A verdict (or an error) while stages still run decides the
         # judgement EARLY -- stop the chain, then collect. A
         # naturally ended chain leaves the stop_event untouched.
-        if _running(chain):
-            chain.stop_event.set()
-        result_list = await _collect(chain)
+        if _running(c):
+            c.stop_event.set()
+        result_list = await _collect(c)
 
     if not _all_stages_accounted(result_list):
         verdict = False
     return result_list, verdict
 
 
-async def judge_association(chain: ChainRun,
+async def judge_association(c: ProcsitterChain,
                             nominal_provider,
                             compare_config,
                             consumer
@@ -229,16 +231,16 @@ async def judge_association(chain: ChainRun,
     """
     try:
         async for chunk_pair in compare_main.associate(
-                compare_config, _TextLineReader(chain.tail.reader),
+                compare_config, _TextLineReader(c.tail.reader),
                 nominal_provider):
             outcome = consumer(chunk_pair)
             if asyncio.iscoroutine(outcome):
                 await outcome
     finally:
-        if _running(chain):
-            chain.stop_event.set()      # error paths only; natural
+        if _running(c):
+            c.stop_event.set()      # error paths only; natural
                                         # completion ends every stage
-        result_list = await _collect(chain)
+        result_list = await _collect(c)
     return result_list
 
 
@@ -267,7 +269,7 @@ async def judge_output_file(file_path,
 # The specification maps every subject to its COMPARATOR. The two
 # subject kinds differ in WHEN they can be judged:
 #
-#     subject          judged      deterministicalization (pype)
+#     subject          judged      canonicalisation (pype)
 #     ---------------  ----------  ---------------------------------
 #     stdout channel   LIVE        a pype STAGE of the running
 #                                  sequence (section RUNNING)
@@ -277,7 +279,7 @@ async def judge_output_file(file_path,
 #                                  judging or filtering it earlier
 #                                  would fail on transients
 #
-# Post-exit file deterministicalization reuses the ground: it is a
+# Post-exit file canonicalisation reuses the ground: it is a
 # one-stage chain -- pype reading the file as its INPUT-FILE
 # argument -- whose tail compare reads. Pipes are the interface,
 # everywhere.
@@ -286,12 +288,12 @@ async def judge_output_file(file_path,
 class Comparator:
     """RETURN: --. HOW one subject is judged: the nominal it is held
                    against, the compare configuration, and -- for FILE
-                   subjects -- an optional pype deterministicalization
+                   subjects -- an optional pype canonicalisation
                    applied POST-EXIT before judging.
 
     'nominal' is a '.readline()' provider or a path (opened lazily).
     For the stdout CHANNEL the pype fields stay None: channel
-    deterministicalization is a pype STAGE of the running chain.
+    canonicalisation is a pype STAGE of the running chain.
     """
     nominal:           object
     compare_config:    object
@@ -305,13 +307,13 @@ class ProcsitterConfigTestRun:
                    run -- the interface definition: hand this to
                    'run_test_app()', receive a 'ProcsitterResultTestRun'.
 
-    THE RUN -- what becomes the chain (launch_chain):
+    THE RUN -- what becomes the chain (chain):
 
     command            argv of the test application -- a Sequence[str],
                        [program, arg, ...]; executed directly, no
                        shell, nothing to escape.
     procsitter            its supervised call: Procsitter(config, work_dir).
-    pype_command       argv of the pype stage deterministicalizing the
+    pype_command       argv of the pype stage canonicalising the
                        stdout channel LIVE ([python, hwut_pype, SCRIPT]);
                        it becomes the second stage of the sequence, in
                        its OWN supervised call.
@@ -370,7 +372,7 @@ class ProcsitterResultTestRun:
     stage_result_list:  tuple    # live sequence stages, pipeline order
     subject_verdict_db: dict     # "stdout" / "stderr" / file name -> bool
     file_stage_db:      dict     # file name -> tuple[ProcsitterResult,...]
-                                 # (post-exit deterministicalization)
+                                 # (post-exit canonicalisation)
     report:             E_TestRunResult = E_TestRunResult.OK
                                  # THE BRIEF REPORT: 'ok' or the reason
                                  # of failure; 'str(report)' prints the
@@ -447,9 +449,9 @@ class ProcsitterResultTestRun:
 
 def _launch(config: ProcsitterConfigTestRun):
     """
-    RETURN: [0] ChainRun, THE RUNNING side of 'config': the test
+    RETURN: [0] ProcsitterChain, THE RUNNING side of 'config': the test
                 application, followed by the pype stage where
-                configured (launch_chain -- the chain rules apply).
+                configured (chain -- the chain rules apply).
             [1] Link|None, the test app's stderr production, wired
                 exactly when the configuration JUDGES the stderr
                 channel (else stderr keeps the ground's default:
@@ -468,9 +470,9 @@ def _launch(config: ProcsitterConfigTestRun):
     last_i   = 1 if config.pype_command is not None else 0
 
     # stdout LOG TAPS -- a log file is a plain consumer on a production
-    # port (tee, producer side; launch_chain tees it onto the chain
+    # port (tee, producer side; chain tees it onto the chain
     # edge). 'before' listens to the test app's raw stdout (stage 0);
-    # 'after' listens to the last stage's stdout -- the determinized
+    # 'after' listens to the last stage's stdout -- the canonicalised
     # stream that is judged (stage 0 itself when no pype runs, so the
     # two then capture the same bytes).
     tap_db  = {}                     # stage index -> [consumer, ...]
@@ -500,7 +502,7 @@ def _launch(config: ProcsitterConfigTestRun):
         stage_list.append((config.pype_procsitter, config.pype_command,
                            kwargs_1))
 
-    chain = launch_chain(stage_list)
+    c = chain(stage_list)
 
     err_closer = None
     if err_link is not None:
@@ -508,10 +510,10 @@ def _launch(config: ProcsitterConfigTestRun):
             """RETURN: None. Stage 0 ended -> its stderr listeners
             see EOF (rule 1, applied to the diagnostic production)."""
             with suppress_exception():
-                await asyncio.shield(chain.task_tuple[0])
+                await asyncio.shield(c.task_tuple[0])
             err_link.close()
         err_closer = asyncio.create_task(close_err())
-    return chain, err_link, err_closer, tuple(closers)
+    return c, err_link, err_closer, tuple(closers)
 
 
 def suppress_exception():
@@ -540,11 +542,11 @@ async def run_test_app(config:   ProcsitterConfigTestRun,
                   'consumer(subject_name, chunk_pair)' (sync callable
                   or coroutine function); no fast-fail.
     """
-    chain, err_link, err_closer, log_closers = _launch(config)
+    c, err_link, err_closer, log_closers = _launch(config)
     try:
         if consumer is None:
-            return await _judge_test_run(chain, err_link, config)
-        return await _associate_test_run(chain, err_link, config,
+            return await _judge_test_run(c, err_link, config)
+        return await _associate_test_run(c, err_link, config,
                                          consumer)
     finally:
         if err_closer is not None:
@@ -604,7 +606,7 @@ async def _judge_file(file_path, comparator):
     """
     RETURN: [0] bool,  the file subject's verdict.
             [1] tuple, ProcsitterResult records of the post-exit
-                       deterministicalization (empty without pype).
+                       canonicalisation (empty without pype).
             [2] E_TestRunResult, the reason this subject contributes
                        to the brief report; None if unsuspicious.
 
@@ -625,18 +627,18 @@ async def _judge_file(file_path, comparator):
                                               comparator.compare_config)
             return verdict, (), None
 
-        chain = launch_chain([
+        c = chain([
             (comparator.pype_procsitter,
              [*comparator.pype_command, str(file_path)])])
         verdict = False
         try:
             verdict = await compare_main.is_equivalent(
                 comparator.compare_config,
-                _TextLineReader(chain.tail.reader), nominal)
+                _TextLineReader(c.tail.reader), nominal)
         finally:
-            if _running(chain):
-                chain.stop_event.set()
-            record_list = await _collect(chain)
+            if _running(c):
+                c.stop_event.set()
+            record_list = await _collect(c)
         reason = _classify_pype_record(record_list[0])
         if not _all_stages_accounted(record_list) or reason is not None:
             verdict = False
@@ -645,7 +647,7 @@ async def _judge_file(file_path, comparator):
         if close_f: nominal.close()
 
 
-async def _judge_test_run(chain:    ChainRun,
+async def _judge_test_run(c:    ProcsitterChain,
                           err_link, config) -> ProcsitterResultTestRun:
     """
     RETURN: ProcsitterResultTestRun, verdict per subject and attribution record
@@ -653,13 +655,13 @@ async def _judge_test_run(chain:    ChainRun,
 
     THE JUDGE over the WHOLE configuration (machinery behind
     'run_test_app'; only the SUBJECT fields of 'config' are consulted
-    -- the run is the given 'chain'). Order is mandatory:
+    -- the run is the given 'c'). Order is mandatory:
 
         1. the stdout CHANNEL is judged LIVE (fast-fail applies);
            without a channel comparator the run is awaited with the
            channel drained;
         2. only AFTER the run terminated, each file of 'config.file_db'
-           is judged -- deterministicalized post-exit where its
+           is judged -- canonicalised post-exit where its
            comparator says so.
 
     Files are judged even when the channel already failed: the result
@@ -681,10 +683,10 @@ async def _judge_test_run(chain:    ChainRun,
     channel_list = []            # (subject_name, comparator, reader)
     if config.channel is not None:
         assert config.channel.pype_procsitter is None, \
-               "channel deterministicalization is a pype STAGE of the " \
+               "channel canonicalisation is a pype STAGE of the " \
                "chain, not a comparator property"
         channel_list.append(("stdout", config.channel,
-                             _TextLineReader(chain.tail.reader)))
+                             _TextLineReader(c.tail.reader)))
     if config.error_channel is not None:
         assert config.error_channel.pype_procsitter is None
         assert err_link is not None
@@ -694,7 +696,7 @@ async def _judge_test_run(chain:    ChainRun,
     drain_task_list = []
     if config.channel is None:
         drain_task_list.append(
-            asyncio.create_task(_drain(chain.tail.reader)))
+            asyncio.create_task(_drain(c.tail.reader)))
 
     async def judge_channel(subject_name, comparator, reader):
         """
@@ -714,25 +716,25 @@ async def _judge_test_run(chain:    ChainRun,
                 comparator.compare_config, reader, nominal)
         finally:
             if close_f: nominal.close()
-            if not verdict and _running(chain):
-                chain.stop_event.set()
+            if not verdict and _running(c):
+                c.stop_event.set()
         return subject_name, verdict, None, reader.byte_n
 
     try:
         channel_outcome_list = await asyncio.gather(
             *(judge_channel(*entry) for entry in channel_list))
     except BaseException:
-        chain.stop_event.set()
-        await _collect(chain)
+        c.stop_event.set()
+        await _collect(c)
         for drain_task in drain_task_list:
             drain_task.cancel()
         raise
     # Channels judged -> the pipeline is decided; a run that still
     # lives is stopped. WITHOUT judged channels there is no early
     # decision: the run completes naturally (collect() waits).
-    if channel_list and _running(chain):
-        chain.stop_event.set()
-    stage_result_list = await _collect(chain)
+    if channel_list and _running(c):
+        c.stop_event.set()
+    stage_result_list = await _collect(c)
     for drain_task in drain_task_list:
         await drain_task
 
@@ -748,7 +750,7 @@ async def _judge_test_run(chain:    ChainRun,
             channel_no_output_f = False
 
     # Live stage reasons: the test app (stage 0) outranks everything;
-    # further live stages are pype deterministicalization.
+    # further live stages are pype canonicalisation.
     test_record = stage_result_list[0]
     if test_record.containment is E_Containment.FAIL_LAUNCH:
         reason_list.insert(0, E_TestRunResult.TEST_APP_LAUNCH_FAILED)
@@ -784,7 +786,7 @@ async def _judge_test_run(chain:    ChainRun,
     return result
 
 
-async def _associate_test_run(chain:    ChainRun,
+async def _associate_test_run(c:    ProcsitterChain,
                               err_link, config,
                               consumer) -> ProcsitterResultTestRun:
     """
@@ -794,7 +796,7 @@ async def _associate_test_run(chain:    ChainRun,
 
     THE LAWYER over the WHOLE configuration (machinery behind
     'run_test_app'; only the SUBJECT fields of 'config' are consulted
-    -- the run is the given 'chain'): for every judged subject the
+    -- the run is the given 'c'): for every judged subject the
     full alignment is produced and each ChunkPair goes to
     'consumer(subject_name, chunk_pair)' -- subject_name is "stdout",
     "stderr" or the file name. No fast-fail; the same live/post-exit
@@ -822,22 +824,22 @@ async def _associate_test_run(chain:    ChainRun,
         except OSError:
             reason_list.append(E_TestRunResult.NOMINAL_FILE_NOT_FOUND)
             subject_verdict_db["stdout"] = False
-            drain_task = asyncio.create_task(_drain(chain.tail.reader))
-            stage_result_list = await _collect(chain)
+            drain_task = asyncio.create_task(_drain(c.tail.reader))
+            stage_result_list = await _collect(c)
             await drain_task
         else:
             try:
                 subject_verdict_db["stdout"] = await consume(
-                    "stdout", _TextLineReader(chain.tail.reader),
+                    "stdout", _TextLineReader(c.tail.reader),
                     nominal, config.channel.compare_config)
             finally:
                 if close_f: nominal.close()
-                if _running(chain):
-                    chain.stop_event.set()      # error paths only
-                stage_result_list = await _collect(chain)
+                if _running(c):
+                    c.stop_event.set()      # error paths only
+                stage_result_list = await _collect(c)
     else:
-        drain_task = asyncio.create_task(_drain(chain.tail.reader))
-        stage_result_list = await _collect(chain)
+        drain_task = asyncio.create_task(_drain(c.tail.reader))
+        stage_result_list = await _collect(c)
         await drain_task
 
     # STDERR channel, judged by the Lawyer as well. The run has ended
@@ -884,7 +886,7 @@ async def _associate_test_run(chain:    ChainRun,
                 reason_list.append(E_TestRunResult.OUTPUT_FILE_NOT_FOUND)
                 verdict = False
             elif comparator.pype_procsitter is not None:
-                file_chain = launch_chain([
+                file_chain = chain([
                     (comparator.pype_procsitter,
                      [*comparator.pype_command, str(file_path)])])
                 try:

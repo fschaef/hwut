@@ -27,19 +27,17 @@ goes through it: test applications, build and helper tools ('make',
 SUPERVISED SYSTEM CALL -- is the ground; everything else is built upon
 it in a lightweight manner:
 
-    APPLICATIONS      plain calls,               judged 
-                      the supervised          test app run
-                      build (make, ...),           | 
-                      helper scripts               |
-                           |                       |
-    COMPOSITION            |                  Link + Tee
-                           |              chaining stdout, stdin
-                           |              connect pipe treatment
-                           |                       |    
-                           |                       |
-                           |                       |
-                    +------+-----------------------+------+
-    THE GROUND      |   THE SUPERVISED SYSTEM CALL        |
+    APPLICATIONS      test runs, supervised builds, helper scripts
+    (ELSEWHERE)       -- each one an ARRANGEMENT of the two levels
+                         below, and none of this component's business
+                                       |
+                    +------------------+------------------+
+    COMPOSITION     |   construction.py                   |
+                    |   Link, tee(), chain()              |
+                    +------------------+------------------+
+                                       |
+                    +------------------+------------------+
+    THE GROUND      |   procsitter.py                     |
                     |   Procsitter.run() -- containment   |
                     |   + attribution                     |
                     +-------------------------------------+
@@ -60,12 +58,12 @@ the exhausted resource.
 
 The supervision's limits are defined by the following 'No-s'. It is:
 
- -- NOT A SECURITY BOUNDARY against malice. 
+ -- NOT A SECURITY BOUNDARY against malice.
 
- -- NO ISOLATION (no namespaces, no read-only roots, no private network 
-    stacks). 
+ -- NO ISOLATION (no namespaces, no read-only roots, no private network
+    stacks).
 
- -- NO CHECK OF ENVIRONMENTAL NEEDS (network connection, GPU, etc.).  
+ -- NO CHECK OF ENVIRONMENTAL NEEDS (network connection, GPU, etc.).
 
 Those concerns belong to the ADMINISTRATOR, who chooses the outer boundary --
 container, VM, dedicated runner -- independently of this level.
@@ -97,7 +95,7 @@ The same primitive runs 'scp backup.tar host:', a generator script, or a test
 application. The result of the call is reported in 'result.containment':
 
    -- E_Containment.OK_COMPLETED: successfull execution.
-   -- E_Containment.FAIL_<name>:  error containment of type '<name>'. 
+   -- E_Containment.FAIL_<name>:  error containment of type '<name>'.
 
 
 3  MODEL
@@ -131,19 +129,19 @@ CAP the procsitter ENFORCES:
 
     field                meaning
     -------------------  ----------------------------------------------------
-    max_wall_clock_sec   total run time--hang-catcher: e.g. a process blocked 
-                         on a dead socket burns no CPU; only wall clock 
+    max_wall_clock_sec   total run time--hang-catcher: e.g. a process blocked
+                         on a dead socket burns no CPU; only wall clock
                          catches it.
     max_cpu_time_sec     CPU seconds (RLIMIT_CPU).
-    max_memory_mb        resident memory, summed over the whole process GROUP 
+    max_memory_mb        resident memory, summed over the whole process GROUP
                          (watchdog).
     max_pids             process count of the group.
     max_file_size_mb     size cap PER created file (RLIMIT_FSIZE).
-    max_disk_mb          TOTAL allocation under work_dir (watchdog, st_blocks): 
+    max_disk_mb          TOTAL allocation under work_dir (watchdog, st_blocks):
                          the many-files loop RLIMIT_FSIZE cannot see.
-    min_free_disk_mb     FREE-SPACE FLOOR of work_dir's filesystem. Below it 
-                         the call is terminated so the OPERATING SYSTEM stays 
-                         operable. 
+    min_free_disk_mb     FREE-SPACE FLOOR of work_dir's filesystem. Below it
+                         the call is terminated so the OPERATING SYSTEM stays
+                         operable.
 
 Any cap hit terminates the supervised process. The result names the cap that
 triggered. A cap the running platform cannot enforce is REPORTED in
@@ -163,14 +161,14 @@ ______________________________________________________________________________
                   ) -> ProcsitterResult
 
 'command' is the argv SEQUENCE -- [program, arg, ...] -- executed DIRECTLY (no
-shell) in 'work_dir'. 
+shell) in 'work_dir'.
 
 'stdout_handler', 'stderr_handler' receive output chunks as they arrive; a
-channel without a handler is DRAINED (a full OS pipe would block the child). 
+channel without a handler is DRAINED (a full OS pipe would block the child).
 
 'stdin_reader', if given, is piped into the child's stdin and closed at its EOF.
 
-'stop_event', when set terminates the run from outside (FAIL_STOPPED). 
+'stop_event', when set terminates the run from outside (FAIL_STOPPED).
 
 
 Anatomy of one supervised call:
@@ -214,8 +212,8 @@ _______________________________________________________________________________
 The KILL LADDER, used by every containment and by stop_event:
 
     SIGTERM to the process GROUP
-        |   
-        |  2 s grace 
+        |
+        |  2 s grace
         v
     SIGKILL to the process GROUP
         |
@@ -247,13 +245,13 @@ The result of an execution is reported in a 'ProcsitterResult':
     .wall_clock_sec   float          measured
     .cpu_time_sec     float | None   measured (getrusage delta, watchdog fallback)
     .peak_memory_mb   float | None   group peak (watchdog)
-    .peak_pids        int | None     peak process-group member count (watchdog) 
+    .peak_pids        int | None     peak process-group member count (watchdog)
                                      => reason for 'FAIL_PIDS_EXCEEDED'
     .peak_disk_mb     float | None   peak allocation under work_dir
                                      => reason for 'FAIL_DISK_USAGE_EXCEEDED'
-    .stderr_last_100_lines str       last 100 LINES of stderr, captured when 
+    .stderr_last_100_lines str       last 100 LINES of stderr, captured when
                                      no stderr_handler was given.
-                                     => reason for nonzero exit. 
+                                     => reason for nonzero exit.
     .unenforced       tuple[str]     caps this platform could not
                                      enforce -- honest reporting
 
@@ -281,116 +279,188 @@ A 'OK_COMPLETED' means that the run was successful, given that the caps of
 Two subtleties, both deliberate:
 
   - An application that IGNORES SIGXFSZ, e.g. CPython:
-    => receives EFBIG from write() at the file-size cap 
+    => receives EFBIG from write() at the file-size cap
     => fails by its own exception.
-    => Containment reads FAIL_COMPLETED with a nonzero exit code. 
-    Cap triggers, but with differing message. 
+    => Containment reads FAIL_COMPLETED with a nonzero exit code.
+    Cap triggers, but with differing message.
 
-  - Possible race: 
-    Fork bomb death by the NPROC rlimit (fork fails inside the process) 
+  - Possible race:
+    Fork bomb death by the NPROC rlimit (fork fails inside the process)
     against by the watchdog's group count.
 
 
-7  COMPOSITION: THE TWO AXES (PORTS); LINK IS INDEPENDENT
+7  CONSTRUCTION: LINK, tee(), chain()
 ______________________________________________________________________________
 
-Every component spans the SAME two orthogonal directions, and the
-whole of composition is wiring between them:
+A 'Link' links channels, such as an 'stdout' as source and 'stdin' as a drain.
+It is unaware of processes, procsitting etc..
 
-    PRODUCTION   what flows OUT   stdout (stderr is a second,
-                                  diagnostic production channel)
-    CONTROL      what flows IN    stdin: the component obeys it
+There are three composition blocks -- 'Link', 'tee()', 'chain()' -- and no
+class beyond them. Everything in sections 8 and 9 is built from these.
 
-These two PORTS are the axes; neither can be made from the other.
-LINKING IS INDEPENDENT of them -- a Link is not a third axis but the
-connector that BRIDGES a production to a control, belonging to
-neither:
 
-  THE LINK -- the independent connector. It carries one production to
-  one control and knows nothing else (no process, no pype, no chain).
-  Its '.feed' is given as a producer's 'stdout_handler' (or
-  'stderr_handler'); its '.reader' is given as a consumer's
-  'stdin_reader'; '.close()' propagates end-of-stream.
+7.1  THE LINK
 
     link = Link()
-    A.run(argv_a, stdout_handler=link.feed)      # A produces
-    B.run(argv_b, stdin_reader =link.reader)     # B is controlled
+    A.run(argv_a, stdout_handler = link.feed)    # A produces
+    B.run(argv_b, stdin_reader   = link.reader)  # B is fed
 
-    +--------+ link.feed   link.reader +--------+
-    | call A |----------> o ---------->| call B |
-    +--------+          Link           +--------+
-     own caps, own record              own caps, own record
+         .--------. link.feed         link.reader .--------.
+         | call A |-------------> o ------------->| call B |
+         '--------'             Link              '--------'
+          own caps,                                own caps,
+          own record                               own record
 
-  tee() -- the CONSUMER SUM. A consumer is a plain async function, and
-  functions ADD: 'tee(x.feed, y.feed)' is one handler that feeds both.
-  Fan-out is therefore NOT an axis of its own -- it is the
-  algebra of the space. Anyone may LISTEN to a production port; the
-  reverse does not exist, because two productions cannot merge into
-  one control port deterministically (ONE VOICE COMMANDS). That single
-  asymmetry belongs to byte streams, not to us.
 
-EVERY STAGE IS ITS OWN SUPERVISED CALL: its own ProcsitterConfig, its
-own work dir if desired, its own ProcsitterResult. A hang in B is
-attributed to B; the producer's caps are not billed for the
-consumer's work.
+7.2  tee() -- FAN-OUT
 
-THE CHAIN. A pipeline A | B | C is Links between stages plus THREE
-RULES, and rules belong in a FUNCTION, not a class. 'launch_chain'
-carries them:
+A consumer is a plain async function, and functions ADD. 'tee()' is the sum
+of consumers: ANYONE MAY LISTEN to a production port.
 
-    chain = launch_chain([(a, argv_a), (b, argv_b), (c, argv_c)],
-                         stdin_reader=None)     # launches every stage
+    B_in, C_in = Link(), Link()
+    A.run(argv_a, stdout_handler = tee(B_in.feed, C_in.feed))
 
-    chain.tail          Link: the chain's production end
-    chain.stop_event    stops every stage at once
-    chain.task_tuple    one task per stage:
-        records = await asyncio.gather(*chain.task_tuple)  # per stage
+    # A's stdout ---+---> B's stdin
+    #               '---> C's stdin
 
-    +---------+ Link +---------+ Link +---------+
-    | stage 0 |----->| stage 1 |----->| stage 2 |----> .tail.reader
-    +---------+      +---------+      +---------+          |
-     own record      own record      own record        consumer
+The reverse does not exist: two productions cannot merge into one control
+port deterministically -- ONE VOICE COMMANDS.
 
-The three rules, encoded once: (1) EOF ONWARD -- a stage that ends
-closes its outgoing Link; (2) STOP ON EARLY DEATH -- a stage ending
-while an UPSTREAM stage still runs sets the shared stop_event (SIGPIPE
-semantics, supervised; this is also what BOUNDS MEMORY, since an
-in-memory 'feed' never blocks -- without the rule an upstream would
-fill a dead chain's buffer without limit); (3) EVERY STAGE ACCOUNTED
--- one task per stage, gathered. A chain's first stage may itself
-drink from a Link ('stdin_reader='): recorded input, or a dialogue's
-back-edge.
 
-Toward compare, the SAME Link face is consumed: the judging functions
-(section 8) read 'chain.tail.reader' -- compare is just the last
-consumer on the chain, nothing special.
+7.3  chain() -- THE PIPELINE
 
-LISTENING TO AN INTERMEDIATE PRODUCTION. Any stage's stdout can be
-observed without disturbing the flow: give that stage a
-'stdout_handler' in its extra kwargs and launch_chain TEES it onto the
-chain edge (a listener, not a replacement). This is how the judged run
-logs stdout to files -- 'stdout_log_before_pype' taps stage 0's raw
-production, 'stdout_log_after_pype' taps the last stage's determinized
-one -- a log being just a consumer on a production port, so it can
-never change what is judged.
+    c = chain([(a, argv_a), (b, argv_b), (d, argv_d)],
+              stdin_reader=None)
 
-7.1  MAN IN THE MIDDLE (interaction)
+    c.tail          Link: the chain's production end
+    c.stop_event    stops every stage at once
+    c.task_tuple    one task per stage
 
-A controller C riding a subject A -- answering its prompts on stdin
-while a consumer B keeps listening undisturbed -- is not a new
-primitive. It is a CYCLE in the graph: production is tee'd, control is
-answered.
+    records = await asyncio.gather(*c.task_tuple)      # per stage
 
-    A.stdout ─tee─▶ to_B.reader   (B: a judge, a pype link, a log)
-               └──▶ to_C.reader
-    C.stdout ──────▶ back.reader ─▶ A.stdin     A and C: symmetric
-                                                peers; B a third
-                                                listener on the sum
+       .---------. Link .---------. Link .---------.  Link: .tail
+       | stage 0 |----->| stage 1 |----->| stage 2 |--------------> consumer
+       '---------'      '---------'      '---------'
+        own record       own record       own record
+
+The three rules:
+
+(1) EOF ONWARD: a stage that ends closes its outgoing Link.
+
+(2) STOP ON EARLY DEATH: a stage ending while an UPSTREAM stage still
+    runs sets the shared stop_event.
+
+    SIGPIPE semantics, supervised; this is also what BOUNDS MEMORY,
+    since an in-memory 'feed' never blocks; else, an upstream would
+    fill a dead chain's buffer without limit.
+
+(3) EVERY STAGE ACCOUNTED: one task per stage, gathered.
+
+A chain's first stage may itself drink from a Link ('stdin_reader='):
+recorded input, or a dialogue's back-edge.
+
+
+7.4  LISTENING TO A PRODUCTION
+
+A stage's THIRD tuple element carries extra keyword arguments into that
+stage's 'run()'. A 'stdout_handler' among them does NOT replace the chain
+edge -- it is TEE'd with it. The production reaches the next stage AND the
+listener.
+
+    c = chain([(ps_0, argv_0, {"stdout_handler": tap}),
+               (ps_1, argv_1)])
+
+       .----------.  tee  .----------.
+       | stage 0  |---+-->| stage 1  |------> c.tail   (transformed)
+       '----------'   |   '----------'
+                      '-> tap                          (raw)
+
+Within the tee the chain edge is fed FIRST, the listener second: a failing
+tap never starves the pipeline of a chunk.
+
+EXAMPLE: a log tap -- a listener is a plain async function.
+
+    log_f = open("raw.log", "wb")
+    async def tap(data):
+        log_f.write(data)
+
+    c       = chain([(ps_0, argv_0, {"stdout_handler": tap}),
+                     (ps_1, argv_1)])
+    records = await asyncio.gather(*c.task_tuple)
+    log_f.close()
+
+EXAMPLE: an eavesdropper -- a listener that is a Link.
+
+    raw = Link()
+    c   = chain([(ps_0, argv_0, {"stdout_handler": raw.feed}),
+                 (ps_1, argv_1)])
+
+    async def eavesdrop():
+        while not raw.reader.at_eof():
+            chunk = await raw.reader.read(4096)
+            ...
+
+    listener = asyncio.create_task(eavesdrop())
+    try:     records = await asyncio.gather(*c.task_tuple)
+    finally: raw.close()
+    await listener
+
+THE TWO RULES OF A LISTENER:
+
+(1) CONSUME IT. An unread Link buffers without bound.
+
+(2) CLOSE IT. 'chain()' closes ITS OWN edges (rule 1 of 7.3). A listener's
+    Link is no edge, so the chain never closes it: 'raw.reader.at_eof()'
+    stays False and an eavesdropper waiting for EOF waits forever. Close
+    it after the stages are gathered.
+
+Listeners ADD, like any consumer:
+
+    {"stdout_handler": tee(raw.feed, tap)}
+
+
+7.5  THE EXTRA KEYWORD ARGUMENTS
+
+    key              in a chain stage
+    ---------------  ---------------------------------------------------
+    stdout_handler   a LISTENER, tee'd with the chain edge (7.4)
+    stderr_handler   passed VERBATIM -- stderr is no chain edge. Wiring
+                     it REPLACES the ground's default capture: that
+                     stage's '.stderr_last_100_lines' stays empty.
+    stdin_reader     THE CHAIN'S -- the upstream stage feeds it.
+                     For the first stage: chain(..., stdin_reader=...)
+    stop_event       THE CHAIN'S -- shared by every stage.
+                     Across chains:      chain(..., stop_event=...)
+
+An owned key in a stage's extra kwargs is a wiring mistake; 'chain()'
+asserts on it at construction, where it is written.
+
+EXAMPLE: a stage's stderr, read live.
+
+    err = Link()
+    c   = chain([(ps_0, argv_0, {"stderr_handler": err.feed}),
+                 (ps_1, argv_1)])
+    ...
+    try:     records = await asyncio.gather(*c.task_tuple)
+    finally: err.close()                     # no edge -- 7.4, rule 2
+
+
+7.6  MAN IN THE MIDDLE (interaction)
+
+A controller C riding a subject A -- answering its prompts on stdin while a
+consumer B keeps listening undisturbed -- is no new primitive. It is a CYCLE
+in the graph: production is tee'd, control is answered.
+
+    A.stdout --tee--> to_B.reader   (B: any consumer -- a filter, a log)
+                 '--> to_C.reader
+    C.stdout -------> back.reader --> A.stdin
+
+    A and C are symmetric peers; B is a third listener on the sum.
 
     to_c, back = Link(), Link()
     async def run_subject():
         try:     return await A.run(argv,
-                     stdout_handler=tee(consumer, to_c.feed),  # + B
+                     stdout_handler=tee(consumer, to_c.feed),   # + B
                      stdin_reader  =back.reader)
         finally: to_c.close()        # A gone -> C sees EOF
     async def run_controller():
@@ -401,9 +471,8 @@ answered.
     a_record, c_record = await asyncio.gather(run_subject(),
                                               run_controller())
 
-Two supervised calls, two attribution records: contained on BOTH
-ends. The controller may equally be a pype script in its own
-procsitter --
+Two supervised calls, two attribution records: contained on BOTH ends. The
+controller may equally be a pype script in its own procsitter --
 
     ctrl_argv = ["python3", "-u", "tools/hwut_pype/hwut_pype.py",
                  "dialogue.pype"]
@@ -413,344 +482,17 @@ procsitter --
     #     }
     #     on: <else> => ignore;
 
--- the SAME wiring, nothing special. Note the '-u': a supervised
-answerer's output must be UNBUFFERED; a buffered answer never
-arrives, and the dialogue stalls until a wall clock strikes (which is
-also the answer to "what if both sides wait?": a dialogue deadlock is
-an accident like any other; the caps contain it).
+-- the SAME wiring, nothing special. Note the '-u': a supervised answerer's
+output must be UNBUFFERED; a buffered answer never arrives and the dialogue
+stalls until a wall clock strikes. A dialogue deadlock is an accident like
+any other; the caps contain it.
 
-Rules of the wiring: every listener MUST consume its Link (an unread
-Link buffers without bound), and each producing side closes its
-Link when it ends -- the 'finally' closers do exactly that, whichever
-end finishes first. stderr, per the axes, is read from EACH call's
-own record by default (the last-100-lines capture); to judge it live,
-wire a Link onto 'stderr_handler' -- identical to stdout, no flag.
+stderr is read from EACH call's own record by default (the last-100-lines
+capture); to read it live, wire a Link onto 'stderr_handler' -- identical to
+stdout, no flag.
 
 
-8  THE TEST APPLICATION RUN: RUNNING AND JUDGING
-______________________________________________________________________________
-
-A TEST APPLICATION run is an ordinary CHAIN (launch_chain,
-section 7) with
-one specialty: its TAIL (and, post-exit, its output files) is
-connected to the COMPARISON ENGINE. RUNNING and JUDGING stay strictly
-apart -- the sequence produces the subject stream; the judge_*
-functions consume it:
-
-    ------------- RUNNING --------------      ------ JUDGING -------
-
-     supervised call      supervised call
-    +--------------+     +--------------+       +--------------+
-    | test app     |     | pype         | lines | compare      |
-    | [Procsitter]    |---->| [Procsitter]    |------>| Judge or     |
-    | PROVOKES and |pipe | ANALYZES:    | .tail | Lawyer:      |
-    | REPORTS      |     | DETERMINIST- |       | JUDGES       |
-    +--------------+     | ICALIZES     |       +--------------+
-                         +--------------+
-     \____________ launch_chain _________/        judge_equivalence
-                                                 judge_association
-
-This is the triad of the pype manual, one concern per stage: the test
-app PROVOKES the unit's behaviour and REPORTS it, only; pype ANALYZES
-the reports -- pype is NOT a filter, it DETERMINISTICALIZES
-non-deterministic output (timing-dependent line order becomes counts
-and settled, sorted summaries); compare JUDGES equivalence upon that
-deterministic description.
-
-8.1  RUNNING -- the sequence
-
-    # deterministic output: one stage
-    chain = launch_chain([(procsitter, test_app_argv)])
-
-    # non-deterministic output: pype stage deterministicalizes
-    chain = launch_chain([(procsitter,      test_app_argv),
-                          (pype_procsitter,  pype_argv)])
-
-Every stage has its own procsitter, its own caps, its own attribution --
-pype's work is not billed to the test app's caps BECAUSE pype has its
-own procsitter. If pype is ever contained by exhaustion, that is ITS
-record -- and the verdict rule below catches it.
-
-8.2  JUDGING, FIRST AXIS -- judge_equivalence (THE JUDGE)
-
-    result_list, verdict = await judge_equivalence(
-        sequence,
-        nominal_provider,          # anything with .readline() -> str
-        compare_config)            # compare's Configuration
-
-'result_list' carries ONE ATTRIBUTION RECORD PER STAGE, in pipeline
-order -- for the pype-deterministicalized run: (test app, pype).
-Investigating correctness, QUICKLY: compare's 'is_equivalent' judges
-the tail against the nominal; FAST-FAIL WORKS BOTH WAYS through the
-sequence's shared stop_event:
-
-    compare says False early --> stop_event set --> every stage
-                                 stopped            (FAIL_STOPPED, False)
-
-    containment kill in any stage (wall clock, memory, ...)
-        --> that stage's stream ends --> downstream sees EOF,
-            settles, exits --> compare judges what arrived
-                                                  (contained, False)
-
-    pype ends while the test app runs ('sys.exit(n)' gating in a
-    pype block) --> sequence stops itself: SIGPIPE semantics,
-    supervised (a chain rule, section 7).
-
-THE VERDICT RULE: every stage must have run to its own end
-(OK_/FAIL_COMPLETED) or been STOPPED (FAIL_STOPPED) by the fast-fail
-for a True verdict. A stage contained by a
-resource cap -- the test app OR pype -- means the run is broken:
-verdict False, whatever fragment happened to match, and the report
-names the stage.
-
-8.3  JUDGING, SECOND AXIS -- judge_association (THE LAWYER)
-
-    result_list = await judge_association(
-        sequence, nominal_provider, compare_config,
-        consumer)                  # callable(ChunkPair) | coroutine fn
-
-Associating subject lines with nominal lines FOR DISPLAY: compare's
-'associate' yields the full alignment; every ChunkPair goes to
-'consumer' (e.g. a feeder adaptor rendering the side-by-side view).
-NO fast-fail -- association exists to SHOW the divergence, so the
-sequence is left to reach its natural end. Containment caps of every
-stage still apply; 'result_list' again carries one record per stage.
-THE LAW holds across the pipeline: the reduction over
-'ChunkPair.is_equivalent()' equals the Judge's verdict (the
-'association' test choice pins this).
-
-8.4  THE INTERFACE -- input = configuration, output = result
-
-One door: hand a 'ProcsitterConfigTestRun' to 'run_test_app()', receive a
-'ProcsitterResultTestRun'. The configuration is THE COMPLETE INPUT -- what runs
-(command line, procsitter, optional pype stage) and what is judged
-(subjects mapped to comparators); the result is THE COMPLETE OUTPUT
--- verdict per subject, attribution record per stage, THE BRIEF
-REPORT.
-
-    config  ---> run_test_app(config)            ---> result
-                 run_test_app(config, consumer)       (Judge/Lawyer)
-
-A test run produces SUBJECTS: the stdout channel, the stderr channel,
-and output files. The configuration maps every subject to its
-COMPARATOR -- the nominal it is held against, its compare
-configuration, and (for files) an optional pype deterministicalization.
-The two subject kinds differ in WHEN they can be judged:
-
-    subject          judged      deterministicalization (pype)
-    ---------------  ----------  ----------------------------------
-    stdout channel   LIVE        a pype STAGE of the running
-                                 sequence (8.1) -- fast-fail applies
-    stderr channel   LIVE        (none yet) -- stderr is a channel
-                                 like any other: nominal behavior
-                                 may be defined on it; judged
-                                 CONCURRENTLY with stdout, both
-                                 feed the fast-fail. Requires
-                                 the run's stderr Link (wired
-                                 True). Unjudged stderr follows the
-                                 ground's default: tail capture.
-    output file      POST-EXIT   applied post-exit by the comparator:
-                                 a file may change at ANY moment
-                                 while the test lives; judging or
-                                 filtering it earlier would fail on
-                                 transients
-
-    config = ProcsitterConfigTestRun(
-        # THE RUN
-        command      = ["python3", "my_test.py"],
-        procsitter      = Procsitter(ProcsitterConfig(...), work_dir),
-        pype_command = None,        # live stdout deterministicalizer:
-        pype_procsitter = None,        # second stage, its OWN procsitter
-        # THE SUBJECTS
-        channel       = Comparator(nominal, cfg),      # None: drained
-        error_channel = Comparator(nominal_err, cfg),  # optional
-        file_db = {
-            "result.txt": Comparator(nominal_r, cfg),
-            "trace.txt":  Comparator(nominal_t, cfg,
-                                     pype_procsitter = ...,
-                                     pype_command = ["python3",
-                                         ".../hwut_pype.py",
-                                         "settle.pype"]),
-        },
-        # LOGGING (optional) -- the stdout production tapped to files.
-        # A log is a plain consumer on the production port (tee), so it
-        # never touches the verdict. stderr is not logged here: it is
-        # already the record's 100-line tail (or judged above).
-        stdout_log_before_pype = "raw.log",    # test app's RAW stdout
-        stdout_log_after_pype  = "final.log")  # DETERMINIZED (judged);
-                                               # == raw when no pype runs
-
-    result = await run_test_app(config)
-
-    result.subject_verdict_db      "stdout"/"stderr"/file name ->
-                                   bool: the mismatching subject is
-                                   NAMED
-    result.stage_result_list       live stage records
-    result.file_stage_db           post-exit pype records per file
-    result.cpu_time_sec            TOTAL cpu seconds -- SUMMED over
-                                   every stage (work adds up); the
-                                   most machine-independent cost the
-                                   run exposes. None w/o 'resource'.
-    result.wall_clock_sec          ELAPSED seconds: max(live stages,
-                                   concurrent) + sum(post-exit file
-                                   stages, sequential)
-    result.peak_memory_mb          high-water memory mark (max stage
-                                   peak, MB). None w/o psutil.
-    result.verdict                 overall: every subject equivalent
-                                   AND every stage accounted for
-    result.report                  THE BRIEF REPORT (E_TestRunResult,
-                                   vut.auxiliary.test_run_result):
-                                   'ok' or ONE reason token --
-                                   not-equivalent-with-nominal,
-                                   test-app-no-output,
-                                   test-app-contained,
-                                   nominal-file-not-found,
-                                   output-file-not-found,
-                                   pype-interpreter-not-found,
-                                   pype-file-not-found,
-                                   pype-file-syntax-error, ...
-                                   Test-app reasons outrank pype
-                                   reasons outrank subject/nominal
-                                   reasons; the pype classifications
-                                   rest on '.stderr_last_100_lines'.
-                                   The enum is meant to GROW (e.g.
-                                   'make' helper-call outcomes).
-
-Post-exit file deterministicalization reuses the ground: the file's
-pype runs as a ONE-STAGE SEQUENCE reading the file as its INPUT-FILE
-argument; compare reads its tail. Pipes are the interface, everywhere.
-
-The err pipe of the underlying sequence follows the configuration
-automatically: judged stderr is piped; unjudged stderr keeps the
-ground's default, tail capture into the stage record.
-
-The Lawyer walks the SAME configuration -- the axis is chosen by the
-'consumer' argument:
-
-    result = await run_test_app(config, consumer)
-
-with 'consumer(subject_name, chunk_pair)' -- every ChunkPair labeled
-by its subject ("stdout", "stderr" or the file name), verdicts derived
-by THE LAW's reduction.
-
-The single-file primitive stays available:
-
-    verdict = await judge_output_file(file_path, nominal_provider,
-                                      compare_config)
-
-CHANNELS are judged LIVE; FILES are judged POST-EXIT (no
-tail-following). An absent file judges False.
-
-8.5  A COMPLETE EXAMPLE -- non-deterministic output,
-     deterministicalized by pype
-
-The test app emits items in an order that differs per run; the pype
-script reports arrival counts and a sorted settlement; the GOOD file
-is fixed:
-
-    # settle.pype
-    on: <bof> => {
-        box = []
-    }
-    on: "item" <name = "*"> => {
-        box.append(name)
-        print("an item arrived (%d so far)" % len(box))
-    }
-    on: "done" => {
-        print("items, sorted:")
-        for name in sorted(box):
-            print("    " + name)
-    }
-    on: <else> => ignore;
-
-    chain = launch_chain([
-        (Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
-         "python3 emit_items.py"),
-        (Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
-         "python3 tools/hwut_pype/hwut_pype.py settle.pype"),
-    ])
-    (test_result, pype_result), verdict = await judge_equivalence(
-        sequence, open("GOOD/emit_items.txt"), Configuration())
-
-Whatever order occurred, 'verdict' is True; both stage records read
-OK_COMPLETED. If the pype script itself ever misbehaved, ITS procsitter
-would contain and attribute that -- and the verdict rule would turn
-the judgement False, naming the stage.
-
-
-
-9  THE SUPERVISED BUILD -- procsitter_build.py
-______________________________________________________________________________
-
-The build is the second APPLICATION of the ground -- and the same
-interface pattern as the judged test application run: ONE DOOR,
-input = configuration, output = result.
-
-    config  ---> run_build(config) ---> result
-
-The configuration names WHICH tool builds (an ENUMERATED vocabulary,
-never a free command string) and WHAT it builds; the ARGV is
-CONSTRUCTED as a list -- the caller composes data, not plumbing, and
-no target ever needs escaping:
-
-    config = ProcsitterConfigBuild(
-        build_system  = E_BuildSystem.MAKE,    # MAKE | NINJA | CMAKE
-                                               # | GENERATOR
-        target_list   = ["app", "lib.a"],     # []: default target
-        procsitter       = Procsitter(ProcsitterConfig(...), work_dir),
-        tool          = None,                  # override: 'gmake', path
-        argument_list = [])                    # e.g. ['-j4'], placed
-                                               # before the targets
-
-    result = await run_build(config)
-
-    result.built_target_list     requested targets that EXIST in the
-                                 work dir AFTER the task finished,
-                                 in request order
-    result.missing_target_list   requested targets that do NOT --
-                                 the mismatch, NAMED
-    result.record                THE ATTRIBUTION RECORD of the build
-                                 call (containment, exit code, peaks,
-                                 stderr's last lines = the WHY of a failure)
-    result.command               the constructed argv (tuple)
-    result.verdict               tool OK_COMPLETED AND every
-                                 requested target present
-    result.report                THE BRIEF REPORT (E_TestRunResult,
-                                 grown by the build members):
-                                 build-tool-not-found,
-                                 build-contained, build-failed,
-                                 target-not-built -- tool reasons
-                                 outrank target reasons
-
-Targets are accounted POST-EXIT only -- like the output files of a
-test run, a target may be incomplete at any moment while the build
-lives. A PHONY target ('clean', 'all') is a request to the build
-system, not a file: it never appears in '.built_target_list'; account
-phony builds by the record's containment (OK_COMPLETED). The
-accounting catches what the exit
-code cannot: a rule that succeeds without producing its file reports
-'target-not-built', with the target NAMED.
-
-THE GENERAL MEMBER -- E_BuildSystem.GENERATOR: any program called in
-a procsitter to GENERATE the targets (a code generator, 'protoc', a
-script). It has no default command ('tool' is MANDATORY -- one
-command word; its arguments travel in 'argument_list'), and the
-targets are NEVER passed in the argv: 'target_list' is purely the
-ACCOUNTING CONTRACT -- what must exist after the task finished:
-
-    config = ProcsitterConfigBuild(
-        build_system  = E_BuildSystem.GENERATOR,
-        target_list   = ["lexer.c", "parser.c"],   # the contract
-        procsitter       = Procsitter(ProcsitterConfig(...), work_dir),
-        tool          = "python3",
-        argument_list = ["gen.py", "lexer.c", "parser.c"])
-
-A generator that exits 0 but forgets a target is caught by the
-post-exit accounting: 'target-not-built', the target NAMED.
-
-
-
-10  PLATFORMS AND DEGRADATION
+8  PLATFORMS AND DEGRADATION
 ______________________________________________________________________________
 
     mechanism                Linux  macOS  BSDs   Windows
@@ -786,7 +528,7 @@ Deliberate non-choices, so nobody re-litigates them:
     scope.
 
 
-11  RELATION TO HWUT TESTING
+9  RELATION TO HWUT TESTING
 ______________________________________________________________________________
 
 The component's own suite (TEST/) follows the standard scheme:
@@ -802,7 +544,7 @@ every test that uses the procsitter:
     child-reap races may emit spurious, nondeterministic lines.
 
 
-12  QUICK REFERENCE
+10  QUICK REFERENCE
 ______________________________________________________________________________
 
 THE GROUND -- every subprocess, always:
@@ -822,12 +564,12 @@ COMPOSITION -- pipelines of supervised calls:
     link = Link()         upstream stdout_handler = link.feed
                                  downstream stdin_reader = link.reader
 
-    chain = launch_chain([(procsitter_a, argv_a),
-                          (procsitter_b, argv_b)],
-                         stdin_reader=...)   # optional: stage-0 control
-    chain.tail.reader            the chain's production end -- Links are
-                                 THE interface, also toward compare
-    await asyncio.gather(*chain.task_tuple)  # one record PER STAGE
+    c     = chain([(procsitter_a, argv_a),
+                   (procsitter_b, argv_b)],
+                  stdin_reader=...)          # optional: stage-0 control
+    c.tail.reader            the chain's production end -- a Link is
+                                 THE interface toward any consumer
+    await asyncio.gather(*c.task_tuple)  # one record PER STAGE
 
     to_c, back = Link(), Link()              MAN IN THE MIDDLE, pure
     subject.run(argv,                        composition: production
@@ -840,55 +582,6 @@ COMPOSITION -- pipelines of supervised calls:
     # + finally: to_c.close() / back.close() consumers ADD; one voice
     #                                        commands.
 
-APPLICATION -- the judged test app run; running and judging apart:
-
-    chain = launch_chain(                    RUNNING; the pype stage
-        [(procsitter, test_argv),              deterministicalizes
-         (pype_procsitter, pype_argv)])        (optional). stderr is
-                                             judged by wiring a Link
-                                             onto stderr_handler -- no
-                                             flag.
-
-    await judge_equivalence(chain, nominal, cfg) JUDGING, axis 1:
-       -> (tuple[ProcsitterResult, ...], bool)   the Judge, fast-fail
-    await judge_association(seq, nominal, cfg,   JUDGING, axis 2:
-                            consumer)            the Lawyer, alignment
-       -> tuple[ProcsitterResult, ...]              for display
-    await judge_output_file(path, nominal, cfg)
-       -> bool                                   files, post-exit
-
-    config = ProcsitterConfigTestRun(                      THE INTERFACE:
-        command=[...], procsitter=...,              input = configuration
-        pype_command=[...], pype_procsitter=...,      (the run + the
-        channel=Comparator(...),                    subjects),
-        error_channel=Comparator(...),           output = result --
-        file_db={name: Comparator(...)})         verdict PER SUBJECT,
-    await run_test_app(config)                   mismatches NAMED;
-       -> ProcsitterResultTestRun                          .report = brief
-    await run_test_app(config, consumer)           report
-       -> ProcsitterResultTestRun   (the Lawyer's axis)      (E_TestRunResult)
-
-    Verdict rule: EVERY subject equivalent and EVERY stage run to
-    its end (OK_/FAIL_COMPLETED) or STOPPED, else False -- one record
-    per stage, one verdict per subject, always.
-
-APPLICATION -- the supervised build (procsitter_build.py):
-
-    config = ProcsitterConfigBuild(                 THE INTERFACE, same
-        build_system = E_BuildSystem.MAKE,         pattern: config in,
-          # MAKE|NINJA|CMAKE|GENERATOR              result out;
-        target_list  = ["app", "lib.a"],           command line
-        procsitter      = Procsitter(...),               CONSTRUCTED;
-        tool         = None,                       GENERATOR: tool
-        argument_list= [])                         mandatory, targets
-    await run_build(config)                        = contract only
-       -> ProcsitterResultBuild                     .built_target_list /
-                                                 .missing_target_list
-                                                 accounted POST-EXIT;
-                                                 .report = brief
-                                                   report (build-*,
-                                                   target-not-built)
-
 Rules of thumb:
   - Route EVERY subprocess through the procsitter -- 'make' and 'scp'
     deserve wall clocks too. Never call 'subprocess' directly.
@@ -897,9 +590,6 @@ Rules of thumb:
   - One Procsitter per call, one work_dir per test: scratch isolation is
     the cheapest hygiene there is.
   - Each pipeline stage gets its OWN procsitter: attribution stays sharp.
-  - Keep running and judging apart: the chain produces the
-    subject, the judge_* functions consume it -- never entangle the
-    two.
   - Read '.unenforced' in reports: a pass without memory enforcement
     is a pass -- but say so.
   - Security, isolation, reproducibility: outer boundary. Always.
