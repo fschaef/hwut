@@ -369,8 +369,7 @@ async def test_chain_stop_early():
         tail_bytes  = await _read_all(c.tail.reader)
         prod_record, cons_record = await asyncio.gather(*c.task_tuple)
 
-    print(f"INSPECT: producer = {prod_record.containment.name} "
-          f"({prod_record.wall_clock_sec:.1f}s), "
+    print(f"INSPECT: producer = {prod_record.containment.name}, "
           f"consumer = {cons_record.containment.name}")
     ok = _check([
         (cons_record.containment is E_Containment.OK_COMPLETED

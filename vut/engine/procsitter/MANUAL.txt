@@ -113,12 +113,40 @@ Execution follows the following scheme:
 
 There is ONE concrete Procsitter class -- no platform hierarchy, no factory.
 What varies per platform is enforcement strength, and that variance is
-reported, not classed (section 10).
+reported, not classed (section 8).
 
 Consumption of the process's output is NOT the procsitter's concern: 'run()'
 hands output chunks to caller-provided handlers. What the handlers do --
 discard, log, feed another supervised call, feed the comparison engine -- is
-composition ABOVE the ground (sections 7, 8).
+composition ABOVE the ground (section 7).
+
+
+3.1  THE LAW OF THE PORT
+
+A PORT IS A NAME FOR THE PEER. It answers questions about the CHANNEL,
+never about the RECORD.
+
+    fan-out    A ---+---> B      A's port names {B, C}. "Whither?" is a
+                    '---> C      channel question, and a port answers it
+                                 completely, however many peers are in
+                                 the set. B's port names A; C's port
+                                 names A. No identity is lost.
+
+    fan-in     A ---+            C's port names {A, B}. "Which of them
+               B ---+---> C      sent THIS line?" is a RECORD question,
+                                 and no port answers that.
+
+ONE WRITER PER PORT. Identity would otherwise have to move out of the port
+and into the payload, as a tag carried by every record.
+
+Three arrangements in this component are that one law applied:
+
+    a control port takes exactly one writer        section 7.2
+    stderr is its own port, never merged           section 7.5
+    one attribution record per stage               section 7.3, rule 3
+
+Fan-out is the only multiplicity admitted here, and 'tee()' is its whole
+surface.
 
 
 4  CONFIGURATION: THE CAPS
@@ -142,6 +170,12 @@ CAP the procsitter ENFORCES:
     min_free_disk_mb     FREE-SPACE FLOOR of work_dir's filesystem. Below it
                          the call is terminated so the OPERATING SYSTEM stays
                          operable.
+    max_output_gap_sec   SILENCE cap (watchdog): no output on EITHER
+                         production port for this long ends the call.
+                         Measured from launch, reset by every chunk.
+                         None -- the default -- switches it off.
+                         A wall clock bounds a call that is WORKING; this
+                         one bounds a call that is WAITING.
 
 Any cap hit terminates the supervised process. The result names the cap that
 triggered. A cap the running platform cannot enforce is REPORTED in
@@ -270,6 +304,8 @@ Containment Overview:
     FAIL_DISK_USAGE_EXCEEDED watchdog (work-dir walk)  many-files flood
     FAIL_DISK_SPACE_LOW      watchdog (free-space      filesystem near
                              floor)                    full (OS at risk)
+    FAIL_STALLED             watchdog (silence)        deadlock, a wait
+                                                       that will not end
     FAIL_STOPPED             external stop_event       (fast-fail)
     FAIL_LAUNCH              spawn impossible          bad command
 
@@ -296,7 +332,8 @@ A 'Link' links channels, such as an 'stdout' as source and 'stdin' as a drain.
 It is unaware of processes, procsitting etc..
 
 There are three composition blocks -- 'Link', 'tee()', 'chain()' -- and no
-class beyond them. Everything in sections 8 and 9 is built from these.
+class beyond them. Every arrangement above this component is built
+from these.
 
 
 7.1  THE LINK
@@ -323,8 +360,7 @@ of consumers: ANYONE MAY LISTEN to a production port.
     # A's stdout ---+---> B's stdin
     #               '---> C's stdin
 
-The reverse does not exist: two productions cannot merge into one control
-port deterministically -- ONE VOICE COMMANDS.
+The reverse is not offered: ONE VOICE COMMANDS (section 3.1).
 
 
 7.3  chain() -- THE PIPELINE

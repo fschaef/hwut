@@ -124,6 +124,39 @@ async def test_wall_clock():
     _verdict(ok, "hang contained by wall clock, attributed.")
 
 
+async def test_output_gap():
+    """The SILENCE cap. Three calls, one cap: a live call that says nothing
+    is ended and attributed; a call that keeps talking is left alone,
+    though it outlives the gap many times over; and a silent call with the
+    cap OFF runs to its own end. Silence, not duration, is what trips."""
+    config = ProcsitterConfig(max_wall_clock_sec=30.0, max_output_gap_sec=1.0)
+
+    silent = await _run(config, "import time; time.sleep(20)")
+    chatty = await _run(config,
+                        "import time\n"
+                        "for i in range(6):\n"
+                        "    print(i); time.sleep(0.4)")
+    no_cap = await _run(ProcsitterConfig(max_wall_clock_sec=30.0),
+                        "import time; time.sleep(2)")
+
+    print(f"INSPECT: silent = {silent.containment.name}, "
+          f"chatty = {chatty.containment.name}, "
+          f"cap off = {no_cap.containment.name}")
+    ok = _check([
+        (silent.containment is E_Containment.FAIL_STALLED,
+         "the silent call is STALLED, not WALL_CLOCK_EXCEEDED"),
+        (silent.wall_clock_sec < 10.0,
+         "ended near the gap, nowhere near its 30 s wall cap"),
+        (silent.exit_code is None,
+         "exit_code is None (the procsitter ended it, not the test)"),
+        (chatty.containment is E_Containment.OK_COMPLETED,
+         "the talking call is untouched, though it ran past the gap"),
+        (no_cap.containment is E_Containment.OK_COMPLETED,
+         "with the cap off, silence is no fault"),
+    ])
+    _verdict(ok, "silence capped; speech and an absent cap left alone.")
+
+
 async def test_cpu_time():
     """A spin loop hits RLIMIT_CPU; the kernel delivers SIGXCPU. Expect
     CPU_TIME_EXCEEDED with measured cpu time near the cap."""
@@ -510,6 +543,7 @@ if __name__ == "__main__":
         title      = "Procsitter resource containment with attribution",
         choice_map = {
             "wall_clock": test_wall_clock,
+            "output_gap": test_output_gap,
             "cpu_time":   test_cpu_time,
             "memory":     test_memory,
             "file_size":  test_file_size,

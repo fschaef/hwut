@@ -23,7 +23,7 @@ script sits in the pipe between the test and the compare engine:
     | happens, as it   |       | sorted summaries |       | GOOD file,   |
     | happens          |       |                  |       | byte-exact   |
     +------------------+       +------------------+       +--------------+
-      non-deterministic          deterministicalizes        deterministic
+      non-deterministic          canonicalises              deterministic
       sequence                   the sequence               judgement
 
 SEPARATION OF CONCERNS. The test application PROVOKES the unit's

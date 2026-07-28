@@ -1,0 +1,7 @@
+INSPECT: silent = FAIL_STALLED, chatty = OK_COMPLETED, cap off = OK_COMPLETED
+  OK  : the silent call is STALLED, not WALL_CLOCK_EXCEEDED
+  OK  : ended near the gap, nowhere near its 30 s wall cap
+  OK  : exit_code is None (the procsitter ended it, not the test)
+  OK  : the talking call is untouched, though it ran past the gap
+  OK  : with the cap off, silence is no fault
+SUCCESS: silence capped; speech and an absent cap left alone.

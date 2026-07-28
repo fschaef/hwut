@@ -154,6 +154,12 @@ class E_Containment(Enum):
                                         # OPERATING SYSTEM operable; the
                                         # shortage is not proof that THIS
                                         # call caused it
+    FAIL_STALLED             = auto()   # watchdog: no output on EITHER
+                                        # production port for
+                                        # max_output_gap_sec. A call that
+                                        # is alive, under every other cap,
+                                        # and saying nothing -- a deadlock
+                                        # or a wait that will not end.
     FAIL_STOPPED             = auto()   # external stop_event
     FAIL_LAUNCH              = auto()   # command not found / not executable
 
@@ -174,6 +180,13 @@ class ProcsitterConfig:
     max_disk_mb:        int   = 100     # TOTAL allocation under work_dir
                                         # (watchdog walk, st_blocks): the
                                         # many-files loop cap
+    max_output_gap_sec: float | None = None   # SILENCE cap: no output on
+                                        # either production port for this
+                                        # long ends the call. None: off.
+                                        # Measured from launch, reset by
+                                        # every chunk. A wall clock bounds
+                                        # a run that is WORKING; this one
+                                        # bounds a run that is WAITING.
     min_free_disk_mb:   int   = 128     # free-space FLOOR of work_dir's
                                         # filesystem: below it the call is
                                         # terminated so the OS stays
@@ -217,10 +230,13 @@ class ProcsitterResult:
 class _RunState:
     """Shared mutable state between run(), watchdog, and stop watcher."""
     __slots__ = ("cause", "peak_memory_mb", "peak_pids", "peak_disk_mb",
-                 "cpu_time_sec", "descendants")
+                 "cpu_time_sec", "descendants", "last_output_sec")
 
     def __init__(self):
-        self.cause          = None    # first containment cause wins
+        self.cause           = None   # first containment cause wins
+        self.last_output_sec = None   # monotonic mark of the last chunk
+                                      # seen on EITHER production port;
+                                      # None until launch sets it
         self.peak_memory_mb = None
         self.peak_pids      = None
         self.peak_disk_mb   = None
@@ -327,9 +343,9 @@ class Procsitter:
                     stderr_lines.append(line[-_STDERR_LINE_MAX:])
 
         out_task  = asyncio.create_task(
-            self._pump(process.stdout, stdout_handler))
+            self._pump(process.stdout, stdout_handler, state))
         err_task  = asyncio.create_task(
-            self._pump(process.stderr, stderr_handler))
+            self._pump(process.stderr, stderr_handler, state))
         in_task   = asyncio.create_task(
             self._pump_stdin(process.stdin, stdin_reader))
         dog_task  = asyncio.create_task(
@@ -508,6 +524,8 @@ class Procsitter:
 
         Enforces, at _WATCHDOG_PERIOD_SEC resolution:
           -- max_wall_clock_sec over the whole run,
+          -- max_output_gap_sec as SILENCE since the last chunk on
+             either production port (from launch, if none came yet),
           -- max_memory_mb as summed RSS over the process group,
           -- max_pids as the group member count,
         and, every _DISK_POLL_EVERY ticks (~1 s; stdlib, no psutil
@@ -545,6 +563,14 @@ class Procsitter:
                     state.set_cause(E_Containment.FAIL_WALL_CLOCK_EXCEEDED)
                     await self._kill_ladder(process)
                     return
+                gap_cap = self.config.max_output_gap_sec
+                if gap_cap is not None:
+                    since = state.last_output_sec
+                    if since is None: since = t0
+                    if now - since >= gap_cap:
+                        state.set_cause(E_Containment.FAIL_STALLED)
+                        await self._kill_ladder(process)
+                        return
                 if main is not None:
                     self._sample(main, state)
                     if state.peak_memory_mb is not None \
@@ -752,17 +778,24 @@ class Procsitter:
     # -------------------------------------------------------- I/O machinery
     # (ported from the previous implementation; battle-tested patterns)
 
-    async def _pump(self, stream, handler):
+    async def _pump(self, stream, handler, state=None):
         """
         RETURN: None. Reads 'stream' to EOF. Chunks go to 'handler' when
                 given; otherwise they are discarded -- the stream is
                 ALWAYS consumed, a full OS pipe would block the child.
                 A handler exception propagates (harness fault).
+
+        With 'state', every chunk marks 'last_output_sec' -- the silence
+        cap reads that mark. Marked BEFORE the handler runs: what is
+        timed is the CALL's silence, never a slow consumer's.
         """
         while not stream.at_eof():
             data = await stream.read(4096)
-            if data and handler is not None:
-                await handler(data)
+            if data:
+                if state is not None:
+                    state.last_output_sec = time.monotonic()
+                if handler is not None:
+                    await handler(data)
 
     async def _pump_stdin(self, writer, reader):
         """
