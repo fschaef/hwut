@@ -1,0 +1,10 @@
+INSPECT: source_file = parse.c
+         stem        = parse
+         runs in     = /tests/parser
+         builds in   = /tests/parser/BUILD/parse
+         outputs to  = /tests/parser/OUT
+  OK  : the stem drops the extension
+  OK  : the build directory is BUILD/<stem> under the test directory
+  OK  : outputs go to OUT/ beside BUILD/
+  OK  : a build writes nowhere near the application's output
+SUCCESS: three roles, three directories, all derived.

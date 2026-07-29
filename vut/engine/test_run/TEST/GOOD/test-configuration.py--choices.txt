@@ -1,0 +1,6 @@
+INSPECT: named keys = ['basic', 'deep'] -> has_choices = True
+         plain keys = [None] -> has_choices = False
+  OK  : a test with named choices HAS choices
+  OK  : a test keyed by None alone has NONE
+  OK  : the None entry is reachable like any other
+SUCCESS: the single None key answers 'has this test choices'.

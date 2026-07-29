@@ -1,0 +1,9 @@
+INSPECT: canonicalised record = 'apple\nzebra\n'
+         raw stream kept      = 'zebra\napple\n'
+         cadence entries      = 2, all non-negative: True
+         cadence has none of the record's bytes: True
+  OK  : the RECORD is the canonicalised stream
+  OK  : the RAW stream is kept beside it, in the order emitted
+  OK  : one cadence entry per RAW line
+  OK  : and it measured the real gap between them
+SUCCESS: record, raw and cadence -- three files, one untouched pipe.

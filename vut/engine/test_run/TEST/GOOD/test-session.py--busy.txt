@@ -1,0 +1,7 @@
+INSPECT: a live process holds the directory
+         run_test -> refused: is held by a live process
+         the holder's lock survives: True
+  OK  : the run is REFUSED, not queued and not forced
+  OK  : and the live holder's lock is untouched
+  OK  : nothing was written on the way out
+SUCCESS: two runs of one test never overlap.

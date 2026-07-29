@@ -1,0 +1,8 @@
+INSPECT: Run    -> ['stderr', 'stdout'], type Subjects
+         Replay -> ['stderr', 'stdout'], type Subjects
+         stdout matches: True
+  OK  : both return the same type
+  OK  : with the same subject names
+  OK  : and the same bytes
+  OK  : they differ only in what they are CALLED, for the observer
+SUCCESS: one product, two provenances, indistinguishable above.

@@ -1,0 +1,4 @@
+INSPECT: every GOOD file, for a crash or a missing verdict
+         every one ends in its verdict, none holds a crash
+  OK  : no oracle records a crash instead of a behaviour
+SUCCESS: a green suite is not the same as a working one.

@@ -1,0 +1,7 @@
+INSPECT: recorded subjects = ['stderr', 'stdout']
+         the judged run and the stored one match: True
+         replay recorded nothing: True
+  OK  : a Run stores every subject it provided
+  OK  : and stores the SAME execution that was judged
+  OK  : a Replay records nothing -- it would write back what it read
+SUCCESS: what was judged is what is recorded.

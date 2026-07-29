@@ -1,0 +1,11 @@
+INSPECT: a new kind     -> kind NewKindOfInst  fields ['confidence', 'origin', 'subject_span']
+INSPECT: a plain class  -> kind PlainClassInst fields ['left', 'right']
+INSPECT: a namedtuple   -> kind NamedTupleInst fields ['left', 'right']
+         no fields      -> readable, and empty: True
+         unreadable     -> cannot read the fields of a object
+  OK  : a NEW kind's NEW fields arrive named, with no edit here
+  OK  : and the shape compare chooses -- dataclass, class, tuple -- does not matter
+  OK  : every message still carries the signature a client checks
+  OK  : a kind with NO fields is readable and empty -- absent is not empty, and this is where they are hardest to tell apart
+  OK  : an item whose fields cannot be READ AT ALL is refused
+SUCCESS: the hub carries what compare emits; it never guesses.

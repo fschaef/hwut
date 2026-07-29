@@ -1,0 +1,3 @@
+# HWUT does not care what language a test is written in.
+test-protocol.lua ; lua5.4
+test-view.lua     ; nvim -l

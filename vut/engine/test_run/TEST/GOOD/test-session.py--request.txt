@@ -1,0 +1,7 @@
+INSPECT: run_test takes ['configuration', 'request']
+         three requests over ONE configuration -> ['OK', 'OK', 'OK']
+         the configuration is unchanged: True
+  OK  : TWO parameters: what the test IS, and what is asked OF it
+  OK  : three different requests, one configuration, all agreeing
+  OK  : a request with nothing said asks the commonest thing
+SUCCESS: what the test is, and what is asked of it, stay apart.

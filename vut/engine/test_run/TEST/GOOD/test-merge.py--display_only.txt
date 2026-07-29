@@ -1,0 +1,6 @@
+INSPECT: the driver presented 5 DOWN items
+         and the session resolved to cancel
+  OK  : DOWN was still presented in full
+  OK  : and a driver that cannot merge simply cancels
+  OK  : storing nothing
+SUCCESS: half-duplex is a driver's choice, not a fault.

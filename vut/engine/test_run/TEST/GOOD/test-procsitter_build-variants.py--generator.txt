@@ -1,9 +1,0 @@
-INSPECT: good: built = ['lexer.c', 'parser.c'], report = ok
-INSPECT: forgetful: built = ['lexer2.c'], missing = ['parser2.c'], report = target-not-built
-  OK  : generated targets accounted -- the contract is honored
-  OK  : target content is the generator's
-  OK  : verdict True; brief report 'ok'
-  OK  : forgetful generator exits 0 -- exit code alone looks fine
-  OK  : the forgotten target is NAMED
-  OK  : brief report 'target-not-built'
-SUCCESS: the general generator: contract in, accounting out.

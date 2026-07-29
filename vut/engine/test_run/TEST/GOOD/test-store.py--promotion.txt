@@ -1,0 +1,8 @@
+INSPECT: nominal before anything      = False
+         after a CANDIDATE is written = False
+         after ACCEPT                 = True
+         content = 'one\ntwo\n'
+  OK  : an unaccepted key has no nominal
+  OK  : writing a candidate does NOT create a nominal
+  OK  : acceptance promotes it
+SUCCESS: acceptance is the only writer of a nominal.

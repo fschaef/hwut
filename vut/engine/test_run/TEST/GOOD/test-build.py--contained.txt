@@ -1,0 +1,6 @@
+INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
+         report      = build-contained
+  OK  : the procsitter ended the build
+  OK  : reported as CONTAINED -- not as a build that failed on merit
+  OK  : and it did not succeed
+SUCCESS: a contained build is distinguished from a failed one.

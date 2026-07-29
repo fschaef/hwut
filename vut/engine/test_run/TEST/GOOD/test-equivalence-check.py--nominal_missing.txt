@@ -1,0 +1,5 @@
+INSPECT: verdict = False
+         report  = nominal-file-not-found
+  OK  : an unreadable nominal FAILS the test
+  OK  : and the report names the nominal, not the subject
+SUCCESS: a missing nominal is a fault, never a pass.

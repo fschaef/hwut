@@ -1,0 +1,7 @@
+INSPECT: BytesNominal read twice -> 'alpha\nbeta\n', 'alpha\nbeta\n'
+         StreamNominal first     -> 'gamma\n'
+         StreamNominal again     -> nominal not available: <pipe> (stream already consumed)
+  OK  : an in-memory nominal is re-openable
+  OK  : a stream nominal reads once
+  OK  : and REFUSES a second open, rather than comparing against nothing
+SUCCESS: one interface; a spent stream says so.

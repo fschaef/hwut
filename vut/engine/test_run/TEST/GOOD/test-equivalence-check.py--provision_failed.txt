@@ -1,0 +1,7 @@
+INSPECT: verdict    = False
+         report     = build-failed
+         comparison = None
+  OK  : the test FAILED
+  OK  : and the report names the build
+  OK  : no comparison happened -- an ABSENCE
+SUCCESS: a failed build is a failed test, with no comparison.

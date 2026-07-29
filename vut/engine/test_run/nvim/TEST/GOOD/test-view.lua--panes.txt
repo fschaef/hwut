@@ -1,0 +1,8 @@
+INSPECT: subject pane = alpha | WRONG | gamma
+         nominal pane = alpha | beta | gamma
+         rows equal   = true
+         neovim's own diff engaged = false
+  OK  : one screen line per compare row, on both sides
+  OK  : and the rows stand beside their counterparts
+  OK  : neovim's OWN diff is not engaged -- the alignment shown is compare's, not a second opinion beside it
+SUCCESS: the panes show compare's alignment, one row per line.

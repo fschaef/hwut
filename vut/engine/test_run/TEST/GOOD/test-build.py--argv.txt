@@ -1,0 +1,9 @@
+INSPECT: MAKE with an argument                  -> ['make', '-j2', 'app']
+INSPECT: NINJA                                  -> ['ninja', 'app']
+INSPECT: CMAKE (targets need --target)          -> ['cmake', '--build', '.', '--target', 'app']
+INSPECT: GENERATOR (targets are accounting only) -> ['protoc', 'spec.y']
+         GENERATOR without a tool               -> GENERATOR has no default command; 'tool' is mandatory
+  OK  : CMAKE builds the current directory
+  OK  : a GENERATOR's targets stay OFF the command line
+  OK  : GENERATOR without a tool is refused, not guessed at
+SUCCESS: one vocabulary, one argv, no quoting question.

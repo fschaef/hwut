@@ -1,0 +1,7 @@
+INSPECT: INTERPRETED, choice 'basic' -> ['python3', '-u', 'basic']
+         INTERPRETED, no choice      -> ['python3', '-u']
+  OK  : the interpreter prefix leads the argv
+  OK  : the choice name is appended as the selecting argument
+  OK  : a test without choices ends at the source file
+  OK  : and carries exactly one argument fewer
+SUCCESS: the source kind fixes the argv; the choice selects.

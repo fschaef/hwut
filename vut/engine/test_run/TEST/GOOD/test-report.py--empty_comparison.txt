@@ -1,0 +1,8 @@
+INSPECT: no subject compared  -> verdict = False report = not-equivalent-with-nominal
+INSPECT: one of two differs   -> verdict = False report = not-equivalent-with-nominal
+INSPECT: both match           -> verdict = True  report = ok
+  OK  : comparing nothing is not success
+  OK  : one differing subject fails the test
+  OK  : all matching passes
+  OK  : and reports OK
+SUCCESS: a verdict must be earned by a comparison that happened.

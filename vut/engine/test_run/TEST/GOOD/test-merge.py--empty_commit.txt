@@ -1,0 +1,5 @@
+INSPECT: driver said COMMIT with no artifact
+         hub resolved to -> cancel, text None
+  OK  : the hub downgrades it to CANCEL
+  OK  : and carries nothing forward
+SUCCESS: an empty commit is refused, not stored.

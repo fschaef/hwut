@@ -1,0 +1,5 @@
+INSPECT: judged   = ['stdout']
+         verdict  = True, report = ok
+  OK  : stderr was produced but never judged: it is not in the map
+  OK  : and its content cannot fail the test
+SUCCESS: what is not held against anything is not judged.

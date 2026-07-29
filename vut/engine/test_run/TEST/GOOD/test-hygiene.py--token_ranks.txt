@@ -1,0 +1,4 @@
+INSPECT: every failure token of the vocabulary
+         unranked: none
+  OK  : every failure token has a place in the precedence table
+SUCCESS: no reason speaks by accident of ordering.

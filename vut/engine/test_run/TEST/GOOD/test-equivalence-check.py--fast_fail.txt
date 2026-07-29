@@ -1,0 +1,8 @@
+INSPECT: fast-fail  judged ['stderr']
+         exhaustive judged ['stderr', 'stdout']
+         three more fast-fail runs judged ['stderr']
+  OK  : fast-fail stops at the FIRST subject by name
+  OK  : and stops at the same one on every run
+  OK  : without fast-fail every subject is judged
+  OK  : both fail -- economy does not change the verdict
+SUCCESS: a deterministic fault is reported deterministically.

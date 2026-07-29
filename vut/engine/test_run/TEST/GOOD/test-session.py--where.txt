@@ -1,0 +1,9 @@
+INSPECT: the store's own directory was named -> artifacts land there
+         nominal in the named directory : True
+         nothing under the test directory: True
+         no store named -> defaults to the test directory: True
+  OK  : a store that names a directory is OBEYED, not ignored
+  OK  : and nothing is written where it did not ask
+  OK  : a configuration naming no store uses the test's own directory
+  OK  : a store is asked whether it records; no StoreConfig, no record
+SUCCESS: where artifacts live is said once, by the configuration.

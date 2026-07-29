@@ -1,0 +1,8 @@
+INSPECT: the console observer still received:
+           ... parse [Run]
+               stdout   ok
+               stderr   DIFFERS
+           === parse: ok
+  OK  : every notification reached the healthy observer
+  OK  : the verdict is untouched by a raising observer
+SUCCESS: observers add, and none of them reaches the verdict.

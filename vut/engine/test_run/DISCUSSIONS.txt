@@ -1,0 +1,146 @@
+============================================================================
+VUT-TESTRUN -- DISCUSSIONS
+============================================================================
+
+What is OPEN. Nothing settled belongs here; the settled design is
+README.txt. An entry is deleted the moment it is settled, and what it
+settled goes into the README as mechanics.
+
+    disc-N   a CHOICE is owed -- Frank-Rene rules, then it is built
+    todo-N   the LABOUR is owed -- the choice is made, the work is not
+
+============================================================================
+
+
+----------------------------------------------------------------------------
+disc-8  THE GREATER MAP  (parked -- Frank-Rene: "that for later")
+----------------------------------------------------------------------------
+
+How a test sits in the world above it:
+
+    a DIRECTORY LIST   ->  a DIRECTORY  ->  a TEST LIST  ->  a TEST
+                                                              -> choices
+
+README's bound says selecting, ordering and scheduling MANY tests is a
+higher layer. What is NOT yet said is the seam: what that layer hands down
+(a TestConfiguration per application, presumably produced by the facade),
+and what it needs back (per-test verdicts, aggregated).
+
+Two things already discussed hang on this and should be settled with it,
+not before:
+
+    the build's two callers -- per test, or once for a directory then
+      fanned out (parallel safety against test self-containment)
+    scope-wide defaults -- a directory-wide cap stated once. Resolved
+      OUTSIDE (disc-9), so invisible here, but whatever resolves it must
+      be told what the scope IS -- and the scope is this map
+
+
+----------------------------------------------------------------------------
+disc-9  THE CONFIGURATION FILE  (parked -- OUTSIDE this component)
+----------------------------------------------------------------------------
+
+Frank-Rene: a configuration FILE is to be designed, and then how its
+content translates into the configuration. Both are outside test_run
+(README 2.7: the aggregate is handed in complete).
+
+Recorded here only for the SEAM, which IS ours: the translation's target
+is 'TestConfiguration' + 'TestChoiceConfiguration' as README 3 states
+them. Two obligations follow on this side:
+
+    the required shape is stated exactly, so a translator can be written
+      against it without reading our code
+
+    every field is declared by the component that ENFORCES it (README 2.7,
+      aggregation), so a file format change never reaches past the
+      translator
+
+    one CHECK is owed there and cannot be done here: two source files with
+      the same STEM would share 'BUILD/<stem>' (README 3). Colliding stems
+      must be REFUSED where configurations are made -- this component sees
+      one test at a time and cannot notice
+
+Sequence: the file is designed AFTER the shape is settled, not with it.
+
+
+----------------------------------------------------------------------------
+todo-2  'reassociate'  (compare)
+----------------------------------------------------------------------------
+
+README section 11.7 requires it: the subject is fixed while the nominal is
+edited, so re-alignment against a changed nominal must not redo the whole
+comparison.
+
+MEASURE BEFORE BUILDING. It is EXPLICITLY an optimisation (11.7: a miss
+costs a briefly imperfect display, never a wrong nominal), and its
+consumer now exists -- 'merge_session' re-presents a comparison after
+every edit. So the question is answerable rather than arguable.
+
+OWED, in this order:
+    1. time a full re-alignment over a realistic nominal, through
+       'merge_session', and write the number down
+    2. only if it is too slow: the safe-window logic, whose hard cases
+       are analogies (global, bidirectional) and multi-line regions that
+       straddle the window
+    3. the oracle is exact and cheap: reassociate(prior, edit) must equal
+       associate(subject, new_nominal), so correctness needs no judgement
+
+If step 1 says it is fast enough, this entry is DELETED and nothing is
+built.
+
+
+----------------------------------------------------------------------------
+todo-12  A MISSPELT TOLERANCE IS ACCEPTED SILENTLY  (compare)
+----------------------------------------------------------------------------
+
+'compare.Configuration' is slotted, so a misspelt field on IT is refused.
+'ConfigurationPatternFinder' is not:
+
+    c.pattern_finder.numeric_tolerence_ratio = 0.01   accepted
+    c.pattern_finder.numeric_tolerance_ratio          still 0
+
+The author believes a tolerance is in force; it is not. Under 'absent and
+empty never collapse' this is the worst shape: the test then passes or
+fails for a reason nobody wrote down, and no error is raised anywhere.
+
+It is COMPARE's to fix -- '__slots__' on the pattern finder, as
+'Configuration' already has -- but it is recorded here because it is this
+component's authors who would be bitten.
+
+OWED, in the compare component:
+    '__slots__' on 'ConfigurationPatternFinder', listing its fields
+    a test choice: a misspelt attribute RAISES rather than being kept
+    nothing here changes -- 'TestChoiceConfiguration' holds compare's
+    struct verbatim either way
+
+
+----------------------------------------------------------------------------
+todo-15  THE CHANNEL  (parked -- the difftool front end comes first)
+----------------------------------------------------------------------------
+
+Both halves work and now agree on the wire:
+
+    protocol.lua   folds a real DOWN stream, reads the two sides from
+                   the cells                        (6 choices, lua5.4)
+    view.lua       shows them as two bound panes, commits the nominal
+                   pane's plain text                (4 choices, nvim -l)
+    RemoteDisplay  speaks the protocol over a pipe  (mock client, python)
+
+What is missing is the piece that makes them ONE thing: a running neovim
+on the other end of RemoteDisplay's pipe, folding as messages arrive and
+answering with an UP envelope when the author decides.
+
+PARKED, and one thing about it is SETTLED. Frank-Rene's shape is
+
+    hwut.difftool -t nvim
+
+so HWUT LAUNCHES THE TOOL; the tool does not call HWUT. An IDE invoking
+the diff itself is a later step again, and does not constrain this one.
+
+What remains open is only the mechanism -- 'nvim --listen' on a socket,
+'jobstart' from within nvim, or 'nvim -l' reading the pipe -- and that is
+a choice to take when the difftool front end is written, not before.
+
+It is TESTABLE HERE when the time comes: neovim is installed, 'nvim -l'
+drives it headlessly, and the mock client already proved the pipe shape.
+============================================================================

@@ -1,0 +1,5 @@
+INSPECT: unknown intent -> unknown UP intent 'obliterate'
+         unknown target -> no driver for display target 'not-a-target'
+  OK  : an intent this hub does not know is refused
+  OK  : and so is a target with no driver
+SUCCESS: refuse the unknown; never guess an action.

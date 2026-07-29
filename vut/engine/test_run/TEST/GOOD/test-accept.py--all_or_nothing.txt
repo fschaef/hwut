@@ -1,0 +1,8 @@
+INSPECT: report            = recording-missing
+         accepted          = {}
+         readable one kept = False
+  OK  : acceptance failed
+  OK  : nothing was stored
+  OK  : not even the subject whose dump WAS readable
+  OK  : and the report names the missing dump
+SUCCESS: all or nothing -- never half a nominal.

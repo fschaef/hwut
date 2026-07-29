@@ -1,0 +1,8 @@
+INSPECT: provision.records = ['record-a', 'record-b']
+         stored.records    = [] (nothing ran)
+         comparison holds  = ['stdout']
+  OK  : attribution records belong to PROVISION
+  OK  : and not to the comparison
+  OK  : provision by stored data carries no records: nothing was contained
+  OK  : provision says whether it delivered
+SUCCESS: two products, two types, no merging.

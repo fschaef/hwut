@@ -1,0 +1,6 @@
+INSPECT: over Run    -> verdict True, report ok, records 1
+         over Replay -> verdict True, report ok, records 0
+  OK  : the verdict is the same over either provision
+  OK  : and so is the report
+  OK  : they differ only in the EVIDENCE: one ran a process, one did not
+SUCCESS: the check never learns where its subjects came from.

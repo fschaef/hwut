@@ -1,0 +1,7 @@
+INSPECT: matching + a target -> True / ok
+         matching + none     -> True / ok
+         differing + target  -> False / not-equivalent-with-nominal
+  OK  : the target does not change a passing verdict
+  OK  : nor the report
+  OK  : a shown difference still reports the mismatch, not the display
+SUCCESS: showing a difference does not change it.

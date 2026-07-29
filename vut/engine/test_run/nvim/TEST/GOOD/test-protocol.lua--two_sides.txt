@@ -1,0 +1,11 @@
+INSPECT: today's DOWN stream, row for row:
+           alpha    | alpha
+           WRONG    | beta
+           gamma    | gamma
+         a stream carrying cells as TEXT -> REFUSED
+         reason: row 1 carries neither 'cells_s' nor 'cells_n' as reada
+  OK  : the two sides are read from the CELLS, and are the same length
+  OK  : row for row, the alignment COMPARE made
+  OK  : and the rows that agree carry their text too
+  OK  : a stream whose cells are NOT readable is refused, with a reason -- never rendered as blank panes
+SUCCESS: the alignment shown is compare's, or none is shown.

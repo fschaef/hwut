@@ -1,8 +1,0 @@
-INSPECT: good verdicts = [('stderr', True), ('stdout', True)]
-INSPECT: bad  verdicts = [('stderr', False), ('stdout', True)]
-  OK  : matching stdout AND stderr -> ok
-  OK  : stderr mismatch NAMED; stdout stays True
-  OK  : brief report: not-equivalent-with-nominal
-  OK  : stderr mismatch FAST-FAILS the run (long before 30 s)
-  OK  : stderr-only specification: stdout drained, stderr judged
-SUCCESS: stderr judged as a channel, symmetric with stdout.

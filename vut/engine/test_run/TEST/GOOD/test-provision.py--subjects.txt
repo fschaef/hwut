@@ -1,0 +1,9 @@
+INSPECT: report   = ok
+         subjects = ['emitted.txt', 'stderr', 'stdout']
+           emitted.txt  'to a file\n'
+           stderr       'to stderr\n'
+           stdout       'to stdout\n'
+  OK  : three subjects: two channels and one output file
+  OK  : provision reports OK
+  OK  : one attribution record: one supervised call happened
+SUCCESS: channels and output files alike are subjects.

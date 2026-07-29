@@ -1,0 +1,7 @@
+INSPECT: before acceptance -> verdict False report nominal-file-not-found
+         after acceptance  -> verdict True  report ok
+         behaviour changed -> verdict False report not-equivalent-with-nominal
+  OK  : with no nominal yet, the test fails and says why
+  OK  : acceptance makes it pass
+  OK  : and a change of behaviour makes it fail again
+SUCCESS: run -> differ -> accept -> pass -> change -> differ.

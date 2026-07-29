@@ -1,0 +1,8 @@
+INSPECT: verdict = False, report = not-equivalent-with-nominal
+         opened  = ['stdout'], closed = True
+         DOWN    = ['ProtocolHeader', 'ConfigInst', 'SectionBeginInst', 'LinePairInst', 'LinePairInst', 'LinePairInst', 'EndOfStreamInst']
+  OK  : the stream opens with a signature the receiver checks FIRST
+  OK  : and ends with an explicit end -- never merely stopping
+  OK  : one aligned row per line pair of the comparison
+  OK  : the verdict is what the comparison found
+SUCCESS: DOWN is compare's; this module carries it.

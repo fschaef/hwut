@@ -1,0 +1,6 @@
+INSPECT: report = ok
+         stored = 'the NEW dump\n'
+  OK  : acceptance succeeded
+  OK  : the nominal is REPLACED wholesale, not merged
+  OK  : and the result says exactly what was stored
+SUCCESS: a dump replaces the nominal, wholesale.

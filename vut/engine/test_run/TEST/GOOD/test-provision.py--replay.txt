@@ -1,0 +1,9 @@
+INSPECT: stored    -> report ok, subjects ['stderr', 'stdout']
+         stdout    -> 'recorded line\n'
+         unstored  -> report recording-missing, subjects []
+  OK  : a stored recording is provided
+  OK  : and reads back what was written
+  OK  : nothing ran, so there is no attribution to make
+  OK  : an absent recording is REPORTED
+  OK  : and not invented as an empty subject
+SUCCESS: stored data provides subjects; absence says so.

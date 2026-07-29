@@ -1,0 +1,6 @@
+INSPECT: trace = ['open:stdout', 'item', 'item', 'close']
+         the driver's exception PROPAGATED: True
+  OK  : the session opens naming the subject
+  OK  : and closes even though presentation raised
+  OK  : the failure PROPAGATES: a display that failed is not reported as a display that happened
+SUCCESS: open, items, close -- close always.

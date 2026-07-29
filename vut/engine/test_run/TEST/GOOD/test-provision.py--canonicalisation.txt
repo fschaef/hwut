@@ -1,0 +1,8 @@
+INSPECT: raw           = 'zebra\napple\nmango\n'
+         canonicalised = 'apple\nmango\nzebra\n'
+         report        = ok
+  OK  : raw keeps the order the application happened to emit
+  OK  : the canonicalised subject is in canonical order
+  OK  : and provision reports OK
+  OK  : a subject with no canonicaliser is passed through raw
+SUCCESS: what provision hands over is already comparable.

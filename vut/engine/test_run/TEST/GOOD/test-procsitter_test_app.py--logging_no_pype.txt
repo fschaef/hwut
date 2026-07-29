@@ -1,5 +1,0 @@
-INSPECT: verdict = True; before==after: True
-  OK  : logging did not disturb the verdict
-  OK  : 'before' log holds the app's stdout
-  OK  : no pype stage -> 'after' is the SAME production as 'before'
-SUCCESS: with no pype, before and after tap one production.

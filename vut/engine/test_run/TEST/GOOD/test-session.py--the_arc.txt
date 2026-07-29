@@ -1,0 +1,8 @@
+INSPECT: no nominal yet     -> False nominal-file-not-found
+INSPECT: accept             -> True  ok
+INSPECT: verdict            -> True  ok
+INSPECT: behaviour changed  -> False not-equivalent-with-nominal
+  OK  : with no nominal the test fails and names the nominal
+  OK  : acceptance makes it pass
+  OK  : a change of behaviour makes it fail again
+SUCCESS: the whole arc, through one callable.

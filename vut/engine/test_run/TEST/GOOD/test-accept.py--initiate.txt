@@ -1,0 +1,6 @@
+INSPECT: with a session -> ok, stored 'merged by an external session\n'
+         without one   -> recording-missing, stored anything: False
+  OK  : the session's final stream becomes the nominal
+  OK  : without a session, acceptance fails
+  OK  : and does NOT fall back to the current output
+SUCCESS: INITIATE stores its session's stream, or nothing.

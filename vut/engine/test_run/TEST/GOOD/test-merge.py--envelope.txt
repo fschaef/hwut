@@ -1,0 +1,9 @@
+INSPECT: envelope   = ['intent', 'nominal', 'signature']
+         signature  = vut-feed/1, intent = commit
+         round trip = 'merged bytes\n'
+         foreign    -> feed protocol 'some-other/9' cannot be parsed by 'vut-feed/1'
+  OK  : the envelope is signed
+  OK  : and carries the plain artifact, not a view
+  OK  : it round-trips
+  OK  : a foreign signature is REFUSED before anything is parsed
+SUCCESS: signed, versioned, and carrying the artifact.

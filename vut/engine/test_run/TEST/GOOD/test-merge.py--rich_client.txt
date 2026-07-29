@@ -1,0 +1,8 @@
+INSPECT: DOWN items serialised to the client = 5
+         client committed -> commit, 'resolved by the client after 5 DOWN items\n'
+         client cancelled -> cancel, None
+  OK  : DOWN crossed a real boundary as JSON, one message per line
+  OK  : the client's UP envelope was parsed back into a resolution
+  OK  : and the client had really SEEN the items it answers about
+  OK  : a client that cancels stores nothing
+SUCCESS: a client in any language can speak this protocol.

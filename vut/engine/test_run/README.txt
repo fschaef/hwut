@@ -1,17 +1,20 @@
 ============================================================================
-VUT-TESTRUN: SPECIFICATION (draft -- for review)
+VUT-TESTRUN
 ============================================================================
 
-Status:  PROPOSED (not yet implemented); paper design under review.
-Layer:   ORCHESTRATION (per test) -- above the applications
-         (procsitter_test_app, procsitter_build) and the compare engine.
-         Running MANY tests is a HIGHER layer, out of scope (section 15).
-Decided: discussion Frank-Rene / Claude, 2026-07.
+Status:  PROPOSED -- the design is settled; the code is partial.
+Layer:   ORCHESTRATION of ONE test -- above procsitter, the supervised
+         build, and the compare engine.
+Bounds:  ONE test. Selecting, ordering and scheduling MANY tests is a
+         HIGHER layer and is not this component's business.
 
-Reading order: PART I is the whole thing in brief (with the master
-diagram); PARTS II-IV are the detail, grouped by concern; PART V is
-reference and settled decisions.
+This is the component's ONE design document: it states the mechanics and
+the design together. Questions still under discussion live in
+DISCUSSIONS.txt and are not repeated here.
 
+Reading order: PART I is the whole thing in brief, with the master
+diagram; PARTS II-IV are the detail, grouped by concern; PART V is
+reference.
 
 ############################################################################
 PART I -- THE GENERAL PICTURE
@@ -45,7 +48,7 @@ existing components and fans out into three operations:
                     |             (procsitter / build / compare)
                     v
         +---------- PROVISION -- a reader per subject ------------+
-        |  Run :  build -> execute -> determinize                 |
+        |  Run :  build -> execute -> canonicalise                 |
         |         (build)  (procsitter)  (pype)                   |
         |  Replay: read the stored records                        |
         +--------------------------+------------------------------+
@@ -65,6 +68,8 @@ existing components and fans out into three operations:
 
 2.2  LAYERING. The orchestration owns no heavy machinery; it TRANSLATES
 the description into the lower components' configs and WIRES them.
+Containment is procsitter's, the build is build.py's, aligning and judging
+and feeding are compare's.
 
     OPERATIONS    EquivalenceCheck | DifferenceDisplay | Accept
                   (each its own class + config)
@@ -76,13 +81,13 @@ the description into the lower components' configs and WIRES them.
                   *** procsitter / build / compare TYPES never appear
                       above this line ***
         +----------------------------------------------------------+
-    COMPONENTS    procsitter | procsitter_build | compare  (existing)
+    COMPONENTS    procsitter | compare        (their own components)
 
 2.3  ONE ARTIFACT, THREE ROLES. There is a single kind of artifact -- a
-DETERMINIZED SUBJECT STREAM (bytes, stored or produced live) -- wearing
+CANONICALISED SUBJECT STREAM (bytes, stored or produced live) -- wearing
 three hats:
 
-              a DETERMINIZED SUBJECT STREAM
+              a CANONICALISED SUBJECT STREAM
              /            |                 \
       Run candidate  Replay candidate     NOMINAL
       (just made)    (read from store)  (a candidate, ACCEPTED & kept)
@@ -105,15 +110,167 @@ and one store:
       DifferenceDisplay  read  -> the aligned comparison, fed to a target
       Accept             write -> the NOMINAL (from a complete dump)
 
-They share a per-subject core (name, groundwork, subjects); each adds
-only what it needs (DifferenceDisplay a display target; Accept its own
-per-subject step).
+All three read the ONE configuration of the test application (2.7) and
+name the CHOICE they act on. What each asks for beyond that differs:
+the two readers need the subjects-to-nominals map (section 7);
+DifferenceDisplay needs a display target; Accept needs its per-subject
+step. Those are what an operation is ASKED for, not what the test IS.
 
-2.6  THE PRINCIPLE: translate and wire; delegate the work. Containment is
-procsitter's, building is procsitter_build's, aligning/judging/feeding is
-compare's. The user writes PLAIN data -- source file, source kind, limits
-as numbers, nominals as readers -- and never constructs a Procsitter, a
-build config, or a compare Comparator; the translation layer builds those.
+  HOW AN OPERATION WORKS INSIDE. An operation is a CLASS -- three doors,
+  each named for what is asked. Inside, the work is done by SUB-PROCESSES
+  that activate UPON NEED: a sub-process runs when its product is wanted
+  and not yet there, and reads the configuration keys it declares (2.7).
+
+      Accept, finding no current subject stored, activates provision.
+      That is not a special case inside Accept; it is an unmet
+      precondition like any other.
+
+      Provision by EXECUTION and provision by STORED DATA (5) produce the
+      same thing from disjoint keys, so no operation ever branches on
+      which one it got -- which is what keeps compare blind to provenance
+      (2.4).
+
+2.6  TWO LAWS THAT KEPT RE-DERIVING THEMSELVES. Both were reached
+  independently in a dozen places before either was written down, so
+  both are stated once here rather than a dozen times below.
+
+  REFUSE RATHER THAN GUESS. Where a component cannot know, it says so; it
+  does not choose.
+
+      an owned keyword in a chain stage  |
+      a configuration serving no goal    |  each has a TEMPTING
+      a build system with no tool        |  DEFAULT, and every
+      a display target with no driver    |  default fails SILENTLY,
+      an UP intent nobody defined        |  in the GREEN direction
+      a foreign protocol signature       |
+                                         v
+                                    REFUSED, named, at the door
+
+  ABSENT AND EMPTY NEVER COLLAPSE.
+
+      an absent recording   is not  an empty subject
+      an unreadable nominal is not  nothing to compare against
+      an empty comparison   is not  a pass
+      a COMMIT with no text is not  a commit
+      a clean exit          is not  a built target
+      'record nothing'      is not  'recorded, and it was empty'
+
+      absent  ---.                    "which was it?" -- a RECORD
+                  +--> one value       question, and no type answers it
+      empty   ---'                     (the law of the port, procsitter
+                                        3.1, applied to VALUES)
+
+  Every collapse yields a FALSE GREEN, the one failure that cannot report
+  itself.
+
+
+2.7  THE CONFIGURATION. THREE WORLDS, kept apart.
+
+    THE CONFIGURATION       THE STORE            IN FLIGHT
+    the test's DESIGN       the ARTIFACTS        the PRODUCTS
+    ....................    ..................   ..................
+    what the test IS        subject candidates   readers, verdicts,
+    command, build, caps,   nominals             aligned pairs,
+    canonicalisers,         timing series        attribution records
+    recording, choices      keyed (test,         passed step to step
+    written by the AUTHOR   subject)             never persisted,
+    read by the STEPS       written by RECORD    never posted
+    never mutated by a run  and by ACCEPT
+
+  ONE WRITER, MANY READERS. The configuration is written once and only
+  read thereafter; products never travel through it. So every product
+  keeps a port that names its producer, and 'which step made this' stays
+  answerable. In the Store the same law holds by key space: RECORD writes
+  candidates, ACCEPT writes nominals, and no key has two writers.
+
+  AGGREGATION, NOT RESTATEMENT. The complete configuration AGGREGATES the
+  raw configuration structs of the sub-components, VERBATIM. Procsitter's
+  caps are a 'ProcsitterConfig' held as a member -- not ten numbers copied
+  out and translated back. A field is declared by the component that
+  enforces it, once.
+
+  HANDED IN COMPLETE. This component does not read a configuration file
+  and does not resolve shorthand. It is HANDED one aggregate, already flat
+  and complete, and only reads it. Whatever produces it -- a configuration
+  file and its reader, a caller in Python -- is OUTSIDE, and the
+  translation happens THERE, once: not a thousand times through a thousand
+  layers. What this component owes in return is that the shape it requires
+  is stated exactly, which is what section 3 does.
+
+  THE UNIT IS THE TEST APPLICATION, identified by its SOURCE FILE. There
+  is NOT a configuration per run, nor one per choice. One configuration
+  serves every run of that application, and the CHOICE DATABASE lives
+  inside it: a choice is an entry, not a configuration of its own.
+
+
+2.8  THE FRONT DOOR. One callable assembles everything below, so nothing
+  above needs to know that procsitter, compare or a build exist:
+
+      run_test(configuration, request) -> Outcome
+
+  TWO THINGS: what the test IS, and what is asked OF it. A configuration
+  does not change between runs; a REQUEST changes every time, and keeping
+  them apart is why neither grows fields belonging to the other.
+
+  WHERE THE ARTIFACTS LIVE IS SAID ONCE, by the configuration: the
+  store's own struct names a directory when it wants one elsewhere, and
+  the test's own directory serves otherwise ('store_of'). A store passed
+  BESIDE a configuration that already declares one would be a second
+  source of truth, and the two could disagree.
+
+      @dataclass Request:
+          goal:     E_Goal          # VERDICT | DISPLAY | NOMINAL
+          choice:   str|None        # which scenario
+          subjects: tuple           # which subjects are judged
+          replay:   bool            # provision from stored data
+          display:  Display         # WHERE a comparison is shown
+          observer: object|None     # the progress seam (12)
+          record:   bool|None       # None: follow the store config
+          stop_event: object|None   # how the caller stops it
+
+      @dataclass Display:
+          target:      E_DisplayTarget|None   # names a driver (11.4)
+          adapter:     DisplayAdapter|None    # given, it WINS
+          argument_db: dict                   # the driver's own arguments
+
+  A caller asks for an OUTCOME, and the goal selects the operation.
+
+  THE CEREMONY. Each step is here and NOT in an operation, because each
+  belongs to a different thing: the lock to a DIRECTORY, the footprint to
+  a finished OPERATION, the recording to a delivering RUN.
+
+                    configuration            request
+                          |                     |
+                          v                     v
+              .-----------------------------------------.
+     verify   | an unservable configuration is refused   |
+              | HERE, before anything runs               |
+              '-----------------------------------------'
+                          |
+     lock     .-----------+-------------------------.
+              | the directory admits ONE live       |  busy -> DirectoryBusy
+              | holder (6)                          |          (never queued)
+              '-----------+-------------------------'
+                          |
+     operate  .-----------+-------------------------.
+              | the goal's operation; sub-processes |
+              | activate upon need (2.5)            |
+              '-----------+-------------------------'
+                          |
+     record   .-----------+-------------------------.
+              | a Run's subjects -> candidates, so  |  the SAME product
+              | Replay has something to read        |  that was judged
+              '-----------+-------------------------'
+                          |
+     footprint.-----------+-------------------------.
+              | what happened, overwriting that     |
+              | one entry (6)                       |
+              '-----------+-------------------------'
+                          |
+     unlock            however it ended
+                          |
+                          v
+                       Outcome
 
 
 ############################################################################
@@ -125,7 +282,7 @@ PART II -- PROVISION  (how the subjects come to exist)
 ----------------------------------------------------------------------------
 
 A source becomes a command by its KIND; the command runs contained; its
-raw output is determinized per subject; taps record it for later Replay:
+raw output is canonicalised per subject; taps record it for later Replay:
 
     source_file
         |  COMPILED: build ---------\
@@ -134,46 +291,94 @@ raw output is determinized per subject; taps record it for later Replay:
         |                                                |
         |                                     raw stdout/stderr, files
         |                                                |
-        |                              determinize (pype, per subject)
+        |                              canonicalise (pype, per subject)
         |                                                |
-        |                                      DETERMINIZED subject --> compare
+        |                                      CANONICALISED subject --> compare
         |                                        |            |
-        |                                    (tap raw)   (tap determinized
+        |                                    (tap raw)   (tap canonicalised
         |                                        |         + timing)
         |                                        v            v
         +--------------------------------------> R E C O R D  (section 4)
 
-  @dataclass Run:
-      source_file:      str
-      source_kind:      E_SourceKind        # EXECUTABLE|INTERPRETED|COMPILED
+The configuration of all this is PER TEST APPLICATION (2.7), and it
+AGGREGATES its sub-components' own structs rather than restating them:
+
+  @dataclass TestConfiguration:
+      source_file:      str              # THE IDENTITY. Its STEM keys the
+                                         #   build directory -- stems must
+                                         #   be unique across tests (below)
+      source_kind:      E_SourceKind     # EXECUTABLE|INTERPRETED|COMPILED
       interpreter:      Sequence[str]|None  # argv prefix, INTERPRETED
                                             #   (['lua'], ['python3','-u'])
-      build_system:     E_BuildSystem|None  # COMPILED: WHICH tool
-      build_targets:    Sequence[str]       # COMPILED
-      build_arguments:  Sequence[str]       # COMPILED
-      application_arguments: Sequence[str]  # args to the test app
-      test_directory:   str                 # runs here; outputs -> OUT/
-      # resource limits -- PLAIN NUMBERS, translated to a ProcsitterConfig:
-      max_wall_clock_sec: float
-      max_cpu_time_sec:   int
-      max_memory_mb:      int
-      max_pids:           int
-      max_file_size_mb:   int
-      max_disk_mb:        int
-      min_free_disk_mb:   int
-      # DETERMINIZATION -- part of provision, per subject (pype argv):
-      determinizers:    dict        # subject name -> pype argv; a subject
-                                    # absent is compared RAW (raw ==
-                                    # determinized for it)
-      # RECORDING (section 4):
-      record_directory: str|None    # None: do not record
-      record_raw:       bool        # also keep the raw pre-pype stream?
-      record_timing:    bool        # also keep per-line delta times?
-      line_stall_cap_sec: float|None  # stall watchdog (section 4)
+      test_directory:   str              # the PLACE; see below
+
+      caps:             ProcsitterConfig    # procsitter's OWN struct, held
+                                            # VERBATIM -- never copied out
+      build:            BuildConfig|None    # the build's OWN struct; None
+                                            # unless COMPILED
+      store:            StoreConfig|None    # the Store's OWN struct:
+                                            # directory, raw, timing
+                                            # (section 4); None: no record
+
+      choice_db:        dict     # choice name | None ->
+                                 #   TestChoiceConfiguration
+
+  @dataclass TestChoiceConfiguration:
+      canonicalisers:   dict     # subject name -> pype argv; a subject
+                                 # absent is compared RAW (raw ==
+                                 # canonicalised for it)
+      compare:          Configuration   # compare's OWN struct, held
+                                        # VERBATIM (2.7). ONE per choice:
+                                        # the compare SETUP for this
+                                        # scenario
 
   E_SourceKind: EXECUTABLE | INTERPRETED | COMPILED
 
-DETERMINIZATION is provision, not comparison: a pype stage is HOW a raw
+A CHOICE is a SCENARIO of this one application -- an entry in the map, not
+a configuration of its own. The choice name is the command line argument
+that selects it.
+
+THE 'None' CHOICE. A test that mentions no choices has the single key
+'None': the application is called ONCE, with NO choice argument. So the
+map is EITHER '{None: ...}' or a map of named choices with no 'None' in
+it; the two never mix, and 'has this test choices' is answered by looking
+for that one key.
+
+FLAT, NOT INHERITED. Every entry is COMPLETE as handed in (2.7): an
+author who states one canonicaliser for the whole test states it once, and
+whatever builds the configuration puts it into every entry. No step here
+resolves a default, and no value's origin has to be traced.
+
+THE PLACE. Three roles, three directories, never one:
+
+    test_directory/                 the application RUNS here
+        BUILD/<source-file-stem>/   the build of THIS test runs here
+        OUT/                        the application's output files
+
+The build has its own sub directory, and one PER TEST, keyed by the source
+file's stem: 'parse.c' builds in 'BUILD/parse'. So a build writes no
+object file where the application writes its output, and two tests of one
+source tree never share a build directory -- which is what makes running
+them CONCURRENTLY safe without a lock.
+
+ONE RUN OF A TEST AT A TIME. NEVER two runs of the same test in parallel.
+This covers its CHOICES: 'BUILD/<stem>' is per test, not per choice, so two
+choices running at once would share one build directory. Different tests may
+run concurrently -- that is what the per-test build directory buys -- and the
+same test never overlaps itself.
+
+  So 'OUT/', 'BUILD/<stem>' and the test's footprint entry (section 6) each
+  have exactly ONE writer at any moment, and none of the three needs a lock.
+
+  NOTE, AND A REQUIREMENT ON WHOEVER BUILDS CONFIGURATIONS: two source
+  files with the SAME STEM would build in the same directory -- 'parse.c'
+  and 'parse.lua' both in 'BUILD/parse'. COLLIDING stems must therefore
+  be REFUSED where the configurations are made. This component holds ONE
+  TestConfiguration at a time and cannot see its siblings, so it cannot
+  check this; it only states the requirement (see also DISCUSSIONS.txt,
+  the configuration file).
+
+CANONICALISATION is provision, not comparison: a pype stage is HOW a raw
 stream becomes the comparable stream. It lives here (per subject), never
 in the compare-side map (section 7) and never in Replay (already applied).
 
@@ -182,13 +387,13 @@ in the compare-side map (section 7) and never in Replay (already applied).
 4  RECORDING -- capturing a Run for a later Replay
 ----------------------------------------------------------------------------
 
-DETERMINIZED (essential). The determinized stream per subject is exactly
+CANONICALISED (essential). The canonicalised stream per subject is exactly
 what compare reads, so it is stored whenever 'record_directory' is set
-(the 'stdout_log_after_pype' tap in procsitter_test_app). A subject with
-no determinizer has raw == determinized and is stored once.
+(a listener tee'd onto the chain edge, procsitter 7.4). A subject with
+no canonicaliser has raw == canonicalised and is stored once.
 
 RAW (optional; 'record_raw', default off). The pre-pype stream: it may
-OVERFLOW the log, and for a determinized subject is never compared or
+OVERFLOW the log, and for a canonicalised subject is never compared or
 displayed, so it serves only forensic inspection ('stdout_log_before_pype').
 
 TIMING (optional; 'record_timing', default off). The per-line DELTA time
@@ -196,30 +401,49 @@ of the RAW cadence -- TINY (one number per line), so captured even when
 the raw CONTENT is too big to keep (orthogonal to 'record_raw'). Two uses
 of the one measurement: (1) an analyst aid, timing beside the diff; (2) a
 HOST COMPUTE-SPEED reference -- a recording from host X vs current host Y
-is a speed ratio that normalizes expectations. FORMAT: a SIDECAR (a
-parallel per-line stream), never interleaved into the determinized record
-(which must stay byte-exact); raw deltas + a host tag are kept, the ratio
-is derived on demand (it is pairwise).
+is a speed ratio that normalises expectations. Raw deltas and a host tag
+are kept; the ratio is derived on demand, being pairwise.
 
-STALL WATCHDOG (optional). No output for an absolute (minute-range) gap,
-or a line far exceeding the recent cadence, trips a stop (attributed
-TEST_APP_STALLED). It is a PROCSITTER CAP: procsitter already pumps the
-stream, so it enforces the gap alongside wall-clock and the rest, and
-protects builds too. The Run's stall setting translates to it. (A
-proposed procsitter extension -- new cap + containment reason.)
+  STORED SEPARATELY, never interleaved into the canonicalised record --
+  which stays byte-exact, and whose pipe into compare is therefore
+  untouched. Separateness is a TECHNICALITY of storage, not a second
+  artifact the caller handles: the timing series sits inside the subject's
+  stored record behind the STORE (section 6), and the Store reports
+  whether a subject carries one. Nothing above the Store sees a file.
 
-THE STORE. A candidate RECORDING holds, per subject: the determinized
-stream, optional raw/timing SIDECARS, and a small MANIFEST (subjects, the
-determinizer used, host + timestamp, verdict). Replay reads a candidate;
-Accept PROMOTES one to the nominal. Both live behind the STORE abstraction
-(section 6); where and how it keeps them is a backend detail.
+  ONE LIMIT, from the ORDER. The cadence is a property of the RAW stream;
+  the stored record is the CANONICALISED one, and a canonicaliser may
+  REORDER. So use (2), a whole-run speed reference, always holds; use (1),
+  a delta beside each displayed line, holds only where raw order IS
+  canonicalised order -- a subject with no canonicaliser. Elsewhere the
+  series describes the run, not the record's lines.
+
+THE SILENCE CAP (optional). No output on either production port for an
+absolute gap ends the call, attributed FAIL_STALLED. It is a PROCSITTER
+CAP -- 'max_output_gap_sec', held in the 'ProcsitterConfig' of the
+configuration (2.7), so it needs no setting here and protects builds
+exactly as it protects runs. A wall clock bounds a call that is WORKING;
+this one bounds a call that is WAITING. The brief report renders it as
+TEST_APP_STALLED (section 13).
+
+  A gap measured against the RECENT CADENCE rather than an absolute
+  number was considered and is not built: cadence varies legitimately
+  between phases of one run, so it would fail in the dangerous direction
+  -- ending a healthy call that has merely slowed.
+
+THE STORE. A candidate RECORDING holds, per subject, the canonicalised
+stream and its optional raw and timing sidecars -- nothing else. Replay
+reads a candidate; Accept PROMOTES one to the nominal. Both live behind the
+STORE abstraction (section 6); where and how it keeps them is a backend
+detail. What HAPPENED during the run is not kept with the streams; it is a
+FOOTPRINT (section 6).
 
 
 ----------------------------------------------------------------------------
 5  REPLAY -- provision by stored data
 ----------------------------------------------------------------------------
 
-No execution: the stored DETERMINIZED readers of a previous Run are read
+No execution: the stored CANONICALISED readers of a previous Run are read
 straight into compare. NO source, NO caps, NO pype, NO procsitter --
 provision is already done. The procsitter/pype configuration is
 EXCLUSIVELY a Run concern.
@@ -233,8 +457,8 @@ EXCLUSIVELY a Run concern.
 6  THE NOMINAL -- the accepted subject record
 ----------------------------------------------------------------------------
 
-A subject is compared against a NOMINAL: the determinized subject stream
-of a run whose behavior was ACCEPTED and written to storage. Available AT
+A subject is compared against a NOMINAL: the canonicalised subject stream
+of a run whose behaviour was ACCEPTED and written to storage. Available AT
 ANY TIME by reading storage ALONE -- no execution, build, interpreter, or
 procsitter. It is the "accepted" role of the one artifact (2.3).
 
@@ -247,14 +471,14 @@ procsitter. It is the "accepted" role of the one artifact (2.3).
       StreamNominal(reader)   an existing reader / pipe (tests)
       BytesNominal(data)      in-memory (tests)
 
-Handing the user a Nominal (not compare's Comparator) keeps component
+Handing the user a Nominal (not compare's own types) keeps component
 types out of the config and unifies nominal with subject. A comparison
 always reads the CURRENTLY accepted record -- no 'record-time vs current'
 ambiguity, nothing to embed. Acceptance (section 10) is what WRITES a
 nominal.
 
 THE STORE. All record access -- read a nominal, read/write a candidate,
-write on Accept -- goes through a STORE keyed by (test name, subject).
+write on Accept -- goes through a STORE keyed by (test, choice, subject).
 
       Accept  --write-->  +---------+  <--read--  EquivalenceCheck /
                           |  STORE  |             DifferenceDisplay / Replay
@@ -263,10 +487,105 @@ write on Accept -- goes through a STORE keyed by (test name, subject).
                           (another -- a DB, an object store -- fits behind
                            the SAME interface)
 
+The Store's own struct, held verbatim by the configuration (2.7):
+
+  @dataclass StoreConfig:
+      directory:     str    # WHERE artifacts live; absent, the test's
+                            #   own directory serves
+      record_raw:    bool   # also keep the PRE-canonicalisation stream
+      record_timing: bool   # also keep the per-line cadence (4)
+
+THE FOOTPRINTS. Beside the records the Store keeps what HAPPENED, most
+recently -- the RECENT FOOTPRINTS OF EXECUTION. This is what a recursive
+listing over results reads ('hwut info' in HWUT today).
+
+JSON. One entry per test and choice, one sub-entry per OPERATION:
+
+    { "parse": {
+        "basic": {
+          "Run":     { "when": "2026-07-26T09:14:03Z",
+                       "host": "linux-x86_64/ws-07",
+                       "verdict": true,
+                       "report": "OK",
+                       "canonicaliser": { "stdout": ["python3",
+                                          "hwut_pype.py", "clean.pype"] },
+                       "compare": { "numeric_tolerance_ratio": 0.01 } },
+          "Accept":  { "when": "2026-07-20T11:02:55Z",
+                       "host": "linux-x86_64/ws-07" },
+          "Display": { "when": "2026-07-26T09:15:40Z",
+                       "host": "linux-x86_64/ws-07" } } } }
+
+ONE FOOTPRINT FILE PER TEST DIRECTORY, holding every test in it. A
+recursive listing walks directories and reads one file from each. Entering
+and leaving a directory is a CEREMONY in any case; reading and writing that
+file is part of it.
+
+THE DIRECTORY IS THE LOCK -- 'DirectoryLock', taken with 'with', raising
+'DirectoryBusy' when a live process holds it. Consistency is kept at
+directory level, not per file -- one lock guards the directory's footprint
+file and its tests' output alike, and it is what keeps two runs of a hwut
+application out of each other's way.
+
+    acquire   'mkdir' of a lock sub directory. 'mkdir' either creates or
+              fails; it cannot half-succeed, so the winner is decided
+              without a second mechanism.
+    holder    the lock names its holder: (PROCESS ID, WHEN IT STARTED).
+              The PAIR is what identifies -- a process id alone does not,
+              since the system reuses them.
+    steal     LIVENESS IS ASKED, NOT INFERRED. If no process of that id
+              started at that time exists, the holder is gone: remove the
+              lock and retry. No expiry, no heart beat, no clock skew, and
+              a crashed run never leaves a lock behind it.
+    release   the lock directory is removed on exit.
+
+  A loser of the steal race simply fails its next 'mkdir' and waits, so
+  removal needs no agreement between the removers.
+
+  WHERE THE PAIR CANNOT BE HAD, DO NOT LOCK. An operating system that
+  cannot report when a process started cannot support concurrent hwut
+  sessions, and a user on such a system knows it. This is the same
+  degradation shape procsitter already applies to its platform-dependent
+  caps: report the reduced capability, do not pretend to it.
+
+'report' is the brief report token (section 13), so a failure names itself:
+BUILD_FAILED, TARGET_NOT_BUILT, TEST_APP_STALLED, and the rest.
+
+NOT A HISTORY. Exactly ONE entry per (test, choice, operation), OVERWRITTEN
+each time, by the single writer that section 3 guarantees. What was done
+BEFORE is the concern of the software configuration
+management system -- git and its kin -- and never of this component. A
+footprint answers "what is the state of this test now", not "what has been
+done to it". No append, no rotation, no log.
+
+THE VERDICT SITS HERE, not in the record. A verdict belongs to an EXECUTION
+EVENT; the stored streams are artifacts of provision. Re-comparing one
+record against an edited nominal must be free to yield a different verdict,
+which it cannot be if the verdict is welded to the stream.
+
+BOTH HALVES OF FREEING ARE RECORDED, and for the same reason: a record is
+history, and the configuration may have moved since.
+
+    'canonicaliser'  changed the RECORD    -- a Replay whose subject was
+                     frozen under one and whose nominal was accepted
+                     under another compares two DIFFERENT freeings, and
+                     the law of the arms breaks with nothing able to
+                     say so.
+
+    'compare'        changed the VERDICT   -- 'verdict: true' means one
+                     thing under a strict setup and another under a
+                     loose one. Recording only what DIFFERS from
+                     compare's default: a default setup adds nothing,
+                     and a footprint does not grow whenever compare
+                     gains an option.
+
+Neither names a tolerance or a pype flag: both walk whatever the lower
+component declares, so an option invented later is recorded the day it is
+first used.
+
 The DEFAULT backend is HWUT's GOOD filesystem: a test's stdout nominal IS
 the 'TEST/GOOD/<name>.txt' file HWUT already diffs against, and Accept
 writing it is HWUT's 'make GOOD'. So testrun's Run -> EquivalenceCheck ->
-Accept GENERALIZES HWUT's run -> diff -> promote loop to many subjects,
+Accept GENERALISES HWUT's run -> diff -> promote loop to many subjects,
 languages, replay, and display. The storage modality (names, persistence)
 is the backend's business, not the design's.
 
@@ -279,19 +598,20 @@ PART III -- COMPARISON & THE OPERATIONS
 7  THE SUBJECTS-TO-NOMINALS MAP  (compare-side; used by the two READERS)
 ----------------------------------------------------------------------------
 
-PURE COMPARE concern: for each subject, WHAT it is held against and HOW.
-Determinization is NOT here (it is provision, section 3). Identical
+PURE COMPARE concern: for each subject, WHAT it is held against.
+Canonicalisation is NOT here (it is provision, section 3). Identical
 whether the subjects come from a Run or a Replay.
 
-  @dataclass SubjectCheck:
-      nominal:         Nominal      # the reference production (section 6)
-      compare_options: object       # compare's tuning (declarative)
-
-  subjects: dict   # subject name -> SubjectCheck
+  subjects: dict   # subject name -> Nominal (section 6)
                    #   "stdout" | "stderr" | "<OUT/ file name>"
                    # a subject absent from the map is not judged.
 
-Compare aligns the DETERMINIZED subject against the nominal; the raw
+HOW is not here. Compare's tuning is the compare SETUP of the scenario and
+lives in 'TestChoiceConfiguration' (section 3), one per choice, as compare's
+own struct held verbatim. This map says only WHAT each subject is held
+against.
+
+Compare aligns the CANONICALISED subject against the nominal; the raw
 stream never enters comparison. This map is shared by EquivalenceCheck
 and DifferenceDisplay; Accept has its own per-subject step (section 10).
 
@@ -305,20 +625,50 @@ Investigates CORRECTNESS, fast and fast-fail. Nothing about display.
   @dataclass EquivalenceCheckConfig:
       name:       str
       groundwork: Run | Replay
-      subjects:   dict                 # subject name -> SubjectCheck
+      subjects:   dict                 # subject name -> Nominal
+      compare:    Configuration|None   # the choice's compare setup (3)
+      fast_fail:  bool = True          # stop at the first differing
+                                       #   subject. Subjects are compared
+                                       #   in NAME ORDER, so the same
+                                       #   difference is reported on
+                                       #   every run.
 
   class EquivalenceCheck:
-      async def run(self, observer=None) -> EquivalenceResult
+      async def run(self, observer=None) -> TestResult
 
-  @dataclass EquivalenceResult:
+EACH SUB-PROCESS RETURNS ITS OWN RESULT; none is merged into another.
+
+  @dataclass Provision:              # WHAT WAS PROVIDED (3, 5)
+      records:     tuple                 # attribution records; empty when
+                                         #   provision was by stored data
+      report:      E_TestRunResult       # OK, or why provision failed
+
+  @dataclass Comparison:             # WHAT WAS COMPARED -- ABSENT when
+      subject_verdict_db: dict           #   provision never delivered
+      report:      E_TestRunResult
+
+A noun names the thing provided, not a wrapper around it: 'Provision' and
+'Comparison' are PRODUCTS. 'TestResult' keeps its suffix because it is not
+a product -- it is DERIVED, folded from whichever products exist.
+
+So "no comparison happened" is an ABSENCE, not a null field in a
+half-filled type; and a field's origin is readable from its type rather
+than by convention.
+
+THE TEST'S VERDICT IS DERIVED, and belongs to neither of them:
+
+  @dataclass TestResult:
       name:        str
-      report:      E_TestRunResult      # OK or the one reason token
-      verdict:     bool
-      subject_verdict_db: dict          # subject name -> bool
-      records:     tuple                 # attribution records (Run only)
+      verdict:     bool                  # folded over what was produced
+      report:      E_TestRunResult        # the FIRST reason by precedence
+      provision:   Provision
+      comparison:  Comparison|None
 
-  Internally: Run -> (build? ->) run_test_app(consumer=None);
-  Replay -> compare.is_equivalent over the recorded readers.
+A FAILED BUILD IS A FAILED TEST. Not "the test could not run": failing to
+build is a SHORTCOMING OF THE CODE under test, so the verdict is false and
+the report is BUILD_FAILED. The comparison is absent, and the test still
+has its result. The precedence of section 13 decides which reason speaks
+when more than one could.
 
 
 ----------------------------------------------------------------------------
@@ -328,17 +678,18 @@ Investigates CORRECTNESS, fast and fast-fail. Nothing about display.
 Aligns NOTHING and renders NOTHING. It drives the DOWN half of the feed
 (section 11): compare produces the aligned comparison, DifferenceDisplay
 routes it to a display TARGET, the target's driver renders. Only the
-DETERMINIZED subject is shown, side by side with the nominal; a recorded
+CANONICALISED subject is shown, side by side with the nominal; a recorded
 timing channel MAY annotate each line with its delta (analyst aid, never
 part of a verdict).
 
   @dataclass DifferenceDisplayConfig:
-      name:       str
-      groundwork: Run | Replay
-      subjects:   dict                 # subject name -> SubjectCheck
-      target:     E_DisplayTarget      # selects the DRIVER (a DisplayAdapter
-                                       # implementation, section 11); the
-                                       # driver owns its own connection
+      name:           str
+      groundwork:     Run | Replay
+      subjects:       dict            # subject name -> Nominal
+      compare:        Configuration|None
+      adapter:        DisplayAdapter|None   # given, it WINS over target
+      only_differing: bool = True     # a MATCHING subject is not carried
+                                      #   out at all
 
   class DifferenceDisplay:
       async def run(self, observer=None) -> DifferenceDisplayResult
@@ -357,7 +708,7 @@ part of a verdict).
 Acceptance's CONTENT PRODUCTION -- authoring, merging, editing -- is
 BEYOND scope: an external tool / IDE / human does it. Our side is thin:
 the nominal is WRITTEN FROM A COMPLETE DUMP we did not construct --
-replaced WHOLESALE, per subject, in the determinized domain. (The dump is
+replaced WHOLESALE, per subject, in the canonicalised domain. (The dump is
 the same KIND of thing as the nominal: a subject record.)
 
     TAKE_DUMP   a complete dump is HANDED to us (the current output, or a
@@ -374,8 +725,13 @@ from HERE there are only these two.
       dump:        Nominal|None           # TAKE_DUMP: the complete dump
       interaction: object|None            # INITIATE: how to launch + collect
   @dataclass AcceptConfig:
-      name:     str
-      subjects: dict                      # subject name -> AcceptStep
+      name:       str
+      subjects:   dict                    # subject name -> AcceptStep
+      choice:     str|None                # which scenario is accepted
+      groundwork: Run|Replay|None         # what Accept PULLS when a step
+                                          #   names no dump
+      compare:    Configuration|None      # the setup an INITIATE session
+                                          #   presents its DOWN under
   class Accept:
       async def run(self, observer=None) -> AcceptResult
 
@@ -421,15 +777,29 @@ HTML) -- an example, not the interface.
   mismatch it REFUSES rather than mis-read.
 
 11.3  UP IS THE ARTIFACT, NOT THE VIEW. DOWN is a rich PROJECTION for
-human eyes; UP is the plain determinized NOMINAL STREAM plus a
+human eyes; UP is the plain canonicalised NOMINAL STREAM plus a
 status -- deliberately ASYMMETRIC. We NEVER reconstruct the nominal from
-the feed: compare tokenizes and may normalize (whitespace, transparent
+the feed: compare tokenises and may normalise (whitespace, transparent
 tokens, tolerance classes), so unparsing a view back to authoritative
 bytes is lossy-risk, and a wrong nominal poisons every future comparison.
 Instead, at INITIATE we hand the tool its MATERIAL -- the feed (to
 display) AND the plain subject + plain nominal streams (to merge FROM) --
 and it returns the plain merged stream. So Accept stays thin and
 byte-exact. Only the UP envelope is new; sign/version it like DOWN.
+
+  CONCRETELY:
+
+    @dataclass Resolution:
+        intent:       E_Intent      # REALIGN | COMMIT | CANCEL
+        nominal_text: str|None      # the PLAIN artifact, never a view
+        signature:    str           # checked BEFORE the message is read
+
+    E_Intent: REALIGN | COMMIT | CANCEL
+
+  A COMMIT carrying NO artifact is downgraded to CANCEL: committing an
+  absent stream would store emptiness as the accepted behaviour. A driver
+  with no 'resolve' cancels too -- half-duplex is a driver's choice, not
+  a fault.
 
 11.4  THE HUBS AND THE DISPLAY ADAPTER. Our hub drives the session (emit
 DOWN, consume UP, reduce to the nominal stream). It reaches any target
@@ -439,7 +809,11 @@ through ONE interface -- a DisplayAdapter stating a required SEQUENCE:
 
 A DRIVER implements that sequence for ONE tool; its connection mechanics
 (a socket, a pipe, mergetool files) are the driver's OWN concern -- there
-is NO shared 'connection' type. 'E_DisplayTarget' selects the driver.
+is NO shared 'connection' type. 'E_DisplayTarget' selects the driver
+through 'driver_for()' -- the ONE place a target becomes a driver, so
+adding a tier touches one function. 'resolve' happens INSIDE the open
+session: open -> present -> resolve -> close, since a driver whose
+connection IS the session has nothing to answer on once it is closed.
 
 11.5  DISPLAY TARGETS -- TWO TIERS. No semantic diff/merge protocol exists
 to adopt (verified: LSP/DAP prove the "one protocol, many editors"
@@ -489,7 +863,7 @@ view. UP thus carries an INTENT with its plain bytes:
     COMMIT   the final nominal  -> stored
     CANCEL   abandon; the nominal is unchanged
 
-11.7  DIFFERENTIAL RE-ASSOCIATION (optimization). The subject is fixed, so
+11.7  DIFFERENTIAL RE-ASSOCIATION (optimisation). The subject is fixed, so
 an edit perturbs the alignment only LOCALLY -- re-align just a WINDOW:
 
     old association: [ head ......... | edited region | ......... tail ]
@@ -501,7 +875,7 @@ an edit perturbs the alignment only LOCALLY -- re-align just a WINDOW:
     START = first affected line pair (nominal side reaches the edit;
             backed to a stable anchor).
     END   = first pair beyond the change where the new alignment
-            re-synchronizes with the old (same subject line, same nominal
+            re-synchronises with the old (same subject line, same nominal
             content, modulo the line-count shift), confirmed by a RUN of
             stable pairs, not one.
 
@@ -510,7 +884,7 @@ bidirectional subject<->nominal binding) and multi-line regions
 (potpourri/verbatim/ignore/table) straddling the window; there, WIDEN or
 fall back to full. Because the safe window needs compare's own semantics,
 this lives IN compare -- an incremental 'reassociate(prior, changed_span)'
-beside feed(). Purely an optimization: COMMIT always does a FULL re-align,
+beside feed(). Purely an optimisation: COMMIT always does a FULL re-align,
 so a miss costs at most a briefly imperfect DISPLAY, never a wrong nominal.
 
 
@@ -523,13 +897,21 @@ console log, a database of record); the target RECEIVES the comparison.
 Duck-typed, all methods optional; fan-out to several is a composite
 (observers ADD).
 
-    class Observer:
+    an observer implements what it cares about; there is NO base class
+    to inherit, and a method it lacks is not a fault:
+
         def started(self, name, groundwork_kind): ...
         def built(self, build_report): ...        # COMPILED Run only
         def verdict(self, subject_name, ok): ...
         def finished(self, result): ...
 
-  Shipped: ConsoleObserver, NullObserver (default). Web / db observers are
+    Operations call through 'notify(observer, method, *args)', which is
+    silent for a missing method AND for one that RAISES: an observer
+    watches, and nothing it does may reach a verdict. So a new call site
+    never breaks an existing observer.
+
+  Shipped: ConsoleObserver, NullObserver (default), ObserverGroup (they
+  ADD, as consumers do in 'tee()'). Web / db observers are
   the caller's, against this protocol.
 
 
@@ -551,12 +933,26 @@ PART V -- REFERENCE
 ############################################################################
 
 ----------------------------------------------------------------------------
-14  NAMING  (confirm or adjust)
+14  NAMES
 ----------------------------------------------------------------------------
 
-  module            test_run.py  (or a small package: run.py, replay.py,
-                    nominal.py, equivalence_check.py, difference_display.py,
-                    accept.py, feed.py)
+  package           a PACKAGE, not one module, one module per concern:
+                      configuration.py    TestConfiguration,
+                                          TestChoiceConfiguration (3)
+                      provision.py        Run, Replay, Provision (3, 5)
+                      build.py            BuildConfig, the build step (3)
+                      store.py            Store, StoreConfig (4, 6)
+                      nominal.py          Nominal and its kinds (6)
+                      equivalence_check.py  EquivalenceCheck (8)
+                      difference_display.py DifferenceDisplay (9)
+                      accept.py           Accept (10)
+                      feed.py             the feed session (11)
+                      observer.py         the progress seam (12)
+                      report.py           TestResult, Provision,
+                                          Comparison, the reason
+                                          PRECEDENCE (8, 13)
+                      session.py          run_test(), E_Goal -- THE FRONT
+                                          DOOR and its ceremony (2.8)
   groundwork        Run | Replay
   operations        EquivalenceCheck | DifferenceDisplay | Accept
   configs           EquivalenceCheckConfig | DifferenceDisplayConfig |
@@ -572,34 +968,4 @@ PART V -- REFERENCE
   file field        source_file
   args fields       application_arguments, build_arguments
   caps              max_wall_clock_sec, max_memory_mb, ...  (plain numbers)
-
-
-----------------------------------------------------------------------------
-15  DECISIONS & RESIDUALS  (the seven questions -- all settled)
-----------------------------------------------------------------------------
-
-  Q1 FEED / UP HALF (11): UP carries PLAIN nominal bytes (never a view to
-     unparse) with an intent REALIGN|COMMIT|CANCEL; merge is an ITERATIVE
-     alignment loop (11.6).
-  Q2 RECORD STORE (4,6): all access behind a STORE keyed by (test name,
-     subject); modality is a backend detail; default = HWUT GOOD (Accept =
-     make-GOOD).
-  Q3 TIMING FORMAT (4): a SIDECAR, never interleaved; store raw deltas +
-     host tag, derive the pairwise ratio on demand.
-  Q4 STALL PLACEMENT (4): a PROCSITTER cap (new output-gap cap +
-     containment reason); the Run's stall setting translates to it.
-  Q5 DISPLAY TARGETS (11.5): TWO TIERS -- RICH = our feed protocol, thin
-     per-IDE clients (nvim first, in compare/feeder); BASIC = git
-     mergetool/difftool (MERGED -> TAKE_DUMP).
-  Q6 CONNECTION TYPE (11.4): none -- the abstraction is a DisplayAdapter
-     (a required-sequence interface); a Driver owns its own connection.
-  Q7 CORPUS / MANY TESTS: OUT -- a higher orchestration layer over many
-     run_test calls.
-
-  CROSS-COMPONENT extensions implied (tracked for implementation): compare
-  gains 'reassociate' (11.7); procsitter gains an output-gap/stall cap (4).
-  Both small, both optional to the core flow.
-
-  RESIDUALS (detail, not architecture): the exact UP envelope framing; and
-  which RICH display client is written first (nvim proposed).
 ============================================================================

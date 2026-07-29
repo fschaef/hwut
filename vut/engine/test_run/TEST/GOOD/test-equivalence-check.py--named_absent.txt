@@ -1,0 +1,6 @@
+INSPECT: judged  = ['OUT/never-written', 'stdout']
+         verdict = False, report = output-file-not-found
+  OK  : the named-but-absent subject FAILS
+  OK  : and the report names the missing output, not a mismatch
+  OK  : while the subject that WAS produced is judged normally
+SUCCESS: named and absent is a fault; unnamed is not judged.

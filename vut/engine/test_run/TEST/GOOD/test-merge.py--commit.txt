@@ -1,0 +1,6 @@
+INSPECT: report = ok
+         stored = 'MERGED from subject line\n'
+  OK  : acceptance succeeded
+  OK  : the tool's plain bytes became the nominal
+  OK  : and the tool saw the real subject as its material
+SUCCESS: the merge tool's artifact becomes the nominal.

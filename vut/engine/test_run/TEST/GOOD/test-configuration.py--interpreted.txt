@@ -1,0 +1,7 @@
+INSPECT: interpreted + interpreter ['lua'] -> accepted
+INSPECT: INTERPRETED without interpreter -> source_kind is INTERPRETED but no interpreter argv prefix is given
+         EXECUTABLE with interpreter     -> an interpreter argv prefix is given, but source_kind is executable
+  OK  : an interpreted test carries no build configuration
+  OK  : INTERPRETED without an interpreter is refused
+  OK  : an interpreter where none is read is refused, not ignored
+SUCCESS: the argv prefix is required exactly where it is read.

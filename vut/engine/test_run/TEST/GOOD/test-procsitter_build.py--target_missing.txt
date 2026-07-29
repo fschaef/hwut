@@ -1,6 +1,0 @@
-INSPECT: exit = 0, built = ['real.out'], missing = ['ghost.out']
-  OK  : tool exit 0 -- the exit code alone would look fine
-  OK  : the built target is accounted
-  OK  : the unbuilt target is NAMED
-  OK  : verdict False; brief report 'target-not-built'
-SUCCESS: post-exit accounting catches the target the exit code missed.

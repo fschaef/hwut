@@ -1,0 +1,8 @@
+INSPECT: subject matches  -> verdict = True  report = ok
+                     per subject = {'stdout': True}
+INSPECT: subject differs  -> verdict = False report = not-equivalent-with-nominal
+                     per subject = {'stdout': False}
+  OK  : a matching subject passes and reports OK
+  OK  : a differing subject fails
+  OK  : and the report names the MISMATCH, nothing else being wrong
+SUCCESS: the verdict follows the comparison, and names itself.

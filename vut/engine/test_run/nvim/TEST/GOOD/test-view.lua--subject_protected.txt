@@ -1,0 +1,6 @@
+INSPECT: subject pane refused a change = true
+         nominal pane accepted one     = true
+         nominal now = alpha | beta EDITED | gamma
+  OK  : the subject pane REFUSES an edit
+  OK  : and the nominal pane accepts one
+SUCCESS: only the nominal is the author's to change.

@@ -1,0 +1,8 @@
+INSPECT: the observer saw
+           start demo [Run]
+             stdout True
+           end ok
+  OK  : the start names the operation and its groundwork
+  OK  : each subject's verdict arrives as it lands
+  OK  : and the derived result closes the arc
+SUCCESS: the arc is watchable without changing it.

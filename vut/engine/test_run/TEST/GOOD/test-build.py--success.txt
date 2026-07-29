@@ -1,0 +1,9 @@
+INSPECT: ran in    = BUILD/demo
+         report    = ok
+         built     = ['app']
+         missing   = []
+  OK  : the build ran in BUILD/<stem>, not in the test directory
+  OK  : the report is OK
+  OK  : the declared target is accounted present
+  OK  : and the outcome says it succeeded
+SUCCESS: a build runs in its own directory and accounts its targets.

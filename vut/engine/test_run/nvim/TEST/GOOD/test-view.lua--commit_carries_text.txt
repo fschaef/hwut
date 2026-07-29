@@ -1,0 +1,8 @@
+INSPECT: carried = "alpha\
+beta RESOLVED\
+gamma\
+"
+         decisions taken = commit, cancel
+  OK  : the commit carries the pane's PLAIN text, ending in a newline
+  OK  : both decisions are bound, and nothing else is
+SUCCESS: what is stored is the material, never a rendering.

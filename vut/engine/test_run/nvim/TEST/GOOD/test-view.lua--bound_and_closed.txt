@@ -1,0 +1,8 @@
+INSPECT: both panes scroll-bound   = true
+         cursor starts in nominal  = true
+         windows before / after    = 1 / 1
+  OK  : both panes are scroll-bound, so a row never drifts from its pair
+  OK  : the cursor starts where the author may type
+  OK  : the layout it borrowed is RESTORED, pane for pane
+  OK  : and its scratch buffers are gone -- nothing left to stumble on
+SUCCESS: level, focused, and tidy on the way out.

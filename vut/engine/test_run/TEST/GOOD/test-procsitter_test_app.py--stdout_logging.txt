@@ -1,6 +1,0 @@
-INSPECT: verdict = True; before 5 lines, after 9 lines; before==after: False
-  OK  : logging did not disturb the verdict
-  OK  : 'after' log holds the DETERMINIZED stream -- what is judged
-  OK  : 'before' log holds the app's RAW stdout (all items + done)
-  OK  : raw and canonicalised streams differ -- the pype did work
-SUCCESS: stdout tapped raw and canonicalised, verdict untouched.

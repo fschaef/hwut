@@ -1,0 +1,7 @@
+INSPECT: lock after a clean run  = False
+         a bad choice raised     = KeyError 'no-such-choice'
+         lock after the failure  = False
+  OK  : the lock is released after a clean run
+  OK  : a choice that was never described is a FAULT, not a default
+  OK  : and the lock is released even then
+SUCCESS: the lock is released however the ceremony ended.

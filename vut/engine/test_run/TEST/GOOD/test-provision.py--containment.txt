@@ -1,0 +1,6 @@
+INSPECT: silent run  -> containment FAIL_STALLED, report test-app-stalled
+         long run    -> containment FAIL_WALL_CLOCK_EXCEEDED, report test-app-contained
+  OK  : FAIL_STALLED becomes TEST_APP_STALLED
+  OK  : any other cap becomes TEST_APP_CONTAINED
+  OK  : and what the run DID produce is still handed over
+SUCCESS: a cap that ended the run reaches the report.

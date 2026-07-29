@@ -1,6 +1,0 @@
-INSPECT: verdicts = [('data.txt', True), ('stderr', True), ('stdout', True)]; labels = ['data.txt', 'stderr', 'stdout']; file pype = OK_COMPLETED
-  OK  : Lawyer reduced EVERY subject (live pype, stderr, file) to True
-  OK  : the async consumer saw a ChunkPair for every subject
-  OK  : post-exit file pype accounted -- its own record
-  OK  : overall verdict True across all three subjects
-SUCCESS: the Lawyer aligns stdout, stderr and files at once.

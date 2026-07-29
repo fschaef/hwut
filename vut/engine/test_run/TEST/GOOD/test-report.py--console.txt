@@ -1,0 +1,9 @@
+INSPECT: the console observer wrote
+           ... parse [Run]
+               build: ok
+               stdout   ok
+           === parse: ok
+  OK  : one line per notification, including 'built'
+  OK  : the arc is bracketed, so a scrolling log stays readable
+  OK  : a build's outcome is announced as it happens
+SUCCESS: progress is written where a person can see it.

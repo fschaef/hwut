@@ -1,0 +1,5 @@
+INSPECT: a live process holds the lock
+         acquire() -> False
+  OK  : the lock is NOT taken while its holder lives
+  OK  : and it is not broken either
+SUCCESS: a live holder is never robbed of its lock.

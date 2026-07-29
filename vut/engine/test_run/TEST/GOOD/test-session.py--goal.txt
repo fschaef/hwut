@@ -1,0 +1,7 @@
+INSPECT: VERDICT -> True, ok
+         DISPLAY -> True, adapter saw 0 items
+         operations recorded = ['Accept', 'Display', 'Run']
+  OK  : both goals read the same test and agree
+  OK  : a MATCHING subject is not carried out to the display
+  OK  : each goal wrote its own footprint entry
+SUCCESS: a caller asks for an outcome, not for a class.

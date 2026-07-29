@@ -1,0 +1,9 @@
+INSPECT: tool failed      -> recording-missing
+         nominal after    -> 'the old nominal\n'
+         tool wrote none  -> recording-missing
+         nominal after    -> 'the old nominal\n'
+  OK  : a failing tool cancels the acceptance
+  OK  : and the nominal is UNTOUCHED
+  OK  : a tool that exits cleanly but writes nothing also cancels
+  OK  : the nominal survives that too
+SUCCESS: an abandoned merge never becomes a nominal.

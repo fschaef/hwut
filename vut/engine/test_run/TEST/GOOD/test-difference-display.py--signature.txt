@@ -1,0 +1,5 @@
+INSPECT: our own signature   -> accepted
+         a foreign signature -> feed protocol 'some-other-protocol/9' cannot be parsed by 'vut-feed/1'
+  OK  : the signature this hub speaks is accepted
+  OK  : a foreign one is REFUSED rather than guessed at
+SUCCESS: refuse rather than mis-read.

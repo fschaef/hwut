@@ -1,0 +1,6 @@
+INSPECT: matching, only_differing -> shown [], items 0
+         matching, always         -> shown ['stdout'], items 5
+  OK  : a matching subject is not carried out at all
+  OK  : unless the caller asked for everything
+  OK  : and either way the verdict is unchanged
+SUCCESS: only what differs is carried, unless asked otherwise.

@@ -1,0 +1,6 @@
+INSPECT: judged = ['stderr', 'stdout']
+         shown  = ['stderr', 'stdout']
+  OK  : BOTH subjects are judged, not just the first
+  OK  : and both are shown
+  OK  : the test still fails
+SUCCESS: a difference is shown whole, never truncated.

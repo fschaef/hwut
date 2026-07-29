@@ -1,0 +1,9 @@
+INSPECT: empty choice_db                  -> choice_db is empty: no call is described
+INSPECT: None mixed with named choices    -> choice_db mixes the 'None' choice with named choices ['basic']
+INSPECT: COMPILED without a build         -> source_kind is COMPILED but no build configuration is given
+INSPECT: interpreter given, but COMPILED  -> an interpreter argv prefix is given, but source_kind is compiled -- it is read only for INTERPRETED
+INSPECT: a choice entry of the wrong type -> choice 'basic' maps to dict, not a TestChoiceConfiguration
+INSPECT: a build given where none is read -> a build configuration is given, but source_kind is executable -- a build happens only for COMPILED
+  OK  : every unservable configuration is refused
+  OK  : a servable one passes silently
+SUCCESS: unservable configurations refused where they are written.

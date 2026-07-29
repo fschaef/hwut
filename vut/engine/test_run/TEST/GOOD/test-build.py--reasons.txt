@@ -1,0 +1,6 @@
+INSPECT: tool not on PATH -> build-tool-not-found
+         tool exits non-zero -> build-failed
+  OK  : an absent tool reports the TOOL, not the missing target
+  OK  : a failing tool reports the FAILURE, not the missing target
+  OK  : the target is still accounted absent -- the evidence remains
+SUCCESS: tool reasons outrank target reasons.

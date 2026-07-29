@@ -1,0 +1,6 @@
+INSPECT: the recorded holder has exited
+         acquire() -> True, taken = True
+  OK  : a lock whose holder is gone is broken and re-taken
+  OK  : and this process now holds it
+  OK  : release removes it
+SUCCESS: a crashed run leaves no lock behind it.
