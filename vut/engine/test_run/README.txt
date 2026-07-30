@@ -2,7 +2,9 @@
 VUT-TESTRUN
 ============================================================================
 
-Status:  PROPOSED -- the design is settled; the code is partial.
+Status:  IMPLEMENTED, except where DISCUSSIONS.txt says otherwise.
+         The design is settled; what is not built is named there,
+         and nowhere else.
 Layer:   ORCHESTRATION of ONE test -- above procsitter, the supervised
          build, and the compare engine.
 Bounds:  ONE test. Selecting, ordering and scheduling MANY tests is a
@@ -41,53 +43,58 @@ comparison.
 2.1  AT A GLANCE. One declarative description flows down into the
 existing components and fans out into three operations:
 
-        DECLARATIVE DESCRIPTION
-        (source, kind, caps, nominals, subjects, ...)
-                    |
-                 TRANSLATION   -- builds the component configs
-                    |             (procsitter / build / compare)
-                    v
-        +---------- PROVISION -- a reader per subject ------------+
-        |  Run :  build -> execute -> canonicalise                 |
-        |         (build)  (procsitter)  (pype)                   |
-        |  Replay: read the stored records                        |
-        +--------------------------+------------------------------+
-                                   | subject readers
-                                   |   (stdout / stderr / files)
+                        DECLARATIVE DESCRIPTION
+               (source, kind, caps, nominals, subjects, ...)
+                                   |
+                                   |
                                    v
-                 NOMINAL  ---->  COMPARE  (aligns two readers)
-                (accepted        |
-                 record)         |
-              +------------------+-------------------+
-              v                  v                   v
-        EquivalenceCheck   DifferenceDisplay      Accept
-         -> VERDICT         -> feed a TARGET      -> write NOMINAL
-              |                  |                    |
-           OBSERVER          DISPLAY ADAPTER        STORE
-         (watch run)        (IDE / mergetool)   (GOOD by default)
+        .----- PROVISION of behavior description output ----------.
+        |                                                         |
+        |  Run :  build --> execute ----> canonicalise            |
+        |         (build)   (procsitter)  (pype/procsitter)       |
+        |                                                         |
+        |  Replay: read the stored records                        |
+        |                                                         |
+        '--------------------------.------------------------------'
+                                   | subject readers
+                                   | (stdout / stderr / files)
+                                   |
+                                   v
+       NOMINAL  ------------->  COMPARE  (aligns two readers)
+       (accepted record)           |
+                                   |
+                .------------------+-------------------.
+                v                  v                   v
+          EquivalenceCheck   DifferenceDisplay      Accept
+           -> VERDICT         -> feed a TARGET      -> write NOMINAL
+                |                  |                    |
+             OBSERVER          DISPLAY ADAPTER        STORE
+           (watch run)        (IDE / mergetool)   (GOOD by default)
 
-2.2  LAYERING. The orchestration owns no heavy machinery; it TRANSLATES
-the description into the lower components' configs and WIRES them.
-Containment is procsitter's, the build is build.py's, aligning and judging
-and feeding are compare's.
+2.2  LAYERING.
 
     OPERATIONS    EquivalenceCheck | DifferenceDisplay | Accept
                   (each its own class + config)
-        +----------------------------------------------------------+
+        ------------------------------------------------------------
     GROUNDWORK    Run (execute + contain + record) | Replay (stored)
                   -> the SUBJECTS: stdout / stderr / file readers
-        +----------------------------------------------------------+
+        ------------------------------------------------------------
     TRANSLATION   declarative description -> component configs
                   *** procsitter / build / compare TYPES never appear
                       above this line ***
-        +----------------------------------------------------------+
+        ------------------------------------------------------------
     COMPONENTS    procsitter | compare        (their own components)
 
-2.3  ONE ARTIFACT, THREE ROLES. There is a single kind of artifact -- a
-CANONICALISED SUBJECT STREAM (bytes, stored or produced live) -- wearing
-three hats:
+2.3  ONE ARTIFACT, THREE ROLES: The behavior description
 
-              a CANONICALISED SUBJECT STREAM
+The output of the test app is considered a description under the tolerance
+of given procedures is considered to be a precise description of the behavior
+of the unit under test.
+
+This textual output is an artifact that appears in three roles:
+
+
+              A CANONICALISED SUBJECT STREAM
              /            |                 \
       Run candidate  Replay candidate     NOMINAL
       (just made)    (read from store)  (a candidate, ACCEPTED & kept)
@@ -129,6 +136,28 @@ step. Those are what an operation is ASKED for, not what the test IS.
       same thing from disjoint keys, so no operation ever branches on
       which one it got -- which is what keeps compare blind to provenance
       (2.4).
+
+2.5b  THE HEART OF THE OPERATION, and who owns each part of it:
+
+    Equivalence( D(b_pole), D(b), T )
+
+    Equivalence  its STRUCTURE   THE FRAMEWORK -- compare. The same for
+                                 every test; no test changes how
+                                 equivalence works, only what it is given.
+    D            the DESCRIPTION THE TEST APPLICATION: what it prints,
+                                 and the CANONICALISER that rewrites that
+                                 into canonical form. Both are D.
+    T            the TOLERANCE   THE TESTER, as declared parameters --
+                                 compare's own struct, held verbatim.
+    b_pole       the REFERENCE   THE STORE: written by Accept, read by
+                                 every comparison after (6).
+
+  THIS IS WHY BOTH KNOBS SIT IN ONE PLACE. 'TestChoiceConfiguration' (3)
+  holds the canonicalisers AND the compare setup, because D and T are one
+  decision about one scenario taken twice -- understanding first,
+  tolerance only over what understanding cannot reach (PHILOSOPHY 6).
+  Filing them apart would make "what does this test absorb?" a question
+  with two answers in two places.
 
 2.6  TWO LAWS THAT KEPT RE-DERIVING THEMSELVES. Both were reached
   independently in a dozen places before either was written down, so

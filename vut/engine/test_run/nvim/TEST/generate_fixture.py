@@ -44,7 +44,18 @@ async def main():
     await feed_down(Configuration(), io.StringIO(SUBJECT),
                     io.StringIO(NOMINAL), adapter, "stdout")
     message_list = [down_message(item) for item in adapter.item_list]
-    path = os.path.join(os.path.dirname(__file__), "down_fixture.lua")
+    #  THE SAME ORACLE, IN A NEUTRAL FORM. The protocol is not Lua's;
+    #  a client in TypeScript or C++ must be held against exactly what a
+    #  client in Lua is held against, or "it works" means something
+    #  different per language.
+    import json
+    here = os.path.dirname(__file__)
+    with open(os.path.join(here, "down_fixture.json"), "w",
+              encoding="utf-8") as fh:
+        json.dump(message_list, fh, indent=1, sort_keys=True)
+        fh.write("\n")
+
+    path = os.path.join(here, "down_fixture.lua")
     with open(path, "w", encoding="utf-8") as fh:
         fh.write("-- SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer\n"
                  "-- " + "-" * 73 + "\n"
@@ -59,6 +70,7 @@ async def main():
         for message in message_list:
             fh.write("  " + as_lua(message) + ",\n")
         fh.write("}\n")
-    print("%i messages -> down_fixture.lua" % len(message_list))
+    print("%i messages -> down_fixture.lua, down_fixture.json"
+          % len(message_list))
 
 asyncio.run(main())

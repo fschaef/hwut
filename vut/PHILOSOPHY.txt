@@ -15,6 +15,8 @@ ______________________________________________________________________________
         |  FREEING -- understanding first, tolerance only after
         v
     JUDGEMENT            green if and only if the behaviour was admissible
+                         -- and 1.1 says exactly when a test can deliver
+                            that 'if and only if'
 
 
 1  THE OBJECT
@@ -28,6 +30,192 @@ The behaviour belongs to a UNIT: a causal system with a causal contract and
 a consistency contract. A TEST is one complete arc of that unit --
 compilation, run, termination -- observed from outside the process. A CHOICE
 is one scenario of that arc.
+
+
+1.1  WHEN A TEST IS WORTH HAVING
+______________________________________________________________________________
+
+Write D for the transformation from BEHAVIOUR to DESCRIPTION -- what the
+unit does, turned into the text a test reads. Write Eq(x, y, T) for the
+comparison of two descriptions under a stated tolerance T. Let GOOD be
+the admissible behaviours and BAD the inadmissible ones, and let
+
+    GOOD  intersect  BAD  =  {}
+
+THE CRITERION. A test, and the description it rests on, is worth having
+IF AND ONLY IF
+
+    for all b0, b1 in GOOD :        Eq(D(b0), D(b1), T)  =  true
+    for all b0 in GOOD, b in BAD :  Eq(D(b0), D(b),  T)  =  false
+
+That is: Eq o D collapses ALL of GOOD into ONE class, and NO member of
+BAD falls into it.
+
+                      D                      Eq(-, -, T)
+    BEHAVIOUR  ------------->  DESCRIPTION  ------------->  one class
+
+         .--------.                     .--------------.
+         |  GOOD  | ------------------> |  ONE class   |   every good
+         '--------'                     '--------------'   behaviour,
+                                                           indistinguishable
+         .--------.                     .--------------.
+         |  BAD   | ------------------> | anywhere ELSE|   no bad behaviour,
+         '--------'                     '--------------'   ever inside
+
+TWO WAYS TO FAIL, and they are the only two:
+
+    a GOOD pair that DIFFERS      the description or the tolerance
+    (first line broken)           discriminates too finely. FALSE RED --
+                                  loud, annoying, and self-reporting.
+
+    a BAD one that MATCHES        the description or the tolerance is
+    (second line broken)          too coarse. FALSE GREEN -- silent, and
+                                  it cannot report itself.
+
+D AND T ARE THE ONLY KNOBS, and section 5 names them: UNDERSTANDING
+shapes D, TOLERANCE shapes T. So "understand what you can, tolerate only
+what you cannot" is not taste -- it is the instruction for satisfying two
+inequalities at once, using the transform that composes before reaching
+for the relation that does not.
+
+ACCEPTANCE IS NOT A FREE CHOICE. It is tempting to say the nominal's
+identity does not matter -- if every good description matches every other,
+any b0 in GOOD would serve. That is true and it is the wrong lesson,
+because it demands the strictest possible form of the criterion and gives
+nothing back.
+
+TO ACCEPT IS TO DECLARE THE POLE OF GOODNESS: not any member of GOOD, but
+the one all the others are arranged around. And the word already said so
+-- a NOMINAL value, in engineering, is the designated centre with the
+tolerance band around it. It was never 'whatever run we happened to
+freeze'.
+
+The gain is measurable. Around an ARBITRARY member, the band must span
+the whole spread; around the POLE it need only reach the furthest member:
+
+    arbitrary b0     T  >=  diameter( D(GOOD) )
+    the POLE         T  >=  radius( D(GOOD) )        and radius <= diameter
+                                                     <= 2 x radius
+
+So the pole roughly HALVES the tolerance the criterion needs -- and every
+unit of tolerance not spent is margin left over against BAD. The margin
+condition becomes
+
+    radius( D(GOOD) )  <=  T  <  distance( pole, D(BAD) )
+
+which is a strictly easier thing to satisfy than the same statement about
+an arbitrary representative.
+
+    .......... D(GOOD) ..........
+    o     o    o   X   o    o   o          X = the pole
+          |<---- radius --->|              a band reaching the furthest
+    |<-------- diameter -------->|         member, not spanning the spread
+
+WHERE THE POLE IS NOT KNOWN, and usually it is not, acceptance is a
+HYPOTHESIS: that this run stands at the centre. The hypothesis is
+falsifiable, and a disagreement between two good runs is exactly what
+falsifies it. So a test that starts failing on a second machine has not
+found a bug in the code -- it has found that the accepted description was
+not the pole, and the answer is to move the nominal toward the centre or
+to widen D until the spread vanishes.
+
+ACCEPTING A RUN NEAR THE EDGE IS A MISTAKE EVEN THOUGH THE RUN IS GOOD.
+That is the practical content of all of this, and it is invisible without
+it.
+
+THE VERDICT MUST NOT DEPEND ON WHICH GOOD BEHAVIOUR WAS ACCEPTED. Written
+out, that is a constraint on Eq itself:
+
+    Eq(D(b0), D(b), T)  is not a function of  b0
+
+The criterion already implies it -- if every good description matches
+every other and none matches a bad one, then any b0 in GOOD decides
+identically. So the danger is not that the rule is missing; it is that
+NOTHING CHECKS IT, and a tolerance can break it quietly.
+
+THE NUMERIC CASE, which is where it bites first. Accept 0.815 under a
+RELATIVE tolerance and the band is centred on 0.815; accept 0.816 and it
+is centred there instead. A value near the edge is then admissible or not
+DEPENDING ON WHICH RUN HAPPENED TO BE ACCEPTED:
+
+    accepted 0.815 |-----------o-----------|
+    accepted 0.816     |-----------o-----------|
+                                           ^
+                                     inside one band,
+                                     outside the other
+
+Two demands follow.
+
+  Eq MUST BE SYMMETRIC. 'within r of the NOMINAL' is not: it makes the
+  nominal an anchor, and the criterion is not even well posed. A relative
+  tolerance must be relative to something symmetric -- the larger
+  magnitude, or the mean -- or be absolute.
+
+  THE MARGIN CONDITION. Let d be the distance Eq thresholds, so that
+  Eq(x, y, T) holds exactly when d(x, y) <= T. Since every comparison is
+  against the POLE and never between two arbitrary members, the two lines
+  of the criterion read
+
+      radius( D(GOOD) )  <=  T  <  distance( pole, D(BAD) )
+
+  and such a T EXISTS if and only if
+
+      radius( D(GOOD) )  <  distance( pole, D(BAD) )
+
+  -- the good descriptions must lie closer to their centre than that
+  centre lies to any bad one. Where that holds, non-transitivity never
+  bites, because nothing is ever chained: every comparison has the same
+  fixed anchor.
+
+AND THIS IS WHY UNDERSTANDING COMES FIRST. A canonicaliser that collapses
+the varying part reduces the diameter of D(GOOD) TO ZERO, and then any
+T >= 0 satisfies the left inequality and the choice of representative
+cannot matter at all. Tolerance is needed exactly where D cannot do that
+-- and there the margin must be checked, not assumed.
+
+    radius 0          any T works; where the pole IS matters not at all
+    radius > 0        T must fit between the spread about the pole and
+                      the gap to BAD -- and somebody must know both
+
+THE HEART OF THE OPERATION, then, is one expression:
+
+    Equivalence( D(b_pole),  D(b),  T )
+
+and its three parts are owned by three different parties. That division
+is the whole architecture:
+
+    Equivalence   its STRUCTURE      THE FRAMEWORK. The same for every
+                  --------------     test ever written; no test may
+                                     change how equivalence WORKS, only
+                                     what it is given.
+
+    D             the DESCRIPTION    THE TEST APPLICATION, in two pieces:
+                  --------------     what it PRINTS, and the
+                                     canonicaliser that rewrites that
+                                     into canonical form. Both are the
+                                     author's, and together they are D.
+
+    T             the TOLERANCE      THE TESTER, as declared parameters.
+
+    b_pole        the REFERENCE      THE STORE. Written by acceptance,
+                  --------------     read by every comparison after.
+
+THE FRAMEWORK OWNS NO JUDGEMENT. It supplies the machinery for both knobs
+and chooses neither -- which is why every absorption is a CLAIM the
+author makes and can be held to (section 8), rather than a behaviour the
+tool exhibits.
+
+AND THE TWO KNOBS ARE THE AUTHOR'S TOGETHER. D and T are not owned by
+different people or held in different places: they are one decision about
+one scenario, taken twice. Section 6 says which to reach for first;
+nothing says they may be separated, and a design that files them apart
+makes "what does this test absorb?" a question with two answers in two
+places.
+
+THE DISJOINTNESS IS A DEMAND ON THE AUTHOR. GOOD and BAD must not overlap
+-- and where a specification leaves a behaviour both admissible and not,
+no test of it can exist. The fault is then in the specification, and no
+choice of D or T repairs it.
 
 
 2  THE CHANNEL
@@ -110,6 +298,11 @@ about. A tolerance relation does not compose, so nothing can be built on top
 of it. Choosing tolerance where understanding was available is therefore a
 strict loss, not a matter of taste.
 
+In the terms of 1.1: both knobs move the same two inequalities, but D
+moves them by CHANGING THE OBJECT and T by WEAKENING THE RELATION. Only
+the first leaves a relation that composes -- so reach for D first, and
+for T only over what D cannot reach.
+
 A suite heavy in tolerances and light in pype scripts is a suite whose
 author declined to understand the output and bought a looser verdict
 instead.
@@ -118,11 +311,13 @@ instead.
 7  THE ASYMMETRY OF ERROR
 ______________________________________________________________________________
 
-    admissible, but RED     a nuisance. Visible. Someone investigates.
+    admissible, but RED     the FIRST line of 1.1 broken. A nuisance.
+                            Visible. Someone investigates.
 
-    inadmissible, but GREEN the real failure, invisible by construction:
-                            a passing test reports nothing, and the
-                            evidence was discarded before the comparison.
+    inadmissible, but GREEN the SECOND line broken -- the real failure,
+                            invisible by construction: a passing test
+                            reports nothing, and the evidence was
+                            discarded before the comparison.
 
 Every tolerance and every canonicalisation is therefore a CLAIM: what is
 absorbed here is channel distortion, not behaviour. A wrong claim swallows a

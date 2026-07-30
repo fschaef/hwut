@@ -71,22 +71,35 @@ README section 11.7 requires it: the subject is fixed while the nominal is
 edited, so re-alignment against a changed nominal must not redo the whole
 comparison.
 
-MEASURE BEFORE BUILDING. It is EXPLICITLY an optimisation (11.7: a miss
-costs a briefly imperfect display, never a wrong nominal), and its
-consumer now exists -- 'merge_session' re-presents a comparison after
-every edit. So the question is answerable rather than arguable.
+NOT A MEASUREMENT QUESTION. Frank-Rene: under the vast potential space of
+scenarios it is impossible to measure a representative set of merge
+operations. A sample bounds nothing -- the space is combinatorial in the
+nominal's edits, the alignment's structure, the analogies in force and
+the regions that straddle a window -- and a benchmark over it would
+answer a question nobody asked.
 
-OWED, in this order:
-    1. time a full re-alignment over a realistic nominal, through
-       'merge_session', and write the number down
-    2. only if it is too slow: the safe-window logic, whose hard cases
-       are analogies (global, bidirectional) and multi-line regions that
-       straddle the window
-    3. the oracle is exact and cheap: reassociate(prior, edit) must equal
-       associate(subject, new_nominal), so correctness needs no judgement
+THE QUESTION IS HOW TO IMPLEMENT IT WELL: the most effective form of
+'reassociate', as a FRAMEWORK that uses the infrastructure already
+there rather than a second algorithm beside it.
 
-If step 1 says it is fast enough, this entry is DELETED and nothing is
-built.
+WORTH ITS OWN DISCUSSION, and Frank-Rene has said so. What that
+discussion has to settle, at least:
+
+    what compare already computes that a re-alignment could REUSE
+      -- the association's own structures, the analogy db, the regions
+    what a nominal edit can and cannot invalidate, stated as a law
+      rather than discovered per case
+    where the boundary of a safe window IS, given that analogies are
+      global and bidirectional and regions may straddle it
+    whether 'reassociate' is a new entry point or a MODE of the
+      association that already exists
+
+WHAT IS ALREADY IN HAND, and should not be rebuilt:
+    an EXACT oracle -- reassociate(prior, edit) must equal
+      associate(subject, new nominal). Correctness needs no judgement,
+      only a comparison.
+    a consumer, once todo-16 lands: the merge loop re-aligns after every
+      edit, which is the only place this is ever exercised.
 
 
 ----------------------------------------------------------------------------
@@ -115,7 +128,7 @@ OWED, in the compare component:
 
 
 ----------------------------------------------------------------------------
-todo-15  THE CHANNEL  (parked -- the difftool front end comes first)
+todo-15  THE CHANNEL  (parked -- LOW-HANGING FRUIT after todo-2)
 ----------------------------------------------------------------------------
 
 Both halves work and now agree on the wire:
@@ -130,7 +143,9 @@ What is missing is the piece that makes them ONE thing: a running neovim
 on the other end of RemoteDisplay's pipe, folding as messages arrive and
 answering with an UP envelope when the author decides.
 
-PARKED, and one thing about it is SETTLED. Frank-Rene's shape is
+PARKED, and Frank-Rene expects it to be EASY once 'reassociate'
+(todo-2) is done -- the hard part is the alignment service behind the
+channel, not the channel. One thing about it is SETTLED: the shape is
 
     hwut.difftool -t nvim
 
@@ -143,4 +158,190 @@ a choice to take when the difftool front end is written, not before.
 
 It is TESTABLE HERE when the time comes: neovim is installed, 'nvim -l'
 drives it headlessly, and the mock client already proved the pipe shape.
+
+----------------------------------------------------------------------------
+todo-16  THE MERGE LOOP DOES NOT LOOP
+----------------------------------------------------------------------------
+
+README 11.6 specifies a LOOP, and 'merge_session' does one round:
+
+    DOWN -> resolve -> done          COMMIT and CANCEL are handled
+                                     REALIGN is declared and acted on
+                                     by nothing
+
+REALIGN is what makes an interactive merge interactive: the human edits,
+the IDE sends the working nominal back, and the ALIGNMENT changes --
+because alignment is COMPARE's, not the editor's. Without the loop an
+author sees the first association and every later edit is unaligned.
+
+    the SUBJECT is FIXED throughout; only the nominal evolves
+    each REALIGN is compare.feed(subject, working nominal) again
+    the IDE stays thin: it owns EDITING and RENDERING, nothing else
+
+OWED:
+    'merge_session' loops until COMMIT or CANCEL
+    a guard against an author looping forever -- a round cap, or none,
+      but decided rather than absent
+    the mock client gains a 'realign then commit' mode, so the loop is
+      tested without an editor
+    'protocol.lua' already builds a REALIGN envelope; nothing there
+      changes
+
+This is where 'reassociate' (todo-2) would pay, and the loop is what
+makes that measurable: until it exists there is nothing to time.
+
+----------------------------------------------------------------------------
+todo-17  A SECOND IDE  (VS Code, Notepad++, whatever comes)
+----------------------------------------------------------------------------
+
+What the nvim work leaves for the next editor, measured:
+
+    feed.py               494 lines   REUSED WHOLE. The Python side is
+                                      editor-neutral: JSON lines out, one
+                                      UP envelope back.
+    down_fixture.json       --        REUSED WHOLE. The same oracle in a
+                                      neutral form, so a client in any
+                                      language is held against exactly
+                                      what the Lua client is held against.
+    protocol.lua          154 lines   RE-IMPLEMENTED. The protocol is
+                                      language-neutral; this file is not.
+                                      Fold DOWN, read cells, build UP.
+    view.lua              125 lines   REPLACED ENTIRELY. Editor API.
+
+So a second RICH client costs roughly 150 lines of protocol plus whatever
+its editor's own view needs -- and none of the Python side moves.
+
+THE CHEAP PATH FIRST. Any editor that can be launched on files already
+works through 'MergeToolDisplay', with no client at all:
+
+    code --wait --diff <subject> <nominal>
+    notepad++ -multiInst -nosession <subject> <nominal>
+
+That is tier 1, and it is what a new editor should get before anyone
+writes a plugin for it. A RICH client earns its cost only where the
+editor can render compare's OWN alignment -- which is the whole reason
+the tier exists, since an editor's own diff is a SECOND opinion beside
+the one the verdict came from.
+
+OWED, when a second client is wanted:
+    a conformance suite driven from 'down_fixture.json', so every client
+      answers the same questions
+    the four the Lua client answers already: fold, foreign signature,
+      unknown kind, truncated stream
+
+----------------------------------------------------------------------------
+todo-18  A BROWSER CLIENT  (the most universal RICH tier)
+----------------------------------------------------------------------------
+
+IT NEEDS NO LIBRARY, and that was measured rather than assumed: DOWN is
+already JSON, so a stdlib 'http.server' streaming Server-Sent Events
+delivers it, and two columns are plain DOM.
+
+    server   python stdlib, SSE          zero dependencies
+    render   two scroll-bound columns    plain DOM
+    edit     a textarea                  enough for a first client
+
+WHY IT IS THE BEST DISPLAY CLIENT, better than any editor: every cell
+already carries WHY it differs --
+
+    { "subject": "WRONG", "relation_id": "BAD_NOMINAL_DIFFERS",
+      "tolerance_id": "STRING", "nominal_ref_i": 0 }
+
+-- so a browser can colour per cell: this DIFFERED, this was tolerated
+as a number, this was matched by analogy. An editor's buffer API makes
+that awkward; a stylesheet makes it trivial. And the alignment shown is
+still COMPARE's, which is the whole point of the tier.
+
+WHERE IT IS WEAKER: editing. An author merging a large nominal wants an
+editor. So the natural split is
+
+    DifferenceDisplay (read-only)  -> the browser is the best client
+    Accept / merge    (editing)    -> an editor, or a browser with a
+                                      real editing component
+
+EDIT THE ROWS, NOT A TEXT BUFFER. The obvious move is to embed an editor
+(CodeMirror, Monaco, Ace all exist and are embeddable). It is the wrong
+one: a free-form editor owns its own wrapping, breaking and scrolling,
+and the nominal pane must stay ROW-ALIGNED with the subject, because the
+alignment is COMPARE's. The effort would go into fighting the editor
+back into alignment.
+
+Compare hands over ROWS, so the natural model is one editable element
+per row:
+
+    row 1   [ alpha  ]  [ alpha ]      read-only | contenteditable
+    row 2   [ WRONG  ]  [ beta  ]      alignment is STRUCTURAL: a cell
+    row 3   [ gamma  ]  [ gamma ]      IS its row and cannot drift
+
+No library, no wrapping problem, no scroll-binding to maintain, and
+per-cell colouring from 'relation_id' comes free -- which a text editor
+actively prevents.
+
+WHAT IS LOST: multi-line edits that split or join rows. That is real, and
+the loop already answers it: splitting a row CHANGES THE ALIGNMENT, which
+is compare's to decide. Edit the cells, send REALIGN (todo-16), let
+compare produce the new rows.
+
+A LIBRARY EARNS ITS PLACE only if the nominal is large, or wants syntax
+highlighting, or undo across rows -- none of which is true of a typical
+expected-output file. Build the row-cell version first.
+
+IF ONE IS EVER USED, one law carries over unchanged: its OWN diff view
+must stay off. Monaco ships one, and using it would put a SECOND
+alignment beside the one the verdict came from -- the same reason
+'test-view.lua' asserts neovim's diff is not engaged. Check what those
+libraries currently offer before choosing; this note should not be
+trusted for their present state.
+
+NOTEPAD++ specifically: plugins are C++ and there is no scripting host in
+the box, so tier 1 ('MergeToolDisplay' launching it on two files) is
+likely the permanent answer there rather than a RICH client.
+
+OWED, when wanted:
+    reuse 'down_fixture.json' as the conformance oracle (todo-17)
+    the UP envelope over the same channel -- a POST, or a websocket if
+      the merge loop (todo-16) wants full duplex
+
+----------------------------------------------------------------------------
+todo-19  THE NUMERIC TOLERANCE IS UNSIGNED AND ASYMMETRIC  (compare)
+----------------------------------------------------------------------------
+
+PHILOSOPHY 1.1 demands that Eq(D(b0), D(b), T) NOT be a function of b0 --
+the verdict must not depend on which good run happened to be accepted.
+Checking our own compare against that found two defects, measured:
+
+    'compare/engine/input/line_element.py', LineElementNumber
+
+        self.epsilon = self.number * numeric_tolerance_ratio
+
+    NO abs(). For a NEGATIVE number the epsilon is negative, and
+
+        error = max(|s - n| - epsilon, 0)
+
+    becomes |s - n| + |epsilon|. The tolerance works BACKWARDS: a 1%
+    tolerance makes negative numbers HARDER to match than no tolerance.
+
+        epsilon( 100.0) =  1.0    d( 100.0,  100.5) = 0.0       tolerated
+        epsilon(-100.0) = -1.0    d(-100.0, -100.5) = 0.014925  NOT
+
+    ASYMMETRIC. The epsilon comes from 'self' alone, so Eq(s, n) and
+    Eq(n, s) use different bands:
+
+        d(-100.0, -100.5) = 0.014925
+        d(-100.5, -100.0) = 0.014975
+
+    Which is precisely the failure PHILOSOPHY 1.1 names: accept 0.815 and
+    the band sits there; accept 0.816 and it sits elsewhere; a value near
+    the edge is admissible or not depending on WHICH RUN WAS ACCEPTED.
+
+OWED, in compare:
+    epsilon from the magnitude, symmetrically -- 'max(abs(s), abs(n)) *
+      ratio' at comparison time, not stored per element
+    test choices: a negative pair inside the band is TOLERATED; d(x,y)
+      equals d(y,x) for signed pairs across the boundary
+    then state the MARGIN CONDITION in compare's own manual:
+      diameter(D(GOOD)) <= T < distance(D(GOOD), D(BAD))
+
+NOTHING IS OWED HERE. 'TestChoiceConfiguration' holds compare's struct
+verbatim; the defect and its fix are entirely compare's.
 ============================================================================

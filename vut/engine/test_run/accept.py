@@ -15,6 +15,16 @@ DESCRIPTION
        So acceptance is a PROMOTION, and README 2.3's one-artifact-three-
        roles becomes an operation rather than a remark.
 
+       TO ACCEPT IS TO DECLARE THE POLE, not to freeze a run (PHILOSOPHY
+       1.1). A nominal is the designated CENTRE of the good descriptions
+       with the tolerance band around it -- what the word means in
+       engineering -- and that is why the band need only reach the RADIUS
+       of the spread rather than its whole diameter. Accepting a run that
+       sits near the EDGE of what is good is a mistake even though the
+       run is good; it shows up later as a test that fails on another
+       machine, and the answer is then to move the nominal toward the
+       centre or to widen the canonicaliser until the spread vanishes.
+
        TWO MODES, and the distinctions of the outside world -- copy,
        write, merge, manual merge -- are distinctions THERE, not here:
 
