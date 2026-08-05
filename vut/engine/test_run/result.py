@@ -23,6 +23,10 @@ from enum import Enum
 class E_TestRunResult(Enum):
     OK                          = "ok"
 
+    # THE SOURCE: nothing could even be attempted.
+    SOURCE_NOT_FOUND            = "source-not-found"
+    INTERPRETER_NOT_FOUND       = "interpreter-not-found"
+
     # THE JUDGEMENT: everything ran; the subject does not match.
     NOT_EQUIVALENT_WITH_NOMINAL = "not-equivalent-with-nominal"
 
@@ -30,6 +34,10 @@ class E_TestRunResult(Enum):
     TEST_APP_LAUNCH_FAILED      = "test-app-launch-failed"
     TEST_APP_CONTAINED          = "test-app-contained"
     TEST_APP_NO_OUTPUT          = "test-app-no-output"
+    TEST_APP_STALLED            = "test-app-stalled"
+
+    # REPLAY: no usable recording to provision from.
+    RECORDING_MISSING           = "recording-missing"
 
     # THE SUBJECTS AND NOMINALS:
     OUTPUT_FILE_NOT_FOUND       = "output-file-not-found"
@@ -47,6 +55,9 @@ class E_TestRunResult(Enum):
     BUILD_CONTAINED             = "build-contained"
     BUILD_FAILED                = "build-failed"
     TARGET_NOT_BUILT            = "target-not-built"
+
+    # THE DISPLAY -- which cannot make a test wrong:
+    DISPLAY_TARGET_UNREACHABLE  = "display-target-unreachable"
 
     def __str__(self):
         """

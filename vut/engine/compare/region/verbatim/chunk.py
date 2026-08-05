@@ -15,7 +15,7 @@ lines take part.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.enums               import E_Chunk
-from   vut.engine.compare.engine.input.input_chunk   import (
+from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)
 import vut.engine.compare.region.verbatim.equivalence as equivalence_verbatim

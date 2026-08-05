@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.auxiliary.test_run_result       import E_TestRunResult  # noqa E402
+from   vut.engine.test_run.result       import E_TestRunResult  # noqa E402
 from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
 from   vut.engine.test_run.accept          import (Accept,       # noqa E402
                                                    AcceptConfig,
@@ -272,6 +272,185 @@ def test_a_client_over_a_pipe():
     _verdict(ok, "a client in any language can speak this protocol.")
 
 
+def test_the_merge_loop():
+    """THE LOOP (README 11.6). A REALIGN is answered with a FRESH
+    association of the fixed subject against the WORKING nominal, and the
+    author is shown it again -- because the alignment is compare's, not
+    the editor's. 'open' and 'close' happen ONCE, outside the loop: a
+    driver whose connection IS the session has nothing to answer on once
+    it is closed.
+
+    TWO GUARDS, both ending the session as a CANCEL so the nominal is
+    left exactly as it was. NO PROGRESS catches the ordinary bug -- a
+    driver echoing its input -- on the very next round, and never touches
+    an author, since every real edit progresses. THE CAP is the backstop
+    for a driver that OSCILLATES (A, B, A, B ...) and so progresses for
+    ever without ever deciding."""
+    round_list = []
+
+    class Scripted:
+        """Answers one scripted Resolution per round, recording what the
+        hub showed it each time."""
+        def __init__(self, answer_list):
+            self.answer_list = list(answer_list)
+            self.opened = self.closed = 0
+            self._item_list = []
+
+        async def open(self, name):    self.opened += 1
+        async def present(self, item): self._item_list.append(item)
+        async def close(self):         self.closed += 1
+
+        async def resolve(self, name, subject_text, nominal_text):
+            """RETURN: Resolution, the next scripted answer."""
+            round_list.append((nominal_text, self._item_list))
+            self._item_list = []
+            if not self.answer_list:
+                return Resolution(intent=E_Intent.CANCEL)
+            return self.answer_list.pop(0)
+
+    subject = "alpha\nbeta\ngamma\n"
+    nominal = "alpha\nBETA\ngamma\n"
+    edited  = "alpha\nbeta\ndelta\ngamma\n"
+
+    looping = Scripted([Resolution(intent=E_Intent.REALIGN,
+                                   nominal_text=edited),
+                        Resolution(intent=E_Intent.COMMIT,
+                                   nominal_text=edited)])
+    text, intent = asyncio.run(merge_session(None, subject, nominal,
+                                             looping, "stdout"))
+
+    del round_list[:]
+    stuck = Scripted([Resolution(intent=E_Intent.REALIGN,
+                                 nominal_text=nominal)])   # NO edit
+    text2, intent2 = asyncio.run(merge_session(None, subject, nominal,
+                                               stuck, "stdout"))
+    stuck_rounds = len(round_list)
+
+    del round_list[:]
+    patient = Scripted([Resolution(intent=E_Intent.REALIGN,
+                                   nominal_text="alpha\n" + "x" * i + "\n")
+                        for i in range(1, 21)]
+                       + [Resolution(intent=E_Intent.COMMIT,
+                                     nominal_text="alpha\n")])
+    _, intent3 = asyncio.run(merge_session(None, subject, nominal,
+                                           patient, "stdout"))
+    patient_rounds = len(round_list)
+
+    del round_list[:]
+    oscillating = Scripted([Resolution(intent=E_Intent.REALIGN,
+                                       nominal_text=(nominal if i % 2
+                                                     else edited))
+                            for i in range(200)])
+    text4, intent4 = asyncio.run(merge_session(None, subject, nominal,
+                                               oscillating, "stdout",
+                                               max_round_n=5))
+    oscillating_rounds = len(round_list)
+
+    print("INSPECT: looping  -> %s, %r" % (intent, text))
+    print("         stuck    -> %s, %r after %i round(s)"
+          % (intent2, text2, stuck_rounds))
+    print("         patient  -> %s after %i round(s)"
+          % (intent3, patient_rounds))
+    print("         capped   -> %s after %i round(s) (cap 5)"
+          % (intent4, oscillating_rounds))
+    ok = _check([
+        (looping.opened == 1 and looping.closed == 1,
+         "open and close happen ONCE -- the loop is inside the session"),
+        (intent is E_Intent.COMMIT and text == edited,
+         "the loop ends on COMMIT, carrying the final artifact"),
+        (intent2 is E_Intent.CANCEL and text2 is None,
+         "a REALIGN that changed nothing is refused as a CANCEL"),
+        (stuck_rounds == 1,
+         "and it is refused AT ONCE -- no second round is computed"),
+        (intent3 is E_Intent.COMMIT and patient_rounds == 21,
+         "twenty progressing rounds are not cut off: only the bug is"),
+        (intent4 is E_Intent.CANCEL and text4 is None,
+         "an OSCILLATING driver -- always progressing, never deciding "
+         "-- is ended by the cap, as a CANCEL"),
+        (oscillating_rounds == 5,
+         "and exactly at the cap, not one round beyond it"),
+    ])
+    _verdict(ok, "the merge loop loops, and stops for a reason.")
+
+
+def test_the_loop_realigns():
+    """THE POINT OF THE LOOP: the second DOWN is not the first one again.
+    The subject is FIXED and the nominal gained a line, so the association
+    compare computes for round 2 differs from round 1's -- which is the
+    whole reason an edit must be answered with a fresh feed rather than
+    with the old projection."""
+    generation_list = []
+
+    class TwoRounds:
+        def __init__(self): self._item_list = []; self._done = False
+        async def open(self, name): pass
+        async def present(self, item): self._item_list.append(item)
+        async def close(self): pass
+        async def resolve(self, name, subject_text, nominal_text):
+            """RETURN: Resolution, REALIGN once with an edit, then COMMIT."""
+            generation_list.append(self._item_list)
+            self._item_list = []
+            if self._done:
+                return Resolution(intent=E_Intent.COMMIT,
+                                  nominal_text="alpha\nbeta\ndelta\ngamma\n")
+            self._done = True
+            return Resolution(intent=E_Intent.REALIGN,
+                              nominal_text="alpha\nbeta\ndelta\ngamma\n")
+
+    def rows(item_list):
+        """RETURN: list, the (subject, nominal) line numbers of the pairs."""
+        return [(i.line_n_s, i.line_n_n) for i in item_list
+                if type(i).__name__ == "LinePairInst"]
+
+    asyncio.run(merge_session(None, "alpha\nbeta\ngamma\n",
+                              "alpha\nBETA\ngamma\n", TwoRounds(), "stdout"))
+    first, second = rows(generation_list[0]), rows(generation_list[1])
+    print("INSPECT: round 1 pairs = %s" % first)
+    print("         round 2 pairs = %s" % second)
+    ok = _check([
+        (len(generation_list) == 2,
+         "two DOWN generations were produced, one per round"),
+        (first != second,
+         "the second is a DIFFERENT association -- the edit re-aligned it"),
+        (len(second) > len(first),
+         "the added nominal line appears as an added pair"),
+    ])
+    _verdict(ok, "an edit changes the alignment, and the author sees it.")
+
+
+def test_the_loop_over_a_real_pipe():
+    """THE LOOP AGAINST A REAL CLIENT, in another process, importing
+    nothing from vut. It answers REALIGN once with an edited nominal, then
+    COMMIT -- so a second DOWN generation must cross the pipe.
+
+    This is what pins 'RemoteDisplay.resolve' NOT closing the client's
+    stdin: a REALIGN is answered on that same pipe, and a driver that shut
+    it after the first answer would make the loop impossible."""
+    one_round = RemoteDisplay(["python3", MOCK_IDE, "commit"])
+    text, intent = asyncio.run(merge_session(
+        None, "subject line\n", "nominal line\n", one_round, "stdout"))
+
+    looping = RemoteDisplay(["python3", MOCK_IDE, "realign", "commit"])
+    text2, intent2 = asyncio.run(merge_session(
+        None, "subject line\n", "nominal line\n", looping, "stdout"))
+
+    print("INSPECT: one round  -> %s after %i DOWN items"
+          % (intent, one_round.sent_count))
+    print("         two rounds -> %s after %i DOWN items"
+          % (intent2, looping.sent_count))
+    ok = _check([
+        (intent is E_Intent.COMMIT and text is not None,
+         "the single-round client still commits, unchanged"),
+        (intent2 is E_Intent.COMMIT and text2 is not None,
+         "the looping client reaches its COMMIT through a REALIGN"),
+        (looping.sent_count > one_round.sent_count,
+         "a SECOND DOWN generation crossed the pipe"),
+        (looping.sent_count == 2 * one_round.sent_count + 1,
+         "one extra MaterialInst and one full generation, exactly"),
+    ])
+    _verdict(ok, "the loop survives a real process boundary.")
+
+
 def test_resolve_is_inside_the_session():
     """THE SEQUENCE: open -> present -> resolve -> close. 'resolve' is
     INSIDE the open session, because a driver whose connection IS the
@@ -402,6 +581,9 @@ if __name__ == "__main__":
             "cancel":        test_cancel_stores_nothing,
             "empty_commit":  test_empty_commit_is_a_cancel,
             "display_only":  test_driver_without_resolve,
+            "loop":          test_the_merge_loop,
+            "loop_realigns": test_the_loop_realigns,
+            "loop_pipe":     test_the_loop_over_a_real_pipe,
             "rich_client":   test_a_client_over_a_pipe,
             "sequence":      test_resolve_is_inside_the_session,
             "unknown":       test_unknown_intent_and_target,

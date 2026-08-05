@@ -38,7 +38,7 @@ different component count are malformed.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.enums               import E_Chunk
-from   vut.engine.compare.engine.input.input_chunk   import (
+from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)
 from   vut.engine.compare.region.registry            import RegionSyntaxError

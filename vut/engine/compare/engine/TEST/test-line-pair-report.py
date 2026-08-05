@@ -11,8 +11,8 @@ from vut.engine.compare.engine.line                                           im
 from vut.engine.compare.core.edit_operations.edit import E_EditId, Edit
 from vut.engine.compare.core.line_pair                          import LinePair
 
-from vut.engine.compare.engine.input.line_element   import E_ToleranceId
-from vut.engine.compare.engine.input.pattern_finder import PatternFinder
+from vut.engine.compare.reading.line_element   import E_ToleranceId
+from vut.engine.compare.reading.pattern_finder import PatternFinder
 from vut.engine.compare.configuration        import Configuration
 
 

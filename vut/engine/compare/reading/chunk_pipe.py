@@ -29,12 +29,12 @@ _______________________________________________________________________________
 """
 from vut.engine.compare.engine.enums             import E_Chunk
 from vut.engine.compare.engine.line              import Line
-from vut.engine.compare.engine.input.input_chunk        import InputChunk,         \
+from vut.engine.compare.reading.input_chunk        import InputChunk,         \
                                                         InputChunkTerminal, \
                                                         InputChunkError,    \
                                                         InputChunk_factory
-from vut.engine.compare.engine.input.pattern_finder     import PatternFinder
-from vut.engine.compare.engine.input.line_scanner       import E_LineClass,       \
+from vut.engine.compare.reading.pattern_finder     import PatternFinder
+from vut.engine.compare.reading.line_scanner       import E_LineClass,       \
                                                         INSIGNIFICANT_LINE_CLASS_SET, \
                                                         classify
 from vut.engine.compare.region.registry          import RegionSyntaxError,  \
@@ -127,7 +127,7 @@ class _RegionFraming:
 
 
 class EquivalenceCheckChunkPipe(ChunkPipe):
-    """PACKAGING POLICY (classification: 'engine/input/line_scanner.py'):
+    """PACKAGING POLICY (classification: 'reading/line_scanner.py'):
 
         REGION_BEGIN/END   open/close a region via the registry; the
                            completed region chunk is yielded, EVEN IF EMPTY
@@ -183,7 +183,7 @@ class EquivalenceCheckChunkPipe(ChunkPipe):
 
 
 class AssociationChunkPipe(ChunkPipe):
-    """PACKAGING POLICY (classification: 'engine/input/line_scanner.py'):
+    """PACKAGING POLICY (classification: 'reading/line_scanner.py'):
 
         REGION_BEGIN/END   open/close a region via the registry; the outer
                            block is flushed on open; the region chunk is

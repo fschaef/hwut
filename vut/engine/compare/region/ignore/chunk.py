@@ -9,7 +9,7 @@ mismatch (not equivalent) -- only the CONTENTS are exempt from judgment.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.enums               import E_Chunk
-from   vut.engine.compare.engine.input.input_chunk   import (
+from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)
 import vut.engine.compare.region.ignore.equivalence  as equivalence_ignore

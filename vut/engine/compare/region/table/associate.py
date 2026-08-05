@@ -2,7 +2,7 @@
 from vut.engine.compare.core.line_pair              import LinePair
 from vut.engine.compare.core.edit_operations.edit   import Edit, E_EditId
 from vut.engine.compare.engine.line                 import Line
-from vut.engine.compare.engine.input.line_element   import LineElementString
+from vut.engine.compare.reading.line_element   import LineElementString
 from vut.engine.compare.region.table.core           import Judgment
 
 

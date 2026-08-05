@@ -1,0 +1,7 @@
+INSPECT: one round  -> commit after 5 DOWN items
+         two rounds -> commit after 11 DOWN items
+  OK  : the single-round client still commits, unchanged
+  OK  : the looping client reaches its COMMIT through a REALIGN
+  OK  : a SECOND DOWN generation crossed the pipe
+  OK  : one extra MaterialInst and one full generation, exactly
+SUCCESS: the loop survives a real process boundary.

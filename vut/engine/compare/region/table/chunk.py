@@ -31,7 +31,7 @@ The NOMINAL's first row defines the table's column count.
 ________________________________________________________________________________
 """
 from   vut.engine.compare.engine.enums               import E_Chunk
-from   vut.engine.compare.engine.input.input_chunk   import (
+from   vut.engine.compare.reading.input_chunk   import (
                                                  AssociationRelatedInputChunk,
                                                  EquivalenceRelatedInputChunk)
 import vut.engine.compare.region.table.equivalence   as equivalence_table

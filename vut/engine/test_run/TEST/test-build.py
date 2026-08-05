@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.auxiliary.test_run_result     import E_TestRunResult  # noqa E402
+from   vut.engine.test_run.result        import E_TestRunResult  # noqa E402
 from   vut.engine.procsitter.procsitter  import ProcsitterConfig # noqa E402
 from   vut.engine.test_run.build         import (BuildConfig,    # noqa E402
                                                  E_BuildSystem,
@@ -92,6 +92,14 @@ def test_argv():
         ("GENERATOR (targets are accounting only)",
          BuildConfig(E_BuildSystem.GENERATOR, ["out.c"], ["spec.y"],
                      tool="protoc")),
+        ("MESON (subcommand 'compile')",
+         BuildConfig(E_BuildSystem.MESON, ["app"])),
+        ("BAZEL (subcommand 'build')",
+         BuildConfig(E_BuildSystem.BAZEL, ["//app:all"])),
+        ("SCONS (plain, like make)",
+         BuildConfig(E_BuildSystem.SCONS, ["app"], ["-j2"])),
+        ("MSBUILD (targets FOLDED into -t:)",
+         BuildConfig(E_BuildSystem.MSBUILD, ["Build", "Test"])),
     ]
     for title, configuration in row_list:
         print("INSPECT: %-38s -> %s" % (title, make_argv(configuration)))
@@ -110,6 +118,11 @@ def test_argv():
          "a GENERATOR's targets stay OFF the command line"),
         (refused is not None,
          "GENERATOR without a tool is refused, not guessed at"),
+        (make_argv(row_list[4][1])[:2] == ["meson", "compile"]
+         and make_argv(row_list[5][1])[:2] == ["bazel", "build"],
+         "MESON and BAZEL carry their subcommand"),
+        (make_argv(row_list[7][1])[-1] == "-t:Build;Test",
+         "MSBUILD folds its targets into ONE -t: option"),
     ])
     _verdict(ok, "one vocabulary, one argv, no quoting question.")
 

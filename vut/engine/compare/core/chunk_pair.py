@@ -10,7 +10,7 @@ from   vut.engine.compare.core.line_pair      import LinePair
 from   vut.engine.compare.engine.enums                      import E_Chunk
 from   vut.engine.compare.engine.analogy_db                 import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db          import FrozenAnalogyDb
-from   vut.engine.compare.engine.input.input_chunk                 import InputChunk
+from   vut.engine.compare.reading.input_chunk                 import InputChunk
 
 from   typeguard import typechecked
 

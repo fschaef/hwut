@@ -32,7 +32,7 @@ from   vut.engine.compare.core.line_pair  import (LinePair,      #noqa: E402
                                                                 NominalCell,
                                                                 SubjectCell)
 from   vut.engine.compare.core.chunk_pair import ChunkPair       #noqa: E402
-from   vut.engine.compare.engine.input.line_element            import E_ToleranceId   #noqa: E402
+from   vut.engine.compare.reading.line_element            import E_ToleranceId   #noqa: E402
 
 from   inspect     import isclass                   #noqa: E402
 from   typing      import List, AsyncIterable  #noqa: E402

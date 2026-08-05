@@ -40,7 +40,7 @@ import sys
 
 from   config import HwutRunner # noqa F401
 
-from   vut.engine.compare.engine.input.line_element import LineElementString, \
+from   vut.engine.compare.reading.line_element import LineElementString, \
                                                   LineElementNumber, \
                                                   LineElementEquivalencePattern, \
                                                   LineElementAnalogy, \

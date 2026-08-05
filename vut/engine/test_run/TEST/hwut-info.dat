@@ -1,5 +1,4 @@
 Testing the platform-independent procsitter: resource caps, attribution,
-process hygiene, honest degradation.
 ---------------------------------------------------------------
 
 coverage run --omit ./*.py -a *.py

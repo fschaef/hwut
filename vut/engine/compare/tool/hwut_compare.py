@@ -67,8 +67,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 "../../../.."))
 
 import vut.engine.compare.configuration                as     configuration     # noqa: E402
-from   vut.engine.compare.engine.input.pattern_finder   import PatternFinder    # noqa: E402
-from   vut.engine.compare.engine.input.line_scanner     import (classify,       # noqa: E402
+from   vut.engine.compare.reading.pattern_finder   import PatternFinder    # noqa: E402
+from   vut.engine.compare.reading.line_scanner     import (classify,       # noqa: E402
                                                                  E_LineClass,
                                                                  REGION_BEGIN_MARKER)
 from   vut.engine.compare.engine.enums                  import E_ToleranceId    # noqa: E402

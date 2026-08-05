@@ -32,8 +32,8 @@ import sys
 from   config import HwutRunner # noqa F401
 
 from   vut.engine.compare.configuration            import ConfigurationPatternFinder
-from   vut.engine.compare.engine.input.pattern_finder import PatternFinder
-from   vut.engine.compare.engine.input.line_element   import E_ToleranceId
+from   vut.engine.compare.reading.pattern_finder import PatternFinder
+from   vut.engine.compare.reading.line_element   import E_ToleranceId
 
 
 if "--hwut-info" in sys.argv:

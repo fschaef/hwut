@@ -35,7 +35,7 @@ import sys
 
 from   config import HwutRunner # noqa F401
 
-from    vut.engine.compare.engine.input.line_element import E_ToleranceId, \
+from    vut.engine.compare.reading.line_element import E_ToleranceId, \
                                                         LineElement, \
                                                         LineElementString
 import vut.engine.compare.core.edit_operations.line   as      edit_operations_line

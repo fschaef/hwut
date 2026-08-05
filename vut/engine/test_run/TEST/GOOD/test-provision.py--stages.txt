@@ -1,0 +1,8 @@
+INSPECT: wiring  [build execute canonicalise load]
+         Run    -> - X X -   kind 'Run'
+         Replay -> - - - X   kind 'Replay'
+  OK  : an executing provision: execute and canonicalise, no load
+  OK  : a loading provision: ONLY its load stage
+  OK  : ONE Provision type -- provenance is wiring, never subclass
+  OK  : both paths, no path, build-beside-load: refused at construction
+SUCCESS: the wiring is data, and its law lives at construction.

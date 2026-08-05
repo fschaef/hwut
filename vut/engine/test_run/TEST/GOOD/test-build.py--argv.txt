@@ -2,8 +2,14 @@ INSPECT: MAKE with an argument                  -> ['make', '-j2', 'app']
 INSPECT: NINJA                                  -> ['ninja', 'app']
 INSPECT: CMAKE (targets need --target)          -> ['cmake', '--build', '.', '--target', 'app']
 INSPECT: GENERATOR (targets are accounting only) -> ['protoc', 'spec.y']
+INSPECT: MESON (subcommand 'compile')           -> ['meson', 'compile', 'app']
+INSPECT: BAZEL (subcommand 'build')             -> ['bazel', 'build', '//app:all']
+INSPECT: SCONS (plain, like make)               -> ['scons', '-j2', 'app']
+INSPECT: MSBUILD (targets FOLDED into -t:)      -> ['msbuild', '-t:Build;Test']
          GENERATOR without a tool               -> GENERATOR has no default command; 'tool' is mandatory
   OK  : CMAKE builds the current directory
   OK  : a GENERATOR's targets stay OFF the command line
   OK  : GENERATOR without a tool is refused, not guessed at
+  OK  : MESON and BAZEL carry their subcommand
+  OK  : MSBUILD folds its targets into ONE -t: option
 SUCCESS: one vocabulary, one argv, no quoting question.

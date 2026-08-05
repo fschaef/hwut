@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.auxiliary.test_run_result import E_TestRunResult      # noqa E402
+from   vut.engine.test_run.result import E_TestRunResult      # noqa E402
 import vut.engine.test_run.report    as     report_module        # noqa E402
 from   vut.engine.test_run.report    import (Provision,          # noqa E402
                                              Comparison,

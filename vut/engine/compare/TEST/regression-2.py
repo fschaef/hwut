@@ -19,7 +19,7 @@ from vut.engine.compare.engine.analogy_db import AnalogyDb # noqa E402
 from vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb # noqa E402
 from vut.engine.compare.engine.line import Line # noqa E402
 from vut.engine.compare.engine.enums import E_ToleranceId # noqa E402
-from vut.engine.compare.engine.input.pattern_finder import PatternFinder # noqa E402
+from vut.engine.compare.reading.pattern_finder import PatternFinder # noqa E402
 from vut.engine.compare.configuration import Configuration # noqa E402
 from vut.engine.compare.core.edit_operations.edit import list_EditGOOD_line # noqa E402
 # --- Formatting Helpers ---

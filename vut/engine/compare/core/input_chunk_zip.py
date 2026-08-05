@@ -16,8 +16,8 @@ compared.
 _______________________________________________________________________________
 """
 
-from vut.engine.compare.engine.input.chunk_pipe  import ChunkPipe
-from vut.engine.compare.engine.input.input_chunk import InputChunkVoid
+from vut.engine.compare.reading.chunk_pipe  import ChunkPipe
+from vut.engine.compare.reading.input_chunk import InputChunkVoid
 from vut.engine.compare.configuration     import Configuration
 
 from   typeguard import typechecked

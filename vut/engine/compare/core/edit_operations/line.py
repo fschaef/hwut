@@ -63,8 +63,8 @@ from  vut.engine.compare.core.edit_operations.core  import (WorkListBase,
                                                                           WorkItemBase, 
                                                                           position_increment_db)
 from  vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
-from  vut.engine.compare.engine.input.pattern_finder  import E_ToleranceId
-from  vut.engine.compare.engine.input.line_element    import LineElement
+from  vut.engine.compare.reading.pattern_finder  import E_ToleranceId
+from  vut.engine.compare.reading.line_element    import LineElement
 from  vut.engine.compare.engine.enums          import E_Verdict
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 

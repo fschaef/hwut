@@ -1,0 +1,6 @@
+INSPECT: reports = ok, ok; the build tool ran 1 time(s)
+         stdout  = 'artifact ran\n' == 'artifact ran\n'
+  OK  : both provisions deliver
+  OK  : the build tool ran ONCE -- the shared stage remembers
+  OK  : and both ran the one artifact it built
+SUCCESS: one shared stage, one build, two provisions served.

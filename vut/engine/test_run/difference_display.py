@@ -23,7 +23,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
-from   vut.auxiliary.test_run_result    import E_TestRunResult
+from   vut.engine.test_run.result      import E_TestRunResult
 from   vut.engine.compare.configuration import Configuration
 from   vut.engine.test_run.feed         import (NullDisplay, feed_down,
                                                 ProtocolMismatch)

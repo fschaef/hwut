@@ -29,7 +29,7 @@ from   vut.engine.compare.core.edit_operations.core  import (WorkListBase,
 from   vut.engine.compare.core.edit_operations.separator_adaptor import SeparatorAdaptor
 
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
-from   vut.engine.compare.engine.input.pattern_finder     import E_ToleranceId
+from   vut.engine.compare.reading.pattern_finder     import E_ToleranceId
 
 from  typeguard   import typechecked
 

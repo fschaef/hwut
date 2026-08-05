@@ -31,7 +31,7 @@ from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional, Sequence
 
-from   vut.auxiliary.test_run_result         import E_TestRunResult
+from   vut.engine.test_run.result           import E_TestRunResult
 from   vut.engine.test_run.accept            import (Accept, AcceptConfig,
                                                      AcceptStep)
 from   vut.engine.test_run.configuration     import verify
@@ -41,7 +41,7 @@ from   vut.engine.test_run.equivalence_check import (EquivalenceCheck,
                                                      EquivalenceCheckConfig)
 from   vut.engine.test_run.feed              import (driver_for,
                                                      E_DisplayTarget)
-from   vut.engine.test_run.provision         import Run, Replay
+from   vut.engine.test_run.provision         import provision_of
 from   vut.engine.test_run.store             import (Store,
                                                      DirectoryBusy)
 
@@ -119,17 +119,11 @@ class Outcome:
 def _groundwork(configuration, store, test_name, choice_name, replay,
                 observer):
     """
-    RETURN: Run | Replay, the provision the goal will read from.
-
-    Provision by execution and by stored data are chosen HERE, once, so
-    no operation below ever asks which one it got.
+    RETURN: Provision, the one the goal will read from -- planned by
+            'provision_of', where run-vs-replay is decided once.
     """
-    if replay:
-        return Replay(store, test_name, choice_name, observer=observer)
-    store_config = configuration.store
-    return Run(configuration, choice_name, observer=observer,
-               keep_raw    = bool(store_config and store_config.record_raw),
-               keep_timing = bool(store_config and store_config.record_timing))
+    return provision_of(configuration, store, test_name, choice_name,
+                        replay, observer=observer)
 
 
 def _nominal_db(store, test_name, choice_name, subject_name_list):
@@ -244,7 +238,7 @@ async def _record(store, configuration, test_name, choice_name, groundwork,
 
     A Replay records nothing: it would write back what it just read.
     """
-    if isinstance(groundwork, Replay):            return None
+    if groundwork.stage_load is not None:         return None
     wanted = record if record is not None else (configuration.store is not None)
     if not wanted:                                return None
 

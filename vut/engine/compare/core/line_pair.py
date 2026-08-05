@@ -186,7 +186,7 @@ def display_twin(line):
                       lexed tokens.
     """
     from vut.engine.compare.engine.line               import Line
-    from vut.engine.compare.engine.input.line_element import LineElementString
+    from vut.engine.compare.reading.line_element import LineElementString
     raw    = line._string.rstrip("\n")
     result = Line(line.line_n, raw, line.lexer)
     result._UT_set_sequence((LineElementString(raw),))

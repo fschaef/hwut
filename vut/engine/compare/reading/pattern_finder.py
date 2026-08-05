@@ -48,7 +48,7 @@ from itertools import count
 from typing import Iterable, Tuple, FrozenSet
 
 from vut.engine.compare.configuration import ConfigurationPatternFinder
-from vut.engine.compare.engine.input.line_element import (E_ToleranceId,
+from vut.engine.compare.reading.line_element import (E_ToleranceId,
                                                    TolerancePattern,
                                                    LineElement,
                                                    LineElementString,

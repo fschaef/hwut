@@ -16,7 +16,7 @@ from typing import Dict, Any
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)) + "/../../../../")
 
 from vut.engine.compare.configuration      import Configuration
-from vut.engine.compare.engine.input.line_element import E_ToleranceId
+from vut.engine.compare.reading.line_element import E_ToleranceId
 from vut.engine.compare.feeder.ui          import (feed,
                                                    SectionBeginInst,
                                                    LinePairInst,

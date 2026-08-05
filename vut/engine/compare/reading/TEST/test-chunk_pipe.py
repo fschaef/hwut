@@ -25,7 +25,7 @@ from   config import HwutRunner # noqa F401
 
 from   vut.engine.compare.configuration    import Configuration
 from   vut.auxiliary.async_helper          import AsyncIterator_ensured
-from   vut.engine.compare.engine.input.chunk_pipe import AssociationChunkPipe
+from   vut.engine.compare.reading.chunk_pipe import AssociationChunkPipe
 from   vut.engine.compare.region.registry         import RegionSyntaxError
 import asyncio
 

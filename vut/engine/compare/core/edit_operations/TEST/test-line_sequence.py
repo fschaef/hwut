@@ -26,7 +26,7 @@ import vut.engine.compare.core.edit_operations.line_sequence  as     edit_distan
 from   vut.engine.compare.core.edit_operations.edit           import E_EditId
 from   vut.engine.compare.TEST.common          import prepare, print_match_sequences_lists, prepare_line_up
 from   vut.engine.compare.engine.line          import Line
-from   vut.engine.compare.engine.input.pattern_finder import PatternFinder
+from   vut.engine.compare.reading.pattern_finder import PatternFinder
 from   vut.engine.compare.configuration        import Configuration
 
 if "--hwut-info" in sys.argv:

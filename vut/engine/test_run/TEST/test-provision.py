@@ -4,8 +4,9 @@ ______________________________________________________________________________
 
 PROVISION: THE TWO WAYS SUBJECTS COME TO EXIST.
 
-    UNIT     'Run' (execute, contain, canonicalise) and 'Replay' (read
-             what was stored) -- disjoint configuration keys, one product.
+    UNIT     ONE 'Provision', its STAGES as members (build, execute,
+             canonicalise | load); 'Run' and 'Replay' are PLANNERS that
+             wire it -- disjoint configuration keys, one product.
 
     CAUSAL CONTRACT
              the source kind fixes the argv and the choice name selects
@@ -18,6 +19,11 @@ PROVISION: THE TWO WAYS SUBJECTS COME TO EXIST.
              tell them apart; a failed build ends provision; a failing
              canonicaliser leaves the text UNCHANGED and says so; an
              absent recording is reported, never invented as empty.
+
+    STAGE CONTRACT
+             the wiring is DATA (None marks an absent stage) and its law
+             lives at construction; a shared BuildStage builds ONCE,
+             however many provisions hold it.
 ______________________________________________________________________________
 """
 import asyncio
@@ -30,7 +36,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.auxiliary.test_run_result     import E_TestRunResult  # noqa E402
+from   vut.engine.test_run.result     import E_TestRunResult  # noqa E402
 from   vut.engine.procsitter.procsitter  import ProcsitterConfig # noqa E402
 from   vut.engine.test_run.build         import (BuildConfig,    # noqa E402
                                                  E_BuildSystem)
@@ -39,6 +45,10 @@ from   vut.engine.test_run.configuration import (               # noqa E402
                                                  TestChoiceConfiguration,
                                                  E_SourceKind)
 from   vut.engine.test_run.provision     import (Run, Replay,    # noqa E402
+                                                 Provision,
+                                                 BuildStage,
+                                                 ExecuteStage,
+                                                 CanonicaliseStage,
                                                  application_argv)
 from   vut.engine.test_run.store         import Store            # noqa E402
 
@@ -398,6 +408,118 @@ def test_containment_reaches_the_report():
     _verdict(ok, "a cap that ended the run reaches the report.")
 
 
+def test_stages():
+    """A Provision holds its stages as MEMBERS -- the wiring is DATA,
+    'None' for a stage this provision does not have. Exactly one path
+    exists, and that law lives at CONSTRUCTION, where the wiring is
+    written."""
+    directory = _place("print('hi')\n")
+    store_dir = tempfile.mkdtemp(prefix="vut_prov_")
+    executed  = Run(_interpreted(directory))
+    loaded    = Replay(Store(store_dir), "demo")
+
+    def picture(p):
+        """RETURN: str, one mark per stage member, 'X' present, '-' absent."""
+        return " ".join("X" if s is not None else "-"
+                        for s in (p.stage_build, p.stage_execute,
+                                  p.stage_canonicalise, p.stage_load))
+    print("INSPECT: wiring  [build execute canonicalise load]")
+    print("         Run    -> %s   kind %r" % (picture(executed),
+                                               executed.kind))
+    print("         Replay -> %s   kind %r" % (picture(loaded),
+                                               loaded.kind))
+
+    refused = []
+    for label, kwargs in (
+            ("both paths",       {"stage_execute": executed.stage_execute,
+                                  "stage_load":    loaded.stage_load}),
+            ("no path",          {}),
+            ("build beside load",
+             {"stage_load":  loaded.stage_load,
+              "stage_build": BuildStage(_interpreted(directory))})):
+        try:
+            Provision(**kwargs)
+            refused.append(False)
+        except AssertionError:
+            refused.append(True)
+
+    ok = _check([
+        (executed.stage_execute is not None
+         and executed.stage_canonicalise is not None
+         and executed.stage_load is None,
+         "an executing provision: execute and canonicalise, no load"),
+        (loaded.stage_load is not None
+         and loaded.stage_build is None
+         and loaded.stage_execute is None
+         and loaded.stage_canonicalise is None,
+         "a loading provision: ONLY its load stage"),
+        (type(executed) is type(loaded),
+         "ONE Provision type -- provenance is wiring, never subclass"),
+        (all(refused),
+         "both paths, no path, build-beside-load: refused at construction"),
+    ])
+    shutil.rmtree(directory, ignore_errors=True)
+    shutil.rmtree(store_dir, ignore_errors=True)
+    _verdict(ok, "the wiring is data, and its law lives at construction.")
+
+
+def test_shared_build():
+    """SHARING IS INSTANCE IDENTITY: the SAME BuildStage wired into two
+    Provisions builds ONCE -- the memoized outcome serves both. That is
+    'build if necessary' at suite scale, and it is the PLANNER's choice:
+    fresh stages (the default) still build per provision."""
+    directory = tempfile.mkdtemp(prefix="vut_prov_")
+    build_dir = os.path.join(directory, "BUILD", "app")
+    os.makedirs(build_dir)
+    with open(os.path.join(build_dir, "Makefile"), "w") as fh:
+        fh.write("built:\n"
+                 "\techo one-build >> build.log\n"
+                 "\tprintf '#! /bin/sh\\necho artifact ran\\n' > built\n"
+                 "\tchmod +x built\n")
+    compiled = TestConfiguration(
+        source_file    = "app.c",
+        source_kind    = E_SourceKind.COMPILED,
+        test_directory = directory,
+        caps           = ProcsitterConfig(max_wall_clock_sec=20.0),
+        build          = BuildConfig(E_BuildSystem.MAKE, ["built"]),
+        choice_db      = {None: TestChoiceConfiguration()})
+
+    shared = BuildStage(compiled)
+    def provision():
+        """RETURN: Provision, execution-wired around the SHARED build."""
+        return Provision(
+            stage_build        = shared,
+            stage_execute      = ExecuteStage(compiled),
+            stage_canonicalise = CanonicaliseStage(compiled))
+
+    async def both():
+        """RETURN: (Subjects, Subjects), two provisions, one build."""
+        first, second = provision(), provision()
+        return await first.provide(), await second.provide()
+    out_a, out_b = asyncio.run(both())
+
+    log_path = os.path.join(build_dir, "build.log")
+    with open(log_path) as fh:
+        build_n = len(fh.read().splitlines())
+    print("INSPECT: reports = %s, %s; the build tool ran %i time(s)"
+          % (out_a.provision.report, out_b.provision.report, build_n))
+    print("         stdout  = %r == %r"
+          % (out_a["stdout"].open().read(),
+             out_b["stdout"].open().read()))
+    ok = _check([
+        (out_a.provision.report is E_TestRunResult.OK
+         and out_b.provision.report is E_TestRunResult.OK,
+         "both provisions deliver"),
+        (build_n == 1,
+         "the build tool ran ONCE -- the shared stage remembers"),
+        (out_a["stdout"].open().read() == "artifact ran\n"
+         and out_b["stdout"].open().read() == "artifact ran\n",
+         "and both ran the one artifact it built"),
+    ])
+    shutil.rmtree(directory, ignore_errors=True)
+    _verdict(ok, "one shared stage, one build, two provisions served.")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
@@ -411,6 +533,8 @@ if __name__ == "__main__":
             "replay":               test_replay,
             "same_shape":           test_same_shape,
             "source_kinds":         test_source_kinds,
+            "stages":               test_stages,
+            "shared_build":         test_shared_build,
             "containment":          test_containment_reaches_the_report,
         },
         happy      = "SUCCESS.*",

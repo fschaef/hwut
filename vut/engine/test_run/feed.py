@@ -43,6 +43,13 @@ import vut.engine.compare.feeder.ui as compare_feeder
 
 PROTOCOL_SIGNATURE = "vut-feed/1"
 
+#  THE ROUND CAP of a merge session. A merge is a human activity and no
+#  author edits one file a thousand times; a session that reaches this
+#  number is a DRIVER answering REALIGN unconditionally. Reaching it ends
+#  the session as a CANCEL -- bounded, and the nominal is left untouched.
+#  A caller may name its own ('merge_session(..., max_round_n=...)').
+MERGE_ROUND_MAX = 1000
+
 
 class E_DisplayTarget(Enum):
     """Which driver carries the session."""
@@ -186,45 +193,121 @@ class CollectingDisplay(DisplayAdapter):
 
 
 async def merge_session(compare_options, subject_text, nominal_text,
-                        adapter, subject_name):
+                        adapter, subject_name,
+                        max_round_n=MERGE_ROUND_MAX):
     """
-    RETURN: (str, E_Intent), the resolved nominal stream and the intent.
-            (None, E_Intent.CANCEL) when the driver resolved nothing.
+    RETURN: (str, E_Intent), the resolved nominal stream and the intent
+            that ended the loop.
+            (None, E_Intent.CANCEL) when the driver resolved nothing, or
+            when a round made no progress (below).
 
     THE FULL-DUPLEX HALF: DOWN presents the comparison, then the driver is
     handed its MATERIAL -- the plain subject and the plain nominal -- and
     returns the plain merged stream. This hub never reconstructs a nominal
     from the projection it just sent.
 
+    THE LOOP (README 11.6). Editing the nominal changes the ALIGNMENT, and
+    the alignment is COMPARE's -- so a REALIGN is answered with a FRESH
+    association of the same subject against the working nominal, and the
+    author is shown it again. The SUBJECT IS FIXED throughout; only the
+    nominal evolves.
+
+        HUB (this function)                          DRIVER (adapter)
+         |                                              |
+         |------------ open(subject_name) ------------->|         ONCE
+         |                                              |
+         |  .--------------- ROUND ---------------------.
+         |  |                                           |
+         |  |  compare.feed(subject, working)           |
+         |  |  yields DOWN items ...                    |
+         |  |----------- present(item) * -------------->|   * once per item
+         |  |                                           |
+         |  |----------- resolve(subject, working) ---->|
+         |  |<---------- Resolution(intent, text) ------|
+         |  |                                           |
+         |  |  intent is COMMIT or CANCEL?  ---------------------> break, keep intent
+         |  |  text is None or == working?  -> NO-PROGRESS GUARD -> CANCEL, break
+         |  |  round_n >= max_round_n?      -> THE CAP           -> CANCEL, break
+         |  |  else: working = text, round_n += 1                -> another ROUND
+         |  '-------------------------------------------.
+         |                                              |
+         |------------ close() ------------------------>|         ONCE
+         |
+        returns (working or None, intent) to the CALLER
+
+    'open' and 'close' stay OUTSIDE the loop: a driver whose connection IS
+    the session -- a pipe, a socket -- has nothing to answer on once it is
+    closed. That is also why 'resolve' sits inside the open session, and
+    why the half-duplex door 'feed_down' cannot be the body of this one.
+
+    ONE COMPARE RUN PER ROUND: each round is an independent, exact
+    'feed(subject, working nominal)'. Nothing carries over between rounds
+    and nothing needs to -- the streams are held here as TEXT, so a round
+    costs a fresh StringIO and no re-reading of anything.
+
     A COMMIT that carries no text is refused as a CANCEL: committing an
     absent artifact would store emptiness as the accepted behaviour.
+
+    TWO GUARDS AGAINST A SESSION THAT NEVER ENDS, and both end it as a
+    CANCEL -- the nominal is left exactly as it was:
+
+        NO PROGRESS   a REALIGN with no artifact, or one byte-identical
+                      to the round before it, cannot align to anything
+                      new. Refused at once. This catches the ordinary
+                      bug -- a driver echoing its input -- on the very
+                      next round, and it never touches an author, since
+                      every real edit progresses.
+
+        THE CAP       'max_round_n' rounds, then the session ends anyway.
+                      The backstop for a driver that oscillates (A, B,
+                      A, B ...) and so progresses for ever without ever
+                      deciding. The default is deliberately far above
+                      any human merge.
     """
     import io
     from vut.engine.compare.configuration import Configuration
     if compare_options is None: compare_options = Configuration()
 
-    #  THE SEQUENCE IS open -> present -> resolve -> close, and 'resolve'
-    #  is INSIDE the open session: a driver whose connection IS the
-    #  session -- a pipe, a socket -- has nothing to answer on once it is
-    #  closed. 'feed_down' is the half-duplex door and closes as it ends,
-    #  so the full-duplex half cannot be built out of it.
+    working    = nominal_text
     resolution = None
+    round_n    = 0
     await _call(adapter, "open", subject_name)
     try:
-        async for item in compare_feeder.feed(compare_options,
-                                              io.StringIO(subject_text),
-                                              io.StringIO(nominal_text)):
-            await _call(adapter, "present", item)
         resolve = getattr(adapter, "resolve", None)
-        if resolve is not None:
-            resolution = await resolve(subject_name, subject_text,
-                                       nominal_text)
+        while True:
+            async for item in compare_feeder.feed(compare_options,
+                                                  io.StringIO(subject_text),
+                                                  io.StringIO(working)):
+                await _call(adapter, "present", item)
+
+            #  A driver with no 'resolve' is half-duplex by its own
+            #  choice, not by fault: one round, then out.
+            if resolve is None: break
+
+            resolution = await resolve(subject_name, subject_text, working)
+            if resolution is None: break
+            round_n += 1
+            #  BEFORE the message is read, never after.
+            check_signature(resolution.signature)
+            if resolution.intent is not E_Intent.REALIGN: break
+
+            if resolution.nominal_text is None \
+               or resolution.nominal_text == working:
+                #  No progress: nothing to align differently. Ending here
+                #  bounds the driver's bug without bounding the author.
+                resolution = Resolution(intent=E_Intent.CANCEL)
+                break
+            if round_n >= max_round_n:
+                #  Progressing, but never deciding. Ended, not raised:
+                #  a hung driver must not take the caller down with it.
+                resolution = Resolution(intent=E_Intent.CANCEL)
+                break
+            working = resolution.nominal_text
     finally:
         await _call(adapter, "close")
 
     if resolution is None:
         return None, E_Intent.CANCEL
-    check_signature(resolution.signature)
     if resolution.intent is E_Intent.COMMIT and resolution.nominal_text is None:
         return None, E_Intent.CANCEL
     return resolution.nominal_text, resolution.intent
@@ -444,6 +527,11 @@ class RemoteDisplay(DisplayAdapter):
 
         Raises ProtocolMismatch when the client answers under a signature
         this hub cannot parse -- checked before the message is read.
+
+        STDIN STAYS OPEN. A REALIGN is answered with a fresh DOWN on this
+        same pipe, so closing the client's input here would end the
+        session after one round and make the loop impossible. 'close()'
+        closes it, once, when the session is really over.
         """
         import json as _json
         if not self.resolve_f: return None
@@ -455,7 +543,6 @@ class RemoteDisplay(DisplayAdapter):
                                         "nominal": nominal_text}}) + "\n")
             .encode("utf-8"))
         await self._process.stdin.drain()
-        self._process.stdin.close()
 
         raw = await self._process.stdout.readline()
         if not raw.strip(): return Resolution(intent=E_Intent.CANCEL)

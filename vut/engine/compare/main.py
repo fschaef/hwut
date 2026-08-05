@@ -38,9 +38,9 @@ from   vut.engine.compare.engine.analogy_db             import AnalogyDb
 import vut.engine.compare.engine.frozen_analogy_db      as     frozen_analogy_db
 from   vut.engine.compare.engine                        import constraints
 from   vut.engine.compare.core.chunk_pair import ChunkPair
-from   vut.engine.compare.engine.input.chunk_pipe              import EquivalenceCheckChunkPipe, \
-                                                               AssociationChunkPipe
-from   vut.engine.compare.engine.input.input_chunk_zip         import generate_chunk_pairs, \
+from   vut.engine.compare.reading.reading               import judge_reading, \
+                                                               lawyer_reading
+from   vut.engine.compare.core.input_chunk_zip         import generate_chunk_pairs, \
                                                                generate_chunk_pairs_type_aligned
 from   vut.engine.compare.configuration                 import Configuration
 
@@ -102,8 +102,10 @@ async def _is_equivalent_fast(config,
 
     try:
         analogy_db = AnalogyDb()
-        subject    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
-        nominal    = EquivalenceCheckChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
+        # ONE constructor for both poles -- a subject and a nominal are
+        # indistinguishable readings; only their argument position differs.
+        subject    = judge_reading(config, subject_line_provider)
+        nominal    = judge_reading(config, nominal_line_provider)
 
         # subject, nominal = 'LINE' or 'POTPOURRI'
         async for subject, nominal in generate_chunk_pairs(config, subject, nominal):
@@ -235,8 +237,8 @@ async def associate(config: Configuration, subject_line_provider, nominal_line_p
     try:
         analogy_db = AnalogyDb()
 
-        subject = AssociationChunkPipe(config, AsyncIterator_ensured(subject_line_provider))
-        nominal = AssociationChunkPipe(config, AsyncIterator_ensured(nominal_line_provider))
+        subject = lawyer_reading(config, subject_line_provider)
+        nominal = lawyer_reading(config, nominal_line_provider)
 
         # subject, nominal = 'LineSequence', 'Potpourri' or None
         async for subject, nominal in generate_chunk_pairs_type_aligned(config, subject, nominal):

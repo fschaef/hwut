@@ -31,7 +31,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional, Sequence
 
-from   vut.auxiliary.test_run_result import E_TestRunResult
+from   vut.engine.test_run.result import E_TestRunResult
 
 
 #  Reason precedence: the earlier a reason stands, the louder it speaks.

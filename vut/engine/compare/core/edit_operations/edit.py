@@ -13,7 +13,7 @@ Edit:         identifies names the operation and provides a possible
 
 EditSequence: maintains a list of edit objects. 
 """
-from  vut.engine.compare.engine.input.line_element import E_ToleranceId
+from  vut.engine.compare.reading.line_element import E_ToleranceId
 # E_EditId lives in the shared semantics module (single source of the
 # comparison semantics); re-exported here for the existing import sites.
 from  vut.engine.compare.engine.semantics          import E_EditId  # noqa: F401

@@ -5,14 +5,38 @@ PURPOSE
        PROVISION -- how the subjects of a test come to exist.
 
 DESCRIPTION
-       Two ways, one product:
+       ONE PROVISION, FOUR STAGES. A Provision holds its stages as
+       MEMBERS; a member that is None is a stage this provision does not
+       have. Absence is DATA -- inspectable, reported by the footprint --
+       never a null object pretending something ran:
 
-           Run      execute, contain, record   -> the subjects
-           Replay   read what was stored       -> the subjects
+           stage_build         sources     -> THE APPLICATION
+           stage_execute       application -> raw streams, fanned out
+           stage_canonicalise  raw         -> THE SUBJECT
+           stage_load          store       -> THE SUBJECT
 
-       They read DISJOINT configuration keys and return the SAME thing,
-       so no operation above ever branches on which one it got -- which
-       is what keeps comparison blind to provenance (README 2.4).
+       EXACTLY ONE PATH. 'stage_execute' and 'stage_load' exclude each
+       other; 'stage_build' and 'stage_canonicalise' stand only beside
+       'stage_execute' -- a loaded subject is ALREADY canonical, which
+       is why a canonicaliser change demands a re-run. The invariants
+       are checked at construction, where the wiring is written.
+
+       EVERY STAGE IS A SUPPLIER: it hands over its product, or one
+       token of the brief vocabulary saying why not. NO STAGE RAISES.
+       Provision failure is TEST failure and the suite runs on -- that
+       robustness is not built on top of this contract, it is a
+       consequence of it (README 2.6).
+
+       SHARING IS INSTANCE IDENTITY. A stage that must not repeat its
+       work REMEMBERS it ('BuildStage'): wire the SAME instance into
+       every Provision of one application, and the tool builds once.
+       Sharing is the planner's deliberate act, never the stage's.
+
+       THE PLANNERS ARE FUNCTIONS, NOT CLASSES. 'Run(...)' wires
+       execution, 'Replay(...)' wires load, 'provision_of(...)' chooses
+       from the request. After wiring there is ONE kind of Provision:
+       nothing downstream can tell a subject's provenance by type
+       (README 2.4). The 'kind' attribute exists for OBSERVATION only.
 
        A SUBJECT IS A NOMINAL-KIND OBJECT. Subject and nominal are the
        same kind of thing (README 2.3); a comparison merely aligns two
@@ -34,14 +58,13 @@ import asyncio
 from   dataclasses import dataclass
 from   pathlib     import Path
 
-from   vut.auxiliary.test_run_result     import E_TestRunResult
+from   vut.engine.test_run.result       import E_TestRunResult
 from   vut.engine.procsitter.procsitter  import Procsitter, E_Containment
 from   vut.engine.procsitter.construction import Link, chain
 from   vut.engine.test_run.build         import build
 from   vut.engine.test_run.configuration import E_SourceKind
 from   vut.engine.test_run.nominal       import BytesNominal
-from   vut.engine.test_run.observer      import notify
-from   vut.engine.test_run.report        import Provision
+from   vut.engine.test_run.report        import Provision as ProvisionRecord
 
 
 STDOUT = "stdout"
@@ -143,7 +166,7 @@ class Subjects:
     run can be large where its cadence never is.
     """
     reader_db: dict
-    provision: Provision
+    provision: ProvisionRecord
     raw_db:    dict = None
     timing_db: dict = None
 
@@ -160,57 +183,61 @@ class Subjects:
         return sorted(self.reader_db)
 
 
-class Run:
-    """PROVISION BY EXECUTION: build if COMPILED, launch, contain,
-    canonicalise, and hand over readers.
+class BuildStage:
+    """THE APPLICATION comes to exist -- once.
 
-    Reads the source, build, place, caps, canonicaliser and store keys of
-    the configuration -- and none of the stored-data keys.
+    A build stage REMEMBERS its outcome: however many Provisions share
+    this instance, the build tool runs a single time. That memo is what
+    'build if necessary' means at suite scale. A fresh stage per
+    Provision -- the planners' default -- reproduces per-run building
+    exactly.
+
+    Reads the source and build keys of the configuration.
     """
 
-    kind = "Run"
+    def __init__(self, configuration, observer=None):
+        self.configuration = configuration
+        self.observer      = observer
+        self._outcome      = None
+        self._lock         = asyncio.Lock()
 
-    def __init__(self, configuration, choice_name=None, observer=None,
-                 keep_raw=False, keep_timing=False):
+    async def supply(self, stop_event=None):
+        """
+        RETURN: BuildOutcome, the product ('succeeded') or the reason
+                ('report'), with the build's own attribution record.
+
+        MEMOIZED behind a lock: a second caller -- even a concurrent
+        one -- receives the FIRST call's outcome, never a second build.
+        """
+        async with self._lock:
+            if self._outcome is None:
+                self._outcome = await build(self.configuration,
+                                            stop_event=stop_event,
+                                            observer=self.observer)
+            return self._outcome
+
+
+class ExecuteStage:
+    """RAW BEHAVIOR comes to exist: launch, contain, collect -- the
+    channels, the output files, and the cadence when asked for.
+
+    Reads the source, place and caps keys of the configuration.
+    """
+
+    def __init__(self, configuration, choice_name=None, keep_timing=False):
         self.configuration = configuration
         self.choice_name   = choice_name
-        self.observer      = observer
-        self.keep_raw      = keep_raw
         self.keep_timing   = keep_timing
-        self.last_provided = None    # what 'provide()' last produced, so
-                                     # a caller may RECORD it without
-                                     # provisioning a second time
 
-    async def provide(self, stop_event=None):
+    async def supply(self, stop_event=None):
         """
-        RETURN: Subjects, the readers and the record of provision.
-
-        REMEMBERS the product, so a caller that must both compare and
-        record does not provision twice -- which for a Run would mean
-        running the application a second time and recording a DIFFERENT
-        execution than the one that was judged.
-        """
-        self.last_provided = await self._provide(stop_event=stop_event)
-        return self.last_provided
-
-    async def _provide(self, stop_event=None):
-        """
-        RETURN: Subjects, the readers and the record of provision.
-
-        The build's failure ENDS provision: there is nothing to launch,
-        so no subject is provided and the report names the build.
+        RETURN: (dict, list, E_TestRunResult, dict), the raw texts by
+                subject name, the attribution records, the report, and
+                the cadence by subject name (empty unless asked for).
+                (None, list, report, {}), the launch failed: there is
+                nothing to canonicalise and nothing to deliver.
         """
         configuration = self.configuration
-        record_list   = []
-
-        if configuration.source_kind is E_SourceKind.COMPILED:
-            outcome = await build(configuration, stop_event=stop_event,
-                                  observer=self.observer)
-            record_list.append(outcome.record)
-            if not outcome.succeeded:
-                return Subjects({}, Provision(report  = outcome.report,
-                                              records = tuple(record_list)))
-
         procsitter = Procsitter(configuration.caps,
                                 work_dir=str(configuration.test_directory))
         error_link = Link()
@@ -228,12 +255,11 @@ class Run:
         finally:
             error_link.close()                 # not an edge: ours to close
         stderr_text = await _read_all(error_link.reader)
-        record_list.append(record)
+        record_list = [record]
 
         if record.containment is E_Containment.FAIL_LAUNCH:
-            return Subjects({}, Provision(
-                report  = E_TestRunResult.TEST_APP_LAUNCH_FAILED,
-                records = tuple(record_list)))
+            return (None, record_list,
+                    E_TestRunResult.TEST_APP_LAUNCH_FAILED, {})
 
         raw_db = {STDOUT: stdout_text, STDERR: stderr_text}
         raw_db.update(self._output_files())
@@ -245,23 +271,7 @@ class Run:
              and record.containment is not E_Containment.FAIL_COMPLETED:
             report = E_TestRunResult.TEST_APP_CONTAINED
 
-        reader_db = {}
-        entry     = configuration.choice_configuration(self.choice_name)
-        for name, text in raw_db.items():
-            pype_argv = entry.canonicalisers.get(name)
-            if pype_argv is not None:
-                text, pype_report = await canonicalise(text, pype_argv,
-                                                       procsitter)
-                if pype_report is not E_TestRunResult.OK \
-                   and report is E_TestRunResult.OK:
-                    report = pype_report
-            reader_db[name] = BytesNominal(text, name=name)
-
-        return Subjects(reader_db,
-                        Provision(report  = report,
-                                  records = tuple(record_list)),
-                        raw_db    = dict(raw_db) if self.keep_raw else None,
-                        timing_db = timing_db if self.keep_timing else None)
+        return raw_db, record_list, report, timing_db
 
     def _output_files(self):
         """
@@ -281,44 +291,65 @@ class Run:
         return file_db
 
 
-class Replay:
-    """PROVISION BY STORED DATA: read the recorded subjects back.
+class CanonicaliseStage:
+    """THE SUBJECT comes to exist: each raw stream rewritten by its
+    declared pype, comparable after. A stream with no canonicaliser
+    declared is comparable raw -- raw IS canonical for it.
 
-    Reads the store keys and NONE of the source, build, place or caps
-    keys. Nothing is executed, so there is nothing to contain and no
-    attribution to make -- which is why its Provision carries no records.
+    Reads the canonicaliser and caps keys of the configuration.
     """
 
-    kind = "Replay"
+    def __init__(self, configuration, choice_name=None):
+        self.configuration = configuration
+        self.choice_name   = choice_name
+
+    async def supply(self, raw_db, report, stop_event=None):
+        """
+        RETURN: (dict, E_TestRunResult), readers by subject name, and
+                the report: the given one or -- only when it was OK --
+                the first canonicaliser failure.
+
+        A failing canonicaliser leaves its text UNCHANGED and says so
+        ('canonicalise'); the subject is delivered either way.
+        """
+        configuration = self.configuration
+        procsitter = Procsitter(configuration.caps,
+                                work_dir=str(configuration.test_directory))
+        reader_db = {}
+        entry     = configuration.choice_configuration(self.choice_name)
+        for name, text in raw_db.items():
+            pype_argv = entry.canonicalisers.get(name)
+            if pype_argv is not None:
+                text, pype_report = await canonicalise(text, pype_argv,
+                                                       procsitter)
+                if pype_report is not E_TestRunResult.OK \
+                   and report is E_TestRunResult.OK:
+                    report = pype_report
+            reader_db[name] = BytesNominal(text, name=name)
+        return reader_db, report
+
+
+class LoadStage:
+    """THE SUBJECT comes to exist from the STORE: what a run recorded,
+    read back. Nothing executes, nothing is contained, there is no
+    attribution to make -- and NOTHING IS INVENTED: an absent recording
+    is REPORTED, never an empty subject that would be compared and
+    called a difference.
+
+    Reads the store keys and NONE of the source, build, place or caps
+    keys.
+    """
 
     def __init__(self, store, test_name, choice_name=None,
-                 subject_name_list=None, observer=None):
+                 subject_name_list=None):
         self.store             = store
         self.test_name         = test_name
         self.choice_name       = choice_name
         self.subject_name_list = subject_name_list
-        self.observer          = observer
-        self.last_provided     = None
 
-    async def provide(self, stop_event=None):
-        """
-        RETURN: Subjects, the readers and the record of provision.
-
-        REMEMBERS the product, so a caller that must both compare and
-        record does not provision twice -- which for a Run would mean
-        running the application a second time and recording a DIFFERENT
-        execution than the one that was judged.
-        """
-        self.last_provided = await self._provide(stop_event=stop_event)
-        return self.last_provided
-
-    async def _provide(self, stop_event=None):
+    async def supply(self, stop_event=None):
         """
         RETURN: Subjects, readers over the stored candidates.
-
-        A recording that is not there is REPORTED, never invented: an
-        absent record must not read as an empty subject, which would be
-        compared and called a difference.
         """
         name_list = self.subject_name_list
         if name_list is None:
@@ -335,6 +366,150 @@ class Replay:
                 reader_db[name] = BytesNominal(reader.read(), name=name)
 
         if not reader_db:
-            return Subjects({}, Provision(
+            return Subjects({}, ProvisionRecord(
                 report=E_TestRunResult.RECORDING_MISSING))
-        return Subjects(reader_db, Provision(report=E_TestRunResult.OK))
+        return Subjects(reader_db, ProvisionRecord(report=E_TestRunResult.OK))
+
+
+class Provision:
+    """ONE PROVISION -- its stages as members, None for a stage it does
+    not have. Constructed by the planners below ('Run', 'Replay',
+    'provision_of'); the invariants live HERE, at construction, where
+    the wiring is written.
+    """
+
+    def __init__(self, stage_build=None, stage_execute=None,
+                 stage_canonicalise=None, stage_load=None,
+                 keep_raw=False, observer=None):
+        assert (stage_execute is None) != (stage_load is None), \
+               "exactly one of stage_execute/stage_load: a provision " \
+               "either runs or loads"
+        assert stage_build is None or stage_execute is not None, \
+               "a build stands only before an execution"
+        assert stage_canonicalise is None or stage_execute is not None, \
+               "a loaded subject is already canonical"
+        self.stage_build        = stage_build
+        self.stage_execute      = stage_execute
+        self.stage_canonicalise = stage_canonicalise
+        self.stage_load         = stage_load
+        self.keep_raw           = keep_raw
+        self.observer           = observer
+        self.kind               = "Replay" if stage_load is not None \
+                                  else "Run"
+        self.last_provided      = None   # what 'provide()' last produced,
+                                         # so a caller may RECORD it
+                                         # without provisioning twice
+
+    async def provide(self, stop_event=None):
+        """
+        RETURN: Subjects, the readers and the record of provision.
+
+        REMEMBERS the product, so a caller that must both compare and
+        record does not provision twice -- which for an executing
+        provision would mean running the application a second time and
+        recording a DIFFERENT execution than the one that was judged.
+        """
+        self.last_provided = await self._provide(stop_event=stop_event)
+        return self.last_provided
+
+    async def _provide(self, stop_event=None):
+        """
+        RETURN: Subjects, the readers and the record of provision.
+
+        The stages, in their one lawful order: build (if any), execute,
+        canonicalise -- or load. The first stage that cannot deliver
+        ENDS provision with its token; the stages beyond it never run.
+        """
+        if self.stage_load is not None:
+            return await self.stage_load.supply(stop_event=stop_event)
+
+        record_list = []
+        if self.stage_build is not None:
+            outcome = await self.stage_build.supply(stop_event=stop_event)
+            record_list.append(outcome.record)
+            if not outcome.succeeded:
+                return Subjects({}, ProvisionRecord(
+                    report  = outcome.report,
+                    records = tuple(record_list)))
+
+        raw_db, records, report, timing_db = \
+            await self.stage_execute.supply(stop_event=stop_event)
+        record_list += records
+        if raw_db is None:
+            return Subjects({}, ProvisionRecord(
+                report  = report,
+                records = tuple(record_list)))
+
+        reader_db, report = await self.stage_canonicalise.supply(
+            raw_db, report, stop_event=stop_event)
+
+        return Subjects(reader_db,
+                        ProvisionRecord(report  = report,
+                                        records = tuple(record_list)),
+                        raw_db    = dict(raw_db) if self.keep_raw else None,
+                        timing_db = timing_db
+                                    if self.stage_execute.keep_timing
+                                    else None)
+
+
+def Run(configuration, choice_name=None, observer=None,
+        keep_raw=False, keep_timing=False):
+    """
+    RETURN: Provision, wired for EXECUTION: build (COMPILED sources
+            only), execute, canonicalise. Reads the source, build,
+            place, caps, canonicaliser and store keys of the
+            configuration -- and none of the stored-data keys.
+
+    A PLANNER, not a class: it wires stages and hands over the ONE
+    Provision kind. Stages are fresh per call; wiring a SHARED stage
+    (one build for many choices) is a caller's deliberate act.
+    """
+    stage_build = BuildStage(configuration, observer=observer) \
+                  if configuration.source_kind is E_SourceKind.COMPILED \
+                  else None
+    return Provision(
+        stage_build        = stage_build,
+        stage_execute      = ExecuteStage(configuration, choice_name,
+                                          keep_timing=keep_timing),
+        stage_canonicalise = CanonicaliseStage(configuration, choice_name),
+        keep_raw           = keep_raw,
+        observer           = observer)
+
+
+Run.kind = "Run"
+
+
+def Replay(store, test_name, choice_name=None, subject_name_list=None,
+           observer=None):
+    """
+    RETURN: Provision, wired for LOAD: the recorded subjects, read
+            back.
+
+    A PLANNER, not a class -- see 'Run'.
+    """
+    return Provision(
+        stage_load = LoadStage(store, test_name, choice_name,
+                               subject_name_list),
+        observer   = observer)
+
+
+Replay.kind = "Replay"
+
+
+def provision_of(configuration, store, test_name, choice_name, replay,
+                 observer=None):
+    """
+    RETURN: Provision, the one the REQUEST asks for: load when
+            'replay', execution otherwise -- with the recording
+            appetite (raw, cadence) read from the configuration's
+            store keys.
+
+    Provision by execution and by stored data are chosen HERE, once,
+    so no operation below ever asks which one it got.
+    """
+    if replay:
+        return Replay(store, test_name, choice_name, observer=observer)
+    store_config = configuration.store
+    return Run(configuration, choice_name, observer=observer,
+               keep_raw    = bool(store_config and store_config.record_raw),
+               keep_timing = bool(store_config and store_config.record_timing))

@@ -17,7 +17,7 @@ from typing import List, Tuple
 sys.path.insert(0, "../" * 8)
 
 from vut.language_support.python.deterministic_random import DeterministicStream
-from vut.engine.compare.engine.input.line_element import E_ToleranceId, LineElement, LineElementString
+from vut.engine.compare.reading.line_element import E_ToleranceId, LineElement, LineElementString
 from vut.engine.compare.engine.line import Line
 import vut.engine.compare.core.edit_operations.line as edit_line
 import vut.engine.compare.core.edit_operations.line_sequence as edit_seq

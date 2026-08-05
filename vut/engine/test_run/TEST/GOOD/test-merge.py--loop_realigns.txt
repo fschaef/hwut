@@ -1,0 +1,6 @@
+INSPECT: round 1 pairs = [(1, 1), (2, 2), (3, 3)]
+         round 2 pairs = [(1, 1), (2, 2), (-1, 3), (3, 4)]
+  OK  : two DOWN generations were produced, one per round
+  OK  : the second is a DIFFERENT association -- the edit re-aligned it
+  OK  : the added nominal line appears as an added pair
+SUCCESS: an edit changes the alignment, and the author sees it.

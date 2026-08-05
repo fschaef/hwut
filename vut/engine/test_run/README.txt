@@ -306,6 +306,32 @@ step. Those are what an operation is ASKED for, not what the test IS.
 PART II -- PROVISION  (how the subjects come to exist)
 ############################################################################
 
+THE STAGES. Provision is ONE type holding its stages as MEMBERS -- a
+member that is None is a stage this provision does not have; absence is
+DATA, never a null object pretending something ran:
+
+    stage_build         sources     -> the APPLICATION  (COMPILED only)
+    stage_execute       application -> raw streams, fanned out
+    stage_canonicalise  raw         -> the SUBJECT
+    stage_load          store       -> the SUBJECT
+
+EXACTLY ONE PATH: 'stage_execute' and 'stage_load' exclude each other;
+build and canonicalise stand only beside execute -- a loaded subject is
+ALREADY canonical, which is why a canonicaliser change demands a re-run.
+The invariants are checked at construction, where the wiring is written.
+
+EVERY STAGE IS A SUPPLIER: its product, or one token of the brief
+vocabulary saying why not -- no stage raises, so provision failure is
+test failure and the suite runs on (2.6). A stage that must not repeat
+its work REMEMBERS it: 'BuildStage' memoizes, so wiring the SAME
+instance into every Provision of one application is 'build if
+necessary' at suite scale -- sharing is the planner's deliberate act.
+
+'Run' (3) and 'Replay' (5) are PLANNERS -- functions that wire the one
+Provision type; 'provision_of' chooses between them from the request.
+Nothing downstream can tell a subject's provenance by type (2.4); the
+'.kind' attribute exists for OBSERVATION only.
+
 ----------------------------------------------------------------------------
 3  RUN -- provision by execution
 ----------------------------------------------------------------------------
@@ -797,7 +823,12 @@ hub. DISPLAY uses DOWN only (half-duplex); MERGE uses DOWN then UP
 runs the association INSIDE and yields immutable DisplayInst items:
 ProtocolHeader, ConfigInst (how comparison was set), SectionBeginInst,
 LinePairInst (the aligned row: subject cells, nominal cells, cost),
-EndOfStreamInst. 'feeder/html_feeder.py' is ONE consumer (side-by-side
+EndOfStreamInst.
+
+  SectionBeginInst carries the BLOCK ID by which an UP addresses that
+  block (11.7). It sits THERE and not on every LinePairInst: a client
+  folds the stream into a buffer and is stateful whatever we do, so one
+  local variable is cheaper than a field on every row, forever. 'feeder/html_feeder.py' is ONE consumer (side-by-side
 HTML) -- an example, not the interface.
 
   THE SIGNATURE in ProtocolHeader versions the PROTOCOL STRUCTURE (the
@@ -821,6 +852,9 @@ byte-exact. Only the UP envelope is new; sign/version it like DOWN.
     @dataclass Resolution:
         intent:       E_Intent      # REALIGN | COMMIT | CANCEL
         nominal_text: str|None      # the PLAIN artifact, never a view
+        block_id:     int|None      # REALIGN: the block the edit fell
+                                    # into, as NAMED by the last DOWN
+                                    # (11.7). None -> realign in full.
         signature:    str           # checked BEFORE the message is read
 
     E_Intent: REALIGN | COMMIT | CANCEL
@@ -892,29 +926,108 @@ view. UP thus carries an INTENT with its plain bytes:
     COMMIT   the final nominal  -> stored
     CANCEL   abandon; the nominal is unchanged
 
-11.7  DIFFERENTIAL RE-ASSOCIATION (optimisation). The subject is fixed, so
-an edit perturbs the alignment only LOCALLY -- re-align just a WINDOW:
+11.6a  THE TWO GUARDS -- ending a session that would not end on its own.
+'merge_session()' (feed.py) is the HUB that drives the loop above; the
+sequence in full, one ROUND at a time:
 
-    old association: [ head ......... | edited region | ......... tail ]
-                                      ^START           ^END
-                                      |<--- WINDOW --->|   (re-sync RUN of
-                                                            stable pairs)
-    result:          head  +  new window  +  tail (renumbered by the shift)
+    HUB (merge_session)                          DRIVER (adapter)
+     |                                              |
+     |------------ open(subject_name) ------------->|         ONCE
+     |                                              |
+     |  .--------------- ROUND ---------------------.
+     |  |                                           |
+     |  |  compare.feed(subject, working)           |
+     |  |  yields DOWN items ...                    |
+     |  |----------- present(item) * -------------->|   * once per item
+     |  |                                           |
+     |  |----------- resolve(subject, working) ---->|
+     |  |<---------- Resolution(intent, text) ------|
+     |  |                                           |
+     |  |  intent is COMMIT or CANCEL?  ----------------------> break, keep intent
+     |  |  text is None or == working?  -> NO-PROGRESS GUARD -> CANCEL, break
+     |  |  round_n >= max_round_n?      -> THE CAP           -> CANCEL, break
+     |  |  else: working = text, round_n += 1                -> another ROUND
+     |  '-------------------------------------------.
+     |                                              |
+     |------------ close() ------------------------>|         ONCE
+     |
+    returns (working or None, intent) to the CALLER
 
-    START = first affected line pair (nominal side reaches the edit;
-            backed to a stable anchor).
-    END   = first pair beyond the change where the new alignment
-            re-synchronises with the old (same subject line, same nominal
-            content, modulo the line-count shift), confirmed by a RUN of
-            stable pairs, not one.
+'open' and 'close' happen ONCE, outside the loop -- a driver whose
+connection IS the session (a pipe, a socket) has nothing to answer on
+once it is closed. Each ROUND is an independent, exact
+'compare.feed(subject, working nominal)': nothing carries over between
+rounds, and nothing needs to, since the streams are held as plain text.
 
-Caveat: compare's GLOBAL features break locality -- ANALOGIES (a
-bidirectional subject<->nominal binding) and multi-line regions
-(potpourri/verbatim/ignore/table) straddling the window; there, WIDEN or
-fall back to full. Because the safe window needs compare's own semantics,
-this lives IN compare -- an incremental 'reassociate(prior, changed_span)'
-beside feed(). Purely an optimisation: COMMIT always does a FULL re-align,
-so a miss costs at most a briefly imperfect DISPLAY, never a wrong nominal.
+Two guards end the loop as a CANCEL -- the nominal is left exactly as it
+was -- so a broken or adversarial driver can never hang the session:
+
+    NO-PROGRESS GUARD   a REALIGN with no artifact, or one byte-identical
+                        to the round before it, cannot align to anything
+                        new. Refused AT ONCE -- no extra round is
+                        computed. This catches the ordinary bug (a
+                        driver echoing its input back unchanged) on the
+                        very next round, and it never touches an author,
+                        since every real edit progresses.
+
+    THE CAP              'max_round_n' rounds (default MERGE_ROUND_MAX =
+                        1000), then the session ends anyway. The
+                        backstop for a driver that OSCILLATES -- always
+                        answering with a DIFFERENT nominal, so it never
+                        trips the no-progress guard, yet never commits
+                        or cancels either. The default is deliberately
+                        far above any human merge.
+
+A COMMIT that carries no text is also downgraded to CANCEL (11.3):
+storing emptiness would record it as accepted behaviour.
+
+11.7  RE-ASSOCIATION IS BLOCK-SCOPED, AND THE BLOCK IS NAMED BY COMPARE.
+A realignment re-folds the BLOCK the edit fell into, not a window computed
+from the edit. A block is a CHUNK: a region is one, and a run of outer
+lines is one. Compare made the chunks, so compare NAMES them; the IDE only
+repeats the name it was given -- alignment never leaves compare.
+
+    DOWN   SectionBeginInst(block_id=7, ...)     compare names the block
+             LinePairInst  ...
+           SectionBeginInst(block_id=8, ...)
+             LinePairInst  ...          <-- the author edits here
+    UP     REALIGN(block_id=8, working nominal)  the IDE quotes it back
+    DOWN   a fresh association, block 8 re-folded
+
+WHY A BLOCK AND NOT A WINDOW. A window has to be DERIVED -- a start backed
+to an anchor, an end confirmed by a run of stable pairs, a widen where a
+region straddles it. A block needs no derivation: it is a boundary compare
+already drew, and an edit lies inside exactly one. The block also cannot
+be straddled -- a region is atomic, since its analogy frame starts EMPTY
+and is dropped (compare, D-13), so there is no mid-region state to resume
+from.
+
+THE COST IS PAID IN LATENCY, DELIBERATELY. Realignment is triggered by the
+author or by a slow timer, never per keystroke. The delay fits the moment
+it serves -- "let us see how that change develops" -- and buys the thing a
+window was never able to give: the rest of the view does not move. Block
+scope is therefore about DISPLAY STABILITY, not about speed.
+
+TWO LAWS THE IDs OBEY:
+
+    PER GENERATION.  Each DOWN issues its ids afresh. An UP quoting an id
+                     from an older generation is REFUSED, not guessed at
+                     -- the same discipline the protocol signature obeys
+                     (11.2).
+    FRAMING VOIDS.   An edit that adds or removes a '##!' or '####'
+                     changes the block structure itself, so no id denotes
+                     what it denoted: every id is void and the realignment
+                     is a FULL re-fold. Detected by re-scanning the
+                     working nominal's framing, before any id is honoured.
+
+WHAT COMPARE OWES: one MODE of the association it already has -- start the
+fold at a named block instead of at the beginning, using the state that
+'ChunkPair' already carries. Not a second algorithm beside 'feed()'.
+
+CORRECTNESS NEEDS NO JUDGEMENT: re-folding from block B must equal
+'feed(subject, working nominal)' -- an exact oracle, not a sample. And
+COMMIT always does a FULL re-align regardless, so a scoping mistake costs
+at most a briefly imperfect DISPLAY, never a wrong nominal.
 
 
 ----------------------------------------------------------------------------

@@ -28,9 +28,8 @@ from   enum        import Enum
 from   pathlib     import Path
 from   typing      import Optional, Sequence
 
-from   vut.auxiliary.test_run_result    import E_TestRunResult
+from   vut.engine.test_run.result       import E_TestRunResult
 from   vut.engine.procsitter.procsitter import (Procsitter,
-                                                ProcsitterConfig,
                                                 E_Containment)
 
 
@@ -48,6 +47,10 @@ class E_BuildSystem(Enum):
     MAKE      = "make"
     NINJA     = "ninja"
     CMAKE     = "cmake"
+    MESON     = "meson"
+    BAZEL     = "bazel"
+    SCONS     = "scons"
+    MSBUILD   = "msbuild"
     GENERATOR = "<generator>"
 
     def __str__(self):
@@ -100,18 +103,32 @@ def make_argv(config):
         tool = config.tool if config.tool is not None \
                            else config.build_system.value
 
+    #  THREE SHAPES, one vocabulary. A build system differs in WHERE the
+    #  subcommand sits and HOW targets are spelled -- never in escaping,
+    #  because there is none: this is the argv, executed directly.
+    #      plain      make | ninja | scons        tool [args] [targets]
+    #      subcommand cmake | meson | bazel       tool SUB [args] [targets]
+    #      folded     msbuild                     tool [args] -t:a;b
     argv = [tool]
-    if config.build_system is E_BuildSystem.CMAKE:
+    if   config.build_system is E_BuildSystem.CMAKE:
         argv += ["--build", "."]
+    elif config.build_system is E_BuildSystem.MESON:
+        argv += ["compile"]
+    elif config.build_system is E_BuildSystem.BAZEL:
+        argv += ["build"]
     argv += [str(a) for a in config.argument_list]
 
     if config.build_system is E_BuildSystem.GENERATOR:
         return argv                       # targets are accounting only
     target_list = [str(t) for t in config.target_list]
     if target_list:
-        if config.build_system is E_BuildSystem.CMAKE:
+        if   config.build_system is E_BuildSystem.CMAKE:
             argv.append("--target")
-        argv += target_list
+            argv += target_list
+        elif config.build_system is E_BuildSystem.MSBUILD:
+            argv.append("-t:" + ";".join(target_list))
+        else:
+            argv += target_list
     return argv
 
 
