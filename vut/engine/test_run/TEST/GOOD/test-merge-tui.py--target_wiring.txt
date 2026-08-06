@@ -1,0 +1,4 @@
+INSPECT: driver_for(TUI) -> TuiDisplay
+  OK  : the TUI target names the TUI driver
+  OK  : and the caller's configuration reached it
+SUCCESS: a caller names an outcome; driver_for builds the tool.

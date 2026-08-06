@@ -1,0 +1,24 @@
+
+=[ tui-under-test ]================================= round 1
+setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+--[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+     1    1 | alpha
+S    2      | value [3.14]
+N         2 | value [3.1]
+     3    3 | gamma
+     4    4 | id ~((X9))~ ready
+            | ^ analogy '((X9))' ~ '((K2))' -- established at S:4/N:4
+     5    5 | id ~((X9))~ again
+            | ^ analogy '((X9))' ~ '((K2))' -- established at S:4/N:4
+============================================================
+
+-- round 1: 1 differing pair(s) --
+[e]dit the nominal   [c]ommit as accepted   [q]uit (cancel) ? 
+  OK  : committing without an edit commits the nominal AS IS
+  OK  : no edit was made, so ONE generation crossed
+  OK  : the compare SETUP is shown -- the rules the verdicts obey
+  OK  : section boundaries are compare's, and they are shown
+  OK  : a differing span is marked on BOTH sides
+  OK  : a tolerated span is marked as tolerated, not hidden
+  OK  : analogy provenance: the FIRST binding site is named
+SUCCESS: the TUI shows what DOWN carries -- and adds nothing.

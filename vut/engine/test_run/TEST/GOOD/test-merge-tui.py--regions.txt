@@ -1,0 +1,31 @@
+
+=[ tui-under-test ]================================= round 1
+setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+--[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+     1    1 | start
+--[ POTPOURRI/POTPOURRI ]--
+     3    4 | worker-2 done
+     4    3 | worker-1 done
+--[ TABLE/TABLE ]--
+     7    8 | ~1 orange 3.20~
+     8    7 | ~2 apple  1.10~
+--[ POINT_CLOUD/POINT_CLOUD ]--
+    11   11 | ~0.10 0.20~
+--[ VERBATIM/VERBATIM ]--
+    14   14 | raw   $$ exact
+--[ IGNORE/IGNORE ]--
+    17   17 | ~timestamp 12:33:01~
+--[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+    19   19 | end
+============================================================
+
+-- round 1: 0 differing pair(s) --
+[e]dit the nominal   [c]ommit as accepted   [q]uit (cancel) ? 
+  OK  : every region kind opens its own section, in stream order
+  OK  : potpourri: the crossed line numbers SHOW the unordered match
+  OK  : table: rows met by KEY, not by position
+  OK  : point-cloud: a point within the limit is tolerated
+  OK  : verbatim: carried exactly, spacing and all
+  OK  : ignore: present, shown, and entirely tolerated
+  OK  : and the whole stream is EQUIVALENT under its regions
+SUCCESS: all five region kinds render under compare's framing.

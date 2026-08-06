@@ -1,0 +1,7 @@
+INSPECT: intent=commit generations=2
+  OK  : the session ends on the author's COMMIT
+  OK  : the committed artifact IS the edited nominal
+  OK  : the edit was answered with a SECOND generation
+  OK  : and the author saw it, as round 2
+  OK  : the fresh association contains the edit
+SUCCESS: edit, realign, see it fresh, commit -- the loop.

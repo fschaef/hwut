@@ -1,0 +1,39 @@
+
+=[ tui-under-test ]================================= round 1
+setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+--[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+     1    1 | id ~((X9))~ opened
+            | ^ analogy '((X9))' ~ '((K2))' -- established at S:1/N:1
+S    2      | id [((X9))] reused
+N         2 | id [((ZZ))] reused
+     3    3 | value ~3.140~
+S    4      | value [9.000]
+N         4 | value [4.000]
+S    5      | count [42] items
+N         5 | count [fortytwo] items
+            | ^ type differs -- one side is a number, the other is not
+     6    6 | version ~v1.2.3-build907~
+S    7      | filler
+N         7 | ~_~[ ]filler
+     8    8 | ((limit: 100))
+            | ^ constraint binding ((limit: 100)) -- the value enters the constraint space
+S    9      | only [here]
+N         9 | only [there]
+============================================================
+
+-- round 1: 5 differing pair(s) --
+[e]dit the nominal   [c]ommit as accepted   [q]uit (cancel) ? 
+  OK  : a numeric WITHIN tolerance is tolerated, and marked so
+  FAIL: ... and the MEASUREMENT says by how much, against what
+  OK  : a numeric OUT of tolerance is a mismatch, on both sides
+  FAIL: ... with the number that decides widen-the-limit vs fix-the-code
+  OK  : the consistent analogy names its FIRST binding site
+  FAIL: the conflicting analogy is told as a CONFLICT ...
+  FAIL: ... naming the site of the binding it conflicts with
+  OK  : two elements matching one equivalence pattern are tolerated
+  FAIL: ... and the pattern that tolerated them is NAMED
+  OK  : a visible nothing pairs against NOTHING -- and is marked as the tolerance it is
+  OK  : a constraint binding is noted -- a value entered the space
+  OK  : a number-vs-word mismatch names its KIND
+  OK  : differing pairs split into an S row and an N row
+FAILURE: every element kind renders, with the meta DOWN carries.

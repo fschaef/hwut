@@ -1,0 +1,10 @@
+INSPECT: noop -> cancel after 1 generation(s)
+         fail -> cancel, editor's exit code told
+         eof  -> cancel, None
+  OK  : the unchanged edit is answered HERE, with a re-prompt
+  OK  : the hub never saw it: ONE generation, no REALIGN
+  OK  : the author's 'q' cancels; nothing is carried out
+  OK  : a failing editor is told, with its exit code
+  OK  : and the nominal stayed untouched
+  OK  : EOF on the answer channel is a CANCEL, not a crash
+SUCCESS: hesitation re-prompts; only decisions leave the TUI.
