@@ -40,12 +40,12 @@ import sys
 import asyncio
 import argparse
 
-from   vut.engine.test_run.feed    import (merge_session, driver_for,
-                                           E_DisplayTarget, E_Intent,
-                                           MERGE_ROUND_MAX)
-from   vut.engine.test_run.services.core import (read_source,
-                                           add_setup_arguments,
-                                           setup_from_arguments)
+from   vut.engine.test_run.interaction.feed import (merge_session, driver_for,
+                                                    E_DisplayTarget, E_Intent,
+                                                    MERGE_ROUND_MAX)
+from   vut.engine.test_run.services.core    import (read_source,
+                                                    add_setup_arguments,
+                                                    setup_from_arguments)
 
 
 async def merge_text(subject_text, nominal_text, adapter,

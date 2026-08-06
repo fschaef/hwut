@@ -577,7 +577,7 @@ def driver_for(target, **argument_db):
         #  Imported lazily: tui.py imports THIS module for the adapter
         #  interface, and a driver is compare-side rendering machinery a
         #  verdict-only run never needs loaded.
-        from vut.engine.test_run.tui import TuiDisplay
+        from vut.engine.test_run.interaction.tui import TuiDisplay
         return TuiDisplay(**argument_db)
     if target is E_DisplayTarget.RICH:
         argv = argument_db.get("argv")

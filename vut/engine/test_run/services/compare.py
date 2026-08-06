@@ -47,11 +47,11 @@ import sys
 import asyncio
 import argparse
 
-from   vut.engine.test_run.feed    import feed_down
-from   vut.engine.test_run.tui     import TuiDisplay
-from   vut.engine.test_run.services.core import (read_source,
-                                           add_setup_arguments,
-                                           setup_from_arguments)
+from   vut.engine.test_run.interaction.feed import feed_down
+from   vut.engine.test_run.interaction.tui  import TuiDisplay
+from   vut.engine.test_run.services.core    import (read_source,
+                                                    add_setup_arguments,
+                                                    setup_from_arguments)
 
 
 async def compare_view(subject_text, nominal_text, adapter,

@@ -459,7 +459,7 @@ verbatim; the defect and its fix are entirely compare's.
 
 todo-20  DOWN CARRIES THE MEASUREMENT, NOT JUST THE VERDICT  (compare feeder)
 ----------------------------------------------------------------------------
-The TUI tier (tui.py) rendered every element and region kind, and the
+The TUI tier (interaction/tui.py) rendered every element and region kind, and the
 exercise drew the line sharply between meta DOWN CARRIES and meta it
 does not. The client law held throughout: what DOWN lacks is compare's
 to emit, never the client's to compute -- a client re-deriving a

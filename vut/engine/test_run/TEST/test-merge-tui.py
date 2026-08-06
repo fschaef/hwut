@@ -39,13 +39,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..
 
 from   config import HwutRunner                                  # noqa F401,E402
 
-from   vut.engine.test_run.feed    import (E_DisplayTarget,      # noqa E402
-                                           E_Intent,
-                                           driver_for)
+from   vut.engine.test_run.interaction.feed import (E_DisplayTarget,      # noqa E402
+                                                    E_Intent,
+                                                    driver_for)
 from   vut.engine.test_run.services.merge   import merge_text             # noqa E402
 from   vut.engine.test_run.services.compare import (compare_view,         # noqa E402
                                            reading_view)
-from   vut.engine.test_run.tui     import TuiDisplay             # noqa E402
+from   vut.engine.test_run.interaction.tui import TuiDisplay             # noqa E402
 from   vut.engine.compare.configuration import Configuration     # noqa E402
 
 MOCK_EDITOR = os.path.join(os.path.dirname(__file__), "mock", "mock_editor.py")

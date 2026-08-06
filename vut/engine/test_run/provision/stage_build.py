@@ -12,7 +12,7 @@ ______________________________________________________________________________
 """
 import asyncio
 
-from   vut.engine.test_run.build           import build
+from   vut.engine.test_run.provision.build import build
 from   vut.engine.test_run.provision.core  import Supply
 
 

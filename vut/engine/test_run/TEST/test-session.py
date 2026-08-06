@@ -44,9 +44,9 @@ from   vut.engine.test_run.session         import (run_test,     # noqa E402
                                                    compare_setup_delta,
                                                    store_of,
                                                    E_Goal)
-from   vut.engine.test_run.feed            import (            # noqa E402
-                                                   E_DisplayTarget,
-                                                   driver_for)
+from   vut.engine.test_run.interaction.feed import (            # noqa E402
+                                                    E_DisplayTarget,
+                                                    driver_for)
 from   vut.engine.test_run.store           import (Store,        # noqa E402
                                                    DirectoryBusy,
                                                    StoreConfig,

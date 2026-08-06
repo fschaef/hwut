@@ -32,14 +32,14 @@ from   enum        import Enum
 from   typing      import Mapping, Optional, Sequence
 
 from   vut.engine.test_run.result           import E_TestRunResult
-from   vut.engine.test_run.accept            import (Accept, AcceptConfig,
+from   vut.engine.test_run.operations.accept import (Accept, AcceptConfig,
                                                      AcceptStep)
 from   vut.engine.test_run.configuration     import verify
-from   vut.engine.test_run.difference_display import (DifferenceDisplay,
-                                                      DifferenceDisplayConfig)
-from   vut.engine.test_run.equivalence_check import (EquivalenceCheck,
-                                                     EquivalenceCheckConfig)
-from   vut.engine.test_run.feed              import (driver_for,
+from   vut.engine.test_run.operations.difference_display import (DifferenceDisplay,
+                                                                 DifferenceDisplayConfig)
+from   vut.engine.test_run.operations.equivalence_check import (EquivalenceCheck,
+                                                                EquivalenceCheckConfig)
+from   vut.engine.test_run.interaction.feed  import (driver_for,
                                                      E_DisplayTarget)
 from   vut.engine.test_run.provision.core    import provision_of
 from   vut.engine.test_run.store             import (Store,

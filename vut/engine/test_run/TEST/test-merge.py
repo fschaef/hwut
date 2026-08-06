@@ -30,25 +30,25 @@ from   config import HwutRunner                                  # noqa F401,E40
 
 from   vut.engine.test_run.result       import E_TestRunResult  # noqa E402
 from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
-from   vut.engine.test_run.accept          import (Accept,       # noqa E402
-                                                   AcceptConfig,
-                                                   AcceptStep,
-                                                   E_AcceptMode)
+from   vut.engine.test_run.operations.accept import (Accept,       # noqa E402
+                                                     AcceptConfig,
+                                                     AcceptStep,
+                                                     E_AcceptMode)
 from   vut.engine.test_run.configuration   import (              # noqa E402
                                                    TestConfiguration,
                                                    TestChoiceConfiguration,
                                                    E_SourceKind)
-from   vut.engine.test_run.feed            import (              # noqa E402
-                                                   E_Intent,
-                                                   MergeToolDisplay,
-                                                   PROTOCOL_SIGNATURE,
-                                                   ProtocolMismatch,
-                                                   Resolution,
-                                                   down_message,
-                                                   envelope,
-                                                   merge_session,
-                                                   resolution_of)
-from   vut.engine.test_run.feed            import RemoteDisplay  # noqa E402
+from   vut.engine.test_run.interaction.feed import (              # noqa E402
+                                                    E_Intent,
+                                                    MergeToolDisplay,
+                                                    PROTOCOL_SIGNATURE,
+                                                    ProtocolMismatch,
+                                                    Resolution,
+                                                    down_message,
+                                                    envelope,
+                                                    merge_session,
+                                                    resolution_of)
+from   vut.engine.test_run.interaction.feed import RemoteDisplay  # noqa E402
 from   vut.engine.test_run.provision.core  import Run            # noqa E402
 from   vut.engine.test_run.store           import Store          # noqa E402
 
@@ -483,7 +483,7 @@ def test_unknown_intent_and_target():
     """An UP message with an intent this hub does not know, and a display
     target with no driver: both are REFUSED. Guessing would act on a
     message nobody sent."""
-    from vut.engine.test_run.feed import driver_for, E_DisplayTarget
+    from vut.engine.test_run.interaction.feed import driver_for, E_DisplayTarget
     unknown_intent = unknown_target = None
     try:
         resolution_of({"signature": PROTOCOL_SIGNATURE,

@@ -34,15 +34,15 @@ from   vut.engine.test_run.configuration   import (              # noqa E402
                                                    TestConfiguration,
                                                    TestChoiceConfiguration,
                                                    E_SourceKind)
-from   vut.engine.test_run.difference_display import (           # noqa E402
-                                                   DifferenceDisplay,
-                                                   DifferenceDisplayConfig)
-from   vut.engine.test_run.feed            import (              # noqa E402
-                                                   CollectingDisplay,
-                                                   NullDisplay,
-                                                   ProtocolMismatch,
-                                                   PROTOCOL_SIGNATURE,
-                                                   check_signature)
+from   vut.engine.test_run.operations.difference_display import (           # noqa E402
+                                                              DifferenceDisplay,
+                                                              DifferenceDisplayConfig)
+from   vut.engine.test_run.interaction.feed import (              # noqa E402
+                                                    CollectingDisplay,
+                                                    NullDisplay,
+                                                    ProtocolMismatch,
+                                                    PROTOCOL_SIGNATURE,
+                                                    check_signature)
 from   vut.engine.test_run.nominal         import BytesNominal   # noqa E402
 from   vut.engine.test_run.provision.core  import Run            # noqa E402
 
@@ -275,7 +275,7 @@ def test_failed_provision_shows_nothing():
     os.makedirs(os.path.join(directory, "BUILD", "broke"))
     with open(os.path.join(directory, "BUILD", "broke", "Makefile"), "w") as fh:
         fh.write("app:\n\tfalse\n")
-    from vut.engine.test_run.build import BuildConfig, E_BuildSystem
+    from vut.engine.test_run.provision.build import BuildConfig, E_BuildSystem
     configuration = TestConfiguration(
         source_file    = "broke.c",
         source_kind    = E_SourceKind.COMPILED,

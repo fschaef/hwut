@@ -907,7 +907,7 @@ connection IS the session has nothing to answer on once it is closed.
 
 11.5  DISPLAY TARGETS. The shipped interactive tier is the TERMINAL:
 
-    TUI    the always-available interactive tier (tui.py): renders each
+    TUI    the always-available interactive tier (interaction/tui.py): renders each
            DOWN generation as text -- setup banner, section boundaries,
            verdict-marked spans, analogy provenance -- and answers
            'resolve' by asking the author: [e]dit hands the nominal to
@@ -990,7 +990,7 @@ view. UP thus carries an INTENT with its plain bytes:
     CANCEL   abandon; the nominal is unchanged
 
 11.6a  THE TWO GUARDS -- ending a session that would not end on its own.
-'merge_session()' (feed.py) is the HUB that drives the loop above; the
+'merge_session()' (interaction/feed.py) is the HUB that drives the loop above; the
 sequence in full, one ROUND at a time:
 
     HUB (merge_session)                          DRIVER (adapter)
@@ -1152,15 +1152,20 @@ PART V -- REFERENCE
                                             it: acquire, build, execute,
                                             canonicalise, load -- class
                                             'Stage<Name>' inside
-                      build.py            BuildConfig, the build step (3)
+                        build.py            BuildConfig, the build TOOL
+                                            under stage_build (3)
                       store.py            Store, StoreConfig (4, 6)
                       nominal.py          Nominal and its kinds (6)
-                      equivalence_check.py  EquivalenceCheck (8)
-                      difference_display.py DifferenceDisplay (9)
-                      accept.py           Accept (10)
-                      feed.py             the feed session (11)
-                      tui.py              TuiDisplay -- the terminal
-                                          tier, two marking views (11.5)
+                      operations/         the three operations (2.5):
+                        equivalence_check.py   EquivalenceCheck (8)
+                        difference_display.py  DifferenceDisplay (9)
+                        accept.py              Accept (10)
+                      interaction/        where a human meets a session:
+                        feed.py             the feed session -- protocol,
+                                            hubs, drivers (11)
+                        tui.py              TuiDisplay -- the terminal
+                                            tier, two marking views (11.5)
+                        nvim/               the nvim client (11.5)
                       services/           the service faces (11.5):
                         merge.py            'hwut merge'
                         compare.py          'hwut compare'

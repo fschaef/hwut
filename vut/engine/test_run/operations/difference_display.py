@@ -25,8 +25,8 @@ from   typing      import Mapping, Optional
 
 from   vut.engine.test_run.result      import E_TestRunResult
 from   vut.engine.compare.configuration import Configuration
-from   vut.engine.test_run.feed         import (NullDisplay, feed_down,
-                                                ProtocolMismatch)
+from   vut.engine.test_run.interaction.feed import (NullDisplay, feed_down,
+                                                    ProtocolMismatch)
 from   vut.engine.test_run.nominal      import NominalNotAvailable
 from   vut.engine.test_run.observer     import notify
 from   vut.engine.test_run.report       import Comparison, TestResult

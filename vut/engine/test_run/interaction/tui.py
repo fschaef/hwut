@@ -55,7 +55,7 @@ import asyncio
 import tempfile
 from   contextlib import suppress
 
-from   vut.engine.test_run.feed import DisplayAdapter, Resolution, E_Intent
+from   vut.engine.test_run.interaction.feed import DisplayAdapter, Resolution, E_Intent
 
 
 class TuiDisplay(DisplayAdapter):

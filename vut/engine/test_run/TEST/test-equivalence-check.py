@@ -30,15 +30,15 @@ from   config import HwutRunner                                  # noqa F401,E40
 
 from   vut.engine.test_run.result       import E_TestRunResult  # noqa E402
 from   vut.engine.procsitter.procsitter    import ProcsitterConfig # noqa E402
-from   vut.engine.test_run.build           import (BuildConfig,   # noqa E402
+from   vut.engine.test_run.provision.build import (BuildConfig,   # noqa E402
                                                    E_BuildSystem)
 from   vut.engine.test_run.configuration   import (              # noqa E402
                                                    TestConfiguration,
                                                    TestChoiceConfiguration,
                                                    E_SourceKind)
-from   vut.engine.test_run.equivalence_check import (            # noqa E402
-                                                   EquivalenceCheck,
-                                                   EquivalenceCheckConfig)
+from   vut.engine.test_run.operations.equivalence_check import (            # noqa E402
+                                                              EquivalenceCheck,
+                                                              EquivalenceCheckConfig)
 from   vut.engine.test_run.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
 from   vut.engine.test_run.observer        import ObserverGroup  # noqa E402

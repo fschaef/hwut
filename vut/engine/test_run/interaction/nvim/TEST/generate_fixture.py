@@ -13,7 +13,7 @@ import asyncio, io, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),
                                 "..", "..", "..", "..", ".."))
 from vut.engine.compare.configuration import Configuration
-from vut.engine.test_run.feed import feed_down, CollectingDisplay, down_message
+from vut.engine.test_run.interaction.feed import feed_down, CollectingDisplay, down_message
 
 SUBJECT, NOMINAL = "alpha\nWRONG\ngamma\n", "alpha\nbeta\ngamma\n"
 
