@@ -73,10 +73,18 @@ def _verdict(ok, sentence):
 
 
 def _module_list():
-    """RETURN: list[str], the component's own source files."""
-    return sorted(os.path.join(COMPONENT, name)
-                  for name in os.listdir(COMPONENT)
-                  if name.endswith(".py") and not name.startswith("__"))
+    """RETURN: list[str], the component's own source files -- the root
+    modules AND the subpackages' (provision/, services/). TEST and the
+    display clients are not the component's modules and stay out."""
+    SKIP      = {"TEST", "nvim", "__pycache__"}
+    path_list = []
+    for directory, directory_list, file_list in os.walk(COMPONENT):
+        directory_list[:] = [d for d in directory_list if d not in SKIP]
+        path_list += (os.path.join(directory, name)
+                      for name in file_list
+                      if name.endswith(".py")
+                      and not name.startswith("__"))
+    return sorted(path_list)
 
 
 def test_good_files_are_machine_free():

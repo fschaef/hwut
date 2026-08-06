@@ -41,6 +41,8 @@ _PRECEDENCE = (
     # -- the source and the build: nothing could even be attempted
     E_TestRunResult.SOURCE_NOT_FOUND,
     E_TestRunResult.INTERPRETER_NOT_FOUND,
+    # -- the dependencies: the world outside would not deliver
+    E_TestRunResult.ACQUISITION_FAILED,
     E_TestRunResult.BUILD_TOOL_NOT_FOUND,
     E_TestRunResult.BUILD_CONTAINED,
     E_TestRunResult.BUILD_FAILED,

@@ -55,6 +55,7 @@ class E_DisplayTarget(Enum):
     """Which driver carries the session."""
     NONE     = "none"       # collect nothing; the verdict is enough
     CONSOLE  = "console"    # the always-available tier
+    TUI      = "tui"        # the terminal, interactively (tui.py)
     RICH     = "rich"       # a client speaking our protocol
 
     def __str__(self):
@@ -215,23 +216,23 @@ async def merge_session(compare_options, subject_text, nominal_text,
         HUB (this function)                          DRIVER (adapter)
          |                                              |
          |------------ open(subject_name) ------------->|         ONCE
-         |                                              |
+         |                                               |
          |  .--------------- ROUND ---------------------.
-         |  |                                           |
-         |  |  compare.feed(subject, working)           |
-         |  |  yields DOWN items ...                    |
-         |  |----------- present(item) * -------------->|   * once per item
-         |  |                                           |
-         |  |----------- resolve(subject, working) ---->|
-         |  |<---------- Resolution(intent, text) ------|
-         |  |                                           |
+         |  |                                            |
+         |  |  compare.feed(subject, working)             |
+         |  |  yields DOWN items ...                      |
+         |  |----------- present(item) * ----------------->|   * once per item
+         |  |                                              |
+         |  |----------- resolve(subject, working) -------->|
+         |  |<---------- Resolution(intent, text) ----------|
+         |  |                                              |
          |  |  intent is COMMIT or CANCEL?  ---------------------> break, keep intent
          |  |  text is None or == working?  -> NO-PROGRESS GUARD -> CANCEL, break
-         |  |  round_n >= max_round_n?      -> THE CAP           -> CANCEL, break
-         |  |  else: working = text, round_n += 1                -> another ROUND
-         |  '-------------------------------------------.
-         |                                              |
-         |------------ close() ------------------------>|         ONCE
+         |  |  round_n >= max_round_n?      -> THE CAP          -> CANCEL, break
+         |  |  else: working = text, round_n += 1               -> another ROUND
+         |  '--------------------------------------------.
+         |                                                |
+         |------------ close() -------------------------->|         ONCE
          |
         returns (working or None, intent) to the CALLER
 
@@ -572,6 +573,12 @@ def driver_for(target, **argument_db):
         return NullDisplay()
     if target is E_DisplayTarget.CONSOLE:
         return CollectingDisplay()
+    if target is E_DisplayTarget.TUI:
+        #  Imported lazily: tui.py imports THIS module for the adapter
+        #  interface, and a driver is compare-side rendering machinery a
+        #  verdict-only run never needs loaded.
+        from vut.engine.test_run.tui import TuiDisplay
+        return TuiDisplay(**argument_db)
     if target is E_DisplayTarget.RICH:
         argv = argument_db.get("argv")
         if not argv:

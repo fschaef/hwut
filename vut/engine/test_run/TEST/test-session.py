@@ -20,6 +20,7 @@ THE FRONT DOOR AND ITS CEREMONY.
 ______________________________________________________________________________
 """
 import asyncio
+import io
 import os
 import shutil
 import subprocess
@@ -331,9 +332,15 @@ def test_target_selects_a_driver():
     """A target is the ONLY place a driver is chosen, so adding a tier
     touches one function. A target with no driver is refused rather than
     guessed at."""
+    #  Each target is named with the arguments THAT outcome needs --
+    #  a client's argv for RICH, a stream and no merge for a TUI probe.
+    argument_db = {
+        E_DisplayTarget.RICH: {"argv": ["python3", "-c", "pass"]},
+        E_DisplayTarget.TUI:  {"out": io.StringIO(), "merge_f": False},
+    }
     row_list = []
     for target in E_DisplayTarget:
-        driver = driver_for(target, argv=["python3", "-c", "pass"])
+        driver = driver_for(target, **argument_db.get(target, {}))
         row_list.append((str(target), type(driver).__name__))
         print("INSPECT: %-8s -> %s" % row_list[-1])
     refused = None
@@ -345,6 +352,8 @@ def test_target_selects_a_driver():
     ok = _check([
         (dict(row_list)["none"] == "NullDisplay",
          "NONE carries nothing"),
+        (dict(row_list)["tui"] == "TuiDisplay",
+         "TUI is the terminal, interactively"),
         (dict(row_list)["rich"] == "RemoteDisplay",
          "RICH is the client that speaks the protocol"),
         (refused is not None,

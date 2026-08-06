@@ -49,7 +49,7 @@ from   vut.engine.test_run.feed            import (              # noqa E402
                                                    merge_session,
                                                    resolution_of)
 from   vut.engine.test_run.feed            import RemoteDisplay  # noqa E402
-from   vut.engine.test_run.provision       import Run            # noqa E402
+from   vut.engine.test_run.provision.core  import Run            # noqa E402
 from   vut.engine.test_run.store           import Store          # noqa E402
 
 

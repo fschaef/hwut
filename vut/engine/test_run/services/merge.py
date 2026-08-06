@@ -18,7 +18,7 @@ DESCRIPTION
        affair (README section 10), so the same service merges two
        arbitrary files just as well as it serves a test run.
 
-       THE CLI FACE ('python3 -m vut.engine.test_run.merge'):
+       THE CLI FACE ('python3 -m vut.engine.test_run.services.merge'):
 
            hwut merge SUBJECT NOMINAL [-o MERGED] [options]
 
@@ -43,7 +43,7 @@ import argparse
 from   vut.engine.test_run.feed    import (merge_session, driver_for,
                                            E_DisplayTarget, E_Intent,
                                            MERGE_ROUND_MAX)
-from   vut.engine.test_run.service import (read_source,
+from   vut.engine.test_run.services.core import (read_source,
                                            add_setup_arguments,
                                            setup_from_arguments)
 
@@ -69,10 +69,27 @@ async def merge_text(subject_text, nominal_text, adapter,
 def main(argv=None):
     """
     RETURN: int, the exit code -- 0 committed or display-only done;
-            1 cancelled, nothing written; 2 unusable request.
+            1 cancelled, nothing written; 141 the reader left early;
+            2 unusable request.
 
-    The CLI face. It builds the TUI driver on STDERR, runs the session,
-    and writes the artifact ONLY on COMMIT -- to '-o PATH', or stdout.
+    Both channels may be pipes (the UI on stderr, the artifact on
+    stdout), so a reader that leaves early is an ORDINARY ending, not
+    a crash -- the unix answer, quietly.
+    """
+    import os
+    try:
+        return _main(argv)
+    except BrokenPipeError:
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 141
+
+
+def _main(argv):
+    """
+    RETURN: int, the exit code -- 'main' without the pipe guard.
+
+    It builds the TUI driver on STDERR, runs the session, and writes
+    the artifact ONLY on COMMIT -- to '-o PATH', or stdout.
     """
     parser = argparse.ArgumentParser(
         prog="hwut merge",

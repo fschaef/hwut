@@ -41,7 +41,7 @@ from   vut.engine.test_run.equivalence_check import (EquivalenceCheck,
                                                      EquivalenceCheckConfig)
 from   vut.engine.test_run.feed              import (driver_for,
                                                      E_DisplayTarget)
-from   vut.engine.test_run.provision         import provision_of
+from   vut.engine.test_run.provision.core    import provision_of
 from   vut.engine.test_run.store             import (Store,
                                                      DirectoryBusy)
 

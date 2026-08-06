@@ -56,6 +56,9 @@ class E_TestRunResult(Enum):
     BUILD_FAILED                = "build-failed"
     TARGET_NOT_BUILT            = "target-not-built"
 
+    # THE ACQUISITION: a dependency the world outside would not deliver.
+    ACQUISITION_FAILED          = "acquisition-failed"
+
     # THE DISPLAY -- which cannot make a test wrong:
     DISPLAY_TARGET_UNREACHABLE  = "display-target-unreachable"
 

@@ -8,9 +8,9 @@ THE TUI TIER AND THE SERVICE FACES.
              of the FULL compare vocabulary (every tolerance kind,
              every region kind), the two marking views (verdict /
              reading), the '$EDITOR' loop, the three answers -- and
-             the service faces 'hwut merge' (merge.py) and 'hwut
-             compare' (compare.py) with their shared argument language
-             (service.py).
+             the service faces 'hwut merge' (services/merge.py) and 'hwut
+             compare' (services/compare.py) with their shared argument language
+             (services/core.py).
 
     CAUSAL CONTRACT
              the driver renders what DOWN carries and aligns nothing;
@@ -42,8 +42,8 @@ from   config import HwutRunner                                  # noqa F401,E40
 from   vut.engine.test_run.feed    import (E_DisplayTarget,      # noqa E402
                                            E_Intent,
                                            driver_for)
-from   vut.engine.test_run.merge   import merge_text             # noqa E402
-from   vut.engine.test_run.compare import (compare_view,         # noqa E402
+from   vut.engine.test_run.services.merge   import merge_text             # noqa E402
+from   vut.engine.test_run.services.compare import (compare_view,         # noqa E402
                                            reading_view)
 from   vut.engine.test_run.tui     import TuiDisplay             # noqa E402
 from   vut.engine.compare.configuration import Configuration     # noqa E402
@@ -345,7 +345,7 @@ def test_compare_cli():
     def run(argv):
         """RETURN: CompletedProcess, one CLI compare run."""
         return subprocess.run(
-            [sys.executable, "-m", "vut.engine.test_run.compare"] + argv,
+            [sys.executable, "-m", "vut.engine.test_run.services.compare"] + argv,
             capture_output=True, text=True, env=environment, cwd=directory)
 
     differing  = run([s_path, n_path, "--plain"])
@@ -473,7 +473,7 @@ def test_service_cli():
     def run(argv, answer):
         """RETURN: CompletedProcess, one CLI merge run, 'answer' fed in."""
         return subprocess.run(
-            [sys.executable, "-m", "vut.engine.test_run.merge"] + argv,
+            [sys.executable, "-m", "vut.engine.test_run.services.merge"] + argv,
             input=answer, capture_output=True, text=True,
             env=environment, cwd=directory)
 

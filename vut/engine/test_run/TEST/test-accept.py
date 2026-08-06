@@ -43,7 +43,7 @@ from   vut.engine.test_run.equivalence_check import (            # noqa E402
                                                    EquivalenceCheckConfig)
 from   vut.engine.test_run.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
-from   vut.engine.test_run.provision       import Run            # noqa E402
+from   vut.engine.test_run.provision.core  import Run            # noqa E402
 from   vut.engine.test_run.store           import Store          # noqa E402
 
 

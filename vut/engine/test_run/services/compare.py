@@ -49,7 +49,7 @@ import argparse
 
 from   vut.engine.test_run.feed    import feed_down
 from   vut.engine.test_run.tui     import TuiDisplay
-from   vut.engine.test_run.service import (read_source,
+from   vut.engine.test_run.services.core import (read_source,
                                            add_setup_arguments,
                                            setup_from_arguments)
 
@@ -93,11 +93,27 @@ async def reading_view(text, adapter, subject_name="reading",
 def main(argv=None):
     """
     RETURN: int, the exit code -- 0 equivalent or reading displayed;
-            1 differing; 2 unusable request.
+            1 differing; 141 the reader left early; 2 unusable request.
 
-    The CLI face. Two positionals ask the comparison question; one
-    positional asks the reading question. The rendering goes to STDOUT
-    -- it is the product.
+    THE PIPE IS THE DESIGN ('hwut compare A B | head'), so a reader
+    that leaves early is an ORDINARY ending, not a crash: the unix
+    answer, quietly, with the shell's own SIGPIPE code.
+    """
+    import os
+    try:
+        return _main(argv)
+    except BrokenPipeError:
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 141
+
+
+def _main(argv):
+    """
+    RETURN: int, the exit code -- 'main' without the pipe guard.
+
+    Two positionals ask the comparison question; one positional asks
+    the reading question. The rendering goes to STDOUT -- it is the
+    product.
     """
     parser = argparse.ArgumentParser(
         prog="hwut compare",

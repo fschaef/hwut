@@ -64,42 +64,50 @@ Sequence: the file is designed AFTER the shape is settled, not with it.
 
 
 ----------------------------------------------------------------------------
-todo-2  'reassociate'  (compare)
+todo-2  RE-ASSOCIATION: WHAT IS STILL OPEN  (compare)
 ----------------------------------------------------------------------------
 
-README section 11.7 requires it: the subject is fixed while the nominal is
-edited, so re-alignment against a changed nominal must not redo the whole
-comparison.
+The SHAPE is settled and stands in README 11.7: a realignment re-folds the
+BLOCK the edit fell into, the block is a chunk, compare names it, the IDE
+quotes the name back. What is left is not a choice of algorithm but two
+gaps between that shape and the code.
 
-NOT A MEASUREMENT QUESTION. Frank-Rene: under the vast potential space of
-scenarios it is impossible to measure a representative set of merge
-operations. A sample bounds nothing -- the space is combinatorial in the
-nominal's edits, the alignment's structure, the analogies in force and
-the regions that straddle a window -- and a benchmark over it would
-answer a question nobody asked.
+(a) THE OUTER TEXT HAS NO BLOCKS.  'AssociationChunkPipe' flushes an outer
+    chunk only at '##!', '####' or EOF, so a nominal without regions is
+    ONE block and "re-fold the block" is "re-fold everything".
 
-THE QUESTION IS HOW TO IMPLEMENT IT WELL: the most effective form of
-'reassociate', as a FRAMEWORK that uses the infrastructure already
-there rather than a second algorithm beside it.
+        with regions:   [outer][##!pot][outer][##!tbl]   4 blocks
+        without:        [ .......................... ]   1 block
 
-WORTH ITS OWN DISCUSSION, and Frank-Rene has said so. What that
-discussion has to settle, at least:
+    Whether to cut the outer text -- and on what boundary, a blank-line
+    run being the obvious candidate -- is OPEN. Note it is INTERNAL: the
+    interface speaks block ids either way, so the clients do not care.
+    It is also CHECKABLE rather than arguable: split the outer text, run
+    compare's own suite, and see whether any GOOD file moves. If none
+    does, the boundary is free; if one does, the split changed what the
+    edit search may match across, and that is the real cost, named.
 
-    what compare already computes that a re-alignment could REUSE
-      -- the association's own structures, the analogy db, the regions
-    what a nominal edit can and cannot invalidate, stated as a law
-      rather than discovered per case
-    where the boundary of a safe window IS, given that analogies are
-      global and bidirectional and regions may straddle it
-    whether 'reassociate' is a new entry point or a MODE of the
-      association that already exists
+(b) STARTING THE FOLD AT A BLOCK NEEDS THE STATE BEFORE IT, AND TWO
+    PIECES OF THAT STATE CANNOT BE CARRIED YET.
 
-WHAT IS ALREADY IN HAND, and should not be rebuilt:
-    an EXACT oracle -- reassociate(prior, edit) must equal
-      associate(subject, new nominal). Correctness needs no judgement,
-      only a comparison.
-    a consumer, once todo-16 lands: the merge loop re-aligns after every
-      edit, which is the only place this is ever exercised.
+        the analogy db     ALREADY carried -- 'ChunkPair' holds the
+                           snapshot that holds after it
+        the flyweight      created and destroyed PER 'associate()' call,
+        registry           so a snapshot from one round is meaningless in
+                           the next: its interned ids belong to a dead
+                           registry. Either the merge SESSION is one
+                           long-lived run across every round, or the
+                           snapshot is made registry-independent.
+        the constraint     no history at all, and its liveness is a
+        space              one-way latch. Until it can be carried, a
+                           re-folded block can produce a different cell
+                           than the full fold would.
+
+    The registry question is SHARED WITH todo-16 -- the loop's own shape
+    decides it -- so it is ruled there, not here.
+
+CORRECTNESS NEEDS NO JUDGEMENT and no measurement: re-folding from block B
+must equal 'feed(subject, working nominal)'. An exact oracle.
 
 
 ----------------------------------------------------------------------------
@@ -128,7 +136,7 @@ OWED, in the compare component:
 
 
 ----------------------------------------------------------------------------
-todo-15  THE CHANNEL  (parked -- LOW-HANGING FRUIT after todo-2)
+todo-15  THE CHANNEL  (parked -- LOW-HANGING FRUIT after todo-16)
 ----------------------------------------------------------------------------
 
 Both halves work and now agree on the wire:
@@ -143,8 +151,8 @@ What is missing is the piece that makes them ONE thing: a running neovim
 on the other end of RemoteDisplay's pipe, folding as messages arrive and
 answering with an UP envelope when the author decides.
 
-PARKED, and Frank-Rene expects it to be EASY once 'reassociate'
-(todo-2) is done -- the hard part is the alignment service behind the
+PARKED, and Frank-Rene expects it to be EASY once the merge LOOP
+(todo-16) is done -- the hard part is the alignment service behind the
 channel, not the channel. One thing about it is SETTLED: the shape is
 
     hwut.difftool -t nvim
@@ -163,32 +171,135 @@ drives it headlessly, and the mock client already proved the pipe shape.
 todo-16  THE MERGE LOOP DOES NOT LOOP
 ----------------------------------------------------------------------------
 
-README 11.6 specifies a LOOP, and 'merge_session' does one round:
+WHAT A MERGE IS. The author is shown the comparison and edits the nominal
+until it says what the test should from now on accept. Editing changes the
+ALIGNMENT -- which line stands beside which -- and the alignment is
+COMPARE's, never the editor's. So after an edit the author must be shown
+the comparison AGAIN, computed afresh. That "again", repeated until the
+author commits or abandons, is the loop.
 
-    DOWN -> resolve -> done          COMMIT and CANCEL are handled
-                                     REALIGN is declared and acted on
-                                     by nothing
+WHAT EXISTS TODAY. 'feed.merge_session' presents the comparison once, asks
+the driver once, and returns:
 
-REALIGN is what makes an interactive merge interactive: the human edits,
-the IDE sends the working nominal back, and the ALIGNMENT changes --
-because alignment is COMPARE's, not the editor's. Without the loop an
-author sees the first association and every later edit is unaligned.
+    open  ->  present every DOWN item  ->  resolve  ->  close  ->  return
 
-    the SUBJECT is FIXED throughout; only the nominal evolves
-    each REALIGN is compare.feed(subject, working nominal) again
-    the IDE stays thin: it owns EDITING and RENDERING, nothing else
+'Resolution.intent' may be COMMIT, CANCEL or REALIGN. COMMIT and CANCEL
+are handled. REALIGN is declared in 'E_Intent' and acted upon by NOTHING:
+the value arrives and the function returns anyway. So an author sees the
+FIRST association and every edit after it is shown against a stale
+alignment.
 
-OWED:
-    'merge_session' loops until COMMIT or CANCEL
-    a guard against an author looping forever -- a round cap, or none,
-      but decided rather than absent
-    the mock client gains a 'realign then commit' mode, so the loop is
-      tested without an editor
-    'protocol.lua' already builds a REALIGN envelope; nothing there
-      changes
+WHAT IT MUST BECOME.
 
-This is where 'reassociate' (todo-2) would pay, and the loop is what
-makes that measurable: until it exists there is nothing to time.
+    open                                     ONCE, at the start
+      |
+      +--> present every DOWN item  <--------------------.
+      |                                                   |
+      +--> resolve  -> REALIGN (working nominal) ---------'
+      |             -> COMMIT  (final nominal) --.
+      |             -> CANCEL  ------------------+
+      |                                          |
+    close                                    ONCE, at the end
+      |
+      v
+    return (nominal_text, intent)
+
+The braces matter. 'open' and 'close' stay OUTSIDE the loop -- a driver
+whose connection IS the session (a pipe, a socket) has nothing left to
+answer on once it is closed, which is why 'resolve' already sits inside
+the open session today. Only present/resolve repeat.
+
+Each round is one fresh call to 'compare_feeder.feed(...)' with the SAME
+subject and the round's working nominal. That is cheap to arrange: this
+hub already holds both sides as TEXT and wraps them in 'io.StringIO' per
+call, so nothing has to be re-read from anywhere. The subject is FIXED
+throughout -- only the nominal evolves.
+
+BUILT, AWAITING ITS ORACLES:
+
+    'merge_session' loops. 'open' and 'close' sit outside; each round is
+    one fresh 'compare_feeder.feed(subject, working nominal)'.
+
+    TWO GUARDS, both ending the session as a CANCEL so the nominal is
+    left exactly as it was:
+
+        NO PROGRESS  a REALIGN with no artifact, or one byte-identical
+                     to the round before it. Catches the ordinary bug
+                     -- a driver echoing its input -- on the very next
+                     round, and never touches an author, since every
+                     real edit progresses.
+        THE CAP      'MERGE_ROUND_MAX' (1000, and a caller may name its
+                     own). The backstop for a driver that OSCILLATES
+                     (A, B, A, B ...) and so progresses for ever
+                     without ever deciding -- which no-progress alone
+                     cannot see.
+
+    ENDED, NOT RAISED. A hung driver must not take its caller down with
+    it, and the nominal is untouched either way. The cost is that a
+    driver bug reads as CANCEL, exactly like an author who changed
+    their mind; if that becomes a nuisance in practice, the cap is the
+    place to make it loud.
+
+    'RemoteDisplay.resolve' NO LONGER CLOSES the client's stdin. A
+    REALIGN is answered with a fresh DOWN on that same pipe, so closing
+    it after the first answer made the loop impossible. 'close()' closes
+    it, once, when the session is really over.
+
+    'mock/mock_ide.py' takes one intent PER ROUND
+    ('mock_ide.py realign commit') and keeps reading after answering, so
+    the loop is exercised without an editor. A 'realign' answer appends
+    a line to the nominal it was handed -- it must progress, or the hub
+    rightly ends the session. Single-round behaviour is unchanged, so
+    the 'rich_client' oracle still holds.
+
+    THREE NEW CHOICES in 'TEST/test-merge.py':
+        loop            open/close once; COMMIT through a REALIGN; the
+                        no-progress refusal; twenty progressing rounds
+                        not cut off
+        loop_realigns   the second DOWN is a DIFFERENT association --
+                        the point of the loop, not a side effect
+        loop_pipe       the same across a real process boundary, which
+                        is what pins the stdin change above
+
+    OWED: their GOOD files. They must be baselined on the real tree by
+    running the choices there -- an oracle is generated on real
+    infrastructure, never written by hand.
+
+STILL OWED (phase 2, protocol):
+
+    'block_id' on 'SectionBeginInst' and on 'Resolution' (README 11.7),
+    the regenerated 'SIGNATURE_UI_PROTOCOL.txt' that follows from it,
+    and the field carried through 'protocol.lua'. The hub records the id
+    and still re-feeds in full: nothing behaves differently yet, and
+    after it no client ever changes again.
+
+THE ONE RULING OWED HERE. Compare offers alignment through 'feed()', and
+one call to it is one RUN: it sets up its own internal state at the start
+and tears it down at the end. The question is how a session of N rounds
+maps onto runs:
+
+    ONE RUN PER ROUND        round 1: [ run ]   round 2: [ run ]   ...
+                             Simple. Each round is independent and exact.
+                             Nothing carries over, and nothing needs to.
+
+    ONE RUN PER SESSION      round 1: [ run ................... ] round N
+                             Only needed if a later round wants to REUSE
+                             what an earlier one computed.
+
+Per round is the obvious default and is all a full re-feed needs. It is
+recorded as a ruling only because of what it forecloses: compare's
+flyweight registry is created and destroyed WITH the call, so a state
+snapshot taken in round 1 means nothing in round 2 -- its interned
+identities belong to a registry that no longer exists. Block-scoped
+re-folding (todo-2) is exactly a later round reusing an earlier one's
+state, so if per-round is ruled, todo-2's remaining work becomes "make the
+snapshot registry-independent" rather than "keep one run alive".
+
+Neither answer blocks this entry: A FULL RE-FEED PER ROUND IS ALREADY A
+CORRECT REALIGNMENT, exact by construction. The loop therefore does not
+wait for block scoping. Block scoping waits for the loop -- and the full
+re-feed is the oracle it must equal.
+
 
 ----------------------------------------------------------------------------
 todo-17  A SECOND IDE  (VS Code, Notepad++, whatever comes)
@@ -344,4 +455,60 @@ OWED, in compare:
 
 NOTHING IS OWED HERE. 'TestChoiceConfiguration' holds compare's struct
 verbatim; the defect and its fix are entirely compare's.
+============================================================================
+
+todo-20  DOWN CARRIES THE MEASUREMENT, NOT JUST THE VERDICT  (compare feeder)
+----------------------------------------------------------------------------
+The TUI tier (tui.py) rendered every element and region kind, and the
+exercise drew the line sharply between meta DOWN CARRIES and meta it
+does not. The client law held throughout: what DOWN lacks is compare's
+to emit, never the client's to compute -- a client re-deriving a
+deviation would re-implement tolerance semantics and drift.
+
+CARRIED TODAY, and rendered: the setup (ConfigInst), section boundaries
+(SectionBeginInst: title, chunk_type), per-cell relation + tolerance
+kind, the line pair's cost, and the analogy provenance
+(analogy_origin_line_number_pair -- first binding site, and the
+conflicting binding's site after the feeder's bake fix).
+
+DELIVERED (the protocol hash bumped once for both; the four signature
+agreement points and the hash-bearing GOODs moved with it):
+
+    numeric deviation     'LinePairInst.numeric_list': NumericMeta
+                          (cell_i, subject, nominal, deviation, limit)
+                          -- computed IN THE FEEDER via the engine's own
+                          'LineElementNumber' (number, epsilon), so the
+                          arithmetic cannot drift from the verdict's.
+                          The limit is the NOMINAL's epsilon. The TUI
+                          renders: 'off by 5 against a limit of 0.04
+                          (125.0x over)' / 'off by 0.001, within the
+                          limit of 0.03141'. (todo-19's fix will show
+                          here the day the epsilon becomes symmetric.)
+    matched pattern       'LinePairInst.pattern_list': PatternMeta
+                          (cell_i, side, pattern) -- re-matched against
+                          the SAME configured pattern list the reading
+                          lexed with. The TUI renders: "pattern:
+                          matches 'v[0-9.]+-build[0-9]+'".
+
+STILL OWED, in compare (deeper than the feeder can reach):
+
+    point-cloud distance  same shape as the numeric: measured distance
+                          vs 'limit' -- the measure lives in the
+                          region's association, not on the line pair
+    region parameters     SectionBeginInst says POTPOURRI but not
+                          'max_comparisons=64': the chunks CONSUME their
+                          resolved params at construction (unpacked into
+                          attributes, dict discarded) -- retaining them
+                          means touching the region constructors, so it
+                          waits for its own round
+    constraint verdicts   a binding is shown entering the space; the
+                          EXPRESSIONS it was checked against and their
+                          verdicts are not carried
+    transpose partner     BAD_TRANSPOSE says out-of-order; the partner
+                          line it transposed WITH would let a display
+                          draw the crossing
+
+The TUI's notes ('^ ...') are the display slot all of these land in;
+the html feeder's tooltips are the same slot. No renderer changes
+shape when these arrive -- one more note per line, that is all.
 ============================================================================

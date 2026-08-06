@@ -5,32 +5,48 @@ PURPOSE
        PROVISION -- how the subjects of a test come to exist.
 
 DESCRIPTION
-       ONE PROVISION, FOUR STAGES. A Provision holds its stages as
-       MEMBERS; a member that is None is a stage this provision does not
-       have. Absence is DATA -- inspectable, reported by the footprint --
-       never a null object pretending something ran:
+       ONE PROVISION, FIVE STAGES, ONE FILE PER STAGE. A Provision
+       holds its stages as MEMBERS; a member that is None is a stage
+       this provision does not have. Absence is DATA -- inspectable,
+       reported by the footprint -- never a null object pretending
+       something ran:
 
+           stage_acquire       the world   -> THE DEPENDENCIES
            stage_build         sources     -> THE APPLICATION
            stage_execute       application -> raw streams, fanned out
            stage_canonicalise  raw         -> THE SUBJECT
            stage_load          store       -> THE SUBJECT
 
-       EXACTLY ONE PATH. 'stage_execute' and 'stage_load' exclude each
-       other; 'stage_build' and 'stage_canonicalise' stand only beside
-       'stage_execute' -- a loaded subject is ALREADY canonical, which
-       is why a canonicaliser change demands a re-run. The invariants
-       are checked at construction, where the wiring is written.
+       Each stage lives in its own module, 'stage_<name>.py', named
+       exactly like the member that holds it. THIS module holds what is
+       not a stage: the answer shape ('Supply'), the delivery
+       ('Subjects'), the orchestrator ('Provision'), and the planners
+       ('Run', 'Replay', 'provision_of').
 
-       EVERY STAGE IS A SUPPLIER: it hands over its product, or one
-       token of the brief vocabulary saying why not. NO STAGE RAISES.
+       EXACTLY ONE PATH. 'stage_execute' and 'stage_load' exclude each
+       other; 'stage_acquire', 'stage_build' and 'stage_canonicalise'
+       stand only beside 'stage_execute' -- a loaded subject is ALREADY
+       canonical, which is why a canonicaliser change demands a re-run,
+       and REPLAY IS OFFLINE: a replayed test touches no network, by
+       construction. The invariants are checked at construction, where
+       the wiring is written.
+
+       EVERY STAGE IS A SUPPLIER, AND EVERY SUPPLIER ANSWERS IN ONE
+       SHAPE: 'Supply(product, report, record_list)'. The product is
+       the stage's own kind of thing; product None means provision
+       cannot continue; the report is one token of the brief
+       vocabulary; the records are the attribution. NO STAGE RAISES.
        Provision failure is TEST failure and the suite runs on -- that
        robustness is not built on top of this contract, it is a
-       consequence of it (README 2.6).
+       consequence of it (README 2.6). One shape also means a stage is
+       free to become a REQUEST to a scheduling component later --
+       'supply()' is already a future; only its inside would change.
 
        SHARING IS INSTANCE IDENTITY. A stage that must not repeat its
-       work REMEMBERS it ('BuildStage'): wire the SAME instance into
-       every Provision of one application, and the tool builds once.
-       Sharing is the planner's deliberate act, never the stage's.
+       work REMEMBERS it ('StageBuild', 'StageAcquire'): wire the SAME
+       instance into every Provision concerned, and the tool builds --
+       the world is asked -- once. Sharing is the planner's deliberate
+       act, never the stage's.
 
        THE PLANNERS ARE FUNCTIONS, NOT CLASSES. 'Run(...)' wires
        execution, 'Replay(...)' wires load, 'provision_of(...)' chooses
@@ -54,16 +70,11 @@ DESCRIPTION
        passes is decided above.
 ______________________________________________________________________________
 """
-import asyncio
 from   dataclasses import dataclass
 from   pathlib     import Path
 
-from   vut.engine.test_run.result       import E_TestRunResult
-from   vut.engine.procsitter.procsitter  import Procsitter, E_Containment
-from   vut.engine.procsitter.construction import Link, chain
-from   vut.engine.test_run.build         import build
+from   vut.engine.test_run.result        import E_TestRunResult
 from   vut.engine.test_run.configuration import E_SourceKind
-from   vut.engine.test_run.nominal       import BytesNominal
 from   vut.engine.test_run.report        import Provision as ProvisionRecord
 
 
@@ -96,7 +107,7 @@ def application_argv(configuration, choice_name):
     return argv
 
 
-async def _read_all(reader):
+async def read_all(reader):
     """RETURN: str, everything the reader yields, to EOF."""
     chunk_list = []
     while not reader.at_eof():
@@ -105,7 +116,7 @@ async def _read_all(reader):
     return b"".join(chunk_list).decode("utf-8", errors="replace")
 
 
-async def _read_all_timed(reader):
+async def read_all_timed(reader):
     """
     RETURN: (str, tuple), everything the reader yields, and the DELTA
             time before each line, in seconds.
@@ -129,31 +140,21 @@ async def _read_all_timed(reader):
             tuple(delta_list))
 
 
-async def canonicalise(text, pype_argv, procsitter):
+@dataclass(frozen=True)
+class Supply:
+    """THE ONE ANSWER SHAPE of every stage.
+
+    'product' is the stage's own kind of thing -- an outcome, raw
+    streams, readers -- and None when the stage could not deliver, which
+    ENDS provision. 'report' is one token of the brief vocabulary; it
+    may be a failure token WHILE a product exists (a stalled run still
+    delivers its partial streams -- they are canonicalised, compared,
+    and the token speaks). 'record_list' is the attribution: one record
+    per supervised call the stage made, kept even in failure.
     """
-    RETURN: (str, E_TestRunResult), the canonicalised text and the report.
-
-    The canonicaliser is a supervised call like any other: its own caps,
-    its own attribution. A canonicaliser that fails leaves the text
-    UNCHANGED and says so -- it never silently returns half a stream,
-    which would be compared and called a difference in the subject.
-    """
-    source = Link()
-    await source.feed(text.encode("utf-8"))
-    source.close()
-
-    c      = chain([(procsitter, list(pype_argv))],
-                   stdin_reader=source.reader)
-    record = (await asyncio.gather(*c.task_tuple))[0]
-    result = await _read_all(c.tail.reader)
-
-    if record.containment is E_Containment.FAIL_LAUNCH:
-        return text, E_TestRunResult.PYPE_INTERPRETER_NOT_FOUND
-    if record.containment is E_Containment.FAIL_COMPLETED:
-        return text, E_TestRunResult.PYPE_FAILED
-    if record.containment is not E_Containment.OK_COMPLETED:
-        return text, E_TestRunResult.PYPE_CONTAINED
-    return result, E_TestRunResult.OK
+    product:     object
+    report:      E_TestRunResult = E_TestRunResult.OK
+    record_list: tuple           = ()
 
 
 @dataclass(frozen=True)
@@ -183,194 +184,6 @@ class Subjects:
         return sorted(self.reader_db)
 
 
-class BuildStage:
-    """THE APPLICATION comes to exist -- once.
-
-    A build stage REMEMBERS its outcome: however many Provisions share
-    this instance, the build tool runs a single time. That memo is what
-    'build if necessary' means at suite scale. A fresh stage per
-    Provision -- the planners' default -- reproduces per-run building
-    exactly.
-
-    Reads the source and build keys of the configuration.
-    """
-
-    def __init__(self, configuration, observer=None):
-        self.configuration = configuration
-        self.observer      = observer
-        self._outcome      = None
-        self._lock         = asyncio.Lock()
-
-    async def supply(self, stop_event=None):
-        """
-        RETURN: BuildOutcome, the product ('succeeded') or the reason
-                ('report'), with the build's own attribution record.
-
-        MEMOIZED behind a lock: a second caller -- even a concurrent
-        one -- receives the FIRST call's outcome, never a second build.
-        """
-        async with self._lock:
-            if self._outcome is None:
-                self._outcome = await build(self.configuration,
-                                            stop_event=stop_event,
-                                            observer=self.observer)
-            return self._outcome
-
-
-class ExecuteStage:
-    """RAW BEHAVIOR comes to exist: launch, contain, collect -- the
-    channels, the output files, and the cadence when asked for.
-
-    Reads the source, place and caps keys of the configuration.
-    """
-
-    def __init__(self, configuration, choice_name=None, keep_timing=False):
-        self.configuration = configuration
-        self.choice_name   = choice_name
-        self.keep_timing   = keep_timing
-
-    async def supply(self, stop_event=None):
-        """
-        RETURN: (dict, list, E_TestRunResult, dict), the raw texts by
-                subject name, the attribution records, the report, and
-                the cadence by subject name (empty unless asked for).
-                (None, list, report, {}), the launch failed: there is
-                nothing to canonicalise and nothing to deliver.
-        """
-        configuration = self.configuration
-        procsitter = Procsitter(configuration.caps,
-                                work_dir=str(configuration.test_directory))
-        error_link = Link()
-        c = chain([(procsitter,
-                    application_argv(configuration, self.choice_name),
-                    {"stderr_handler": error_link.feed})])
-        timing_db = {}
-        try:
-            if self.keep_timing:
-                stdout_text, delta_tuple = await _read_all_timed(c.tail.reader)
-                timing_db[STDOUT] = delta_tuple
-            else:
-                stdout_text = await _read_all(c.tail.reader)
-            record = (await asyncio.gather(*c.task_tuple))[0]
-        finally:
-            error_link.close()                 # not an edge: ours to close
-        stderr_text = await _read_all(error_link.reader)
-        record_list = [record]
-
-        if record.containment is E_Containment.FAIL_LAUNCH:
-            return (None, record_list,
-                    E_TestRunResult.TEST_APP_LAUNCH_FAILED, {})
-
-        raw_db = {STDOUT: stdout_text, STDERR: stderr_text}
-        raw_db.update(self._output_files())
-
-        report    = E_TestRunResult.OK
-        if record.containment is E_Containment.FAIL_STALLED:
-            report = E_TestRunResult.TEST_APP_STALLED
-        elif record.containment is not E_Containment.OK_COMPLETED \
-             and record.containment is not E_Containment.FAIL_COMPLETED:
-            report = E_TestRunResult.TEST_APP_CONTAINED
-
-        return raw_db, record_list, report, timing_db
-
-    def _output_files(self):
-        """
-        RETURN: dict, subject name -> text, for every file the run left
-                under 'OUT/'. A file subject is named by its file name.
-        """
-        directory = self.configuration.output_directory
-        file_db   = {}
-        if not directory.is_dir(): return file_db
-        for path in sorted(directory.iterdir()):
-            if not path.is_file(): continue
-            try:
-                file_db[path.name] = path.read_text(encoding="utf-8",
-                                                    errors="replace")
-            except OSError:
-                pass
-        return file_db
-
-
-class CanonicaliseStage:
-    """THE SUBJECT comes to exist: each raw stream rewritten by its
-    declared pype, comparable after. A stream with no canonicaliser
-    declared is comparable raw -- raw IS canonical for it.
-
-    Reads the canonicaliser and caps keys of the configuration.
-    """
-
-    def __init__(self, configuration, choice_name=None):
-        self.configuration = configuration
-        self.choice_name   = choice_name
-
-    async def supply(self, raw_db, report, stop_event=None):
-        """
-        RETURN: (dict, E_TestRunResult), readers by subject name, and
-                the report: the given one or -- only when it was OK --
-                the first canonicaliser failure.
-
-        A failing canonicaliser leaves its text UNCHANGED and says so
-        ('canonicalise'); the subject is delivered either way.
-        """
-        configuration = self.configuration
-        procsitter = Procsitter(configuration.caps,
-                                work_dir=str(configuration.test_directory))
-        reader_db = {}
-        entry     = configuration.choice_configuration(self.choice_name)
-        for name, text in raw_db.items():
-            pype_argv = entry.canonicalisers.get(name)
-            if pype_argv is not None:
-                text, pype_report = await canonicalise(text, pype_argv,
-                                                       procsitter)
-                if pype_report is not E_TestRunResult.OK \
-                   and report is E_TestRunResult.OK:
-                    report = pype_report
-            reader_db[name] = BytesNominal(text, name=name)
-        return reader_db, report
-
-
-class LoadStage:
-    """THE SUBJECT comes to exist from the STORE: what a run recorded,
-    read back. Nothing executes, nothing is contained, there is no
-    attribution to make -- and NOTHING IS INVENTED: an absent recording
-    is REPORTED, never an empty subject that would be compared and
-    called a difference.
-
-    Reads the store keys and NONE of the source, build, place or caps
-    keys.
-    """
-
-    def __init__(self, store, test_name, choice_name=None,
-                 subject_name_list=None):
-        self.store             = store
-        self.test_name         = test_name
-        self.choice_name       = choice_name
-        self.subject_name_list = subject_name_list
-
-    async def supply(self, stop_event=None):
-        """
-        RETURN: Subjects, readers over the stored candidates.
-        """
-        name_list = self.subject_name_list
-        if name_list is None:
-            name_list = [STDOUT, STDERR]
-
-        reader_db, missing = {}, []
-        for name in name_list:
-            candidate = self.store.candidate(self.test_name,
-                                             self.choice_name, name)
-            if not candidate.exists():
-                missing.append(name)
-                continue
-            with candidate.open() as reader:
-                reader_db[name] = BytesNominal(reader.read(), name=name)
-
-        if not reader_db:
-            return Subjects({}, ProvisionRecord(
-                report=E_TestRunResult.RECORDING_MISSING))
-        return Subjects(reader_db, ProvisionRecord(report=E_TestRunResult.OK))
-
-
 class Provision:
     """ONE PROVISION -- its stages as members, None for a stage it does
     not have. Constructed by the planners below ('Run', 'Replay',
@@ -378,16 +191,19 @@ class Provision:
     the wiring is written.
     """
 
-    def __init__(self, stage_build=None, stage_execute=None,
-                 stage_canonicalise=None, stage_load=None,
-                 keep_raw=False, observer=None):
+    def __init__(self, stage_acquire=None, stage_build=None,
+                 stage_execute=None, stage_canonicalise=None,
+                 stage_load=None, keep_raw=False, observer=None):
         assert (stage_execute is None) != (stage_load is None), \
                "exactly one of stage_execute/stage_load: a provision " \
                "either runs or loads"
+        assert stage_acquire is None or stage_execute is not None, \
+               "dependencies are acquired for a RUN -- replay is offline"
         assert stage_build is None or stage_execute is not None, \
                "a build stands only before an execution"
         assert stage_canonicalise is None or stage_execute is not None, \
                "a loaded subject is already canonical"
+        self.stage_acquire      = stage_acquire
         self.stage_build        = stage_build
         self.stage_execute      = stage_execute
         self.stage_canonicalise = stage_canonicalise
@@ -416,34 +232,48 @@ class Provision:
         """
         RETURN: Subjects, the readers and the record of provision.
 
-        The stages, in their one lawful order: build (if any), execute,
-        canonicalise -- or load. The first stage that cannot deliver
-        ENDS provision with its token; the stages beyond it never run.
+        The stages, in their one lawful order: acquire, build (each if
+        any), execute, canonicalise -- or load. Every stage answers in
+        the ONE shape, so there is ONE rule: a stage whose product is
+        None ENDS provision with its token, and the stages beyond it
+        never run.
         """
         if self.stage_load is not None:
-            return await self.stage_load.supply(stop_event=stop_event)
+            supply = await self.stage_load.supply(stop_event=stop_event)
+            return Subjects(supply.product or {},
+                            ProvisionRecord(report=supply.report))
 
         record_list = []
-        if self.stage_build is not None:
-            outcome = await self.stage_build.supply(stop_event=stop_event)
-            record_list.append(outcome.record)
-            if not outcome.succeeded:
-                return Subjects({}, ProvisionRecord(
-                    report  = outcome.report,
-                    records = tuple(record_list)))
 
-        raw_db, records, report, timing_db = \
-            await self.stage_execute.supply(stop_event=stop_event)
-        record_list += records
-        if raw_db is None:
+        def failed(supply):
+            """RETURN: Subjects, the empty delivery that ends provision
+            with 'supply's token and everything attributed so far."""
             return Subjects({}, ProvisionRecord(
-                report  = report,
+                report  = supply.report,
                 records = tuple(record_list)))
 
-        reader_db, report = await self.stage_canonicalise.supply(
-            raw_db, report, stop_event=stop_event)
+        #  THE PRE-STAGES: suppliers before the run, in their order.
+        for stage in (self.stage_acquire, self.stage_build):
+            if stage is None: continue
+            supply = await stage.supply(stop_event=stop_event)
+            record_list += supply.record_list
+            if supply.product is None: return failed(supply)
 
-        return Subjects(reader_db,
+        executed = await self.stage_execute.supply(stop_event=stop_event)
+        record_list += executed.record_list
+        if executed.product is None: return failed(executed)
+        raw_db, timing_db = executed.product
+
+        canonicalised = await self.stage_canonicalise.supply(
+            raw_db, stop_event=stop_event)
+
+        #  THE MERGE OF THE REPORTS is the orchestrator's: the earlier
+        #  stage's token speaks over the later one's.
+        report = executed.report \
+                 if executed.report is not E_TestRunResult.OK \
+                 else canonicalised.report
+
+        return Subjects(canonicalised.product,
                         ProvisionRecord(report  = report,
                                         records = tuple(record_list)),
                         raw_db    = dict(raw_db) if self.keep_raw else None,
@@ -453,25 +283,36 @@ class Provision:
 
 
 def Run(configuration, choice_name=None, observer=None,
-        keep_raw=False, keep_timing=False):
+        keep_raw=False, keep_timing=False, stage_acquire=None):
     """
-    RETURN: Provision, wired for EXECUTION: build (COMPILED sources
-            only), execute, canonicalise. Reads the source, build,
-            place, caps, canonicaliser and store keys of the
-            configuration -- and none of the stored-data keys.
+    RETURN: Provision, wired for EXECUTION: acquire (when handed one),
+            build (COMPILED sources only), execute, canonicalise. Reads
+            the source, build, place, caps, canonicaliser and store
+            keys of the configuration -- and none of the stored-data
+            keys.
 
     A PLANNER, not a class: it wires stages and hands over the ONE
     Provision kind. Stages are fresh per call; wiring a SHARED stage
-    (one build for many choices) is a caller's deliberate act.
+    (one build for many choices, one acquisition for a suite) is a
+    caller's deliberate act -- which is why 'stage_acquire' is taken
+    READY-MADE: dependencies are suite property, not conjured per test.
     """
-    stage_build = BuildStage(configuration, observer=observer) \
+    #  Imported lazily: the stage modules import THIS module for the
+    #  answer shape, and a planner is the one place that names them --
+    #  the same law as 'driver_for' and its drivers (feed.py).
+    from vut.engine.test_run.provision.stage_build        import StageBuild
+    from vut.engine.test_run.provision.stage_execute      import StageExecute
+    from vut.engine.test_run.provision.stage_canonicalise import \
+                                                          StageCanonicalise
+    stage_build = StageBuild(configuration, observer=observer) \
                   if configuration.source_kind is E_SourceKind.COMPILED \
                   else None
     return Provision(
+        stage_acquire      = stage_acquire,
         stage_build        = stage_build,
-        stage_execute      = ExecuteStage(configuration, choice_name,
+        stage_execute      = StageExecute(configuration, choice_name,
                                           keep_timing=keep_timing),
-        stage_canonicalise = CanonicaliseStage(configuration, choice_name),
+        stage_canonicalise = StageCanonicalise(configuration, choice_name),
         keep_raw           = keep_raw,
         observer           = observer)
 
@@ -487,8 +328,9 @@ def Replay(store, test_name, choice_name=None, subject_name_list=None,
 
     A PLANNER, not a class -- see 'Run'.
     """
+    from vut.engine.test_run.provision.stage_load import StageLoad
     return Provision(
-        stage_load = LoadStage(store, test_name, choice_name,
+        stage_load = StageLoad(store, test_name, choice_name,
                                subject_name_list),
         observer   = observer)
 

@@ -28,8 +28,9 @@ from   enum        import Enum
 from   pathlib     import Path
 from   typing      import Optional, Sequence
 
-from   vut.engine.test_run.result       import E_TestRunResult
+from   vut.engine.test_run.result      import E_TestRunResult
 from   vut.engine.procsitter.procsitter import (Procsitter,
+                                                ProcsitterConfig,
                                                 E_Containment)
 
 

@@ -22,7 +22,7 @@ PROVISION: THE TWO WAYS SUBJECTS COME TO EXIST.
 
     STAGE CONTRACT
              the wiring is DATA (None marks an absent stage) and its law
-             lives at construction; a shared BuildStage builds ONCE,
+             lives at construction; a shared StageBuild builds ONCE,
              however many provisions hold it.
 ______________________________________________________________________________
 """
@@ -44,12 +44,19 @@ from   vut.engine.test_run.configuration import (               # noqa E402
                                                  TestConfiguration,
                                                  TestChoiceConfiguration,
                                                  E_SourceKind)
-from   vut.engine.test_run.provision     import (Run, Replay,    # noqa E402
-                                                 Provision,
-                                                 BuildStage,
-                                                 ExecuteStage,
-                                                 CanonicaliseStage,
-                                                 application_argv)
+from   vut.engine.test_run.provision.core import (Run, Replay,   # noqa E402
+                                                  Provision,
+                                                  Supply,
+                                                  application_argv)
+from   vut.engine.test_run.provision.stage_acquire      import (  # noqa E402
+                                                  AcquireItem,
+                                                  StageAcquire)
+from   vut.engine.test_run.provision.stage_build        import \
+                                                  StageBuild      # noqa E402
+from   vut.engine.test_run.provision.stage_execute      import \
+                                                  StageExecute    # noqa E402
+from   vut.engine.test_run.provision.stage_canonicalise import \
+                                                  StageCanonicalise  # noqa E402
 from   vut.engine.test_run.store         import Store            # noqa E402
 
 PYPE = os.path.join(os.path.dirname(__file__),
@@ -421,9 +428,10 @@ def test_stages():
     def picture(p):
         """RETURN: str, one mark per stage member, 'X' present, '-' absent."""
         return " ".join("X" if s is not None else "-"
-                        for s in (p.stage_build, p.stage_execute,
-                                  p.stage_canonicalise, p.stage_load))
-    print("INSPECT: wiring  [build execute canonicalise load]")
+                        for s in (p.stage_acquire, p.stage_build,
+                                  p.stage_execute, p.stage_canonicalise,
+                                  p.stage_load))
+    print("INSPECT: wiring  [acquire build execute canonicalise load]")
     print("         Run    -> %s   kind %r" % (picture(executed),
                                                executed.kind))
     print("         Replay -> %s   kind %r" % (picture(loaded),
@@ -436,7 +444,10 @@ def test_stages():
             ("no path",          {}),
             ("build beside load",
              {"stage_load":  loaded.stage_load,
-              "stage_build": BuildStage(_interpreted(directory))})):
+              "stage_build": StageBuild(_interpreted(directory))}),
+            ("acquire beside load -- replay is OFFLINE",
+             {"stage_load":    loaded.stage_load,
+              "stage_acquire": StageAcquire(_interpreted(directory), [])})):
         try:
             Provision(**kwargs)
             refused.append(False)
@@ -456,15 +467,90 @@ def test_stages():
         (type(executed) is type(loaded),
          "ONE Provision type -- provenance is wiring, never subclass"),
         (all(refused),
-         "both paths, no path, build-beside-load: refused at construction"),
+         "both paths, no path, build-beside-load, acquire-beside-load: "
+         "refused at construction"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     shutil.rmtree(store_dir, ignore_errors=True)
     _verdict(ok, "the wiring is data, and its law lives at construction.")
 
 
+def test_acquire():
+    """DEPENDENCIES come to exist -- once, and only where absent. An
+    acquisition is A SUPERVISED CALL guarded by a SATISFACTION CHECK
+    (the make semantics): satisfied is SKIPPED, absent is acquired, a
+    failure ENDS provision with 'acquisition-failed' -- and the run
+    stage never starts. A LYING command -- ran fine, check still absent
+    -- is the same failure. Shared across provisions, the world is
+    asked ONCE."""
+    directory = _place("print('app ran')\n")
+    marker    = os.path.join(directory, "dep.marker")
+    log_path  = os.path.join(directory, "acquire.log")
+
+    #  One satisfied item whose command WOULD fail if it ever ran; one
+    #  absent item whose command acquires and logs.
+    item_list = [
+        AcquireItem("already-there", lambda: True, ("sh", "-c", "exit 7")),
+        AcquireItem("fetched-dep",
+                    lambda: os.path.exists(marker),
+                    ("sh", "-c",
+                     "echo got-it > dep.marker && echo fetched >> acquire.log")),
+    ]
+    configuration = _interpreted(directory)
+    shared        = StageAcquire(configuration, item_list)
+
+    async def both():
+        """RETURN: (Subjects, Subjects), two provisions, one acquisition."""
+        first  = Run(configuration, stage_acquire=shared)
+        second = Run(configuration, stage_acquire=shared)
+        return await first.provide(), await second.provide()
+    out_a, out_b = asyncio.run(both())
+
+    with open(log_path) as fh:
+        fetch_n = len(fh.read().splitlines())
+
+    #  The failing acquisition: provision ENDS, the app never runs.
+    failing = Run(_interpreted(_place("print('never')\n")),
+                  stage_acquire=StageAcquire(
+                      configuration,
+                      [AcquireItem("unreachable", lambda: False,
+                                   ("sh", "-c", "exit 3"))]))
+    out_c = asyncio.run(failing.provide())
+
+    #  The LIAR: the command succeeds, the check still says absent.
+    lying = Run(_interpreted(_place("print('never')\n")),
+                stage_acquire=StageAcquire(
+                    configuration,
+                    [AcquireItem("claimed", lambda: False, ("true",))]))
+    out_d = asyncio.run(lying.provide())
+
+    supply = asyncio.run(shared.supply())
+    print("INSPECT: acquired = %s; the fetch command ran %i time(s)"
+          % (list(supply.product), fetch_n))
+    print("         failing -> %s, subjects %s"
+          % (out_c.provision.report, out_c.names()))
+    print("         lying   -> %s" % out_d.provision.report)
+    ok = _check([
+        (out_a.provision.report is E_TestRunResult.OK
+         and out_b.provision.report is E_TestRunResult.OK,
+         "with dependencies satisfied, provision delivers as ever"),
+        (os.path.exists(marker) and fetch_n == 1,
+         "the absent dependency was acquired ONCE -- shared stage, "
+         "one ask of the world"),
+        (isinstance(supply, Supply) and supply.record_list,
+         "the answer is the ONE SHAPE, and the call is attributed"),
+        (out_c.provision.report is E_TestRunResult.ACQUISITION_FAILED
+         and out_c.names() == [],
+         "a failing acquisition ends provision -- the app NEVER ran"),
+        (out_d.provision.report is E_TestRunResult.ACQUISITION_FAILED,
+         "a command that 'succeeded' past an unsatisfied check failed"),
+    ])
+    shutil.rmtree(directory, ignore_errors=True)
+    _verdict(ok, "the world is asked once, refused loudly, never trusted.")
+
+
 def test_shared_build():
-    """SHARING IS INSTANCE IDENTITY: the SAME BuildStage wired into two
+    """SHARING IS INSTANCE IDENTITY: the SAME StageBuild wired into two
     Provisions builds ONCE -- the memoized outcome serves both. That is
     'build if necessary' at suite scale, and it is the PLANNER's choice:
     fresh stages (the default) still build per provision."""
@@ -484,13 +570,13 @@ def test_shared_build():
         build          = BuildConfig(E_BuildSystem.MAKE, ["built"]),
         choice_db      = {None: TestChoiceConfiguration()})
 
-    shared = BuildStage(compiled)
+    shared = StageBuild(compiled)
     def provision():
         """RETURN: Provision, execution-wired around the SHARED build."""
         return Provision(
             stage_build        = shared,
-            stage_execute      = ExecuteStage(compiled),
-            stage_canonicalise = CanonicaliseStage(compiled))
+            stage_execute      = StageExecute(compiled),
+            stage_canonicalise = StageCanonicalise(compiled))
 
     async def both():
         """RETURN: (Subjects, Subjects), two provisions, one build."""
@@ -534,6 +620,7 @@ if __name__ == "__main__":
             "same_shape":           test_same_shape,
             "source_kinds":         test_source_kinds,
             "stages":               test_stages,
+            "acquire":              test_acquire,
             "shared_build":         test_shared_build,
             "containment":          test_containment_reaches_the_report,
         },

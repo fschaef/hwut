@@ -310,22 +310,49 @@ THE STAGES. Provision is ONE type holding its stages as MEMBERS -- a
 member that is None is a stage this provision does not have; absence is
 DATA, never a null object pretending something ran:
 
+    stage_acquire       the world   -> the DEPENDENCIES  (when declared)
     stage_build         sources     -> the APPLICATION  (COMPILED only)
     stage_execute       application -> raw streams, fanned out
     stage_canonicalise  raw         -> the SUBJECT
     stage_load          store       -> the SUBJECT
 
 EXACTLY ONE PATH: 'stage_execute' and 'stage_load' exclude each other;
-build and canonicalise stand only beside execute -- a loaded subject is
-ALREADY canonical, which is why a canonicaliser change demands a re-run.
-The invariants are checked at construction, where the wiring is written.
+acquire, build and canonicalise stand only beside execute -- a loaded
+subject is ALREADY canonical, which is why a canonicaliser change
+demands a re-run, and REPLAY IS OFFLINE: a replayed test touches no
+network, by construction. The invariants are checked at construction,
+where the wiring is written.
 
-EVERY STAGE IS A SUPPLIER: its product, or one token of the brief
-vocabulary saying why not -- no stage raises, so provision failure is
-test failure and the suite runs on (2.6). A stage that must not repeat
-its work REMEMBERS it: 'BuildStage' memoizes, so wiring the SAME
-instance into every Provision of one application is 'build if
-necessary' at suite scale -- sharing is the planner's deliberate act.
+EVERY STAGE IS A SUPPLIER, AND EVERY SUPPLIER ANSWERS IN ONE SHAPE:
+
+    Supply(product, report, record_list)
+
+The product is the stage's own kind of thing; product None ENDS
+provision with the report token; the records are the attribution --
+kept even in failure. A failure token may ride BESIDE a product (a
+stalled run still delivers its partial streams; they are compared, and
+the token speaks). No stage raises, so provision failure is test
+failure and the suite runs on (2.6). Which reason SPEAKS among stages
+is the ORCHESTRATOR'S merge -- a stage never knows its upstream. And
+one shape keeps the door open: 'supply()' is already a future, so a
+stage may later become a REQUEST to a scheduling component (a build
+queue that orders its work) without any caller learning of it.
+
+A stage that must not repeat its work REMEMBERS it: 'StageBuild' and
+'StageAcquire' memoize, so wiring the SAME instance into every
+Provision concerned is 'build if necessary' -- and 'ask the world
+once' -- at suite scale. Sharing is the planner's deliberate act.
+
+ACQUISITION IS A SUPERVISED CALL, LEFT OPEN. An 'AcquireItem' is a
+name, a SATISFACTION CHECK, and a command: satisfied is SKIPPED (the
+make semantics -- a suite runs twice without re-fetching the world),
+absent runs the command under its own procsitter (the wall clock
+contains a hung mirror, the disk cap a runaway download), and a command
+that 'succeeded' while the check still says absent has FAILED. The
+stage does not interpret what a command does -- curl, git, an
+installer: the caller's affair. Discipline: acquire INTO the test's own
+directory; pin what you fetch (a commit, a checksum, an exact version)
+or the test is not reproducible.
 
 'Run' (3) and 'Replay' (5) are PLANNERS -- functions that wire the one
 Provision type; 'provision_of' chooses between them from the request.
@@ -878,7 +905,43 @@ adding a tier touches one function. 'resolve' happens INSIDE the open
 session: open -> present -> resolve -> close, since a driver whose
 connection IS the session has nothing to answer on once it is closed.
 
-11.5  DISPLAY TARGETS -- TWO TIERS. No semantic diff/merge protocol exists
+11.5  DISPLAY TARGETS. The shipped interactive tier is the TERMINAL:
+
+    TUI    the always-available interactive tier (tui.py): renders each
+           DOWN generation as text -- setup banner, section boundaries,
+           verdict-marked spans, analogy provenance -- and answers
+           'resolve' by asking the author: [e]dit hands the nominal to
+           '$EDITOR' (the git-commit idiom; the TUI builds no editor),
+           [c]ommit, [q]uit. An edit that changed NOTHING is re-prompted
+           locally -- the hub's no-progress guard (11.6a) is for broken
+           drivers, not for hesitation. Meta this tier shows is meta
+           DOWN carries; what DOWN lacks is compare's to emit, never
+           the client's to compute.
+
+           The renderer has TWO MARKING VIEWS, same rows, notes and
+           banner: the VERDICT view marks what DID differ (bad '[..]',
+           tolerated '~..~'); the READING view marks what CAN vary, by
+           tolerance kind -- '{numeric}' '~analogy~' '<pattern>'
+           '!binding!' '|nothing|' -- with a legend line under the
+           banner. The reading of ONE stream is that stream fed against
+           ITSELF: every pair equivalent by construction, so only the
+           INTERPRETATION shows. One renderer, no second feeder.
+
+           TWO SERVICE FACES share one argument language (services/core.py:
+           '-' is stdin; --numeric/--pattern/--nothing name the setup):
+
+           'hwut merge' (services/merge.py): any subject stream/file against any
+           nominal -- UI on stderr, the artifact on '-o PATH' or
+           stdout, written ONLY on commit (exit 0; a CANCEL exits 1 and
+           writes nothing). Knows nothing of GOOD/ -- storing stays
+           Accept's (10).
+
+           'hwut compare' (services/compare.py): display only, never writes --
+           the rendering IS the product, so it goes to STDOUT; exit is
+           the diff convention (0 equivalent, 1 differing). With ONE
+           argument it displays the READING of that stream.
+
+Beyond the terminal -- TWO TIERS. No semantic diff/merge protocol exists
 to adopt (verified: LSP/DAP prove the "one protocol, many editors"
 pattern, but for language/debug, not comparison). So:
 
@@ -933,23 +996,23 @@ sequence in full, one ROUND at a time:
     HUB (merge_session)                          DRIVER (adapter)
      |                                              |
      |------------ open(subject_name) ------------->|         ONCE
-     |                                              |
+     |                                               |
      |  .--------------- ROUND ---------------------.
-     |  |                                           |
-     |  |  compare.feed(subject, working)           |
-     |  |  yields DOWN items ...                    |
-     |  |----------- present(item) * -------------->|   * once per item
-     |  |                                           |
-     |  |----------- resolve(subject, working) ---->|
-     |  |<---------- Resolution(intent, text) ------|
-     |  |                                           |
-     |  |  intent is COMMIT or CANCEL?  ----------------------> break, keep intent
+     |  |                                            |
+     |  |  compare.feed(subject, working)             |
+     |  |  yields DOWN items ...                      |
+     |  |----------- present(item) * ----------------->|   * once per item
+     |  |                                              |
+     |  |----------- resolve(subject, working) -------->|
+     |  |<---------- Resolution(intent, text) ----------|
+     |  |                                              |
+     |  |  intent is COMMIT or CANCEL?  ---------------------> break, keep intent
      |  |  text is None or == working?  -> NO-PROGRESS GUARD -> CANCEL, break
-     |  |  round_n >= max_round_n?      -> THE CAP           -> CANCEL, break
-     |  |  else: working = text, round_n += 1                -> another ROUND
-     |  '-------------------------------------------.
-     |                                              |
-     |------------ close() ------------------------>|         ONCE
+     |  |  round_n >= max_round_n?      -> THE CAP          -> CANCEL, break
+     |  |  else: working = text, round_n += 1               -> another ROUND
+     |  '--------------------------------------------.
+     |                                                |
+     |------------ close() -------------------------->|         ONCE
      |
     returns (working or None, intent) to the CALLER
 
@@ -1081,7 +1144,14 @@ PART V -- REFERENCE
   package           a PACKAGE, not one module, one module per concern:
                       configuration.py    TestConfiguration,
                                           TestChoiceConfiguration (3)
-                      provision.py        Run, Replay, Provision (3, 5)
+                      provision/          the stage package (3, 5):
+                        core.py             Supply, Subjects, Provision,
+                                            Run, Replay, provision_of
+                        stage_<name>.py     ONE module per stage, named
+                                            like the member that holds
+                                            it: acquire, build, execute,
+                                            canonicalise, load -- class
+                                            'Stage<Name>' inside
                       build.py            BuildConfig, the build step (3)
                       store.py            Store, StoreConfig (4, 6)
                       nominal.py          Nominal and its kinds (6)
@@ -1089,6 +1159,13 @@ PART V -- REFERENCE
                       difference_display.py DifferenceDisplay (9)
                       accept.py           Accept (10)
                       feed.py             the feed session (11)
+                      tui.py              TuiDisplay -- the terminal
+                                          tier, two marking views (11.5)
+                      services/           the service faces (11.5):
+                        merge.py            'hwut merge'
+                        compare.py          'hwut compare'
+                        core.py             what the faces share:
+                                            streams and setup flags
                       observer.py         the progress seam (12)
                       report.py           TestResult, Provision,
                                           Comparison, the reason
