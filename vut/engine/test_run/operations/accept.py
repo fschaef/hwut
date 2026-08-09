@@ -46,10 +46,10 @@ from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional
 
-from   vut.engine.test_run.result import E_TestRunResult
-from   vut.engine.test_run.interaction.feed import E_Intent, merge_session
-from   vut.engine.test_run.nominal   import NominalNotAvailable
-from   vut.engine.test_run.observer  import notify
+from   ..result           import E_TestRunResult
+from   ..interaction.feed import E_Intent, merge_session
+from   ..nominal          import NominalNotAvailable
+from   ..observer         import notify
 
 
 class E_AcceptMode(Enum):

@@ -1,9 +1,0 @@
-INSPECT: differing -> exit 1
-         tolerated -> exit 0
-         reading   -> exit 0
-  OK  : a difference: exit 1, the rendering says where, on stdout
-  OK  : and stderr stays silent -- the rendering IS the product
-  OK  : the SAME streams under --numeric 0.01: equivalent, exit 0
-  OK  : ONE argument asks the reading question -- legend and all
-  OK  : the banner is the TUI's own -- one renderer, two faces
-SUCCESS: compare answers with the diff convention, homogeneously.

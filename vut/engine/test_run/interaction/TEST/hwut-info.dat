@@ -1,0 +1,6 @@
+Testing the interaction seam: the feed session, the merge loop, the TUI tier and the service faces.
+---------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

@@ -39,7 +39,7 @@ from   dataclasses import dataclass
 from   datetime    import datetime, timezone
 from   pathlib     import Path
 
-from   vut.engine.test_run.nominal import RecordNominal
+from   .nominal import RecordNominal
 
 try:
     import psutil

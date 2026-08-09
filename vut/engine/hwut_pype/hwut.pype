@@ -1,17 +1,15 @@
 #! /usr/bin/env python3
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
-______________________________________________________________________________
 
-She-bang interpreter for pype scripts. Install on PATH; a script beginning
-
-    #! /usr/bin/env hwut.pype
-
-made executable then acts as a pipe filter: 'producer | ./script.pype'.
-______________________________________________________________________________
+The shebang entry: 'hwut.pype SCRIPT < input' and
+'#! /usr/bin/env hwut.pype' both land here.
 """
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from hwut_pype import main                                          # noqa: E402
 
-sys.exit(main())
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from hwut_pype import main   # noqa E402
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -62,7 +62,7 @@ def setup_from_arguments(arguments):
     RETURN: Configuration, compare's setup with the shared flags
             applied; the plain default setup when none was given.
     """
-    from vut.engine.compare.configuration import Configuration
+    from ...compare.configuration import Configuration
     configuration = Configuration()
     if arguments.numeric is not None:
         configuration.pattern_finder.numeric_tolerance_ratio = \

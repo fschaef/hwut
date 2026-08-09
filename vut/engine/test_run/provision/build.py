@@ -28,10 +28,10 @@ from   enum        import Enum
 from   pathlib     import Path
 from   typing      import Optional, Sequence
 
-from   vut.engine.test_run.result      import E_TestRunResult
-from   vut.engine.procsitter.procsitter import (Procsitter,
-                                                ProcsitterConfig,
-                                                E_Containment)
+from   ..result                 import E_TestRunResult
+from   ...procsitter.procsitter import (Procsitter,
+                                        ProcsitterConfig,
+                                        E_Containment)
 
 
 class E_BuildSystem(Enum):
@@ -180,7 +180,7 @@ async def build(configuration, caps=None, stop_event=None, observer=None):
     The build directory is CREATED if absent: a first build of a test has
     nowhere to run yet.
     """
-    from vut.engine.test_run.observer import notify
+    from ..observer import notify
 
     build_configuration = configuration.build
     assert build_configuration is not None, \

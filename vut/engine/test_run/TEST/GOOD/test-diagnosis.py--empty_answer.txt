@@ -1,0 +1,24 @@
+STIMULUS the test application answered:
+             stdout  ''
+             stderr  "ImportError: no module named 'parser'\n"
+         exit code 2, ended by itself
+
+REACTION the old way {
+    (empty)
+}
+REACTION the diagnosis {
+    EXPLAIN  parse, choice basic
+      REQUEST    ['vut-no-such-interpreter', 'parse.py', 'basic']
+      RESOLVED   vut-no-such-interpreter: NOT FOUND on PATH
+      CWD        /tests/parser
+      call[0]    containment fail-completed   exit 2   wall 0.417s
+                 stderr tail (2 line(s)) | first: "error: no module named 'parser'"
+      REPORT     test-app-no-output
+      stderr         38 bytes   first: "ImportError: no module named 'parser'"
+      stdout          0 bytes
+      HINT: stdout is EMPTY while stderr is not -- output on the wrong channel? (a runner may route print() to stderr; compare reads stdout)
+}
+
+An empty answer is rendered WITH its exit code, its
+containment, and the other channel's tail.
+SUCCESS: nothing that failed goes away without saying why.

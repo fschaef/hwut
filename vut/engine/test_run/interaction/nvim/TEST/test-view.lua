@@ -1,3 +1,4 @@
+#! /usr/bin/env nvim -l
 -- SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 -- ---------------------------------------------------------------------------
 --
@@ -26,6 +27,15 @@ local view = require("vut_merge.view")
 local SUBJECT = { "alpha", "WRONG", "gamma" }
 local NOMINAL = { "alpha", "beta",  "gamma" }
 
+--  nvim -l routes print() to STDERR; HWUT reads STDOUT. Make print
+--  speak stdout with print's own semantics (tab-joined, newline).
+if vim ~= nil then
+    print = function(...)
+        local n, t = select("#", ...), {}
+        for i = 1, n do t[i] = tostring(select(i, ...)) end
+        io.stdout:write(table.concat(t, "\t"), "\n")
+    end
+end
 --- RETURN: true, every claim held; false, at least one did not.
 local function check(claim_list)
     local ok = true

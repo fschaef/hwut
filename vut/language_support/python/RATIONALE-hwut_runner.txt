@@ -1,0 +1,88 @@
+==============================================================================
+RATIONALE -- hwut_runner (settled 2026-08-08)
+==============================================================================
+
+------------------------------------------------------------------------------
+PROBLEM   Reloading the application per choice dominates suite time.
+DECISION  Interactive mode: the framework starts the app once with
+          '--interactive' and triggers choices over stdin ("batch is a
+          pure ACCELERATOR": interactive output is byte-exact equal to
+          normal-mode output; one set of GOOD files).
+COST      Any state leak between choices is a defect to hunt, not a
+          documented quirk.
+MEASURED  (Python 3.12, one machine, medians) interpreter start + the
+          runner's import set: 145 ms; fork of the loaded app: 1.3 ms;
+          in-process dispatch: 0.005 ms. Saving vs reload: ~99 %. The
+          application's own import weight adds on top and is saved
+          identically -- the win scales with the heavy end.
+GRAVEYARD Batch as an own mode with own oracles: doubles the oracle
+          count; the two sets drift.
+
+------------------------------------------------------------------------------
+PROBLEM   Designating the per-choice output channel across the process
+          boundary.
+DECISION  The framework sends a FILE NAME ('run <choice> <out> <err>');
+          the app opens it and dup2's onto descriptors 1 and 2.
+COST      None observed; HWUT collects output files anyway.
+GRAVEYARD (a) fixed pass_fds at exec: set is fixed before any choice is
+          known. (b) SCM_RIGHTS fd passing: works, POSIX-only, a second
+          channel to build. (b) buried under (c)'s zero cost. Raw fd
+          numbers in the protocol: an fd number names an entry in the
+          sender's table; it cannot cross the boundary at all.
+
+------------------------------------------------------------------------------
+PROBLEM   stdout/stderr: one merged stream or two.
+DECISION  TWO SINKS per choice.
+COST      Tree-wide re-baseline: every GOOD was recorded through '2>&1';
+          run_all.sh changes shape (two files, two diffs per choice).
+          Registered in OPEN.txt.
+GRAVEYARD Merged sink: interleaving follows buffer-flush timing (stdout
+          block-buffered into a file, stderr unbuffered) -- a timing
+          artefact the GOODs happen to survive, and survive less once
+          choices run beside others or asyncio's reap-race lines appear.
+          Arity-decides compromise: superseded by the full-split ruling.
+
+------------------------------------------------------------------------------
+PROBLEM   A stray print(), or a child inheriting fd 1, injects a line
+          into the protocol and desynchronises the session -- silently,
+          corrupting SUBSEQUENT choices.
+DECISION  The UP channel is a private dup of the original stdout, taken
+          at session entry; fd 1 and fd 2 point at a stray sink between
+          choices. Forced anyway by the two-sink ruling: with both
+          descriptors redirected per choice, neither can carry UP.
+COST      One extra descriptor and temp file per session.
+
+------------------------------------------------------------------------------
+PROBLEM   Parallel execution: threads, async tasks, or processes.
+DECISION  The app declares the scheme (constructor 'parallel'): None =
+          sequential, "process" = fork per choice. No in-process
+          parallelism.
+COST      "process" is POSIX only; elsewhere the app runs sequentially
+          (declared, not pretended -- the procsitter platform-table
+          pattern).
+MEASURED  Fork fan-out with a 200 MB parent: ~4 ms/child (copy-on-write;
+          the feared "lot of copying" does not materialise). 64 I/O-bound
+          choices x 50 ms on ONE core: sequential ~3.3 s, fork-parallel
+          0.38 s.
+GRAVEYARD Threads/async tasks: fd 1 is process-global; a per-task
+          sys.stdout proxy catches print() and misses every spawned
+          process -- procsitter's whole subject. Buys 1.3 ms per choice
+          over fork. Mechanism keywords in the info block (THREAD;/
+          ASYNC;): a promise the framework must honour when it knows
+          better; wrong scope.
+
+------------------------------------------------------------------------------
+PROBLEM   What 'done' guarantees when a choice spawned processes that
+          outlive it (writer contaminating a later choice's sink -- a
+          bug class the per-choice process death used to prevent for
+          free).
+DECISION  'done' is a barrier for the APP'S OWN writes (flushed, sinks
+          closed, descriptors restored). Containment of spawned
+          processes is the choice's concern: choices that spawn use the
+          procsitter, which contains its groups. (D3 -- containment
+          stays in the one place it lives; HwutRunner grows none.)
+COST      Unenforced against a choice that spawns by other means and
+          leaks.
+GRAVEYARD Own-writes-only with no stated responsibility: leaves the bug
+          class unowned. Per-choice setsid + group containment in
+          HwutRunner: duplicates the procsitter inside the harness.

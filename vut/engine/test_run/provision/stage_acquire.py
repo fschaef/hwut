@@ -14,9 +14,9 @@ ______________________________________________________________________________
 import asyncio
 from   dataclasses import dataclass
 
-from   vut.engine.test_run.result         import E_TestRunResult
-from   vut.engine.procsitter.procsitter    import Procsitter, E_Containment
-from   vut.engine.test_run.provision.core  import Supply
+from   ..result                 import E_TestRunResult
+from   ...procsitter.procsitter import Procsitter, E_Containment
+from   .core                    import Supply
 
 
 @dataclass(frozen=True)

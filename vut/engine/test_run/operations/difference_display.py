@@ -23,15 +23,15 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
-from   vut.engine.test_run.result      import E_TestRunResult
-from   vut.engine.compare.configuration import Configuration
-from   vut.engine.test_run.interaction.feed import (NullDisplay, feed_down,
-                                                    ProtocolMismatch)
-from   vut.engine.test_run.nominal      import NominalNotAvailable
-from   vut.engine.test_run.observer     import notify
-from   vut.engine.test_run.report       import Comparison, TestResult
+from   ..result                 import E_TestRunResult
+from   ...compare.configuration import Configuration
+from   ..interaction.feed       import (NullDisplay, feed_down,
+                                        ProtocolMismatch)
+from   ..nominal                import NominalNotAvailable
+from   ..observer               import notify
+from   ..report                 import Comparison, TestResult
 
-import vut.engine.compare.main as compare_main
+from   ...compare               import main as compare_main
 
 
 @dataclass(frozen=True)

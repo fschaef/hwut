@@ -1154,6 +1154,11 @@ PART V -- REFERENCE
                                             'Stage<Name>' inside
                         build.py            BuildConfig, the build TOOL
                                             under stage_build (3)
+                      diagnosis.py        every silent failure names
+                                          itself: explain(), resolution
+                                          chains, the wrong-channel
+                                          hint, DiagnosisObserver
+                                          (todo-21)
                       store.py            Store, StoreConfig (4, 6)
                       nominal.py          Nominal and its kinds (6)
                       operations/         the three operations (2.5):
@@ -1169,8 +1174,13 @@ PART V -- REFERENCE
                       services/           the service faces (11.5):
                         merge.py            'hwut merge'
                         compare.py          'hwut compare'
+                        report.py           'hwut report' -- one test
+                                            packed whole: metadata,
+                                            source, GOOD, OUT, cadence
                         core.py             what the faces share:
                                             streams and setup flags
+                        config.py           the walk-up for direct
+                                            execution (PEP 366)
                       observer.py         the progress seam (12)
                       report.py           TestResult, Provision,
                                           Comparison, the reason

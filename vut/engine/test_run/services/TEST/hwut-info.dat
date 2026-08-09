@@ -1,0 +1,8 @@
+Testing hwut merge and hwut compare, over the process boundary.
+---------------------------------------------------------------
+
+bash *.sh
+
+--not config.py
+
+---------------------------------------------------------------

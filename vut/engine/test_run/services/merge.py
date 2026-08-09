@@ -40,12 +40,20 @@ import sys
 import asyncio
 import argparse
 
-from   vut.engine.test_run.interaction.feed import (merge_session, driver_for,
-                                                    E_DisplayTarget, E_Intent,
-                                                    MERGE_ROUND_MAX)
-from   vut.engine.test_run.services.core    import (read_source,
-                                                    add_setup_arguments,
-                                                    setup_from_arguments)
+#  THE IMPORT CALL. A service face is EXECUTABLE from any directory;
+#  run as a plain script it has no package context, so 'config.py' (in
+#  THIS directory -- script-mode sys.path[0]) does the walk-up, and the
+#  face merely ADOPTS its package (PEP 366). Dead under '-m' or import.
+if __package__ in (None, ""):
+    import config
+    __package__ = config.PACKAGE
+
+from   ..interaction.feed import (merge_session, driver_for,
+                                  E_DisplayTarget, E_Intent,
+                                  MERGE_ROUND_MAX)
+from   .core              import (read_source,
+                                  add_setup_arguments,
+                                  setup_from_arguments)
 
 
 async def merge_text(subject_text, nominal_text, adapter,

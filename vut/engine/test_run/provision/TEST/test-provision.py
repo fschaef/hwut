@@ -59,8 +59,13 @@ from   vut.engine.test_run.provision.stage_canonicalise import \
                                                   StageCanonicalise  # noqa E402
 from   vut.engine.test_run.store         import Store            # noqa E402
 
-PYPE = os.path.join(os.path.dirname(__file__),
-                    "..", "..", "hwut_pype", "hwut_pype.py")
+#  ASKED OF config.py, NOT COUNTED IN '..'. The walk in config.py is
+#  the one place that knows where 'vut' is; a hop count here is a
+#  silent hostage to the layout -- this test moved one level deeper
+#  once, and the counted path went on pointing into the void.
+from   config import VUT_DIRECTORY                               # noqa E402
+
+PYPE = os.path.join(VUT_DIRECTORY, "engine", "hwut_pype", "hwut_pype.py")
 
 _SORT_SCRIPT = ("on: <bof> => {\n"
                 "    collected = []\n"

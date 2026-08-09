@@ -2,15 +2,14 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-THE TUI TIER AND THE SERVICE FACES.
+THE TUI TIER.
 
     UNIT     'TuiDisplay' (tui.py) -- the terminal driver: rendering
              of the FULL compare vocabulary (every tolerance kind,
              every region kind), the two marking views (verdict /
-             reading), the '$EDITOR' loop, the three answers -- and
-             the service faces 'hwut merge' (services/merge.py) and 'hwut
-             compare' (services/compare.py) with their shared argument language
-             (services/core.py).
+             reading), the '$EDITOR' loop, the three answers. The
+             service FACES built on this driver are tested where they
+             live: services/TEST.
 
     CAUSAL CONTRACT
              the driver renders what DOWN carries and aligns nothing;
@@ -22,35 +21,28 @@ THE TUI TIER AND THE SERVICE FACES.
     CONSISTENCY CONTRACT
              an author who saved nothing is re-prompted LOCALLY -- the
              hub never sees a no-progress REALIGN from this driver; a
-             CANCEL writes nothing; merge's artifact channel (stdout/
-             -o) carries the artifact and never the UI; compare's
-             stdout carries the rendering, and its exit code is the
-             diff convention (0 equivalent, 1 differing).
+             CANCEL carries nothing out; what is rendered is what DOWN
+             carried, and nothing else.
 ______________________________________________________________________________
 """
 import asyncio
 import io
 import os
-import subprocess
 import sys
-import tempfile
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", ".."))
 
 from   config import HwutRunner                                  # noqa F401,E402
 
 from   vut.engine.test_run.interaction.feed import (E_DisplayTarget,      # noqa E402
                                                     E_Intent,
-                                                    driver_for)
-from   vut.engine.test_run.services.merge   import merge_text             # noqa E402
-from   vut.engine.test_run.services.compare import (compare_view,         # noqa E402
-                                           reading_view)
-from   vut.engine.test_run.interaction.tui import TuiDisplay             # noqa E402
-from   vut.engine.compare.configuration import Configuration     # noqa E402
+                                                    driver_for,
+                                                    feed_down,
+                                                    merge_session)
+from   vut.engine.test_run.interaction.tui  import TuiDisplay             # noqa E402
+from   vut.engine.compare.configuration     import Configuration          # noqa E402
 
 MOCK_EDITOR = os.path.join(os.path.dirname(__file__), "mock", "mock_editor.py")
-ROOT        = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                           "..", "..", "..", ".."))
 
 
 def _check(pair_list):
@@ -90,9 +82,9 @@ def _session(subject, nominal, answer_list, editor_mode=None, merge_f=True,
         editor = [sys.executable, MOCK_EDITOR, editor_mode]
     driver = TuiDisplay(out=out, input_f=scripted_input,
                         color_f=False, editor_argv=editor, merge_f=merge_f)
-    text, intent = asyncio.run(merge_text(subject, nominal, driver,
-                                          subject_name="tui-under-test",
-                                          compare_options=compare_options))
+    text, intent = asyncio.run(merge_session(compare_options,
+                                             subject, nominal, driver,
+                                             "tui-under-test"))
     return driver, out.getvalue(), text, intent
 
 
@@ -299,8 +291,10 @@ def test_reading_view():
     out    = io.StringIO()
     driver = TuiDisplay(out=out, color_f=False, merge_f=False,
                         reading_f=True)
-    asyncio.run(reading_view(text, driver, subject_name="reading-probe",
-                             compare_options=configuration))
+    #  THE READING is the stream fed against ITSELF -- straight through
+    #  the display door; the services' reading face is just this call.
+    asyncio.run(feed_down(configuration, io.StringIO(text),
+                          io.StringIO(text), driver, "reading-probe"))
     rendering = out.getvalue()
 
     print(rendering)
@@ -324,51 +318,6 @@ def test_reading_view():
          "self-feed: every pair equivalent BY CONSTRUCTION"),
     ])
     _verdict(ok, "the reading shows the interpretation, nothing else.")
-
-
-def test_compare_cli():
-    """THE COMPARE FACE, over a REAL process boundary, homogeneous with
-    merge's: same stream arguments, same setup flags -- but the
-    rendering goes to STDOUT (it IS the product) and the exit code is
-    the diff convention: 0 equivalent, 1 differing. One argument asks
-    the READING question."""
-    directory = tempfile.mkdtemp(prefix="vut_compare_")
-    s_path    = os.path.join(directory, "subject.txt")
-    n_path    = os.path.join(directory, "nominal.txt")
-    with open(s_path, "w") as file_handle:
-        file_handle.write("alpha\nvalue 3.140\n")
-    with open(n_path, "w") as file_handle:
-        file_handle.write("alpha\nvalue 3.141\n")
-
-    environment = dict(os.environ, PYTHONPATH=ROOT)
-
-    def run(argv):
-        """RETURN: CompletedProcess, one CLI compare run."""
-        return subprocess.run(
-            [sys.executable, "-m", "vut.engine.test_run.services.compare"] + argv,
-            capture_output=True, text=True, env=environment, cwd=directory)
-
-    differing  = run([s_path, n_path, "--plain"])
-    tolerated  = run([s_path, n_path, "--plain", "--numeric", "0.01"])
-    reading    = run([s_path, "--plain"])
-
-    print("INSPECT: differing -> exit %i" % differing.returncode)
-    print("         tolerated -> exit %i" % tolerated.returncode)
-    print("         reading   -> exit %i" % reading.returncode)
-    ok = _check([
-        (differing.returncode == 1 and "[3.140]" in differing.stdout,
-         "a difference: exit 1, the rendering says where, on stdout"),
-        (differing.stderr == "",
-         "and stderr stays silent -- the rendering IS the product"),
-        (tolerated.returncode == 0 and "~3.140~" in tolerated.stdout,
-         "the SAME streams under --numeric 0.01: equivalent, exit 0"),
-        (reading.returncode == 0
-         and "reading |" in reading.stdout,
-         "ONE argument asks the reading question -- legend and all"),
-        ("round 1" in differing.stdout,
-         "the banner is the TUI's own -- one renderer, two faces"),
-    ])
-    _verdict(ok, "compare answers with the diff convention, homogeneously.")
 
 
 def test_editor_loop():
@@ -457,57 +406,6 @@ def test_display_only():
     _verdict(ok, "display-only renders once and resolves nothing.")
 
 
-def test_service_cli():
-    """THE SERVICE FACE, over a REAL process boundary: UI on stderr,
-    the artifact on '-o PATH' or stdout, written ONLY on commit; exit
-    code 0 commits, 1 cancels."""
-    directory = tempfile.mkdtemp(prefix="vut_tui_")
-    s_path    = os.path.join(directory, "subject.txt")
-    n_path    = os.path.join(directory, "nominal.txt")
-    m_path    = os.path.join(directory, "merged.txt")
-    with open(s_path, "w") as file_handle: file_handle.write("alpha\nbeta\n")
-    with open(n_path, "w") as file_handle: file_handle.write("alpha\nBETA\n")
-
-    environment = dict(os.environ, PYTHONPATH=ROOT)
-
-    def run(argv, answer):
-        """RETURN: CompletedProcess, one CLI merge run, 'answer' fed in."""
-        return subprocess.run(
-            [sys.executable, "-m", "vut.engine.test_run.services.merge"] + argv,
-            input=answer, capture_output=True, text=True,
-            env=environment, cwd=directory)
-
-    committed = run([s_path, n_path, "-o", m_path, "--plain"], "c\n")
-    cancelled = run([s_path, n_path, "-o", m_path + ".none", "--plain"],
-                    "q\n")
-    to_stdout = run([s_path, n_path, "--plain"], "c\n")
-
-    with open(m_path) as file_handle: merged = file_handle.read()
-
-    print("INSPECT: commit -> exit %i, artifact %r"
-          % (committed.returncode, merged))
-    print("         cancel -> exit %i, file exists: %s"
-          % (cancelled.returncode,
-             os.path.exists(m_path + ".none")))
-    ok = _check([
-        (committed.returncode == 0 and merged == "alpha\nBETA\n",
-         "COMMIT: exit 0 and the artifact is written to -o"),
-        (committed.stdout == "",
-         "with -o, stdout stays empty -- the UI went to stderr"),
-        ("round 1" in committed.stderr,
-         "and the rendering is really there, on stderr"),
-        (cancelled.returncode == 1
-         and not os.path.exists(m_path + ".none"),
-         "CANCEL: exit 1 and NOTHING is written"),
-        (to_stdout.returncode == 0
-         and to_stdout.stdout == "alpha\nBETA\n",
-         "without -o, stdout carries the artifact, exactly"),
-        ("round 1" in to_stdout.stderr,
-         "while the UI still went to stderr -- the channels never mix"),
-    ])
-    _verdict(ok, "the service commits to the artifact channel only.")
-
-
 def test_target_wiring():
     """THE TIER IS A TARGET like any other: 'driver_for' builds it from
     the name, and the driver arrives configured -- adding the tier
@@ -528,17 +426,15 @@ def test_target_wiring():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "The TUI tier and the merge service",
+        title      = "The TUI tier",
         choice_map = {
             "rendering":        test_rendering,
             "elements":         test_every_element_kind,
             "regions":          test_every_region_kind,
             "reading":          test_reading_view,
-            "compare_cli":      test_compare_cli,
             "editor_loop":      test_editor_loop,
             "undecided_author": test_undecided_author,
             "display_only":     test_display_only,
-            "service_cli":      test_service_cli,
             "target_wiring":    test_target_wiring,
         },
         happy      = "SUCCESS.*",

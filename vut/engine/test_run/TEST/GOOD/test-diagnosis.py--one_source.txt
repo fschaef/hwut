@@ -1,0 +1,14 @@
+STIMULUS an INTERPRETED application, interpreter ['vut-no-such-interpreter'],
+         source 'parse.py', choice 'basic'
+REACTION the REQUEST line {
+      REQUEST    ['vut-no-such-interpreter', 'parse.py', 'basic']
+}
+
+STIMULUS the same application, but NO choice (the 'None' key)
+REACTION the REQUEST line {
+      REQUEST    ['vut-no-such-interpreter', 'parse.py']
+}
+
+The choice name is the last argument, and it is absent when
+there is no choice -- because that is what the runner did.
+SUCCESS: the diagnosis quotes the run; it does not re-invent it.

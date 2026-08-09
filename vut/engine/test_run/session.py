@@ -31,19 +31,19 @@ from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional, Sequence
 
-from   vut.engine.test_run.result           import E_TestRunResult
-from   vut.engine.test_run.operations.accept import (Accept, AcceptConfig,
-                                                     AcceptStep)
-from   vut.engine.test_run.configuration     import verify
-from   vut.engine.test_run.operations.difference_display import (DifferenceDisplay,
-                                                                 DifferenceDisplayConfig)
-from   vut.engine.test_run.operations.equivalence_check import (EquivalenceCheck,
-                                                                EquivalenceCheckConfig)
-from   vut.engine.test_run.interaction.feed  import (driver_for,
-                                                     E_DisplayTarget)
-from   vut.engine.test_run.provision.core    import provision_of
-from   vut.engine.test_run.store             import (Store,
-                                                     DirectoryBusy)
+from   .result                        import E_TestRunResult
+from   .operations.accept             import (Accept, AcceptConfig,
+                                              AcceptStep)
+from   .configuration                 import verify
+from   .operations.difference_display import (DifferenceDisplay,
+                                              DifferenceDisplayConfig)
+from   .operations.equivalence_check  import (EquivalenceCheck,
+                                              EquivalenceCheckConfig)
+from   .interaction.feed              import (driver_for,
+                                              E_DisplayTarget)
+from   .provision.core                import provision_of
+from   .store                         import (Store,
+                                              DirectoryBusy)
 
 
 class E_Goal(Enum):
@@ -274,7 +274,7 @@ def compare_setup_delta(options):
     the day it is used.
     """
     if options is None: return {}
-    from vut.engine.compare.configuration import Configuration
+    from ..compare.configuration import Configuration
     default    = Configuration()
     difference = {}
 

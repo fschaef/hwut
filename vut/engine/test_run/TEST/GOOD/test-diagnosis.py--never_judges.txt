@@ -1,0 +1,14 @@
+STIMULUS a finished run, verdict = False, report = test-app-no-output
+REACTION what the observer wrote {
+    EXPLAIN  parse, choice basic
+      REQUEST    ['vut-no-such-interpreter', 'parse.py', 'basic']
+      RESOLVED   vut-no-such-interpreter: NOT FOUND on PATH
+      CWD        /tests/parser
+      call[0]    containment fail-completed   exit 2   wall 0.417s
+                 stderr tail (2 line(s)) | first: "error: no module named 'parser'"
+      REPORT     test-app-no-output
+}
+
+         after the observer ran: verdict = False, report = test-app-no-output
+
+SUCCESS: it renders and returns; the verdict is none of its business.

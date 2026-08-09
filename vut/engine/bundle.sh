@@ -7,8 +7,8 @@ Options:
   -d DIR1 [DIR2 ...]   Directories to search (space-separated)
   -e EXT1 [EXT2 ...]   Extensions to include (space-separated)
   -f FILE1 [FILE2 ...] Extra static files to append (space-separated)
-  -x PATTERN           Pattern to exclude via grep -v (Default: ${EXCLUDE_PATTERN})
-  -o FILE              Output filename (Default: ${OUTPUT_FILE})
+  -x PAT1 [PAT2 ...]   Patterns to exclude via grep -v (Default: ${EXCLUDE_PATTERNS[*]})
+  -o FILE              Output filename (Default: dump-<first-dir-name>.txt)
   -h, --help           Show this help message
 EOF
 }
@@ -18,8 +18,8 @@ set -euo pipefail
 
 # --- Configuration & State ---
 EXTRA_FILES=()
-EXCLUDE_PATTERN="OUT"
-OUTPUT_FILE="bundle.run"
+EXCLUDE_PATTERNS=("OUT")
+OUTPUT_FILE=""
 EXTENSIONS=()
 DIRS=()
 
@@ -58,12 +58,23 @@ command_line_parse() {
             -d) command_line_get_nominus_followers DIRS "$@"; shift "$SHIFT_COUNT" ;;
             -e) command_line_get_nominus_followers EXTENSIONS "$@"; shift "$SHIFT_COUNT" ;;
             -f) command_line_get_nominus_followers EXTRA_FILES "$@"; shift "$SHIFT_COUNT" ;;
-            -x) command_line_get_follower EXCLUDE_PATTERN "$@"; shift "$SHIFT_COUNT" ;;
+            -x) EXCLUDE_PATTERNS=()
+                command_line_get_nominus_followers EXCLUDE_PATTERNS "$@"; shift "$SHIFT_COUNT" ;;
             -o) command_line_get_follower OUTPUT_FILE "$@"; shift "$SHIFT_COUNT" ;;
             -h|--help) print_usage; exit 0 ;;
             *) echo "Error: Unknown option '$arg'" >&2; print_usage >&2; exit 1 ;;
         esac
     done
+}
+
+# Derive OUTPUT_FILE from the first search directory when -o was not given.
+output_file_determine() {
+    [[ -n "$OUTPUT_FILE" ]] && return 0
+    local dir_name="files"
+    if [[ ${#DIRS[@]} -gt 0 ]]; then
+        dir_name=$(basename "$(realpath -m "${DIRS[0]}")")
+    fi
+    OUTPUT_FILE="dump-${dir_name}.txt"
 }
 
 # --- Core Processing & Formatting ---
@@ -79,6 +90,7 @@ file_lacks_final_newline() {
     [[ "$last" != "10" ]]
 }
 
+# Returns 0 if the file was dumped, 1 if it was skipped.
 dump_file_contents() {
     local file="$1"
     local out_target="$2"
@@ -124,6 +136,7 @@ dump_file_contents() {
         fi
     else
         echo "Warning: File '$file' not found. Skipping." >&2
+        return 1
     fi
 }
 
@@ -144,8 +157,17 @@ collect_target_files() {
         local find_name_args=()
         build_find_extensions find_name_args
 
-        find "${DIRS[@]}" \( "${find_name_args[@]}" \) -print0 \
-            | grep -z -v "$EXCLUDE_PATTERN" >> "$list_file" || true
+        if [[ ${#EXCLUDE_PATTERNS[@]} -gt 0 ]]; then
+            local grep_args=()
+            local pattern
+            for pattern in "${EXCLUDE_PATTERNS[@]}"; do
+                grep_args+=("-e" "$pattern")
+            done
+            find "${DIRS[@]}" \( "${find_name_args[@]}" \) -print0 \
+                | grep -z -v "${grep_args[@]}" >> "$list_file" || true
+        else
+            find "${DIRS[@]}" \( "${find_name_args[@]}" \) -print0 >> "$list_file"
+        fi
     fi
 
     for file in "${EXTRA_FILES[@]}"; do
@@ -153,11 +175,47 @@ collect_target_files() {
     done
 }
 
+# --- Statistics ---
+
+declare -A EXT_COUNT=()
+TOTAL_COUNT=0
+
+statistics_register() {
+    local base ext
+    base=$(basename "$1")
+    case "$base" in
+        ?*.*) ext="${base##*.}" ;;
+        *)    ext="(no ext)" ;;
+    esac
+    EXT_COUNT["$ext"]=$(( ${EXT_COUNT["$ext"]:-0} + 1 ))
+    TOTAL_COUNT=$((TOTAL_COUNT + 1))
+}
+
+# Prints: Files: "*.txt": 321, "*.py": 2, ... (sorted by count, descending)
+statistics_report() {
+    local summary="" count ext
+    while read -r count ext; do
+        [[ -n "$summary" ]] && summary+=", "
+        summary+="\"*.${ext}\": ${count}"
+    done < <(
+        for ext in "${!EXT_COUNT[@]}"; do
+            printf '%s %s\n' "${EXT_COUNT[$ext]}" "$ext"
+        done | sort -rn -k1,1
+    )
+
+    local size
+    size=$(numfmt --to=iec --suffix=B "$(stat -c%s "$OUTPUT_FILE")")
+
+    echo "Files: ${summary:-(none)}"
+    echo "Total: ${TOTAL_COUNT} files, dump size: ${size}"
+}
+
 # --- Main Execution Path ---
 
 main() {
     echo "(1) parsing command line"
     command_line_parse "$@"
+    output_file_determine
 
     local file_list_tmp
     file_list_tmp=$(mktemp)
@@ -181,13 +239,16 @@ EOF
 
     echo "(3) dumping file contents"
     while IFS= read -r -d '' file; do
-        dump_file_contents "$file" "$temp_payload"
+        if dump_file_contents "$file" "$temp_payload"; then
+            statistics_register "$file"
+        fi
     done < "$file_list_tmp"
 
     mv "$temp_payload" "$OUTPUT_FILE"
     rm -f "$file_list_tmp"
 
     echo "Success: Concatenated bundle written to $OUTPUT_FILE"
+    statistics_report
     echo "To undump: git apply $OUTPUT_FILE   (or: patch -p1 < $OUTPUT_FILE)"
 }
 

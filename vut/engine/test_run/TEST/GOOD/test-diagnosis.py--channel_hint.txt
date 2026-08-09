@@ -1,0 +1,23 @@
+STIMULUS three channel situations, in turn:
+
+    stdout   stderr   hint expected
+    ------   ------   ----------------------------------
+    empty    full     yes -- the pattern that costs a night
+    full     full     no  -- there IS an answer
+    empty    empty    no  -- nothing to point at
+
+REACTION stdout empty, stderr full {
+    stderr         18 bytes   first: 'print() went here'
+    stdout          0 bytes
+    HINT: stdout is EMPTY while stderr is not -- output on the wrong channel? (a runner may route print() to stderr; compare reads stdout)
+}
+REACTION both channels carry text {
+    stderr         10 bytes   first: 'a warning'
+    stdout         11 bytes   first: 'the answer'
+}
+REACTION both channels empty {
+    stderr          0 bytes
+    stdout          0 bytes
+}
+
+SUCCESS: the hint names a pattern for a human, never a verdict.

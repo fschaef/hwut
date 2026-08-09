@@ -1,0 +1,6 @@
+STIMULUS a result that carries no provision record
+REACTION the observer wrote 0 character(s)
+
+Silence is the honest answer: nothing ran, so nothing is
+explained. An empty EXPLAIN block would suggest a run.
+SUCCESS: no run, no diagnosis -- and no noise.

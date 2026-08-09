@@ -1,0 +1,32 @@
+STIMULUS the nominal (with the author's own '##' comment),
+         paired: 1-1, 2-2, subject 3 unpaired, nominal 3 unpaired
+
+REACTION what the editor opens {
+    ##ACTUAL:1: "alpha"
+    alpha
+    ##ACTUAL:2: "BETA"
+    beta
+    ##ACTUAL:3: "extra"
+    ##ACTUAL:-: ""
+    ## a comment the author wrote
+    gamma
+}
+
+The author's own comment is NOT annotated -- the comparison
+never saw it, so it has no ACTUAL to name.
+
+STIMULUS the author appends 'delta' and REWRITES the second
+         annotation into a note of their own
+
+REACTION the nominal that leaves the editor {
+    alpha
+    ## the author kept this note
+    beta
+    ## a comment the author wrote
+    gamma
+    delta
+}
+
+Exactly the WRITTEN annotations are removed -- once each;
+what the author touched is the author's, and stays.
+SUCCESS: annotated in, author's text out -- nothing more.

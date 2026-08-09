@@ -1,0 +1,19 @@
+STIMULUS a call that ended by itself with exit code 2
+REACTION its attribution {
+    call[0]    containment fail-completed   exit 2   wall 0.417s
+               stderr tail (2 line(s)) | first: "error: no module named 'parser'"
+}
+
+STIMULUS a call the watchdog stopped, caps unenforced
+REACTION its attribution {
+    call[0]    containment fail-wall-clock-exceeded   exit None   wall 0.417s
+               unenforced caps: peak_memory_mb
+               stderr tail (2 line(s)) | first: "error: no module named 'parser'"
+}
+
+STIMULUS a call that succeeded, stderr silent
+REACTION its attribution {
+    call[0]    containment ok-completed   exit 0   wall 0.417s
+}
+
+SUCCESS: containment, exit and duration always; the rest when it exists.

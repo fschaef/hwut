@@ -27,12 +27,12 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   typing      import Mapping, Optional
 
-import vut.engine.compare.main             as compare_main
-from   vut.engine.test_run.result         import E_TestRunResult
-from   vut.engine.compare.configuration    import Configuration
-from   vut.engine.test_run.nominal         import NominalNotAvailable
-from   vut.engine.test_run.observer        import notify
-from   vut.engine.test_run.report          import (Comparison, TestResult)
+from   ...compare               import main as compare_main
+from   ..result                 import E_TestRunResult
+from   ...compare.configuration import Configuration
+from   ..nominal                import NominalNotAvailable
+from   ..observer               import notify
+from   ..report                 import (Comparison, TestResult)
 
 
 @dataclass(frozen=True)

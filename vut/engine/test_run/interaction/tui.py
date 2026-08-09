@@ -55,7 +55,77 @@ import asyncio
 import tempfile
 from   contextlib import suppress
 
-from   vut.engine.test_run.interaction.feed import DisplayAdapter, Resolution, E_Intent
+from   .feed import DisplayAdapter, Resolution, E_Intent
+
+
+def annotate_for_editor(nominal_text, pair_list):
+    """
+    RETURN: (str, [str]), the nominal annotated for the author's editor,
+            and THE ANNOTATION LINES THEMSELVES -- remembered, so
+            'strip_annotations' removes exactly what was written.
+
+    Before each nominal line the subject's paired line rides as a
+    comment:
+
+        ##ACTUAL:<line-n>: "....."          <line-n>: subject line number
+
+    A subject line WITHOUT a nominal partner (an insertion) is annotated
+    in sequence, before the next nominal line; a nominal line WITHOUT a
+    subject partner (a deletion) is annotated '##ACTUAL:-: ""'. Lines
+    the comparison never saw (blank, '##' comments) pass through
+    unannotated -- they have no ACTUAL to name.
+    """
+    #  annotations keyed by the nominal line they precede; key 0 gathers
+    #  what follows the last nominal line (trailing insertions)
+    ann_db  = {}
+    pending = []
+    for line_n_s, line_n_n, subject_text in pair_list:
+        if line_n_s == -1:
+            line = '##ACTUAL:-: ""'
+        else:
+            line = '##ACTUAL:%i: "%s"' % (line_n_s, subject_text)
+        pending.append(line)
+        if line_n_n != -1:
+            ann_db[line_n_n] = pending
+            pending          = []
+    trailing = pending
+
+    annotation_list = []
+    line_list       = []
+    for n, line in enumerate(nominal_text.splitlines(), start=1):
+        for annotation in ann_db.get(n, ()):
+            line_list.append(annotation)
+            annotation_list.append(annotation)
+        line_list.append(line)
+    for annotation in trailing:
+        line_list.append(annotation)
+        annotation_list.append(annotation)
+    return "\n".join(line_list) + ("\n" if nominal_text.endswith("\n")
+                                    or annotation_list else ""), \
+           annotation_list
+
+
+def strip_annotations(text, annotation_list):
+    """
+    RETURN: str, 'text' with the REMEMBERED annotation lines removed --
+            each written line removed once, wherever it stands.
+
+    Only what 'annotate_for_editor' wrote is removed: an author's own
+    '##' comment stays, and so does an annotation line the author
+    CHANGED -- a changed line is the author's text now ('##' lines are
+    comments; the comparison never reads them either way). Membership
+    is by MULTISET, not by order: one changed annotation must not
+    shield the annotations after it.
+    """
+    from collections import Counter
+    remaining = Counter(annotation_list)
+    line_list = []
+    for line in text.splitlines():
+        if remaining[line] > 0:
+            remaining[line] -= 1
+            continue
+        line_list.append(line)
+    return "\n".join(line_list) + ("\n" if text.endswith("\n") else "")
 
 
 class TuiDisplay(DisplayAdapter):
@@ -106,6 +176,10 @@ class TuiDisplay(DisplayAdapter):
         self.subject_name = None
         self.generation_n = 0        # DOWN generations rendered (= rounds)
         self.bad_pair_n   = 0        # differing pairs, current generation
+        self.pair_list    = []       # (line_n_s, line_n_n, subject_text)
+                                     # of the current generation -- the
+                                     # editor's '##ACTUAL:' annotations
+                                     # are written from this
 
     # -- the DisplayAdapter sequence -------------------------------------
 
@@ -165,10 +239,31 @@ class TuiDisplay(DisplayAdapter):
     # -- the author's editor ---------------------------------------------
 
     async def _edit(self, working):
-        """RETURN: str, the nominal as the author's editor left it;
-                   'working' unchanged when the editor failed.
+        """RETURN: str, the nominal as the author's editor left it, the
+                   '##ACTUAL:' annotations REMOVED; 'working' unchanged
+                   when the editor failed.
 
-        The nominal is written to a temporary file, the editor runs ON
+        WHAT THE AUTHOR EDITS IS ANNOTATED: before each nominal line the
+        subject's paired line rides as a comment --
+
+            ##ACTUAL:<line-n>: "....."
+
+        '##' lines are comments and never considered for comparison, so
+        even a stray survivor cannot tilt a verdict -- but the WRITTEN
+        annotations are remembered and removed from the answer, so the
+        nominal that leaves here is the author's text alone.
+        """
+        annotated, annotation_list = annotate_for_editor(working,
+                                                         self.pair_list)
+        answer = await self._run_editor(annotated)
+        if answer is None: return working
+        return strip_annotations(answer, annotation_list)
+
+    async def _run_editor(self, text):
+        """RETURN: str, the file as the author's editor left it;
+                   None, when the editor failed.
+
+        The text is written to a temporary file, the editor runs ON
         THE TTY (inherited stdio -- this driver's 'out' may be stderr,
         the editor's screen is its own affair), and whatever the file
         holds afterwards is the answer.
@@ -182,13 +277,13 @@ class TuiDisplay(DisplayAdapter):
         descriptor, path = tempfile.mkstemp(suffix=".nominal", text=True)
         try:
             with io.open(descriptor, "w", encoding="utf-8") as file_handle:
-                file_handle.write(working)
+                file_handle.write(text)
             process = await asyncio.create_subprocess_exec(*argv, path)
             code    = await process.wait()
             if code != 0:
                 self._write("(editor exited with %i -- nominal unchanged)\n"
                             % code)
-                return working
+                return None
             with io.open(path, "r", encoding="utf-8") as file_handle:
                 return file_handle.read()
         finally:
@@ -203,6 +298,7 @@ class TuiDisplay(DisplayAdapter):
         from a prompt line in a captured (non-tty) rendering."""
         self.generation_n += 1
         self.bad_pair_n    = 0
+        self.pair_list     = []
         title = self.subject_name if self.subject_name is not None else ""
         self._write("\n=[ %s ]=%s round %i\n"
                     % (title, "=" * max(1, 46 - len(title)),
@@ -237,6 +333,10 @@ class TuiDisplay(DisplayAdapter):
         """RETURN: None. One aligned pair -- ONE row when equivalent,
         an S row and an N row when the sides differ, and a note row per
         piece of provenance the cells carry."""
+        self.pair_list.append(
+            (item.line_n_s, item.line_n_n,
+             "".join(cell.subject or "" for cell in item.cells_s)))
+
         s_n = "" if item.line_n_s == -1 else str(item.line_n_s)
         n_n = "" if item.line_n_n == -1 else str(item.line_n_n)
 

@@ -30,7 +30,7 @@ from   enum        import Enum
 from   pathlib     import Path
 from   typing      import Mapping, Optional, Sequence
 
-from   vut.engine.procsitter.procsitter import ProcsitterConfig
+from   ..procsitter.procsitter import ProcsitterConfig
 
 
 class E_SourceKind(Enum):

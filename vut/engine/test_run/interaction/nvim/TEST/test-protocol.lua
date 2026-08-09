@@ -1,4 +1,4 @@
-#! /usr/bin/env lua5.4
+#! /usr/bin/env nvim -l
 -- SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 -- ---------------------------------------------------------------------------
 --
@@ -31,6 +31,16 @@ package.path = (arg[0]:match("(.*)/") or ".") .. "/../lua/?.lua;" ..
 
 local protocol = require("vut_merge.protocol")
 local HERE     = (arg[0]:match("(.*)/") or ".")
+
+--  nvim -l routes print() to STDERR; HWUT reads STDOUT. Make print
+--  speak stdout with print's own semantics (tab-joined, newline).
+if vim ~= nil then
+    print = function(...)
+        local n, t = select("#", ...), {}
+        for i = 1, n do t[i] = tostring(select(i, ...)) end
+        io.stdout:write(table.concat(t, "\t"), "\n")
+    end
+end
 
 --- RETURN: true if every claim held, false otherwise. Prints one line
 ---         per claim, so a failure names itself.

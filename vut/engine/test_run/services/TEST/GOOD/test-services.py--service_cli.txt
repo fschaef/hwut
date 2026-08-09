@@ -1,9 +1,0 @@
-INSPECT: commit -> exit 0, artifact 'alpha\nBETA\n'
-         cancel -> exit 1, file exists: False
-  OK  : COMMIT: exit 0 and the artifact is written to -o
-  OK  : with -o, stdout stays empty -- the UI went to stderr
-  OK  : and the rendering is really there, on stderr
-  OK  : CANCEL: exit 1 and NOTHING is written
-  OK  : without -o, stdout carries the artifact, exactly
-  OK  : while the UI still went to stderr -- the channels never mix
-SUCCESS: the service commits to the artifact channel only.

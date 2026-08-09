@@ -10,10 +10,10 @@ DESCRIPTION
        or loads, never both.
 ______________________________________________________________________________
 """
-from   vut.engine.test_run.result          import E_TestRunResult
-from   vut.engine.test_run.nominal          import BytesNominal
-from   vut.engine.test_run.provision.core   import (Supply,
-                                                    STDOUT, STDERR)
+from   ..result  import E_TestRunResult
+from   ..nominal import BytesNominal
+from   .core     import (Supply,
+                         STDOUT, STDERR)
 
 
 class StageLoad:

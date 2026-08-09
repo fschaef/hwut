@@ -1,0 +1,6 @@
+Testing the three operations: equivalence check, difference display, accept.
+---------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

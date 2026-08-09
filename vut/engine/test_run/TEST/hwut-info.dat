@@ -1,7 +1,7 @@
-Testing the platform-independent procsitter: resource caps, attribution,
-process hygiene, honest degradation.
+Testing test_run configuration, store, report, session, component hygiene.
 ---------------------------------------------------------------
 
 coverage run --omit ./*.py -a *.py
 
 --not config.py
+---------------------------------------------------------------

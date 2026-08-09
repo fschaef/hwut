@@ -45,7 +45,35 @@ from   vut.engine.test_run.result import E_TestRunResult      # noqa E402
 import vut.engine.test_run.report    as     report_module        # noqa E402
 
 COMPONENT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
-GOOD      = os.path.join(os.path.dirname(__file__), "GOOD")
+
+#  The tests live where their units live: every package carries its own
+#  TEST/. Hygiene is the COMPONENT's, so its walks cover them all --
+#  nvim's lua corpus excepted, as everywhere (it is the client's own).
+_WALK_SKIP = {"nvim", "__pycache__", "OUT"}
+
+
+def _test_directory_list():
+    """RETURN: list[str], every TEST directory of the component."""
+    found = []
+    for directory, directory_list, _ in os.walk(COMPONENT):
+        directory_list[:] = [d for d in directory_list
+                             if d not in _WALK_SKIP]
+        if os.path.basename(directory) == "TEST":
+            found.append(directory)
+            directory_list[:] = []          # a TEST holds no further TEST
+    return sorted(found)
+
+
+def _good_file_list():
+    """RETURN: list[(str, str)], (basename, full path) of every GOOD
+    file of the component, across all its TEST directories."""
+    pair_list = []
+    for test_directory in _test_directory_list():
+        good = os.path.join(test_directory, "GOOD")
+        if not os.path.isdir(good): continue
+        pair_list += ((name, os.path.join(good, name))
+                      for name in os.listdir(good))
+    return sorted(pair_list)
 
 #  Shapes an environment chooses. A test may READ any of them; what
 #  reaches a GOOD file must be a statement that holds on every machine.
@@ -93,8 +121,8 @@ def test_good_files_are_machine_free():
     -- makes the oracle true of one machine instead of true of the
     behaviour."""
     offence_list = []
-    for name in sorted(os.listdir(GOOD)):
-        text = open(os.path.join(GOOD, name), encoding="utf-8").read()
+    for name, path in _good_file_list():
+        text = open(path, encoding="utf-8").read()
         for pattern, what in ENVIRONMENT_SHAPE:
             found = re.search(pattern, text)
             if found:
@@ -126,8 +154,8 @@ def test_no_good_file_holds_a_crash():
     offence.
     """
     offence_list = []
-    for name in sorted(os.listdir(GOOD)):
-        text = open(os.path.join(GOOD, name), encoding="utf-8").read()
+    for name, path in _good_file_list():
+        text = open(path, encoding="utf-8").read()
         if "Traceback (most recent call last)" in text:
             offence_list.append((name, "a traceback"))
             continue
@@ -180,11 +208,11 @@ def test_no_name_without_a_consumer():
     name_db  = _public_name_db()
     body     = "\n".join(open(p, encoding="utf-8").read()
                          for p in _module_list())
-    test_dir = os.path.dirname(__file__)
     tests    = "\n".join(
-        open(os.path.join(test_dir, n), encoding="utf-8").read()
-        for n in sorted(os.listdir(test_dir))
-        if n.startswith("test-") and n.endswith(".py"))
+        open(os.path.join(test_directory, name), encoding="utf-8").read()
+        for test_directory in _test_directory_list()
+        for name in sorted(os.listdir(test_directory))
+        if name.startswith("test-") and name.endswith(".py"))
 
     orphan_list = []
     for name, module in sorted(name_db.items()):

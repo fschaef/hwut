@@ -47,11 +47,17 @@ import sys
 import asyncio
 import argparse
 
-from   vut.engine.test_run.interaction.feed import feed_down
-from   vut.engine.test_run.interaction.tui  import TuiDisplay
-from   vut.engine.test_run.services.core    import (read_source,
-                                                    add_setup_arguments,
-                                                    setup_from_arguments)
+#  THE IMPORT CALL -- see merge.py: config.py (this directory) does the
+#  walk-up; the face adopts its package (PEP 366). Dead under '-m'.
+if __package__ in (None, ""):
+    import config
+    __package__ = config.PACKAGE
+
+from   ..interaction.feed import feed_down
+from   ..interaction.tui  import TuiDisplay
+from   .core              import (read_source,
+                                  add_setup_arguments,
+                                  setup_from_arguments)
 
 
 async def compare_view(subject_text, nominal_text, adapter,
@@ -64,7 +70,7 @@ async def compare_view(subject_text, nominal_text, adapter,
     adapter renders it. The verdict is read off the rendering's own
     count, not derived a second way.
     """
-    from vut.engine.compare.configuration import Configuration
+    from ...compare.configuration import Configuration
     if compare_options is None: compare_options = Configuration()
     await feed_down(compare_options,
                     io.StringIO(subject_text), io.StringIO(nominal_text),
@@ -83,7 +89,7 @@ async def reading_view(text, adapter, subject_name="reading",
     which regions frame it. (The adapter should be a reading-marking
     one; this function does not police it.)
     """
-    from vut.engine.compare.configuration import Configuration
+    from ...compare.configuration import Configuration
     if compare_options is None: compare_options = Configuration()
     await feed_down(compare_options,
                     io.StringIO(text), io.StringIO(text),

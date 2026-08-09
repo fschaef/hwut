@@ -12,14 +12,14 @@ ______________________________________________________________________________
 """
 import asyncio
 
-from   vut.engine.test_run.result          import E_TestRunResult
-from   vut.engine.procsitter.procsitter     import Procsitter, E_Containment
-from   vut.engine.procsitter.construction   import Link, chain
-from   vut.engine.test_run.provision.core   import (Supply,
-                                                    STDOUT, STDERR,
-                                                    application_argv,
-                                                    read_all,
-                                                    read_all_timed)
+from   ..result                   import E_TestRunResult
+from   ...procsitter.procsitter   import Procsitter, E_Containment
+from   ...procsitter.construction import Link, chain
+from   .core                      import (Supply,
+                                          STDOUT, STDERR,
+                                          application_argv,
+                                          read_all,
+                                          read_all_timed)
 
 
 class StageExecute:

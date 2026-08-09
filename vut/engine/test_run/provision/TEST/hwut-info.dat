@@ -1,0 +1,6 @@
+Testing provision: the stages, the one answer shape, the planners, the build tool.
+---------------------------------------------------------------
+coverage run --omit ./*.py -a *.py
+
+--not config.py
+---------------------------------------------------------------

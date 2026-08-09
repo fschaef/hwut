@@ -1,0 +1,20 @@
+STIMULUS a command three hops from its file:
+
+             cmd  ->  hop-a  ->  hop-b  ->  real-file
+
+REACTION its resolution {
+    cmd -> <dir>/cmd
+       -> <dir>/hop-a
+       -> <dir>/hop-b
+       -> <dir>/real-file
+}
+
+STIMULUS a command that is NOT on PATH:
+REACTION its resolution {
+    vut-no-such-command: NOT FOUND on PATH
+}
+
+One line per hop, so a command three hops from its binary is
+visible rather than mysterious; and what PATH cannot answer
+is SAID, never guessed.
+SUCCESS: what PATH answers is shown; what it cannot is said.

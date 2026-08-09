@@ -512,3 +512,104 @@ The TUI's notes ('^ ...') are the display slot all of these land in;
 the html feeder's tooltips are the same slot. No renderer changes
 shape when these arrive -- one more note per line, that is all.
 ============================================================================
+
+todo-21  THE EXPLAIN SEAM -- every silent failure names itself
+----------------------------------------------------------------------------
+Earned by a real evening: HWUT 1.0 answered a broken nvim interview with
+'[NO INFO]' and an empty string. The empty string collapsed five distinct
+events -- never spawned / died / wrong interpreter / said nothing / said
+it ON THE OTHER CHANNEL -- and the decisive evidence (stderr, which held
+the entire answer; nvim -l routes print() there) was collected and
+thrown away. Debugging meant editing the framework to add prints.
+
+2.0 already HOLDS every missing fact by construction: ProcsitterResult
+(argv, containment, exit, stderr tail, timings) rides in
+Supply.record_list and ProvisionRecord.records even in failure; stderr
+is a SUBJECT, so the wrong-channel bug is visible in the data. What is
+missing is PRESENTATION: the records mostly die unread.
+
+DELIVERED (diagnosis.py + TEST/test-diagnosis.py): explain() renders
+REQUEST (argv from the one source), the resolution chain, every
+record's containment/exit/stderr-tail, the report token, the channels
+with the wrong-channel hint; DiagnosisObserver hangs it on the seam
+(12). STILL OWED beyond the list below: the resolution chain CARRIED
+IN THE RECORD (today it is recomputed at render time -- honest for a
+live diagnosis, not for an archived one), and session-level wiring (a
+request flag that installs the observer).
+
+OWED:
+
+    the EXPLAIN observer   one switch that renders, per supervised
+                           call: argv; the RESOLUTION CHAIN (shutil
+                           .which + symlink chase -- 'nvim ->
+                           /usr/local/bin/nvim -> /opt/...'); cwd;
+                           exit; containment token; duration; per
+                           channel the byte count and first line.
+                           An OBSERVER on the existing seam (12) --
+                           no operation changes.
+    resolution reporting   resolve interpreters at argv construction
+                           via shutil.which (the shell's semantics --
+                           NEVER whereis), and carry the resolved
+                           chain into the record so EXPLAIN can show
+                           it. INTERPRETER_NOT_FOUND already exists;
+                           now it can say what was searched.
+    the wrong-channel hint 'stdout 0 bytes, stderr N>0' is a nameable
+                           pattern: one display-side note in the
+                           explain rendering ('output on the wrong
+                           channel?'). A HINT, never a verdict --
+                           provision judges nothing.
+
+THREE LAWS, distilled from the archaeology, for any runner code here:
+    (1) an empty answer is never reported empty -- it is reported WITH
+        exit code, containment, and the other channel's tail;
+    (2) a diagnostic path uses THE SAME call convention as the path it
+        diagnoses (1.0's whereis fallback broke this: string vs list,
+        and manufactured the red herring);
+    (3) children inherit the environment; resolution follows PATH.
+============================================================================
+
+todo-22  COVERAGE IN THE PACK  ('hwut report -c')
+----------------------------------------------------------------------------
+The flag is ACCEPTED and RESERVED today: 'hwut report x.py c -c' answers
+with a COVERAGE section that says the gathering is owed. Reserved, and
+honest about it -- a flag that silently did nothing would be the very
+'[NO INFO]' failure todo-21 was earned from.
+
+WHAT IS OWED. Coverage is a MEASUREMENT of a run, so it belongs where
+every other measurement of a run belongs: to PROVISION, as a sidecar
+beside the record, written by the store -- never re-derived by a
+service. The pack then only READS it, as it reads '.times'.
+
+    the source           the corpus already runs its tests under
+                         'coverage run --omit ./*.py -a *.py'
+                         (hwut-info.dat), leaving '.coverage' in the
+                         TEST directory -- a datum nobody currently
+                         collects
+    the sidecar          'store.write_coverage(test, choice, subject?)'
+                         beside 'write_timing': the per-file line hit
+                         counts of THIS test/choice, as data (JSON),
+                         never a rendered report -- the pack renders,
+                         the store stores
+    who gathers          an option of the RUN, like 'record_timing':
+                         'StoreConfig.record_coverage'. A coverage run
+                         is a DIFFERENT supervised call (the tool wraps
+                         the application), so it is the execute stage's
+                         argv that changes -- one place, and the
+                         'E_TestRunResult' vocabulary needs no new
+                         token: a coverage tool that fails is a build/
+                         launch failure like any other
+    the rendering        in the pack: per source file, percentage and
+                         the UNCOVERED line ranges -- the ranges are
+                         what a conversation about a test needs ('these
+                         branches were never taken'), a percentage
+                         alone says nothing actionable
+    the discipline       MACHINE-FREE like the rest of the pack: line
+                         numbers and counts, never absolute paths, never
+                         timestamps
+
+OPEN QUESTION, for when it is built: coverage of WHAT -- the test
+application only, or the units it exercises? The second is what a
+tester actually wants ('did this test reach the code it claims to
+test'), and it needs the '--omit'/'--include' set to come from the
+test's own configuration, not from a global convention.
+============================================================================

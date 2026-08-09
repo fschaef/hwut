@@ -1,0 +1,13 @@
+STIMULUS  subject.txt: alpha, beta      nominal.txt: alpha, BETA
+          echo c | hwut merge subject.txt nominal.txt -o merged.txt --plain
+REACTION  exit code : 0
+          merged.txt {
+              alpha
+              BETA
+          }
+          stdout    : 0 bytes
+          stderr    : carries the UI -- banner seen: 2 time(s)
+
+The artifact is the NOMINAL AS COMMITTED; the UI never
+touches the artifact channel.
+SUCCESS: commit writes the artifact to -o, and only there.

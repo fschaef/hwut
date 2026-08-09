@@ -38,7 +38,7 @@ from   pathlib     import Path
 from   enum        import Enum
 from   typing      import Optional
 
-import vut.engine.compare.feeder.ui as compare_feeder
+from   ...compare.feeder import ui as compare_feeder
 
 
 PROTOCOL_SIGNATURE = "vut-feed/1"
@@ -266,7 +266,7 @@ async def merge_session(compare_options, subject_text, nominal_text,
                       any human merge.
     """
     import io
-    from vut.engine.compare.configuration import Configuration
+    from ...compare.configuration import Configuration
     if compare_options is None: compare_options = Configuration()
 
     working    = nominal_text
@@ -577,7 +577,7 @@ def driver_for(target, **argument_db):
         #  Imported lazily: tui.py imports THIS module for the adapter
         #  interface, and a driver is compare-side rendering machinery a
         #  verdict-only run never needs loaded.
-        from vut.engine.test_run.interaction.tui import TuiDisplay
+        from .tui import TuiDisplay
         return TuiDisplay(**argument_db)
     if target is E_DisplayTarget.RICH:
         argv = argument_db.get("argv")

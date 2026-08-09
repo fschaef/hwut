@@ -73,9 +73,9 @@ ______________________________________________________________________________
 from   dataclasses import dataclass
 from   pathlib     import Path
 
-from   vut.engine.test_run.result        import E_TestRunResult
-from   vut.engine.test_run.configuration import E_SourceKind
-from   vut.engine.test_run.report        import Provision as ProvisionRecord
+from   ..result        import E_TestRunResult
+from   ..configuration import E_SourceKind
+from   ..report        import Provision as ProvisionRecord
 
 
 STDOUT = "stdout"
@@ -300,9 +300,9 @@ def Run(configuration, choice_name=None, observer=None,
     #  Imported lazily: the stage modules import THIS module for the
     #  answer shape, and a planner is the one place that names them --
     #  the same law as 'driver_for' and its drivers (feed.py).
-    from vut.engine.test_run.provision.stage_build        import StageBuild
-    from vut.engine.test_run.provision.stage_execute      import StageExecute
-    from vut.engine.test_run.provision.stage_canonicalise import \
+    from .stage_build                                     import StageBuild
+    from .stage_execute                                   import StageExecute
+    from .stage_canonicalise import \
                                                           StageCanonicalise
     stage_build = StageBuild(configuration, observer=observer) \
                   if configuration.source_kind is E_SourceKind.COMPILED \
@@ -328,7 +328,7 @@ def Replay(store, test_name, choice_name=None, subject_name_list=None,
 
     A PLANNER, not a class -- see 'Run'.
     """
-    from vut.engine.test_run.provision.stage_load import StageLoad
+    from .stage_load import StageLoad
     return Provision(
         stage_load = StageLoad(store, test_name, choice_name,
                                subject_name_list),

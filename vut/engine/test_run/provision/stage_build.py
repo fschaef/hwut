@@ -12,8 +12,8 @@ ______________________________________________________________________________
 """
 import asyncio
 
-from   vut.engine.test_run.provision.build import build
-from   vut.engine.test_run.provision.core  import Supply
+from   .build import build
+from   .core  import Supply
 
 
 class StageBuild:
