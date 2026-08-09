@@ -4,8 +4,8 @@ ____________________________________________________________________________
 
 PURPOSE: Functionality of 'LineElement'-s;
 
-CHOICES: LineElementString, LineElementNumber, LineElementEquivalencePattern, 
-         LineElementAnalogy;
+CHOICES: LineElementString, LineElementNumber, NumberBand,
+         LineElementEquivalencePattern, LineElementAnalogy;
 
 DESCRIPTION:
 
@@ -49,7 +49,7 @@ from   vut.engine.compare.reading.line_element import LineElementString, \
 
 if "--hwut-info" in sys.argv:
     print("Tolerance: LineElement-s;")
-    print("CHOICES: LineElementString, LineElementNumber, LineElementEquivalencePattern, LineElementAnalogy;")
+    print("CHOICES: LineElementString, LineElementNumber, NumberBand, LineElementEquivalencePattern, LineElementAnalogy;")
     sys.exit()
 
 choice = sys.argv[1]
@@ -90,6 +90,73 @@ if choice == "LineElementNumber":
     test(LineElementNumber("A fox 4712 high"[6:10]),
          LineElementNumber("An 5000 13  does not jump"[3:7]),
          LineElementNumber("Mice don't 4711"[11:16], 0.01))
+
+if choice == "NumberBand":
+    RATIO = 0.01
+
+    print("The tolerance band belongs to the NOMINAL, the 'pole':")
+    print()
+    print("             band radius = abs(nominal) * ratio")
+    print()
+    print("             <---------|--------->")
+    print("        -----+---------O---------+------------> number line")
+    print("                    nominal            subject inside: EQUIVALENT")
+    print()
+    print("A radius carries no sign. The price of substituting subject for")
+    print("nominal is 'max(|s-n| - band, 0) / max(|s|, |n|)', capped at 1.")
+    print()
+    print("ratio: %.2f" % RATIO)
+
+    def number(Text):
+        return LineElementNumber(Text, RATIO)
+
+    print()
+    print("(1) THE BAND, STRADDLING ZERO -- sign-symmetric rows adjacent")
+    print()
+    print("     nominal      band    subject      |s-n|   verdict")
+    print("    --------   -------   --------   --------   ----------")
+    for nom_txt, sub_txt in (("100.0",  "100.4"),
+                             ("-100.0", "-100.4"),
+                             ("100.0",  "102.0"),
+                             ("-100.0", "-102.0"),
+                             ("-100.0", "-100.0"),
+                             ("0.0",    "0.0")):
+        nom, sub   = number(nom_txt), number(sub_txt)
+        verdict, _ = sub.compare(nom)
+        print("    %8s   %7.2f   %8s   %8.1f   %s"
+              % (nom_txt, nom.epsilon, sub_txt,
+                 abs(sub.number - nom.number), verdict.name))
+
+    print()
+    print("(2) THE SAME NUMBER, TWO SPELLINGS")
+    print()
+    print("     nominal      subject     verdict")
+    print("    ---------   ---------    ----------")
+    for nom_txt, sub_txt in (("100.00",  "100.0"),
+                             ("-100.00", "-100.0"),
+                             ("-100.0",  "-100"),
+                             ("-100.4",  "-1.004e2")):
+        nom, sub   = number(nom_txt), number(sub_txt)
+        verdict, _ = sub.compare(nom)
+        print("    %9s   %9s    %s" % (nom_txt, sub_txt, verdict.name))
+
+    print()
+    print("(3) THE PRICE OF SUBSTITUTION -- in [0, 1], 0 inside the band")
+    print()
+    print("     nominal      subject      price   remark")
+    print("    --------   ----------   --------   -------------------------")
+    for nom_txt, sub_txt, remark in (
+            ("100.0",  "100.4",     "inside the band"),
+            ("-100.0", "-100.4",    "inside the band"),
+            ("-100.0", "-102.0",    "just outside"),
+            ("1.0",    "10.0",      "overshoot, ranked"),
+            ("1.0",    "100000.0",  "far overshoot, ranked"),
+            ("1.0",    "-100.0",    "opposite signs, capped"),
+            ("0.0",    "5.0",       "pole at zero, capped"),
+            ("5.0",    "0.0",       "subject at zero")):
+        nom, sub = number(nom_txt), number(sub_txt)
+        print("    %8s   %10s   %8.6f   %s"
+              % (nom_txt, sub_txt, sub.edit_distance_relative(nom), remark))
 
 if choice == "LineElementEquivalencePattern":
     test(LineElementEquivalencePattern("A fox jumps high"[2:5], (1,2,3)),

@@ -1,0 +1,45 @@
+The tolerance band belongs to the NOMINAL, the 'pole':
+
+             band radius = abs(nominal) * ratio
+
+             <---------|--------->
+        -----+---------O---------+------------> number line
+                    nominal            subject inside: EQUIVALENT
+
+A radius carries no sign. The price of substituting subject for
+nominal is 'max(|s-n| - band, 0) / max(|s|, |n|)', capped at 1.
+
+ratio: 0.01
+
+(1) THE BAND, STRADDLING ZERO -- sign-symmetric rows adjacent
+
+     nominal      band    subject      |s-n|   verdict
+    --------   -------   --------   --------   ----------
+       100.0      1.00      100.4        0.4   EQUIVALENT
+      -100.0      1.00     -100.4        0.4   EQUIVALENT
+       100.0      1.00      102.0        2.0   DIFFERENT
+      -100.0      1.00     -102.0        2.0   DIFFERENT
+      -100.0      1.00     -100.0        0.0   EQUIVALENT
+         0.0      0.00        0.0        0.0   EQUIVALENT
+
+(2) THE SAME NUMBER, TWO SPELLINGS
+
+     nominal      subject     verdict
+    ---------   ---------    ----------
+       100.00       100.0    EQUIVALENT
+      -100.00      -100.0    EQUIVALENT
+       -100.0        -100    EQUIVALENT
+       -100.4    -1.004e2    EQUIVALENT
+
+(3) THE PRICE OF SUBSTITUTION -- in [0, 1], 0 inside the band
+
+     nominal      subject      price   remark
+    --------   ----------   --------   -------------------------
+       100.0        100.4   0.000000   inside the band
+      -100.0       -100.4   0.000000   inside the band
+      -100.0       -102.0   0.009804   just outside
+         1.0         10.0   0.899000   overshoot, ranked
+         1.0     100000.0   0.999990   far overshoot, ranked
+         1.0       -100.0   1.000000   opposite signs, capped
+         0.0          5.0   1.000000   pole at zero, capped
+         5.0          0.0   0.990000   subject at zero

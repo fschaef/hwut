@@ -1,10 +1,10 @@
 GOOD.compare:            (EQUIVALENT, None)
 GOOD.string:             '4712'
-GOOD.difference_cost:    0.000212
+GOOD.difference_cost:    0.000000
 GOOD.representation:     NUMERIC '4712'
 FAILURE.compare:         (DIFFERENT, None)
 FAILURE.string:          '5000'
-FAILURE.difference_cost: 0.057800
+FAILURE.difference_cost: 0.048378
 FAILURE.representation:  NUMERIC '5000'
 MISFIT.compare:          (MISFIT, None)
 NOMINAL.string:          '4711'

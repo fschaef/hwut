@@ -23,10 +23,8 @@ from   vut.engine.compare.reading.pattern_finder  import E_ToleranceId
 from   vut.engine.compare.engine.analogy_db     import AnalogyDb
 from   vut.engine.compare.engine.frozen_analogy_db import FrozenAnalogyDb
 import vut.engine.compare.region.line_sequence.equivalence      as equivalence_check_line
-import vut.engine.compare.region.potpourri.equivalence as equivalence_check_potpourri
 from   vut.engine.compare.core.line_pair       import LinePair
 import vut.engine.compare.region.line_sequence.associate   as association_line_sequence
-import vut.engine.compare.region.potpourri.associate       as association_potpourri
 
 from   abc       import ABC
 from   typing    import Iterable
@@ -129,36 +127,6 @@ class InputChunkError(InputChunkTerminal):
     def is_error(self): return True
     def __repr__(self): return "InputChunkError(%r)" % (self.error,)
 
-class InputChunkPotpourri(AssociationRelatedInputChunk, EquivalenceRelatedInputChunk):
-    def __init__(self, start_line_n, end_line_n, line_list: Iterable[Line],
-                 config, params=None):
-        super().__init__(E_Chunk.POTPOURRI, start_line_n, end_line_n, line_list, config)
-
-        # 'params' arrives fully resolved from the registry (shebang >
-        # Configuration.region['potpourri'] > spec default). 'params=None'
-        # happens only on DIRECT construction (unit tests, legacy factory)
-        # -- then the spec default applies.
-        if params is not None and params.get("max_comparisons") is not None:
-            self.max_comparison_count = params["max_comparisons"]
-        else:
-            self.max_comparison_count = 128
-        self.subset_f     = bool(params and params.get("subset"))
-        self.duplicates_f = bool(params and params.get("duplicates"))
-
-        # partition line list: lines with and without analogies
-        self.analogy_line_list = []
-        self.non_analogy_line_list = []
-        for line in line_list:
-            if line.has_analogy(): self.analogy_line_list.append(line)
-            else:                  self.non_analogy_line_list.append(line)
-
-    def _is_equivalent_to_nominal(self, nominal, analogy_db):
-        """called by super().is_equivalent_to_nominal()"""
-        return equivalence_check_potpourri.do(self, nominal, analogy_db)
-
-    def _associate_with_nominal(self, nominal, analogy_db):
-        return association_potpourri.do(self, nominal, analogy_db)
-
 class InputChunkLine(EquivalenceRelatedInputChunk):
     # @typechecked -- too expensive
     def __init__(self, line_n, line: Line, config):
@@ -173,6 +141,8 @@ def InputChunk_factory(chunk_type: E_Chunk, start_line_n, end_line_n, line_list:
     """
     match chunk_type:
         case E_Chunk.POTPOURRI:
+            # late import: 'chunk.py' derives from this module's base classes
+            from vut.engine.compare.region.potpourri.chunk import InputChunkPotpourri
             result = InputChunkPotpourri(start_line_n, end_line_n, line_list, config)
         case E_Chunk.LINE_SEQUENCE:
             result = InputChunkLineSequence(start_line_n, end_line_n, line_list, config)

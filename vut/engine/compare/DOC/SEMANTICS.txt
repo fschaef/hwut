@@ -91,7 +91,10 @@ with a tolerance class that defines its notion of "equal":
 
     STRING               byte-equal.
     NUMERIC              equal within the configured relative tolerance
-                         ('numeric_tolerance_ratio'; 0 = exact).
+                         ('numeric_tolerance_ratio'; 0 = exact). The band
+                         is centred on the NOMINAL, the 'pole'; its radius
+                         is 'abs(nominal) * ratio' -- a radius carries no
+                         sign (D-27).
     ANALOGY              '((...))'-wrapped placeholder; equal under a
                          consistent analogy binding (section 5).
     EQUIVALENCE_PATTERN  words declared mutually equivalent (e.g.
@@ -661,6 +664,31 @@ D-26 (2026-07-19) STATEFUL CONSTRAINTS (user-designed, complete ruling;
      by killing the space at the first non-equivalent pair. [Stage 7;
      engine/constraints.py; section 10; TEST/test-constraints.py;
      fuzz family 'constraints']
+
+
+D-27 (2026-08-09) NUMERIC TOLERANCE: POLE BAND, BOUNDED PRICE (user-ruled;
+     settles todo-19 and its two siblings found on location). The nominal
+     is the pole; the tolerance band is centred on it with radius
+     'abs(nominal) * ratio' -- a radius carries no sign (the missing
+     'abs()' made the band unsatisfiable for negative poles: the same
+     value in two spellings, '-100.0' vs '-100.00', compared unequal).
+     Both faces read the POLE's band: the Judge always did; the Lawyer's
+     substitution price subtracted the SUBJECT's epsilon and now subtracts
+     the nominal's -- one edit serves both, THE LAW keeps holding by
+     construction. The price of a substitution is a fraction of a full
+     substitution, bounded to [0, 1]: 'min(1, max(|s-n| - band, 0) /
+     max(|s|, |n|))'. Opposite-sign pairs previously priced up to ~2,
+     above INSERT+DELETE (= 2) and above the search's seeded per-pair
+     worst case (= 1, 'core/edit_operations/core.py:max_cost'), so the
+     cap restores both the edit-preference order and the pruning bound's
+     admissibility. Scale stays the pair's larger magnitude: the pole
+     defines the band, the pair defines the scale -- a pole-only scale
+     ('|n|') saturates every overshooting candidate at 1.0 and surrenders
+     candidate ranking to search order (GRAVEYARD). Golden impact: exactly
+     one file, 'reading/TEST/GOOD/test-line_element.py--LineElementNumber'
+     (a tolerated pair had priced as a difference: the golden recorded the
+     incoherence). [reading/line_element.py:LineElementNumber;
+     TEST/test-line_element.py choice 'NumberBand'; section 3]
 
 
 SEE ALSO

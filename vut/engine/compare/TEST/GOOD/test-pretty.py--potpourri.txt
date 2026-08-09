@@ -18,7 +18,7 @@
 .   .   [LinePair]
 .   .   .   .subject: [BAD_NOMINAL_DIFFERS:NUMERIC(0) '0.815'],[OK_GOOD:SEPERATOR(1) ' '],[OK_TOLERATED:ANALOGY(2) '((is))'],[OK_GOOD:SEPERATOR(3) ' '],[OK_TOLERATED:ANALOGY(4) '((a))'],[OK_GOOD:SEPERATOR(5) ' '],[OK_TOLERATED:EQUIVALENCE_PATTERN(6) 'number'],[OK_GOOD:STRING(7) '.']
 .   .   .   .nominal: [BAD_SUBJECT_DIFFERS:NUMERIC(0) '4712'],[OK_GOOD:SEPERATOR(1) ' '],[OK_TOLERATED:ANALOGY(2) '((ist))'],[OK_GOOD:SEPERATOR(3) ' '],[OK_TOLERATED:ANALOGY(4) '((eine))'],[OK_GOOD:SEPERATOR(5) ' '],[OK_TOLERATED:EQUIVALENCE_PATTERN(6) 'Zahl'],[OK_GOOD:STRING(7) '.']
-.   .   .   .cost: 0.2000
+.   .   .   .cost: 0.1800
 .   .analogy_db: AnalogyDb
 
 

@@ -13,8 +13,7 @@ Displaying similar lines shall shed some light on HWUT's tolerant comparison
 process while inspecting the output of unit tests.
 ________________________________________________________________________________
 """
-from    vut.engine.compare.engine.enums           import (E_ToleranceId,
-                                                          E_PotpourriBorder)
+from    vut.engine.compare.engine.enums           import E_ToleranceId
 from    vut.engine.compare.engine.semantics       import GOOD_EDIT_ID_SET, \
                                                           is_good_edit
 from    vut.engine.compare.engine.line            import Line
@@ -202,7 +201,6 @@ class LinePair:
                  subject:          Line|None,
                  nominal:          Line|None,
                  edit_list         = tuple(),
-                 potpourri_border: E_PotpourriBorder = E_PotpourriBorder.NONE,
                  cost:             float = 0.0,
                  seq_edit_id:      E_EditId | None = None):
         # Store ingredients in the raw container
@@ -226,16 +224,11 @@ class LinePair:
         self._nominal_cell_list = None
         
         # Publicly accessible metadata
-        self.border = potpourri_border
         self.cost   = cost
         self.subject_line_n = subject.line_n if subject else -1
         self.nominal_line_n = nominal.line_n if nominal else -1
         self.subject_char_n = 0 if subject is None else subject.character_n()
         self.nominal_char_n = 0 if nominal is None else nominal.character_n()
-
-    @staticmethod
-    def potpourri_border(subject, nominal, border):
-        return LinePair(subject, nominal, tuple(), border)
 
     def _ensure_expanded(self):
         if self._raw is not None:

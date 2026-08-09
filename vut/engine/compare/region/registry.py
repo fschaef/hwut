@@ -219,7 +219,7 @@ def _handler_db():
     Late import: chunk classes live near their faces; importing them at
     module load would cycle through reading/input_chunk.
     """
-    from vut.engine.compare.reading.input_chunk import InputChunkPotpourri
+    from vut.engine.compare.region.potpourri.chunk import InputChunkPotpourri
     from vut.engine.compare.region.verbatim.chunk    import InputChunkVerbatim
     from vut.engine.compare.region.ignore.chunk      import InputChunkIgnore
     from vut.engine.compare.region.point_cloud.chunk import InputChunkPointCloud

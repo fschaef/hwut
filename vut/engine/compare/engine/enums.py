@@ -25,9 +25,6 @@ class E_Verdict(Enum):
         from vut.engine.compare.engine.semantics import is_equivalent_verdict
         return is_equivalent_verdict(x)
 
-class E_PotpourriBorder(Enum):
-    NONE  = auto()
-
 class E_Chunk(Enum):
     LINE_SEQUENCE = auto()
     LINE          = auto()

@@ -287,17 +287,27 @@ class LineElementNumber(LineElement):
         assert numeric_tolerance_ratio is None or 0.0 <= numeric_tolerance_ratio <= 1.0
         LineElement.__init__(self, E_ToleranceId.NUMERIC, content)
         self.number  = float(self._string)
-        self.epsilon = self.number * numeric_tolerance_ratio if numeric_tolerance_ratio else 0.0
+        # tolerance band radius when this element serves as pole (nominal);
+        # a radius carries no sign.
+        self.epsilon = abs(self.number) * numeric_tolerance_ratio if numeric_tolerance_ratio else 0.0
 
     def edit_distance_relative(self, nominal):
+        """RETURN: cost, a float in [0, 1]: 0 inside the nominal's tolerance
+                   band, 1 for a completely different number, in between else.
+
+        The band belongs to the nominal, the 'pole': dead-zone radius is
+        'nominal.epsilon'. The scale is the pair's larger magnitude. For
+        opposite signs '|s-n|' can reach twice the scale; the price of a
+        substitution is capped at 1 ('completely different').
+        """
         if self.number == nominal.number: return 0 # quick pass
-        # diff - tolerance (aux): distance is 0 if within dead-zone.
-        error = max(abs(self.number - nominal.number) - self.epsilon, 0.0)
+        # diff - tolerance (aux): distance is 0 if within the pole's dead-zone.
+        error = max(abs(self.number - nominal.number) - nominal.epsilon, 0.0)
         if error == 0.0: return 0.0 # quick pass
         mag = max(abs(self.number), abs(nominal.number))
         # NOTE: 'mag' cannot be zero, because self.val != nominal.val
         #       => check mag != 0 only as a guard rail against numeric weird events
-        return error / mag if mag != 0 else 1.0 
+        return min(1.0, error / mag) if mag != 0 else 1.0
 
     def compare(self, nominal):
         """RETURNS: [0] MISFIT,     if 'other' is of another class.
