@@ -28,23 +28,27 @@ DESCRIPTION
        STARTED) -- the PAIR identifies, a process id alone does not, since
        the system reuses them. Liveness is ASKED, not inferred from
        elapsed time: no expiry, no heart beat, no clock skew, and a
-       crashed run leaves no lock behind it.
+       crashed run leaves no lock behind it. The mechanism is
+       'MkdirMutex' (vut/auxiliary/directory_mutex.py); 'DirectoryLock'
+       is its face here, and non-recursive: the live holder locking
+       again is refused by name ('DirectoryDeadlock').
 ______________________________________________________________________________
 """
 import json
 import os
 import platform
-import time
 from   dataclasses import dataclass
 from   datetime    import datetime, timezone
 from   pathlib     import Path
 
 from   .nominal import RecordNominal
-
-try:
-    import psutil
-except ImportError:
-    psutil = None
+#  The lock mechanism lives in the auxiliary; these names are part of
+#  THIS component's face and are re-exported here.
+from   ...auxiliary.directory_mutex import (MkdirMutex,        # noqa: F401
+                                            DirectoryBusy,
+                                            DirectoryDeadlock,
+                                            liveness_can_be_asked,
+                                            LOCK_DIRECTORY_NAME)
 
 
 FOOTPRINT_FILE_NAME = "hwut-footprints.json"
@@ -77,153 +81,16 @@ def _now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _process_start_time(pid):
-    """
-    RETURN: float, when process 'pid' started, as a POSIX timestamp.
-            None,  the pair cannot be had on this platform, or no such
-                   process exists.
-
-    The pair (pid, start time) is what identifies a process: a process id
-    alone does not, since the system reuses them.
-    """
-    if psutil is not None:
-        try:
-            return psutil.Process(pid).create_time()
-        except Exception:
-            return None
-    try:                                              # Linux, no psutil
-        with open("/proc/%i/stat" % pid, "rb") as fh:
-            field_list = fh.read().rpartition(b")")[2].split()
-        ticks = float(field_list[19])
-        with open("/proc/uptime", "r") as fh:
-            uptime = float(fh.read().split()[0])
-        return time.time() - uptime + ticks / os.sysconf("SC_CLK_TCK")
-    except Exception:
-        return None
-
-
-def liveness_can_be_asked():
-    """
-    RETURN: True,  this platform reports when a process started.
-            False, it does not -- so no lock is taken at all.
-
-    A system that cannot report a start time cannot support concurrent
-    hwut sessions. The reduced capability is REPORTED, never pretended
-    to -- the same degradation shape procsitter applies to its
-    platform-dependent caps.
-    """
-    return _process_start_time(os.getpid()) is not None
-
-
-class DirectoryBusy(RuntimeError):
-    """Another LIVE process holds this test directory. Raised rather than
-    waited out: two runs of one test must never overlap, and a caller
-    that wants to queue can decide that for itself."""
-    pass
-
-
-class DirectoryLock:
+class DirectoryLock(MkdirMutex):
     """The access check of ONE test directory: it guards the directory's
     footprint file and its tests' output alike.
 
     Use as a context manager. Where liveness cannot be asked, the lock is
-    a no-op and '.taken' says so.
+    a no-op and '.taken' says so. The face of 'MkdirMutex'
+    (vut/auxiliary/directory_mutex.py) in this component; mechanism,
+    holder record and policies live there.
     """
-
-    def __init__(self, directory):
-        self.directory = Path(directory)
-        self.path      = self.directory / LOCK_DIRECTORY_NAME
-        self.taken     = False
-
-    def _holder(self):
-        """
-        RETURN: dict, the recorded holder {'pid', 'started'}.
-                None, no holder is recorded or it cannot be read.
-        """
-        try:
-            with open(self.path / _HOLDER_FILE_NAME, "r") as fh:
-                return json.load(fh)
-        except Exception:
-            return None
-
-    def _holder_is_gone(self):
-        """
-        RETURN: True,  no process of that id started at that time exists,
-                       so the recorded holder is gone.
-                False, the holder is alive, or the question cannot be
-                       answered -- in which case the lock STANDS.
-
-        Never infers death from elapsed time.
-        """
-        holder = self._holder()
-        if holder is None: return True            # a lock naming nobody
-        started = _process_start_time(holder.get("pid", -1))
-        if started is None: return True            # no such process
-        return abs(started - holder.get("started", 0.0)) > 1.0
-
-    def acquire(self, attempt_max=3):
-        """
-        RETURN: True,  the lock is held by this process.
-                False, another live process holds it.
-
-        'mkdir' decides the winner: it creates or it fails, never half.
-        A stale lock -- one whose holder is gone -- is removed and the
-        attempt repeated. A loser of that race simply fails its next
-        'mkdir', so removal needs no agreement between removers.
-        """
-        if not liveness_can_be_asked():
-            self.taken = False
-            return True                            # no lock on this platform
-        for _ in range(attempt_max):
-            try:
-                self.path.mkdir(parents=True)
-            except FileExistsError:
-                if not self._holder_is_gone():
-                    return False
-                self._break()
-                continue
-            with open(self.path / _HOLDER_FILE_NAME, "w") as fh:
-                json.dump({"pid":     os.getpid(),
-                           "started": _process_start_time(os.getpid())}, fh)
-            self.taken = True
-            return True
-        return False
-
-    def _break(self):
-        """RETURN: None. Removes a lock whose holder is gone."""
-        try:
-            (self.path / _HOLDER_FILE_NAME).unlink()
-        except OSError:
-            pass
-        try:
-            self.path.rmdir()
-        except OSError:
-            pass
-
-    def release(self):
-        """RETURN: None. Removes this process's lock. Idempotent."""
-        if not self.taken: return
-        self._break()
-        self.taken = False
-
-    def __enter__(self):
-        """
-        RETURN: self, with the lock held.
-
-        Raises DirectoryBusy when another live process holds it. This is
-        THE way to take the lock -- 'acquire'/'release' exist for it, and
-        a caller that used them directly would have to repeat the release
-        in a 'finally' of its own.
-        """
-        if not self.acquire():
-            raise DirectoryBusy("test directory '%s' is held by a live "
-                                "process" % self.directory)
-        return self
-
-    def __exit__(self, *_):
-        """RETURN: False, exceptions propagate."""
-        self.release()
-        return False
+    pass
 
 
 class Store:

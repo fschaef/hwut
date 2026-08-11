@@ -613,3 +613,66 @@ tester actually wants ('did this test reach the code it claims to
 test'), and it needs the '--omit'/'--include' set to come from the
 test's own configuration, not from a global convention.
 ============================================================================
+
+----------------------------------------------------------------------------
+todo-23  PROXY PROVISION -- what remains open
+----------------------------------------------------------------------------
+BUILT: the seam (provision/provider.py, one interface per role, refused
+at the door, planner-declared 'kind', cadence in the delivery) and THE
+MULTI-EXECUTOR (provision/multi_execute.py): one supervised '--interactive'
+call serves many choices through per-choice I_ExecuteProviders; tickets
+by token, sinks as relative transport under '.hwut-session/', a non-zero
+status delivers with report OK, 'fail' delivers nothing and names it.
+RULED: the capability is a CONFIGURATION key, 'interactive' -- registered,
+never probed. RULED, the general scheme: 'I_Provider' roots the family;
+'I_ProxyProvider(I_Provider)' is a provider handed out by an
+'I_MultiProvider' (the holder of one shared in-parallel means); the
+ORCHESTRATOR decides -- queue a plain provider, or generate a
+multi-provider and queue its proxies. MultiExecute/ChoiceExecute are the
+first concrete pair; a multi-builder and a configuration-management
+acquire stand on the same three interfaces.
+
+Still open, each awaiting its ruling:
+
+    (the attribution: RULED and BUILT. The record of the process that
+     produced a result is PART of that result, in every mode -- so every
+     choice's 'record_list' carries the session's ProcsitterResult, the
+     same one for each. It exists only after 'close()', hence the session
+     PRODUCES FIRST and is read afterwards; the sinks hold the products
+     meanwhile. Rejected: an empty carriage (silence about the producer);
+     a per-choice invented record (nothing to invent it from).)
+    file subjects        the current law: a session delivers the two
+                         CHANNEL subjects only; choices of one test share
+                         one 'OUT/', so file subjects would cross-pollute.
+                         A test with file subjects takes the classic
+                         one-call run -- until ruled otherwise
+    isolation            sequential interactive mode shares one process
+                         across choices (hwut_runner README, RESET
+                         DISCIPLINE); which suites accept that bargain is
+                         the orchestrator's dial, not this component's
+                         default
+    (one lock site: BUILT -- 'run_test_held', entered by the holder;
+     the home: DECIDED, vut/engine/orchestrator/ -- worker's placement,
+     standing until vetoed; see that component's RATIONALE D-1/D-2.)
+
+----------------------------------------------------------------------------
+disc-1  THE RESULT STORE -- a language, and where divergence is detected
+----------------------------------------------------------------------------
+OPEN. Raised by Frank-Rene alongside the attribution ruling; not decided.
+
+    the language     a structured text for results AND test structure --
+                     JSON, or HOCON. HWUT 1.0's 'info' and 'time' modes
+                     print the answers to QUERIES against such a base;
+                     that shape is the model
+    the redundancy   the same fact stands in more than one place (the
+                     footprint, the store, the recorded candidates, the
+                     configuration's own declarations). Redundancy must be
+                     SYNCHRONISED -- and a SPECIFIC PLACE must detect
+                     divergence and react to it. Which place, and what
+                     reaction, is the ruling
+    the reach        today's attribution: every choice carries its
+                     producing process's record (ruled), and a session's
+                     record additionally sits in the orchestrator's
+                     '.record_db' -- MEMORY, which ends with the visit.
+                     A durable home follows from this discussion, not
+                     before it

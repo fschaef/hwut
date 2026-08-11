@@ -79,6 +79,12 @@ class TestConfiguration:
     interpreter:    Optional[Sequence[str]] = None   # INTERPRETED only
     build:          object                  = None   # COMPILED only
     store:          object                  = None   # None: do not record
+    interactive:    bool                    = False  # the app accepts
+                                            # '--interactive': many choices
+                                            # through ONE call, driven over
+                                            # stdin (hwut_runner). Only a
+                                            # registered capability admits a
+                                            # session -- it is never probed.
 
     @property
     def stem(self):

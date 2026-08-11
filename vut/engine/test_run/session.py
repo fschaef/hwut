@@ -166,57 +166,77 @@ async def run_test(configuration, request=None):
     and DirectoryBusy if a live process holds the test directory.
     """
     request = request if request is not None else Request()
+    verify(configuration)
+    store = store_of(configuration)
+    with store.lock():
+        return await run_test_held(configuration, request, store=store)
+
+
+async def run_test_held(configuration, request=None, store=None,
+                        provision=None):
+    """
+    RETURN: Outcome, the operation's result and what the ceremony did.
+
+    THE HELD ENTRY: the caller HOLDS the test directory and has verified
+    the configuration -- an orchestrator spanning a session locks ONCE
+    (the mutex is non-recursive; auxiliary RATIONALE D-2) and enters the
+    per-choice ceremony here. 'run_test' is this entry wrapped in its
+    own lock: the standalone law, untouched.
+
+    'provision' -- a pre-wired Provision (an orchestrator's plugged
+    providers); None: planned by 'provision_of', as ever.
+    """
+    request = request if request is not None else Request()
     goal, choice_name, observer = request.goal, request.choice, \
                                   request.observer
     subject_name_list = request.subjects
     stop_event        = request.stop_event
-    verify(configuration)
-    store     = store_of(configuration)
+    store     = store if store is not None else store_of(configuration)
     test_name = configuration.stem
 
-    with store.lock():
-        groundwork = _groundwork(configuration, store, test_name,
-                                 choice_name, request.replay, observer)
-        if goal is E_Goal.NOMINAL:
-            result = await Accept(
-                AcceptConfig(name       = test_name,
-                             subjects   = {n: AcceptStep()
-                                           for n in subject_name_list},
-                             choice     = choice_name,
-                             groundwork = groundwork),
-                store, observer=observer).run(stop_event=stop_event)
-            recorded_db = None
+    groundwork = provision if provision is not None \
+                 else _groundwork(configuration, store, test_name,
+                                  choice_name, request.replay, observer)
+    if goal is E_Goal.NOMINAL:
+        result = await Accept(
+            AcceptConfig(name       = test_name,
+                         subjects   = {n: AcceptStep()
+                                       for n in subject_name_list},
+                         choice     = choice_name,
+                         groundwork = groundwork),
+            store, observer=observer).run(stop_event=stop_event)
+        recorded_db = None
+    else:
+        nominal_db = _nominal_db(store, test_name, choice_name,
+                                 subject_name_list)
+        if goal is E_Goal.DISPLAY:
+            operation = DifferenceDisplay(
+                DifferenceDisplayConfig(
+                    name       = test_name,
+                    groundwork = groundwork,
+                    subjects   = nominal_db,
+                    compare    = _compare_options(configuration,
+                                                  choice_name),
+                    adapter    = request.display.driver()),
+                observer=observer)
         else:
-            nominal_db = _nominal_db(store, test_name, choice_name,
-                                     subject_name_list)
-            if goal is E_Goal.DISPLAY:
-                operation = DifferenceDisplay(
-                    DifferenceDisplayConfig(
-                        name       = test_name,
-                        groundwork = groundwork,
-                        subjects   = nominal_db,
-                        compare    = _compare_options(configuration,
-                                                      choice_name),
-                        adapter    = request.display.driver()),
-                    observer=observer)
-            else:
-                operation = EquivalenceCheck(
-                    EquivalenceCheckConfig(
-                        name       = test_name,
-                        groundwork = groundwork,
-                        subjects   = nominal_db,
-                        compare    = _compare_options(configuration,
-                                                      choice_name)),
-                    observer=observer)
-            result      = await operation.run(stop_event=stop_event)
-            recorded_db = await _record(store, configuration, test_name,
-                                        choice_name, groundwork,
-                                        request.record)
+            operation = EquivalenceCheck(
+                EquivalenceCheckConfig(
+                    name       = test_name,
+                    groundwork = groundwork,
+                    subjects   = nominal_db,
+                    compare    = _compare_options(configuration,
+                                                  choice_name)),
+                observer=observer)
+        result      = await operation.run(stop_event=stop_event)
+        recorded_db = await _record(store, configuration, test_name,
+                                    choice_name, groundwork,
+                                    request.record)
 
-        footprint = _write_footprint(store, test_name, choice_name, goal,
-                                     result, configuration)
-        return Outcome(result=result, recorded_db=recorded_db,
-                       footprint=footprint)
+    footprint = _write_footprint(store, test_name, choice_name, goal,
+                                 result, configuration)
+    return Outcome(result=result, recorded_db=recorded_db,
+                   footprint=footprint)
 
 
 def _compare_options(configuration, choice_name):

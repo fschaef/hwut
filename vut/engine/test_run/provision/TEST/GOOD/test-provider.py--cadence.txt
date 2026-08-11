@@ -1,0 +1,7 @@
+INSPECT: measuring run   -> timing_db is a dict: True, 'stdout' measured: True
+         non-measuring   -> timing_db = None
+         proxy delivery  -> timing_db = None
+  OK  : a measuring provider hands the cadence in the delivery
+  OK  : a non-measuring one hands None -- absent, not empty
+  OK  : a provider that cannot measure says so the same way
+SUCCESS: the cadence is read from the delivery, never from the provider's person.

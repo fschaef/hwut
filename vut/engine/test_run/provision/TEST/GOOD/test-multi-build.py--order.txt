@@ -1,0 +1,4 @@
+INSPECT: at c's build, 'a.built' stood: True
+  OK  : waves build IN ORDER: what 'c' stands on, stands first
+  OK  : and 'c' is delivered
+SUCCESS: the partition's order is the build's order.

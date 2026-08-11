@@ -14,9 +14,10 @@ from   ..result  import E_TestRunResult
 from   ..nominal import BytesNominal
 from   .core     import (Supply,
                          STDOUT, STDERR)
+from   .provider import I_LoadProvider
 
 
-class StageLoad:
+class StageLoad(I_LoadProvider):
     """THE SUBJECT comes to exist from the STORE: what a run recorded,
     read back. Nothing executes, nothing is contained, there is no
     attribution to make -- and NOTHING IS INVENTED: an absent recording

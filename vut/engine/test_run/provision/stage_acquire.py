@@ -17,6 +17,7 @@ from   dataclasses import dataclass
 from   ..result                 import E_TestRunResult
 from   ...procsitter.procsitter import Procsitter, E_Containment
 from   .core                    import Supply
+from   .provider                import I_AcquireProvider
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,7 @@ class AcquireItem:
     argv:        tuple
 
 
-class StageAcquire:
+class StageAcquire(I_AcquireProvider):
     """THE DEPENDENCIES come to exist -- once, and only where absent.
 
     Each item's command is A SUPERVISED CALL: own caps, own attribution

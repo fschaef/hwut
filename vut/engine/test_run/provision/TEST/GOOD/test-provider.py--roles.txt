@@ -1,0 +1,11 @@
+INSPECT: stage -> its role interface
+         StageAcquire      is I_AcquireProvider: True
+         StageBuild        is I_BuildProvider: True
+         StageExecute      is I_ExecuteProvider: True
+         StageCanonicalise is I_CanonicaliseProvider: True
+         StageLoad         is I_LoadProvider: True
+         canonicalise supply(raw_db, stop_event)
+         execute      supply(stop_event)
+  OK  : every local stage derives from its role's interface
+  OK  : the one role fed by its predecessor declares that, alone
+SUCCESS: the role is the type, and each role speaks for itself.

@@ -1,0 +1,5 @@
+INSPECT: unregistered capability -> "MultiExecute requires a configuration that registers 'interactive'; 'app.py' does not"
+         a name with a blank    -> "the wire is blank-separated: choice 'two words' cannot travel it"
+  OK  : a configuration without the registered capability is refused, by name
+  OK  : a name the wire cannot carry is refused before it travels
+SUCCESS: what cannot make sense is refused at the door.

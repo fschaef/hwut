@@ -1,0 +1,7 @@
+INSPECT: bogus -> product None: True, report = test-app-launch-failed
+         beta afterwards -> 'beta speaks\n'
+  OK  : an unexecuted command delivers nothing -- never an empty subject
+  OK  : and the report names it
+  OK  : the session serves the other choice of the same call
+  OK  : even a refusal carries the producing process's record
+SUCCESS: a refusal is named; the session runs on.

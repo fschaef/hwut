@@ -18,6 +18,7 @@ from   ...procsitter.procsitter   import Procsitter, E_Containment
 from   ...procsitter.construction import Link, chain
 from   ..nominal                  import BytesNominal
 from   .core                      import Supply, read_all
+from   .provider                  import I_CanonicaliseProvider
 
 
 async def canonicalise(text, pype_argv, procsitter):
@@ -47,7 +48,7 @@ async def canonicalise(text, pype_argv, procsitter):
     return result, E_TestRunResult.OK
 
 
-class StageCanonicalise:
+class StageCanonicalise(I_CanonicaliseProvider):
     """THE SUBJECT comes to exist: each raw stream rewritten by its
     declared pype, comparable after. A stream with no canonicaliser
     declared is comparable raw -- raw IS canonical for it.

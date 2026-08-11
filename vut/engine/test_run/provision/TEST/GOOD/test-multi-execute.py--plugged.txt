@@ -1,0 +1,6 @@
+INSPECT: the proxy is an I_ExecuteProvider: True
+         canonicalised stdout = '   apple\n   zebra\nalpha speaks\n'
+         cadence              = None
+  OK  : provide() delivers the canonicalised subject
+  OK  : a sink has no arrival: the cadence is absent, never empty
+SUCCESS: behind the seam, the session is just an execute provider.

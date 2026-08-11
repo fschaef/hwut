@@ -1,0 +1,7 @@
+INSPECT: a stand-in proxy fills the execute slot
+         delivered subjects = ['stderr', 'stdout']
+         stdout             = 'as if it had run\n'
+         kind (declared)    = 'Run'
+  OK  : downstream, the delivery is indistinguishable
+  OK  : observation reports what the planner declared
+SUCCESS: behind the interface, local and proxy are one kind.

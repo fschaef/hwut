@@ -48,11 +48,21 @@ DESCRIPTION
        the world is asked -- once. Sharing is the planner's deliberate
        act, never the stage's.
 
+       EVERY SLOT HAS ITS OWN INTERFACE (provider.py): what fills it is
+       anything derived from that role's ABC -- the local stage, or a
+       proxy a TestDirectoryOrchestrator plugs. The role is the TYPE,
+       and a provider in the wrong slot is REFUSED AT THE DOOR, by
+       name, at construction.
+
        THE PLANNERS ARE FUNCTIONS, NOT CLASSES. 'Run(...)' wires
        execution, 'Replay(...)' wires load, 'provision_of(...)' chooses
-       from the request. After wiring there is ONE kind of Provision:
+       from the request -- the STANDALONE wiring, used when no
+       orchestrator plugs. After wiring there is ONE kind of Provision:
        nothing downstream can tell a subject's provenance by type
-       (README 2.4). The 'kind' attribute exists for OBSERVATION only.
+       (README 2.4). The 'kind' attribute exists for OBSERVATION only,
+       and is DECLARED by the planner -- a proxy in the execute slot
+       reading a filled sink is mechanically a load, so inference from
+       the filled slot would report the wrong thing.
 
        A SUBJECT IS A NOMINAL-KIND OBJECT. Subject and nominal are the
        same kind of thing (README 2.3); a comparison merely aligns two
@@ -76,6 +86,9 @@ from   pathlib     import Path
 from   ..result        import E_TestRunResult
 from   ..configuration import E_SourceKind
 from   ..report        import Provision as ProvisionRecord
+from   .provider       import (I_AcquireProvider, I_BuildProvider,
+                               I_ExecuteProvider, I_CanonicaliseProvider,
+                               I_LoadProvider)
 
 
 STDOUT = "stdout"
@@ -193,7 +206,8 @@ class Provision:
 
     def __init__(self, stage_acquire=None, stage_build=None,
                  stage_execute=None, stage_canonicalise=None,
-                 stage_load=None, keep_raw=False, observer=None):
+                 stage_load=None, keep_raw=False, observer=None,
+                 kind=None):
         assert (stage_execute is None) != (stage_load is None), \
                "exactly one of stage_execute/stage_load: a provision " \
                "either runs or loads"
@@ -203,6 +217,19 @@ class Provision:
                "a build stands only before an execution"
         assert stage_canonicalise is None or stage_execute is not None, \
                "a loaded subject is already canonical"
+        #  THE ROLE IS THE TYPE: a provider in the wrong slot is refused
+        #  HERE, by name -- never discovered as a wrong product shape
+        #  three stages later.
+        for slot_name, provider, interface in (
+                ("stage_acquire",      stage_acquire,      I_AcquireProvider),
+                ("stage_build",        stage_build,        I_BuildProvider),
+                ("stage_execute",      stage_execute,      I_ExecuteProvider),
+                ("stage_canonicalise", stage_canonicalise,
+                                                    I_CanonicaliseProvider),
+                ("stage_load",         stage_load,         I_LoadProvider)):
+            assert provider is None or isinstance(provider, interface), \
+                   "%s requires an %s; received a %s" \
+                   % (slot_name, interface.__name__, type(provider).__name__)
         self.stage_acquire      = stage_acquire
         self.stage_build        = stage_build
         self.stage_execute      = stage_execute
@@ -210,8 +237,11 @@ class Provision:
         self.stage_load         = stage_load
         self.keep_raw           = keep_raw
         self.observer           = observer
-        self.kind               = "Replay" if stage_load is not None \
-                                  else "Run"
+        #  OBSERVATION only, DECLARED by the planner; inferred from the
+        #  wiring only where no planner said otherwise.
+        self.kind               = kind if kind is not None else \
+                                  ("Replay" if stage_load is not None
+                                   else "Run")
         self.last_provided      = None   # what 'provide()' last produced,
                                          # so a caller may RECORD it
                                          # without provisioning twice
@@ -277,9 +307,10 @@ class Provision:
                         ProvisionRecord(report  = report,
                                         records = tuple(record_list)),
                         raw_db    = dict(raw_db) if self.keep_raw else None,
-                        timing_db = timing_db
-                                    if self.stage_execute.keep_timing
-                                    else None)
+                        #  the cadence rides IN the delivery: a dict where
+                        #  the provider measured, None where it could not
+                        #  -- never asked of the provider's person.
+                        timing_db = timing_db)
 
 
 def Run(configuration, choice_name=None, observer=None,
@@ -314,7 +345,8 @@ def Run(configuration, choice_name=None, observer=None,
                                           keep_timing=keep_timing),
         stage_canonicalise = StageCanonicalise(configuration, choice_name),
         keep_raw           = keep_raw,
-        observer           = observer)
+        observer           = observer,
+        kind               = Run.kind)
 
 
 Run.kind = "Run"
@@ -332,7 +364,8 @@ def Replay(store, test_name, choice_name=None, subject_name_list=None,
     return Provision(
         stage_load = StageLoad(store, test_name, choice_name,
                                subject_name_list),
-        observer   = observer)
+        observer   = observer,
+        kind       = Replay.kind)
 
 
 Replay.kind = "Replay"

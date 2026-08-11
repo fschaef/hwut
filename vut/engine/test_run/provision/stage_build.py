@@ -14,9 +14,10 @@ import asyncio
 
 from   .build import build
 from   .core  import Supply
+from   .provider import I_BuildProvider
 
 
-class StageBuild:
+class StageBuild(I_BuildProvider):
     """THE APPLICATION comes to exist -- once.
 
     A build stage REMEMBERS its outcome: however many Provisions share

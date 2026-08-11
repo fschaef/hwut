@@ -20,9 +20,10 @@ from   .core                      import (Supply,
                                           application_argv,
                                           read_all,
                                           read_all_timed)
+from   .provider                  import I_ExecuteProvider
 
 
-class StageExecute:
+class StageExecute(I_ExecuteProvider):
     """RAW BEHAVIOR comes to exist: launch, contain, collect -- the
     channels, the output files, and the cadence when asked for.
 
@@ -50,7 +51,10 @@ class StageExecute:
         c = chain([(procsitter,
                     application_argv(configuration, self.choice_name),
                     {"stderr_handler": error_link.feed})])
-        timing_db = {}
+        #  The cadence is measured AT ARRIVAL, or not at all: a dict
+        #  where this provider measured, None where it did not --
+        #  absence is data, never an empty measurement.
+        timing_db = {} if self.keep_timing else None
         try:
             if self.keep_timing:
                 stdout_text, delta_tuple = await read_all_timed(c.tail.reader)
