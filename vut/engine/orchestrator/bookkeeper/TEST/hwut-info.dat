@@ -1,0 +1,7 @@
+Bookkeeper -- Maintaining Results and Configuration Info
+---------------------------
+
+python *.py
+
+--not config.py
+

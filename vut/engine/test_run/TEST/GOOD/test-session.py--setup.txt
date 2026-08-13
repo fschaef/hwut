@@ -1,8 +1,8 @@
-INSPECT: default setup  -> verdict False footprint 'compare' False
-         loose setup    -> verdict True  footprint 'compare' {'numeric_tolerance_ratio': 0.01}
+INSPECT: default setup  -> verdict False entry 'compare' False
+         loose setup    -> verdict True  entry 'compare' {'numeric_tolerance_ratio': 0.01}
          an option compare has not invented yet -> {'rounding_digits': 3}
   OK  : the setup decided the verdict -- same subject, same nominal
-  OK  : a DEFAULT setup adds nothing to the footprint
+  OK  : a DEFAULT setup adds nothing to the entry
   OK  : a chosen one is recorded, and only what was chosen
   OK  : a tolerance compare invents later is recorded the day it is used
 SUCCESS: what the verdict meant is recorded beside the verdict.

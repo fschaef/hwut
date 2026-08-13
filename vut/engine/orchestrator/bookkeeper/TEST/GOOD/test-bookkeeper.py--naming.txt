@@ -1,0 +1,10 @@
+INSPECT: with choice = GOOD/parse--basic.stdout
+         no choice   = GOOD/parse.stdout
+         candidate   = OUT/parse--basic.stdout
+         raw         = OUT/parse--basic.stdout.raw
+         cadence     = OUT/parse--basic.stdout.times
+  OK  : the choice is part of the key, so choices never collide
+  OK  : a test without choices carries no choice part
+  OK  : nominals and candidates live in SEPARATE key spaces
+  OK  : the sidecars ride beside the candidate, named after it
+SUCCESS: one key per (test, choice, subject); the Bookkeeper names its file.

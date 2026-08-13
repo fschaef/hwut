@@ -1,7 +1,6 @@
 INSPECT: verdict    = False
          report     = build-failed
          comparison = None
-         footprint  = {'verdict': False, 'report': 'build-failed'}
   OK  : the test FAILED -- it is not excused
   OK  : and the report names the build
   OK  : no comparison happened: an ABSENCE, not a half-filled type

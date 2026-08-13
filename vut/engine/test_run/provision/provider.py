@@ -41,7 +41,7 @@ DESCRIPTION
        report, record_list)' (core.py): product None ends provision
        with the report token; the records are the attribution, kept
        even in failure -- for a proxy, they TRAVEL WITH the delivery,
-       so the footprint never goes silent about work done elsewhere.
+       so the book never goes silent about work done elsewhere.
        No provider raises.
 
        THE GENERAL SCHEME. 'I_Provider' is the family's root: the one

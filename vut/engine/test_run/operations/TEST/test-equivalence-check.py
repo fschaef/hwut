@@ -43,6 +43,8 @@ from   vut.engine.test_run.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
 from   vut.engine.test_run.observer        import ObserverGroup  # noqa E402
 from   vut.engine.test_run.provision.core  import Run, Replay    # noqa E402
+from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+                                                   Bookkeeper)
 from   vut.engine.test_run.store           import Store          # noqa E402
 
 
@@ -229,7 +231,7 @@ def test_blind_to_provenance():
     """The same check over Run and over Replay yields the same verdict:
     the operation never learns which provision it got."""
     directory = _place("print('alpha'); print('beta')\n")
-    store     = Store(directory)
+    store     = Store(Bookkeeper(directory))
     executed  = _run(directory, {"stdout": BytesNominal("alpha\nbeta\n")})
     store.write_candidate("demo", None, "stdout", "alpha\nbeta\n")
     store.write_candidate("demo", None, "stderr", "")

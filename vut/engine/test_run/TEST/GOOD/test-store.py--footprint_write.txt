@@ -1,9 +1,0 @@
-INSPECT: tests recorded = ['other', 'parse']
-         Run report was 'ok', now 'not-equivalent-with-nominal'
-         entry keys = ['host', 'report', 'verdict', 'when']
-  OK  : the second write REPLACED the first
-  OK  : one entry per operation -- Run and Accept, not four
-  OK  : a sibling operation is untouched
-  OK  : another test in the same file is untouched
-  OK  : 'when' and 'host' are added by the store, not by the caller
-SUCCESS: state now, never a log -- and no entry disturbs another.

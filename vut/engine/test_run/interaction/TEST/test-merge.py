@@ -50,6 +50,8 @@ from   vut.engine.test_run.interaction.feed import (              # noqa E402
                                                     resolution_of)
 from   vut.engine.test_run.interaction.feed import RemoteDisplay  # noqa E402
 from   vut.engine.test_run.provision.core  import Run            # noqa E402
+from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+                                                   Bookkeeper)
 from   vut.engine.test_run.store           import Store          # noqa E402
 
 
@@ -85,7 +87,7 @@ def _place(tool_body):
         caps           = ProcsitterConfig(max_wall_clock_sec=20.0),
         interpreter    = ["python3", "-u"],
         choice_db      = {None: TestChoiceConfiguration()})
-    return configuration, Store(directory), directory, tool
+    return configuration, Store(Bookkeeper(directory)), directory, tool
 
 
 def _accept_through(configuration, store, directory, tool, work):

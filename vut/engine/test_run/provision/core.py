@@ -8,7 +8,7 @@ DESCRIPTION
        ONE PROVISION, FIVE STAGES, ONE FILE PER STAGE. A Provision
        holds its stages as MEMBERS; a member that is None is a stage
        this provision does not have. Absence is DATA -- inspectable,
-       reported by the footprint -- never a null object pretending
+       reported in the book -- never a null object pretending
        something ran:
 
            stage_acquire       the world   -> THE DEPENDENCIES

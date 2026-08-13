@@ -656,23 +656,14 @@ Still open, each awaiting its ruling:
      standing until vetoed; see that component's RATIONALE D-1/D-2.)
 
 ----------------------------------------------------------------------------
-disc-1  THE RESULT STORE -- a language, and where divergence is detected
+(disc-1  THE RESULT STORE: RULED AND BUILT, and it left this component.)
 ----------------------------------------------------------------------------
-OPEN. Raised by Frank-Rene alongside the attribution ruling; not decided.
-
-    the language     a structured text for results AND test structure --
-                     JSON, or HOCON. HWUT 1.0's 'info' and 'time' modes
-                     print the answers to QUERIES against such a base;
-                     that shape is the model
-    the redundancy   the same fact stands in more than one place (the
-                     footprint, the store, the recorded candidates, the
-                     configuration's own declarations). Redundancy must be
-                     SYNCHRONISED -- and a SPECIFIC PLACE must detect
-                     divergence and react to it. Which place, and what
-                     reaction, is the ruling
-    the reach        today's attribution: every choice carries its
-                     producing process's record (ruled), and a session's
-                     record additionally sits in the orchestrator's
-                     '.record_db' -- MEMORY, which ends with the visit.
-                     A durable home follows from this discussion, not
-                     before it
+ONE base, 'GOOD/result_db.json', JSON, REPLACES the footprint file; the
+footprint face, FOOTPRINT_FILE_NAME and '_write_footprint' are gone. The
+base, THE NAMING, the reproducible configurations and the divergence
+verdicts belong to the BOOKKEEPER (vut/engine/orchestrator/bookkeeper/);
+its RATIONALE D-1..D-6 holds the rulings, and the attribution record has
+its first durable home there. Here, the Store keeps the ARTIFACTS and the
+LOCK, is constructed OVER a Bookkeeper, and asks it for every path: the
+Bookkeeper answers WHERE, this component decides WHEN. The Bookkeeper is
+MADE ABOVE and handed to every mode.

@@ -1,0 +1,9 @@
+INSPECT: declared as recorded    -> {'deleted': [], 'non-responsive': {}}
+         'old' renamed to 'fancy'-> {'deleted': [], 'non-responsive': {'demo': ['old']}}
+         'demo' not declared     -> {'deleted': ['demo'], 'non-responsive': {}}
+  OK  : book and declaration agreeing raise nothing
+  OK  : a recorded choice no longer declared is NON-RESPONSIVE
+  OK  : the never-recorded 'fancy' raises no complaint -- it is new
+  OK  : a recorded test no longer declared is DELETED
+  OK  : the answer never edits the book
+SUCCESS: the caller declares; the book answers; healing is a service.

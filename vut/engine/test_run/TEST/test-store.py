@@ -2,20 +2,20 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-THE STORE: RECORDS, FOOTPRINTS, AND THE DIRECTORY LOCK.
+THE STORE: RECORDS AND THE DIRECTORY LOCK.
 
     UNIT     'Store' + 'DirectoryLock' + the Nominal kinds -- every
-             artifact of a test, behind one interface.
+             artifact of a test, behind one interface. The naming is the
+             Bookkeeper's; the Store asks it for every path.
 
     CAUSAL CONTRACT
              a key names a record; acceptance PROMOTES a candidate to a
-             nominal; a footprint is OVERWRITTEN, never appended; the
-             lock admits one live holder and breaks for a dead one.
+             nominal; the lock admits one live holder and breaks for a
+             dead one.
 
     CONSISTENCY CONTRACT
-             the two key spaces have one writer each; a footprint write
-             leaves every other entry untouched; a lock whose holder is
-             ALIVE is never broken, however long it is held.
+             the two key spaces have one writer each; a lock whose
+             holder is ALIVE is never broken, however long it is held.
 
     Each choice prints the whole picture, so wrongness is visible.
 ______________________________________________________________________________
@@ -34,6 +34,8 @@ from   config import HwutRunner                                  # noqa F401,E40
 from   vut.engine.test_run.nominal import (BytesNominal,         # noqa E402
                                            StreamNominal,
                                            NominalNotAvailable)
+from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+                                           Bookkeeper)
 from   vut.engine.test_run.store   import (Store,                # noqa E402
                                            DirectoryLock,
                                            liveness_can_be_asked,
@@ -58,9 +60,10 @@ def _verdict(ok, sentence):
 
 
 def _store():
-    """RETURN: (Store, str), a store over a fresh temporary directory."""
+    """RETURN: (Store, str), a store over a fresh temporary directory --
+    OVER a Bookkeeper, which owns the naming."""
     directory = tempfile.mkdtemp(prefix="vut_store_")
-    return Store(directory), directory
+    return Store(Bookkeeper(directory)), directory
 
 
 def test_keys():
@@ -109,60 +112,6 @@ def test_promotion():
          "acceptance promotes it"),
     ])
     _verdict(ok, "acceptance is the only writer of a nominal.")
-
-
-def test_footprint_overwrites():
-    """A footprint is the state NOW, not a history: one entry per (test,
-    choice, operation), overwritten, every other entry untouched."""
-    store, _ = _store()
-    store.write_footprint("parse", "basic", "Run", verdict=True, report="ok")
-    store.write_footprint("parse", "basic", "Accept")
-    store.write_footprint("other", None, "Run", verdict=False,
-                          report="build-failed")
-    first = store.footprint("parse", "basic", "Run")["report"]
-    store.write_footprint("parse", "basic", "Run", verdict=False,
-                          report="not-equivalent-with-nominal")
-    second = store.footprint("parse", "basic", "Run")
-
-    content = store.footprints()
-    print("INSPECT: tests recorded = %s" % sorted(content))
-    print("         Run report was '%s', now '%s'" % (first, second["report"]))
-    print("         entry keys = %s" % sorted(second))
-    ok = _check([
-        (second["report"] == "not-equivalent-with-nominal",
-         "the second write REPLACED the first"),
-        (len(content["parse"]["basic"]) == 2,
-         "one entry per operation -- Run and Accept, not four"),
-        (store.footprint("parse", "basic", "Accept") is not None,
-         "a sibling operation is untouched"),
-        (content["other"]["<none>"]["Run"]["report"] == "build-failed",
-         "another test in the same file is untouched"),
-        ("when" in second and "host" in second,
-         "'when' and 'host' are added by the store, not by the caller"),
-    ])
-    _verdict(ok, "state now, never a log -- and no entry disturbs another.")
-
-
-def test_footprint_survives_damage():
-    """A footprint is a convenience. Its loss must never fail a run, so a
-    damaged file reads as empty rather than raising."""
-    store, _ = _store()
-    store.write_footprint("parse", "basic", "Run", verdict=True)
-    with open(store.footprint_path, "w") as fh:
-        fh.write("{ this is not json")
-    damaged = store.footprints()
-    store.write_footprint("parse", "basic", "Run", verdict=False)
-    after = store.footprint("parse", "basic", "Run")
-
-    print("INSPECT: damaged file reads as %r" % damaged)
-    print("         a later write recovers: verdict = %s" % after["verdict"])
-    ok = _check([
-        (damaged == {},
-         "a damaged footprint file reads as empty, it does not raise"),
-        (after is not None and after["verdict"] is False,
-         "writing recovers the file"),
-    ])
-    _verdict(ok, "a lost footprint never fails a run.")
 
 
 def test_lock_live_holder():
@@ -270,12 +219,10 @@ def test_nominal_kinds():
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
-        title      = "The store: records, footprints, and the directory lock",
+        title      = "The store: records and the directory lock",
         choice_map = {
             "keys":              test_keys,
             "promotion":         test_promotion,
-            "footprint_write":   test_footprint_overwrites,
-            "footprint_damage":  test_footprint_survives_damage,
             "lock_live":         test_lock_live_holder,
             "lock_dead":         test_lock_dead_holder,
             "nominal_kinds":     test_nominal_kinds,

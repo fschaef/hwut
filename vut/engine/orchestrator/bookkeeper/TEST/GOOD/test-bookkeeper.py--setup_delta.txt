@@ -1,0 +1,7 @@
+INSPECT: default setup -> {}
+         chosen setup  -> {'numeric_tolerance_ratio': 0.01}
+         an option compare has not invented yet -> {'rounding_digits': 3}
+  OK  : a DEFAULT setup adds nothing
+  OK  : a chosen one is recorded, and only what was chosen
+  OK  : a tolerance compare invents later is recorded the day it is used
+SUCCESS: what somebody CHOSE is what the book keeps.

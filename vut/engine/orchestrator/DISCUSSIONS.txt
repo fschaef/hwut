@@ -1,0 +1,55 @@
+============================================================================
+VUT-ORCHESTRATOR -- DISCUSSIONS
+============================================================================
+
+What is OPEN. Nothing settled belongs here; the settled design is
+README.txt and RATIONALE.txt. An entry is deleted the moment it is
+settled.
+
+    disc-N   a CHOICE is owed -- Frank-Rene rules, then it is built
+    todo-N   the LABOUR is owed -- the choice is made, the work is not
+
+============================================================================
+
+----------------------------------------------------------------------------
+todo-1  THE TEST_RUN REWIRING  (pass 2; the choice is made, D-1/D-5/D-6)
+----------------------------------------------------------------------------
+Owed, in test_run:
+    - every mode is HANDED a Bookkeeper (made above; tests construct
+      their own at the top)
+    - store.py loses the naming (delegates to the Bookkeeper) and the
+      footprint face entirely; FOOTPRINT_FILE_NAME and the footprint
+      file are deleted
+    - session.py loses _write_footprint, compare_setup_delta and
+      _OPERATION_NAME; records through bookkeeper.record()
+    - the outcome's '.footprint' field: renamed or retired -- the GOOD
+      files that print it move; a DESIGNED change, re-recorded and said
+      so
+    - result.footprint_facts(): retired (the Bookkeeper derives)
+    - test-store.py, test-session.py: footprint choices become
+      Bookkeeper-backed or move to bookkeeper/TEST
+
+----------------------------------------------------------------------------
+todo-2  THE SERVICES  (the surface is ruled, D-4)
+----------------------------------------------------------------------------
+Owed, in services/: hwut.rename, hwut.rename-choice, hwut.remove,
+hwut.remove-choice -- each edits the base AND moves/removes the record
+files the naming names, in one holding of the directory. The report
+service moves here from test_run/services/report.py and asks the
+Bookkeeper instead of globbing (find_records retires).
+
+----------------------------------------------------------------------------
+todo-3  THE CONFIGURATION PARSERS
+----------------------------------------------------------------------------
+The Bookkeeper's second half: parsing the user's configuration
+statements (what a test IS, from the source) as opposed to the recorded
+copy (what the base holds). The statement syntax is not designed yet;
+nothing here binds it.
+
+----------------------------------------------------------------------------
+disc-1  THE EXPLORER  (parked -- "something we focus on in isolation
+                       and calm")
+----------------------------------------------------------------------------
+Which directories hold tests: a task file naming them, or a walk for a
+marker (HWUT 1.0: 'hwut-info.dat'). orchestrator.py has nothing to bind
+until this is taken up; it is therefore not built yet (no orphans).

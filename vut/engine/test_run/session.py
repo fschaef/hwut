@@ -7,7 +7,7 @@ PURPOSE
 DESCRIPTION
        Everything below is assembled here, so nothing above has to know
        that procsitter, compare or a build exist (README 2.2). A caller
-       brings a TestConfiguration and a Store, and names a GOAL.
+       brings a TestConfiguration and a Bookkeeper, and names a GOAL.
 
        THE CEREMONY of entering a test directory, in order:
 
@@ -18,13 +18,14 @@ DESCRIPTION
                        activate upon need
            record      a Run's subjects are stored as candidates, so
                        Replay has something to read
-           footprint   what happened is written, overwriting the entry
+           book        what happened is entered in the book, overwriting
+                       the entry
            unlock      however it ended
 
        THESE BELONG HERE AND NOT IN THE OPERATIONS. The lock is taken
-       when a DIRECTORY is entered, the footprint written when an
-       operation FINISHES, the recording done when a Run DELIVERS -- one
-       place each, rather than three operations each remembering.
+       when a DIRECTORY is entered, the entry booked when an operation
+       FINISHES, the recording done when a Run DELIVERS -- one place
+       each, rather than three operations each remembering.
 ______________________________________________________________________________
 """
 from   dataclasses import dataclass, field
@@ -34,7 +35,8 @@ from   typing      import Mapping, Optional, Sequence
 from   .result                        import E_TestRunResult
 from   .operations.accept             import (Accept, AcceptConfig,
                                               AcceptStep)
-from   .configuration                 import verify
+from   .configuration                 import (verify,
+                                              ConfigurationError)
 from   .operations.difference_display import (DifferenceDisplay,
                                               DifferenceDisplayConfig)
 from   .operations.equivalence_check  import (EquivalenceCheck,
@@ -103,7 +105,7 @@ class Outcome:
     the ceremony did around it."""
     result:      object                       # TestResult | AcceptResult
     recorded_db: Mapping[str, str] = None
-    footprint:   Optional[dict]    = None
+    entry:       Optional[dict]    = None     # the book entry, as written
 
     @property
     def verdict(self):
@@ -138,42 +140,56 @@ def _nominal_db(store, test_name, choice_name, subject_name_list):
             for name in subject_name_list}
 
 
-def store_of(configuration):
+def store_of(configuration, bookkeeper):
     """
-    RETURN: Store, where this test's artifacts live.
+    RETURN: Store, where this test's artifacts live -- constructed OVER
+            the Bookkeeper.
 
     THE CONFIGURATION SAYS WHERE, and nobody says it twice: the store's
     own struct names the directory when it wants one elsewhere, and the
-    test's own directory serves otherwise. A store handed in beside a
-    configuration that already declares one would be a second source of
-    truth, and the two could disagree.
+    test's own directory serves otherwise. A Bookkeeper handed in over a
+    DIFFERENT directory would be a second source of truth, and the two
+    could disagree -- refused here, at the door.
+
+    Raises ConfigurationError on that disagreement.
     """
     store_config = configuration.store
     directory    = store_config.directory if store_config is not None \
                                           else configuration.test_directory
-    return Store(directory, store_config)
+    from pathlib import Path
+    if Path(bookkeeper.directory) != Path(directory):
+        raise ConfigurationError(
+            "the configuration says '%s'; the Bookkeeper is over '%s' "
+            "-- the configuration says where, and nobody says it twice"
+            % (directory, bookkeeper.directory))
+    return Store(bookkeeper, store_config)
 
 
-async def run_test(configuration, request=None):
+async def run_test(configuration, request=None, bookkeeper=None):
     """
     RETURN: Outcome, the operation's result and what the ceremony did.
 
     TWO THINGS: what the test IS, and what is asked OF it. Where its
     artifacts live follows from the first; how to stop it is part of the
-    second.
+    second. The BOOKKEEPER is made ABOVE -- by the orchestrator, from
+    the test's directory -- and handed in; nothing here makes its own.
 
-    Raises ConfigurationError if the configuration cannot serve any goal,
-    and DirectoryBusy if a live process holds the test directory.
+    Raises ConfigurationError if the configuration cannot serve any goal
+    or no Bookkeeper is handed in, and DirectoryBusy if a live process
+    holds the test directory.
     """
     request = request if request is not None else Request()
     verify(configuration)
-    store = store_of(configuration)
+    if bookkeeper is None:
+        raise ConfigurationError(
+            "no Bookkeeper -- it is made above and handed in")
+    store = store_of(configuration, bookkeeper)
     with store.lock():
         return await run_test_held(configuration, request, store=store)
 
 
 async def run_test_held(configuration, request=None, store=None,
-                        provision=None):
+                        provision=None, bookkeeper=None):
     """
     RETURN: Outcome, the operation's result and what the ceremony did.
 
@@ -185,13 +201,22 @@ async def run_test_held(configuration, request=None, store=None,
 
     'provision' -- a pre-wired Provision (an orchestrator's plugged
     providers); None: planned by 'provision_of', as ever.
+    'store'     -- the holder's Store, already OVER a Bookkeeper; where
+    only a 'bookkeeper' is handed in, the Store is made here.
+
+    Raises ConfigurationError if neither a Store nor a Bookkeeper is
+    handed in -- the Bookkeeper is made above, never here.
     """
     request = request if request is not None else Request()
     goal, choice_name, observer = request.goal, request.choice, \
                                   request.observer
     subject_name_list = request.subjects
     stop_event        = request.stop_event
-    store     = store if store is not None else store_of(configuration)
+    if store is None:
+        if bookkeeper is None:
+            raise ConfigurationError(
+                "no Bookkeeper -- it is made above and handed in")
+        store = store_of(configuration, bookkeeper)
     test_name = configuration.stem
 
     groundwork = provision if provision is not None \
@@ -233,10 +258,9 @@ async def run_test_held(configuration, request=None, store=None,
                                     choice_name, groundwork,
                                     request.record)
 
-    footprint = _write_footprint(store, test_name, choice_name, goal,
-                                 result, configuration)
-    return Outcome(result=result, recorded_db=recorded_db,
-                   footprint=footprint)
+    entry = store.bookkeeper.record(result, configuration, goal,
+                                    choice_name)
+    return Outcome(result=result, recorded_db=recorded_db, entry=entry)
 
 
 def _compare_options(configuration, choice_name):
@@ -277,85 +301,3 @@ async def _record(store, configuration, test_name, choice_name, groundwork,
             store.write_timing(test_name, choice_name, name,
                                provided.timing_db[name])
     return recorded_db
-
-
-def compare_setup_delta(options):
-    """
-    RETURN: dict, every compare setting that DIFFERS from the default.
-            {},   the setup is compare's default throughout.
-
-    ONLY THE DIFFERENCES. A default setup adds nothing to a footprint,
-    and recording the whole of compare's Configuration would make every
-    footprint grow whenever compare gained an option. What is worth
-    keeping is what somebody CHOSE.
-
-    Nothing here names a tolerance: the walk is over whatever compare
-    declares, so a tolerance compare has not invented yet is recorded
-    the day it is used.
-    """
-    if options is None: return {}
-    from ..compare.configuration import Configuration
-    default    = Configuration()
-    difference = {}
-
-    for name in getattr(Configuration, "__slots__", ()):
-        chosen = getattr(options, name, None)
-        plain  = getattr(default, name, None)
-        if name == "pattern_finder":
-            for field_name in vars(plain):
-                a = getattr(chosen, field_name, None)
-                b = getattr(plain,  field_name, None)
-                if a != b: difference[field_name] = _plain(a)
-            #  an option compare added but the default object lacks
-            for field_name in vars(chosen):
-                if field_name not in vars(plain):
-                    difference[field_name] = _plain(getattr(chosen,
-                                                            field_name))
-            continue
-        if chosen != plain:
-            difference[name] = _plain(chosen)
-    return difference
-
-
-def _plain(value):
-    """
-    RETURN: the value if JSON can carry it; its repr otherwise.
-
-    A footprint is read by anything, so nothing Python-shaped may reach
-    it.
-    """
-    if isinstance(value, (str, int, float, bool, type(None))): return value
-    if isinstance(value, (list, tuple)):  return [_plain(v) for v in value]
-    if isinstance(value, dict):
-        return {str(k): _plain(v) for k, v in value.items()}
-    return repr(value)
-
-
-def _write_footprint(store, test_name, choice_name, goal, result,
-                     configuration):
-    """
-    RETURN: dict, the footprint entry as written.
-
-    The CANONICALISER is recorded with it: a record is history, and
-    without knowing which canonicaliser produced it, a later Replay
-    cannot tell that it is comparing two different freeings.
-    """
-    entry = configuration.choice_configuration(choice_name)
-    fact_db = {"verdict": bool(result.verdict),
-               "report":  str(result.report)}
-    if entry.canonicalisers:
-        fact_db["canonicaliser"] = {name: list(argv) for name, argv
-                                    in entry.canonicalisers.items()}
-    #  BOTH HALVES OF FREEING, or a later reader cannot tell what this
-    #  verdict meant: the canonicaliser changed the RECORD, the compare
-    #  setup changed the VERDICT.
-    setup = compare_setup_delta(entry.compare)
-    if setup:
-        fact_db["compare"] = setup
-    return store.write_footprint(test_name, choice_name,
-                                 _OPERATION_NAME[goal], **fact_db)
-
-
-_OPERATION_NAME = {E_Goal.VERDICT: "Run",
-                   E_Goal.DISPLAY: "Display",
-                   E_Goal.NOMINAL: "Accept"}

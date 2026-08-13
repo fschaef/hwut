@@ -265,8 +265,8 @@ step. Those are what an operation is ASKED for, not what the test IS.
   A caller asks for an OUTCOME, and the goal selects the operation.
 
   THE CEREMONY. Each step is here and NOT in an operation, because each
-  belongs to a different thing: the lock to a DIRECTORY, the footprint to
-  a finished OPERATION, the recording to a delivering RUN.
+  belongs to a different thing: the lock to a DIRECTORY, the book entry
+  to a finished OPERATION, the recording to a delivering RUN.
 
                     configuration            request
                           |                     |
@@ -291,7 +291,7 @@ step. Those are what an operation is ASKED for, not what the test IS.
               | Replay has something to read        |  that was judged
               '-----------+-------------------------'
                           |
-     footprint.-----------+-------------------------.
+     book     .-----------+-------------------------.
               | what happened, overwriting that     |
               | one entry (6)                       |
               '-----------+-------------------------'
@@ -305,6 +305,11 @@ step. Those are what an operation is ASKED for, not what the test IS.
 ############################################################################
 PART II -- PROVISION  (how the subjects come to exist)
 ############################################################################
+
+WHO PROVIDES A STAGE is a separate map: 'provision/provider.py' holds
+'I_Provider' and the five role interfaces, with 'I_ProxyProvider' and
+'I_MultiProvider' forming the multi-provider scheme. That architecture is
+'provision/README-provider.txt'. This part maps the STAGES themselves.
 
 THE STAGES. Provision is ONE type holding its stages as MEMBERS -- a
 member that is None is a stage this provision does not have; absence is
@@ -449,7 +454,7 @@ choices running at once would share one build directory. Different tests may
 run concurrently -- that is what the per-test build directory buys -- and the
 same test never overlaps itself.
 
-  So 'OUT/', 'BUILD/<stem>' and the test's footprint entry (section 6) each
+  So 'OUT/', 'BUILD/<stem>' and the test's book entry (section 6) each
   have exactly ONE writer at any moment, and none of the three needs a lock.
 
   NOTE, AND A REQUIREMENT ON WHOEVER BUILDS CONFIGURATIONS: two source
@@ -518,7 +523,7 @@ stream and its optional raw and timing sidecars -- nothing else. Replay
 reads a candidate; Accept PROMOTES one to the nominal. Both live behind the
 STORE abstraction (section 6); where and how it keeps them is a backend
 detail. What HAPPENED during the run is not kept with the streams; it is a
-FOOTPRINT (section 6).
+BOOK ENTRY (section 6).
 
 
 ----------------------------------------------------------------------------
@@ -577,35 +582,23 @@ The Store's own struct, held verbatim by the configuration (2.7):
       record_raw:    bool   # also keep the PRE-canonicalisation stream
       record_timing: bool   # also keep the per-line cadence (4)
 
-THE FOOTPRINTS. Beside the records the Store keeps what HAPPENED, most
-recently -- the RECENT FOOTPRINTS OF EXECUTION. This is what a recursive
-listing over results reads ('hwut info' in HWUT today).
+THE BOOK. What HAPPENED is not this component's to keep. It is entered in
+the BOOKKEEPER (vut/engine/orchestrator/bookkeeper/), which owns the one
+base of a test directory -- 'GOOD/result_db.json' -- and its shape. This is
+what a recursive listing over results reads ('hwut info' in HWUT today).
 
-JSON. One entry per test and choice, one sub-entry per OPERATION:
-
-    { "parse": {
-        "basic": {
-          "Run":     { "when": "2026-07-26T09:14:03Z",
-                       "host": "linux-x86_64/ws-07",
-                       "verdict": true,
-                       "report": "OK",
-                       "canonicaliser": { "stdout": ["python3",
-                                          "hwut_pype.py", "clean.pype"] },
-                       "compare": { "numeric_tolerance_ratio": 0.01 } },
-          "Accept":  { "when": "2026-07-20T11:02:55Z",
-                       "host": "linux-x86_64/ws-07" },
-          "Display": { "when": "2026-07-26T09:15:40Z",
-                       "host": "linux-x86_64/ws-07" } } } }
-
-ONE FOOTPRINT FILE PER TEST DIRECTORY, holding every test in it. A
-recursive listing walks directories and reads one file from each. Entering
-and leaving a directory is a CEREMONY in any case; reading and writing that
-file is part of it.
+THE NAMING IS THE BOOKKEEPER'S TOO. A record's key is (test, choice,
+subject); the Bookkeeper turns it into the file that carries it. The Store
+asks it for every path and does the reading and the writing: the Bookkeeper
+answers WHERE, the Store decides WHEN. A Store is therefore constructed
+over a Bookkeeper, and the Bookkeeper is MADE ABOVE -- by the orchestrator,
+from the test's directory -- and handed to every mode. Nothing here makes
+its own.
 
 THE DIRECTORY IS THE LOCK -- 'DirectoryLock', taken with 'with', raising
 'DirectoryBusy' when a live process holds it. Consistency is kept at
-directory level, not per file -- one lock guards the directory's footprint
-file and its tests' output alike, and it is what keeps two runs of a hwut
+directory level, not per file -- one lock guards the directory's book and
+its tests' output alike, and it is what keeps two runs of a hwut
 application out of each other's way.
 
     acquire   'mkdir' of a lock sub directory. 'mkdir' either creates or
@@ -629,23 +622,17 @@ application out of each other's way.
   degradation shape procsitter already applies to its platform-dependent
   caps: report the reduced capability, do not pretend to it.
 
-'report' is the brief report token (section 13), so a failure names itself:
-BUILD_FAILED, TARGET_NOT_BUILT, TEST_APP_STALLED, and the rest.
+THE ENTRY IS OVERWRITTEN, never appended, by the single writer that
+section 3 guarantees; its shape, its fields and the report token are the
+Bookkeeper's own map.
 
-NOT A HISTORY. Exactly ONE entry per (test, choice, operation), OVERWRITTEN
-each time, by the single writer that section 3 guarantees. What was done
-BEFORE is the concern of the software configuration
-management system -- git and its kin -- and never of this component. A
-footprint answers "what is the state of this test now", not "what has been
-done to it". No append, no rotation, no log.
-
-THE VERDICT SITS HERE, not in the record. A verdict belongs to an EXECUTION
+THE VERDICT SITS IN THE ENTRY, not in the record. A verdict belongs to an EXECUTION
 EVENT; the stored streams are artifacts of provision. Re-comparing one
 record against an edited nominal must be free to yield a different verdict,
 which it cannot be if the verdict is welded to the stream.
 
-BOTH HALVES OF FREEING ARE RECORDED, and for the same reason: a record is
-history, and the configuration may have moved since.
+BOTH HALVES OF FREEING ARE RECORDED with it, and for the same reason: a
+record is history, and the configuration may have moved since.
 
     'canonicaliser'  changed the RECORD    -- a Replay whose subject was
                      frozen under one and whose nominal was accepted
@@ -657,7 +644,7 @@ history, and the configuration may have moved since.
                      thing under a strict setup and another under a
                      loose one. Recording only what DIFFERS from
                      compare's default: a default setup adds nothing,
-                     and a footprint does not grow whenever compare
+                     and an entry does not grow whenever compare
                      gains an option.
 
 Neither names a tolerance or a pype flag: both walk whatever the lower

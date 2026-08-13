@@ -1,0 +1,7 @@
+INSPECT: the holder acquires its own directory again
+         raised = DirectoryDeadlock
+  OK  : re-acquisition by the live holder raises DirectoryDeadlock
+  OK  : which IS a DirectoryBusy, for a caller that does not distinguish
+  OK  : the first acquisition still stands
+  OK  : and the lock is untouched
+SUCCESS: the mutex is non-recursive, and says so by name.

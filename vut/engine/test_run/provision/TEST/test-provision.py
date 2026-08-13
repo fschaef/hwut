@@ -57,6 +57,8 @@ from   vut.engine.test_run.provision.stage_execute      import \
                                                   StageExecute    # noqa E402
 from   vut.engine.test_run.provision.stage_canonicalise import \
                                                   StageCanonicalise  # noqa E402
+from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+                                                 Bookkeeper)
 from   vut.engine.test_run.store         import Store            # noqa E402
 
 #  ASKED OF config.py, NOT COUNTED IN '..'. The walk in config.py is
@@ -270,7 +272,7 @@ def test_replay():
     no attribution records -- and an absent recording is REPORTED, never
     invented as an empty subject."""
     directory = tempfile.mkdtemp(prefix="vut_prov_")
-    store     = Store(directory)
+    store     = Store(Bookkeeper(directory))
     store.write_candidate("demo", None, "stdout", "recorded line\n")
     store.write_candidate("demo", None, "stderr", "")
 
@@ -304,7 +306,7 @@ def test_same_shape():
     directory = _place("print('same')\n")
     executed  = asyncio.run(Run(_interpreted(directory)).provide())
 
-    store = Store(directory)
+    store = Store(Bookkeeper(directory))
     for name in ("stdout", "stderr"):
         store.write_candidate("demo", None, name,
                               executed[name].open().read())
@@ -428,7 +430,7 @@ def test_stages():
     directory = _place("print('hi')\n")
     store_dir = tempfile.mkdtemp(prefix="vut_prov_")
     executed  = Run(_interpreted(directory))
-    loaded    = Replay(Store(store_dir), "demo")
+    loaded    = Replay(Store(Bookkeeper(store_dir)), "demo")
 
     def picture(p):
         """RETURN: str, one mark per stage member, 'X' present, '-' absent."""

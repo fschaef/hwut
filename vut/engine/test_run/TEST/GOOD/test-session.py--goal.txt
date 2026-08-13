@@ -3,5 +3,5 @@ INSPECT: VERDICT -> True, ok
          operations recorded = ['Accept', 'Display', 'Run']
   OK  : both goals read the same test and agree
   OK  : a MATCHING subject is not carried out to the display
-  OK  : each goal wrote its own footprint entry
+  OK  : each goal booked its own entry
 SUCCESS: a caller asks for an outcome, not for a class.

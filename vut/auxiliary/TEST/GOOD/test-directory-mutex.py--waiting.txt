@@ -1,0 +1,5 @@
+INSPECT: a live holder outlives the contender's wait
+         acquire() -> False, waited the full period: True
+  OK  : the holder outliving the wait is still refused
+  OK  : and the contender did wait before saying so
+SUCCESS: waiting buys patience, never the lock.

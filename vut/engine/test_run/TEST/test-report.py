@@ -58,7 +58,6 @@ def test_failed_build():
     print("INSPECT: verdict    = %s" % result.verdict)
     print("         report     = %s" % result.report)
     print("         comparison = %s" % result.comparison)
-    print("         footprint  = %s" % result.footprint_facts())
     ok = _check([
         (result.verdict is False,
          "the test FAILED -- it is not excused"),

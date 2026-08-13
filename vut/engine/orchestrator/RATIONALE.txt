@@ -1,0 +1,116 @@
+============================================================================
+VUT-ORCHESTRATOR -- RATIONALE
+============================================================================
+
+Settled decisions, read-only. Ruled by Frank-Rene, 2026-08-12, closing
+test_run's disc-1 (THE RESULT STORE).
+
+----------------------------------------------------------------------------
+D-1  ONE BASE REPLACES THE FOOTPRINT
+----------------------------------------------------------------------------
+PROBLEM   The same fact stood in several places: the footprint, the
+          store, the recorded candidates, the configuration's own
+          declarations. The attribution record (ProcsitterResult) had
+          two transient homes and zero durable ones. The footprint is
+          read back for queries and report generation, so a stale copy
+          produces a wrong answer.
+DECISION  ONE base, 'GOOD/result_db.json', replaces the footprint file
+          outright. Six facts collapse to one home each: canonicaliser,
+          compare setup, verdict/report, candidate-vs-nominal claim,
+          the attribution record (first durable home), the key scheme.
+COST      GOOD is written by every Run. Mitigated: the adapter owns
+          unprotect/write/re-protect, atomically.
+GRAVEYARD Two files (structure in GOOD, volatile footprint outside):
+          rejected -- it recreates, inside our own tree, the divergence
+          problem the discussion exists to abolish.
+
+----------------------------------------------------------------------------
+D-2  PROTECTION IS A GUARD, NOT A BLESSING
+----------------------------------------------------------------------------
+PROBLEM   GOOD's write-protection marks blessed descriptions of good
+          behaviour; a base rewritten on every run is not blessed.
+DECISION  The property of immutability is 'misused' for the base: it
+          protects a record from unintentional user actions. There is
+          nothing to bless about a report db; it just records properly.
+COST      Two protection reasons live in one directory. Mitigated: the
+          distinction is stated here, once.
+GRAVEYARD Placing the base outside GOOD: rejected -- it loses the
+          guard, and it is exactly the careless hand the guard is for.
+
+----------------------------------------------------------------------------
+D-3  JSON
+----------------------------------------------------------------------------
+PROBLEM   JSON or HOCON (or JSONC/JSON5/HJSON/YAML) for the base.
+DECISION  JSON. Stdlib read and write, lossless byte-stable round
+          trips, the existing readers already speak it.
+COST      No comments. Mitigated: a comment in any dialect survives
+          only until the next machine write; commentary, if wanted, is
+          emitted by the adapter as data fields.
+GRAVEYARD HOCON: a dependency, a lossy write path, comfort for a file
+          nobody may edit by hand. Its includes argument (a base
+          referencing another) is speculative -- the directory-list
+          layer is parked (test_run disc-8).
+
+----------------------------------------------------------------------------
+D-4  DIVERGENCE ON CALL; RENAME IS THE KIND THAT MATTERS
+----------------------------------------------------------------------------
+PROBLEM   A user edits declarations at will; the base does not follow.
+          Entries for renamed or deleted names linger as truth. When is
+          the discrepancy detected, and what is the reaction?
+DECISION  ON CALL. The caller knows what it asked: 'run all tests'
+          makes a missing choice an error; 'run this test with that
+          choice' does not. The Bookkeeper provides the verdict as
+          data: an unregistered app rename reads DELETED (its tests
+          failed), an unregistered choice rename reads NON-RESPONSIVE.
+          Healing is a service (hwut.rename, hwut.rename-choice,
+          hwut.remove, hwut.remove-choice), never a guess.
+COST      'Non-responsive' surfaces later than at write; callers must
+          ask. Mitigated: the manager above asks once per task.
+GRAVEYARD Detection at write time: a renamed choice's entry is never
+          written again, so write-time detection never sees it.
+          Detection on every open: greets 'hwut.rename' with the
+          complaint it came to resolve.
+
+----------------------------------------------------------------------------
+D-5  THE COMPONENT AND ITS SEAM
+----------------------------------------------------------------------------
+PROBLEM   Where do the base's adapter, the configuration parsing, the
+          services and the naming live?
+DECISION  One component, vut/engine/orchestrator/: bookkeeper/ (one
+          test directory's book), explorer/ (which directories),
+          services/, orchestrator.py binding them. The Bookkeeper takes
+          THE NAMING -- (test, choice, subject) -> path -- so the key
+          scheme has one expression; the report service stops globbing
+          and asks. test_run keeps the artifact handling (Nominal
+          kinds, promotion on accept) and the directory lock: the
+          Bookkeeper answers WHERE, test_run decides WHEN. A rename
+          touches declarations and results at once; one component keeps
+          that a one-scope transaction.
+COST      test_run mounts orchestrator/bookkeeper for every path it
+          forms. Mitigated: one import, one face.
+GRAVEYARD The adapter inside test_run: four services and a query tool
+          that run no test would depend on the component that runs one.
+          A Bookkeeper that also handles streams: acceptance is a
+          test_run ceremony, not a storage act. 'data_management' as
+          the name: names the activity, not the thing. A top-level base
+          above the directories: every fact in it a copy, the whole
+          problem one level up -- the directory set is the Explorer's
+          question, not a second base.
+
+----------------------------------------------------------------------------
+D-6  ENTRIES ARE DERIVED (the seam faces the Bookkeeper)
+----------------------------------------------------------------------------
+PROBLEM   Does test_run flatten an entry and hand a dict, or hand the
+          result and configuration for the Bookkeeper to derive?
+DECISION  The Bookkeeper DERIVES: record(result, configuration, goal,
+          choice_name). compare_setup_delta lives here; when compare
+          gains an option, one place learns of it. The attribution
+          rides in on result.provision.records without a new argument.
+          The Bookkeeper is made ABOVE and handed to every test_run
+          mode; a service makes its own inside the service.
+COST      The Bookkeeper knows the SHAPE of test_run's result and
+          configuration objects. Mitigated: duck-typed attribute
+          access; no test_run import at module level, so no cycle.
+GRAVEYARD test_run flattening: keeps compare knowledge inside the
+          recorder and leaves the dict's shape an unwritten contract
+          between two components.

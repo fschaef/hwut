@@ -1,0 +1,6 @@
+INSPECT: no holder recorded      -> age = None
+         this process holds      -> age is a number >= 0: True
+         a record without 'acquired' -> age = None
+  OK  : a held lock answers its age
+  OK  : a record without an acquisition time answers None, never zero
+SUCCESS: holder time is answered where recorded, absent where not.

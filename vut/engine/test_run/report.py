@@ -157,11 +157,3 @@ class TestResult:
         if reason is not E_TestRunResult.OK:  return reason
         if self.verdict:                      return E_TestRunResult.OK
         return E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL
-
-    def footprint_facts(self):
-        """
-        RETURN: dict, what a footprint records of this result -- the
-                verdict and the report token. 'when' and 'host' are the
-                store's to add.
-        """
-        return {"verdict": self.verdict, "report": str(self.report)}

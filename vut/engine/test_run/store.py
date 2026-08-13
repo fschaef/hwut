@@ -10,17 +10,17 @@ DESCRIPTION
        default backend is the HWUT GOOD filesystem, and another -- a
        database, an object store -- fits behind the same interface.
 
+       THE NAMING IS THE BOOKKEEPER'S. A Store is constructed OVER a
+       Bookkeeper (vut/engine/orchestrator/bookkeeper/) and asks it for
+       every path it touches; the key scheme has ONE expression, there.
+       The Store triggers the reading and the writing; the Bookkeeper
+       answers where. Results and entries are the Bookkeeper's whole
+       business -- nothing of them lives here.
+
        TWO KEY SPACES, ONE WRITER EACH. A candidate is written by
        recording; a nominal is written by acceptance. No key has two
        writers, so 'which step wrote this' never becomes a question a key
        cannot answer.
-
-       BESIDE THE RECORDS, THE FOOTPRINTS: what happened, most recently,
-       per test and choice. JSON, ONE FILE PER TEST DIRECTORY, one entry
-       per test, one sub-entry per operation. NOT A HISTORY -- exactly one
-       entry per (test, choice, operation), overwritten. What was done
-       before is the concern of the software configuration management
-       system, never of this one.
 
        THE DIRECTORY IS THE LOCK. 'mkdir' of a lock sub directory either
        creates or fails, so the winner is decided without a second
@@ -36,9 +36,7 @@ ______________________________________________________________________________
 """
 import json
 import os
-import platform
 from   dataclasses import dataclass
-from   datetime    import datetime, timezone
 from   pathlib     import Path
 
 from   .nominal import RecordNominal
@@ -51,7 +49,6 @@ from   ...auxiliary.directory_mutex import (MkdirMutex,        # noqa: F401
                                             LOCK_DIRECTORY_NAME)
 
 
-FOOTPRINT_FILE_NAME = "hwut-footprints.json"
 LOCK_DIRECTORY_NAME = ".hwut-lock"
 _HOLDER_FILE_NAME   = "holder.json"
 
@@ -65,25 +62,9 @@ class StoreConfig:
     record_timing: bool = False   # keep per-line delta times
 
 
-def this_host():
-    """
-    RETURN: str, a host tag for a footprint, 'linux-x86_64/<node>'.
-
-    Coarse on purpose: it exists to compare compute speed between hosts,
-    not to identify a machine.
-    """
-    return "%s-%s/%s" % (platform.system().lower(), platform.machine(),
-                         platform.node())
-
-
-def _now():
-    """RETURN: str, the current UTC instant, seconds resolution, ISO."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
 class DirectoryLock(MkdirMutex):
     """The access check of ONE test directory: it guards the directory's
-    footprint file and its tests' output alike.
+    book and its tests' output alike.
 
     Use as a context manager. Where liveness cannot be asked, the lock is
     a no-op and '.taken' says so. The face of 'MkdirMutex'
@@ -94,15 +75,22 @@ class DirectoryLock(MkdirMutex):
 
 
 class Store:
-    """Records and footprints of the tests under ONE directory.
+    """The artifacts of the tests under ONE directory.
 
     Default backend: the HWUT GOOD filesystem. A record is a file under
     'GOOD/' named for its key; candidates live beside it under 'OUT/'.
+    Constructed OVER a Bookkeeper: the directory is the Bookkeeper's,
+    and every path is asked of it.
     """
 
-    def __init__(self, directory, config=None):
-        self.directory = Path(directory)
-        self.config    = config
+    def __init__(self, bookkeeper, config=None):
+        self.bookkeeper = bookkeeper
+        self.config     = config
+
+    @property
+    def directory(self):
+        """RETURN: Path, the ONE directory -- the Bookkeeper's."""
+        return Path(self.bookkeeper.directory)
 
     @property
     def records(self):
@@ -115,22 +103,14 @@ class Store:
         """
         return self.config is not None
 
-    # -- keys ---------------------------------------------------------
-    def _key(self, test, choice, subject):
-        """
-        RETURN: str, the file name of one record: 'test--choice.subject'
-                for a test with choices, 'test.subject' without.
-        """
-        stem = test if choice is None else "%s--%s" % (test, choice)
-        return "%s.%s" % (stem, subject)
-
+    # -- keys: THE NAMING IS THE BOOKKEEPER'S -------------------------
     def nominal_path(self, test, choice, subject):
         """RETURN: Path, where the ACCEPTED record of that key lives."""
-        return self.directory / "GOOD" / self._key(test, choice, subject)
+        return self.bookkeeper.nominal_path(test, choice, subject)
 
     def candidate_path(self, test, choice, subject):
         """RETURN: Path, where the CANDIDATE record of that key lives."""
-        return self.directory / "OUT" / self._key(test, choice, subject)
+        return self.bookkeeper.candidate_path(test, choice, subject)
 
     # -- records ------------------------------------------------------
     def nominal(self, test, choice, subject):
@@ -173,13 +153,11 @@ class Store:
 
     def raw_path(self, test, choice, subject):
         """RETURN: Path, where the PRE-canonicalisation stream lives."""
-        return self.candidate_path(test, choice, subject).with_suffix(
-                   self.candidate_path(test, choice, subject).suffix + ".raw")
+        return self.bookkeeper.raw_path(test, choice, subject)
 
     def timing_path(self, test, choice, subject):
         """RETURN: Path, where the cadence sidecar of that key lives."""
-        return self.candidate_path(test, choice, subject).with_suffix(
-                   self.candidate_path(test, choice, subject).suffix + ".times")
+        return self.bookkeeper.timing_path(test, choice, subject)
 
     def write_raw(self, test, choice, subject, text):
         """
@@ -226,64 +204,6 @@ class Store:
                 return tuple(json.load(fh)["delta_list"])
         except Exception:
             return None
-
-    # -- footprints ---------------------------------------------------
-    @property
-    def footprint_path(self):
-        """RETURN: Path, the ONE footprint file of this directory."""
-        return self.directory / FOOTPRINT_FILE_NAME
-
-    def footprints(self):
-        """
-        RETURN: dict, every footprint of this directory, test -> choice ->
-                operation -> facts. Empty when none were written.
-
-        A missing or unreadable file reads as empty: a footprint is a
-        convenience, and its loss must never fail a run.
-        """
-        try:
-            with open(self.footprint_path, "r", encoding="utf-8") as fh:
-                content = json.load(fh)
-        except Exception:
-            return {}
-        return content if isinstance(content, dict) else {}
-
-    def footprint(self, test, choice, operation):
-        """
-        RETURN: dict, the most recent facts of that operation.
-                None, no such footprint.
-        """
-        key = "<none>" if choice is None else choice
-        return self.footprints().get(test, {}).get(key, {}).get(operation)
-
-    def write_footprint(self, test, choice, operation, **fact_db):
-        """
-        RETURN: dict, the entry as written -- 'when' and 'host' are added
-                here, so no caller has to remember them.
-
-        OVERWRITES exactly one (test, choice, operation) entry and leaves
-        every other untouched. NOT an append: what was there before is the
-        concern of the configuration management system.
-
-        The single writer is guaranteed above -- one run of a test at a
-        time, one live holder of the directory lock.
-        """
-        key     = "<none>" if choice is None else choice
-        content = self.footprints()
-        entry   = dict(fact_db)
-        entry["when"] = _now()
-        entry["host"] = this_host()
-        content.setdefault(test, {}).setdefault(key, {})[operation] = entry
-
-        self.footprint_path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.footprint_path.with_suffix(".json.tmp")
-        with open(temporary, "w", encoding="utf-8") as fh:
-            json.dump(content, fh, indent=2, sort_keys=True)
-            fh.write("\n")
-        os.replace(temporary, self.footprint_path)   # atomic: a reader sees
-                                                    # the old file or the
-                                                    # new one, never half
-        return entry
 
     def lock(self):
         """RETURN: DirectoryLock, the access check of this directory."""

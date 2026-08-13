@@ -1,0 +1,6 @@
+INSPECT: Run report was 'ok', now 'not-equivalent-with-nominal'
+         operations recorded = ['Accept', 'Run']
+  OK  : the second write REPLACED the first
+  OK  : one entry per operation -- Run and Accept, not three
+  OK  : a sibling operation is untouched
+SUCCESS: state now, never a log -- and no entry disturbs another.

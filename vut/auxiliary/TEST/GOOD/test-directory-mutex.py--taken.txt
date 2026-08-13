@@ -1,0 +1,10 @@
+INSPECT: acquire() -> True, taken = True
+         the recorded holder is this process: True
+  OK  : a free directory is taken
+  OK  : and the mutex says so
+  OK  : the lock sub directory exists
+  OK  : the holder file names this process
+  OK  : and records when it acquired
+  OK  : release removes every trace
+  OK  : and the mutex says so
+SUCCESS: the mutex is taken and released without residue.

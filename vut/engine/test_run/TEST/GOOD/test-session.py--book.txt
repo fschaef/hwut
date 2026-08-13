@@ -1,6 +1,7 @@
-INSPECT: footprints = {'demo': {'<none>': ['Accept', 'Run']}}
+INSPECT: operations booked = {'demo': {'<none>': ['Accept', 'Run']}}
          Run entry  = {'verdict': True, 'report': 'ok', 'canonicaliser': {'stdout': ['cat']}}
   OK  : one entry per operation, both kept
   OK  : the canonicaliser is recorded: a record is HISTORY, and a later Replay must be able to tell it was freed differently
   OK  : when and host are recorded for the speed reference
-SUCCESS: what happened is written, and never appended to.
+  OK  : the attribution rides with it -- the record of the process that produced a result is PART of that result
+SUCCESS: what happened is booked, and never appended to.

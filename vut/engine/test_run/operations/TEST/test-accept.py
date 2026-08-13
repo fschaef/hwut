@@ -44,6 +44,8 @@ from   vut.engine.test_run.operations.equivalence_check import (            # no
 from   vut.engine.test_run.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
 from   vut.engine.test_run.provision.core  import Run            # noqa E402
+from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+                                                   Bookkeeper)
 from   vut.engine.test_run.store           import Store          # noqa E402
 
 
@@ -84,7 +86,7 @@ def test_take_dump():
     """A complete dump is stored WHOLESALE: the nominal becomes exactly
     what was handed over, not a merge of it with what was there."""
     directory = tempfile.mkdtemp(prefix="vut_acc_")
-    store     = Store(directory)
+    store     = Store(Bookkeeper(directory))
     store.accept("demo", None, "stdout", "the OLD nominal\n")
     result = asyncio.run(Accept(AcceptConfig(
         "demo", {"stdout": AcceptStep(dump=BytesNominal("the NEW dump\n"))}),
@@ -111,7 +113,7 @@ def test_pulls_provision():
     directory = _place("import sys\n"
                        "print('to stdout')\n"
                        "sys.stderr.write('to stderr\\n')\n")
-    store  = Store(directory)
+    store  = Store(Bookkeeper(directory))
     result = asyncio.run(Accept(AcceptConfig(
         "demo",
         {"stdout": AcceptStep(), "stderr": AcceptStep()},
@@ -142,7 +144,7 @@ def test_all_or_nothing():
     test would hold new behaviour against old nominals on the subjects
     that were missed, and report the difference as a fault of the code."""
     directory = tempfile.mkdtemp(prefix="vut_acc_")
-    store     = Store(directory)
+    store     = Store(Bookkeeper(directory))
     result = asyncio.run(Accept(AcceptConfig("demo", {
         "stdout": AcceptStep(dump=BytesNominal("this one is readable\n")),
         "stderr": AcceptStep(dump=RecordNominal("/nowhere/no-such-dump")),
@@ -171,7 +173,7 @@ def test_the_loop_closes():
     Acceptance is what turns a failing test into a passing one, and
     nothing else in the component may."""
     directory = _place("print('behaviour version one')\n")
-    store     = Store(directory)
+    store     = Store(Bookkeeper(directory))
 
     def check():
         """RETURN: TestResult, of one EquivalenceCheck over a fresh Run."""
@@ -216,7 +218,7 @@ def test_initiate_needs_its_session():
     there is nothing to store, and that is reported rather than
     silently falling back to the current output."""
     directory = tempfile.mkdtemp(prefix="vut_acc_")
-    store     = Store(directory)
+    store     = Store(Bookkeeper(directory))
 
     class Session:
         async def collect(self, subject_name):

@@ -1,0 +1,6 @@
+INSPECT: a different live process holds the lock
+         acquire() -> False, 'with' entered -> False
+  OK  : acquire() answers False, it does not raise
+  OK  : 'with' raises DirectoryBusy
+  OK  : the holder's lock survives both
+SUCCESS: a live holder is never robbed of its lock.

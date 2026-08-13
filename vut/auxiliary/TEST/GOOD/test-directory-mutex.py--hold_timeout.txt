@@ -1,0 +1,8 @@
+INSPECT: a live holder, acquired 100 seconds ago
+         default policy        -> acquire() False
+         max_hold_sec = 1000.0 -> acquire() False
+         max_hold_sec = 1.0    -> acquire() True
+  OK  : under the default, liveness alone decides
+  OK  : a live holder within its allowance stands
+  OK  : a live holder past its allowance is treated as gone
+SUCCESS: the hold allowance is an opt-in, not the law.

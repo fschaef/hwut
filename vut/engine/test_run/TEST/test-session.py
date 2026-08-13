@@ -4,13 +4,13 @@ ______________________________________________________________________________
 
 THE FRONT DOOR AND ITS CEREMONY.
 
-    UNIT     'run_test' -- verify, lock, operate, record, footprint,
+    UNIT     'run_test' -- verify, lock, operate, record, book,
              unlock. The one callable a caller needs.
 
     CAUSAL CONTRACT
              the GOAL selects the operation; a Run's subjects are stored
              as candidates so Replay has something to read; what happened
-             is written as a footprint.
+             is entered in the book.
 
     CONSISTENCY CONTRACT
              the lock is released however the run ended; an unservable
@@ -38,12 +38,15 @@ from   vut.engine.test_run.configuration   import (              # noqa E402
                                                    TestChoiceConfiguration,
                                                    ConfigurationError,
                                                    E_SourceKind)
-from   vut.engine.test_run.session         import (run_test,     # noqa E402
+from   vut.engine.test_run.session         import (              # noqa E402
+                                                   run_test as _front_door,
                                                    Display,
                                                    Request,
-                                                   compare_setup_delta,
                                                    store_of,
                                                    E_Goal)
+from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
+                                                   Bookkeeper,
+                                                   compare_setup_delta)
 from   vut.engine.test_run.interaction.feed import (            # noqa E402
                                                     E_DisplayTarget,
                                                     driver_for)
@@ -51,6 +54,25 @@ from   vut.engine.test_run.store           import (Store,        # noqa E402
                                                    DirectoryBusy,
                                                    StoreConfig,
                                                    LOCK_DIRECTORY_NAME)
+
+
+def _bookkeeper_of(configuration):
+    """RETURN: Bookkeeper, over the directory the configuration names.
+
+    MADE ABOVE: the Bookkeeper is never made inside 'run_test' -- and in
+    this file, 'above' is the test itself.
+    """
+    directory = configuration.store.directory \
+                if configuration.store is not None \
+                else configuration.test_directory
+    return Bookkeeper(directory)
+
+
+def run_test(configuration, request=None):
+    """RETURN: Outcome, of the front door, handed a Bookkeeper made
+    here."""
+    return _front_door(configuration, request,
+                       bookkeeper=_bookkeeper_of(configuration))
 
 
 def _check(pair_list):
@@ -82,7 +104,9 @@ def _place(body, **kwargs):
                        choice_db      = {None: TestChoiceConfiguration()})
     argument_db.update(kwargs)
     configuration = TestConfiguration(**argument_db)
-    return configuration, store_of(configuration), directory
+    return (configuration,
+            store_of(configuration, _bookkeeper_of(configuration)),
+            directory)
 
 
 def test_the_arc():
@@ -143,8 +167,8 @@ def test_recording_feeds_replay():
     _verdict(ok, "what was judged is what is recorded.")
 
 
-def test_footprint_is_written():
-    """What happened is written as a footprint, one entry per operation,
+def test_entry_is_booked():
+    """What happened is entered in the book, one entry per operation,
     overwritten -- and the canonicaliser is recorded with it."""
     configuration, store, directory = _place(
         "print('x')\n",
@@ -153,25 +177,30 @@ def test_footprint_is_written():
 
     asyncio.run(run_test(configuration, Request(goal=E_Goal.NOMINAL)))
     outcome = asyncio.run(run_test(configuration))
-    content = store.footprints()
+    book    = store.bookkeeper.book()
 
-    print("INSPECT: footprints = %s"
-          % {t: {c: sorted(o) for c, o in v.items()}
-             for t, v in content.items()})
+    print("INSPECT: operations booked = %s"
+          % {t: {c: sorted(v["choices"][c]["operations"])
+                 for c in v["choices"]}
+             for t, v in book.items()})
     print("         Run entry  = %s"
-          % {k: v for k, v in outcome.footprint.items()
-             if k not in ("when", "host")})
+          % {k: v for k, v in outcome.entry.items()
+             if k not in ("when", "host", "records")})
     ok = _check([
-        (sorted(content["demo"]["<none>"]) == ["Accept", "Run"],
+        (sorted(book["demo"]["choices"]["<none>"]["operations"])
+             == ["Accept", "Run"],
          "one entry per operation, both kept"),
-        ("canonicaliser" in outcome.footprint,
+        ("canonicaliser" in outcome.entry,
          "the canonicaliser is recorded: a record is HISTORY, and a later "
          "Replay must be able to tell it was freed differently"),
-        ("when" in outcome.footprint and "host" in outcome.footprint,
+        ("when" in outcome.entry and "host" in outcome.entry,
          "when and host are recorded for the speed reference"),
+        ("records" in outcome.entry,
+         "the attribution rides with it -- the record of the process "
+         "that produced a result is PART of that result"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "what happened is written, and never appended to.")
+    _verdict(ok, "what happened is booked, and never appended to.")
 
 
 def test_lock_is_released():
@@ -225,14 +254,14 @@ def test_refused_before_anything_runs():
     print("INSPECT: empty choice_db -> %s" % (refused or "NOT REFUSED"))
     print("         lock left behind: %s"
           % os.path.isdir(os.path.join(directory, LOCK_DIRECTORY_NAME)))
-    print("         footprints written: %s" % store.footprints())
+    print("         entries booked: %s" % store.bookkeeper.book())
     ok = _check([
         (refused is not None,
          "the configuration is refused"),
         (not os.path.isdir(os.path.join(directory, LOCK_DIRECTORY_NAME)),
          "no lock was taken"),
-        (store.footprints() == {},
-         "and nothing was written"),
+        (store.bookkeeper.book() == {},
+         "and nothing was booked"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "refused at the door, before anything happens.")
@@ -255,7 +284,8 @@ def test_goal_selects():
     display = asyncio.run(run_test(
         configuration,
         Request(goal=E_Goal.DISPLAY, display=Display(adapter=Adapter()))))
-    operation_list = sorted(store.footprints()["demo"]["<none>"])
+    operation_list = sorted(store.bookkeeper.book()["demo"]["choices"]
+                                                  ["<none>"]["operations"])
 
     print("INSPECT: VERDICT -> %s, %s" % (verdict.verdict, verdict.report))
     print("         DISPLAY -> %s, adapter saw %i items"
@@ -267,7 +297,7 @@ def test_goal_selects():
         (collected == [],
          "a MATCHING subject is not carried out to the display"),
         (operation_list == ["Accept", "Display", "Run"],
-         "each goal wrote its own footprint entry"),
+         "each goal booked its own entry"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "a caller asks for an outcome, not for a class.")
@@ -300,7 +330,7 @@ def test_recording_sidecars():
             canonicalisers={"stdout": ["python3", pype,
                                        os.path.join(directory,
                                                     "sort.pype")]})})
-    store = Store(directory)
+    store = Store(Bookkeeper(directory))
     asyncio.run(run_test(configuration))
 
     candidate = store.candidate("demo", None, "stdout").open().read()
@@ -398,8 +428,8 @@ def test_busy_directory_is_refused():
          "the run is REFUSED, not queued and not forced"),
         (still_held is True,
          "and the live holder's lock is untouched"),
-        (store.footprints() == {},
-         "nothing was written on the way out"),
+        (store.bookkeeper.book() == {},
+         "nothing was booked on the way out"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "two runs of one test never overlap.")
@@ -455,7 +485,7 @@ def test_the_configuration_says_where():
         choice_db      = {None: TestChoiceConfiguration()})
 
     asyncio.run(run_test(moved, Request(goal=E_Goal.NOMINAL)))
-    here     = store_of(moved)
+    here     = store_of(moved, _bookkeeper_of(moved))
     storeless = TestConfiguration(
         source_file    = "demo.py",
         source_kind    = E_SourceKind.INTERPRETED,
@@ -463,7 +493,7 @@ def test_the_configuration_says_where():
         caps           = ProcsitterConfig(max_wall_clock_sec=20.0),
         interpreter    = ["python3", "-u"],
         choice_db      = {None: TestChoiceConfiguration()})
-    default   = store_of(storeless)
+    default   = store_of(storeless, _bookkeeper_of(storeless))
     landed    = here.nominal("demo", None, "stdout").exists()
     not_here  = not os.path.exists(os.path.join(directory, "GOOD"))
 
@@ -487,12 +517,12 @@ def test_the_configuration_says_where():
 
 
 def test_the_compare_setup_is_recorded():
-    """BOTH HALVES OF FREEING reach the footprint. The canonicaliser
-    changed the RECORD; the compare setup changed the VERDICT. A footprint
+    """BOTH HALVES OF FREEING reach the entry. The canonicaliser
+    changed the RECORD; the compare setup changed the VERDICT. An entry
     saying 'verdict: true' means something different under a loose setup
     than a strict one, and without this nothing said which was in force.
 
-    ONLY the differences: a default setup adds nothing, so a footprint
+    ONLY the differences: a default setup adds nothing, so an entry
     does not grow every time compare gains an option.
     """
     import vut.engine.compare.configuration as compare_configuration
@@ -514,7 +544,7 @@ def test_the_compare_setup_is_recorded():
             store          = StoreConfig(directory=directory),
             choice_db      = {None: TestChoiceConfiguration(compare=options)})
 
-    store = Store(directory)
+    store = Store(Bookkeeper(directory))
     store.accept("demo", None, "stdout", "value 100.0\n")
     strict_outcome = asyncio.run(run_test(configured(None)))
     loose_outcome  = asyncio.run(run_test(configured(loose)))
@@ -524,19 +554,19 @@ def test_the_compare_setup_is_recorded():
     future = compare_configuration.Configuration()
     future.pattern_finder.rounding_digits = 3
 
-    print("INSPECT: default setup  -> verdict %-5s footprint 'compare' %s"
+    print("INSPECT: default setup  -> verdict %-5s entry 'compare' %s"
           % (strict_outcome.verdict,
-             "compare" in strict_outcome.footprint))
-    print("         loose setup    -> verdict %-5s footprint 'compare' %s"
-          % (loose_outcome.verdict, loose_outcome.footprint.get("compare")))
+             "compare" in strict_outcome.entry))
+    print("         loose setup    -> verdict %-5s entry 'compare' %s"
+          % (loose_outcome.verdict, loose_outcome.entry.get("compare")))
     print("         an option compare has not invented yet -> %s"
           % compare_setup_delta(future))
     ok = _check([
         (strict_outcome.verdict is False and loose_outcome.verdict is True,
          "the setup decided the verdict -- same subject, same nominal"),
-        ("compare" not in strict_outcome.footprint,
-         "a DEFAULT setup adds nothing to the footprint"),
-        (loose_outcome.footprint["compare"]
+        ("compare" not in strict_outcome.entry,
+         "a DEFAULT setup adds nothing to the entry"),
+        (loose_outcome.entry["compare"]
              == {"numeric_tolerance_ratio": 0.01},
          "a chosen one is recorded, and only what was chosen"),
         (compare_setup_delta(future) == {"rounding_digits": 3},
@@ -553,7 +583,7 @@ if __name__ == "__main__":
         choice_map = {
             "the_arc":     test_the_arc,
             "recording":   test_recording_feeds_replay,
-            "footprint":   test_footprint_is_written,
+            "book":        test_entry_is_booked,
             "lock":        test_lock_is_released,
             "refused":     test_refused_before_anything_runs,
             "goal":        test_goal_selects,

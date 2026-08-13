@@ -1,0 +1,9 @@
+INSPECT: entry keys = ['canonicaliser', 'host', 'records', 'report', 'verdict', 'when']
+         verdict True, report ok
+         canonicaliser = {'stdout': ['cat']}
+         attribution: 1 record(s), containment OK_COMPLETED, exit 0
+  OK  : 'when' and 'host' are added here, not by the caller
+  OK  : the verdict and the report come from the result
+  OK  : the canonicaliser comes from the choice's configuration
+  OK  : the attribution record is DURABLE -- read by a fresh Bookkeeper
+SUCCESS: an entry is derived, and the producer's record survives the visit.

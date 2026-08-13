@@ -1,7 +1,7 @@
 INSPECT: empty choice_db -> choice_db is empty: no call is described
          lock left behind: False
-         footprints written: {}
+         entries booked: {}
   OK  : the configuration is refused
   OK  : no lock was taken
-  OK  : and nothing was written
+  OK  : and nothing was booked
 SUCCESS: refused at the door, before anything happens.

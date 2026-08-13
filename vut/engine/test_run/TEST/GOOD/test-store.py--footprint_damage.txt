@@ -1,5 +1,0 @@
-INSPECT: damaged file reads as {}
-         a later write recovers: verdict = False
-  OK  : a damaged footprint file reads as empty, it does not raise
-  OK  : writing recovers the file
-SUCCESS: a lost footprint never fails a run.

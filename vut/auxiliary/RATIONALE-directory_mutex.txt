@@ -1,0 +1,64 @@
+==============================================================================
+RATIONALE -- directory_mutex                                       (read-only)
+==============================================================================
+
+D-1  THE MECHANISM IS AN AUXILIARY, NOT A STORE DETAIL       (2026-08-09)
+------------------------------------------------------------------------------
+PROBLEM   test_run's directory lock lived inside store.py. The coming
+          TestDirectoryOrchestrator holds one interactive session per
+          test application across many per-choice ceremonies; lock
+          lifetime and session lifetime meet, and a lock buried in one
+          component's store cannot serve a holder above it.
+DECISION  The mechanism moves to vut/auxiliary/directory_mutex.py as
+          'MkdirMutex': a real class over a directory, state in a
+          holder file {pid, started, acquired}. test_run keeps its
+          public face: 'DirectoryLock' is a subclass, 'Store.lock()'
+          unchanged, 'DirectoryBusy' / 'liveness_can_be_asked' /
+          'LOCK_DIRECTORY_NAME' re-exported from store.py.
+COST      One extra hop for a reader of store.py; the names live in two
+          places (defined once, faced twice).
+GRAVEYARD A second lock implementation beside the store's (two truths).
+          Moving test_run's imports instead of re-exporting (every
+          caller and test churns for a mechanism move).
+
+D-2  NON-RECURSIVE, REFUSED BY NAME                          (2026-08-09)
+------------------------------------------------------------------------------
+PROBLEM   The orchestrator locks a directory for a session's lifetime;
+          run_test, called per choice inside it, locks the same
+          directory from the same process. Same holder meets its own
+          mutex: recursive (depth count) or non-recursive?
+DECISION  Non-recursive -- Frank-Rene: obvious from what a mutex IS.
+          One lock site per holder; a holder locking again has lost
+          track of its own critical section. Re-acquisition by the live
+          holder raises 'DirectoryDeadlock', a subclass of
+          'DirectoryBusy': the fault is loud and named the instant it
+          is made, and a caller that does not distinguish still sees a
+          busy.
+COST      The orchestrator design must keep ONE lock site: a ceremony
+          running inside an orchestrator-held lock must be enterable
+          without taking it (wiring belongs to the orchestrator pass,
+          not to this one).
+GRAVEYARD Recursive mutex with a depth count (hides unclear ownership
+          of the critical section; the depth is bookkeeping for a fault
+          that should not exist). Same-holder re-lock returning plain
+          False (collapses a programming fault into an ordinary busy).
+
+D-3  THE STEAL LAW STANDS; HOLD AND WAIT ARE OPT-INS         (2026-08-09)
+------------------------------------------------------------------------------
+PROBLEM   "We might have some time out related to it, when it does not
+          make sense to hold the lock any longer" -- while the recorded
+          law says: liveness is asked, not inferred; no expiry.
+DECISION  Default behaviour unchanged: a lock is broken only when its
+          recorded holder no longer exists. Two policies exist as
+          explicit opt-ins, both off by default:
+              wait_sec      a contender's patience before 'busy'
+              max_hold_sec  a live holder past its allowance is treated
+                            as gone
+          The holder file carries 'acquired', so 'holder_age_sec()'
+          answers holder time whether or not any policy reads it; a
+          record without 'acquired' answers None -- absence is data.
+COST      A stolen-by-decree holder does not learn of the theft; the
+          caller enabling 'max_hold_sec' owns that consequence.
+GRAVEYARD Expiry as the default (a healthy long run robbed of its
+          lock -- the failure in the green direction). Heart beats and
+          lease renewal (clock skew, a second mechanism).

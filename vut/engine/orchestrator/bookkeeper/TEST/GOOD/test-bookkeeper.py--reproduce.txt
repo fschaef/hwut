@@ -1,0 +1,9 @@
+INSPECT: test facts   = {'interactive': False, 'interpreter': ['python3', '-u'], 'source_file': 'demo.py', 'source_kind': 'interpreted'}
+         caps recorded: True
+         choice facts = {'canonicaliser': {'stdout': ['cat']}, 'compare': {'numeric_tolerance_ratio': 0.01}}
+         unknown test -> None, unknown choice -> None
+  OK  : the test application is reproducible from the base
+  OK  : the caps ride with it
+  OK  : the choice is reproducible: both halves of freeing
+  OK  : what was never recorded answers None, not a guess
+SUCCESS: the base alone reproduces what a test is configured to do.

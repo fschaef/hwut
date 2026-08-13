@@ -1,0 +1,7 @@
+Testing the auxiliary directory mutex: one live holder, holder identity,
+non-recursive refusal, liveness-asked steal, hold and wait policies.
+---------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py
