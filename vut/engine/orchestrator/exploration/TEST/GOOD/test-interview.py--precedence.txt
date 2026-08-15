@@ -1,0 +1,5 @@
+
+--- a header-carrying file and an 'apps' entry are never run ---
+legacy.bas       CONF  'conf speaks'
+test-header.py   HEADER  'header speaks'
+interviewed: nobody

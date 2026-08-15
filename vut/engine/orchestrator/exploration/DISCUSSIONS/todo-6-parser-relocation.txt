@@ -1,0 +1,29 @@
+todo-6  THE PARSER MOVES TO 'language_support/python'
+______________________________________________________________________________
+
+DECIDED (R-27, R-34). BUILT. This file records the move and what remains
+open after it.
+
+    vut/language_support/python/
+        hwut_runner.py
+        hocon_parser.py        <-- one copy, shipped to test authors
+
+    vut/engine/orchestrator/exploration/reader.py
+        imports it from there
+
+DONE:
+  1  The file moved; the module kept its name.
+  2  The parser states its OWN fault record ('ParseFault', 'E_ParseFault')
+     and imports nothing from the engine; 'reader._converted' says it in
+     the engine's vocabulary. 'SourceLine' is the parser's and the
+     unwrapper imports it.
+  3  The parser's TEST choices moved with it, GOOD files and all.
+  4  What stayed: the detector, the unwrapper, the validator -- the
+     unwrapper knows about comment leaders, which is HWUT's business and
+     not HOCON's.
+
+NOT NECESSARY FOR NOW: the other languages. The Python parser is what HWUT
+itself uses, and a port is written when a language actually needs one --
+'language_support/<lang>/' as the heart desires. The GOOD files of the
+Python one are the description any port is measured against, and they exist
+already. Nothing waits on this.

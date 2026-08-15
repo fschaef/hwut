@@ -1,0 +1,18 @@
+
+--- plain: as its own file ---
+{ at 1:1
+  key 'hwut' at 1:1 ->
+    { at 1:7
+      key 'title' at 2:5 ->
+        'T' (str) at 2:13
+    }
+}
+
+--- offset: same text, region begins at line 40, 3 columns stripped ---
+{ at 40:4
+  key 'hwut' at 40:4 ->
+    { at 40:10
+      key 'title' at 41:8 ->
+        'T' (str) at 41:16
+    }
+}

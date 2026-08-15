@@ -1,0 +1,11 @@
+
+--- test parameters do not stand at the conf root ---
+on_entry 'setup.sh'  on_exit None  ignore ()
+collision []
+FAULT hwut.conf:2:5: VOCABULARY: 'numeric' at the root of hwut.conf: the root carries directory keys only; this key belongs to an 'apps' entry
+FAULT hwut.conf:3:5: VOCABULARY: 'title' at the root of hwut.conf: the root carries directory keys only; this key belongs to an 'apps' entry
+
+--- a target of three words ---
+on_entry None  on_exit None  ignore ()
+collision []
+FAULT hwut.conf:2:17: TYPE: 'collision' takes a target: a file name, or a file name and a choice name; 'test-a.py one two' names 3 words

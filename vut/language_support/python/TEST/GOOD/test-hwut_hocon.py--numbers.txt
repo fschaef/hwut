@@ -1,0 +1,73 @@
+
+--- decimal, with sign and exponent ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    42 (int) at 1:5
+  key 'b' at 2:1 ->
+    -0.12 (float) at 2:5
+  key 'c' at 3:1 ->
+    7e+212 (float) at 3:5
+  key 'd' at 4:1 ->
+    6.02e+23 (float) at 4:5
+  key 'e' at 5:1 ->
+    0.5 (float) at 5:5
+}
+
+--- the visual helper enters no value ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    1000 (int) at 1:5
+  key 'b' at 2:1 ->
+    7000.55 (float) at 2:5
+}
+
+--- hexadecimal, binary, octal ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    3735928559 (int) at 1:5
+  key 'b' at 2:1 ->
+    125 (int) at 2:5
+  key 'c' at 3:1 ->
+    1620 (int) at 3:5
+  key 'd' at 4:1 ->
+    255 (int) at 4:5
+  key 'e' at 5:1 ->
+    -10 (int) at 5:5
+}
+
+--- roman ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    4 (int) at 1:5
+  key 'b' at 2:1 ->
+    1984 (int) at 2:5
+  key 'c' at 3:1 ->
+    -10 (int) at 3:5
+}
+
+--- a sign standing apart from its digits ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    -0.12 (float) at 1:5
+  key 'b' at 2:1 ->
+    7 (int) at 2:5
+  key 'c' at 3:1 ->
+    -255 (int) at 3:5
+}
+
+--- what spells no number is a string, and carries quotes ---
+{ at 1:1
+}
+FAULT f.hocon:1:5: SYNTAX: a string is written in double quotes: "1.2.3"
+FAULT f.hocon:2:5: SYNTAX: a string is written in double quotes: "0x"
+FAULT f.hocon:3:5: SYNTAX: a string is written in double quotes: "0b012"
+FAULT f.hocon:4:5: SYNTAX: a string is written in double quotes: "1__0"
+FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "0rIIII"
+FAULT f.hocon:6:5: SYNTAX: a string is written in double quotes: "0rVX"
+
+--- no arithmetic: this language computes nothing ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    5 (int) at 1:5
+}
+FAULT f.hocon:1:9: SYNTAX: expected '=', ':' or '{' after key '-'

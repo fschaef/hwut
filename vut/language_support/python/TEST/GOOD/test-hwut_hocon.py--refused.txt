@@ -1,0 +1,9 @@
+
+--- refused, each by name ---
+{ at 1:1
+}
+FAULT f.hocon:1:1: REFUSED: 'include' does not exist here: a specification refers to nothing outside its file
+FAULT f.hocon:2:5: REFUSED: substitutions '${...}' do not exist here: a specification refers to nothing outside its file
+FAULT f.hocon:3:3: REFUSED: '+=' does not exist here
+FAULT f.hocon:4:5: REFUSED: triple-quoted strings do not exist here
+FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "survives"

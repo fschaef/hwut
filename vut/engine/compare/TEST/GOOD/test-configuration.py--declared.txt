@@ -1,0 +1,20 @@
+
+--- ConfigurationPatternFinder ---
+    strip_whitespace_f             True
+    ignored_line_f                 True
+    analogy_f                      True
+    constraint_f                   True
+    whitespace_f                   True
+    backslash_f                    True
+    numeric_tolerance_ratio        0
+    equivalent_pattern_list        []
+    visible_nothing_pattern_list   []
+    ignored_line_begin_marker      '##'
+    ignored_line_end_marker        '##'
+    analogy_begin_marker           '(('
+    analogy_end_marker             '))'
+
+--- Configuration ---
+    constraint_expression_list     []
+    constraint_db                  {}
+    region                         {'potpourri': {'max_comparisons': 128}}

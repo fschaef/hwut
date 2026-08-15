@@ -1,0 +1,30 @@
+
+--- the table imported: every member exists and declares ---
+import check passed
+
+--- parameter, owning class, member(s), derived default ---
+analogy            ConfigCompare       analogy_f, analogy_begin_marker, analogy_end_marker ('((', '))')  <adapted>
+build.executable   ConfigBuild         executable                                     None
+build.framework    ConfigBuild         framework                                      None
+caps.child_process_max_n ConfigCaps          child_process_max_n                            None
+caps.cpu_sec       ConfigCaps          cpu_sec                                        None
+caps.file_handle_max_n ConfigCaps          file_handle_max_n                              None
+caps.file_size_mb  ConfigCaps          file_size_mb                                   None
+caps.memory_mb     ConfigCaps          memory_mb                                      None
+caps.network       ConfigCaps          network                                        True
+caps.timeout_sec   ConfigCaps          timeout_sec                                    60.0
+caps.write_directory_list ConfigCaps          write_directory_list                           None
+comment            ConfigCompare       ignored_line_f, ignored_line_begin_marker, ignored_line_end_marker ('##', '##')  <adapted>
+constraints        ConfigCompare       constraint_f, constraint_db                    ()  <adapted>
+eq-pattern         ConfigCompare       equivalent_pattern_list                        ()
+interactive        ConfigRunner        interactive_f                                  False
+nothing            ConfigCompare       visible_nothing_pattern_list                   ()
+numeric            ConfigCompare       numeric_tolerance_ratio                        0.0
+pype               ConfigCanonicalise  pype                                           None
+same               ConfigStore         same_nominal_f                                 False
+slash_eqv          ConfigCompare       backslash_f                                    True
+whitespace_eqv     ConfigCompare       whitespace_f                                   True
+
+--- a member renamed behind our back ---
+Renamed -> 'numeric': Renamed has no member 'numeric_tolerance_ratio'
+Silent -> 'numeric': Silent.numeric_tolerance_ratio declares no default

@@ -1,0 +1,6 @@
+
+--- an application that does not exist ---
+REFUSED: 'test-z.py' is not a test application of this directory; it offers: test-a.py, test-b.sh, test-c.py
+
+--- a choice that does not exist ---
+REFUSED: 'test-a.py' has no choice 'three'; it offers: one, two

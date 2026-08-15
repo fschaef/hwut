@@ -1,6 +1,7 @@
-Support modules for Unit Test development
--------------------------------------------------------------------------------
+The HOCON Subset Parser given to Python Test Authors
+-----------------------------------------------------
 
 coverage run --omit ./*.py -a *.py
 
 --not config.py
+--not benchmark*.py

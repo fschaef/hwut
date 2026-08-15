@@ -1,0 +1,6 @@
+
+--- offsets, region at line 4 ---
+marker at 4:4
+line  4  stripped 3  |hwut {|
+line  5  stripped 3  |    title = "T"|
+line  6  stripped 3  |}|

@@ -1,0 +1,7 @@
+
+--- a name the vocabulary does not carry ---
+timeout      refused
+app          refused
+constraint   refused
+caps         refused
+invented     refused

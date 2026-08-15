@@ -1,0 +1,5 @@
+
+--- both explore; the origin says which carrier spoke ---
+interview caps: Caps(timeout_sec=10.0, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=1, file_handle_max_n=None, network=False, write_directory_list=None)
+otto-von-bismarck.bas    INTERVIEW 'Iron and Blood'  choices: one, two
+test-modern.py           HEADER    'modern'  choices: -

@@ -1,0 +1,10 @@
+
+--- comments ---
+{ at 1:1
+  key 'a' at 2:1 ->
+    1 (int) at 2:5
+  key 'b' at 4:1 ->
+    2 (int) at 4:5
+}
+FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "bare"
+FAULT f.hocon:6:1: SYNTAX: expected '=', ':' or '{' after key 'value'

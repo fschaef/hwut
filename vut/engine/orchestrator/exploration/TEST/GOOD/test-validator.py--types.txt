@@ -1,0 +1,15 @@
+
+--- wrong shapes, each named ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    caps = Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=None, write_directory_list=None)
+choice 'one':
+    (nothing stated)
+FAULT f.py:3:15: TYPE: 'numeric' is a relative ratio in [0..1]
+FAULT f.py:4:15: TYPE: 'build' is a framework name or a scope of 'framework', 'executable' and 'caps'
+FAULT f.py:5:17: TYPE: 'slash_eqv' must be a boolean
+FAULT f.py:6:29: TYPE: 'timeout_sec' must be a number
+FAULT f.py:6:49: TYPE: 'memory_mb' must be greater than zero
+FAULT f.py:7:15: VOCABULARY: unknown cap 'bandwidth'
+FAULT f.py:8:15: TYPE: 'analogy' names two markers, the opening and the closing; 3 given
+FAULT f.py:9:24: TYPE: the list form of 'choices' carries names only

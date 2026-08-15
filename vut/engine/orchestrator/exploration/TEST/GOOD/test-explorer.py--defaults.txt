@@ -1,0 +1,4 @@
+
+--- effective = chosen, or the owner's default ---
+record    numeric 0.25  comment None  analogy None
+effective numeric 0.25  comment ('##', '##')  analogy ('((', '))')

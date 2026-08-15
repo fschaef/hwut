@@ -1,0 +1,40 @@
+
+--- build named alone; analogy and constraints switched off ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    build = Build(framework='make', executable=None, caps=None)
+    analogy = ()
+    constraints = ()
+choice -:
+    (nothing stated)
+
+--- the other spellings of off, and absence beside them ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    analogy = ()
+    constraints = ()
+choice -:
+    (nothing stated)
+
+--- 'analogy = true' says nothing and is refused ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    (nothing stated)
+choice -:
+    (nothing stated)
+FAULT f.py:3:15: TYPE: 'analogy = true' says nothing: leave 'analogy' unstated for the analogy markers, or name the pair
+
+--- 'comment' is a marker pair, and reads alike ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    comment = ('/*', '*/')
+choice -:
+    (nothing stated)
+
+--- 'comment' switched off, and one of three markers ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    comment = ()
+choice 'one':
+    (nothing stated)
+FAULT f.py:4:31: TYPE: 'comment' names two markers, the opening and the closing; 3 given

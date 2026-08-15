@@ -1,0 +1,21 @@
+
+--- at the root: they reach every choice ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    same = True
+    interactive = True
+choice 'one':
+    (nothing stated)
+choice 'two':
+    numeric = 0.05
+
+--- inside a choice: refused, by name ---
+title    'T'  language None  origin HEADER  at 1:7
+root:
+    (nothing stated)
+choice 'one':
+    (nothing stated)
+choice 'two':
+    (nothing stated)
+FAULT f.py:4:15: VOCABULARY: 'same' cannot be a choice attribute
+FAULT f.py:5:15: VOCABULARY: 'interactive' cannot be a choice attribute

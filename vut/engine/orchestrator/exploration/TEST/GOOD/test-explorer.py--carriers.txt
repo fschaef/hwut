@@ -1,0 +1,7 @@
+
+--- header AND apps; and a ghost entry ---
+directory keys: on_entry None ignore ()
+app 'test-both.py'  title 'I have a header'  origin HEADER
+    choice -     (nothing stated)
+FAULT hwut.conf:3:24: DIRECTORY: 'test-both.py' carries a header AND is named under 'apps': one file, one carrier
+FAULT hwut.conf:4:24: DIRECTORY: 'apps' names 'test-ghost.py', which does not exist

@@ -1,0 +1,110 @@
+todo-1  OWNER FACES: WHAT EACH COMPONENT OWES
+______________________________________________________________________________
+
+DECIDED (R-37..R-43). The mechanism is BUILT: 'relation.py' relates our word
+to '(class, member)', writes values with setattr, reads defaults out of the
+frozen dataclass declaration, and checks the whole table at IMPORT.
+
+UNBUILT: the owners have not declared their faces.
+'owner_faces_provisional.py' stands in for all six.
+
+WHAT AN OWNER OWES (R-41, R-57): its configuration declared as a FROZEN
+DATACLASS, with the default it judges least astonishing on each member --
+its own members, in its own words. No face, no second declaration: where a
+word of ours is several members of its, an ADAPTER in 'relation.py' bridges
+the two, and the default is derived backwards through it.
+
+    ConfigBuild          -> the build component
+    ConfigCaps           -> procsitter          (todo-4 names the caps)
+    ConfigCanonicalise   -> the pype component
+    ConfigCompare        -> vut.engine.compare  (below)
+    ConfigStore          -> the result store    ('same', R-45)
+    ConfigRunner         -> the runner          ('interactive', R-46)
+
+
+COMPARE: WHAT IS THERE TODAY
+______________________________________________________________________________
+
+Compare's configuration is not flat and not frozen:
+
+    Configuration                       slotted, mutable
+        constraint_db                   dict, top level
+        pattern_finder                  ConfigurationPatternFinder,
+                                        NOT slotted
+            numeric_tolerance_ratio
+            equivalent_pattern_list
+            visible_nothing_pattern_list
+            analogy_f
+            analogy_begin_marker
+            analogy_end_marker
+            constraint_f
+            whitespace_f
+            backslash_f
+
+THE FACE COMPARE OWES, member by member, against our vocabulary:
+
+    numeric        -> numeric_tolerance_ratio        (0.0)
+    eq-pattern     -> equivalent_pattern_list        (())
+    nothing        -> visible_nothing_pattern_list   (())
+    analogy        -> the marker PAIR (R-24), which compare holds as
+                      three fields: 'analogy_f' plus two markers. The
+                      face carries ONE member -- a pair, empty for off.
+    constraints    -> the expression LIST (R-25), which compare holds as
+                      'constraint_f' plus 'constraint_db', a NAMED map.
+                      The face carries one member: a tuple.
+    slash          -> backslash_f
+    comment        -> compare's comment marker, wherever it lives today
+
+SETTLED (R-54, R-55, R-56):
+
+  -  'whitespace' entered the vocabulary; it relates to compare's
+     'whitespace_f'. 'slash' relates to 'backslash_f'.
+  -  'constraints' stays a LIST; compare relates each expression to its
+     variables itself.
+  -  Compare's configuration becomes frozen dataclasses. The FACE is
+     no longer asked for (R-57 supersedes R-40's face): three adapters
+     -- ANALOGY, CONSTRAINTS, COMMENT -- bridge our words to compare's
+     own members, and 'ConfigCompare' in
+     'owner_faces_provisional.py' now MIRRORS compare's real
+     'ConfigurationPatternFinder' member for member.
+
+STILL OPEN, and only compare can answer:
+
+  SETTLED SINCE (R-64, R-65, R-66):
+
+  a  'comment' is a marker PAIR, read like 'analogy'. Compare therefore
+     needs an 'ignored_line_f' beside its two markers, as it has
+     'analogy_f' beside those two -- otherwise OFF cannot be said. It
+     is in the delivered 'configuration.py'.
+  b  'strip_whitespace_f' stays compare's own; no specification reaches
+     it. 'whitespace_eqv' is the whitespace parameter and the only one.
+  c  The constraint namespace carries the maths and 'glob', and a test
+     run has ONE for all its constraints:
+     'engine/constraint_namespace.py' in the delivered bundle, with
+     'engine/README-constraint_namespace.txt' beside it.
+
+  STILL OPEN, in compare: 'engine/constraints.py' already declares
+  'SAFE_FUNCTION_DB', 'SAFE_CONSTANT_DB' and 'SAFE_STR_METHOD_SET' of its
+  own, and its 'ConstraintSpace' is the run-scoped half of the namespace.
+  Those three names become imports from 'constraint_namespace':
+
+      SAFE_FUNCTION_DB    -> FUNCTION_DB
+      SAFE_CONSTANT_DB    -> CONSTANT_DB
+      SAFE_STR_METHOD_SET -> STR_METHOD_SET
+
+  and the scope built in 'ConstraintExpression' becomes
+  'namespace_of(bindings)'. The AST allow-list stays exactly as it is.
+
+
+THE MOVE, per owner:
+  1  The owner declares its face.
+  2  'RELATION' names the owner's class; member names change with it.
+  3  The stand-in class is deleted; when the file is empty, it goes.
+
+Nothing else changes, and '_assert_relation()' fails loudly at import if a
+name does not match. 'test-defaults.py' prints every declared default, so
+each step's GOOD file change IS the contract change.
+
+THE PROVISIONAL VALUES were not ruled one by one. One is worth the owner's
+eye: 'caps.network = True' -- the stand-in permits network access, and the
+opposite is defensible. It is procsitter's call.

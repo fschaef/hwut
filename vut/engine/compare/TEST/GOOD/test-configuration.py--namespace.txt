@@ -1,0 +1,42 @@
+
+--- the run's namespace: fixed names, and what the run bound ---
+    bound z      -> namespace carries 53 names, 1 of them the run's
+    bound area   -> namespace carries 54 names, 2 of them the run's
+    bound name   -> namespace carries 55 names, 3 of them the run's
+    a fresh run starts at 52
+
+--- a constraint evaluates against the namespace ---
+    abs(sin(z)) < 1e-9                     {'z': 0.0}                   True
+    sqrt(area) < 10                        {'area': 81}                 True
+    log10(n) > 2                           {'n': 1000}                  True
+    degrees(angle) == 180.0                {'angle': 3.141592653589793} True
+    value < pi                             {'value': 3.0}               True
+    glob(name, "build-*.log")              {'name': 'build-42.log'}     True
+    glob(name, "build-*.log")              {'name': 'run.log'}          False
+    isclose(ratio, 0.5, abs_tol=1e-9)      {'ratio': 0.5}               True
+
+--- the namespace reaches nothing else ---
+    open         carried: False
+    __import__   carried: False
+    eval         carried: False
+    exec         carried: False
+    os           carried: False
+    sys          carried: False
+    functions 47   constants 5   string methods 15
+
+--- glob is the shell's own form, and case sensitive ---
+    'build-42.log' 'build-*.log'    True
+    'build-42.log' 'build-?2.log'   True
+    'Build-42.log' 'build-*.log'    False
+    'x.log'        '[abx].log'      True
+    4711           '47*'            True
+
+--- what a variable may not be called ---
+    55 names
+    sin        True
+    min        True
+    glob       True
+    pi         True
+    abs        True
+    x          False
+    epsilon    False

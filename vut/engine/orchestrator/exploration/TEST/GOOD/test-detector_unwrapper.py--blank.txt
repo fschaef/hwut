@@ -1,0 +1,8 @@
+
+--- blank line takes no part ---
+marker at 1:3
+line  1  stripped 2  |hwut {|
+line  2  stripped 2  |    title = "T"|
+line  3  stripped 0  ||
+line  4  stripped 2  |    numeric = 0.5|
+line  5  stripped 2  |}|

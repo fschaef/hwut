@@ -1,0 +1,37 @@
+todo-4  THE VOCABULARY OF 'caps'
+______________________________________________________________________________
+
+DECIDED (R-22): 'caps' is procsitter's scope, and procsitter owns every
+default in it. DECIDED (R-47): the vocabulary is FIXED -- an unknown cap is
+a fault at the door. DECIDED (R-48): a cap procsitter cannot enforce refuses
+the test.
+
+BUILT:  timeout_sec, network.
+
+NAMED, UNBUILT -- each is one field in 'Caps', one branch in
+'validator._caps', and one entry in 'RELATION':
+
+    cpu_sec               CPU time, as distinct from wall clock
+    memory_mb             address space
+    file_size_mb          the largest file the process may write
+    child_process_max_n   how many children it may spawn
+    file_handle_max_n     how many handles it may hold open
+    write_directory_list  where it may write. DEFAULT: the directory of
+                          the test source and all of its
+                          sub-directories.
+
+Most map onto 'setrlimit' and are cheap. 'network' and
+'write_directory_list' do not -- they need namespaces or a sandbox, and
+procsitter may be unable to enforce them on a given platform.
+
+WHERE A CAP CANNOT BE ENFORCED (R-48): the test does not run. The
+documentation must state the way out:
+
+    --ignore=<cap>    run the test with that cap unenforced, knowingly
+
+The switch belongs to the RUNNER, not to this component. It is written down
+here so that it is not lost: a refusal with no stated remedy is a wall.
+
+OWED TO PROCSITTER (todo-1): the defaults of every cap above, declared on
+its own face. The values in 'owner_faces_provisional.ConfigCaps' are
+stand-ins and were not ruled one by one.

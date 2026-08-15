@@ -1,0 +1,18 @@
+
+--- one expression, two variables ---
+    x          ['x < y + 2']
+    y          ['x < y + 2']
+
+--- one variable, two expressions ---
+    x          ['x < 10', 'x > 0']
+
+--- both ways at once ---
+    epsilon    ['abs(z) < epsilon']
+    x          ['x < y + 2']
+    y          ['x < y + 2', 'y > z']
+    z          ['abs(z) < epsilon', 'y > z']
+
+--- through the configuration: the flag follows the database ---
+    before: constraint_f True  db {}
+    after:  constraint_f True  db {'t': ('t > 0 and t < 100',)}
+    empty:  constraint_f False  db {}

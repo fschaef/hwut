@@ -1,0 +1,50 @@
+
+--- everything ---
+test-a.py {
+    title = "Tolerances"
+    choices {
+        two {
+            build {
+                framework = null              # default
+                executable = null             # default
+            }
+            caps {
+                timeout_sec = 30.0            # app
+                cpu_sec = null                # default
+                memory_mb = null              # default
+                file_size_mb = null           # default
+                child_process_max_n = null    # default
+                file_handle_max_n = null      # default
+                network = true                # default
+                write_directory_list = null   # default
+            }
+            pype = null                       # default
+            numeric = 0.05
+            eq-pattern = []                   # default
+            nothing = []                      # default
+            analogy = ["((", "))"]            # default
+            constraints = []                  # default
+            comment = ["//", ""]              # hwut.conf:2
+            slash_eqv = true                  # default
+            whitespace_eqv = true             # default
+            same = false                      # default
+            interactive = false               # default
+        }
+    }
+}
+
+
+--- --no-default: what somebody stated ---
+test-a.py {
+    title = "Tolerances"
+    choices {
+        two {
+            caps {
+                timeout_sec = 30.0            # app
+            }
+            numeric = 0.05
+            comment = ["//", ""]              # hwut.conf:2
+        }
+    }
+}
+

@@ -1,0 +1,25 @@
+
+--- quoted: blanks, comment markers and binders are content ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    'make %.exe' (str) at 1:5
+  key 'b' at 2:1 ->
+    'not # a comment' (str) at 2:5
+  key 'c' at 3:1 ->
+    'x = y' (str) at 3:5
+  key 'd' at 4:1 ->
+    'yes' (str) at 4:5
+}
+
+--- unquoted: refused, and shown in the quotes it wants ---
+{ at 1:1
+  key 'c' at 3:1 ->
+    [ at 3:5
+    ]
+  key 'd' at 4:1 ->
+    1 (int) at 4:5
+}
+FAULT f.hocon:1:5: SYNTAX: a string is written in double quotes: "make"
+FAULT f.hocon:2:5: SYNTAX: a string is written in double quotes: "strip.pype"
+FAULT f.hocon:3:6: SYNTAX: a string is written in double quotes: "one"
+FAULT f.hocon:3:11: SYNTAX: a string is written in double quotes: "two"

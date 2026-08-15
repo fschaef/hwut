@@ -1,0 +1,10 @@
+
+--- a directory of both carriers ---
+directory keys: on_entry None ignore ('*.gen',)
+app 'test-gen.c'  title 'generated'  origin CONF
+    choice -     (nothing stated)
+app 'test-parse.py'  title 'parses'  origin HEADER
+    choice one   (nothing stated)
+    choice two   (nothing stated)
+app 'test-plain.sh'  title 'plain'  origin HEADER
+    choice -     (nothing stated)

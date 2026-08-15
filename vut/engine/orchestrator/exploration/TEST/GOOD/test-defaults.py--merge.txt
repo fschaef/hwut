@@ -1,0 +1,7 @@
+
+--- stated, unstated, and stated OFF ---
+numeric            record 0.25           effective 0.25
+analogy            record ()             effective ()
+comment            record None           effective ('##', '##')
+caps.timeout_sec   record 5              effective 5
+caps.network       record None           effective True

@@ -1,0 +1,31 @@
+todo-2  INSTANTIATION: THE FACES BLESSED ON REAL COMPONENTS
+______________________________________________________________________________
+
+DECIDED (R-18, R-37..R-41). BUILT: 'instantiate.configurations_of' yields one
+COMPLETE configuration per owning class, with no per-component code -- the
+relation table is the whole mechanism.
+
+UNBUILT: the blessing against the REAL components. 'test-defaults.py
+instantiate' records what the STAND-IN faces yield
+(owner_faces_provisional.py), and its GOOD file is therefore a description of
+the stand-in, not of compare.
+
+That is deliberate and it is safe here, because the stand-in's values are
+never the oracle of a comparison: the choice prints what the mechanism
+produced, and the mechanism is what is under test.
+
+COMPARE IN PARTICULAR: 'instantiate.configurations_of' hands compare an
+instance of its FACE, not of its live 'Configuration'. Building the live one
+from the face is compare's step, and the place where 'analogy' becomes
+'analogy_f' plus two markers, and 'constraints' becomes 'constraint_f' plus
+a map. That translation is compare's to write and compare's to test; this
+component states the author's words and nothing more.
+
+AT INTEGRATION, per owner (see todo-1):
+  1  'RELATION' names the owner's class.
+  2  Run 'test-defaults.py declared' and 'instantiate'; INSPECT the first
+     output before blessing it. A member the owner renamed shows in
+     'declared' as "DECLARES NOTHING" or as a missing member, by name.
+  3  Record the GOOD files against the real components, in one batch, once
+     all four faces exist -- not one at a time, which would bless three
+     stand-ins alongside one real face and hide which is which.

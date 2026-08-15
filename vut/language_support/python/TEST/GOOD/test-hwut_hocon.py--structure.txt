@@ -1,0 +1,46 @@
+
+--- nesting and key-brace ---
+{ at 1:1
+  key 'outer' at 1:1 ->
+    { at 1:8
+      key 'inner' at 2:5 ->
+        { at 2:14
+          key 'deep' at 2:15 ->
+            1 (int) at 2:22
+        }
+      key 'braced' at 3:5 ->
+        { at 3:13
+          key 'x' at 3:14 ->
+            2 (int) at 3:18
+        }
+    }
+}
+
+--- lists ---
+{ at 1:1
+  key 'commas' at 1:1 ->
+    [ at 1:12
+    ]
+  key 'newlines' at 2:1 ->
+    [ at 2:12
+        1 (int) at 3:5
+        2 (int) at 4:5
+    ]
+  key 'objects' at 6:1 ->
+    [ at 6:12
+        { at 6:15
+          key 'a' at 6:16 ->
+            1 (int) at 6:20
+        }
+        { at 6:26
+          key 'a' at 6:27 ->
+            2 (int) at 6:31
+        }
+    ]
+  key 'empty' at 7:1 ->
+    [ at 7:12
+    ]
+}
+FAULT f.hocon:1:13: SYNTAX: a string is written in double quotes: "one"
+FAULT f.hocon:1:18: SYNTAX: a string is written in double quotes: "two"
+FAULT f.hocon:1:23: SYNTAX: a string is written in double quotes: "three"

@@ -112,27 +112,25 @@ def compare_setup_delta(options):
     keeping is what somebody CHOSE.
 
     Nothing here names a tolerance: the walk is over whatever compare
-    declares, so a tolerance compare has not invented yet is recorded
-    the day it is used.
+    DECLARES, so a tolerance compare has not invented yet is recorded the
+    day it is used. The declaration is read through 'dataclasses.fields'
+    -- the same source compare's own defaults stand in, so the delta and
+    the defaults cannot disagree about what a member is.
     """
     if options is None: return {}
     from vut.engine.compare.configuration import Configuration
     default    = Configuration()
     difference = {}
 
-    for name in getattr(Configuration, "__slots__", ()):
+    for field in fields(Configuration):
+        name   = field.name
         chosen = getattr(options, name, None)
         plain  = getattr(default, name, None)
         if name == "pattern_finder":
-            for field_name in vars(plain):
-                a = getattr(chosen, field_name, None)
-                b = getattr(plain,  field_name, None)
-                if a != b: difference[field_name] = _plain(a)
-            #  an option compare added but the default object lacks
-            for field_name in vars(chosen):
-                if field_name not in vars(plain):
-                    difference[field_name] = _plain(getattr(chosen,
-                                                            field_name))
+            for inner in fields(plain):
+                a = getattr(chosen, inner.name, None)
+                b = getattr(plain,  inner.name, None)
+                if a != b: difference[inner.name] = _plain(a)
             continue
         if chosen != plain:
             difference[name] = _plain(chosen)

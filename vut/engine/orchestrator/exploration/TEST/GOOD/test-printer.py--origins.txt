@@ -1,0 +1,101 @@
+
+--- every provenance in one directory ---
+gen.c {
+    title = "generated"
+    choices {
+        - {
+            build {
+                framework = null              # default
+                executable = null             # default
+            }
+            caps {
+                timeout_sec = 60.0            # default
+                cpu_sec = null                # default
+                memory_mb = null              # default
+                file_size_mb = null           # default
+                child_process_max_n = null    # default
+                file_handle_max_n = null      # default
+                network = true                # default
+                write_directory_list = null   # default
+            }
+            pype = null                       # default
+            numeric = 0.0                     # default
+            eq-pattern = []                   # default
+            nothing = []                      # default
+            analogy = ["((", "))"]            # default
+            constraints = []                  # default
+            comment = ["//", "//"]            # hwut.conf:5
+            slash_eqv = true                  # hwut.conf:2
+            whitespace_eqv = true             # default
+            same = false                      # default
+            interactive = false               # default
+        }
+    }
+}
+
+legacy.bas {
+    title = "Iron and Blood"
+    choices {
+        one {
+            build {
+                framework = null              # default
+                executable = null             # default
+            }
+            caps {
+                timeout_sec = 60.0            # default
+                cpu_sec = null                # default
+                memory_mb = null              # default
+                file_size_mb = null           # default
+                child_process_max_n = null    # default
+                file_handle_max_n = null      # default
+                network = true                # default
+                write_directory_list = null   # default
+            }
+            pype = null                       # default
+            numeric = 0.0                     # default
+            eq-pattern = []                   # default
+            nothing = []                      # default
+            analogy = ["((", "))"]            # default
+            constraints = []                  # default
+            comment = ["##", "##"]            # default
+            slash_eqv = true                  # hwut.conf:2
+            whitespace_eqv = true             # default
+            same = true                       # --hwut-info
+            interactive = false               # default
+        }
+    }
+}
+
+test-own.py {
+    title = "own"
+    choices {
+        two {
+            build {
+                framework = null              # default
+                executable = null             # default
+            }
+            caps {
+                timeout_sec = 60.0            # default
+                cpu_sec = null                # default
+                memory_mb = null              # default
+                file_size_mb = null           # default
+                child_process_max_n = null    # default
+                file_handle_max_n = null      # default
+                network = true                # default
+                write_directory_list = null   # default
+            }
+            pype = null                       # default
+            numeric = 0.05
+            eq-pattern = []                   # default
+            nothing = []                      # default
+            analogy = ["((", "))"]            # default
+            constraints = []                  # default
+            comment = ["##", "##"]            # default
+            slash_eqv = true                  # hwut.conf:2
+            whitespace_eqv = true             # default
+            same = false                      # default
+            interactive = false               # default
+        }
+    }
+}
+

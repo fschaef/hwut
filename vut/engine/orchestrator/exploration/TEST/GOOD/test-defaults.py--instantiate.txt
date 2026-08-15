@@ -1,0 +1,37 @@
+
+--- a case stating two things, and what it yields ---
+record: numeric 0.05  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)  comment None
+
+ConfigBuild:
+    framework                      None
+    executable                     None
+ConfigCaps:
+    timeout_sec                    60.0
+    cpu_sec                        None
+    memory_mb                      None
+    file_size_mb                   None
+    child_process_max_n            None
+    file_handle_max_n              None
+    network                        False
+    write_directory_list           None
+ConfigCanonicalise:
+    pype                           None
+ConfigCompare:
+    strip_whitespace_f             True
+    analogy_f                      True
+    constraint_f                   True
+    whitespace_f                   True
+    backslash_f                    True
+    numeric_tolerance_ratio        0.05
+    equivalent_pattern_list        ()
+    visible_nothing_pattern_list   ()
+    ignored_line_f                 True
+    ignored_line_begin_marker      '##'
+    ignored_line_end_marker        '##'
+    analogy_begin_marker           '(('
+    analogy_end_marker             '))'
+    constraint_db                  None
+ConfigStore:
+    same_nominal_f                 False
+ConfigRunner:
+    interactive_f                  False

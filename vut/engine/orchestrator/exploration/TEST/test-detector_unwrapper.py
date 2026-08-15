@@ -1,0 +1,146 @@
+#! /usr/bin/env python3
+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+______________________________________________________________________________
+
+PURPOSE: The detector and the unwrapper -- finding the region without
+         knowing any language's comment syntax, and stripping the
+         discovered leader while carrying the offsets.
+
+CHOICES: detect, star, hash, dash, single, blank, offsets;
+
+DESCRIPTION:
+
+detect     the marker found at its first occurrence, anywhere; a file
+           without one is not a test application; 'hwut' as a mere word
+           (no brace) does not detect; a brace inside a quoted string
+           does not end the region.
+
+star       C block comment style, ' * ' leader, trailing '*/' after the
+           closing brace lying outside the region.
+
+hash       shell/python style, '# ' leader -- and a HOCON comment INSIDE
+           the region surviving the strip.
+
+dash       lua style, '-- ' leader.
+
+single     a single-line region, and a region whose closer is the only
+           line after the opener -- the leader must never eat the brace.
+
+blank      a blank line inside the region takes no part in the prefix
+           discovery and breaks nothing.
+
+offsets    each unwrapped line names its file line and its stripped
+           column count -- the numbers an error message will use.
+______________________________________________________________________________
+"""
+import sys
+from config import HwutRunner                                # noqa: F401
+
+from vut.engine.orchestrator.exploration.source_file_detector import detect
+from vut.engine.orchestrator.exploration.unwrapper         import unwrap
+
+
+def banner(label):
+    """RETURN: None. Section heading."""
+    print()
+    print("--- %s ---" % label)
+
+
+def show(text):
+    """RETURN: None. Detects and unwraps 'text'; prints every line with
+    its offsets."""
+    region = detect(text)
+    if region is None:
+        print("no region")
+        return
+    print("marker at %d:%d" % (region.line, region.column))
+    for line in unwrap(text, region):
+        print("line %2d  stripped %d  |%s|"
+              % (line.line, line.column_offset, line.text))
+
+
+def test_detect():
+    """RETURN: None. Presence, absence, word-only, brace in string."""
+    banner("found, first occurrence")
+    show("code code\n/* hwut { title = \"T\" } */\nmore code\n")
+    banner("absent")
+    show("no marker anywhere\n")
+    banner("the word alone, no brace")
+    show("this line mentions hwut in prose\nreal code\n")
+    banner("a brace inside a string does not close the region")
+    show('# hwut {\n#     title = "closer } inside"\n# }\n')
+
+
+def test_star():
+    """RETURN: None. ' * ' leader; '*/' outside the region."""
+    banner("star leader")
+    show('/* hwut {\n'
+         ' *     title = "Parser corner cases"\n'
+         ' *     build = "make"\n'
+         ' * } */\n'
+         'int main() { return 0; }\n')
+
+
+def test_hash():
+    """RETURN: None. '# ' leader; an inner HOCON comment survives."""
+    banner("hash leader")
+    show('#! /usr/bin/env python3\n'
+         '# hwut {\n'
+         '#     title = "T"\n'
+         '#     # a comment INSIDE the specification\n'
+         '#     numeric = 0.01\n'
+         '# }\n'
+         'import sys\n')
+
+
+def test_dash():
+    """RETURN: None. '-- ' leader."""
+    banner("dash leader")
+    show('-- hwut {\n'
+         '--     title = "T"\n'
+         '-- }\n'
+         'print("lua")\n')
+
+
+def test_single():
+    """RETURN: None. One line; and opener plus lone closer."""
+    banner("everything on one line")
+    show('/* hwut { title = "T" } */\n')
+    banner("lone closer: the leader must not eat the brace")
+    show('/* hwut { title = "T"\n'
+         ' * } */\n')
+
+
+def test_blank():
+    """RETURN: None. A blank line inside the region."""
+    banner("blank line takes no part")
+    show('# hwut {\n'
+         '#     title = "T"\n'
+         '\n'
+         '#     numeric = 0.5\n'
+         '# }\n')
+
+
+def test_offsets():
+    """RETURN: None. The region deep in a file: line numbers are the
+    file's, columns count what was stripped."""
+    banner("offsets, region at line 4")
+    show('line one\n'
+         'line two\n'
+         'line three\n'
+         '/* hwut {\n'
+         ' *     title = "T"\n'
+         ' * } */\n')
+
+
+if __name__ == "__main__":
+    HwutRunner(sys.argv,
+               "Detector and unwrapper: no comment syntax known;", {
+        "detect":  test_detect,
+        "star":    test_star,
+        "hash":    test_hash,
+        "dash":    test_dash,
+        "single":  test_single,
+        "blank":   test_blank,
+        "offsets": test_offsets,
+    }).run()

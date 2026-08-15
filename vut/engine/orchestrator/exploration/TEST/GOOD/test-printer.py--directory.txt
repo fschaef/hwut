@@ -1,0 +1,103 @@
+
+--- the whole directory ---
+hwut.conf
+    on_entry             setup.sh
+    collision            test-b.py
+    dependency           test-a.py one <- test-b.py  test-b.py <- test-a.py one
+
+test-a.py {
+    title = "A"
+    choices {
+        one {
+            build {
+                framework = null              # default
+                executable = null             # default
+            }
+            caps {
+                timeout_sec = 60.0            # default
+                cpu_sec = null                # default
+                memory_mb = null              # default
+                file_size_mb = null           # default
+                child_process_max_n = null    # default
+                file_handle_max_n = null      # default
+                network = true                # default
+                write_directory_list = null   # default
+            }
+            pype = null                       # default
+            numeric = 0.0                     # default
+            eq-pattern = []                   # default
+            nothing = []                      # default
+            analogy = ["((", "))"]            # default
+            constraints = []                  # default
+            comment = ["##", "##"]            # default
+            slash_eqv = true                  # default
+            whitespace_eqv = true             # default
+            same = false                      # default
+            interactive = false               # default
+        }
+        two {
+            build {
+                framework = null              # default
+                executable = null             # default
+            }
+            caps {
+                timeout_sec = 60.0            # default
+                cpu_sec = null                # default
+                memory_mb = null              # default
+                file_size_mb = null           # default
+                child_process_max_n = null    # default
+                file_handle_max_n = null      # default
+                network = true                # default
+                write_directory_list = null   # default
+            }
+            pype = null                       # default
+            numeric = 0.0                     # default
+            eq-pattern = []                   # default
+            nothing = []                      # default
+            analogy = ["((", "))"]            # default
+            constraints = []                  # default
+            comment = ["##", "##"]            # default
+            slash_eqv = true                  # default
+            whitespace_eqv = true             # default
+            same = false                      # default
+            interactive = false               # default
+        }
+    }
+}
+
+test-b.py {
+    title = "B"
+    choices {
+        - {
+            build {
+                framework = null              # default
+                executable = null             # default
+            }
+            caps {
+                timeout_sec = 60.0            # default
+                cpu_sec = null                # default
+                memory_mb = null              # default
+                file_size_mb = null           # default
+                child_process_max_n = null    # default
+                file_handle_max_n = null      # default
+                network = true                # default
+                write_directory_list = null   # default
+            }
+            pype = null                       # default
+            numeric = 0.0                     # default
+            eq-pattern = []                   # default
+            nothing = []                      # default
+            analogy = ["((", "))"]            # default
+            constraints = []                  # default
+            comment = ["##", "##"]            # default
+            slash_eqv = true                  # default
+            whitespace_eqv = true             # default
+            same = false                      # default
+            interactive = false               # default
+        }
+    }
+}
+
+test-a.py one   [MISDEP]
+test-b.py -   [MISDEP]
+FAULT hwut.conf:1:7: DIRECTORY: dependency cycle: test-a.py one -> test-b.py -> test-a.py one

@@ -1,0 +1,20 @@
+
+--- a full block ---
+title 'My Title'  origin INTERVIEW
+root: eq_pattern=('[0-9]+', '0x[0-9a-f]+')  same=True  interactive=True
+choices: alpha, beta
+
+--- a choice-less application ---
+title 'Solitary'  origin INTERVIEW
+root: interactive=True
+choices: -
+
+--- the least a block can be ---
+title 'Bare'  origin INTERVIEW
+root: (nothing)
+choices: -
+
+--- a line beyond the block is passed over in silence ---
+title 'My Title'  origin INTERVIEW
+root: interactive=True
+choices: one

@@ -1,9 +1,0 @@
-=> Testing Stable Sort (Same Priority, Same Tick)
-All fire at tick 0 with priority 1. Order should be First -> Second -> Third.
-SETUP:   First |1|
-SETUP:  Second |1|
-SETUP:   Third |1|
-[t:0] Trigger 'First' fired.
-[t:0] Trigger 'Second' fired.
-[t:0] Trigger 'Third' fired.
-

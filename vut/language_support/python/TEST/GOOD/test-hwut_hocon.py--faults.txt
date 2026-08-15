@@ -1,0 +1,15 @@
+
+--- faults accumulate ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    1 (int) at 1:5
+  key 'c' at 5:1 ->
+    { at 5:4
+      key 'd' at 6:5 ->
+        3 (int) at 6:9
+    }
+}
+FAULT f.hocon:2:1: SYNTAX: duplicate key 'a'; the first stands, this one is refused
+FAULT f.hocon:3:5: SYNTAX: unterminated string
+FAULT f.hocon:4:1: SYNTAX: unmatched '}'
+FAULT f.hocon:7:1: SYNTAX: unterminated object: '}' missing

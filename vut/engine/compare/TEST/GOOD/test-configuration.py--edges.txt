@@ -1,0 +1,19 @@
+
+--- a name the namespace provides is not a variable ---
+    a          ['max(a, b) < c']
+    b          ['max(a, b) < c']
+    c          ['max(a, b) < c']
+    epsilon    ['abs(sin(z) - x) < epsilon']
+    name       ['len(name) > 3', 'glob(name, "b-*")']
+    x          ['abs(x) < 1', 'abs(sin(z) - x) < epsilon']
+    z          ['abs(sin(z) - x) < epsilon']
+
+--- a literal is not a variable ---
+    flag       ['flag == True']
+    x          ['x is not None']
+
+--- an expression that does not parse contributes nothing ---
+    (nothing)
+
+--- ... and does not stop the ones that do ---
+    y          ['y > 0']

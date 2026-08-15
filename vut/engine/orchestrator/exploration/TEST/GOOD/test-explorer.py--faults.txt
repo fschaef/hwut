@@ -1,0 +1,6 @@
+
+--- a malformed header beside a healthy one ---
+directory keys: on_entry None ignore ()
+app 'test-good.py'  title 'good'  origin HEADER
+    choice -     (nothing stated)
+FAULT test-bad.py:3:7: VOCABULARY: unknown key 'numerc'

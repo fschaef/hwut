@@ -374,6 +374,7 @@ def test_setup_delta():
     """ONLY the differences reach the book: a default compare setup adds
     nothing, and an option compare has not invented yet is recorded the
     day it is used."""
+    import dataclasses
     import vut.engine.compare.configuration as compare_configuration
 
     plain = compare_setup_delta(compare_configuration.Configuration())
@@ -381,15 +382,57 @@ def test_setup_delta():
     loose.pattern_finder.numeric_tolerance_ratio = 0.01
     chosen = compare_setup_delta(loose)
 
-    compare_configuration.ConfigurationPatternFinder.rounding_digits = 0
-    future = compare_configuration.Configuration()
-    future.pattern_finder.rounding_digits = 3
-    invented = compare_setup_delta(future)
+    #  AN OPTION COMPARE HAS NOT INVENTED YET. Compare invents one by
+    #  DECLARING it, and the walk is over whatever it declares at the
+    #  moment of the call -- so the option is recorded the day it exists,
+    #  with nothing here naming it. The declaration is stood in for and
+    #  put back; a test that leaves a component changed is a trap for the
+    #  next one.
+    original_finder = compare_configuration.ConfigurationPatternFinder
+    original_config = compare_configuration.Configuration
+
+    field_list = [(f.name, f.type, f)
+                  for f in dataclasses.fields(original_finder)]
+    FutureFinder = dataclasses.make_dataclass(
+        "ConfigurationPatternFinder",
+        [(name, type_, field) for name, type_, field in field_list]
+        + [("rounding_digits", int, dataclasses.field(default=0))],
+        slots=True)
+
+    FutureConfiguration = dataclasses.make_dataclass(
+        "Configuration",
+        [(f.name,
+          FutureFinder if f.name == "pattern_finder" else f.type,
+          dataclasses.field(default_factory=FutureFinder)
+          if f.name == "pattern_finder" else f)
+         for f in dataclasses.fields(original_config)],
+        slots=True)
+
+    compare_configuration.ConfigurationPatternFinder = FutureFinder
+    compare_configuration.Configuration              = FutureConfiguration
+    try:
+        future = FutureConfiguration()
+        future.pattern_finder.rounding_digits = 3
+        invented = compare_setup_delta(future)
+    finally:
+        compare_configuration.ConfigurationPatternFinder = original_finder
+        compare_configuration.Configuration              = original_config
+
+    #  AND AN OPTION THAT DOES NOT EXIST cannot be set at all: the
+    #  configuration is slotted, so a misspelt tolerance is refused where
+    #  it is written instead of being carried silently into the book.
+    try:
+        compare_configuration.Configuration().pattern_finder \
+                            .numeric_tolerence_ratio = 0.01
+        refused = ""
+    except AttributeError as error:
+        refused = str(error)
 
     print("INSPECT: default setup -> %s" % plain)
     print("         chosen setup  -> %s" % chosen)
     print("         an option compare has not invented yet -> %s"
           % invented)
+    print("         a misspelt one -> %s" % refused)
     ok = _check([
         (plain == {},
          "a DEFAULT setup adds nothing"),
@@ -398,6 +441,9 @@ def test_setup_delta():
         (invented == {"rounding_digits": 3},
          "a tolerance compare invents later is recorded the day it "
          "is used"),
+        (bool(refused),
+         "a tolerance that does not exist is refused where it is "
+         "written"),
     ])
     _verdict(ok, "what somebody CHOSE is what the book keeps.")
 

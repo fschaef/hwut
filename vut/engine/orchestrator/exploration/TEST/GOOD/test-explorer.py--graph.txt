@@ -1,0 +1,36 @@
+
+--- targets that exist; nothing unreachable ---
+directory keys: on_entry None ignore ()
+app 'test-a.py'  title 'A'  origin HEADER
+    choice one   (nothing stated)
+    choice two   (nothing stated)
+app 'test-b.py'  title 'B'  origin HEADER
+    choice -     (nothing stated)
+
+--- a target the directory does not offer ---
+directory keys: on_entry None ignore ()
+app 'test-a.py'  title 'A'  origin HEADER
+    choice one   (nothing stated)
+    choice two   (nothing stated)
+    test-a.py    one   [MISDEP]
+FAULT hwut.conf:1:7: DIRECTORY: 'collision' names 'test-ghost.py', which this directory does not offer
+FAULT hwut.conf:1:7: DIRECTORY: 'dependency' names 'test-a.py three', which this directory does not offer
+
+--- a cycle, and what hangs off it ---
+directory keys: on_entry None ignore ()
+app 'test-a.py'  title 'A'  origin HEADER
+    choice -     (nothing stated)
+app 'test-b.py'  title 'B'  origin HEADER
+    choice -     (nothing stated)
+app 'test-c.py'  title 'C'  origin HEADER
+    choice -     (nothing stated)
+app 'test-d.py'  title 'D'  origin HEADER
+    choice -     (nothing stated)
+app 'test-e.py'  title 'E'  origin HEADER
+    choice -     (nothing stated)
+    test-a.py    -     [MISDEP]
+    test-b.py    -     [MISDEP]
+    test-c.py    -     [MISDEP]
+    test-d.py    -     [MISDEP]
+    test-e.py    -     [MISDEP]
+FAULT hwut.conf:1:7: DIRECTORY: dependency cycle: test-a.py -> test-c.py -> test-b.py -> test-a.py

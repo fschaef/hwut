@@ -1,0 +1,38 @@
+
+--- two entries, one line, no comma ---
+{ at 1:1
+  key 'caps' at 1:1 ->
+    { at 1:7
+      key 'timeout_sec' at 1:8 ->
+        30 (int) at 1:22
+      key 'network' at 1:26 ->
+        False (bool) at 1:36
+    }
+}
+
+--- a quoted value with blanks, beside a following key ---
+{ at 1:1
+  key 'a' at 1:1 ->
+    { at 1:4
+      key 'build' at 1:5 ->
+        'make %.exe' (str) at 1:13
+      key 'timeout_sec' at 1:27 ->
+        5 (int) at 1:41
+    }
+}
+
+--- three entries, one line ---
+{ at 1:1
+  key 'x' at 1:1 ->
+    { at 1:4
+      key 'a' at 1:5 ->
+        1 (int) at 1:9
+      key 'b' at 1:12 ->
+        'two' (str) at 1:16
+      key 'c' at 1:23 ->
+        { at 1:28
+          key 'd' at 1:29 ->
+            3 (int) at 1:33
+        }
+    }
+}

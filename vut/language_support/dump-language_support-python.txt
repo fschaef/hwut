@@ -1,0 +1,1649 @@
+# This bundle is a unified diff against /dev/null. To undump:
+#   git apply <this-file>          # recreates files and directories
+#   patch -p1 < <this-file>        # alternative, if git is unavailable
+# Lines beginning with '#' are ignored by both tools.
+diff --git a/python/RATIONALE-hwut_runner.txt b/python/RATIONALE-hwut_runner.txt
+new file mode 100644
+--- /dev/null
++++ b/python/RATIONALE-hwut_runner.txt
+@@ -0,0 +1,88 @@
++==============================================================================
++RATIONALE -- hwut_runner (settled 2026-08-08)
++==============================================================================
++
++------------------------------------------------------------------------------
++PROBLEM   Reloading the application per choice dominates suite time.
++DECISION  Interactive mode: the framework starts the app once with
++          '--interactive' and triggers choices over stdin ("batch is a
++          pure ACCELERATOR": interactive output is byte-exact equal to
++          normal-mode output; one set of GOOD files).
++COST      Any state leak between choices is a defect to hunt, not a
++          documented quirk.
++MEASURED  (Python 3.12, one machine, medians) interpreter start + the
++          runner's import set: 145 ms; fork of the loaded app: 1.3 ms;
++          in-process dispatch: 0.005 ms. Saving vs reload: ~99 %. The
++          application's own import weight adds on top and is saved
++          identically -- the win scales with the heavy end.
++GRAVEYARD Batch as an own mode with own oracles: doubles the oracle
++          count; the two sets drift.
++
++------------------------------------------------------------------------------
++PROBLEM   Designating the per-choice output channel across the process
++          boundary.
++DECISION  The framework sends a FILE NAME ('run <choice> <out> <err>');
++          the app opens it and dup2's onto descriptors 1 and 2.
++COST      None observed; HWUT collects output files anyway.
++GRAVEYARD (a) fixed pass_fds at exec: set is fixed before any choice is
++          known. (b) SCM_RIGHTS fd passing: works, POSIX-only, a second
++          channel to build. (b) buried under (c)'s zero cost. Raw fd
++          numbers in the protocol: an fd number names an entry in the
++          sender's table; it cannot cross the boundary at all.
++
++------------------------------------------------------------------------------
++PROBLEM   stdout/stderr: one merged stream or two.
++DECISION  TWO SINKS per choice.
++COST      Tree-wide re-baseline: every GOOD was recorded through '2>&1';
++          run_all.sh changes shape (two files, two diffs per choice).
++          Registered in OPEN.txt.
++GRAVEYARD Merged sink: interleaving follows buffer-flush timing (stdout
++          block-buffered into a file, stderr unbuffered) -- a timing
++          artefact the GOODs happen to survive, and survive less once
++          choices run beside others or asyncio's reap-race lines appear.
++          Arity-decides compromise: superseded by the full-split ruling.
++
++------------------------------------------------------------------------------
++PROBLEM   A stray print(), or a child inheriting fd 1, injects a line
++          into the protocol and desynchronises the session -- silently,
++          corrupting SUBSEQUENT choices.
++DECISION  The UP channel is a private dup of the original stdout, taken
++          at session entry; fd 1 and fd 2 point at a stray sink between
++          choices. Forced anyway by the two-sink ruling: with both
++          descriptors redirected per choice, neither can carry UP.
++COST      One extra descriptor and temp file per session.
++
++------------------------------------------------------------------------------
++PROBLEM   Parallel execution: threads, async tasks, or processes.
++DECISION  The app declares the scheme (constructor 'parallel'): None =
++          sequential, "process" = fork per choice. No in-process
++          parallelism.
++COST      "process" is POSIX only; elsewhere the app runs sequentially
++          (declared, not pretended -- the procsitter platform-table
++          pattern).
++MEASURED  Fork fan-out with a 200 MB parent: ~4 ms/child (copy-on-write;
++          the feared "lot of copying" does not materialise). 64 I/O-bound
++          choices x 50 ms on ONE core: sequential ~3.3 s, fork-parallel
++          0.38 s.
++GRAVEYARD Threads/async tasks: fd 1 is process-global; a per-task
++          sys.stdout proxy catches print() and misses every spawned
++          process -- procsitter's whole subject. Buys 1.3 ms per choice
++          over fork. Mechanism keywords in the info block (THREAD;/
++          ASYNC;): a promise the framework must honour when it knows
++          better; wrong scope.
++
++------------------------------------------------------------------------------
++PROBLEM   What 'done' guarantees when a choice spawned processes that
++          outlive it (writer contaminating a later choice's sink -- a
++          bug class the per-choice process death used to prevent for
++          free).
++DECISION  'done' is a barrier for the APP'S OWN writes (flushed, sinks
++          closed, descriptors restored). Containment of spawned
++          processes is the choice's concern: choices that spawn use the
++          procsitter, which contains its groups. (D3 -- containment
++          stays in the one place it lives; HwutRunner grows none.)
++COST      Unenforced against a choice that spawns by other means and
++          leaks.
++GRAVEYARD Own-writes-only with no stated responsibility: leaves the bug
++          class unowned. Per-choice setsid + group containment in
++          HwutRunner: duplicates the procsitter inside the harness.
+diff --git a/python/README-hwut_runner.txt b/python/README-hwut_runner.txt
+new file mode 100644
+--- /dev/null
++++ b/python/README-hwut_runner.txt
+@@ -0,0 +1,140 @@
++==============================================================================
++hwut_runner -- FRONT END OF A HWUT TEST APPLICATION
++==============================================================================
++
++A test application constructs one HwutRunner and calls '.run()'.
++
++    from hwut_runner import HwutRunner
++
++    HwutRunner(sys.argv, "My Title;",
++               { "first": test_first, "second": test_second },
++               parallel=None).run()
++
++'choice_map' maps choice name -> test function; a function may be a plain
++function or a coroutine function. Key 'None' names the single choice-less
++test; then it is the only entry.
++
++'parallel' selects the execution scheme of interactive mode:
++
++    None        sequential, in-process           (default)
++    "process"   one forked child per choice; choices run concurrently;
++                POSIX only
++
++
++1  COMMAND LINE -- THE TWO FRAMEWORK MODES
++______________________________________________________________________________
++
++    app --hwut-info     print the info block; exit 0.
++    app <choice>        NORMAL MODE. Run one choice. Test output flows on
++                        the process's stdout and stderr. Exit status is the
++                        process's exit status.
++    app --interactive   INTERACTIVE MODE. Section 2.
++    app                 manual mode: list choices with indices, read one
++                        index from stdin, run it, exit.
++    app -h | --hi | --sos | --wtf     same as '--hwut-info'.
++
++Info block:
++
++    <title>;
++    CHOICES: <name>, <name>, ...;         (absent for a choice-less app)
++    HAPPY: <pattern>;                     (zero or more)
++    SAME;                                 (if 'same_f')
++    INTERACTIVE;                          (always)
++
++'INTERACTIVE;' announces: the app accepts '--interactive'. Every app with a
++HwutRunner front end announces it.
++
++
++2  INTERACTIVE MODE
++______________________________________________________________________________
++
++Channels of a session:
++
++    stdin               DOWN   commands from the framework
++    original stdout     UP     protocol replies
++    per-choice sinks           test output: two files named per 'run'
++
++On entry the original stdout is duplicated onto a private control
++descriptor. Descriptors 1 and 2 are then pointed at a session stray sink
++(a temp file). Output written outside a running choice lands in the stray
++sink. Output written before '.run()' precedes the session; the framework's
++UP reader skips lines that match no UP message.
++
++DOWN grammar, one command per line, fields separated by blanks:
++
++    run <choice> <sink-out> <sink-err>
++    info
++    quit | q | exit
++
++'<choice>' is a choice name, a decimal index into the sorted choice list,
++or '-' for the choice-less test. '<sink-out>' and '<sink-err>' are file
++paths; the app opens them (created, truncated) and points descriptor 1 at
++the first, descriptor 2 at the second, for the duration of the choice.
++Processes spawned by the choice inherit these descriptors.
++
++UP grammar, one message per line:
++
++    done <choice> <status>       the choice ran; see BARRIER
++    fail <choice> <reason>       the command did not execute
++                                 reasons: unknown-choice, bad-command
++    info: <line>                 reply lines to 'info', one per info-block
++                                 line, terminated by 'done - 0'
++    bye                          session end; every child is reaped
++
++End of session: 'quit' or end of stdin. Both drain outstanding children,
++then emit 'bye'.
++
++<status> of 'done':
++
++    0        the test function ran and returned
++    n != 0   the test function raised SystemExit(n), or raised an
++             exception (=> 1; traceback in the error sink), or -- in
++             "process" mode -- the child exited with n; a negative n is
++             a terminating signal number.
++
++
++3  EXECUTION SCHEMES
++______________________________________________________________________________
++
++SEQUENTIAL ('parallel=None'). One choice at a time, in the app's own
++process. Per choice: streams flushed, descriptors 1 and 2 saved, pointed
++at the sinks, restored afterwards. 'done' follows immediately.
++
++PROCESS ('parallel="process"'). One 'fork()' per 'run' command; the child
++performs the sequential procedure and exits with the status; the parent
++keeps reading DOWN commands. A reaper thread reports 'done' upon each
++child's end. 'done' messages therefore arrive in COMPLETION order, not in
++submission order; the framework matches by the choice token. POSIX only.
++
++
++4  BARRIER -- WHAT 'done' GUARANTEES
++______________________________________________________________________________
++
++At the instant 'done <choice> <status>' is readable:
++
++    - every write of the app's own process (in "process" mode: of the
++      child) to the sinks is flushed and the sinks are closed;
++    - descriptors 1 and 2 of the app are restored.
++
++Writes of processes SPAWNED BY THE CHOICE that outlive the choice are the
++choice's concern. A choice that spawns uses the procsitter, which contains
++its process groups; a choice that spawns by other means owns its own
++containment.
++
++
++5  RESET DISCIPLINE (SEQUENTIAL MODE)
++______________________________________________________________________________
++
++In sequential mode consecutive choices share the process. State a choice
++alters and a later choice reads -- working directory, environment,
++module-level caches, RNG state -- is the test author's concern. The
++byte-exactness check: run the suite once in normal mode, once
++interactively, diff the sinks. In "process" mode each choice starts from
++the state at session entry.
++
++
++6  FURTHER CONTENT OF THE MODULE
++______________________________________________________________________________
++
++make_script_application()   generate a temporary executable script
++ScriptApplication           context manager around it; deletes on exit
+diff --git a/python/TEST/GOOD/test-deterministic-random.py--gauss.txt b/python/TEST/GOOD/test-deterministic-random.py--gauss.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-deterministic-random.py--gauss.txt
+@@ -0,0 +1,27 @@
++
++--- gauss(0, 1) -- 10 draws (full precision) ---
++[00] -1.6932610530200953
++[01] -1.7948937871423571
++[02] -0.41807683535209517
++[03] -0.23446950249309567
++[04] 0.10369126041457351
++[05] 0.6461958319491309
++[06] -1.3342073905957992
++[07] 1.9400921371759479
++[08] 0.5181356198956355
++[09] 1.2879258134135625
++
++--- gauss(0, 1) clamped to [-1, 1] ---
++[00] -1.0
++[01] -1.0
++[02] -0.41807683535209517
++[03] -0.23446950249309567
++[04] 0.10369126041457351
++[05] 0.6461958319491309
++[06] -1.0
++[07] 1.0
++[08] 0.5181356198956355
++[09] 1.0
++
++--- gauss_int(100, 15) -- 20 draws ---
++75 73 94 96 102 110 80 129 108 119 91 99 86 107 92 102 115 120 105 85
+diff --git a/python/TEST/GOOD/test-deterministic-random.py--primitives.txt b/python/TEST/GOOD/test-deterministic-random.py--primitives.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-deterministic-random.py--primitives.txt
+@@ -0,0 +1,37 @@
++
++--- next_int(0, 1000000) -- first 20 ---
++[00] 185883
++[01] 562855
++[02] 198763
++[03] 508699
++[04] 685045
++[05] 670199
++[06] 580153
++[07] 713932
++[08] 498852
++[09] 235989
++[10] 536297
++[11] 848254
++[12] 317799
++[13] 421617
++[14] 107882
++[15] 64363
++[16] 190233
++[17] 795899
++[18] 102912
++[19] 146799
++
++--- next_float -- first 10 (full precision) ---
++[00] 0.18588281411718588
++[01] 0.5628544371455628
++[02] 0.19876280123719875
++[03] 0.5086984913015087
++[04] 0.6850443149556851
++[05] 0.6701983298016702
++[06] 0.5801524198475801
++[07] 0.7139312860687139
++[08] 0.49885150114849885
++[09] 0.235988764011236
++
++--- coin(0.5) -- 40 draws ---
++T F T F F F F F T T F F T T T T T F T T T T F T T T F F T T F T T F T T F F T F
+diff --git a/python/TEST/GOOD/test-deterministic-random.py--ranges.txt b/python/TEST/GOOD/test-deterministic-random.py--ranges.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-deterministic-random.py--ranges.txt
+@@ -0,0 +1,9 @@
++
++--- next_int(0, 9) -- 30 draws ---
++6 9 3 6 5 4 5 8 7 3 1 0 6 3 5 3 5 9 9 9 9 4 7 1 9 7 0 8 7 9
++
++--- next_int(5, 5) -- degenerate range returns the bound ---
++5 5 5 5 5
++
++--- next_int(-3, 3) -- spanning zero ---
+++1 -1 +1 +0 +0 -1 -1 +3 -1 +2 -2 +2 +3 +1 +1 -3 +0 -2 -1 +3
+diff --git a/python/TEST/GOOD/test-deterministic-random.py--sample.txt b/python/TEST/GOOD/test-deterministic-random.py--sample.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-deterministic-random.py--sample.txt
+@@ -0,0 +1,12 @@
++
++--- sample_indices(10, 10) -- full permutation ---
++[6, 5, 1, 0, 7, 9, 2, 8, 3, 4]
++
++--- sample_indices(20, 5) -- partial draw ---
++[6, 17, 1, 8, 5]
++
++--- choice from a list -- 20 draws ---
++beta epsilon delta beta alpha epsilon alpha delta gamma delta beta alpha beta delta alpha delta alpha epsilon epsilon epsilon
++
++--- sample(list, 4) -- unique elements ---
++['G', 'D', 'F', 'E']
+diff --git a/python/TEST/GOOD/test-deterministic-random.py--seed_sweep.txt b/python/TEST/GOOD/test-deterministic-random.py--seed_sweep.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-deterministic-random.py--seed_sweep.txt
+@@ -0,0 +1,18 @@
++
++--- first next_int(0, 1000000) per seed 0..15 ---
++seed= 0 -> 0
++seed= 1 -> 48271
++seed= 2 -> 96542
++seed= 3 -> 144813
++seed= 4 -> 193084
++seed= 5 -> 241355
++seed= 6 -> 289626
++seed= 7 -> 337897
++seed= 8 -> 386168
++seed= 9 -> 434439
++seed=10 -> 482710
++seed=11 -> 530981
++seed=12 -> 579252
++seed=13 -> 627523
++seed=14 -> 675794
++seed=15 -> 724065
+diff --git a/python/TEST/GOOD/test-deterministic-random.py--select.txt b/python/TEST/GOOD/test-deterministic-random.py--select.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-deterministic-random.py--select.txt
+@@ -0,0 +1,6 @@
++
++--- select over a list -- 20 draws ---
++c b d a b c d a d d d c a d b d d b b b
++
++--- select over a tuple -- 12 draws ---
++p q p r p p p q q r q p
+diff --git a/python/TEST/GOOD/test-deterministic-random.py--unchosen.txt b/python/TEST/GOOD/test-deterministic-random.py--unchosen.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-deterministic-random.py--unchosen.txt
+@@ -0,0 +1,13 @@
++
++--- stable pool -- three full cycles of 4 elements ---
++c b d a b a d c d c b a
++
++--- FRESH container each call -- identical to the stable pool above ---
++c b d a b a d c d c b a
++
++--- sub-pool coherence -- draw from [a,b] then the full [a,b,c,d] ---
++first(from sub): a  then(from full): c d b
++
++--- reset() restarts the cycle ---
++before reset: c b d a
++after  reset: b a d c
+diff --git a/python/TEST/GOOD/test-pseudo_time_trigger.py--priority-tie.txt b/python/TEST/GOOD/test-pseudo_time_trigger.py--priority-tie.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-pseudo_time_trigger.py--priority-tie.txt
+@@ -0,0 +1,18 @@
++=> Testing Priority Tie-Break (Same Tick)
++A, B -- Both fire at tick 0, but B(1) should beat A(2) ... 
++SETUP:       A |21   3|
++SETUP:       B |12   2|
++C, D -- Both fire at tick 2, but C(0) should beat D(9)
++SETUP:       C |  0  1|
++SETUP:       D |  9  0|
++[t:0] Trigger 'B' fired.
++[t:0] Trigger 'A' fired.
++[t:1] Trigger 'A' fired.
++[t:1] Trigger 'B' fired.
++[t:2] Trigger 'C' fired.
++[t:2] Trigger 'D' fired.
++[t:5] Trigger 'D' fired.
++[t:5] Trigger 'C' fired.
++[t:5] Trigger 'B' fired.
++[t:5] Trigger 'A' fired.
++
+diff --git a/python/TEST/GOOD/test-pseudo_time_trigger.py--simple.txt b/python/TEST/GOOD/test-pseudo_time_trigger.py--simple.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-pseudo_time_trigger.py--simple.txt
+@@ -0,0 +1,8 @@
++=> Testing Simple Sequence
++SETUP:       A |1    |
++SETUP:       B |  1  |
++SETUP:       C |    1|
++[t:0] Trigger 'A' fired.
++[t:2] Trigger 'B' fired.
++[t:4] Trigger 'C' fired.
++
+diff --git a/python/TEST/GOOD/test-pseudo_time_trigger.py--stable-sort.txt b/python/TEST/GOOD/test-pseudo_time_trigger.py--stable-sort.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-pseudo_time_trigger.py--stable-sort.txt
+@@ -0,0 +1,9 @@
++=> Testing Stable Sort (Same Priority, Same Tick)
++All fire at tick 0 with priority 1. Order should be First -> Second -> Third.
++SETUP:   First |1|
++SETUP:  Second |1|
++SETUP:   Third |1|
++[t:0] Trigger 'First' fired.
++[t:0] Trigger 'Second' fired.
++[t:0] Trigger 'Third' fired.
++
+diff --git a/python/TEST/config.py b/python/TEST/config.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/config.py
+@@ -0,0 +1,18 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++Bootstrap: add 'vut' parent and this dir to sys.path. Import FIRST in tests.
++"""
++import os
++import sys
++
++_here = os.path.abspath(os.path.dirname(__file__))
++_cur = _here
++while os.path.basename(_cur) != "vut":
++    _cur, prev = os.path.dirname(_cur), _cur
++    if _cur == prev:
++        raise RuntimeError("config.py: 'vut' not found above %s" % _here)
++sys.path.insert(0, os.path.dirname(_cur))
++
++if _here not in sys.path:
++    sys.path.insert(0, _here)
++
++from vut.language_support.python.hwut_runner import HwutRunner # noqa: F401, E402
+diff --git a/python/TEST/test-deterministic-random.py b/python/TEST/test-deterministic-random.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/test-deterministic-random.py
+@@ -0,0 +1,195 @@
++#! /usr/bin/env python3
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Pin the DeterministicStream RNG and the SelectionMarker spread so any
++         drift in the number stream -- the substrate the monkey fuzzer and every
++         other reproducible walk stands on -- shows up as a binary diff.
++
++CHOICES: primitives, ranges, gauss, sample, select, unchosen, seed_sweep;
++
++DESCRIPTION:
++
++The stream is a Park-Miller MINSTD generator: 'state = 48271 * state mod
++(2^31 - 1)'. It is pure integer arithmetic with no platform-dependent floats in
++the core, so the recorded numbers MUST be identical on every machine. The Gauss
++path is the only one that touches libm (log/cos/sqrt); it is recorded too, so a
++libm-induced last-ULP difference would surface here rather than silently in a
++downstream walk.
++
++    primitives   raw next_int stream, next_float, coin -- the bare generator.
++    ranges       next_int over small and degenerate [v,v] ranges.
++    gauss        gauss, gauss clamped to a band, gauss_int -- the libm path.
++    sample       sample_indices (Fisher-Yates) and sample over a list.
++    select       stateless select: same state + same pool -> same element.
++    unchosen     select_unchosen with a caller-owned SelectionMarker: spread is
++                 reproducible across FRESH containers and coherent across
++                 differing sub-pools, because memory is keyed on candidate
++                 identity (NOT container address). This is the property the
++                 monkey fuzzer's per-ALT marker relies on.
++    seed_sweep   the first draw for a range of seeds -- pins seed handling.
++______________________________________________________________________________
++"""
++import sys
++import config                                                       # noqa: F401
++
++from vut.language_support.python.hwut_runner          import HwutRunner
++from vut.language_support.python.deterministic_random import (DeterministicStream,
++                                                              SelectionMarker)
++
++SEED = 0x42
++
++
++def banner(label):
++    """RETURN: None. Section heading."""
++    print()
++    print("--- %s ---" % label)
++
++
++def run_primitives():
++    """RETURN: None. The bare generator: next_int, next_float, coin."""
++    banner("next_int(0, 1000000) -- first 20")
++    s = DeterministicStream(SEED)
++    for i in range(20):
++        print("[%02d] %d" % (i, s.next_int(0, 1000000)))
++
++    banner("next_float -- first 10 (full precision)")
++    s = DeterministicStream(SEED)
++    for i in range(10):
++        print("[%02d] %r" % (i, s.next_float()))
++
++    banner("coin(0.5) -- 40 draws")
++    s = DeterministicStream(SEED)
++    print(" ".join("T" if s.coin(0.5) else "F" for _ in range(40)))
++
++
++def run_ranges():
++    """RETURN: None. next_int over small and degenerate ranges."""
++    banner("next_int(0, 9) -- 30 draws")
++    s = DeterministicStream(SEED)
++    print(" ".join(str(s.next_int(0, 9)) for _ in range(30)))
++
++    banner("next_int(5, 5) -- degenerate range returns the bound")
++    s = DeterministicStream(SEED)
++    print(" ".join(str(s.next_int(5, 5)) for _ in range(5)))
++
++    banner("next_int(-3, 3) -- spanning zero")
++    s = DeterministicStream(SEED)
++    print(" ".join("%+d" % s.next_int(-3, 3) for _ in range(20)))
++
++
++def run_gauss():
++    """RETURN: None. The libm path: gauss, clamped gauss, gauss_int."""
++    banner("gauss(0, 1) -- 10 draws (full precision)")
++    s = DeterministicStream(SEED)
++    for i in range(10):
++        print("[%02d] %r" % (i, s.gauss(0.0, 1.0)))
++
++    banner("gauss(0, 1) clamped to [-1, 1]")
++    s = DeterministicStream(SEED)
++    for i in range(10):
++        print("[%02d] %r" % (i, s.gauss(0.0, 1.0, -1.0, 1.0)))
++
++    banner("gauss_int(100, 15) -- 20 draws")
++    s = DeterministicStream(SEED)
++    print(" ".join(str(s.gauss_int(100.0, 15.0)) for _ in range(20)))
++
++
++def run_sample():
++    """RETURN: None. sample_indices (Fisher-Yates) and sample over a list."""
++    banner("sample_indices(10, 10) -- full permutation")
++    s = DeterministicStream(SEED)
++    print(s.sample_indices(10, 10))
++
++    banner("sample_indices(20, 5) -- partial draw")
++    s = DeterministicStream(SEED)
++    print(s.sample_indices(20, 5))
++
++    banner("choice from a list -- 20 draws")
++    s = DeterministicStream(SEED)
++    pool = ["alpha", "beta", "gamma", "delta", "epsilon"]
++    print(" ".join(s.choice(pool) for _ in range(20)))
++
++    banner("sample(list, 4) -- unique elements")
++    s = DeterministicStream(SEED)
++    print(s.sample(list("ABCDEFGH"), 4))
++
++
++def run_select():
++    """RETURN: None. Stateless select: same state + same pool -> same element."""
++    banner("select over a list -- 20 draws")
++    s = DeterministicStream(SEED)
++    pool = ["a", "b", "c", "d"]
++    print(" ".join(s.select(pool) for _ in range(20)))
++
++    banner("select over a tuple -- 12 draws")
++    s = DeterministicStream(SEED)
++    branches = ("p", "q", "r")
++    print(" ".join(s.select(branches) for _ in range(12)))
++
++
++def run_unchosen():
++    """RETURN: None. select_unchosen spread is identity-keyed, not address-keyed.
++
++    Records three properties the monkey fuzzer's per-ALT marker depends on:
++    a clean cycle over a stable pool, the SAME cycle when the container is
++    rebuilt fresh every call (proving memory is not keyed on container address),
++    and coherence when the pool composition changes between calls (a candidate
++    chosen via a sub-pool is remembered when the full pool is offered).
++    """
++    banner("stable pool -- three full cycles of 4 elements")
++    s = DeterministicStream(SEED)
++    pool = ["a", "b", "c", "d"]
++    m = SelectionMarker()
++    print(" ".join(s.select_unchosen(pool, m) for _ in range(12)))
++
++    banner("FRESH container each call -- identical to the stable pool above")
++    s = DeterministicStream(SEED)
++    m = SelectionMarker()
++    out = []
++    for _ in range(12):
++        fresh = ["a", "b", "c", "d"]      # new list object every call
++        out.append(s.select_unchosen(fresh, m))
++    print(" ".join(out))
++
++    banner("sub-pool coherence -- draw from [a,b] then the full [a,b,c,d]")
++    s = DeterministicStream(SEED)
++    m = SelectionMarker()
++    full = ["a", "b", "c", "d"]
++    sub  = ["a", "b"]
++    first = s.select_unchosen(sub, m)
++    rest  = [s.select_unchosen(full, m) for _ in range(3)]
++    print("first(from sub):", first, " then(from full):", " ".join(rest))
++
++    banner("reset() restarts the cycle")
++    s = DeterministicStream(SEED)
++    pool = ["a", "b", "c", "d"]
++    m = SelectionMarker()
++    before = [s.select_unchosen(pool, m) for _ in range(4)]
++    m.reset()
++    after  = [s.select_unchosen(pool, m) for _ in range(4)]
++    print("before reset:", " ".join(before))
++    print("after  reset:", " ".join(after))
++
++
++def run_seed_sweep():
++    """RETURN: None. First next_int per seed -- pins seed handling."""
++    banner("first next_int(0, 1000000) per seed 0..15")
++    for seed in range(16):
++        s = DeterministicStream(seed)
++        print("seed=%2d -> %d" % (seed, s.next_int(0, 1000000)))
++
++
++HwutRunner(
++    argv       = sys.argv,
++    title      = "DeterministicStream RNG and SelectionMarker spread",
++    choice_map = {
++        "primitives": run_primitives,
++        "ranges":     run_ranges,
++        "gauss":      run_gauss,
++        "sample":     run_sample,
++        "select":     run_select,
++        "unchosen":   run_unchosen,
++        "seed_sweep": run_seed_sweep,
++    },
++).run()
+diff --git a/python/TEST/test-pseudo_time_trigger.py b/python/TEST/test-pseudo_time_trigger.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/test-pseudo_time_trigger.py
+@@ -0,0 +1,93 @@
++#! /usr/bin/env python3
++"""
++PURPOSE: Testing the TriggerDispatcher for deterministic async flow.
++
++DESCRIPTION:
++    This test verifies that:
++    1. Triggers fire at the correct pseudo-time tick.
++    2. Within a tick, lower digits (higher priority) fire first.
++    3. If digits are identical, registration order determines the sequence.
++
++CHOICES: simple-sequence, priority-tie-break, stable-sort;
++"""
++
++import sys
++import asyncio
++
++sys.path.insert(0, "../../../../")
++
++from   vut.language_support.python.racing_condition_sim import TriggerDispatcher, Trigger #noqa E402
++
++# Assuming the implementation above is in a file named trigger_dispatcher.py
++# or included in the same directory.
++# from trigger_dispatcher import Trigger, TriggerDispatcher
++
++class PrintTrigger(Trigger):
++    """A concrete implementation of Trigger for HWUT verification."""
++    def __init__(self, name: str, timeline: str):
++        super().__init__(timeline)
++        self.name = name
++        print("SETUP: %7s |%s|" % (name, timeline))
++
++    async def fire(self, pseudo_time: int):
++        """ACTION: Print the firing event to stdout for HWUT comparison."""
++        print(f"[t:{pseudo_time}] Trigger '{self.name}' fired.")
++
++async def test_simple_sequence():
++    """Tests basic staggered triggers."""
++    print("=> Testing Simple Sequence")
++    t1 = PrintTrigger("A", "1    ") # Fires at 0
++    t2 = PrintTrigger("B", "  1  ") # Fires at 2
++    t3 = PrintTrigger("C", "    1") # Fires at 4
++    
++    dispatcher = TriggerDispatcher([t1, t2, t3])
++    await dispatcher.run()
++    print()
++
++async def test_priority_tie_break():
++    """Tests that lower digits fire before higher digits at the same tick."""
++    print("=> Testing Priority Tie-Break (Same Tick)")
++    print("A, B -- Both fire at tick 0, but B(1) should beat A(2) ... ")
++    t1 = PrintTrigger("A", "21   3") 
++    t2 = PrintTrigger("B", "12   2")
++    
++    print("C, D -- Both fire at tick 2, but C(0) should beat D(9)")
++    t3 = PrintTrigger("C", "  0  1")
++    t4 = PrintTrigger("D", "  9  0")
++    
++    dispatcher = TriggerDispatcher([t1, t2, t3, t4])
++    await dispatcher.run()
++    print()
++
++async def test_stable_sort():
++    """Tests that identical digits fire in registration order."""
++    print("=> Testing Stable Sort (Same Priority, Same Tick)")
++    print("All fire at tick 0 with priority 1. Order should be First -> Second -> Third.")
++    t1 = PrintTrigger("First",  "1")
++    t2 = PrintTrigger("Second", "1")
++    t3 = PrintTrigger("Third",  "1")
++    
++    dispatcher = TriggerDispatcher([t1, t2, t3])
++    await dispatcher.run()
++    print()
++
++# Main HWUT Entry Point
++if __name__ == "__main__":
++    if "--hwut-info" in sys.argv:
++        print("TriggerDispatcher Logic;")
++        print("CHOICES: simple, priority-tie, stable-sort;")
++        sys.exit()
++
++    choice = sys.argv[1] if len(sys.argv) > 1 else ""
++
++    if "simple" in choice:
++        asyncio.run(test_simple_sequence())
++    elif "priority-tie" in choice:
++        asyncio.run(test_priority_tie_break())
++    elif "stable-sort" in choice:
++        asyncio.run(test_stable_sort())
++    else:
++        # Default run if no specific choice is matched
++        asyncio.run(test_simple_sequence())
++        asyncio.run(test_priority_tie_break())
++        asyncio.run(test_stable_sort())
+diff --git a/python/__init__.py b/python/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/python/deterministic_random.py b/python/deterministic_random.py
+new file mode 100644
+--- /dev/null
++++ b/python/deterministic_random.py
+@@ -0,0 +1,124 @@
++import math
++# from   typeguard import typechecked -- too costly in most applications
++
++
++class SelectionMarker:
++    """Remembers which candidate OBJECTS have been chosen at one selection site.
++
++    Keyed by object identity (id), never equality: two structurally equal
++    candidates are still distinct alternatives. The marker is caller-owned, so
++    'prefer unchosen' is reproducible regardless of container address reuse --
++    the marker, not id(container), is the memory. One marker per logical site
++    (e.g. one per grammar ALT node) gives coverage-style spread across a walk.
++
++    Safe to key on id() because the caller holds the candidate objects alive
++    for the marker's lifetime (e.g. grammar branches are long-lived nodes).
++    """
++    def __init__(self):
++        """RETURN: None. Starts with an empty chosen-set."""
++        self.chosen = set()      # set of id(candidate)
++
++    def reset(self):
++        """RETURN: None. Forgets all chosen candidates; the next cycle restarts."""
++        self.chosen.clear()
++
++
++class DeterministicStream:
++    """
++    A platform-independent random number generator using a 
++    Linear Congruential Generator (LCG).
++    """
++    def __init__(self, seed: int = 0x42):
++        # Using parameters from glibc/POSIX
++        self.state = seed & 0x7FFFFFFF
++
++    def coin(self, probability_of_true) -> bool:
++        return bool(self.next_float() < probability_of_true)
++
++    # @typechecked -- too costly
++    def select(self, candidates: list|tuple|str):
++        """RETURN: object, a uniformly random candidate from 'candidates'.
++
++        Stateless: the same stream state and the same 'candidates' always yield
++        the same element. For spread that prefers not-yet-chosen candidates, use
++        'select_unchosen' with a caller-owned SelectionMarker.
++        """
++        return candidates[self.next_int(0, len(candidates) - 1)]
++
++    # @typechecked -- too costly
++    def select_unchosen(self, candidates: list|tuple|str, marker: "SelectionMarker"):
++        """RETURN: object, a random candidate whose identity 'marker' has not seen.
++
++        Draws uniformly among the candidates absent from 'marker' (by object
++        identity), records the choice, and returns it. When every candidate has
++        been seen, resets 'marker' and draws from the full pool.
++
++        Identity-keyed, so the result is independent of pool composition: a
++        candidate counts as 'the same' across differing sub-pools of one site
++        (e.g. a branch seen via a 'recursive' sub-list is remembered when the
++        full branch list is offered next). Determinism does not depend on the
++        container's address -- only on the stream state and the marker.
++        """
++        unchosen = [c for c in candidates if id(c) not in marker.chosen]
++        if not unchosen:
++            marker.reset()
++            unchosen = list(candidates)
++        choice = unchosen[self.next_int(0, len(unchosen) - 1)]
++        marker.chosen.add(id(choice))
++        return choice
++
++    # @typechecked -- too costly
++    def next_int(self, v_min: int, v_max: int) -> int:
++        """Returns a random integer in [v_min, v_max]."""
++        # Park-Miller "Minimal Standard" (MINSTD) generator.
++        # Uses Mersenne prime 2^31 - 1 to avoid low-bit correlations found in power-of-2 LCGs.
++        # Multiplier 48271 is the modern standard (improved over original 16807).
++        self.state = (48271 * self.state) % 2147483647
++        if v_min == v_max:
++            return v_min
++        return v_min + (self.state % (v_max - v_min + 1))
++
++    def next_float(self) -> float:
++        """Returns a random float in [0.0, 1.0)."""
++        return self.next_int(0, 1000000) / 1000001.0
++
++    def gauss(self, mu: float, sigma: float, lower: float=-math.inf, upper: float=math.inf) -> float:
++        """
++        Box-Muller transform to generate Gaussian distribution 
++        independently of platform libraries.
++        """
++        u1 = self.next_float() + 1e-9 # Avoid log(0)
++        u2 = self.next_float()
++        z0 = math.sqrt(-2.0 * math.log(u1)) * math.cos(2.0 * math.pi * u2)
++
++        result = z0 * sigma + mu
++        if   result < lower: return lower
++        elif result > upper: return upper
++        else:                return result
++
++    def gauss_int(self, mu: float, sigma: float, lower: int=-math.inf, upper: int=math.inf) -> float:
++        return int(round(self.gauss(mu, sigma, float(lower), float(upper))))
++
++    def choice(self, seq: list):
++        """Pick a random element from a list."""
++        return seq[self.next_int(0, len(seq) - 1)]
++
++    def sample_indices(self, population_size: int, k: int) -> list[int]:
++        """Returns k unique indices from range(population_size)."""
++        assert population_size >= k
++        indices = list(range(population_size))
++        result = []
++        for i in range(k):
++            # Swap current index with a random remaining one (Fisher-Yates)
++            idx = self.next_int(i, population_size - 1)
++            indices[i], indices[idx] = indices[idx], indices[i]
++            result.append(indices[i])
++        return result
++
++    # @typechecked -- to costly
++    def sample(self, population: list, n: int):
++        assert len(population) >= n
++        return [ 
++            population[i] for i in self.sample_indices(len(population), n)
++        ]
++
+diff --git a/python/hwut_runner.py b/python/hwut_runner.py
+new file mode 100644
+--- /dev/null
++++ b/python/hwut_runner.py
+@@ -0,0 +1,519 @@
++# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++#______________________________________________________________________________
++import os
++import sys
++import re
++import time
++import threading
++import stat
++import tempfile
++from   pathlib   import Path
++from   typing    import Callable, Optional, ContextManager
++from   typeguard import typechecked
++
++
++class HwutRunner:
++    """Front end of a HWUT test application.
++
++    A test application constructs one HwutRunner with its choice map and
++    calls '.run()'. The command line selects the mode:
++
++        app --hwut-info      print the info block; exit.
++        app <choice>         normal mode: run one choice; test output on
++                             the process's stdout and stderr.
++        app --interactive    interactive mode: choices are started via
++                             stdin; per choice, test output goes to two
++                             named sink files; 'done' is reported on the
++                             process's original stdout.
++        app                  manual mode: list choices, read one selection
++                             from stdin, run it, exit.
++    """
++    @typechecked
++    def __init__(self,
++                 argv:        list[str],
++                 title:       str,
++                 choice_map:  dict[str|None, Callable],
++                 happy:       None | list[str] | list[re.Pattern] | str | re.Pattern = None,
++                 same_f:      bool = False,
++                 parallel:    str | None = None):
++        """RETURN: HwutRunner, ready for '.run()'.
++
++        'argv'        command line of the test application ('sys.argv').
++        'title'       title line of the info block.
++        'choice_map'  maps choice name -> test function. Key 'None' stands
++                      for the single choice-less test; then it is the only
++                      entry.
++        'happy'       pattern(s) for the info block's 'HAPPY:' lines.
++        'same_f'      True => info block carries 'SAME;'.
++        'parallel'    execution scheme of interactive mode:
++                          None       -- sequential, in-process
++                          "process"  -- one forked child per choice;
++                                        choices run concurrently.
++        """
++        assert choice_map
++        assert parallel in (None, "process")
++        # None indicates the test function for no choice. We only have apps
++        # with and without choices, not both.
++        if None in choice_map: assert len(choice_map) == 1
++
++        self.title      = title
++        self.argv       = argv
++        self.choice     = None if len(argv) < 2 else argv[1]
++        self.choice_map = choice_map
++        self.parallel   = parallel
++        # Provide a 'choice' by index -> also on the command line easy
++        # specification.
++        # NOTE: 'None' cannot be sorted against strings => safety separation
++        self.sorted_choice_list = [None] if None in choice_map else sorted(choice_map)
++
++        self.__same_result_for_all_choices = same_f
++
++        if   type(happy) is str:        self.happy = [happy]
++        elif type(happy) is list:       self.happy = [ h if type(h) is str else h.pattern for h in happy ]
++        elif type(happy) is re.Pattern: self.happy = [happy.pattern]
++        else:                           self.happy = []
++
++        # Interactive mode state (armed in MODE_interactive).
++        self._control       = None                # UP channel (original stdout)
++        self._control_lock  = threading.Lock()
++        self._stray_path    = None                # session sink for stray output
++        self._pending       = {}                  # pid -> choice token
++        self._pending_lock  = threading.Lock()
++        self._pending_event = threading.Event()
++        self._reaper_done   = threading.Event()
++
++    def run(self):
++        """RETURN: None.
++
++        Dispatches on the first command line argument (see class docstring).
++        """
++        def identify_mode():
++            if self.choice in ("-h", "--hi", "--hwut-info", "--sos", "--wtf"):
++                return "--hwut-info"
++            elif self.choice == "--interactive":
++                return "--interactive"
++            elif self.choice is None:
++                return None
++            else:
++                return "--run"
++
++        match identify_mode():
++            case "--hwut-info":
++                do = self.MODE_hwut_info
++            case "--interactive":
++                do = self.MODE_interactive
++            case None:
++                # If no choice is specified, but required, ask the user.
++                if None not in self.choice_map:        do = self.MODE_manual_interaction_with_user
++                else:                                  do = self.MODE_run_test
++            case "--run":
++                if self.choice not in self.choice_map: do = self.MODE_choice_does_not_exist
++                else:                                  do = self.MODE_run_test
++            case _:
++                def do(): pass
++
++        do()
++
++    def MODE_choice_does_not_exist(self):
++        """RETURN: never; exits with status 1.
++
++        Reports the unavailable choice, the available ones, and the closest
++        match by Levenshtein distance.
++        """
++        print(f"error: choice '{self.choice}' not available.")
++        print(f'error: available: {", ".join(self.__printable_choice_list())}.')
++        suggestion = _levenshtein_best_match(self.choice, self.sorted_choice_list)
++        if suggestion is not None:
++            print(f"error: did you mean '{suggestion}'?")
++        sys.exit(1)
++
++    def MODE_run_test(self):
++        """RETURN: None.
++
++        Normal mode. Runs the test of the given 'choice'; if there is no
++        second command line argument the choice is 'None' and the according
++        test is entered in the choice map as 'None'. Output flows on the
++        process's own stdout and stderr.
++        """
++        self.__run_choice(self.choice)
++
++    def MODE_hwut_info(self):
++        """RETURN: never; exits with status 0.
++
++        Prints the info block: title, CHOICES, HAPPY patterns, SAME flag,
++        INTERACTIVE capability.
++        """
++        for line in self.__info_block_lines(): print(line)
++        sys.exit()
++
++    def MODE_manual_interaction_with_user(self):
++        """RETURN: None.
++
++        Lists the choices with indices, reads one line from stdin, runs the
++        selected choice. One shot; for another shot, call the app again.
++        """
++        print("Select choice:")
++        for i, choice in enumerate(self.__printable_choice_list()):
++            print(f"({i}) {choice}")
++
++        cmd = self.__readline()
++        if cmd is None or not cmd.isnumeric():
++            print("error: bad choice or instruction")
++            return
++        try:
++            choice = self.sorted_choice_list[int(cmd)]
++        except IndexError:
++            print(f"error: choice number {cmd} does not exist")
++            sys.exit(-1)
++        self.__run_choice(choice)
++
++    def MODE_interactive(self):
++        """RETURN: None; returns when the session ends ('quit' or EOF).
++
++        Interactive mode. The session's channels:
++
++            stdin                DOWN: commands from the framework.
++            original stdout      UP:   protocol replies ('done', ...).
++            per-choice sinks     test output: two files named in the
++                                 'run' command.
++
++        On entry, the original stdout is duplicated onto a private control
++        descriptor; fd 1 and fd 2 are then pointed at a session stray sink.
++        Output outside a running choice lands in the stray sink, never in
++        the protocol.
++
++        DOWN grammar (one command per line):
++            run <choice> <sink-out> <sink-err>
++            info
++            quit | q | exit
++        '<choice>' is a choice name, a decimal index into the sorted choice
++        list, or '-' for the choice-less test.
++
++        UP grammar (one message per line):
++            done <choice> <status>      choice ran; sinks complete & closed
++            fail <choice> <reason-...>  command not executed
++            info: <line>                reply lines to 'info'
++            bye                         session end; all children reaped
++        """
++        sys.stdout.flush(); sys.stderr.flush()
++        self._control = os.fdopen(os.dup(1), "w", buffering=1)
++
++        stray_fd, self._stray_path = tempfile.mkstemp(prefix="hwut_stray_", suffix=".txt")
++        os.dup2(stray_fd, 1)
++        os.dup2(stray_fd, 2)
++        os.close(stray_fd)
++
++        if self.parallel == "process":
++            reaper = threading.Thread(target=self.__reap_loop,
++                                      name="hwut-reaper", daemon=True)
++            reaper.start()
++
++        while (line := self.__readline()) is not None:
++            if not self.__interprete(line): break
++
++        self.__drain_children()
++        self.__up("bye")
++
++    def __interprete(self, line: str) -> bool:
++        """RETURN: True,  session continues
++                   False, session ends
++
++        Interpretes one DOWN command line of interactive mode. Replies on
++        the UP channel; never raises.
++        """
++        fields = line.split()
++        match fields:
++            case ["quit" | "q" | "exit"]:
++                return False
++            case ["info"]:
++                for info_line in self.__info_block_lines():
++                    self.__up(f"info: {info_line}")
++                self.__up("done - 0")
++            case ["run", token, sink_out, sink_err]:
++                choice, found_f = self.__find_choice(token)
++                if not found_f:
++                    self.__up(f"fail {token} unknown-choice")
++                elif self.parallel == "process":
++                    self.__run_forked(token, choice, sink_out, sink_err)
++                else:
++                    status = self.__run_into_sinks(choice, sink_out, sink_err)
++                    self.__up(f"done {token} {status}")
++            case _:
++                self.__up(f"fail - bad-command")
++        return True
++
++    def __find_choice(self, token: str) -> tuple:
++        """RETURN: (choice, True),  token names an existing choice
++                   (None,   False), else
++
++        'token' is a choice name, a decimal index into the sorted choice
++        list, or '-' for the 'None' choice.
++        """
++        if token == "-":
++            return (None, None in self.choice_map)
++        elif token in self.choice_map:
++            return (token, True)
++        elif token.isnumeric():
++            try:    return (self.sorted_choice_list[int(token)], True)
++            except IndexError: return (None, False)
++        return (None, False)
++
++    def __run_into_sinks(self, choice, sink_out: str, sink_err: str) -> int:
++        """RETURN: 0,      test function ran and returned
++                   n != 0, test function raised SystemExit(n) or an
++                           exception (=> 1; traceback in the error sink)
++
++        Runs 'choice' with fd 1 and fd 2 pointed at the two sink files.
++        Before the return: Python's streams are flushed, both sinks are
++        closed, fd 1 and fd 2 are restored. The return is the 'done'
++        barrier for the app's own writes; writes of processes spawned by
++        the choice are the choice's concern (see README, BARRIER).
++        """
++        out_fd = os.open(sink_out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
++        err_fd = os.open(sink_err, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
++
++        sys.stdout.flush(); sys.stderr.flush()
++        saved_1 = os.dup(1)
++        saved_2 = os.dup(2)
++        os.dup2(out_fd, 1); os.close(out_fd)
++        os.dup2(err_fd, 2); os.close(err_fd)
++
++        status = 0
++        try:
++            self.__run_choice(choice)
++        except SystemExit as x:
++            status = x.code if type(x.code) is int else (0 if x.code is None else 1)
++        except BaseException:
++            import traceback
++            traceback.print_exc()
++            status = 1
++        finally:
++            sys.stdout.flush(); sys.stderr.flush()
++            os.dup2(saved_1, 1); os.close(saved_1)
++            os.dup2(saved_2, 2); os.close(saved_2)
++        return status
++
++    def __run_forked(self, token: str, choice, sink_out: str, sink_err: str):
++        """RETURN: None; registers the child, returns immediately.
++
++        Forks one child per choice. The child runs '__run_into_sinks' and
++        exits with its status; the reaper thread reports 'done' upon the
++        child's end. The parent's streams are flushed before the fork.
++        """
++        sys.stdout.flush(); sys.stderr.flush()
++        pid = os.fork()
++        if pid == 0:
++            try:
++                status = self.__run_into_sinks(choice, sink_out, sink_err)
++            except BaseException:
++                status = 1
++            os._exit(status & 0xFF)
++
++        with self._pending_lock:
++            self._pending[pid] = token
++        self._pending_event.set()
++
++    def __reap_loop(self):
++        """RETURN: None; runs until '_reaper_done' with no pending children.
++
++        Reaper thread of parallel interactive mode. Waits for child ends
++        and reports 'done <token> <status>' on the UP channel.
++        """
++        while True:
++            self._pending_event.wait()
++            with self._pending_lock:
++                if not self._pending:
++                    if self._reaper_done.is_set(): return
++                    self._pending_event.clear()
++                    continue
++            try:
++                pid, wstatus = os.wait()
++            except ChildProcessError:
++                continue
++            with self._pending_lock:
++                token = self._pending.pop(pid, None)
++            if token is not None:
++                self.__up(f"done {token} {os.waitstatus_to_exitcode(wstatus)}")
++
++    def __drain_children(self):
++        """RETURN: None; upon return every child is reaped and reported.
++
++        Ends the reaper thread. No-op in sequential mode.
++        """
++        if self.parallel != "process": return
++        self._reaper_done.set()
++        self._pending_event.set()
++        while True:
++            with self._pending_lock:
++                if not self._pending: break
++            time.sleep(0.02)
++
++    def __up(self, message: str):
++        """RETURN: None; 'message' is written and flushed on the UP channel.
++        """
++        with self._control_lock:
++            self._control.write(message + "\n")
++
++    def __info_block_lines(self) -> list[str]:
++        """RETURN: list of str, the lines of the info block.
++        """
++        result = [ self.title if self.title.endswith(";") else self.title + ";" ]
++        if None not in self.choice_map:
++            result.append("CHOICES: " + ", ".join(self.sorted_choice_list) + ";")
++        for happy_pattern in self.happy:
++            result.append("HAPPY: " + happy_pattern + ";")
++        if self.__same_result_for_all_choices:
++            result.append("SAME;")
++        result.append("INTERACTIVE;")
++        return result
++
++    def __printable_choice_list(self) -> list[str]:
++        """RETURN: list of str, the sorted choices; the 'None' choice as '-'.
++        """
++        return [ "-" if c is None else c for c in self.sorted_choice_list ]
++
++    def __run_choice(self, choice):
++        """RETURN: None; upon return the test function of 'choice' has run.
++
++        Runs the function in sync or async manner, depending on the
++        function type entered in the choice map.
++        """
++        test_function = self.choice_map[choice]
++        import asyncio
++        if asyncio.iscoroutinefunction(test_function):
++            asyncio.run(test_function())
++        else:
++            test_function()
++
++    def __readline(self) -> str | None:
++        """RETURN: str,  next non-empty stripped line from stdin
++                   None, upon end of stream
++        """
++        try:
++            while True:
++                if not (line := sys.stdin.readline()): return None
++                elif line := line.strip():             return line
++        except EOFError:
++            return None
++
++
++def _levenshtein_best_match(needle: str | None, haystack: list) -> str | None:
++    """RETURN: str,  element of 'haystack' with least Levenshtein distance
++                     to 'needle'
++               None, if 'needle' is None or 'haystack' is empty
++    """
++    if   needle is None:      return None
++    elif not haystack:        return None
++    elif needle in haystack:  return needle
++    best_key  = None
++    best_dist = None
++    for key in haystack:
++        if key is None: continue
++        dist = _levenshtein_distance(needle, key)
++        if best_dist is None or dist < best_dist:
++            best_dist = dist
++            best_key  = key
++    return best_key
++
++def _levenshtein_distance(a: str, b: str) -> int:
++    """RETURN: int >= 0, the Levenshtein distance between 'a' and 'b'.
++    """
++    if   a == b: return 0
++    elif not a:  return len(b)
++    elif not b:  return len(a)
++    # Ensure 'b' is the shorter one to keep memory smaller
++    if len(a) < len(b):
++        a, b = b, a
++    prev = list(range(len(b) + 1))
++    for i, ca in enumerate(a, start=1):
++        cur      = [i]
++        prev_j_1 = i - 1
++        for j, cb in enumerate(b, start=1):
++            ins  = cur[j - 1] + 1
++            dele = prev[j] + 1
++            sub  = prev_j_1 + (0 if ca == cb else 1)
++            prev_j_1 = prev[j]
++            cur.append(min(ins, dele, sub))
++        prev = cur
++    return prev[-1]
++
++def make_script_application(file_name:       Optional[str],
++                            shebang:         str,
++                            script_txt_list: list[str],
++                            display_f:       bool = True) -> Optional[str]:
++    """RETURN: filename (str) != "", if script is generated and executable
++               None,                 if not
++
++    'shebang'         tells what interpreter to use
++    'script_txt_list' defines the text of the script
++
++    This function generates a (temporary) test script that may be used for
++    interaction with unit tests.
++    """
++    script_path = None
++
++    content = shebang if shebang.startswith("#!") else f"#!{shebang}"
++    content += "\n" + "\n".join(script_txt_list) + "\n"
++
++    try:
++        if file_name is None:
++            # delete=False is necessary so the file remains after the handle is closed
++            # allowing a sandbox process to find and execute it.
++            with tempfile.NamedTemporaryFile(prefix="test_app_", delete=False) as tmp:
++                script_path = Path(tmp.name)
++        else:
++            script_path = Path(file_name)
++
++        script_path.write_text(content)
++        script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC) # make 'executable'
++
++    except Exception:
++        if script_path and script_path.exists():
++            try:
++                script_path.unlink()
++            except Exception:
++                pass
++        return None
++
++    if display_f:
++        if not file_name: file_name = "<temporary file>"
++        print(f"SCRIPT: '{file_name}' " + "{")
++        for line in content.splitlines():
++            print(f"    {line}")
++        print("}")
++
++    return str(script_path)
++
++class ScriptApplication(ContextManager[str]):
++    """A context manager wrapper for make_script_application.
++    Ensures the generated script is deleted upon exiting the 'with' block.
++    """
++    def __init__(self, file_name, shebang, script_txt_list, display_f=True):
++        self.params = {
++            'file_name': file_name,
++            'shebang': shebang,
++            'script_txt_list': script_txt_list,
++            'display_f': display_f
++        }
++        self.path = None
++
++    def __enter__(self) -> str:
++        """RETURN: str, path of the generated, executable script.
++
++        Raises RuntimeError if generation failed.
++        """
++        result = make_script_application(**self.params)
++        if result is None:
++            raise RuntimeError("make_script_application failed to generate a script.")
++
++        self.path = result
++        return self.path
++
++    def __exit__(self, exc_type, exc_val, exc_tb):
++        """RETURN: None; the generated script is deleted, if it exists.
++        """
++        if self.path and os.path.exists(self.path):
++            try:
++                os.unlink(self.path)
++            except Exception:
++                pass
+diff --git a/python/racing_condition_sim.py b/python/racing_condition_sim.py
+new file mode 100644
+--- /dev/null
++++ b/python/racing_condition_sim.py
+@@ -0,0 +1,140 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++
++PURPOSE: Deterministic asynchronous event dispatcher.
++
++    A utility to orchestrate multiple asynchronous tasks (Triggers) based on 
++    digit-encoded timeline strings.
++
++DESCRIPTION:
++
++    The core power of this manager lies in the simplicity of its timeline 
++    strings. The position of a trigger is given by the position in the 
++    string (from left to right). For triggers to appear at the same time
++    the priority is given by a digit from 0 to 9.
++    
++        Trigger A: "1  12 1"
++        Trigger B: " 1  1 2"
++
++    SHORT:
++
++        - Ticks:       Each character position in a timeline string is one 
++                       pseudo-time tick.
++        - Triggers:    Any digit '0'-'9' triggers an event.
++
++        - Priority:    Lower digits fire before higher digits within the 
++                       same tick.
++
++        - Determinism: Stable sorting ensures that even identical priorities 
++                       execute in the order triggers were registered.
++
++    This visual approach allows developers to "draw" complex race conditions 
++    directly in the code. By simply looking at the string, you can see exactly 
++    when events fire and, more importantly, who "wins" a tie-break (via the 
++    digit's priority). This eliminates the need for complex math, delta-t 
++    calculations, or unreliable sleep-based synchronization in unit tests.
++
++    The TriggerDispatcher provides a robust framework for testing race conditions 
++    and asynchronous flow in a 100% deterministic manner. It pre-calculates an 
++    execution array from these strings, ensuring that even if the system is 
++    under heavy load, the sequence of events remains stable and reproducible.
++
++NOTE: Use '.stop()' to abort the trigger process.
++
++USAGE EXAMPLE:
++    class MyTrigger(Trigger):
++        async def fire(self, pseudo_time):
++            print(f"[{pseudo_time}] {self.name} fired with prio {priority}")
++
++    async def run():
++        # Visualizing the race: 
++        # Tick 0: SUB(1) leads NOM(2). 
++        # Tick 2: NOM(0) leads SUB(1).
++        manager = TriggerDispatcher([
++            MyTrigger("1 1 3 1   1")
++            MyTrigger("2  121  1  ")
++            MyTrigger("2   1 2 2  ")
++        ])
++        
++        await manager.run()
++"""
++
++import asyncio
++from   typing import Iterable
++
++class Trigger:
++    """
++    Abstract base class for a dispatchable asynchronous event.
++
++    A Trigger is defined by a 'timeline' string where digits 0-9 represent 
++    activation points and their respective priorities. Derived classes 
++    must implement the 'fire' method to define the behavior.
++    """
++    def __init__(self, timeline: str, name = ""):
++        self.timeline = timeline
++        self.name     = str(id(self))
++
++    async def on_termination(self, pseudo_time: int):
++        """Executions action related to trigger.
++        """
++        raise NotImplementedError
++
++    async def fire(self, pseudo_time: int):
++        """Executions action related to trigger.
++        """
++        raise NotImplementedError
++
++
++class TriggerDispatcher:
++    """Dispatcher executes Triggers according to a pre-calculated timeline.
++
++    The manager translates string-based timelines into a static _trigger_time_db. 
++    Execution is performed by stepping through the array, ensuring absolute 
++    determinism regardless of system performance or I/O jitter.
++    """
++    def __init__(self, triggers: Iterable[Trigger]):
++        self._running_f       = True
++        self._triggers        = list(triggers)
++        self._trigger_time_db = self._build(self._triggers)
++
++    def _build(self, triggers: list[Trigger]):
++        """Translates string timelines into prioritized, sorted tick sequences.
++        """
++        end_tick = max(len(t.timeline) for t in triggers) if triggers else 0
++        result   = [[] for _ in range(end_tick)]
++        for trigger in triggers:
++            for t, char in enumerate(trigger.timeline):
++                if char.isdigit():
++                    priority = int(char)
++                    result[t].append((priority, trigger))
++        
++        for tick_sequence in result: # sort for each pseudo time tick by priority
++            tick_sequence.sort(key=lambda x: x[0])
++
++        return result
++
++    def stop(self):
++        self._running_f = False
++
++    async def run(self):
++        """Sequentially executes all scheduled triggers in the timeline.
++
++        Iterates through the _trigger_time_db tick by tick. After each fire(), 
++        it yields control (sleep 0) to allow other asynchronous tasks 
++        (e.g., consumers of data produced by the trigger) to progress.
++        """
++        for pseudo_time, tick_sequence in enumerate(self._trigger_time_db):
++            if not self._running_f: break
++            for priority, trigger in tick_sequence:
++                if not self._running_f: break
++                await trigger.fire(pseudo_time)
++                await asyncio.sleep(0)
++
++        for t in self._triggers: t.on_termination(pseudo_time) 
++
++    def __repr__(self):
++        result = ["TriggerDispatcher"]
++        for pseudo_time, trigger_list in enumerate(self._trigger_time_db):
++            for priority, t in trigger_list:
++                result.append(f"[pseudo_time] ({priority}){t.name}")
++        return "\n".join(result)
++
+diff --git a/python/space_iterator.py b/python/space_iterator.py
+new file mode 100644
+--- /dev/null
++++ b/python/space_iterator.py
+@@ -0,0 +1,73 @@
++"""
++PURPOSE:
++       Iteration over all possible combinations of parameters of a 
++       parameter basis. Useful for function argument generation or 
++       scenario parameterization in general.
++
++SYNOPSIS:
++       import hwut.language_support.python.space_iterator as generator
++
++       basis [
++           list of values for 'a',
++           list of values for 'b',
++           list of values for 'c',
++       ]
++
++       for a, b, c in generator.do(basis):
++           ...
++
++       yields  a0, b0, c0
++               a0, b0, c1
++               a0, b0, c2
++               a0, b1, c0
++               a0, b1, c1
++               a0, b1, c2
++               ...
++
++DESCRIPTION:
++       
++       'do(basis)' yields the cartesian product of an orthogonal basis.
++
++       The basis is given as a list of iterables, where each iterable
++       represents one independent dimension of the search space. Each yielded
++       tuple contains exactly one element from each basis dimension, in the
++       same order as provided in basis.
++
++       Iteration order follows the standard cartesian-product convention: the
++       rightmost dimension changes fastest.
++
++EXAMPLE: function argument generation
++
++           basis = [
++               [0, 2, 4, 6, 8],
++               ["otto", "heinz", "frieda"],
++               [1, 2, 3],
++           ]
++
++           def run_test(x, name, number):
++               ...
++
++           for x, name, number in space_iterator.do(basis):
++               run_test(x, name, number)
++
++NOTES
++       - If basis is empty, generator yields exactly one tuple: ().
++       - If any basis dimension is empty, generator yields nothing.
++
++The implemention is almost trivial. The module is provided, anyways, because it is
++such a powerful approach to achieve high coverage in unit testing.
++"""
++
++import itertools
++from   collections.abc import Iterable, Iterator
++
++def do(basis: list[Iterable]) -> Iterator[tuple]:
++    if not basis:
++        yield tuple()
++        return
++
++    pool = [tuple(dim) for dim in basis]
++    if any(len(dim) == 0 for dim in pool):
++        return
++
++    yield from itertools.product(*pool)

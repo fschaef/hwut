@@ -1,0 +1,1167 @@
+==============================================================================
+exploration -- RATIONALE
+==============================================================================
+Settled decisions. Read-only.
+
+
+R-1  SPECIFICATION IN THE FILE, NOT IN THE PROCESS
+______________________________________________________________________________
+PROBLEM   HWUT 1.0 discovered a test by executing it and reading
+          '--hwut-info'. Discovery required running every candidate,
+          including malformed ones; the failure mode of a broken
+          candidate at discovery time was murky.
+DECISION  The specification is a static declaration carried by the file.
+          Discovery is a text scan; no execution.
+COST      Computed choices are gone. An application can no longer
+          generate its choice list at run time.
+NOTE      A migration service may translate an HWUT 1.0 application into
+          one carrying a header.
+GRAVEYARD Keeping '--hwut-info' as the oracle: retains the drift-free
+          property, keeps execution-at-discovery and its murky failures.
+
+
+R-2  '--hwut-info' SURVIVES AS A HINT SOURCE
+______________________________________________________________________________
+PROBLEM   Header and implementation can drift: the header declares a
+          choice the code does not implement.
+DECISION  Where an application answers, its choices are compared against
+          the specification and the difference feeds error message
+          hints. The protocol is not imposed; absence of an answer is
+          not a fault.
+COST      Drift in an application that does not answer surfaces only at
+          run time.
+GRAVEYARD Imposing the protocol: reintroduces execution as a
+          precondition of exploration.
+
+
+R-3  HOCON
+______________________________________________________________________________
+PROBLEM   The specification is a tree. One language must serve both
+          carriers.
+DECISION  HOCON.
+COST      No HOCON parser in the Python standard library.
+GRAVEYARD INI / getpot style: flat; nesting faked by dotted section
+          names; lists are comma strings re-parsed by hand; every value
+          a string.
+
+
+R-4  ALL LOWERCASE; A STRUCTURAL FENCE, NOT A CASE FENCE
+______________________________________________________________________________
+PROBLEM   Framework keys and user-chosen names share one namespace. An
+          earlier ruling separated them by case -- UPPERCASE for the
+          framework -- and 'HWUT-TITLE' was the result.
+DECISION  All lowercase. 'hwut' is the marker, 'title' the required key.
+          The namespace is kept clear structurally: a user-chosen name
+          never stands beside a framework key; it stands inside one that
+          holds only such names ('choices', 'language-setup', 'apps').
+COST      A framework key that admitted free-form names at its own level
+          would break the scheme. None does; none may.
+NOTE      Case distinction is not a property of every writing system, so
+          it cannot carry meaning in a language meant to be written
+          everywhere.
+GRAVEYARD Case as the fence: reads as shouting, and rests on an
+          ethnocentric premise about alphabets.
+
+
+R-5  THE ROOT IS THE DEFAULT; A CHOICE OVERWRITES
+______________________________________________________________________________
+PROBLEM   Where does a parameter stand that holds for every choice?
+DECISION  Every test parameter may stand at the root as the default; a
+          choice's own value overwrites it. 'title', 'language' and
+          'choices' are structural and do not participate.
+HISTORY   Ruled the other way first: with 'choices' present, a
+          choice-related key at the root was refused, on the ground that
+          a reader of an empty choice body would have to look upward to
+          learn what it runs. R-6 dissolved that ground -- the choice
+          name IS the call, so nothing at the root can change what a
+          choice runs, only how it is built and how its output is judged.
+COST      A reader of a choice body must look up to the root to know the
+          effective parameters. Resolution therefore happens once, at
+          exploration, so that no consumer ever repeats it.
+
+
+R-6  THE CHOICE NAME IS THE CALL
+______________________________________________________________________________
+PROBLEM   How does a test application learn what to do?
+DECISION  From its first argument, which is the choice name. No 'args'
+          key stands beside a choice name.
+COST      A test instruction weaving extra arguments into a call is not
+          expressible. Parked.
+NOTE      This is what admits the list form 'choices = [one, two]': a
+          choice needing no parameters is a name and nothing else.
+
+
+R-7  ONE FILE, ONE CARRIER
+______________________________________________________________________________
+PROBLEM   Header and 'hwut.conf' can both describe the same file.
+DECISION  Disjoint. A file with a header is specified by its header;
+          naming it under 'apps' is a TEST DIRECTORY ERROR. 'hwut.conf'
+          describes only header-less files -- languages without
+          comments, generated code, files whose comment convention the
+          framework cannot know.
+COST      A new error category, TEST DIRECTORY ERROR, distinct from a
+          test's verdict. Separate reporting: parked.
+DERIVED   The root of 'hwut.conf' carries no test parameters for the
+          directory at large: a directory-wide default would silently
+          reach into files it may not touch.
+GRAVEYARD Key-by-key override: the header no longer shows the whole
+          specification. Whole-file override: 'hwut.conf' entries die
+          silently.
+
+
+R-8  NOTHING ABOVE THE TEST DIRECTORY
+______________________________________________________________________________
+PROBLEM   A tree-wide configuration layer would place a TEST directory's
+          meaning outside itself.
+DECISION  A TEST directory is testable standing alone. Two carriers,
+          both inside it. No upward walk, no invocation layer.
+COST      A setting wanted by forty directories is written forty times.
+MITIGATED 'hwut.propagate global.conf' webs shared sections into each
+          directory's 'hwut.conf' as text, at authoring time. Afterwards
+          every directory still says everything about itself; the global
+          file exists at authoring time, never at run time.
+DERIVED   Propagation touches 'hwut.conf' only. A header is therefore
+          never machine-written, which is why its shape must stay
+          comfortable to type: the list form of 'choices', root
+          defaults, and no required key but 'title'.
+OPEN      Test-task descriptions with a global touch: parked.
+
+
+R-9  THE REGION IS FOUND WITHOUT KNOWING THE LANGUAGE
+______________________________________________________________________________
+PROBLEM   The specification stands in a comment, and comment syntax
+          differs per language.
+DECISION  The region is delimited by 'hwut' and its matching brace,
+          found at the first occurrence anywhere in the file. Its lines'
+          longest common leading prefix is stripped; a trailing closer
+          on the last line is tolerated. No table of comment syntaxes
+          exists.
+COST      A file mentioning 'hwut {' in a string or a comment ABOUT hwut
+          is detected. A region whose lines share no common prefix
+          leaves a stray leader in the HOCON; HOCON's own comment syntax
+          ('#', '//') heals those cases, '*'-led and '--'-led ones it
+          does not.
+MITIGATED 'hwut.parse' shows the author what was extracted and how it
+          parsed.
+GRAVEYARD An extension-to-comment-syntax table: a language HWUT has not
+          heard of would not work, which contradicts language
+          agnosticism. A start/end marker pair: one more line to write,
+          and the content is HOCON, whose braces already delimit.
+          Stopping the scan at the end of a 'header': "header" cannot be
+          defined without the comment syntax this ruling removes.
+
+
+R-10  'language' AND 'language-setup' ARE TWO WORDS
+______________________________________________________________________________
+PROBLEM   One word would have meant both "which language is this file
+          written in" and "how does HWUT deal with that language".
+DECISION  'language' is a file's property and stands in either carrier.
+          'language-setup' is the directory's and stands in 'hwut.conf'
+          alone. A source file may hint its language; it may not
+          configure one.
+COST      Two words to learn where one was tempting.
+NOTE      A language with no 'language-setup' entry is called by its own
+          name.
+
+
+R-11  'build' AND 'app'
+______________________________________________________________________________
+PROBLEM   A build command says how to build; what to run afterwards must
+          also be known, and parsing it out of the command works only
+          while the artefact appears literally in it.
+DECISION  'build' is the command, '%' expanding to the source file's
+          stem. 'app' names the artefact and defaults to that stem.
+COST      Two keys where one usually suffices; 'app' is redundant in the
+          ordinary case.
+GRAVEYARD Deriving the artefact from the command: 'make all',
+          'cmake --build . -t thing' and './configure && make' name
+          nothing HWUT could take.
+
+
+R-12  'happy' IS 'eq-pattern'
+______________________________________________________________________________
+PROBLEM   HWUT 1.0's 'happy' and compare's equivalence pattern are one
+          mechanism under two names.
+DECISION  'eq-pattern'. 'happy' is dropped.
+NOTE      The name states what it does: two elements matching one
+          pattern are equivalent, so 'bonjour|hello' accepts either as
+          the greeting.
+
+
+R-13  POSITIONS ARE FILE-RELATIVE FROM THE START
+______________________________________________________________________________
+PROBLEM   An error must name where it occurred. The unwrapper hands the
+          parser a text that is not the text on disk: the line is
+          shifted by the region's offset, the column by the stripped
+          prefix's width.
+DECISION  The unwrapper carries both offsets forward and the parser
+          attaches file-relative positions. No position anywhere in the
+          system is region-relative.
+COST      The unwrapper's output is a text plus two offset series, not a
+          bare string.
+GRAVEYARD Translating at report time: every error path must remember to
+          do it, and one that forgets reports a position that looks
+          plausible and is wrong.
+
+
+R-14  POSITION PER NODE, NOT PER VALUE
+______________________________________________________________________________
+PROBLEM   Where is a position attached?
+DECISION  Every key, every value and every block carries one.
+COST      The parsed tree is not plain data.
+RATIONALE The validator's characteristic errors are ABOUT KEYS: an
+          unknown key, a misspelt key, a key in the wrong carrier, a
+          required key absent. A position per value can report none of
+          them -- a misspelt key's only position is its value's, and an
+          absent required key has no value at all.
+
+
+R-15  TWO TREES; THE VALIDATOR IS THE ONLY CONSUMER OF THE FIRST
+______________________________________________________________________________
+PROBLEM   Position-carrying nodes force every reader to unwrap a
+          '.value', all the way downstream.
+DECISION  The annotated tree lives between parser and validator and
+          nowhere else. On acceptance the validator emits the plain
+          tree. Nothing downstream knows the annotated tree existed.
+COST      One recursive conversion walk at the validator's exit.
+NOTE      This also settles resolution: root defaults are written into
+          choices after the wrapper is gone, so no synthesised value has
+          to invent a position or carry a false one.
+
+
+R-16  TYPED, SLOTTED, FROZEN RECORDS
+______________________________________________________________________________
+PROBLEM   A plain dict downstream returns the string key, and a typo
+          there is a run-time KeyError -- the same fault class todo-12
+          records against compare's pattern finder.
+DECISION  The plain tree is built of typed, slotted, frozen dataclasses.
+          The vocabulary is stated once, in code; the validator checks
+          against it.
+COST      Resolution cannot mutate in place; it builds new records.
+NOTE      That cost is a benefit: the unresolved and resolved forms
+          cannot be confused, and a consumer holding a 'CTestCase' knows
+          nothing has edited it since.
+
+
+R-17  UNSTATED IS 'None'; ONE DEFAULT TABLE, POINTING TO OWNERS
+______________________________________________________________________________
+PROBLEM   'numeric = 0' stated and 'numeric' never written are different
+          facts. Both need a value at the point of use.
+DECISION  An unstated field is 'None'. This component owns one table
+          mapping a parameter name to the module that owns it; the
+          module states the default. The table's keys are the parameter
+          vocabulary, so vocabulary and defaults are one list.
+COST      A value now has two possible origins, so "why did this test
+          tolerate 1%?" has two answers. 'hwut.parse' shows the
+          effective value with its provenance.
+RATIONALE A default is the value that causes the least astonishment, and
+          only the component that knows what the parameter means can
+          judge that. This component knows 'comment' is a string; it
+          does not know that '##' is what a reader expects.
+NOTE      Adaptability of the table is deferred, not designed for.
+GRAVEYARD A registry each component writes into at import time: a
+          component not imported has not registered, and the table is
+          silently short an entry. Literals restated here: two copies of
+          one fact, the shape 'compare_setup_delta' exists to avoid.
+
+
+R-18  THIS COMPONENT KNOWS THE TABLE; THE EXPLORER INSTANTIATES
+______________________________________________________________________________
+PROBLEM   Who turns absence into a value?
+DECISION  This component owns the table and only knows it. The explorer
+          builds the consumer configurations from record plus table, and
+          keeps the record beside them.
+COST      Two things exist per choice where one would do.
+RATIONALE The record says what the author CHOSE; the configuration says
+          what will happen. The store records the record, so a default
+          setting adds nothing to an entry and a deliberate one is
+          recorded the day it is used -- which is the existing recording
+          law.
+GRAVEYARD Filling every 'None' from the table into the record: the
+          chosen-vs-default distinction is lost before the store sees
+          it. Leaving 'None' for each consumer to resolve: every
+          consumer must remember to consult, and the explorer's
+          instantiation would be mere construction.
+
+
+R-19  THREE STAGES; THE UNIT CHANGES ONCE
+______________________________________________________________________________
+PROBLEM   The specification is per-file; run, diff, merge, and accept
+          act per choice.
+DECISION  Exploration yields per-application elements mirroring the
+          specification, resolved and instantiated. Selection turns the
+          application set plus a stated wish into a flat per-choice
+          sequence. Consumers see only the per-choice form.
+COST      Provenance is no longer structural; a test case carries its
+          origin as an explicit field.
+NOTE      A blessing records the pole for a specification, never for the
+          way a run was selected. Selection therefore enters at exactly
+          one stage and leaves no trace in the parameters.
+
+
+R-20  'CTestTaskList' IS AN INTERFACE, NOT A STRUCTURE
+______________________________________________________________________________
+PROBLEM   The criteria by which a user selects tests are not enumerable
+          in advance.
+DECISION  One member function fixes the contract:
+
+              get_test_cases(CTestAppSet) -> CTestCaseSequence
+
+          Internal structure and operation stay open. Name patterns,
+          named choices, expected durations, and coverage requirements
+          all satisfy it.
+COST      No shared machinery between task list kinds until one is
+          needed.
+
+R-21  'app' IS STRUCK; 'build' IS THE FRAMEWORK OR THE SCOPE
+______________________________________________________________________________
+PROBLEM   'app' named the artefact the build produces and stood beside
+          'build' as an unrelated key. The two are one subject.
+DECISION  'build' takes either form: the framework named alone
+          ('build = "make"'), or the scope carrying 'framework',
+          'executable' and 'caps'. 'app' is struck; 'executable' is its
+          name inside the scope.
+COST      One key with two shapes; the validator carries the branch.
+RATIONALE What produces the artefact and what the artefact is called
+          belong together. A test application with no build states
+          neither and is called by its own name.
+GRAVEYARD Keeping 'app' at parameter level: an author reading 'build'
+          alone would not learn that the artefact's name is settled
+          elsewhere.
+
+
+R-22  'caps' IS PROCSITTER'S SCOPE; 'timeout' MOVES INTO IT
+______________________________________________________________________________
+PROBLEM   'timeout' was one execution cap standing alone, and more caps
+          are coming -- network access among them.
+DECISION  'caps' is a scope of process caps and 'timeout_sec' its first
+          field. It stands at parameter level, capping the RUN, and
+          inside 'build', capping the BUILD process. Procsitter owns
+          every default in it.
+COST      A cap is written one level deeper than before.
+RATIONALE Procsitter runs the process and knows what it may spend;
+          nothing else can state those defaults without restating
+          procsitter's own.
+GRAVEYARD Two vocabularies, one for build caps and one for run caps: one
+          noun, one meaning, is the standing law.
+
+
+R-23  DEFAULT PROVISION IS CONTRACT
+______________________________________________________________________________
+PROBLEM   An owner that does not publish 'default_table', or a parameter
+          added without an owner, fails at the first test that happens
+          to reach the parameter -- far from the cause.
+DECISION  TEST/test-defaults.py checks the contract directly: the table's
+          keys and the parameter vocabulary cover each other exactly;
+          every owner imports, publishes, and answers; the answers are
+          printed, so a changed default is a visible contract change.
+COST      A GOOD file changes whenever a default changes. That is the
+          point.
+GRAVEYARD Checking at import time: a component not imported has not
+          been checked.
+
+
+R-24  'analogy' IS THE MARKER PAIR; ABSENCE IS NEVER OFF
+______________________________________________________________________________
+PROBLEM   'analogy' carried an on/off flag and two markers in three
+          keys, and 'off' and 'unstated' were one value.
+DECISION  'analogy = ["((", "))"]' -- two elements, ordered. Absence
+          takes compare's own pair. OFF is written, in any of five
+          spellings: '[]', 'false', 'no', 'null', or a value left empty.
+          'analogy = true' is refused: it names no markers.
+COST      The record distinguishes 'None' from '()' and every consumer
+          must respect the difference.
+RATIONALE Absence is data. A key not written must reach the owner's
+          default; only a written key may switch a feature off.
+NOTE      The friendly spellings cost one predicate and spare an author
+          the memory of which one this language chose.
+
+
+R-25  'constraints', PLURAL, IS A LIST OF EXPRESSIONS
+______________________________________________________________________________
+PROBLEM   'constraint' was a map of name to expression; the names were
+          never read.
+DECISION  'constraints = ["x < y + 2", "abs(sin(z) - x) < epsilon"]'.
+          The same five spellings switch it off.
+COST      An expression can no longer be referred to by name in a
+          message; the expression itself is the name.
+GRAVEYARD The named map: a name nothing consumes is a field an author
+          must invent and a reader must ignore.
+
+
+R-26  A SCOPE MERGES FIELD BY FIELD
+______________________________________________________________________________
+PROBLEM   A choice stating 'caps { timeout_sec = 5 }' beside a root
+          stating 'caps { timeout_sec = 30  network = false }' either
+          keeps the root's network cap or discards it.
+DECISION  Per field, at every depth. The root is the new default and a
+          scope is transparent to it.
+COST      A reader must know a scope is transparent to see what a choice
+          yields, and there is no way to say "take the plain defaults,
+          ignore the root".
+RATIONALE The standing law is that the root is the default and a
+          choice's own value overwrites; a scope is no reason to
+          suspend it.
+GRAVEYARD Wholesale replacement: an author capping the timeout would
+          lose the network cap without being told.
+
+R-27  THE HOCON PARSER IS TEST-WRITING SUPPORT, PER LANGUAGE
+______________________________________________________________________________
+PROBLEM   The parser was built inside the engine, where only the engine
+          can reach it. A test author writing a specification, in any
+          language, faces the same grammar.
+DECISION  The parser is support for WRITING TESTS and is provided per
+          supported language. HWUT is language-agnostic; the modules
+          that help write tests are not. The Python one lives at
+          'vut/language_support/python/hocon_parser.py' and the engine
+          imports it from there -- one copy, one grammar.
+COST      A dependency that reads oddly: the engine leans on
+          'language_support/', which otherwise only test applications
+          import.
+RATIONALE One homogeneous little parser, behaving the same in every
+          language we support, is the feature -- notably where the
+          language has no HOCON parser at all.
+GRAVEYARD A copy inside the engine beside the shipped one: two
+          implementations of one grammar, drifting. A neutral
+          'vut/support/hocon/' with per-language ports: for Python the
+          port IS the original, so the language directory would hold a
+          file whose only content is where the real file is.
+
+
+R-28  THE CONFIGURATION FILE IS 'hwut.conf'
+______________________________________________________________________________
+PROBLEM   'hwut.hocon' would name the language the file is written in.
+DECISION  'hwut.conf'. Unchanged.
+RATIONALE The name says the file configures hwut. Which language it is
+          written in is the file's business, not its name's, and the
+          dialect is ours -- a subset, refusing constructs real HOCON
+          admits.
+
+
+R-29  'hwut.parse' -- CHECK, RESOLVE, PRINT
+______________________________________________________________________________
+PROBLEM   An author needs to see what the framework READ, not what was
+          written.
+DECISION  'hwut.parse' checks the syntax, resolves the defaults, and
+          prints the complete configuration, prettily.
+              on a source file : scan for the trigger token, extract the
+                                 specification, print it
+              no argument      : act as the explorer -- 'hwut.conf'
+                                 first, then the files
+COST      A printed form of the plain tree is a second rendering of the
+          vocabulary and must follow it.
+RATIONALE Every fault this component reports carries a position; this
+          service is where an author looks when the position is not
+          enough. Resolution and default-filling are exactly the steps
+          an author cannot see by reading the file.
+
+
+R-30  'CTestAppSet' IS THE RESULT OF PARSING; NOTHING ELSE PRODUCES IT
+______________________________________________________________________________
+PROBLEM   The orchestrator receives a 'CTestAppSet'. From whom?
+DECISION  'CTestAppSet' is the result of parsing 'hwut.conf' and the
+          source files with their headers. There is one producer.
+RATIONALE Exploration is a function of the directory alone (R-19). A
+          second producer would make the set a thing that can be
+          assembled by hand, and the directory would stop being its
+          single source.
+
+
+R-31  'on_entry' AND 'on_exit'
+______________________________________________________________________________
+PROBLEM   'enter' and 'leave' read as commands to the reader.
+DECISION  'on_entry' and 'on_exit'.
+RATIONALE The keys name the OCCASION on which a script runs, not an
+          action the framework performs.
+
+
+R-32  'collision' REPLACES 'parallel' AND 'isolated'
+______________________________________________________________________________
+PROBLEM   'parallel' listed what may run together and 'isolated' what
+          may not -- two keys, one fact, stated from both ends, and an
+          author could write a contradiction.
+DECISION  One key:
+
+              collision = [ test-a.py, test-b.py two ]
+
+          the applications that cannot run at the same time. What is
+          not named may run in parallel.
+COST      "Run this one alone" is written by naming it beside everything
+          it clashes with, rather than by one word.
+NOTE      The orchestrator and procsitter may in addition WATCH -- lsof
+          and kin -- whether two running applications touch one
+          resource; a collision detected that way is a finding, not a
+          declaration.
+GRAVEYARD Both keys kept: two statements of one fact, with no rule
+          settling which wins when they disagree.
+
+
+R-33  'dependency' REPLACES 'sequence'
+______________________________________________________________________________
+PROBLEM   'sequence' named an order without naming what the order is
+          for.
+DECISION  'dependency' names what must have run first. A dependency may
+          name a test app, or a test app AND a choice. Circularity is a
+          DIRECTORY error.
+COST      An author who wants a plain order writes it as a chain.
+RATIONALE An order is a consequence of dependencies, not a fact of its
+          own. Stating the dependency states the reason with it.
+
+
+R-34  A TARGET IS THE CALL
+______________________________________________________________________________
+PROBLEM   'collision' and 'dependency' both name test apps, sometimes
+          down to one choice. One notation must serve both.
+DECISION  A TARGET is a file name, or a file name and a choice name with
+          one blank between -- the call itself (R-6):
+
+              collision = ["test-net.py", "test-port.py two"]
+              dependency {
+                  "test-b.py"     = ["test-a.py"]
+                  "test-c.py two" = ["test-a.py", "test-b.py one"]
+              }
+
+          A bare file name means every choice of that file. Quotes are
+          needed only where a choice is named.
+COST      A key carrying a blank must be quoted.
+RATIONALE The choice name IS the call; a target written as the call
+          teaches the reader nothing new.
+GRAVEYARD A nested map, 'dependency { test-c.py { two = [...] } }': two
+          shapes for one idea, and 'collision' -- a list -- could not
+          use it at all.
+
+
+R-35  '[MISDEP]': THE DEPENDENCIES CANNOT BE MET
+______________________________________________________________________________
+PROBLEM   A cycle makes a directory's shape broken. It also makes
+          particular cases untestable, and the report must say which.
+DECISION  The directory failure names the cycle. Each affected case
+          reports individually:
+
+              test-c.py  two   [MISDEP]
+
+          The criterion is SATISFIABILITY, not membership of the cycle:
+          a case in a cycle, a case depending on a cycle member, a case
+          depending on a [MISDEP] case, and a case naming a target that
+          does not exist all carry it.
+COST      A report where twenty cases read [MISDEP] does not show which
+          three form the cycle. The directory failure's message does.
+RATIONALE A case that depends on a poisoned case is equally untestable
+          and equally not the author's doing.
+
+
+R-36  'dependency' IS ORDER, NOT SUCCESS
+______________________________________________________________________________
+PROBLEM   Does a dependant run when its dependency FAILS?
+DECISION  It runs. 'dependency' says: this ran to completion before that
+          started. The verdict does not enter.
+RATIONALE A test that reports OK and leaves the world wrong is
+          indistinguishable, to the framework, from one that leaves it
+          right. A verdict-conditional edge would claim a knowledge the
+          framework does not have.
+CONSEQUENCE Satisfiability is a property of the graph alone and is
+          decided at exploration time, before anything runs. [MISDEP] is
+          the only token dependency can produce; there is no cascade of
+          failure and no second token.
+
+R-37  NO PARAMETER IS 'None' AS AN END RESULT
+______________________________________________________________________________
+PROBLEM   A record field left 'None' reached consumers, and each had to
+          know what to do with a blank.
+DECISION  Defaulting means the owning component supplies the value that
+          causes the least astonishment -- what is agreed upon to fill
+          the blank. The configuration parser hands out COMPLETE
+          configurations; a customer never searches for a default.
+COST      The record and the configuration now differ in kind, and both
+          exist per case.
+RATIONALE The record's 'None's are the store's business: it must record
+          what was CHOSEN (R-18). The consumer's business is what will
+          happen, and that has no blanks.
+
+
+R-38  THE COMPONENT DECLARES; WE POINT AT MEMBERS
+______________________________________________________________________________
+PROBLEM   A table of defaults keyed by HWUT's words obliges every owner
+          to learn HWUT's vocabulary -- procsitter above all, a toolbox
+          that serves no framework.
+DECISION  The component owns the configuration CLASS and therefore the
+          member names. HWUT points at MEMBERS; no component maintains a
+          table for us, and none states a default in our words.
+COST      Our table must be kept in step with member names we do not
+          own.
+RATIONALE Consistency between the parameters written into a
+          configuration and the knowledge of its defaults is needed
+          anyway. One relation, and the two vocabularies stay
+          disentangled -- ours expresses the RELATION, not the value.
+
+
+R-39  ONE RELATION TABLE, BOTH DIRECTIONS
+______________________________________________________________________________
+PROBLEM   Writing parsed values and reading defaults were two mechanisms
+          over one correspondence.
+DECISION  One table. It writes the parsed values into a configuration
+          and reads the declared defaults off the same members. The
+          relation is needed to store parser results in any case; it
+          does double duty.
+RATIONALE Two tables over one correspondence is two copies of one fact.
+
+
+R-40  THE ENTRY IS '(class, member name)'; THE FACE IS FLAT
+______________________________________________________________________________
+PROBLEM   How is a member named without imposing on the class?
+
+              "numeric": ConfigCompare.numeric_tolerance
+
+          was considered and does not work: a plain class attribute
+          evaluates to its VALUE, and 0.0 cannot say what it is called.
+          It would work only if every configuration member were a
+          descriptor -- an imposition on every participating component.
+DECISION  '"numeric": (ConfigCompare, "numeric_tolerance")'. Nothing is
+          imposed: a dataclass, a plain class, a slotted one all
+          participate unchanged. The member is named at the TOP LEVEL --
+          the flat face; whatever nesting a component has lives behind
+          it.
+COST      The member name is a string, unchecked at import; a rename in
+          the component fails at first use. TEST/test-defaults.py walks
+          every entry against its class and catches it there.
+GRAVEYARD Descriptors: a change to compare, procsitter and the build
+          component, to spare us a string. A chain of '(class, member)'
+          pairs reaching into a nested member: our table would then
+          mirror compare's internal shape, and an internal refactor of
+          compare would break a line here that names a class we have no
+          business knowing.
+
+
+R-41  THE DECLARATION IS THE ANNOUNCEMENT
+______________________________________________________________________________
+PROBLEM   Where is the default READ from -- a blackboard object, or a
+          constructed instance?
+DECISION  Neither. A configuration is a frozen dataclass, so its default
+          stands in its declaration and 'dataclasses.fields()' reads it
+          without constructing anything.
+COST      A member declaring no default at all, and a member declaring a
+          'default_factory', are two cases the reader must handle. The
+          first is a fault by name -- the component announced nothing,
+          and silence is not a value to pass on.
+GRAVEYARD A separate 'Default' object per component: a second place a
+          default could be stated, and nothing preventing the two from
+          disagreeing. Constructing an instance: the default becomes
+          whatever the constructor happens to do, which is not an
+          announcement.
+
+R-42  THE RELATION IS CHECKED AT IMPORT
+______________________________________________________________________________
+PROBLEM   The member name is a string this component does not own. A
+          rename in the component, or a default forgotten there, would
+          surface at the first case that happens to need the parameter.
+DECISION  'relation._assert_relation()' runs at the import of the module:
+          every related member exists on its class and declares a
+          default, or the import fails naming parameter, class and
+          member. Raised and not 'assert'ed -- the check must stand
+          under 'python -O'.
+COST      A component whose face is momentarily out of step cannot be
+          imported at all.
+RATIONALE That cost is the point: the table and the classes are one
+          fact, and a disagreement is not a thing to carry further.
+
+
+R-43  A DECLARED 'None' IS THE VALUE
+______________________________________________________________________________
+PROBLEM   'build.framework = None' was read as a blank still needing to
+          be filled.
+DECISION  It is not. A declared 'None' documents that the thing is
+          ABSENT -- there is no build framework, there is no
+          canonicalisation -- and it is reported as the real value.
+          Nothing substitutes for it.
+RATIONALE R-37 forbids a consumer meeting an unanswered parameter. It
+          does not forbid an owner answering "there is none". The end
+          result reports real values; where the real value is 'None',
+          that is what it reports.
+
+R-44  '--hwut-info' IS THE THIRD CARRIER: MIGRATION
+______________________________________________________________________________
+PROBLEM   'otto-von-bismarck.bas' stands in the directory, is not
+          ignored, is not named under 'apps', and carries no 'hwut'
+          trigger -- because it is an hwut 1.0 test application and
+          predates the trigger. Under R-1 it is simply not a test
+          application, and a whole 1.0 suite explores as empty.
+DECISION  Where neither carrier speaks for a candidate file, it is
+          INTERVIEWED: 'app --hwut-info'. The answer is read as a
+          specification. Only what hwut 1.0 defines is looked for --
+          title, 'CHOICES:', 'HAPPY:' -- as 'HwutRunner' emits it; a
+          line beyond that is passed over in silence.
+COST      Exploration EXECUTES. It was a function of the directory's
+          text alone (R-1, R-19); it now runs a program, once per
+          header-less unnamed candidate. The interview runs under
+          procsitter with caps: an old application that hangs must not
+          hang exploration.
+RATIONALE R-2 kept '--hwut-info' alive as a courtesy and imagined it
+          feeding error-message hints. This is the better use of the
+          same courtesy: a 1.0 suite explores as it stands, and its
+          author migrates file by file at his own pace. A file that
+          does not answer, answers badly, or exits non-zero is not a
+          test application -- silence is not a fault.
+NOTE      The interview is reached only where both carriers are silent,
+          so it costs a modern directory nothing: no header-carrying
+          file and no 'apps' entry is ever run to be read.
+GRAVEYARD Interviewing every file, and comparing the answer against the
+          specification as a cross-check: an execution per file on every
+          run, to catch a drift that is usually absent. Making the
+          answer authoritative where it disagrees with a written
+          specification: the written word is the specification (R-1);
+          the interview speaks only where nothing was written.
+
+R-45  'same': ONE NOMINAL FILE FOR ALL CHOICES
+______________________________________________________________________________
+PROBLEM   hwut 1.0's 'SAME;' had no counterpart in the new vocabulary.
+DECISION  'same' says: all choices of this file share ONE nominal file.
+          It is a STORAGE ECONOMY -- choices that display the same
+          behaviour store one description of it, not one per choice.
+          It also facilitates ACCEPTANCE: one choice is checked and
+          blessed, and the rest must follow it. The default is 'False'
+          -- nominals differ per choice unless the author says
+          otherwise.
+COST      A divergence in any choice shows against the shared nominal;
+          the store cannot say which choice recorded it, because only
+          one recording exists. That is the economy, bought knowingly.
+NOTE      A property of the FILE. 'same' cannot be a choice attribute:
+          the statement is about the set.
+
+
+R-46  'interactive': THE APPLICATION SERVES A SESSION
+______________________________________________________________________________
+PROBLEM   hwut 1.0's info block carried 'INTERACTIVE;', announcing that
+          the application accepts '--interactive' -- choices driven over
+          stdin, several served by one call, without a restart per
+          choice. The new vocabulary had no word for it, and with a
+          static specification (R-1) nothing asks.
+DECISION  'interactive' is a test parameter: the application announces
+          that it serves a session. It stands at the root only -- the
+          front end is the file's, not a choice's.
+COST      An application that gains or loses the capability must say so
+          in its specification; nothing discovers it.
+RATIONALE Under R-1 the specification is what is written. A capability
+          that decides HOW the framework calls a file must be readable
+          without calling it.
+NOTE      The interview reads 'INTERACTIVE;' as this parameter, so a
+          1.0 application announces it as it always did (R-44).
+
+R-47  THE CAPS ARE A FIXED VOCABULARY
+______________________________________________________________________________
+PROBLEM   Is 'caps' a named list of caps, or a scope passed through to
+          procsitter unread?
+DECISION  Named. An unknown cap is a fault at the door, with a line and
+          a column.
+COST      One line per cap added.
+RATIONALE Passing keys through moves the door into procsitter: a typo
+          would surface at run time, inside a process, instead of at
+          exploration.
+
+
+R-48  AN UNENFORCEABLE CAP REFUSES THE TEST
+______________________________________________________________________________
+PROBLEM   'network = false' is declared and procsitter cannot enforce
+          it on this platform. Run anyway, or not at all?
+DECISION  Refuse to run the test. A cap that does not cap is worse than
+          no cap: the author believes the test is confined and it is
+          not.
+COST      A suite written against a platform that can confine does not
+          run on one that cannot.
+NOTE      The documentation states the way out: '--ignore=<cap>' runs
+          the test with that cap unenforced, knowingly. The switch
+          belongs to the runner and is named here so it is not
+          forgotten.
+
+R-49  A STRING VALUE IS WRITTEN IN DOUBLE QUOTES
+______________________________________________________________________________
+PROBLEM   Real HOCON admits the unquoted string, and pays for it: an
+          unquoted value runs to the end of the line, so a comment
+          marker ends a value, two entries sharing a line are
+          ambiguous, and 'yes' is a boolean while 'yes please' is a
+          string. Our parser carried a lookahead rule to guess where
+          such a value ended.
+DECISION  A string value carries double quotes. A bare token is a
+          boolean, a number, or a spelling of nothing, and ends at a
+          blank. An unquoted word that is none of those is refused, and
+          the message shows the word in the quotes it wants.
+COST      'choices = ["one", "two"]' where 'choices = [one, two]' was
+          written before. Every string in every specification gains two
+          characters.
+RATIONALE The quotes are no burden once one is used to them, and they
+          feel right once one sees what ambiguity they remove: where a
+          value begins and ends is stated, not inferred.
+CONSEQUENCE The lookahead that gave back a swallowed key is GONE. A
+          bare token cannot contain a blank, so two entries share a
+          line without a rule.
+NOTE      KEYS may stand bare; they are not values. A key carrying a
+          blank -- a target naming a choice -- carries quotes (R-34).
+
+R-50  THE PRINTED CONFIGURATION IS WRITTEN IN THE SPECIFICATION LANGUAGE
+______________________________________________________________________________
+PROBLEM   The service printed an indented tree of its own invention. An
+          author then read two shapes: the one he writes and the one he
+          is shown.
+DECISION  It prints HOCON -- the language the specification is written
+          in. What is printed can be read back.
+COST      Deeper indentation, and closing braces on lines of their own.
+RATIONALE Consistency with the specification. A printed value an author
+          disagrees with can be copied into his file and corrected
+          there.
+
+
+R-51  THE PROVENANCE IS A COMMENT; '--no-default' DROPS THE REST
+______________________________________________________________________________
+PROBLEM   Every parameter of the vocabulary is printed, and most of them
+          carry a default nobody stated. The noise buries what was
+          chosen.
+DECISION  The provenance stands in a HOCON comment, and only where the
+          value is not this choice's own word. '--no-default' drops
+          every line that reads 'default'; what remains is what somebody
+          stated. A scope whose every leaf would go is dropped whole.
+RATIONALE Both readings are wanted at different moments: the complete
+          one answers "what will happen", the reduced one answers "what
+          did anybody ask for".
+
+
+R-52  'default_app' IN 'hwut.conf'
+______________________________________________________________________________
+PROBLEM   A directory of applications that share a comment marker, a
+          cap, a tolerance, had to state it once per file.
+DECISION  'hwut.conf' may carry a 'default_app' scope of test
+          parameters. Every application of the directory receives them,
+          and they DO NOT OVERWRITE: what an application states itself
+          stands. The three sources, outermost first: 'default_app', the
+          application's own root, the choice.
+COST      A value an author does not find in his file may stand in
+          'hwut.conf'. The provenance answers that: 'hwut.conf:<line>'.
+NOTE      R-7 said the conf root carries no directory-wide test-
+          parameter defaults. It still does not: they stand in a NAMED
+          scope, not at the root, so nothing is ambiguous about where a
+          directory key ends and a test parameter begins.
+
+
+R-53  'app', NOT 'root'; AND A CONF-BORNE VALUE NAMES ITS LINE
+______________________________________________________________________________
+PROBLEM   'root' named the place in a file rather than the thing that
+          stated the value, and said nothing to a reader who had not
+          read this document.
+DECISION  'app'. An application configured in 'hwut.conf' -- under
+          'apps' or through 'default_app' -- carries provenances of the
+          form 'hwut.conf:<line>' throughout.
+RATIONALE The provenance answers "who said this", and the answer is an
+          application, a file and a line, a component, or the
+          application's own info block.
+
+R-54  'whitespace_eqv' AND 'slash_eqv': A CLASS OF DIFFERENCE IS NONE
+______________________________________________________________________________
+PROBLEM   Compare carries 'whitespace_f' -- whitespace of any kind and
+          any extent counts as the same -- and the vocabulary had no
+          word for it, so a specification could not reach it.
+DECISION  'whitespace_eqv' and 'slash_eqv', both booleans, both ON by
+          default. The suffix says what the parameter asserts: an
+          EQUIVALENCE. 'slash' alone named a character and not the
+          claim made about it.
+RATIONALE Each says that a class of difference is no difference, and
+          each is on unless the author switches it off -- so the key an
+          author writes is nearly always 'false', and it must read as
+          the thing being denied.
+NOTE      'slash_eqv' relates to compare's 'backslash_f': the dos and
+          unix spelling of one path. 'whitespace_eqv' relates to
+          'whitespace_f'.
+
+
+R-55  'constraints' IS A LIST; COMPARE BUILDS THE DATABASE
+______________________________________________________________________________
+PROBLEM   Compare works from a database relating a VARIABLE to the
+          constraints that must hold for it. A specification states
+          expressions. Somebody must relate one to the other.
+DECISION  Compare. The face carries the expressions AS WRITTEN, and
+          compare's own
+          'related_variable_to_constraint_expression_db(expression_list)'
+          builds the database and is unit-tested there.
+COST      One function and its test in compare.
+RATIONALE The relation runs both ways -- one expression may constrain
+          several variables, one variable may carry several expressions
+          -- and a database assembled outside compare could relate a
+          variable to an expression that does not mention it, with
+          nothing to notice. Safety lies in deriving the relation from
+          the expression itself, where the expression is understood.
+GRAVEYARD Requiring a consistent database from outside: the caller
+          would have to parse the expressions to build it, which is
+          compare's competence, not the caller's.
+
+
+R-56  COMPARE'S CONFIGURATION BECOMES FROZEN DATACLASSES
+______________________________________________________________________________
+PROBLEM   R-41 reads a default out of a declaration, which a mutable
+          slotted class cannot answer.
+          'ConfigurationPatternFinder' is not slotted at all, so a
+          misspelt tolerance is accepted in silence (recorded as todo-12
+          of the test_run component).
+DECISION  'Configuration' and 'ConfigurationPatternFinder' become frozen
+          dataclasses, and compare gains 'ConfigurationFace' -- flat,
+          frozen, one member per parameter HWUT may set -- with
+          'configuration_of(face)' building the working shape from it.
+COST      Every site that mutates a configuration in place becomes a
+          'replace' or a face. Compare's own tests do this in several
+          places.
+RATIONALE The face is where one member of ours becomes the several
+          fields compare works with: the marker PAIR becomes a flag and
+          two markers, the comment marker becomes a beginning and an
+          end, and the expression list becomes the database. That
+          translation belongs to compare, which understands both sides.
+
+R-57  AN ENTRY MAY CARRY AN ADAPTER; NO COMPONENT OWES A FACE
+______________________________________________________________________________
+PROBLEM   One word of ours is several fields of a component's: 'analogy'
+          is a flag and two markers, 'constraints' a flag and a
+          database, 'comment' a beginning and an end. R-40 answered
+          this by asking each component for a FLAT FACE -- a second
+          declaration to keep in step with its own.
+DECISION  The table entry may name SEVERAL members and carry an
+          ADAPTER: two tiny functions.
+
+              forward     our value      -> {member: value, ...}
+              backward    {member: ...}  -> our value
+
+          'forward' writes; 'backward' derives the DEFAULT from the
+          component's own declarations. Compare declares 'analogy_f',
+          'analogy_begin_marker' and 'analogy_end_marker'; backward
+          reads those three and hands back the marker pair. No default
+          is restated here, and no face is asked of anybody.
+COST      Our table names members of a component's own configuration,
+          so a rename there reaches a line here. '_assert_relation()'
+          fails at import when it does, naming parameter, class and
+          member.
+RATIONALE R-40's face was a second declaration of one fact, kept in
+          step by hand. An adapter is a translation, and a translation
+          is honestly two-sided: it belongs where both sides are known,
+          which is the table that already relates them.
+SUPERSEDES R-40's flat face. The '(class, member)' entry stands
+          unchanged for every parameter that needs no translation, which
+          is most of them.
+NOTE      The DATABASE compare works from is still compare's to build
+          (R-55): 'forward' hands over the expressions as written and
+          says that constraints are in force; relating a variable to the
+          expressions that mention it happens in compare.
+
+R-58  EXPLORATION LIVES UNDER THE ORCHESTRATOR
+______________________________________________________________________________
+PROBLEM   The component stood as a sibling of the orchestrator, on the
+          grounds that 'hwut.parse' uses it without running anything.
+DECISION  'vut/engine/orchestrator/exploration/'. Exploration is part of
+          orchestration and of nothing else. That a service also reads a
+          specification does not make the reading a component of its
+          own.
+COST      A service that only prints imports through the orchestrator's
+          tree.
+RATIONALE The component exists to tell the orchestrator what the
+          directory offers. Its consumer is one; its shelf is that
+          consumer's.
+NOTE      The dependency stays one-way: exploration imports nothing of
+          the orchestrator's. 'Bookkeeper' remains struck from this
+          component's vocabulary -- the noun belongs to
+          'orchestrator.Bookkeeper' alone, and the two now stand in one
+          tree.
+
+
+R-59  'config.py' AND 'hwut-info.dat' FOLLOW THE HOUSE FORM
+______________________________________________________________________________
+PROBLEM   This component's TEST bootstrap and info file were written
+          from scratch and diverged from every other component's.
+DECISION  Both take the form the other components use.
+
+          'config.py' walks upward to the directory named 'vut',
+          inserts its parent into 'sys.path', EXPORTS 'VUT_DIRECTORY',
+          and re-exports 'HwutRunner'. A test's first line is then
+
+              from config import HwutRunner            # noqa: F401
+
+          and no test counts '..' to reach a sibling component.
+
+          'hwut-info.dat' carries a title, an underline, the command
+          line that runs the tests, and the '--not' exclusions.
+RATIONALE One form, swept tree-wide. A bootstrap that differs per
+          component is a hop count waiting to happen.
+
+R-60  THE PARSER'S BRANCHES ARE EXCLUSIVE AND SAY SO
+______________________________________________________________________________
+PROBLEM   The parser dispatched through sequences of 'if ... return',
+          each guard mutually exclusive with the ones before it but
+          nothing in the text saying so. A reader had to prove the
+          exclusivity for himself, and a guard inserted in the wrong
+          place would be silently unreachable.
+DECISION  Where the branches are exclusive, they are written as one
+          'match' on the deciding character, guards included. Where they
+          are not, they stay a sequence and read as one.
+COST      'match' costs Python 3.10.
+RATIONALE The shape of the code states the shape of the decision.
+
+
+R-61  THE PARSER SCANS RUNS, NOT CHARACTERS
+______________________________________________________________________________
+PROBLEM   Every key, value, string and blank run was walked one
+          character at a time through 'peek', which cost a method call
+          per character: 489 calls for a header of 19 lines.
+DECISION  A run is matched WHOLE. One pattern takes a key or a bare
+          value; a string with no backslash in it is taken by finding
+          its closing quote; blank runs are walked flat against the
+          line's own text, without a call. The cursor keeps the current
+          line's text in a slot rather than reaching for it each time.
+COST      Two regular expressions, and a fast path beside the general
+          one in the string reader.
+MEASURED  523 us -> 214 us per parse of a full 19-line header: 2.4x.
+          Every GOOD file of the parser suite stayed byte-identical
+          throughout, which is what made the change safe to make in
+          steps.
+NOTE      The speed is not why it matters -- exploration's cost is file
+          opening and, for a legacy application, a process. It matters
+          because the scan now reads as what it is: runs of a kind,
+          taken as runs.
+
+R-62  NUMBERS IN EVERY RADIX, WITH VISUAL HELPERS
+______________________________________________________________________________
+PROBLEM   The language read decimal integers and floats and nothing
+          else. A mask written '0xDEAD_BEEF', a bit pattern written
+          '0b0111_11_01', a mode written '0o3124' were strings, and an
+          author who wrote one of them got a quoting fault.
+DECISION  Decimal, hexadecimal ('0x'), binary ('0b'), octal ('0o') and
+          roman ('0r'). '_' stands anywhere between digits as a VISUAL
+          HELPER and enters no value; it may not begin or end the
+          digits, and two in a row are refused. A sign may stand apart
+          from its digits -- '- 0.12' -- in any radix.
+COST      A number grammar of its own, and its refusals: '0x' alone,
+          '0b012', '1__0', 'IIII'.
+RATIONALE A test parameter that is a mask or a bit pattern is written
+          the way its author thinks of it. The helper is why: a reader
+          checking 'DEAD_BEEF' against a datasheet should not have to
+          count.
+NOTE      The roman form is the strict one. There is NO ARITHMETIC:
+          '5 - 1' is the number five followed by something that is not
+          a key, and it is refused as such.
+
+
+R-63  THE LANGUAGE IS DOCUMENTED WHERE IT IS IMPLEMENTED
+______________________________________________________________________________
+PROBLEM   The subset was described in scattered docstrings and in this
+          component's README, which describes the VOCABULARY -- what
+          the keys mean -- and not the language the keys are written
+          in.
+DECISION  'language_support/python/README-hwut_hocon.txt' states the
+          language: grammar, strings, numbers, booleans and nothing,
+          comments, what is refused by name, faults, and what the
+          parser hands back.
+RATIONALE The parser is given to every language HWUT supports, and each
+          port is measured against the Python one. A port needs the
+          language stated in one place, not inferred from an
+          implementation.
+
+R-64  'comment' IS A MARKER PAIR, READ LIKE 'analogy'
+______________________________________________________________________________
+PROBLEM   'comment' was one string, and compare carries two markers --
+          the beginning and the end of an ignored line. The one was
+          written into both, so an author could not state an
+          asymmetric pair, and two keys of one kind read differently.
+DECISION  'comment = ["##", "##"]'. A pair, exactly as 'analogy' is: two
+          elements, the opening and the closing; the empty pair is OFF,
+          stated; absence takes the owner's own pair.
+COST      'comment = "##"' becomes 'comment = ["##", "##"]'.
+RATIONALE Two parameters of one kind read alike, and one reader of a
+          pair serves both.
+NOTE      Compare needs an 'ignored_line_f' beside its two markers, as
+          it has 'analogy_f' beside those two -- otherwise OFF has no
+          way to be said. It is one field (todo-1).
+
+
+R-65  'whitespace_eqv' IS THE WHITESPACE PARAMETER; 'strip' IS NOT ONE
+______________________________________________________________________________
+PROBLEM   Compare carries 'whitespace_f' AND 'strip_whitespace_f', and
+          it was open whether both earn a word here.
+DECISION  'whitespace_eqv' is the parameter, and it is the only one:
+          whitespace of any kind and any extent is the same whitespace.
+          'strip_whitespace_f' -- what compare does with the whitespace
+          at a line's ends -- stays compare's own and no specification
+          reaches it.
+RATIONALE The vocabulary states what an author TOLERATES. Stripping is a
+          reading step, not a tolerance.
+
+
+R-66  THE CONSTRAINT NAMESPACE CARRIES MATHS, AND A GLOB MATCH
+______________________________________________________________________________
+PROBLEM   The constraint sandbox provided 'len abs min max int float str
+          round ord all any' and no maths, so 'abs(sin(z) - x) <
+          epsilon' read 'sin' as a VARIABLE -- a constraint on a name
+          nothing would ever bind.
+DECISION  A TEST RUN HAS ONE NAMESPACE for all its constraints: the
+          fixed names -- maths, the builtins, the constants, the string
+          methods -- and the variables the run has bound so far. The
+          fixed part carries the maths in full and a glob match beside
+          it:
+
+              glob(value, pattern)    fnmatch, the shell's own form
+
+          The two are composed at evaluation time; the fixed part is
+          copied, so one run's bindings never reach another's.
+COST      Every name added is a name a variable may not carry. A
+          constraint over a variable called 'min' or 'sin' cannot be
+          written.
+RATIONALE A constraint says what a number must satisfy, and what a
+          number must satisfy is said in maths. The glob is the same
+          argument for text: '((name: "build-42.log"))' against
+          'glob(name, "build-*.log")'.
+NOTE      Compare ALREADY carried 'SAFE_FUNCTION_DB',
+          'SAFE_CONSTANT_DB', 'SAFE_STR_METHOD_SET' and the per-run
+          'ConstraintSpace'. The delivery extends that structure rather
+          than standing beside it: one module holds the fixed names,
+          and its 'NOT_A_VARIABLE_SET' is read by the AST check, by the
+          evaluation and by the variable finder alike, so the three
+          cannot drift.
+DOCUMENTED 'compare/engine/README-constraint_namespace.txt': the
+          namespace per run, what a constraint may contain, what
+          refuses one, and why a variable may not carry a name of the
+          namespace.
+
+R-67  '--provenance' AND '--gnu' NAME THE PLACE
+______________________________________________________________________________
+PROBLEM   The printed configuration named WHO stated a value -- 'app',
+          'hwut.conf:3' -- but not WHERE, and a value the author wrote
+          himself carried nothing at all. An author looking at a value
+          he disagrees with had to find its line by searching.
+DECISION  Two switches beside '--no-default':
+
+              --provenance   every stated value names its place:
+                             'test-a.py:5'
+              --gnu          the place in the GNU ERROR FORMAT,
+                             'file:line:column:', AT THE LINE'S
+                             BEGINNING -- what the GNU Coding Standards
+                             prescribe for diagnostics and where an
+                             editor's error parser looks for it. The
+                             places stand in a column of their own,
+                             padded to the longest.
+
+          EVERY LINE CARRIES A PLACE. A line with none of its own -- a
+          brace, a title, a defaulted value -- takes the place of what
+          ENCLOSES it: the scope's first stated member, else the
+          specification's own head. Not the line above it: a default
+          stands in no relation to whatever value happens to precede
+          it.
+
+COST      The provenance record carries a file, a line and a column
+          beside the word, and is settled where the sources still stand
+          apart.
+RATIONALE The short word answers "who said this" and the place answers
+          "where do I change it". The second is worth an editor being
+          able to open it -- and an error parser reads the beginning of
+          a line, not the end of one, so under '--gnu' the place leads
+          and the specification follows.
+
+          A blank place is not a neutral filler: vim files such a line
+          in the quickfix list as an entry that jumps NOWHERE, and a
+          walk with ':cnext' wastes a step on it. Emacs shows it as
+          inert. Inheriting is what makes the whole output navigable.
+GRAVEYARD Pointing a DEFAULT at the component that DECLARES it --
+          compare's own configuration.py, found through 'inspect'. It
+          answers "where does this '##' come from", but a ':cnext' walk
+          would keep leaving the author's own directory, and absolute
+          paths would have to be kept out of every GOOD file. Worth a
+          switch of its own one day; not this one.
