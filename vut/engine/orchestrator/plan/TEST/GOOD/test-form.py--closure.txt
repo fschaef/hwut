@@ -1,0 +1,9 @@
+
+--- [MISDEP] -> non-[MISDEP]: refused ---
+REFUSED: 'm.py' [MISDEP] -> 'a.py' without [MISDEP]: the R-35 closure is violated
+
+--- [MISDEP] -> [MISDEP]: stands ---
+2 node(s); before_db: {'n.py': ['m.py']}
+
+--- a cycle in the ordering links: refused, members named ---
+REFUSED: ordering links carry a cycle: a.py -> b.py -> c.py -> a.py -- resolved before the plan exists (R-35)

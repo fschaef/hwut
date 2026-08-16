@@ -1,0 +1,9 @@
+TEST PLAN: 3 node(s), 0 link(s), 0 exclusion set(s)
+NODES
+    solo.py     TEST
+    duo.py one  TEST
+    duo.py two  TEST
+LINKS
+    (none)
+EXCLUSIONS
+    (none)

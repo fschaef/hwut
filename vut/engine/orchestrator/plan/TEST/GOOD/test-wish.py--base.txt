@@ -1,0 +1,48 @@
+
+--- --fail ---
+    WISH: --fail
+    2 case(s)
+        test-a.py one
+        test-b.py -
+
+--- --pass ---
+    WISH: --pass
+    2 case(s)
+        test-a.py two
+        test-net.py -
+
+--- --since=2h : the never-run case is not wanted ---
+    WISH: --since=2h
+    2 case(s)
+        test-a.py one
+        test-a.py two
+
+--- --until=2h : the stale wish -- the never-run counted ---
+    WISH: --until=2h
+    3 case(s)
+        quick-3.py one
+        test-b.py -
+        test-net.py -
+
+--- --until=yesterday : older anchors reach further back ---
+    WISH: --until=yesterday
+    1 case(s)
+        quick-3.py one
+
+--- --fail --since=2h : the questions are AND'ed ---
+    WISH: --fail --since=2h
+    1 case(s)
+        test-a.py one
+
+--- --fail --until=2h : the never-run answers NO to --fail ---
+    WISH: --fail --until=2h
+    1 case(s)
+        test-b.py -
+
+--- --fail --glob 'test-b.py' : keyword and glob, AND'ed ---
+    WISH: --fail --glob "test-b.py"
+    1 case(s)
+        test-b.py -
+
+--- asking the base without a Bookkeeper: refused ---
+REFUSED: the wish asks the base (--fail) and no Bookkeeper was handed down

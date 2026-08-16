@@ -1,0 +1,12 @@
+
+--- an unknown option ---
+$ hwut.show --verbose
+    REFUSED: unknown option(s): --verbose
+    usage: hwut.show [<source file>] [--no-default] [--provenance] [--gnu] [--directory=<path>]
+    [status 2]
+
+--- two source files ---
+$ hwut.show test-a.py test-b.py
+    REFUSED: 2 source files named; 'hwut.show' reads one, or the directory
+    usage: hwut.show [<source file>] [--no-default] [--provenance] [--gnu] [--directory=<path>]
+    [status 2]

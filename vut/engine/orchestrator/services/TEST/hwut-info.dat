@@ -1,0 +1,6 @@
+Services -- The Command Line Faces
+------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

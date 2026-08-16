@@ -1,0 +1,57 @@
+============================================================================
+VUT-ORCHESTRATOR-SCHEDULER -- RATIONALE
+============================================================================
+Settled. Read-only. S-N handles; the plan's rulings cited as P-N,
+exploration's as R-N. S-1 and S-2 stood first in the plan's RATIONALE
+as P-13 and P-14 and moved here with the component.
+
+----------------------------------------------------------------------------
+S-1  THE SCHEDULER'S SEAM
+----------------------------------------------------------------------------
+PROBLEM   The scheduler must execute a plan without becoming a
+          runner: running is test_run's (P-1).
+DECISION  'I_Dispatcher' -- run_script, run_build, open_session,
+          close_session, run_test -- every member a coroutine,
+          every failure a VALUE, never an exception. The scheduler
+          reads the plan, asks CPlanState who may start, starts
+          what fits, and awaits the FIRST ending. The state
+          machine (state.py) holds no clock and runs nothing.
+COST      Two units where one loop would do; a dispatcher must be
+          written per world (test_run's, and a test's own).
+GRAVEYARD The scheduler calling test_run directly (no plan could
+          then be executed without processes, and no trace could
+          be blessed). Exceptions as failures (a failure that
+          unwinds the loop cannot be a node state).
+
+----------------------------------------------------------------------------
+S-2  A TERMINAL STATE SATISFIES AN ORDERING LINK
+----------------------------------------------------------------------------
+PROBLEM   What an ordering link does when its source never runs,
+          or runs and fails.
+DECISION  ANY terminal state satisfies it: ENDED_GOOD, ENDED_BAD,
+          UNSUPPORTED, MISDEP. The link is ordering, not success
+          (R-33), and a node that will never run must not hold its
+          dependants for ever.
+COST      A dependant runs after a broken dependency -- stated,
+          and the author who wants otherwise has no key for it
+          yet.
+GRAVEYARD Verdict-carrying ordering links (R-33 says otherwise).
+          Waiting on a node that can never end (deadlock as a
+          policy).
+
+----------------------------------------------------------------------------
+S-3  READINESS IS ASKED ANEW BEFORE EVERY START
+----------------------------------------------------------------------------
+PROBLEM   Starting one member of an exclusion set withdraws
+          admission from the others; a snapshot of 'ready()' taken
+          before the start no longer states the truth, and
+          starting from it is refused by the state machine.
+DECISION  The dispatch loop asks 'ready()' before EVERY start and
+          takes the first name. The snapshot defect was found by
+          the suite before blessing; the refusal at the door is
+          what surfaced it.
+COST      One readiness computation per start instead of one per
+          wave.
+GRAVEYARD Starting a whole snapshot (the defect). Filtering the
+          snapshot inside the loop (re-states the readiness rules
+          in a second place).

@@ -1,0 +1,18 @@
+
+--- at construction ---
+    build[make]            PENDING
+    a.py one               PENDING
+    a.py two               PENDING
+    z.py                   MISDEP
+    ready: build[make], a.py two
+    done_f=False stuck_f=False
+
+--- the build starts ---
+    build[make]            RUNNING
+    a.py one               PENDING
+    a.py two               PENDING
+    z.py                   MISDEP
+    ready: a.py two
+
+--- starting what is not ready: refused ---
+REFUSED: 'a.py one' is not ready to start

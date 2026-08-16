@@ -1,0 +1,27 @@
+
+--- the directory, --no-default ---
+$ hwut.show --no-default
+    hwut.conf
+        dependency           test-b.py <- test-a.py one
+
+    test-a.py {
+        title = "A"
+        choices {
+            one {
+                numeric = 0.01                    # app
+            }
+            two {
+                numeric = 0.01                    # app
+            }
+        }
+    }
+
+    test-b.py {
+        title = "B"
+        choices {
+            - {
+            }
+        }
+    }
+
+    [status 0]

@@ -1,0 +1,32 @@
+
+--- --help ---
+$ hwut.show --help
+    hwut.show -- the configuration the framework READ
+
+        hwut.show                   the whole directory: 'hwut.conf' first,
+                                    then every test application as a tree
+        hwut.show <source file>     one file's specification
+
+    OPTIONS
+        --no-default        drop every value nobody stated, leaving what
+                            somebody chose
+        --provenance        name the place of every stated value -- the
+                            file and the line it stands on
+        --gnu               name it in the GNU error format,
+                            'file:line:column', which an editor jumps to
+        --directory=<path>  the directory to read; the current one else
+        --help              this text
+
+    What is shown is what the framework READ -- syntax checked, defaults
+    resolved -- not what was written. A specification carrying a fault
+    yields its faults and no tree. The printed form is the specification
+    language itself and can be read back (R-50).
+
+    The TEST PLAN -- what the framework intends to run -- is the service
+    'hwut.plan'.
+
+    EXIT STATUS
+        0    nothing refused, no fault met
+        1    a fault was met
+        2    the command line cannot be read
+    [status 0]

@@ -1,0 +1,35 @@
+
+--- one worker ---
+TRACE
+    test   a.py                   start   (standing: 1)
+    test   a.py                   end     good
+    test   b.py                   start   (standing: 1)
+    test   b.py                   end     good
+    test   c.py                   start   (standing: 1)
+    test   c.py                   end     good
+REPORT
+    entry=None  exit=None  good=True
+    dispatched: a.py, b.py, c.py
+    a.py                   ENDED_GOOD
+    b.py                   ENDED_GOOD
+    c.py                   ENDED_GOOD
+    most standing at once: 1
+
+--- no bound ---
+TRACE
+    test   a.py                   start   (standing: 1)
+    test   b.py                   start   (standing: 2)
+    test   c.py                   start   (standing: 3)
+    test   c.py                   end     good
+    test   b.py                   end     good
+    test   a.py                   end     good
+REPORT
+    entry=None  exit=None  good=True
+    dispatched: a.py, b.py, c.py
+    a.py                   ENDED_GOOD
+    b.py                   ENDED_GOOD
+    c.py                   ENDED_GOOD
+    most standing at once: 3
+
+--- a bound below one: refused ---
+REFUSED: worker_max_n is 0; a bound below one schedules nothing

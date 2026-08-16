@@ -1,0 +1,28 @@
+
+--- 'test-b.py' alone: 'test-a.py one' enters by implication ---
+WISH: --glob "test-b.py"
+TEST PLAN: 3 node(s), 2 link(s), 0 exclusion set(s)
+NODES
+    build[make test-a.py]  BUILD
+    test-b.py              TEST
+    test-a.py one          TEST     <= required by test-b.py
+LINKS
+    test-a.py one -> test-b.py
+    build[make test-a.py] ==> test-a.py one
+EXCLUSIONS
+    (none)
+
+--- 'test-c.py' alone: the chain runs to its end ---
+WISH: --glob "test-c.py"
+TEST PLAN: 4 node(s), 3 link(s), 0 exclusion set(s)
+NODES
+    build[make test-a.py]  BUILD
+    test-c.py              TEST
+    test-b.py              TEST     <= required by test-c.py
+    test-a.py one          TEST     <= required by test-b.py
+LINKS
+    test-b.py -> test-c.py
+    test-a.py one -> test-b.py
+    build[make test-a.py] ==> test-a.py one
+EXCLUSIONS
+    (none)

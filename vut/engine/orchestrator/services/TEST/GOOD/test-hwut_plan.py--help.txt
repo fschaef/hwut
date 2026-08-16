@@ -1,0 +1,55 @@
+
+--- --help ---
+$ hwut.plan --help
+    hwut.plan -- the TEST PLAN the framework intends
+
+        hwut.plan           the plan of everything the directory offers:
+                            the nodes (TEST, BUILD, SESSION), the links
+                            ('x -> y' ordering, 'w ==> t' supports), and
+                            the exclusion sets
+
+    SELECTION -- the wish; an absent keyword asks nothing
+        --fail              the last recorded run's verdict was negative
+        --pass              the last recorded run's verdict was positive
+        --since=<point>     the last recorded run lies AT or AFTER the
+                            point; a case never run is not wanted
+        --until=<point>     the last recorded run lies BEFORE the point,
+                            and a case NEVER RUN is wanted too -- the
+                            stale wish
+        --glob <target>     a target: a file name, or a file name and a
+                            choice name with one blank between, either
+                            carrying fnmatch's '*', '?' and '[ ]':
+                                --glob "test-*.py quick-[0-2]"
+                            may stand several times; the globs are OR'ed
+                            among themselves
+
+        Keywords of different kinds are AND'ed. '--fail' beside '--pass'
+        is refused. A wish matching nothing yields an empty plan and a
+        report, not a refusal.
+
+    A <point> is a SPAN back from now -- a number and one of 's', 'm',
+    'h', 'd', as in '90s', '2h', '7d' -- or an ANCHOR, reckoned in UTC:
+        today, yesterday            that day, 00:00
+        last-week                   Monday of the week before, 00:00
+        last-month                  the 1st of the month before, 00:00
+        monday .. sunday            the most recent such day, 00:00
+        january .. december         the 1st of the most recent such month
+
+    OTHER
+        --directory=<path>  the directory to read; the current one else
+        --help              this text
+
+    The plan is printed, never read back: to replay is to re-determine,
+    and determination is deterministic. Cases required by a selected case
+    enter by implication, marked '<= required by <target>'. A case whose
+    dependencies cannot be met carries '[MISDEP]': it is selected,
+    reported as failure, and does not run.
+
+    The configuration the framework READ is the service 'hwut.show'.
+
+    EXIT STATUS
+        0    nothing refused, no fault met
+        1    a fault was met
+        2    the command line cannot be read, or the wish names what the
+             directory does not offer
+    [status 0]

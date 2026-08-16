@@ -1,0 +1,34 @@
+
+--- the plan ---
+9 node(s):
+    build[make]
+    session[test-i.py]
+    test-a.py one
+    test-a.py two
+    test-i.py x
+    test-i.py y
+    test-b.py
+    test-c.py
+    test-d.py
+
+--- before_db ---
+    test-a.py one    <- test-b.py
+    test-d.py        <- test-c.py
+
+--- supports_db ---
+    build[make]          ==> test-a.py one, test-a.py two
+    session[test-i.py]   ==> test-i.py x, test-i.py y
+
+--- supporter_db ---
+    test-a.py one    <== build[make]
+    test-a.py two    <== build[make]
+    test-i.py x      <== session[test-i.py]
+    test-i.py y      <== session[test-i.py]
+
+--- exclusion_sets_of ---
+    test-a.py one    { test-a.py, test-i.py x }
+    test-a.py two    { test-a.py, test-i.py x }
+    test-i.py x      { test-a.py, test-i.py x }
+    test-i.py y      -
+    build[make]      -
+    no-such-node     -

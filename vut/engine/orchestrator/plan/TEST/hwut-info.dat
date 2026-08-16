@@ -1,0 +1,6 @@
+Plan -- Determined, Printed, Executed
+--------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

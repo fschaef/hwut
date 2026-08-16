@@ -1,0 +1,32 @@
+
+--- 'b.py' waits for 'a.py' ---
+TRACE
+    test   a.py                   start   (standing: 1)
+    test   free.py                start   (standing: 2)
+    test   free.py                end     good
+    test   a.py                   end     good
+    test   b.py                   start   (standing: 1)
+    test   b.py                   end     good
+REPORT
+    entry=None  exit=None  good=True
+    dispatched: a.py, free.py, b.py
+    a.py                   ENDED_GOOD
+    b.py                   ENDED_GOOD
+    free.py                ENDED_GOOD
+    most standing at once: 2
+
+--- 'a.py' ends BAD -- 'b.py' runs all the same ---
+TRACE
+    test   a.py                   start   (standing: 1)
+    test   free.py                start   (standing: 2)
+    test   free.py                end     good
+    test   a.py                   end     BAD
+    test   b.py                   start   (standing: 1)
+    test   b.py                   end     good
+REPORT
+    entry=None  exit=None  good=False
+    dispatched: a.py, free.py, b.py
+    a.py                   ENDED_BAD
+    b.py                   ENDED_GOOD
+    free.py                ENDED_GOOD
+    most standing at once: 2

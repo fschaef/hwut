@@ -1,0 +1,50 @@
+
+--- (nothing) ---
+    wish : (all)
+    rest : -
+    asks nothing: True
+
+--- --fail ---
+    wish : --fail
+    rest : -
+    asks nothing: False
+
+--- --pass ---
+    wish : --pass
+    rest : -
+    asks nothing: False
+
+--- --since=2h ---
+    wish : --since=2h
+    rest : -
+    asks nothing: False
+
+--- --until=yesterday ---
+    wish : --until=yesterday
+    rest : -
+    asks nothing: False
+
+--- --since=monday --until=last-week ---
+    wish : --since=monday --until=last-week
+    rest : -
+    asks nothing: False
+
+--- --glob test-*.py ---
+    wish : --glob "test-*.py"
+    rest : -
+    asks nothing: False
+
+--- --glob=test-a.py one ---
+    wish : --glob "test-a.py one"
+    rest : -
+    asks nothing: False
+
+--- --fail --since=7d --glob test-a.py * --glob quick-[0-9].py ---
+    wish : --fail --since=7d --glob "test-a.py *" --glob "quick-[0-9].py"
+    rest : -
+    asks nothing: False
+
+--- --fail --directory=x some-file.py ---
+    wish : --fail
+    rest : --directory=x, some-file.py
+    asks nothing: False

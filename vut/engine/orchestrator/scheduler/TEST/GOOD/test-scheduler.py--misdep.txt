@@ -1,0 +1,12 @@
+
+--- two unsatisfiable cases beside one that runs ---
+TRACE
+    test   free.py                start   (standing: 1)
+    test   free.py                end     good
+REPORT
+    entry=None  exit=None  good=False
+    dispatched: free.py
+    c.py                   MISDEP
+    d.py                   MISDEP
+    free.py                ENDED_GOOD
+    most standing at once: 1

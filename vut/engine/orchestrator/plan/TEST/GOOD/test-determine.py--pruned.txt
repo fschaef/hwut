@@ -1,0 +1,22 @@
+
+--- both members stand: the group stands ---
+WISH: --glob "test-net.py" --glob "test-port.py *"
+TEST PLAN: 3 node(s), 0 link(s), 1 exclusion set(s)
+NODES
+    test-net.py       TEST
+    test-port.py one  TEST
+    test-port.py two  TEST
+LINKS
+    (none)
+EXCLUSIONS
+    { test-net.py, test-port.py two }
+
+--- one member stands: the group constrains nothing ---
+WISH: --glob "test-net.py"
+TEST PLAN: 1 node(s), 0 link(s), 0 exclusion set(s)
+NODES
+    test-net.py  TEST
+LINKS
+    (none)
+EXCLUSIONS
+    (none)

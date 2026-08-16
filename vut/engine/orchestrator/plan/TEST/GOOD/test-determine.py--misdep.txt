@@ -1,0 +1,11 @@
+
+--- 'test-lost.py' names a target the directory lacks ---
+WISH: --glob "test-lost.py" --glob "test-heir.py"
+TEST PLAN: 2 node(s), 1 link(s), 0 exclusion set(s)
+NODES
+    test-heir.py  TEST     [MISDEP]
+    test-lost.py  TEST     [MISDEP]
+LINKS
+    test-lost.py -> test-heir.py
+EXCLUSIONS
+    (none)

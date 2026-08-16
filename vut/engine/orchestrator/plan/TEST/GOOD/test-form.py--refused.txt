@@ -1,0 +1,27 @@
+
+--- two nodes of one name ---
+REFUSED: two nodes named 'a.py one'
+
+--- a link source naming no node ---
+REFUSED: link source 'ghost.py' names no node
+
+--- a link target naming no node ---
+REFUSED: link target 'ghost.py' names no node
+
+--- an ordering link whose end is a BUILD node ---
+REFUSED: ordering link 'build[make] -> a.py one': both ends must be TEST nodes
+
+--- a supports link whose source is a TEST node ---
+REFUSED: supports link 'b.py ==> a.py one': source must be a BUILD or SESSION node
+
+--- a supports link whose target is a BUILD node ---
+REFUSED: supports link 'build[make] ==> build[make]': target must be a TEST node
+
+--- a session supporting a choice of another file ---
+REFUSED: 'session[a.py]' supports 'b.py one': a session serves the choices of its own file alone
+
+--- an exclusion member covering no TEST node ---
+REFUSED: exclusion member 'ghost.py' covers no TEST node of the plan
+
+--- an exclusion member naming only a BUILD node ---
+REFUSED: exclusion member 'build[make]' covers no TEST node of the plan

@@ -1,0 +1,33 @@
+
+--- the plan of everything ---
+$ hwut.plan
+    WISH: (all)
+    TEST PLAN: 5 node(s), 3 link(s), 1 exclusion set(s)
+    NODES
+        build[make test-a.py]  BUILD
+        test-a.py one          TEST
+        test-a.py two          TEST
+        test-b.py              TEST
+        test-net.py            TEST
+    LINKS
+        test-a.py one -> test-b.py
+        build[make test-a.py] ==> test-a.py one
+        build[make test-a.py] ==> test-a.py two
+    EXCLUSIONS
+        { test-net.py, test-a.py two }
+    [status 0]
+
+--- implication: 'test-b.py' pulls in what it requires ---
+$ hwut.plan --glob test-b.py
+    WISH: --glob "test-b.py"
+    TEST PLAN: 3 node(s), 2 link(s), 0 exclusion set(s)
+    NODES
+        build[make test-a.py]  BUILD
+        test-b.py              TEST
+        test-a.py one          TEST     <= required by test-b.py
+    LINKS
+        test-a.py one -> test-b.py
+        build[make test-a.py] ==> test-a.py one
+    EXCLUSIONS
+        (none)
+    [status 0]

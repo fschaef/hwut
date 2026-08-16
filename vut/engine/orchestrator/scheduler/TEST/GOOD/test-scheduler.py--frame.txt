@@ -1,0 +1,26 @@
+
+--- 'on_entry' stands ---
+TRACE
+    script on_entry               start   (standing: 1)
+    script on_entry               end     good
+    test   a.py                   start   (standing: 1)
+    test   a.py                   end     good
+    script on_exit                start   (standing: 1)
+    script on_exit                end     good
+REPORT
+    entry=True  exit=True  good=True
+    dispatched: a.py
+    a.py                   ENDED_GOOD
+    most standing at once: 1
+
+--- 'on_entry' fails: nothing is dispatched, 'on_exit' runs ---
+TRACE
+    script on_entry               start   (standing: 1)
+    script on_entry               end     BAD
+    script on_exit                start   (standing: 1)
+    script on_exit                end     good
+REPORT
+    entry=False exit=True  good=False
+    dispatched: -
+    a.py                   PENDING
+    most standing at once: 1

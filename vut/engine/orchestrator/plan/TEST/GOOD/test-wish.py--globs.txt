@@ -1,0 +1,38 @@
+
+--- everything the directory offers ---
+    WISH: (all)
+    5 case(s)
+        quick-3.py one
+        test-a.py one
+        test-a.py two
+        test-b.py -
+        test-net.py -
+
+--- a file glob: every choice of every match ---
+    WISH: --glob "test-*.py"
+    4 case(s)
+        test-a.py one
+        test-a.py two
+        test-b.py -
+        test-net.py -
+
+--- a choice glob beside it ---
+    WISH: --glob "test-a.py *"
+    2 case(s)
+        test-a.py one
+        test-a.py two
+
+--- a set in the file member ---
+    WISH: --glob "quick-[0-3].py *"
+    1 case(s)
+        quick-3.py one
+
+--- two globs hold ONE question: OR ---
+    WISH: --glob "test-b.py" --glob "test-a.py one"
+    2 case(s)
+        test-a.py one
+        test-b.py -
+
+--- a glob matching nothing: legal, empty ---
+    WISH: --glob "test-*.pt"
+    0 case(s)

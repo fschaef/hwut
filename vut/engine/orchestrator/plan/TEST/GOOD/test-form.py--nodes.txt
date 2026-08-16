@@ -1,0 +1,15 @@
+
+--- names, one per kind ---
+    t.py one             TEST
+    t.py                 TEST
+    build[make all]      BUILD
+    session[t.py]        SESSION
+
+--- the TEST node's annotations ---
+    t.py one   provenance=NAMED    implied_by=None       misdep_f=False
+    u.py       provenance=IMPLIED  implied_by=t.py one   misdep_f=False
+    v.py       provenance=NAMED    implied_by=None       misdep_f=True
+
+--- provenance and implied_by contradict: refused ---
+REFUSED: TEST node 't.py': provenance NAMED with implied_by 'u.py'
+REFUSED: TEST node 't.py': provenance IMPLIED with implied_by None

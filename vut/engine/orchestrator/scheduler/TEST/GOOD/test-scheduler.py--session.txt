@@ -1,0 +1,29 @@
+
+--- the session launches: opened once, closed once ---
+TRACE
+    open   session[i.py]          start   (standing: 1)
+    open   session[i.py]          end     good
+    test   i.py x                 start   (standing: 1)
+    test   i.py y                 start   (standing: 2)
+    test   i.py y                 end     good
+    test   i.py x                 end     good
+    close  session[i.py]
+REPORT
+    entry=None  exit=None  good=True
+    dispatched: session[i.py], i.py x, i.py y
+    session[i.py]          ENDED_GOOD
+    i.py x                 ENDED_GOOD
+    i.py y                 ENDED_GOOD
+    most standing at once: 2
+
+--- the session does not launch: never closed ---
+TRACE
+    open   session[i.py]          start   (standing: 1)
+    open   session[i.py]          end     BAD
+REPORT
+    entry=None  exit=None  good=False
+    dispatched: session[i.py]
+    session[i.py]          ENDED_BAD
+    i.py x                 UNSUPPORTED
+    i.py y                 UNSUPPORTED
+    most standing at once: 1

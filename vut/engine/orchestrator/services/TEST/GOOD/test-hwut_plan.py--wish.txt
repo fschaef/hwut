@@ -1,0 +1,29 @@
+
+--- two globs: OR'ed ---
+$ hwut.plan --glob test-net.py --glob test-b.py
+    WISH: --glob "test-net.py" --glob "test-b.py"
+    TEST PLAN: 4 node(s), 2 link(s), 0 exclusion set(s)
+    NODES
+        build[make test-a.py]  BUILD
+        test-b.py              TEST
+        test-net.py            TEST
+        test-a.py one          TEST     <= required by test-b.py
+    LINKS
+        test-a.py one -> test-b.py
+        build[make test-a.py] ==> test-a.py one
+    EXCLUSIONS
+        (none)
+    [status 0]
+
+--- a glob matching nothing: an empty plan, reported ---
+$ hwut.plan --glob test-*.pt
+    WISH: --glob "test-*.pt"
+    REPORT: the selection is empty: no test case answers the wish
+    TEST PLAN: 0 node(s), 0 link(s), 0 exclusion set(s)
+    NODES
+        (none)
+    LINKS
+        (none)
+    EXCLUSIONS
+        (none)
+    [status 0]

@@ -1,0 +1,21 @@
+TEST PLAN: 9 node(s), 6 link(s), 2 exclusion set(s)
+NODES
+    build[make]         BUILD
+    session[test-i.py]  SESSION
+    test-a.py one       TEST
+    test-a.py two       TEST
+    test-i.py x         TEST
+    test-i.py y         TEST
+    test-b.py           TEST     <= required by test-a.py one
+    test-c.py           TEST     [MISDEP]
+    test-d.py           TEST     [MISDEP]  <= required by test-c.py
+LINKS
+    test-b.py -> test-a.py one
+    test-c.py -> test-d.py
+    build[make] ==> test-a.py one
+    build[make] ==> test-a.py two
+    session[test-i.py] ==> test-i.py x
+    session[test-i.py] ==> test-i.py y
+EXCLUSIONS
+    { test-a.py, test-i.py x }
+    { test-b.py, test-c.py }

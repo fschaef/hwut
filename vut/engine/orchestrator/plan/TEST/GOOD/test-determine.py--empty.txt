@@ -1,0 +1,11 @@
+
+--- a glob matching nothing ---
+WISH: --glob "test-*.pt"
+REPORT: the selection is empty: no test case answers the wish
+TEST PLAN: 0 node(s), 0 link(s), 0 exclusion set(s)
+NODES
+    (none)
+LINKS
+    (none)
+EXCLUSIONS
+    (none)

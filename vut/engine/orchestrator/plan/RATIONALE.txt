@@ -1,0 +1,235 @@
+============================================================================
+VUT-ORCHESTRATOR-PLAN -- RATIONALE
+============================================================================
+Settled. Read-only. P-N handles; exploration's rulings cited as R-N.
+
+----------------------------------------------------------------------------
+P-1  OWNERSHIP AND ROLE
+----------------------------------------------------------------------------
+PROBLEM   Who owns the form of what determination emits.
+DECISION  'orchestrator/plan/' owns the FORM: node classes, link
+          classes, CTestPlan, the printer. Nouns only, no policy.
+          The plan is an INSTRUCTION TO THE SCHEDULER.
+          Determination (wish + ExplorationResult) emits it; the
+          scheduler reads and obeys; running is test_run's.
+COST      A component boundary; the vocabulary must settle before
+          either neighbour moves.
+GRAVEYARD Form inside the scheduler (policy entangled, unprintable
+          without it). Form in exploration (breaks R-19: what
+          EXISTS, not what will be DONE).
+
+----------------------------------------------------------------------------
+P-2  THE NOUN
+----------------------------------------------------------------------------
+PROBLEM   'Sequence' names a total order; the thing is a graph.
+DECISION  TEST PLAN. Swept.
+          AMENDED (P-16): first carried as an option '--test-plan'
+          of one reading service; now a service of its own,
+          'hwut.plan'.
+COST      Exploration's todo-7 amended; exploration's disc-1
+          absorbed here and deleted.
+GRAVEYARD 'test sequence' (misnamer), 'test graph' (names the
+          representation, not the role).
+
+----------------------------------------------------------------------------
+P-3  WHAT THE PLAN STATES
+----------------------------------------------------------------------------
+PROBLEM   Fixed order versus run-time freedom.
+DECISION  The plan states CONSTRAINTS and ADMISSIONS, no total
+          order: (i) exclusion sets -- members may not stand at
+          once, member = application or single choice (target
+          form, R-34); (ii) ordering links x -> y -- x runs to
+          completion before y starts (ordering, not success,
+          R-33); (iii) supports links -- verdict-carrying (P-5).
+          The scheduler decides AT RUN TIME what to dispatch from
+          the remaining satisfied work, free to use timings.
+COST      Run order within an exclusion set is not reproducible
+          from the print; reproducibility of behaviour rests on
+          the tests.
+GRAVEYARD Flat step list (pessimal barriers). Fabricated ordering
+          links serialising exclusion groups (invents constraints
+          the author never stated). Full-DAG arrow grammar in the
+          print as an INPUT (P-4).
+
+----------------------------------------------------------------------------
+P-4  REPRESENTATION
+----------------------------------------------------------------------------
+PROBLEM   In flight only, printable, or also readable.
+DECISION  A formal data structure, PRINTABLE: the service
+          'hwut.plan' (P-16) emits the canonical text. Blessable
+          byte-exact. No reader: a stored print is never input.
+COST      Replay means re-determination; determination must be
+          deterministic and tested so.
+GRAVEYARD Objects only (unanswerable determiner). Read-back format
+          (second input carrier beside hwut.conf, drift law owed).
+
+----------------------------------------------------------------------------
+P-5  WORK NODES AND THE SUPPORTS LAW
+----------------------------------------------------------------------------
+PROBLEM   Builds and interactive sessions are work that is not a
+          test.
+DECISION  Node kinds: TEST, BUILD, SESSION. At determination the
+          determiner asks test_run's multi-builder what build
+          actions the selected cases need; the actions become
+          BUILD nodes. Per interactive file (R-46, MultiExecute):
+          one SESSION node; choices remain individual TEST nodes.
+          SUPPORTS links (build ==> test, session ==> test) CARRY
+          THE VERDICT: supporter broken, supported cases FAIL --
+          they do not merely wait. Test -> test links never carry
+          verdicts (R-33).
+COST      Three node kinds through form, printer, scheduler,
+          bookkeeping; the scheduler holds a MultiExecute open
+          around its choice nodes' dispatch.
+GRAVEYARD Build folded into 'first' choice (unprintable accident).
+          Builds as serial preamble (forfeits overlap). One
+          session node carrying choices inline (coarsens links
+          and verdicts; contradicts tickets-by-token).
+
+----------------------------------------------------------------------------
+P-6  [MISDEP] IN THE PLAN
+----------------------------------------------------------------------------
+PROBLEM   Selected-but-unsatisfiable cases (R-35).
+DECISION  Present as marked nodes. Never dispatched. Reported as
+          FAILURE in the verdict bookkeeping. Links from them
+          never fire (dependants are [MISDEP] by R-35 closure;
+          the form asserts the closure).
+COST      A node state the scheduler skips.
+GRAVEYARD Absent-with-side-report (print lies about the wish).
+
+----------------------------------------------------------------------------
+P-7  IMPLICATION CLOSURE, MARKED
+----------------------------------------------------------------------------
+PROBLEM   A selected test depends on an unselected one.
+DECISION  Determination closes over 'dependency': required cases
+          enter the plan automatically, as full cases (parameters
+          from their own declarations; selection never enters
+          parameters, R-19). Provenance on every node: NAMED, or
+          IMPLIED -- printed '<= required by <target>'.
+COST      A provenance field through form and printer.
+GRAVEYARD Silent implication (print silent where determination
+          acted on its own). Refusing under-closed wishes.
+
+----------------------------------------------------------------------------
+P-8  THE WISH: FIXED KEYWORDS, GLOBS
+----------------------------------------------------------------------------
+PROBLEM   'Run those that failed'; flexible targeting.
+DECISION  Fixed keywords, implicit AND: '--fail' (last verdict,
+          from the Bookkeeper -- handed in, never constructed
+          below), '--since=<span>', '--glob <target>', which may
+          stand SEVERAL TIMES. A target glob follows the target
+          form (R-34) with fnmatch '*', '?', '[ ]' in either
+          member: "test-*.py quick-[0-2]"; bare file-glob = every
+          choice of every match. SELECT stays the one door: a
+          query is a CTestTaskList ('CTestTaskListQuery').
+          AMENDED: the keywords were first written '--failed' and
+          '--file <globs>'; the spellings above are the ruled
+          ones. AMENDED AGAIN (P-15): '--pass', '--until=', and
+          anchors joined the vocabulary.
+COST      Query vocabulary grows keyword by keyword; 'or' is not
+          offered.
+GRAVEYARD Boolean expression language (power before need).
+          Resolving queries outside SELECT (breaks R-19 staging).
+
+----------------------------------------------------------------------------
+P-9  EMPTY SELECTION
+----------------------------------------------------------------------------
+PROBLEM   A glob or keyword combination matching nothing.
+DECISION  Legal. Empty plan, REPORTED, naming the wish that
+          matched nothing. Not a suite failure.
+          CTestTaskListNamed's literal refusal stands untouched.
+COST      An empty green run is possible; the report is the guard.
+GRAVEYARD Refusal-for-globs (breaks batch wishes over many
+          directories; multi-directory law parked).
+
+----------------------------------------------------------------------------
+P-10 THE FRAME
+----------------------------------------------------------------------------
+PROBLEM   Where on_entry/on_exit (R-31) stand.
+DECISION  FRAME AROUND THE PLAN, run by the scheduler: on_entry
+          before any dispatch; on_exit after all work ends,
+          always. Entry failure: the frame did not stand, nothing
+          is dispatched, the failure is the run's report. The
+          scripts do not appear in the printed plan.
+COST      Execution the print does not account for -- accepted.
+GRAVEYARD Frame nodes (on_exit's always-runs law fits no node
+          law).
+
+----------------------------------------------------------------------------
+P-11 SPECIAL COMMANDS
+----------------------------------------------------------------------------
+PROBLEM   Directory actions that are not tests ('clean', ...).
+DECISION  Root-only key, parsed by exploration:
+              special = { "clean" = "clean_this.sh" }
+          Value: ONE command string. Service 'hwut.special <name>'
+          walks directories, executes where present, skips
+          silently where absent -- FRAMED: on_entry -> special ->
+          on_exit (entry failure: not executed, reported). Runs in
+          the directory, procsitter-supervised, directory caps.
+          No test machinery, no verdicts, no GOOD.
+COST      Exploration re-opens for one key (validator, vocabulary,
+          printer, README, tests); service beside todo-2's four.
+GRAVEYARD Pseudo-choices (test machinery to disable). Own file
+          (second carrier). String-or-scope (scope members
+          unnamed -- design on spec; string-to-scope remains the
+          compatible direction).
+
+----------------------------------------------------------------------------
+P-12 PRINT ORDER
+----------------------------------------------------------------------------
+PROBLEM   Sorted print or construction order.
+DECISION  Construction order throughout -- the determiner's own
+          account, verbatim. Empty sections print '(none)'.
+COST      Byte-exactness of the print rests on the determiner's
+          determinism (P-4 already demands it).
+GRAVEYARD Sorted print (re-orders the account; hides nothing
+          sorting would reveal).
+
+----------------------------------------------------------------------------
+P-13, P-14 -- MOVED
+----------------------------------------------------------------------------
+The scheduler's seam (P-13) and 'a terminal state satisfies an
+ordering link' (P-14) moved with the scheduler to its own component:
+orchestrator/scheduler/RATIONALE.txt, as S-1 and S-2. The handles
+P-13 and P-14 are retired, not reused.
+
+----------------------------------------------------------------------------
+P-15 THE WISH GROWS: --pass, --until=, ANCHORS
+----------------------------------------------------------------------------
+PROBLEM   'run what is stale' was inexpressible: '--since=' wants
+          the recently run and shuns the never-run; and points in
+          time were spans alone.
+DECISION  '--pass': the last verdict was positive (complement of
+          '--fail'; both together refused -- they can want
+          nothing). '--until=<point>': the last run lies BEFORE
+          the point, AND the never-run are wanted -- the stale
+          wish. A <point> is a span, or an ANCHOR reckoned in UTC:
+          'today', 'yesterday', 'last-week' (Monday of the week
+          before), 'last-month' (the 1st of the month before), a
+          weekday (most recent, today counted), a month (the 1st,
+          this one counted) -- all at 00:00. UTC because the
+          Bookkeeper's instants are UTC.
+COST      Two readings of time near one word; the doc must say
+          which side of the point each keyword takes, and does.
+          Anchor arithmetic, and a clock parameter for tests.
+GRAVEYARD 'since' meaning stale (one word cannot wear both).
+          Local-time anchors (the base is UTC; two clocks, one
+          question). Free-form date parsing (a vocabulary without
+          a boundary).
+
+----------------------------------------------------------------------------
+P-16 TWO FACES: hwut.show AND hwut.plan
+----------------------------------------------------------------------------
+PROBLEM   One service carried what was READ and what is INTENDED;
+          the selection keywords made sense for the second alone
+          and had to be refused around the first.
+DECISION  SPLIT. 'hwut.show': the configuration tree (the R-29
+          service, renamed -- 'parse' named the machinery, not the
+          answer). 'hwut.plan': the test plan, carrying the
+          selection keywords. Each face answers '--help'; both
+          live in orchestrator/services/ with a README.
+COST      Two entry points; the common laws (exit status,
+          '--directory=', write-parameter) stated once in the
+          services README and held twice.
+GRAVEYARD 'hwut.parse' (names machinery). 'hwut.check' (promises
+          a verdict, delivers a tree). One face with a mode switch
+          (each face one job).

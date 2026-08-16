@@ -1,0 +1,16 @@
+
+--- 'net.py' and 'port.py two' collide; 'free.py' does not ---
+TRACE
+    test   net.py                 start   (standing: 1)
+    test   free.py                start   (standing: 2)
+    test   net.py                 end     good
+    test   free.py                end     good
+    test   port.py two            start   (standing: 1)
+    test   port.py two            end     good
+REPORT
+    entry=None  exit=None  good=True
+    dispatched: net.py, free.py, port.py two
+    net.py                 ENDED_GOOD
+    port.py two            ENDED_GOOD
+    free.py                ENDED_GOOD
+    most standing at once: 2

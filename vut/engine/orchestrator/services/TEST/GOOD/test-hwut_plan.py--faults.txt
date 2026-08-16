@@ -1,0 +1,19 @@
+
+--- the fault prints; the plan of what stands follows ---
+$ hwut.plan
+    test-broken.py:1:38: TYPE: 'numeric' must be a number
+    WISH: (all)
+    TEST PLAN: 5 node(s), 3 link(s), 1 exclusion set(s)
+    NODES
+        build[make test-a.py]  BUILD
+        test-a.py one          TEST
+        test-a.py two          TEST
+        test-b.py              TEST
+        test-net.py            TEST
+    LINKS
+        test-a.py one -> test-b.py
+        build[make test-a.py] ==> test-a.py one
+        build[make test-a.py] ==> test-a.py two
+    EXCLUSIONS
+        { test-net.py, test-a.py two }
+    [status 1]

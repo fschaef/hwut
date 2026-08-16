@@ -1,0 +1,34 @@
+
+--- the build stands ---
+TRACE
+    build  build[make a.py]       start   (standing: 1)
+    test   free.py                start   (standing: 2)
+    build  build[make a.py]       end     good
+    test   free.py                end     good
+    test   a.py one               start   (standing: 1)
+    test   a.py two               start   (standing: 2)
+    test   a.py one               end     good
+    test   a.py two               end     good
+REPORT
+    entry=None  exit=None  good=True
+    dispatched: build[make a.py], free.py, a.py one, a.py two
+    build[make a.py]       ENDED_GOOD
+    a.py one               ENDED_GOOD
+    a.py two               ENDED_GOOD
+    free.py                ENDED_GOOD
+    most standing at once: 2
+
+--- the build breaks: the choices FAIL undispatched ---
+TRACE
+    build  build[make a.py]       start   (standing: 1)
+    test   free.py                start   (standing: 2)
+    build  build[make a.py]       end     BAD
+    test   free.py                end     good
+REPORT
+    entry=None  exit=None  good=False
+    dispatched: build[make a.py], free.py
+    build[make a.py]       ENDED_BAD
+    a.py one               UNSUPPORTED
+    a.py two               UNSUPPORTED
+    free.py                ENDED_GOOD
+    most standing at once: 2

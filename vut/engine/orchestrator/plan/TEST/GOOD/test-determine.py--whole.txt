@@ -1,0 +1,28 @@
+
+--- everything the directory offers ---
+WISH: (all)
+TEST PLAN: 13 node(s), 7 link(s), 1 exclusion set(s)
+NODES
+    build[make test-a.py]  BUILD
+    session[test-i.py]     SESSION
+    test-a.py one          TEST
+    test-a.py two          TEST
+    test-b.py              TEST
+    test-c.py              TEST
+    test-heir.py           TEST     [MISDEP]
+    test-i.py x            TEST
+    test-i.py y            TEST
+    test-lost.py           TEST     [MISDEP]
+    test-net.py            TEST
+    test-port.py one       TEST
+    test-port.py two       TEST
+LINKS
+    test-a.py one -> test-b.py
+    test-b.py -> test-c.py
+    test-lost.py -> test-heir.py
+    build[make test-a.py] ==> test-a.py one
+    build[make test-a.py] ==> test-a.py two
+    session[test-i.py] ==> test-i.py x
+    session[test-i.py] ==> test-i.py y
+EXCLUSIONS
+    { test-net.py, test-port.py two }
