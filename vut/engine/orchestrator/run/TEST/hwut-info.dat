@@ -1,0 +1,6 @@
+Run -- The Outer Face, the Report Stream
+------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

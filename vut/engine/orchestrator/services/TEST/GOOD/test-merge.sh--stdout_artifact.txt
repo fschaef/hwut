@@ -1,0 +1,12 @@
+STIMULUS  echo c | hwut.merge subject.txt nominal.txt --plain
+          (no -o: the artifact channel is stdout)
+REACTION  exit code : 0
+          out.txt {
+              alpha
+              BETA
+          }
+          stderr    : still the UI -- banner seen: 2 time(s)
+
+The channels never mix: the pipe downstream receives the
+artifact and not one byte of conversation.
+SUCCESS: without -o, stdout IS the artifact channel, exactly.

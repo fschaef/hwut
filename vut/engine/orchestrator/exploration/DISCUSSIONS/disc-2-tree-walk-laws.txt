@@ -1,0 +1,14 @@
+disc-2  TREE WALK -- PROVISIONAL LAWS                        ** OPEN **
+______________________________________________________________________________
+
+Taken to build R-69; reported, not settled; each one line to change.
+
+ 1  Names beginning '.' are skipped; the walk descends sorted and does
+    NOT descend into a test directory (what stands below one is its
+    own).
+ 2  The ROOT itself is never a test directory unless its own name
+    equals the marker -- 'hwut.plan --directory=X' remains the face
+    for one directory taken as a test directory regardless of name.
+ 3  'language_setup' inherits CHILD-WINS WHOLE, not per language.
+ 4  'ignore' inherits child-wins whole (a child stating 'ignore'
+    replaces the parent's, it does not add to it).

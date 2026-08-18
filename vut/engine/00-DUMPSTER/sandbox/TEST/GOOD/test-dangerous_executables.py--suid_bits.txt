@@ -1,0 +1,7 @@
+MOCK: 'suid_app' at /usr/bin/suid_app (mode 0o104755)
+MOCK: 'sgid_app' at /usr/bin/sgid_app (mode 0o102755)
+MOCK: 'norm_app' at /usr/bin/norm_app (mode 0o100755)
+RESULT: Forbidden binaries found:
+  - /usr/bin/sgid_app
+  - /usr/bin/suid_app
+SUCCESS: Elevated privileges correctly flagged.

@@ -1,0 +1,883 @@
+                              sandbox -- MANUAL
+______________________________________________________________________________
+
+1  PURPOSE: THE SUPERVISED SYSTEM CALL
+______________________________________________________________________________
+
+The sandbox is HWUT's replacement for 'subprocess'. EVERY subprocess
+goes through it: test applications, build and helper tools ('make',
+'scp', maintenance scripts), pype stages. One primitive -- the
+SUPERVISED SYSTEM CALL -- is the ground; everything else is built upon
+it in a lightweight manner:
+
+    APPLICATIONS      plain calls,         the judged test app run:
+                      the supervised       a sequence whose tail is
+                      build (make, ...),   judged on two axes --
+                      helper scripts       equivalence, association
+                           |                       |
+    COMPOSITION            |               SandboxSequence: supervised
+                           |               calls chained stdout->stdin;
+                           |               SandboxPipe -- THE interface
+                           |               between sandboxes AND toward
+                           |               compare
+                           |                       |
+                    +------+-----------------------+------+
+    THE GROUND      |   THE SUPERVISED SYSTEM CALL        |
+                    |   Sandbox.run() -- containment      |
+                    |   + attribution                     |
+                    +-------------------------------------+
+
+A supervised call CONTAINS the unintentional misbehavior of the
+process -- endless loops, hangs, runaway memory, fork bombs, disk
+flooding -- and ATTRIBUTES it: the call dies alone, the session
+survives, and the record names the exhausted resource.
+
+    without supervision:                with supervision:
+
+    'make' of test #317 hangs           'make' of test #317 hangs
+        |                                   |
+        v                                   v
+    the whole session hangs             call: WALL_CLOCK_EXCEEDED
+    "job timed out" -- where?           after 60.0 s -- attributed;
+                                        session continues
+
+WHAT IT IS NOT. Not a security boundary (the callers of 'make' and the
+authors of tests are trusted; malice is out of scope), no isolation
+(no namespaces, no read-only roots, no private network stacks), no
+environment pinning. Those concerns belong to the ADMINISTRATOR, who
+chooses the outer boundary -- container, VM, dedicated runner --
+independently of this level:
+
+    +--------------------------------------------------------------+
+    |  OUTER BOUNDARY          (administrator: container, VM, ...) |
+    |  security, isolation, reproducibility                        |
+    |                                                              |
+    |    +----------------------------------------------------+    |
+    |    |  HWUT session                                      |    |
+    |    |                                                    |    |
+    |    |   +-------------+  +-------------+  +----------+   |    |
+    |    |   | supervised  |  | supervised  |  |supervised|   |    |
+    |    |   | call:       |  | call:       |  |call:     |   |    |
+    |    |   | test app    |  | pype stage  |  |'make'    |   |    |
+    |    |   +-------------+  +-------------+  +----------+   |    |
+    |    +----------------------------------------------------+    |
+    +--------------------------------------------------------------+
+
+The sandbox is PLATFORM-INDEPENDENT, PERIOD: one implementation,
+python stdlib plus 'psutil', no wrapper binaries, no per-OS backends.
+A cap the platform cannot enforce is REPORTED in the result, never
+silently ignored (section 6).
+
+
+2  QUICK START
+______________________________________________________________________________
+
+A helper call -- this is the whole pattern, there is no more to it:
+
+    import asyncio
+    from vut.engine.sandbox.sandbox import Sandbox, SandboxConfig
+
+    async def main():
+        sandbox = Sandbox(SandboxConfig(max_wall_clock_sec=120.0),
+                          work_dir="build/")
+        result  = await sandbox.run("make -j4 all")
+        if not result.ok:
+            print("make failed:", result.containment.name,
+                  result.exit_code)
+
+    asyncio.run(main())
+
+The same primitive runs 'scp backup.tar host:', a generator script, or
+a test application. 'result.ok' is True exactly when the process
+COMPLETED by itself with exit code 0; everything else -- a nonzero
+exit, any containment kill -- is False.
+
+
+3  MODEL
+______________________________________________________________________________
+
+Three objects; each answers one question.
+
+    SandboxConfig        "what may this call do?"      THE CONTRACT
+       |
+       v
+    Sandbox.run(...)     "run it, supervised"          THE EXECUTION
+       |
+       v
+    SandboxResult        "what happened, and why?"     THE ATTRIBUTION
+                                                       RECORD
+
+There is ONE concrete Sandbox class -- no platform hierarchy, no
+factory. What varies per platform is enforcement strength, and that
+variance is reported, not classed (section 10).
+
+Consumption of the process's output is NOT the sandbox's concern:
+'run()' hands output chunks to caller-provided handlers. What the
+handlers do -- discard, log, feed another supervised call, feed the
+comparison engine -- is composition ABOVE the ground (sections 7, 8).
+
+
+4  CONFIGURATION
+______________________________________________________________________________
+
+'SandboxConfig' is the per-call contract, and every field in it is a CAP the
+sandbox ENFORCES:
+
+    field                  default  meaning
+    ---------------------  -------  ----------------------------------
+    max_wall_clock_sec     60.0     total run time. THE hang-catcher:
+                                    a process blocked on a dead socket
+                                    burns no CPU; only wall clock
+                                    catches it.
+    max_cpu_time_sec       60       CPU seconds (RLIMIT_CPU).
+    max_memory_mb          512      resident memory, summed over the
+                                    whole process GROUP (watchdog).
+    max_pids               32       process count of the group.
+    max_file_size_mb       10       size cap per created file
+                                    (RLIMIT_FSIZE).
+
+Hit a cap during execution and the call is TERMINATED; the result
+names the cap (section 6). A cap the running platform cannot enforce
+is REPORTED in '.unenforced' -- never silently dropped.
+
+A call's ENVIRONMENTAL needs -- network reach, bound ports, writable
+paths beyond the work dir -- are NOT the sandbox's concern. Ensuring
+them is the ORCHESTRATOR's job.
+
+
+5  THE SUPERVISED CALL
+______________________________________________________________________________
+
+    async def run(self,
+                  command_line:    str,
+                  stdout_handler:  async callable(bytes) | None = None,
+                  stderr_handler:  async callable(bytes) | None = None,
+                  stdin_reader:    asyncio.StreamReader  | None = None,
+                  stop_event:      asyncio.Event         | None = None,
+                  backup_file_set: Iterable[str]         | None = None
+                  ) -> SandboxResult
+
+'command_line' is split with shlex and executed DIRECTLY (no shell) in
+'work_dir'. Handlers receive output chunks as they arrive; a channel
+without a handler is DRAINED (a full OS pipe would block the child).
+'stdin_reader', if given, is piped into the child's stdin and closed
+at its EOF -- this is where a pipeline's upstream connects (section
+7). Setting 'stop_event' terminates the run from outside (containment
+STOPPED). 'backup_file_set' names files in the work dir to be set
+aside before execution: an existing 'result.txt' becomes
+'result.txt-1.BACKUP' (counter, deterministic -- no timestamps).
+
+Anatomy of one supervised call:
+
+    launch      preexec hook (child, POSIX): own process group
+    |           (setsid) + rlimits: CPU time, file size
+    |
+    |  +------------------ concurrently ---------------------------+
+    |  |  stdout pump ----> stdout_handler (or drain)              |
+    |  |  stderr pump ----> stderr_handler (or drain)              |
+    |  |  stdin  pump <---- stdin_reader (optional)                |
+    |  |  stop watcher ---- kills on stop_event                    |
+    |  |  WATCHDOG (every 0.25 s):                                 |
+    |  |      wall clock over cap?          -> kill, attribute     |
+    |  |      group RSS over cap?           -> kill, attribute     |
+    |  |      group member count over cap?  -> kill, attribute     |
+    |  |      records peaks; registers every descendant seen       |
+    |  |      process exited but children linger > 1 s? -> reap    |
+    |  +-----------------------------------------------------------+
+    |
+    teardown    ALWAYS runs (try/finally): kill ladder if needed,
+    |           tasks cancelled, stdin transport closed, post-mortem
+    |           sweep of observed descendants (pid + create-time
+    |           guarded -- no pid-reuse accidents)
+    v
+    SandboxResult
+
+Teardown is CANCELLATION-PROOF. If the run is INTERRUPTED mid-flight
+-- Ctrl-C, or a logout tearing the harness down -- the child would
+otherwise survive: it setsid'd into its own session, so nothing else
+would reap it, and such orphans accumulating across runs exhaust the
+per-user process table (the accident that eventually LOGS A DEVELOPER
+OUT). So on an interrupt the group is hard-killed SYNCHRONOUSLY (group
++ leader, no await to be stolen) and swept. A module-level atexit
+backstop killpg's any group a dying harness leaves registered; only a
+SIGKILL of the harness itself can defeat that (no process can catch
+it) -- that residue is the outer boundary's concern.
+
+The KILL LADDER, used by every containment and by stop_event:
+
+    SIGTERM to the process GROUP
+        |         (2 s grace -- a clean shutdown may flush and exit)
+        v
+    SIGKILL to the process GROUP
+        |
+        v
+    sweep: any observed descendant that escaped the group is killed
+
+    (an INTERRUPTED run skips the grace: SIGKILL at once, group AND
+     leader, synchronously -- no leak even mid-cancellation.)
+
+The straggler rule deserves emphasis: children INHERIT the output
+pipes. A process that exits while its forked child sleeps on would
+hold the harness's stdout pump open indefinitely -- the watchdog reaps
+such stragglers one second after the main process is gone. No call can
+leave processes behind, and no call's leftovers can stall a pipeline.
+
+Misbehavior of the CALLED PROCESS never raises -- it is a RESULT.
+'run()' raises only on HARNESS faults: an exception inside a
+caller-provided handler (the process is killed, nothing leaks, then
+the exception surfaces); an impossible spawn is reported as
+LAUNCH_FAILED.
+
+
+6  THE ATTRIBUTION RECORD
+______________________________________________________________________________
+
+    SandboxResult
+        .containment      E_Containment  what ended the run
+        .exit_code        int | None     the process's own exit code;
+                                         None unless COMPLETED
+        .wall_clock_sec   float          measured
+        .cpu_time_sec     float | None   measured (getrusage delta,
+                                         watchdog fallback)
+        .peak_memory_mb   float | None   group peak (watchdog)
+        .peak_pids        int | None     peak process-group member count
+                                         (watchdog) -- the WHY beside a
+                                         PIDS_EXCEEDED; None w/o psutil
+        .unenforced       tuple[str]     caps this platform could not
+                                         enforce -- honest reporting
+        .stderr_tail      str            last 4 KiB of stderr, captured
+                                         when no stderr_handler was
+                                         given: the WHY beside a
+                                         nonzero exit ("" when a
+                                         handler consumed the channel
+                                         -- e.g. when stderr is a
+                                         JUDGED subject, section 8.4)
+        .ok               property       COMPLETED and exit_code == 0
+
+    E_Containment          fired by                    typical accident
+    ---------------------  --------------------------  ----------------
+    COMPLETED              process exited by itself    (none)
+    WALL_CLOCK_EXCEEDED    watchdog                    hang, deadlock
+    CPU_TIME_EXCEEDED      kernel, SIGXCPU             endless loop
+    MEMORY_EXCEEDED        watchdog (group RSS)        leak, hoard
+    FILE_SIZE_EXCEEDED     kernel, SIGXFSZ             disk flooding
+    PIDS_EXCEEDED          watchdog (group count)      fork bomb
+    STOPPED                external stop_event         (fast-fail)
+    LAUNCH_FAILED          spawn impossible            bad command
+
+Two subtleties, both deliberate:
+
+  - An application that IGNORES SIGXFSZ -- CPython does -- receives
+    EFBIG from write() at the file-size cap and fails by its own
+    exception instead: containment reads COMPLETED with a nonzero
+    exit code. The cap held either way (the file stops exactly at the
+    cap); only the messenger differs.
+
+  - Whether a fork bomb dies by the NPROC rlimit (fork fails inside
+    the process) or by the watchdog's group count is a race.
+    Assertions should accept the NORMALIZED outcome: contained,
+    before the natural end, no survivors.
+
+'.unenforced' lists every cap the running platform cannot enforce -- e.g.
+without psutil: ('max_memory_mb', 'max_pids'); on a platform without the
+'resource' module: additionally ('max_cpu_time_sec', 'max_file_size_mb'). The
+wall-clock cap works everywhere. A green result with a non-empty '.unenforced'
+is a true statement, not a pretended one.
+
+
+7  PIPELINES: SUPERVISED CALLS, CONNECTED
+______________________________________________________________________________
+
+Two supervised calls connect stdout -> stdin through a 'SandboxPipe':
+
+    link = SandboxPipe()
+
+    upstream:    sandbox_a.run(cmd_a, stdout_handler=link.feed, ...)
+    downstream:  sandbox_b.run(cmd_b, stdin_reader=link.reader, ...)
+
+    +----------------+   link.feed      link.reader  +--------------+
+    | call A         |--------------> o ------------>| call B       |
+    | [Sandbox A]    |          SandboxPipe          | [Sandbox B]  |
+    | own caps,      |                               | own caps,    |
+    | own attribution|                               | own          |
+    +----------------+                               | attribution  |
+                                                     +--------------+
+
+EVERY STAGE IS A SUPERVISED CALL OF ITS OWN: its own SandboxConfig,
+its own work dir if desired, its own SandboxResult. A hang in stage B
+is attributed to STAGE B, not to the producer; the producer's caps are
+not billed for the consumer's work. When the upstream call ends --
+naturally or contained -- '.close()' propagates EOF downstream, so a
+chain unwinds stage by stage exactly like a shell pipeline, but
+supervised at every link.
+
+THE SEQUENCE. 'SandboxSequence' packages the whole chain:
+
+    sequence = SandboxSequence([(sandbox_a, cmd_a),
+                                (sandbox_b, cmd_b),
+                                ...])           # construction launches
+
+    sequence.tail          SandboxPipe: the chain's stdout end
+    sequence.stop_event    stops every stage at once
+    sequence.collect()     -> tuple[SandboxResult, ...],
+                              ONE RECORD PER STAGE, in pipeline order
+
+    +---------+ pipe +---------+ pipe +---------+
+    | stage 0 |----->| stage 1 |----->| stage 2 |----> .tail.reader
+    +---------+      +---------+      +---------+          |
+     [Sandbox]        [Sandbox]        [Sandbox]           v
+     own record       own record       own record     next consumer
+
+Rules of the sequence: EOF propagates downstream stage by stage; a
+stage that ends while an UPSTREAM stage still runs stops the whole
+sequence (SIGPIPE semantics, supervised); '.collect()' accounts for
+every stage -- nothing disappears.
+
+PIPE-CONSTRUCTION IS THE INTERFACE, in both directions. Between
+sandboxes, a SandboxPipe links stdout to stdin. Toward the comparison
+engine, THE SAME pipe face is consumed: the judging functions (section
+8) read 'sequence.tail.reader' -- compare is just the last consumer on
+the chain, nothing special.
+
+A sequence's FIRST stage may itself drink from a pipe:
+
+    SandboxSequence(stage_list, stdin_reader=source.reader)
+
+-- recorded input fed through the whole pipeline, or the inject side
+of a tee (below) driving an interactive chain.
+
+7.1  THE TWO-WAY TEE: INTERACTION
+
+'SandboxTee' is the interaction point of a supervised call: one
+direction EAVESDROPS the process's stdout -- every chunk flows BOTH
+to the original consumer AND to the tee's '.tap' pipe -- the other
+direction may INJECT into the process's stdin through '.inject'.
+Eavesdrop, never steal: whoever consumed stdout before still sees
+all of it.
+
+    original consumer <---tee---- process stdout
+                          |
+                    .tap  v   (the eavesdropper reads)
+                +--------------------+
+                |    eavesdropper    |  a coroutine -- or a pype
+                |                    |  script in its OWN sandbox
+                +--------------------+
+                 .inject  |   (the eavesdropper writes)
+                          v
+                          +---------> process stdin
+
+THE TEE IS THE WHOLE FEATURE -- no further function needed;
+everything is pipe composition against 'run()' as it stands. TWO
+SANDBOXES interact via stdout and stdin -- e.g. a CONTROLLER
+providing control signals for the process under test -- wired in a
+loop, THE IDIOM:
+
+    tee = SandboxTee(stdout_handler=consumer)   # consumer: judge,
+                                                # pype link, log --
+                                                # undisturbed
+    async def run_subject():
+        try:     return await subject.run(cmd,
+                     stdout_handler=tee.stdout_handler,
+                     stdin_reader  =tee.stdin_reader)
+        finally: tee.tap.close()     # subject gone -> controller EOF
+
+    async def run_controller():
+        try:     return await controller.run(ctrl_cmd,
+                     stdin_reader   =tee.tap.reader,
+                     stdout_handler =tee.inject.feed)
+        finally: tee.inject.close()  # controller gone -> stdin EOF
+
+    subject_result, controller_result = await asyncio.gather(
+        run_subject(), run_controller())
+
+Two supervised calls, two attribution records: the interaction is
+contained on BOTH ends. The controller may equally be a pype script
+in its own sandbox --
+
+    controller_cmd = "python3 -u tools/hwut_pype/hwut_pype.py " \
+                     "dialogue.pype"
+
+    # dialogue.pype -- the subject asks, pype answers:
+    #     on: "capital-of-france" => {
+    #         print("paris")
+    #     }
+    #     on: <else> => ignore;
+
+-- the SAME wiring, nothing special. Note the '-u': the controller's
+answers must be UNBUFFERED; a buffered answer never arrives, and the
+dialogue stalls until a wall clock strikes (which is also the answer
+to "what if both sides wait?": a dialogue deadlock is an accident
+like any other; the caps contain it).
+
+Rules of the tee: the eavesdropper MUST consume '.tap.reader' (an
+unread tap buffers without bound), and '.inject' MUST be closed when
+the dialogue is over -- the process then sees stdin EOF. The two
+'finally' closers of the idiom do exactly that, whichever end
+finishes first.
+
+More sophisticated pipe-interaction scenarios -- a controller riding
+a judged or deterministicalized run, tees inside sequences -- are
+FUTURE compositions of the same building block; nothing new will be
+needed at the ground.
+
+
+8  THE TEST APPLICATION RUN: RUNNING AND JUDGING
+______________________________________________________________________________
+
+A TEST APPLICATION run is an ordinary SandboxSequence (section 7) with
+one specialty: its TAIL (and, post-exit, its output files) is
+connected to the COMPARISON ENGINE. RUNNING and JUDGING stay strictly
+apart -- the sequence produces the subject stream; the judge_*
+functions consume it:
+
+    ------------- RUNNING --------------      ------ JUDGING -------
+
+     supervised call      supervised call
+    +--------------+     +--------------+       +--------------+
+    | test app     |     | pype         | lines | compare      |
+    | [Sandbox]    |---->| [Sandbox]    |------>| Judge or     |
+    | PROVOKES and |pipe | ANALYZES:    | .tail | Lawyer:      |
+    | REPORTS      |     | DETERMINIST- |       | JUDGES       |
+    +--------------+     | ICALIZES     |       +--------------+
+                         +--------------+
+     \_________ SandboxSequence ________/        judge_equivalence
+                                                 judge_association
+
+This is the triad of the pype manual, one concern per stage: the test
+app PROVOKES the unit's behaviour and REPORTS it, only; pype ANALYZES
+the reports -- pype is NOT a filter, it DETERMINISTICALIZES
+non-deterministic output (timing-dependent line order becomes counts
+and settled, sorted summaries); compare JUDGES equivalence upon that
+deterministic description.
+
+8.1  RUNNING -- the sequence
+
+    # deterministic output: one stage
+    sequence = SandboxSequence([(sandbox, test_app_cmd)])
+
+    # non-deterministic output: pype stage deterministicalizes
+    sequence = SandboxSequence([(sandbox,      test_app_cmd),
+                                (pype_sandbox, pype_cmd)])
+
+Every stage has its own sandbox, its own caps, its own attribution --
+pype's work is not billed to the test app's caps BECAUSE pype has its
+own sandbox. If pype is ever contained by exhaustion, that is ITS
+record -- and the verdict rule below catches it.
+
+8.2  JUDGING, FIRST AXIS -- judge_equivalence (THE JUDGE)
+
+    result_list, verdict = await judge_equivalence(
+        sequence,
+        nominal_provider,          # anything with .readline() -> str
+        compare_config)            # compare's Configuration
+
+'result_list' carries ONE ATTRIBUTION RECORD PER STAGE, in pipeline
+order -- for the pype-deterministicalized run: (test app, pype).
+Investigating correctness, QUICKLY: compare's 'is_equivalent' judges
+the tail against the nominal; FAST-FAIL WORKS BOTH WAYS through the
+sequence's shared stop_event:
+
+    compare says False early --> stop_event set --> every stage
+                                 stopped            (STOPPED, False)
+
+    containment kill in any stage (wall clock, memory, ...)
+        --> that stage's stream ends --> downstream sees EOF,
+            settles, exits --> compare judges what arrived
+                                                  (contained, False)
+
+    pype ends while the test app runs ('sys.exit(n)' gating in a
+    pype block) --> sequence stops itself: SIGPIPE semantics,
+    supervised (a SandboxSequence rule, section 7).
+
+THE VERDICT RULE: every stage must have COMPLETED by itself (or been
+STOPPED by the fast-fail) for a True verdict. A stage contained by a
+resource cap -- the test app OR pype -- means the run is broken:
+verdict False, whatever fragment happened to match, and the report
+names the stage.
+
+8.3  JUDGING, SECOND AXIS -- judge_association (THE LAWYER)
+
+    result_list = await judge_association(
+        sequence, nominal_provider, compare_config,
+        consumer)                  # callable(ChunkPair) | coroutine fn
+
+Associating subject lines with nominal lines FOR DISPLAY: compare's
+'associate' yields the full alignment; every ChunkPair goes to
+'consumer' (e.g. a feeder adaptor rendering the side-by-side view).
+NO fast-fail -- association exists to SHOW the divergence, so the
+sequence is left to reach its natural end. Containment caps of every
+stage still apply; 'result_list' again carries one record per stage.
+THE LAW holds across the pipeline: the reduction over
+'ChunkPair.is_equivalent()' equals the Judge's verdict (the
+'association' test choice pins this).
+
+8.4  THE INTERFACE -- input = configuration, output = result
+
+One door: hand a 'SandboxConfigTestRun' to 'run_test_app()', receive a
+'SandboxResultTestRun'. The configuration is THE COMPLETE INPUT -- what runs
+(command line, sandbox, optional pype stage) and what is judged
+(subjects mapped to comparators); the result is THE COMPLETE OUTPUT
+-- verdict per subject, attribution record per stage, THE BRIEF
+REPORT.
+
+    config  ---> run_test_app(config)            ---> result
+                 run_test_app(config, consumer)       (Judge/Lawyer)
+
+A test run produces SUBJECTS: the stdout channel, the stderr channel,
+and output files. The configuration maps every subject to its
+COMPARATOR -- the nominal it is held against, its compare
+configuration, and (for files) an optional pype deterministicalization.
+The two subject kinds differ in WHEN they can be judged:
+
+    subject          judged      deterministicalization (pype)
+    ---------------  ----------  ----------------------------------
+    stdout channel   LIVE        a pype STAGE of the running
+                                 sequence (8.1) -- fast-fail applies
+    stderr channel   LIVE        (none yet) -- stderr is a channel
+                                 like any other: nominal behavior
+                                 may be defined on it; judged
+                                 CONCURRENTLY with stdout, both
+                                 feed the fast-fail. Requires
+                                 SandboxSequence(..., err_pipe_f=
+                                 True). Unjudged stderr follows the
+                                 ground's default: tail capture.
+    output file      POST-EXIT   applied post-exit by the comparator:
+                                 a file may change at ANY moment
+                                 while the test lives; judging or
+                                 filtering it earlier would fail on
+                                 transients
+
+    config = SandboxConfigTestRun(
+        # THE RUN
+        command_line      = "python3 my_test.py",
+        sandbox           = Sandbox(SandboxConfig(...), work_dir),
+        pype_command_line = None,   # live stdout deterministicalizer:
+        pype_sandbox      = None,   # second stage, its OWN sandbox
+        # THE SUBJECTS
+        channel       = Comparator(nominal, cfg),      # None: drained
+        error_channel = Comparator(nominal_err, cfg),  # optional
+        file_db = {
+            "result.txt": Comparator(nominal_r, cfg),
+            "trace.txt":  Comparator(nominal_t, cfg,
+                                     pype_sandbox      = ...,
+                                     pype_command_line = "python3 "
+                                         ".../hwut_pype.py settle.pype"),
+        })
+
+    result = await run_test_app(config)
+
+    result.subject_verdict_db      "stdout"/"stderr"/file name ->
+                                   bool: the mismatching subject is
+                                   NAMED
+    result.stage_result_list       live stage records
+    result.file_stage_db           post-exit pype records per file
+    result.cpu_time_sec            TOTAL cpu seconds -- SUMMED over
+                                   every stage (work adds up); the
+                                   most machine-independent cost the
+                                   run exposes. None w/o 'resource'.
+    result.wall_clock_sec          ELAPSED seconds: max(live stages,
+                                   concurrent) + sum(post-exit file
+                                   stages, sequential)
+    result.peak_memory_mb          high-water memory mark (max stage
+                                   peak, MB). None w/o psutil.
+    result.verdict                 overall: every subject equivalent
+                                   AND every stage accounted for
+    result.report                  THE BRIEF REPORT (E_TestRunResult,
+                                   vut.auxiliary.test_run_result):
+                                   'ok' or ONE reason token --
+                                   not-equivalent-with-nominal,
+                                   test-app-no-output,
+                                   test-app-contained,
+                                   nominal-file-not-found,
+                                   output-file-not-found,
+                                   pype-interpreter-not-found,
+                                   pype-file-not-found,
+                                   pype-file-syntax-error, ...
+                                   Test-app reasons outrank pype
+                                   reasons outrank subject/nominal
+                                   reasons; the pype classifications
+                                   rest on the captured stderr tail.
+                                   The enum is meant to GROW (e.g.
+                                   'make' helper-call outcomes).
+
+Post-exit file deterministicalization reuses the ground: the file's
+pype runs as a ONE-STAGE SEQUENCE reading the file as its INPUT-FILE
+argument; compare reads its tail. Pipes are the interface, everywhere.
+
+The err pipe of the underlying sequence follows the configuration
+automatically: judged stderr is piped; unjudged stderr keeps the
+ground's default, tail capture into the stage record.
+
+The Lawyer walks the SAME configuration -- the axis is chosen by the
+'consumer' argument:
+
+    result = await run_test_app(config, consumer)
+
+with 'consumer(subject_name, chunk_pair)' -- every ChunkPair labeled
+by its subject ("stdout", "stderr" or the file name), verdicts derived
+by THE LAW's reduction.
+
+The single-file primitive stays available:
+
+    verdict = await judge_output_file(file_path, nominal_provider,
+                                      compare_config)
+
+CHANNELS are judged LIVE; FILES are judged POST-EXIT (no
+tail-following). An absent file judges False.
+
+8.5  A COMPLETE EXAMPLE -- non-deterministic output,
+     deterministicalized by pype
+
+The test app emits items in an order that differs per run; the pype
+script reports arrival counts and a sorted settlement; the GOOD file
+is fixed:
+
+    # settle.pype
+    on: <bof> => {
+        box = []
+    }
+    on: "item" <name = "*"> => {
+        box.append(name)
+        print("an item arrived (%d so far)" % len(box))
+    }
+    on: "done" => {
+        print("items, sorted:")
+        for name in sorted(box):
+            print("    " + name)
+    }
+    on: <else> => ignore;
+
+    sequence = SandboxSequence([
+        (Sandbox(SandboxConfig(max_wall_clock_sec=15.0), work_dir),
+         "python3 emit_items.py"),
+        (Sandbox(SandboxConfig(max_wall_clock_sec=15.0), work_dir),
+         "python3 tools/hwut_pype/hwut_pype.py settle.pype"),
+    ])
+    (test_result, pype_result), verdict = await judge_equivalence(
+        sequence, open("GOOD/emit_items.txt"), Configuration())
+
+Whatever order occurred, 'verdict' is True; both stage records read
+COMPLETED. If the pype script itself ever misbehaved, ITS sandbox
+would contain and attribute that -- and the verdict rule would turn
+the judgement False, naming the stage.
+
+
+
+9  THE SUPERVISED BUILD -- sandbox_build.py
+______________________________________________________________________________
+
+The build is the second APPLICATION of the ground -- and the same
+interface pattern as the judged test application run: ONE DOOR,
+input = configuration, output = result.
+
+    config  ---> run_build(config) ---> result
+
+The configuration names WHICH tool builds (an ENUMERATED vocabulary,
+never a free command string) and WHAT it builds; the command line is
+CONSTRUCTED -- the caller composes data, not plumbing:
+
+    config = SandboxConfigBuild(
+        build_system  = E_BuildSystem.MAKE,    # MAKE | NINJA | CMAKE
+                                               # | GENERATOR
+        target_list   = ["app", "lib.a"],     # []: default target
+        sandbox       = Sandbox(SandboxConfig(...), work_dir),
+        tool          = None,                  # override: 'gmake', path
+        argument_list = [])                    # e.g. ['-j4'], placed
+                                               # before the targets
+
+    result = await run_build(config)
+
+    result.built_target_list     requested targets that EXIST in the
+                                 work dir AFTER the task finished,
+                                 in request order
+    result.missing_target_list   requested targets that do NOT --
+                                 the mismatch, NAMED
+    result.record                THE ATTRIBUTION RECORD of the build
+                                 call (containment, exit code, peaks,
+                                 stderr tail = the WHY of a failure)
+    result.command_line          the constructed command line
+    result.verdict               tool COMPLETED, exit 0, AND every
+                                 requested target present
+    result.report                THE BRIEF REPORT (E_TestRunResult,
+                                 grown by the build members):
+                                 build-tool-not-found,
+                                 build-contained, build-failed,
+                                 target-not-built -- tool reasons
+                                 outrank target reasons
+
+Targets are accounted POST-EXIT only -- like the output files of a
+test run, a target may be incomplete at any moment while the build
+lives. A PHONY target ('clean', 'all') is a request to the build
+system, not a file: it never appears in '.built_target_list'; account
+phony builds by '.record.ok'. The accounting catches what the exit
+code cannot: a rule that succeeds without producing its file reports
+'target-not-built', with the target NAMED.
+
+THE GENERAL MEMBER -- E_BuildSystem.GENERATOR: any program called in
+a sandbox to GENERATE the targets (a code generator, 'protoc', a
+script). It has no default command ('tool' is MANDATORY -- one
+command word; its arguments travel in 'argument_list'), and the
+targets are NEVER passed on the command line: 'target_list' is purely
+the ACCOUNTING CONTRACT -- what must exist after the task finished:
+
+    config = SandboxConfigBuild(
+        build_system  = E_BuildSystem.GENERATOR,
+        target_list   = ["lexer.c", "parser.c"],   # the contract
+        sandbox       = Sandbox(SandboxConfig(...), work_dir),
+        tool          = "python3",
+        argument_list = ["gen.py", "lexer.c", "parser.c"])
+
+A generator that exits 0 but forgets a target is caught by the
+post-exit accounting: 'target-not-built', the target NAMED.
+
+
+
+10  PLATFORMS AND DEGRADATION
+______________________________________________________________________________
+
+    mechanism                Linux  macOS  BSDs   Windows
+    -----------------------  -----  -----  -----  -------
+    wall clock + RSS + pid
+      watchdog (psutil)        +      +      +       +
+    rlimits: cpu, fsize
+      ('resource')             +      +      +       -
+    process-group kill         +      +      +      (single
+                                                    process)
+    everything reported        +      +      +       +
+
+Dependencies: python stdlib + 'psutil'. Without psutil the RSS and
+pid-count caps are off and REPORTED ('.unenforced'); wall clock and
+rlimits keep working. Without 'resource' (Windows) the kernel caps are
+off and reported; the watchdog carries wall clock and memory.
+
+Deliberate non-choices, so nobody re-litigates them:
+
+  - RLIMIT_AS is NOT used: it breaks interpreters that reserve large
+    virtual address spaces. Memory containment is RSS-watchdog-based;
+    the ~0.25 s poll is adequate against accidents -- adversaries are
+    out of scope by definition.
+  - RLIMIT_NPROC is NOT used: it caps processes per REAL USER ID --
+    system-wide, not per-call. Set from a point-in-time snapshot it
+    STARVES a legitimate build the instant unrelated processes of the
+    same user push the global count past the snapshot (on a busy
+    desktop: a build fork returns EAGAIN, "Resource temporarily
+    unavailable", and the tool dies mid-build). THE process-count cap
+    is the watchdog's group-member count -- correctly scoped to the
+    call's own group. The one-poll blind spot (a burst between polls)
+    is an accident the watchdog then contains; adversaries are out of
+    scope.
+
+
+11  RELATION TO HWUT TESTING
+______________________________________________________________________________
+
+The component's own suite (TEST/) follows the standard scheme:
+'config.py' bootstraps sys.path (walks up to 'vut/'), test files begin
+with 'from config import HwutRunner', choices per accident class,
+outputs baselined in GOOD/. Two rules learned there, worth keeping for
+every test that uses the sandbox:
+
+  - Assert NORMALIZED outcomes where mechanisms race (section 6): the
+    GOOD file must hold on every platform and every run.
+  - Silence asyncio's logger warnings in the harness
+    ('logging.getLogger("asyncio").setLevel(logging.ERROR)'):
+    child-reap races may emit spurious, nondeterministic lines.
+
+
+12  QUICK REFERENCE
+______________________________________________________________________________
+
+THE GROUND -- every subprocess, always:
+
+    Sandbox(config, work_dir)
+    await sandbox.run(cmd, stdout_handler=..., stderr_handler=...,
+                      stdin_reader=..., stop_event=...,
+                      backup_file_set=...)          -> SandboxResult
+
+    result.ok                    COMPLETED and exit_code == 0
+    result.containment           E_Containment (section 6)
+    result.unenforced            caps the platform cannot enforce
+
+COMPOSITION -- pipelines of supervised calls:
+
+    link = SandboxPipe()         upstream stdout_handler = link.feed
+                                 downstream stdin_reader = link.reader
+
+    seq = SandboxSequence([(sandbox_a, cmd_a), (sandbox_b, cmd_b)],
+                          stdin_reader=...)   # optional: stage-0 stdin
+    seq.tail.reader              the chain's stdout end -- pipes are
+                                 THE interface, also toward compare
+    await seq.collect()          -> one SandboxResult PER STAGE
+
+    tee = SandboxTee(stdout_handler=...)     THE TWO-WAY TEE --
+    subject.run(cmd,                         the whole feature, pure
+        stdout_handler=tee.stdout_handler,   composition: eavesdrop
+        stdin_reader  =tee.stdin_reader)     stdout (copy, never
+    controller.run(ctrl_cmd,                 steal), inject stdin;
+        stdin_reader  =tee.tap.reader,       controller = any second
+        stdout_handler=tee.inject.feed)      sandbox, e.g. pype with
+    # + finally-closers: tap / inject        'python3 -u' (unbuffered)
+
+APPLICATION -- the judged test app run; running and judging apart:
+
+    seq = SandboxSequence([(sandbox, test_cmd),  RUNNING; the pype
+                           (pype_sandbox,        stage deterministic-
+                            pype_cmd)],          alizes (optional);
+                          err_pipe_f=True)       err pipe when stderr
+                                                 is judged
+
+    await judge_equivalence(seq, nominal, cfg)   JUDGING, axis 1:
+       -> (tuple[SandboxResult, ...], bool)      the Judge, fast-fail
+    await judge_association(seq, nominal, cfg,   JUDGING, axis 2:
+                            consumer)            the Lawyer, alignment
+       -> tuple[SandboxResult, ...]              for display
+    await judge_output_file(path, nominal, cfg)
+       -> bool                                   files, post-exit
+
+    config = SandboxConfigTestRun(                      THE INTERFACE:
+        command_line=..., sandbox=...,           input = configuration
+        pype_command_line=..., pype_sandbox=...,   (the run + the
+        channel=Comparator(...),                    subjects),
+        error_channel=Comparator(...),           output = result --
+        file_db={name: Comparator(...)})         verdict PER SUBJECT,
+    await run_test_app(config)                   mismatches NAMED;
+       -> SandboxResultTestRun                          .report = brief
+    await run_test_app(config, consumer)           report
+       -> SandboxResultTestRun   (the Lawyer's axis)      (E_TestRunResult)
+
+    Verdict rule: EVERY subject equivalent and EVERY stage COMPLETED
+    (or STOPPED by fast-fail), else False -- one attribution record
+    per stage, one verdict per subject, always.
+
+APPLICATION -- the supervised build (sandbox_build.py):
+
+    config = SandboxConfigBuild(                 THE INTERFACE, same
+        build_system = E_BuildSystem.MAKE,         pattern: config in,
+          # MAKE|NINJA|CMAKE|GENERATOR              result out;
+        target_list  = ["app", "lib.a"],           command line
+        sandbox      = Sandbox(...),               CONSTRUCTED;
+        tool         = None,                       GENERATOR: tool
+        argument_list= [])                         mandatory, targets
+    await run_build(config)                        = contract only
+       -> SandboxResultBuild                     .built_target_list /
+                                                 .missing_target_list
+                                                 accounted POST-EXIT;
+                                                 .report = brief
+                                                   report (build-*,
+                                                   target-not-built)
+
+Rules of thumb:
+  - Route EVERY subprocess through the sandbox -- 'make' and 'scp'
+    deserve wall clocks too. Never call 'subprocess' directly.
+  - Set 'max_wall_clock_sec' first; it is the one cap that catches
+    everything eventually and works on every platform.
+  - One Sandbox per call, one work_dir per test: scratch isolation is
+    the cheapest hygiene there is.
+  - Each pipeline stage gets its OWN sandbox: attribution stays sharp.
+  - Keep running and judging apart: the SandboxSequence produces the
+    subject, the judge_* functions consume it -- never entangle the
+    two.
+  - Read '.unenforced' in reports: a pass without memory enforcement
+    is a pass -- but say so.
+  - Security, isolation, reproducibility: outer boundary. Always.
+______________________________________________________________________________

@@ -1,0 +1,12 @@
+
+--- parameter by parameter: the nearer word wins ---
+    other/TEST               test-b.py
+        test-b.py    numeric=0.5
+    sub/TEST                 test-a.py
+        test-a.py    numeric=0.1
+
+--- the untouched sibling still flows from the root ---
+    other/TEST               test-b.py
+        test-b.py    pype='root.pype'
+    sub/TEST                 test-a.py
+        test-a.py    pype='own.pype'

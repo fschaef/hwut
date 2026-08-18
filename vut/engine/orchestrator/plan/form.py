@@ -26,8 +26,19 @@ from enum        import Enum, auto
 
 class E_NodeKind(Enum):
     TEST    = auto()   # one (file, choice) call
-    BUILD   = auto()   # one build action, from test_run's multi-builder
+    BUILD   = auto()   # one build action, from the build interview
     SESSION = auto()   # one interactive application call (R-46)
+
+
+class E_ProvisionStage(Enum):
+    """THE PROVISION LADDER (P-18): the stages by which a test's output
+    comes to exist. A stage rises to the PLAN where its work is shared
+    or constrained; it stays inside the per-case call where private
+    (pype, compare). ACQUIRE is the empty rung, named now so it lands
+    someday as one more rung, not a redesign."""
+    ACQUIRE = auto()   # dependencies come to exist (future rung)
+    BUILD   = auto()   # sources -> the application
+    EXECUTE = auto()   # application -> the subject
 
 
 class E_Provenance(Enum):
@@ -95,6 +106,17 @@ class CPlanNode:
                 application 'file'.
         """
         return cls(kind=E_NodeKind.SESSION, file=file, payload=payload)
+
+    def provision_stage(self):
+        """
+        RETURN: E_ProvisionStage, the rung of the provision ladder this
+                node's work stands on -- DERIVED from the kind, stored
+                nowhere (P-18): a SESSION is the shared facet of
+                EXECUTE, a TEST is the case itself on the same rung.
+        """
+        return {E_NodeKind.BUILD:   E_ProvisionStage.BUILD,
+                E_NodeKind.SESSION: E_ProvisionStage.EXECUTE,
+                E_NodeKind.TEST:    E_ProvisionStage.EXECUTE}[self.kind]
 
     def name(self):
         """

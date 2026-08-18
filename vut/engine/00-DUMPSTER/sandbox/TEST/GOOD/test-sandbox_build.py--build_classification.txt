@@ -1,0 +1,7 @@
+  OK  : tool not found               -> build-tool-not-found
+  OK  : hanging rule (wall cap 1 s)  -> build-contained
+  OK  : failing rule (exit 1)        -> build-failed
+  OK  : contained build: the record names the resource
+  OK  : failing build: stderr tail captured -- the WHY survives
+  OK  : no failing case sneaks a True verdict
+SUCCESS: the brief report names the build failure, one token each.

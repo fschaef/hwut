@@ -17,6 +17,7 @@ caps.write_directory_list ConfigCaps          write_directory_list              
 comment            ConfigCompare       ignored_line_f, ignored_line_begin_marker, ignored_line_end_marker ('##', '##')  <adapted>
 constraints        ConfigCompare       constraint_f, constraint_db                    ()  <adapted>
 eq-pattern         ConfigCompare       equivalent_pattern_list                        ()
+execute            ConfigRunner        execute                                        None
 interactive        ConfigRunner        interactive_f                                  False
 nothing            ConfigCompare       visible_nothing_pattern_list                   ()
 numeric            ConfigCompare       numeric_tolerance_ratio                        0.0

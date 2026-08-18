@@ -1,0 +1,7 @@
+
+--- Testing File Watching and Backup ---
+## TEMPDIR: ((/tmp/hwut_sandbox_g8rqbkdg))
+INITIAL STATE: result.txt created in temp dir.
+FILESYSTEM PROOF:
+  FILE: result.txt-2026y02m24d-08h56m15s.BACKUP
+## CLEANUP: ((/tmp/hwut_sandbox_g8rqbkdg))

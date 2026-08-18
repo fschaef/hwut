@@ -1165,3 +1165,50 @@ GRAVEYARD Pointing a DEFAULT at the component that DECLARES it --
           would keep leaving the author's own directory, and absolute
           paths would have to be kept out of every GOOD file. Worth a
           switch of its own one day; not this one.
+
+----------------------------------------------------------------------------
+R-68  'execute' -- THE CALL ITSELF, STATED VERBATIM
+----------------------------------------------------------------------------
+PROBLEM   A test file whose execution no interpreter mapping covers
+          ('awk -f ...') had no way to state how it is called.
+DECISION  'execute', an ORDINARY test parameter (root and per-choice,
+          the R-26 merging): ONE double-quoted command string,
+          replacing the interpreter-derived call, procsitter-
+          supervised under the choice's caps. Framework variables,
+          expanded at the call: '$file', '$choice', '$filestem'
+          (the file name without its last extension); '$choice'
+          expands empty for the choice-less call. An unknown '$word'
+          is refused at validation, naming it. 'execute' beside
+          'interactive' is REFUSED at resolution: the session
+          protocol assumes the runner; state one.
+COST      A key through relation, specification, validator, printer;
+          expansion is the runner's labour (test_run dispatcher,
+          owed).
+GRAVEYARD Root-only (forbids per-choice oddity for no gain). A scope
+          with argv members (the string IS the author's own shell
+          word; splitting it is the runner's affair).
+
+----------------------------------------------------------------------------
+R-69  THE CONFIGURATION TREE
+----------------------------------------------------------------------------
+PROBLEM   A project is a TREE of test directories; each stating its
+          whole configuration repeats what the tree could say once.
+DECISION  'explore_tree(root)': the stage before 'explore()'. It walks
+          down, finds every TEST DIRECTORY, and folds 'hwut.conf' down
+          the tree -- a parent's values flow down, the child's own
+          word wins (R-26 lifted one level; 'default_app' merges
+          parameter by parameter). A test directory is one whose NAME
+          equals the effective 'test_directory' key -- a root-only
+          directory key, itself inherited, 'TEST' where nobody states
+          it; the name that applies to a directory is decided by its
+          parent chain. WHAT FLOWS: default_app, language_setup,
+          ignore, test_directory. WHAT DOES NOT: on_entry, on_exit,
+          collision, dependency -- they name LOCAL matters; stated at
+          a tree level they draw a fault and flow nowhere.
+COST      A second reading of 'hwut.conf' (at tree levels) with a
+          narrower lawful vocabulary; the inheritable set must be
+          maintained as keys join.
+GRAVEYARD Every directory an island (HWUT 1.0: repeats caps and
+          defaults per directory). Everything inheriting (a parent's
+          'collision' naming files a child does not hold would fault
+          every child).

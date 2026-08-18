@@ -1,0 +1,22 @@
+
+--- everything stands ---
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 3, "when": "T02"}
+    {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "frame", "role": "on_entry", "when": "T03"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "run-begun", "node": "build[make test-a.py]", "node_kind": "BUILD", "when": "T04"}
+    {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "build[make test-a.py]", "node_kind": "BUILD", "verdict": "ok", "when": "T05"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "run-begun", "node": "test-a.py", "node_kind": "TEST", "when": "T06"}
+    {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-a.py", "node_kind": "TEST", "verdict": "ok", "when": "T07"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "run-begun", "node": "test-b.py", "node_kind": "TEST", "when": "T08"}
+    {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-b.py", "node_kind": "TEST", "verdict": "ok", "when": "T09"}
+    {"directory": "alpha/TEST", "fail_db": {}, "format": 1, "good": true, "kind": "dir-done", "when": "T10"}
+    {"directory": "beta/TEST", "format": 1, "kind": "dir-begun", "node_n": 1, "when": "T11"}
+    {"directory": "beta/TEST", "format": 1, "kind": "run-begun", "node": "test-z.py", "node_kind": "TEST", "when": "T12"}
+    {"directory": "beta/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-z.py", "node_kind": "TEST", "verdict": "ok", "when": "T13"}
+    {"directory": "beta/TEST", "fail_db": {}, "format": 1, "good": true, "kind": "dir-done", "when": "T14"}
+    {"fail_n": 0, "format": 1, "good": true, "kind": "tree-done", "when": "T15"}
+    None
+
+--- folded ---
+    good_f=True fail_n=0
+    directories: alpha/TEST, beta/TEST

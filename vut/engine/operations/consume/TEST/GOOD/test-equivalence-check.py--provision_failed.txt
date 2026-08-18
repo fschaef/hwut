@@ -1,0 +1,7 @@
+INSPECT: verdict    = False
+         report     = test-app-launch-failed
+         comparison = None
+  OK  : the test FAILED
+  OK  : and the report names the launch
+  OK  : no comparison happened -- an ABSENCE
+SUCCESS: a failed provision is a failed test, with no comparison.

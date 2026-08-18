@@ -1,0 +1,4 @@
+INSPECT: -R bind-mount values: ['/', '/dev/null:/usr/bin/curl']
+  OK  : existing binary '/usr/bin/curl' is masked with /dev/null
+  OK  : absent binary '/usr/bin/__nonexistent_binary__' is not added to args
+SUCCESS: Forbidden binary masking is correct.

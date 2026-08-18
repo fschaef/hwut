@@ -1,0 +1,30 @@
+STIMULUS  hwut.report demo.py basic          (fixture WITHOUT sidecars)
+REACTION  exit code : 0   stderr : 0 bytes
+          the pack {
+              ==[ HWUT TEST REPORT ]========================================================
+              test:    demo.py
+              choice:  basic
+              hint:    OUT differs from GOOD
+              files:
+                demo.py                          29 bytes  (source)
+                GOOD/demo.py--basic.stdout       11 bytes  (good stdout)
+                OUT/demo.py--basic.stdout        11 bytes  (out stdout)
+              coverage: not requested
+              cadence: none recorded
+              
+              ==[ SOURCE: demo.py ]===========================================================
+              print("alpha")
+              print("beta")
+              
+              ==[ GOOD STDOUT: GOOD/demo.py--basic.stdout ]===================================
+              alpha
+              beta
+              
+              ==[ OUT STDOUT: OUT/demo.py--basic.stdout ]=====================================
+              alpha
+              BETA
+          }
+
+Absence is reported, never guessed: no cadence recorded is
+SAID, and no section pretends otherwise.
+SUCCESS: what is not there is spoken, not invented.

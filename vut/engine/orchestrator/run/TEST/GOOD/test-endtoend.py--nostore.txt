@@ -1,0 +1,6 @@
+
+--- record=False: the store stays empty ---
+    candidates after the run: 0
+
+--- record default: every subject stored, sidecar beside it ---
+    candidates: 5   freshness sidecars: 10

@@ -14,7 +14,7 @@ DESCRIPTION
 
        THE NAMING. A record's key is (test, choice, subject); the
        Bookkeeper turns it into the file that carries it -- nominal
-       under 'GOOD/', candidate under 'OUT/', the raw and cadence
+       under 'GOOD/', candidate under '.hwut-store/', the raw and cadence
        sidecars beside the candidate. Whoever reads or writes those
        files asks here for the path; the reading and writing themselves
        are the caller's.
@@ -163,8 +163,14 @@ class Bookkeeper:
         return self.directory / "GOOD" / self.key(test, choice, subject)
 
     def candidate_path(self, test, choice, subject):
-        """RETURN: Path, where the CANDIDATE record of that key lives."""
-        return self.directory / "OUT" / self.key(test, choice, subject)
+        """RETURN: Path, where the CANDIDATE record of that key lives.
+
+        THE STORE'S OWN GROUND, apart from 'OUT/': 'OUT/' is the
+        TEST'S product space -- execution reads every file there as a
+        subject -- and the store's records must never become the next
+        run's subjects. The dot-name also keeps the tree walk out."""
+        return self.directory / ".hwut-store" \
+                              / self.key(test, choice, subject)
 
     def raw_path(self, test, choice, subject):
         """RETURN: Path, where the PRE-canonicalisation stream lives."""
@@ -236,6 +242,12 @@ class Bookkeeper:
         OVERWRITES exactly one (test, choice, operation) entry and
         leaves every other untouched; refreshes the test's and the
         choice's reproducible configuration beside it.
+
+        THE LEDGER READING of an ACCEPT (n-3): the book is a book of
+        record, and an accept is an EVENT in it. The entry keeps
+        'first_accept' -- the instant of the FIRST acceptance ever,
+        carried forward untouched -- while 'when' is the LAST: a
+        re-accept moves only the second.
         """
         operation = _OPERATION_BY_GOAL[goal.name]
         entry     = {"verdict": bool(result.verdict),
@@ -260,7 +272,13 @@ class Bookkeeper:
         choice_db  = test_book.setdefault("choices", {})
         choice_book = choice_db.setdefault(choice_key, {})
         choice_book["configuration"] = self._choice_facts(choice_entry)
-        choice_book.setdefault("operations", {})[operation] = entry
+        operation_db = choice_book.setdefault("operations", {})
+        if operation == "Accept":
+            prior = operation_db.get("Accept")
+            entry["first_accept"] = prior.get("first_accept",
+                                              prior.get("when")) \
+                                    if prior else entry["when"]
+        operation_db[operation] = entry
         self._write_book(content)
         return entry
 

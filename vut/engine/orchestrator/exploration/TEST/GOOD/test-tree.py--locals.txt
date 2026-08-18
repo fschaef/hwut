@@ -1,0 +1,6 @@
+
+--- named, faulted, and not flowed ---
+    TEST                     test-a.py
+    FAULT hwut.conf:1:7: VOCABULARY: 'on_entry' at a tree level: it names local matters and belongs in a test directory's own 'hwut.conf'
+    FAULT hwut.conf:1:7: VOCABULARY: 'collision' at a tree level: it names local matters and belongs in a test directory's own 'hwut.conf'
+    TEST                     on_entry=None collision=[]

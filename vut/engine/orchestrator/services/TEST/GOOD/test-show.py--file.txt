@@ -1,0 +1,80 @@
+
+--- resolved ---
+$ hwut.show test-a.py
+    test-a.py {
+        title = "A"
+        choices {
+            one {
+                build {
+                    framework = null              # default
+                    executable = null             # default
+                }
+                caps {
+                    timeout_sec = 60.0            # default
+                    cpu_sec = null                # default
+                    memory_mb = null              # default
+                    file_size_mb = null           # default
+                    child_process_max_n = null    # default
+                    file_handle_max_n = null      # default
+                    network = true                # default
+                    write_directory_list = null   # default
+                }
+                pype = null                       # default
+                numeric = 0.01                    # app
+                eq-pattern = []                   # default
+                nothing = []                      # default
+                analogy = ["((", "))"]            # default
+                constraints = []                  # default
+                comment = ["##", "##"]            # default
+                slash_eqv = true                  # default
+                whitespace_eqv = true             # default
+                same = false                      # default
+                interactive = false               # default
+                execute = null                    # default
+            }
+            two {
+                build {
+                    framework = null              # default
+                    executable = null             # default
+                }
+                caps {
+                    timeout_sec = 60.0            # default
+                    cpu_sec = null                # default
+                    memory_mb = null              # default
+                    file_size_mb = null           # default
+                    child_process_max_n = null    # default
+                    file_handle_max_n = null      # default
+                    network = true                # default
+                    write_directory_list = null   # default
+                }
+                pype = null                       # default
+                numeric = 0.01                    # app
+                eq-pattern = []                   # default
+                nothing = []                      # default
+                analogy = ["((", "))"]            # default
+                constraints = []                  # default
+                comment = ["##", "##"]            # default
+                slash_eqv = true                  # default
+                whitespace_eqv = true             # default
+                same = false                      # default
+                interactive = false               # default
+                execute = null                    # default
+            }
+        }
+    }
+    [status 0]
+
+--- --no-default: what somebody chose ---
+$ hwut.show test-a.py --no-default
+    test-a.py {
+        title = "A"
+        choices {
+            one {
+                numeric = 0.01                    # app
+            }
+            two {
+                numeric = 0.01                    # app
+            }
+        }
+    }
+    [status 0]

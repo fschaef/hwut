@@ -1,9 +1,0 @@
-STIMULUS  the same streams,
-          echo q | hwut merge subject.txt nominal.txt -o merged.txt --plain
-REACTION  exit code       : 1
-          merged.txt exists: no
-          stdout          : 0 bytes
-
-A cancel carries nothing out: no artifact, no empty file, no
-half-written one.
-SUCCESS: cancel is exit 1 and an untouched file system.

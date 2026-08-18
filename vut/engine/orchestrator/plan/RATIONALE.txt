@@ -233,3 +233,47 @@ COST      Two entry points; the common laws (exit status,
 GRAVEYARD 'hwut.parse' (names machinery). 'hwut.check' (promises
           a verdict, delivers a tree). One face with a mode switch
           (each face one job).
+
+----------------------------------------------------------------------------
+P-17 THE TREE PLAN
+----------------------------------------------------------------------------
+PROBLEM   The outer interface takes a ROOT; the plan was per
+          directory.
+DECISION  'CTreePlan': one CTestPlan per test directory, in WALK
+          ORDER; directories run SERIALLY, each under its own frame
+          (P-10) and its own Bookkeeper -- the tree level adds ORDER
+          over directories and nothing else. An entry names its
+          directory RELATIVE to the root. 'determine_tree(tree, wish,
+          bookkeeper_factory)': the factory is handed down, required
+          where the wish asks the base. 'print_tree_plan': entry
+          headings '[ <directory> ]', faults and reports per entry,
+          then the entry's canonical plan.
+COST      Cross-directory relations are inexpressible -- stated;
+          parallel directories are a later fork the shape admits.
+GRAVEYARD One plan spanning the tree (frames and targets would need
+          directory scoping; cross-directory semantics nobody stated).
+
+----------------------------------------------------------------------------
+P-18 THE PROVISION LADDER
+----------------------------------------------------------------------------
+PROBLEM   Provision-stage awareness was an achievement of the old
+          test_run; with the surgery it needed a prominent home in the
+          planner's reasoning, without teaching the scheduler
+          semantics.
+DECISION  'E_ProvisionStage' (ACQUIRE, BUILD, EXECUTE) in form.py;
+          'CPlanNode.provision_stage()' a PROPERTY, derived from kind,
+          stored nowhere -- SESSION is the shared facet of EXECUTE,
+          TEST the case itself on the same rung. Determination is
+          organised BY the ladder: one file per hoisted rung,
+          'provision_build.py' and 'provision_execute.py';
+          'determine.py' walks and assembles;
+          'provision_acquire.py' is the empty rung, created the day
+          acquisition returns. The SCHEDULER remains stage-blind:
+          stage meaning enters only through node kind, read by the
+          dispatcher alone.
+COST      Two small modules where one file stood; a stored attribute
+          would be needed the day one kind stands in two stages
+          (nothing on the horizon says so).
+GRAVEYARD A Stage object in the plan with nodes carrying references
+          (machinery ahead of any need). A stage member on the node
+          (redundant with kind; one truth, derived).

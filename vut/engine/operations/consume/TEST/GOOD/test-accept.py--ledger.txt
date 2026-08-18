@@ -1,0 +1,9 @@
+INSPECT: after the FIRST accept
+         first_accept == when : True
+         after a RE-ACCEPT
+         first_accept carried : True
+         'when' may move on   : True
+  OK  : the first accept IS both ends of the ledger
+  OK  : a re-accept leaves 'first_accept' untouched
+  OK  : and moves only 'when' -- the LAST accept
+SUCCESS: first and last accept: the book keeps the history's two ends.

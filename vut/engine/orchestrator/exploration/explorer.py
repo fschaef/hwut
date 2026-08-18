@@ -27,6 +27,24 @@ from .specification import (CTestApp, CTestAppSet, DirectorySpec,
                             TestParameters)
 
 
+def _execute_interactive_refused(app):
+    """
+    RETURN: list[Fault], one fault per choice of 'app' that states
+            'execute' beside 'interactive' -- the session protocol
+            assumes the runner, so the pair is refused (R-68); empty
+            where the pair does not stand.
+    """
+    fault_list = []
+    for choice, parameters in sorted(app.choice_db.items(),
+                                     key=lambda item: item[0] or ""):
+        if parameters.execute is not None and parameters.interactive:
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, app.source_file, app.position,
+                "'execute' beside 'interactive': the session protocol "
+                "assumes the runner; state one"))
+    return fault_list
+
+
 @dataclass(frozen=True, slots=True)
 class ExplorationResult:
     """What one TEST directory yields: the set of what exists, and every
@@ -35,7 +53,7 @@ class ExplorationResult:
     fault_list: tuple
 
 
-def explore(directory, interview_runner=None):
+def explore(directory, interview_runner=None, inherited=None):
     """
     RETURN: ExplorationResult -- the CTestAppSet of 'directory' and the
             accumulated faults.
@@ -44,6 +62,11 @@ def explore(directory, interview_runner=None):
     and returns its '--hwut-info' answer; the default runs it under
     procsitter (R-44). It is a parameter so that a test may drive the
     third carrier without a process.
+
+    'inherited' is the DirectorySpec the CONFIGURATION TREE hands down
+    (R-69): its inheritable fields govern where this directory states
+    no word of its own; the directory's own 'hwut.conf' wins field by
+    field, 'default_app' parameter by parameter.
     """
     fault_list = []
 
@@ -60,6 +83,9 @@ def explore(directory, interview_runner=None):
         if directory_spec is None:
             directory_spec = DirectorySpec(language_setup={},
                                            dependency={})
+    if inherited is not None:
+        from .tree_explorer import inherited_spec
+        directory_spec = inherited_spec(inherited, directory_spec)
 
     #  THE WALK, then the headers.
     app_db = {}
@@ -77,7 +103,12 @@ def explore(directory, interview_runner=None):
             spec = hwut_info_interview.interview(directory, name,
                                                  runner=interview_runner)
             if spec is None:             continue
-        app_db[name] = _resolve(spec, directory_spec)
+        app = _resolve(spec, directory_spec)
+        pair_fault_list = _execute_interactive_refused(app)
+        if pair_fault_list:
+            fault_list.extend(pair_fault_list)
+            continue                                 # refused, not guessed
+        app_db[name] = app
 
     #  CROSS-CHECK -- only knowable once both carriers are read.
     for name, spec in conf_app_db.items():
@@ -92,7 +123,12 @@ def explore(directory, interview_runner=None):
                 E_FaultKind.DIRECTORY, finder.CONF_NAME, spec.position,
                 "'apps' names '%s', which does not exist" % name))
             continue
-        app_db[name] = _resolve(spec, directory_spec)
+        app = _resolve(spec, directory_spec)
+        pair_fault_list = _execute_interactive_refused(app)
+        if pair_fault_list:
+            fault_list.extend(pair_fault_list)
+            continue                                 # refused, not guessed
+        app_db[name] = app
 
     #  SATISFIABILITY -- the dependency graph is complete only now, and
     #  no verdict enters it: what cannot be reached is knowable here.

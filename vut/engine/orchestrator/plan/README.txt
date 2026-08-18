@@ -181,3 +181,31 @@ order. An empty selection yields an empty plan and a report.
 choice), ...))'. 'SpecificationBuildInterview' is the answer the
 specification alone gives: one action per (file, framework) met, named
 '<framework> <file>'.
+
+
+8  THE TREE PLAN  (tree.py)
+______________________________________________________________________________
+
+'CTreePlan' holds one entry per test directory of a tree, in walk order:
+the directory (relative to the plan's root), its CTestPlan, its frame
+('on_entry'/'on_exit'), the reports determination made, and the faults
+exploration met there. Directories run serially; each entry stands alone.
+
+'determine_tree(tree_exploration, wish, bookkeeper_factory)' determines
+every entry; the factory takes a directory and answers ITS Bookkeeper --
+made above, handed down, required where the wish asks the base.
+
+'print_tree_plan(tree_plan)' writes the walk's faults, then per entry a
+heading '[ <directory> ]', its faults and reports, and its canonical plan.
+
+
+9  THE PROVISION LADDER  (P-18)
+______________________________________________________________________________
+
+'E_ProvisionStage' names the rungs by which a test's output comes to
+exist: ACQUIRE (the empty rung), BUILD, EXECUTE.
+'CPlanNode.provision_stage()' derives a node's rung from its kind.
+Determination is organised by the ladder: 'provision_build.py' raises
+BUILD nodes from the interview; 'provision_execute.py' raises SESSION
+nodes for the shared facet of execution; 'determine.py' raises the
+TEST nodes, walks, closes and assembles. The scheduler is stage-blind.

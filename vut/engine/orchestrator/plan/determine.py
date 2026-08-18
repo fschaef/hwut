@@ -30,56 +30,23 @@ NODE ORDER: BUILD nodes, then SESSION nodes, then TEST nodes in
 selection order. Determination is deterministic -- the same wish on the
 same directory yields the same plan, and the print may be blessed
 byte-exact (P-4).
+
+THE PROVISION LADDER (P-18) is the organising figure: this module
+walks the selection and raises the TEST nodes; each HOISTED rung has
+its own file, 'provision_<stage>.py' -- build actions
+(provision_build.py), the shared facet of execution
+(provision_execute.py) -- and acquisition lands someday as one more
+rung, not a redesign. The scheduler stays STAGE-BLIND: stage meaning
+enters only through node kind, read by the dispatcher alone.
 ______________________________________________________________________________
 """
-from abc import ABC, abstractmethod
-
 from ..exploration.specification import Target
+from .provision_build   import (I_BuildInterview,
+                                SpecificationBuildInterview,
+                                build_nodes)
+from .provision_execute import session_nodes
 from .form import (CExclusionSet, CPlanLink, CPlanNode, CTestPlan,
                    E_LinkKind, E_Provenance)
-
-
-class I_BuildInterview(ABC):
-    """WHAT MUST BE BUILT BEFORE THE SELECTED CASES RUN. One
-    implementation per source of that knowledge; test_run's
-    multi-builder is the one the orchestrator hands down."""
-
-    @abstractmethod
-    def actions(self, case_list):
-        """
-        RETURN: sequence of (str, tuple) -- an action's name, and the
-                (file, choice) pairs of the cases it supports. Every
-                pair names a case of 'case_list'; an action supporting
-                no case of it is not answered.
-        """
-
-
-class SpecificationBuildInterview(I_BuildInterview):
-    """The interview the SPECIFICATION alone can answer: a case stating
-    'build' needs the named framework built for its file, and one
-    action serves every case of that file stating it.
-
-    Action name: '<framework> <file>'."""
-
-    def actions(self, case_list):
-        """
-        RETURN: list of (str, tuple), one entry per (file, framework)
-                met, in first-met order, with the cases it supports.
-        """
-        action_list = []
-        index_db    = {}
-        for case in case_list:
-            build = case.parameters.build
-            if build is None or build.framework is None: continue
-            key = (case.source_file, build.framework)
-            if key not in index_db:
-                index_db[key] = len(action_list)
-                action_list.append(("%s %s" % (build.framework,
-                                               case.source_file), []))
-            action_list[index_db[key]][1].append((case.source_file,
-                                                  case.choice))
-        return [(name, tuple(pair_list))
-                for name, pair_list in action_list]
 
 
 def determine(app_set, task_list, build_interview=None):
@@ -123,9 +90,9 @@ def determine(app_set, task_list, build_interview=None):
                for node in test_node_list}
 
     build_node_list, build_link_list = \
-        _build_nodes(build_interview, case_list, name_of)
+        build_nodes(build_interview, case_list, name_of)
     session_node_list, session_link_list = \
-        _session_nodes(case_list, app_set, name_of)
+        session_nodes(case_list, app_set, name_of)
 
     ordering_link_list = _ordering_links(app_set, name_of, case_list)
     exclusion_list     = _exclusion_sets(app_set, test_node_list)
@@ -217,48 +184,6 @@ def _sorted_choices(app):
     choice-less application."""
     if None in app.choice_db: return [None]
     return sorted(app.choice_db)
-
-
-def _build_nodes(build_interview, case_list, name_of):
-    """
-    RETURN: [0] list[CPlanNode], one BUILD node per action answered.
-            [1] list[CPlanLink], one SUPPORTS link per case an action
-                supports, dropping a pair that names no TEST node of
-                the plan.
-    """
-    node_list = []
-    link_list = []
-    for action, pair_tuple in build_interview.actions(case_list):
-        node = CPlanNode.build(action)
-        node_list.append(node)
-        for pair in pair_tuple:
-            target = name_of.get(pair)
-            if target is None: continue
-            link_list.append(CPlanLink(E_LinkKind.SUPPORTS,
-                                       node.name(), target))
-    return node_list, link_list
-
-
-def _session_nodes(case_list, app_set, name_of):
-    """
-    RETURN: [0] list[CPlanNode], one SESSION node per interactive file
-                holding a case of the plan, in first-met order.
-            [1] list[CPlanLink], one SUPPORTS link per case of such a
-                file.
-    """
-    node_list = []
-    link_list = []
-    seen_set  = set()
-    for case in case_list:
-        if not case.parameters.interactive:   continue
-        if case.source_file not in seen_set:
-            seen_set.add(case.source_file)
-            node_list.append(CPlanNode.session(case.source_file))
-        link_list.append(
-            CPlanLink(E_LinkKind.SUPPORTS,
-                      "session[%s]" % case.source_file,
-                      name_of[(case.source_file, case.choice)]))
-    return node_list, link_list
 
 
 def _ordering_links(app_set, name_of, case_list):

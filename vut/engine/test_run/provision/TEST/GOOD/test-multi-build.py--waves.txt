@@ -1,9 +1,0 @@
-INSPECT: 3 targets, partition [(a, b), (c,)] -> 2 invocation(s)
-         deliveries = {'a': 'a', 'b': 'b', 'c': 'c'}
-         proxy roles: I_ProxyProvider True, I_BuildProvider True, names its multi True
-  OK  : one invocation per WAVE, not per target
-  OK  : every target is delivered by name
-  OK  : every delivery carries its wave's ONE record
-  OK  : and the artifacts stand
-  OK  : close keeps one attribution per invocation
-SUCCESS: many targets, few invocations -- the wave is the unit.

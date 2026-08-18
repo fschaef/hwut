@@ -1,0 +1,9 @@
+INSPECT: COMPILED argv   = ['built']
+         COMPILED stdout = 'compiled artifact ran\n'
+         EXECUTABLE argv = ['direct.sh', 'basic']
+         EXECUTABLE out  = 'executable ran with basic\n'
+  OK  : the COMPILED test built AND ran
+  OK  : and its ARTIFACT produced the output, not its source
+  OK  : one record: the run's -- the build's own attribution is the BUILD node's, above
+  OK  : the EXECUTABLE ran directly, with the choice as its argument
+SUCCESS: all three source kinds launch what they should.

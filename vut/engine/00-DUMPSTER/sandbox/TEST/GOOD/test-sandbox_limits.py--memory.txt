@@ -1,0 +1,6 @@
+INSPECT: containment = MEMORY_EXCEEDED
+  OK  : containment is MEMORY_EXCEEDED
+  OK  : recorded peak exceeds the 96 MB cap
+  OK  : kill came before the hoard grew unbounded (< 1 GB)
+  OK  : exit_code is None (the sandbox ended it, not the test)
+SUCCESS: memory growth contained by RSS watchdog, attributed.

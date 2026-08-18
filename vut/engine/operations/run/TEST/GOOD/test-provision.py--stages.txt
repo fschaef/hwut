@@ -1,0 +1,7 @@
+INSPECT: wiring  [execute canonicalise]
+         Run -> X X   kind 'Run'
+         no execute refused: True
+         no canonicalise refused: True
+  OK  : an executing provision: execute and canonicalise
+  OK  : a missing stage is refused at construction, by name
+SUCCESS: the wiring is data, and its law lives at the door.

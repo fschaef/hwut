@@ -1,0 +1,43 @@
+
+--- everything ---
+[ alpha/TEST ]
+TEST PLAN: 3 node(s), 2 link(s), 0 exclusion set(s)
+NODES
+    build[make test-a.py]  BUILD
+    test-a.py              TEST
+    test-b.py              TEST
+LINKS
+    test-a.py -> test-b.py
+    build[make test-a.py] ==> test-a.py
+EXCLUSIONS
+    (none)
+
+[ beta/TEST ]
+TEST PLAN: 1 node(s), 0 link(s), 0 exclusion set(s)
+NODES
+    test-z.py  TEST
+LINKS
+    (none)
+EXCLUSIONS
+    (none)
+
+--- one glob: 'beta' comes up empty, and says so ---
+[ alpha/TEST ]
+TEST PLAN: 2 node(s), 1 link(s), 0 exclusion set(s)
+NODES
+    build[make test-a.py]  BUILD
+    test-a.py              TEST
+LINKS
+    build[make test-a.py] ==> test-a.py
+EXCLUSIONS
+    (none)
+
+[ beta/TEST ]
+REPORT: the selection is empty: no test case answers the wish
+TEST PLAN: 0 node(s), 0 link(s), 0 exclusion set(s)
+NODES
+    (none)
+LINKS
+    (none)
+EXCLUSIONS
+    (none)

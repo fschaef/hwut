@@ -1,0 +1,8 @@
+INSPECT: full-macvlan flags:    ['--macvlan_iface', 'eth0', '--macvlan_vs_ip', '192.168.1.50', '--macvlan_vs_gw', '192.168.1.1']
+INSPECT: partial-macvlan flags: ['--macvlan_iface', 'eth0']
+  OK  : --macvlan_iface = 'eth0'
+  OK  : --macvlan_vs_ip = '192.168.1.50'
+  OK  : --macvlan_vs_gw = '192.168.1.1'
+  OK  : --macvlan_vs_ip absent when IP not configured
+  OK  : --macvlan_vs_gw absent when GW not configured
+SUCCESS: MACVLAN flags correctly generated.

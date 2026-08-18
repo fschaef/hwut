@@ -18,7 +18,7 @@ EXIT STATUS, common to every face:
 
 The faces:
 
-    hwut.show    (hwut_show_cmd.py)
+    hwut.show    (show.py)
                  what the framework READ: the configuration as a tree,
                  syntax checked, defaults resolved. One file's, or the
                  whole directory's. '--no-default' drops what nobody
@@ -27,7 +27,7 @@ The faces:
                  printed form is the specification language itself and
                  can be read back (R-50).
 
-    hwut.plan    (hwut_plan_cmd.py)
+    hwut.plan    (plan.py)
                  what the framework INTENDS: the test plan -- nodes,
                  links, exclusion sets (see orchestrator/plan). The
                  selection keywords state the wish: '--fail', '--pass',
@@ -42,3 +42,19 @@ The faces:
 
 A fault does not withhold the output: a directory with one broken header
 prints the fault, then the tree or the plan of what stands, and answers 1.
+
+
+THE CONSOLIDATION: every command line face lives HERE -- one door for
+the tool, under ONE NAMING LAW:
+
+    hwut.<name>  <=>  vut/engine/orchestrator/services/<name>.py
+                      ('python3 -m vut.engine.orchestrator.services.<name>')
+    its suite    <=>  TEST/test-<name>.py or TEST/test-<name>.sh
+
+Every plain '<name>.py' in this directory IS a service; a module that
+is NOT a service is underscore-prefixed ('_core.py', '_config.py' --
+private helpers of the operations faces). 'show.py' and 'plan.py'
+face the orchestrator; 'compare.py', 'merge.py' and 'report.py' face
+the operations component. A healing face on a stored subject reads
+the Bookkeeper; its run-fallback re-enters the orchestrator -- a face
+importing both sides sits above both, which is here.

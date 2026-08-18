@@ -1,9 +1,0 @@
-INSPECT: acquired = ['already-there', 'fetched-dep']; the fetch command ran 1 time(s)
-         failing -> acquisition-failed, subjects []
-         lying   -> acquisition-failed
-  OK  : with dependencies satisfied, provision delivers as ever
-  OK  : the absent dependency was acquired ONCE -- shared stage, one ask of the world
-  OK  : the answer is the ONE SHAPE, and the call is attributed
-  OK  : a failing acquisition ends provision -- the app NEVER ran
-  OK  : a command that 'succeeded' past an unsatisfied check failed
-SUCCESS: the world is asked once, refused loudly, never trusted.

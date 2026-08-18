@@ -4,7 +4,7 @@ ______________________________________________________________________________
 PURPOSE: THE SCHEDULER -- the unit that EXECUTES a test plan. It reads
          the plan, obeys its constraints, and hands every piece of work
          to a dispatcher. It runs no process itself: running is
-         test_run's (P-1).
+         operations' (P-1).
 
     frame           on_entry before any dispatch; on_exit after all
                     work has ended, ALWAYS. Entry failure: the frame
@@ -21,7 +21,7 @@ PURPOSE: THE SCHEDULER -- the unit that EXECUTES a test plan. It reads
 THE DISPATCHER (I_Dispatcher) is the seam to the world: one coroutine
 per kind of work. A test drives the scheduler through a dispatcher of
 its own and needs no process; the orchestrator's dispatcher hands the
-work to test_run.
+work to operations.
 
     open_session(node)      -> bool     the session launched
     run_build(node)         -> bool     the build stood
@@ -106,7 +106,7 @@ class Scheduler:
     run; 'run()' is a coroutine and may be driven by 'asyncio.run'."""
 
     def __init__(self, dispatcher, on_entry=None, on_exit=None,
-                 worker_max_n=None):
+                 worker_max_n=None, notify=None):
         """
         RETURN: Scheduler, ready to run a plan.
 
@@ -115,6 +115,18 @@ class Scheduler:
         'on_exit'       the directory's exit command, or 'None'.
         'worker_max_n'  how many pieces of work may stand at once;
                         'None' is no bound.
+        'notify'        an observer, 'notify(kind, **fields)', told as
+                        the run proceeds; 'None' is nobody listening.
+                        The kinds and their fields:
+                            'frame'    role, good_f
+                            'started'  node
+                            'ended'    node, state, cause -- 'cause'
+                                       names the BUILD or SESSION node
+                                       whose breaking left this TEST
+                                       node UNSUPPORTED; 'None' else
+                        Every field value is the plan's own object
+                        (CPlanNode, E_NodeState); no wire format is
+                        spoken here.
 
         Raises AssertionError where 'worker_max_n' is not a positive
         number -- a bound of zero schedules nothing and is refused at
@@ -130,6 +142,7 @@ class Scheduler:
         self.on_entry     = on_entry
         self.on_exit      = on_exit
         self.worker_max_n = worker_max_n
+        self.notify       = notify or (lambda kind, **fields: None)
 
     async def run(self, plan):
         """
@@ -148,6 +161,7 @@ class Scheduler:
         if self.on_entry is not None:
             entry_f = bool(await self.dispatcher.run_script("on_entry",
                                                             self.on_entry))
+            self.notify("frame", role="on_entry", good_f=entry_f)
         if entry_f is not False:
             await self._dispatch_all(plan, state, dispatched)
 
@@ -155,6 +169,7 @@ class Scheduler:
         if self.on_exit is not None:
             exit_f = bool(await self.dispatcher.run_script("on_exit",
                                                            self.on_exit))
+            self.notify("frame", role="on_exit", good_f=exit_f)
 
         return CRunReport(entry_f    = entry_f,
                           exit_f     = exit_f,
@@ -180,6 +195,7 @@ class Scheduler:
                 name = ready_tuple[0]
                 state.started(name)
                 dispatched.append(name)
+                self.notify("started", node=plan.node(name))
                 task_db[asyncio.ensure_future(
                             self._work(plan.node(name)))] = name
 
@@ -197,8 +213,13 @@ class Scheduler:
             done_set, _ = await asyncio.wait(
                               task_db, return_when=asyncio.FIRST_COMPLETED)
             for task in sorted(done_set, key=lambda t: task_db[t]):
-                name = task_db.pop(task)
-                state.ended(name, bool(task.result()))
+                name        = task_db.pop(task)
+                unsupported = state.ended(name, bool(task.result()))
+                self.notify("ended", node=plan.node(name),
+                            state=state.state(name), cause=None)
+                for target in unsupported:
+                    self.notify("ended", node=plan.node(target),
+                                state=state.state(target), cause=name)
             await self._close_spent_sessions(plan, state, closed_set)
 
     async def _work(self, node):

@@ -17,6 +17,8 @@ Two vocabularies, one per carrier (README 6):
 Every fault accumulates; validation completes.
 ______________________________________________________________________________
 """
+import re
+
 from .fault         import Fault, E_FaultKind
 from vut.language_support.python.hwut_hocon import (ScalarNode,
                                                       ListNode,
@@ -34,6 +36,7 @@ _CAP_POSITIVE_SET   = {"timeout_sec":         float,
                        "file_size_mb":        int,
                        "child_process_max_n": int,
                        "file_handle_max_n":   int}
+_EXECUTE_VARIABLE   = re.compile(r"\$(\w+)")
 _CONF_KEY_SET       = ("on_entry", "on_exit", "ignore", "collision",
                        "dependency", "default_app", "language-setup",
                        "apps")
@@ -110,7 +113,7 @@ def validate_conf(hwut_node, file):
     app_db         = {}
 
     for entry in hwut_node.entry_list:
-        if entry.key in ("on_entry", "on_exit"):
+        if entry.key in ("on_entry", "on_exit", "test_directory"):
             value = _string(entry, file, fault_list)
             if value is not None: field_db[entry.key] = value
         elif entry.key == "ignore":
@@ -233,6 +236,19 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     if key == "pype":
         value = _string(entry, file, fault_list)
         if value is not None: parameter_db["pype"] = value
+    elif key == "execute":
+        value = _string(entry, file, fault_list)
+        if value is not None:
+            unknown = [name for name in _EXECUTE_VARIABLE.findall(value)
+                       if name not in ("file", "choice", "filestem")]
+            if unknown:
+                fault_list.append(Fault(
+                    E_FaultKind.TYPE, file, entry.node.position,
+                    "'execute' knows '$file', '$choice' and "
+                    "'$filestem'; not: %s"
+                    % ", ".join("'$%s'" % name for name in unknown)))
+            else:
+                parameter_db["execute"] = value
     elif key == "numeric":
         value = _number(entry, file, fault_list)
         if value is not None:

@@ -1,0 +1,4 @@
+
+--- two test directories, walk order ---
+    alpha/TEST               test-a.py
+    beta/gamma/TEST          test-b.py

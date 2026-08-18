@@ -1,0 +1,11 @@
+
+--- the stream ---
+    {"directory_list": ["suite/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory": "suite/TEST", "format": 1, "kind": "fault", "text": "hwut.conf:1:7: DIRECTORY: 'dependency' names 'required.dat', which this directory does not offer", "when": "T02"}
+    {"directory": "suite/TEST", "format": 1, "kind": "dir-begun", "node_n": 11, "when": "T03"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-m.sh", "node_kind": "TEST", "verdict": "misdep", "when": "T04"}
+    {"directory": "suite/TEST", "format": 1, "good": false, "kind": "frame", "role": "on_entry", "when": "T05"}
+    {"directory": "suite/TEST", "format": 1, "good": true, "kind": "frame", "role": "on_exit", "when": "T06"}
+    {"directory": "suite/TEST", "fail_db": {"test-m.sh": "MISDEP"}, "format": 1, "good": false, "kind": "dir-done", "when": "T07"}
+    {"fail_n": 1, "format": 1, "good": false, "kind": "tree-done", "when": "T08"}
+    None

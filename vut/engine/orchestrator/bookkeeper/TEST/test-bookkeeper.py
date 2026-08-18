@@ -39,14 +39,14 @@ from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
                                            Bookkeeper,
                                            compare_setup_delta,
                                            RESULT_DB_FILE_NAME)
-from   vut.engine.test_run.configuration import (TestConfiguration,  # noqa E402
+from   vut.engine.operations.configuration import (TestConfiguration,  # noqa E402
                                            TestChoiceConfiguration,
                                            E_SourceKind)
-from   vut.engine.test_run.report        import (TestResult,     # noqa E402
+from   vut.engine.operations.report        import (TestResult,     # noqa E402
                                            Comparison)
-from   vut.engine.test_run.result        import E_TestRunResult  # noqa F401,E402
-from   vut.engine.test_run.provision.core import Run             # noqa E402
-from   vut.engine.test_run.session       import E_Goal           # noqa E402
+from   vut.engine.operations.result        import E_TestRunResult  # noqa F401,E402
+from   vut.engine.operations.run.core import Run             # noqa E402
+from   vut.engine.operations.session       import E_Goal           # noqa E402
 from   vut.engine.procsitter.procsitter  import ProcsitterConfig # noqa E402
 
 
@@ -107,7 +107,8 @@ def _ran(configuration, choice_name=None):
 
 def test_naming():
     """The naming turns (test, choice, subject) into the file that
-    carries it: nominal under GOOD/, candidate under OUT/, the raw and
+    carries it: nominal under GOOD/, candidate under '.hwut-store/'
+    (the store's OWN ground, apart from the test's 'OUT/'), the raw and
     cadence sidecars beside the candidate."""
     book = Bookkeeper("/place")
     with_choice = book.nominal_path("parse", "basic", "stdout")
@@ -126,7 +127,7 @@ def test_naming():
          "the choice is part of the key, so choices never collide"),
         (str(without).endswith("GOOD/parse.stdout"),
          "a test without choices carries no choice part"),
-        (str(candidate).endswith("OUT/parse--basic.stdout"),
+        (str(candidate).endswith(".hwut-store/parse--basic.stdout"),
          "nominals and candidates live in SEPARATE key spaces"),
         (str(raw).endswith(".stdout.raw")
          and str(cadence).endswith(".stdout.times"),

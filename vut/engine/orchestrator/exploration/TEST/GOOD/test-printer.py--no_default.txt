@@ -29,6 +29,7 @@ test-a.py {
             whitespace_eqv = true             # default
             same = false                      # default
             interactive = false               # default
+            execute = null                    # default
         }
     }
 }

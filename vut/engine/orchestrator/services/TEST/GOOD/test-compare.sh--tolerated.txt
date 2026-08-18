@@ -1,0 +1,16 @@
+STIMULUS  the same streams,
+          hwut.compare subject.txt nominal.txt --plain --numeric 0.01
+REACTION  stdout {
+              
+              =[ subject.txt ]==================================== round 1
+              setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
+              --[ LINE_SEQUENCE/LINE_SEQUENCE ]--
+                   1    1 | alpha
+                   2    2 | value ~3.140~
+              ============================================================
+          }
+          exit code : 0
+
+What was a difference is now a tolerance, and the marks say
+so; the SETUP changed the verdict, never the machinery.
+SUCCESS: under the widened setup the same streams answer 0.

@@ -1,0 +1,9 @@
+todo-1  'hwut.run' AND '--format'                         ** LABOUR OWED **
+______________________________________________________________________________
+
+The command line face over 'orchestrator()' -- run the tree, drive a
+consumer (at least: fold to a summary, print it, exit status from
+'good_f') -- now UNBLOCKED: the real dispatcher stands
+(run/dispatcher.py, O-7). Owed with it: '--format' printing
+'vocabulary.format_text()', and the tree mode of 'hwut.plan'
+(print_tree_plan stands ready in plan/tree.py).

@@ -1,0 +1,165 @@
+============================================================================
+VUT-ORCHESTRATOR-RUN -- RATIONALE
+============================================================================
+Settled. Read-only. O-N handles; plan P-N, scheduler S-N, exploration
+R-N cited.
+
+----------------------------------------------------------------------------
+O-1  THE OUTER FACE
+----------------------------------------------------------------------------
+PROBLEM   One call that takes a wish and a root and yields a running,
+          observable whole.
+DECISION  Two functions. 'orchestrate(root, wish) -> CTreePlan':
+          determination, synchronous -- explore the tree (R-69),
+          determine per directory (P-17), Bookkeepers made here and
+          handed down. 'orchestrator(root, wish, dispatcher_factory)
+          -> asyncio.Queue': sets a CTreeScheduler running as an
+          asyncio task; the queue carries the report stream and one
+          'None' after 'tree-done' closes it. Determination happens
+          BEFORE the first event: a refused wish raises at the call.
+COST      A running event loop is required; a consumer that wants only
+          the end must drain the queue (O-4 pays it back).
+GRAVEYARD Returning a report object beside the queue (two carriers of
+          one truth, drifting). A thread-backed queue (the house runs
+          asyncio; a second concurrency model buys nothing here).
+
+----------------------------------------------------------------------------
+O-2  THE STREAM'S SHAPE
+----------------------------------------------------------------------------
+PROBLEM   TUI, web server and customer application must all read the
+          run as it happens, without the scheduler knowing any of
+          them.
+DECISION  Flat JSON-able dicts, one per event; every event carries
+          'format' (integer, starts at 1), 'kind' and 'when'. Kinds
+          are PLAIN STRINGS -- no padding, no 64-bit forms; the format
+          description notes kinds are ASCII, <= 9 bytes, unique, so a
+          consumer MAY pad one into an integer. THE PROMISE: fields
+          are only ever added, kinds never removed; unknown kinds and
+          fields are ignored; 'format' rises only where the promise
+          cannot hold. The table in vocabulary.py IS the format;
+          'format_text()' prints it. The emitter asserts every event
+          against the table: a wrong event is OUR defect, named at
+          emission.
+COST      A vocabulary to keep; growth is append-only by promise.
+GRAVEYARD 8-byte padded kinds ('dir--beg': paid by every reader,
+          earning only in a binary wire we do not speak). Nested
+          objects mirroring CRunReport (heavier, and the add-only
+          promise breaks at first growth). JSON encoding inside the
+          scheduler (serialisation baked into the emitter).
+
+----------------------------------------------------------------------------
+O-3  EVERYTHING THAT LEADS TO EXECUTABILITY IS THE TEST
+----------------------------------------------------------------------------
+PROBLEM   A test that never ran because its build broke must be
+          reported as the failed test it is, cause named.
+DECISION  'run-ended' carries 'verdict' -- WHY: ok, test-failed,
+          build-failed, launch-failed, unsupported, misdep, and the
+          list is OPEN under the add-only promise (an unknown verdict
+          reads not-ok; 'refused-cap' and 'pype-failed' join with the
+          test_run dispatcher). 'cause' names the node whose breaking
+          failed this one. A node that never dispatched still gets its
+          'run-ended'; a 'run-ended' without 'run-begun' is legal and
+          stated in the format.
+COST      Two failure carriers per broken supporter: its own event and
+          one per supported test -- by design, that IS the premise.
+GRAVEYARD A bare good/bad bit (the WHY lost on the wire). Reporting
+          only the supporter's failure (the test's own failure
+          invisible to a consumer watching tests).
+
+----------------------------------------------------------------------------
+O-4  THE SUMMARY IS A FOLD
+----------------------------------------------------------------------------
+PROBLEM   A final run report is wanted; a second carrier would drift
+          from the stream.
+DECISION  'summary.fold(events) -> CRunSummary' -- a pure function
+          over the stream, shipped beside it; 'drain(queue)' folds to
+          the closing 'None'. The queue is the outer face's ONLY
+          return; the scheduler's internal CRunReport stays internal.
+COST      The whole is only as complete as the stream (which is the
+          point).
+GRAVEYARD CRunReport returned beside the queue (two truths).
+
+----------------------------------------------------------------------------
+O-5  THE RECEIVER
+----------------------------------------------------------------------------
+PROBLEM   A consumer wants handlers, not a parsing loop; the wire must
+          stay ours to change.
+DECISION  'CRunReportReceiver', CONCRETE: every 'on_<kind>' a no-op
+          with NAMED parameters -- exactly the vocabulary's fields,
+          optionals defaulting to 'None', newer fields dropped before
+          the call, which is how named parameters survive growth.
+          '**fields' on the catch-alls alone: 'on_any' (every event,
+          raw, before its handler), 'on_unknown' (a kind the
+          vocabulary does not carry), 'on_misfit' (a KNOWN kind whose
+          structure does not fit: required field missing or badly
+          typed, or no dict at all).
+COST      Nothing forces a user to handle anything -- that is the
+          point; and the receiver must be regenerated in step with the
+          vocabulary (one table feeds both).
+GRAVEYARD Abstract methods (every vocabulary growth breaks every
+          user). '**fields' on specific handlers (the named surface
+          was the stated want).
+
+----------------------------------------------------------------------------
+O-6  THE VERDICT WORD LAW
+----------------------------------------------------------------------------
+PROBLEM   The real dispatcher knows a finer WHY (E_TestRunResult) than
+          the six verdict words; the wire had to carry it without
+          growing every consumer's switch.
+DECISION  'verdict' stays the COARSE six -- a consumer's switch never
+          grows -- and 'run-ended' gains the OPTIONAL field 'report':
+          the operation's own word, E_TestRunResult verbatim, absent
+          where nothing finer is known. Add-only; the promise holds.
+          One lift: a TEST whose report is 'test-app-launch-failed'
+          carries verdict 'launch-failed' -- the launch is the WHAT,
+          whichever node met it.
+COST      Two words for one failure where the fine one exists -- by
+          design: one for switching, one for reading.
+GRAVEYARD Fine words ON the switch (every consumer must know an open
+          list to act). Coarse only (the ledger would know what the
+          wire withheld).
+
+----------------------------------------------------------------------------
+O-7  THE REAL DISPATCHER
+----------------------------------------------------------------------------
+PROBLEM   The seam (S-1) needed its one binding onto operations.
+DECISION  'run/dispatcher.py': the ONE file that knows both sides.
+          ONE LOCK, ONE STORE, ONE LIFETIME -- taken at construction
+          (DirectoryBusy refused at the door), released at 'close()';
+          the per-choice ceremony enters through 'run_test_held', the
+          held door, never the standalone one. run_script -> a
+          procsitter-supervised 'bash -c' in the directory; run_build
+          -> build_action, the finer word kept; open_session -> the
+          MultiExecute stands up, the application call LAZY (R-46);
+          run_test -> the ceremony, with the session's own
+          ChoiceExecute plugged as provision where one stands;
+          close_session -> spend and shut down. 'adapter.py' maps
+          exploration's CTestApp to operations' TestConfiguration;
+          what it does not map is refused, not guessed. The factory
+          takes (directory, entry): the entry's app_set names what
+          exists; a double may ignore it. 'report_of' hands the wire
+          the finer word.
+COST      The two-mode ChoiceExecute (held vs one-shot) the dispatcher
+          forced into the open; the adapter must grow with the
+          exploration vocabulary.
+GRAVEYARD Per-choice locks (the mutex is non-recursive; the standalone
+          door fights itself). session.run_test per choice (same).
+          Scheduler importing operations (the seam was the point).
+
+----------------------------------------------------------------------------
+O-8  THE STORE'S OWN GROUND
+----------------------------------------------------------------------------
+PROBLEM   Found by the end-to-end suite: candidates lived under 'OUT/'
+          -- the TEST'S product space, whose every file execution
+          reads as a subject -- so each run ingested the previous
+          runs' candidates, sidecars of sidecars ('.when.when').
+          Storing by default (n-1) surfaced it.
+DECISION  The store's records live on THE STORE'S OWN GROUND:
+          '<directory>/.hwut-store/' -- candidates, raws, cadences,
+          freshness sidecars. 'OUT/' is the test's alone; 'GOOD/'
+          stays the author's. The dot-name also keeps the tree walk
+          out. Three worlds apart, applied to the disk.
+COST      Two blessed suites re-worded to the new ground (audited:
+          the rename alone).
+GRAVEYARD Filtering store keys out of the subject scan (guessing at
+          the door). Snapshot-diff of 'OUT/' (statefulness, races).

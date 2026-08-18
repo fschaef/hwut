@@ -115,7 +115,7 @@ def _procsitter_runner(path, caps):
     procsitter cannot enforce refuses the interview (R-48): an
     unconfined question is not asked.
     """
-    from vut.procsitter import chain               # noqa: F401  (lazy)
+    from vut.engine.procsitter import chain               # noqa: F401  (lazy)
 
     raise NotImplementedError(
         "the interview's procsitter call is owed at integration; see "

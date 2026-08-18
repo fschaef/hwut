@@ -1,0 +1,7 @@
+MOCK: 'ssh' at /bin/ssh (mode 0o100755)
+MOCK: 'ls' at /bin/ls (mode 0o100755)
+MOCK: 'nc' at /usr/bin/nc (mode 0o100755)
+RESULT: Forbidden binaries found:
+  - /bin/ssh
+  - /usr/bin/nc
+SUCCESS: Keywords correctly identified.

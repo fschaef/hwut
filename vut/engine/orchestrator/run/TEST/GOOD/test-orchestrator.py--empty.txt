@@ -1,0 +1,16 @@
+
+--- a glob matching nothing ---
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "report", "text": "the selection is empty: no test case answers the wish", "when": "T02"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 0, "when": "T03"}
+    {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "frame", "role": "on_entry", "when": "T04"}
+    {"directory": "alpha/TEST", "fail_db": {}, "format": 1, "good": true, "kind": "dir-done", "when": "T05"}
+    {"directory": "beta/TEST", "format": 1, "kind": "report", "text": "the selection is empty: no test case answers the wish", "when": "T06"}
+    {"directory": "beta/TEST", "format": 1, "kind": "dir-begun", "node_n": 0, "when": "T07"}
+    {"directory": "beta/TEST", "fail_db": {}, "format": 1, "good": true, "kind": "dir-done", "when": "T08"}
+    {"fail_n": 0, "format": 1, "good": true, "kind": "tree-done", "when": "T09"}
+    None
+
+--- folded ---
+    good_f=True fail_n=0
+    directories: alpha/TEST, beta/TEST

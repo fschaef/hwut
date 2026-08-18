@@ -1,0 +1,8 @@
+INSPECT: verdict    = False
+         report     = test-app-launch-failed
+         comparison = None
+         target saw = 0 items, opened []
+  OK  : the display reports the launch, exactly as the fast reader does
+  OK  : the comparison is ABSENT
+  OK  : and NOTHING was carried out -- there was nothing to show
+SUCCESS: no provision, no comparison, nothing shown.

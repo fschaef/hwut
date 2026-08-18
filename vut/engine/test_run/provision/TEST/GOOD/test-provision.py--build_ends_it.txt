@@ -1,7 +1,0 @@
-INSPECT: report   = build-failed
-         subjects = []
-         records  = 1
-  OK  : the report names the build
-  OK  : NO subject is provided -- nothing was launched
-  OK  : the build's own attribution record is kept
-SUCCESS: a failed build ends provision, with its evidence.

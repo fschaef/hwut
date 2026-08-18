@@ -1,0 +1,39 @@
+STIMULUS  hwut.report demo.py basic --raw    (the files verbatim)
+REACTION  exit code : 0   stderr : 0 bytes
+          the pack {
+              ==[ HWUT TEST REPORT ]========================================================
+              test:    demo.py
+              choice:  basic
+              hint:    OUT differs from GOOD
+              files:
+                demo.py                          29 bytes  (source)
+                GOOD/demo.py--basic.stdout       11 bytes  (good stdout)
+                OUT/demo.py--basic.stdout.raw     19 bytes  (out raw stdout)
+                OUT/demo.py--basic.stdout        11 bytes  (out stdout)
+                OUT/demo.py--basic.stdout.times     51 bytes  (out timing stdout)
+              coverage: not requested
+              cadence: sections verbatim
+              
+              ==[ SOURCE: demo.py ]===========================================================
+              print("alpha")
+              print("beta")
+              
+              ==[ GOOD STDOUT: GOOD/demo.py--basic.stdout ]===================================
+              alpha
+              beta
+              
+              ==[ OUT RAW STDOUT: OUT/demo.py--basic.stdout.raw ]=============================
+              raw alpha
+              raw BETA
+              
+              ==[ OUT STDOUT: OUT/demo.py--basic.stdout ]=====================================
+              alpha
+              BETA
+              
+              ==[ TIMING (verbatim): OUT/demo.py--basic.stdout.times ]========================
+              {"unit": "second", "delta_list": [0.0121, 1.5034]}
+          }
+
+No prefixes woven in: the raw sidecar is its own section and
+the cadence sidecar rides verbatim, as it was written.
+SUCCESS: --raw shows what is on disk, not an interpretation.

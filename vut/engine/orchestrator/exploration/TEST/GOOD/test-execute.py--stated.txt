@@ -1,0 +1,5 @@
+
+--- root word holds; the choice's own word wins ---
+    test-awk.py  one    execute='awk -f $file -v c=$choice'
+    test-awk.py  two    execute='awk -f $filestem.aux'
+    faults: 0

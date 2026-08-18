@@ -1,0 +1,12 @@
+
+--- unknown kind ---
+REFUSED: unknown event kind 'tree-gone'
+
+--- missing field ---
+REFUSED: 'tree-done' misses its field 'fail_n'
+
+--- wrong type ---
+REFUSED: 'tree-done': field 'fail_n' is str, not int
+
+--- unknown field ---
+REFUSED: 'tree-done' does not know a field 'colour'

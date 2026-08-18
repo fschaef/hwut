@@ -92,9 +92,15 @@ class ConfigStore:
 
 @dataclass(frozen=True, slots=True)
 class ConfigRunner:
-    """OWED TO: the runner ('test_run.TestConfiguration' already carries an
+    """OWED TO: the runner ('operations.TestConfiguration' already carries an
     'interactive' flag).
 
     'interactive_f' -- the application serves a SESSION: choices driven
-    over stdin, several per call, no restart per choice (R-46)."""
+    over stdin, several per call, no restart per choice (R-46).
+
+    'execute' -- the call itself, stated verbatim (R-68). Unstated means
+    the interpreter-derived call. The framework variables '$file',
+    '$choice' and '$filestem' expand at the call; '$choice' expands
+    empty for the choice-less call."""
     interactive_f: bool = False
+    execute:       str | None = None

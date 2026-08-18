@@ -1,9 +1,0 @@
-INSPECT: 'x' breaks its wave; 1 invocation(s) ran
-         a -> product None, report build-failed, records 1
-         x -> product None, report build-failed, records 1
-         c -> product None, report target-not-built, records 0
-  OK  : the breaking target answers 'build-failed'
-  OK  : its wave-mates share the verdict, the record beside it
-  OK  : a later wave answers 'target-not-built' -- no record pretends a run
-  OK  : and its invocation never happened
-SUCCESS: a broken wave breaks what stands on it, and says so.

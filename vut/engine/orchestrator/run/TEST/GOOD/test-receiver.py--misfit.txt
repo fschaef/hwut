@@ -1,0 +1,11 @@
+
+--- a required field missing ---
+    any      tree-done  fields: good, when
+    misfit   tree-done  fields: good, when
+
+--- a required field of the wrong type ---
+    any      tree-done  fields: fail_n, good, when
+    misfit   tree-done  fields: fail_n, good, when
+
+--- no event at all ---
+    misfit   ?          fields: raw

@@ -29,6 +29,7 @@ gen.c {
             whitespace_eqv = true             # default
             same = false                      # default
             interactive = false               # default
+            execute = null                    # default
         }
     }
 }
@@ -62,6 +63,7 @@ legacy.bas {
             whitespace_eqv = true             # default
             same = true                       # --hwut-info
             interactive = false               # default
+            execute = null                    # default
         }
     }
 }
@@ -95,6 +97,7 @@ test-own.py {
             whitespace_eqv = true             # default
             same = false                      # default
             interactive = false               # default
+            execute = null                    # default
         }
     }
 }

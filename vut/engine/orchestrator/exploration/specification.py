@@ -40,6 +40,7 @@ KEY_TO_FIELD = {
     "whitespace_eqv": "whitespace_eqv",
     "same":        "same",
     "interactive": "interactive",
+    "execute":     "execute",
 }
 
 #  Stated at the ROOT only. Neither is a statement a single choice can
@@ -131,6 +132,7 @@ class TestParameters(_Scope):
     whitespace_eqv:  bool | None = None
     same:        bool  | None = None
     interactive: bool  | None = None
+    execute:     str   | None = None
 
     def overwritten_by(self, other):
         """
@@ -194,6 +196,7 @@ class DirectorySpec:
     itself stands."""
     on_entry:        str | None = None
     on_exit:         str | None = None
+    test_directory:  str | None = None
     ignore:          tuple      = ()
     collision:       tuple      = ()     # of Target
     dependency:      dict       = None   # Target -> tuple of Target

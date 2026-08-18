@@ -1,0 +1,25 @@
+
+--- build broken; one case unsatisfiable ---
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "fault", "text": "hwut.conf:1:7: DIRECTORY: 'dependency' names 'test-ghost.py', which this directory does not offer", "when": "T02"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 4, "when": "T03"}
+    {"directory": "alpha/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-m.py", "node_kind": "TEST", "verdict": "misdep", "when": "T04"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "run-begun", "node": "build[make test-a.py]", "node_kind": "BUILD", "when": "T05"}
+    {"directory": "alpha/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "build[make test-a.py]", "node_kind": "BUILD", "verdict": "build-failed", "when": "T06"}
+    {"cause": "build[make test-a.py]", "directory": "alpha/TEST", "format": 1, "good": false, "kind": "run-ended", "node": "test-a.py", "node_kind": "TEST", "verdict": "unsupported", "when": "T07"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "run-begun", "node": "test-b.py", "node_kind": "TEST", "when": "T08"}
+    {"directory": "alpha/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-b.py", "node_kind": "TEST", "verdict": "ok", "when": "T09"}
+    {"directory": "alpha/TEST", "fail_db": {"build[make test-a.py]": "ENDED_BAD", "test-a.py": "UNSUPPORTED", "test-m.py": "MISDEP"}, "format": 1, "good": false, "kind": "dir-done", "when": "T10"}
+    {"directory": "beta/TEST", "format": 1, "kind": "dir-begun", "node_n": 1, "when": "T11"}
+    {"directory": "beta/TEST", "format": 1, "kind": "run-begun", "node": "test-z.py", "node_kind": "TEST", "when": "T12"}
+    {"directory": "beta/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-z.py", "node_kind": "TEST", "verdict": "ok", "when": "T13"}
+    {"directory": "beta/TEST", "fail_db": {}, "format": 1, "good": true, "kind": "dir-done", "when": "T14"}
+    {"fail_n": 3, "format": 1, "good": false, "kind": "tree-done", "when": "T15"}
+    None
+
+--- folded ---
+    good_f=False fail_n=3
+    directories: alpha/TEST, beta/TEST
+    FAILED alpha/TEST build[make test-a.py] build-failed
+    FAILED alpha/TEST test-a.py         unsupported  <= build[make test-a.py]
+    FAILED alpha/TEST test-m.py         misdep

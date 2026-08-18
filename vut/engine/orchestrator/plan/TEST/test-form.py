@@ -26,7 +26,8 @@ ______________________________________________________________________________
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from vut.engine.orchestrator.plan.form import (CExclusionSet, CPlanLink,
+from vut.engine.orchestrator.plan.form import (E_ProvisionStage,
+                                                CExclusionSet, CPlanLink,
                                                CPlanNode, CTestPlan,
                                                E_LinkKind, E_NodeKind,
                                                E_Provenance)
@@ -210,11 +211,29 @@ def test_closure():
         print("REFUSED: %s" % error)
 
 
+
+
+def test_stage():
+    """THE PROVISION LADDER (P-18): 'provision_stage()' is DERIVED from
+    the kind, stored nowhere -- a SESSION is the shared facet of
+    EXECUTE, a TEST is the case itself on the same rung."""
+    build   = CPlanNode.build("make lib")
+    session = CPlanNode.session("test-app.py")
+    test    = CPlanNode.test("test-app.py", "one")
+    for node in (build, session, test):
+        print("    %-22s %-8s -> %s"
+              % (node.name(), node.kind.name,
+                 node.provision_stage().name))
+    print("    the ladder's rungs: %s"
+          % ", ".join(stage.name for stage in E_ProvisionStage))
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "Plan form: nodes, links, exclusions, laws at the door;", {
         "nodes":   test_nodes,
         "derived": test_derived,
         "refused": test_refused,
+        "stage":    test_stage,
         "closure": test_closure,
     }).run()

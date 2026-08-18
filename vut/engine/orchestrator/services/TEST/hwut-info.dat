@@ -2,5 +2,6 @@ Services -- The Command Line Faces
 ------------------------------------
 
 coverage run --omit ./*.py -a *.py
+bash *.sh
 
 --not config.py

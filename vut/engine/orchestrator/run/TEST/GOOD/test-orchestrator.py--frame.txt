@@ -1,0 +1,16 @@
+
+--- alpha's frame does not stand; beta runs ---
+    {"directory_list": ["alpha/TEST", "beta/TEST"], "format": 1, "kind": "tree-begun", "when": "T01"}
+    {"directory": "alpha/TEST", "format": 1, "kind": "dir-begun", "node_n": 3, "when": "T02"}
+    {"directory": "alpha/TEST", "format": 1, "good": false, "kind": "frame", "role": "on_entry", "when": "T03"}
+    {"directory": "alpha/TEST", "fail_db": {}, "format": 1, "good": false, "kind": "dir-done", "when": "T04"}
+    {"directory": "beta/TEST", "format": 1, "kind": "dir-begun", "node_n": 1, "when": "T05"}
+    {"directory": "beta/TEST", "format": 1, "kind": "run-begun", "node": "test-z.py", "node_kind": "TEST", "when": "T06"}
+    {"directory": "beta/TEST", "format": 1, "good": true, "kind": "run-ended", "node": "test-z.py", "node_kind": "TEST", "verdict": "ok", "when": "T07"}
+    {"directory": "beta/TEST", "fail_db": {}, "format": 1, "good": true, "kind": "dir-done", "when": "T08"}
+    {"fail_n": 0, "format": 1, "good": false, "kind": "tree-done", "when": "T09"}
+    None
+
+--- folded ---
+    good_f=False fail_n=0
+    directories: alpha/TEST, beta/TEST

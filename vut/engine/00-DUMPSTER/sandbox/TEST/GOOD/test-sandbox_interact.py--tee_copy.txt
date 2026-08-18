@@ -1,0 +1,6 @@
+INSPECT: consumer = b'alpha\nbeta\ngamma\n'
+INSPECT: tap      = b'alpha\nbeta\ngamma\n'
+  OK  : supervised call completed
+  OK  : original consumer: complete
+  OK  : eavesdropper's tap: complete
+SUCCESS: the tee copies; nobody is robbed.

@@ -1,0 +1,6 @@
+INSPECT: a canonicaliser knocks at the execute slot
+         refused: 'stage_execute requires an I_ExecuteProvider; received a StageCanonicalise'
+         the execute provider passes: True
+  OK  : the refusal names the required role and the received type
+  OK  : the right provider passes the same door
+SUCCESS: a wrong plug is refused at the door, never downstream.

@@ -1,0 +1,5 @@
+INSPECT: stage records = test COMPLETED, pype COMPLETED; verdict = True
+  OK  : test app stage completed
+  OK  : pype stage completed -- its own attribution record
+  OK  : non-deterministic order judged equivalent BEHIND the pype stage
+SUCCESS: pype deterministicalized the sequence; compare agreed.

@@ -1,8 +1,8 @@
 INSPECT: with choice = GOOD/parse--basic.stdout
          no choice   = GOOD/parse.stdout
-         candidate   = OUT/parse--basic.stdout
-         raw         = OUT/parse--basic.stdout.raw
-         cadence     = OUT/parse--basic.stdout.times
+         candidate   = .hwut-store/parse--basic.stdout
+         raw         = .hwut-store/parse--basic.stdout.raw
+         cadence     = .hwut-store/parse--basic.stdout.times
   OK  : the choice is part of the key, so choices never collide
   OK  : a test without choices carries no choice part
   OK  : nominals and candidates live in SEPARATE key spaces
