@@ -13,7 +13,7 @@ NOTE: > python path/to/this/file.py
 
       > python path/to/this/file.py -w
 
-        writes the protocol signature to "SIGNATURE_UI_PROTOCOL.txt" in
+        writes the protocol signature to "<root>/adm/SIGNATURE_UI_PROTOCOL.txt" in
         the project root directory.
 """
 from __future__ import annotations
@@ -25,14 +25,14 @@ import os
 root_dir = os.path.dirname(__file__) + "/../../../.."
 sys.path.insert(0, root_dir)
 
-import vut.version                                      as     version         #noqa: E402
-import vut.engine.compare.main                          as     main            #noqa: E402
-from   vut.engine.compare.core.line_pair  import (LinePair,      #noqa: E402
-                                                                LineNumberPair,
-                                                                NominalCell,
-                                                                SubjectCell)
-from   vut.engine.compare.core.chunk_pair import ChunkPair       #noqa: E402
-from   vut.engine.compare.reading.line_element            import E_ToleranceId   #noqa: E402
+import vut.adm.version                         as     version         #noqa: E402
+import vut.engine.compare.main                 as     main            #noqa: E402
+from   vut.engine.compare.core.line_pair       import (LinePair,      #noqa: E402
+                                                       LineNumberPair,
+                                                       NominalCell,
+                                                       SubjectCell)
+from   vut.engine.compare.core.chunk_pair      import ChunkPair       #noqa: E402
+from   vut.engine.compare.reading.line_element import E_ToleranceId   #noqa: E402
 
 from   inspect     import isclass                   #noqa: E402
 from   typing      import List, AsyncIterable  #noqa: E402
@@ -244,7 +244,8 @@ if __name__ == "__main__":
     # helper to provide a protocol hash
     ph = _get_protocol_hash()
     print("Protocol Hash: ", ph)
+    repo_root_dir = os.path.dirname(__file__) + "/../../.."
     if "-w" in sys.argv:
-        with open(root_dir + "/vut/SIGNATURE_UI_PROTOCOL.txt", "w") as fh:
-# END: DO NOT REMOVE THIS!
+        with open(repo_root_dir + "/adm/SIGNATURE_UI_PROTOCOL.txt", "w") as fh:
             fh.write(ph)
+# END: DO NOT REMOVE THIS!

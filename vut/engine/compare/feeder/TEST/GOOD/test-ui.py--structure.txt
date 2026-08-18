@@ -21,5 +21,5 @@ Packet: ROW S:03 | N:03 (Cost: 0.00)
 
 Packet: EOS
 ----
-Signature in 'SIGNATURE_UI_PROTOCOL.txt': ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
+Signature in 'adm/SIGNATURE_UI_PROTOCOL.txt': ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 ----

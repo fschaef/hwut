@@ -9,7 +9,7 @@ fi
 # File paths
 UI_FILE="../ui.py"
 FEEDER_FILE="test-html_feeder.py"
-GLOBAL_SIG_FILE="../../../../SIGNATURE_UI_PROTOCOL.txt"
+GLOBAL_SIG_FILE="../../../../adm/SIGNATURE_UI_PROTOCOL.txt"
 
 # 1. Extraction: currently produced signature (from running ui.py)
 # Runs the script, finds the line, takes the 3rd word after the label
@@ -24,7 +24,7 @@ UI_FILE_SIG=$(awk '/SIGNATURE/ {print $2;exit}' $UI_FILE)
 # Looks for line starting with "SIGNATURE =" and takes the word after the "="
 FEEDER_SIG=$(awk '/SIGNATURE *=/ {print $3;exit}' "$FEEDER_FILE" | tr -d "'\"")
 
-# 4. Extraction: signature announced in SIGNATURE_UI_PROTOCOL.txt
+# 4. Extraction: signature announced in adm/SIGNATURE_UI_PROTOCOL.txt
 # Takes the first word/content of that file
 if [ -f "$GLOBAL_SIG_FILE" ]; then
     GLOBAL_SIG=$(cat "$GLOBAL_SIG_FILE" | xargs)
@@ -39,5 +39,5 @@ echo "signature announced in ui.py:                     (($UI_FILE_SIG))"
 echo "## --> see file header 'SIGNATURE: ..." 
 echo "signature used in test-ui_feeder.py:              (($FEEDER_SIG))"
 echo "## --> see SIGNATURE = ..." 
-echo "signature announced in SIGNATURE_UI_PROTOCOL.txt: (($GLOBAL_SIG))"
+echo "signature announced in adm/SIGNATURE_UI_PROTOCOL.txt: (($GLOBAL_SIG))"
 echo "## --> call 'python ui.py -w'" 

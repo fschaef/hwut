@@ -91,8 +91,8 @@ async def run_feeder(name, subject_str, nominal_str, config):
             print("Packet: EOS")
             
     print("----")
-    with open(os.path.dirname(__file__) + "/../../../../SIGNATURE_UI_PROTOCOL.txt") as fh:
-        print(f"Signature in 'SIGNATURE_UI_PROTOCOL.txt': (({fh.read().strip()}))")
+    with open(os.path.dirname(__file__) + "/../../../../adm/SIGNATURE_UI_PROTOCOL.txt") as fh:
+        print(f"Signature in 'adm/SIGNATURE_UI_PROTOCOL.txt': (({fh.read().strip()}))")
     print("----")
 
 # --- Choice Functions ---
