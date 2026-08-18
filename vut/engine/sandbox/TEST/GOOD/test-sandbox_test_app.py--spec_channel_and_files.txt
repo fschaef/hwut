@@ -1,9 +1,0 @@
-INSPECT: good verdicts = [('report.txt', True), ('result.txt', True), ('stdout', True)]
-INSPECT: bad  verdicts = [('report.txt', False), ('result.txt', True), ('stdout', True)]
-INSPECT: lawyer labels = ['report.txt', 'result.txt', 'stdout']
-  OK  : all subjects equivalent -> overall verdict True
-  OK  : one mismatching file -> overall verdict False
-  OK  : the mismatching subject is NAMED: report.txt
-  OK  : Lawyer labels every ChunkPair with its subject
-  OK  : THE LAW: Lawyer's per-subject reductions equal the Judge's
-SUCCESS: channel vs. comparator: every subject judged, named.

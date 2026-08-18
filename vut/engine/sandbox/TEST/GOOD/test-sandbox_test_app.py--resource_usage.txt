@@ -1,8 +1,0 @@
-INSPECT: cpu_measured   = True
-INSPECT: wall_positive  = True
-INSPECT: mem_measured   = True
-  OK  : cpu_time_sec reported -- total WORK, summed over stages
-  OK  : wall_clock_sec reported -- elapsed time
-  OK  : peak_memory_mb reported -- high-water mark (psutil present)
-  OK  : cpu time is sane against wall clock (single stage)
-SUCCESS: the result carries the run's time and memory.

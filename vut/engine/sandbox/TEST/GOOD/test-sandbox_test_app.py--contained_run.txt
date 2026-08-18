@@ -1,4 +1,0 @@
-INSPECT: containment = MEMORY_EXCEEDED, verdict = False
-  OK  : containment is MEMORY_EXCEEDED
-  OK  : a contained run is never equivalent
-SUCCESS: containment kill unwound the judged sequence cleanly.

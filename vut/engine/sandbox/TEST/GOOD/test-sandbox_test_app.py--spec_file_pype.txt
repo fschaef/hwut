@@ -1,5 +1,0 @@
-INSPECT: verdicts = [('trace.txt', True)], post-exit pype = COMPLETED
-  OK  : random file order judged equivalent BEHIND post-exit pype
-  OK  : post-exit pype stage accounted -- its own attribution record
-  OK  : overall verdict True
-SUCCESS: file deterministicalized post-exit, never during the run.

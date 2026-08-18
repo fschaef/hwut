@@ -1,5 +1,0 @@
-INSPECT: containment = STOPPED, verdict = False
-  OK  : judged NOT equivalent
-  OK  : test app STOPPED by the fast-fail (not run to natural end)
-  OK  : abort came long before the 30 s sleep ended
-SUCCESS: early mismatch stopped the sequence, fast-fail both ways.
