@@ -63,8 +63,8 @@ import textwrap
 import sys
 import config                                                       # noqa: F401
 
-from hwut_runner import HwutRunner, ScriptApplication
-from hwut_pype   import parse, Interpreter, PypeError
+from   vut.language_support.python.hwut_runner import HwutRunner, ScriptApplication
+from   vut.engine.hwut_pype.hwut_pype          import parse, Interpreter, PypeError, generate_example_input
 
 
 def banner(label):
@@ -682,7 +682,6 @@ def run_generate():
             print("}")
 
     banner("walk skips pure-IGNORE handlers and mode()-only switches")
-    from hwut_pype import generate_example_input
     mode_db, first = parse(
         'on: "visible" <n = int> => {\n'
         '    print(n)\n'

@@ -5,7 +5,6 @@ import sys
 import re
 import time
 import threading
-import stat
 import tempfile
 from   pathlib   import Path
 from   typing    import Callable, Optional, ContextManager
@@ -239,7 +238,7 @@ class HwutRunner:
                     status = self.__run_into_sinks(choice, sink_out, sink_err)
                     self.__up(f"done {token} {status}")
             case _:
-                self.__up(f"fail - bad-command")
+                self.__up("fail - bad-command")
         return True
 
     def __find_choice(self, token: str) -> tuple:
@@ -437,43 +436,61 @@ def _levenshtein_distance(a: str, b: str) -> int:
         prev = cur
     return prev[-1]
 
+class ScriptApplicationError(Exception):
+    """The script could not be made executable -- with the reason."""
+
+
 def make_script_application(file_name:       Optional[str],
                             shebang:         str,
                             script_txt_list: list[str],
-                            display_f:       bool = True) -> Optional[str]:
-    """RETURN: filename (str) != "", if script is generated and executable
-               None,                 if not
+                            display_f:       bool = True) -> str:
+    """RETURN: str, the path of the generated script, executable and
+               ready to be run.
 
     'shebang'         tells what interpreter to use
     'script_txt_list' defines the text of the script
 
-    This function generates a (temporary) test script that may be used for
-    interaction with unit tests.
-    """
-    script_path = None
+    This function generates a (temporary) test script that may be used
+    for interaction with unit tests.
 
+    Raises ScriptApplicationError, naming what stood in the way: a
+    she-bang interpreter that is not executable, or a file that could
+    not be written. Nothing half-made is left behind.
+    """
     content = shebang if shebang.startswith("#!") else f"#!{shebang}"
     content += "\n" + "\n".join(script_txt_list) + "\n"
 
+    #  A she-bang names an INTERPRETER; where it is not executable the
+    #  kernel refuses the SCRIPT and names the script -- the wrong
+    #  file. Named HERE, before anything is written.
+    first = content.splitlines()[0][2:].split()
+    if first and not os.access(first[0], os.X_OK):
+        raise ScriptApplicationError(
+            "the she-bang interpreter '%s' is not executable -- the "
+            "kernel would refuse the script and name the script "
+            "instead" % first[0])
+
+    script_path = None
     try:
         if file_name is None:
-            # delete=False is necessary so the file remains after the handle is closed
-            # allowing a sandbox process to find and execute it.
-            with tempfile.NamedTemporaryFile(prefix="test_app_", delete=False) as tmp:
+            # delete=False is necessary so the file remains after the handle is
+            # closed, allowing a sandbox process to find and execute it.
+            with tempfile.NamedTemporaryFile(prefix="test_app_",
+                                             delete=False) as tmp:
                 script_path = Path(tmp.name)
         else:
             script_path = Path(file_name)
-
         script_path.write_text(content)
-        script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC) # make 'executable'
-
-    except Exception:
+        script_path.chmod(0o755)                       # rwx r-x r-x
+    except Exception as error:
         if script_path and script_path.exists():
             try:
                 script_path.unlink()
             except Exception:
                 pass
-        return None
+        raise ScriptApplicationError(
+            "'%s' could not be made: %s"
+            % (script_path or file_name, error)) from error
 
     if display_f:
         if not file_name: file_name = "<temporary file>"
@@ -502,11 +519,7 @@ class ScriptApplication(ContextManager[str]):
 
         Raises RuntimeError if generation failed.
         """
-        result = make_script_application(**self.params)
-        if result is None:
-            raise RuntimeError("make_script_application failed to generate a script.")
-
-        self.path = result
+        self.path = make_script_application(**self.params)
         return self.path
 
     def __exit__(self, exc_type, exc_val, exc_tb):

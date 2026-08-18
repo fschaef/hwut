@@ -139,6 +139,218 @@ RE_RANGE        = re.compile(r"^(\d+)?\s*(\.\.)?\s*(\d+)?$")
 REGEX_NUMBER = r"[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?"
 REGEX_INT    = r"[-+]?\d+"
 
+def parse(source_txt, file_name, search_dir_list=None, source_db=None):
+    """RETURN: (dict, str), the mode map (name -> Mode) and the name of the
+                            start mode if success.
+               Raises PypeError, else.
+
+    The start mode is the default mode (bare 'on:' handlers) when the
+    script has one, otherwise the first-defined named mode. 'source_txt'
+    is the complete script text; 'file_name' labels error messages and
+    compiled block tracebacks.
+
+    'import: "FILE-PATH"' lines pull in further pype files. The quoted
+    path may contain environment variables ('$HOME/...'), expanded
+    before resolution. A relative path is resolved against the
+    importing file's directory, then against each entry of
+    'search_dir_list' in order; an absolute path stands alone. A file already imported is
+    entered once; an import cycle is an error. If the caller passes a
+    dictionary as 'source_db', it is filled with file name -> source
+    line list for every parsed file (feeding the tracer).
+    """
+    import os as _os
+    mode_db         = {}
+    first_mode_name = None
+    seen_files      = set()
+    search_dir_list = search_dir_list if search_dir_list is not None else []
+    if source_db is None: source_db = {}
+
+    def resolve_import(path_txt, importer_file, where):
+        """RETURN: str, the resolved path of an imported file if success.
+                   Raises PypeError, else.
+        """
+        candidate_list = [
+            _os.path.join(_os.path.dirname(_os.path.abspath(importer_file)),
+                          path_txt)]
+        candidate_list += [_os.path.join(d, path_txt)
+                           for d in search_dir_list]
+        if _os.path.isabs(path_txt): candidate_list = [path_txt]
+        for candidate in candidate_list:
+            if _os.path.isfile(candidate): return candidate
+        raise PypeError("%s: cannot find import '%s' (searched: %s)"
+                        % (where, path_txt,
+                           ", ".join(candidate_list)))
+
+    def _parse_one(source_txt, file_name, import_stack):
+        nonlocal first_mode_name
+        source_db[file_name] = source_txt.splitlines()
+        line_list       = source_db[file_name]
+        current_handler = None
+        i               = 0
+
+        def get_mode(name):
+            if name not in mode_db: mode_db[name] = Mode(name)
+            return mode_db[name]
+
+        def read_block(start_i):
+            """RETURN: (code, int), the compiled Python block and the index of
+                                    the line after the closing '}' if success.
+                       Raises PypeError, else.
+            """
+            body = []
+            j    = start_i
+            while j < len(line_list):
+                if line_list[j].strip() == "}":
+                    code_txt = textwrap.dedent("\n".join(body)) or "pass"
+                    padded   = "\n" * start_i + code_txt   # align tracebacks
+                    return compile(padded, file_name, "exec"), j + 1
+                body.append(line_list[j])
+                j += 1
+            raise PypeError("%s:%d: block opened here is never closed by '}'"
+                            % (file_name, start_i))
+
+        while i < len(line_list):
+            raw   = line_list[i]
+            where = "%s:%d" % (file_name, i + 1)
+            text  = raw.strip()
+            if not text or text.startswith("#"):
+                i += 1
+                continue
+
+            match_import = RE_IMPORT_HEAD.match(text)
+            if match_import is not None:
+                match_path = RE_IMPORT_PATH.match(
+                    match_import.group(1).strip())
+                if match_path is None:
+                    raise PypeError('%s: import path must be a quoted '
+                                    'string: import: "PATH"' % where)
+                path_txt = _os.path.expandvars(match_path.group(1))
+                imported = resolve_import(path_txt, file_name, where)
+                key = _os.path.abspath(imported)
+                if key in import_stack:
+                    raise PypeError("%s: import cycle via '%s'"
+                                    % (where, imported))
+                if key not in seen_files:
+                    seen_files.add(key)
+                    with open(imported, "r") as fh:
+                        _parse_one(fh.read(), imported,
+                                   import_stack + [key])
+                current_handler = None
+                i += 1
+                continue
+
+            match_and  = RE_AND_HEAD.match(text)
+            match_on   = RE_HANDLER_HEAD.match(text)
+            match_bare = RE_DEFAULT_HEAD.match(text)
+            match_is   = RE_IS_HEAD.match(text) or RE_IS_DEFAULT.match(text)
+            if match_is:
+                if match_is.re is RE_IS_HEAD:
+                    left_name, right_txt = match_is.group(1), match_is.group(2)
+                else:
+                    left_name, right_txt = DEFAULT_MODE, match_is.group(1)
+                right_name_list = [n.strip() for n in right_txt.split(",")]
+                for right_name in right_name_list:
+                    get_mode(left_name).base_name_list.append((right_name, where))
+                if left_name != DEFAULT_MODE and first_mode_name is None:
+                    first_mode_name = left_name
+                current_handler = None
+                i += 1
+                continue
+            if match_and:
+                if current_handler is None:
+                    raise PypeError("%s: 'and:' without preceding handler" % where)
+                rest = match_and.group(1)
+            elif match_on:
+                mode_name, rest = match_on.group(1), match_on.group(2)
+                mode = get_mode(mode_name)
+                if first_mode_name is None: first_mode_name = mode_name
+            elif match_bare:
+                rest = match_bare.group(1)
+                mode = get_mode(DEFAULT_MODE)
+            else:
+                raise PypeError("%s: expected 'MODE/on:', 'on:', "
+                                "'MODE is:' or 'and:'" % where)
+
+            if match_and:
+                effect_txt = rest.strip()
+                if not effect_txt:
+                    raise PypeError("%s: missing EFFECT after 'and:'" % where)
+                head_txt = ""
+            else:
+                arrow = RE_ARROW.search(rest)
+                if arrow is None:
+                    raise PypeError("%s: missing '=> EFFECT'" % where)
+                head_txt   = rest[:arrow.start()].strip()
+                effect_txt = arrow.group(1).strip()
+
+            if match_and:
+                pass
+            else:
+                owner = mode.name
+                match_keyword = RE_CAUSE_KEYWORD.match(head_txt)
+                if match_keyword is not None:
+                    kind = match_keyword.group(1)
+                    current_handler = Handler(kind, owner_name=owner,
+                                              where=where,
+                                              cause_txt="<%s>" % kind)
+                elif RE_IF_CAUSE.match(head_txt):
+                    condition_txt = RE_IF_CAUSE.match(head_txt).group(1)
+                    try:
+                        condition = compile(condition_txt.strip(), where, "eval")
+                    except SyntaxError as error:
+                        raise PypeError("%s: cannot compile 'if' condition: %s"
+                                        % (where, error))
+                    current_handler = Handler("match", owner_name=owner,
+                                              where=where, condition=condition,
+                                              cause_txt=head_txt)
+                else:
+                    matcher, token_list = compile_pattern(head_txt, where)
+                    current_handler = Handler("match", matcher,
+                                              owner_name=owner, where=where,
+                                              token_list=token_list,
+                                              cause_txt=head_txt)
+                mode.handler_list.append(current_handler)
+
+            match_effect = RE_EFFECT.match(effect_txt)
+            if match_effect is None:
+                raise PypeError("%s: cannot read EFFECT '%s'"
+                                % (where, effect_txt))
+            block_f, goto_name, push_name, pop_w, ignore_w, flush_w = \
+                match_effect.groups()
+            if block_f is not None:
+                code, i = read_block(i + 1)
+                current_handler.action_list.append(Action(code=code))
+                continue
+            if   goto_name is not None:
+                current_handler.action_list.append(
+                    Action(next_mode=goto_name))
+            elif push_name is not None:
+                current_handler.action_list.append(
+                    Action(push_mode=push_name))
+            elif pop_w is not None:
+                current_handler.action_list.append(Action(pop_f=True))
+            elif flush_w is not None:
+                current_handler.action_list.append(Action(flush_f=True))
+            else:                                        # ignore
+                current_handler.action_list.append(Action())
+            i += 1
+
+
+    _parse_one(source_txt, file_name,
+               [_os.path.abspath(file_name)])
+    seen_files.add(_os.path.abspath(file_name))
+
+    _resolve_inheritance(mode_db, file_name)
+
+    if DEFAULT_MODE in mode_db:  start_mode_name = DEFAULT_MODE
+    elif first_mode_name is None:
+        raise PypeError("%s: script defines no mode" % file_name)
+    else:                        start_mode_name = first_mode_name
+
+    _check_else_present(mode_db, start_mode_name, file_name)
+    return mode_db, start_mode_name
+
+
 
 def parse_glob(glob_txt):
     """RETURN: list, of glob elements:
@@ -811,218 +1023,6 @@ class Mode:
         source = self.resolved_list if self.resolved_list is not None \
                  else self.handler_list
         return [h for h in source if h.kind == kind]
-
-
-def parse(source_txt, file_name, search_dir_list=None, source_db=None):
-    """RETURN: (dict, str), the mode map (name -> Mode) and the name of the
-                            start mode if success.
-               Raises PypeError, else.
-
-    The start mode is the default mode (bare 'on:' handlers) when the
-    script has one, otherwise the first-defined named mode. 'source_txt'
-    is the complete script text; 'file_name' labels error messages and
-    compiled block tracebacks.
-
-    'import: "FILE-PATH"' lines pull in further pype files. The quoted
-    path may contain environment variables ('$HOME/...'), expanded
-    before resolution. A relative path is resolved against the
-    importing file's directory, then against each entry of
-    'search_dir_list' in order; an absolute path stands alone. A file already imported is
-    entered once; an import cycle is an error. If the caller passes a
-    dictionary as 'source_db', it is filled with file name -> source
-    line list for every parsed file (feeding the tracer).
-    """
-    import os as _os
-    mode_db         = {}
-    first_mode_name = None
-    seen_files      = set()
-    search_dir_list = search_dir_list if search_dir_list is not None else []
-    if source_db is None: source_db = {}
-
-    def resolve_import(path_txt, importer_file, where):
-        """RETURN: str, the resolved path of an imported file if success.
-                   Raises PypeError, else.
-        """
-        candidate_list = [
-            _os.path.join(_os.path.dirname(_os.path.abspath(importer_file)),
-                          path_txt)]
-        candidate_list += [_os.path.join(d, path_txt)
-                           for d in search_dir_list]
-        if _os.path.isabs(path_txt): candidate_list = [path_txt]
-        for candidate in candidate_list:
-            if _os.path.isfile(candidate): return candidate
-        raise PypeError("%s: cannot find import '%s' (searched: %s)"
-                        % (where, path_txt,
-                           ", ".join(candidate_list)))
-
-    def _parse_one(source_txt, file_name, import_stack):
-        nonlocal first_mode_name
-        source_db[file_name] = source_txt.splitlines()
-        line_list       = source_db[file_name]
-        current_handler = None
-        i               = 0
-
-        def get_mode(name):
-            if name not in mode_db: mode_db[name] = Mode(name)
-            return mode_db[name]
-
-        def read_block(start_i):
-            """RETURN: (code, int), the compiled Python block and the index of
-                                    the line after the closing '}' if success.
-                       Raises PypeError, else.
-            """
-            body = []
-            j    = start_i
-            while j < len(line_list):
-                if line_list[j].strip() == "}":
-                    code_txt = textwrap.dedent("\n".join(body)) or "pass"
-                    padded   = "\n" * start_i + code_txt   # align tracebacks
-                    return compile(padded, file_name, "exec"), j + 1
-                body.append(line_list[j])
-                j += 1
-            raise PypeError("%s:%d: block opened here is never closed by '}'"
-                            % (file_name, start_i))
-
-        while i < len(line_list):
-            raw   = line_list[i]
-            where = "%s:%d" % (file_name, i + 1)
-            text  = raw.strip()
-            if not text or text.startswith("#"):
-                i += 1
-                continue
-
-            match_import = RE_IMPORT_HEAD.match(text)
-            if match_import is not None:
-                match_path = RE_IMPORT_PATH.match(
-                    match_import.group(1).strip())
-                if match_path is None:
-                    raise PypeError('%s: import path must be a quoted '
-                                    'string: import: "PATH"' % where)
-                path_txt = _os.path.expandvars(match_path.group(1))
-                imported = resolve_import(path_txt, file_name, where)
-                key = _os.path.abspath(imported)
-                if key in import_stack:
-                    raise PypeError("%s: import cycle via '%s'"
-                                    % (where, imported))
-                if key not in seen_files:
-                    seen_files.add(key)
-                    with open(imported, "r") as fh:
-                        _parse_one(fh.read(), imported,
-                                   import_stack + [key])
-                current_handler = None
-                i += 1
-                continue
-
-            match_and  = RE_AND_HEAD.match(text)
-            match_on   = RE_HANDLER_HEAD.match(text)
-            match_bare = RE_DEFAULT_HEAD.match(text)
-            match_is   = RE_IS_HEAD.match(text) or RE_IS_DEFAULT.match(text)
-            if match_is:
-                if match_is.re is RE_IS_HEAD:
-                    left_name, right_txt = match_is.group(1), match_is.group(2)
-                else:
-                    left_name, right_txt = DEFAULT_MODE, match_is.group(1)
-                right_name_list = [n.strip() for n in right_txt.split(",")]
-                for right_name in right_name_list:
-                    get_mode(left_name).base_name_list.append((right_name, where))
-                if left_name != DEFAULT_MODE and first_mode_name is None:
-                    first_mode_name = left_name
-                current_handler = None
-                i += 1
-                continue
-            if match_and:
-                if current_handler is None:
-                    raise PypeError("%s: 'and:' without preceding handler" % where)
-                rest = match_and.group(1)
-            elif match_on:
-                mode_name, rest = match_on.group(1), match_on.group(2)
-                mode = get_mode(mode_name)
-                if first_mode_name is None: first_mode_name = mode_name
-            elif match_bare:
-                rest = match_bare.group(1)
-                mode = get_mode(DEFAULT_MODE)
-            else:
-                raise PypeError("%s: expected 'MODE/on:', 'on:', "
-                                "'MODE is:' or 'and:'" % where)
-
-            if match_and:
-                effect_txt = rest.strip()
-                if not effect_txt:
-                    raise PypeError("%s: missing EFFECT after 'and:'" % where)
-                head_txt = ""
-            else:
-                arrow = RE_ARROW.search(rest)
-                if arrow is None:
-                    raise PypeError("%s: missing '=> EFFECT'" % where)
-                head_txt   = rest[:arrow.start()].strip()
-                effect_txt = arrow.group(1).strip()
-
-            if match_and:
-                pass
-            else:
-                owner = mode.name
-                match_keyword = RE_CAUSE_KEYWORD.match(head_txt)
-                if match_keyword is not None:
-                    kind = match_keyword.group(1)
-                    current_handler = Handler(kind, owner_name=owner,
-                                              where=where,
-                                              cause_txt="<%s>" % kind)
-                elif RE_IF_CAUSE.match(head_txt):
-                    condition_txt = RE_IF_CAUSE.match(head_txt).group(1)
-                    try:
-                        condition = compile(condition_txt.strip(), where, "eval")
-                    except SyntaxError as error:
-                        raise PypeError("%s: cannot compile 'if' condition: %s"
-                                        % (where, error))
-                    current_handler = Handler("match", owner_name=owner,
-                                              where=where, condition=condition,
-                                              cause_txt=head_txt)
-                else:
-                    matcher, token_list = compile_pattern(head_txt, where)
-                    current_handler = Handler("match", matcher,
-                                              owner_name=owner, where=where,
-                                              token_list=token_list,
-                                              cause_txt=head_txt)
-                mode.handler_list.append(current_handler)
-
-            match_effect = RE_EFFECT.match(effect_txt)
-            if match_effect is None:
-                raise PypeError("%s: cannot read EFFECT '%s'"
-                                % (where, effect_txt))
-            block_f, goto_name, push_name, pop_w, ignore_w, flush_w = \
-                match_effect.groups()
-            if block_f is not None:
-                code, i = read_block(i + 1)
-                current_handler.action_list.append(Action(code=code))
-                continue
-            if   goto_name is not None:
-                current_handler.action_list.append(
-                    Action(next_mode=goto_name))
-            elif push_name is not None:
-                current_handler.action_list.append(
-                    Action(push_mode=push_name))
-            elif pop_w is not None:
-                current_handler.action_list.append(Action(pop_f=True))
-            elif flush_w is not None:
-                current_handler.action_list.append(Action(flush_f=True))
-            else:                                        # ignore
-                current_handler.action_list.append(Action())
-            i += 1
-
-
-    _parse_one(source_txt, file_name,
-               [_os.path.abspath(file_name)])
-    seen_files.add(_os.path.abspath(file_name))
-
-    _resolve_inheritance(mode_db, file_name)
-
-    if DEFAULT_MODE in mode_db:  start_mode_name = DEFAULT_MODE
-    elif first_mode_name is None:
-        raise PypeError("%s: script defines no mode" % file_name)
-    else:                        start_mode_name = first_mode_name
-
-    _check_else_present(mode_db, start_mode_name, file_name)
-    return mode_db, start_mode_name
 
 
 def _check_else_present(mode_db, start_mode_name, file_name):
