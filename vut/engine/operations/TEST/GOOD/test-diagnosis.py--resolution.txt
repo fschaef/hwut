@@ -18,3 +18,4 @@ One line per hop, so a command three hops from its binary is
 visible rather than mysterious; and what PATH cannot answer
 is SAID, never guessed.
 SUCCESS: what PATH answers is shown; what it cannot is said.
+<hwut-end>

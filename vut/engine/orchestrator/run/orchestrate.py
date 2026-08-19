@@ -40,12 +40,14 @@ def _verdict(state, node_kind):
     RETURN: str, the verdict word of the vocabulary for a node of that
             kind ending in that state.
     """
-    if state is E_NodeState.ENDED_GOOD:  return "ok"
-    if state is E_NodeState.UNSUPPORTED: return "unsupported"
-    if state is E_NodeState.MISDEP:      return "misdep"
-    return {E_NodeKind.TEST:    "test-failed",
-            E_NodeKind.BUILD:   "build-failed",
-            E_NodeKind.SESSION: "launch-failed"}[node_kind]
+    match state:
+        case E_NodeState.ENDED_GOOD:  return "ok"
+        case E_NodeState.UNSUPPORTED: return "unsupported"
+        case E_NodeState.MISDEP:      return "misdep"
+        case _:
+            return {E_NodeKind.TEST:    "test-failed",
+                    E_NodeKind.BUILD:   "build-failed",
+                    E_NodeKind.SESSION: "launch-failed"}[node_kind]
 
 
 def _utc_now():

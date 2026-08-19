@@ -6,3 +6,4 @@ INSPECT: report        = ok
   OK  : both subjects were accepted
   OK  : provision ran ONCE -- one attribution record for two subjects
 SUCCESS: an unmet precondition pulls provision, once.
+<hwut-end>

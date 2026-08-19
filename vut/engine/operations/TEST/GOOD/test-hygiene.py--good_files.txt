@@ -2,3 +2,4 @@ INSPECT: every GOOD file, scanned for every environment shape
          none carries one
   OK  : no GOOD file freezes a value the environment chose
 SUCCESS: every oracle is true of the behaviour, not of a machine.
+<hwut-end>

@@ -3,3 +3,4 @@ INSPECT: unregistered capability -> "MultiExecute requires a configuration that 
   OK  : a configuration without the registered capability is refused, by name
   OK  : a name the wire cannot carry is refused before it travels
 SUCCESS: what cannot make sense is refused at the door.
+<hwut-end>

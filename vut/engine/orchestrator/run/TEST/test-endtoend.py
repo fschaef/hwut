@@ -16,7 +16,25 @@ The FIXTURE TREE provokes every verdict the wire knows:
         + its test      never dispatched                -> unsupported,
                                                            cause named
     test-noise.sh       noisy stdout, pype strips it    -> ok IFF the
-                        pype RAN (the verdict is the proof)
+                        pype RAN (the verdict is the proof); the
+                        FILTER emits '<hwut-end>' at its end -- the
+                        pype owns the token (R-70 t-6)
+    test-tol.sh         prints a number the GOOD states  -> ok IFF the
+                        differently; header states           stated
+                        'numeric = 0.01'                     tolerance
+                                                             REACHED
+                                                             compare
+    test-same.sh        two choices, header 'same = yes' -> ok IFF ONE
+                        -- one blessed nominal for both      nominal
+                                                             serves both
+    test-mark.sh        emits '<hwut-end>' itself; GOOD  -> ok -- a
+                        participates                       renovated
+                                                           plain test
+    test-cut.sh         GOOD participates, the app       -> test-failed,
+                        exits without the token            report
+                                                           terminated-
+                                                           without-
+                                                           hwut-end
     test-m.sh           depends on a file that is not   -> misdep
                         there
     test-app.sh         INTERACTIVE, choices a and b:      one SESSION
@@ -108,8 +126,9 @@ def fixture(entry_command="true"):
     put(test, "strip_noise.py",
         'import re, sys\n'
         'for line in sys.stdin:\n'
-        '    sys.stdout.write(re.sub(r"NOISE-\\d+ ", "", line))\n')
-    put(good, "test-noise.stdout", "kept line\n")
+        '    sys.stdout.write(re.sub(r"NOISE-\\d+ ", "", line))\n'
+        'print("<hwut-end>")   # the pype owns the token (R-70 t-6)\n')
+    put(good, "test-noise.stdout", "kept line\n<hwut-end>\n")
     put(test, "test-app.sh",
         '#!/bin/bash\n'
         '# hwut { title = "App"  interactive = yes\n'
@@ -133,6 +152,33 @@ def fixture(entry_command="true"):
         '#!/bin/bash\n'
         '# hwut { title = "Misdep" }\n'
         'echo never\n', executable=True)
+    put(test, "test-tol.sh",
+        '#!/bin/bash\n'
+        '# hwut { title   = "Tolerance"\n'
+        '#        numeric = 0.01 }\n'
+        'echo "value 100.4"\n'
+        'echo "<hwut-end>"\n', executable=True)
+    put(good, "test-tol.stdout", "value 100.0\n<hwut-end>\n")
+    put(test, "test-same.sh",
+        '#!/bin/bash\n'
+        '# hwut { title   = "Same"\n'
+        '#        same    = yes\n'
+        '#        choices = ["a", "b"] }\n'
+        'echo "one behaviour for every choice"\n'
+        'echo "<hwut-end>"\n', executable=True)
+    put(good, "test-same.stdout",
+        "one behaviour for every choice\n<hwut-end>\n")
+    put(test, "test-mark.sh",
+        '#!/bin/bash\n'
+        '# hwut { title = "Mark" }\n'
+        'echo "renovated line"\n'
+        'echo "<hwut-end>"\n', executable=True)
+    put(good, "test-mark.stdout", "renovated line\n<hwut-end>\n")
+    put(test, "test-cut.sh",
+        '#!/bin/bash\n'
+        '# hwut { title = "Cut" }\n'
+        'echo "renovated line"\n', executable=True)
+    put(good, "test-cut.stdout",  "renovated line\n<hwut-end>\n")
     return root
 
 

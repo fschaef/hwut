@@ -38,6 +38,7 @@ import json
 import os
 from   dataclasses import dataclass
 from   pathlib     import Path
+from .configuration import StoreConfig   # noqa: F401
 
 #  The lock mechanism lives in the auxiliary; these names are part of
 #  THIS component's face and are re-exported here.
@@ -69,15 +70,6 @@ def source_digest_of(path):
     with open(path, "rb") as fh:
         return hashlib.sha256(fh.read()).hexdigest()
 _HOLDER_FILE_NAME   = "holder.json"
-
-
-@dataclass(frozen=True)
-class StoreConfig:
-    """WHERE and HOW MUCH is kept. Held verbatim by the test's
-    configuration (README 2.7); None there means: do not record."""
-    directory:     str
-    record_raw:    bool = False   # keep the pre-canonicalisation stream
-    record_timing: bool = False   # keep per-line delta times
 
 
 class DirectoryLock(MkdirMutex):
@@ -122,6 +114,15 @@ class Store:
         return self.config is not None
 
     # -- keys: THE NAMING IS THE BOOKKEEPER'S -------------------------
+    def stderr_note(self, test, choice):
+        """RETURN: E_StderrNote, what the book says about that choice's
+        stderr; FORBIDDEN where nothing is noted."""
+        return self.bookkeeper.stderr_note(test, choice)
+
+    def note_stderr(self, test, choice, note):
+        """RETURN: E_StderrNote, what now stands in the book."""
+        return self.bookkeeper.note_stderr(test, choice, note)
+
     def nominal_path(self, test, choice, subject):
         """RETURN: Path, where the ACCEPTED record of that key lives."""
         return self.bookkeeper.nominal_path(test, choice, subject)

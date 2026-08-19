@@ -6,3 +6,4 @@ INSPECT: behaviour changed  -> False not-equivalent-with-nominal
   OK  : acceptance makes it pass
   OK  : a change of behaviour makes it fail again
 SUCCESS: the whole arc, through one callable.
+<hwut-end>

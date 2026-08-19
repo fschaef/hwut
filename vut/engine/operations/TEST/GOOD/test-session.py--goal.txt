@@ -5,3 +5,4 @@ INSPECT: VERDICT -> True, ok
   OK  : a MATCHING subject is not carried out to the display
   OK  : each goal booked its own entry
 SUCCESS: a caller asks for an outcome, not for a class.
+<hwut-end>

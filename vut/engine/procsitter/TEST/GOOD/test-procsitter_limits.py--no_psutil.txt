@@ -5,3 +5,4 @@ INSPECT: unenforced  = ['max_memory_mb', 'max_pids']
   OK  : pid cap reported as unenforced
   OK  : no fabricated memory measurement
 SUCCESS: degradation without psutil is loud, never silent.
+<hwut-end>

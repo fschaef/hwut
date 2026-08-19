@@ -10,3 +10,4 @@ INSPECT: transcript:
   OK  : second answer injected by pype
   OK  : the dialogue reached its end
 SUCCESS: a pype script drives the dialogue -- same wiring, supervised on both ends.
+<hwut-end>

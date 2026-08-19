@@ -5,3 +5,4 @@ INSPECT: intent=commit generations=2
   OK  : and the author saw it, as round 2
   OK  : the fresh association contains the edit
 SUCCESS: edit, realign, see it fresh, commit -- the loop.
+<hwut-end>

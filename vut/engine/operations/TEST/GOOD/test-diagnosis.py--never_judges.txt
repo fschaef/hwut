@@ -12,3 +12,4 @@ REACTION what the observer wrote {
          after the observer ran: verdict = False, report = test-app-no-output
 
 SUCCESS: it renders and returns; the verdict is none of its business.
+<hwut-end>

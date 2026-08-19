@@ -101,3 +101,4 @@ disjoint classes lawful: '[abc]' vs 'd'
 
 --- effect-command words in a base list: plain unknown-mode law ---
 PypeError (expected): <test>:2: 'is:' names unknown mode 'IGNORE'
+<hwut-end>

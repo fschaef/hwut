@@ -17,3 +17,4 @@ $ hwut.plan
     EXCLUSIONS
         { test-net.py, test-a.py two }
     [status 1]
+<hwut-end>

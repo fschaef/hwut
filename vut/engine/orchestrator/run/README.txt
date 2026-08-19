@@ -102,3 +102,28 @@ Unmapped statements are refused by name, never guessed into defaults.
 under procsitter, a real make, a real pype filter, two live sessions
 over the stdin/stdout protocol -- and blesses the stream byte for
 byte; the pype leg's green verdict is the proof the filter ran.
+
+
+6  THE TRANSLATION  (adapter.py)
+______________________________________________________________________________
+
+'test_configuration_of(app, directory)' answers operations'
+TestConfiguration; 'naming_of(app)' answers the bookkeeper's
+NamingConfig. The mapping, stated parameter -> owner:
+
+    build, language     source kind, interpreter, BuildConfig
+    execute             the call itself; the source kind decides
+                        nothing where it stands
+    caps                procsitter's configuration, folded onto its
+                        own defaults
+    pype                the stdout canonicaliser of the choice
+    numeric, eq_pattern, nothing, analogy, constraints, comment,
+    slash_eqv, whitespace_eqv
+                        compare's Configuration, per choice; None
+                        where nothing is stated
+    same                the bookkeeper's naming law (nominal only)
+    interactive         the session capability
+
+An unknown language and a marker pair that is not a pair are refused
+by name. 'TEST/test-adapter.py' sweeps every declared parameter and
+names any that reaches nothing.

@@ -53,6 +53,7 @@ from   dataclasses import fields, is_dataclass
 from   datetime    import datetime, timezone
 from   enum        import Enum
 from   pathlib     import Path
+from .configuration import E_StderrNote, NamingConfig
 
 
 RESULT_DB_FILE_NAME = "result_db.json"
@@ -118,7 +119,7 @@ def compare_setup_delta(options):
     the defaults cannot disagree about what a member is.
     """
     if options is None: return {}
-    from vut.engine.compare.configuration import Configuration
+    from ...compare.configuration import Configuration
     default    = Configuration()
     difference = {}
 
@@ -141,13 +142,26 @@ class Bookkeeper:
     """ONE test directory's book: the naming, the entries, the
     reproducible configurations, and the divergence verdicts.
 
+    THE NAMING LAW lives in 'configuration.py' (NamingConfig):
+    'same_nominal_f' drops the choice part from a NOMINAL's key, so
+    every choice is held against one blessed file; candidates keep
+    their own names, so a diff still names which choice diverged.
+
     Made ABOVE -- the orchestrator makes one from the test's directory
     and hands it down; a service that needs one makes it inside the
     service. Nothing below makes its own.
     """
 
-    def __init__(self, directory):
+    def __init__(self, directory, naming=None):
+        """
+        RETURN: Bookkeeper over 'directory'.
+
+        'naming' is the NamingConfig in force; None takes the default
+        (a nominal per choice). It reaches the NOMINAL's name only --
+        candidates are always named per choice.
+        """
         self.directory = Path(directory)
+        self.naming    = naming if naming is not None else NamingConfig()
 
     # -- the naming ---------------------------------------------------
     def key(self, test, choice, subject):
@@ -159,8 +173,17 @@ class Bookkeeper:
         return "%s.%s" % (stem, subject)
 
     def nominal_path(self, test, choice, subject):
-        """RETURN: Path, where the ACCEPTED record of that key lives."""
-        return self.directory / "GOOD" / self.key(test, choice, subject)
+        """
+        RETURN: Path, where the ACCEPTED record of that key lives.
+
+        Under 'same_nominal_f' the CHOICE PART IS DROPPED: every choice
+        of the test is held against one blessed file. Candidates keep
+        their own names regardless, or the choices would overwrite one
+        another (configuration.py, NamingConfig).
+        """
+        nominal_choice = None if self.naming.same_nominal_f else choice
+        return self.directory / "GOOD" / self.key(test, nominal_choice,
+                                                  subject)
 
     def candidate_path(self, test, choice, subject):
         """RETURN: Path, where the CANDIDATE record of that key lives.
@@ -327,6 +350,50 @@ class Bookkeeper:
         return sorted((None if key == NO_CHOICE_KEY else key
                        for key in recorded),
                       key=lambda name: (name is not None, name))
+
+    def stderr_note(self, test, choice):
+        """
+        RETURN: E_StderrNote, what the book says about that choice's
+                stderr:
+
+                    NOMINAL    a stderr stream was recorded and is
+                               compared like any other subject
+                    IGNORED    whatever happens there, do not worry
+                    FORBIDDEN  a word there is an ERROR
+
+                An unnoted choice reads FORBIDDEN: a test that was
+                never asked about stderr is one that has never spoken
+                there, and the first word it says is news.
+        """
+        key   = NO_CHOICE_KEY if choice is None else choice
+        noted = self.book().get(test, {}).get("choices", {}) \
+                           .get(key, {}).get("stderr")
+        try:
+            return E_StderrNote(noted)
+        except ValueError:
+            return E_StderrNote.FORBIDDEN
+
+    def note_stderr(self, test, choice, note):
+        """
+        RETURN: E_StderrNote, what now stands in the book for that
+                choice -- written verbatim, replacing any earlier note.
+
+        THE NOTE IS THE DECISION, and acceptance is where it is taken.
+        Noting NOMINAL does not write a nominal; noting IGNORED or
+        FORBIDDEN removes any nominal stderr, since a stream cannot be
+        both compared and disregarded.
+        """
+        note       = E_StderrNote(note)
+        content    = self.book()
+        test_book  = content.setdefault(test, {})
+        choice_db  = test_book.setdefault("choices", {})
+        key        = NO_CHOICE_KEY if choice is None else choice
+        choice_db.setdefault(key, {})["stderr"] = note.value
+        self._write_book(content)
+        if note is not E_StderrNote.NOMINAL:
+            path = self.nominal_path(test, choice, "stderr")
+            if path.exists(): path.unlink()
+        return note
 
     def result(self, test, choice, operation):
         """

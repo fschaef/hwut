@@ -1,0 +1,31 @@
+
+--- the '<eof>' emission: the stream states its completeness ---
+SCRIPT: {
+    SCAN/on: <else> => flush;
+    SCAN/on: <eof> => {
+        print("<hwut-end>")
+    }
+}
+INPUT: {
+    alpha
+    beta
+}
+OUTPUT: {
+alpha
+beta
+<hwut-end>
+}
+
+--- no emission: the stream ends BARE -- the script's fault ---
+SCRIPT: {
+    SCAN/on: <else> => flush;
+}
+INPUT: {
+    alpha
+    beta
+}
+OUTPUT: {
+alpha
+beta
+}
+<hwut-end>

@@ -13,3 +13,4 @@ INSPECT: MSBUILD (targets FOLDED into -t:)      -> ['msbuild', '-t:Build;Test']
   OK  : MESON and BAZEL carry their subcommand
   OK  : MSBUILD folds its targets into ONE -t: option
 SUCCESS: one vocabulary, one argv, no quoting question.
+<hwut-end>

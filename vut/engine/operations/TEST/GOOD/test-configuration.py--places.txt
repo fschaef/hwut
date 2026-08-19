@@ -8,3 +8,4 @@ INSPECT: source_file = parse.c
   OK  : outputs go to OUT/ beside BUILD/
   OK  : a build writes nowhere near the application's output
 SUCCESS: three roles, three directories, all derived.
+<hwut-end>

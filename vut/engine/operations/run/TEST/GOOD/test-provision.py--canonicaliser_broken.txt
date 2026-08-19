@@ -3,3 +3,4 @@ INSPECT: report = pype-interpreter-not-found
   OK  : the report names the canonicaliser, not the application
   OK  : the text is UNCHANGED -- never half a stream
 SUCCESS: a broken canonicaliser blames itself, not the code.
+<hwut-end>

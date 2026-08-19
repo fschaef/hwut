@@ -4,3 +4,4 @@ INSPECT: a canonicaliser knocks at the execute slot
   OK  : the refusal names the required role and the received type
   OK  : the right provider passes the same door
 SUCCESS: a wrong plug is refused at the door, never downstream.
+<hwut-end>

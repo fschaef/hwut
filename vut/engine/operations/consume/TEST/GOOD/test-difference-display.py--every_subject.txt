@@ -4,3 +4,4 @@ INSPECT: judged = ['stderr', 'stdout']
   OK  : and both are shown
   OK  : the test still fails
 SUCCESS: a difference is shown whole, never truncated.
+<hwut-end>

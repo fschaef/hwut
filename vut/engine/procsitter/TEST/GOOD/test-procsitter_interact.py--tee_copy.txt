@@ -4,3 +4,4 @@ INSPECT: listener = b'alpha\nbeta\ngamma\n'
   OK  : original consumer: complete
   OK  : added listener: complete
 SUCCESS: the tee copies; nobody is robbed.
+<hwut-end>

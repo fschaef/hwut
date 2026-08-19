@@ -5,3 +5,4 @@ INSPECT: verdict    = False
   OK  : and the report names the launch
   OK  : no comparison happened -- an ABSENCE
 SUCCESS: a failed provision is a failed test, with no comparison.
+<hwut-end>

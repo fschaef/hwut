@@ -6,3 +6,4 @@ INSPECT: provision.records = ['record-a', 'record-b']
   OK  : provision by stored data carries no records: nothing was contained
   OK  : provision says whether it delivered
 SUCCESS: two products, two types, no merging.
+<hwut-end>

@@ -53,3 +53,4 @@ $ hwut.plan --help
         2    the command line cannot be read, or the wish names what the
              directory does not offer
     [status 0]
+<hwut-end>

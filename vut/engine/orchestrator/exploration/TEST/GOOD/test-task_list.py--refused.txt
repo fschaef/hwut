@@ -4,3 +4,4 @@ REFUSED: 'test-z.py' is not a test application of this directory; it offers: tes
 
 --- a choice that does not exist ---
 REFUSED: 'test-a.py' has no choice 'three'; it offers: one, two
+<hwut-end>

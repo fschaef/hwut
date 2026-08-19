@@ -5,3 +5,4 @@ INSPECT: INTERPRETED, choice 'basic' -> ['python3', '-u', 'basic']
   OK  : a test without choices ends at the source file
   OK  : and carries exactly one argument fewer
 SUCCESS: the source kind fixes the argv; the choice selects.
+<hwut-end>

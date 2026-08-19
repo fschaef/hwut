@@ -7,3 +7,4 @@ INSPECT: stored    -> report ok, subjects ['stderr', 'stdout']
   OK  : an absent recording is REPORTED
   OK  : and not invented as an empty subject
 SUCCESS: stored data provides subjects; absence says so.
+<hwut-end>

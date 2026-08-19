@@ -5,3 +5,4 @@ INSPECT: operations booked = {'demo': {'<none>': ['Accept', 'Run']}}
   OK  : when and host are recorded for the speed reference
   OK  : the attribution rides with it -- the record of the process that produced a result is PART of that result
 SUCCESS: what happened is booked, and never appended to.
+<hwut-end>

@@ -31,6 +31,7 @@ from   ...compare               import main as compare_main
 from   ..result                 import E_TestRunResult
 from   ...compare.configuration import Configuration
 from   ..nominal                import NominalNotAvailable
+from   .terminal                import ends_in_terminal
 from   ..observer               import notify
 from   ..report                 import (Comparison, TestResult)
 
@@ -45,6 +46,8 @@ class EquivalenceCheckConfig:
     subjects:   Mapping[str, object] = field(default_factory=dict)
     compare:    Optional[Configuration] = None
     fast_fail:  bool = True
+    stderr_forbidden_f: bool = False  # the book says FORBIDDEN: a word
+                                      # on stderr is an error
 
 
 class EquivalenceCheck:
@@ -92,6 +95,17 @@ class EquivalenceCheck:
         verdict_db = {}
         report     = E_TestRunResult.OK
 
+        #  A FORBIDDEN STDERR (the book's note, S-1): a word on that
+        #  stream is an ERROR, reported BY NAME -- never a line
+        #  difference against a nominal that does not exist.
+        if self.config.stderr_forbidden_f and "stderr" in provided:
+            with provided["stderr"].open() as reader:
+                noise = reader.read()
+            if noise.strip():
+                verdict_db["stderr"] = False
+                report = E_TestRunResult.UNEXPECTED_STDERR
+                notify(self.observer, "verdict", "stderr", False)
+
         for name in sorted(self.config.subjects):
             nominal = self.config.subjects[name]
             if name not in provided:
@@ -109,6 +123,23 @@ class EquivalenceCheck:
                 if report is E_TestRunResult.OK:
                     report = E_TestRunResult.NOMINAL_FILE_NOT_FOUND
                 notify(self.observer, "verdict", name, False)
+                if self.config.fast_fail: break
+                continue
+
+            #  THE TERMINAL TOKEN (R-70): the nominal decides
+            #  participation. A participating subject that ends
+            #  without '<hwut-end>' is INCOMPLETE -- its own name, not
+            #  a wall of line differences ending in one missing line.
+            #  Peeked on FRESH readers; the working pair stays
+            #  untouched.
+            if ends_in_terminal(nominal.open()) \
+               and not ends_in_terminal(provided[name].open()):
+                verdict_db[name] = False
+                if report is E_TestRunResult.OK:
+                    report = E_TestRunResult.TERMINATED_WITHOUT_END
+                notify(self.observer, "verdict", name, False)
+                close = getattr(nominal_reader, "close", None)
+                if close is not None: close()
                 if self.config.fast_fail: break
                 continue
 

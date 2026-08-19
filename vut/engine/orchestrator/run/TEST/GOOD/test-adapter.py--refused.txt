@@ -1,0 +1,6 @@
+INSPECT: an unknown language -> no interpreter declared for language 'klingon'
+         a marker pair of one -> 'analogy' is a marker PAIR; 1 stated
+  OK  : the unknown language is named in its refusal
+  OK  : the malformed pair is named in its refusal
+SUCCESS: what cannot be translated is refused, by name.
+<hwut-end>

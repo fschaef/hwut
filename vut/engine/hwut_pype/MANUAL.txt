@@ -81,6 +81,44 @@ services ALPHABETICALLY:
 Whatever order the providers answer in, the output is byte-identical.
 
 
+1b  THE TERMINAL TOKEN '<hwut-end>'  (R-70) -- READ THIS
+______________________________________________________________________________
+
+Under HWUT, a subject stream states its own completeness: its last
+non-empty line is the terminal token
+
+    <hwut-end>
+
+Where a pype stands between the test application and the framework,
+THE PYPE SCRIPT OWNS THE TOKEN. Two laws, both binding:
+
+    1.  A TEST APPLICATION THAT FEEDS A PYPE MUST NOT PRODUCE
+        '<hwut-end>'. It cannot place the token safely -- an
+        application subject to buffering, threads or races would lie
+        about its own completeness -- and it does not have to: the
+        pype's '<eof>' firing is the one honest proof that the pipe
+        ran dry. (The framework enforces this side for the reference
+        runner through the environment word 'HWUT_NO_TERMINAL'.)
+
+    2.  EVERY hwut.pype SCRIPT EMITS THE TOKEN FROM ITS '<eof>'
+        HANDLER -- of whatever mode is active at end of input:
+
+            SCAN/on: <eof> => {
+                print("<hwut-end>")
+            }
+
+A pype-d stream that ends WITHOUT the token is therefore THE PYPE
+SCRIPT'S FAULT, and the framework's diagnosis names the script --
+never the test application.
+
+Participation is decided by the NOMINAL: where the recorded GOOD ends
+in the token, the subject must ('terminated-without-hwut-end' else);
+where it does not, no check stands. 'sys.exit(n)' from a block skips
+pending '<eof>' handlers (section 6) -- a script that gates and exits
+deliberately forgoes the token, and its nominal, recorded through the
+same road, will agree.
+
+
 2  MODEL
 ______________________________________________________________________________
 

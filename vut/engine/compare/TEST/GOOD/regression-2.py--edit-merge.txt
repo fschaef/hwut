@@ -19,3 +19,4 @@ VERDICT: PASS
   All combinations merged correctly.
 ================================================================================
 
+<hwut-end>

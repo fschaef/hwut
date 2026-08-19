@@ -3,3 +3,4 @@ INSPECT: sequence = ['open', 'resolve', 'close']
   OK  : resolve happens between open and close, never after
   OK  : and after every DOWN item has been presented
 SUCCESS: open, present, resolve, close -- in that order.
+<hwut-end>

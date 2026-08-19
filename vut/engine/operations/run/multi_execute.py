@@ -91,6 +91,7 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import asyncio
+from   dataclasses import replace
 import shutil
 from   pathlib import Path
 
@@ -149,7 +150,20 @@ class MultiExecute(I_MultiProvider):
         self._started = True
         configuration = self.configuration
         self._session_directory().mkdir(parents=True, exist_ok=True)
-        procsitter = Procsitter(configuration.caps,
+        #  THE TERMINAL TOKEN (R-70, t-6): where a pype owns any
+        #  choice's stdout, the SESSION application must not emit
+        #  '<hwut-end>' -- per-choice suppression cannot exist on one
+        #  process, so any pype silences the app for the whole
+        #  session; the pype's '<eof>' provides, and the nominal
+        #  (recorded through the same road) decides consistently.
+        pype_owned_f = any("stdout" in c.canonicalisers
+                           for c in configuration.choice_db.values()
+                           if c is not None)
+        caps = configuration.caps
+        if pype_owned_f:
+            caps = replace(caps, env={**(caps.env or {}),
+                                      "HWUT_NO_TERMINAL": "1"})
+        procsitter = Procsitter(caps,
                                 work_dir=str(configuration.test_directory))
         self._down   = Link()
         self._stderr = Link()
@@ -360,20 +374,27 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
             ticket = session.submit(self.choice_name)
             answer = await ticket
         record = (session.record,) if session.record is not None else ()
-        if answer == "fail":
-            return Supply(product     = None,
-                          report      = E_TestRunResult.TEST_APP_LAUNCH_FAILED,
-                          record_list = record)
-        if answer == "session-ended":
-            return Supply(product     = None,
-                          report      = E_TestRunResult.TEST_APP_CONTAINED,
-                          record_list = record)
-        raw_db = session._read_sinks(session._token(self.choice_name))
-        report = E_TestRunResult.OK if answer >= 0 \
-                 else E_TestRunResult.TEST_APP_CONTAINED
-        return Supply(product     = (raw_db, None),
-                      report      = report,
-                      record_list = record)
+        match answer:
+            case "fail":
+                #  The application refused the choice, by name.
+                return Supply(
+                        product     = None,
+                        report      = E_TestRunResult.TEST_APP_LAUNCH_FAILED,
+                        record_list = record)
+            case "session-ended":
+                #  The wire fell silent before this ticket was served.
+                return Supply(
+                        product     = None,
+                        report      = E_TestRunResult.TEST_APP_CONTAINED,
+                        record_list = record)
+            case _:
+                raw_db = session._read_sinks(
+                                    session._token(self.choice_name))
+                report = E_TestRunResult.OK if answer >= 0 \
+                         else E_TestRunResult.TEST_APP_CONTAINED
+                return Supply(product     = (raw_db, None),
+                              report      = report,
+                              record_list = record)
 
 
 def _is_int(text):

@@ -1,8 +1,24 @@
 INSPECT: default setup  -> verdict False entry 'compare' False
          loose setup    -> verdict True  entry 'compare' {'numeric_tolerance_ratio': 0.01}
-         an option compare has not invented yet -> {'rounding_digits': 3}
+
+         THE SWEEP -- every declared member of compare's pattern finder
+         member                         default        chosen         in entry
+         strip_whitespace_f             True           False          yes
+         ignored_line_f                 True           False          yes
+         analogy_f                      True           False          yes
+         constraint_f                   True           False          yes
+         whitespace_f                   True           False          yes
+         backslash_f                    True           False          yes
+         numeric_tolerance_ratio        0              1              yes
+         equivalent_pattern_list        []             ['chosen']     yes
+         visible_nothing_pattern_list   []             ['chosen']     yes
+         ignored_line_begin_marker      '##'           '##!'          yes
+         ignored_line_end_marker        '##'           '##!'          yes
+         analogy_begin_marker           '(('           '((!'          yes
+         analogy_end_marker             '))'           '))!'          yes
   OK  : the setup decided the verdict -- same subject, same nominal
   OK  : a DEFAULT setup adds nothing to the entry
   OK  : a chosen one is recorded, and only what was chosen
-  OK  : a tolerance compare invents later is recorded the day it is used
+  OK  : EVERY declared member surfaces when chosen -- none is silently dropped
 SUCCESS: what the verdict meant is recorded beside the verdict.
+<hwut-end>

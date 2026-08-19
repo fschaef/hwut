@@ -122,7 +122,10 @@ def _launch_count(configuration):
 
 
 def test_session():
-    """ONE call, many choices; residue-free; one attribution."""
+    """ONE call, many choices; residue-free; one attribution. Each
+    choice's stdout sink ends in '<hwut-end>' (R-70): the stream
+    self-delimits, in band -- no pype stands here, so the application
+    (the reference runner) owns the token."""
     configuration = _interactive_configuration()
 
     async def scene():
@@ -145,11 +148,13 @@ def test_session():
     ok = _check([
         (_launch_count(configuration) == 1,
          "ONE call served both choices"),
-        (a.product[0]["stdout"] == "alpha speaks\n   zebra\n   apple\n",
-         "the first choice's channels are its own"),
-        (b.product[0]["stdout"] == "beta speaks\n"
+        (a.product[0]["stdout"] == "alpha speaks\n   zebra\n"
+                                   "   apple\n<hwut-end>\n",
+         "the first choice's channels are its own, token-terminated"),
+        (b.product[0]["stdout"] == "beta speaks\n<hwut-end>\n"
          and b.product[0]["stderr"] == "on stderr, too\n",
-         "and the second's are its own -- no bleed between choices"),
+         "and the second's are its own -- no bleed; stdout ends in "
+         "the token, stderr never carries one (R-70: stdout only)"),
         (not os.path.isdir(session_dir),
          "the transport leaves with the session"),
         (record is not None,
@@ -246,8 +251,9 @@ def test_unknown():
          "subject"),
         (bogus.report is E_TestRunResult.TEST_APP_LAUNCH_FAILED,
          "and the report names it"),
-        (real.product[0]["stdout"] == "beta speaks\n",
-         "the session serves the other choice of the same call"),
+        (real.product[0]["stdout"] == "beta speaks\n<hwut-end>\n",
+         "the session serves the other choice, token-terminated "
+         "(R-70)"),
         (len(bogus.record_list) == 1,
          "even a refusal carries the producing process's record"),
     ])

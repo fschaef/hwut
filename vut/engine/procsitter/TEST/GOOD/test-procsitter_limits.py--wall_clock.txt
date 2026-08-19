@@ -4,3 +4,4 @@ INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
   OK  : exit_code is None (the procsitter ended it, not the test)
   OK  : no caps unenforced on this platform
 SUCCESS: hang contained by wall clock, attributed.
+<hwut-end>

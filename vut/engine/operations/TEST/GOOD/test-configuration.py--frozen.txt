@@ -3,3 +3,4 @@ INSPECT: assignment to 'test_directory' -> refused
   OK  : every assignment is refused
   OK  : the value is unchanged after the attempt
 SUCCESS: one writer, many readers -- enforced by the object.
+<hwut-end>

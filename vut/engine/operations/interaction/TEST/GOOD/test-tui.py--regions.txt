@@ -29,3 +29,4 @@ setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##.
   OK  : ignore: present, shown, and entirely tolerated
   OK  : and the whole stream is EQUIVALENT under its regions
 SUCCESS: all five region kinds render under compare's framing.
+<hwut-end>

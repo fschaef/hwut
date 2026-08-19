@@ -4,3 +4,4 @@ INSPECT: named keys = ['basic', 'deep'] -> has_choices = True
   OK  : a test keyed by None alone has NONE
   OK  : the None entry is reachable like any other
 SUCCESS: the single None key answers 'has this test choices'.
+<hwut-end>

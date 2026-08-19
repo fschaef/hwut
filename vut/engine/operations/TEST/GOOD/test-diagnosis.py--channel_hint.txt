@@ -21,3 +21,4 @@ REACTION both channels empty {
 }
 
 SUCCESS: the hint names a pattern for a human, never a verdict.
+<hwut-end>

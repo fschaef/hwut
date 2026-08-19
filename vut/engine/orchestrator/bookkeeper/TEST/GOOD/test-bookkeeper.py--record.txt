@@ -7,3 +7,4 @@ INSPECT: entry keys = ['canonicaliser', 'host', 'records', 'report', 'verdict', 
   OK  : the canonicaliser comes from the choice's configuration
   OK  : the attribution record is DURABLE -- read by a fresh Bookkeeper
 SUCCESS: an entry is derived, and the producer's record survives the visit.
+<hwut-end>

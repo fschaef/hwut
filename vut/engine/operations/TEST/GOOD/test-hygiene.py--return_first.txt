@@ -2,3 +2,4 @@ INSPECT: every function of the component
          every one opens with what it returns
   OK  : every function states its return before its explanation
 SUCCESS: the answer comes before the argument.
+<hwut-end>

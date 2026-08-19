@@ -214,3 +214,4 @@ EXIT: 0
 STDOUT: dry run ok: 1 mode(s), 2 handler(s)
 EXIT: 1
 STDERR: pype: tmp-dry-bad.pype: mode '<default>' has no <else> handler in its effective list; every activatable mode must state what happens to unmatched lines
+<hwut-end>

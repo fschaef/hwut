@@ -7,3 +7,4 @@ INSPECT: after the FIRST accept
   OK  : a re-accept leaves 'first_accept' untouched
   OK  : and moves only 'when' -- the LAST accept
 SUCCESS: first and last accept: the book keeps the history's two ends.
+<hwut-end>

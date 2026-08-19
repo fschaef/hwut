@@ -7,3 +7,4 @@ INSPECT: the store's own directory was named -> artifacts land there
   OK  : a configuration naming no store uses the test's own directory
   OK  : a store is asked whether it records; no StoreConfig, no record
 SUCCESS: where artifacts live is said once, by the configuration.
+<hwut-end>

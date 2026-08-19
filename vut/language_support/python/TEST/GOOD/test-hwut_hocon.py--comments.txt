@@ -8,3 +8,4 @@
 }
 FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "bare"
 FAULT f.hocon:6:1: SYNTAX: expected '=', ':' or '{' after key 'value'
+<hwut-end>

@@ -8,3 +8,4 @@ INSPECT: noop -> cancel after 1 generation(s)
   OK  : and the nominal stayed untouched
   OK  : EOF on the answer channel is a CANCEL, not a crash
 SUCCESS: hesitation re-prompts; only decisions leave the TUI.
+<hwut-end>

@@ -5,3 +5,4 @@ INSPECT: BytesNominal read twice -> 'alpha\nbeta\n', 'alpha\nbeta\n'
   OK  : a stream nominal reads once
   OK  : and REFUSES a second open, rather than comparing against nothing
 SUCCESS: one interface; a spent stream says so.
+<hwut-end>

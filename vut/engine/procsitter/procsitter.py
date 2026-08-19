@@ -74,6 +74,11 @@ from   enum        import Enum, auto
 from   pathlib     import Path
 from   typing      import Awaitable, Callable, Optional, Sequence
 
+#  THE COMPONENT'S CONFIGURATION lives in 'configuration.py'; it is
+#  re-exported here, so 'from .procsitter import ProcsitterConfig'
+#  keeps standing wherever it is already written.
+from   .configuration import ProcsitterConfig        # noqa: F401
+
 try:                import resource
 except ImportError: resource = None      # e.g. Windows
 
@@ -165,36 +170,6 @@ class E_Containment(Enum):
 
 
 @dataclass
-class ProcsitterConfig:
-    """THE PER-CALL CONTRACT: every field is a CAP the procsitter
-    ENFORCES. A call's ENVIRONMENTAL needs -- network reach, bound
-    ports, writable paths beyond the work dir -- are NOT here: ensuring
-    them is the ORCHESTRATOR's job (it owns the environment), ABOVE
-    this level. The procsitter neither records nor enforces them.
-    """
-    max_wall_clock_sec: float = 300.0
-    max_cpu_time_sec:   int   = 300
-    max_memory_mb:      int   = 512     # watchdog RSS, whole process group
-    max_pids:           int   = 32
-    max_file_size_mb:   int   = 10      # PER FILE (RLIMIT_FSIZE)
-    max_disk_mb:        int   = 100     # TOTAL allocation under work_dir
-                                        # (watchdog walk, st_blocks): the
-                                        # many-files loop cap
-    max_output_gap_sec: float | None = None   # SILENCE cap: no output on
-                                        # either production port for this
-                                        # long ends the call. None: off.
-                                        # Measured from launch, reset by
-                                        # every chunk. A wall clock bounds
-                                        # a run that is WORKING; this one
-                                        # bounds a run that is WAITING.
-    min_free_disk_mb:   int   = 128     # free-space FLOOR of work_dir's
-                                        # filesystem: below it the call is
-                                        # terminated so the OS stays
-                                        # operable, whoever caused the
-                                        # shortage
-
-
-@dataclass
 class ProcsitterResult:
     """THE ATTRIBUTION RECORD of one procsittered execution."""
     containment:    E_Containment        # THE VERDICT: OK_ vs FAIL_
@@ -259,6 +234,7 @@ class Procsitter:
         self.config   = config
         self.work_dir = Path(work_dir).resolve()
 
+
     # ------------------------------------------------------------------ API
 
     async def run(self,
@@ -302,6 +278,8 @@ class Procsitter:
                 stdout = asyncio.subprocess.PIPE,
                 stderr = asyncio.subprocess.PIPE,
                 cwd    = self.work_dir,
+                env    = (None if self.config.env is None
+                          else {**os.environ, **self.config.env}),
                 **self._spawn_kwargs(preexec))
         except (FileNotFoundError, PermissionError, NotADirectoryError):
             return ProcsitterResult(E_Containment.FAIL_LAUNCH, None,

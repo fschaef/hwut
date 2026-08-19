@@ -36,3 +36,4 @@
 --- a glob matching nothing: legal, empty ---
     WISH: --glob "test-*.pt"
     0 case(s)
+<hwut-end>

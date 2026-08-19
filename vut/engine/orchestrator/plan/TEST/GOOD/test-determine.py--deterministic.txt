@@ -2,3 +2,4 @@
 --- ten determinations of one directory ---
     distinct prints: 1
     lines of the one print: 25
+<hwut-end>

@@ -48,3 +48,4 @@ default handles it
 
 --- no way back: mode('<default>') rejected ---
 PypeError (expected): pype.goto('<default>'): the default mode cannot be entered
+<hwut-end>

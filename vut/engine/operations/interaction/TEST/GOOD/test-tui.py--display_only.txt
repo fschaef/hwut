@@ -4,3 +4,4 @@ INSPECT: cancel, None after 1 generation(s)
   OK  : and no question was asked
   OK  : the comparison itself was shown
 SUCCESS: display-only renders once and resolves nothing.
+<hwut-end>

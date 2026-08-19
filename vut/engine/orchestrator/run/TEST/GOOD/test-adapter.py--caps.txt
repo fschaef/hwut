@@ -1,0 +1,7 @@
+INSPECT: unstated -> wall clock 300.0, memory 512
+         stated   -> wall clock 11, memory 64
+         a cap NOT stated keeps procsitter's own: cpu 300
+  OK  : a stated cap arrives under procsitter's name
+  OK  : an unstated cap keeps procsitter's default -- never a zero
+SUCCESS: caps arrive; silence keeps the owner's default.
+<hwut-end>

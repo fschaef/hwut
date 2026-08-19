@@ -6,3 +6,4 @@ INSPECT: nominal before anything      = False
   OK  : writing a candidate does NOT create a nominal
   OK  : acceptance promotes it
 SUCCESS: acceptance is the only writer of a nominal.
+<hwut-end>

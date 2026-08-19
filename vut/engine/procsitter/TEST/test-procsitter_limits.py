@@ -20,6 +20,9 @@ CHOICES:
                file stopped near the cap.
   pids:        fork storm -> contained by the watchdog's group count
                (PIDS_EXCEEDED); no straggling children survive the run.
+  output_gap:  the SILENCE cap -- silence measured on the WIRE: a
+               mute call and a BLOCK-BUFFERED talker are both stalled;
+               a flushing talker outlives the gap untouched.
   no_psutil:   psutil absent -> memory/pid caps reported in .unenforced,
                wall clock still enforced.
   cancelled_run: an INTERRUPTED run (Ctrl-C, a logout killing the
@@ -125,22 +128,43 @@ async def test_wall_clock():
 
 
 async def test_output_gap():
-    """The SILENCE cap. Three calls, one cap: a live call that says nothing
-    is ended and attributed; a call that keeps talking is left alone,
-    though it outlives the gap many times over; and a silent call with the
-    cap OFF runs to its own end. Silence, not duration, is what trips."""
-    config = ProcsitterConfig(max_wall_clock_sec=30.0, max_output_gap_sec=1.0)
+    """The SILENCE cap, and what silence MEANS: it is measured on the
+    WIRE, not in the application's intent.
 
-    silent = await _run(config, "import time; time.sleep(20)")
-    chatty = await _run(config,
-                        "import time\n"
-                        "for i in range(6):\n"
-                        "    print(i); time.sleep(0.4)")
-    no_cap = await _run(ProcsitterConfig(max_wall_clock_sec=30.0),
-                        "import time; time.sleep(2)")
+    Four calls, one cap: a live call that says nothing is ended and
+    attributed; a call that keeps talking -- and FLUSHES, so the wire
+    hears it -- is left alone, though it outlives the gap many times
+    over; the same talker WITHOUT flushing is stalled, because a
+    block-buffered stream delivers nothing until the call ends; and a
+    silent call with the cap OFF runs to its own end.
+
+    The unflushed leg states the law that surprises test authors: an
+    application busy for a minute behind a full buffer IS silent here,
+    by design. 'flush=True' is stated in the talking legs so that no
+    inherited 'PYTHONUNBUFFERED' can decide this test's outcome."""
+    config = ProcsitterConfig(max_wall_clock_sec=30.0, max_output_gap_sec=1.0)
+    #  Both talkers state their buffering OUTRIGHT -- neither asks the
+    #  environment: 'flush=True' on one, and the other writing into a
+    #  wrapper of its own whose buffer no 'PYTHONUNBUFFERED' can undo.
+    flushing_talker = ("import time\n"
+                       "for i in range(6):\n"
+                       "    print(i, flush=True); time.sleep(0.4)\n")
+    buffered_talker = ("import io, time\n"
+                       "out = io.TextIOWrapper(open(1, 'wb', buffering=8192),\n"
+                       "                       write_through=False)\n"
+                       "for i in range(6):\n"
+                       "    out.write('%d\\n' % i); time.sleep(0.4)\n"
+                       "out.flush()\n")
+
+    silent   = await _run(config, "import time; time.sleep(20)")
+    chatty   = await _run(config, flushing_talker)
+    buffered = await _run(config, buffered_talker)
+    no_cap   = await _run(ProcsitterConfig(max_wall_clock_sec=30.0),
+                          "import time; time.sleep(2)")
 
     print(f"INSPECT: silent = {silent.containment.name}, "
           f"chatty = {chatty.containment.name}, "
+          f"buffered = {buffered.containment.name}, "
           f"cap off = {no_cap.containment.name}")
     ok = _check([
         (silent.containment is E_Containment.FAIL_STALLED,
@@ -150,11 +174,14 @@ async def test_output_gap():
         (silent.exit_code is None,
          "exit_code is None (the procsitter ended it, not the test)"),
         (chatty.containment is E_Containment.OK_COMPLETED,
-         "the talking call is untouched, though it ran past the gap"),
+         "the FLUSHING talker is untouched, though it ran past the gap"),
+        (buffered.containment is E_Containment.FAIL_STALLED,
+         "a talker the wire cannot hear is silence, and is capped"),
         (no_cap.containment is E_Containment.OK_COMPLETED,
          "with the cap off, silence is no fault"),
     ])
-    _verdict(ok, "silence capped; speech and an absent cap left alone.")
+    _verdict(ok, "silence is what the wire hears; an absent cap "
+                 "leaves it alone.")
 
 
 async def test_cpu_time():

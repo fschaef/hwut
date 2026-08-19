@@ -1,7 +1,8 @@
 INSPECT: bogus -> product None: True, report = test-app-launch-failed
-         beta afterwards -> 'beta speaks\n'
+         beta afterwards -> 'beta speaks\n<hwut-end>\n'
   OK  : an unexecuted command delivers nothing -- never an empty subject
   OK  : and the report names it
-  OK  : the session serves the other choice of the same call
+  OK  : the session serves the other choice, token-terminated (R-70)
   OK  : even a refusal carries the producing process's record
 SUCCESS: a refusal is named; the session runs on.
+<hwut-end>

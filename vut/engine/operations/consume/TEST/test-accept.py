@@ -48,6 +48,8 @@ from   vut.engine.operations.run.core  import Run            # noqa E402
 from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
                                                    Bookkeeper)
 from   vut.engine.orchestrator.bookkeeper.stream_store           import Store          # noqa E402
+from   vut.engine.orchestrator.bookkeeper.configuration import (  # noqa E402
+                                              E_StderrNote)
 
 
 def _check(pair_list):
@@ -298,11 +300,88 @@ def test_ledger():
                  "two ends.")
 
 
+
+
+def test_stderr():
+    """THE SECOND QUESTION (S-1). The book holds ONE NOTE about a
+    choice's stderr, with three readings -- 'nominal' (recorded and
+    compared), 'ignored' (whatever happens, do not worry), 'forbidden'
+    (a word there is an error) -- and ACCEPTANCE is where it is
+    written. A stream that appears with NO note ever taken stops the
+    ceremony: 'stderr-undecided', nothing written at all, because only
+    the author knows which of the three is meant.
+
+    An UNNOTED choice reads 'forbidden': a test nobody was asked about
+    has never spoken there, and its first word is news."""
+    def accepted(note):
+        """RETURN: (AcceptResult, note in the book, nominal exists)."""
+        directory  = tempfile.mkdtemp(prefix="vut_acc_")
+        bookkeeper = Bookkeeper(directory)
+        store      = Store(bookkeeper)
+        result     = asyncio.run(Accept(
+            AcceptConfig(
+                name       = "demo",
+                subjects   = {"stdout": AcceptStep()},
+                groundwork = _Provided({
+                    "stdout": BytesNominal("the behaviour\n"),
+                    "stderr": BytesNominal("a warning nobody blessed\n")}),
+                stderr     = note),
+            store).run())
+        state = (result, bookkeeper.stderr_note("demo", None),
+                 store.nominal_path("demo", None, "stderr").exists())
+        shutil.rmtree(directory, ignore_errors=True)
+        return state
+
+    print("INSPECT: an unnoted choice reads %s"
+          % Bookkeeper(tempfile.mkdtemp()).stderr_note("demo", None))
+    print("         %-12s %-22s %-11s %s"
+          % ("asked for", "report", "book note", "nominal file"))
+    outcome_db = {}
+    for note in (None, E_StderrNote.NOMINAL, E_StderrNote.IGNORED,
+                 E_StderrNote.FORBIDDEN):
+        result, written, nominal_f = accepted(note)
+        outcome_db[note] = (result, written, nominal_f)
+        print("         %-12s %-22s %-11s %s"
+              % ("(nothing)" if note is None else note.value,
+                 result.report.value, written.value, nominal_f))
+
+    refused = outcome_db[None][0]
+    ok = _check([
+        (refused.report is E_TestRunResult.STDERR_UNDECIDED,
+         "a stream with words and no note REFUSES the ceremony"),
+        (not refused.accepted_db,
+         "and nothing at all is written -- not even the stdout that "
+         "was fine"),
+        (outcome_db[E_StderrNote.NOMINAL][1] is E_StderrNote.NOMINAL
+         and outcome_db[E_StderrNote.NOMINAL][2],
+         "'nominal' notes the book AND records the stream"),
+        (outcome_db[E_StderrNote.IGNORED][1] is E_StderrNote.IGNORED
+         and not outcome_db[E_StderrNote.IGNORED][2],
+         "'ignored' notes the book and records nothing"),
+        (outcome_db[E_StderrNote.FORBIDDEN][1] is E_StderrNote.FORBIDDEN
+         and not outcome_db[E_StderrNote.FORBIDDEN][2],
+         "'forbidden' notes the book and records nothing"),
+    ])
+    _verdict(ok, "one note, three readings, and the author writes it.")
+
+
+class _Provided:
+    """A groundwork over a made delivery -- what a run would hand in."""
+    def __init__(self, reader_db):
+        from vut.engine.operations.run.core import Subjects
+        from vut.engine.operations.report import Provision as ProvisionRecord
+        self.subjects = Subjects(reader_db,
+                                 ProvisionRecord(report=E_TestRunResult.OK))
+    async def provide(self, stop_event=None):
+        return self.subjects
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
         title      = "Accept: write the nominal",
         choice_map = {
+            "stderr":         test_stderr,
             "ledger":         test_ledger,
             "take_dump":      test_take_dump,
             "pulls_run":      test_pulls_provision,

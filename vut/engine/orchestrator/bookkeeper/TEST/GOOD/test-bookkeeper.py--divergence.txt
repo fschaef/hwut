@@ -7,3 +7,4 @@ INSPECT: declared as recorded    -> {'deleted': [], 'non-responsive': {}}
   OK  : a recorded test no longer declared is DELETED
   OK  : the answer never edits the book
 SUCCESS: the caller declares; the book answers; healing is a service.
+<hwut-end>

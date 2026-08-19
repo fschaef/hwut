@@ -79,3 +79,4 @@ visible 1
 go
 deep sample.log
 hidden
+<hwut-end>

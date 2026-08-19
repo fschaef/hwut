@@ -135,3 +135,4 @@ parse succeeded: SUB's effective <else> is MID's (own before inherited); ROOT's 
 --- effect-command words are lawful mode names; unknown ones err ---
 parse succeeded: mode 'FLUSH' defined and targeted via goto
 PypeError (expected): pype.goto('FLUSH'): no such mode
+<hwut-end>

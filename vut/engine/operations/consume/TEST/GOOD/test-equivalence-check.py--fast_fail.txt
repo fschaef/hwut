@@ -6,3 +6,4 @@ INSPECT: fast-fail  judged ['stderr']
   OK  : without fast-fail every subject is judged
   OK  : both fail -- economy does not change the verdict
 SUCCESS: a deterministic fault is reported deterministically.
+<hwut-end>

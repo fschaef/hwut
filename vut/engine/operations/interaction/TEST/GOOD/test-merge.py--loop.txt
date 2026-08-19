@@ -10,3 +10,4 @@ INSPECT: looping  -> commit, 'alpha\nbeta\ndelta\ngamma\n'
   OK  : an OSCILLATING driver -- always progressing, never deciding -- is ended by the cap, as a CANCEL
   OK  : and exactly at the cap, not one round beyond it
 SUCCESS: the merge loop loops, and stops for a reason.
+<hwut-end>

@@ -31,3 +31,4 @@ $ hwut.plan --glob test-b.py
     EXCLUSIONS
         (none)
     [status 0]
+<hwut-end>

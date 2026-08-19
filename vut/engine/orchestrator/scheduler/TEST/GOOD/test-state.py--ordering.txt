@@ -8,3 +8,4 @@
     a.py                   ENDED_BAD
     b.py                   PENDING
     ready: b.py
+<hwut-end>

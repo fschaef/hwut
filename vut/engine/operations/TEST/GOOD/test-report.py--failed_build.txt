@@ -5,3 +5,4 @@ INSPECT: verdict    = False
   OK  : and the report names the build
   OK  : no comparison happened: an ABSENCE, not a half-filled type
 SUCCESS: a failed build is a failed test, with its reason.
+<hwut-end>

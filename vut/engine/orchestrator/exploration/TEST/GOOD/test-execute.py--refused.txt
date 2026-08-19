@@ -6,3 +6,4 @@
 --- 'execute' beside 'interactive' ---
     test-i.py:1:9: TYPE: 'execute' beside 'interactive': the session protocol assumes the runner; state one
     applications: 0
+<hwut-end>

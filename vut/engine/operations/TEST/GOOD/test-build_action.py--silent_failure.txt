@@ -5,3 +5,4 @@ INSPECT: the tool exited cleanly: containment = OK_COMPLETED
   OK  : the ACCOUNTING caught it: the declared target is absent
   OK  : so the build did not succeed, whatever the exit code said
 SUCCESS: a clean exit is not proof that anything was built.
+<hwut-end>

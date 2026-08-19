@@ -4,3 +4,4 @@ INSPECT: tool not on PATH -> build-tool-not-found
   OK  : a failing tool reports the FAILURE, not the missing target
   OK  : the target is still accounted absent -- the evidence remains
 SUCCESS: tool reasons outrank target reasons.
+<hwut-end>

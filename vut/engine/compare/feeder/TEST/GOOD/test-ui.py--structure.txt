@@ -23,3 +23,4 @@ Packet: EOS
 ----
 Signature in 'adm/SIGNATURE_UI_PROTOCOL.txt': ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 ----
+<hwut-end>

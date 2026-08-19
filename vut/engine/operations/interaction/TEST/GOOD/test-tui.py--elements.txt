@@ -37,3 +37,4 @@ N         9 | only [there]
   OK  : a number-vs-word mismatch names its KIND
   OK  : differing pairs split into an S row and an N row
 FAILURE: every element kind renders, with the meta DOWN carries.
+<hwut-end>

@@ -5,3 +5,4 @@ analogy            record ()             effective ()
 comment            record None           effective ('##', '##')
 caps.timeout_sec   record 5              effective 5
 caps.network       record None           effective True
+<hwut-end>

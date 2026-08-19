@@ -7,3 +7,4 @@ INSPECT: subject transcript:
   OK  : controller: own attribution record, clean, natural end
   OK  : the control dialogue ran to completion, in order
 SUCCESS: control signals via stdout/stdin -- two supervised calls, one loop.
+<hwut-end>

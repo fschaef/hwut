@@ -106,7 +106,16 @@ def application_argv(configuration, choice_name):
             CHOICE NAME is appended as the argument that selects it.
 
     A test without choices is keyed by 'None' and gets no such argument.
+
+    A STATED CALL WINS (R-68): where the configuration carries
+    'execute', that argv IS the call and the source kind decides
+    nothing -- the author has said how the application is invoked.
     """
+    if configuration.execute is not None:
+        argv = [str(x) for x in configuration.execute]
+        if choice_name is not None: argv.append(str(choice_name))
+        return argv
+
     kind = configuration.source_kind
     if   kind is E_SourceKind.INTERPRETED:
         argv = [str(x) for x in configuration.interpreter]

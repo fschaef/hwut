@@ -1,0 +1,18 @@
+INSPECT: nothing stated -> None
+         numeric        -> 0.01
+         eq_pattern     -> ['a|b']
+         nothing        -> ['~']
+         analogy pair   -> << >> (on: True)
+         comment pair   -> /* */ (on: True)
+         constraints    -> ['x < y']
+         slash_eqv      -> backslash_f False
+         whitespace_eqv -> whitespace_f False
+         stated OFF: analogy_f False, ignored_line_f False
+  OK  : an unstated tolerance is compare's OWN default -- no configuration is invented
+  OK  : the ratio and the pattern lists arrive
+  OK  : a marker PAIR arrives as begin and end
+  OK  : the equivalence flags arrive under compare's own names
+  OK  : the constraint expressions arrive
+  OK  : the empty tuple is the stated OFF, and switches the handling off
+SUCCESS: every stated tolerance reaches compare, by its own name.
+<hwut-end>

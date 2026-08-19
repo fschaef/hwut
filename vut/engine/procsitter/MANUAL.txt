@@ -177,6 +177,18 @@ CAP the procsitter ENFORCES:
                          A wall clock bounds a call that is WORKING; this
                          one bounds a call that is WAITING.
 
+                         SILENCE IS WHAT THE WIRE HEARS, not what the
+                         application intends. A call whose stream is
+                         BLOCK-BUFFERED delivers nothing until it ends
+                         or its buffer fills: to this cap it is silent,
+                         however busy it is, and it is terminated. An
+                         application that means to be heard flushes
+                         (python: 'print(..., flush=True)' or '-u'; C:
+                         'setvbuf' / 'fflush'; a pipeline: 'stdbuf
+                         -oL'). Where an application cannot be changed,
+                         leave this cap OFF and let the wall clock bound
+                         it.
+
 Any cap hit terminates the supervised process. The result names the cap that
 triggered. A cap the running platform cannot enforce is REPORTED in
 '.unenforced' -- never silently dropped.
@@ -630,3 +642,12 @@ Rules of thumb:
     is a pass -- but say so.
   - Security, isolation, reproducibility: outer boundary. Always.
 ______________________________________________________________________________
+
+
+ENVIRONMENT OVERLAY
+______________________________________________________________________________
+
+'Procsitter(config, work_dir, env=None)': 'env' is a dict merged OVER
+the parent's environment at spawn; None inherits unchanged. The
+framework speaks to the application here -- e.g. R-70's
+'HWUT_NO_TERMINAL', set where a pype owns the stream's terminal token.

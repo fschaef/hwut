@@ -7,3 +7,4 @@
     numeric_tolerence_ratio  refused: 'ConfigurationPatternFinder' object has no attribute 'numeric_tolerence_ratio'
     analogy_marker           refused: 'ConfigurationPatternFinder' object has no attribute 'analogy_marker'
     equivalent_patterns      refused: 'ConfigurationPatternFinder' object has no attribute 'equivalent_patterns'
+<hwut-end>

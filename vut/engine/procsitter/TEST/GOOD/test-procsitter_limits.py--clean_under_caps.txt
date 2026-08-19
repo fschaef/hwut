@@ -6,3 +6,4 @@ INSPECT: containment = OK_COMPLETED, exit = 0
   OK  : peak memory stayed under the cap -- no false memory kill
   OK  : peak disk stayed under the cap -- no false disk kill
 SUCCESS: a real workload under every cap completes untouched.
+<hwut-end>

@@ -5,3 +5,4 @@ INSPECT: before acceptance -> verdict False report nominal-file-not-found
   OK  : acceptance makes it pass
   OK  : and a change of behaviour makes it fail again
 SUCCESS: run -> differ -> accept -> pass -> change -> differ.
+<hwut-end>

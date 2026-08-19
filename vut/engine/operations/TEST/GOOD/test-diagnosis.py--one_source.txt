@@ -12,3 +12,4 @@ REACTION the REQUEST line {
 The choice name is the last argument, and it is absent when
 there is no choice -- because that is what the runner did.
 SUCCESS: the diagnosis quotes the run; it does not re-invent it.
+<hwut-end>

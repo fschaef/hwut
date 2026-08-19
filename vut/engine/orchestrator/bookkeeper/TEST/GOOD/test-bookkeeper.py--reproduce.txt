@@ -7,3 +7,4 @@ INSPECT: test facts   = {'interactive': False, 'interpreter': ['python3', '-u'],
   OK  : the choice is reproducible: both halves of freeing
   OK  : what was never recorded answers None, not a guess
 SUCCESS: the base alone reproduces what a test is configured to do.
+<hwut-end>

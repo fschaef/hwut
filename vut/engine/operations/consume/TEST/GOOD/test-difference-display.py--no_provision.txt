@@ -6,3 +6,4 @@ INSPECT: verdict    = False
   OK  : the comparison is ABSENT
   OK  : and NOTHING was carried out -- there was nothing to show
 SUCCESS: no provision, no comparison, nothing shown.
+<hwut-end>

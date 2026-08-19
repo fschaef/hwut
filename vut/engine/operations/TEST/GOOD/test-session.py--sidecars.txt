@@ -7,3 +7,4 @@ INSPECT: canonicalised record = 'apple\nzebra\n'
   OK  : one cadence entry per RAW line
   OK  : and it measured the real gap between them
 SUCCESS: record, raw and cadence -- three files, one untouched pipe.
+<hwut-end>

@@ -6,3 +6,4 @@ INSPECT: both match           -> verdict = True  report = ok
   OK  : all matching passes
   OK  : and reports OK
 SUCCESS: a verdict must be earned by a comparison that happened.
+<hwut-end>

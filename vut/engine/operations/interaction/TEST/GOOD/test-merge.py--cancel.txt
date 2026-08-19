@@ -7,3 +7,4 @@ INSPECT: tool failed      -> recording-missing
   OK  : a tool that exits cleanly but writes nothing also cancels
   OK  : the nominal survives that too
 SUCCESS: an abandoned merge never becomes a nominal.
+<hwut-end>

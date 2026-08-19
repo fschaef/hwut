@@ -6,3 +6,4 @@ INSPECT: the observer saw
   OK  : each subject's verdict arrives as it lands
   OK  : and the derived result closes the arc
 SUCCESS: the arc is watchable without changing it.
+<hwut-end>

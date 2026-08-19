@@ -44,3 +44,4 @@
 FAULT f.hocon:1:13: SYNTAX: a string is written in double quotes: "one"
 FAULT f.hocon:1:18: SYNTAX: a string is written in double quotes: "two"
 FAULT f.hocon:1:23: SYNTAX: a string is written in double quotes: "three"
+<hwut-end>

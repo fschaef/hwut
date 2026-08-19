@@ -42,6 +42,9 @@ class E_TestRunResult(Enum):
     # THE SUBJECTS AND NOMINALS:
     OUTPUT_FILE_NOT_FOUND       = "output-file-not-found"
     NOMINAL_FILE_NOT_FOUND      = "nominal-file-not-found"
+    TERMINATED_WITHOUT_END      = "terminated-without-hwut-end"
+    UNEXPECTED_STDERR           = "unexpected-stderr"
+    STDERR_UNDECIDED            = "stderr-undecided"
 
     # THE PYPE STAGE (deterministicalization):
     PYPE_INTERPRETER_NOT_FOUND  = "pype-interpreter-not-found"

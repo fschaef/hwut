@@ -11,6 +11,7 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import asyncio
+from   dataclasses import replace
 
 from   ..result                   import E_TestRunResult
 from   ...procsitter.procsitter   import Procsitter, E_Containment
@@ -45,7 +46,18 @@ class StageExecute(I_ExecuteProvider):
                 behavior, and the token speaks beside them.
         """
         configuration = self.configuration
-        procsitter = Procsitter(configuration.caps,
+        #  THE TERMINAL TOKEN (R-70, t-6): where a pype owns this
+        #  choice's stdout, the APPLICATION must not emit '<hwut-end>'
+        #  -- the framework says so through the environment, and the
+        #  reference runner listens.
+        choice = configuration.choice_db.get(self.choice_name)
+        pype_owned_f = (choice is not None
+                        and "stdout" in choice.canonicalisers)
+        caps = configuration.caps
+        if pype_owned_f:
+            caps = replace(caps, env={**(caps.env or {}),
+                                      "HWUT_NO_TERMINAL": "1"})
+        procsitter = Procsitter(caps,
                                 work_dir=str(configuration.test_directory))
         error_link = Link()
         c = chain([(procsitter,

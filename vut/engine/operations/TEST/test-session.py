@@ -522,9 +522,16 @@ def test_the_compare_setup_is_recorded():
     saying 'verdict: true' means something different under a loose setup
     than a strict one, and without this nothing said which was in force.
 
-    ONLY the differences: a default setup adds nothing, so an entry
-    does not grow every time compare gains an option.
+    TWO PROPERTIES, both shown over EVERY DECLARED MEMBER:
+
+        COMPLETE  a member chosen away from its default SURFACES in
+                  the entry -- nothing silently vanishes, which is what
+                  would make a stored verdict uninterpretable. The
+                  sweep reads compare's DECLARATION, so a member
+                  compare gains later is swept the day it exists.
+        MINIMAL   a default setup adds nothing at all.
     """
+    import dataclasses
     import vut.engine.compare.configuration as compare_configuration
 
     loose = compare_configuration.Configuration()
@@ -549,18 +556,33 @@ def test_the_compare_setup_is_recorded():
     strict_outcome = asyncio.run(run_test(configured(None)))
     loose_outcome  = asyncio.run(run_test(configured(loose)))
 
-    #  a tolerance compare has NOT invented yet
-    compare_configuration.ConfigurationPatternFinder.rounding_digits = 0
-    future = compare_configuration.Configuration()
-    future.pattern_finder.rounding_digits = 3
-
     print("INSPECT: default setup  -> verdict %-5s entry 'compare' %s"
           % (strict_outcome.verdict,
              "compare" in strict_outcome.entry))
     print("         loose setup    -> verdict %-5s entry 'compare' %s"
           % (loose_outcome.verdict, loose_outcome.entry.get("compare")))
-    print("         an option compare has not invented yet -> %s"
-          % compare_setup_delta(future))
+
+    #  THE SWEEP: every declared member, perturbed by its type, and
+    #  what the delta says about it.
+    print()
+    print("         THE SWEEP -- every declared member of compare's "
+          "pattern finder")
+    print("         %-30s %-14s %-14s %s"
+          % ("member", "default", "chosen", "in entry"))
+    unreached = []
+    for member in dataclasses.fields(
+                        compare_configuration.ConfigurationPatternFinder):
+        options  = compare_configuration.Configuration()
+        default  = getattr(options.pattern_finder, member.name)
+        chosen   = _perturbed(default)
+        setattr(options.pattern_finder, member.name, chosen)
+        delta    = compare_setup_delta(options)
+        present  = member.name in delta
+        if not present: unreached.append(member.name)
+        print("         %-30s %-14s %-14s %s"
+              % (member.name, _short(default), _short(chosen),
+                 "yes" if present else "NO -- UNREACHED"))
+
     ok = _check([
         (strict_outcome.verdict is False and loose_outcome.verdict is True,
          "the setup decided the verdict -- same subject, same nominal"),
@@ -569,11 +591,37 @@ def test_the_compare_setup_is_recorded():
         (loose_outcome.entry["compare"]
              == {"numeric_tolerance_ratio": 0.01},
          "a chosen one is recorded, and only what was chosen"),
-        (compare_setup_delta(future) == {"rounding_digits": 3},
-         "a tolerance compare invents later is recorded the day it is used"),
+        (not unreached,
+         "EVERY declared member surfaces when chosen -- none is "
+         "silently dropped"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
     _verdict(ok, "what the verdict meant is recorded beside the verdict.")
+
+
+def _perturbed(value):
+    """
+    RETURN: a value of the same type as 'value', but DIFFERENT from it
+            -- what a member looks like once somebody has chosen it.
+
+    Raises AssertionError for a type the sweep has not met: a new kind
+    of member must be PLACED here, never silently skipped.
+    """
+    match value:
+        case bool():  return not value
+        case int():   return value + 1
+        case float(): return value + 0.5
+        case str():   return value + "!"
+        case list():  return list(value) + ["chosen"]
+        case tuple(): return tuple(value) + ("chosen",)
+        case _:
+            assert False, "the sweep cannot perturb a %s" % type(value)
+
+
+def _short(value):
+    """RETURN: str, 'value' rendered short enough for the table."""
+    text = repr(value)
+    return text if len(text) <= 13 else text[:10] + "..."
 
 
 if __name__ == "__main__":

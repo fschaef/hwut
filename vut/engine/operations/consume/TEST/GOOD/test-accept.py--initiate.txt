@@ -4,3 +4,4 @@ INSPECT: with a session -> ok, stored 'merged by an external session\n'
   OK  : without a session, acceptance fails
   OK  : and does NOT fall back to the current output
 SUCCESS: INITIATE stores its session's stream, or nothing.
+<hwut-end>

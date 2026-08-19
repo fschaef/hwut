@@ -1,0 +1,19 @@
+INSPECT: every member of 'TestParameters', stated alone
+         stated           arrives at
+         build            source_kind, interpreter, build
+         caps             caps
+         pype             canonicalisers
+         numeric          compare
+         eq_pattern       compare
+         nothing          compare
+         analogy          compare
+         constraints      compare
+         comment          compare
+         slash_eqv        compare
+         whitespace_eqv   compare
+         same             naming
+         interactive      interactive
+         execute          execute
+  OK  : every stated parameter reaches a component -- none is silently dropped
+SUCCESS: what an author states, a component receives.
+<hwut-end>

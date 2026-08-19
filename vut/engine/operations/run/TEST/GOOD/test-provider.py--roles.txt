@@ -6,3 +6,4 @@ INSPECT: stage -> its role interface
   OK  : every local stage derives from its role's interface
   OK  : the one role fed by its predecessor declares that, alone
 SUCCESS: the role is the type, and each role speaks for itself.
+<hwut-end>

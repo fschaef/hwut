@@ -239,10 +239,11 @@ def _place_text(origin):
 def _printed(value):
     """RETURN: str, a value as a specification writes it -- strings in
     double quotes, booleans lower case, absence as 'null'."""
-    if value is None:            return "null"
-    if value is True:            return "true"
-    if value is False:           return "false"
-    if isinstance(value, str):   return '"%s"' % value
-    if isinstance(value, tuple):
-        return "[%s]" % ", ".join(_printed(item) for item in value)
-    return repr(value)
+    match value:
+        case None:   return "null"
+        case True:   return "true"
+        case False:  return "false"
+        case str():  return '"%s"' % value
+        case tuple():
+            return "[%s]" % ", ".join(_printed(item) for item in value)
+        case _:      return repr(value)

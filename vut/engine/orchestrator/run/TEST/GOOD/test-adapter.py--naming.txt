@@ -1,0 +1,6 @@
+INSPECT: unstated -> same_nominal_f False
+         same=yes -> same_nominal_f True
+  OK  : unstated: a nominal per choice
+  OK  : 'same' reaches the bookkeeper's naming law
+SUCCESS: 'same' is a NAMING law, and arrives as one.
+<hwut-end>

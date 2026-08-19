@@ -3,3 +3,4 @@ INSPECT: one-consumer saw 'a\nb\nc\n'; zero -> OK_COMPLETED, one -> OK_COMPLETED
   OK  : the one-consumer run completed cleanly
   OK  : tee() -- the empty sum -- discards, yet the run completes
 SUCCESS: the tee algebra holds at its borders: identity and empty sum.
+<hwut-end>

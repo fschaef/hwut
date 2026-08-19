@@ -13,3 +13,4 @@
 --- provenance and implied_by contradict: refused ---
 REFUSED: TEST node 't.py': provenance NAMED with implied_by 'u.py'
 REFUSED: TEST node 't.py': provenance IMPLIED with implied_by None
+<hwut-end>

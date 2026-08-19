@@ -19,3 +19,4 @@ $ hwut.plan test-a.py
     usage: hwut.plan [--fail] [--pass] [--since=<point>] [--until=<point>]
                      [--glob <target>]... [--directory=<path>]
     [status 2]
+<hwut-end>

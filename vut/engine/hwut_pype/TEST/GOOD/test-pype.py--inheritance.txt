@@ -92,3 +92,4 @@ PypeError (expected): <test>:1: 'is:' names unknown mode 'GHOST'
 --- IGNORE reserved as mode name ---
 PypeError (expected): <test>:1: cannot read EFFECT '{ }'
 PypeError (expected): <test>:1: 'is:' names unknown mode 'IGNORE'
+<hwut-end>

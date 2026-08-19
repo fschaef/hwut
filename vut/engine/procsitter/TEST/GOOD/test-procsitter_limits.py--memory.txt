@@ -4,3 +4,4 @@ INSPECT: containment = FAIL_MEMORY_EXCEEDED
   OK  : kill came before the hoard grew unbounded (< 1 GB)
   OK  : exit_code is None (the procsitter ended it, not the test)
 SUCCESS: memory growth contained by RSS watchdog, attributed.
+<hwut-end>

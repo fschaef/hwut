@@ -5,3 +5,4 @@ INSPECT: Run    -> ['stderr', 'stdout'], type Subjects
   OK  : with the same subject names
   OK  : and the same bytes
 SUCCESS: one product, two provenances, indistinguishable above.
+<hwut-end>

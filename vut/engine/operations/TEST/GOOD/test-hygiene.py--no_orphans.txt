@@ -2,3 +2,4 @@ INSPECT: every public name of the component
          every one has a consumer, in the code or a test
   OK  : no public name is declared without something that uses it
 SUCCESS: what is declared is used, or it is not declared.
+<hwut-end>

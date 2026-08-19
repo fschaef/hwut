@@ -1,0 +1,3046 @@
+# This bundle is a unified diff against /dev/null. To undump:
+#   git apply <this-file>          # recreates files and directories
+#   patch -p1 < <this-file>        # alternative, if git is unavailable
+# Lines beginning with '#' are ignored by both tools.
+diff --git a/procsitter/MANUAL.txt b/procsitter/MANUAL.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/MANUAL.txt
+@@ -0,0 +1,644 @@
++                              procsitter -- MANUAL
++______________________________________________________________________________
++
++1  PURPOSE: THE SUPERVISED SYSTEM CALL
++______________________________________________________________________________
++
++PLACE ON THE MAP:
++
++    .-------------------------------------------------------------.
++    |  OUTER BOUNDARY (administrator: container, VM, ...)         |
++    |  security, isolation, reproducibility                       |
++    |                                                             |
++    |    .----------------------------------------------------.   |
++    |    |  HWUT session                                      |   |
++    |    |                                                    |   |
++    |    |   .-------------.  .-------------.  .----------.   |   |
++    |    |   | supervised  |  | supervised  |  |supervised|   |   |
++    |    |   | call:       |  | call:       |  |call:     |   |   |
++    |    |   | test app    |  | pype stage  |  |'make'    |   |   |
++    |    |   '-------------'  '-------------'  '----------'   |   |
++    |    '----------------------------------------------------'   |
++    '-------------------------------------------------------------'
++
++The procsitter is HWUT's replacement for 'subprocess'. EVERY subprocess
++goes through it: test applications, build and helper tools ('make',
++'scp', maintenance scripts), pype stages. One primitive -- the
++SUPERVISED SYSTEM CALL -- is the ground; everything else is built upon
++it in a lightweight manner:
++
++    APPLICATIONS      test runs, supervised builds, helper scripts
++    (ELSEWHERE)       -- each one an ARRANGEMENT of the two levels
++                         below, and none of this component's business
++                                       |
++                    +------------------+------------------+
++    COMPOSITION     |   construction.py                   |
++                    |   Link, tee(), chain()              |
++                    +------------------+------------------+
++                                       |
++                    +------------------+------------------+
++    THE GROUND      |   procsitter.py                     |
++                    |   Procsitter.run() -- containment   |
++                    |   + attribution                     |
++                    +-------------------------------------+
++
++A supervised call CONTAINS the unintentional misbehavior of the process --
++endless loops, hangs, runaway memory, fork bombs, disk flooding -- and
++ATTRIBUTES it: the call dies alone, the session survives, and the record names
++the exhausted resource.
++
++    without supervision:                with supervision:
++
++    'make' of test #317 hangs           'make' of test #317 hangs
++        |                                   |
++        v                                   v
++    the whole session hangs             call: FAIL_WALL_CLOCK_EXCEEDED
++    "job timed out" -- where?           after 60.0 s -- attributed;
++                                        session continues
++
++The supervision's limits are defined by the following 'No-s'. It is:
++
++ -- NOT A SECURITY BOUNDARY against malice.
++
++ -- NO ISOLATION (no namespaces, no read-only roots, no private network
++    stacks).
++
++ -- NO CHECK OF ENVIRONMENTAL NEEDS (network connection, GPU, etc.).
++
++Those concerns belong to the ADMINISTRATOR, who chooses the outer boundary --
++container, VM, dedicated runner -- independently of this level.
++
++The procsitter is PLATFORM-INDEPENDENT: one implementation, python 'stdlib' plus
++'psutil', no wrapper binaries, no per-OS backends. A cap the platform cannot
++enforce is REPORTED in the result, never silently ignored (section 6).
++
++
++2  QUICK START
++______________________________________________________________________________
++
++EXAMPLE USAGE:
++
++    import asyncio
++    from   vut.engine.procsitter.procsitter import Procsitter, ProcsitterConfig
++
++    async def main():
++        procsitter = Procsitter(ProcsitterConfig(max_wall_clock_sec=120.0),
++                                work_dir="build/")
++        result     = await procsitter.run(["make", "-j4", "all"])
++        if result.containment is not E_Containment.OK_COMPLETED:
++            print("make failed:", result.containment.name,
++                  result.exit_code)
++
++    asyncio.run(main())
++
++The same primitive runs 'scp backup.tar host:', a generator script, or a test
++application. The result of the call is reported in 'result.containment':
++
++   -- E_Containment.OK_COMPLETED: successfull execution.
++   -- E_Containment.FAIL_<name>:  error containment of type '<name>'.
++
++
++3  MODEL
++______________________________________________________________________________
++
++Execution follows the following scheme:
++
++    ProcsitterConfig        "what may this call do?"      CONTRACT
++       |
++       v
++    Procsitter.run(...)     "run it, supervised"          EXECUTION
++       |
++       v
++    ProcsitterResult        "what happened, and why?"     ATTRIBUTION RECORD
++
++There is ONE concrete Procsitter class -- no platform hierarchy, no factory.
++What varies per platform is enforcement strength, and that variance is
++reported, not classed (section 8).
++
++Consumption of the process's output is NOT the procsitter's concern: 'run()'
++hands output chunks to caller-provided handlers. What the handlers do --
++discard, log, feed another supervised call, feed the comparison engine -- is
++composition ABOVE the ground (section 7).
++
++
++3.1  THE LAW OF THE PORT
++
++A PORT IS A NAME FOR THE PEER. It answers questions about the CHANNEL,
++never about the RECORD.
++
++    fan-out    A ---+---> B      A's port names {B, C}. "Whither?" is a
++                    '---> C      channel question, and a port answers it
++                                 completely, however many peers are in
++                                 the set. B's port names A; C's port
++                                 names A. No identity is lost.
++
++    fan-in     A ---+            C's port names {A, B}. "Which of them
++               B ---+---> C      sent THIS line?" is a RECORD question,
++                                 and no port answers that.
++
++ONE WRITER PER PORT. Identity would otherwise have to move out of the port
++and into the payload, as a tag carried by every record.
++
++Three arrangements in this component are that one law applied:
++
++    a control port takes exactly one writer        section 7.2
++    stderr is its own port, never merged           section 7.5
++    one attribution record per stage               section 7.3, rule 3
++
++Fan-out is the only multiplicity admitted here, and 'tee()' is its whole
++surface.
++
++
++4  CONFIGURATION: THE CAPS
++______________________________________________________________________________
++
++'ProcsitterConfig' is the per-call contract, and every field in it is a
++CAP the procsitter ENFORCES:
++
++    field                meaning
++    -------------------  ----------------------------------------------------
++    max_wall_clock_sec   total run time--hang-catcher: e.g. a process blocked
++                         on a dead socket burns no CPU; only wall clock
++                         catches it.
++    max_cpu_time_sec     CPU seconds (RLIMIT_CPU).
++    max_memory_mb        resident memory, summed over the whole process GROUP
++                         (watchdog).
++    max_pids             process count of the group.
++    max_file_size_mb     size cap PER created file (RLIMIT_FSIZE).
++    max_disk_mb          TOTAL allocation under work_dir (watchdog, st_blocks):
++                         the many-files loop RLIMIT_FSIZE cannot see.
++    min_free_disk_mb     FREE-SPACE FLOOR of work_dir's filesystem. Below it
++                         the call is terminated so the OPERATING SYSTEM stays
++                         operable.
++    max_output_gap_sec   SILENCE cap (watchdog): no output on EITHER
++                         production port for this long ends the call.
++                         Measured from launch, reset by every chunk.
++                         None -- the default -- switches it off.
++                         A wall clock bounds a call that is WORKING; this
++                         one bounds a call that is WAITING.
++
++                         SILENCE IS WHAT THE WIRE HEARS, not what the
++                         application intends. A call whose stream is
++                         BLOCK-BUFFERED delivers nothing until it ends
++                         or its buffer fills: to this cap it is silent,
++                         however busy it is, and it is terminated. An
++                         application that means to be heard flushes
++                         (python: 'print(..., flush=True)' or '-u'; C:
++                         'setvbuf' / 'fflush'; a pipeline: 'stdbuf
++                         -oL'). Where an application cannot be changed,
++                         leave this cap OFF and let the wall clock bound
++                         it.
++
++Any cap hit terminates the supervised process. The result names the cap that
++triggered. A cap the running platform cannot enforce is REPORTED in
++'.unenforced' -- never silently dropped.
++
++Default values can be examined in dataclass 'ProcsitterConfig'.
++
++5  THE SUPERVISED CALL
++______________________________________________________________________________
++
++    async def run(self,
++                  command:        Sequence[str],
++                  stdout_handler: async callable(bytes) | None = None,
++                  stderr_handler: async callable(bytes) | None = None,
++                  stdin_reader:   asyncio.StreamReader  | None = None,
++                  stop_event:     asyncio.Event         | None = None
++                  ) -> ProcsitterResult
++
++'command' is the argv SEQUENCE -- [program, arg, ...] -- executed DIRECTLY (no
++shell) in 'work_dir'.
++
++'stdout_handler', 'stderr_handler' receive output chunks as they arrive; a
++channel without a handler is DRAINED (a full OS pipe would block the child).
++
++'stdin_reader', if given, is piped into the child's stdin and closed at its EOF.
++
++'stop_event', when set terminates the run from outside (FAIL_STOPPED).
++
++
++Anatomy of one supervised call:
++
++    launch      preexec hook (child, POSIX): own process group
++    |           (setsid) + rlimits: CPU time, file size
++    |
++    |  +------------------ concurrently ---------------------------+
++    |  |  stdout pump ----> stdout_handler (or drain)              |
++    |  |  stderr pump ----> stderr_handler (or drain)              |
++    |  |  stdin  pump <---- stdin_reader (optional)                |
++    |  |  stop watcher ---- kills on stop_event                    |
++    |  |  WATCHDOG (every 0.25 s):                                 |
++    |  |      wall clock over cap?          -> kill, attribute     |
++    |  |      group RSS over cap?           -> kill, attribute     |
++    |  |      group member count over cap?  -> kill, attribute     |
++    |  |      records peaks; registers every descendant seen       |
++    |  |      process exited but children linger > 1 s? -> reap    |
++    |  +-----------------------------------------------------------+
++    |
++    teardown    ALWAYS runs (try/finally): kill ladder if needed,
++    |           tasks cancelled, stdin transport closed, post-mortem
++    |           sweep of observed descendants (pid + create-time
++    |           guarded -- no pid-reuse accidents)
++    v
++    ProcsitterResult
++
++NOTE:__________________________________________________________________________
++Teardown is CANCELLATION-PROOF. If the run is INTERRUPTED mid-flight -- Ctrl-C,
++or a logout tearing the harness down -- the child would otherwise survive: it
++setsid'd into its own session, so nothing else would reap it, and such orphans
++accumulating across runs exhaust the per-user process table (the accident that
++eventually LOGS A DEVELOPER OUT). So on an interrupt the group is hard-killed
++SYNCHRONOUSLY (group + leader, no await to be stolen) and swept. A module-level
++atexit backstop killpg's any group a dying harness leaves registered; only a
++SIGKILL of the harness itself can defeat that (no process can catch it) -- that
++residue is the outer boundary's concern.
++_______________________________________________________________________________
++
++
++The KILL LADDER, used by every containment and by stop_event:
++
++    SIGTERM to the process GROUP
++        |
++        |  2 s grace
++        v
++    SIGKILL to the process GROUP
++        |
++        v
++    sweep: any observed descendant that escaped the group is killed
++
++    (an INTERRUPTED run skips the grace: SIGKILL at once, group AND
++     leader, synchronously -- no leak even mid-cancellation.)
++
++The straggler rule deserves emphasis: children INHERIT the output pipes. A
++process that exits while its forked child sleeps on would hold the harness's
++stdout pump open indefinitely -- the watchdog reaps such stragglers one second
++after the main process is gone. No call can leave processes behind, and no
++call's leftovers can stall a pipeline.
++
++Misbehavior of the CALLED PROCESS never raises -- it is a RESULT. 'run()'
++raises only on HARNESS faults: an exception inside a caller-provided handler
++(the process is killed, nothing leaks, then the exception surfaces); an
++impossible spawn is reported as FAIL_LAUNCH.
++
++
++6  THE ATTRIBUTION RECORD
++______________________________________________________________________________
++
++The result of an execution is reported in a 'ProcsitterResult':
++
++    .containment      E_Containment  THE VERDICT: OK_* vs FAIL_*
++    .exit_code        int | None     process's own exit code;
++    .wall_clock_sec   float          measured
++    .cpu_time_sec     float | None   measured (getrusage delta, watchdog fallback)
++    .peak_memory_mb   float | None   group peak (watchdog)
++    .peak_pids        int | None     peak process-group member count (watchdog)
++                                     => reason for 'FAIL_PIDS_EXCEEDED'
++    .peak_disk_mb     float | None   peak allocation under work_dir
++                                     => reason for 'FAIL_DISK_USAGE_EXCEEDED'
++    .stderr_last_100_lines str       last 100 LINES of stderr, captured when
++                                     no stderr_handler was given.
++                                     => reason for nonzero exit.
++    .unenforced       tuple[str]     caps this platform could not
++                                     enforce -- honest reporting
++
++Containment Overview:
++
++    E_Containment            fired by                  typical accident
++    -----------------------  ------------------------  ----------------
++    OK_COMPLETED             exited by itself, code 0  (success)
++    FAIL_COMPLETED           exited by itself, code    the app's own
++                             != 0 (incl. signal death) failure/crash
++    FAIL_WALL_CLOCK_EXCEEDED watchdog                  hang, deadlock
++    FAIL_CPU_TIME_EXCEEDED   kernel, SIGXCPU           endless loop
++    FAIL_MEMORY_EXCEEDED     watchdog (group RSS)      leak, hoard
++    FAIL_FILE_SIZE_EXCEEDED  kernel, SIGXFSZ           one huge file
++    FAIL_PIDS_EXCEEDED       watchdog (group count)    fork bomb
++    FAIL_DISK_USAGE_EXCEEDED watchdog (work-dir walk)  many-files flood
++    FAIL_DISK_SPACE_LOW      watchdog (free-space      filesystem near
++                             floor)                    full (OS at risk)
++    FAIL_STALLED             watchdog (silence)        deadlock, a wait
++                                                       that will not end
++    FAIL_STOPPED             external stop_event       (fast-fail)
++    FAIL_LAUNCH              spawn impossible          bad command
++
++A 'OK_COMPLETED' means that the run was successful, given that the caps of
++'.unenforced' were not considered.
++
++Two subtleties, both deliberate:
++
++  - An application that IGNORES SIGXFSZ, e.g. CPython:
++    => receives EFBIG from write() at the file-size cap
++    => fails by its own exception.
++    => Containment reads FAIL_COMPLETED with a nonzero exit code.
++    Cap triggers, but with differing message.
++
++  - Possible race:
++    Fork bomb death by the NPROC rlimit (fork fails inside the process)
++    against by the watchdog's group count.
++
++
++7  CONSTRUCTION: LINK, tee(), chain()
++______________________________________________________________________________
++
++A 'Link' links channels, such as an 'stdout' as source and 'stdin' as a drain.
++It is unaware of processes, procsitting etc..
++
++There are three composition blocks -- 'Link', 'tee()', 'chain()' -- and no
++class beyond them. Every arrangement above this component is built
++from these.
++
++
++7.1  THE LINK
++
++    link = Link()
++    A.run(argv_a, stdout_handler = link.feed)    # A produces
++    B.run(argv_b, stdin_reader   = link.reader)  # B is fed
++
++         .--------. link.feed         link.reader .--------.
++         | call A |-------------> o ------------->| call B |
++         '--------'             Link              '--------'
++          own caps,                                own caps,
++          own record                               own record
++
++
++7.2  tee() -- FAN-OUT
++
++A consumer is a plain async function, and functions ADD. 'tee()' is the sum
++of consumers: ANYONE MAY LISTEN to a production port.
++
++    B_in, C_in = Link(), Link()
++    A.run(argv_a, stdout_handler = tee(B_in.feed, C_in.feed))
++
++    # A's stdout ---+---> B's stdin
++    #               '---> C's stdin
++
++The reverse is not offered: ONE VOICE COMMANDS (section 3.1).
++
++
++7.3  chain() -- THE PIPELINE
++
++    c = chain([(a, argv_a), (b, argv_b), (d, argv_d)],
++              stdin_reader=None)
++
++    c.tail          Link: the chain's production end
++    c.stop_event    stops every stage at once
++    c.task_tuple    one task per stage
++
++    records = await asyncio.gather(*c.task_tuple)      # per stage
++
++       .---------. Link .---------. Link .---------.  Link: .tail
++       | stage 0 |----->| stage 1 |----->| stage 2 |--------------> consumer
++       '---------'      '---------'      '---------'
++        own record       own record       own record
++
++The three rules:
++
++(1) EOF ONWARD: a stage that ends closes its outgoing Link.
++
++(2) STOP ON EARLY DEATH: a stage ending while an UPSTREAM stage still
++    runs sets the shared stop_event.
++
++    SIGPIPE semantics, supervised; this is also what BOUNDS MEMORY,
++    since an in-memory 'feed' never blocks; else, an upstream would
++    fill a dead chain's buffer without limit.
++
++(3) EVERY STAGE ACCOUNTED: one task per stage, gathered.
++
++A chain's first stage may itself drink from a Link ('stdin_reader='):
++recorded input, or a dialogue's back-edge.
++
++
++7.4  LISTENING TO A PRODUCTION
++
++A stage's THIRD tuple element carries extra keyword arguments into that
++stage's 'run()'. A 'stdout_handler' among them does NOT replace the chain
++edge -- it is TEE'd with it. The production reaches the next stage AND the
++listener.
++
++    c = chain([(ps_0, argv_0, {"stdout_handler": tap}),
++               (ps_1, argv_1)])
++
++       .----------.  tee  .----------.
++       | stage 0  |---+-->| stage 1  |------> c.tail   (transformed)
++       '----------'   |   '----------'
++                      '-> tap                          (raw)
++
++Within the tee the chain edge is fed FIRST, the listener second: a failing
++tap never starves the pipeline of a chunk.
++
++EXAMPLE: a log tap -- a listener is a plain async function.
++
++    log_f = open("raw.log", "wb")
++    async def tap(data):
++        log_f.write(data)
++
++    c       = chain([(ps_0, argv_0, {"stdout_handler": tap}),
++                     (ps_1, argv_1)])
++    records = await asyncio.gather(*c.task_tuple)
++    log_f.close()
++
++EXAMPLE: an eavesdropper -- a listener that is a Link.
++
++    raw = Link()
++    c   = chain([(ps_0, argv_0, {"stdout_handler": raw.feed}),
++                 (ps_1, argv_1)])
++
++    async def eavesdrop():
++        while not raw.reader.at_eof():
++            chunk = await raw.reader.read(4096)
++            ...
++
++    listener = asyncio.create_task(eavesdrop())
++    try:     records = await asyncio.gather(*c.task_tuple)
++    finally: raw.close()
++    await listener
++
++THE TWO RULES OF A LISTENER:
++
++(1) CONSUME IT. An unread Link buffers without bound.
++
++(2) CLOSE IT. 'chain()' closes ITS OWN edges (rule 1 of 7.3). A listener's
++    Link is no edge, so the chain never closes it: 'raw.reader.at_eof()'
++    stays False and an eavesdropper waiting for EOF waits forever. Close
++    it after the stages are gathered.
++
++Listeners ADD, like any consumer:
++
++    {"stdout_handler": tee(raw.feed, tap)}
++
++
++7.5  THE EXTRA KEYWORD ARGUMENTS
++
++    key              in a chain stage
++    ---------------  ---------------------------------------------------
++    stdout_handler   a LISTENER, tee'd with the chain edge (7.4)
++    stderr_handler   passed VERBATIM -- stderr is no chain edge. Wiring
++                     it REPLACES the ground's default capture: that
++                     stage's '.stderr_last_100_lines' stays empty.
++    stdin_reader     THE CHAIN'S -- the upstream stage feeds it.
++                     For the first stage: chain(..., stdin_reader=...)
++    stop_event       THE CHAIN'S -- shared by every stage.
++                     Across chains:      chain(..., stop_event=...)
++
++An owned key in a stage's extra kwargs is a wiring mistake; 'chain()'
++asserts on it at construction, where it is written.
++
++EXAMPLE: a stage's stderr, read live.
++
++    err = Link()
++    c   = chain([(ps_0, argv_0, {"stderr_handler": err.feed}),
++                 (ps_1, argv_1)])
++    ...
++    try:     records = await asyncio.gather(*c.task_tuple)
++    finally: err.close()                     # no edge -- 7.4, rule 2
++
++
++7.6  MAN IN THE MIDDLE (interaction)
++
++A controller C riding a subject A -- answering its prompts on stdin while a
++consumer B keeps listening undisturbed -- is no new primitive. It is a CYCLE
++in the graph: production is tee'd, control is answered.
++
++    A.stdout --tee--> to_B.reader   (B: any consumer -- a filter, a log)
++                 '--> to_C.reader
++    C.stdout -------> back.reader --> A.stdin
++
++    A and C are symmetric peers; B is a third listener on the sum.
++
++    to_c, back = Link(), Link()
++    async def run_subject():
++        try:     return await A.run(argv,
++                     stdout_handler=tee(consumer, to_c.feed),   # + B
++                     stdin_reader  =back.reader)
++        finally: to_c.close()        # A gone -> C sees EOF
++    async def run_controller():
++        try:     return await C.run(ctrl_argv,
++                     stdin_reader  =to_c.reader,
++                     stdout_handler=back.feed)
++        finally: back.close()        # C gone -> A stdin EOF
++    a_record, c_record = await asyncio.gather(run_subject(),
++                                              run_controller())
++
++Two supervised calls, two attribution records: contained on BOTH ends. The
++controller may equally be a pype script in its own procsitter --
++
++    ctrl_argv = ["python3", "-u", "tools/hwut_pype/hwut_pype.py",
++                 "dialogue.pype"]
++    # dialogue.pype -- the subject asks, pype answers:
++    #     on: "capital-of-france" => {
++    #         print("paris")
++    #     }
++    #     on: <else> => ignore;
++
++-- the SAME wiring, nothing special. Note the '-u': a supervised answerer's
++output must be UNBUFFERED; a buffered answer never arrives and the dialogue
++stalls until a wall clock strikes. A dialogue deadlock is an accident like
++any other; the caps contain it.
++
++stderr is read from EACH call's own record by default (the last-100-lines
++capture); to read it live, wire a Link onto 'stderr_handler' -- identical to
++stdout, no flag.
++
++
++8  PLATFORMS AND DEGRADATION
++______________________________________________________________________________
++
++    mechanism                Linux  macOS  BSDs   Windows
++    -----------------------  -----  -----  -----  -------
++    wall clock + RSS + pid
++      watchdog (psutil)        +      +      +       +
++    rlimits: cpu, fsize
++      ('resource')             +      +      +       -
++    process-group kill         +      +      +      (single
++                                                    process)
++    everything reported        +      +      +       +
++
++Dependencies: python stdlib + 'psutil'. Without psutil the RSS and
++pid-count caps are off and REPORTED ('.unenforced'); wall clock and
++rlimits keep working. Without 'resource' (Windows) the kernel caps are
++off and reported; the watchdog carries wall clock and memory.
++
++Deliberate non-choices, so nobody re-litigates them:
++
++  - RLIMIT_AS is NOT used: it breaks interpreters that reserve large
++    virtual address spaces. Memory containment is RSS-watchdog-based;
++    the ~0.25 s poll is adequate against accidents -- adversaries are
++    out of scope by definition.
++  - RLIMIT_NPROC is NOT used: it caps processes per REAL USER ID --
++    system-wide, not per-call. Set from a point-in-time snapshot it
++    STARVES a legitimate build the instant unrelated processes of the
++    same user push the global count past the snapshot (on a busy
++    desktop: a build fork returns EAGAIN, "Resource temporarily
++    unavailable", and the tool dies mid-build). THE process-count cap
++    is the watchdog's group-member count -- correctly scoped to the
++    call's own group. The one-poll blind spot (a burst between polls)
++    is an accident the watchdog then contains; adversaries are out of
++    scope.
++
++
++9  RELATION TO HWUT TESTING
++______________________________________________________________________________
++
++The component's own suite (TEST/) follows the standard scheme:
++'config.py' bootstraps sys.path (walks up to 'vut/'), test files begin
++with 'from config import HwutRunner', choices per accident class,
++outputs baselined in GOOD/. Two rules learned there, worth keeping for
++every test that uses the procsitter:
++
++  - Assert NORMALIZED outcomes where mechanisms race (section 6): the
++    GOOD file must hold on every platform and every run.
++  - Silence asyncio's logger warnings in the harness
++    ('logging.getLogger("asyncio").setLevel(logging.ERROR)'):
++    child-reap races may emit spurious, nondeterministic lines.
++
++
++10  QUICK REFERENCE
++______________________________________________________________________________
++
++THE GROUND -- every subprocess, always:
++
++    Procsitter(config, work_dir)
++    await procsitter.run(argv, stdout_handler=..., stderr_handler=...,
++                      stdin_reader=..., stop_event=...) -> ProcsitterResult
++                      # argv = ["make", "-j4", "all"] -- no escaping
++
++    result.containment           E_Containment: OK_COMPLETED
++                                 is success; every FAIL_* a fault
++    result.containment           E_Containment (section 6)
++    result.unenforced            caps the platform cannot enforce
++
++COMPOSITION -- pipelines of supervised calls:
++
++    link = Link()         upstream stdout_handler = link.feed
++                                 downstream stdin_reader = link.reader
++
++    c     = chain([(procsitter_a, argv_a),
++                   (procsitter_b, argv_b)],
++                  stdin_reader=...)          # optional: stage-0 control
++    c.tail.reader            the chain's production end -- a Link is
++                                 THE interface toward any consumer
++    await asyncio.gather(*c.task_tuple)  # one record PER STAGE
++
++    to_c, back = Link(), Link()              MAN IN THE MIDDLE, pure
++    subject.run(argv,                        composition: production
++        stdout_handler=tee(consumer,         tee'd (consumer keeps
++                           to_c.feed),       listening), control
++        stdin_reader  =back.reader)          answered. controller =
++    controller.run(ctrl_argv,                any second procsitter,
++        stdin_reader  =to_c.reader,          e.g. pype with 'python3
++        stdout_handler=back.feed)            -u' (unbuffered).
++    # + finally: to_c.close() / back.close() consumers ADD; one voice
++    #                                        commands.
++
++Rules of thumb:
++  - Route EVERY subprocess through the procsitter -- 'make' and 'scp'
++    deserve wall clocks too. Never call 'subprocess' directly.
++  - Set 'max_wall_clock_sec' first; it is the one cap that catches
++    everything eventually and works on every platform.
++  - One Procsitter per call, one work_dir per test: scratch isolation is
++    the cheapest hygiene there is.
++  - Each pipeline stage gets its OWN procsitter: attribution stays sharp.
++  - Read '.unenforced' in reports: a pass without memory enforcement
++    is a pass -- but say so.
++  - Security, isolation, reproducibility: outer boundary. Always.
++______________________________________________________________________________
+diff --git a/procsitter/TEST/ADM/cache.fly b/procsitter/TEST/ADM/cache.fly
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/ADM/cache.fly
+@@ -0,0 +1,39 @@
++{
++title: Procsitter resource containment with attribution;
++file_name: test-procsitter_limits.py;
++hwut_info_time: 1787034781L;
++interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
++happy_pattern_list: [ SUCCESS.*; ]
++result_list: [
++  [ cancelled_run; OK; 1.814714; 0; ]
++  [ clean_under_caps; OK; 0.653399; 0; ]
++  [ command_guard; OK; 0.460237; 0; ]
++  [ cpu_time; OK; 2.803081; 0; ]
++  [ disk_space_low; OK; 0.514509; 0; ]
++  [ disk_usage; OK; 1.515032; 0; ]
++  [ file_size; OK; 0.522266; 0; ]
++  [ memory; OK; 0.996839; 0; ]
++  [ no_psutil; OK; 1.536461; 0; ]
++  [ output_gap; OK; 7.281366; 0; ]
++  [ pids; OK; 1.435628; 0; ]
++  [ self_exit_codes; OK; 1.976240; 0; ]
++  [ stderr_tail_cap; OK; 0.527825; 0; ]
++  [ wall_clock; OK; 1.585736; 0; ]
++]
++}
++{
++title: eavesdrop stdout, inject stdin -- pure pipe composition;
++title_group: The two-way tee;
++file_name: test-procsitter_interact.py;
++hwut_info_time: 1786856836L;
++interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
++happy_pattern_list: [ SUCCESS.*; ]
++result_list: [
++  [ chain_stdin; OK; 0.536847; 0; ]
++  [ chain_stop_early; OK; 0.666708; 0; ]
++  [ control_signals; OK; 0.469422; 0; ]
++  [ pype_interactor; OK; 0.531854; 0; ]
++  [ tee_copy; OK; 0.339379; 0; ]
++  [ tee_degenerate; OK; 0.356129; 0; ]
++]
++}
+diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt
+@@ -0,0 +1,7 @@
++INSPECT: tail:
++    | * BANANA
++    | * APPLE
++    | * CHERRY
++  OK  : both stages completed -- one record each
++  OK  : recorded input traversed the whole chain
++SUCCESS: the first stage drinks from a link like any other.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stop_early.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stop_early.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stop_early.txt
+@@ -0,0 +1,6 @@
++INSPECT: producer = FAIL_STOPPED, consumer = OK_COMPLETED
++  OK  : consumer read its fill and exited cleanly -- own record
++  OK  : producer STOPPED by rule 2 (downstream died first)
++  OK  : producer stopped PROMPTLY -- nowhere near its 20 s wall cap
++  OK  : the consumer produced nothing; the tail saw a clean EOF
++SUCCESS: a chain bounds itself: early death upstream-stops the rest.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--control_signals.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--control_signals.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--control_signals.txt
+@@ -0,0 +1,9 @@
++INSPECT: subject transcript:
++    | ready
++    | pong
++    | result 42
++    | bye
++  OK  : subject: own attribution record, clean, natural end
++  OK  : controller: own attribution record, clean, natural end
++  OK  : the control dialogue ran to completion, in order
++SUCCESS: control signals via stdout/stdin -- two supervised calls, one loop.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--pype_interactor.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--pype_interactor.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--pype_interactor.txt
+@@ -0,0 +1,12 @@
++INSPECT: transcript:
++    | ask: capital-of-france
++    | got paris
++    | ask: six-times-seven
++    | got 42
++    | dialogue-done
++  OK  : app: own attribution record, clean
++  OK  : pype controller: OWN attribution record, clean
++  OK  : first answer injected by pype
++  OK  : second answer injected by pype
++  OK  : the dialogue reached its end
++SUCCESS: a pype script drives the dialogue -- same wiring, supervised on both ends.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_copy.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_copy.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_copy.txt
+@@ -0,0 +1,6 @@
++INSPECT: consumer = b'alpha\nbeta\ngamma\n'
++INSPECT: listener = b'alpha\nbeta\ngamma\n'
++  OK  : supervised call completed
++  OK  : original consumer: complete
++  OK  : added listener: complete
++SUCCESS: the tee copies; nobody is robbed.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_degenerate.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_degenerate.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_degenerate.txt
+@@ -0,0 +1,5 @@
++INSPECT: one-consumer saw 'a\nb\nc\n'; zero -> OK_COMPLETED, one -> OK_COMPLETED
++  OK  : tee(one) delivers the COMPLETE production to the single consumer
++  OK  : the one-consumer run completed cleanly
++  OK  : tee() -- the empty sum -- discards, yet the run completes
++SUCCESS: the tee algebra holds at its borders: identity and empty sum.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--cancelled_run.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--cancelled_run.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--cancelled_run.txt
+@@ -0,0 +1,4 @@
++INSPECT: survivors after cancel = 0
++  OK  : cancellation is honoured (CancelledError re-raised)
++  OK  : no child survives the interrupted run -- group reaped
++SUCCESS: an interrupted run leaks nothing; logout-by-leak prevented.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--clean_under_caps.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--clean_under_caps.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--clean_under_caps.txt
+@@ -0,0 +1,8 @@
++INSPECT: containment = OK_COMPLETED, exit = 0
++  OK  : clean completion -- OK_COMPLETED, no cap fired
++  OK  : exit code 0
++  OK  : every cap enforced, none skipped
++  OK  : the file was written intact (0.5 MB)
++  OK  : peak memory stayed under the cap -- no false memory kill
++  OK  : peak disk stayed under the cap -- no false disk kill
++SUCCESS: a real workload under every cap completes untouched.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--command_guard.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--command_guard.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--command_guard.txt
+@@ -0,0 +1,4 @@
++INSPECT: bare-string raised = True, missing program = FAIL_LAUNCH
++  OK  : a bare string command is rejected loudly (AssertionError)
++  OK  : a missing program is a RESULT: FAIL_LAUNCH, not a crash
++SUCCESS: argv-list contract enforced; a missing program attributed.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--cpu_time.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--cpu_time.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--cpu_time.txt
+@@ -0,0 +1,5 @@
++INSPECT: containment = FAIL_CPU_TIME_EXCEEDED
++  OK  : containment is CPU_TIME_EXCEEDED
++  OK  : measured cpu time reached the cap
++  OK  : exit_code is None (the procsitter ended it, not the test)
++SUCCESS: spin loop contained by cpu-time cap, attributed.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_space_low.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_space_low.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_space_low.txt
+@@ -0,0 +1,5 @@
++INSPECT: containment = FAIL_DISK_SPACE_LOW
++  OK  : containment is FAIL_DISK_SPACE_LOW
++  OK  : floor fired on an early disk poll, well before 30 s
++  OK  : exit_code is None (the procsitter ended it, not the test)
++SUCCESS: free-space floor keeps the operating system operable.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_usage.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_usage.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_usage.txt
+@@ -0,0 +1,6 @@
++INSPECT: containment = FAIL_DISK_USAGE_EXCEEDED
++  OK  : containment is FAIL_DISK_USAGE_EXCEEDED
++  OK  : recorded peak exceeds the 20 MB cap
++  OK  : kill came before the flood grew unbounded (< 512 MB)
++  OK  : containment well before the 30 s natural end
++SUCCESS: many-files flood contained by the disk-usage cap.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--file_size.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--file_size.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--file_size.txt
+@@ -0,0 +1,4 @@
++  OK  : flood contained (SIGXFSZ death or EFBIG self-abort)
++  OK  : flood file stopped at the 1 MB cap
++  OK  : containment came well before the flood's natural end
++SUCCESS: disk flooding contained by file-size cap.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--memory.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--memory.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--memory.txt
+@@ -0,0 +1,6 @@
++INSPECT: containment = FAIL_MEMORY_EXCEEDED
++  OK  : containment is MEMORY_EXCEEDED
++  OK  : recorded peak exceeds the 96 MB cap
++  OK  : kill came before the hoard grew unbounded (< 1 GB)
++  OK  : exit_code is None (the procsitter ended it, not the test)
++SUCCESS: memory growth contained by RSS watchdog, attributed.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--no_psutil.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--no_psutil.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--no_psutil.txt
+@@ -0,0 +1,7 @@
++INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
++INSPECT: unenforced  = ['max_memory_mb', 'max_pids']
++  OK  : wall clock still enforced without psutil
++  OK  : memory cap reported as unenforced
++  OK  : pid cap reported as unenforced
++  OK  : no fabricated memory measurement
++SUCCESS: degradation without psutil is loud, never silent.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--output_gap.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--output_gap.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--output_gap.txt
+@@ -0,0 +1,8 @@
++INSPECT: silent = FAIL_STALLED, chatty = OK_COMPLETED, buffered = FAIL_STALLED, cap off = OK_COMPLETED
++  OK  : the silent call is STALLED, not WALL_CLOCK_EXCEEDED
++  OK  : ended near the gap, nowhere near its 30 s wall cap
++  OK  : exit_code is None (the procsitter ended it, not the test)
++  OK  : the FLUSHING talker is untouched, though it ran past the gap
++  OK  : a talker the wire cannot hear is silence, and is capped
++  OK  : with the cap off, silence is no fault
++SUCCESS: silence is what the wire hears; an absent cap leaves it alone.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--pids.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--pids.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--pids.txt
+@@ -0,0 +1,4 @@
++  OK  : storm contained (PIDS_EXCEEDED, watchdog group count)
++  OK  : containment came well before the storm's natural end
++  OK  : no straggling storm children survive the run
++SUCCESS: fork storm contained, all children reaped.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--self_exit_codes.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--self_exit_codes.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--self_exit_codes.txt
+@@ -0,0 +1,5 @@
++INSPECT: exit0 = OK_COMPLETED/0, exit3 = FAIL_COMPLETED/3, signal = FAIL_COMPLETED/-6
++  OK  : exit 0 -> OK_COMPLETED, the sole success
++  OK  : nonzero self-exit -> FAIL_COMPLETED, positive code preserved
++  OK  : signal death -> FAIL_COMPLETED, negative signal number
++SUCCESS: self-termination classified by exit status alone.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--stderr_tail_cap.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--stderr_tail_cap.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--stderr_tail_cap.txt
+@@ -0,0 +1,5 @@
++INSPECT: kept 100 lines [err 50 .. err 149]; long line len = 4096
++  OK  : exactly the LAST 100 lines kept (150 emitted)
++  OK  : the kept window is the TAIL, not the head
++  OK  : a newline-less 5000-char line trimmed to its 4096-byte tail
++SUCCESS: the stderr tail is bounded, by line count and by length.
+diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--wall_clock.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--wall_clock.txt
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--wall_clock.txt
+@@ -0,0 +1,6 @@
++INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
++  OK  : containment is WALL_CLOCK_EXCEEDED
++  OK  : wall clock between cap and cap + kill overhead
++  OK  : exit_code is None (the procsitter ended it, not the test)
++  OK  : no caps unenforced on this platform
++SUCCESS: hang contained by wall clock, attributed.
+diff --git a/procsitter/TEST/config.py b/procsitter/TEST/config.py
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/config.py
+@@ -0,0 +1,40 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Bootstrap module for tests in this directory.
++
++This file is the chicken-and-egg solution: HwutRunner.insert_project_path()
++cannot be used to locate HwutRunner itself, because importing it requires
++sys.path to be set up first. So this tiny stdlib-only module does the
++bootstrap by walking upward from its own location until it finds a directory
++named 'vut/', then inserts that directory's parent into sys.path.
++
++After 'import config' (as the first import in a test file), all of:
++
++    from vut.language_support.python.hwut_runner import HwutRunner
++    from vut.engine.procsitter.procsitter              import ...
++
++work normally.
++
++NOTE: This file imports nothing from vut. It is excluded from coverage
++      and from test discovery via 'hwut-info.dat'.
++______________________________________________________________________________
++"""
++import os
++import sys
++
++_here = os.path.abspath(os.path.dirname(__file__))
++_cur  = _here
++while True:
++    if os.path.basename(_cur) == "vut":
++        sys.path.insert(0, os.path.dirname(_cur))
++        break
++    _parent = os.path.dirname(_cur)
++    if _parent == _cur:
++        raise RuntimeError(
++            "config.py: could not find directory 'vut' walking up from '%s'"
++            % _here
++        )
++    _cur = _parent
++
++from vut.language_support.python.hwut_runner import HwutRunner # noqa E401
+diff --git a/procsitter/TEST/test-procsitter_interact.py b/procsitter/TEST/test-procsitter_interact.py
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/test-procsitter_interact.py
+@@ -0,0 +1,435 @@
++#!/usr/bin/env python3
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Verify the composition algebra of the two building blocks:
++         the LINK (production -> control edge) and 'tee()' (the
++         CONSUMER SUM -- anyone may listen to a production port; one
++         voice commands a control port).
++
++DESCRIPTION:
++
++THE TWO AXES: PRODUCTION (stdout; stderr as diagnostic production)
++and CONTROL (stdin). Everything here is wiring of Links between
++production and control ports of supervised calls -- no further class:
++
++  fan-out    tee(b.feed, c.feed)      consumers ADD
++  loop       A -> C, C -> A           the man in the middle
++  chain      chain(stages)     the three chain rules
++
++CHOICES:
++
++  tee_copy:        eavesdrop, never steal: tee() duplicates -- the
++                   original consumer AND the listener both see the
++                   COMPLETE production, byte for byte.
++  control_signals: TWO PROCSITTERS interact via production/control:
++                   the controller answers the subject's reports with
++                   control signals (ping/work/shutdown); both ends
++                   supervised, one attribution record each; natural
++                   end on both sides.
++  pype_interactor: the controller is a PYPE SCRIPT in its own
++                   procsitter ('python3 -u': unbuffered, else the
++                   answer never arrives) -- the same wiring, nothing
++                   special.
++  chain_stdin:     chain(stdin_reader=...): recorded input
++                   fed into the FIRST stage's control port,
++                   transformed along the chain, read at the tail.
++  chain_stop_early:CHAIN RULE 2 -- a downstream stage that ends while
++                   an upstream still runs STOPS the upstream (SIGPIPE
++                   semantics; bounds the in-memory buffers).
++  tee_degenerate:  the tee algebra at its borders -- tee(one) is the
++                   consumer itself; tee() is the empty sum (discards,
++                   the run still completes).
++
++AUTHOR: Frank-Rene Schaefer
++"""
++
++import asyncio      # noqa F401  (HwutRunner drives the coroutines)
++import logging
++import os
++import sys
++import tempfile
++
++from   config import HwutRunner                                     # noqa F401
++
++from   vut.engine.procsitter.procsitter   import (Procsitter,      # noqa E402
++                                                  ProcsitterConfig,
++                                                  E_Containment)
++from   vut.engine.procsitter.construction import (Link,            # noqa E402
++                                                  chain,
++                                                  tee)
++
++logging.getLogger("asyncio").setLevel(logging.ERROR)
++
++ROOT_DIR  = os.path.abspath(os.path.join(os.path.dirname(__file__),
++                                         "..", "..", "..", ".."))
++
++HWUT_PYPE = os.path.abspath("../../hwut_pype/hwut_pype.py")
++
++def _require_hwut_pype() -> bool:
++    """
++    RETURN: True,  the pype interpreter is present.
++            False, else -- with an ACTIONABLE report: this is an
++                   environment defect, not a code defect.
++    """
++    if os.path.exists(HWUT_PYPE):
++        return True
++    print(f"FAIL: pype interpreter not found: '{HWUT_PYPE}'")
++    print("      undump component-hwut_pype.txt so that hwut_pype.py")
++    print("      lies at <project root>/tools/hwut_pype/, or set the")
++    print("      environment variable VUT_HWUT_PYPE to its path.")
++    return False
++
++
++def _argv(app_code: str) -> list:
++    """
++    RETURN: list[str], argv running 'app_code' with this interpreter.
++    """
++    return [sys.executable, "-c", app_code]
++
++
++def _check(results):
++    """
++    RETURN: True,  all (bool, label) pairs in results are True;
++                   prints OK/FAIL per line.
++            False, else.
++    """
++    ok = True
++    for result, label in results:
++        print(f"  {'OK  ' if result else 'FAIL'}: {label}")
++        ok = ok and result
++    return ok
++
++
++def _verdict(ok, subject):
++    """
++    RETURN: None. Prints the final SUCCESS/FAIL line for the choice.
++    """
++    if ok: print(f"SUCCESS: {subject}")
++    else:  print(f"FAIL: {subject} (see above)")
++
++
++async def _read_all(reader) -> bytes:
++    """
++    RETURN: bytes, everything 'reader' delivers until EOF.
++    """
++    box = bytearray()
++    while not reader.at_eof():
++        box += await reader.read(4096)
++    return bytes(box)
++
++
++async def _interaction(consumer, subject, subject_cmd,
++                       controller, controller_cmd):
++    """
++    RETURN: (ProcsitterResult, ProcsitterResult) -- subject and
++            controller records of TWO PROCSITTERS wired in a LOOP of
++            Links: the subject's production is tee'd to 'consumer' AND
++            to the controller's control port; the controller's
++            production answers into the subject's control port. THE
++            IDIOM -- pure composition, 'finally' closers hand EOF
++            onward whichever end finishes first.
++    """
++    to_ctrl = Link()     # subject production -> controller control
++    back    = Link()     # controller production -> subject control
++
++    async def run_subject():
++        try:
++            return await subject.run(
++                subject_cmd,
++                stdout_handler=tee(consumer, to_ctrl.feed),
++                stdin_reader  =back.reader)
++        finally:
++            to_ctrl.close()      # subject gone -> controller sees EOF
++
++    async def run_controller():
++        try:
++            return await controller.run(controller_cmd,
++                                        stdin_reader  =to_ctrl.reader,
++                                        stdout_handler=back.feed)
++        finally:
++            back.close()         # controller gone -> subject stdin EOF
++
++    return await asyncio.gather(run_subject(), run_controller())
++
++
++# ---------------------------------------------------------------------------
++
++async def test_tee_copy():
++    """Eavesdrop, never steal: 'tee()' is the CONSUMER SUM -- the
++    original consumer and the added listener both see the COMPLETE
++    production, byte for byte. Wired by hand: the summed handler is
++    an ordinary 'run()' argument."""
++    app = ("print('alpha')\n"
++           "print('beta')\n"
++           "print('gamma')\n")
++
++    consumer_box = bytearray()
++    async def consumer(data):
++        consumer_box.extend(data)
++
++    listen = Link()              # the second listener on the production
++
++    async def listener():
++        return await _read_all(listen.reader)
++
++    with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
++        procsitter  = Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir)
++        listen_task = asyncio.create_task(listener())
++        result      = await procsitter.run(_argv(app), stdout_handler=tee(consumer, listen.feed))
++        listen.close() # producer gone -> listener EOF
++        listened    = await listen_task
++
++    expected = b"alpha\nbeta\ngamma\n"
++    print(f"INSPECT: consumer = {bytes(consumer_box)!r}")
++    print(f"INSPECT: listener = {listened!r}")
++    ok = _check([
++        (result.containment is E_Containment.OK_COMPLETED, "supervised call completed"),
++        (bytes(consumer_box) == expected,                  "original consumer: complete"),
++        (listened            == expected,                  "added listener: complete"),
++    ])
++    _verdict(ok, "the tee copies; nobody is robbed.")
++
++
++async def test_control_signals():
++    """TWO PROCSITTERS interact via stdout and stdin: the subject
++    REPORTS, the controller answers with CONTROL SIGNALS -- ping,
++    work, shutdown. Each end is its own supervised call with its own
++    attribution record; the dialogue ends NATURALLY on both sides.
++    The transcript (the subject's stdout) stays fully visible to the
++    original consumer -- the tee eavesdrops, it does not steal."""
++    subject_app = ("import sys\n"
++                   "print('ready', flush=True)\n"
++                   "for line in sys.stdin:\n"
++                   "    signal = line.strip()\n"
++                   "    if   signal == 'ping':     print('pong', flush=True)\n"
++                   "    elif signal == 'work':     print('result 42', flush=True)\n"
++                   "    elif signal == 'shutdown':\n"
++                   "        print('bye', flush=True)\n"
++                   "        break\n")
++
++    controller_app = ("import sys\n"
++                      "for line in sys.stdin:\n"
++                      "    report = line.strip()\n"
++                      "    if   report == 'ready':     print('ping', flush=True)\n"
++                      "    elif report == 'pong':      print('work', flush=True)\n"
++                      "    elif report == 'result 42': print('shutdown', flush=True)\n"
++                      "    elif report == 'bye':       break\n")
++
++    transcript = bytearray()
++    async def consumer(data):
++        transcript.extend(data)
++
++    with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
++        subject_result, controller_result = await _interaction(
++            consumer,
++            Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
++            _argv(subject_app),
++            Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
++            _argv(controller_app))
++
++    text = transcript.decode()
++    print("INSPECT: subject transcript:")
++    for line in text.splitlines():
++        print(f"    | {line}")
++    ok = _check([
++        (subject_result.containment is E_Containment.OK_COMPLETED,
++         "subject: own attribution record, clean, natural end"),
++        (controller_result.containment is E_Containment.OK_COMPLETED,
++         "controller: own attribution record, clean, natural end"),
++        (text == "ready\npong\nresult 42\nbye\n",
++         "the control dialogue ran to completion, in order"),
++    ])
++    _verdict(ok, "control signals via stdout/stdin -- two supervised "
++                 "calls, one loop.")
++
++
++async def test_pype_interactor():
++    """The controller is a PYPE SCRIPT in its own procsitter: the SAME
++    wiring as any two-procsitter interaction, nothing special. App
++    stdout is pype's stdin; pype's printed reactions are the app's
++    stdin ('python3 -u': unbuffered -- a buffered answer never
++    arrives)."""
++    app = ("import sys\n"
++           "print('ask: capital-of-france', flush=True)\n"
++           "a1 = sys.stdin.readline().strip()\n"
++           "print('got ' + a1, flush=True)\n"
++           "print('ask: six-times-seven', flush=True)\n"
++           "a2 = sys.stdin.readline().strip()\n"
++           "print('got ' + a2, flush=True)\n"
++           "print('dialogue-done', flush=True)\n")
++
++    pype_script = ('on: "capital-of-france" => {\n'
++                   '    print("paris")\n'
++                   '}\n'
++                   'on: "six-times-seven" => {\n'
++                   '    print("42")\n'
++                   '}\n'
++                   'on: <else> => ignore;\n')
++
++    if not _require_hwut_pype(): return
++    transcript = bytearray()
++    async def consumer(data):
++        transcript.extend(data)
++
++    with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
++        script_path = os.path.join(work_dir, "answers.pype")
++        with open(script_path, "w") as fh:
++            fh.write(pype_script)
++
++        result, pype_result = await _interaction(
++            consumer,
++            Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
++            _argv(app),
++            Procsitter(ProcsitterConfig(max_wall_clock_sec=15.0), work_dir),
++            [sys.executable, "-u", HWUT_PYPE, script_path])
++
++    text = transcript.decode()
++    print("INSPECT: transcript:")
++    for line in text.splitlines():
++        print(f"    | {line}")
++    ok = _check([
++        (result.containment is E_Containment.OK_COMPLETED,                  "app: own attribution record, clean"),
++        (pype_result.containment is E_Containment.OK_COMPLETED,
++         "pype controller: OWN attribution record, clean"),
++        ("got paris" in text,        "first answer injected by pype"),
++        ("got 42" in text,           "second answer injected by pype"),
++        ("dialogue-done" in text,    "the dialogue reached its end"),
++    ])
++    _verdict(ok, "a pype script drives the dialogue -- same wiring, "
++                 "supervised on both ends.")
++
++
++async def test_chain_stdin():
++    """The chain's control hook: recorded input fed into the FIRST
++    stage's control port ('chain(stdin_reader=...)'),
++    transformed along the chain, read at the tail."""
++    app_upper  = ("import sys\n"
++                  "for line in sys.stdin:\n"
++                  "    print(line.strip().upper(), flush=True)\n")
++    app_prefix = ("import sys\n"
++                  "for line in sys.stdin:\n"
++                  "    print('* ' + line.strip(), flush=True)\n")
++
++    source = Link()
++    await source.feed(b"banana\napple\ncherry\n")
++    source.close()
++
++    with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
++        c = chain(
++            [(Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir),
++              _argv(app_upper)),
++             (Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0), work_dir),
++              _argv(app_prefix))],
++            stdin_reader=source.reader)
++        tail_bytes  = await _read_all(c.tail.reader)
++        record_list = await asyncio.gather(*c.task_tuple)
++
++    text = tail_bytes.decode()
++    print("INSPECT: tail:")
++    for line in text.splitlines():
++        print(f"    | {line}")
++    ok = _check([
++        (all(r.containment is E_Containment.OK_COMPLETED
++             for r in record_list),
++         "both stages completed -- one record each"),
++        (text == "* BANANA\n* APPLE\n* CHERRY\n",
++         "recorded input traversed the whole chain"),
++    ])
++    _verdict(ok, "the first stage drinks from a link like any other.")
++
++
++async def test_chain_stop_early():
++    """CHAIN RULE 2 -- STOP ON EARLY DEATH. A downstream stage that
++    ends while an UPSTREAM stage still runs sets the shared stop_event
++    (SIGPIPE semantics; this is what BOUNDS the in-memory buffers). The
++    producer would emit forever; the consumer reads three lines and
++    exits. The producer must be STOPPED promptly -- not run to its wall
++    cap -- and be attributed FAIL_STOPPED, its own record intact."""
++    producer = ("import time\n"
++                "i = 0\n"
++                "while True:\n"
++                "    print('line %d' % i, flush=True)\n"
++                "    i += 1\n"
++                "    time.sleep(0.05)\n")
++    consumer = ("import sys\n"
++                "n = 0\n"
++                "for line in sys.stdin:\n"
++                "    n += 1\n"
++                "    if n >= 3:\n"
++                "        break\n")
++
++    with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
++        c = chain([
++            (Procsitter(ProcsitterConfig(max_wall_clock_sec=20.0), work_dir),
++             _argv(producer)),
++            (Procsitter(ProcsitterConfig(max_wall_clock_sec=20.0), work_dir),
++             _argv(consumer))])
++        # tail carries the consumer's (empty) production to EOF.
++        tail_bytes  = await _read_all(c.tail.reader)
++        prod_record, cons_record = await asyncio.gather(*c.task_tuple)
++
++    print(f"INSPECT: producer = {prod_record.containment.name}, "
++          f"consumer = {cons_record.containment.name}")
++    ok = _check([
++        (cons_record.containment is E_Containment.OK_COMPLETED
++         and cons_record.exit_code == 0,
++         "consumer read its fill and exited cleanly -- own record"),
++        (prod_record.containment is E_Containment.FAIL_STOPPED,
++         "producer STOPPED by rule 2 (downstream died first)"),
++        (prod_record.wall_clock_sec < 10.0,
++         "producer stopped PROMPTLY -- nowhere near its 20 s wall cap"),
++        (tail_bytes == b"",
++         "the consumer produced nothing; the tail saw a clean EOF"),
++    ])
++    _verdict(ok, "a chain bounds itself: early death upstream-stops the rest.")
++
++
++async def test_tee_degenerate():
++    """The tee ALGEBRA at its borders. tee() with ONE consumer is that
++    consumer -- the complete production reaches it. tee() with ZERO
++    consumers is the EMPTY SUM: a valid handler that simply discards,
++    and the production is still fully consumed so the run completes.
++    Functions add; the empty sum is the identity."""
++    app = ("print('a')\nprint('b')\nprint('c')\n")
++
++    seen = bytearray()
++    async def one(data):
++        seen.extend(data)
++
++    with tempfile.TemporaryDirectory(prefix="vut_tee_") as work_dir:
++        r1 = await Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0),
++                        work_dir).run(_argv(app), stdout_handler=tee(one))
++        r0 = await Procsitter(ProcsitterConfig(max_wall_clock_sec=10.0),
++                        work_dir).run(_argv(app), stdout_handler=tee())
++
++    print(f"INSPECT: one-consumer saw {seen.decode()!r}; "
++          f"zero -> {r0.containment.name}, one -> {r1.containment.name}")
++    ok = _check([
++        (seen == b"a\nb\nc\n",
++         "tee(one) delivers the COMPLETE production to the single consumer"),
++        (r1.containment is E_Containment.OK_COMPLETED,
++         "the one-consumer run completed cleanly"),
++        (r0.containment is E_Containment.OK_COMPLETED,
++         "tee() -- the empty sum -- discards, yet the run completes"),
++    ])
++    _verdict(ok, "the tee algebra holds at its borders: identity and empty sum.")
++
++
++# ---------------------------------------------------------------------------
++
++if __name__ == "__main__":
++    HwutRunner(
++        argv       = sys.argv,
++        title      = "The two-way tee: eavesdrop stdout, inject stdin -- "
++                     "pure pipe composition",
++        choice_map = {
++            "tee_copy":         test_tee_copy,
++            "control_signals":  test_control_signals,
++            "pype_interactor":  test_pype_interactor,
++            "chain_stdin":      test_chain_stdin,
++            "chain_stop_early": test_chain_stop_early,
++            "tee_degenerate":   test_tee_degenerate,
++        },
++        happy      = "SUCCESS.*",
++    ).run()
+diff --git a/procsitter/TEST/test-procsitter_limits.py b/procsitter/TEST/test-procsitter_limits.py
+new file mode 100644
+--- /dev/null
++++ b/procsitter/TEST/test-procsitter_limits.py
+@@ -0,0 +1,588 @@
++#!/usr/bin/env python3
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Verify that the procsitter contains each resource-exhaustion accident
++         class and attributes it correctly in ProcsitterResult.
++
++DESCRIPTION:
++
++The procsitter's one job: a runaway test dies alone, and the report names the
++exhausted resource. Each choice provokes one accident class with a small
++inline test application and checks the attribution record.
++
++CHOICES:
++
++  wall_clock:  sleep-forever application -> WALL_CLOCK_EXCEEDED near cap.
++  cpu_time:    spin loop -> CPU_TIME_EXCEEDED (RLIMIT_CPU / SIGXCPU).
++  memory:      growing allocation -> MEMORY_EXCEEDED, peak recorded.
++  file_size:   oversized write -> FILE_SIZE_EXCEEDED (RLIMIT_FSIZE),
++               file stopped near the cap.
++  pids:        fork storm -> contained by the watchdog's group count
++               (PIDS_EXCEEDED); no straggling children survive the run.
++  output_gap:  the SILENCE cap -- silence measured on the WIRE: a
++               mute call and a BLOCK-BUFFERED talker are both stalled;
++               a flushing talker outlives the gap untouched.
++  no_psutil:   psutil absent -> memory/pid caps reported in .unenforced,
++               wall clock still enforced.
++  cancelled_run: an INTERRUPTED run (Ctrl-C, a logout killing the
++               harness) leaks NO child -- the cleanup is
++               cancellation-proof; the accident that exhausts the
++               per-user process table (and logs a developer out) is
++               prevented.
++  disk_usage:  a MANY-FILES loop -> FAIL_DISK_USAGE_EXCEEDED (the
++               work-dir allocation cap RLIMIT_FSIZE cannot see), peak
++               recorded.
++  disk_space_low: a free-space FLOOR below current free space fires
++               at once -> FAIL_DISK_SPACE_LOW; the mechanism that
++               keeps the operating system operable.
++  clean_under_caps: THE COMPLEMENT -- a real workload (memory, a file,
++               children, cpu) UNDER every cap completes cleanly: the
++               watchdog does not false-positive.
++  self_exit_codes: the exit-status reference classes -- 0 ->
++               OK_COMPLETED; nonzero -> FAIL_COMPLETED (positive code);
++               signal death -> FAIL_COMPLETED (negative signal number).
++  stderr_tail_cap: the captured tail is bounded -- last 100 lines, and
++               a newline-less line trimmed to its 4096-byte tail.
++  command_guard: the argv-list contract -- a bare string is rejected
++               loudly (AssertionError); a missing program is a RESULT
++               (FAIL_LAUNCH), never a crash.
++
++AUTHOR: Frank-Rene Schaefer
++"""
++
++import asyncio
++import logging
++import sys
++import tempfile
++
++from   config import HwutRunner                                   # noqa F401
++
++import vut.engine.procsitter.procsitter              as procsitter_module  # noqa E402
++from   vut.engine.procsitter.procsitter              import (Procsitter,   # noqa E402
++                                                       ProcsitterConfig,
++                                                       E_Containment)
++
++# Child-reap races between the harness's kill discipline and asyncio's
++# child watcher may emit spurious warnings ("Unknown child process ...")
++# -- harmless, but nondeterministic; the GOOD file must not see them.
++logging.getLogger("asyncio").setLevel(logging.ERROR)
++
++def _argv(app_code: str) -> list:
++    """
++    RETURN: list[str], argv running 'app_code' with this interpreter --
++            a plain list, nothing to escape.
++    """
++    return [sys.executable, "-c", app_code]
++
++
++def _check(results):
++    """
++    RETURN: True,  all (bool, label) pairs in results are True;
++                   prints OK/FAIL per line.
++            False, else.
++    """
++    ok = True
++    for result, label in results:
++        print(f"  {'OK  ' if result else 'FAIL'}: {label}")
++        ok = ok and result
++    return ok
++
++
++def _verdict(ok, subject):
++    """
++    RETURN: None. Prints the final SUCCESS/FAIL line for the choice.
++    """
++    if ok: print(f"SUCCESS: {subject}")
++    else:  print(f"FAIL: {subject} (see above)")
++
++
++async def _run(config, app_code):
++    """
++    RETURN: ProcsitterResult, of running 'app_code' in a fresh scratch dir.
++    """
++    with tempfile.TemporaryDirectory(prefix="vut_procsitter_test_") as work_dir:
++        return await Procsitter(config, work_dir).run(_argv(app_code))
++
++
++# ---------------------------------------------------------------------------
++
++async def test_wall_clock():
++    """A sleeping (hanging) test burns no CPU; only the wall-clock cap can
++    catch it. Expect WALL_CLOCK_EXCEEDED shortly after the cap."""
++    config = ProcsitterConfig(max_wall_clock_sec=1.0)
++    result = await _run(config, "import time; time.sleep(30)")
++
++    print(f"INSPECT: containment = {result.containment.name}")
++    ok = _check([
++        (result.containment is E_Containment.FAIL_WALL_CLOCK_EXCEEDED,
++         "containment is WALL_CLOCK_EXCEEDED"),
++        (1.0 <= result.wall_clock_sec < 8.0,
++         "wall clock between cap and cap + kill overhead"),
++        (result.exit_code is None,
++         "exit_code is None (the procsitter ended it, not the test)"),
++        (result.unenforced == (),
++         "no caps unenforced on this platform"),
++    ])
++    _verdict(ok, "hang contained by wall clock, attributed.")
++
++
++async def test_output_gap():
++    """The SILENCE cap, and what silence MEANS: it is measured on the
++    WIRE, not in the application's intent.
++
++    Four calls, one cap: a live call that says nothing is ended and
++    attributed; a call that keeps talking -- and FLUSHES, so the wire
++    hears it -- is left alone, though it outlives the gap many times
++    over; the same talker WITHOUT flushing is stalled, because a
++    block-buffered stream delivers nothing until the call ends; and a
++    silent call with the cap OFF runs to its own end.
++
++    The unflushed leg states the law that surprises test authors: an
++    application busy for a minute behind a full buffer IS silent here,
++    by design. 'flush=True' is stated in the talking legs so that no
++    inherited 'PYTHONUNBUFFERED' can decide this test's outcome."""
++    config = ProcsitterConfig(max_wall_clock_sec=30.0, max_output_gap_sec=1.0)
++    #  Both talkers state their buffering OUTRIGHT -- neither asks the
++    #  environment: 'flush=True' on one, and the other writing into a
++    #  wrapper of its own whose buffer no 'PYTHONUNBUFFERED' can undo.
++    flushing_talker = ("import time\n"
++                       "for i in range(6):\n"
++                       "    print(i, flush=True); time.sleep(0.4)\n")
++    buffered_talker = ("import io, time\n"
++                       "out = io.TextIOWrapper(open(1, 'wb', buffering=8192),\n"
++                       "                       write_through=False)\n"
++                       "for i in range(6):\n"
++                       "    out.write('%d\\n' % i); time.sleep(0.4)\n"
++                       "out.flush()\n")
++
++    silent   = await _run(config, "import time; time.sleep(20)")
++    chatty   = await _run(config, flushing_talker)
++    buffered = await _run(config, buffered_talker)
++    no_cap   = await _run(ProcsitterConfig(max_wall_clock_sec=30.0),
++                          "import time; time.sleep(2)")
++
++    print(f"INSPECT: silent = {silent.containment.name}, "
++          f"chatty = {chatty.containment.name}, "
++          f"buffered = {buffered.containment.name}, "
++          f"cap off = {no_cap.containment.name}")
++    ok = _check([
++        (silent.containment is E_Containment.FAIL_STALLED,
++         "the silent call is STALLED, not WALL_CLOCK_EXCEEDED"),
++        (silent.wall_clock_sec < 10.0,
++         "ended near the gap, nowhere near its 30 s wall cap"),
++        (silent.exit_code is None,
++         "exit_code is None (the procsitter ended it, not the test)"),
++        (chatty.containment is E_Containment.OK_COMPLETED,
++         "the FLUSHING talker is untouched, though it ran past the gap"),
++        (buffered.containment is E_Containment.FAIL_STALLED,
++         "a talker the wire cannot hear is silence, and is capped"),
++        (no_cap.containment is E_Containment.OK_COMPLETED,
++         "with the cap off, silence is no fault"),
++    ])
++    _verdict(ok, "silence is what the wire hears; an absent cap "
++                 "leaves it alone.")
++
++
++async def test_cpu_time():
++    """A spin loop hits RLIMIT_CPU; the kernel delivers SIGXCPU. Expect
++    CPU_TIME_EXCEEDED with measured cpu time near the cap."""
++    config = ProcsitterConfig(max_cpu_time_sec=1, max_wall_clock_sec=15.0)
++    result = await _run(config, "while True: pass")
++
++    print(f"INSPECT: containment = {result.containment.name}")
++    ok = _check([
++        (result.containment is E_Containment.FAIL_CPU_TIME_EXCEEDED,
++         "containment is CPU_TIME_EXCEEDED"),
++        (result.cpu_time_sec is not None and result.cpu_time_sec >= 0.9,
++         "measured cpu time reached the cap"),
++        (result.exit_code is None,
++         "exit_code is None (the procsitter ended it, not the test)"),
++    ])
++    _verdict(ok, "spin loop contained by cpu-time cap, attributed.")
++
++
++async def test_memory():
++    """A growing allocation crosses the RSS cap; the watchdog kills the
++    group. Expect MEMORY_EXCEEDED with the peak recorded."""
++    config = ProcsitterConfig(max_memory_mb=96, max_wall_clock_sec=20.0)
++    app    = ("import time\n"
++              "hoard = []\n"
++              "while True:\n"
++              "    hoard.append(bytearray(4 * 1024 * 1024))\n"
++              "    time.sleep(0.01)\n")
++    result = await _run(config, app)
++
++    print(f"INSPECT: containment = {result.containment.name}")
++    ok = _check([
++        (result.containment is E_Containment.FAIL_MEMORY_EXCEEDED,
++         "containment is MEMORY_EXCEEDED"),
++        (result.peak_memory_mb is not None
++         and result.peak_memory_mb > 96.0,
++         "recorded peak exceeds the 96 MB cap"),
++        (result.peak_memory_mb is not None
++         and result.peak_memory_mb < 1024.0,
++         "kill came before the hoard grew unbounded (< 1 GB)"),
++        (result.exit_code is None,
++         "exit_code is None (the procsitter ended it, not the test)"),
++    ])
++    _verdict(ok, "memory growth contained by RSS watchdog, attributed.")
++
++
++async def test_file_size():
++    """An oversized write hits RLIMIT_FSIZE. Apps that keep the default
++    SIGXFSZ disposition die by signal -> FILE_SIZE_EXCEEDED; apps that
++    ignore it -- CPython does -- get EFBIG from write() and fail by their
++    own OSError -> COMPLETED, nonzero. Either way the kernel cap holds:
++    the flood file stops at exactly the cap."""
++    import os
++    config = ProcsitterConfig(max_file_size_mb=1, max_wall_clock_sec=15.0)
++    app    = ("with open('flood.bin', 'wb') as fh:\n"
++              "    for _ in range(64):\n"
++              "        fh.write(b'x' * (1024 * 1024))\n"
++              "        fh.flush()\n")
++    with tempfile.TemporaryDirectory(prefix="vut_procsitter_test_") as work_dir:
++        result     = await Procsitter(config, work_dir).run(_argv(app))
++        flood_path = os.path.join(work_dir, "flood.bin")
++        size_mb    = (os.path.getsize(flood_path) / (1024.0 * 1024.0)
++                      if os.path.exists(flood_path) else 0.0)
++
++    # NOTE: which mechanism fires (SIGXFSZ death vs. EFBIG self-abort) is
++    # platform-dependent -- the printed output only asserts the NORMALIZED
++    # outcome (SIGXFSZ death -> FAIL_FILE_SIZE_EXCEEDED, EFBIG
++    # self-abort -> FAIL_COMPLETED), so the GOOD file holds everywhere.
++    contained_f = (result.containment is E_Containment.FAIL_FILE_SIZE_EXCEEDED) \
++                  or (result.containment is E_Containment.FAIL_COMPLETED)
++    ok = _check([
++        (contained_f,
++         "flood contained (SIGXFSZ death or EFBIG self-abort)"),
++        (size_mb <= 1.0 + 1e-6,
++         "flood file stopped at the 1 MB cap"),
++        (result.wall_clock_sec < 10.0,
++         "containment came well before the flood's natural end"),
++    ])
++    _verdict(ok, "disk flooding contained by file-size cap.")
++
++
++async def test_pids():
++    """A fork storm is contained by the watchdog's group-member count
++    (PIDS_EXCEEDED): the storm dies and no child survives the run.
++    RLIMIT_NPROC is deliberately not used -- it is a per-REAL-USER cap
++    that starves legitimate builds; max_pids is the watchdog's job. The
++    marker string tags storm children so the post-run scan can prove
++    extinction."""
++    import psutil
++    marker = "VUT_PROCSITTER_PIDBOMB_MARKER"
++    config = ProcsitterConfig(max_pids=8, max_wall_clock_sec=15.0)
++    app    = ("import os, sys, time\n"
++              "for i in range(64):\n"
++              "    pid = os.fork()\n"
++              "    if pid == 0:\n"
++              f"        sys.argv.append('{marker}')\n"
++              "        time.sleep(30)\n"
++              "        os._exit(0)\n"
++              "time.sleep(30)\n")
++    result = await _run(config, app)
++
++    await asyncio.sleep(0.5)    # give the OS a moment to reap
++    survivors = [proc for proc in psutil.process_iter(attrs=("cmdline",))
++                 if proc.info["cmdline"]
++                 and any(marker in arg for arg in proc.info["cmdline"])]
++
++    # A storm that raced the watchdog to its own end (all forks done, the
++    # parent sleeping) reads FAIL_COMPLETED; the printed output asserts
++    # only the NORMALIZED outcome, so the GOOD file is stable.
++    contained_f = (result.containment is E_Containment.FAIL_PIDS_EXCEEDED) \
++                  or (result.containment is E_Containment.FAIL_COMPLETED)
++    ok = _check([
++        (contained_f,
++         "storm contained (PIDS_EXCEEDED, watchdog group count)"),
++        (result.wall_clock_sec < 10.0,
++         "containment came well before the storm's natural end"),
++        (len(survivors) == 0,
++         "no straggling storm children survive the run"),
++    ])
++    _verdict(ok, "fork storm contained, all children reaped.")
++
++
++async def test_cancelled_run():
++    """An INTERRUPTED run (Ctrl-C, or a logout that tears the harness
++    down mid-test) must leak NO child. The child setsid's into its own
++    session, so nobody else would ever reap it -- the procsitter's cleanup
++    is CANCELLATION-PROOF: it kills the child's group synchronously even
++    as the run coroutine unwinds. A leak here silently consumes the
++    per-user process table across runs -- the very accident that
++    eventually logs a developer out."""
++    import os, psutil
++    marker = f"VUT_PROCSITTER_CANCEL_MARKER_{os.getpid()}"
++    config = ProcsitterConfig(max_wall_clock_sec=30.0)
++    app    = (f"import sys, time\n"
++              f"sys.argv.append('{marker}')\n"
++              f"time.sleep(30)\n")
++
++    with tempfile.TemporaryDirectory(prefix="vut_procsitter_test_") as work_dir:
++        run_task = asyncio.create_task(
++            Procsitter(config, work_dir).run(_argv(app)))
++        await asyncio.sleep(0.8)     # let it launch and setsid
++        run_task.cancel()            # <-- interrupt the run mid-flight
++        reraised = False
++        try:
++            await run_task
++        except asyncio.CancelledError:
++            reraised = True          # honoured -- AFTER the group is dead
++
++    await asyncio.sleep(0.5)         # give the OS a moment to reap
++    survivors = [proc for proc in psutil.process_iter(attrs=("cmdline",))
++                 if proc.info["cmdline"]
++                 and any(marker in arg for arg in proc.info["cmdline"])]
++
++    print(f"INSPECT: survivors after cancel = {len(survivors)}")
++    ok = _check([
++        (reraised,
++         "cancellation is honoured (CancelledError re-raised)"),
++        (len(survivors) == 0,
++         "no child survives the interrupted run -- group reaped"),
++    ])
++    _verdict(ok, "an interrupted run leaks nothing; logout-by-leak "
++                 "prevented.")
++
++
++async def test_no_psutil():
++    """Honest reporting: without psutil the memory and pid caps cannot be
++    enforced -- they must appear in .unenforced; the wall-clock cap must
++    keep working."""
++    saved = procsitter_module.psutil
++    procsitter_module.psutil = None
++    try:
++        config = ProcsitterConfig(max_wall_clock_sec=1.0)
++        result = await _run(config, "import time; time.sleep(30)")
++    finally:
++        procsitter_module.psutil = saved
++
++    print(f"INSPECT: containment = {result.containment.name}")
++    print(f"INSPECT: unenforced  = {sorted(result.unenforced)}")
++    ok = _check([
++        (result.containment is E_Containment.FAIL_WALL_CLOCK_EXCEEDED,
++         "wall clock still enforced without psutil"),
++        ("max_memory_mb" in result.unenforced,
++         "memory cap reported as unenforced"),
++        ("max_pids" in result.unenforced,
++         "pid cap reported as unenforced"),
++        (result.peak_memory_mb is None,
++         "no fabricated memory measurement"),
++    ])
++    _verdict(ok, "degradation without psutil is loud, never silent.")
++
++
++async def test_disk_usage():
++    """A loop writing MANY files floods the disk where RLIMIT_FSIZE
++    (per single file) is blind. The watchdog sums allocated bytes under
++    the work dir and contains it: FAIL_DISK_USAGE_EXCEEDED, peak
++    recorded, kill before the flood grows unbounded."""
++    config = ProcsitterConfig(max_disk_mb=20, max_wall_clock_sec=30.0)
++    app    = ("import time\n"
++              "i = 0\n"
++              "while True:\n"
++              "    with open('flood%d.bin' % i, 'wb') as fh:\n"
++              "        fh.write(b'x' * (1024 * 1024))\n"
++              "    i += 1\n"
++              "    time.sleep(0.02)\n")
++    result = await _run(config, app)
++
++    print(f"INSPECT: containment = {result.containment.name}")
++    ok = _check([
++        (result.containment is E_Containment.FAIL_DISK_USAGE_EXCEEDED,
++         "containment is FAIL_DISK_USAGE_EXCEEDED"),
++        (result.peak_disk_mb is not None
++         and result.peak_disk_mb > 20.0,
++         "recorded peak exceeds the 20 MB cap"),
++        (result.peak_disk_mb is not None
++         and result.peak_disk_mb < 512.0,
++         "kill came before the flood grew unbounded (< 512 MB)"),
++        (result.wall_clock_sec < 15.0,
++         "containment well before the 30 s natural end"),
++    ])
++    _verdict(ok, "many-files flood contained by the disk-usage cap.")
++
++
++async def test_disk_space_low():
++    """THE FLOOR that keeps the OS operable: an absurdly high
++    min_free_disk_mb (larger than the whole disk) is below the free
++    space immediately, so the FIRST disk poll terminates the call --
++    FAIL_DISK_SPACE_LOW. This is the mechanism that stops a runaway
++    write from filling the filesystem out from under the operating
++    system, whoever caused the shortage."""
++    import shutil
++    total_mb = shutil.disk_usage(".").total / (1024.0 * 1024.0)
++    config = ProcsitterConfig(min_free_disk_mb=int(total_mb) + 10**6,
++                              max_wall_clock_sec=30.0)
++    result = await _run(config, "import time; time.sleep(30)")
++
++    print(f"INSPECT: containment = {result.containment.name}")
++    ok = _check([
++        (result.containment is E_Containment.FAIL_DISK_SPACE_LOW,
++         "containment is FAIL_DISK_SPACE_LOW"),
++        (result.wall_clock_sec < 10.0,
++         "floor fired on an early disk poll, well before 30 s"),
++        (result.exit_code is None,
++         "exit_code is None (the procsitter ended it, not the test)"),
++    ])
++    _verdict(ok, "free-space floor keeps the operating system operable.")
++
++
++async def test_clean_under_caps():
++    """THE COMPLEMENT of every violation above: a run that genuinely
++    USES resources -- memory, a file, extra processes, cpu, wall time
++    -- yet stays UNDER every cap must complete cleanly, its work
++    intact. This proves the watchdog does NOT false-positive: a
++    legitimate call operating near a cap is not killed. Without this
++    reference case, an over-eager cap would pass every test above while
++    silently breaking real work."""
++    import os
++    config = ProcsitterConfig(max_memory_mb=256, max_file_size_mb=4,
++                              max_disk_mb=50, max_pids=8,
++                              max_cpu_time_sec=15, max_wall_clock_sec=15.0)
++    app = ("import os\n"
++           "for _ in range(2):\n"                 # a few short-lived children
++           "    if os.fork() == 0:\n"
++           "        os._exit(0)\n"
++           "for _ in range(2): os.wait()\n"
++           "hoard = bytearray(40 * 1024 * 1024)\n"   # 40 MB  < 256 cap
++           "with open('out.bin', 'wb') as fh:\n"
++           "    fh.write(b'y' * (512 * 1024))\n"      # 0.5 MB < 4 cap, < disk
++           "s = 0\n"
++           "for i in range(200000): s += i\n"        # a little cpu
++           "print('done', s)\n")
++    with tempfile.TemporaryDirectory(prefix="vut_procsitter_test_") as work_dir:
++        result   = await Procsitter(config, work_dir).run(_argv(app))
++        out_path = os.path.join(work_dir, "out.bin")
++        out_mb   = (os.path.getsize(out_path) / (1024.0 * 1024.0)
++                    if os.path.exists(out_path) else -1.0)
++
++    print(f"INSPECT: containment = {result.containment.name}, "
++          f"exit = {result.exit_code}")
++    ok = _check([
++        (result.containment is E_Containment.OK_COMPLETED,
++         "clean completion -- OK_COMPLETED, no cap fired"),
++        (result.exit_code == 0,           "exit code 0"),
++        (result.unenforced == (),         "every cap enforced, none skipped"),
++        (abs(out_mb - 0.5) < 0.01,        "the file was written intact (0.5 MB)"),
++        (result.peak_memory_mb is None or result.peak_memory_mb < 256.0,
++         "peak memory stayed under the cap -- no false memory kill"),
++        (result.peak_disk_mb is None or result.peak_disk_mb < 50.0,
++         "peak disk stayed under the cap -- no false disk kill"),
++    ])
++    _verdict(ok, "a real workload under every cap completes untouched.")
++
++
++async def test_self_exit_codes():
++    """The process's OWN termination -- three reference classes read
++    straight from the exit status, NO cap involved: exit 0 ->
++    OK_COMPLETED (the sole success); a nonzero exit -> FAIL_COMPLETED
++    carrying that POSITIVE code; death by an uncaught SIGNAL ->
++    FAIL_COMPLETED carrying the NEGATIVE signal number (the documented
++    'death by signal' case)."""
++    config = ProcsitterConfig(max_wall_clock_sec=10.0)
++    ok_res   = await _run(config, "import sys; sys.exit(0)")
++    fail_res = await _run(config, "import sys; sys.exit(3)")
++    sig_res  = await _run(config, "import os; os.abort()")     # SIGABRT
++
++    print(f"INSPECT: exit0 = {ok_res.containment.name}/{ok_res.exit_code}, "
++          f"exit3 = {fail_res.containment.name}/{fail_res.exit_code}, "
++          f"signal = {sig_res.containment.name}/{sig_res.exit_code}")
++    ok = _check([
++        (ok_res.containment is E_Containment.OK_COMPLETED
++         and ok_res.exit_code == 0,
++         "exit 0 -> OK_COMPLETED, the sole success"),
++        (fail_res.containment is E_Containment.FAIL_COMPLETED
++         and fail_res.exit_code == 3,
++         "nonzero self-exit -> FAIL_COMPLETED, positive code preserved"),
++        (sig_res.containment is E_Containment.FAIL_COMPLETED
++         and sig_res.exit_code is not None and sig_res.exit_code < 0,
++         "signal death -> FAIL_COMPLETED, negative signal number"),
++    ])
++    _verdict(ok, "self-termination classified by exit status alone.")
++
++
++async def test_stderr_tail_cap():
++    """stderr_last_100_lines is BOUNDED by contract: the record keeps
++    the LAST 100 lines (a runaway cannot flood it), and one
++    pathological line without newlines is trimmed to its 4096-byte
++    tail (memory cannot flood either). Two runs, the two bounds."""
++    config = ProcsitterConfig(max_wall_clock_sec=10.0)
++    many = await _run(config,
++        "import sys\n"
++        "for i in range(150):\n"
++        "    sys.stderr.write('err %d\\n' % i)\n")
++    longline = await _run(config,
++        "import sys\n"
++        "sys.stderr.write('x' * 5000)\n")     # no newline: pending tail
++
++    tail = many.stderr_last_100_lines.splitlines()
++    longs = longline.stderr_last_100_lines.splitlines()
++    print(f"INSPECT: kept {len(tail)} lines "
++          f"[{tail[0] if tail else '-'} .. {tail[-1] if tail else '-'}]; "
++          f"long line len = {len(longs[0]) if longs else 0}")
++    ok = _check([
++        (len(tail) == 100,
++         "exactly the LAST 100 lines kept (150 emitted)"),
++        (tail[0] == "err 50" and tail[-1] == "err 149",
++         "the kept window is the TAIL, not the head"),
++        (len(longs) == 1 and len(longs[0]) <= 4096,
++         "a newline-less 5000-char line trimmed to its 4096-byte tail"),
++    ])
++    _verdict(ok, "the stderr tail is bounded, by line count and by length.")
++
++
++async def test_command_guard():
++    """The command is an argv LIST, never a string, and that contract
++    is enforced LOUDLY: a bare string (which would spread into single
++    characters) raises AssertionError -- a harness fault, not a silent
++    misrun. A well-formed argv naming a program that does not exist is
++    the opposite: a RESULT, not an exception -- FAIL_LAUNCH."""
++    config = ProcsitterConfig(max_wall_clock_sec=10.0)
++    with tempfile.TemporaryDirectory(prefix="vut_procsitter_test_") as work_dir:
++        procsitter = Procsitter(config, work_dir)
++        raised = False
++        try:
++            await procsitter.run("echo hello")        # a STRING -- misuse
++        except AssertionError:
++            raised = True
++        launch = await procsitter.run(["/no/such/program", "arg"])
++
++    print(f"INSPECT: bare-string raised = {raised}, "
++          f"missing program = {launch.containment.name}")
++    ok = _check([
++        (raised,
++         "a bare string command is rejected loudly (AssertionError)"),
++        (launch.containment is E_Containment.FAIL_LAUNCH
++         and launch.exit_code is None,
++         "a missing program is a RESULT: FAIL_LAUNCH, not a crash"),
++    ])
++    _verdict(ok, "argv-list contract enforced; a missing program attributed.")
++
++
++# ---------------------------------------------------------------------------
++
++if __name__ == "__main__":
++    HwutRunner(
++        argv       = sys.argv,
++        title      = "Procsitter resource containment with attribution",
++        choice_map = {
++            "wall_clock": test_wall_clock,
++            "output_gap": test_output_gap,
++            "cpu_time":   test_cpu_time,
++            "memory":     test_memory,
++            "file_size":  test_file_size,
++            "pids":       test_pids,
++            "no_psutil":  test_no_psutil,
++            "cancelled_run": test_cancelled_run,
++            "disk_usage":      test_disk_usage,
++            "disk_space_low":  test_disk_space_low,
++            "clean_under_caps": test_clean_under_caps,
++            "self_exit_codes":  test_self_exit_codes,
++            "stderr_tail_cap":  test_stderr_tail_cap,
++            "command_guard":    test_command_guard,
++        },
++        happy      = "SUCCESS.*",
++    ).run()
+diff --git a/procsitter/construction.py b/procsitter/construction.py
+new file mode 100644
+--- /dev/null
++++ b/procsitter/construction.py
+@@ -0,0 +1,212 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE
++       CONSTRUCTION BLOCKS for supervised calls -- the byte edges between
++       them, and the pipelines built from those edges.
++
++DESCRIPTION
++       A supervised call (see 'procsitter.py') owns one process: its caps,
++       its kill ladder, its attribution record. It knows nothing of any
++       other call. What connects calls lives here:
++
++           Link              the directed edge: one production port to
++                             one control port
++           tee()             the consumer sum: many listeners on one
++                             production port
++           chain()           a pipeline of supervised calls, obeying the
++                             three rules
++           ProcsitterChain   the launched pipeline as plain data
++
++       This module holds no knowledge of any application. It composes
++       supervised calls; what those calls do is the caller's affair.
++______________________________________________________________________________
++"""
++import asyncio
++from   contextlib  import suppress
++from   dataclasses import dataclass
++
++
++class Link:
++    """RETURN: --. THE DIRECTED EDGE of the byte world: it carries a
++                   stream from a PRODUCTION port to a CONTROL port.
++
++    THE TWO AXES. Every component spans the same two orthogonal
++    directions:
++
++        PRODUCTION  what flows OUT   (stdout; stderr is a second,
++                                      diagnostic production channel)
++        CONTROL     what flows IN    (stdin: the component obeys it)
++
++    A Link connects one production to one control: its '.feed' is
++    given as a producer's 'stdout_handler' (or 'stderr_handler'); its
++    '.reader' is given as a consumer's 'stdin_reader'. '.close()'
++    propagates end-of-stream. The law of the axes: production may be
++    LISTENED to by many ('tee', below -- consumers add); a control
++    port obeys ONE voice (byte streams do not merge
++    deterministically).
++
++    Every process on a wired graph runs in its OWN procsitter: own
++    caps, own attribution -- supervised at every link.
++    """
++    def __init__(self):
++        self.reader = asyncio.StreamReader()
++
++    async def feed(self, data: bytes):
++        """RETURN: None. Upstream stdout handler: pass one chunk on."""
++        self.reader.feed_data(data)
++
++    def close(self):
++        """RETURN: None. Upstream ended: downstream sees EOF."""
++        with suppress(Exception):
++            self.reader.feed_eof()
++
++
++def tee(*consumer_list):
++    """
++    RETURN: async handler, feeding every consumer in 'consumer_list'
++            with each chunk -- THE CONSUMER SUM.
++
++    Fan-out is NOT a building block: a consumer is a plain async
++    function, and functions ADD. 'tee(judge_link.feed, observer.feed)'
++    is the sum of two consumers -- anyone may LISTEN to a production
++    port. (The reverse does not exist: two productions cannot merge
++    into one control port deterministically -- ONE VOICE COMMANDS.)
++    """
++    async def handler(data: bytes):
++        for consume in consumer_list:
++            await consume(data)
++    return handler
++
++# ---------------------------------------------------------------------------
++# THE WIRING IDIOMS -- everything above the two building blocks is
++# composition; no further class is needed.
++#
++# CHAIN (a pipeline A | B), with THE THREE RULES every chain obeys:
++#   (1) EOF ONWARD: when a stage ends, close its outgoing Link
++#       ('finally: link.close()') -- downstream sees end-of-stream.
++#   (2) STOP ON EARLY DEATH: a stage that ends while an UPSTREAM stage
++#       still runs sets the shared stop_event -- SIGPIPE semantics,
++#       supervised; this is also what BOUNDS MEMORY (an in-memory
++#       'feed' never blocks; without the rule an upstream would fill
++#       a dead chain's buffer without limit).
++#   (3) EVERY STAGE ACCOUNTED: gather ALL stage tasks; one
++#       ProcsitterResult per stage, nothing disappears.
++#
++#     stop = asyncio.Event()
++#     link = Link()
++#     async def stage_a():
++#         try:     return await a.run(argv_a, stdout_handler=link.feed,
++#                                     stop_event=stop)
++#         finally: link.close()                              # rule 1
++#     async def stage_b():
++#         try:     return await b.run(argv_b, stdin_reader=link.reader,
++#                                     stdout_handler=consume,
++#                                     stop_event=stop)
++#         finally:
++#             if not task_a.done(): stop.set()               # rule 2
++#     record_a, record_b = await asyncio.gather(stage_a(), stage_b())
++#                                                            # rule 3
++#
++# MAN IN THE MIDDLE (controller C rides subject A, consumer B keeps
++# listening undisturbed): production is TEE'D, control is answered --
++#
++#     to_b, to_c, back = Link(), Link(), Link()   # B and C listen; C answers
++#     A.run(argv, stdout_handler=tee(to_b.feed, to_c.feed),
++#           stdin_reader=back.reader)             # finally: to_b/to_c.close()
++#     C.run(ctrl_argv, stdin_reader=to_c.reader,
++#           stdout_handler=back.feed)             # finally: back.close()
++#     B consumes to_b.reader (a judge, a pype link, a log)
++#
++# A dialogue where both ends wait is an accident like any other: the
++# wall clocks contain it. A supervised answerer must be UNBUFFERED
++# (e.g. 'python3 -u') -- a buffered answer never arrives.
++# ---------------------------------------------------------------------------
++
++
++@dataclass(frozen=True)
++class ProcsitterChain:
++    """RETURN: --. PLAIN DATA handed back by 'chain()': the
++                   chain's production end ('.tail', a Link), the shared
++                   stop_event, and ONE TASK PER STAGE. No behavior --
++                   the chain's rules live in 'chain'; the data
++                   is dumb:
++
++        records  = await asyncio.gather(*c.task_tuple)
++        running  = any(not t.done() for t in c.task_tuple)
++        stop     = c.stop_event.set()
++    """
++    tail:       "Link"
++    stop_event: "asyncio.Event"
++    task_tuple: tuple
++
++
++def chain(stage_list, stop_event=None, stdin_reader=None):
++    """
++    RETURN: ProcsitterChain, the LAUNCHED chain: every stage runs; the last
++            stage's production feeds '.tail'.
++
++    THE POLICY FUNCTION of the chain idiom -- the three rules, encoded
++    once (see the idiom block above): (1) EOF onward -- a stage that
++    ends closes its outgoing Link; (2) stop on early death -- a stage
++    ending while an UPSTREAM stage still runs sets the shared
++    stop_event (SIGPIPE semantics, supervised; bounds the in-memory
++    buffers); (3) every stage accounted -- one task per stage, gather
++    them for the records.
++
++    'stage_list' entries are (procsitter, argv) or (procsitter, argv,
++    extra_run_kwargs) -- the extra kwargs go verbatim into that
++    stage's 'run()' (e.g. {'stderr_handler': err_link.feed} to wire a
++    stage's diagnostic production). ONE exception: a 'stdout_handler'
++    in the extra kwargs is not a replacement but a LISTENER -- it is
++    TEE'D with the chain edge, so the stage's production reaches both
++    the next stage AND the listener (a log tap, a mirror); anyone may
++    LISTEN to a production, the pipeline still flows. 'stdin_reader'
++    feeds the FIRST stage's control port (recorded input, or a
++    dialogue's back edge).
++
++    'stdin_reader' and 'stop_event' are THE CHAIN'S: the upstream stage
++    feeds the one, every stage shares the other. Either of them in a
++    stage's extra kwargs is a wiring mistake, caught HERE, where it is
++    written -- not later, as a duplicate-keyword TypeError inside the
++    stage's task, surfacing at the 'gather'.
++    """
++    OWNED = ("stdin_reader", "stop_event")
++    for i, stage in enumerate(stage_list):
++        for key in (stage[2] if len(stage) > 2 else ()):
++            assert key not in OWNED, \
++                   "chain(): stage %i passes '%s' -- that is the chain's. " \
++                   "Pass it to chain(), not to a stage." % (i, key)
++
++    stop      = stop_event if stop_event is not None else asyncio.Event()
++    tail      = Link()
++    task_list = []
++    last_i    = len(stage_list) - 1
++    upstream  = stdin_reader
++    for i, stage in enumerate(stage_list):
++        procsitter, argv = stage[0], stage[1]
++        extra    = dict(stage[2]) if len(stage) > 2 else {}
++        listener = extra.pop("stdout_handler", None)   # a production tap
++        out_link = tail if i == last_i else Link()
++        # chain edge FIRST: a chunk reaches the next stage before the
++        # listener runs, so a failing tap (e.g. an unwritable log) never
++        # starves the pipeline of that chunk -- it surfaces afterwards
++        # as a loud harness fault, the chain already fed.
++        handler  = out_link.feed if listener is None \
++                   else tee(out_link.feed, listener)
++
++        async def run_stage(ps=procsitter, av=argv, up=upstream,
++                            out=out_link, idx=i, kw=extra, h=handler):
++            try:
++                return await ps.run(av, stdin_reader=up,
++                                    stdout_handler=h,
++                                    stop_event=stop, **kw)
++            finally:
++                out.close()                                   # rule 1
++                if any(not t.done() for t in task_list[:idx]):
++                    stop.set()                                # rule 2
++
++        task_list.append(asyncio.create_task(run_stage()))
++        upstream = out_link.reader
++    return ProcsitterChain(tail=tail, stop_event=stop,
++                           task_tuple=tuple(task_list))        # rule 3
+diff --git a/procsitter/procsitter.py b/procsitter/procsitter.py
+new file mode 100644
+--- /dev/null
++++ b/procsitter/procsitter.py
+@@ -0,0 +1,827 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE
++       THE SUPERVISED SYSTEM CALL -- platform-independent containment
++       of unintentional misbehavior of trusted subprocesses, with
++       attribution.
++
++DESCRIPTION
++       Every subprocess HWUT launches goes through the procsitter: test
++       applications, build and helper tools ('make', 'scp', scripts),
++       and pype filters. It replaces direct 'subprocess' usage. The
++       procsitter is THE GROUND; everything else -- pipelines, the judged
++       test -- is lightweight composition on top (see judged.py).
++
++       The procsitter protects the RUN from the subprocess's BUGS: disk
++       flooding, fork bombs, runaway memory growth, endless loops,
++       hangs. A violation is reported as the failure of the call that
++       caused it, with the exhausted resource named (ProcsitterResult).
++
++       It does NOT defend against malice, does not isolate, and does
++       not pin execution environments. Those concerns are resolved
++       independently at the outer boundary (container, VM, dedicated
++       runner) by the administrator. See SPEC-procsitter.txt.
++
++       Dependencies: stdlib + psutil. Degradable: without psutil the
++       memory and pid-count caps cannot be enforced and are REPORTED
++       in ProcsitterResult.unenforced -- never silently ignored. On
++       platforms without the 'resource' module (Windows) the CPU-time
++       and file-size caps are likewise reported as unenforced; the
++       wall-clock cap works everywhere.
++
++MECHANISMS
++       preexec hook     os.setsid (own process group) + rlimits for
++                        CPU time and file size.
++       watchdog task    polls beside the stream readers: enforces
++                        wall-clock and RSS caps over the whole process
++                        group, counts group members against max_pids
++                        (THE process-count cap -- per-call, own group),
++                        records peaks for attribution, and reaps
++                        stragglers that outlive the test process.
++       kill ladder      SIGTERM -> grace -> SIGKILL, applied to the
++                        process GROUP; post-mortem sweep of any
++                        observed descendant that escaped the group.
++       anti-leak        cleanup is CANCELLATION-PROOF: an interrupted
++                        run (Ctrl-C, logout) still kills and sweeps its
++                        group; a module-level atexit backstop killpg's
++                        any group a dying harness left behind.
++
++       RLIMIT_AS is deliberately NOT used: it breaks interpreters that
++       reserve large virtual address spaces. Memory containment is
++       watchdog-based (RSS) -- adequate against accidents; adversaries
++       are out of scope.
++
++       RLIMIT_NPROC is deliberately NOT used: it caps processes per
++       REAL USER ID -- system-wide, not per-call. Derived from a
++       point-in-time snapshot it STARVES a legitimate build the moment
++       unrelated processes of the same user push the global count past
++       the snapshot (a busy desktop: build fork -> EAGAIN, "Resource
++       temporarily unavailable"). The per-call process-count cap is the
++       watchdog's group-member count, which is correctly scoped.
++______________________________________________________________________________
++"""
++import asyncio
++import atexit
++import os
++import shutil
++import signal
++import time
++from   collections import deque
++from   contextlib  import suppress
++from   dataclasses import dataclass
++from   enum        import Enum, auto
++from   pathlib     import Path
++from   typing      import Awaitable, Callable, Optional, Sequence
++
++try:                import resource
++except ImportError: resource = None      # e.g. Windows
++
++try:                import psutil
++except ImportError: psutil = None        # degradable, reported
++
++
++_WATCHDOG_PERIOD_SEC  = 0.25   # poll period: RSS, pid count, wall clock
++_DISK_POLL_EVERY      = 4      # disk checked every Nth tick (~1 s): a
++                               # directory walk is heavier than a poll
++_KILL_GRACE_SEC       = 2.0    # SIGTERM -> SIGKILL escalation delay
++_STRAGGLER_GRACE_SEC  = 1.0    # children outliving the exited test process
++
++_STDERR_TAIL_LINES    = 100    # stderr kept as its LAST N lines (the field
++                               # name 'stderr_last_100_lines' states N)
++_STDERR_LINE_MAX      = 4096   # one line trimmed to its tail: a line
++                               # without newlines cannot flood memory
++
++_SIGKILL              = getattr(signal, "SIGKILL", signal.SIGTERM)
++
++# THE ANTI-LEAK BACKSTOP. Every live supervised call registers its
++# process-group id (== the child pid: it setsid'd) here, and clears it
++# on cleanup. A child that setsid'd into its own session would NOT die
++# with the harness -- so if the harness exits with groups still live
++# (an unhandled exception, sys.exit, an interpreter teardown), this
++# atexit hook killpg's them. It cannot fire on SIGKILL of the harness
++# (no process can); that residue is the outer boundary's concern.
++_ACTIVE_GROUP_PIDS: set = set()
++
++
++def _reap_active_groups():
++    """
++    RETURN: None. Best-effort SIGKILL of every still-registered process
++            group -- the harness is exiting; nothing else would reap a
++            setsid'd child.
++    """
++    if os.name != "posix":
++        return
++    for pid in list(_ACTIVE_GROUP_PIDS):
++        with suppress(ProcessLookupError, PermissionError, OSError):
++            os.killpg(pid, _SIGKILL)
++    _ACTIVE_GROUP_PIDS.clear()
++
++
++atexit.register(_reap_active_groups)
++
++
++class E_Containment(Enum):
++    """How the supervised call ended. THE PREFIX IS THE VERDICT: 'OK_'
++    is the one success (ran to its own end, exit 0); every 'FAIL_' is a
++    way it went wrong -- so success is readable from the containment
++    alone, no separate flag.
++    """
++    OK_COMPLETED             = auto()   # exited by itself, exit code 0
++    FAIL_COMPLETED           = auto()   # exited by itself, NONZERO code
++                                        # (incl. death by signal, e.g.
++                                        # SIGSEGV -> negative exit_code)
++    FAIL_WALL_CLOCK_EXCEEDED = auto()   # watchdog: max_wall_clock_sec
++    FAIL_CPU_TIME_EXCEEDED   = auto()   # RLIMIT_CPU (SIGXCPU)
++    FAIL_MEMORY_EXCEEDED     = auto()   # watchdog: group RSS over cap
++    FAIL_FILE_SIZE_EXCEEDED  = auto()   # RLIMIT_FSIZE (SIGXFSZ death).
++                                        # NOTE: an app that ignores
++                                        # SIGXFSZ -- CPython does -- gets
++                                        # EFBIG from write() and fails by
++                                        # its own exception: the cap
++                                        # still holds, but the run
++                                        # reports FAIL_COMPLETED with the
++                                        # app's exit code.
++    FAIL_PIDS_EXCEEDED       = auto()   # watchdog: group members over cap
++    FAIL_DISK_USAGE_EXCEEDED = auto()   # watchdog: allocated bytes under
++                                        # the work dir over max_disk_mb --
++                                        # catches the many-files loop that
++                                        # RLIMIT_FSIZE (per file) cannot
++    FAIL_DISK_SPACE_LOW      = auto()   # watchdog: free space of the work
++                                        # dir's filesystem fell below
++                                        # min_free_disk_mb WHILE this call
++                                        # ran -- terminated to keep the
++                                        # OPERATING SYSTEM operable; the
++                                        # shortage is not proof that THIS
++                                        # call caused it
++    FAIL_STALLED             = auto()   # watchdog: no output on EITHER
++                                        # production port for
++                                        # max_output_gap_sec. A call that
++                                        # is alive, under every other cap,
++                                        # and saying nothing -- a deadlock
++                                        # or a wait that will not end.
++    FAIL_STOPPED             = auto()   # external stop_event
++    FAIL_LAUNCH              = auto()   # command not found / not executable
++
++
++@dataclass
++class ProcsitterConfig:
++    """THE PER-CALL CONTRACT: every field is a CAP the procsitter
++    ENFORCES. A call's ENVIRONMENTAL needs -- network reach, bound
++    ports, writable paths beyond the work dir -- are NOT here: ensuring
++    them is the ORCHESTRATOR's job (it owns the environment), ABOVE
++    this level. The procsitter neither records nor enforces them.
++    """
++    max_wall_clock_sec: float = 300.0
++    max_cpu_time_sec:   int   = 300
++    max_memory_mb:      int   = 512     # watchdog RSS, whole process group
++    max_pids:           int   = 32
++    max_file_size_mb:   int   = 10      # PER FILE (RLIMIT_FSIZE)
++    max_disk_mb:        int   = 100     # TOTAL allocation under work_dir
++                                        # (watchdog walk, st_blocks): the
++                                        # many-files loop cap
++    max_output_gap_sec: float | None = None   # SILENCE cap: no output on
++                                        # either production port for this
++                                        # long ends the call. None: off.
++                                        # Measured from launch, reset by
++                                        # every chunk. A wall clock bounds
++                                        # a run that is WORKING; this one
++                                        # bounds a run that is WAITING.
++    min_free_disk_mb:   int   = 128     # free-space FLOOR of work_dir's
++                                        # filesystem: below it the call is
++                                        # terminated so the OS stays
++                                        # operable, whoever caused the
++                                        # shortage
++
++
++@dataclass
++class ProcsitterResult:
++    """THE ATTRIBUTION RECORD of one procsittered execution."""
++    containment:    E_Containment        # THE VERDICT: OK_ vs FAIL_
++    exit_code:      Optional[int]        # set for OK_/FAIL_COMPLETED;
++                                         # None when the procsitter ended it
++    wall_clock_sec: float
++    cpu_time_sec:   Optional[float]      # None if not measurable
++    peak_memory_mb: Optional[float]      # None without psutil
++    unenforced:     tuple[str, ...]      # caps the platform cannot enforce
++    stderr_last_100_lines: str = ""      # last 100 lines of stderr,
++                                         # captured when NO stderr_handler
++                                         # was given -- the WHY for the
++                                         # report (a nonzero exit without
++                                         # it is a riddle); bounded by
++                                         # LINE COUNT, so it informs
++                                         # without risking a flood; "" when
++                                         # a handler consumed the channel
++    peak_pids:      Optional[int] = None # peak process-group member count
++                                         # observed (None without psutil);
++                                         # the WHY beside FAIL_PIDS_EXCEEDED
++    peak_disk_mb:   Optional[float] = None
++                                         # peak allocation observed under
++                                         # the work dir (watchdog walk);
++                                         # the WHY beside
++                                         # FAIL_DISK_USAGE_EXCEEDED
++                                         #
++                                         # SUCCESS is 'containment is
++                                         # E_Containment.OK_COMPLETED' --
++                                         # no separate '.ok' flag (the
++                                         # prefix already says it).
++
++
++class _RunState:
++    """Shared mutable state between run(), watchdog, and stop watcher."""
++    __slots__ = ("cause", "peak_memory_mb", "peak_pids", "peak_disk_mb",
++                 "cpu_time_sec", "descendants", "last_output_sec")
++
++    def __init__(self):
++        self.cause           = None   # first containment cause wins
++        self.last_output_sec = None   # monotonic mark of the last chunk
++                                      # seen on EITHER production port;
++                                      # None until launch sets it
++        self.peak_memory_mb = None
++        self.peak_pids      = None
++        self.peak_disk_mb   = None
++        self.cpu_time_sec   = None
++        self.descendants    = {}      # pid -> create_time, ever observed
++
++    def set_cause(self, cause):
++        """
++        RETURN: True,  cause was recorded (first one wins).
++                False, a cause was already present.
++        """
++        if self.cause is None:
++            self.cause = cause
++            return True
++        return False
++
++
++class Procsitter:
++    def __init__(self, config: ProcsitterConfig, work_dir: str):
++        self.config   = config
++        self.work_dir = Path(work_dir).resolve()
++
++    # ------------------------------------------------------------------ API
++
++    async def run(self,
++                  command:        Sequence[str],
++                  stdout_handler: None | Callable[[bytes], Awaitable[None]] = None,
++                  stderr_handler: None | Callable[[bytes], Awaitable[None]] = None,
++                  stdin_reader:   None | asyncio.StreamReader = None,
++                  stop_event:     None | asyncio.Event = None) -> ProcsitterResult:
++        """
++        RETURN: ProcsitterResult, the attribution record of the completed (or
++                contained) run: what ended it, exit code, wall clock, cpu
++                time, peak memory, and any caps the platform could not
++                enforce.
++
++        'command' is the argv SEQUENCE -- [program, arg, ...] -- executed
++        DIRECTLY, no shell: nothing to quote or escape, a path with
++        spaces is simply one element.
++
++        Handlers, if given, receive output
++        chunks as they arrive; otherwise the channels are drained. Never
++        raises on TEST misbehavior -- misbehavior is a RESULT, not an
++        exception. Raises only on harness-level faults (a handler raising,
++        bad configuration).
++        """
++        # A bare str is iterable -- it would spread into single CHARACTERS
++        # and fail cryptically (program 'c', 'm', ...). Catch the mistake
++        # loudly: 'command' is the argv list, e.g. ["make", "-j4", "all"].
++        assert not isinstance(command, (str, bytes)), \
++               "command must be an argv sequence, e.g. ['make', 'all'], " \
++               "not a string"
++
++        state              = _RunState()
++        preexec, unenforced = self._make_preexec()
++        rusage_before      = self._rusage_children()
++        t0                 = time.monotonic()
++
++        try:
++            process = await asyncio.create_subprocess_exec(
++                *command,
++                stdin  = asyncio.subprocess.PIPE,
++                stdout = asyncio.subprocess.PIPE,
++                stderr = asyncio.subprocess.PIPE,
++                cwd    = self.work_dir,
++                **self._spawn_kwargs(preexec))
++        except (FileNotFoundError, PermissionError, NotADirectoryError):
++            return ProcsitterResult(E_Containment.FAIL_LAUNCH, None,
++                                 time.monotonic() - t0, None, None,
++                                 unenforced)
++        except OSError:
++            # e.g. EAGAIN ("Resource temporarily unavailable"): the
++            # per-user process table is full -- the SYSTEM is out of
++            # processes, not a fault of THIS call. A clean, attributed
++            # result, never a raw traceback out of the harness.
++            return ProcsitterResult(E_Containment.FAIL_LAUNCH, None,
++                                 time.monotonic() - t0, None, None,
++                                 unenforced)
++
++        # Register the group for the anti-leak backstop (POSIX: the child
++        # setsid'd, so its group id equals its pid).
++        if os.name == "posix":
++            _ACTIVE_GROUP_PIDS.add(process.pid)
++
++        # Without a caller handler, stderr is CAPTURED (last 100 lines)
++        # instead of blindly drained: a nonzero exit without its stderr
++        # is a riddle; it lands in ProcsitterResult.stderr_last_100_lines.
++        # The cap is by LINE COUNT -- informative, and a runaway process
++        # cannot flood it. A pathological single line without newlines is
++        # itself trimmed to its tail so it cannot flood memory either.
++        stderr_lines   = deque(maxlen=_STDERR_TAIL_LINES)
++        stderr_pending = bytearray()
++        if stderr_handler is None:
++            async def stderr_handler(data):
++                stderr_pending.extend(data)
++                while True:
++                    i = stderr_pending.find(b"\n")
++                    if i < 0:
++                        if len(stderr_pending) > _STDERR_LINE_MAX:
++                            del stderr_pending[:-_STDERR_LINE_MAX]
++                        break
++                    line, del_to = bytes(stderr_pending[:i + 1]), i + 1
++                    del stderr_pending[:del_to]
++                    stderr_lines.append(line[-_STDERR_LINE_MAX:])
++
++        out_task  = asyncio.create_task(
++            self._pump(process.stdout, stdout_handler, state))
++        err_task  = asyncio.create_task(
++            self._pump(process.stderr, stderr_handler, state))
++        in_task   = asyncio.create_task(
++            self._pump_stdin(process.stdin, stdin_reader))
++        dog_task  = asyncio.create_task(
++            self._watchdog(process, state, t0))
++        stop_task = asyncio.create_task(
++            self._watch_stop(process, state, stop_event))
++        exit_task = asyncio.create_task(process.wait())
++
++        harness_error = None
++        cancelled     = False
++        try:
++            # Completes when (a) process exited AND both output pipes hit
++            # EOF, or (b) a pump raised (harness fault in a handler).
++            await asyncio.wait({exit_task, out_task, err_task},
++                               return_when=asyncio.FIRST_EXCEPTION)
++        except asyncio.CancelledError:
++            cancelled = True          # interrupt: still clean up below
++        finally:
++            # THE ANTI-LEAK GUARANTEE. A run interrupted at ANY point still
++            # kills its process group and sweeps -- a cancelled run must
++            # NEVER orphan its children (they setsid into their own group,
++            # so nobody else would reap them).
++            all_tasks = (out_task, err_task, in_task, dog_task,
++                         stop_task, exit_task)
++            if cancelled:
++                # Interrupted (Ctrl-C, logout): no graceful shutdown owed,
++                # only a guarantee of no leak. Kill the group AND the
++                # leader directly, SYNCHRONOUSLY -- no await can be stolen,
++                # and the direct kill covers the pre-setsid window where
++                # the group id does not yet exist.
++                self._hard_kill(process)
++            elif process.returncode is None:
++                await self._kill_ladder(process)      # normal: be graceful
++            for task in all_tasks:
++                if not task.done(): task.cancel()
++            results = []
++            with suppress(asyncio.CancelledError, Exception):
++                results = await asyncio.gather(*all_tasks,
++                                               return_exceptions=True)
++            harness_error = next(
++                (r for r in results[:2]
++                 if isinstance(r, Exception)
++                 and not isinstance(r, asyncio.CancelledError)),
++                None)
++            with suppress(asyncio.CancelledError, Exception):
++                await self._close_stdin_transport(process)
++            self._sweep(state)                        # synchronous: always
++            _ACTIVE_GROUP_PIDS.discard(process.pid)
++
++        if cancelled:
++            # Group is dead and swept; now honour the cancellation.
++            raise asyncio.CancelledError
++        if harness_error is not None:
++            raise harness_error
++
++        wall = time.monotonic() - t0
++        cpu  = self._cpu_time(rusage_before, state)
++        if stderr_pending:                     # the final unterminated line
++            stderr_lines.append(bytes(stderr_pending)[-_STDERR_LINE_MAX:])
++        stderr_text = b"".join(stderr_lines).decode("utf-8", errors="replace")
++        return self._make_result(process.returncode, state, wall, cpu,
++                                 unenforced, stderr_text)
++
++    # ------------------------------------------------------- result shaping
++
++    def _make_result(self, returncode, state, wall, cpu, unenforced,
++                     stderr_last_100_lines):
++        """
++        RETURN: ProcsitterResult, the verdict derived from the recorded
++                watchdog/stop cause first, else the death signal
++                (SIGXCPU/SIGXFSZ -> rlimit containment), else the
++                process's own exit: OK_COMPLETED (0) or FAIL_COMPLETED
++                (nonzero, incl. death by signal).
++        """
++        if state.cause is not None:
++            containment, exit_code = state.cause, None
++        elif resource is not None and returncode == -signal.SIGXCPU:
++            containment, exit_code = E_Containment.FAIL_CPU_TIME_EXCEEDED, None
++        elif resource is not None and returncode == -signal.SIGXFSZ:
++            containment, exit_code = E_Containment.FAIL_FILE_SIZE_EXCEEDED, None
++        elif returncode == 0:
++            containment, exit_code = E_Containment.OK_COMPLETED, 0
++        else:
++            containment, exit_code = E_Containment.FAIL_COMPLETED, returncode
++
++        return ProcsitterResult(containment    = containment,
++                             exit_code      = exit_code,
++                             wall_clock_sec = wall,
++                             cpu_time_sec   = cpu,
++                             peak_memory_mb = state.peak_memory_mb,
++                             unenforced     = unenforced,
++                             stderr_last_100_lines = stderr_last_100_lines,
++                             peak_pids      = state.peak_pids,
++                             peak_disk_mb   = state.peak_disk_mb)
++
++    def _cpu_time(self, rusage_before, state):
++        """
++        RETURN: float, cpu seconds attributed to the run: preferred source
++                       is the getrusage(RUSAGE_CHILDREN) delta (exact for
++                       the reaped child incl. its waited-for descendants);
++                       fallback is the watchdog's last group sample.
++                None,  if neither source is available.
++        """
++        if rusage_before is not None:
++            after = self._rusage_children()
++            delta = (after[0] - rusage_before[0]) \
++                  + (after[1] - rusage_before[1])
++            if delta >= 0.0:
++                return delta
++        return state.cpu_time_sec
++
++    @staticmethod
++    def _rusage_children():
++        """
++        RETURN: (float, float), user and system cpu time of reaped children.
++                None,            if 'resource' is unavailable.
++        """
++        if resource is None: return None
++        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
++        return usage.ru_utime, usage.ru_stime
++
++    # ------------------------------------------------------------- spawning
++
++    def _spawn_kwargs(self, preexec):
++        """
++        RETURN: dict, platform-appropriate spawn keywords: on POSIX a new
++                      session (own process group) plus the rlimit preexec
++                      hook; empty elsewhere.
++        """
++        if os.name != "posix":
++            return {}
++        kwargs = {"start_new_session": True}
++        if preexec is not None:
++            kwargs["preexec_fn"] = preexec
++        return kwargs
++
++    def _make_preexec(self):
++        """
++        RETURN: [0] callable, pre-exec hook applying rlimits in the child.
++                    None,     if the 'resource' module is unavailable.
++                [1] tuple[str, ...], names of caps the platform cannot
++                    enforce (honest-reporting; surfaces in ProcsitterResult).
++        """
++        unenforced = []
++        if psutil is None:
++            # No watchdog: no RSS cap, and no process-count cap either
++            # (max_pids is the watchdog's group-member count).
++            unenforced += ["max_memory_mb", "max_pids"]
++        if resource is None:
++            unenforced += ["max_cpu_time_sec", "max_file_size_mb"]
++            return None, tuple(unenforced)
++
++        cpu_sec    = self.config.max_cpu_time_sec
++        fsize_byte = self.config.max_file_size_mb * 1024 * 1024
++
++        def preexec():
++            # Child context, post-fork pre-exec: keep it minimal; a cap
++            # the kernel refuses is skipped (kernel ceilings vary).
++            # NOTE: RLIMIT_NPROC is NOT set here -- it is a per-REAL-USER
++            # cap, not per-call, and starves legitimate builds on a busy
++            # machine (module header). max_pids is the watchdog's job.
++            with suppress(ValueError, OSError):
++                resource.setrlimit(resource.RLIMIT_CPU,
++                                   (cpu_sec, cpu_sec + 1))
++            with suppress(ValueError, OSError):
++                resource.setrlimit(resource.RLIMIT_FSIZE,
++                                   (fsize_byte, fsize_byte))
++
++        return preexec, tuple(unenforced)
++
++    # ------------------------------------------------------------- watchdog
++
++    async def _watchdog(self, process, state, t0):
++        """
++        RETURN: None.
++
++        Enforces, at _WATCHDOG_PERIOD_SEC resolution:
++          -- max_wall_clock_sec over the whole run,
++          -- max_output_gap_sec as SILENCE since the last chunk on
++             either production port (from launch, if none came yet),
++          -- max_memory_mb as summed RSS over the process group,
++          -- max_pids as the group member count,
++        and, every _DISK_POLL_EVERY ticks (~1 s; stdlib, no psutil
++        needed):
++          -- max_disk_mb as allocated bytes under the work dir
++             (st_blocks: sparse files count what they CLAIM),
++          -- min_free_disk_mb as the free-space floor of the work
++             dir's filesystem -- the call is terminated below it so
++             the OPERATING SYSTEM stays operable, whoever caused the
++             shortage.
++        Records peaks and observed descendants for attribution and the
++        post-mortem sweep, and reaps stragglers: descendants that outlive
++        the exited test process beyond _STRAGGLER_GRACE_SEC.
++        """
++        main = None
++        if psutil is not None:
++            with suppress(Exception):
++                main = psutil.Process(process.pid)
++        exited_at = None
++        tick      = 0
++
++        while True:
++            now = time.monotonic()
++
++            if process.returncode is not None:
++                # Test process is gone; only stragglers can remain.
++                if exited_at is None: exited_at = now
++                if not self._group_alive(process.pid):
++                    return
++                if now - exited_at >= _STRAGGLER_GRACE_SEC:
++                    await self._kill_ladder(process)
++                    return
++            else:
++                if now - t0 >= self.config.max_wall_clock_sec:
++                    state.set_cause(E_Containment.FAIL_WALL_CLOCK_EXCEEDED)
++                    await self._kill_ladder(process)
++                    return
++                gap_cap = self.config.max_output_gap_sec
++                if gap_cap is not None:
++                    since = state.last_output_sec
++                    if since is None: since = t0
++                    if now - since >= gap_cap:
++                        state.set_cause(E_Containment.FAIL_STALLED)
++                        await self._kill_ladder(process)
++                        return
++                if main is not None:
++                    self._sample(main, state)
++                    if state.peak_memory_mb is not None \
++                       and state.peak_memory_mb > self.config.max_memory_mb \
++                       and self._current_memory_mb(main) \
++                           > self.config.max_memory_mb:
++                        state.set_cause(E_Containment.FAIL_MEMORY_EXCEEDED)
++                        await self._kill_ladder(process)
++                        return
++                    if state.peak_pids is not None \
++                       and state.peak_pids > self.config.max_pids:
++                        state.set_cause(E_Containment.FAIL_PIDS_EXCEEDED)
++                        await self._kill_ladder(process)
++                        return
++                if tick % _DISK_POLL_EVERY == 0:
++                    usage_mb = self._disk_usage_mb()
++                    if usage_mb is not None:
++                        state.peak_disk_mb = max(state.peak_disk_mb or 0.0,
++                                                 usage_mb)
++                        if usage_mb > self.config.max_disk_mb:
++                            state.set_cause(
++                                E_Containment.FAIL_DISK_USAGE_EXCEEDED)
++                            await self._kill_ladder(process)
++                            return
++                    free_mb = self._disk_free_mb()
++                    if free_mb is not None \
++                       and free_mb < self.config.min_free_disk_mb:
++                        state.set_cause(E_Containment.FAIL_DISK_SPACE_LOW)
++                        await self._kill_ladder(process)
++                        return
++
++            tick += 1
++            await asyncio.sleep(_WATCHDOG_PERIOD_SEC)
++
++    def _sample(self, main, state):
++        """
++        RETURN: None. One watchdog sample over the process group: updates
++                peak RSS (MB), peak member count, summed cpu time, and the
++                descendant registry (pid -> create_time) for the sweep.
++        """
++        try:
++            procs = [main] + main.children(recursive=True)
++        except psutil.NoSuchProcess:
++            return
++        rss_byte = 0
++        cpu_sec  = 0.0
++        count    = 0
++        for proc in procs:
++            with suppress(psutil.NoSuchProcess, psutil.AccessDenied):
++                with proc.oneshot():
++                    rss_byte += proc.memory_info().rss
++                    times     = proc.cpu_times()
++                    cpu_sec  += times.user + times.system
++                    state.descendants[proc.pid] = proc.create_time()
++                    count += 1
++        if count == 0: return
++        rss_mb = rss_byte / (1024.0 * 1024.0)
++        state.peak_memory_mb = max(state.peak_memory_mb or 0.0, rss_mb)
++        state.peak_pids      = max(state.peak_pids or 0, count)
++        state.cpu_time_sec   = max(state.cpu_time_sec or 0.0, cpu_sec)
++
++    @staticmethod
++    def _current_memory_mb(main):
++        """
++        RETURN: float, current (re-sampled) group RSS in MB -- confirms a
++                       peak before a MEMORY_EXCEEDED kill, so a spike that
++                       already receded does not kill.
++        """
++        rss_byte = 0
++        with suppress(psutil.NoSuchProcess, psutil.AccessDenied):
++            rss_byte += main.memory_info().rss
++            for proc in main.children(recursive=True):
++                with suppress(psutil.NoSuchProcess, psutil.AccessDenied):
++                    rss_byte += proc.memory_info().rss
++        return rss_byte / (1024.0 * 1024.0)
++
++    def _disk_usage_mb(self):
++        """
++        RETURN: float, allocated megabytes under the work dir -- summed
++                       st_blocks (actual disk claim; a sparse file
++                       counts what it allocates, not what it
++                       addresses). Platforms without st_blocks
++                       (Windows) fall back to st_size.
++                None,  if the work dir cannot be walked.
++        """
++        total_byte = 0
++        try:
++            stack = [str(self.work_dir)]
++            while stack:
++                path = stack.pop()
++                with os.scandir(path) as entry_iter:
++                    for entry in entry_iter:
++                        with suppress(OSError):
++                            st = entry.stat(follow_symlinks=False)
++                            blocks = getattr(st, "st_blocks", None)
++                            total_byte += (blocks * 512
++                                           if blocks is not None
++                                           else st.st_size)
++                            if entry.is_dir(follow_symlinks=False):
++                                stack.append(entry.path)
++        except OSError:
++            return None
++        return total_byte / (1024.0 * 1024.0)
++
++    def _disk_free_mb(self):
++        """
++        RETURN: float, free megabytes on the filesystem holding the
++                       work dir (shutil.disk_usage: platform-
++                       independent).
++                None,  if not determinable.
++        """
++        try:
++            return shutil.disk_usage(str(self.work_dir)).free \
++                   / (1024.0 * 1024.0)
++        except OSError:
++            return None
++
++    async def _watch_stop(self, process, state, stop_event):
++        """
++        RETURN: None. Waits on 'stop_event'; on set, records STOPPED and
++                runs the kill ladder. Completes immediately if no event.
++        """
++        if stop_event is None: return
++        await stop_event.wait()
++        if process.returncode is None:
++            state.set_cause(E_Containment.FAIL_STOPPED)
++            await self._kill_ladder(process)
++
++    # ------------------------------------------------------ kill discipline
++
++    async def _kill_ladder(self, process):
++        """
++        RETURN: None. killpg(SIGTERM) -> grace -> killpg(SIGKILL); applied
++                to the process GROUP so children die with the test.
++        """
++        self._signal_group(process, signal.SIGTERM)
++        with suppress(asyncio.TimeoutError):
++            await asyncio.wait_for(asyncio.shield(process.wait()),
++                                   timeout=_KILL_GRACE_SEC)
++        if process.returncode is None or self._group_alive(process.pid):
++            self._signal_group(process, getattr(signal, "SIGKILL",
++                                                signal.SIGTERM))
++        with suppress(Exception):
++            await process.wait()
++
++    def _hard_kill(self, process):
++        """
++        RETURN: None. SYNCHRONOUS, unconditional group teardown for the
++                interrupted path: SIGKILL the process GROUP and the leader
++                DIRECTLY. Runs even if the leader was already reaped -- its
++                group id stays valid while any child lives, so the group
++                kill still reaps a surviving grandchild. The direct leader
++                kill covers the window before the child setsid'd (its group
++                id does not exist yet, so a group kill alone would miss it).
++                No await -- a cancellation cannot steal this step, so an
++                interrupted run can never leak its child.
++        """
++        self._signal_group(process, _SIGKILL)
++        if os.name == "posix":
++            with suppress(ProcessLookupError, PermissionError, OSError):
++                os.kill(process.pid, _SIGKILL)
++
++    @staticmethod
++    def _signal_group(process, sig):
++        """
++        RETURN: None. Sends 'sig' to the process group on POSIX (group id
++                equals the pid: the child called setsid); falls back to
++                single-process terminate/kill elsewhere.
++        """
++        if os.name == "posix":
++            with suppress(ProcessLookupError, PermissionError, OSError):
++                os.killpg(process.pid, sig)
++        else:
++            with suppress(Exception):
++                if sig == signal.SIGTERM: process.terminate()
++                else:                     process.kill()
++
++    @staticmethod
++    def _group_alive(pid):
++        """
++        RETURN: True,  some member of the process group still exists.
++                False, else (or not determinable on this platform).
++        """
++        if os.name != "posix": return False
++        try:
++            os.killpg(pid, 0)
++            return True
++        except (ProcessLookupError, PermissionError, OSError):
++            return False
++
++    def _sweep(self, state):
++        """
++        RETURN: None. Post-mortem: kills every observed descendant that
++                still exists AND matches its recorded create_time (pid
++                reuse guard). Catches group escapees (double setsid).
++        """
++        if psutil is None: return
++        for pid, created in state.descendants.items():
++            with suppress(psutil.NoSuchProcess, psutil.AccessDenied,
++                          Exception):
++                proc = psutil.Process(pid)
++                if abs(proc.create_time() - created) < 1e-4:
++                    proc.kill()
++
++    # -------------------------------------------------------- I/O machinery
++    # (ported from the previous implementation; battle-tested patterns)
++
++    async def _pump(self, stream, handler, state=None):
++        """
++        RETURN: None. Reads 'stream' to EOF. Chunks go to 'handler' when
++                given; otherwise they are discarded -- the stream is
++                ALWAYS consumed, a full OS pipe would block the child.
++                A handler exception propagates (harness fault).
++
++        With 'state', every chunk marks 'last_output_sec' -- the silence
++        cap reads that mark. Marked BEFORE the handler runs: what is
++        timed is the CALL's silence, never a slow consumer's.
++        """
++        while not stream.at_eof():
++            data = await stream.read(4096)
++            if data:
++                if state is not None:
++                    state.last_output_sec = time.monotonic()
++                if handler is not None:
++                    await handler(data)
++
++    async def _pump_stdin(self, writer, reader):
++        """
++        RETURN: None. Pipes 'reader' into the child's stdin; closes on EOF.
++                Completes immediately if no reader is given.
++        """
++        if reader is None: return
++        try:
++            while not reader.at_eof():
++                data = await reader.read(4096)
++                if not data: break
++                writer.write(data)
++                await writer.drain()
++            if writer.can_write_eof():
++                writer.write_eof()
++            await writer.drain()
++            writer.close()
++        except (ConnectionResetError, BrokenPipeError):
++            pass    # child ended before consuming stdin: normal
++
++    async def _close_stdin_transport(self, process):
++        """
++        RETURN: None. Closes the writable stdin pipe and awaits the OS
++                acknowledgment, preventing file-descriptor leaks.
++        """
++        if not process.stdin: return
++        with suppress(Exception):
++            process.stdin.close()
++            await process.stdin.wait_closed()

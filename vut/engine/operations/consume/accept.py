@@ -45,6 +45,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional
+from ...orchestrator.bookkeeper.configuration import E_StderrNote
 
 from   ..result           import E_TestRunResult
 from   ..interaction.feed import E_Intent, merge_session
@@ -80,7 +81,14 @@ class AcceptConfig:
     subjects:   Mapping[str, AcceptStep] = field(default_factory=dict)
     choice:     Optional[str]            = None
     groundwork: Optional[object]         = None
-    compare:    Optional[object]         = None
+    compare:    Optional[object]          = None
+    stderr:     Optional[E_StderrNote]   = None
+                            # THE SECOND QUESTION: which NOTE to write
+                            # in the book for stderr. None means it was
+                            # not asked -- and acceptance REFUSES
+                            # rather than decide on the author's behalf
+                            # ('--stderr-nominal' / '--stderr-ignored'
+                            # / '--stderr-forbidden' at the face).
 
 
 @dataclass(frozen=True)
@@ -104,9 +112,11 @@ class Accept:
     """WRITE THE NOMINAL."""
 
     def __init__(self, config, store, observer=None):
-        self.config   = config
-        self.store    = store
-        self.observer = observer
+        self.config    = config
+        self.store     = store
+        self.observer  = observer
+        self._provided = None      # the subjects delivery, kept for
+                                   # the stderr question
 
     async def run(self, stop_event=None):
         """
@@ -119,6 +129,14 @@ class Accept:
         notify(self.observer, "started", config.name, "Accept")
 
         text_db, report, provision = await self._gather(stop_event)
+
+        #  THE SECOND QUESTION, at the door: a stderr that has words in
+        #  it and no decision about it stops the ceremony. Accepting
+        #  stdout while silently discarding a stream the test produced
+        #  would bless a half-truth.
+        if report is E_TestRunResult.OK:
+            report = self._stderr_refusal(self._provided)
+
         if report is not E_TestRunResult.OK:
             result = AcceptResult(config.name, report, {}, provision)
             notify(self.observer, "finished", result)
@@ -128,10 +146,63 @@ class Accept:
             self.store.accept(config.name, config.choice, name, text)
             notify(self.observer, "verdict", name, True)
 
+        #  THE NOTE IS THE DECISION (S-1): written verbatim into the
+        #  book, and 'nominal' additionally records the stream itself.
+        match config.stderr:
+            case E_StderrNote.NOMINAL:
+                self.store.accept(config.name, config.choice, "stderr",
+                                  self._stderr_text(self._provided))
+                self.store.note_stderr(config.name, config.choice,
+                                       E_StderrNote.NOMINAL)
+                notify(self.observer, "verdict", "stderr", True)
+            case E_StderrNote.IGNORED | E_StderrNote.FORBIDDEN:
+                self.store.note_stderr(config.name, config.choice,
+                                       config.stderr)
+                notify(self.observer, "verdict", "stderr", True)
+            case _:
+                pass
+
         result = AcceptResult(config.name, E_TestRunResult.OK,
                               dict(text_db), provision)
         notify(self.observer, "finished", result)
         return result
+
+    def _stderr_text(self, provided):
+        """
+        RETURN: str, what the run wrote on stderr; '' where the
+                provision delivered no such subject.
+
+        'provided' is the SUBJECTS delivery ('None' where provision
+        failed), not the provision record.
+        """
+        if provided is None or "stderr" not in provided: return ""
+        with provided["stderr"].open() as reader:
+            return reader.read()
+
+    def _stderr_refusal(self, provided):
+        """
+        RETURN: E_TestRunResult.STDERR_UNDECIDED where the run wrote on
+                stderr and NO note about it was ever taken -- neither
+                handed to this ceremony nor standing in the book;
+                E_TestRunResult.OK otherwise.
+
+        REFUSE RATHER THAN GUESS, AT THE DOOR: the three notes say
+        different things about the same stream, and only the author
+        knows which is meant.
+        """
+        config = self.config
+        if config.stderr is not None:            return E_TestRunResult.OK
+        if "stderr" in config.subjects:
+            #  ASKED FOR BY NAME: the caller named stderr among the
+            #  subjects to accept, which IS the decision -- the second
+            #  question is about a stream that appeared UNASKED.
+            return E_TestRunResult.OK
+        if not _has_words(self._stderr_text(provided)):
+            return E_TestRunResult.OK
+        if self.store.stderr_note(config.name, config.choice) \
+                is not E_StderrNote.FORBIDDEN:
+            return E_TestRunResult.OK          # the book already says
+        return E_TestRunResult.STDERR_UNDECIDED
 
     async def _initiate(self, subject_name, step):
         """
@@ -222,8 +293,9 @@ class Accept:
             if provided is None:
                 if config.groundwork is None:
                     return {}, E_TestRunResult.RECORDING_MISSING, None
-                provided = await config.groundwork.provide(
+                provided       = await config.groundwork.provide(
                                                    stop_event=stop_event)
+                self._provided = provided
                 if not provided.provision.delivered:
                     return {}, provided.provision.report, provided.provision
             if name not in provided:
@@ -234,3 +306,8 @@ class Accept:
 
         return text_db, E_TestRunResult.OK, \
                (provided.provision if provided is not None else None)
+
+
+def _has_words(text):
+    """RETURN: True, 'text' holds anything but whitespace; False else."""
+    return bool(text) and bool(text.strip())

@@ -88,3 +88,4 @@ PypeError (expected): <test>:1: repeat groups do not nest
 --- index expressions are offsets only: '+'/'-' integers ---
 PypeError (expected): <test>:1: cannot read pattern at '<x[i * 2] = int> )'
 PypeError (expected): <test>:1: index 'j' does not name the repeat counter 'i'
+<hwut-end>

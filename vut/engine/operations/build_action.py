@@ -140,12 +140,16 @@ def classify(record, missing_target_list):
     Tool reasons outrank target reasons: a tool that never ran cannot be
     blamed for a target it never reached.
     """
-    if record.containment is E_Containment.FAIL_LAUNCH:
-        return E_TestRunResult.BUILD_TOOL_NOT_FOUND
-    if record.containment is E_Containment.FAIL_COMPLETED:
-        return E_TestRunResult.BUILD_FAILED            # nonzero exit
-    if record.containment is not E_Containment.OK_COMPLETED:
-        return E_TestRunResult.BUILD_CONTAINED         # a resource cap
+    match record.containment:
+        case E_Containment.FAIL_LAUNCH:
+            return E_TestRunResult.BUILD_TOOL_NOT_FOUND
+        case E_Containment.FAIL_COMPLETED:
+            return E_TestRunResult.BUILD_FAILED        # nonzero exit
+        case E_Containment.OK_COMPLETED:
+            pass                                       # on to the targets
+        case _:
+            return E_TestRunResult.BUILD_CONTAINED     # a resource cap
+
     if missing_target_list:
         return E_TestRunResult.TARGET_NOT_BUILT
     return E_TestRunResult.OK

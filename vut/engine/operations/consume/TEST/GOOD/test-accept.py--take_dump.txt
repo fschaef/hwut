@@ -4,3 +4,4 @@ INSPECT: report = ok
   OK  : the nominal is REPLACED wholesale, not merged
   OK  : and the result says exactly what was stored
 SUCCESS: a dump replaces the nominal, wholesale.
+<hwut-end>

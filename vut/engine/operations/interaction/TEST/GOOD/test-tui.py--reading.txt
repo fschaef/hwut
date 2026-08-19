@@ -21,3 +21,4 @@ reading | {numeric} ~analogy~ <pattern> !binding! |nothing|
   OK  : a constraint binding is marked as binding
   OK  : self-feed: every pair equivalent BY CONSTRUCTION
 SUCCESS: the reading shows the interpretation, nothing else.
+<hwut-end>

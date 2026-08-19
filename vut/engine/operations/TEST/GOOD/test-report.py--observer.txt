@@ -6,3 +6,4 @@ INSPECT: the console observer still received:
   OK  : every notification reached the healthy observer
   OK  : the verdict is untouched by a raising observer
 SUCCESS: observers add, and none of them reaches the verdict.
+<hwut-end>

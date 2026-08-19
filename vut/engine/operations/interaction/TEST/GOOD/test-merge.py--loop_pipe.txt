@@ -5,3 +5,4 @@ INSPECT: one round  -> commit after 5 DOWN items
   OK  : a SECOND DOWN generation crossed the pipe
   OK  : one extra MaterialInst and one full generation, exactly
 SUCCESS: the loop survives a real process boundary.
+<hwut-end>

@@ -4,3 +4,4 @@ INSPECT: producer = FAIL_STOPPED, consumer = OK_COMPLETED
   OK  : producer stopped PROMPTLY -- nowhere near its 20 s wall cap
   OK  : the consumer produced nothing; the tail saw a clean EOF
 SUCCESS: a chain bounds itself: early death upstream-stops the rest.
+<hwut-end>

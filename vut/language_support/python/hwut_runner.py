@@ -5,11 +5,19 @@ import sys
 import re
 import time
 import threading
+import stat
 import tempfile
 from   pathlib   import Path
 from   typing    import Callable, Optional, ContextManager
 from   typeguard import typechecked
 
+
+#  THE TERMINAL TOKEN (R-70): the stream's own statement of
+#  completeness; the nominal decides participation.
+TERMINAL_TOKEN = "<hwut-end>"
+#  Suppressed under 'HWUT_NO_TERMINAL' -- set by the framework where a
+#  PYPE owns the stream's token (R-70, t-6): a pype-fed application
+#  must not produce it; the pype's '<eof>' handler does.
 
 class HwutRunner:
     """Front end of a HWUT test application.
@@ -133,8 +141,19 @@ class HwutRunner:
         second command line argument the choice is 'None' and the according
         test is entered in the choice map as 'None'. Output flows on the
         process's own stdout and stderr.
+
+        THE TERMINAL TOKEN (R-70): '<hwut-end>' is printed as the very
+        LAST act -- the stream's own statement of completeness. A test
+        whose stdout feeds a PYPE never carries the token itself; there
+        the pype's '<eof>' handler emits it (hwut_pype MANUAL) -- such
+        a test records its GOOD through the pype, so the nominal still
+        decides participation and nothing here needs to know.
         """
         self.__run_choice(self.choice)
+        if not os.environ.get("HWUT_NO_TERMINAL"):
+            sys.stdout.flush()
+            print(TERMINAL_TOKEN)
+        sys.stdout.flush()
 
     def MODE_hwut_info(self):
         """RETURN: never; exits with status 0.
@@ -238,7 +257,7 @@ class HwutRunner:
                     status = self.__run_into_sinks(choice, sink_out, sink_err)
                     self.__up(f"done {token} {status}")
             case _:
-                self.__up("fail - bad-command")
+                self.__up(f"fail - bad-command")
         return True
 
     def __find_choice(self, token: str) -> tuple:
@@ -267,6 +286,10 @@ class HwutRunner:
         closed, fd 1 and fd 2 are restored. The return is the 'done'
         barrier for the app's own writes; writes of processes spawned by
         the choice are the choice's concern (see README, BARRIER).
+
+        THE TERMINAL TOKEN (R-70): '<hwut-end>' ends the choice's
+        STDOUT sink, written before the flush that precedes 'done' --
+        each choice's stream self-delimits, in band.
         """
         out_fd = os.open(sink_out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
         err_fd = os.open(sink_err, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
@@ -280,6 +303,9 @@ class HwutRunner:
         status = 0
         try:
             self.__run_choice(choice)
+            if not os.environ.get("HWUT_NO_TERMINAL"):
+                sys.stdout.flush()
+                print(TERMINAL_TOKEN)
         except SystemExit as x:
             status = x.code if type(x.code) is int else (0 if x.code is None else 1)
         except BaseException:
@@ -436,61 +462,43 @@ def _levenshtein_distance(a: str, b: str) -> int:
         prev = cur
     return prev[-1]
 
-class ScriptApplicationError(Exception):
-    """The script could not be made executable -- with the reason."""
-
-
 def make_script_application(file_name:       Optional[str],
                             shebang:         str,
                             script_txt_list: list[str],
-                            display_f:       bool = True) -> str:
-    """RETURN: str, the path of the generated script, executable and
-               ready to be run.
+                            display_f:       bool = True) -> Optional[str]:
+    """RETURN: filename (str) != "", if script is generated and executable
+               None,                 if not
 
     'shebang'         tells what interpreter to use
     'script_txt_list' defines the text of the script
 
-    This function generates a (temporary) test script that may be used
-    for interaction with unit tests.
-
-    Raises ScriptApplicationError, naming what stood in the way: a
-    she-bang interpreter that is not executable, or a file that could
-    not be written. Nothing half-made is left behind.
+    This function generates a (temporary) test script that may be used for
+    interaction with unit tests.
     """
+    script_path = None
+
     content = shebang if shebang.startswith("#!") else f"#!{shebang}"
     content += "\n" + "\n".join(script_txt_list) + "\n"
 
-    #  A she-bang names an INTERPRETER; where it is not executable the
-    #  kernel refuses the SCRIPT and names the script -- the wrong
-    #  file. Named HERE, before anything is written.
-    first = content.splitlines()[0][2:].split()
-    if first and not os.access(first[0], os.X_OK):
-        raise ScriptApplicationError(
-            "the she-bang interpreter '%s' is not executable -- the "
-            "kernel would refuse the script and name the script "
-            "instead" % first[0])
-
-    script_path = None
     try:
         if file_name is None:
-            # delete=False is necessary so the file remains after the handle is
-            # closed, allowing a sandbox process to find and execute it.
-            with tempfile.NamedTemporaryFile(prefix="test_app_",
-                                             delete=False) as tmp:
+            # delete=False is necessary so the file remains after the handle is closed
+            # allowing a sandbox process to find and execute it.
+            with tempfile.NamedTemporaryFile(prefix="test_app_", delete=False) as tmp:
                 script_path = Path(tmp.name)
         else:
             script_path = Path(file_name)
+
         script_path.write_text(content)
-        script_path.chmod(0o755)                       # rwx r-x r-x
-    except Exception as error:
+        script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC) # make 'executable'
+
+    except Exception:
         if script_path and script_path.exists():
             try:
                 script_path.unlink()
             except Exception:
                 pass
-        raise ScriptApplicationError(
-            "'%s' could not be made: %s"
-            % (script_path or file_name, error)) from error
+        return None
 
     if display_f:
         if not file_name: file_name = "<temporary file>"
@@ -519,7 +527,11 @@ class ScriptApplication(ContextManager[str]):
 
         Raises RuntimeError if generation failed.
         """
-        self.path = make_script_application(**self.params)
+        result = make_script_application(**self.params)
+        if result is None:
+            raise RuntimeError("make_script_application failed to generate a script.")
+
+        self.path = result
         return self.path
 
     def __exit__(self, exc_type, exc_val, exc_tb):

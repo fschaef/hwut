@@ -13,3 +13,4 @@ Judge (is_equivalent): True
 Lawyer (associate):    True
 Consistency:         OK
 Expectation:         MATCH
+<hwut-end>

@@ -692,3 +692,30 @@ test source). The LAW over it -- refuse, warn, or stay silent when an
 accept or diff consumes a stored subject whose source digest no longer
 matches -- is NOT ruled. Nothing depends on the ruling; history is
 being recorded either way.
+
+----------------------------------------------------------------------------
+todo-25  THE FACE OF THE SECOND QUESTION
+----------------------------------------------------------------------------
+
+S-1 is built beneath: the three states, the refusal, the mark. What is
+NOT built is the FACE -- 'hwut.accept' does not exist yet, so
+'--stderr-accept' and '--stderr-ignore' have nowhere to be typed. Two
+things fall to it:
+
+    - the three flags ('--stderr-nominal', '--stderr-ignored',
+      '--stderr-forbidden'), carried into 'Request.stderr' as an
+      E_StderrNote
+    - the INTERACTIVE form: where no flag stands and a terminal is
+      present, ASK -- the first answer accepts stdout, the second
+      writes the note (Frank-Rene's case 2)
+
+Until then, the decision travels only through 'Request.stderr' in
+code, and the refusal is what a tree-wide run reports.
+
+----------------------------------------------------------------------------
+todo-26  RENOVATE AND THE STDERR SURVEY
+----------------------------------------------------------------------------
+
+'hwut.renovate' should report which tests would newly refuse under S-1
+-- those that write on stderr with no nominal and no mark -- so a tree
+can be surveyed before the law is met test by test.

@@ -33,3 +33,4 @@ REPORT
 
 --- a bound below one: refused ---
 REFUSED: worker_max_n is 0; a bound below one schedules nothing
+<hwut-end>

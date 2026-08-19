@@ -6,3 +6,4 @@
     test-b.sh  -     numeric=None   caps=-                                        
     test-c.py  x     numeric=None   caps=-                                        
     test-c.py  y     numeric=None   caps=-                                        [MISDEP]
+<hwut-end>

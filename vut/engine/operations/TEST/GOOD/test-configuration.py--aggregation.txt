@@ -5,3 +5,4 @@ INSPECT: caps is a ProcsitterConfig
   OK  : no cap is restated as a field of the configuration
   OK  : the silence cap arrives through procsitter's own struct
 SUCCESS: sub-component structs held verbatim, never restated.
+<hwut-end>

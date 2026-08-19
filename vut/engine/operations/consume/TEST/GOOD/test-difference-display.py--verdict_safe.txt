@@ -5,3 +5,4 @@ INSPECT: matching + a target -> True / ok
   OK  : nor the report
   OK  : a shown difference still reports the mismatch, not the display
 SUCCESS: showing a difference does not change it.
+<hwut-end>

@@ -2,3 +2,4 @@ INSPECT: bare-string raised = True, missing program = FAIL_LAUNCH
   OK  : a bare string command is rejected loudly (AssertionError)
   OK  : a missing program is a RESULT: FAIL_LAUNCH, not a crash
 SUCCESS: argv-list contract enforced; a missing program attributed.
+<hwut-end>

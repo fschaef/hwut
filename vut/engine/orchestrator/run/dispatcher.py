@@ -38,7 +38,8 @@ from ...orchestrator.bookkeeper.bookkeeper   import Bookkeeper
 from ...orchestrator.bookkeeper.stream_store import Store, DirectoryBusy
 from ...procsitter.procsitter       import Procsitter, ProcsitterConfig
 from ..scheduler.scheduler          import I_Dispatcher
-from .adapter                       import test_configuration_of
+from .adapter                       import (naming_of,
+                                            test_configuration_of)
 
 
 FRAME_CAPS = ProcsitterConfig(max_wall_clock_sec=60.0)
@@ -64,8 +65,18 @@ class TestRunDispatcher(I_Dispatcher):
         """
         self.directory  = directory
         self.record     = True if record is None else record
+        #  ONE bookkeeper per NAMING LAW: 'same' (all choices share one
+        #  nominal) is an application's word, so an application that
+        #  states it gets its own book; the directory's default book
+        #  serves the rest. The LOCK is the directory's, taken once.
         self.bookkeeper = Bookkeeper(directory)
         self.store      = Store(self.bookkeeper)
+        self.store_db   = {}
+        for app in entry.app_set:
+            naming = naming_of(app)
+            if not naming.same_nominal_f: continue
+            self.store_db[app.source_file] = Store(
+                                    Bookkeeper(directory, naming))
         self.lock       = self.store.lock()
         if not self.lock.acquire():
             raise DirectoryBusy(
@@ -167,7 +178,8 @@ class TestRunDispatcher(I_Dispatcher):
         outcome = await run_test_held(
             configuration,
             Request(choice=node.choice, record=self.record),
-            store=self.store, provision=provision)
+            store=self.store_db.get(node.file, self.store),
+            provision=provision)
         if not outcome.verdict:
             self.report_db[node.name()] = outcome.result.report.value
         return bool(outcome.verdict)

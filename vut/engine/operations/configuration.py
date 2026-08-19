@@ -79,6 +79,16 @@ class TestConfiguration:
     interpreter:    Optional[Sequence[str]] = None   # INTERPRETED only
     build:          object                  = None   # COMPILED only
     store:          object                  = None   # None: do not record
+    execute:        Optional[Sequence[str]] = None   # THE CALL, STATED
+                                            # VERBATIM (R-68): where an
+                                            # author states how the
+                                            # application is called, that
+                                            # argv stands and the source
+                                            # kind decides nothing. The
+                                            # choice name is appended as
+                                            # ever -- it selects the
+                                            # scenario, it is not part of
+                                            # the call.
     interactive:    bool                    = False  # the app accepts
                                             # '--interactive': many choices
                                             # through ONE call, driven over

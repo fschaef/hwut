@@ -5,3 +5,4 @@ INSPECT: run_test takes ['configuration', 'request']
   OK  : three different requests, one configuration, all agreeing
   OK  : a request with nothing said asks the commonest thing
 SUCCESS: what the test is, and what is asked of it, stay apart.
+<hwut-end>

@@ -5,3 +5,4 @@ INSPECT: the choice leaves with sys.exit(3)
   OK  : and they are the choice's own
   OK  : the report stays OK -- the classic run's law
 SUCCESS: a non-zero status delivers; behavior is judged by compare, not here.
+<hwut-end>

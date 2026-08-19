@@ -3,3 +3,4 @@ INSPECT: exit0 = OK_COMPLETED/0, exit3 = FAIL_COMPLETED/3, signal = FAIL_COMPLET
   OK  : nonzero self-exit -> FAIL_COMPLETED, positive code preserved
   OK  : signal death -> FAIL_COMPLETED, negative signal number
 SUCCESS: self-termination classified by exit status alone.
+<hwut-end>

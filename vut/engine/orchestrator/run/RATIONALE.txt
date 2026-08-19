@@ -163,3 +163,65 @@ COST      Two blessed suites re-worded to the new ground (audited:
           the rename alone).
 GRAVEYARD Filtering store keys out of the subject scan (guessing at
           the door). Snapshot-diff of 'OUT/' (statefulness, races).
+
+----------------------------------------------------------------------------
+O-9  THE TRANSLATION: WHAT AN AUTHOR STATES, A COMPONENT RECEIVES
+----------------------------------------------------------------------------
+PROBLEM   The adapter carried the source kind, the caps, the build and
+          the pype -- and DROPPED the rest. A test stating
+          'numeric = 0.01' was compared byte-exact; a test stating
+          'same' looked for a nominal per choice; a test stating
+          'execute' was launched by a derived argv. Each produced a
+          CONFIDENT WRONG VERDICT on correct code -- the worst failure
+          a validator has, and invisible, because the test simply
+          failed and the author saw a diff.
+DECISION  Every member of 'TestParameters' reaches the component that
+          OWNS it, or is refused BY NAME:
+              tolerances (numeric, eq_pattern, nothing, analogy,
+              constraints, comment, slash_eqv, whitespace_eqv)
+                            -> compare's Configuration, per choice.
+                               Nothing stated -> None: an unstated
+                               tolerance is compare's own default, and
+                               a Configuration built here would only
+                               restate it.
+              caps          -> procsitter's configuration; an unstated
+                               cap keeps procsitter's default, never a
+                               zero.
+              same          -> the bookkeeper's NamingConfig: one
+                               nominal for every choice. Candidates
+                               keep their own names, or the choices
+                               would overwrite one another.
+              execute       -> the CALL itself (R-68): a stated argv
+                               stands and the source kind decides
+                               nothing.
+          A marker pair that is not a pair, and a language no
+          interpreter is declared for, are refused at the door.
+          THE ORACLE IS A SWEEP: 'run/TEST/test-adapter.py' walks
+          'dataclasses.fields(TestParameters)' and names any member
+          that reaches nothing -- a parameter exploration gains later
+          is swept the day it exists.
+COST      The adapter must grow with exploration's vocabulary, and the
+          sweep goes red the day it does not. That is the point.
+GRAVEYARD Mapping the tolerances "when someone asks" (the byte-exact
+          comparison was silent, and looked like the test's fault).
+          A per-choice Bookkeeper for 'same' (the naming is the
+          APPLICATION's word; the lock is the directory's).
+
+----------------------------------------------------------------------------
+O-10 A CONFIGURATION LIVES IN 'configuration.py'
+----------------------------------------------------------------------------
+PROBLEM   'ProcsitterConfig' lived in 'procsitter.py', 'StoreConfig' in
+          'stream_store.py' -- a reader looking for what a component
+          can be told had to know which module to open.
+DECISION  Every component subject to configuration holds its
+          configuration class in 'configuration.py' in its own core
+          directory, every member documented there: compare (already),
+          operations (already), procsitter (moved), bookkeeper (moved,
+          and gained 'NamingConfig'). Each old home RE-EXPORTS its
+          class, so existing imports keep standing.
+          'specification.py' in exploration is NOT renamed: a
+          SPECIFICATION is what an author STATED, before resolution --
+          a different animal from a configuration a component consumes.
+COST      One import hop for readers of the old modules.
+GRAVEYARD One central 'configuration.py' for the tree (a component's
+          contract belongs with the component).

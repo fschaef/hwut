@@ -17,6 +17,8 @@ Bounds:  Running ONE test is test_run's business. This component asks
         orchestrator.py     the Orchestrator: explore, then per
                             directory ask the Bookkeeper, drive the run
         bookkeeper/
+            configuration.py  StoreConfig (what is kept) and
+                              NamingConfig (how a record is named)
             bookkeeper.py   the Bookkeeper: ONE test directory's book
         explorer/
             explorer.py     the Explorer: which directories hold tests

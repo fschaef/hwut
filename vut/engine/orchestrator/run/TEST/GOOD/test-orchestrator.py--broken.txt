@@ -23,3 +23,4 @@
     FAILED alpha/TEST build[make test-a.py] build-failed
     FAILED alpha/TEST test-a.py         unsupported  <= build[make test-a.py]
     FAILED alpha/TEST test-m.py         misdep
+<hwut-end>

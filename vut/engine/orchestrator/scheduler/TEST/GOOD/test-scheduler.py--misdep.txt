@@ -10,3 +10,4 @@ REPORT
     d.py                   MISDEP
     free.py                ENDED_GOOD
     most standing at once: 1
+<hwut-end>

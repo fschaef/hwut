@@ -1,11 +1,12 @@
 INSPECT: the application was launched 1 time(s) for 2 choices
-         alpha stdout = 'alpha speaks\n   zebra\n   apple\n'
-         beta  stdout = 'beta speaks\n'
+         alpha stdout = 'alpha speaks\n   zebra\n   apple\n<hwut-end>\n'
+         beta  stdout = 'beta speaks\n<hwut-end>\n'
          beta  stderr = 'on stderr, too\n'
   OK  : ONE call served both choices
-  OK  : the first choice's channels are its own
-  OK  : and the second's are its own -- no bleed between choices
+  OK  : the first choice's channels are its own, token-terminated
+  OK  : and the second's are its own -- no bleed; stdout ends in the token, stderr never carries one (R-70: stdout only)
   OK  : the transport leaves with the session
   OK  : close hands the ONE attribution of the one call
   OK  : and EVERY choice carries it: the record of the process that produced a result is part of that result
 SUCCESS: many choices, one application call.
+<hwut-end>

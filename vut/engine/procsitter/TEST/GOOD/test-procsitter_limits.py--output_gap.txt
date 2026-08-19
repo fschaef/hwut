@@ -1,7 +1,9 @@
-INSPECT: silent = FAIL_STALLED, chatty = OK_COMPLETED, cap off = OK_COMPLETED
+INSPECT: silent = FAIL_STALLED, chatty = OK_COMPLETED, buffered = FAIL_STALLED, cap off = OK_COMPLETED
   OK  : the silent call is STALLED, not WALL_CLOCK_EXCEEDED
   OK  : ended near the gap, nowhere near its 30 s wall cap
   OK  : exit_code is None (the procsitter ended it, not the test)
-  OK  : the talking call is untouched, though it ran past the gap
+  OK  : the FLUSHING talker is untouched, though it ran past the gap
+  OK  : a talker the wire cannot hear is silence, and is capped
   OK  : with the cap off, silence is no fault
-SUCCESS: silence capped; speech and an absent cap left alone.
+SUCCESS: silence is what the wire hears; an absent cap leaves it alone.
+<hwut-end>

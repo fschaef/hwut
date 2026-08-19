@@ -9,3 +9,4 @@ INSPECT: every role roots in I_Provider: True
   OK  : a hand-out is a proxy IN a role, and names its multi
   OK  : one queue consumes both shapes, and provenance stays visible only to who asks
 SUCCESS: queue a provider, or a multi's proxies -- the seam carries both.
+<hwut-end>

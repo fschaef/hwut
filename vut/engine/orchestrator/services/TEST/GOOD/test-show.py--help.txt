@@ -30,3 +30,4 @@ $ hwut.show --help
         1    a fault was met
         2    the command line cannot be read
     [status 0]
+<hwut-end>

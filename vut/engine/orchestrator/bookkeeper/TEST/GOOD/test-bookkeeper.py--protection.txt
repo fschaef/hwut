@@ -6,3 +6,4 @@ INSPECT: result_db.json
   OK  : a second write meets the protection and restores it
   OK  : the write is by replacement; no temporary remains
 SUCCESS: protected against careless hands, writable only through the adapter.
+<hwut-end>

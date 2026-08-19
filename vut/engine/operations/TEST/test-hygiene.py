@@ -146,7 +146,9 @@ def test_no_good_file_holds_a_crash():
 
     It happened here: a GOOD file was baselined while its test was
     failing to import, and froze a traceback. The suite went green.
-    A GOOD file must end in the verdict line, and hold no traceback.
+    A GOOD file must end in the verdict line -- or, per R-70, in the
+    terminal token '<hwut-end>' with the verdict line directly above
+    it -- and hold no traceback.
 
     A TRAP FOR ANY SELF-INSPECTING TEST: baseline it through a temporary
     file. Redirecting straight into its own GOOD file truncates that file
@@ -160,6 +162,10 @@ def test_no_good_file_holds_a_crash():
             offence_list.append((name, "a traceback"))
             continue
         last = [l for l in text.rstrip("\n").split("\n") if l.strip()]
+        if last and last[-1] == "<hwut-end>":
+            last = last[:-1]                       # R-70: the token ends
+                                                   # the STREAM; the
+                                                   # verdict ends the TEST
         if not last:
             offence_list.append((name, "no output at all"))
         elif not (last[-1].startswith("SUCCESS:")

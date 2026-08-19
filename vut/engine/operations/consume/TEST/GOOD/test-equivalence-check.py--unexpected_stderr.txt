@@ -1,0 +1,9 @@
+INSPECT: silent stderr    -> verdict True, report ok
+         blank lines only -> verdict True, report ok
+         a word on stderr -> verdict False, report unexpected-stderr
+  OK  : silence is what a FORBIDDEN stderr expects
+  OK  : and whitespace is silence
+  OK  : a WORD there is reported by name
+  OK  : and the test failed
+SUCCESS: a forbidden stderr is expected to say nothing.
+<hwut-end>

@@ -6,3 +6,4 @@ INSPECT: no failure at all                  -> ok
   OK  : every case picks the reason that outranks the others
   OK  : every failure token has a rank -- a new one must be PLACED
 SUCCESS: one reason speaks, and it is the loudest one.
+<hwut-end>

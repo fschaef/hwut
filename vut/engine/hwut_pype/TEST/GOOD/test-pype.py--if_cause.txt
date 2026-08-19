@@ -79,3 +79,4 @@ PypeError (expected): <test>:3: mode 'B' contains an 'if' cause and cannot be in
 
 --- broken condition rejected at parse ---
 PypeError (expected): <test>:1: cannot compile 'if' condition: invalid syntax (<test>:1, line 1)
+<hwut-end>

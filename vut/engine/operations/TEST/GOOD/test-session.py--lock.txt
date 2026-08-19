@@ -5,3 +5,4 @@ INSPECT: lock after a clean run  = False
   OK  : a choice that was never described is a FAULT, not a default
   OK  : and the lock is released even then
 SUCCESS: the lock is released however the ceremony ended.
+<hwut-end>

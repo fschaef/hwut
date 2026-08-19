@@ -34,3 +34,4 @@ app 'test-e.py'  title 'E'  origin HEADER
     test-d.py    -     [MISDEP]
     test-e.py    -     [MISDEP]
 FAULT hwut.conf:1:7: DIRECTORY: dependency cycle: test-a.py -> test-c.py -> test-b.py -> test-a.py
+<hwut-end>

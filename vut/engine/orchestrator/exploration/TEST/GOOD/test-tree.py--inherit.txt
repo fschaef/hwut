@@ -10,3 +10,4 @@
         test-b.py    pype='root.pype'
     sub/TEST                 test-a.py
         test-a.py    pype='own.pype'
+<hwut-end>

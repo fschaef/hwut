@@ -3,3 +3,4 @@ INSPECT: damaged base reads as {}
   OK  : a damaged base reads as empty, it does not raise
   OK  : writing recovers the base
 SUCCESS: a lost base never fails a run.
+<hwut-end>

@@ -3,3 +3,4 @@ INSPECT: containment = FAIL_CPU_TIME_EXCEEDED
   OK  : measured cpu time reached the cap
   OK  : exit_code is None (the procsitter ended it, not the test)
 SUCCESS: spin loop contained by cpu-time cap, attributed.
+<hwut-end>

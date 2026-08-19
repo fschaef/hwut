@@ -4,3 +4,4 @@ INSPECT: the recorded holder has exited
   OK  : and this process now holds it
   OK  : release removes it
 SUCCESS: a crashed run leaves no lock behind it.
+<hwut-end>

@@ -3,3 +3,4 @@ INSPECT: report   = test-app-launch-failed
   OK  : the launch names the absence -- nothing was built here
   OK  : NO subject is provided
 SUCCESS: an unprovided application is the launch's failure.
+<hwut-end>

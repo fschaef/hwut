@@ -13,3 +13,4 @@ FAULT f.py:6:49: TYPE: 'memory_mb' must be greater than zero
 FAULT f.py:7:15: VOCABULARY: unknown cap 'bandwidth'
 FAULT f.py:8:15: TYPE: 'analogy' names two markers, the opening and the closing; 3 given
 FAULT f.py:9:24: TYPE: the list form of 'choices' carries names only
+<hwut-end>

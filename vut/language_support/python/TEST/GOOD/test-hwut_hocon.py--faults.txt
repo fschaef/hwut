@@ -13,3 +13,4 @@ FAULT f.hocon:2:1: SYNTAX: duplicate key 'a'; the first stands, this one is refu
 FAULT f.hocon:3:5: SYNTAX: unterminated string
 FAULT f.hocon:4:1: SYNTAX: unmatched '}'
 FAULT f.hocon:7:1: SYNTAX: unterminated object: '}' missing
+<hwut-end>

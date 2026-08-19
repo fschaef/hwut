@@ -6,3 +6,4 @@ line  3  stripped 2  |    title = "T"|
 line  4  stripped 2  |    # a comment INSIDE the specification|
 line  5  stripped 2  |    numeric = 0.01|
 line  6  stripped 2  |}|
+<hwut-end>

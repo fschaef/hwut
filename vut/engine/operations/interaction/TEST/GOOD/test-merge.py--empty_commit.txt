@@ -3,3 +3,4 @@ INSPECT: driver said COMMIT with no artifact
   OK  : the hub downgrades it to CANCEL
   OK  : and carries nothing forward
 SUCCESS: an empty commit is refused, not stored.
+<hwut-end>

@@ -1,0 +1,13 @@
+INSPECT: an unnoted choice reads forbidden
+         asked for    report                 book note   nominal file
+         (nothing)    stderr-undecided       forbidden   False
+         nominal      ok                     nominal     True
+         ignored      ok                     ignored     False
+         forbidden    ok                     forbidden   False
+  OK  : a stream with words and no note REFUSES the ceremony
+  OK  : and nothing at all is written -- not even the stdout that was fine
+  OK  : 'nominal' notes the book AND records the stream
+  OK  : 'ignored' notes the book and records nothing
+  OK  : 'forbidden' notes the book and records nothing
+SUCCESS: one note, three readings, and the author writes it.
+<hwut-end>

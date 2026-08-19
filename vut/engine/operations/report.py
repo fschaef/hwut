@@ -62,6 +62,12 @@ _PRECEDENCE = (
     # -- the subjects and nominals
     E_TestRunResult.OUTPUT_FILE_NOT_FOUND,
     E_TestRunResult.NOMINAL_FILE_NOT_FOUND,
+    # -- completeness precedes judgement: an incomplete stream must
+    #    never masquerade as an ordinary mismatch (R-70)
+    E_TestRunResult.TERMINATED_WITHOUT_END,
+    #  -- stderr: a stream nobody blessed, and a decision nobody took
+    E_TestRunResult.STDERR_UNDECIDED,
+    E_TestRunResult.UNEXPECTED_STDERR,
     # -- the judgement: everything ran, the subject does not match
     E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
     # -- the display, which cannot make a test wrong

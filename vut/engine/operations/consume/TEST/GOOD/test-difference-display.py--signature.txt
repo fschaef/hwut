@@ -3,3 +3,4 @@ INSPECT: our own signature   -> accepted
   OK  : the signature this hub speaks is accepted
   OK  : a foreign one is REFUSED rather than guessed at
 SUCCESS: refuse rather than mis-read.
+<hwut-end>

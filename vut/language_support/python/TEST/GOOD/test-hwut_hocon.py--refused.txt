@@ -7,3 +7,4 @@ FAULT f.hocon:2:5: REFUSED: substitutions '${...}' do not exist here: a specific
 FAULT f.hocon:3:3: REFUSED: '+=' does not exist here
 FAULT f.hocon:4:5: REFUSED: triple-quoted strings do not exist here
 FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "survives"
+<hwut-end>

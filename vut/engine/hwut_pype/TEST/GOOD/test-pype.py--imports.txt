@@ -21,3 +21,4 @@ PypeError (expected): WORK/b.pype:1: import cycle via 'WORK/a.pype'
 --- sys.exit(n) inside a block gates the exit status ---
 with a failure: exit 3, stdout 'gating: 1 failure(s)\n'
 clean: exit 0, stdout ''
+<hwut-end>

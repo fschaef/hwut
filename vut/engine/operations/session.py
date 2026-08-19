@@ -31,6 +31,7 @@ ______________________________________________________________________________
 from   dataclasses import dataclass, field
 from   enum        import Enum
 from   typing      import Mapping, Optional, Sequence
+from ..orchestrator.bookkeeper.configuration import E_StderrNote
 
 from   .result                        import E_TestRunResult
 from .consume.accept             import (Accept, AcceptConfig,
@@ -99,6 +100,11 @@ class Request:
     replay:      bool              = False
     display:     Display           = field(default_factory=Display)
     observer:    Optional[object]  = None
+    stderr:      Optional[object]  = None   # E_StderrNote at a NOMINAL
+                                            # goal: which note to write
+                                            # for stderr. None: not
+                                            # asked -- acceptance
+                                            # refuses rather than guess
     record:      Optional[bool]    = None   # None: follow the store config
     stop_event:  Optional[object]  = None   # how the caller stops it
 
@@ -166,6 +172,9 @@ def _nominal_db(store, test_name, choice_name, subject_name_list):
     return {name: RecordNominal(store.nominal_path(test_name,
                                                    choice_name, name))
             for name in subject_name_list}
+
+
+
 
 
 def store_of(configuration, bookkeeper):
@@ -256,12 +265,23 @@ async def run_test_held(configuration, request=None, store=None,
                          subjects   = {n: AcceptStep()
                                        for n in subject_name_list},
                          choice     = choice_name,
-                         groundwork = groundwork),
+                         groundwork = groundwork,
+                         stderr     = request.stderr),
             store, observer=observer).run(stop_event=stop_event)
         recorded_db = None
     else:
+        #  STDERR IS WHAT THE BOOK SAYS IT IS (S-1): 'nominal' is
+        #  compared like any other subject, 'ignored' is never read,
+        #  'forbidden' -- the reading of an unnoted choice -- makes a
+        #  word there an error by name.
+        note        = store.stderr_note(test_name, choice_name)
+        judged_list = list(subject_name_list)
+        if note is E_StderrNote.NOMINAL:
+            if "stderr" not in judged_list: judged_list.append("stderr")
+        elif "stderr" in judged_list:
+            judged_list.remove("stderr")
         nominal_db = _nominal_db(store, test_name, choice_name,
-                                 subject_name_list)
+                                 judged_list)
         if goal is E_Goal.DISPLAY:
             operation = DifferenceDisplay(
                 DifferenceDisplayConfig(
@@ -275,9 +295,10 @@ async def run_test_held(configuration, request=None, store=None,
         else:
             operation = EquivalenceCheck(
                 EquivalenceCheckConfig(
-                    name       = test_name,
-                    groundwork = groundwork,
-                    subjects   = nominal_db,
+                    name          = test_name,
+                    groundwork    = groundwork,
+                    subjects      = nominal_db,
+                    stderr_forbidden_f = (note is E_StderrNote.FORBIDDEN),
                     compare    = _compare_options(configuration,
                                                   choice_name)),
                 observer=observer)

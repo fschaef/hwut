@@ -5,3 +5,4 @@ INSPECT: INTERPRETED without interpreter -> source_kind is INTERPRETED but no in
   OK  : INTERPRETED without an interpreter is refused
   OK  : an interpreter where none is read is refused, not ignored
 SUCCESS: the argv prefix is required exactly where it is read.
+<hwut-end>

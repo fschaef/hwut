@@ -1494,10 +1494,38 @@ def run_pipe():
         print("}")
 
 
+
+
+def run_terminal():
+    """RETURN: None. THE TERMINAL TOKEN (R-70, MANUAL 1b): a script
+    WITH the '<eof>' emission ends its stream in '<hwut-end>'; a
+    script WITHOUT ends bare -- and a bare end on a pype-d stream is
+    the SCRIPT's fault, by the law the MANUAL states. The feeding
+    application never carries the token."""
+    banner("the '<eof>' emission: the stream states its completeness")
+    run_script("""
+         SCAN/on: <else> => flush;
+         SCAN/on: <eof> => {
+             print("<hwut-end>")
+         }
+         """, """
+         alpha
+         beta
+         """)
+    banner("no emission: the stream ends BARE -- the script's fault")
+    run_script("""
+         SCAN/on: <else> => flush;
+         """, """
+         alpha
+         beta
+         """)
+
+
 HwutRunner(
     argv       = sys.argv,
     title      = "pype line-matching language",
     choice_map = {
+        "terminal":       run_terminal,
         "patterns":  run_patterns,
         "modes":     run_modes,
         "namespace": run_namespace,

@@ -5,3 +5,4 @@ INSPECT: empty choice_db -> choice_db is empty: no call is described
   OK  : no lock was taken
   OK  : and nothing was booked
 SUCCESS: refused at the door, before anything happens.
+<hwut-end>

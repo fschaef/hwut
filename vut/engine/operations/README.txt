@@ -1192,3 +1192,69 @@ PART V -- REFERENCE
   args fields       application_arguments, build_arguments
   caps              max_wall_clock_sec, max_memory_mb, ...  (plain numbers)
 ============================================================================
+
+
+THE TERMINAL TOKEN  (R-70)
+______________________________________________________________________________
+
+'<hwut-end>' as a subject stream's last non-empty line says: THE
+STREAM IS COMPLETE, by the testimony of whoever ends it. The token is
+CONTENT -- compared, stored, displayed; the compare framework knows no
+plumbing ('consume/terminal.py' holds the word and the reading law).
+
+THE NOMINAL DECIDES PARTICIPATION: a nominal ending in the token
+requires the subject to; a nominal without it imposes no check. The
+migration therefore needs no switch anywhere -- 'hwut.renovate'
+(planned) appends tokens to nominals; new tests carry them from birth
+through the reference runner.
+
+ABSENCE HAS ITS OWN NAME: a participating subject without the token
+draws 'terminated-without-hwut-end' -- placed in the report precedence
+ABOVE the judgement: an incomplete stream never masquerades as an
+ordinary mismatch, and never becomes a wall of line differences.
+
+WHO ENDS A STREAM:
+    plain            the application; HwutRunner emits as the
+                     choice's last act
+    interactive      the application, per choice, into the stdout
+                     sink before 'done' -- each choice's stream
+                     self-delimits, in band
+    pype-d           THE PYPE SCRIPT, from its '<eof>' handler; the
+                     application MUST NOT emit (it cannot place the
+                     token safely) and is told so through the
+                     environment word 'HWUT_NO_TERMINAL', set at
+                     launch wherever a stdout canonicaliser stands
+                     (per run for plain tests; session-wide for
+                     interactive ones). An absent token on a pype-d
+                     stream criticises the SCRIPT (hwut_pype MANUAL
+                     1b).
+
+COMPLETENESS AND CONTAINMENT ARE ORTHOGONAL: the token is the
+stream's testimony; 'killed' is the killer's (procsitter). Neither
+substitutes for the other; both reach the report. STDOUT ONLY:
+stderr never carries a token.
+
+
+STDERR  (S-1)
+______________________________________________________________________________
+
+THE BOOK HOLDS ONE NOTE per (test, choice), with three readings:
+
+    nominal    a stderr stream was RECORDED: compared like any other
+               subject
+    ignored    whatever happens there, do not worry: never read,
+               never compared
+    forbidden  a word there is an ERROR -- 'unexpected-stderr', by
+               name, never a line difference
+
+An UNNOTED choice reads 'forbidden'. 'Bookkeeper.stderr_note()' reads
+it, 'note_stderr()' writes it, and ACCEPTANCE is the only place it is
+written: 'Request.stderr' carries an 'E_StderrNote' at a NOMINAL goal.
+Noting anything but 'nominal' removes a recorded stderr, since a
+stream cannot be both compared and disregarded.
+
+THE SECOND QUESTION: where a run wrote on stderr and no note was ever
+taken, the accept ceremony REFUSES -- 'stderr-undecided' -- and writes
+nothing at all, not even the stdout that was fine. A caller that NAMES
+'stderr' among the subjects to accept has decided by naming it.
+Whitespace is silence.

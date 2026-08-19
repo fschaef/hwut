@@ -25,3 +25,4 @@
 FAULT f.hocon:1:5: SYNTAX: a string is written in double quotes: "bare"
 FAULT f.hocon:8:5: SYNTAX: a string is written in double quotes: "make"
 FAULT f.hocon:8:15: SYNTAX: expected '=', ':' or '{' after key '%.exe'
+<hwut-end>

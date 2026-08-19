@@ -43,6 +43,8 @@ from   vut.engine.operations.nominal         import (BytesNominal, # noqa E402
                                                    RecordNominal)
 from   vut.engine.operations.observer        import ObserverGroup  # noqa E402
 from   vut.engine.operations.run.core  import Run            # noqa E402
+from   vut.engine.orchestrator.bookkeeper.stream_store import Store  # noqa E402
+from   vut.engine.orchestrator.bookkeeper.bookkeeper import Bookkeeper      # noqa E402
 from   vut.engine.operations.consume.loaded import loaded        # noqa E402
 from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
                                                    Bookkeeper)
@@ -325,11 +327,128 @@ def test_named_but_not_produced():
     _verdict(ok, "named and absent is a fault; unnamed is not judged.")
 
 
+
+
+def test_terminated():
+    """THE TERMINAL TOKEN (R-70): the nominal decides participation.
+    A participating subject that ends without '<hwut-end>' draws
+    'terminated-without-hwut-end' -- its own name, never a wall of
+    line differences; trailing blank lines after the token are
+    forgiven; a NON-participating nominal sees a token-bearing subject
+    as ordinary content."""
+    async def judged(nominal_text, subject_text):
+        directory = tempfile.mkdtemp(prefix="vut_eq_")
+        try:
+            store = Store(Bookkeeper(directory))
+            store.write_candidate("demo", None, "stdout", subject_text)
+            result = await EquivalenceCheck(EquivalenceCheckConfig(
+                name       = "demo",
+                groundwork = _Provided(loaded(store, "demo",
+                                       subject_name_list=("stdout",))),
+                subjects   = {"stdout": BytesNominal(nominal_text)},
+            )).run()
+            return result
+        finally:
+            shutil.rmtree(directory, ignore_errors=True)
+
+    participating = "alpha\nbeta\n<hwut-end>\n"
+
+    cut      = asyncio.run(judged(participating, "alpha\nbeta\n"))
+    complete = asyncio.run(judged(participating,
+                                  "alpha\nbeta\n<hwut-end>\n"))
+    padded   = asyncio.run(judged(participating,
+                                  "alpha\nbeta\n<hwut-end>\n\n\n"))
+    old      = asyncio.run(judged("alpha\nbeta\n",
+                                  "alpha\nbeta\n<hwut-end>\n"))
+
+    print("INSPECT: cut      -> verdict %s, report %s"
+          % (cut.verdict, cut.report))
+    print("         complete -> verdict %s, report %s"
+          % (complete.verdict, complete.report))
+    print("         padded   -> verdict %s, report %s"
+          % (padded.verdict, padded.report))
+    print("         old nominal, marked subject -> verdict %s, "
+          "report %s" % (old.verdict, old.report))
+    ok = _check([
+        (cut.report is E_TestRunResult.TERMINATED_WITHOUT_END,
+         "the missing token has its OWN name, not a line difference"),
+        (cut.verdict is False,
+         "and the test FAILED"),
+        (complete.verdict is True,
+         "with the token, the same content passes"),
+        (padded.verdict is True,
+         "trailing blank lines after the token are forgiven"),
+        (old.verdict is False
+         and old.report is E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
+         "a non-participating nominal sees the token as ordinary "
+         "content: one trailing difference"),
+    ])
+    _verdict(ok, "the nominal decides; absence is named, never "
+                 "diffed.")
+
+
+class _Provided:
+    """A groundwork over an already-made Subjects delivery."""
+    def __init__(self, subjects):
+        self.subjects      = subjects
+        self.last_provided = subjects
+    async def provide(self, stop_event=None):
+        return self.subjects
+
+
+
+
+def test_unexpected_stderr():
+    """A FORBIDDEN STDERR (S-1): the book's note says a word on that
+    stream is an ERROR -- reported BY NAME, never a line difference
+    against a nominal that does not exist. An unnoted choice reads
+    'forbidden'. A silent run is untouched by the law, and whitespace
+    is silence."""
+    async def judged(stderr_text):
+        directory = tempfile.mkdtemp(prefix="vut_eq_")
+        try:
+            store = Store(Bookkeeper(directory))
+            store.write_candidate("demo", None, "stdout", "the behaviour\n")
+            store.write_candidate("demo", None, "stderr", stderr_text)
+            return await EquivalenceCheck(EquivalenceCheckConfig(
+                name            = "demo",
+                groundwork      = _Provided(loaded(store, "demo")),
+                subjects        = {"stdout":
+                                   BytesNominal("the behaviour\n")},
+                stderr_forbidden_f = True)).run()
+        finally:
+            shutil.rmtree(directory, ignore_errors=True)
+
+    silent = asyncio.run(judged(""))
+    blank  = asyncio.run(judged("\n  \n"))
+    noisy  = asyncio.run(judged("a warning nobody blessed\n"))
+
+    print("INSPECT: silent stderr    -> verdict %s, report %s"
+          % (silent.verdict, silent.report))
+    print("         blank lines only -> verdict %s, report %s"
+          % (blank.verdict, blank.report))
+    print("         a word on stderr -> verdict %s, report %s"
+          % (noisy.verdict, noisy.report))
+    ok = _check([
+        (silent.verdict is True,
+         "silence is what a FORBIDDEN stderr expects"),
+        (blank.verdict is True,
+         "and whitespace is silence"),
+        (noisy.report is E_TestRunResult.UNEXPECTED_STDERR,
+         "a WORD there is reported by name"),
+        (noisy.verdict is False,
+         "and the test failed"),
+    ])
+    _verdict(ok, "a forbidden stderr is expected to say nothing.")
+
+
 if __name__ == "__main__":
     HwutRunner(
         argv       = sys.argv,
         title      = "EquivalenceCheck: read -> verdict",
         choice_map = {
+            "unexpected_stderr": test_unexpected_stderr,
+            "terminated":       test_terminated,
             "verdict":           test_verdict,
             "nominal_missing":   test_unreadable_nominal_is_a_fault,
             "unjudged":          test_unjudged_subject,

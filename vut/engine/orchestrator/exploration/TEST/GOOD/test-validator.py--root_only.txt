@@ -19,3 +19,4 @@ choice 'two':
     (nothing stated)
 FAULT f.py:4:15: VOCABULARY: 'same' cannot be a choice attribute
 FAULT f.py:5:15: VOCABULARY: 'interactive' cannot be a choice attribute
+<hwut-end>

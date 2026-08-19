@@ -7,3 +7,4 @@ INSPECT: COMPILED argv   = ['built']
   OK  : one record: the run's -- the build's own attribution is the BUILD node's, above
   OK  : the EXECUTABLE ran directly, with the choice as its argument
 SUCCESS: all three source kinds launch what they should.
+<hwut-end>

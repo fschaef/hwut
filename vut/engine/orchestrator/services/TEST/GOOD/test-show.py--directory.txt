@@ -25,3 +25,4 @@ $ hwut.show --no-default
     }
 
     [status 0]
+<hwut-end>

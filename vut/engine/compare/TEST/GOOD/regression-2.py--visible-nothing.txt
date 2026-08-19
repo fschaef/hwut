@@ -11,3 +11,4 @@ Nominal: (STRING 'A',)
 RESPONSE: ['GOOD_DELETE', 'GOOD']
 VERDICT: PASS
   Sequence aligned correctly.
+<hwut-end>

@@ -7,5 +7,4 @@ INSPECT: default setup -> {}
   OK  : a tolerance compare invents later is recorded the day it is used
   OK  : a tolerance that does not exist is refused where it is written
 SUCCESS: what somebody CHOSE is what the book keeps.
-
-
+<hwut-end>

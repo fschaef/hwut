@@ -7,3 +7,4 @@ INSPECT: envelope   = ['intent', 'nominal', 'signature']
   OK  : it round-trips
   OK  : a foreign signature is REFUSED before anything is parsed
 SUCCESS: signed, versioned, and carrying the artifact.
+<hwut-end>

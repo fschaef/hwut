@@ -28,3 +28,4 @@ REFUSED: '--fail' beside '--pass' can want nothing
 
 --- --since=1h --until=2h ---
 REFUSED: '--since=1h --until=2h': the window is empty -- 'until' must lie further back than 'since'
+<hwut-end>

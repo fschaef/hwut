@@ -5,3 +5,4 @@ INSPECT: tail:
   OK  : both stages completed -- one record each
   OK  : recorded input traversed the whole chain
 SUCCESS: the first stage drinks from a link like any other.
+<hwut-end>

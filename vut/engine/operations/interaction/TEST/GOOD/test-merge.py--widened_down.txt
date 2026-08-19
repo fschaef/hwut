@@ -9,3 +9,4 @@ INSPECT: a namedtuple   -> kind NamedTupleInst fields ['left', 'right']
   OK  : a kind with NO fields is readable and empty -- absent is not empty, and this is where they are hardest to tell apart
   OK  : an item whose fields cannot be READ AT ALL is refused
 SUCCESS: the hub carries what compare emits; it never guesses.
+<hwut-end>

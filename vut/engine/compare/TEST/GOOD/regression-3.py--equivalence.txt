@@ -13,3 +13,4 @@
 
 VERDICT: PASS
 DETAILS: Sessions are isolated. Symbol IDs reset to 0.
+<hwut-end>

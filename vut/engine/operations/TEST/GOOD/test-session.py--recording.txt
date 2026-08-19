@@ -5,3 +5,4 @@ INSPECT: recorded subjects = ['stderr', 'stdout']
   OK  : and stores the SAME execution that was judged
   OK  : a Replay records nothing -- it would write back what it read
 SUCCESS: what was judged is what is recorded.
+<hwut-end>

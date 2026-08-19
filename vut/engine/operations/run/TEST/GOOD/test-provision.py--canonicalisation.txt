@@ -6,3 +6,4 @@ INSPECT: raw           = 'zebra\napple\nmango\n'
   OK  : and provision reports OK
   OK  : a subject with no canonicaliser is passed through raw
 SUCCESS: what provision hands over is already comparable.
+<hwut-end>

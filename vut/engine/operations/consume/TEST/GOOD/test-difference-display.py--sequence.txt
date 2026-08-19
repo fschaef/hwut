@@ -4,3 +4,4 @@ INSPECT: trace = ['open:stdout', 'item', 'item', 'close']
   OK  : and closes even though presentation raised
   OK  : the failure PROPAGATES: a display that failed is not reported as a display that happened
 SUCCESS: open, items, close -- close always.
+<hwut-end>

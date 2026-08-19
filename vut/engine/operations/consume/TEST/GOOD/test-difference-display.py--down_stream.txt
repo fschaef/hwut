@@ -6,3 +6,4 @@ INSPECT: verdict = False, report = not-equivalent-with-nominal
   OK  : one aligned row per line pair of the comparison
   OK  : the verdict is what the comparison found
 SUCCESS: DOWN is compare's; this module carries it.
+<hwut-end>

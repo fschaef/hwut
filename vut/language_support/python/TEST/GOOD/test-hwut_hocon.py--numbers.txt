@@ -71,3 +71,4 @@ FAULT f.hocon:6:5: SYNTAX: a string is written in double quotes: "0rVX"
     5 (int) at 1:5
 }
 FAULT f.hocon:1:9: SYNTAX: expected '=', ':' or '{' after key '-'
+<hwut-end>

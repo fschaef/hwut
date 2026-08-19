@@ -104,3 +104,4 @@ test-b.py {
 test-a.py one   [MISDEP]
 test-b.py -   [MISDEP]
 FAULT hwut.conf:1:7: DIRECTORY: dependency cycle: test-a.py one -> test-b.py -> test-a.py one
+<hwut-end>
