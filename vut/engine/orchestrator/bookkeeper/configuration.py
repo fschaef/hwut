@@ -17,11 +17,31 @@ from enum        import Enum
 
 
 class E_StderrNote(Enum):
-    """WHAT THE BOOK SAYS about a choice's stderr -- one note, three
-    readings, and acceptance is where it is written.
+    """WHAT THE BOOK SAYS about a choice's stderr -- and acceptance is
+    where it is written.
 
-    NOMINAL    a stderr stream was RECORDED: it is compared like any
-               other subject, and a difference is a difference.
+    ===================================================================
+    STDERR IS NEVER SUBJECT TO TESTING.
+    ===================================================================
+    stderr is for ERROR REPORTING. That is its whole job. A test
+    application's stderr is never a nominal, never compared, never
+    pype-d.
+
+    Where error reporting is itself the thing under test, the
+    application FLUSHES IT INTO A FILE and names that file in the
+    'output' parameter. A file is a subject; stderr is not.
+
+    WHY: a stream that both carries diagnostics and is held to a
+    blessed text cannot do either job. Every diagnostic an author adds
+    while debugging would fail the test, so the author learns to stay
+    silent -- and the framework has then taught them to remove the
+    reporting it wanted.
+
+    NOMINAL is RETIRED by this ruling. It still stands in the enum
+    because 'operations/consume/' reads it and a blessed suite
+    exercises it; it is written by nothing that should, and its
+    removal is its own piece of work.
+
     IGNORED    whatever happens on stderr, DO NOT WORRY: it is never
                read, never compared, never reported.
     FORBIDDEN  a word there is an ERROR ('unexpected-stderr'). An

@@ -4,8 +4,8 @@ STDOUT {
     REFUSED: the directory 'nowhere-such-dir' does not exist
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--no-store] [--jobs=<n>]
-                    [-v|--verbose|--plain|--quiet|--silent]
-                    [--colour|--no-colour] [--directory=<path>]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--directory=<path>]
 }
 == an option nobody knows ==
 STATUS: 2
@@ -13,8 +13,8 @@ STDOUT {
     REFUSED: 'hwut.run' does not take: --frobnicate
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--no-store] [--jobs=<n>]
-                    [-v|--verbose|--plain|--quiet|--silent]
-                    [--colour|--no-colour] [--directory=<path>]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--directory=<path>]
 }
 == tiers beside one another ==
 STATUS: 2
@@ -22,8 +22,8 @@ STDOUT {
     REFUSED: choose one of -v/--verbose, --quiet, --silent
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--no-store] [--jobs=<n>]
-                    [-v|--verbose|--plain|--quiet|--silent]
-                    [--colour|--no-colour] [--directory=<path>]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--directory=<path>]
 }
 == colour beside no-colour ==
 STATUS: 2
@@ -31,8 +31,8 @@ STDOUT {
     REFUSED: '--colour' beside '--no-colour' can want nothing
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--no-store] [--jobs=<n>]
-                    [-v|--verbose|--plain|--quiet|--silent]
-                    [--colour|--no-colour] [--directory=<path>]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--directory=<path>]
 }
 == jobs without a number ==
 STATUS: 2
@@ -40,6 +40,6 @@ STDOUT {
     REFUSED: '--jobs' takes a positive integer, not 'many'
     usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
                     [--glob <target>]... [--no-store] [--jobs=<n>]
-                    [-v|--verbose|--plain|--quiet|--silent]
-                    [--colour|--no-colour] [--directory=<path>]
+                    [-v|--verbose|--plain|--quiet|--silent] [--colour|--no-colour]
+                    [--directory=<path>]
 }

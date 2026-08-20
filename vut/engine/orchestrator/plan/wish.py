@@ -56,6 +56,34 @@ MONTH_INDEX   = {name.lower(): index for index, name
                  in enumerate(calendar.month_name) if index}
 
 
+#  ---------------------------------------------------------------------
+#  THE WISH'S OWN WORDS -- DATA, written ONCE: the argument list a face
+#  adds to its own, and the block that describes them. A face that
+#  re-describes these keywords in its own prose puts a second
+#  description beside this one with nothing keeping the two aligned.
+#
+#  HOW a usage line is laid out is NOT this module's business (D-8):
+#  the wrapping lives with the faces, in 'services/_core.py'.
+#  ---------------------------------------------------------------------
+USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
+                     "[--until=<point>]", "[--glob <target>]...")
+
+HELP = """SELECTION -- the wish; an absent keyword asks nothing
+    --fail              the last recorded run's verdict was negative
+    --pass              the last recorded run's verdict was positive
+    --since=<point>     the last recorded run lies AT or AFTER the
+                        point; a case never run is not wanted
+    --until=<point>     the last recorded run lies BEFORE the point,
+                        and a case NEVER RUN is wanted too -- the
+                        stale wish
+    --glob <target>     a target: a file name, or a file name and a
+                        choice name with one blank between, either
+                        carrying fnmatch's '*', '?' and '[ ]':
+                            --glob "test-*.py quick-[0-2]"
+                        may stand several times; the globs are OR'ed
+                        among themselves"""
+
+
 class WishError(Exception):
     """A wish the command line cannot mean: an unreadable point, a
     keyword without its value, a combination that can want nothing."""

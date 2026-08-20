@@ -1,0 +1,15 @@
+STATUS: 0
+STDOUT {
+    
+    ==============================================================================
+    ACCEPTED  3 of 3
+    ------------------------------------------------------------------------------
+        blessed        test-ok.sh .stdout
+        blessed        test-two.sh a .stdout
+        blessed        test-two.sh b .stdout
+    ==============================================================================
+}
+GOOD holds:
+    test-ok.stdout
+    test-two--a.stdout
+    test-two--b.stdout

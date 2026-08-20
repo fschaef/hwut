@@ -1,0 +1,27 @@
+== a second accept: the nominals stand ==
+STATUS: 1
+STDOUT {
+    
+    ==============================================================================
+    ACCEPTED  0 of 3
+    ------------------------------------------------------------------------------
+        merge required test-ok.sh .stdout
+        merge required test-two.sh a .stdout
+        merge required test-two.sh b .stdout
+    
+    A nominal already stands for the keys above. That is a CHANGE, not a
+    first blessing: use 'hwut.merge', or '--force' to overwrite the pole.
+    ==============================================================================
+}
+== --force ==
+STATUS: 0
+STDOUT {
+    
+    ==============================================================================
+    ACCEPTED  3 of 3
+    ------------------------------------------------------------------------------
+        blessed        test-ok.sh .stdout
+        blessed        test-two.sh a .stdout
+        blessed        test-two.sh b .stdout
+    ==============================================================================
+}

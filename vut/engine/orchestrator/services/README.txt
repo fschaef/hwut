@@ -57,6 +57,19 @@ The faces:
                  rendering. '--no-store' suppresses recording; '--jobs'
                  bounds parallel work per directory.
 
+    hwut.accept  (accept.py)
+                 PROMOTION: a recorded candidate becomes the NOMINAL,
+                 the pole every later run is judged against --
+                 'Store.accept()' is the only way a nominal comes to
+                 exist, and this face is the only thing that calls
+                 it. Selection is the wish; a positional short form
+                 desugars into '--glob'. A standing nominal is a
+                 CHANGE and 'hwut.merge's business: detected, named,
+                 left alone unless '--force' says otherwise.
+                 STDERR IS NEVER SUBJECT TO TESTING: never promoted;
+                 where it spoke, refused until '--stderr-tol' notes
+                 it IGNORED.
+
 A fault does not withhold the output: a directory with one broken header
 prints the fault, then the tree or the plan of what stands, and answers 1.
 

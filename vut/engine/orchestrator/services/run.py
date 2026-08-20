@@ -32,23 +32,30 @@ import asyncio
 import os
 import sys
 
-from ...display.console            import (RenderingError,
+from ...display.console            import (HELP as RENDERING_HELP,
+                                           RenderingError,
                                            console_view,
                                            parse_rendering)
+from ...display.console            import USAGE_TOKEN_TUPLE \
+                                           as RENDERING_TOKEN_TUPLE
 from ..exploration.task_list       import SelectionError
-from ..plan.wish                   import WishError, parse_wish
+from ..plan.wish                   import (HELP as WISH_HELP,
+                                           WishError,
+                                           parse_wish)
 from ..run.dispatcher              import test_run_dispatcher_factory
 from ..run.orchestrate             import orchestrator
 from ..run.summary                 import fold
+from ..plan.wish                   import USAGE_TOKEN_TUPLE \
+                                           as WISH_TOKEN_TUPLE
+from ._core                        import usage_line
 from ._exit                        import E_ExitCode
 
 
-USAGE = "usage: hwut.run [--fail] [--pass] [--since=<point>] " \
-        "[--until=<point>]\n" \
-        "                [--glob <target>]... [--no-store] " \
-        "[--jobs=<n>]\n" \
-        "                [-v|--verbose|--plain|--quiet|--silent]\n" \
-        "                [--colour|--no-colour] [--directory=<path>]"
+USAGE = usage_line("usage: hwut.run",
+                    WISH_TOKEN_TUPLE
+                    + ("[--no-store]", "[--jobs=<n>]")
+                        + RENDERING_TOKEN_TUPLE
+                        + ("[--directory=<path>]",))
 
 HELP = """hwut.run -- the tree run, rendered live
 
@@ -56,10 +63,7 @@ HELP = """hwut.run -- the tree run, rendered live
                         offers: per directory its frame, its builds,
                         its sessions, its tests
 
-SELECTION -- the wish; the words of 'hwut.plan'
-    --fail --pass --since=<point> --until=<point> --glob <target>
-                        keywords of different kinds are AND'ed; the
-                        globs OR'ed among themselves
+""" + WISH_HELP + """
 
 EXECUTION
     --directory=<path>  the root to run below; the current one else
@@ -67,22 +71,7 @@ EXECUTION
     --jobs=<n>          the per-directory bound on work standing at
                         once; unbounded where absent
 
-RENDERING -- one tier, the flags mutually exclusive
-    -v, --verbose       every event as it arrives, the swallowed ones
-                        included
-    --plain             the default: the flow, the DIRECTORIES
-                        roll-call, FAILURES last; statable redundantly
-    --quiet             no flow; the closing blocks alone
-    --silent            nothing on stdout; the exit status is the
-                        whole report -- faults still go to stderr,
-                        prefixed and nicknamed as in the flow
-
-COLOUR -- decided once, at the door
-    --colour            enforcement: on, over every gate, NO_COLOR
-                        included
-    --no-colour         off, always
-    (neither)           on only where stdout is a terminal, NO_COLOR
-                        and CI are unset, and TERM claims a capability
+""" + RENDERING_HELP + """
 
 EXIT STATUS
     0   every test green, no fault met

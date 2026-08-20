@@ -30,6 +30,32 @@ from .plain import CPlainFlow, E_Tier
 from .word  import CInk, colour_decision
 
 
+#  ---------------------------------------------------------------------
+#  THE RENDERING WORDS -- written ONCE, spliced by every face that
+#  renders (hwut.run, and whatever follows). D-8: a face never
+#  describes how something looks.
+#  ---------------------------------------------------------------------
+USAGE_TOKEN_TUPLE = ("[-v|--verbose|--plain|--quiet|--silent]",
+                     "[--colour|--no-colour]")
+
+HELP = """RENDERING -- one tier, the flags mutually exclusive
+    -v, --verbose       every event as it arrives, the swallowed ones
+                        included
+    --plain             the default: the flow, the DIRECTORIES
+                        roll-call, FAILURES last; statable redundantly
+    --quiet             no flow; the closing blocks alone
+    --silent            nothing on stdout; the exit status is the
+                        whole report -- faults still go to stderr,
+                        prefixed and nicknamed as in the flow
+
+COLOUR -- decided once, at the door
+    --colour            enforcement: on, over every gate, NO_COLOR
+                        included
+    --no-colour         off, always
+    (neither)           on only where stdout is a terminal, NO_COLOR
+                        and CI are unset, and TERM claims a capability"""
+
+
 class RenderingError(Exception):
     """The rendering words cannot want anything."""
 

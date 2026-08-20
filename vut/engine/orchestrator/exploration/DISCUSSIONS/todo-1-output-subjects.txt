@@ -1,0 +1,108 @@
+todo-1  THE 'output' PARAMETER -- SUBJECTS ARE THE TEST'S DESIGN
+        decided, unbuilt
+
+DECIDED
+    A test states what it produces. New header parameter 'output':
+
+        absent          the subject is '<stdout>', and only that
+        a list          the subjects, in order. '<stdout>' is a
+                        SPECIAL name marking the standard output
+                        channel; every other entry is a FILE NAME,
+                        read AFTER the run has ended.
+
+    Example:
+
+        hwut {
+            output = ["<stdout>", "result.csv", "diagnostics.log"]
+        }
+
+    '<stderr>' IS NOT A VALID ENTRY and is refused by name, with the
+    reason (see THE THREE LAWS below).
+
+    WHY CONFIGURATION AND NOT A COMMAND-LINE OPTION: what a test
+    produces is its DESIGN, authored once, not something restated at
+    every acceptance. The three worlds hold -- configuration says what
+    the subjects ARE; the store holds what they WERE; acceptance
+    decides which recording is the pole.
+
+    ===================================================================
+    THE THREE LAWS -- state these in every manual that touches subjects
+    ===================================================================
+
+    (1) STDERR IS NEVER SUBJECT TO TESTING.
+        stderr is for ERROR REPORTING, and that is its whole job. It
+        is never a nominal, never compared. Where error reporting is
+        itself under test, the application FLUSHES IT TO A FILE and
+        names that file in 'output'.
+
+        A stream that both carries diagnostics and is held to a
+        blessed text can do neither job: every diagnostic an author
+        adds while debugging would fail the test, so the author learns
+        to stay silent, and the framework has taught them to remove
+        the reporting it wanted.
+
+    (2) A FILE IS READ ONLY AFTER THE TEST HAS TERMINATED.
+        Therefore file content is NOT subject to race conditions --
+        there is no interleaving to observe, no flush to time, no
+        FIFO-sink question. This is why a file, and not a stream, is
+        the answer to (1).
+
+    (3) PYPE-ING IS ONLY EVER APPLIED TO STDOUT.
+        Not to stderr (never read), not to files (not a stream; read
+        whole, after the end). 'canonicalisers' is a dict keyed by
+        subject and the bookkeeper iterates it generically, but
+        'stdout' is the ONLY key that will ever stand in it. The
+        generality is harmless; the law is what governs.
+
+    WHAT ACCEPT STILL DECIDES -- one thing, and only for stderr:
+
+        (B) stderr silent          -> FORBIDDEN, silently, the default
+        (A) stderr speaks          -> REFUSE. No default: a default
+                                      here leaves a user clueless in
+                                      front of output that deviates.
+                                      Request '--stderr-tol[erated]',
+                                      which notes IGNORED.
+
+        There is no second remedy. 'stderr becomes nominal' is dropped.
+
+WHAT ALREADY STANDS -- this is less new than it looks
+    operations/result.py    OUTPUT_FILE_NOT_FOUND is already a verdict
+    operations/session.py   'Request.subjects' is already a sequence,
+                            defaulting to ("stdout",); 'judged_list'
+                            already adds and removes subjects, and the
+                            stderr note already drives it
+    bookkeeper              already keys EVERY record by
+                            (test, choice, SUBJECT); nominal,
+                            candidate, raw and timing paths all carry
+                            the subject already
+    display/word.py         'output file missing' already phrases the
+                            verdict
+
+WHAT IS MISSING
+    (1) exploration     'output' is not in the parameter table
+                        (specification.py); nothing parses it, so no
+                        spec carries it
+    (2) adapter         'run/adapter.py' does not map it onto
+                        'Request.subjects' -- nothing in production
+                        ever sets subjects beyond ("stdout",)
+    (3) operations      no post-run step READS the declared files into
+                        the store as candidates; the verdict exists,
+                        the reader does not
+    (4) accept/merge    '--stderr-tol' and the refusal above
+    (5) the manual      README of exploration, run and services
+
+RETIRED BY THIS RULING -- its own piece of work
+    'E_StderrNote.NOMINAL' is dead. It still stands in the enum
+    because these read or write it:
+
+        orchestrator/bookkeeper/bookkeeper.py:393   the removal branch
+        operations/consume/accept.py:152,156        a match arm, and a
+                                                    note_stderr write
+        operations/session.py:279                   judged_list gains
+                                                    'stderr'
+        operations/consume/TEST/test-accept.py      a BLESSED suite
+                                                    that iterates all
+                                                    four note states
+
+    Removing the member moves that GOOD, so it is a step of its own
+    and not a side effect of building 'output'.

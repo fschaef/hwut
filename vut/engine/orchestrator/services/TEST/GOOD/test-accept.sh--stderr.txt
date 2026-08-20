@@ -1,0 +1,29 @@
+== stderr spoke, no flag ==
+STATUS: 1
+STDOUT {
+    REFUSED: stderr SPOKE and no note tolerates it --
+        test-ok   (10 bytes)
+    stderr is for ERROR REPORTING and is never subject to
+    testing. Either state '--stderr-tol' to note it IGNORED,
+    or -- where the reporting is itself under test -- flush
+    it to a FILE and name that file in 'output'.
+}
+== --stderr-tol ==
+STATUS: 0
+STDOUT {
+    NOTE: stderr of 'test-ok' is now IGNORED (10 bytes spoke)
+    
+    ==============================================================================
+    ACCEPTED  3 of 3
+    ------------------------------------------------------------------------------
+        blessed        test-ok.sh .stdout
+        blessed        test-two.sh a .stdout
+        blessed        test-two.sh b .stdout
+    ==============================================================================
+}
+== the note governs: the suite re-runs green ==
+run status: 0
+GOOD holds (no stderr nominal):
+    test-ok.stdout
+    test-two--a.stdout
+    test-two--b.stdout

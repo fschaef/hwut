@@ -71,3 +71,75 @@ COST      Marginally more code in fold(). The fix was forced by the
           'test-plain.py unknown' choice, which crafted a 'run-ended'
           lacking 'verdict' -- a legitimate test of the stability
           promise at the consumer.
+
+----------------------------------------------------------------------------
+E-4  ACCEPTANCE, AND WHAT IT REFUSES
+----------------------------------------------------------------------------
+PROBLEM   'Store.accept()' existed -- "the only way a nominal comes to
+          exist" -- but nothing called it: no face promoted a
+          candidate, so the first pole could only be placed by hand.
+
+DECISION  'hwut.accept'. The table:
+
+              candidate  nominal  --force   accept
+              ---------  -------  -------   ------------------------
+                 yes       no        -      BLESS, the first pole
+                 yes       yes       no     MERGE REQUIRED: named,
+                                            nothing written, FAULT
+                 yes       yes      yes     BLESS, overwriting
+
+          '--yes' and '--force' are SEPARATE flags: '--yes' asserts
+          'I have already looked'; '--force' asserts 'overwrite the
+          thing I judge against' -- the one operation here that
+          destroys evidence, never implied by the other.
+
+          SELECTION IS THE WISH, once: the positional short form
+          ('hwut.accept "test-*.py" one two') is SUGAR that desugars
+          into '--glob' targets; 'task_list_query' does the selecting
+          for both spellings. Keys follow RECORDING: the stem
+          ('operations/session.py', configuration.stem), per subject
+          -- a choice can be part-blessed.
+
+          The interactive question shows the CANDIDATE -- the
+          canonicalised record, which is what the framework compares;
+          '.raw' is named, not printed. Anything but 'y' leaves the
+          pole alone.
+
+COST      Unattended '--yes --force' in a script can rewrite every
+          pole of a directory; the two-flag split is the guard, and
+          the words are deliberate.
+
+GRAVEYARD One combined '--force' meaning both -- rejected; unattended
+          first-blessing would silently acquire pole-clobbering.
+
+----------------------------------------------------------------------------
+E-5  STDERR IS NEVER SUBJECT TO TESTING
+----------------------------------------------------------------------------
+PROBLEM   A run records a stderr candidate; accept blessed it; the
+          verdict stayed 'unexpected-stderr' -- the NOTE governs, not
+          the file, so accept could produce a nominal that provably
+          does nothing. Worse: a stream that both carries diagnostics
+          and is held to a blessed text can do neither job.
+
+DECISION  stderr is for ERROR REPORTING; that is its whole job. Never
+          a nominal, never compared, never pype-d. Where error
+          reporting is itself under test, the application FLUSHES IT
+          TO A FILE and names that file in 'output' (exploration/
+          DISCUSSIONS/todo-1). 'E_StderrNote.NOMINAL' is retired;
+          its code removal is its own step (a blessed suite iterates
+          it).
+
+          Accept's one stderr decision is the NOTE, and only where it
+          SPOKE:
+
+              silent            FORBIDDEN, silently, the default
+              spoke, no flag    REFUSED by name, both remedies stated
+              spoke, --stderr-tol[erated]
+                                the note IGNORED is written; it
+                                GOVERNS -- the re-run is green
+
+          THERE IS NO DEFAULT where stderr speaks: a default leaves
+          the user clueless in front of output that deviates.
+
+COST      One more flag, and a refusal where HWUT 1.0 users may have
+          expected a question. The refusal names both ways out.

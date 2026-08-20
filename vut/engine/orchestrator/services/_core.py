@@ -27,6 +27,32 @@ import io
 import sys
 
 
+USAGE_WIDTH = 78
+
+
+def usage_line(prefix, token_tuple, width=USAGE_WIDTH):
+    """
+    RETURN: str, a wrapped usage block -- 'prefix' ('usage: hwut.run'),
+            then the tokens, every continuation line aligned under the
+            first token.
+
+    A face states its arguments as a tuple and never places its own
+    line breaks, so a keyword added to a shared list ('plan/wish.py':
+    USAGE_TOKEN_TUPLE) cannot leave another face's usage line stale.
+    """
+    indent    = " " * (len(prefix) + 1)
+    line_list = []
+    line      = prefix
+    for token in token_tuple:
+        if len(line) + 1 + len(token) > width:
+            line_list.append(line)
+            line = indent + token
+        else:
+            line = "%s %s" % (line, token)
+    line_list.append(line)
+    return "\n".join(line_list)
+
+
 def read_source(path):
     """
     RETURN: str, the stream behind 'path' -- the file's content, or

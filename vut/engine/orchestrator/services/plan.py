@@ -8,13 +8,9 @@ PURPOSE: THE 'hwut.plan' COMMAND LINE -- what the framework INTENDS. It
 
     hwut.plan                   the plan of everything the directory
                                 offers
-    --fail                      the last recorded run failed
-    --pass                      the last recorded run stood
-    --since=<point>             the last run lies at or after the point
-    --until=<point>             the last run lies before the point --
-                                the never-run counted
-    --glob <target>             'test-*.py quick-[0-2]'; several times,
-                                OR'ed among themselves
+    <the wish>                  which cases are wanted; the keywords
+                                and their meaning stand in
+                                'plan/wish.py', spliced into --help
     --directory=<path>          where to read; the current one else
     --help                      this text
 
@@ -35,14 +31,19 @@ from ..exploration.task_list       import SelectionError
 from ..exploration.task_list_query import CTestTaskListQuery
 from ..plan.determine              import determine
 from ..plan.printer                import print_plan
-from ..plan.wish                   import WishError, parse_wish
+from ..plan.wish                   import (HELP as WISH_HELP,
+                                           WishError,
+                                           parse_wish)
 from ..bookkeeper.bookkeeper       import Bookkeeper
+from ..plan.wish                   import USAGE_TOKEN_TUPLE \
+                                           as WISH_TOKEN_TUPLE
+from ._core                        import usage_line
 from ._exit                        import E_ExitCode
 
 
-USAGE = "usage: hwut.plan [--fail] [--pass] [--since=<point>] " \
-        "[--until=<point>]\n" \
-        "                 [--glob <target>]... [--directory=<path>]"
+USAGE = usage_line("usage: hwut.plan",
+                    WISH_TOKEN_TUPLE
+                    + ("[--directory=<path>]",))
 
 HELP = """hwut.plan -- the TEST PLAN the framework intends
 
@@ -51,20 +52,7 @@ HELP = """hwut.plan -- the TEST PLAN the framework intends
                         ('x -> y' ordering, 'w ==> t' supports), and
                         the exclusion sets
 
-SELECTION -- the wish; an absent keyword asks nothing
-    --fail              the last recorded run's verdict was negative
-    --pass              the last recorded run's verdict was positive
-    --since=<point>     the last recorded run lies AT or AFTER the
-                        point; a case never run is not wanted
-    --until=<point>     the last recorded run lies BEFORE the point,
-                        and a case NEVER RUN is wanted too -- the
-                        stale wish
-    --glob <target>     a target: a file name, or a file name and a
-                        choice name with one blank between, either
-                        carrying fnmatch's '*', '?' and '[ ]':
-                            --glob "test-*.py quick-[0-2]"
-                        may stand several times; the globs are OR'ed
-                        among themselves
+""" + WISH_HELP + """
 
     Keywords of different kinds are AND'ed. '--fail' beside '--pass'
     is refused. A wish matching nothing yields an empty plan and a
