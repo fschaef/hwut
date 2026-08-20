@@ -37,6 +37,7 @@ from ..plan.determine              import determine
 from ..plan.printer                import print_plan
 from ..plan.wish                   import WishError, parse_wish
 from ..bookkeeper.bookkeeper       import Bookkeeper
+from ._exit                        import E_ExitCode
 
 
 USAGE = "usage: hwut.plan [--fail] [--pass] [--since=<point>] " \
@@ -67,7 +68,7 @@ SELECTION -- the wish; an absent keyword asks nothing
 
     Keywords of different kinds are AND'ed. '--fail' beside '--pass'
     is refused. A wish matching nothing yields an empty plan and a
-    report, not a refusal.
+    report; the exit status is 3.
 
 A <point> is a SPAN back from now -- a number and one of 's', 'm',
 'h', 'd', as in '90s', '2h', '7d' -- or an ANCHOR, reckoned in UTC:
@@ -93,14 +94,17 @@ EXIT STATUS
     0    nothing refused, no fault met
     1    a fault was met
     2    the command line cannot be read, or the wish names what the
-         directory does not offer"""
+         directory does not offer
+    3    the command line reads, and asks for nothing: the wish
+         selects no test case"""
 
 
 def main(argv=None, write=None):
     """
-    RETURN: int, the exit status: 0 where nothing was refused and no
-            fault was met, 1 where a fault was met, 2 where the
-            command line cannot be read or the wish is refused.
+    RETURN: E_ExitCode, the exit status (E-1): OK where nothing was
+            refused and no fault was met, FAULT where one was met,
+            REFUSED where the command line cannot be read or the wish
+            is refused, EMPTY where the wish selects no test case.
 
     'write' takes one line at a time; 'print' where none is given, so
     a test may capture the face without a process.
@@ -110,14 +114,14 @@ def main(argv=None, write=None):
     if argv is None: argv = sys.argv[1:]
     if "--help" in argv:
         write(HELP)
-        return 0
+        return E_ExitCode.OK
 
     try:
         wish, rest_list = parse_wish(argv)
     except WishError as error:
         write("REFUSED: %s" % error)
         write(USAGE)
-        return 2
+        return E_ExitCode.REFUSED
 
     directory = "."
     unknown   = []
@@ -130,7 +134,7 @@ def main(argv=None, write=None):
         write("REFUSED: 'hwut.plan' does not take: %s"
               % ", ".join(sorted(unknown)))
         write(USAGE)
-        return 2
+        return E_ExitCode.REFUSED
 
     result = explore(directory)
     for fault in result.fault_list:
@@ -142,13 +146,15 @@ def main(argv=None, write=None):
         plan, report_list = determine(result.app_set, task_list)
     except SelectionError as error:
         write("REFUSED: %s" % error)
-        return 2
+        return E_ExitCode.REFUSED
 
     write("WISH: %s" % wish)
     for report in report_list:
         write("REPORT: %s" % report)
     print_plan(plan, write)
-    return 1 if result.fault_list else 0
+    if result.fault_list:   return E_ExitCode.FAULT
+    if not plan.node_tuple: return E_ExitCode.EMPTY
+    return E_ExitCode.OK
 
 
 if __name__ == "__main__":

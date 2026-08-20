@@ -6,7 +6,7 @@ diff --git a/operations/DISCUSSIONS.txt b/operations/DISCUSSIONS.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/DISCUSSIONS.txt
-@@ -0,0 +1,694 @@
+@@ -0,0 +1,721 @@
 +============================================================================
 +VUT-TESTRUN -- DISCUSSIONS
 +============================================================================
@@ -701,11 +701,38 @@ new file mode 100644
 +accept or diff consumes a stored subject whose source digest no longer
 +matches -- is NOT ruled. Nothing depends on the ruling; history is
 +being recorded either way.
++
++----------------------------------------------------------------------------
++todo-25  THE FACE OF THE SECOND QUESTION
++----------------------------------------------------------------------------
++
++S-1 is built beneath: the three states, the refusal, the mark. What is
++NOT built is the FACE -- 'hwut.accept' does not exist yet, so
++'--stderr-accept' and '--stderr-ignore' have nowhere to be typed. Two
++things fall to it:
++
++    - the three flags ('--stderr-nominal', '--stderr-ignored',
++      '--stderr-forbidden'), carried into 'Request.stderr' as an
++      E_StderrNote
++    - the INTERACTIVE form: where no flag stands and a terminal is
++      present, ASK -- the first answer accepts stdout, the second
++      writes the note (Frank-Rene's case 2)
++
++Until then, the decision travels only through 'Request.stderr' in
++code, and the refusal is what a tree-wide run reports.
++
++----------------------------------------------------------------------------
++todo-26  RENOVATE AND THE STDERR SURVEY
++----------------------------------------------------------------------------
++
++'hwut.renovate' should report which tests would newly refuse under S-1
++-- those that write on stderr with no nominal and no mark -- so a tree
++can be surveyed before the law is met test by test.
 diff --git a/operations/README.txt b/operations/README.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/README.txt
-@@ -0,0 +1,1194 @@
+@@ -0,0 +1,1260 @@
 +============================================================================
 +VUT-TESTRUN
 +============================================================================
@@ -1900,6 +1927,72 @@ new file mode 100644
 +  args fields       application_arguments, build_arguments
 +  caps              max_wall_clock_sec, max_memory_mb, ...  (plain numbers)
 +============================================================================
++
++
++THE TERMINAL TOKEN  (R-70)
++______________________________________________________________________________
++
++'<hwut-end>' as a subject stream's last non-empty line says: THE
++STREAM IS COMPLETE, by the testimony of whoever ends it. The token is
++CONTENT -- compared, stored, displayed; the compare framework knows no
++plumbing ('consume/terminal.py' holds the word and the reading law).
++
++THE NOMINAL DECIDES PARTICIPATION: a nominal ending in the token
++requires the subject to; a nominal without it imposes no check. The
++migration therefore needs no switch anywhere -- 'hwut.renovate'
++(planned) appends tokens to nominals; new tests carry them from birth
++through the reference runner.
++
++ABSENCE HAS ITS OWN NAME: a participating subject without the token
++draws 'terminated-without-hwut-end' -- placed in the report precedence
++ABOVE the judgement: an incomplete stream never masquerades as an
++ordinary mismatch, and never becomes a wall of line differences.
++
++WHO ENDS A STREAM:
++    plain            the application; HwutRunner emits as the
++                     choice's last act
++    interactive      the application, per choice, into the stdout
++                     sink before 'done' -- each choice's stream
++                     self-delimits, in band
++    pype-d           THE PYPE SCRIPT, from its '<eof>' handler; the
++                     application MUST NOT emit (it cannot place the
++                     token safely) and is told so through the
++                     environment word 'HWUT_NO_TERMINAL', set at
++                     launch wherever a stdout canonicaliser stands
++                     (per run for plain tests; session-wide for
++                     interactive ones). An absent token on a pype-d
++                     stream criticises the SCRIPT (hwut_pype MANUAL
++                     1b).
++
++COMPLETENESS AND CONTAINMENT ARE ORTHOGONAL: the token is the
++stream's testimony; 'killed' is the killer's (procsitter). Neither
++substitutes for the other; both reach the report. STDOUT ONLY:
++stderr never carries a token.
++
++
++STDERR  (S-1)
++______________________________________________________________________________
++
++THE BOOK HOLDS ONE NOTE per (test, choice), with three readings:
++
++    nominal    a stderr stream was RECORDED: compared like any other
++               subject
++    ignored    whatever happens there, do not worry: never read,
++               never compared
++    forbidden  a word there is an ERROR -- 'unexpected-stderr', by
++               name, never a line difference
++
++An UNNOTED choice reads 'forbidden'. 'Bookkeeper.stderr_note()' reads
++it, 'note_stderr()' writes it, and ACCEPTANCE is the only place it is
++written: 'Request.stderr' carries an 'E_StderrNote' at a NOMINAL goal.
++Noting anything but 'nominal' removes a recorded stderr, since a
++stream cannot be both compared and disregarded.
++
++THE SECOND QUESTION: where a run wrote on stderr and no note was ever
++taken, the accept ceremony REFUSES -- 'stderr-undecided' -- and writes
++nothing at all, not even the stdout that was fine. A caller that NAMES
++'stderr' among the subjects to accept has decided by naming it.
++Whitespace is silence.
 diff --git a/operations/TEST/ADM/cache.fly b/operations/TEST/ADM/cache.fly
 new file mode 100644
 --- /dev/null
@@ -1912,12 +2005,12 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ console; OK; 0.307969; 0; ]
-+  [ empty_comparison; OK; 0.406881; 0; ]
-+  [ failed_build; OK; 0.451486; 0; ]
-+  [ observer; OK; 0.433015; 0; ]
-+  [ precedence; OK; 0.420883; 0; ]
-+  [ products; OK; 0.456531; 0; ]
++  [ console; OK; 0.262488; 0; ]
++  [ empty_comparison; OK; 0.266088; 0; ]
++  [ failed_build; OK; 0.266228; 0; ]
++  [ observer; OK; 0.263741; 0; ]
++  [ precedence; OK; 0.265668; 0; ]
++  [ products; OK; 0.263887; 0; ]
 +]
 +}
 +{
@@ -1927,25 +2020,25 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ argv; OK; 0.454056; 0; ]
-+  [ contained; OK; 1.654735; 0; ]
-+  [ reasons; OK; 0.497879; 0; ]
-+  [ silent_failure; OK; 0.472776; 0; ]
-+  [ success; OK; 0.346788; 0; ]
++  [ argv; OK; 0.295924; 0; ]
++  [ contained; OK; 1.429875; 0; ]
++  [ reasons; OK; 0.457380; 0; ]
++  [ silent_failure; OK; 0.313857; 0; ]
++  [ success; OK; 0.315710; 0; ]
 +]
 +}
 +{
 +title: The component's hygiene, checked rather than remembered;
 +file_name: test-hygiene.py;
-+hwut_info_time: 1786944657L;
++hwut_info_time: 1787116219L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ good_files; OK; 0.440391; 0; ]
-+  [ no_crash; OK; 0.276028; 0; ]
-+  [ no_orphans; OK; 0.659321; 0; ]
-+  [ return_first; OK; 0.346637; 0; ]
-+  [ token_ranks; OK; 0.463357; 0; ]
++  [ good_files; OK; 0.277326; 0; ]
++  [ no_crash; OK; 0.273393; 0; ]
++  [ no_orphans; OK; 0.672358; 0; ]
++  [ return_first; OK; 0.335788; 0; ]
++  [ token_ranks; OK; 0.263588; 0; ]
 +]
 +}
 +{
@@ -1955,33 +2048,33 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ aggregation; OK; 0.303062; 0; ]
-+  [ choices; OK; 0.298198; 0; ]
-+  [ frozen; OK; 0.298264; 0; ]
-+  [ interpreted; OK; 0.448444; 0; ]
-+  [ places; OK; 0.301469; 0; ]
-+  [ refusal; OK; 0.299451; 0; ]
++  [ aggregation; OK; 0.287005; 0; ]
++  [ choices; OK; 0.286706; 0; ]
++  [ frozen; OK; 0.292128; 0; ]
++  [ interpreted; OK; 0.431433; 0; ]
++  [ places; OK; 0.428750; 0; ]
++  [ refusal; OK; 0.425162; 0; ]
 +]
 +}
 +{
 +title: The front door and its ceremony;
 +file_name: test-session.py;
-+hwut_info_time: 1786944657L;
++hwut_info_time: 1787120198L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ book; OK; 1.065506; 0; ]
-+  [ busy; OK; 0.740199; 0; ]
-+  [ goal; OK; 0.849721; 0; ]
-+  [ lock; OK; 0.847362; 0; ]
-+  [ recording; OK; 0.746481; 0; ]
-+  [ refused; OK; 0.855517; 0; ]
-+  [ request; OK; 0.899942; 0; ]
-+  [ setup; NO OUTPUT; 0.960506; 0; ]
-+  [ sidecars; OK; 1.086223; 0; ]
-+  [ target; OK; 0.852008; 0; ]
-+  [ the_arc; OK; 0.779421; 0; ]
-+  [ where; OK; 0.696725; 0; ]
++  [ book; OK; 0.728415; 0; ]
++  [ busy; OK; 0.874135; 0; ]
++  [ goal; OK; 0.880677; 0; ]
++  [ lock; OK; 0.671549; 0; ]
++  [ recording; OK; 0.803893; 0; ]
++  [ refused; OK; 0.822107; 0; ]
++  [ request; OK; 0.872403; 0; ]
++  [ setup; OK; 0.705499; 0; ]
++  [ sidecars; OK; 0.881170; 0; ]
++  [ target; OK; 0.747383; 0; ]
++  [ the_arc; OK; 0.884697; 0; ]
++  [ where; OK; 0.662412; 0; ]
 +]
 +}
 +{
@@ -1992,20 +2085,20 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ channel_hint; OK; 0.304791; 0; ]
-+  [ empty_answer; OK; 0.460141; 0; ]
-+  [ never_judges; OK; 0.443923; 0; ]
-+  [ nothing; OK; 0.315376; 0; ]
-+  [ one_source; OK; 0.480105; 0; ]
-+  [ record; OK; 0.460340; 0; ]
-+  [ resolution; OK; 0.430547; 0; ]
++  [ channel_hint; OK; 0.298130; 0; ]
++  [ empty_answer; OK; 0.297782; 0; ]
++  [ never_judges; OK; 0.299179; 0; ]
++  [ nothing; OK; 0.296829; 0; ]
++  [ one_source; OK; 0.297283; 0; ]
++  [ record; OK; 0.297432; 0; ]
++  [ resolution; OK; 0.298319; 0; ]
 +]
 +}
 diff --git a/operations/TEST/GOOD/test-build_action.py--argv.txt b/operations/TEST/GOOD/test-build_action.py--argv.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-build_action.py--argv.txt
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,16 @@
 +INSPECT: MAKE with an argument                  -> ['make', '-j2', 'app']
 +INSPECT: NINJA                                  -> ['ninja', 'app']
 +INSPECT: CMAKE (targets need --target)          -> ['cmake', '--build', '.', '--target', 'app']
@@ -2021,33 +2114,36 @@ new file mode 100644
 +  OK  : MESON and BAZEL carry their subcommand
 +  OK  : MSBUILD folds its targets into ONE -t: option
 +SUCCESS: one vocabulary, one argv, no quoting question.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-build_action.py--contained.txt b/operations/TEST/GOOD/test-build_action.py--contained.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-build_action.py--contained.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
 +         report      = build-contained
 +  OK  : the procsitter ended the build
 +  OK  : reported as CONTAINED -- not as a build that failed on merit
 +  OK  : and it did not succeed
 +SUCCESS: a contained build is distinguished from a failed one.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-build_action.py--reasons.txt b/operations/TEST/GOOD/test-build_action.py--reasons.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-build_action.py--reasons.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: tool not on PATH -> build-tool-not-found
 +         tool exits non-zero -> build-failed
 +  OK  : an absent tool reports the TOOL, not the missing target
 +  OK  : a failing tool reports the FAILURE, not the missing target
 +  OK  : the target is still accounted absent -- the evidence remains
 +SUCCESS: tool reasons outrank target reasons.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-build_action.py--silent_failure.txt b/operations/TEST/GOOD/test-build_action.py--silent_failure.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-build_action.py--silent_failure.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: the tool exited cleanly: containment = OK_COMPLETED
 +         report  = target-not-built
 +         missing = ['app']
@@ -2055,11 +2151,12 @@ new file mode 100644
 +  OK  : the ACCOUNTING caught it: the declared target is absent
 +  OK  : so the build did not succeed, whatever the exit code said
 +SUCCESS: a clean exit is not proof that anything was built.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-build_action.py--success.txt b/operations/TEST/GOOD/test-build_action.py--success.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-build_action.py--success.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: ran in    = BUILD/demo
 +         report    = ok
 +         built     = ['app']
@@ -2069,11 +2166,12 @@ new file mode 100644
 +  OK  : the declared target is accounted present
 +  OK  : and the outcome says it succeeded
 +SUCCESS: a build runs in its own directory and accounts its targets.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-configuration.py--aggregation.txt b/operations/TEST/GOOD/test-configuration.py--aggregation.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-configuration.py--aggregation.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: caps is a ProcsitterConfig
 +         max_wall_clock_sec = 12.5
 +         max_output_gap_sec = 3.0
@@ -2081,32 +2179,35 @@ new file mode 100644
 +  OK  : no cap is restated as a field of the configuration
 +  OK  : the silence cap arrives through procsitter's own struct
 +SUCCESS: sub-component structs held verbatim, never restated.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-configuration.py--choices.txt b/operations/TEST/GOOD/test-configuration.py--choices.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-configuration.py--choices.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: named keys = ['basic', 'deep'] -> has_choices = True
 +         plain keys = [None] -> has_choices = False
 +  OK  : a test with named choices HAS choices
 +  OK  : a test keyed by None alone has NONE
 +  OK  : the None entry is reachable like any other
 +SUCCESS: the single None key answers 'has this test choices'.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-configuration.py--frozen.txt b/operations/TEST/GOOD/test-configuration.py--frozen.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-configuration.py--frozen.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: assignment to 'source_file' -> refused
 +INSPECT: assignment to 'test_directory' -> refused
 +  OK  : every assignment is refused
 +  OK  : the value is unchanged after the attempt
 +SUCCESS: one writer, many readers -- enforced by the object.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-configuration.py--interpreted.txt b/operations/TEST/GOOD/test-configuration.py--interpreted.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-configuration.py--interpreted.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: interpreted + interpreter ['lua'] -> accepted
 +INSPECT: INTERPRETED without interpreter -> source_kind is INTERPRETED but no interpreter argv prefix is given
 +         EXECUTABLE with interpreter     -> an interpreter argv prefix is given, but source_kind is executable
@@ -2114,11 +2215,12 @@ new file mode 100644
 +  OK  : INTERPRETED without an interpreter is refused
 +  OK  : an interpreter where none is read is refused, not ignored
 +SUCCESS: the argv prefix is required exactly where it is read.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-configuration.py--places.txt b/operations/TEST/GOOD/test-configuration.py--places.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-configuration.py--places.txt
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,11 @@
 +INSPECT: source_file = parse.c
 +         stem        = parse
 +         runs in     = /tests/parser
@@ -2129,11 +2231,12 @@ new file mode 100644
 +  OK  : outputs go to OUT/ beside BUILD/
 +  OK  : a build writes nowhere near the application's output
 +SUCCESS: three roles, three directories, all derived.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-configuration.py--refusal.txt b/operations/TEST/GOOD/test-configuration.py--refusal.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-configuration.py--refusal.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: empty choice_db                  -> choice_db is empty: no call is described
 +INSPECT: None mixed with named choices    -> choice_db mixes the 'None' choice with named choices ['basic']
 +INSPECT: COMPILED without a build         -> source_kind is COMPILED but no build configuration is given
@@ -2143,11 +2246,12 @@ new file mode 100644
 +  OK  : every unservable configuration is refused
 +  OK  : a servable one passes silently
 +SUCCESS: unservable configurations refused where they are written.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-diagnosis.py--channel_hint.txt b/operations/TEST/GOOD/test-diagnosis.py--channel_hint.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-diagnosis.py--channel_hint.txt
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,24 @@
 +STIMULUS three channel situations, in turn:
 +
 +    stdout   stderr   hint expected
@@ -2171,11 +2275,12 @@ new file mode 100644
 +}
 +
 +SUCCESS: the hint names a pattern for a human, never a verdict.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-diagnosis.py--empty_answer.txt b/operations/TEST/GOOD/test-diagnosis.py--empty_answer.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-diagnosis.py--empty_answer.txt
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,25 @@
 +STIMULUS the test application answered:
 +             stdout  ''
 +             stderr  "ImportError: no module named 'parser'\n"
@@ -2200,11 +2305,12 @@ new file mode 100644
 +An empty answer is rendered WITH its exit code, its
 +containment, and the other channel's tail.
 +SUCCESS: nothing that failed goes away without saying why.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-diagnosis.py--never_judges.txt b/operations/TEST/GOOD/test-diagnosis.py--never_judges.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-diagnosis.py--never_judges.txt
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,15 @@
 +STIMULUS a finished run, verdict = False, report = test-app-no-output
 +REACTION what the observer wrote {
 +    EXPLAIN  parse, choice basic
@@ -2219,22 +2325,24 @@ new file mode 100644
 +         after the observer ran: verdict = False, report = test-app-no-output
 +
 +SUCCESS: it renders and returns; the verdict is none of its business.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-diagnosis.py--nothing.txt b/operations/TEST/GOOD/test-diagnosis.py--nothing.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-diagnosis.py--nothing.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +STIMULUS a result that carries no provision record
 +REACTION the observer wrote 0 character(s)
 +
 +Silence is the honest answer: nothing ran, so nothing is
 +explained. An empty EXPLAIN block would suggest a run.
 +SUCCESS: no run, no diagnosis -- and no noise.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-diagnosis.py--one_source.txt b/operations/TEST/GOOD/test-diagnosis.py--one_source.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-diagnosis.py--one_source.txt
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,15 @@
 +STIMULUS an INTERPRETED application, interpreter ['vut-no-such-interpreter'],
 +         source 'parse.py', choice 'basic'
 +REACTION the REQUEST line {
@@ -2249,11 +2357,12 @@ new file mode 100644
 +The choice name is the last argument, and it is absent when
 +there is no choice -- because that is what the runner did.
 +SUCCESS: the diagnosis quotes the run; it does not re-invent it.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-diagnosis.py--record.txt b/operations/TEST/GOOD/test-diagnosis.py--record.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-diagnosis.py--record.txt
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,20 @@
 +STIMULUS a call that ended by itself with exit code 2
 +REACTION its attribution {
 +    call[0]    containment fail-completed   exit 2   wall 0.417s
@@ -2273,11 +2382,12 @@ new file mode 100644
 +}
 +
 +SUCCESS: containment, exit and duration always; the rest when it exists.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-diagnosis.py--resolution.txt b/operations/TEST/GOOD/test-diagnosis.py--resolution.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-diagnosis.py--resolution.txt
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,21 @@
 +STIMULUS a command three hops from its file:
 +
 +             cmd  ->  hop-a  ->  hop-b  ->  real-file
@@ -2298,56 +2408,62 @@ new file mode 100644
 +visible rather than mysterious; and what PATH cannot answer
 +is SAID, never guessed.
 +SUCCESS: what PATH answers is shown; what it cannot is said.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-hygiene.py--good_files.txt b/operations/TEST/GOOD/test-hygiene.py--good_files.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-hygiene.py--good_files.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: every GOOD file, scanned for every environment shape
 +         none carries one
 +  OK  : no GOOD file freezes a value the environment chose
 +SUCCESS: every oracle is true of the behaviour, not of a machine.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-hygiene.py--no_crash.txt b/operations/TEST/GOOD/test-hygiene.py--no_crash.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-hygiene.py--no_crash.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: every GOOD file, for a crash or a missing verdict
 +         every one ends in its verdict, none holds a crash
 +  OK  : no oracle records a crash instead of a behaviour
 +SUCCESS: a green suite is not the same as a working one.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-hygiene.py--no_orphans.txt b/operations/TEST/GOOD/test-hygiene.py--no_orphans.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-hygiene.py--no_orphans.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: every public name of the component
 +         every one has a consumer, in the code or a test
 +  OK  : no public name is declared without something that uses it
 +SUCCESS: what is declared is used, or it is not declared.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-hygiene.py--return_first.txt b/operations/TEST/GOOD/test-hygiene.py--return_first.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-hygiene.py--return_first.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: every function of the component
 +         every one opens with what it returns
 +  OK  : every function states its return before its explanation
 +SUCCESS: the answer comes before the argument.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-hygiene.py--token_ranks.txt b/operations/TEST/GOOD/test-hygiene.py--token_ranks.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-hygiene.py--token_ranks.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: every failure token of the vocabulary
 +         unranked: none
 +  OK  : every failure token has a place in the precedence table
 +SUCCESS: no reason speaks by accident of ordering.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-report.py--console.txt b/operations/TEST/GOOD/test-report.py--console.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-report.py--console.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: the console observer wrote
 +           ... parse [Run]
 +               build: ok
@@ -2357,11 +2473,12 @@ new file mode 100644
 +  OK  : the arc is bracketed, so a scrolling log stays readable
 +  OK  : a build's outcome is announced as it happens
 +SUCCESS: progress is written where a person can see it.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-report.py--empty_comparison.txt b/operations/TEST/GOOD/test-report.py--empty_comparison.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-report.py--empty_comparison.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: no subject compared  -> verdict = False report = not-equivalent-with-nominal
 +INSPECT: one of two differs   -> verdict = False report = not-equivalent-with-nominal
 +INSPECT: both match           -> verdict = True  report = ok
@@ -2370,11 +2487,12 @@ new file mode 100644
 +  OK  : all matching passes
 +  OK  : and reports OK
 +SUCCESS: a verdict must be earned by a comparison that happened.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-report.py--failed_build.txt b/operations/TEST/GOOD/test-report.py--failed_build.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-report.py--failed_build.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: verdict    = False
 +         report     = build-failed
 +         comparison = None
@@ -2382,11 +2500,12 @@ new file mode 100644
 +  OK  : and the report names the build
 +  OK  : no comparison happened: an ABSENCE, not a half-filled type
 +SUCCESS: a failed build is a failed test, with its reason.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-report.py--observer.txt b/operations/TEST/GOOD/test-report.py--observer.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-report.py--observer.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: the console observer still received:
 +           ... parse [Run]
 +               stdout   ok
@@ -2395,11 +2514,12 @@ new file mode 100644
 +  OK  : every notification reached the healthy observer
 +  OK  : the verdict is untouched by a raising observer
 +SUCCESS: observers add, and none of them reaches the verdict.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-report.py--precedence.txt b/operations/TEST/GOOD/test-report.py--precedence.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-report.py--precedence.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: build beats a missing output file  -> build-failed
 +INSPECT: the run beats the canonicaliser    -> test-app-stalled
 +INSPECT: a mismatch is the quietest failure -> nominal-file-not-found
@@ -2408,11 +2528,12 @@ new file mode 100644
 +  OK  : every case picks the reason that outranks the others
 +  OK  : every failure token has a rank -- a new one must be PLACED
 +SUCCESS: one reason speaks, and it is the loudest one.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-report.py--products.txt b/operations/TEST/GOOD/test-report.py--products.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-report.py--products.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: provision.records = ['record-a', 'record-b']
 +         stored.records    = [] (nothing ran)
 +         comparison holds  = ['stdout']
@@ -2421,11 +2542,12 @@ new file mode 100644
 +  OK  : provision by stored data carries no records: nothing was contained
 +  OK  : provision says whether it delivered
 +SUCCESS: two products, two types, no merging.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--book.txt b/operations/TEST/GOOD/test-session.py--book.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--book.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: operations booked = {'demo': {'<none>': ['Accept', 'Run']}}
 +         Run entry  = {'verdict': True, 'report': 'ok', 'canonicaliser': {'stdout': ['cat']}}
 +  OK  : one entry per operation, both kept
@@ -2433,11 +2555,12 @@ new file mode 100644
 +  OK  : when and host are recorded for the speed reference
 +  OK  : the attribution rides with it -- the record of the process that produced a result is PART of that result
 +SUCCESS: what happened is booked, and never appended to.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--busy.txt b/operations/TEST/GOOD/test-session.py--busy.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--busy.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: a live process holds the directory
 +         run_test -> refused: is held by a live process
 +         the holder's lock survives: True
@@ -2445,11 +2568,12 @@ new file mode 100644
 +  OK  : and the live holder's lock is untouched
 +  OK  : nothing was booked on the way out
 +SUCCESS: two runs of one test never overlap.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--goal.txt b/operations/TEST/GOOD/test-session.py--goal.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--goal.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: VERDICT -> True, ok
 +         DISPLAY -> True, adapter saw 0 items
 +         operations recorded = ['Accept', 'Display', 'Run']
@@ -2457,11 +2581,12 @@ new file mode 100644
 +  OK  : a MATCHING subject is not carried out to the display
 +  OK  : each goal booked its own entry
 +SUCCESS: a caller asks for an outcome, not for a class.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--lock.txt b/operations/TEST/GOOD/test-session.py--lock.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--lock.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: lock after a clean run  = False
 +         a bad choice raised     = KeyError 'no-such-choice'
 +         lock after the failure  = False
@@ -2469,11 +2594,12 @@ new file mode 100644
 +  OK  : a choice that was never described is a FAULT, not a default
 +  OK  : and the lock is released even then
 +SUCCESS: the lock is released however the ceremony ended.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--recording.txt b/operations/TEST/GOOD/test-session.py--recording.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--recording.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: recorded subjects = ['stderr', 'stdout']
 +         the judged run and the stored one match: True
 +         replay recorded nothing: True
@@ -2481,11 +2607,12 @@ new file mode 100644
 +  OK  : and stores the SAME execution that was judged
 +  OK  : a Replay records nothing -- it would write back what it read
 +SUCCESS: what was judged is what is recorded.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--refused.txt b/operations/TEST/GOOD/test-session.py--refused.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--refused.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: empty choice_db -> choice_db is empty: no call is described
 +         lock left behind: False
 +         entries booked: {}
@@ -2493,11 +2620,12 @@ new file mode 100644
 +  OK  : no lock was taken
 +  OK  : and nothing was booked
 +SUCCESS: refused at the door, before anything happens.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--request.txt b/operations/TEST/GOOD/test-session.py--request.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--request.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: run_test takes ['configuration', 'request']
 +         three requests over ONE configuration -> ['OK', 'OK', 'OK']
 +         the configuration is unchanged: True
@@ -2505,24 +2633,41 @@ new file mode 100644
 +  OK  : three different requests, one configuration, all agreeing
 +  OK  : a request with nothing said asks the commonest thing
 +SUCCESS: what the test is, and what is asked of it, stay apart.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--setup.txt b/operations/TEST/GOOD/test-session.py--setup.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--setup.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,24 @@
 +INSPECT: default setup  -> verdict False entry 'compare' False
 +         loose setup    -> verdict True  entry 'compare' {'numeric_tolerance_ratio': 0.01}
-+         an option compare has not invented yet -> {'rounding_digits': 3}
++
++         THE SWEEP -- every declared member of compare's pattern finder
++         member                         default        chosen         in entry
++         strip_whitespace_f             True           False          yes
++         ignored_line_f                 True           False          yes
++         analogy_f                      True           False          yes
++         constraint_f                   True           False          yes
++         whitespace_f                   True           False          yes
++         backslash_f                    True           False          yes
++         numeric_tolerance_ratio        0              1              yes
++         equivalent_pattern_list        []             ['chosen']     yes
++         visible_nothing_pattern_list   []             ['chosen']     yes
++         ignored_line_begin_marker      '##'           '##!'          yes
++         ignored_line_end_marker        '##'           '##!'          yes
++         analogy_begin_marker           '(('           '((!'          yes
++         analogy_end_marker             '))'           '))!'          yes
 +  OK  : the setup decided the verdict -- same subject, same nominal
 +  OK  : a DEFAULT setup adds nothing to the entry
 +  OK  : a chosen one is recorded, and only what was chosen
-+  OK  : a tolerance compare invents later is recorded the day it is used
++  OK  : EVERY declared member surfaces when chosen -- none is silently dropped
 +SUCCESS: what the verdict meant is recorded beside the verdict.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--sidecars.txt b/operations/TEST/GOOD/test-session.py--sidecars.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--sidecars.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: canonicalised record = 'apple\nzebra\n'
 +         raw stream kept      = 'zebra\napple\n'
 +         cadence entries      = 2, all non-negative: True
@@ -2532,11 +2677,12 @@ new file mode 100644
 +  OK  : one cadence entry per RAW line
 +  OK  : and it measured the real gap between them
 +SUCCESS: record, raw and cadence -- three files, one untouched pipe.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--target.txt b/operations/TEST/GOOD/test-session.py--target.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--target.txt
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,11 @@
 +INSPECT: none     -> NullDisplay
 +INSPECT: console  -> CollectingDisplay
 +INSPECT: tui      -> TuiDisplay
@@ -2547,11 +2693,12 @@ new file mode 100644
 +  OK  : RICH is the client that speaks the protocol
 +  OK  : and RICH without a client is refused -- there is no default IDE
 +SUCCESS: one place turns a target into a driver.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--the_arc.txt b/operations/TEST/GOOD/test-session.py--the_arc.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--the_arc.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: no nominal yet     -> False nominal-file-not-found
 +INSPECT: accept             -> True  ok
 +INSPECT: verdict            -> True  ok
@@ -2560,11 +2707,12 @@ new file mode 100644
 +  OK  : acceptance makes it pass
 +  OK  : a change of behaviour makes it fail again
 +SUCCESS: the whole arc, through one callable.
++<hwut-end>
 diff --git a/operations/TEST/GOOD/test-session.py--where.txt b/operations/TEST/GOOD/test-session.py--where.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/GOOD/test-session.py--where.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: the store's own directory was named -> artifacts land there
 +         nominal in the named directory : True
 +         nothing under the test directory: True
@@ -2574,6 +2722,7 @@ new file mode 100644
 +  OK  : a configuration naming no store uses the test's own directory
 +  OK  : a store is asked whether it records; no StoreConfig, no record
 +SUCCESS: where artifacts live is said once, by the configuration.
++<hwut-end>
 diff --git a/operations/TEST/config.py b/operations/TEST/config.py
 new file mode 100644
 --- /dev/null
@@ -3434,7 +3583,7 @@ diff --git a/operations/TEST/test-hygiene.py b/operations/TEST/test-hygiene.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/test-hygiene.py
-@@ -0,0 +1,294 @@
+@@ -0,0 +1,300 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -3583,7 +3732,9 @@ new file mode 100644
 +
 +    It happened here: a GOOD file was baselined while its test was
 +    failing to import, and froze a traceback. The suite went green.
-+    A GOOD file must end in the verdict line, and hold no traceback.
++    A GOOD file must end in the verdict line -- or, per R-70, in the
++    terminal token '<hwut-end>' with the verdict line directly above
++    it -- and hold no traceback.
 +
 +    A TRAP FOR ANY SELF-INSPECTING TEST: baseline it through a temporary
 +    file. Redirecting straight into its own GOOD file truncates that file
@@ -3597,6 +3748,10 @@ new file mode 100644
 +            offence_list.append((name, "a traceback"))
 +            continue
 +        last = [l for l in text.rstrip("\n").split("\n") if l.strip()]
++        if last and last[-1] == "<hwut-end>":
++            last = last[:-1]                       # R-70: the token ends
++                                                   # the STREAM; the
++                                                   # verdict ends the TEST
 +        if not last:
 +            offence_list.append((name, "no output at all"))
 +        elif not (last[-1].startswith("SUCCESS:")
@@ -3973,7 +4128,7 @@ diff --git a/operations/TEST/test-session.py b/operations/TEST/test-session.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/TEST/test-session.py
-@@ -0,0 +1,598 @@
+@@ -0,0 +1,646 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -4498,9 +4653,16 @@ new file mode 100644
 +    saying 'verdict: true' means something different under a loose setup
 +    than a strict one, and without this nothing said which was in force.
 +
-+    ONLY the differences: a default setup adds nothing, so an entry
-+    does not grow every time compare gains an option.
++    TWO PROPERTIES, both shown over EVERY DECLARED MEMBER:
++
++        COMPLETE  a member chosen away from its default SURFACES in
++                  the entry -- nothing silently vanishes, which is what
++                  would make a stored verdict uninterpretable. The
++                  sweep reads compare's DECLARATION, so a member
++                  compare gains later is swept the day it exists.
++        MINIMAL   a default setup adds nothing at all.
 +    """
++    import dataclasses
 +    import vut.engine.compare.configuration as compare_configuration
 +
 +    loose = compare_configuration.Configuration()
@@ -4525,18 +4687,33 @@ new file mode 100644
 +    strict_outcome = asyncio.run(run_test(configured(None)))
 +    loose_outcome  = asyncio.run(run_test(configured(loose)))
 +
-+    #  a tolerance compare has NOT invented yet
-+    compare_configuration.ConfigurationPatternFinder.rounding_digits = 0
-+    future = compare_configuration.Configuration()
-+    future.pattern_finder.rounding_digits = 3
-+
 +    print("INSPECT: default setup  -> verdict %-5s entry 'compare' %s"
 +          % (strict_outcome.verdict,
 +             "compare" in strict_outcome.entry))
 +    print("         loose setup    -> verdict %-5s entry 'compare' %s"
 +          % (loose_outcome.verdict, loose_outcome.entry.get("compare")))
-+    print("         an option compare has not invented yet -> %s"
-+          % compare_setup_delta(future))
++
++    #  THE SWEEP: every declared member, perturbed by its type, and
++    #  what the delta says about it.
++    print()
++    print("         THE SWEEP -- every declared member of compare's "
++          "pattern finder")
++    print("         %-30s %-14s %-14s %s"
++          % ("member", "default", "chosen", "in entry"))
++    unreached = []
++    for member in dataclasses.fields(
++                        compare_configuration.ConfigurationPatternFinder):
++        options  = compare_configuration.Configuration()
++        default  = getattr(options.pattern_finder, member.name)
++        chosen   = _perturbed(default)
++        setattr(options.pattern_finder, member.name, chosen)
++        delta    = compare_setup_delta(options)
++        present  = member.name in delta
++        if not present: unreached.append(member.name)
++        print("         %-30s %-14s %-14s %s"
++              % (member.name, _short(default), _short(chosen),
++                 "yes" if present else "NO -- UNREACHED"))
++
 +    ok = _check([
 +        (strict_outcome.verdict is False and loose_outcome.verdict is True,
 +         "the setup decided the verdict -- same subject, same nominal"),
@@ -4545,11 +4722,37 @@ new file mode 100644
 +        (loose_outcome.entry["compare"]
 +             == {"numeric_tolerance_ratio": 0.01},
 +         "a chosen one is recorded, and only what was chosen"),
-+        (compare_setup_delta(future) == {"rounding_digits": 3},
-+         "a tolerance compare invents later is recorded the day it is used"),
++        (not unreached,
++         "EVERY declared member surfaces when chosen -- none is "
++         "silently dropped"),
 +    ])
 +    shutil.rmtree(directory, ignore_errors=True)
 +    _verdict(ok, "what the verdict meant is recorded beside the verdict.")
++
++
++def _perturbed(value):
++    """
++    RETURN: a value of the same type as 'value', but DIFFERENT from it
++            -- what a member looks like once somebody has chosen it.
++
++    Raises AssertionError for a type the sweep has not met: a new kind
++    of member must be PLACED here, never silently skipped.
++    """
++    match value:
++        case bool():  return not value
++        case int():   return value + 1
++        case float(): return value + 0.5
++        case str():   return value + "!"
++        case list():  return list(value) + ["chosen"]
++        case tuple(): return tuple(value) + ("chosen",)
++        case _:
++            assert False, "the sweep cannot perturb a %s" % type(value)
++
++
++def _short(value):
++    """RETURN: str, 'value' rendered short enough for the table."""
++    text = repr(value)
++    return text if len(text) <= 13 else text[:10] + "..."
 +
 +
 +if __name__ == "__main__":
@@ -4576,7 +4779,7 @@ diff --git a/operations/build_action.py b/operations/build_action.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/build_action.py
-@@ -0,0 +1,205 @@
+@@ -0,0 +1,209 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -4719,12 +4922,16 @@ new file mode 100644
 +    Tool reasons outrank target reasons: a tool that never ran cannot be
 +    blamed for a target it never reached.
 +    """
-+    if record.containment is E_Containment.FAIL_LAUNCH:
-+        return E_TestRunResult.BUILD_TOOL_NOT_FOUND
-+    if record.containment is E_Containment.FAIL_COMPLETED:
-+        return E_TestRunResult.BUILD_FAILED            # nonzero exit
-+    if record.containment is not E_Containment.OK_COMPLETED:
-+        return E_TestRunResult.BUILD_CONTAINED         # a resource cap
++    match record.containment:
++        case E_Containment.FAIL_LAUNCH:
++            return E_TestRunResult.BUILD_TOOL_NOT_FOUND
++        case E_Containment.FAIL_COMPLETED:
++            return E_TestRunResult.BUILD_FAILED        # nonzero exit
++        case E_Containment.OK_COMPLETED:
++            pass                                       # on to the targets
++        case _:
++            return E_TestRunResult.BUILD_CONTAINED     # a resource cap
++
 +    if missing_target_list:
 +        return E_TestRunResult.TARGET_NOT_BUILT
 +    return E_TestRunResult.OK
@@ -4786,7 +4993,7 @@ diff --git a/operations/configuration.py b/operations/configuration.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/configuration.py
-@@ -0,0 +1,187 @@
+@@ -0,0 +1,197 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -4868,6 +5075,16 @@ new file mode 100644
 +    interpreter:    Optional[Sequence[str]] = None   # INTERPRETED only
 +    build:          object                  = None   # COMPILED only
 +    store:          object                  = None   # None: do not record
++    execute:        Optional[Sequence[str]] = None   # THE CALL, STATED
++                                            # VERBATIM (R-68): where an
++                                            # author states how the
++                                            # application is called, that
++                                            # argv stands and the source
++                                            # kind decides nothing. The
++                                            # choice name is appended as
++                                            # ever -- it selects the
++                                            # scenario, it is not part of
++                                            # the call.
 +    interactive:    bool                    = False  # the app accepts
 +                                            # '--interactive': many choices
 +                                            # through ONE call, driven over
@@ -4978,44 +5195,65 @@ diff --git a/operations/consume/TEST/ADM/cache.fly b/operations/consume/TEST/ADM
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/ADM/cache.fly
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,53 @@
 +{
++title: DifferenceDisplay and the feed session;
 +file_name: test-difference-display.py;
++hwut_info_time: 1786944657L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
++happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ ; NO GOOD FILE; 0.634582; 0; ]
++  [ down_stream; OK; 0.785224; 0; ]
++  [ every_subject; OK; 0.646668; 0; ]
++  [ no_provision; OK; 0.774647; 0; ]
++  [ only_differing; OK; 0.786495; 0; ]
++  [ sequence; OK; 0.804188; 0; ]
++  [ signature; OK; 0.752541; 0; ]
++  [ verdict_safe; OK; 0.836137; 0; ]
 +]
 +}
 +{
++title: write the nominal;
++title_group: Accept;
 +file_name: test-accept.py;
++hwut_info_time: 1787143364L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
++happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ ; NO GOOD FILE; 0.897643; 0; ]
++  [ all_or_nothing; OK; 0.633944; 0; ]
++  [ initiate; OK; 0.630216; 0; ]
++  [ ledger; OK; 0.758676; 0; ]
++  [ pulls_run; OK; 0.647004; 0; ]
++  [ stderr; OK; 0.792808; 0; ]
++  [ take_dump; OK; 0.810282; 0; ]
++  [ the_loop; OK; 0.724011; 0; ]
 +]
 +}
 +{
 +title: read -> verdict;
 +title_group: EquivalenceCheck;
 +file_name: test-equivalence-check.py;
-+hwut_info_time: 1786944657L;
++hwut_info_time: 1787143364L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ blind; OK; 0.765795; 0; ]
-+  [ fast_fail; OK; 0.880267; 0; ]
-+  [ named_absent; OK; 0.849747; 0; ]
-+  [ nominal_missing; OK; 0.739025; 0; ]
-+  [ observer; OK; 0.809001; 0; ]
-+  [ provision_failed; OK; 0.890157; 0; ]
-+  [ unjudged; OK; 0.783010; 0; ]
-+  [ verdict; OK; 0.939188; 0; ]
++  [ blind; OK; 0.784331; 0; ]
++  [ fast_fail; OK; 0.861593; 0; ]
++  [ named_absent; OK; 0.782087; 0; ]
++  [ nominal_missing; OK; 0.632321; 0; ]
++  [ observer; OK; 0.643464; 0; ]
++  [ provision_failed; OK; 0.608667; 0; ]
++  [ terminated; OK; 0.609281; 0; ]
++  [ unexpected_stderr; OK; 0.756436; 0; ]
++  [ unjudged; OK; 0.639887; 0; ]
++  [ verdict; OK; 0.804640; 0; ]
 +]
 +}
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--all_or_nothing.txt b/operations/consume/TEST/GOOD/test-accept.py--all_or_nothing.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-accept.py--all_or_nothing.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: report            = recording-missing
 +         accepted          = {}
 +         readable one kept = False
@@ -5024,22 +5262,24 @@ new file mode 100644
 +  OK  : not even the subject whose dump WAS readable
 +  OK  : and the report names the missing dump
 +SUCCESS: all or nothing -- never half a nominal.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--initiate.txt b/operations/consume/TEST/GOOD/test-accept.py--initiate.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-accept.py--initiate.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: with a session -> ok, stored 'merged by an external session\n'
 +         without one   -> recording-missing, stored anything: False
 +  OK  : the session's final stream becomes the nominal
 +  OK  : without a session, acceptance fails
 +  OK  : and does NOT fall back to the current output
 +SUCCESS: INITIATE stores its session's stream, or nothing.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--ledger.txt b/operations/consume/TEST/GOOD/test-accept.py--ledger.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-accept.py--ledger.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: after the FIRST accept
 +         first_accept == when : True
 +         after a RE-ACCEPT
@@ -5049,11 +5289,12 @@ new file mode 100644
 +  OK  : a re-accept leaves 'first_accept' untouched
 +  OK  : and moves only 'when' -- the LAST accept
 +SUCCESS: first and last accept: the book keeps the history's two ends.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--pulls_run.txt b/operations/consume/TEST/GOOD/test-accept.py--pulls_run.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-accept.py--pulls_run.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: report        = ok
 +         accepted      = ['stderr', 'stdout']
 +         stdout stored = 'to stdout\n'
@@ -5062,22 +5303,42 @@ new file mode 100644
 +  OK  : both subjects were accepted
 +  OK  : provision ran ONCE -- one attribution record for two subjects
 +SUCCESS: an unmet precondition pulls provision, once.
++<hwut-end>
+diff --git a/operations/consume/TEST/GOOD/test-accept.py--stderr.txt b/operations/consume/TEST/GOOD/test-accept.py--stderr.txt
+new file mode 100644
+--- /dev/null
++++ b/operations/consume/TEST/GOOD/test-accept.py--stderr.txt
+@@ -0,0 +1,13 @@
++INSPECT: an unnoted choice reads forbidden
++         asked for    report                 book note   nominal file
++         (nothing)    stderr-undecided       forbidden   False
++         nominal      ok                     nominal     True
++         ignored      ok                     ignored     False
++         forbidden    ok                     forbidden   False
++  OK  : a stream with words and no note REFUSES the ceremony
++  OK  : and nothing at all is written -- not even the stdout that was fine
++  OK  : 'nominal' notes the book AND records the stream
++  OK  : 'ignored' notes the book and records nothing
++  OK  : 'forbidden' notes the book and records nothing
++SUCCESS: one note, three readings, and the author writes it.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--take_dump.txt b/operations/consume/TEST/GOOD/test-accept.py--take_dump.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-accept.py--take_dump.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: report = ok
 +         stored = 'the NEW dump\n'
 +  OK  : acceptance succeeded
 +  OK  : the nominal is REPLACED wholesale, not merged
 +  OK  : and the result says exactly what was stored
 +SUCCESS: a dump replaces the nominal, wholesale.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--the_loop.txt b/operations/consume/TEST/GOOD/test-accept.py--the_loop.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-accept.py--the_loop.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: before acceptance -> verdict False report nominal-file-not-found
 +         after acceptance  -> verdict True  report ok
 +         behaviour changed -> verdict False report not-equivalent-with-nominal
@@ -5085,11 +5346,12 @@ new file mode 100644
 +  OK  : acceptance makes it pass
 +  OK  : and a change of behaviour makes it fail again
 +SUCCESS: run -> differ -> accept -> pass -> change -> differ.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-difference-display.py--down_stream.txt b/operations/consume/TEST/GOOD/test-difference-display.py--down_stream.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-difference-display.py--down_stream.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: verdict = False, report = not-equivalent-with-nominal
 +         opened  = ['stdout'], closed = True
 +         DOWN    = ['ProtocolHeader', 'ConfigInst', 'SectionBeginInst', 'LinePairInst', 'LinePairInst', 'LinePairInst', 'EndOfStreamInst']
@@ -5098,22 +5360,24 @@ new file mode 100644
 +  OK  : one aligned row per line pair of the comparison
 +  OK  : the verdict is what the comparison found
 +SUCCESS: DOWN is compare's; this module carries it.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-difference-display.py--every_subject.txt b/operations/consume/TEST/GOOD/test-difference-display.py--every_subject.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-difference-display.py--every_subject.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: judged = ['stderr', 'stdout']
 +         shown  = ['stderr', 'stdout']
 +  OK  : BOTH subjects are judged, not just the first
 +  OK  : and both are shown
 +  OK  : the test still fails
 +SUCCESS: a difference is shown whole, never truncated.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-difference-display.py--no_provision.txt b/operations/consume/TEST/GOOD/test-difference-display.py--no_provision.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-difference-display.py--no_provision.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: verdict    = False
 +         report     = test-app-launch-failed
 +         comparison = None
@@ -5122,43 +5386,47 @@ new file mode 100644
 +  OK  : the comparison is ABSENT
 +  OK  : and NOTHING was carried out -- there was nothing to show
 +SUCCESS: no provision, no comparison, nothing shown.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-difference-display.py--only_differing.txt b/operations/consume/TEST/GOOD/test-difference-display.py--only_differing.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-difference-display.py--only_differing.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: matching, only_differing -> shown [], items 0
 +         matching, always         -> shown ['stdout'], items 5
 +  OK  : a matching subject is not carried out at all
 +  OK  : unless the caller asked for everything
 +  OK  : and either way the verdict is unchanged
 +SUCCESS: only what differs is carried, unless asked otherwise.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-difference-display.py--sequence.txt b/operations/consume/TEST/GOOD/test-difference-display.py--sequence.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-difference-display.py--sequence.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: trace = ['open:stdout', 'item', 'item', 'close']
 +         the driver's exception PROPAGATED: True
 +  OK  : the session opens naming the subject
 +  OK  : and closes even though presentation raised
 +  OK  : the failure PROPAGATES: a display that failed is not reported as a display that happened
 +SUCCESS: open, items, close -- close always.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-difference-display.py--signature.txt b/operations/consume/TEST/GOOD/test-difference-display.py--signature.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-difference-display.py--signature.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: our own signature   -> accepted
 +         a foreign signature -> feed protocol 'some-other-protocol/9' cannot be parsed by 'vut-feed/1'
 +  OK  : the signature this hub speaks is accepted
 +  OK  : a foreign one is REFUSED rather than guessed at
 +SUCCESS: refuse rather than mis-read.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-difference-display.py--verdict_safe.txt b/operations/consume/TEST/GOOD/test-difference-display.py--verdict_safe.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-difference-display.py--verdict_safe.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: matching + a target -> True / ok
 +         matching + none     -> True / ok
 +         differing + target  -> False / not-equivalent-with-nominal
@@ -5166,22 +5434,24 @@ new file mode 100644
 +  OK  : nor the report
 +  OK  : a shown difference still reports the mismatch, not the display
 +SUCCESS: showing a difference does not change it.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--blind.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--blind.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--blind.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: over Run    -> verdict True, report ok, records 1
 +         over loaded -> verdict True, report ok, records 0
 +  OK  : the verdict is the same over either provision
 +  OK  : and so is the report
 +  OK  : they differ only in the EVIDENCE: one ran a process, one did not
 +SUCCESS: the check never learns where its subjects came from.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--fast_fail.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--fast_fail.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--fast_fail.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: fast-fail  judged ['stderr']
 +         exhaustive judged ['stderr', 'stdout']
 +         three more fast-fail runs judged ['stderr']
@@ -5190,32 +5460,35 @@ new file mode 100644
 +  OK  : without fast-fail every subject is judged
 +  OK  : both fail -- economy does not change the verdict
 +SUCCESS: a deterministic fault is reported deterministically.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--named_absent.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--named_absent.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--named_absent.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: judged  = ['OUT/never-written', 'stdout']
 +         verdict = False, report = output-file-not-found
 +  OK  : the named-but-absent subject FAILS
 +  OK  : and the report names the missing output, not a mismatch
 +  OK  : while the subject that WAS produced is judged normally
 +SUCCESS: named and absent is a fault; unnamed is not judged.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--nominal_missing.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--nominal_missing.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--nominal_missing.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: verdict = False
 +         report  = nominal-file-not-found
 +  OK  : an unreadable nominal FAILS the test
 +  OK  : and the report names the nominal, not the subject
 +SUCCESS: a missing nominal is a fault, never a pass.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--observer.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--observer.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--observer.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: the observer saw
 +           start demo [Run]
 +             stdout True
@@ -5224,11 +5497,12 @@ new file mode 100644
 +  OK  : each subject's verdict arrives as it lands
 +  OK  : and the derived result closes the arc
 +SUCCESS: the arc is watchable without changing it.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--provision_failed.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--provision_failed.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--provision_failed.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: verdict    = False
 +         report     = test-app-launch-failed
 +         comparison = None
@@ -5236,21 +5510,53 @@ new file mode 100644
 +  OK  : and the report names the launch
 +  OK  : no comparison happened -- an ABSENCE
 +SUCCESS: a failed provision is a failed test, with no comparison.
++<hwut-end>
+diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--terminated.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--terminated.txt
+new file mode 100644
+--- /dev/null
++++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--terminated.txt
+@@ -0,0 +1,11 @@
++INSPECT: cut      -> verdict False, report terminated-without-hwut-end
++         complete -> verdict True, report ok
++         padded   -> verdict True, report ok
++         old nominal, marked subject -> verdict False, report not-equivalent-with-nominal
++  OK  : the missing token has its OWN name, not a line difference
++  OK  : and the test FAILED
++  OK  : with the token, the same content passes
++  OK  : trailing blank lines after the token are forgiven
++  OK  : a non-participating nominal sees the token as ordinary content: one trailing difference
++SUCCESS: the nominal decides; absence is named, never diffed.
++<hwut-end>
+diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--unexpected_stderr.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--unexpected_stderr.txt
+new file mode 100644
+--- /dev/null
++++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--unexpected_stderr.txt
+@@ -0,0 +1,9 @@
++INSPECT: silent stderr    -> verdict True, report ok
++         blank lines only -> verdict True, report ok
++         a word on stderr -> verdict False, report unexpected-stderr
++  OK  : silence is what a FORBIDDEN stderr expects
++  OK  : and whitespace is silence
++  OK  : a WORD there is reported by name
++  OK  : and the test failed
++SUCCESS: a forbidden stderr is expected to say nothing.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--unjudged.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--unjudged.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--unjudged.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: judged   = ['stdout']
 +         verdict  = True, report = ok
 +  OK  : stderr was produced but never judged: it is not in the map
 +  OK  : and its content cannot fail the test
 +SUCCESS: what is not held against anything is not judged.
++<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-equivalence-check.py--verdict.txt b/operations/consume/TEST/GOOD/test-equivalence-check.py--verdict.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-equivalence-check.py--verdict.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: subject matches  -> verdict = True  report = ok
 +                     per subject = {'stdout': True}
 +INSPECT: subject differs  -> verdict = False report = not-equivalent-with-nominal
@@ -5259,6 +5565,7 @@ new file mode 100644
 +  OK  : a differing subject fails
 +  OK  : and the report names the MISMATCH, nothing else being wrong
 +SUCCESS: the verdict follows the comparison, and names itself.
++<hwut-end>
 diff --git a/operations/consume/TEST/config.py b/operations/consume/TEST/config.py
 new file mode 100644
 --- /dev/null
@@ -5314,7 +5621,7 @@ diff --git a/operations/consume/TEST/test-accept.py b/operations/consume/TEST/te
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/test-accept.py
-@@ -0,0 +1,314 @@
+@@ -0,0 +1,393 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -5365,6 +5672,8 @@ new file mode 100644
 +from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
 +                                                   Bookkeeper)
 +from   vut.engine.orchestrator.bookkeeper.stream_store           import Store          # noqa E402
++from   vut.engine.orchestrator.bookkeeper.configuration import (  # noqa E402
++                                              E_StderrNote)
 +
 +
 +def _check(pair_list):
@@ -5615,11 +5924,88 @@ new file mode 100644
 +                 "two ends.")
 +
 +
++
++
++def test_stderr():
++    """THE SECOND QUESTION (S-1). The book holds ONE NOTE about a
++    choice's stderr, with three readings -- 'nominal' (recorded and
++    compared), 'ignored' (whatever happens, do not worry), 'forbidden'
++    (a word there is an error) -- and ACCEPTANCE is where it is
++    written. A stream that appears with NO note ever taken stops the
++    ceremony: 'stderr-undecided', nothing written at all, because only
++    the author knows which of the three is meant.
++
++    An UNNOTED choice reads 'forbidden': a test nobody was asked about
++    has never spoken there, and its first word is news."""
++    def accepted(note):
++        """RETURN: (AcceptResult, note in the book, nominal exists)."""
++        directory  = tempfile.mkdtemp(prefix="vut_acc_")
++        bookkeeper = Bookkeeper(directory)
++        store      = Store(bookkeeper)
++        result     = asyncio.run(Accept(
++            AcceptConfig(
++                name       = "demo",
++                subjects   = {"stdout": AcceptStep()},
++                groundwork = _Provided({
++                    "stdout": BytesNominal("the behaviour\n"),
++                    "stderr": BytesNominal("a warning nobody blessed\n")}),
++                stderr     = note),
++            store).run())
++        state = (result, bookkeeper.stderr_note("demo", None),
++                 store.nominal_path("demo", None, "stderr").exists())
++        shutil.rmtree(directory, ignore_errors=True)
++        return state
++
++    print("INSPECT: an unnoted choice reads %s"
++          % Bookkeeper(tempfile.mkdtemp()).stderr_note("demo", None))
++    print("         %-12s %-22s %-11s %s"
++          % ("asked for", "report", "book note", "nominal file"))
++    outcome_db = {}
++    for note in (None, E_StderrNote.NOMINAL, E_StderrNote.IGNORED,
++                 E_StderrNote.FORBIDDEN):
++        result, written, nominal_f = accepted(note)
++        outcome_db[note] = (result, written, nominal_f)
++        print("         %-12s %-22s %-11s %s"
++              % ("(nothing)" if note is None else note.value,
++                 result.report.value, written.value, nominal_f))
++
++    refused = outcome_db[None][0]
++    ok = _check([
++        (refused.report is E_TestRunResult.STDERR_UNDECIDED,
++         "a stream with words and no note REFUSES the ceremony"),
++        (not refused.accepted_db,
++         "and nothing at all is written -- not even the stdout that "
++         "was fine"),
++        (outcome_db[E_StderrNote.NOMINAL][1] is E_StderrNote.NOMINAL
++         and outcome_db[E_StderrNote.NOMINAL][2],
++         "'nominal' notes the book AND records the stream"),
++        (outcome_db[E_StderrNote.IGNORED][1] is E_StderrNote.IGNORED
++         and not outcome_db[E_StderrNote.IGNORED][2],
++         "'ignored' notes the book and records nothing"),
++        (outcome_db[E_StderrNote.FORBIDDEN][1] is E_StderrNote.FORBIDDEN
++         and not outcome_db[E_StderrNote.FORBIDDEN][2],
++         "'forbidden' notes the book and records nothing"),
++    ])
++    _verdict(ok, "one note, three readings, and the author writes it.")
++
++
++class _Provided:
++    """A groundwork over a made delivery -- what a run would hand in."""
++    def __init__(self, reader_db):
++        from vut.engine.operations.run.core import Subjects
++        from vut.engine.operations.report import Provision as ProvisionRecord
++        self.subjects = Subjects(reader_db,
++                                 ProvisionRecord(report=E_TestRunResult.OK))
++    async def provide(self, stop_event=None):
++        return self.subjects
++
++
 +if __name__ == "__main__":
 +    HwutRunner(
 +        argv       = sys.argv,
 +        title      = "Accept: write the nominal",
 +        choice_map = {
++            "stderr":         test_stderr,
 +            "ledger":         test_ledger,
 +            "take_dump":      test_take_dump,
 +            "pulls_run":      test_pulls_provision,
@@ -5963,7 +6349,7 @@ diff --git a/operations/consume/TEST/test-equivalence-check.py b/operations/cons
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/test-equivalence-check.py
-@@ -0,0 +1,343 @@
+@@ -0,0 +1,462 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -6009,6 +6395,8 @@ new file mode 100644
 +                                                   RecordNominal)
 +from   vut.engine.operations.observer        import ObserverGroup  # noqa E402
 +from   vut.engine.operations.run.core  import Run            # noqa E402
++from   vut.engine.orchestrator.bookkeeper.stream_store import Store  # noqa E402
++from   vut.engine.orchestrator.bookkeeper.bookkeeper import Bookkeeper      # noqa E402
 +from   vut.engine.operations.consume.loaded import loaded        # noqa E402
 +from   vut.engine.orchestrator.bookkeeper.bookkeeper import (    # noqa E402
 +                                                   Bookkeeper)
@@ -6291,11 +6679,128 @@ new file mode 100644
 +    _verdict(ok, "named and absent is a fault; unnamed is not judged.")
 +
 +
++
++
++def test_terminated():
++    """THE TERMINAL TOKEN (R-70): the nominal decides participation.
++    A participating subject that ends without '<hwut-end>' draws
++    'terminated-without-hwut-end' -- its own name, never a wall of
++    line differences; trailing blank lines after the token are
++    forgiven; a NON-participating nominal sees a token-bearing subject
++    as ordinary content."""
++    async def judged(nominal_text, subject_text):
++        directory = tempfile.mkdtemp(prefix="vut_eq_")
++        try:
++            store = Store(Bookkeeper(directory))
++            store.write_candidate("demo", None, "stdout", subject_text)
++            result = await EquivalenceCheck(EquivalenceCheckConfig(
++                name       = "demo",
++                groundwork = _Provided(loaded(store, "demo",
++                                       subject_name_list=("stdout",))),
++                subjects   = {"stdout": BytesNominal(nominal_text)},
++            )).run()
++            return result
++        finally:
++            shutil.rmtree(directory, ignore_errors=True)
++
++    participating = "alpha\nbeta\n<hwut-end>\n"
++
++    cut      = asyncio.run(judged(participating, "alpha\nbeta\n"))
++    complete = asyncio.run(judged(participating,
++                                  "alpha\nbeta\n<hwut-end>\n"))
++    padded   = asyncio.run(judged(participating,
++                                  "alpha\nbeta\n<hwut-end>\n\n\n"))
++    old      = asyncio.run(judged("alpha\nbeta\n",
++                                  "alpha\nbeta\n<hwut-end>\n"))
++
++    print("INSPECT: cut      -> verdict %s, report %s"
++          % (cut.verdict, cut.report))
++    print("         complete -> verdict %s, report %s"
++          % (complete.verdict, complete.report))
++    print("         padded   -> verdict %s, report %s"
++          % (padded.verdict, padded.report))
++    print("         old nominal, marked subject -> verdict %s, "
++          "report %s" % (old.verdict, old.report))
++    ok = _check([
++        (cut.report is E_TestRunResult.TERMINATED_WITHOUT_END,
++         "the missing token has its OWN name, not a line difference"),
++        (cut.verdict is False,
++         "and the test FAILED"),
++        (complete.verdict is True,
++         "with the token, the same content passes"),
++        (padded.verdict is True,
++         "trailing blank lines after the token are forgiven"),
++        (old.verdict is False
++         and old.report is E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
++         "a non-participating nominal sees the token as ordinary "
++         "content: one trailing difference"),
++    ])
++    _verdict(ok, "the nominal decides; absence is named, never "
++                 "diffed.")
++
++
++class _Provided:
++    """A groundwork over an already-made Subjects delivery."""
++    def __init__(self, subjects):
++        self.subjects      = subjects
++        self.last_provided = subjects
++    async def provide(self, stop_event=None):
++        return self.subjects
++
++
++
++
++def test_unexpected_stderr():
++    """A FORBIDDEN STDERR (S-1): the book's note says a word on that
++    stream is an ERROR -- reported BY NAME, never a line difference
++    against a nominal that does not exist. An unnoted choice reads
++    'forbidden'. A silent run is untouched by the law, and whitespace
++    is silence."""
++    async def judged(stderr_text):
++        directory = tempfile.mkdtemp(prefix="vut_eq_")
++        try:
++            store = Store(Bookkeeper(directory))
++            store.write_candidate("demo", None, "stdout", "the behaviour\n")
++            store.write_candidate("demo", None, "stderr", stderr_text)
++            return await EquivalenceCheck(EquivalenceCheckConfig(
++                name            = "demo",
++                groundwork      = _Provided(loaded(store, "demo")),
++                subjects        = {"stdout":
++                                   BytesNominal("the behaviour\n")},
++                stderr_forbidden_f = True)).run()
++        finally:
++            shutil.rmtree(directory, ignore_errors=True)
++
++    silent = asyncio.run(judged(""))
++    blank  = asyncio.run(judged("\n  \n"))
++    noisy  = asyncio.run(judged("a warning nobody blessed\n"))
++
++    print("INSPECT: silent stderr    -> verdict %s, report %s"
++          % (silent.verdict, silent.report))
++    print("         blank lines only -> verdict %s, report %s"
++          % (blank.verdict, blank.report))
++    print("         a word on stderr -> verdict %s, report %s"
++          % (noisy.verdict, noisy.report))
++    ok = _check([
++        (silent.verdict is True,
++         "silence is what a FORBIDDEN stderr expects"),
++        (blank.verdict is True,
++         "and whitespace is silence"),
++        (noisy.report is E_TestRunResult.UNEXPECTED_STDERR,
++         "a WORD there is reported by name"),
++        (noisy.verdict is False,
++         "and the test failed"),
++    ])
++    _verdict(ok, "a forbidden stderr is expected to say nothing.")
++
++
 +if __name__ == "__main__":
 +    HwutRunner(
 +        argv       = sys.argv,
 +        title      = "EquivalenceCheck: read -> verdict",
 +        choice_map = {
++            "unexpected_stderr": test_unexpected_stderr,
++            "terminated":       test_terminated,
 +            "verdict":           test_verdict,
 +            "nominal_missing":   test_unreadable_nominal_is_a_fault,
 +            "unjudged":          test_unjudged_subject,
@@ -6311,7 +6816,7 @@ diff --git a/operations/consume/accept.py b/operations/consume/accept.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/accept.py
-@@ -0,0 +1,236 @@
+@@ -0,0 +1,313 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -6359,6 +6864,7 @@ new file mode 100644
 +from   dataclasses import dataclass, field
 +from   enum        import Enum
 +from   typing      import Mapping, Optional
++from ...orchestrator.bookkeeper.configuration import E_StderrNote
 +
 +from   ..result           import E_TestRunResult
 +from   ..interaction.feed import E_Intent, merge_session
@@ -6394,7 +6900,14 @@ new file mode 100644
 +    subjects:   Mapping[str, AcceptStep] = field(default_factory=dict)
 +    choice:     Optional[str]            = None
 +    groundwork: Optional[object]         = None
-+    compare:    Optional[object]         = None
++    compare:    Optional[object]          = None
++    stderr:     Optional[E_StderrNote]   = None
++                            # THE SECOND QUESTION: which NOTE to write
++                            # in the book for stderr. None means it was
++                            # not asked -- and acceptance REFUSES
++                            # rather than decide on the author's behalf
++                            # ('--stderr-nominal' / '--stderr-ignored'
++                            # / '--stderr-forbidden' at the face).
 +
 +
 +@dataclass(frozen=True)
@@ -6418,9 +6931,11 @@ new file mode 100644
 +    """WRITE THE NOMINAL."""
 +
 +    def __init__(self, config, store, observer=None):
-+        self.config   = config
-+        self.store    = store
-+        self.observer = observer
++        self.config    = config
++        self.store     = store
++        self.observer  = observer
++        self._provided = None      # the subjects delivery, kept for
++                                   # the stderr question
 +
 +    async def run(self, stop_event=None):
 +        """
@@ -6433,6 +6948,14 @@ new file mode 100644
 +        notify(self.observer, "started", config.name, "Accept")
 +
 +        text_db, report, provision = await self._gather(stop_event)
++
++        #  THE SECOND QUESTION, at the door: a stderr that has words in
++        #  it and no decision about it stops the ceremony. Accepting
++        #  stdout while silently discarding a stream the test produced
++        #  would bless a half-truth.
++        if report is E_TestRunResult.OK:
++            report = self._stderr_refusal(self._provided)
++
 +        if report is not E_TestRunResult.OK:
 +            result = AcceptResult(config.name, report, {}, provision)
 +            notify(self.observer, "finished", result)
@@ -6442,10 +6965,63 @@ new file mode 100644
 +            self.store.accept(config.name, config.choice, name, text)
 +            notify(self.observer, "verdict", name, True)
 +
++        #  THE NOTE IS THE DECISION (S-1): written verbatim into the
++        #  book, and 'nominal' additionally records the stream itself.
++        match config.stderr:
++            case E_StderrNote.NOMINAL:
++                self.store.accept(config.name, config.choice, "stderr",
++                                  self._stderr_text(self._provided))
++                self.store.note_stderr(config.name, config.choice,
++                                       E_StderrNote.NOMINAL)
++                notify(self.observer, "verdict", "stderr", True)
++            case E_StderrNote.IGNORED | E_StderrNote.FORBIDDEN:
++                self.store.note_stderr(config.name, config.choice,
++                                       config.stderr)
++                notify(self.observer, "verdict", "stderr", True)
++            case _:
++                pass
++
 +        result = AcceptResult(config.name, E_TestRunResult.OK,
 +                              dict(text_db), provision)
 +        notify(self.observer, "finished", result)
 +        return result
++
++    def _stderr_text(self, provided):
++        """
++        RETURN: str, what the run wrote on stderr; '' where the
++                provision delivered no such subject.
++
++        'provided' is the SUBJECTS delivery ('None' where provision
++        failed), not the provision record.
++        """
++        if provided is None or "stderr" not in provided: return ""
++        with provided["stderr"].open() as reader:
++            return reader.read()
++
++    def _stderr_refusal(self, provided):
++        """
++        RETURN: E_TestRunResult.STDERR_UNDECIDED where the run wrote on
++                stderr and NO note about it was ever taken -- neither
++                handed to this ceremony nor standing in the book;
++                E_TestRunResult.OK otherwise.
++
++        REFUSE RATHER THAN GUESS, AT THE DOOR: the three notes say
++        different things about the same stream, and only the author
++        knows which is meant.
++        """
++        config = self.config
++        if config.stderr is not None:            return E_TestRunResult.OK
++        if "stderr" in config.subjects:
++            #  ASKED FOR BY NAME: the caller named stderr among the
++            #  subjects to accept, which IS the decision -- the second
++            #  question is about a stream that appeared UNASKED.
++            return E_TestRunResult.OK
++        if not _has_words(self._stderr_text(provided)):
++            return E_TestRunResult.OK
++        if self.store.stderr_note(config.name, config.choice) \
++                is not E_StderrNote.FORBIDDEN:
++            return E_TestRunResult.OK          # the book already says
++        return E_TestRunResult.STDERR_UNDECIDED
 +
 +    async def _initiate(self, subject_name, step):
 +        """
@@ -6536,8 +7112,9 @@ new file mode 100644
 +            if provided is None:
 +                if config.groundwork is None:
 +                    return {}, E_TestRunResult.RECORDING_MISSING, None
-+                provided = await config.groundwork.provide(
++                provided       = await config.groundwork.provide(
 +                                                   stop_event=stop_event)
++                self._provided = provided
 +                if not provided.provision.delivered:
 +                    return {}, provided.provision.report, provided.provision
 +            if name not in provided:
@@ -6548,6 +7125,11 @@ new file mode 100644
 +
 +        return text_db, E_TestRunResult.OK, \
 +               (provided.provision if provided is not None else None)
++
++
++def _has_words(text):
++    """RETURN: True, 'text' holds anything but whitespace; False else."""
++    return bool(text) and bool(text.strip())
 diff --git a/operations/consume/difference_display.py b/operations/consume/difference_display.py
 new file mode 100644
 --- /dev/null
@@ -6697,7 +7279,7 @@ diff --git a/operations/consume/equivalence_check.py b/operations/consume/equiva
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/equivalence_check.py
-@@ -0,0 +1,129 @@
+@@ -0,0 +1,160 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -6731,6 +7313,7 @@ new file mode 100644
 +from   ..result                 import E_TestRunResult
 +from   ...compare.configuration import Configuration
 +from   ..nominal                import NominalNotAvailable
++from   .terminal                import ends_in_terminal
 +from   ..observer               import notify
 +from   ..report                 import (Comparison, TestResult)
 +
@@ -6745,6 +7328,8 @@ new file mode 100644
 +    subjects:   Mapping[str, object] = field(default_factory=dict)
 +    compare:    Optional[Configuration] = None
 +    fast_fail:  bool = True
++    stderr_forbidden_f: bool = False  # the book says FORBIDDEN: a word
++                                      # on stderr is an error
 +
 +
 +class EquivalenceCheck:
@@ -6792,6 +7377,17 @@ new file mode 100644
 +        verdict_db = {}
 +        report     = E_TestRunResult.OK
 +
++        #  A FORBIDDEN STDERR (the book's note, S-1): a word on that
++        #  stream is an ERROR, reported BY NAME -- never a line
++        #  difference against a nominal that does not exist.
++        if self.config.stderr_forbidden_f and "stderr" in provided:
++            with provided["stderr"].open() as reader:
++                noise = reader.read()
++            if noise.strip():
++                verdict_db["stderr"] = False
++                report = E_TestRunResult.UNEXPECTED_STDERR
++                notify(self.observer, "verdict", "stderr", False)
++
 +        for name in sorted(self.config.subjects):
 +            nominal = self.config.subjects[name]
 +            if name not in provided:
@@ -6809,6 +7405,23 @@ new file mode 100644
 +                if report is E_TestRunResult.OK:
 +                    report = E_TestRunResult.NOMINAL_FILE_NOT_FOUND
 +                notify(self.observer, "verdict", name, False)
++                if self.config.fast_fail: break
++                continue
++
++            #  THE TERMINAL TOKEN (R-70): the nominal decides
++            #  participation. A participating subject that ends
++            #  without '<hwut-end>' is INCOMPLETE -- its own name, not
++            #  a wall of line differences ending in one missing line.
++            #  Peeked on FRESH readers; the working pair stays
++            #  untouched.
++            if ends_in_terminal(nominal.open()) \
++               and not ends_in_terminal(provided[name].open()):
++                verdict_db[name] = False
++                if report is E_TestRunResult.OK:
++                    report = E_TestRunResult.TERMINATED_WITHOUT_END
++                notify(self.observer, "verdict", name, False)
++                close = getattr(nominal_reader, "close", None)
++                if close is not None: close()
 +                if self.config.fast_fail: break
 +                continue
 +
@@ -6884,6 +7497,60 @@ new file mode 100644
 +                 for name, path in path_db.items()}
 +    return Subjects(reader_db,
 +                    ProvisionRecord(report=E_TestRunResult.OK))
+diff --git a/operations/consume/terminal.py b/operations/consume/terminal.py
+new file mode 100644
+--- /dev/null
++++ b/operations/consume/terminal.py
+@@ -0,0 +1,49 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: THE TERMINAL TOKEN (R-70) -- '<hwut-end>' as the last
++         non-empty line of a subject stream says: THE STREAM IS
++         COMPLETE, by the testimony of whoever ends it.
++
++WHO ENDS A STREAM:
++    a PYPE-D stream        the pype script, from its '<eof>' handler
++                           -- the test application MUST NOT produce
++                           the token (it cannot place it safely) and
++                           never has to; an absent token criticises
++                           the PYPE SCRIPT (hwut_pype MANUAL).
++    a PLAIN stream         the application itself; HwutRunner, the
++                           reference implementation, emits it as a
++                           choice's last act.
++
++THE NOMINAL DECIDES PARTICIPATION: where the nominal ends in the
++token, the subject must; where it does not, no check stands -- the
++migration needs no switch, no key, anywhere ('hwut.renovate' appends
++tokens to nominals).
++
++The token is CONTENT: compared, stored, displayed; the compare
++framework knows no plumbing. Completeness and CONTAINMENT are
++orthogonal: the token is the stream's testimony, 'killed' is the
++killer's (procsitter); neither substitutes for the other.
++______________________________________________________________________________
++"""
++
++TERMINAL_TOKEN = "<hwut-end>"
++
++
++def ends_in_terminal(reader):
++    """
++    RETURN: bool, whether the stream's last NON-EMPTY line is the
++            terminal token -- trailing blank lines after it carry no
++            information and are forgiven.
++
++    The reader is consumed and closed.
++    """
++    last = None
++    try:
++        for line in reader:
++            stripped = line.rstrip("\r\n")
++            if stripped: last = stripped
++    finally:
++        close = getattr(reader, "close", None)
++        if close is not None: close()
++    return last == TERMINAL_TOKEN
 diff --git a/operations/diagnosis.py b/operations/diagnosis.py
 new file mode 100644
 --- /dev/null
@@ -7050,26 +7717,51 @@ diff --git a/operations/interaction/TEST/ADM/cache.fly b/operations/interaction/
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/ADM/cache.fly
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,39 @@
 +{
-+file_name: test-merge.py;
++title: The TUI tier;
++file_name: test-tui.py;
++hwut_info_time: 1786944657L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
++happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ ; NO GOOD FILE; 0.798081; 0; ]
++  [ display_only; OK; 0.586853; 0; ]
++  [ editor_loop; OK; 0.606107; 0; ]
++  [ elements; OK; 0.588534; 0; ]
++  [ reading; OK; 0.724632; 0; ]
++  [ regions; OK; 0.786688; 0; ]
++  [ rendering; OK; 0.720372; 0; ]
++  [ target_wiring; OK; 0.557654; 0; ]
++  [ undecided_author; OK; 0.614428; 0; ]
 +]
 +}
 +{
-+file_name: test-tui.py;
++title: the UP half;
++title_group: The merge session;
++file_name: test-merge.py;
++hwut_info_time: 1786944657L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
++happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ ; NO GOOD FILE; 0.743053; 0; ]
++  [ cancel; OK; 0.817357; 0; ]
++  [ commit; OK; 0.774123; 0; ]
++  [ display_only; OK; 0.658726; 0; ]
++  [ empty_commit; OK; 0.763705; 0; ]
++  [ envelope; OK; 0.613236; 0; ]
++  [ loop; OK; 0.891665; 0; ]
++  [ loop_pipe; OK; 0.697393; 0; ]
++  [ loop_realigns; OK; 0.710329; 0; ]
++  [ rich_client; OK; 0.686124; 0; ]
++  [ sequence; OK; 0.707520; 0; ]
++  [ unknown; OK; 0.619206; 0; ]
++  [ widened_down; OK; 0.624713; 0; ]
 +]
 +}
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--cancel.txt b/operations/interaction/TEST/GOOD/test-merge.py--cancel.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--cancel.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: tool failed      -> recording-missing
 +         nominal after    -> 'the old nominal\n'
 +         tool wrote none  -> recording-missing
@@ -7079,43 +7771,47 @@ new file mode 100644
 +  OK  : a tool that exits cleanly but writes nothing also cancels
 +  OK  : the nominal survives that too
 +SUCCESS: an abandoned merge never becomes a nominal.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--commit.txt b/operations/interaction/TEST/GOOD/test-merge.py--commit.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--commit.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: report = ok
 +         stored = 'MERGED from subject line\n'
 +  OK  : acceptance succeeded
 +  OK  : the tool's plain bytes became the nominal
 +  OK  : and the tool saw the real subject as its material
 +SUCCESS: the merge tool's artifact becomes the nominal.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--display_only.txt b/operations/interaction/TEST/GOOD/test-merge.py--display_only.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--display_only.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: the driver presented 5 DOWN items
 +         and the session resolved to cancel
 +  OK  : DOWN was still presented in full
 +  OK  : and a driver that cannot merge simply cancels
 +  OK  : storing nothing
 +SUCCESS: half-duplex is a driver's choice, not a fault.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--empty_commit.txt b/operations/interaction/TEST/GOOD/test-merge.py--empty_commit.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--empty_commit.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: driver said COMMIT with no artifact
 +         hub resolved to -> cancel, text None
 +  OK  : the hub downgrades it to CANCEL
 +  OK  : and carries nothing forward
 +SUCCESS: an empty commit is refused, not stored.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--envelope.txt b/operations/interaction/TEST/GOOD/test-merge.py--envelope.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--envelope.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: envelope   = ['intent', 'nominal', 'signature']
 +         signature  = vut-feed/1, intent = commit
 +         round trip = 'merged bytes\n'
@@ -7125,11 +7821,12 @@ new file mode 100644
 +  OK  : it round-trips
 +  OK  : a foreign signature is REFUSED before anything is parsed
 +SUCCESS: signed, versioned, and carrying the artifact.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--loop.txt b/operations/interaction/TEST/GOOD/test-merge.py--loop.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--loop.txt
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,13 @@
 +INSPECT: looping  -> commit, 'alpha\nbeta\ndelta\ngamma\n'
 +         stuck    -> cancel, None after 1 round(s)
 +         patient  -> commit after 21 round(s)
@@ -7142,11 +7839,12 @@ new file mode 100644
 +  OK  : an OSCILLATING driver -- always progressing, never deciding -- is ended by the cap, as a CANCEL
 +  OK  : and exactly at the cap, not one round beyond it
 +SUCCESS: the merge loop loops, and stops for a reason.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--loop_pipe.txt b/operations/interaction/TEST/GOOD/test-merge.py--loop_pipe.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--loop_pipe.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: one round  -> commit after 5 DOWN items
 +         two rounds -> commit after 11 DOWN items
 +  OK  : the single-round client still commits, unchanged
@@ -7154,22 +7852,24 @@ new file mode 100644
 +  OK  : a SECOND DOWN generation crossed the pipe
 +  OK  : one extra MaterialInst and one full generation, exactly
 +SUCCESS: the loop survives a real process boundary.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--loop_realigns.txt b/operations/interaction/TEST/GOOD/test-merge.py--loop_realigns.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--loop_realigns.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: round 1 pairs = [(1, 1), (2, 2), (3, 3)]
 +         round 2 pairs = [(1, 1), (2, 2), (-1, 3), (3, 4)]
 +  OK  : two DOWN generations were produced, one per round
 +  OK  : the second is a DIFFERENT association -- the edit re-aligned it
 +  OK  : the added nominal line appears as an added pair
 +SUCCESS: an edit changes the alignment, and the author sees it.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--rich_client.txt b/operations/interaction/TEST/GOOD/test-merge.py--rich_client.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--rich_client.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: DOWN items serialised to the client = 5
 +         client committed -> commit, 'resolved by the client after 5 DOWN items\n'
 +         client cancelled -> cancel, None
@@ -7178,31 +7878,34 @@ new file mode 100644
 +  OK  : and the client had really SEEN the items it answers about
 +  OK  : a client that cancels stores nothing
 +SUCCESS: a client in any language can speak this protocol.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--sequence.txt b/operations/interaction/TEST/GOOD/test-merge.py--sequence.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--sequence.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: sequence = ['open', 'resolve', 'close']
 +         (5 DOWN items elided)
 +  OK  : resolve happens between open and close, never after
 +  OK  : and after every DOWN item has been presented
 +SUCCESS: open, present, resolve, close -- in that order.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--unknown.txt b/operations/interaction/TEST/GOOD/test-merge.py--unknown.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--unknown.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: unknown intent -> unknown UP intent 'obliterate'
 +         unknown target -> no driver for display target 'not-a-target'
 +  OK  : an intent this hub does not know is refused
 +  OK  : and so is a target with no driver
 +SUCCESS: refuse the unknown; never guess an action.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--widened_down.txt b/operations/interaction/TEST/GOOD/test-merge.py--widened_down.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-merge.py--widened_down.txt
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,12 @@
 +INSPECT: a new kind     -> kind NewKindOfInst  fields ['confidence', 'origin', 'subject_span']
 +INSPECT: a plain class  -> kind PlainClassInst fields ['left', 'right']
 +INSPECT: a namedtuple   -> kind NamedTupleInst fields ['left', 'right']
@@ -7214,17 +7917,19 @@ new file mode 100644
 +  OK  : a kind with NO fields is readable and empty -- absent is not empty, and this is where they are hardest to tell apart
 +  OK  : an item whose fields cannot be READ AT ALL is refused
 +SUCCESS: the hub carries what compare emits; it never guesses.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--display_only.txt b/operations/interaction/TEST/GOOD/test-tui.py--display_only.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--display_only.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: cancel, None after 1 generation(s)
 +  OK  : no merge was offered, so nothing was resolved
 +  OK  : exactly one generation was rendered
 +  OK  : and no question was asked
 +  OK  : the comparison itself was shown
 +SUCCESS: display-only renders once and resolves nothing.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--editor_annotation.txt b/operations/interaction/TEST/GOOD/test-tui.py--editor_annotation.txt
 new file mode 100644
 --- /dev/null
@@ -7266,7 +7971,7 @@ diff --git a/operations/interaction/TEST/GOOD/test-tui.py--editor_loop.txt b/ope
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--editor_loop.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: intent=commit generations=2
 +  OK  : the session ends on the author's COMMIT
 +  OK  : the committed artifact IS the edited nominal
@@ -7274,11 +7979,12 @@ new file mode 100644
 +  OK  : and the author saw it, as round 2
 +  OK  : the fresh association contains the edit
 +SUCCESS: edit, realign, see it fresh, commit -- the loop.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--elements.txt b/operations/interaction/TEST/GOOD/test-tui.py--elements.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--elements.txt
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,40 @@
 +
 +=[ tui-under-test ]================================= round 1
 +setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -7318,11 +8024,12 @@ new file mode 100644
 +  OK  : a number-vs-word mismatch names its KIND
 +  OK  : differing pairs split into an S row and an N row
 +FAILURE: every element kind renders, with the meta DOWN carries.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--reading.txt b/operations/interaction/TEST/GOOD/test-tui.py--reading.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--reading.txt
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,24 @@
 +
 +=[ reading-probe ]================================== round 1
 +setup | numeric=+/-0.01 | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -7346,11 +8053,12 @@ new file mode 100644
 +  OK  : a constraint binding is marked as binding
 +  OK  : self-feed: every pair equivalent BY CONSTRUCTION
 +SUCCESS: the reading shows the interpretation, nothing else.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--regions.txt b/operations/interaction/TEST/GOOD/test-tui.py--regions.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--regions.txt
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,32 @@
 +
 +=[ tui-under-test ]================================= round 1
 +setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -7382,11 +8090,12 @@ new file mode 100644
 +  OK  : ignore: present, shown, and entirely tolerated
 +  OK  : and the whole stream is EQUIVALENT under its regions
 +SUCCESS: all five region kinds render under compare's framing.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--rendering.txt b/operations/interaction/TEST/GOOD/test-tui.py--rendering.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--rendering.txt
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,25 @@
 +
 +=[ tui-under-test ]================================= round 1
 +setup | numeric=exact | analogy=on '((..))' | whitespace=tolerant | ignored '##..##'
@@ -7411,20 +8120,22 @@ new file mode 100644
 +  OK  : a tolerated span is marked as tolerated, not hidden
 +  OK  : analogy provenance: the FIRST binding site is named
 +SUCCESS: the TUI shows what DOWN carries -- and adds nothing.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--target_wiring.txt b/operations/interaction/TEST/GOOD/test-tui.py--target_wiring.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--target_wiring.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: driver_for(TUI) -> TuiDisplay
 +  OK  : the TUI target names the TUI driver
 +  OK  : and the caller's configuration reached it
 +SUCCESS: a caller names an outcome; driver_for builds the tool.
++<hwut-end>
 diff --git a/operations/interaction/TEST/GOOD/test-tui.py--undecided_author.txt b/operations/interaction/TEST/GOOD/test-tui.py--undecided_author.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/interaction/TEST/GOOD/test-tui.py--undecided_author.txt
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,11 @@
 +INSPECT: noop -> cancel after 1 generation(s)
 +         fail -> cancel, editor's exit code told
 +         eof  -> cancel, None
@@ -7435,6 +8146,7 @@ new file mode 100644
 +  OK  : and the nominal stayed untouched
 +  OK  : EOF on the answer channel is a CANCEL, not a crash
 +SUCCESS: hesitation re-prompts; only decisions leave the TUI.
++<hwut-end>
 diff --git a/operations/interaction/TEST/config.py b/operations/interaction/TEST/config.py
 new file mode 100644
 --- /dev/null
@@ -9270,10 +9982,10 @@ new file mode 100644
 +interpreter_list: [ nvim; -l; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ bound_and_closed; OK; 0.011007; 0; ]
-+  [ commit_carries_text; OK; 0.012922; 0; ]
-+  [ panes; OK; 0.016362; 0; ]
-+  [ subject_protected; OK; 0.026780; 0; ]
++  [ bound_and_closed; OK; 0.010597; 0; ]
++  [ commit_carries_text; OK; 0.012761; 0; ]
++  [ panes; OK; 0.014225; 0; ]
++  [ subject_protected; OK; 0.021379; 0; ]
 +]
 +}
 +{
@@ -9283,12 +9995,12 @@ new file mode 100644
 +interpreter_list: [ nvim; -l; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ envelope; OK; 0.032988; 0; ]
-+  [ fold; OK; 0.044085; 0; ]
-+  [ foreign; OK; 0.035792; 0; ]
-+  [ truncated; OK; 0.036812; 0; ]
-+  [ two_sides; OK; 0.037516; 0; ]
-+  [ unknown_kind; OK; 0.039330; 0; ]
++  [ envelope; OK; 0.020896; 0; ]
++  [ fold; OK; 0.022176; 0; ]
++  [ foreign; OK; 0.021192; 0; ]
++  [ truncated; OK; 0.022023; 0; ]
++  [ two_sides; OK; 0.021768; 0; ]
++  [ unknown_kind; OK; 0.022176; 0; ]
 +]
 +}
 diff --git a/operations/interaction/nvim/TEST/GOOD/test-protocol.lua--envelope.txt b/operations/interaction/nvim/TEST/GOOD/test-protocol.lua--envelope.txt
@@ -11202,7 +11914,7 @@ diff --git a/operations/report.py b/operations/report.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/report.py
-@@ -0,0 +1,159 @@
+@@ -0,0 +1,165 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -11267,6 +11979,12 @@ new file mode 100644
 +    # -- the subjects and nominals
 +    E_TestRunResult.OUTPUT_FILE_NOT_FOUND,
 +    E_TestRunResult.NOMINAL_FILE_NOT_FOUND,
++    # -- completeness precedes judgement: an incomplete stream must
++    #    never masquerade as an ordinary mismatch (R-70)
++    E_TestRunResult.TERMINATED_WITHOUT_END,
++    #  -- stderr: a stream nobody blessed, and a decision nobody took
++    E_TestRunResult.STDERR_UNDECIDED,
++    E_TestRunResult.UNEXPECTED_STDERR,
 +    # -- the judgement: everything ran, the subject does not match
 +    E_TestRunResult.NOT_EQUIVALENT_WITH_NOMINAL,
 +    # -- the display, which cannot make a test wrong
@@ -11366,7 +12084,7 @@ diff --git a/operations/result.py b/operations/result.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/result.py
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,73 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -11411,6 +12129,9 @@ new file mode 100644
 +    # THE SUBJECTS AND NOMINALS:
 +    OUTPUT_FILE_NOT_FOUND       = "output-file-not-found"
 +    NOMINAL_FILE_NOT_FOUND      = "nominal-file-not-found"
++    TERMINATED_WITHOUT_END      = "terminated-without-hwut-end"
++    UNEXPECTED_STDERR           = "unexpected-stderr"
++    STDERR_UNDECIDED            = "stderr-undecided"
 +
 +    # THE PYPE STAGE (deterministicalization):
 +    PYPE_INTERPRETER_NOT_FOUND  = "pype-interpreter-not-found"
@@ -11627,30 +12348,30 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ absent_application; OK; 0.375603; 0; ]
-+  [ argv; OK; 0.500136; 0; ]
-+  [ canonicalisation; OK; 0.588537; 0; ]
-+  [ canonicaliser_broken; OK; 0.481931; 0; ]
-+  [ containment; OK; 2.679450; 0; ]
-+  [ loaded; OK; 0.541857; 0; ]
-+  [ same_shape; OK; 0.366120; 0; ]
-+  [ source_kinds; OK; 0.530569; 0; ]
-+  [ stages; OK; 0.477265; 0; ]
-+  [ subjects; OK; 0.351460; 0; ]
++  [ absent_application; OK; 0.461289; 0; ]
++  [ argv; OK; 0.451558; 0; ]
++  [ canonicalisation; OK; 0.425307; 0; ]
++  [ canonicaliser_broken; OK; 0.459615; 0; ]
++  [ containment; OK; 2.559757; 0; ]
++  [ loaded; OK; 0.444457; 0; ]
++  [ same_shape; OK; 0.460421; 0; ]
++  [ source_kinds; OK; 0.481196; 0; ]
++  [ stages; OK; 0.445287; 0; ]
++  [ subjects; OK; 0.334388; 0; ]
 +]
 +}
 +{
 +title: one application call, many choices;
 +title_group: The multi-executor;
 +file_name: test-multi-execute.py;
-+hwut_info_time: 1786944657L;
++hwut_info_time: 1787114684L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ plugged; OK; 0.646571; 0; ]
-+  [ refused; OK; 0.835564; 0; ]
-+  [ session; OK; 0.834375; 0; ]
-+  [ status; OK; 0.809951; 0; ]
-+  [ unknown; OK; 0.702265; 0; ]
++  [ plugged; OK; 0.787999; 0; ]
++  [ refused; OK; 0.757992; 0; ]
++  [ session; OK; 0.734789; 0; ]
++  [ status; OK; 0.711065; 0; ]
++  [ unknown; OK; 0.751129; 0; ]
 +]
 +}
 +{
@@ -11660,55 +12381,58 @@ new file mode 100644
 +hwut_info_time: 1786944657L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ cadence; OK; 0.511304; 0; ]
-+  [ door; OK; 0.468069; 0; ]
-+  [ foreign; OK; 0.459705; 0; ]
-+  [ roles; OK; 0.312932; 0; ]
-+  [ scheme; OK; 0.453582; 0; ]
++  [ cadence; OK; 0.492752; 0; ]
++  [ door; OK; 0.293607; 0; ]
++  [ foreign; OK; 0.299892; 0; ]
++  [ roles; OK; 0.297344; 0; ]
++  [ scheme; OK; 0.429715; 0; ]
 +]
 +}
 diff --git a/operations/run/TEST/GOOD/test-multi-execute.py--plugged.txt b/operations/run/TEST/GOOD/test-multi-execute.py--plugged.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-multi-execute.py--plugged.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: the proxy is an I_ExecuteProvider: True
 +         canonicalised stdout = '   apple\n   zebra\nalpha speaks\n'
 +         cadence              = None
 +  OK  : provide() delivers the canonicalised subject
 +  OK  : a sink has no arrival: the cadence is absent, never empty
 +SUCCESS: behind the seam, the session is just an execute provider.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-multi-execute.py--refused.txt b/operations/run/TEST/GOOD/test-multi-execute.py--refused.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-multi-execute.py--refused.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: unregistered capability -> "MultiExecute requires a configuration that registers 'interactive'; 'app.py' does not"
 +         a name with a blank    -> "the wire is blank-separated: choice 'two words' cannot travel it"
 +  OK  : a configuration without the registered capability is refused, by name
 +  OK  : a name the wire cannot carry is refused before it travels
 +SUCCESS: what cannot make sense is refused at the door.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-multi-execute.py--session.txt b/operations/run/TEST/GOOD/test-multi-execute.py--session.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-multi-execute.py--session.txt
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,12 @@
 +INSPECT: the application was launched 1 time(s) for 2 choices
-+         alpha stdout = 'alpha speaks\n   zebra\n   apple\n'
-+         beta  stdout = 'beta speaks\n'
++         alpha stdout = 'alpha speaks\n   zebra\n   apple\n<hwut-end>\n'
++         beta  stdout = 'beta speaks\n<hwut-end>\n'
 +         beta  stderr = 'on stderr, too\n'
 +  OK  : ONE call served both choices
-+  OK  : the first choice's channels are its own
-+  OK  : and the second's are its own -- no bleed between choices
++  OK  : the first choice's channels are its own, token-terminated
++  OK  : and the second's are its own -- no bleed; stdout ends in the token, stderr never carries one (R-70: stdout only)
 +  OK  : the transport leaves with the session
 +  OK  : close hands the ONE attribution of the one call
 +  OK  : and EVERY choice carries it: the record of the process that produced a result is part of that result
 +SUCCESS: many choices, one application call.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-multi-execute.py--status.txt b/operations/run/TEST/GOOD/test-multi-execute.py--status.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-multi-execute.py--status.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: the choice leaves with sys.exit(3)
 +         stdout = 'gamma speaks, then leaves with 3\n'
 +         report = ok
@@ -11716,23 +12440,25 @@ new file mode 100644
 +  OK  : and they are the choice's own
 +  OK  : the report stays OK -- the classic run's law
 +SUCCESS: a non-zero status delivers; behavior is judged by compare, not here.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-multi-execute.py--unknown.txt b/operations/run/TEST/GOOD/test-multi-execute.py--unknown.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-multi-execute.py--unknown.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: bogus -> product None: True, report = test-app-launch-failed
-+         beta afterwards -> 'beta speaks\n'
++         beta afterwards -> 'beta speaks\n<hwut-end>\n'
 +  OK  : an unexecuted command delivers nothing -- never an empty subject
 +  OK  : and the report names it
-+  OK  : the session serves the other choice of the same call
++  OK  : the session serves the other choice, token-terminated (R-70)
 +  OK  : even a refusal carries the producing process's record
 +SUCCESS: a refusal is named; the session runs on.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provider.py--cadence.txt b/operations/run/TEST/GOOD/test-provider.py--cadence.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provider.py--cadence.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: measuring run   -> timing_db is a dict: True, 'stdout' measured: True
 +         non-measuring   -> timing_db = None
 +         proxy delivery  -> timing_db = None
@@ -11740,22 +12466,24 @@ new file mode 100644
 +  OK  : a non-measuring one hands None -- absent, not empty
 +  OK  : a provider that cannot measure says so the same way
 +SUCCESS: the cadence is read from the delivery, never from the provider's person.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provider.py--door.txt b/operations/run/TEST/GOOD/test-provider.py--door.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provider.py--door.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: a canonicaliser knocks at the execute slot
 +         refused: 'stage_execute requires an I_ExecuteProvider; received a StageCanonicalise'
 +         the execute provider passes: True
 +  OK  : the refusal names the required role and the received type
 +  OK  : the right provider passes the same door
 +SUCCESS: a wrong plug is refused at the door, never downstream.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provider.py--foreign.txt b/operations/run/TEST/GOOD/test-provider.py--foreign.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provider.py--foreign.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: a stand-in proxy fills the execute slot
 +         delivered subjects = ['stderr', 'stdout']
 +         stdout             = 'as if it had run\n'
@@ -11763,11 +12491,12 @@ new file mode 100644
 +  OK  : downstream, the delivery is indistinguishable
 +  OK  : observation reports what the planner declared
 +SUCCESS: behind the interface, local and proxy are one kind.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provider.py--roles.txt b/operations/run/TEST/GOOD/test-provider.py--roles.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provider.py--roles.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: stage -> its role interface
 +         StageExecute      is I_ExecuteProvider: True
 +         StageCanonicalise is I_CanonicaliseProvider: True
@@ -11776,11 +12505,12 @@ new file mode 100644
 +  OK  : every local stage derives from its role's interface
 +  OK  : the one role fed by its predecessor declares that, alone
 +SUCCESS: the role is the type, and each role speaks for itself.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provider.py--scheme.txt b/operations/run/TEST/GOOD/test-provider.py--scheme.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provider.py--scheme.txt
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,12 @@
 +INSPECT: every role roots in I_Provider: True
 +         MultiExecute  is an I_MultiProvider: True
 +         its hand-out  is I_ProxyProvider and I_ExecuteProvider: True, True
@@ -11792,21 +12522,23 @@ new file mode 100644
 +  OK  : a hand-out is a proxy IN a role, and names its multi
 +  OK  : one queue consumes both shapes, and provenance stays visible only to who asks
 +SUCCESS: queue a provider, or a multi's proxies -- the seam carries both.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--absent_application.txt b/operations/run/TEST/GOOD/test-provision.py--absent_application.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--absent_application.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: report   = test-app-launch-failed
 +         subjects = []
 +  OK  : the launch names the absence -- nothing was built here
 +  OK  : NO subject is provided
 +SUCCESS: an unprovided application is the launch's failure.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--argv.txt b/operations/run/TEST/GOOD/test-provision.py--argv.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--argv.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: INTERPRETED, choice 'basic' -> ['python3', '-u', 'basic']
 +         INTERPRETED, no choice      -> ['python3', '-u']
 +  OK  : the interpreter prefix leads the argv
@@ -11814,11 +12546,12 @@ new file mode 100644
 +  OK  : a test without choices ends at the source file
 +  OK  : and carries exactly one argument fewer
 +SUCCESS: the source kind fixes the argv; the choice selects.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--canonicalisation.txt b/operations/run/TEST/GOOD/test-provision.py--canonicalisation.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--canonicalisation.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: raw           = 'zebra\napple\nmango\n'
 +         canonicalised = 'apple\nmango\nzebra\n'
 +         report        = ok
@@ -11827,32 +12560,35 @@ new file mode 100644
 +  OK  : and provision reports OK
 +  OK  : a subject with no canonicaliser is passed through raw
 +SUCCESS: what provision hands over is already comparable.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--canonicaliser_broken.txt b/operations/run/TEST/GOOD/test-provision.py--canonicaliser_broken.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--canonicaliser_broken.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: report = pype-interpreter-not-found
 +         stdout = 'alpha\n'
 +  OK  : the report names the canonicaliser, not the application
 +  OK  : the text is UNCHANGED -- never half a stream
 +SUCCESS: a broken canonicaliser blames itself, not the code.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--containment.txt b/operations/run/TEST/GOOD/test-provision.py--containment.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--containment.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: silent run  -> containment FAIL_STALLED, report test-app-stalled
 +         long run    -> containment FAIL_WALL_CLOCK_EXCEEDED, report test-app-contained
 +  OK  : FAIL_STALLED becomes TEST_APP_STALLED
 +  OK  : any other cap becomes TEST_APP_CONTAINED
 +  OK  : and what the run DID produce is still handed over
 +SUCCESS: a cap that ended the run reaches the report.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--loaded.txt b/operations/run/TEST/GOOD/test-provision.py--loaded.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--loaded.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: stored    -> report ok, subjects ['stderr', 'stdout']
 +         stdout    -> 'recorded line\n'
 +         unstored  -> report recording-missing, subjects []
@@ -11862,11 +12598,12 @@ new file mode 100644
 +  OK  : an absent recording is REPORTED
 +  OK  : and not invented as an empty subject
 +SUCCESS: stored data provides subjects; absence says so.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--same_shape.txt b/operations/run/TEST/GOOD/test-provision.py--same_shape.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--same_shape.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: Run    -> ['stderr', 'stdout'], type Subjects
 +         loaded -> ['stderr', 'stdout'], type Subjects
 +         stdout matches: True
@@ -11874,11 +12611,12 @@ new file mode 100644
 +  OK  : with the same subject names
 +  OK  : and the same bytes
 +SUCCESS: one product, two provenances, indistinguishable above.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--source_kinds.txt b/operations/run/TEST/GOOD/test-provision.py--source_kinds.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--source_kinds.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: COMPILED argv   = ['built']
 +         COMPILED stdout = 'compiled artifact ran\n'
 +         EXECUTABLE argv = ['direct.sh', 'basic']
@@ -11888,11 +12626,12 @@ new file mode 100644
 +  OK  : one record: the run's -- the build's own attribution is the BUILD node's, above
 +  OK  : the EXECUTABLE ran directly, with the choice as its argument
 +SUCCESS: all three source kinds launch what they should.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--stages.txt b/operations/run/TEST/GOOD/test-provision.py--stages.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--stages.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: wiring  [execute canonicalise]
 +         Run -> X X   kind 'Run'
 +         no execute refused: True
@@ -11900,11 +12639,12 @@ new file mode 100644
 +  OK  : an executing provision: execute and canonicalise
 +  OK  : a missing stage is refused at construction, by name
 +SUCCESS: the wiring is data, and its law lives at the door.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-provision.py--subjects.txt b/operations/run/TEST/GOOD/test-provision.py--subjects.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--subjects.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: report   = ok
 +         subjects = ['emitted.txt', 'stderr', 'stdout']
 +           emitted.txt  'to a file\n'
@@ -11914,6 +12654,7 @@ new file mode 100644
 +  OK  : provision reports OK
 +  OK  : one attribution record: one supervised call happened
 +SUCCESS: channels and output files alike are subjects.
++<hwut-end>
 diff --git a/operations/run/TEST/config.py b/operations/run/TEST/config.py
 new file mode 100644
 --- /dev/null
@@ -11969,7 +12710,7 @@ diff --git a/operations/run/TEST/test-multi-execute.py b/operations/run/TEST/tes
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/test-multi-execute.py
-@@ -0,0 +1,305 @@
+@@ -0,0 +1,311 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -12094,7 +12835,10 @@ new file mode 100644
 +
 +
 +def test_session():
-+    """ONE call, many choices; residue-free; one attribution."""
++    """ONE call, many choices; residue-free; one attribution. Each
++    choice's stdout sink ends in '<hwut-end>' (R-70): the stream
++    self-delimits, in band -- no pype stands here, so the application
++    (the reference runner) owns the token."""
 +    configuration = _interactive_configuration()
 +
 +    async def scene():
@@ -12117,11 +12861,13 @@ new file mode 100644
 +    ok = _check([
 +        (_launch_count(configuration) == 1,
 +         "ONE call served both choices"),
-+        (a.product[0]["stdout"] == "alpha speaks\n   zebra\n   apple\n",
-+         "the first choice's channels are its own"),
-+        (b.product[0]["stdout"] == "beta speaks\n"
++        (a.product[0]["stdout"] == "alpha speaks\n   zebra\n"
++                                   "   apple\n<hwut-end>\n",
++         "the first choice's channels are its own, token-terminated"),
++        (b.product[0]["stdout"] == "beta speaks\n<hwut-end>\n"
 +         and b.product[0]["stderr"] == "on stderr, too\n",
-+         "and the second's are its own -- no bleed between choices"),
++         "and the second's are its own -- no bleed; stdout ends in "
++         "the token, stderr never carries one (R-70: stdout only)"),
 +        (not os.path.isdir(session_dir),
 +         "the transport leaves with the session"),
 +        (record is not None,
@@ -12218,8 +12964,9 @@ new file mode 100644
 +         "subject"),
 +        (bogus.report is E_TestRunResult.TEST_APP_LAUNCH_FAILED,
 +         "and the report names it"),
-+        (real.product[0]["stdout"] == "beta speaks\n",
-+         "the session serves the other choice of the same call"),
++        (real.product[0]["stdout"] == "beta speaks\n<hwut-end>\n",
++         "the session serves the other choice, token-terminated "
++         "(R-70)"),
 +        (len(bogus.record_list) == 1,
 +         "even a refusal carries the producing process's record"),
 +    ])
@@ -13466,7 +14213,7 @@ diff --git a/operations/run/core.py b/operations/run/core.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/core.py
-@@ -0,0 +1,337 @@
+@@ -0,0 +1,346 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -13575,7 +14322,16 @@ new file mode 100644
 +            CHOICE NAME is appended as the argument that selects it.
 +
 +    A test without choices is keyed by 'None' and gets no such argument.
++
++    A STATED CALL WINS (R-68): where the configuration carries
++    'execute', that argv IS the call and the source kind decides
++    nothing -- the author has said how the application is invoked.
 +    """
++    if configuration.execute is not None:
++        argv = [str(x) for x in configuration.execute]
++        if choice_name is not None: argv.append(str(choice_name))
++        return argv
++
 +    kind = configuration.source_kind
 +    if   kind is E_SourceKind.INTERPRETED:
 +        argv = [str(x) for x in configuration.interpreter]
@@ -13808,7 +14564,7 @@ diff --git a/operations/run/multi_execute.py b/operations/run/multi_execute.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/multi_execute.py
-@@ -0,0 +1,385 @@
+@@ -0,0 +1,406 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -13902,6 +14658,7 @@ new file mode 100644
 +______________________________________________________________________________
 +"""
 +import asyncio
++from   dataclasses import replace
 +import shutil
 +from   pathlib import Path
 +
@@ -13960,7 +14717,20 @@ new file mode 100644
 +        self._started = True
 +        configuration = self.configuration
 +        self._session_directory().mkdir(parents=True, exist_ok=True)
-+        procsitter = Procsitter(configuration.caps,
++        #  THE TERMINAL TOKEN (R-70, t-6): where a pype owns any
++        #  choice's stdout, the SESSION application must not emit
++        #  '<hwut-end>' -- per-choice suppression cannot exist on one
++        #  process, so any pype silences the app for the whole
++        #  session; the pype's '<eof>' provides, and the nominal
++        #  (recorded through the same road) decides consistently.
++        pype_owned_f = any("stdout" in c.canonicalisers
++                           for c in configuration.choice_db.values()
++                           if c is not None)
++        caps = configuration.caps
++        if pype_owned_f:
++            caps = replace(caps, env={**(caps.env or {}),
++                                      "HWUT_NO_TERMINAL": "1"})
++        procsitter = Procsitter(caps,
 +                                work_dir=str(configuration.test_directory))
 +        self._down   = Link()
 +        self._stderr = Link()
@@ -14171,20 +14941,27 @@ new file mode 100644
 +            ticket = session.submit(self.choice_name)
 +            answer = await ticket
 +        record = (session.record,) if session.record is not None else ()
-+        if answer == "fail":
-+            return Supply(product     = None,
-+                          report      = E_TestRunResult.TEST_APP_LAUNCH_FAILED,
-+                          record_list = record)
-+        if answer == "session-ended":
-+            return Supply(product     = None,
-+                          report      = E_TestRunResult.TEST_APP_CONTAINED,
-+                          record_list = record)
-+        raw_db = session._read_sinks(session._token(self.choice_name))
-+        report = E_TestRunResult.OK if answer >= 0 \
-+                 else E_TestRunResult.TEST_APP_CONTAINED
-+        return Supply(product     = (raw_db, None),
-+                      report      = report,
-+                      record_list = record)
++        match answer:
++            case "fail":
++                #  The application refused the choice, by name.
++                return Supply(
++                        product     = None,
++                        report      = E_TestRunResult.TEST_APP_LAUNCH_FAILED,
++                        record_list = record)
++            case "session-ended":
++                #  The wire fell silent before this ticket was served.
++                return Supply(
++                        product     = None,
++                        report      = E_TestRunResult.TEST_APP_CONTAINED,
++                        record_list = record)
++            case _:
++                raw_db = session._read_sinks(
++                                    session._token(self.choice_name))
++                report = E_TestRunResult.OK if answer >= 0 \
++                         else E_TestRunResult.TEST_APP_CONTAINED
++                return Supply(product     = (raw_db, None),
++                              report      = report,
++                              record_list = record)
 +
 +
 +def _is_int(text):
@@ -14451,7 +15228,7 @@ diff --git a/operations/run/stage_execute.py b/operations/run/stage_execute.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/stage_execute.py
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,117 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -14465,6 +15242,7 @@ new file mode 100644
 +______________________________________________________________________________
 +"""
 +import asyncio
++from   dataclasses import replace
 +
 +from   ..result                   import E_TestRunResult
 +from   ...procsitter.procsitter   import Procsitter, E_Containment
@@ -14499,7 +15277,18 @@ new file mode 100644
 +                behavior, and the token speaks beside them.
 +        """
 +        configuration = self.configuration
-+        procsitter = Procsitter(configuration.caps,
++        #  THE TERMINAL TOKEN (R-70, t-6): where a pype owns this
++        #  choice's stdout, the APPLICATION must not emit '<hwut-end>'
++        #  -- the framework says so through the environment, and the
++        #  reference runner listens.
++        choice = configuration.choice_db.get(self.choice_name)
++        pype_owned_f = (choice is not None
++                        and "stdout" in choice.canonicalisers)
++        caps = configuration.caps
++        if pype_owned_f:
++            caps = replace(caps, env={**(caps.env or {}),
++                                      "HWUT_NO_TERMINAL": "1"})
++        procsitter = Procsitter(caps,
 +                                work_dir=str(configuration.test_directory))
 +        error_link = Link()
 +        c = chain([(procsitter,
@@ -14561,7 +15350,7 @@ diff --git a/operations/session.py b/operations/session.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/session.py
-@@ -0,0 +1,344 @@
+@@ -0,0 +1,365 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -14595,6 +15384,7 @@ new file mode 100644
 +from   dataclasses import dataclass, field
 +from   enum        import Enum
 +from   typing      import Mapping, Optional, Sequence
++from ..orchestrator.bookkeeper.configuration import E_StderrNote
 +
 +from   .result                        import E_TestRunResult
 +from .consume.accept             import (Accept, AcceptConfig,
@@ -14663,6 +15453,11 @@ new file mode 100644
 +    replay:      bool              = False
 +    display:     Display           = field(default_factory=Display)
 +    observer:    Optional[object]  = None
++    stderr:      Optional[object]  = None   # E_StderrNote at a NOMINAL
++                                            # goal: which note to write
++                                            # for stderr. None: not
++                                            # asked -- acceptance
++                                            # refuses rather than guess
 +    record:      Optional[bool]    = None   # None: follow the store config
 +    stop_event:  Optional[object]  = None   # how the caller stops it
 +
@@ -14730,6 +15525,9 @@ new file mode 100644
 +    return {name: RecordNominal(store.nominal_path(test_name,
 +                                                   choice_name, name))
 +            for name in subject_name_list}
++
++
++
 +
 +
 +def store_of(configuration, bookkeeper):
@@ -14820,12 +15618,23 @@ new file mode 100644
 +                         subjects   = {n: AcceptStep()
 +                                       for n in subject_name_list},
 +                         choice     = choice_name,
-+                         groundwork = groundwork),
++                         groundwork = groundwork,
++                         stderr     = request.stderr),
 +            store, observer=observer).run(stop_event=stop_event)
 +        recorded_db = None
 +    else:
++        #  STDERR IS WHAT THE BOOK SAYS IT IS (S-1): 'nominal' is
++        #  compared like any other subject, 'ignored' is never read,
++        #  'forbidden' -- the reading of an unnoted choice -- makes a
++        #  word there an error by name.
++        note        = store.stderr_note(test_name, choice_name)
++        judged_list = list(subject_name_list)
++        if note is E_StderrNote.NOMINAL:
++            if "stderr" not in judged_list: judged_list.append("stderr")
++        elif "stderr" in judged_list:
++            judged_list.remove("stderr")
 +        nominal_db = _nominal_db(store, test_name, choice_name,
-+                                 subject_name_list)
++                                 judged_list)
 +        if goal is E_Goal.DISPLAY:
 +            operation = DifferenceDisplay(
 +                DifferenceDisplayConfig(
@@ -14839,9 +15648,10 @@ new file mode 100644
 +        else:
 +            operation = EquivalenceCheck(
 +                EquivalenceCheckConfig(
-+                    name       = test_name,
-+                    groundwork = groundwork,
-+                    subjects   = nominal_db,
++                    name          = test_name,
++                    groundwork    = groundwork,
++                    subjects      = nominal_db,
++                    stderr_forbidden_f = (note is E_StderrNote.FORBIDDEN),
 +                    compare    = _compare_options(configuration,
 +                                                  choice_name)),
 +                observer=observer)

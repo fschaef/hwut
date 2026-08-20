@@ -1,0 +1,212 @@
+==============================================================================
+display -- RATIONALE
+==============================================================================
+
+Settled decisions, read-only. Ruled by Frank-Rene, 2026-08-19.
+
+----------------------------------------------------------------------------
+D-1  THE FLOW LINE FORMAT
+----------------------------------------------------------------------------
+PROBLEM   Tests run in parallel; the reader needs to know what is
+          happening NOW and how many threads are live, without reading
+          a clock of their own or polling.
+
+DECISION  One line per event:
+
+              hh:mm:ss | NNN | [EVENT] NICK:base [choice] ...
+
+          'hh:mm:ss' relative to the stream's first 'when'; unparseable
+          'when' prints verbatim, right-aligned to 8. 'NNN' is the
+          parallel count AFTER the event. '[SKIP ]' for a 'run-ended'
+          that never had a 'run-begun'. Failing lines carry the phrase
+          inline. Cause appended with '<-'. Width fixed 78 (constructor
+          arg; COLUMNS honoured only on a tty, at the face, once).
+
+          DIRECTORIES roll-call after the flow; FAILURES last. Per-
+          directory dotted block from HWUT 1.0: GRAVEYARD (confusing,
+          no longer needed -- the roll-call and FAILURES carry all of it).
+
+COST      One line per event means a long run produces a long log; the
+          QUIET tier is the answer for callers that want the summary only.
+
+GRAVEYARD Per-directory dotted progress block (HWUT 1.0) -- retired in
+          favour of the linear flow + closing roll-call.
+
+----------------------------------------------------------------------------
+D-2  THE COLOUR DECISION
+----------------------------------------------------------------------------
+PROBLEM   Colour helps on a terminal; it is noise in a file, a CI log,
+          or a 'diff'. Gates are not obvious ('TERM=dumb' under ssh,
+          Windows without ANSI, NO_COLOR, CI).
+
+DECISION  ALL gates must pass for colour to be on: isatty, NO_COLOR
+          unset, CI unset, TERM set and not 'dumb', not Windows-without-
+          ANSI. '--colour' ('force_f') beats every gate, NO_COLOR
+          included. '--no-colour' ('veto_f') refuses. Both together:
+          REFUSED. Decision taken once at 'main', handed down as a
+          flag; no line re-sniffs. The test verifies the DECISION
+          (escape presence) not the escape spelling.
+
+COST      '--colour' beside '--no-colour' is refused, not silently
+          chosen; the caller must be unambiguous.
+
+GRAVEYARD Escapes-as-literals test idea -- the test would be tautological
+          (it only exercises what the test itself writes). The decision
+          is the right thing to test.
+
+----------------------------------------------------------------------------
+D-3 / E-1  THE EXIT STATUS LAW
+----------------------------------------------------------------------------
+PROBLEM   Five faces, five sets of magic integers. A caller checking
+          '$?' against a literal had no guarantee two faces agreed.
+
+DECISION  One enum, 'E_ExitCode' (services/_exit.py), IntEnum so
+          'sys.exit()' takes a member unchanged:
+
+              OK=0  FAULT=1  REFUSED=2  EMPTY=3  SIGPIPE=141
+
+          Every face returns members and nothing else. The import is
+          delayed past '_config' adoption for the three faces
+          (compare, merge, report) that may be run by path without
+          '-m': 'from ._exit import E_ExitCode' moved to after the
+          'if __package__' guard so the relative import resolves in
+          both invocation modes.
+
+COST      The five faces needed surgical edits; their GOODs that print
+          status numbers changed.
+
+GRAVEYARD Bare integer returns -- every 'return 0/1/2' replaced.
+
+----------------------------------------------------------------------------
+D-4  THE DEFAULT TIER
+----------------------------------------------------------------------------
+PROBLEM   What should 'hwut.run' show without a flag?
+
+DECISION  '--plain' is the default, statable redundantly; the name is
+          explicit so a script can pin the rendering even if the
+          default changes later.
+
+COST      None.
+
+----------------------------------------------------------------------------
+D-5  THE TIER LADDER
+----------------------------------------------------------------------------
+PROBLEM   Some callers want every event (debugging, audit); others
+          want the summary only (CI gate); others want nothing on
+          stdout (pipe the exit status).
+
+DECISION  Four tiers, each a strict subset of the one above:
+
+              VERBOSE  every event, the swallowed ones included
+              PLAIN    the flow, the roll-call, FAILURES (default)
+              QUIET    no flow; the roll-call, FAULTS, FAILURES
+              SILENT   nothing on stdout; faults to stderr, prefixed
+
+          SILENT governs stdout only -- faults go to stderr with the
+          same prefix and nickname as in the flow (the curl -sS law:
+          '--silent' means 'quiet on stdout', not 'swallow errors').
+          Tiers are mutually exclusive; two together: REFUSED.
+
+COST      '--plain' beside another tier flag is REFUSED, not silently
+          ignored; callers that state it redundantly must omit it when
+          adding another tier flag.
+
+GRAVEYARD Stderr-silent SILENT -- rejected; hides faults from the
+          operator and violates the curl -sS precedent.
+
+----------------------------------------------------------------------------
+D-6  ONE ENGLISH DOOR
+----------------------------------------------------------------------------
+PROBLEM   Wire tokens (e.g. 'terminated-without-hwut-end') are
+          machine words; prose renderings had appeared ad hoc in
+          several places, giving the impression of misaligned
+          components.
+
+DECISION  'word.py' is the ONE place a token becomes English. Every
+          rendering draws from 'phrase()'; the wire keeps its tokens.
+          PHRASE_DB covers every verdict word and every E_TestRunResult
+          value. A token not in the table prints with its hyphens
+          opened -- the stability promise.
+
+          One voice throughout: 'not supported here' is always 'not
+          supported here', never sometimes 'unsupported'. No mental
+          effort wondering whether two renderings name the same thing.
+
+COST      A token the table does not know prints hyphens-opened, which
+          may surprise a user on first sight; the fallback is explicit
+          and consistent with the stability promise.
+
+GRAVEYARD Token-in-flow / phrase-in-block split -- rejected; two
+          vocabularies in one report are harder to read than one.
+
+----------------------------------------------------------------------------
+D-7  ONE HOME FOR RENDERING
+----------------------------------------------------------------------------
+PROBLEM   Human-facing output had three possible homes: 'compare/
+          feeder' (which both computed a difference AND rendered it),
+          'operations/interaction' (TuiDisplay), and 'display/'. Three
+          homes is what makes a tree look like misaligned components --
+          the very appearance D-6 was ruled to prevent.
+
+DECISION  'compare' COMPUTES, 'display' RENDERS. Compare emits an
+          association structure carrying tolerance marks; display turns
+          it into text. One English door ('word.py') therefore covers
+          artifact differences as well as the run report, and the
+          renderer is reusable by 'accept' and 'merge' without either
+          importing compare's presentation.
+
+COST      Compare must emit structure where it previously emitted text;
+          TuiDisplay's place (absorbed, kept as the interactive layer
+          above the renderer, or retired) is NOT yet ruled.
+
+GRAVEYARD (a) compare renders its own differences -- rejected; it puts
+          a second vocabulary beside word.py with nothing keeping the
+          two aligned.
+
+----------------------------------------------------------------------------
+D-8  THE FACE IS OPERATIONAL; DISPLAY OWNS THE RENDERING WORDS
+----------------------------------------------------------------------------
+PROBLEM   'orchestrator/run/' was verified free of rendering -- no
+          print, no write, no format string, no display import. The
+          FACE was not: 'services/run.py' held the tier table, the
+          three rendering refusals, the tty sniff, the colour gates,
+          the width policy and the ink construction. An operational
+          face was deciding how things look.
+
+DECISION  Three kinds of word, three parsers, each owned by whoever
+          understands it:
+
+              selection   the wish         plan/wish.py   parse_wish()
+              execution   --jobs --no-store  the face
+              rendering   tier, colour     display/console.py
+                                              parse_rendering()
+
+          'parse_rendering()' mirrors 'parse_wish()': it takes the
+          words, yields what it understood and what it did not touch,
+          and raises 'RenderingError' where the words cannot want
+          anything. The face turns the raise into REFUSED, by name,
+          with the usage line -- exactly as it already did for
+          'WishError'.
+
+          'console_view()' hands back a constructed view: tier, ink and
+          width already decided. The face keeps ONE piece of rendering
+          knowledge -- whether its own stdout is a terminal -- because
+          it alone knows its sink ('write' given, or 'print').
+
+          'orchestrator/run/' remains operational only. That is now a
+          LAW in its README, not an accident.
+
+          Side effect, and the reason this shape was chosen over a
+          simple helper call: the REST split becomes STRUCTURAL rather
+          than a rule in a document. Selection and execution are
+          exposed; rendering never is. A type, not a convention.
+
+COST      One more module in display/. The alternative (growing
+          'plain.py') was rejected because a second view (html, pdf)
+          will want its own option vocabulary and none of the console's
+          tty gates; 'console.py' names the tier that owns them, so a
+          future 'html.py' sits beside 'plain.py' as a peer.
+
+VERIFIED  A pure refactor must move zero GOODs. All 14 display GOODs
+          byte-exact after the move, the 'refused' choice -- which
+          exercises all three rendering refusals -- included.

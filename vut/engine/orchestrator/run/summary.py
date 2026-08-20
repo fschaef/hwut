@@ -44,7 +44,10 @@ class CRunSummary:
 def fold(event_iterable):
     """
     RETURN: CRunSummary, the given events folded in order. Events of
-            an unknown kind are ignored; a 'None' ends the fold.
+            an unknown kind are ignored, and so is a known kind whose
+            required fields are missing -- the vocabulary's promise,
+            honoured at the consumer; anything that is not a dict ends
+            the fold ('None' does).
     """
     directory_list = []
     verdict_db     = {}
@@ -56,24 +59,37 @@ def fold(event_iterable):
     good_f         = None
     fail_n         = None
 
+    def fits(*name_tuple):
+        """RETURN: bool, True where 'item' carries every named field
+        -- the promise extended: a malformed known kind is ignored
+        like an unknown one, never a crash at the consumer."""
+        return all(name in item for name in name_tuple)
+
     for item in event_iterable:
-        if item is None: break
+        if not isinstance(item, dict): break
         kind = item.get("kind")
         if   kind == "tree-begun":
+            if not fits("directory_list"): continue
             directory_list = list(item["directory_list"])
         elif kind == "run-ended":
+            if not fits("directory", "node", "verdict"): continue
             key             = (item["directory"], item["node"])
             verdict_db[key] = item["verdict"]
             if "cause" in item: cause_db[key] = item["cause"]
         elif kind == "frame":
+            if not fits("directory", "role", "good"): continue
             frame_db[(item["directory"], item["role"])] = item["good"]
         elif kind == "fault":
+            if not fits("directory", "text"): continue
             fault_list.append((item["directory"], item["text"]))
         elif kind == "report":
+            if not fits("directory", "text"): continue
             report_list.append((item["directory"], item["text"]))
         elif kind == "dir-done":
+            if not fits("directory", "good"): continue
             dir_good_db[item["directory"]] = item["good"]
         elif kind == "tree-done":
+            if not fits("good", "fail_n"): continue
             good_f = item["good"]
             fail_n = item["fail_n"]
 

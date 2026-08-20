@@ -6,7 +6,7 @@ diff --git a/procsitter/MANUAL.txt b/procsitter/MANUAL.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/MANUAL.txt
-@@ -0,0 +1,644 @@
+@@ -0,0 +1,653 @@
 +                              procsitter -- MANUAL
 +______________________________________________________________________________
 +
@@ -651,6 +651,15 @@ new file mode 100644
 +    is a pass -- but say so.
 +  - Security, isolation, reproducibility: outer boundary. Always.
 +______________________________________________________________________________
++
++
++ENVIRONMENT OVERLAY
++______________________________________________________________________________
++
++'Procsitter(config, work_dir, env=None)': 'env' is a dict merged OVER
++the parent's environment at spawn; None inherits unchanged. The
++framework speaks to the application here -- e.g. R-70's
++'HWUT_NO_TERMINAL', set where a pype owns the stream's terminal token.
 diff --git a/procsitter/TEST/ADM/cache.fly b/procsitter/TEST/ADM/cache.fly
 new file mode 100644
 --- /dev/null
@@ -663,20 +672,20 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ cancelled_run; OK; 1.814714; 0; ]
-+  [ clean_under_caps; OK; 0.653399; 0; ]
-+  [ command_guard; OK; 0.460237; 0; ]
-+  [ cpu_time; OK; 2.803081; 0; ]
-+  [ disk_space_low; OK; 0.514509; 0; ]
-+  [ disk_usage; OK; 1.515032; 0; ]
-+  [ file_size; OK; 0.522266; 0; ]
-+  [ memory; OK; 0.996839; 0; ]
-+  [ no_psutil; OK; 1.536461; 0; ]
-+  [ output_gap; OK; 7.281366; 0; ]
-+  [ pids; OK; 1.435628; 0; ]
-+  [ self_exit_codes; OK; 1.976240; 0; ]
-+  [ stderr_tail_cap; OK; 0.527825; 0; ]
-+  [ wall_clock; OK; 1.585736; 0; ]
++  [ cancelled_run; OK; 1.764172; 0; ]
++  [ clean_under_caps; OK; 0.612636; 0; ]
++  [ command_guard; OK; 0.416498; 0; ]
++  [ cpu_time; OK; 2.592614; 0; ]
++  [ disk_space_low; OK; 0.487640; 0; ]
++  [ disk_usage; OK; 1.466631; 0; ]
++  [ file_size; OK; 0.492665; 0; ]
++  [ memory; OK; 0.949885; 0; ]
++  [ no_psutil; OK; 1.547885; 0; ]
++  [ output_gap; OK; 7.197962; 0; ]
++  [ pids; OK; 1.490393; 0; ]
++  [ self_exit_codes; OK; 1.899190; 0; ]
++  [ stderr_tail_cap; OK; 0.516849; 0; ]
++  [ wall_clock; OK; 1.438422; 0; ]
 +]
 +}
 +{
@@ -687,19 +696,19 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ SUCCESS.*; ]
 +result_list: [
-+  [ chain_stdin; OK; 0.536847; 0; ]
-+  [ chain_stop_early; OK; 0.666708; 0; ]
-+  [ control_signals; OK; 0.469422; 0; ]
-+  [ pype_interactor; OK; 0.531854; 0; ]
-+  [ tee_copy; OK; 0.339379; 0; ]
-+  [ tee_degenerate; OK; 0.356129; 0; ]
++  [ chain_stdin; OK; 0.540193; 0; ]
++  [ chain_stop_early; OK; 0.616823; 0; ]
++  [ control_signals; OK; 0.448630; 0; ]
++  [ pype_interactor; OK; 0.352470; 0; ]
++  [ tee_copy; OK; 0.478297; 0; ]
++  [ tee_degenerate; OK; 0.326806; 0; ]
 +]
 +}
 diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: tail:
 +    | * BANANA
 +    | * APPLE
@@ -707,22 +716,24 @@ new file mode 100644
 +  OK  : both stages completed -- one record each
 +  OK  : recorded input traversed the whole chain
 +SUCCESS: the first stage drinks from a link like any other.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stop_early.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stop_early.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stop_early.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: producer = FAIL_STOPPED, consumer = OK_COMPLETED
 +  OK  : consumer read its fill and exited cleanly -- own record
 +  OK  : producer STOPPED by rule 2 (downstream died first)
 +  OK  : producer stopped PROMPTLY -- nowhere near its 20 s wall cap
 +  OK  : the consumer produced nothing; the tail saw a clean EOF
 +SUCCESS: a chain bounds itself: early death upstream-stops the rest.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--control_signals.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--control_signals.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--control_signals.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +INSPECT: subject transcript:
 +    | ready
 +    | pong
@@ -732,11 +743,12 @@ new file mode 100644
 +  OK  : controller: own attribution record, clean, natural end
 +  OK  : the control dialogue ran to completion, in order
 +SUCCESS: control signals via stdout/stdin -- two supervised calls, one loop.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--pype_interactor.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--pype_interactor.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--pype_interactor.txt
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,13 @@
 +INSPECT: transcript:
 +    | ask: capital-of-france
 +    | got paris
@@ -749,41 +761,45 @@ new file mode 100644
 +  OK  : second answer injected by pype
 +  OK  : the dialogue reached its end
 +SUCCESS: a pype script drives the dialogue -- same wiring, supervised on both ends.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_copy.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_copy.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_copy.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: consumer = b'alpha\nbeta\ngamma\n'
 +INSPECT: listener = b'alpha\nbeta\ngamma\n'
 +  OK  : supervised call completed
 +  OK  : original consumer: complete
 +  OK  : added listener: complete
 +SUCCESS: the tee copies; nobody is robbed.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_degenerate.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_degenerate.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_interact.py--tee_degenerate.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: one-consumer saw 'a\nb\nc\n'; zero -> OK_COMPLETED, one -> OK_COMPLETED
 +  OK  : tee(one) delivers the COMPLETE production to the single consumer
 +  OK  : the one-consumer run completed cleanly
 +  OK  : tee() -- the empty sum -- discards, yet the run completes
 +SUCCESS: the tee algebra holds at its borders: identity and empty sum.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--cancelled_run.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--cancelled_run.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--cancelled_run.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: survivors after cancel = 0
 +  OK  : cancellation is honoured (CancelledError re-raised)
 +  OK  : no child survives the interrupted run -- group reaped
 +SUCCESS: an interrupted run leaks nothing; logout-by-leak prevented.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--clean_under_caps.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--clean_under_caps.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--clean_under_caps.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: containment = OK_COMPLETED, exit = 0
 +  OK  : clean completion -- OK_COMPLETED, no cap fired
 +  OK  : exit code 0
@@ -792,71 +808,78 @@ new file mode 100644
 +  OK  : peak memory stayed under the cap -- no false memory kill
 +  OK  : peak disk stayed under the cap -- no false disk kill
 +SUCCESS: a real workload under every cap completes untouched.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--command_guard.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--command_guard.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--command_guard.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +INSPECT: bare-string raised = True, missing program = FAIL_LAUNCH
 +  OK  : a bare string command is rejected loudly (AssertionError)
 +  OK  : a missing program is a RESULT: FAIL_LAUNCH, not a crash
 +SUCCESS: argv-list contract enforced; a missing program attributed.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--cpu_time.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--cpu_time.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--cpu_time.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: containment = FAIL_CPU_TIME_EXCEEDED
 +  OK  : containment is CPU_TIME_EXCEEDED
 +  OK  : measured cpu time reached the cap
 +  OK  : exit_code is None (the procsitter ended it, not the test)
 +SUCCESS: spin loop contained by cpu-time cap, attributed.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_space_low.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_space_low.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_space_low.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: containment = FAIL_DISK_SPACE_LOW
 +  OK  : containment is FAIL_DISK_SPACE_LOW
 +  OK  : floor fired on an early disk poll, well before 30 s
 +  OK  : exit_code is None (the procsitter ended it, not the test)
 +SUCCESS: free-space floor keeps the operating system operable.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_usage.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_usage.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--disk_usage.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: containment = FAIL_DISK_USAGE_EXCEEDED
 +  OK  : containment is FAIL_DISK_USAGE_EXCEEDED
 +  OK  : recorded peak exceeds the 20 MB cap
 +  OK  : kill came before the flood grew unbounded (< 512 MB)
 +  OK  : containment well before the 30 s natural end
 +SUCCESS: many-files flood contained by the disk-usage cap.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--file_size.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--file_size.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--file_size.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +  OK  : flood contained (SIGXFSZ death or EFBIG self-abort)
 +  OK  : flood file stopped at the 1 MB cap
 +  OK  : containment came well before the flood's natural end
 +SUCCESS: disk flooding contained by file-size cap.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--memory.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--memory.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--memory.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: containment = FAIL_MEMORY_EXCEEDED
 +  OK  : containment is MEMORY_EXCEEDED
 +  OK  : recorded peak exceeds the 96 MB cap
 +  OK  : kill came before the hoard grew unbounded (< 1 GB)
 +  OK  : exit_code is None (the procsitter ended it, not the test)
 +SUCCESS: memory growth contained by RSS watchdog, attributed.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--no_psutil.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--no_psutil.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--no_psutil.txt
-@@ -0,0 +1,7 @@
+@@ -0,0 +1,8 @@
 +INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
 +INSPECT: unenforced  = ['max_memory_mb', 'max_pids']
 +  OK  : wall clock still enforced without psutil
@@ -864,11 +887,12 @@ new file mode 100644
 +  OK  : pid cap reported as unenforced
 +  OK  : no fabricated memory measurement
 +SUCCESS: degradation without psutil is loud, never silent.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--output_gap.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--output_gap.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--output_gap.txt
-@@ -0,0 +1,8 @@
+@@ -0,0 +1,9 @@
 +INSPECT: silent = FAIL_STALLED, chatty = OK_COMPLETED, buffered = FAIL_STALLED, cap off = OK_COMPLETED
 +  OK  : the silent call is STALLED, not WALL_CLOCK_EXCEEDED
 +  OK  : ended near the gap, nowhere near its 30 s wall cap
@@ -877,46 +901,51 @@ new file mode 100644
 +  OK  : a talker the wire cannot hear is silence, and is capped
 +  OK  : with the cap off, silence is no fault
 +SUCCESS: silence is what the wire hears; an absent cap leaves it alone.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--pids.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--pids.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--pids.txt
-@@ -0,0 +1,4 @@
+@@ -0,0 +1,5 @@
 +  OK  : storm contained (PIDS_EXCEEDED, watchdog group count)
 +  OK  : containment came well before the storm's natural end
 +  OK  : no straggling storm children survive the run
 +SUCCESS: fork storm contained, all children reaped.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--self_exit_codes.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--self_exit_codes.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--self_exit_codes.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: exit0 = OK_COMPLETED/0, exit3 = FAIL_COMPLETED/3, signal = FAIL_COMPLETED/-6
 +  OK  : exit 0 -> OK_COMPLETED, the sole success
 +  OK  : nonzero self-exit -> FAIL_COMPLETED, positive code preserved
 +  OK  : signal death -> FAIL_COMPLETED, negative signal number
 +SUCCESS: self-termination classified by exit status alone.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--stderr_tail_cap.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--stderr_tail_cap.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--stderr_tail_cap.txt
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +INSPECT: kept 100 lines [err 50 .. err 149]; long line len = 4096
 +  OK  : exactly the LAST 100 lines kept (150 emitted)
 +  OK  : the kept window is the TAIL, not the head
 +  OK  : a newline-less 5000-char line trimmed to its 4096-byte tail
 +SUCCESS: the stderr tail is bounded, by line count and by length.
++<hwut-end>
 diff --git a/procsitter/TEST/GOOD/test-procsitter_limits.py--wall_clock.txt b/procsitter/TEST/GOOD/test-procsitter_limits.py--wall_clock.txt
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/TEST/GOOD/test-procsitter_limits.py--wall_clock.txt
-@@ -0,0 +1,6 @@
+@@ -0,0 +1,7 @@
 +INSPECT: containment = FAIL_WALL_CLOCK_EXCEEDED
 +  OK  : containment is WALL_CLOCK_EXCEEDED
 +  OK  : wall clock between cap and cap + kill overhead
 +  OK  : exit_code is None (the procsitter ended it, not the test)
 +  OK  : no caps unenforced on this platform
 +SUCCESS: hang contained by wall clock, attributed.
++<hwut-end>
 diff --git a/procsitter/TEST/config.py b/procsitter/TEST/config.py
 new file mode 100644
 --- /dev/null
@@ -1995,6 +2024,86 @@ new file mode 100644
 +        },
 +        happy      = "SUCCESS.*",
 +    ).run()
+diff --git a/procsitter/configuration.py b/procsitter/configuration.py
+new file mode 100644
+--- /dev/null
++++ b/procsitter/configuration.py
+@@ -0,0 +1,75 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: THE PROCSITTER'S CONFIGURATION -- the per-call contract.
++
++Every member is a CAP the procsitter ENFORCES, or the environment
++overlay it hands the call. A call's ENVIRONMENTAL needs -- network
++reach, bound ports, writable paths beyond the work dir -- are NOT
++here: ensuring them is the ORCHESTRATOR's job (it owns the
++environment), ABOVE this level. The procsitter neither records nor
++enforces them.
++______________________________________________________________________________
++"""
++from dataclasses import dataclass, field
++
++
++@dataclass
++class ProcsitterConfig:
++    """THE PER-CALL CONTRACT: every field is a CAP the procsitter
++    ENFORCES.
++
++    max_wall_clock_sec   the call's total lifetime, from launch to end.
++                         Bounds a call that is WORKING.
++
++    max_cpu_time_sec     CPU seconds of the whole process group
++                         (RLIMIT_CPU). A call that spins is caught here
++                         even where the wall clock has room.
++
++    max_memory_mb        resident set size of the whole process group,
++                         watched. Exceeding it ends the call.
++
++    max_pids             processes the call may hold at once
++                         (RLIMIT_NPROC): the fork-bomb cap.
++
++    max_file_size_mb     PER FILE (RLIMIT_FSIZE) -- one file the call
++                         writes may not grow past this.
++
++    max_disk_mb          TOTAL allocation under the work dir, walked by
++                         the watchdog over st_blocks: the many-files
++                         loop cap, which a per-file limit cannot catch.
++
++    max_output_gap_sec   SILENCE cap: no output on either production
++                         port for this long ends the call. 'None' --
++                         the default -- switches it off. Measured from
++                         launch, reset by every chunk. Bounds a call
++                         that is WAITING, where the wall clock bounds
++                         one that is working.
++
++                         SILENCE IS WHAT THE WIRE HEARS, not what the
++                         application intends: a BLOCK-BUFFERED call
++                         delivers nothing until it ends or its buffer
++                         fills, and to this cap it is silent however
++                         busy it is. An application that means to be
++                         heard flushes.
++
++    min_free_disk_mb     free-space FLOOR of the work dir's filesystem.
++                         Below it the call is terminated so the OS
++                         stays operable, whoever caused the shortage.
++
++    env                  ENVIRONMENT OVERLAY: a dict merged OVER the
++                         parent's environment at spawn; 'None' inherits
++                         it unchanged. The framework speaks to the
++                         application here -- e.g. R-70's
++                         'HWUT_NO_TERMINAL', set where a pype owns the
++                         stream's terminal token.
++    """
++    max_wall_clock_sec: float = 300.0
++    max_cpu_time_sec:   int   = 300
++    max_memory_mb:      int   = 512
++    max_pids:           int   = 32
++    max_file_size_mb:   int   = 10
++    max_disk_mb:        int   = 100
++    max_output_gap_sec: float | None = None
++    min_free_disk_mb:   int   = 128
++    env:                dict  | None = None
 diff --git a/procsitter/construction.py b/procsitter/construction.py
 new file mode 100644
 --- /dev/null
@@ -2216,7 +2325,7 @@ diff --git a/procsitter/procsitter.py b/procsitter/procsitter.py
 new file mode 100644
 --- /dev/null
 +++ b/procsitter/procsitter.py
-@@ -0,0 +1,827 @@
+@@ -0,0 +1,805 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -2292,6 +2401,11 @@ new file mode 100644
 +from   enum        import Enum, auto
 +from   pathlib     import Path
 +from   typing      import Awaitable, Callable, Optional, Sequence
++
++#  THE COMPONENT'S CONFIGURATION lives in 'configuration.py'; it is
++#  re-exported here, so 'from .procsitter import ProcsitterConfig'
++#  keeps standing wherever it is already written.
++from   .configuration import ProcsitterConfig        # noqa: F401
 +
 +try:                import resource
 +except ImportError: resource = None      # e.g. Windows
@@ -2384,36 +2498,6 @@ new file mode 100644
 +
 +
 +@dataclass
-+class ProcsitterConfig:
-+    """THE PER-CALL CONTRACT: every field is a CAP the procsitter
-+    ENFORCES. A call's ENVIRONMENTAL needs -- network reach, bound
-+    ports, writable paths beyond the work dir -- are NOT here: ensuring
-+    them is the ORCHESTRATOR's job (it owns the environment), ABOVE
-+    this level. The procsitter neither records nor enforces them.
-+    """
-+    max_wall_clock_sec: float = 300.0
-+    max_cpu_time_sec:   int   = 300
-+    max_memory_mb:      int   = 512     # watchdog RSS, whole process group
-+    max_pids:           int   = 32
-+    max_file_size_mb:   int   = 10      # PER FILE (RLIMIT_FSIZE)
-+    max_disk_mb:        int   = 100     # TOTAL allocation under work_dir
-+                                        # (watchdog walk, st_blocks): the
-+                                        # many-files loop cap
-+    max_output_gap_sec: float | None = None   # SILENCE cap: no output on
-+                                        # either production port for this
-+                                        # long ends the call. None: off.
-+                                        # Measured from launch, reset by
-+                                        # every chunk. A wall clock bounds
-+                                        # a run that is WORKING; this one
-+                                        # bounds a run that is WAITING.
-+    min_free_disk_mb:   int   = 128     # free-space FLOOR of work_dir's
-+                                        # filesystem: below it the call is
-+                                        # terminated so the OS stays
-+                                        # operable, whoever caused the
-+                                        # shortage
-+
-+
-+@dataclass
 +class ProcsitterResult:
 +    """THE ATTRIBUTION RECORD of one procsittered execution."""
 +    containment:    E_Containment        # THE VERDICT: OK_ vs FAIL_
@@ -2478,6 +2562,7 @@ new file mode 100644
 +        self.config   = config
 +        self.work_dir = Path(work_dir).resolve()
 +
++
 +    # ------------------------------------------------------------------ API
 +
 +    async def run(self,
@@ -2521,6 +2606,8 @@ new file mode 100644
 +                stdout = asyncio.subprocess.PIPE,
 +                stderr = asyncio.subprocess.PIPE,
 +                cwd    = self.work_dir,
++                env    = (None if self.config.env is None
++                          else {**os.environ, **self.config.env}),
 +                **self._spawn_kwargs(preexec))
 +        except (FileNotFoundError, PermissionError, NotADirectoryError):
 +            return ProcsitterResult(E_Containment.FAIL_LAUNCH, None,

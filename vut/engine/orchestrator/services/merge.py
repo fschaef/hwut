@@ -47,6 +47,7 @@ import argparse
 if __package__ in (None, ""):
     import _config
     __package__ = _config.PACKAGE
+from ._exit import E_ExitCode  # delayed past _config adoption
 
 from   vut.engine.operations.interaction.feed import (merge_session, driver_for,
                                   E_DisplayTarget, E_Intent,
@@ -89,7 +90,7 @@ def main(argv=None):
         return _main(argv)
     except BrokenPipeError:
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-        return 141
+        return E_ExitCode.SIGPIPE
 
 
 def _main(argv):
@@ -154,15 +155,15 @@ def _main(argv):
         max_round_n     = arguments.max_rounds))
 
     if arguments.display_only:
-        return 0
+        return E_ExitCode.OK
     if intent is not E_Intent.COMMIT or text is None:
-        return 1
+        return E_ExitCode.FAULT
     if arguments.out is None:
         sys.stdout.write(text)
     else:
         with io.open(arguments.out, "w", encoding="utf-8") as file_handle:
             file_handle.write(text)
-    return 0
+    return E_ExitCode.OK
 
 
 if __name__ == "__main__":

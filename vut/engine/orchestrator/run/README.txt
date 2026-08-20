@@ -127,3 +127,32 @@ NamingConfig. The mapping, stated parameter -> owner:
 An unknown language and a marker pair that is not a pair are refused
 by name. 'TEST/test-adapter.py' sweeps every declared parameter and
 names any that reaches nothing.
+
+==============================================================================
+THIS COMPONENT IS OPERATIONAL ONLY
+==============================================================================
+
+A LAW, not an observation: nothing here renders. No 'print', no
+'.write()', no format string aimed at a human, no '__pretty__', and no
+import of 'display'. This component RUNS things and EMITS events; what
+those events look like is decided elsewhere.
+
+The direction of the dependency, tree-wide:
+
+    orchestrator/run  --emits-->  the queue  --read by-->  display
+                                                              |
+    a service face composes both -----------------------------+
+
+'display' imports this component's 'vocabulary', 'receiver' and
+'summary'. Nothing here imports 'display' back. A service face
+importing both is the intended -- and only -- exception.
+
+The one accumulation that legitimately lives here is 'summary.fold()',
+because 'CRunSummary' answers an OPERATIONAL question: did anything
+fail, i.e. what is the exit status. It carries no text and names no
+English. The presentation model is display's, and is a different shape
+for a different question (display/DISCUSSIONS/todo-1).
+
+The law is cheap to keep and easy to lose: one 'print()' left behind
+after debugging breaks it silently. 'TEST/' does not police this;
+review does.

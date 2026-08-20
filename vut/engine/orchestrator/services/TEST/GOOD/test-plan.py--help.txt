@@ -25,7 +25,7 @@ $ hwut.plan --help
 
         Keywords of different kinds are AND'ed. '--fail' beside '--pass'
         is refused. A wish matching nothing yields an empty plan and a
-        report, not a refusal.
+        report; the exit status is 3.
 
     A <point> is a SPAN back from now -- a number and one of 's', 'm',
     'h', 'd', as in '90s', '2h', '7d' -- or an ANCHOR, reckoned in UTC:
@@ -52,5 +52,7 @@ $ hwut.plan --help
         1    a fault was met
         2    the command line cannot be read, or the wish names what the
              directory does not offer
+        3    the command line reads, and asks for nothing: the wish
+             selects no test case
     [status 0]
 <hwut-end>

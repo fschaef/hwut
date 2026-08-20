@@ -1,0 +1,73 @@
+==============================================================================
+orchestrator/services -- RATIONALE
+==============================================================================
+
+Settled decisions, read-only. Append-only; no entry is removed once
+written.
+
+----------------------------------------------------------------------------
+E-1  THE EXIT STATUS LAW
+----------------------------------------------------------------------------
+PROBLEM   Five faces, five sets of magic integers, no shared source of
+          truth. A caller comparing '$?' against a literal had no
+          guarantee two faces agreed on what '1' meant.
+
+DECISION  One 'IntEnum', 'E_ExitCode', in '_exit.py'; every face
+          imports and returns its members:
+
+              OK      = 0   nothing refused, nothing failed
+              FAULT   = 1   a fault or failure; still printed what stands
+              REFUSED = 2   the command line cannot be READ
+              EMPTY   = 3   reads, asks for NOTHING
+              SIGPIPE = 141 reader hung up; face went quiet
+
+          'IntEnum': 'sys.exit()' takes a member unchanged, so a
+          standing suite's 'status == 2' check keeps holding without
+          change while the faces migrate.
+
+          For the three faces (compare, merge, report) that can be run
+          by path ('python3 .../report.py') in addition to '-m', the
+          'from ._exit import E_ExitCode' line is placed AFTER the
+          '_config' adoption guard so the relative import resolves in
+          both invocation modes.
+
+COST      Every face needed surgical edits; GOODs that print status
+          numbers changed for plan (E-2 below) and for the new run face.
+
+GRAVEYARD Bare integer returns -- every 'return 0/1/2' replaced.
+
+----------------------------------------------------------------------------
+E-2  PLAN EMPTY-SELECTION EXIT STATUS RETROACTIVE CHANGE
+----------------------------------------------------------------------------
+PROBLEM   'hwut.plan' with a wish that selects nothing previously
+          returned 0 -- indistinguishable from a plan that found tests.
+          An empty selection is a design signal, not a success.
+
+DECISION  'hwut.plan' with an empty plan now returns 3 (EMPTY), not 0.
+          The HELP text's status blurb extended with the EMPTY line.
+          The wish GOOD ('test-plan.py--wish') re-blessed: one line
+          changed from '[status 0]' to '[status 3]'. Named separately
+          here so the delivery header can state it explicitly.
+
+COST      Callers that checked 'hwut.plan ... && ...' for an empty
+          plan must adjust; the new status is more informative.
+
+----------------------------------------------------------------------------
+E-3  FOLD HARDENING (FORCED FIX, NOT A DESIGN CHOICE)
+----------------------------------------------------------------------------
+PROBLEM   'orchestrator/run/summary.py' fold() crashed with KeyError
+          when a KNOWN kind's required field was absent -- the
+          vocabulary's stability promise requires that a malformed
+          known kind be IGNORED, not crashed on, exactly as an unknown
+          kind is.
+
+DECISION  fold() now guards every branch with a 'fits(*fields)' check;
+          a known kind missing a required field is silently skipped.
+          The docstring updated to state the extended promise. The four
+          receiver GOODs are byte-exact unchanged -- fold() only changed
+          its error behaviour, not its happy path.
+
+COST      Marginally more code in fold(). The fix was forced by the
+          'test-plain.py unknown' choice, which crafted a 'run-ended'
+          lacking 'verdict' -- a legitimate test of the stability
+          promise at the consumer.

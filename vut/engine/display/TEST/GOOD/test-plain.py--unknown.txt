@@ -1,0 +1,20 @@
+
+--- unknown kind ignored; unknown verdict reads not-ok; a misfit is a fault ---
+00:00:00 | 000 | [DIR  ] SUIT = suite/TEST
+00:00:01 | 001 | [START] SUIT:test-q.sh
+00:00:02 | 000 | [END  ] SUIT:test-q.sh .................. quarantined  [FAIL]
+00:00:02 | 000 | [FAULT] SUIT: event of kind 'run-ended' does not fit the vocabulary
+
+==============================================================================
+DIRECTORIES                                             0 ok, 1 fail, 00:00:02
+------------------------------------------------------------------------------
+SUIT  suite/TEST ........................................ [FAIL]   0 of   1 ok
+
+==============================================================================
+FAILURES
+------------------------------------------------------------------------------
+SUIT  suite/TEST
+    test-q.sh                    quarantined
+==============================================================================
+[fold: good_f=False fail_n=1 verdict_n=1 fault_n=0]
+<hwut-end>

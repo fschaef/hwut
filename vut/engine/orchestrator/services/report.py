@@ -47,11 +47,13 @@ import sys
 import json
 import argparse
 
+
 #  THE IMPORT CALL -- see merge.py: __config.py (this directory) does the
 #  walk-up; the face adopts its package (PEP 366). Dead under '-m'.
 if __package__ in (None, ""):
     import _config
     __package__ = _config.PACKAGE
+from ._exit import E_ExitCode  # delayed past _config adoption
 
 
 def _key_stem(application, choice):
@@ -246,7 +248,7 @@ def main(argv=None):
         return _main(argv)
     except BrokenPipeError:
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-        return 141
+        return E_ExitCode.SIGPIPE
 
 
 def _main(argv):
@@ -278,7 +280,7 @@ def _main(argv):
     sys.stdout.write(build_pack(directory, application,
                                 arguments.choice, arguments.raw,
                                 arguments.coverage))
-    return 0
+    return E_ExitCode.OK
 
 
 if __name__ == "__main__":

@@ -52,6 +52,7 @@ import argparse
 if __package__ in (None, ""):
     import _config
     __package__ = _config.PACKAGE
+from ._exit import E_ExitCode  # delayed past _config adoption
 
 from   vut.engine.operations.interaction.feed import feed_down
 from   vut.engine.operations.interaction.tui  import TuiDisplay
@@ -110,7 +111,7 @@ def main(argv=None):
         return _main(argv)
     except BrokenPipeError:
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-        return 141
+        return E_ExitCode.SIGPIPE
 
 
 def _main(argv):
@@ -156,12 +157,12 @@ def _main(argv):
         asyncio.run(reading_view(read_source(arguments.subject), adapter,
                                  subject_name=arguments.subject,
                                  compare_options=setup))
-        return 0
+        return E_ExitCode.OK
 
     bad_pair_n = asyncio.run(compare_view(
         read_source(arguments.subject), read_source(arguments.nominal),
         adapter, subject_name=arguments.subject, compare_options=setup))
-    return 0 if bad_pair_n == 0 else 1
+    return E_ExitCode.OK if bad_pair_n == 0 else E_ExitCode.FAULT
 
 
 if __name__ == "__main__":

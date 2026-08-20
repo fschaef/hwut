@@ -6,7 +6,7 @@ diff --git a/hwut_pype/MANUAL.txt b/hwut_pype/MANUAL.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/MANUAL.txt
-@@ -0,0 +1,566 @@
+@@ -0,0 +1,604 @@
 +                                pype -- MANUAL
 +______________________________________________________________________________
 +
@@ -88,6 +88,44 @@ new file mode 100644
 +    DONE/on: <else> => flush;
 +
 +Whatever order the providers answer in, the output is byte-identical.
++
++
++1b  THE TERMINAL TOKEN '<hwut-end>'  (R-70) -- READ THIS
++______________________________________________________________________________
++
++Under HWUT, a subject stream states its own completeness: its last
++non-empty line is the terminal token
++
++    <hwut-end>
++
++Where a pype stands between the test application and the framework,
++THE PYPE SCRIPT OWNS THE TOKEN. Two laws, both binding:
++
++    1.  A TEST APPLICATION THAT FEEDS A PYPE MUST NOT PRODUCE
++        '<hwut-end>'. It cannot place the token safely -- an
++        application subject to buffering, threads or races would lie
++        about its own completeness -- and it does not have to: the
++        pype's '<eof>' firing is the one honest proof that the pipe
++        ran dry. (The framework enforces this side for the reference
++        runner through the environment word 'HWUT_NO_TERMINAL'.)
++
++    2.  EVERY hwut.pype SCRIPT EMITS THE TOKEN FROM ITS '<eof>'
++        HANDLER -- of whatever mode is active at end of input:
++
++            SCAN/on: <eof> => {
++                print("<hwut-end>")
++            }
++
++A pype-d stream that ends WITHOUT the token is therefore THE PYPE
++SCRIPT'S FAULT, and the framework's diagnosis names the script --
++never the test application.
++
++Participation is decided by the NOMINAL: where the recorded GOOD ends
++in the token, the subject must ('terminated-without-hwut-end' else);
++where it does not, no check stands. 'sys.exit(n)' from a block skips
++pending '<eof>' handlers (section 6) -- a script that gates and exits
++deliberately forgoes the token, and its nominal, recorded through the
++same road, will agree.
 +
 +
 +2  MODEL
@@ -758,36 +796,37 @@ diff --git a/hwut_pype/TEST/ADM/cache.fly b/hwut_pype/TEST/ADM/cache.fly
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/ADM/cache.fly
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,25 @@
 +{
 +title: pype line-matching language;
 +file_name: test-pype.py;
-+hwut_info_time: 1787033365L;
++hwut_info_time: 1787114684L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ anchors_repeat; OK; 0.468570; 0; ]
-+  [ boundaries_stack; OK; 0.645754; 0; ]
-+  [ compat; OK; 0.566638; 0; ]
-+  [ default_mode; OK; 0.456715; 0; ]
-+  [ else_flush; OK; 0.469987; 0; ]
-+  [ errors; OK; 0.444242; 0; ]
-+  [ examples; OK; 0.652599; 0; ]
-+  [ generate; OK; 1.146782; 0; ]
-+  [ if_cause; OK; 0.491479; 0; ]
-+  [ imports; OK; 0.541372; 0; ]
-+  [ inheritance; OK; 0.504956; 0; ]
-+  [ modes; OK; 0.300660; 0; ]
-+  [ multi_inheritance; OK; 0.341870; 0; ]
-+  [ namespace; OK; 0.306813; 0; ]
-+  [ patterns; OK; 0.344385; 0; ]
-+  [ pipe; OK; 0.454586; 0; ]
++  [ anchors_repeat; OK; 0.436882; 0; ]
++  [ boundaries_stack; OK; 0.587830; 0; ]
++  [ compat; OK; 0.483646; 0; ]
++  [ default_mode; OK; 0.441696; 0; ]
++  [ else_flush; OK; 0.450886; 0; ]
++  [ errors; OK; 0.294612; 0; ]
++  [ examples; OK; 0.633581; 0; ]
++  [ generate; OK; 1.113997; 0; ]
++  [ if_cause; OK; 0.420778; 0; ]
++  [ imports; OK; 0.645348; 0; ]
++  [ inheritance; OK; 0.463928; 0; ]
++  [ modes; OK; 0.294378; 0; ]
++  [ multi_inheritance; OK; 0.331421; 0; ]
++  [ namespace; OK; 0.295589; 0; ]
++  [ patterns; OK; 0.474135; 0; ]
++  [ pipe; OK; 0.558609; 0; ]
++  [ terminal; OK; 0.448445; 0; ]
 +]
 +}
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--anchors_repeat.txt b/hwut_pype/TEST/GOOD/test-pype.py--anchors_repeat.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--anchors_repeat.txt
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,91 @@
 +
 +--- bol distinguishes line-start from mid-line ---
 +SCRIPT: {
@@ -878,11 +917,12 @@ new file mode 100644
 +--- index expressions are offsets only: '+'/'-' integers ---
 +PypeError (expected): <test>:1: cannot read pattern at '<x[i * 2] = int> )'
 +PypeError (expected): <test>:1: index 'j' does not name the repeat counter 'i'
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--boundaries_stack.txt b/hwut_pype/TEST/GOOD/test-pype.py--boundaries_stack.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--boundaries_stack.txt
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,217 @@
 +
 +--- <bof> and <eof> fire once at the file boundaries ---
 +SCRIPT: {
@@ -1099,19 +1139,21 @@ new file mode 100644
 +STDOUT: dry run ok: 1 mode(s), 2 handler(s)
 +EXIT: 1
 +STDERR: pype: tmp-dry-bad.pype: mode '<default>' has no <else> handler in its effective list; every activatable mode must state what happens to unmatched lines
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--compat.txt b/hwut_pype/TEST/GOOD/test-pype.py--compat.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--compat.txt
-@@ -0,0 +1,3 @@
+@@ -0,0 +1,4 @@
 +
 +--- forbidden constructs in hwut_pype.py ---
 +clean: no f-strings, no annotations, no walrus, no keyword-only arguments
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--default_mode.txt b/hwut_pype/TEST/GOOD/test-pype.py--default_mode.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--default_mode.txt
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,51 @@
 +
 +--- default mode starts; leaving it is one-way ---
 +SCRIPT: {
@@ -1162,11 +1204,12 @@ new file mode 100644
 +
 +--- no way back: mode('<default>') rejected ---
 +PypeError (expected): pype.goto('<default>'): the default mode cannot be entered
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--else_flush.txt b/hwut_pype/TEST/GOOD/test-pype.py--else_flush.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--else_flush.txt
-@@ -0,0 +1,137 @@
+@@ -0,0 +1,138 @@
 +
 +--- else fires only on unmatched lines ---
 +SCRIPT: {
@@ -1304,11 +1347,12 @@ new file mode 100644
 +--- effect-command words are lawful mode names; unknown ones err ---
 +parse succeeded: mode 'FLUSH' defined and targeted via goto
 +PypeError (expected): pype.goto('FLUSH'): no such mode
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--errors.txt b/hwut_pype/TEST/GOOD/test-pype.py--errors.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--errors.txt
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,13 @@
 +
 +--- missing arrow ---
 +PypeError (expected): <err>:1: missing '=> EFFECT'
@@ -1321,11 +1365,12 @@ new file mode 100644
 +
 +--- switch to unknown mode ---
 +PypeError (expected): pype.goto('GHOST'): no such mode
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--examples.txt b/hwut_pype/TEST/GOOD/test-pype.py--examples.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--examples.txt
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,123 @@
 +
 +--- 01-test-report ---
 +INPUT: {
@@ -1448,11 +1493,12 @@ new file mode 100644
 +        storage-service
 +    all checks passed
 +}
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--generate.txt b/hwut_pype/TEST/GOOD/test-pype.py--generate.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--generate.txt
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,82 @@
 +
 +--- 01-test-report ---
 +GENERATED (exit 0): {
@@ -1534,11 +1580,12 @@ new file mode 100644
 +go
 +deep sample.log
 +hidden
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--if_cause.txt b/hwut_pype/TEST/GOOD/test-pype.py--if_cause.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--if_cause.txt
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,82 @@
 +
 +--- if-cause fires on condition; dispatch order holds ---
 +SCRIPT: {
@@ -1620,11 +1667,12 @@ new file mode 100644
 +
 +--- broken condition rejected at parse ---
 +PypeError (expected): <test>:1: cannot compile 'if' condition: invalid syntax (<test>:1, line 1)
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--imports.txt b/hwut_pype/TEST/GOOD/test-pype.py--imports.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--imports.txt
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,24 @@
 +
 +--- import resolved via --pype-dir; inherited library mode ---
 +EXIT: 0
@@ -1648,11 +1696,12 @@ new file mode 100644
 +--- sys.exit(n) inside a block gates the exit status ---
 +with a failure: exit 3, stdout 'gating: 1 failure(s)\n'
 +clean: exit 0, stdout ''
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--inheritance.txt b/hwut_pype/TEST/GOOD/test-pype.py--inheritance.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--inheritance.txt
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,95 @@
 +
 +--- inherited match and <entry>/<exit> handlers ---
 +SCRIPT: {
@@ -1747,11 +1796,12 @@ new file mode 100644
 +--- IGNORE reserved as mode name ---
 +PypeError (expected): <test>:1: cannot read EFFECT '{ }'
 +PypeError (expected): <test>:1: 'is:' names unknown mode 'IGNORE'
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--modes.txt b/hwut_pype/TEST/GOOD/test-pype.py--modes.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--modes.txt
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,62 @@
 +
 +--- arrow switch with <entry>/<exit> ---
 +SCRIPT: {
@@ -1813,11 +1863,12 @@ new file mode 100644
 +block two
 +now in B
 +}
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--multi_inheritance.txt b/hwut_pype/TEST/GOOD/test-pype.py--multi_inheritance.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--multi_inheritance.txt
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,104 @@
 +
 +--- two bases: handlers of both received ---
 +SCRIPT: {
@@ -1921,11 +1972,12 @@ new file mode 100644
 +
 +--- effect-command words in a base list: plain unknown-mode law ---
 +PypeError (expected): <test>:2: 'is:' names unknown mode 'IGNORE'
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--namespace.txt b/hwut_pype/TEST/GOOD/test-pype.py--namespace.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--namespace.txt
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,30 @@
 +
 +--- counter survives handlers and mode switches ---
 +SCRIPT: {
@@ -1955,11 +2007,12 @@ new file mode 100644
 +A tick, n = 2
 +B tick, n = 3
 +}
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--patterns.txt b/hwut_pype/TEST/GOOD/test-pype.py--patterns.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--patterns.txt
-@@ -0,0 +1,91 @@
+@@ -0,0 +1,92 @@
 +
 +--- constants, number, int, glob; named and unnamed ---
 +SCRIPT: {
@@ -2051,11 +2104,12 @@ new file mode 100644
 +OUTPUT: {
 +first
 +}
++<hwut-end>
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--pipe.txt b/hwut_pype/TEST/GOOD/test-pype.py--pipe.txt
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/GOOD/test-pype.py--pipe.txt
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,32 @@
 +
 +--- two input files read in order as one stream ---
 +EXIT: 0
@@ -2087,6 +2141,43 @@ new file mode 100644
 +    ok 2 b.txt
 +    done
 +}
++<hwut-end>
+diff --git a/hwut_pype/TEST/GOOD/test-pype.py--terminal.txt b/hwut_pype/TEST/GOOD/test-pype.py--terminal.txt
+new file mode 100644
+--- /dev/null
++++ b/hwut_pype/TEST/GOOD/test-pype.py--terminal.txt
+@@ -0,0 +1,31 @@
++
++--- the '<eof>' emission: the stream states its completeness ---
++SCRIPT: {
++    SCAN/on: <else> => flush;
++    SCAN/on: <eof> => {
++        print("<hwut-end>")
++    }
++}
++INPUT: {
++    alpha
++    beta
++}
++OUTPUT: {
++alpha
++beta
++<hwut-end>
++}
++
++--- no emission: the stream ends BARE -- the script's fault ---
++SCRIPT: {
++    SCAN/on: <else> => flush;
++}
++INPUT: {
++    alpha
++    beta
++}
++OUTPUT: {
++alpha
++beta
++}
++<hwut-end>
 diff --git a/hwut_pype/TEST/config.py b/hwut_pype/TEST/config.py
 new file mode 100644
 --- /dev/null
@@ -2136,7 +2227,7 @@ diff --git a/hwut_pype/TEST/test-pype.py b/hwut_pype/TEST/test-pype.py
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/test-pype.py
-@@ -0,0 +1,1518 @@
+@@ -0,0 +1,1546 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -3633,10 +3724,38 @@ new file mode 100644
 +        print("}")
 +
 +
++
++
++def run_terminal():
++    """RETURN: None. THE TERMINAL TOKEN (R-70, MANUAL 1b): a script
++    WITH the '<eof>' emission ends its stream in '<hwut-end>'; a
++    script WITHOUT ends bare -- and a bare end on a pype-d stream is
++    the SCRIPT's fault, by the law the MANUAL states. The feeding
++    application never carries the token."""
++    banner("the '<eof>' emission: the stream states its completeness")
++    run_script("""
++         SCAN/on: <else> => flush;
++         SCAN/on: <eof> => {
++             print("<hwut-end>")
++         }
++         """, """
++         alpha
++         beta
++         """)
++    banner("no emission: the stream ends BARE -- the script's fault")
++    run_script("""
++         SCAN/on: <else> => flush;
++         """, """
++         alpha
++         beta
++         """)
++
++
 +HwutRunner(
 +    argv       = sys.argv,
 +    title      = "pype line-matching language",
 +    choice_map = {
++        "terminal":       run_terminal,
 +        "patterns":  run_patterns,
 +        "modes":     run_modes,
 +        "namespace": run_namespace,

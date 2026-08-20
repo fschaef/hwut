@@ -1,0 +1,12 @@
+THE ENUM (services/_exit.py):
+    OK       = 0
+    FAULT    = 1
+    REFUSED  = 2
+    EMPTY    = 3
+    SIGPIPE  = 141
+
+FACE         OK  FAULT  REFUSED  EMPTY
+hwut.show     0      1        2      -
+hwut.plan     0      1        2      3
+hwut.run      0      1        2      3
+hwut.compare  0      1        2      -

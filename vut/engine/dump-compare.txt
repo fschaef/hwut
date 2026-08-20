@@ -2502,8 +2502,8 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ line-sequence; OK; 0.737692; 0; ]
-+  [ potpourri; OK; 0.746713; -639545010; ]
++  [ line-sequence; OK; 0.699472; 0; ]
++  [ potpourri; OK; 0.745127; -639545010; ]
 +]
 +}
 +{
@@ -2512,10 +2512,10 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ consistency; OK; 5.895270; 0; ]
-+  [ reflexive; OK; 3.753281; 0; ]
-+  [ metamorphic; OK; 5.477364; 0; ]
-+  [ constraints; OK; 3.789805; 0; ]
++  [ consistency; OK; 4.872688; 0; ]
++  [ reflexive; OK; 3.608214; 0; ]
++  [ metamorphic; OK; 5.136904; 0; ]
++  [ constraints; OK; 3.527101; 0; ]
 +]
 +}
 +{
@@ -2524,12 +2524,12 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ compare; OK; 0.639010; 0; ]
-+  [ compare-2; OK; 0.896339; 0; ]
-+  [ associate; OK; 0.661498; 0; ]
-+  [ associate-2; OK; 0.885763; 0; ]
-+  [ compare-3; OK; 0.586802; 0; ]
-+  [ associate-3; OK; 0.716407; 0; ]
++  [ compare; OK; 0.627145; 0; ]
++  [ compare-2; OK; 0.657032; 0; ]
++  [ associate; OK; 0.706807; 0; ]
++  [ associate-2; OK; 0.824123; 0; ]
++  [ compare-3; OK; 0.695512; 0; ]
++  [ associate-3; OK; 0.575608; 0; ]
 +]
 +}
 +{
@@ -2539,11 +2539,11 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ Consistency:         OK; ]
 +result_list: [
-+  [ analogy; OK; 0.610066; 0; ]
-+  [ leakage; OK; 0.681203; 0; ]
-+  [ numeric; OK; 0.805936; 0; ]
-+  [ potpourri; OK; 0.811821; 0; ]
-+  [ sudoku; OK; 0.826734; 0; ]
++  [ analogy; OK; 0.579749; -2028662773; ]
++  [ leakage; OK; 0.659302; -1788607993; ]
++  [ numeric; OK; 0.580363; -1464410146; ]
++  [ potpourri; OK; 0.635494; 1482541241; ]
++  [ sudoku; OK; 0.774368; -891971562; ]
 +]
 +}
 +{
@@ -2552,8 +2552,8 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ associate; OK; 1.009181; 0; ]
-+  [ equivalence; OK; 0.819068; 0; ]
++  [ associate; OK; 0.961238; -331883516; ]
++  [ equivalence; OK; 0.824000; 507848997; ]
 +]
 +}
 +{
@@ -2562,9 +2562,9 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ amnesia; OK; 0.655089; 0; ]
-+  [ pruning_analogy; OK; 0.499709; 0; ]
-+  [ pruning_trans; OK; 0.512857; 0; ]
++  [ amnesia; OK; 0.487747; -847525794; ]
++  [ pruning_analogy; OK; 0.484469; -949291077; ]
++  [ pruning_trans; OK; 0.496348; -1992139694; ]
 +]
 +}
 +{
@@ -2574,10 +2574,10 @@ new file mode 100644
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +happy_pattern_list: [ VERDICT: PASS; ]
 +result_list: [
-+  [ bool; OK; 0.741416; 0; ]
-+  [ csp; OK; 0.689265; 0; ]
-+  [ edit-merge; OK; 0.592811; 0; ]
-+  [ visible-nothing; OK; 0.569134; 0; ]
++  [ bool; OK; 0.536078; -1804006397; ]
++  [ csp; OK; 0.662291; -1535895084; ]
++  [ edit-merge; OK; 0.659799; 2032059049; ]
++  [ visible-nothing; OK; 0.659266; 1340974661; ]
 +]
 +}
 +{
@@ -2587,9 +2587,9 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ nominal-slow; OK; 0.680631; 0; ]
-+  [ subject-slow; OK; 0.653373; 0; ]
-+  [ jittery; OK; 0.647047; 0; ]
++  [ nominal-slow; OK; 0.618943; 0; ]
++  [ subject-slow; OK; 0.617040; 0; ]
++  [ jittery; OK; 0.614009; 0; ]
 +]
 +}
 +{
@@ -2599,9 +2599,9 @@ new file mode 100644
 +hwut_info_time: 1781434065L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ subject-slow; OK; 0.741083; 0; ]
-+  [ nominal-slow; OK; 0.757672; 0; ]
-+  [ jittery; OK; 0.724648; 1629107896; ]
++  [ subject-slow; OK; 0.545788; 0; ]
++  [ nominal-slow; OK; 0.686009; 0; ]
++  [ jittery; OK; 0.680679; 1629107896; ]
 +]
 +}
 +{
@@ -2611,11 +2611,11 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ constraint_db; OK; 0.278393; 0; ]
-+  [ declared; OK; 0.292785; 0; ]
-+  [ edges; OK; 0.419015; 0; ]
-+  [ namespace; OK; 0.428041; 0; ]
-+  [ slots; OK; 0.419655; 0; ]
++  [ constraint_db; OK; 0.259657; -1068323839; ]
++  [ declared; OK; 0.397763; 664567393; ]
++  [ edges; OK; 0.256818; 1633856923; ]
++  [ namespace; OK; 0.260818; -508312512; ]
++  [ slots; OK; 0.256423; 536951871; ]
 +]
 +}
 +{
@@ -2625,13 +2625,13 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ coverage; OK; 0.825665; 0; ]
-+  [ pair; OK; 0.814775; 0; ]
-+  [ dist; OK; 0.680943; 0; ]
-+  [ constraint; OK; 0.651728; 0; ]
-+  [ errors; OK; 0.655919; 0; ]
-+  [ generative; OK; 1.781275; 0; ]
-+  [ spatial; OK; 2.058412; 0; ]
++  [ coverage; OK; 0.764516; 0; ]
++  [ pair; OK; 0.617860; 0; ]
++  [ dist; OK; 0.620133; 0; ]
++  [ constraint; OK; 0.621393; 0; ]
++  [ errors; OK; 0.610928; 0; ]
++  [ generative; OK; 1.492882; 0; ]
++  [ spatial; OK; 1.791294; 0; ]
 +]
 +}
 +{
@@ -2641,9 +2641,9 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ subset; OK; 0.831270; 0; ]
-+  [ duplicates; OK; 0.811510; 0; ]
-+  [ combined; OK; 0.805871; 0; ]
++  [ subset; OK; 0.645000; 0; ]
++  [ duplicates; OK; 0.621053; 0; ]
++  [ combined; OK; 0.605429; 0; ]
 +]
 +}
 +{
@@ -2653,10 +2653,10 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ verbatim; OK; 0.685624; 0; ]
-+  [ ignore; OK; 0.689795; 0; ]
-+  [ params; OK; 0.781449; 0; ]
-+  [ errors; OK; 0.797772; 0; ]
++  [ verbatim; OK; 0.769053; 0; ]
++  [ ignore; OK; 0.622577; 0; ]
++  [ params; OK; 0.623404; 0; ]
++  [ errors; OK; 0.626398; 0; ]
 +]
 +}
 +{
@@ -2666,11 +2666,11 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ basic; OK; 0.769644; 0; ]
-+  [ deps; OK; 0.633426; 0; ]
-+  [ strings; OK; 0.606511; 0; ]
-+  [ lawyer; OK; 0.581367; 0; ]
-+  [ errors; OK; 0.683337; 0; ]
++  [ basic; OK; 0.721042; 0; ]
++  [ deps; OK; 0.733721; 0; ]
++  [ strings; OK; 0.702806; 0; ]
++  [ lawyer; OK; 0.683351; 0; ]
++  [ errors; OK; 0.628567; 0; ]
 +]
 +}
 +{
@@ -2680,17 +2680,17 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ modes; OK; 0.880969; 0; ]
-+  [ columns; OK; 0.830737; 0; ]
-+  [ key; OK; 0.640493; 0; ]
-+  [ errors; OK; 0.647054; 0; ]
++  [ modes; OK; 0.636600; 0; ]
++  [ columns; OK; 0.755888; 0; ]
++  [ key; OK; 0.752743; 0; ]
++  [ errors; OK; 0.765022; 0; ]
 +]
 +}
 diff --git a/compare/TEST/GOOD/regression-1.py--amnesia.txt b/compare/TEST/GOOD/regression-1.py--amnesia.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-1.py--amnesia.txt
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,25 @@
 +
 +================================================================================
 +SCENARIO: Transposition Amnesia
@@ -2715,11 +2715,12 @@ new file mode 100644
 +  Engine correctly avoided the Transpose path (due to Analogy Conflict).
 +================================================================================
 +
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-1.py--pruning_analogy.txt b/compare/TEST/GOOD/regression-1.py--pruning_analogy.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-1.py--pruning_analogy.txt
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,24 @@
 +
 +================================================================================
 +SCENARIO: State Pruning (Analogy Constraints)
@@ -2743,11 +2744,12 @@ new file mode 100644
 +  Optimal analogy A=2 was found. State pruning respected constraints.
 +================================================================================
 +
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-1.py--pruning_trans.txt b/compare/TEST/GOOD/regression-1.py--pruning_trans.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-1.py--pruning_trans.txt
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,24 @@
 +
 +================================================================================
 +SCENARIO: State Pruning (Subject Modification)
@@ -2771,11 +2773,12 @@ new file mode 100644
 +  Engine avoided the local trap and found the global optimal (SUBSTITUTE).
 +================================================================================
 +
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-2.py--bool.txt b/compare/TEST/GOOD/regression-2.py--bool.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-2.py--bool.txt
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,18 @@
 +
 +================================================================================
 +SCENARIO: Boolean Logic (Abort Flag)
@@ -2793,11 +2796,12 @@ new file mode 100644
 +  Flag set to True. Mismatch detected correctly.
 +================================================================================
 +
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-2.py--csp.txt b/compare/TEST/GOOD/regression-2.py--csp.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-2.py--csp.txt
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,11 @@
 +
 +================================================================================
 +SCENARIO: CSP Solver Crash / Mutable State Check
@@ -2808,11 +2812,12 @@ new file mode 100644
 +  Function handled mutable DB (Frozen conversion applied).
 +================================================================================
 +
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-2.py--edit-merge.txt b/compare/TEST/GOOD/regression-2.py--edit-merge.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-2.py--edit-merge.txt
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,22 @@
 +
 +================================================================================
 +SCENARIO: Line Sequence Edit Merging
@@ -2834,11 +2839,12 @@ new file mode 100644
 +  All combinations merged correctly.
 +================================================================================
 +
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-2.py--visible-nothing.txt b/compare/TEST/GOOD/regression-2.py--visible-nothing.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-2.py--visible-nothing.txt
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,14 @@
 +
 +================================================================================
 +SCENARIO: Visible Nothing Alignment
@@ -2852,11 +2858,12 @@ new file mode 100644
 +RESPONSE: ['GOOD_DELETE', 'GOOD']
 +VERDICT: PASS
 +  Sequence aligned correctly.
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-3.py--associate.txt b/compare/TEST/GOOD/regression-3.py--associate.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-3.py--associate.txt
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,16 @@
 +
 +[SCENARIO] Mode: ASSOCIATE
 +--------------------------------------------------------------------------------
@@ -2872,11 +2879,12 @@ new file mode 100644
 +
 +VERDICT: PASS
 +DETAILS: Sessions are isolated. Symbol IDs reset to 0.
++<hwut-end>
 diff --git a/compare/TEST/GOOD/regression-3.py--equivalence.txt b/compare/TEST/GOOD/regression-3.py--equivalence.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/regression-3.py--equivalence.txt
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,16 @@
 +
 +[SCENARIO] Mode: EQUIVALENCE
 +--------------------------------------------------------------------------------
@@ -2892,6 +2900,7 @@ new file mode 100644
 +
 +VERDICT: PASS
 +DETAILS: Sessions are isolated. Symbol IDs reset to 0.
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-associate-race.py--jittery.txt b/compare/TEST/GOOD/test-associate-race.py--jittery.txt
 new file mode 100644
 --- /dev/null
@@ -3127,7 +3136,7 @@ diff --git a/compare/TEST/GOOD/test-configuration.py--constraint_db.txt b/compar
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-configuration.py--constraint_db.txt
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,19 @@
 +
 +--- one expression, two variables ---
 +    x          ['x < y + 2']
@@ -3146,11 +3155,12 @@ new file mode 100644
 +    before: constraint_f True  db {}
 +    after:  constraint_f True  db {'t': ('t > 0 and t < 100',)}
 +    empty:  constraint_f False  db {}
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-configuration.py--declared.txt b/compare/TEST/GOOD/test-configuration.py--declared.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-configuration.py--declared.txt
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,21 @@
 +
 +--- ConfigurationPatternFinder ---
 +    strip_whitespace_f             True
@@ -3171,11 +3181,12 @@ new file mode 100644
 +    constraint_expression_list     []
 +    constraint_db                  {}
 +    region                         {'potpourri': {'max_comparisons': 128}}
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-configuration.py--edges.txt b/compare/TEST/GOOD/test-configuration.py--edges.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-configuration.py--edges.txt
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,20 @@
 +
 +--- a name the namespace provides is not a variable ---
 +    a          ['max(a, b) < c']
@@ -3195,11 +3206,12 @@ new file mode 100644
 +
 +--- ... and does not stop the ones that do ---
 +    y          ['y > 0']
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-configuration.py--namespace.txt b/compare/TEST/GOOD/test-configuration.py--namespace.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-configuration.py--namespace.txt
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,43 @@
 +
 +--- the run's namespace: fixed names, and what the run bound ---
 +    bound z      -> namespace carries 53 names, 1 of them the run's
@@ -3242,11 +3254,12 @@ new file mode 100644
 +    abs        True
 +    x          False
 +    epsilon    False
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-configuration.py--slots.txt b/compare/TEST/GOOD/test-configuration.py--slots.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-configuration.py--slots.txt
-@@ -0,0 +1,9 @@
+@@ -0,0 +1,10 @@
 +
 +--- assignment works as it always did ---
 +    numeric_tolerance_ratio 0.01
@@ -3256,6 +3269,7 @@ new file mode 100644
 +    numeric_tolerence_ratio  refused: 'ConfigurationPatternFinder' object has no attribute 'numeric_tolerence_ratio'
 +    analogy_marker           refused: 'ConfigurationPatternFinder' object has no attribute 'analogy_marker'
 +    equivalent_patterns      refused: 'ConfigurationPatternFinder' object has no attribute 'equivalent_patterns'
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-consistency-fuzz.py--consistency.txt b/compare/TEST/GOOD/test-consistency-fuzz.py--consistency.txt
 new file mode 100644
 --- /dev/null
@@ -3385,7 +3399,7 @@ diff --git a/compare/TEST/GOOD/test-equivalence-vs-association.py--analogy.txt b
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-equivalence-vs-association.py--analogy.txt
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,25 @@
 +=== AXIS: TOKEN LOGIC (Analogy) ===
 +
 +SCENARIO: Analogy: Basic Consistent
@@ -3410,11 +3424,12 @@ new file mode 100644
 +  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
 +Consistency:         OK
 +Expectation:         MATCH
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-equivalence-vs-association.py--leakage.txt b/compare/TEST/GOOD/test-equivalence-vs-association.py--leakage.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-equivalence-vs-association.py--leakage.txt
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,58 @@
 +=== INTERSECTION: GLOBAL + LOCAL (Leakage) ===
 +
 +SCENARIO: Leakage (Line -> Pot): Consistent (1->1)
@@ -3472,11 +3487,12 @@ new file mode 100644
 +Lawyer (associate):    True
 +Consistency:         OK
 +Expectation:         MATCH
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-equivalence-vs-association.py--numeric.txt b/compare/TEST/GOOD/test-equivalence-vs-association.py--numeric.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-equivalence-vs-association.py--numeric.txt
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,25 @@
 +=== AXIS: TOKEN LOGIC (Numeric 10%) ===
 +
 +SCENARIO: Numeric: Boundary Inclusive
@@ -3501,11 +3517,12 @@ new file mode 100644
 +  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
 +Consistency:         OK
 +Expectation:         MATCH
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-equivalence-vs-association.py--potpourri.txt b/compare/TEST/GOOD/test-equivalence-vs-association.py--potpourri.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-equivalence-vs-association.py--potpourri.txt
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,16 @@
 +=== AXIS: STRUCTURE (Potpourri) ===
 +
 +SCENARIO: Potpourri: Shuffle + Analogy
@@ -3521,11 +3538,12 @@ new file mode 100644
 +Lawyer (associate):    True
 +Consistency:         OK
 +Expectation:         MATCH
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-equivalence-vs-association.py--sudoku.txt b/compare/TEST/GOOD/test-equivalence-vs-association.py--sudoku.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/TEST/GOOD/test-equivalence-vs-association.py--sudoku.txt
-@@ -0,0 +1,16 @@
+@@ -0,0 +1,17 @@
 +=== INTERSECTION: STRUCTURE + AMBIGUITY (The Sudoku Trap) ===
 +
 +SCENARIO: Sudoku: Pigeonhole (2 items into 1 slot)
@@ -3542,6 +3560,7 @@ new file mode 100644
 +  -> Errors: ['BAD_NOMINAL_DIFFERS', 'BAD_SUBJECT_DIFFERS']
 +Consistency:         OK
 +Expectation:         MATCH
++<hwut-end>
 diff --git a/compare/TEST/GOOD/test-is_equivalent-race.py--jittery.txt b/compare/TEST/GOOD/test-is_equivalent-race.py--jittery.txt
 new file mode 100644
 --- /dev/null
@@ -9402,10 +9421,10 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ basic; OK; 0.562451; 0; ]
-+  [ visible-nothing; OK; 0.714852; 0; ]
-+  [ special; OK; 0.546198; 0; ]
-+  [ analogies; OK; 0.693457; 0; ]
++  [ basic; OK; 0.513205; 0; ]
++  [ visible-nothing; OK; 0.659227; 0; ]
++  [ special; OK; 0.514963; 0; ]
++  [ analogies; OK; 0.517390; 0; ]
 +]
 +}
 +{
@@ -9414,8 +9433,8 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ basic; OK; 0.443045; 0; ]
-+  [ long; OK; 0.473615; 0; ]
++  [ basic; OK; 0.270639; 0; ]
++  [ long; OK; 0.272490; 0; ]
 +]
 +}
 +{
@@ -9425,9 +9444,9 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ subject; OK; 0.563719; 0; ]
-+  [ nominal; OK; 0.756320; 0; ]
-+  [ special; OK; 0.622699; 0; ]
++  [ subject; OK; 0.528954; 0; ]
++  [ nominal; OK; 0.519582; 0; ]
++  [ special; OK; 0.537839; 0; ]
 +]
 +}
 +{
@@ -9437,11 +9456,11 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ different; OK; 0.683681; 0; ]
-+  [ different-2; OK; 0.522637; 0; ]
-+  [ different-good-2; OK; 0.710272; 0; ]
-+  [ different-void-2; OK; 0.543160; 0; ]
-+  [ same; OK; 0.539240; 0; ]
++  [ different; OK; 0.488938; 0; ]
++  [ different-2; OK; 0.494806; 0; ]
++  [ different-good-2; OK; 0.503196; 0; ]
++  [ different-void-2; OK; 0.646905; 0; ]
++  [ same; OK; 0.620048; 0; ]
 +]
 +}
 +{
@@ -9451,8 +9470,8 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ transpose; OK; 0.595886; 0; ]
-+  [ visible-nothing; OK; 0.550447; 0; ]
++  [ transpose; OK; 0.556847; 0; ]
++  [ visible-nothing; OK; 0.513069; 0; ]
 +]
 +}
 diff --git a/compare/core/edit_operations/TEST/GOOD/test-line-2.py--transpose.txt b/compare/core/edit_operations/TEST/GOOD/test-line-2.py--transpose.txt
@@ -14020,11 +14039,11 @@ new file mode 100644
 +hwut_info_time: 1781434065L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ flyweight; OK; 0.148892; 0; ]
-+  [ consistency; OK; 0.332666; 0; ]
-+  [ immutability; OK; 0.197750; 0; ]
-+  [ member_functions; OK; 0.145027; 0; ]
-+  [ hybrid_masks; OK; 0.348742; 0; ]
++  [ flyweight; OK; 0.129874; 0; ]
++  [ consistency; OK; 0.130509; 0; ]
++  [ immutability; OK; 0.192169; 0; ]
++  [ member_functions; OK; 0.124624; 0; ]
++  [ hybrid_masks; OK; 0.241512; 0; ]
 +]
 +}
 +{
@@ -14033,8 +14052,8 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ judge; OK; 0.747635; 0; ]
-+  [ info; OK; 0.731823; 0; ]
++  [ judge; OK; 0.495287; 0; ]
++  [ info; OK; 0.501434; 0; ]
 +]
 +}
 +{
@@ -14043,8 +14062,8 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ judge; OK; 0.709622; 0; ]
-+  [ info; OK; 0.675871; 0; ]
++  [ judge; OK; 0.495366; 0; ]
++  [ info; OK; 0.507277; 0; ]
 +]
 +}
 +{
@@ -14053,8 +14072,8 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ judge; OK; 0.925957; 0; ]
-+  [ info; OK; 0.718107; 0; ]
++  [ judge; OK; 0.544743; 0; ]
++  [ info; OK; 0.696804; 0; ]
 +]
 +}
 +{
@@ -14064,12 +14083,12 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ transpose; OK; 0.489945; 0; ]
-+  [ monkey; OK; 0.558957; 0; ]
-+  [ visible-nothing; OK; 0.495337; 0; ]
-+  [ accordion; OK; 0.562047; 0; ]
-+  [ exhaustion; OK; 0.554595; 0; ]
-+  [ circular; OK; 0.521635; 0; ]
++  [ transpose; OK; 0.481772; 0; ]
++  [ monkey; OK; 0.475377; 0; ]
++  [ visible-nothing; OK; 0.468683; 0; ]
++  [ accordion; OK; 0.600470; 0; ]
++  [ exhaustion; OK; 0.473284; 0; ]
++  [ circular; OK; 0.611892; 0; ]
 +]
 +}
 diff --git a/compare/engine/TEST/GOOD/test-compare_line_sequence.py--info.txt b/compare/engine/TEST/GOOD/test-compare_line_sequence.py--info.txt
@@ -16762,7 +16781,7 @@ new file mode 100644
 +hwut_info_time: 1787031017L;
 +interpreter_list: [ bash; ]
 +result_list: [
-+  [ ; OK; 0.377319; 708871607; ]
++  [ ; OK; 0.217932; 708871607; ]
 +]
 +}
 +{
@@ -16771,9 +16790,9 @@ new file mode 100644
 +hwut_info_time: 1787031077L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ potpourri; OK; 0.720373; 207258344; ]
-+  [ structure; OK; 0.603989; -186362541; ]
-+  [ types; OK; 0.608545; 335442781; ]
++  [ potpourri; OK; 0.776517; -208645280; ]
++  [ structure; OK; 0.590821; -1629541785; ]
++  [ types; OK; 0.590729; 1041340001; ]
 +]
 +}
 diff --git a/compare/feeder/TEST/GOOD/test-html_feeder.py.txt b/compare/feeder/TEST/GOOD/test-html_feeder.py.txt
@@ -17032,7 +17051,7 @@ diff --git a/compare/feeder/TEST/GOOD/test-ui.py--potpourri.txt b/compare/feeder
 new file mode 100644
 --- /dev/null
 +++ b/compare/feeder/TEST/GOOD/test-ui.py--potpourri.txt
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,18 @@
 +--- TEST: Potpourri Mismatch ---
 +Packet: HEADER (Signature: ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8)) )
 +Packet: CONFIG
@@ -17050,11 +17069,12 @@ new file mode 100644
 +----
 +Signature in 'adm/SIGNATURE_UI_PROTOCOL.txt': ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 +----
++<hwut-end>
 diff --git a/compare/feeder/TEST/GOOD/test-ui.py--structure.txt b/compare/feeder/TEST/GOOD/test-ui.py--structure.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/feeder/TEST/GOOD/test-ui.py--structure.txt
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,26 @@
 +--- TEST: Structural Mismatch (LineSequence) ---
 +Packet: HEADER (Signature: ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8)) )
 +Packet: CONFIG
@@ -17080,11 +17100,12 @@ new file mode 100644
 +----
 +Signature in 'adm/SIGNATURE_UI_PROTOCOL.txt': ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 +----
++<hwut-end>
 diff --git a/compare/feeder/TEST/GOOD/test-ui.py--types.txt b/compare/feeder/TEST/GOOD/test-ui.py--types.txt
 new file mode 100644
 --- /dev/null
 +++ b/compare/feeder/TEST/GOOD/test-ui.py--types.txt
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,41 @@
 +--- TEST: All Types (GOOD vs TOLERATED) ---
 +Packet: HEADER (Signature: ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8)) )
 +Packet: CONFIG
@@ -17125,6 +17146,7 @@ new file mode 100644
 +----
 +Signature in 'adm/SIGNATURE_UI_PROTOCOL.txt': ((mmiFiE-j4bsvTLp0iGNZEAJF9GErpfkXjVZc9Xw0yi8))
 +----
++<hwut-end>
 diff --git a/compare/feeder/TEST/GOOD/verify_signature.sh.txt b/compare/feeder/TEST/GOOD/verify_signature.sh.txt
 new file mode 100644
 --- /dev/null
@@ -18403,9 +18425,9 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ normal; OK; 0.703651; 0; ]
-+  [ special; OK; 0.646236; 0; ]
-+  [ comment; OK; 0.688495; 0; ]
++  [ normal; OK; 0.742258; 0; ]
++  [ special; OK; 0.602637; 0; ]
++  [ comment; OK; 0.746660; 0; ]
 +]
 +}
 +{
@@ -18414,10 +18436,10 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ setup; OK; 0.696871; 0; ]
-+  [ tolerance_id; OK; 0.686442; 0; ]
-+  [ do; OK; 0.659344; 0; ]
-+  [ aggressive; OK; 0.494007; 0; ]
++  [ setup; OK; 0.473306; 0; ]
++  [ tolerance_id; OK; 0.463371; 0; ]
++  [ do; OK; 0.462871; 0; ]
++  [ aggressive; OK; 0.463633; 0; ]
 +]
 +}
 +{
@@ -18427,11 +18449,11 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ LineElementString; OK; 0.477075; 0; ]
-+  [ LineElementNumber; OK; 0.639652; 0; ]
-+  [ NumberBand; OK; 0.633847; 0; ]
-+  [ LineElementEquivalencePattern; OK; 0.476113; 0; ]
-+  [ LineElementAnalogy; OK; 0.614489; 0; ]
++  [ LineElementString; OK; 0.447724; 0; ]
++  [ LineElementNumber; OK; 0.445666; 0; ]
++  [ NumberBand; OK; 0.445297; 0; ]
++  [ LineElementEquivalencePattern; OK; 0.582934; 0; ]
++  [ LineElementAnalogy; OK; 0.452038; 0; ]
 +]
 +}
 diff --git a/compare/reading/TEST/GOOD/test-chunk_pipe.py--comment.txt b/compare/reading/TEST/GOOD/test-chunk_pipe.py--comment.txt
@@ -21720,9 +21742,9 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ analogy_interferences; OK; 0.670999; 0; ]
-+  [ extract_ultimates; OK; 0.632040; 0; ]
-+  [ pairing; OK; 0.681978; 0; ]
++  [ analogy_interferences; OK; 0.615781; 0; ]
++  [ extract_ultimates; OK; 0.472251; 0; ]
++  [ pairing; OK; 0.466193; 0; ]
 +]
 +}
 +{
@@ -21732,12 +21754,12 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ basic; OK; 0.604618; 0; ]
-+  [ analogy; OK; 0.748587; 0; ]
-+  [ wild; OK; 1.741814; 0; ]
-+  [ wild-2; OK; 1.031215; 0; ]
-+  [ border; OK; 0.756855; 0; ]
-+  [ special; OK; 0.828855; 0; ]
++  [ basic; OK; 0.540858; 0; ]
++  [ analogy; OK; 0.543473; 0; ]
++  [ wild; OK; 1.557943; 0; ]
++  [ wild-2; OK; 0.939554; 0; ]
++  [ border; OK; 0.564684; 0; ]
++  [ special; OK; 0.540262; 0; ]
 +]
 +}
 +{
@@ -21747,10 +21769,10 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ basic; OK; 0.584020; 0; ]
-+  [ analogy; OK; 0.591611; 0; ]
-+  [ wild; OK; 1.486033; 0; ]
-+  [ border; OK; 0.588466; 0; ]
++  [ basic; OK; 0.686663; 0; ]
++  [ analogy; OK; 0.551244; 0; ]
++  [ wild; OK; 1.463341; 0; ]
++  [ border; OK; 0.691130; 0; ]
 +]
 +}
 +{
@@ -21760,8 +21782,8 @@ new file mode 100644
 +hwut_info_time: 1786856836L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ basic; OK; 0.605542; 0; ]
-+  [ restricted_cmp; OK; 0.588665; 0; ]
++  [ basic; OK; 0.729135; 0; ]
++  [ restricted_cmp; OK; 0.556794; 0; ]
 +]
 +}
 diff --git a/compare/region/potpourri/TEST/GOOD/test-exact-fail-quickly.py--analogy.txt b/compare/region/potpourri/TEST/GOOD/test-exact-fail-quickly.py--analogy.txt
@@ -25393,9 +25415,9 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ basic; OK; 0.365155; 0; ]
-+  [ stress; OK; 3.186374; 0; ]
-+  [ chain; OK; 0.695716; 0; ]
++  [ basic; OK; 0.272869; 0; ]
++  [ stress; OK; 2.748082; 0; ]
++  [ chain; OK; 0.565505; 0; ]
 +]
 +}
 +{
@@ -25405,10 +25427,10 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
 +result_list: [
-+  [ soduko; OK; 8.769235; 0; ]
-+  [ backtracking; OK; 0.672169; 0; ]
-+  [ massive-pipe; OK; 9.032320; 0; ]
-+  [ lane-trap; OK; 10.165040; 0; ]
++  [ soduko; OK; 7.653848; 0; ]
++  [ backtracking; OK; 0.454363; 0; ]
++  [ massive-pipe; OK; 7.241863; 0; ]
++  [ lane-trap; OK; 8.456969; 0; ]
 +]
 +}
 diff --git a/compare/region/potpourri/solver/TEST/GOOD/test-csp_backtracking_mrv.py--backtracking.txt b/compare/region/potpourri/solver/TEST/GOOD/test-csp_backtracking_mrv.py--backtracking.txt
@@ -27853,10 +27875,10 @@ new file mode 100644
 +hwut_info_time: 1784456250L;
 +interpreter_list: [ bash; ]
 +result_list: [
-+  [ lexing; OK; 0.242399; 0; ]
-+  [ stdin-and-wrapper; OK; 0.803028; 2081970317; ]
-+  [ config; OK; 0.492218; 0; ]
-+  [ errors; OK; 0.384104; 0; ]
++  [ lexing; OK; 0.176760; 0; ]
++  [ stdin-and-wrapper; OK; 0.499732; 2081970317; ]
++  [ config; OK; 0.303796; 0; ]
++  [ errors; OK; 0.674410; 0; ]
 +]
 +}
 diff --git a/compare/tool/TEST/GOOD/test-hwut-compare-tool.sh--config.txt b/compare/tool/TEST/GOOD/test-hwut-compare-tool.sh--config.txt

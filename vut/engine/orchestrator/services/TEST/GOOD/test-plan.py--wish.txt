@@ -26,5 +26,5 @@ $ hwut.plan --glob test-*.pt
         (none)
     EXCLUSIONS
         (none)
-    [status 0]
+    [status 3]
 <hwut-end>

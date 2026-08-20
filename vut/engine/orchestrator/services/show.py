@@ -24,6 +24,7 @@ ______________________________________________________________________________
 import sys
 
 from ..exploration.hwut_parse import text_of_directory, text_of_file
+from ._exit                   import E_ExitCode
 
 
 USAGE = "usage: hwut.show [<source file>] [--no-default] " \
@@ -61,9 +62,9 @@ EXIT STATUS
 
 def main(argv=None, write=None):
     """
-    RETURN: int, the exit status: 0 where nothing was refused and no
-            fault was met, 1 where a fault was met, 2 where the
-            command line itself cannot be read.
+    RETURN: E_ExitCode, the exit status (E-1): OK where nothing was
+            refused and no fault was met, FAULT where one was met,
+            REFUSED where the command line itself cannot be read.
 
     'write' takes one line at a time; 'print' where none is given, so
     a test may capture the face without a process.
@@ -73,7 +74,7 @@ def main(argv=None, write=None):
     if argv is None: argv = sys.argv[1:]
     if "--help" in argv:
         write(HELP)
-        return 0
+        return E_ExitCode.OK
 
     directory  = "."
     option_set = set()
@@ -91,12 +92,12 @@ def main(argv=None, write=None):
     if unknown:
         write("REFUSED: unknown option(s): %s" % ", ".join(unknown))
         write(USAGE)
-        return 2
+        return E_ExitCode.REFUSED
     if len(name_list) > 1:
         write("REFUSED: %d source files named; 'hwut.show' reads one, "
               "or the directory" % len(name_list))
         write(USAGE)
-        return 2
+        return E_ExitCode.REFUSED
 
     no_default_f = "--no-default" in option_set
     provenance_f = "--provenance" in option_set
@@ -114,7 +115,7 @@ def main(argv=None, write=None):
         write(str(fault))
     if text:
         write(text)
-    return 1 if fault_list else 0
+    return E_ExitCode.FAULT if fault_list else E_ExitCode.OK
 
 
 if __name__ == "__main__":
