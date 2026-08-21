@@ -1,9 +1,9 @@
 INSPECT: report        = ok
-         accepted      = ['stderr', 'stdout']
+         accepted      = ['stdout']
          stdout stored = 'to stdout\n'
          provision run = True (records: 1)
   OK  : acceptance succeeded without any dump being handed over
-  OK  : both subjects were accepted
-  OK  : provision ran ONCE -- one attribution record for two subjects
-SUCCESS: an unmet precondition pulls provision, once.
+  OK  : the one subject was accepted
+  OK  : provision ran ONCE, one attribution record
+SUCCESS: an unmet precondition pulls provision.
 <hwut-end>

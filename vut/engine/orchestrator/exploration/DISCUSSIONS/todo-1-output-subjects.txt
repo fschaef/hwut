@@ -65,31 +65,42 @@ DECIDED
 
         There is no second remedy. 'stderr becomes nominal' is dropped.
 
-WHAT ALREADY STANDS -- this is less new than it looks
-    operations/result.py    OUTPUT_FILE_NOT_FOUND is already a verdict
-    operations/session.py   'Request.subjects' is already a sequence,
-                            defaulting to ("stdout",); 'judged_list'
-                            already adds and removes subjects, and the
-                            stderr note already drives it
-    bookkeeper              already keys EVERY record by
-                            (test, choice, SUBJECT); nominal,
-                            candidate, raw and timing paths all carry
-                            the subject already
-    display/word.py         'output file missing' already phrases the
-                            verdict
+BUILT (this session) -- the parameter is LIVE end to end
+    exploration     'output' in KEY_TO_FIELD, TestParameters,
+                    validator ('<stderr>' refused by name with the
+                    E-5 reason; '<stdin>' and every other unknown
+                    channel refused; duplicates refused; faults
+                    position-accurate). ConfigRunner OWES it, default
+                    ('<stdout>',); RELATION carries the row -- the
+                    orphan contract (test-defaults) holds.
+    adapter         '<stdout>' -> 'stdout'; file names verbatim; onto
+                    'TestChoiceConfiguration.output'.
+    session         the declaration GOVERNS the judged subjects; an
+                    explicit request still speaks.
+    stage_execute   declared files read AFTER termination -- and then
+                    REMOVED. READ-AND-REMOVE was decided DURING the
+                    build, forced by two live findings: a lingering
+                    file is explored as a candidate test application
+                    by the next walk (seen: the explorer interviewing
+                    a CSV), and a STALE file from run N greens run
+                    N+1 even where the application stopped producing
+                    it -- a false green. The store's record is the
+                    product; the file was only the carrier (the sink
+                    law of multi_execute._read_sinks). The former
+                    'OUT/' DISCOVERY sweep is RETIRED: discovery can
+                    never tell 'produced' from 'forgot', so the
+                    verdict 'output-file-not-found' could never fire.
+    accept          a file subject is promoted like stdout; proven:
+                    declare -> run -> bless -> green -> forget the
+                    file -> 'output file missing', exit 1.
+    suite           exploration/TEST/test-output.sh: declare, refuse,
+                    cycle, forgotten -- blessed.
 
-WHAT IS MISSING
-    (1) exploration     'output' is not in the parameter table
-                        (specification.py); nothing parses it, so no
-                        spec carries it
-    (2) adapter         'run/adapter.py' does not map it onto
-                        'Request.subjects' -- nothing in production
-                        ever sets subjects beyond ("stdout",)
-    (3) operations      no post-run step READS the declared files into
-                        the store as candidates; the verdict exists,
-                        the reader does not
-    (4) accept/merge    '--stderr-tol' and the refusal above
-    (5) the manual      README of exploration, run and services
+STILL OPEN of the original list
+    (4) accept/merge  '--stderr-tol' is BUILT (accept); merge's
+                      stderr handling follows when merge is built
+    (5) the manual    the three laws into every manual that touches
+                      subjects -- exploration README pending
 
 RETIRED BY THIS RULING -- its own piece of work
     'E_StderrNote.NOMINAL' is dead. It still stands in the enum

@@ -261,6 +261,10 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
     elif key in ("eq-pattern", "nothing"):
         value = _string_list(entry, file, fault_list)
         if value is not None: parameter_db[KEY_TO_FIELD[key]] = value
+    elif key == "output":
+        value = _string_list(entry, file, fault_list)
+        if value is not None:
+            _output(entry, value, parameter_db, file, fault_list)
     elif key == "constraints":
         if _off_f(entry.node):
             parameter_db["constraints"] = ()
@@ -279,6 +283,51 @@ def _parameter(entry, parameter_db, file, fault_list, position_db=None):
         if value is not None: parameter_db["caps"] = value
     elif key in ("analogy", "comment"):
         _marker_pair(entry, parameter_db, file, fault_list)
+
+
+def _output(entry, value, parameter_db, file, fault_list):
+    """RETURN: None. The 'output' subject list into 'parameter_db', or a
+    fault by name.
+
+    '<stdout>' is the ONE special entry, marking the channel; every
+    other entry is a FILE NAME, read after the run has ended.
+    '<stderr>' is REFUSED: STDERR IS NEVER SUBJECT TO TESTING (E-5) --
+    it is for error reporting; where the reporting is itself under
+    test, the application flushes it to a file and names THAT file
+    here. A duplicate entry is refused too: one subject, one record.
+    """
+    position = _position_of(entry.node, entry)
+    if "<stderr>" in value:
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, position,
+            "'<stderr>' is not a subject: stderr is for error "
+            "reporting and is never subject to testing; flush the "
+            "reporting to a file and name that file in 'output'"))
+        return
+    for name in value:
+        if name.startswith("<") and name != "<stdout>":
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, position,
+                "'output' knows one channel name, '<stdout>'; "
+                "not '%s'" % name))
+            return
+        if not name:
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, position,
+                "'output' holds no empty entry"))
+            return
+        if name.startswith("-"):
+            fault_list.append(Fault(
+                E_FaultKind.TYPE, file, position,
+                "an 'output' name does not start with '-': the key "
+                "'test--choice--name' must stay parseable"))
+            return
+    if len(set(value)) != len(value):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, position,
+            "'output' names every subject once"))
+        return
+    parameter_db["output"] = value
 
 
 def _build(entry, file, fault_list):

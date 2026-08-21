@@ -5,7 +5,7 @@ ______________________________________________________________________________
 PURPOSE: The multi-executor -- many choices of one test application
          through ONE supervised call, driven interactively.
 
-CHOICES: session, plugged, status, unknown, refused;
+CHOICES: session, plugged, status, unknown, refused, files;
 
 DESCRIPTION:
 
@@ -32,6 +32,7 @@ refused   a configuration that does not register 'interactive' is
 ______________________________________________________________________________
 """
 import os
+import shutil
 import sys
 import asyncio
 import tempfile
@@ -91,8 +92,16 @@ def run_gamma():
     print('gamma speaks, then leaves with 3')
     sys.exit(3)
 
+def run_delta():
+    print('delta speaks')
+    open('delta.csv', 'w').write('a,b\\n1,2\\n')
+
+def run_omega():
+    print('omega speaks, and forgets its file')
+
 HwutRunner(sys.argv, 'Fixture;',
-           {'alpha': run_alpha, 'beta': run_beta, 'gamma': run_gamma}).run()
+           {'alpha': run_alpha, 'beta': run_beta, 'gamma': run_gamma,
+            'delta': run_delta, 'omega': run_omega}).run()
 """
 
 
@@ -109,7 +118,14 @@ def _interactive_configuration(canonicalisers=None):
         interpreter    = [sys.executable],
         test_directory = directory,
         caps           = ProcsitterConfig(max_wall_clock_sec=20.0),
-        choice_db      = {"alpha": choice, "beta": choice, "gamma": choice},
+        choice_db      = {"alpha": choice, "beta": choice, "gamma": choice,
+                          #  R-71 on the SESSION road: 'delta' declares
+                          #  a file it writes; 'omega' declares one it
+                          #  FORGETS.
+                          "delta": TestChoiceConfiguration(
+                              output=("stdout", "delta.csv")),
+                          "omega": TestChoiceConfiguration(
+                              output=("stdout", "omega.csv"))},
         interactive    = True)
 
 
@@ -164,6 +180,53 @@ def test_session():
          "produced a result is part of that result"),
     ])
     _verdict(ok, "many choices, one application call.")
+
+
+def test_files():
+    """A DECLARED FILE ON THE SESSION ROAD (todo-1-judgement-timing).
+
+    The session process does not end between choices, so the reading
+    point is the CHOICE'S 'done' -- which the token precedes -- never
+    the process end. Read-and-remove is PER CHOICE: a sibling served
+    later must not find the leftover. A choice that FORGETS its
+    declared file is the verdict 'output-file-not-found'."""
+    configuration = _interactive_configuration()
+    directory     = configuration.test_directory
+
+    async def scene():
+        """RETURN: (Supply, Supply, Supply), delta, omega, then beta --
+        a file-writer, a file-forgetter, a file-less sibling after."""
+        async with MultiExecute(configuration) as m:
+            d = await m.provider("delta").supply()
+            o = await m.provider("omega").supply()
+            b = await m.provider("beta").supply()
+            return d, o, b
+
+    d, o, b = asyncio.run(scene())
+    residue_f = os.path.exists(os.path.join(directory, "delta.csv"))
+    print("INSPECT: delta -> report %s, subjects %s"
+          % (d.report.value, sorted(d.product[0])))
+    print("         delta.csv = %r" % d.product[0]["delta.csv"])
+    print("         omega -> report %s, subjects %s"
+          % (o.report.value, sorted(o.product[0])))
+    print("         residue after delta: %s" % residue_f)
+    ok = _check([
+        (d.report is E_TestRunResult.OK
+             and d.product[0]["delta.csv"] == "a,b\n1,2\n",
+         "the declared file is a subject, read after the CHOICE's done"),
+        (not residue_f,
+         "and REMOVED -- per choice: a sibling never finds the leftover"),
+        (o.report is E_TestRunResult.OUTPUT_FILE_NOT_FOUND,
+         "a forgotten declared file is a verdict, not a silence"),
+        ("omega.csv" not in o.product[0],
+         "and never an empty stand-in subject"),
+        (b.report is E_TestRunResult.OK
+             and sorted(b.product[0]) == ["stderr", "stdout"],
+         "a file-less sibling is untouched by its neighbours' files"),
+    ])
+    shutil.rmtree(directory, ignore_errors=True)
+    _verdict(ok, "the session road obeys R-71: declared, after the "
+                 "token, removed.")
 
 
 def test_plugged():
@@ -303,6 +366,7 @@ HwutRunner(
     title      = "The multi-executor: one application call, many choices",
     choice_map = {
         "session": test_session,
+        "files":   test_files,
         "plugged": test_plugged,
         "status":  test_status,
         "unknown": test_unknown,

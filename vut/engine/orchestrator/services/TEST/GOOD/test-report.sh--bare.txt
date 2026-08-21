@@ -6,9 +6,9 @@ REACTION  exit code : 0   stderr : 0 bytes
               choice:  basic
               hint:    OUT differs from GOOD
               files:
-                demo.py                          29 bytes  (source)
-                GOOD/demo.py--basic.stdout       11 bytes  (good stdout)
-                OUT/demo.py--basic.stdout        11 bytes  (out stdout)
+                demo.py                                      29 bytes  (source)
+                GOOD/demo--basic.stdout                      11 bytes  (good stdout)
+                .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
               coverage: not requested
               cadence: none recorded
               
@@ -16,11 +16,11 @@ REACTION  exit code : 0   stderr : 0 bytes
               print("alpha")
               print("beta")
               
-              ==[ GOOD STDOUT: GOOD/demo.py--basic.stdout ]===================================
+              ==[ GOOD STDOUT: GOOD/demo--basic.stdout ]======================================
               alpha
               beta
               
-              ==[ OUT STDOUT: OUT/demo.py--basic.stdout ]=====================================
+              ==[ OUT STDOUT: .hwut-store/demo--basic.stdout ]================================
               alpha
               BETA
           }

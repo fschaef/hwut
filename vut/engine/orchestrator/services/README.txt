@@ -68,7 +68,9 @@ The faces:
                  left alone unless '--force' says otherwise.
                  STDERR IS NEVER SUBJECT TO TESTING: never promoted;
                  where it spoke, refused until '--stderr-tol' notes
-                 it IGNORED.
+                 it IGNORED. A stdout candidate whose last line is
+                 not '<hwut-end>' is refused outright: an incomplete
+                 stream is never promotable, and no flag bypasses.
 
 A fault does not withhold the output: a directory with one broken header
 prints the fault, then the tree or the plan of what stands, and answers 1.

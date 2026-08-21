@@ -1212,3 +1212,62 @@ GRAVEYARD Every directory an island (HWUT 1.0: repeats caps and
           defaults per directory). Everything inheriting (a parent's
           'collision' naming files a child does not hold would fault
           every child).
+
+----------------------------------------------------------------------------
+R-71  'output' -- SUBJECTS ARE DECLARED, NEVER DISCOVERED
+----------------------------------------------------------------------------
+PROBLEM   A test may produce more than its stdout: files written during
+          the run. The old convention DISCOVERED them -- anything left
+          under 'OUT/' became a subject, unnamed. Discovery cannot tell
+          'produced' from 'forgot' (no missing-file verdict can ever
+          fire), and it sweeps droppings up as subjects.
+
+DECISION  A test STATES what it produces. Header parameter 'output':
+          absent means '<stdout>' alone; a stated list names the
+          subjects in order. '<stdout>' is the ONE channel name; every
+          other entry is a FILE NAME. Owed to ConfigRunner, default
+          ('<stdout>',). '<stderr>', unknown channel names, empty
+          entries, duplicates, and names starting with '-' (the key
+          'test--choice--name' must stay parseable) are refused at
+          validation, by name. (source-file, choice, output-name) is
+          unique by construction -- no further naming law exists.
+
+          THREE LAWS, stated in every manual that touches subjects:
+
+          (1) STDERR IS NEVER SUBJECT TO TESTING. stderr is for error
+              reporting; that is its whole job -- never a nominal,
+              never compared, never pype-d. Error reporting under test
+              flushes to a FILE named here. (The why: a stream that
+              both carries diagnostics and is held to a blessed text
+              can do neither job -- every diagnostic added while
+              debugging would fail the test, so the author learns
+              silence, and the framework has taught them to remove
+              the reporting it wanted.)
+
+          (2) A FILE IS READ ONLY AFTER THE RUN HAS TERMINATED --
+              no interleaving to observe, no flush to time, hence no
+              race. READ AND REMOVED (the sink law): a lingering file
+              is explored as a candidate test application by the next
+              walk, and a STALE file from run N greens run N+1 even
+              where the application stopped producing it -- a false
+              green. The store's record is the product; the file was
+              only the carrier. A declared file the run did not leave
+              is 'output-file-not-found', not a silence.
+
+          (3) PYPE-ING IS ONLY EVER APPLIED TO STDOUT. Not to stderr
+              (never read as a subject), not to files (not a stream).
+              'canonicalisers' stays a subject-keyed map and the
+              bookkeeper iterates it generically; the law, not the
+              shape, is what governs.
+
+COST      An author with file outputs must name them -- one line of
+          header. The 'OUT/' discovery sweep is retired; a tree that
+          relied on it states its files instead.
+
+GRAVEYARD Discovery of 'OUT/' -- retired: no missing-file verdict, and
+          droppings become subjects.
+          '<stderr>' as an 'output' entry, and 'stderr becomes
+          nominal' at acceptance -- both rejected under law (1).
+          A per-acceptance command-line option for extra files --
+          rejected: what a test produces is its DESIGN, authored once,
+          not restated at every acceptance.

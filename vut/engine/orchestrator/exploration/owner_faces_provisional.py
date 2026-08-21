@@ -101,6 +101,12 @@ class ConfigRunner:
     'execute' -- the call itself, stated verbatim (R-68). Unstated means
     the interpreter-derived call. The framework variables '$file',
     '$choice' and '$filestem' expand at the call; '$choice' expands
-    empty for the choice-less call."""
+    empty for the choice-less call.
+
+    'output' -- WHAT THE TEST PRODUCES, declared (todo-1): the subjects
+    in order. '<stdout>' names the one channel; every other entry is a
+    FILE, read after the run has ended and then removed. The default is
+    the channel alone. stderr is NEVER here (E-5)."""
     interactive_f: bool = False
+    output:        tuple = ("<stdout>",)
     execute:       str | None = None

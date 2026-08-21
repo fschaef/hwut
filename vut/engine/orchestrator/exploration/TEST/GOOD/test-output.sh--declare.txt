@@ -1,0 +1,2 @@
+test-file.sh   output = ('<stdout>', 'result.csv')
+STATUS: 0

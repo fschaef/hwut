@@ -1,10 +1,13 @@
-INSPECT: report   = ok
+INSPECT: declared = ('stdout', 'emitted.txt')
+         report   = ok
          subjects = ['emitted.txt', 'stderr', 'stdout']
            emitted.txt  'to a file\n'
            stderr       'to stderr\n'
            stdout       'to stdout\n'
-  OK  : three subjects: two channels and one output file
+         residue  = False
+  OK  : the DECLARED file is a subject, beside both channels
   OK  : provision reports OK
   OK  : one attribution record: one supervised call happened
-SUCCESS: channels and output files alike are subjects.
+  OK  : read AND REMOVED: the carrier leaves no residue
+SUCCESS: a declared file is a subject; the channels always are.
 <hwut-end>

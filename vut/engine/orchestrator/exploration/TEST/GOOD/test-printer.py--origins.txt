@@ -30,6 +30,7 @@ gen.c {
             same = false                      # default
             interactive = false               # default
             execute = null                    # default
+            output = ["<stdout>"]             # default
         }
     }
 }
@@ -64,6 +65,7 @@ legacy.bas {
             same = true                       # --hwut-info
             interactive = false               # default
             execute = null                    # default
+            output = ["<stdout>"]             # default
         }
     }
 }
@@ -98,6 +100,7 @@ test-own.py {
             same = false                      # default
             interactive = false               # default
             execute = null                    # default
+            output = ["<stdout>"]             # default
         }
     }
 }

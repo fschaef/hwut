@@ -145,6 +145,7 @@ RELATION = {
     "same":            (ConfigStore,  "same_nominal_f"),
     "interactive":     (ConfigRunner, "interactive_f"),
     "execute":         (ConfigRunner, "execute"),
+    "output":          (ConfigRunner, "output"),
 }
 
 

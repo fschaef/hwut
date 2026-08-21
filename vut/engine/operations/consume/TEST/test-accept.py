@@ -112,14 +112,20 @@ def test_take_dump():
 
 def test_pulls_provision():
     """A step naming no dump has an UNMET PRECONDITION, so provision
-    activates -- and it activates ONCE, however many subjects need it."""
-    directory = _place("import sys\n"
-                       "print('to stdout')\n"
-                       "sys.stderr.write('to stderr\\n')\n")
+    activates.
+
+    Formerly exercised with 'stdout' AND 'stderr' as the two subjects
+    pulling one provision. STDERR IS NEVER A SUBJECT (E-5): the
+    fixture that named it is a fixture that named an impossible thing,
+    not a defect the removal exposed. A second REAL subject needs a
+    file, which needs the 'output' parameter (exploration/DISCUSSIONS/
+    todo-1) -- not yet built. Reduced to the one subject that still
+    stands; re-widen to two once a file subject exists."""
+    directory = _place("print('to stdout')\n")
     store  = Store(Bookkeeper(directory))
     result = asyncio.run(Accept(AcceptConfig(
         "demo",
-        {"stdout": AcceptStep(), "stderr": AcceptStep()},
+        {"stdout": AcceptStep()},
         groundwork=Run(_configuration(directory))), store).run())
 
     print("INSPECT: report        = %s" % result.report)
@@ -132,14 +138,14 @@ def test_pulls_provision():
     ok = _check([
         (result.verdict is True,
          "acceptance succeeded without any dump being handed over"),
-        (sorted(result.accepted_db) == ["stderr", "stdout"],
-         "both subjects were accepted"),
+        (sorted(result.accepted_db) == ["stdout"],
+         "the one subject was accepted"),
         (result.provision is not None
              and len(result.provision.records) == 1,
-         "provision ran ONCE -- one attribution record for two subjects"),
+         "provision ran ONCE, one attribution record"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "an unmet precondition pulls provision, once.")
+    _verdict(ok, "an unmet precondition pulls provision.")
 
 
 def test_all_or_nothing():
@@ -337,8 +343,7 @@ def test_stderr():
     print("         %-12s %-22s %-11s %s"
           % ("asked for", "report", "book note", "nominal file"))
     outcome_db = {}
-    for note in (None, E_StderrNote.NOMINAL, E_StderrNote.IGNORED,
-                 E_StderrNote.FORBIDDEN):
+    for note in (None, E_StderrNote.IGNORED, E_StderrNote.FORBIDDEN):
         result, written, nominal_f = accepted(note)
         outcome_db[note] = (result, written, nominal_f)
         print("         %-12s %-22s %-11s %s"
@@ -352,9 +357,10 @@ def test_stderr():
         (not refused.accepted_db,
          "and nothing at all is written -- not even the stdout that "
          "was fine"),
-        (outcome_db[E_StderrNote.NOMINAL][1] is E_StderrNote.NOMINAL
-         and outcome_db[E_StderrNote.NOMINAL][2],
-         "'nominal' notes the book AND records the stream"),
+        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): there is no
+        #  reading that records the stream itself -- only the note.
+        (not hasattr(E_StderrNote, "NOMINAL"),
+         "'nominal' is RETIRED: no reading ever records the stream"),
         (outcome_db[E_StderrNote.IGNORED][1] is E_StderrNote.IGNORED
          and not outcome_db[E_StderrNote.IGNORED][2],
          "'ignored' notes the book and records nothing"),
@@ -362,7 +368,8 @@ def test_stderr():
          and not outcome_db[E_StderrNote.FORBIDDEN][2],
          "'forbidden' notes the book and records nothing"),
     ])
-    _verdict(ok, "one note, three readings, and the author writes it.")
+    _verdict(ok, "two readings, never the stream, and the author "
+                "writes it.")
 
 
 class _Provided:

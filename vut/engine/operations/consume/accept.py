@@ -146,15 +146,11 @@ class Accept:
             self.store.accept(config.name, config.choice, name, text)
             notify(self.observer, "verdict", name, True)
 
-        #  THE NOTE IS THE DECISION (S-1): written verbatim into the
-        #  book, and 'nominal' additionally records the stream itself.
+        #  THE NOTE IS THE DECISION: written verbatim into the book.
+        #  STDERR IS NEVER SUBJECT TO TESTING (E-5) -- unlike every
+        #  other subject, its stream is never itself accepted; only
+        #  the note is.
         match config.stderr:
-            case E_StderrNote.NOMINAL:
-                self.store.accept(config.name, config.choice, "stderr",
-                                  self._stderr_text(self._provided))
-                self.store.note_stderr(config.name, config.choice,
-                                       E_StderrNote.NOMINAL)
-                notify(self.observer, "verdict", "stderr", True)
             case E_StderrNote.IGNORED | E_StderrNote.FORBIDDEN:
                 self.store.note_stderr(config.name, config.choice,
                                        config.stderr)
@@ -192,11 +188,9 @@ class Accept:
         """
         config = self.config
         if config.stderr is not None:            return E_TestRunResult.OK
-        if "stderr" in config.subjects:
-            #  ASKED FOR BY NAME: the caller named stderr among the
-            #  subjects to accept, which IS the decision -- the second
-            #  question is about a stream that appeared UNASKED.
-            return E_TestRunResult.OK
+        #  STDERR IS NEVER A SUBJECT (E-5): 'config.subjects' can no
+        #  longer name it, so the earlier "asked for by name" escape
+        #  is gone -- there is no second way to have decided.
         if not _has_words(self._stderr_text(provided)):
             return E_TestRunResult.OK
         if self.store.stderr_note(config.name, config.choice) \

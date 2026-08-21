@@ -11,6 +11,7 @@ DESCRIPTION
 ______________________________________________________________________________
 """
 import asyncio
+from pathlib import Path
 from   dataclasses import replace
 
 from   ..result                   import E_TestRunResult
@@ -86,7 +87,7 @@ class StageExecute(I_ExecuteProvider):
                           record_list = record_list)
 
         raw_db = {STDOUT: stdout_text, STDERR: stderr_text}
-        raw_db.update(self._output_files())
+        missing_report = self._output_files(raw_db)
 
         report    = E_TestRunResult.OK
         if record.containment is E_Containment.FAIL_STALLED:
@@ -94,24 +95,67 @@ class StageExecute(I_ExecuteProvider):
         elif record.containment is not E_Containment.OK_COMPLETED \
              and record.containment is not E_Containment.FAIL_COMPLETED:
             report = E_TestRunResult.TEST_APP_CONTAINED
+        elif missing_report is not None:
+            #  Containment speaks first: a contained run explains a
+            #  missing file better than the file's absence does.
+            report = missing_report
 
         return Supply(product     = (raw_db, timing_db),
                       report      = report,
                       record_list = record_list)
 
-    def _output_files(self):
+    def _output_files(self, raw_db):
         """
-        RETURN: dict, subject name -> text, for every file the run left
-                under 'OUT/'. A file subject is named by its file name.
+        RETURN: E_TestRunResult.OUTPUT_FILE_NOT_FOUND where a declared
+                file subject is absent; None else. The single-run
+                road's door to 'read_declared_files'.
         """
-        directory = self.configuration.output_directory
-        file_db   = {}
-        if not directory.is_dir(): return file_db
-        for path in sorted(directory.iterdir()):
-            if not path.is_file(): continue
-            try:
-                file_db[path.name] = path.read_text(encoding="utf-8",
-                                                    errors="replace")
-            except OSError:
-                pass
-        return file_db
+        return read_declared_files(self.configuration, self.choice_name,
+                                   raw_db)
+
+
+def read_declared_files(configuration, choice_name, raw_db):
+    """
+    RETURN: E_TestRunResult.OUTPUT_FILE_NOT_FOUND where a DECLARED
+            file subject is absent after the run; None where every
+            declared file was read into 'raw_db'.
+
+    ONE implementation, every road: the single run reads after the
+    process ended; the SESSION reads after the CHOICE'S token/'done'
+    (todo-1-judgement-timing) -- the process does not end between
+    choices, and a file develops with REVISIONS, so only its state
+    at the token is the subject.
+
+    SUBJECTS ARE DECLARED, NEVER DISCOVERED ('output', R-71): the
+    choice's 'output' names them; a name that is not 'stdout' is a
+    FILE in the test directory. A declared file the run did not leave
+    is a verdict, not a silence: discovery could never tell
+    'produced' from 'forgot'.
+
+    READ AND REMOVED -- the transport leaves no residue (the sink law
+    of multi_execute._read_sinks), PER CHOICE on the session road:
+    choice B must never read choice A's leftover; a lingering file
+    would be explored as a candidate test application by the next
+    walk; and a STALE file from run N would green run N+1 even where
+    the application stopped producing it.
+    """
+    choice = configuration.choice_db.get(choice_name)
+    output = getattr(choice, "output", None) if choice else None
+    if output is None: return None
+    directory = Path(configuration.test_directory)
+    missing_f = False
+    for name in output:
+        if name == STDOUT: continue
+        path = directory / name
+        try:
+            raw_db[name] = path.read_text(encoding="utf-8",
+                                          errors="replace")
+        except OSError:
+            missing_f = True
+            continue
+        try:
+            path.unlink()
+        except OSError:
+            pass
+    if missing_f: return E_TestRunResult.OUTPUT_FILE_NOT_FOUND
+    return None

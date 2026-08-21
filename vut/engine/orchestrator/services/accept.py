@@ -107,6 +107,13 @@ STDERR IS NEVER SUBJECT TO TESTING
     and names that file in the 'output' parameter. Accordingly there
     is no 'accept stderr as nominal' here, and never will be.
 
+THE CLOSING TOKEN
+    A candidate whose stdout does not end in the line '<hwut-end>' is
+    REFUSED: the stream never testified its completeness -- it was
+    cut short, aborted, or the application does not follow R-70. No
+    flag bypasses this; '--force' overrides a standing pole, never
+    stream integrity.
+
 WHAT IS SHOWN BEFORE A BLESSING
     The CANDIDATE, which is the canonicalised record -- what the
     framework actually compares. The pre-canonicalisation stream is
@@ -323,6 +330,17 @@ def stderr_decision(store, spoke_db, tolerate_f, write):
     return refused_list
 
 
+def token_terminated_f(text):
+    """
+    RETURN: bool, True where the stream's LAST LINE is the closing
+            token '<hwut-end>' (R-70) -- the stream's own testimony
+            that it completed.
+    """
+    if text is None: return False
+    line_list = text.splitlines()
+    return bool(line_list) and line_list[-1] == "<hwut-end>"
+
+
 def classify(key, force_f):
     """
     RETURN: str, what accept is to do with the key -- one of:
@@ -466,6 +484,28 @@ def main(argv=None, write=None, read_line=None):
             write("    %s" % key.name)
             conflict_set.add(id(key))
         write("    that is the test failing, not something to bless")
+
+    #  THE CLOSING TOKEN (R-70): a stdout stream that does not end in
+    #  '<hwut-end>' never COMPLETED -- cut short, aborted, or the
+    #  application does not speak the law. An incomplete stream is
+    #  never promotable, and NO FLAG bypasses this: '--force'
+    #  overrides a standing pole, not stream integrity; the abort
+    #  ruling already made such content irrelevant.
+    tokenless_list = [key for key in key_list
+                      if key.subject == "stdout"
+                      and not token_terminated_f(
+                              read_text(key.candidate_path))]
+    if tokenless_list:
+        write("REFUSED: the closing token '<hwut-end>' does not "
+              "appear --")
+        for key in tokenless_list:
+            write("    %s" % key.name)
+        write("a stream without its terminal token never COMPLETED; "
+              "nothing here is")
+        write("promotable. Re-run the test. An application the "
+              "framework does not run")
+        write("prints the token itself, as its last line.")
+        return E_ExitCode.FAULT
 
     blessed_list, merge_list, skipped_list = [], [], []
     for key in key_list:

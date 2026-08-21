@@ -139,8 +139,16 @@ def _choice_of(parameters):
     canonicalisers = {}
     if parameters.pype is not None:
         canonicalisers["stdout"] = tuple(shlex.split(parameters.pype))
+    #  'output' (todo-1): the spec's '<stdout>' becomes the plain
+    #  subject name; file entries pass verbatim. None stays None --
+    #  the default, ('stdout',), is resolved at the point of use.
+    output = None
+    if parameters.output is not None:
+        output = tuple("stdout" if name == "<stdout>" else name
+                       for name in parameters.output)
     return TestChoiceConfiguration(canonicalisers = canonicalisers,
-                                   compare        = _compare_of(parameters))
+                                   compare        = _compare_of(parameters),
+                                   output         = output)
 
 
 def _compare_of(parameters):

@@ -108,7 +108,38 @@ cannot make.
                     'caps'       the caps of the BUILD process
 
     CANONICALISATION -- the D of Equivalence(D(b_pole), D(b), T)
-        pype        pype script that rewrites a stream into canonical form
+        pype        pype script that rewrites a stream into canonical
+                    form. PYPE-ING IS ONLY EVER APPLIED TO STDOUT --
+                    not to stderr (never read as a subject), not to
+                    files (not a stream; read whole, after the end).
+
+    WHAT THE TEST PRODUCES
+        output      the subjects, in order. Absent: '<stdout>' alone.
+
+                        output = ["<stdout>", "result.csv"]
+
+                    '<stdout>' is the ONE channel name; every other
+                    entry is a FILE NAME. Three laws govern here:
+
+                    (1) STDERR IS NEVER SUBJECT TO TESTING. stderr is
+                        for ERROR REPORTING; that is its whole job. It
+                        is never a nominal, never compared, never
+                        pype-d -- '<stderr>' in this list is refused
+                        by name. Where error reporting is itself the
+                        thing under test, the application FLUSHES IT
+                        TO A FILE and names that file here.
+
+                    (2) A FILE IS READ ONLY AFTER THE RUN HAS
+                        TERMINATED -- so its content is NOT subject to
+                        race conditions: no interleaving to observe,
+                        no flush to time. Read, recorded, and REMOVED:
+                        the store's record is the product, the file
+                        was only the carrier; a stale file can never
+                        green a run that stopped producing it.
+
+                    (3) A DECLARED FILE THE RUN DID NOT LEAVE is the
+                        verdict 'output-file-not-found', not a
+                        silence.
 
     TOLERANCE -- the T
         numeric     relative numeric tolerance, ratio in [0..1]

@@ -41,6 +41,7 @@ KEY_TO_FIELD = {
     "same":        "same",
     "interactive": "interactive",
     "execute":     "execute",
+    "output":      "output",
 }
 
 #  Stated at the ROOT only. Neither is a statement a single choice can
@@ -133,6 +134,12 @@ class TestParameters(_Scope):
     same:        bool  | None = None
     interactive: bool  | None = None
     execute:     str   | None = None
+    #  WHAT THE TEST PRODUCES (todo-1). None: '<stdout>' alone.
+    #  A stated tuple names the subjects in order; '<stdout>' is the
+    #  ONE special name marking the channel, every other entry a FILE
+    #  read AFTER the run has ended. '<stderr>' is refused at
+    #  validation: STDERR IS NEVER SUBJECT TO TESTING (E-5).
+    output:      tuple | None = None
 
     def overwritten_by(self, other):
         """

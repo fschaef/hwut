@@ -100,10 +100,9 @@ class Request:
     replay:      bool              = False
     display:     Display           = field(default_factory=Display)
     observer:    Optional[object]  = None
-    stderr:      Optional[object]  = None   # E_StderrNote at a NOMINAL
-                                            # goal: which note to write
-                                            # for stderr. None: not
-                                            # asked -- acceptance
+    stderr:      Optional[object]  = None   # E_StderrNote to WRITE at
+                                            # an acceptance goal; None:
+                                            # not asked -- acceptance
                                             # refuses rather than guess
     record:      Optional[bool]    = None   # None: follow the store config
     stop_event:  Optional[object]  = None   # how the caller stops it
@@ -247,7 +246,16 @@ async def run_test_held(configuration, request=None, store=None,
     request = request if request is not None else Request()
     goal, choice_name, observer = request.goal, request.choice, \
                                   request.observer
+    #  SUBJECTS ARE THE TEST'S DESIGN ('output', todo-1): the choice's
+    #  declaration governs; the request's default, ('stdout',), stands
+    #  only where the author declared nothing. An EXPLICIT request
+    #  still speaks -- a caller that names subjects has a reason.
     subject_name_list = request.subjects
+    if subject_name_list == ("stdout",):
+        declared = configuration.choice_db.get(choice_name)
+        if declared is not None \
+           and getattr(declared, "output", None) is not None:
+            subject_name_list = tuple(declared.output)
     stop_event        = request.stop_event
     if store is None:
         if bookkeeper is None:
@@ -270,16 +278,13 @@ async def run_test_held(configuration, request=None, store=None,
             store, observer=observer).run(stop_event=stop_event)
         recorded_db = None
     else:
-        #  STDERR IS WHAT THE BOOK SAYS IT IS (S-1): 'nominal' is
-        #  compared like any other subject, 'ignored' is never read,
-        #  'forbidden' -- the reading of an unnoted choice -- makes a
-        #  word there an error by name.
+        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): the note governs
+        #  only whether a spoken word is an ERROR ('forbidden') or
+        #  disregarded ('ignored'); it is never compared like a
+        #  subject, so it never enters 'judged_list'.
         note        = store.stderr_note(test_name, choice_name)
         judged_list = list(subject_name_list)
-        if note is E_StderrNote.NOMINAL:
-            if "stderr" not in judged_list: judged_list.append("stderr")
-        elif "stderr" in judged_list:
-            judged_list.remove("stderr")
+        if "stderr" in judged_list: judged_list.remove("stderr")
         nominal_db = _nominal_db(store, test_name, choice_name,
                                  judged_list)
         if goal is E_Goal.DISPLAY:

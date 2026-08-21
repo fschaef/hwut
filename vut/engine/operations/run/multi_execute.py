@@ -96,6 +96,7 @@ import shutil
 from   pathlib import Path
 
 from   ..result                   import E_TestRunResult
+from   .stage_execute             import read_declared_files
 from   ...procsitter.procsitter   import Procsitter
 from   ...procsitter.construction import Link, chain
 from   .core                      import (Supply, STDOUT, STDERR,
@@ -388,10 +389,23 @@ class ChoiceExecute(I_ProxyProvider, I_ExecuteProvider):
                         report      = E_TestRunResult.TEST_APP_CONTAINED,
                         record_list = record)
             case _:
-                raw_db = session._read_sinks(
+                raw_db  = session._read_sinks(
                                     session._token(self.choice_name))
+                #  THE CHOICE'S declared files, read NOW -- after this
+                #  choice's 'done', which the token precedes; the
+                #  process lives on for its siblings, so the process
+                #  end can never be the reading point here
+                #  (todo-1-judgement-timing). Read-and-remove PER
+                #  CHOICE: B never reads A's leftover.
+                missing = read_declared_files(session.configuration,
+                                              self.choice_name, raw_db)
                 report = E_TestRunResult.OK if answer >= 0 \
                          else E_TestRunResult.TEST_APP_CONTAINED
+                if report is E_TestRunResult.OK and missing is not None:
+                    #  Containment speaks first: a contained run
+                    #  explains a missing file better than the file's
+                    #  absence does.
+                    report = missing
                 return Supply(product     = (raw_db, None),
                               report      = report,
                               record_list = record)

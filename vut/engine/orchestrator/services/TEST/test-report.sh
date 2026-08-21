@@ -18,11 +18,17 @@
 #
 # THE FIXTURE, built here: a packed corpus in miniature --
 #
-#     <work>/demo.py                        the source
-#     <work>/GOOD/demo.py--basic.stdout     alpha, beta
-#     <work>/OUT/demo.py--basic.stdout      alpha, BETA      (differs!)
-#     <work>/OUT/...stdout.raw              raw sidecar
-#     <work>/OUT/...stdout.times            cadence sidecar
+#     <work>/demo.py                              the source
+#     <work>/GOOD/demo--basic.stdout              alpha, beta
+#     <work>/.hwut-store/demo--basic.stdout       alpha, BETA  (differs!)
+#     <work>/.hwut-store/...stdout.raw            raw sidecar
+#     <work>/.hwut-store/...stdout.times          cadence sidecar
+#
+# THE KEY IS THE BOOKKEEPER'S: 'demo--basic', the source file's STEM --
+# what RECORDING uses. The old fixture spelled 'demo.py--basic', which
+# no real run ever writes; it named a corpus that could not exist, and
+# the face agreed with it because the face spelled the law twice.
+# Candidates live under '.hwut-store/', nominals under 'GOOD/'.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../../../.." && pwd)
@@ -41,14 +47,15 @@ trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
 
 build_fixture() {       # [bare]  -- 'bare' omits the sidecars
-    mkdir -p GOOD OUT
+    mkdir -p GOOD .hwut-store
     printf 'print("alpha")\nprint("beta")\n' > demo.py
-    printf 'alpha\nbeta\n'                   > GOOD/demo.py--basic.stdout
-    printf 'alpha\nBETA\n'                   > OUT/demo.py--basic.stdout
+    printf 'alpha\nbeta\n'                   > GOOD/demo--basic.stdout
+    printf 'alpha\nBETA\n'                   > .hwut-store/demo--basic.stdout
     if [ "$1" != "bare" ]; then
-        printf 'raw alpha\nraw BETA\n'       > OUT/demo.py--basic.stdout.raw
+        printf 'raw alpha\nraw BETA\n' \
+                                > .hwut-store/demo--basic.stdout.raw
         printf '{"unit": "second", "delta_list": [0.0121, 1.5034]}\n' \
-                                             > OUT/demo.py--basic.stdout.times
+                                > .hwut-store/demo--basic.stdout.times
     fi
 }
 

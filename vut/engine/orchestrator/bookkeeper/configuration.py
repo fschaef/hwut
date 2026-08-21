@@ -37,10 +37,10 @@ class E_StderrNote(Enum):
     silent -- and the framework has then taught them to remove the
     reporting it wanted.
 
-    NOMINAL is RETIRED by this ruling. It still stands in the enum
-    because 'operations/consume/' reads it and a blessed suite
-    exercises it; it is written by nothing that should, and its
-    removal is its own piece of work.
+    NOMINAL is RETIRED and REMOVED. It is never written by anything --
+    'orchestrator/services/accept.py' promotes every subject EXCEPT
+    stderr, and refuses by name where stderr spoke and no note
+    tolerates it (E-5, services/RATIONALE.txt).
 
     IGNORED    whatever happens on stderr, DO NOT WORRY: it is never
                read, never compared, never reported.
@@ -49,7 +49,6 @@ class E_StderrNote(Enum):
                about has never spoken there, and its first word is
                news.
     """
-    NOMINAL   = "nominal"
     IGNORED   = "ignored"
     FORBIDDEN = "forbidden"
 

@@ -1,0 +1,5 @@
+FAULT: test-a.sh:3:19: TYPE: '<stderr>' is not a subject: stderr is for error reporting and is never subject to testing; flush the reporting to a file and name that file in 'output'
+FAULT: test-b.sh:3:19: TYPE: 'output' knows one channel name, '<stdout>'; not '<stdin>'
+FAULT: test-c.sh:3:19: TYPE: 'output' names every subject once
+FAULT: test-d.sh:3:19: TYPE: an 'output' name does not start with '-': the key 'test--choice--name' must stay parseable
+STATUS: 0

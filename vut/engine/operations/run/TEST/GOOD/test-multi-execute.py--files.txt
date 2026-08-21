@@ -1,0 +1,11 @@
+INSPECT: delta -> report ok, subjects ['delta.csv', 'stderr', 'stdout']
+         delta.csv = 'a,b\n1,2\n'
+         omega -> report output-file-not-found, subjects ['stderr', 'stdout']
+         residue after delta: False
+  OK  : the declared file is a subject, read after the CHOICE's done
+  OK  : and REMOVED -- per choice: a sibling never finds the leftover
+  OK  : a forgotten declared file is a verdict, not a silence
+  OK  : and never an empty stand-in subject
+  OK  : a file-less sibling is untouched by its neighbours' files
+SUCCESS: the session road obeys R-71: declared, after the token, removed.
+<hwut-end>

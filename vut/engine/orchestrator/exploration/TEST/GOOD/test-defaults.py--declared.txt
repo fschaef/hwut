@@ -21,6 +21,7 @@ execute            ConfigRunner        execute                                  
 interactive        ConfigRunner        interactive_f                                  False
 nothing            ConfigCompare       visible_nothing_pattern_list                   ()
 numeric            ConfigCompare       numeric_tolerance_ratio                        0.0
+output             ConfigRunner        output                                         ('<stdout>',)
 pype               ConfigCanonicalise  pype                                           None
 same               ConfigStore         same_nominal_f                                 False
 slash_eqv          ConfigCompare       backslash_f                                    True

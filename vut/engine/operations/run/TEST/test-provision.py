@@ -120,9 +120,15 @@ def _interpreted_capped(directory, **cap_db):
         choice_db      = {None: TestChoiceConfiguration()})
 
 
-def _interpreted(directory, canonicaliser_db=None, choice_db=None):
-    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'."""
-    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {})
+def _interpreted(directory, canonicaliser_db=None, choice_db=None,
+                 output=None):
+    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'.
+
+    'output' states the subjects (R-71). None leaves the default --
+    the stdout channel alone.
+    """
+    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {},
+                                    output=output)
     return TestConfiguration(
         source_file    = "demo.py",
         source_kind    = E_SourceKind.INTERPRETED,
@@ -159,30 +165,44 @@ def test_argv():
 
 
 def test_subjects():
-    """stdout, stderr and every file the run leaves under OUT/ are
-    subjects, provided as readers of one kind."""
+    """SUBJECTS ARE DECLARED, NEVER DISCOVERED (R-71). A file becomes a
+    subject because 'output' NAMES it -- not because the run happened
+    to leave it behind. Both channels are provided regardless; what is
+    JUDGED is decided above (stderr never is, E-5).
+
+    The file is read AFTER termination, hence no race, and REMOVED:
+    a lingering file would be explored as a test application by the
+    next walk, and a stale one would green a run that stopped
+    producing it."""
     directory = _place(
-        "import sys, os\n"
+        "import sys\n"
         "print('to stdout')\n"
         "sys.stderr.write('to stderr\\n')\n"
-        "os.makedirs('OUT', exist_ok=True)\n"
-        "open(os.path.join('OUT','emitted.txt'),'w').write('to a file\\n')\n")
-    provided = asyncio.run(Run(_interpreted(directory)).provide())
+        "open('emitted.txt','w').write('to a file\\n')\n")
+    configuration = _interpreted(directory,
+                                 output=("stdout", "emitted.txt"))
+    provided = asyncio.run(Run(configuration).provide())
 
-    print("INSPECT: report   = %s" % provided.provision.report)
+    print("INSPECT: declared = %s"
+          % (configuration.choice_db[None].output,))
+    print("         report   = %s" % provided.provision.report)
     print("         subjects = %s" % provided.names())
     for name in provided.names():
         print("           %-12s %r" % (name, provided[name].open().read()))
+    print("         residue  = %s"
+          % os.path.exists(os.path.join(directory, "emitted.txt")))
     ok = _check([
         (provided.names() == ["emitted.txt", "stderr", "stdout"],
-         "three subjects: two channels and one output file"),
+         "the DECLARED file is a subject, beside both channels"),
         (provided.provision.report is E_TestRunResult.OK,
          "provision reports OK"),
         (len(provided.provision.records) == 1,
          "one attribution record: one supervised call happened"),
+        (not os.path.exists(os.path.join(directory, "emitted.txt")),
+         "read AND REMOVED: the carrier leaves no residue"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "channels and output files alike are subjects.")
+    _verdict(ok, "a declared file is a subject; the channels always are.")
 
 
 def test_canonicalisation():
@@ -582,9 +602,15 @@ def _interpreted_capped(directory, **cap_db):
         choice_db      = {None: TestChoiceConfiguration()})
 
 
-def _interpreted(directory, canonicaliser_db=None, choice_db=None):
-    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'."""
-    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {})
+def _interpreted(directory, canonicaliser_db=None, choice_db=None,
+                 output=None):
+    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'.
+
+    'output' states the subjects (R-71). None leaves the default --
+    the stdout channel alone.
+    """
+    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {},
+                                    output=output)
     return TestConfiguration(
         source_file    = "demo.py",
         source_kind    = E_SourceKind.INTERPRETED,
@@ -621,30 +647,44 @@ def test_argv():
 
 
 def test_subjects():
-    """stdout, stderr and every file the run leaves under OUT/ are
-    subjects, provided as readers of one kind."""
+    """SUBJECTS ARE DECLARED, NEVER DISCOVERED (R-71). A file becomes a
+    subject because 'output' NAMES it -- not because the run happened
+    to leave it behind. Both channels are provided regardless; what is
+    JUDGED is decided above (stderr never is, E-5).
+
+    The file is read AFTER termination, hence no race, and REMOVED:
+    a lingering file would be explored as a test application by the
+    next walk, and a stale one would green a run that stopped
+    producing it."""
     directory = _place(
-        "import sys, os\n"
+        "import sys\n"
         "print('to stdout')\n"
         "sys.stderr.write('to stderr\\n')\n"
-        "os.makedirs('OUT', exist_ok=True)\n"
-        "open(os.path.join('OUT','emitted.txt'),'w').write('to a file\\n')\n")
-    provided = asyncio.run(Run(_interpreted(directory)).provide())
+        "open('emitted.txt','w').write('to a file\\n')\n")
+    configuration = _interpreted(directory,
+                                 output=("stdout", "emitted.txt"))
+    provided = asyncio.run(Run(configuration).provide())
 
-    print("INSPECT: report   = %s" % provided.provision.report)
+    print("INSPECT: declared = %s"
+          % (configuration.choice_db[None].output,))
+    print("         report   = %s" % provided.provision.report)
     print("         subjects = %s" % provided.names())
     for name in provided.names():
         print("           %-12s %r" % (name, provided[name].open().read()))
+    print("         residue  = %s"
+          % os.path.exists(os.path.join(directory, "emitted.txt")))
     ok = _check([
         (provided.names() == ["emitted.txt", "stderr", "stdout"],
-         "three subjects: two channels and one output file"),
+         "the DECLARED file is a subject, beside both channels"),
         (provided.provision.report is E_TestRunResult.OK,
          "provision reports OK"),
         (len(provided.provision.records) == 1,
          "one attribution record: one supervised call happened"),
+        (not os.path.exists(os.path.join(directory, "emitted.txt")),
+         "read AND REMOVED: the carrier leaves no residue"),
     ])
     shutil.rmtree(directory, ignore_errors=True)
-    _verdict(ok, "channels and output files alike are subjects.")
+    _verdict(ok, "a declared file is a subject; the channels always are.")
 
 
 def test_canonicalisation():

@@ -356,14 +356,16 @@ class Bookkeeper:
         RETURN: E_StderrNote, what the book says about that choice's
                 stderr:
 
-                    NOMINAL    a stderr stream was recorded and is
-                               compared like any other subject
                     IGNORED    whatever happens there, do not worry
                     FORBIDDEN  a word there is an ERROR
 
                 An unnoted choice reads FORBIDDEN: a test that was
                 never asked about stderr is one that has never spoken
-                there, and the first word it says is news.
+                there, and the first word it says is news. A book
+                written before E-5 may still hold 'nominal' -- unknown
+                to this enum, so it reads FORBIDDEN too: the migration
+                is silent, and a speaking choice is caught at its next
+                run rather than trusted on old say-so.
         """
         key   = NO_CHOICE_KEY if choice is None else choice
         noted = self.book().get(test, {}).get("choices", {}) \
@@ -379,9 +381,10 @@ class Bookkeeper:
                 choice -- written verbatim, replacing any earlier note.
 
         THE NOTE IS THE DECISION, and acceptance is where it is taken.
-        Noting NOMINAL does not write a nominal; noting IGNORED or
-        FORBIDDEN removes any nominal stderr, since a stream cannot be
-        both compared and disregarded.
+        STDERR IS NEVER SUBJECT TO TESTING (E-5): noting IGNORED or
+        FORBIDDEN removes any nominal stderr that lingers from before
+        this ruling, since a stream cannot be both compared and
+        disregarded.
         """
         note       = E_StderrNote(note)
         content    = self.book()
@@ -390,9 +393,11 @@ class Bookkeeper:
         key        = NO_CHOICE_KEY if choice is None else choice
         choice_db.setdefault(key, {})["stderr"] = note.value
         self._write_book(content)
-        if note is not E_StderrNote.NOMINAL:
-            path = self.nominal_path(test, choice, "stderr")
-            if path.exists(): path.unlink()
+        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): every remaining
+        #  note -- IGNORED or FORBIDDEN -- means no nominal stderr can
+        #  stand, so any that lingers is removed, unconditionally.
+        path = self.nominal_path(test, choice, "stderr")
+        if path.exists(): path.unlink()
         return note
 
     def result(self, test, choice, operation):

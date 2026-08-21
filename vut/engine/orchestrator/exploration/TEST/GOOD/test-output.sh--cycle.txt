@@ -1,0 +1,11 @@
+first run (no nominal yet): status 1
+residue in the test directory: 0
+candidates:
+    test-file.result.csv
+    test-file.stderr
+    test-file.stdout
+accepted: status 0
+nominals:
+    test-file.result.csv
+    test-file.stdout
+STATUS: 0

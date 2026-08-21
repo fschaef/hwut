@@ -143,3 +143,29 @@ DECISION  stderr is for ERROR REPORTING; that is its whole job. Never
 
 COST      One more flag, and a refusal where HWUT 1.0 users may have
           expected a question. The refusal names both ways out.
+
+----------------------------------------------------------------------------
+E-6  ACCEPT REFUSES THE STREAM THAT NEVER COMPLETED
+----------------------------------------------------------------------------
+PROBLEM   A candidate can sit in the store without its closing token:
+          a run cut short, an abort, a crash mid-write, or an
+          application that does not speak R-70. Promotion would bless
+          an INCOMPLETE stream as the pole every later run is judged
+          against.
+
+DECISION  'hwut.accept' refuses to operate where a selected stdout
+          candidate's last line is not '<hwut-end>'. Atomic, before
+          any pole is touched; every offending key named. NO FLAG
+          bypasses it: '--force' overrides a standing pole, never
+          stream integrity. Consistent by construction with the abort
+          ruling (the aborting entity provides FAIL; content
+          irrelevant) and with R-70 (the token is the stream's own
+          testimony of completeness). File subjects are exempt: their
+          completeness is the READING POINT (after the token), not a
+          token of their own.
+
+COST      Every fixture and every hand-run application must speak the
+          law -- print the token as its last line -- including the
+          suites' own bash fixtures, which were corrected rather than
+          exempted: a fixture that does not speak the law is a
+          fixture that lies.

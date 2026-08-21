@@ -66,6 +66,13 @@ class TestChoiceConfiguration:
     """
     canonicalisers: Mapping[str, Sequence[str]] = field(default_factory=dict)
     compare:        object                      = None
+    #  WHAT THE TEST PRODUCES, as DECLARED ('output', todo-1): subject
+    #  names in order. 'stdout' marks the channel; every other name is
+    #  a FILE in the test directory, read AFTER the run has ended --
+    #  no interleaving to observe, hence no race. A declared file that
+    #  is absent is the verdict 'output-file-not-found'. None: the
+    #  default, ('stdout',). stderr is NEVER here (E-5).
+    output:         Sequence[str] | None       = None
 
 
 @dataclass(frozen=True)

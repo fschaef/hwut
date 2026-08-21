@@ -63,7 +63,8 @@ import textwrap
 import sys
 import config                                                       # noqa: F401
 
-from   vut.language_support.python.hwut_runner import HwutRunner, ScriptApplication
+from   vut.language_support.python.hwut_runner  import HwutRunner
+from   vut.language_support.python.script_runner import CRunScript
 from   vut.engine.hwut_pype.hwut_pype          import parse, Interpreter, PypeError, generate_example_input
 
 
@@ -1112,7 +1113,7 @@ def run_boundaries_stack():
     banner("--trace: gcc-style 'file:line:' diagnostics on stderr")
     interpreter_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
-    with ScriptApplication(
+    with CRunScript(
             file_name       = "tmp-trace.pype",
             shebang         = "#!" + interpreter_path,
             script_txt_list = [
@@ -1144,7 +1145,7 @@ def run_boundaries_stack():
             print("}")
 
     banner("--trace with mode-name filters traces only those modes")
-    with ScriptApplication(
+    with CRunScript(
             file_name       = "tmp-trace-filter.pype",
             shebang         = "#!" + interpreter_path,
             script_txt_list = [
@@ -1169,7 +1170,7 @@ def run_boundaries_stack():
     banner("--dry-run checks the script and reads no input")
     interpreter = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
-    with ScriptApplication(
+    with CRunScript(
             file_name       = "tmp-dry.pype",
             shebang         = "#!" + interpreter,
             script_txt_list = [
@@ -1183,7 +1184,7 @@ def run_boundaries_stack():
             capture_output = True, text = True)
         print("EXIT:", result.returncode)
         print("STDOUT:", result.stdout.strip())
-    with ScriptApplication(
+    with CRunScript(
             file_name       = "tmp-dry-bad.pype",
             shebang         = "#!" + interpreter,
             script_txt_list = [
@@ -1479,7 +1480,7 @@ def run_pipe():
     print("SCRIPT: 'tmp-filter.pype' (she-bang: hwut.pype) {")
     for line in script_txt_list: print("    " + line)
     print("}")
-    with ScriptApplication(
+    with CRunScript(
             file_name       = "tmp-filter.pype",
             shebang         = "#!" + interpreter,
             script_txt_list = script_txt_list,

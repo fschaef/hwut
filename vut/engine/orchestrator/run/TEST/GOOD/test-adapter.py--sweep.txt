@@ -14,6 +14,7 @@ INSPECT: every member of 'TestParameters', stated alone
          same             naming
          interactive      interactive
          execute          execute
+         output           output
   OK  : every stated parameter reaches a component -- none is silently dropped
 SUCCESS: what an author states, a component receives.
 <hwut-end>

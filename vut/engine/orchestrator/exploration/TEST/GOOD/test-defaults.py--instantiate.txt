@@ -35,5 +35,6 @@ ConfigStore:
     same_nominal_f                 False
 ConfigRunner:
     interactive_f                  False
+    output                         ('<stdout>',)
     execute                        None
 <hwut-end>

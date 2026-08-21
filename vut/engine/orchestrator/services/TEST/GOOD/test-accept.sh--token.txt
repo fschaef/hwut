@@ -1,0 +1,9 @@
+STATUS: 1
+STDOUT {
+    REFUSED: the closing token '<hwut-end>' does not appear --
+        test-cut.sh .stdout
+    a stream without its terminal token never COMPLETED; nothing here is
+    promotable. Re-run the test. An application the framework does not run
+    prints the token itself, as its last line.
+}
+GOOD holds:

@@ -109,6 +109,7 @@ def _stated_value(member):
         case "same":        return True
         case "interactive": return True
         case "execute":     return "./run-me --now"
+        case "output":      return ("<stdout>", "extra.log")
         case _:
             assert False, ("the sweep does not know how to state '%s'"
                            % member.name)
@@ -139,6 +140,8 @@ def _arrivals(parameters):
         arrival.append("canonicalisers")
     if carried_choice.compare is not None:
         arrival.append("compare")
+    if plain_choice.output != carried_choice.output:
+        arrival.append("output")
     if naming_of(_app(parameters)) != naming_of(_app(TestParameters())):
         arrival.append("naming")
     return arrival

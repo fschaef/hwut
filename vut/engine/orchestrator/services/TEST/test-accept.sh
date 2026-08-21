@@ -26,7 +26,7 @@ export PYTHONPATH="$ROOT"
 case "$1" in
     --hwut-info)
         echo "The hwut.accept face: promotion, and what it refuses."
-        echo "CHOICES: bless, merge, stderr, sugar, ask;"
+        echo "CHOICES: bless, merge, stderr, sugar, ask, token;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -53,9 +53,9 @@ fixture() {             # one directory, one plain test, one two-choice
     mkdir -p tree/suite/TEST
     printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
         > tree/suite/TEST/hwut.conf
-    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\n' \
+    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-ok.sh
-    printf '#!/bin/bash\n# hwut { title = "Two"\n#        choices = ["a", "b"] }\necho "choice $1"\n' \
+    printf '#!/bin/bash\n# hwut { title = "Two"\n#        choices = ["a", "b"] }\necho "choice $1"\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-two.sh
     chmod +x tree/suite/TEST/*.sh
     $RUN --directory=tree --silent 2> /dev/null
@@ -90,7 +90,7 @@ stderr)
     #  default: refused by name with both remedies; '--stderr-tol'
     #  notes IGNORED, and the note GOVERNS -- the re-run is green.
     fixture
-    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\necho "a warning" >&2\n' \
+    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\necho "a warning" >&2\necho "<hwut-end>"\n' \
         > tree/suite/TEST/test-ok.sh
     chmod +x tree/suite/TEST/test-ok.sh
     $RUN --directory=tree --silent 2> /dev/null
@@ -116,6 +116,21 @@ sugar)
     echo "== the same thing, spelled as the wish =="
     fixture
     face --directory=tree/suite/TEST --yes --glob "test-two.sh a"
+    echo "GOOD holds:"
+    good | sed 's/^/    /'
+    ;;
+
+token)
+    #  THE CLOSING TOKEN (R-70): a candidate whose stdout does not end
+    #  in '<hwut-end>' never COMPLETED. REFUSED atomically -- nothing
+    #  is promotable while one incomplete stream stands in the
+    #  selection, and no flag bypasses.
+    fixture
+    printf '#!/bin/bash\n# hwut { title = "Cut" }\necho "half a line"\n' \
+        > tree/suite/TEST/test-cut.sh
+    chmod +x tree/suite/TEST/test-cut.sh
+    $RUN --directory=tree --silent 2> /dev/null
+    face --directory=tree/suite/TEST --yes --force
     echo "GOOD holds:"
     good | sed 's/^/    /'
     ;;

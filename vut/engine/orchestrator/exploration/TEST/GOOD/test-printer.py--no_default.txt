@@ -30,6 +30,7 @@ test-a.py {
             same = false                      # default
             interactive = false               # default
             execute = null                    # default
+            output = ["<stdout>"]             # default
         }
     }
 }
