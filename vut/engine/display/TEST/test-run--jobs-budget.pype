@@ -1,0 +1,8 @@
+#! /usr/bin/env hwut.pype
+# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+# The flow digest, and the most work ever standing at once -- the
+# '--jobs' budget made visible.
+import: "test-run.pype"
+on: <bof> => {
+    peak_f = True
+}

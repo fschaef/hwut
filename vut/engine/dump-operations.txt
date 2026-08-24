@@ -728,6 +728,82 @@ new file mode 100644
 +'hwut.renovate' should report which tests would newly refuse under S-1
 +-- those that write on stderr with no nominal and no mark -- so a tree
 +can be surveyed before the law is met test by test.
+diff --git a/operations/DISCUSSIONS/todo-1-judgement-timing.txt b/operations/DISCUSSIONS/todo-1-judgement-timing.txt
+new file mode 100644
+--- /dev/null
++++ b/operations/DISCUSSIONS/todo-1-judgement-timing.txt
+@@ -0,0 +1,71 @@
++todo-1  WHEN A SUBJECT MAY BE JUDGED -- and what may abort a run
++        decided, unbuilt
++
++DECIDED (ruled in session)
++
++    '<hwut-end>' ends every test run: without a choice, with a
++    choice, interactive -- every road. (The session-path omission in
++    hwut_runner.__run_into_sinks is FIXED; see the R-70 fix note.)
++
++    STDOUT is an append-only stream. It may be compared WHILE it
++    arrives, line by line, against the nominal. A divergence there
++    MAY ABORT the run early.
++
++    A FILE develops with REVISIONS during the run -- written,
++    rewritten, truncated, seeked. Only its FINAL state is the
++    subject. It is judged only AFTER '<hwut-end>' has been received.
++    A file divergence can NEVER abort a run early.
++
++    THE COMPARATOR SETUP MUST BE CONDITIONED on the subject's kind:
++
++        comparator(stdout)   armed at run start; may stream;
++                             may abort the run
++        comparator(file)     armed at token receipt; judges the
++                             final state, once
++
++WHAT STANDS, WHAT DOES NOT
++
++    single run    files read after the end, judged after -- CONFORMS
++                  (stage_execute._output_files, R-71).
++    session       BUILT (this session): 'read_declared_files' is ONE
++                  implementation in stage_execute.py, called by both
++                  roads; the session calls it after the CHOICE'S
++                  'done' (which the token precedes), read-and-remove
++                  PER CHOICE. Containment speaks before a missing
++                  file. Proven: test-multi-execute.py--files (writer,
++                  forgetter, and an untouched file-less sibling).
++    early abort   NOT built on any road. All comparison happens
++                  after the run today.
++
++RULED -- file naming needs no new law
++    (source-file, choice) is unique by construction; 'test--choice'
++    extended by the output name stays unique AND parseable, provided
++    an output name never starts with '-'. That one refusal stands in
++    the validator (exploration, R-71); nothing else was needed.
++
++OPEN -- raise before building the early abort
++    (1) STREAMABILITY. Live judgement is only SOUND where a
++        divergence in a prefix implies divergence of the whole --
++        the comparison must be PREFIX-MONOTONE. Per-element
++        tolerances (numeric, eq-pattern on a line) are prefix-safe.
++        ANALOGY regions absorb REORDERING: the candidate's early
++        lines may match the nominal's late ones, so no prefix
++        verdict exists. A PYPE is an arbitrary filter: a sorting
++        pype makes the whole stream non-streamable. So the
++        comparator conditioning has a THIRD axis beside channel/file:
++
++            streamable      no pype, no analogy region in T
++                            -> live comparison, MAY abort
++            not streamable  -> judged whole, after the token,
++                            like a file
++
++        The conservative predicate costs nothing: where unsure,
++        judge after the token -- correctness never depends on the
++        abort, only speed does.
++
++    (2) RULED (standing, replayed): when a run is aborted, THE
++        ENTITY THAT TRIGGERS THE ABORT PROVIDES THE VERDICT -- FAIL
++        upon abortion. Any output content is IRRELEVANT: nothing is
++        recorded, nothing is kept, no candidate exists. Consistent
++        with the token law by construction: a stream without its
++        terminal token could never be promoted anyway.
 diff --git a/operations/README.txt b/operations/README.txt
 new file mode 100644
 --- /dev/null
@@ -1993,107 +2069,6 @@ new file mode 100644
 +nothing at all, not even the stdout that was fine. A caller that NAMES
 +'stderr' among the subjects to accept has decided by naming it.
 +Whitespace is silence.
-diff --git a/operations/TEST/ADM/cache.fly b/operations/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/operations/TEST/ADM/cache.fly
-@@ -0,0 +1,96 @@
-+{
-+title: Products, the derived result, and the progress seam;
-+file_name: test-report.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ console; OK; 0.262488; 0; ]
-+  [ empty_comparison; OK; 0.266088; 0; ]
-+  [ failed_build; OK; 0.266228; 0; ]
-+  [ observer; OK; 0.263741; 0; ]
-+  [ precedence; OK; 0.265668; 0; ]
-+  [ products; OK; 0.263887; 0; ]
-+]
-+}
-+{
-+title: The build step of provision;
-+file_name: test-build_action.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ argv; OK; 0.295924; 0; ]
-+  [ contained; OK; 1.429875; 0; ]
-+  [ reasons; OK; 0.457380; 0; ]
-+  [ silent_failure; OK; 0.313857; 0; ]
-+  [ success; OK; 0.315710; 0; ]
-+]
-+}
-+{
-+title: The component's hygiene, checked rather than remembered;
-+file_name: test-hygiene.py;
-+hwut_info_time: 1787116219L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ good_files; OK; 0.277326; 0; ]
-+  [ no_crash; OK; 0.273393; 0; ]
-+  [ no_orphans; OK; 0.672358; 0; ]
-+  [ return_first; OK; 0.335788; 0; ]
-+  [ token_ranks; OK; 0.263588; 0; ]
-+]
-+}
-+{
-+title: The configuration of one test application;
-+file_name: test-configuration.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ aggregation; OK; 0.287005; 0; ]
-+  [ choices; OK; 0.286706; 0; ]
-+  [ frozen; OK; 0.292128; 0; ]
-+  [ interpreted; OK; 0.431433; 0; ]
-+  [ places; OK; 0.428750; 0; ]
-+  [ refusal; OK; 0.425162; 0; ]
-+]
-+}
-+{
-+title: The front door and its ceremony;
-+file_name: test-session.py;
-+hwut_info_time: 1787120198L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ book; OK; 0.728415; 0; ]
-+  [ busy; OK; 0.874135; 0; ]
-+  [ goal; OK; 0.880677; 0; ]
-+  [ lock; OK; 0.671549; 0; ]
-+  [ recording; OK; 0.803893; 0; ]
-+  [ refused; OK; 0.822107; 0; ]
-+  [ request; OK; 0.872403; 0; ]
-+  [ setup; OK; 0.705499; 0; ]
-+  [ sidecars; OK; 0.881170; 0; ]
-+  [ target; OK; 0.747383; 0; ]
-+  [ the_arc; OK; 0.884697; 0; ]
-+  [ where; OK; 0.662412; 0; ]
-+]
-+}
-+{
-+title: every silent failure names itself;
-+title_group: Diagnosis;
-+file_name: test-diagnosis.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ channel_hint; OK; 0.298130; 0; ]
-+  [ empty_answer; OK; 0.297782; 0; ]
-+  [ never_judges; OK; 0.299179; 0; ]
-+  [ nothing; OK; 0.296829; 0; ]
-+  [ one_source; OK; 0.297283; 0; ]
-+  [ record; OK; 0.297432; 0; ]
-+  [ resolution; OK; 0.298319; 0; ]
-+]
-+}
 diff --git a/operations/TEST/GOOD/test-build_action.py--argv.txt b/operations/TEST/GOOD/test-build_action.py--argv.txt
 new file mode 100644
 --- /dev/null
@@ -4993,7 +4968,7 @@ diff --git a/operations/configuration.py b/operations/configuration.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/configuration.py
-@@ -0,0 +1,197 @@
+@@ -0,0 +1,204 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -5062,6 +5037,13 @@ new file mode 100644
 +    """
 +    canonicalisers: Mapping[str, Sequence[str]] = field(default_factory=dict)
 +    compare:        object                      = None
++    #  WHAT THE TEST PRODUCES, as DECLARED ('output', todo-1): subject
++    #  names in order. 'stdout' marks the channel; every other name is
++    #  a FILE in the test directory, read AFTER the run has ended --
++    #  no interleaving to observe, hence no race. A declared file that
++    #  is absent is the verdict 'output-file-not-found'. None: the
++    #  default, ('stdout',). stderr is NEVER here (E-5).
++    output:         Sequence[str] | None       = None
 +
 +
 +@dataclass(frozen=True)
@@ -5191,64 +5173,6 @@ new file mode 100644
 +        raise ConfigurationError("choice %r maps to %s, not a "
 +                                 "TestChoiceConfiguration."
 +                                 % (name, type(entry).__name__))
-diff --git a/operations/consume/TEST/ADM/cache.fly b/operations/consume/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/operations/consume/TEST/ADM/cache.fly
-@@ -0,0 +1,53 @@
-+{
-+title: DifferenceDisplay and the feed session;
-+file_name: test-difference-display.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ down_stream; OK; 0.785224; 0; ]
-+  [ every_subject; OK; 0.646668; 0; ]
-+  [ no_provision; OK; 0.774647; 0; ]
-+  [ only_differing; OK; 0.786495; 0; ]
-+  [ sequence; OK; 0.804188; 0; ]
-+  [ signature; OK; 0.752541; 0; ]
-+  [ verdict_safe; OK; 0.836137; 0; ]
-+]
-+}
-+{
-+title: write the nominal;
-+title_group: Accept;
-+file_name: test-accept.py;
-+hwut_info_time: 1787143364L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ all_or_nothing; OK; 0.633944; 0; ]
-+  [ initiate; OK; 0.630216; 0; ]
-+  [ ledger; OK; 0.758676; 0; ]
-+  [ pulls_run; OK; 0.647004; 0; ]
-+  [ stderr; OK; 0.792808; 0; ]
-+  [ take_dump; OK; 0.810282; 0; ]
-+  [ the_loop; OK; 0.724011; 0; ]
-+]
-+}
-+{
-+title: read -> verdict;
-+title_group: EquivalenceCheck;
-+file_name: test-equivalence-check.py;
-+hwut_info_time: 1787143364L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ blind; OK; 0.784331; 0; ]
-+  [ fast_fail; OK; 0.861593; 0; ]
-+  [ named_absent; OK; 0.782087; 0; ]
-+  [ nominal_missing; OK; 0.632321; 0; ]
-+  [ observer; OK; 0.643464; 0; ]
-+  [ provision_failed; OK; 0.608667; 0; ]
-+  [ terminated; OK; 0.609281; 0; ]
-+  [ unexpected_stderr; OK; 0.756436; 0; ]
-+  [ unjudged; OK; 0.639887; 0; ]
-+  [ verdict; OK; 0.804640; 0; ]
-+]
-+}
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--all_or_nothing.txt b/operations/consume/TEST/GOOD/test-accept.py--all_or_nothing.txt
 new file mode 100644
 --- /dev/null
@@ -5296,31 +5220,30 @@ new file mode 100644
 +++ b/operations/consume/TEST/GOOD/test-accept.py--pulls_run.txt
 @@ -0,0 +1,9 @@
 +INSPECT: report        = ok
-+         accepted      = ['stderr', 'stdout']
++         accepted      = ['stdout']
 +         stdout stored = 'to stdout\n'
 +         provision run = True (records: 1)
 +  OK  : acceptance succeeded without any dump being handed over
-+  OK  : both subjects were accepted
-+  OK  : provision ran ONCE -- one attribution record for two subjects
-+SUCCESS: an unmet precondition pulls provision, once.
++  OK  : the one subject was accepted
++  OK  : provision ran ONCE, one attribution record
++SUCCESS: an unmet precondition pulls provision.
 +<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--stderr.txt b/operations/consume/TEST/GOOD/test-accept.py--stderr.txt
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/GOOD/test-accept.py--stderr.txt
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,12 @@
 +INSPECT: an unnoted choice reads forbidden
 +         asked for    report                 book note   nominal file
 +         (nothing)    stderr-undecided       forbidden   False
-+         nominal      ok                     nominal     True
 +         ignored      ok                     ignored     False
 +         forbidden    ok                     forbidden   False
 +  OK  : a stream with words and no note REFUSES the ceremony
 +  OK  : and nothing at all is written -- not even the stdout that was fine
-+  OK  : 'nominal' notes the book AND records the stream
++  OK  : 'nominal' is RETIRED: no reading ever records the stream
 +  OK  : 'ignored' notes the book and records nothing
 +  OK  : 'forbidden' notes the book and records nothing
-+SUCCESS: one note, three readings, and the author writes it.
++SUCCESS: two readings, never the stream, and the author writes it.
 +<hwut-end>
 diff --git a/operations/consume/TEST/GOOD/test-accept.py--take_dump.txt b/operations/consume/TEST/GOOD/test-accept.py--take_dump.txt
 new file mode 100644
@@ -5621,7 +5544,7 @@ diff --git a/operations/consume/TEST/test-accept.py b/operations/consume/TEST/te
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/TEST/test-accept.py
-@@ -0,0 +1,393 @@
+@@ -0,0 +1,400 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -5736,14 +5659,20 @@ new file mode 100644
 +
 +def test_pulls_provision():
 +    """A step naming no dump has an UNMET PRECONDITION, so provision
-+    activates -- and it activates ONCE, however many subjects need it."""
-+    directory = _place("import sys\n"
-+                       "print('to stdout')\n"
-+                       "sys.stderr.write('to stderr\\n')\n")
++    activates.
++
++    Formerly exercised with 'stdout' AND 'stderr' as the two subjects
++    pulling one provision. STDERR IS NEVER A SUBJECT (E-5): the
++    fixture that named it is a fixture that named an impossible thing,
++    not a defect the removal exposed. A second REAL subject needs a
++    file, which needs the 'output' parameter (exploration/DISCUSSIONS/
++    todo-1) -- not yet built. Reduced to the one subject that still
++    stands; re-widen to two once a file subject exists."""
++    directory = _place("print('to stdout')\n")
 +    store  = Store(Bookkeeper(directory))
 +    result = asyncio.run(Accept(AcceptConfig(
 +        "demo",
-+        {"stdout": AcceptStep(), "stderr": AcceptStep()},
++        {"stdout": AcceptStep()},
 +        groundwork=Run(_configuration(directory))), store).run())
 +
 +    print("INSPECT: report        = %s" % result.report)
@@ -5756,14 +5685,14 @@ new file mode 100644
 +    ok = _check([
 +        (result.verdict is True,
 +         "acceptance succeeded without any dump being handed over"),
-+        (sorted(result.accepted_db) == ["stderr", "stdout"],
-+         "both subjects were accepted"),
++        (sorted(result.accepted_db) == ["stdout"],
++         "the one subject was accepted"),
 +        (result.provision is not None
 +             and len(result.provision.records) == 1,
-+         "provision ran ONCE -- one attribution record for two subjects"),
++         "provision ran ONCE, one attribution record"),
 +    ])
 +    shutil.rmtree(directory, ignore_errors=True)
-+    _verdict(ok, "an unmet precondition pulls provision, once.")
++    _verdict(ok, "an unmet precondition pulls provision.")
 +
 +
 +def test_all_or_nothing():
@@ -5961,8 +5890,7 @@ new file mode 100644
 +    print("         %-12s %-22s %-11s %s"
 +          % ("asked for", "report", "book note", "nominal file"))
 +    outcome_db = {}
-+    for note in (None, E_StderrNote.NOMINAL, E_StderrNote.IGNORED,
-+                 E_StderrNote.FORBIDDEN):
++    for note in (None, E_StderrNote.IGNORED, E_StderrNote.FORBIDDEN):
 +        result, written, nominal_f = accepted(note)
 +        outcome_db[note] = (result, written, nominal_f)
 +        print("         %-12s %-22s %-11s %s"
@@ -5976,9 +5904,10 @@ new file mode 100644
 +        (not refused.accepted_db,
 +         "and nothing at all is written -- not even the stdout that "
 +         "was fine"),
-+        (outcome_db[E_StderrNote.NOMINAL][1] is E_StderrNote.NOMINAL
-+         and outcome_db[E_StderrNote.NOMINAL][2],
-+         "'nominal' notes the book AND records the stream"),
++        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): there is no
++        #  reading that records the stream itself -- only the note.
++        (not hasattr(E_StderrNote, "NOMINAL"),
++         "'nominal' is RETIRED: no reading ever records the stream"),
 +        (outcome_db[E_StderrNote.IGNORED][1] is E_StderrNote.IGNORED
 +         and not outcome_db[E_StderrNote.IGNORED][2],
 +         "'ignored' notes the book and records nothing"),
@@ -5986,7 +5915,8 @@ new file mode 100644
 +         and not outcome_db[E_StderrNote.FORBIDDEN][2],
 +         "'forbidden' notes the book and records nothing"),
 +    ])
-+    _verdict(ok, "one note, three readings, and the author writes it.")
++    _verdict(ok, "two readings, never the stream, and the author "
++                "writes it.")
 +
 +
 +class _Provided:
@@ -6816,7 +6746,7 @@ diff --git a/operations/consume/accept.py b/operations/consume/accept.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/consume/accept.py
-@@ -0,0 +1,313 @@
+@@ -0,0 +1,307 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -6965,15 +6895,11 @@ new file mode 100644
 +            self.store.accept(config.name, config.choice, name, text)
 +            notify(self.observer, "verdict", name, True)
 +
-+        #  THE NOTE IS THE DECISION (S-1): written verbatim into the
-+        #  book, and 'nominal' additionally records the stream itself.
++        #  THE NOTE IS THE DECISION: written verbatim into the book.
++        #  STDERR IS NEVER SUBJECT TO TESTING (E-5) -- unlike every
++        #  other subject, its stream is never itself accepted; only
++        #  the note is.
 +        match config.stderr:
-+            case E_StderrNote.NOMINAL:
-+                self.store.accept(config.name, config.choice, "stderr",
-+                                  self._stderr_text(self._provided))
-+                self.store.note_stderr(config.name, config.choice,
-+                                       E_StderrNote.NOMINAL)
-+                notify(self.observer, "verdict", "stderr", True)
 +            case E_StderrNote.IGNORED | E_StderrNote.FORBIDDEN:
 +                self.store.note_stderr(config.name, config.choice,
 +                                       config.stderr)
@@ -7011,11 +6937,9 @@ new file mode 100644
 +        """
 +        config = self.config
 +        if config.stderr is not None:            return E_TestRunResult.OK
-+        if "stderr" in config.subjects:
-+            #  ASKED FOR BY NAME: the caller named stderr among the
-+            #  subjects to accept, which IS the decision -- the second
-+            #  question is about a stream that appeared UNASKED.
-+            return E_TestRunResult.OK
++        #  STDERR IS NEVER A SUBJECT (E-5): 'config.subjects' can no
++        #  longer name it, so the earlier "asked for by name" escape
++        #  is gone -- there is no second way to have decided.
 +        if not _has_words(self._stderr_text(provided)):
 +            return E_TestRunResult.OK
 +        if self.store.stderr_note(config.name, config.choice) \
@@ -7713,50 +7637,6 @@ new file mode 100644
 +        if provision_record is None: return
 +        self._write(explain(self.configuration, self.choice_name,
 +                            provision_record))
-diff --git a/operations/interaction/TEST/ADM/cache.fly b/operations/interaction/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/operations/interaction/TEST/ADM/cache.fly
-@@ -0,0 +1,39 @@
-+{
-+title: The TUI tier;
-+file_name: test-tui.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ display_only; OK; 0.586853; 0; ]
-+  [ editor_loop; OK; 0.606107; 0; ]
-+  [ elements; OK; 0.588534; 0; ]
-+  [ reading; OK; 0.724632; 0; ]
-+  [ regions; OK; 0.786688; 0; ]
-+  [ rendering; OK; 0.720372; 0; ]
-+  [ target_wiring; OK; 0.557654; 0; ]
-+  [ undecided_author; OK; 0.614428; 0; ]
-+]
-+}
-+{
-+title: the UP half;
-+title_group: The merge session;
-+file_name: test-merge.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ cancel; OK; 0.817357; 0; ]
-+  [ commit; OK; 0.774123; 0; ]
-+  [ display_only; OK; 0.658726; 0; ]
-+  [ empty_commit; OK; 0.763705; 0; ]
-+  [ envelope; OK; 0.613236; 0; ]
-+  [ loop; OK; 0.891665; 0; ]
-+  [ loop_pipe; OK; 0.697393; 0; ]
-+  [ loop_realigns; OK; 0.710329; 0; ]
-+  [ rich_client; OK; 0.686124; 0; ]
-+  [ sequence; OK; 0.707520; 0; ]
-+  [ unknown; OK; 0.619206; 0; ]
-+  [ widened_down; OK; 0.624713; 0; ]
-+]
-+}
 diff --git a/operations/interaction/TEST/GOOD/test-merge.py--cancel.txt b/operations/interaction/TEST/GOOD/test-merge.py--cancel.txt
 new file mode 100644
 --- /dev/null
@@ -9970,39 +9850,6 @@ new file mode 100644
 +    lua/vut_merge/init.lua       the neovim glue: buffers, keys, streams
 +    TEST/                        HWUT choices, written in Lua
 +============================================================================
-diff --git a/operations/interaction/nvim/TEST/ADM/cache.fly b/operations/interaction/nvim/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/operations/interaction/nvim/TEST/ADM/cache.fly
-@@ -0,0 +1,28 @@
-+{
-+title: The editor half, driven by a real neovim;
-+file_name: test-view.lua;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ nvim; -l; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ bound_and_closed; OK; 0.010597; 0; ]
-+  [ commit_carries_text; OK; 0.012761; 0; ]
-+  [ panes; OK; 0.014225; 0; ]
-+  [ subject_protected; OK; 0.021379; 0; ]
-+]
-+}
-+{
-+title: The merge plugin's protocol layer (Lua);
-+file_name: test-protocol.lua;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ nvim; -l; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ envelope; OK; 0.020896; 0; ]
-+  [ fold; OK; 0.022176; 0; ]
-+  [ foreign; OK; 0.021192; 0; ]
-+  [ truncated; OK; 0.022023; 0; ]
-+  [ two_sides; OK; 0.021768; 0; ]
-+  [ unknown_kind; OK; 0.022176; 0; ]
-+]
-+}
 diff --git a/operations/interaction/nvim/TEST/GOOD/test-protocol.lua--envelope.txt b/operations/interaction/nvim/TEST/GOOD/test-protocol.lua--envelope.txt
 new file mode 100644
 --- /dev/null
@@ -12335,59 +12182,22 @@ new file mode 100644
 +two or more requests, no replay, channel subjects only -- one dissenter
 +forces plain. The build decision (which waves, from which system) is
 +orchestrator work on the same seam.
-diff --git a/operations/run/TEST/ADM/cache.fly b/operations/run/TEST/ADM/cache.fly
+diff --git a/operations/run/TEST/GOOD/test-multi-execute.py--files.txt b/operations/run/TEST/GOOD/test-multi-execute.py--files.txt
 new file mode 100644
 --- /dev/null
-+++ b/operations/run/TEST/ADM/cache.fly
-@@ -0,0 +1,48 @@
-+{
-+title: execute, canonicalise, and the loaded read;
-+title_group: Provision;
-+file_name: test-provision.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ absent_application; OK; 0.461289; 0; ]
-+  [ argv; OK; 0.451558; 0; ]
-+  [ canonicalisation; OK; 0.425307; 0; ]
-+  [ canonicaliser_broken; OK; 0.459615; 0; ]
-+  [ containment; OK; 2.559757; 0; ]
-+  [ loaded; OK; 0.444457; 0; ]
-+  [ same_shape; OK; 0.460421; 0; ]
-+  [ source_kinds; OK; 0.481196; 0; ]
-+  [ stages; OK; 0.445287; 0; ]
-+  [ subjects; OK; 0.334388; 0; ]
-+]
-+}
-+{
-+title: one application call, many choices;
-+title_group: The multi-executor;
-+file_name: test-multi-execute.py;
-+hwut_info_time: 1787114684L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ plugged; OK; 0.787999; 0; ]
-+  [ refused; OK; 0.757992; 0; ]
-+  [ session; OK; 0.734789; 0; ]
-+  [ status; OK; 0.711065; 0; ]
-+  [ unknown; OK; 0.751129; 0; ]
-+]
-+}
-+{
-+title: one interface per role, refused at the door;
-+title_group: The provider seam;
-+file_name: test-provider.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ cadence; OK; 0.492752; 0; ]
-+  [ door; OK; 0.293607; 0; ]
-+  [ foreign; OK; 0.299892; 0; ]
-+  [ roles; OK; 0.297344; 0; ]
-+  [ scheme; OK; 0.429715; 0; ]
-+]
-+}
++++ b/operations/run/TEST/GOOD/test-multi-execute.py--files.txt
+@@ -0,0 +1,11 @@
++INSPECT: delta -> report ok, subjects ['delta.csv', 'stderr', 'stdout']
++         delta.csv = 'a,b\n1,2\n'
++         omega -> report output-file-not-found, subjects ['stderr', 'stdout']
++         residue after delta: False
++  OK  : the declared file is a subject, read after the CHOICE's done
++  OK  : and REMOVED -- per choice: a sibling never finds the leftover
++  OK  : a forgotten declared file is a verdict, not a silence
++  OK  : and never an empty stand-in subject
++  OK  : a file-less sibling is untouched by its neighbours' files
++SUCCESS: the session road obeys R-71: declared, after the token, removed.
++<hwut-end>
 diff --git a/operations/run/TEST/GOOD/test-multi-execute.py--plugged.txt b/operations/run/TEST/GOOD/test-multi-execute.py--plugged.txt
 new file mode 100644
 --- /dev/null
@@ -12644,16 +12454,19 @@ diff --git a/operations/run/TEST/GOOD/test-provision.py--subjects.txt b/operatio
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/GOOD/test-provision.py--subjects.txt
-@@ -0,0 +1,10 @@
-+INSPECT: report   = ok
+@@ -0,0 +1,13 @@
++INSPECT: declared = ('stdout', 'emitted.txt')
++         report   = ok
 +         subjects = ['emitted.txt', 'stderr', 'stdout']
 +           emitted.txt  'to a file\n'
 +           stderr       'to stderr\n'
 +           stdout       'to stdout\n'
-+  OK  : three subjects: two channels and one output file
++         residue  = False
++  OK  : the DECLARED file is a subject, beside both channels
 +  OK  : provision reports OK
 +  OK  : one attribution record: one supervised call happened
-+SUCCESS: channels and output files alike are subjects.
++  OK  : read AND REMOVED: the carrier leaves no residue
++SUCCESS: a declared file is a subject; the channels always are.
 +<hwut-end>
 diff --git a/operations/run/TEST/config.py b/operations/run/TEST/config.py
 new file mode 100644
@@ -12710,7 +12523,7 @@ diff --git a/operations/run/TEST/test-multi-execute.py b/operations/run/TEST/tes
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/test-multi-execute.py
-@@ -0,0 +1,311 @@
+@@ -0,0 +1,375 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -12718,7 +12531,7 @@ new file mode 100644
 +PURPOSE: The multi-executor -- many choices of one test application
 +         through ONE supervised call, driven interactively.
 +
-+CHOICES: session, plugged, status, unknown, refused;
++CHOICES: session, plugged, status, unknown, refused, files;
 +
 +DESCRIPTION:
 +
@@ -12745,6 +12558,7 @@ new file mode 100644
 +______________________________________________________________________________
 +"""
 +import os
++import shutil
 +import sys
 +import asyncio
 +import tempfile
@@ -12804,8 +12618,16 @@ new file mode 100644
 +    print('gamma speaks, then leaves with 3')
 +    sys.exit(3)
 +
++def run_delta():
++    print('delta speaks')
++    open('delta.csv', 'w').write('a,b\\n1,2\\n')
++
++def run_omega():
++    print('omega speaks, and forgets its file')
++
 +HwutRunner(sys.argv, 'Fixture;',
-+           {'alpha': run_alpha, 'beta': run_beta, 'gamma': run_gamma}).run()
++           {'alpha': run_alpha, 'beta': run_beta, 'gamma': run_gamma,
++            'delta': run_delta, 'omega': run_omega}).run()
 +"""
 +
 +
@@ -12822,7 +12644,14 @@ new file mode 100644
 +        interpreter    = [sys.executable],
 +        test_directory = directory,
 +        caps           = ProcsitterConfig(max_wall_clock_sec=20.0),
-+        choice_db      = {"alpha": choice, "beta": choice, "gamma": choice},
++        choice_db      = {"alpha": choice, "beta": choice, "gamma": choice,
++                          #  R-71 on the SESSION road: 'delta' declares
++                          #  a file it writes; 'omega' declares one it
++                          #  FORGETS.
++                          "delta": TestChoiceConfiguration(
++                              output=("stdout", "delta.csv")),
++                          "omega": TestChoiceConfiguration(
++                              output=("stdout", "omega.csv"))},
 +        interactive    = True)
 +
 +
@@ -12877,6 +12706,53 @@ new file mode 100644
 +         "produced a result is part of that result"),
 +    ])
 +    _verdict(ok, "many choices, one application call.")
++
++
++def test_files():
++    """A DECLARED FILE ON THE SESSION ROAD (todo-1-judgement-timing).
++
++    The session process does not end between choices, so the reading
++    point is the CHOICE'S 'done' -- which the token precedes -- never
++    the process end. Read-and-remove is PER CHOICE: a sibling served
++    later must not find the leftover. A choice that FORGETS its
++    declared file is the verdict 'output-file-not-found'."""
++    configuration = _interactive_configuration()
++    directory     = configuration.test_directory
++
++    async def scene():
++        """RETURN: (Supply, Supply, Supply), delta, omega, then beta --
++        a file-writer, a file-forgetter, a file-less sibling after."""
++        async with MultiExecute(configuration) as m:
++            d = await m.provider("delta").supply()
++            o = await m.provider("omega").supply()
++            b = await m.provider("beta").supply()
++            return d, o, b
++
++    d, o, b = asyncio.run(scene())
++    residue_f = os.path.exists(os.path.join(directory, "delta.csv"))
++    print("INSPECT: delta -> report %s, subjects %s"
++          % (d.report.value, sorted(d.product[0])))
++    print("         delta.csv = %r" % d.product[0]["delta.csv"])
++    print("         omega -> report %s, subjects %s"
++          % (o.report.value, sorted(o.product[0])))
++    print("         residue after delta: %s" % residue_f)
++    ok = _check([
++        (d.report is E_TestRunResult.OK
++             and d.product[0]["delta.csv"] == "a,b\n1,2\n",
++         "the declared file is a subject, read after the CHOICE's done"),
++        (not residue_f,
++         "and REMOVED -- per choice: a sibling never finds the leftover"),
++        (o.report is E_TestRunResult.OUTPUT_FILE_NOT_FOUND,
++         "a forgotten declared file is a verdict, not a silence"),
++        ("omega.csv" not in o.product[0],
++         "and never an empty stand-in subject"),
++        (b.report is E_TestRunResult.OK
++             and sorted(b.product[0]) == ["stderr", "stdout"],
++         "a file-less sibling is untouched by its neighbours' files"),
++    ])
++    shutil.rmtree(directory, ignore_errors=True)
++    _verdict(ok, "the session road obeys R-71: declared, after the "
++                 "token, removed.")
 +
 +
 +def test_plugged():
@@ -13016,6 +12892,7 @@ new file mode 100644
 +    title      = "The multi-executor: one application call, many choices",
 +    choice_map = {
 +        "session": test_session,
++        "files":   test_files,
 +        "plugged": test_plugged,
 +        "status":  test_status,
 +        "unknown": test_unknown,
@@ -13306,7 +13183,7 @@ diff --git a/operations/run/TEST/test-provision.py b/operations/run/TEST/test-pr
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/TEST/test-provision.py
-@@ -0,0 +1,902 @@
+@@ -0,0 +1,942 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -13429,9 +13306,15 @@ new file mode 100644
 +        choice_db      = {None: TestChoiceConfiguration()})
 +
 +
-+def _interpreted(directory, canonicaliser_db=None, choice_db=None):
-+    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'."""
-+    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {})
++def _interpreted(directory, canonicaliser_db=None, choice_db=None,
++                 output=None):
++    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'.
++
++    'output' states the subjects (R-71). None leaves the default --
++    the stdout channel alone.
++    """
++    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {},
++                                    output=output)
 +    return TestConfiguration(
 +        source_file    = "demo.py",
 +        source_kind    = E_SourceKind.INTERPRETED,
@@ -13468,30 +13351,44 @@ new file mode 100644
 +
 +
 +def test_subjects():
-+    """stdout, stderr and every file the run leaves under OUT/ are
-+    subjects, provided as readers of one kind."""
++    """SUBJECTS ARE DECLARED, NEVER DISCOVERED (R-71). A file becomes a
++    subject because 'output' NAMES it -- not because the run happened
++    to leave it behind. Both channels are provided regardless; what is
++    JUDGED is decided above (stderr never is, E-5).
++
++    The file is read AFTER termination, hence no race, and REMOVED:
++    a lingering file would be explored as a test application by the
++    next walk, and a stale one would green a run that stopped
++    producing it."""
 +    directory = _place(
-+        "import sys, os\n"
++        "import sys\n"
 +        "print('to stdout')\n"
 +        "sys.stderr.write('to stderr\\n')\n"
-+        "os.makedirs('OUT', exist_ok=True)\n"
-+        "open(os.path.join('OUT','emitted.txt'),'w').write('to a file\\n')\n")
-+    provided = asyncio.run(Run(_interpreted(directory)).provide())
++        "open('emitted.txt','w').write('to a file\\n')\n")
++    configuration = _interpreted(directory,
++                                 output=("stdout", "emitted.txt"))
++    provided = asyncio.run(Run(configuration).provide())
 +
-+    print("INSPECT: report   = %s" % provided.provision.report)
++    print("INSPECT: declared = %s"
++          % (configuration.choice_db[None].output,))
++    print("         report   = %s" % provided.provision.report)
 +    print("         subjects = %s" % provided.names())
 +    for name in provided.names():
 +        print("           %-12s %r" % (name, provided[name].open().read()))
++    print("         residue  = %s"
++          % os.path.exists(os.path.join(directory, "emitted.txt")))
 +    ok = _check([
 +        (provided.names() == ["emitted.txt", "stderr", "stdout"],
-+         "three subjects: two channels and one output file"),
++         "the DECLARED file is a subject, beside both channels"),
 +        (provided.provision.report is E_TestRunResult.OK,
 +         "provision reports OK"),
 +        (len(provided.provision.records) == 1,
 +         "one attribution record: one supervised call happened"),
++        (not os.path.exists(os.path.join(directory, "emitted.txt")),
++         "read AND REMOVED: the carrier leaves no residue"),
 +    ])
 +    shutil.rmtree(directory, ignore_errors=True)
-+    _verdict(ok, "channels and output files alike are subjects.")
++    _verdict(ok, "a declared file is a subject; the channels always are.")
 +
 +
 +def test_canonicalisation():
@@ -13891,9 +13788,15 @@ new file mode 100644
 +        choice_db      = {None: TestChoiceConfiguration()})
 +
 +
-+def _interpreted(directory, canonicaliser_db=None, choice_db=None):
-+    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'."""
-+    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {})
++def _interpreted(directory, canonicaliser_db=None, choice_db=None,
++                 output=None):
++    """RETURN: TestConfiguration, an INTERPRETED test in 'directory'.
++
++    'output' states the subjects (R-71). None leaves the default --
++    the stdout channel alone.
++    """
++    entry = TestChoiceConfiguration(canonicalisers=canonicaliser_db or {},
++                                    output=output)
 +    return TestConfiguration(
 +        source_file    = "demo.py",
 +        source_kind    = E_SourceKind.INTERPRETED,
@@ -13930,30 +13833,44 @@ new file mode 100644
 +
 +
 +def test_subjects():
-+    """stdout, stderr and every file the run leaves under OUT/ are
-+    subjects, provided as readers of one kind."""
++    """SUBJECTS ARE DECLARED, NEVER DISCOVERED (R-71). A file becomes a
++    subject because 'output' NAMES it -- not because the run happened
++    to leave it behind. Both channels are provided regardless; what is
++    JUDGED is decided above (stderr never is, E-5).
++
++    The file is read AFTER termination, hence no race, and REMOVED:
++    a lingering file would be explored as a test application by the
++    next walk, and a stale one would green a run that stopped
++    producing it."""
 +    directory = _place(
-+        "import sys, os\n"
++        "import sys\n"
 +        "print('to stdout')\n"
 +        "sys.stderr.write('to stderr\\n')\n"
-+        "os.makedirs('OUT', exist_ok=True)\n"
-+        "open(os.path.join('OUT','emitted.txt'),'w').write('to a file\\n')\n")
-+    provided = asyncio.run(Run(_interpreted(directory)).provide())
++        "open('emitted.txt','w').write('to a file\\n')\n")
++    configuration = _interpreted(directory,
++                                 output=("stdout", "emitted.txt"))
++    provided = asyncio.run(Run(configuration).provide())
 +
-+    print("INSPECT: report   = %s" % provided.provision.report)
++    print("INSPECT: declared = %s"
++          % (configuration.choice_db[None].output,))
++    print("         report   = %s" % provided.provision.report)
 +    print("         subjects = %s" % provided.names())
 +    for name in provided.names():
 +        print("           %-12s %r" % (name, provided[name].open().read()))
++    print("         residue  = %s"
++          % os.path.exists(os.path.join(directory, "emitted.txt")))
 +    ok = _check([
 +        (provided.names() == ["emitted.txt", "stderr", "stdout"],
-+         "three subjects: two channels and one output file"),
++         "the DECLARED file is a subject, beside both channels"),
 +        (provided.provision.report is E_TestRunResult.OK,
 +         "provision reports OK"),
 +        (len(provided.provision.records) == 1,
 +         "one attribution record: one supervised call happened"),
++        (not os.path.exists(os.path.join(directory, "emitted.txt")),
++         "read AND REMOVED: the carrier leaves no residue"),
 +    ])
 +    shutil.rmtree(directory, ignore_errors=True)
-+    _verdict(ok, "channels and output files alike are subjects.")
++    _verdict(ok, "a declared file is a subject; the channels always are.")
 +
 +
 +def test_canonicalisation():
@@ -14564,7 +14481,7 @@ diff --git a/operations/run/multi_execute.py b/operations/run/multi_execute.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/multi_execute.py
-@@ -0,0 +1,406 @@
+@@ -0,0 +1,420 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -14663,6 +14580,7 @@ new file mode 100644
 +from   pathlib import Path
 +
 +from   ..result                   import E_TestRunResult
++from   .stage_execute             import read_declared_files
 +from   ...procsitter.procsitter   import Procsitter
 +from   ...procsitter.construction import Link, chain
 +from   .core                      import (Supply, STDOUT, STDERR,
@@ -14955,10 +14873,23 @@ new file mode 100644
 +                        report      = E_TestRunResult.TEST_APP_CONTAINED,
 +                        record_list = record)
 +            case _:
-+                raw_db = session._read_sinks(
++                raw_db  = session._read_sinks(
 +                                    session._token(self.choice_name))
++                #  THE CHOICE'S declared files, read NOW -- after this
++                #  choice's 'done', which the token precedes; the
++                #  process lives on for its siblings, so the process
++                #  end can never be the reading point here
++                #  (todo-1-judgement-timing). Read-and-remove PER
++                #  CHOICE: B never reads A's leftover.
++                missing = read_declared_files(session.configuration,
++                                              self.choice_name, raw_db)
 +                report = E_TestRunResult.OK if answer >= 0 \
 +                         else E_TestRunResult.TEST_APP_CONTAINED
++                if report is E_TestRunResult.OK and missing is not None:
++                    #  Containment speaks first: a contained run
++                    #  explains a missing file better than the file's
++                    #  absence does.
++                    report = missing
 +                return Supply(product     = (raw_db, None),
 +                              report      = report,
 +                              record_list = record)
@@ -15228,7 +15159,7 @@ diff --git a/operations/run/stage_execute.py b/operations/run/stage_execute.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/run/stage_execute.py
-@@ -0,0 +1,117 @@
+@@ -0,0 +1,161 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -15242,6 +15173,7 @@ new file mode 100644
 +______________________________________________________________________________
 +"""
 +import asyncio
++from pathlib import Path
 +from   dataclasses import replace
 +
 +from   ..result                   import E_TestRunResult
@@ -15317,7 +15249,7 @@ new file mode 100644
 +                          record_list = record_list)
 +
 +        raw_db = {STDOUT: stdout_text, STDERR: stderr_text}
-+        raw_db.update(self._output_files())
++        missing_report = self._output_files(raw_db)
 +
 +        report    = E_TestRunResult.OK
 +        if record.containment is E_Containment.FAIL_STALLED:
@@ -15325,32 +15257,75 @@ new file mode 100644
 +        elif record.containment is not E_Containment.OK_COMPLETED \
 +             and record.containment is not E_Containment.FAIL_COMPLETED:
 +            report = E_TestRunResult.TEST_APP_CONTAINED
++        elif missing_report is not None:
++            #  Containment speaks first: a contained run explains a
++            #  missing file better than the file's absence does.
++            report = missing_report
 +
 +        return Supply(product     = (raw_db, timing_db),
 +                      report      = report,
 +                      record_list = record_list)
 +
-+    def _output_files(self):
++    def _output_files(self, raw_db):
 +        """
-+        RETURN: dict, subject name -> text, for every file the run left
-+                under 'OUT/'. A file subject is named by its file name.
++        RETURN: E_TestRunResult.OUTPUT_FILE_NOT_FOUND where a declared
++                file subject is absent; None else. The single-run
++                road's door to 'read_declared_files'.
 +        """
-+        directory = self.configuration.output_directory
-+        file_db   = {}
-+        if not directory.is_dir(): return file_db
-+        for path in sorted(directory.iterdir()):
-+            if not path.is_file(): continue
-+            try:
-+                file_db[path.name] = path.read_text(encoding="utf-8",
-+                                                    errors="replace")
-+            except OSError:
-+                pass
-+        return file_db
++        return read_declared_files(self.configuration, self.choice_name,
++                                   raw_db)
++
++
++def read_declared_files(configuration, choice_name, raw_db):
++    """
++    RETURN: E_TestRunResult.OUTPUT_FILE_NOT_FOUND where a DECLARED
++            file subject is absent after the run; None where every
++            declared file was read into 'raw_db'.
++
++    ONE implementation, every road: the single run reads after the
++    process ended; the SESSION reads after the CHOICE'S token/'done'
++    (todo-1-judgement-timing) -- the process does not end between
++    choices, and a file develops with REVISIONS, so only its state
++    at the token is the subject.
++
++    SUBJECTS ARE DECLARED, NEVER DISCOVERED ('output', R-71): the
++    choice's 'output' names them; a name that is not 'stdout' is a
++    FILE in the test directory. A declared file the run did not leave
++    is a verdict, not a silence: discovery could never tell
++    'produced' from 'forgot'.
++
++    READ AND REMOVED -- the transport leaves no residue (the sink law
++    of multi_execute._read_sinks), PER CHOICE on the session road:
++    choice B must never read choice A's leftover; a lingering file
++    would be explored as a candidate test application by the next
++    walk; and a STALE file from run N would green run N+1 even where
++    the application stopped producing it.
++    """
++    choice = configuration.choice_db.get(choice_name)
++    output = getattr(choice, "output", None) if choice else None
++    if output is None: return None
++    directory = Path(configuration.test_directory)
++    missing_f = False
++    for name in output:
++        if name == STDOUT: continue
++        path = directory / name
++        try:
++            raw_db[name] = path.read_text(encoding="utf-8",
++                                          errors="replace")
++        except OSError:
++            missing_f = True
++            continue
++        try:
++            path.unlink()
++        except OSError:
++            pass
++    if missing_f: return E_TestRunResult.OUTPUT_FILE_NOT_FOUND
++    return None
 diff --git a/operations/session.py b/operations/session.py
 new file mode 100644
 --- /dev/null
 +++ b/operations/session.py
-@@ -0,0 +1,365 @@
+@@ -0,0 +1,370 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -15453,10 +15428,9 @@ new file mode 100644
 +    replay:      bool              = False
 +    display:     Display           = field(default_factory=Display)
 +    observer:    Optional[object]  = None
-+    stderr:      Optional[object]  = None   # E_StderrNote at a NOMINAL
-+                                            # goal: which note to write
-+                                            # for stderr. None: not
-+                                            # asked -- acceptance
++    stderr:      Optional[object]  = None   # E_StderrNote to WRITE at
++                                            # an acceptance goal; None:
++                                            # not asked -- acceptance
 +                                            # refuses rather than guess
 +    record:      Optional[bool]    = None   # None: follow the store config
 +    stop_event:  Optional[object]  = None   # how the caller stops it
@@ -15600,7 +15574,16 @@ new file mode 100644
 +    request = request if request is not None else Request()
 +    goal, choice_name, observer = request.goal, request.choice, \
 +                                  request.observer
++    #  SUBJECTS ARE THE TEST'S DESIGN ('output', todo-1): the choice's
++    #  declaration governs; the request's default, ('stdout',), stands
++    #  only where the author declared nothing. An EXPLICIT request
++    #  still speaks -- a caller that names subjects has a reason.
 +    subject_name_list = request.subjects
++    if subject_name_list == ("stdout",):
++        declared = configuration.choice_db.get(choice_name)
++        if declared is not None \
++           and getattr(declared, "output", None) is not None:
++            subject_name_list = tuple(declared.output)
 +    stop_event        = request.stop_event
 +    if store is None:
 +        if bookkeeper is None:
@@ -15623,16 +15606,13 @@ new file mode 100644
 +            store, observer=observer).run(stop_event=stop_event)
 +        recorded_db = None
 +    else:
-+        #  STDERR IS WHAT THE BOOK SAYS IT IS (S-1): 'nominal' is
-+        #  compared like any other subject, 'ignored' is never read,
-+        #  'forbidden' -- the reading of an unnoted choice -- makes a
-+        #  word there an error by name.
++        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): the note governs
++        #  only whether a spoken word is an ERROR ('forbidden') or
++        #  disregarded ('ignored'); it is never compared like a
++        #  subject, so it never enters 'judged_list'.
 +        note        = store.stderr_note(test_name, choice_name)
 +        judged_list = list(subject_name_list)
-+        if note is E_StderrNote.NOMINAL:
-+            if "stderr" not in judged_list: judged_list.append("stderr")
-+        elif "stderr" in judged_list:
-+            judged_list.remove("stderr")
++        if "stderr" in judged_list: judged_list.remove("stderr")
 +        nominal_db = _nominal_db(store, test_name, choice_name,
 +                                 judged_list)
 +        if goal is E_Goal.DISPLAY:

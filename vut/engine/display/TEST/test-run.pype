@@ -1,0 +1,52 @@
+#! /usr/bin/env hwut.pype
+# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+# ---------------------------------------------------------------------------
+# THE FLOW DIGEST of a parallel 'hwut.run': the flow tier's lines are
+# recorded per directory nickname and printed SORTED, the parallel
+# column dropped; the closing blocks pass through unchanged. Times are
+# masked by the suite before the filter sees them; a machine path in a
+# fault's text is masked here, on every line.
+# ---------------------------------------------------------------------------
+on: <bof> => {
+    import re
+    flow_db   = {}          # nick -> [line body, ...]
+    standing  = 0
+    peak      = 0
+    peak_f    = False       # set by 'test-run--jobs-budget.pype'
+    def masked(text):
+        # a machine path between quotes: the tree-relative tail kept
+        return re.sub(r"'[^']*/tree/", "'<work>/tree/", text)
+}
+
+# A flow line: 'hh:mm:ss | NNN | [TAG  ] NICK...'. The body after the
+# parallel column is kept; the nickname is the word that follows the tag.
+on: <bol> "hh:mm:ss |" <int> "|" => {
+    body = pype.line().split("|", 2)[2].strip()
+    tag, rest = body[:7], body[7:].strip()
+    nick = rest.split(":")[0].split(" ")[0]
+    if   tag == "[START]": standing += 1; peak = max(peak, standing)
+    elif tag == "[END  ]": standing -= 1
+    if flow_db is None: print(masked(pype.line()))     # a FAULTS block line
+    else:               flow_db.setdefault(nick, []).append(masked(body))
+}
+
+on: <bol> "=====" => {
+    if flow_db is not None:
+        print("FLOW DIGEST (per directory, sorted) {")
+        for nick in sorted(flow_db):
+            print("    %s:" % nick)
+            for body in sorted(flow_db[nick]):
+                print("        %s" % body)
+        if peak_f:
+            print("    peak standing at once: %d" % peak)
+        print("}")
+        print("")
+        flow_db = None
+    print(pype.line())
+}
+
+on: <else> => {
+    # blank lines of the flow are the digest's own business; everything
+    # after the first ruler passes through.
+    if flow_db is None or pype.line().strip(): print(masked(pype.line()))
+}

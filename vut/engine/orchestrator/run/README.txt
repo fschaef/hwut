@@ -9,7 +9,8 @@ application -- read the queue and are unknown to everything behind it.
 
     orchestrate(root, wish)                 -> CTreePlan     (plan/tree.py)
     orchestrator(root, wish, dispatcher_factory,
-                 worker_max_n=None, clock=None) -> asyncio.Queue
+                 worker_max_n=None, clock=None,
+                 strategy=None)                 -> asyncio.Queue
 
 'orchestrator' explores the tree, determines the plans, and sets a
 CTreeScheduler running as an asyncio task. Determination happens before the
@@ -42,14 +43,54 @@ event is the emitter's defect, named at emission.
 2  THE TREE SCHEDULER  (orchestrate.py)
 ______________________________________________________________________________
 
-'CTreeScheduler(dispatcher_factory, worker_max_n, clock).run(tree_plan,
-queue)' runs the directories SERIALLY, in walk order. Per directory: its
-faults and reports, 'dir-begun', one 'run-ended  verdict=misdep' per
-[MISDEP] node, then the directory's own Scheduler under its own frame and
-its own dispatcher -- 'dispatcher_factory' takes the absolute directory
-path and answers its I_Dispatcher. 'clock' answers the 'when' string and
-is a parameter so that a test may state it. Event 'directory' fields are
+'CTreeScheduler(dispatcher_factory, worker_max_n, clock, strategy).run(
+tree_plan, queue)' emits 'tree-begun' with the directory list in walk
+order, the walk's own faults, then runs the directories under ONE
+host-global budget of 'worker_max_n' slots ('None' is no bound), each
+started when the STRATEGY says (section 2a). The budget is a
+CBudget (scheduler/budget.py) made here and handed to every directory's
+Scheduler; frame scripts, builds, session launches and tests each take
+one slot. 'tree-done' follows the last directory; one 'None' closes the
+queue.
+
+Each directory is a CDirectoryWork -- THE UNIT OF PLACEABLE WORK:
+
+    CDirectoryWork(root, entry, dispatcher_factory)
+        .directory                      root-relative
+        .run(emit, budget) -> CDirDone  good_f, fail_n
+
+'run' emits the entry's faults and reports, 'dir-begun', one 'run-ended
+verdict=misdep' per [MISDEP] node, then constructs the directory's
+dispatcher INSIDE the unit -- 'dispatcher_factory' takes the absolute
+directory path and the entry and answers its I_Dispatcher; bookkeeper,
+store and the directory lock live in that dispatcher -- drives the
+node-level Scheduler under the directory's frame, closes the dispatcher,
+and emits 'dir-done'. Nothing crosses the unit's edge but 'emit' and the
+budget. A unit that RAISES (a held lock, a raising dispatcher) becomes a
+'fault' and a 'dir-done good=false' from the tree scheduler; the other
+units run on.
+
+Across directories, the ORDER of events is not promised: 'dir-begun' of
+one directory may follow 'run-begun' of another. Within one directory the
+order is the Scheduler's. 'clock' answers the 'when' string and is a
+parameter so that a test may state it. Event 'directory' fields are
 RELATIVE to the root; no event carries a machine-chosen path.
+
+
+2a THE STRATEGY  (strategy.py)
+______________________________________________________________________________
+
+'CStrategy.run(guarded_list) -> list[CDirDone]' is the template: units in
+walk order; unit 'index' starts when 'may_start(index, running)' answers
+True, 'running' the set of indices in flight; the hook is asked again on
+every ending; results come back in walk order. The hook is the strategy:
+
+    linear     not running          one after another (the default)
+    successor  len(running) < 2     the next starts beside the current
+    parallel   True                 all at once
+
+'strategy_of(name)' answers one by name; 'STRATEGY_DB' lists them;
+'DEFAULT_STRATEGY_NAME' is 'linear'.
 
 
 3  THE SUMMARY  (summary.py)

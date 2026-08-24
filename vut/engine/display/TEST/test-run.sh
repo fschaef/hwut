@@ -14,6 +14,15 @@
 # THE COLOUR DECISION under test, not the escapes' spelling: piped is
 # plain; '--colour' enforces, 'NO_COLOR' notwithstanding;
 # '--no-colour' refuses.
+#
+# MANY DIRECTORIES (O-11..O-15): the flow tier may interleave across
+# directories and is blessed THROUGH THE DIGEST FILTER 'test-run.pype'
+# beside this file -- per directory, sorted; the closing blocks pass
+# through verbatim. THE DIGEST IS STRATEGY-FREE: it records WHAT ran,
+# not when. Every tree choice runs the LINEAR strategy and shows its
+# digest, then runs every other strategy and shows that its digest is
+# byte-identical -- the homogeneity law (O-15). '--strategy=linear
+# --jobs=1' is blessed raw: the serial run of old.
 # ---------------------------------------------------------------------------
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../../../.." && pwd)
@@ -24,7 +33,7 @@ unset NO_COLOR CI COLUMNS
 case "$1" in
     --hwut-info)
         echo "The hwut.run face: the tree run, rendered live."
-        echo "CHOICES: green, fail, nostore, empty, refused, tiers, colour;"
+        echo "CHOICES: green, fail, nostore, empty, refused, tiers, colour, tree-green, tree-fail, jobs-budget, linear-raw, busy, strategy-refused;"
         echo "HAPPY: STATUS: [0-9];"
         exit 0 ;;
 esac
@@ -52,6 +61,58 @@ face() {                # <args...>  -- status, masked stdout, stderr
 
 put() {                 # <path> <content...>
     printf '%s\n' "$2" > "$1"
+}
+
+digest() {              # <args...>  -- status, digested stdout, stderr
+    #  '$?' after a pipe is the pipe's: the face's status is taken from
+    #  PIPESTATUS. The digest filter sits beside this suite and is
+    #  called by path; times are masked before it reads.
+    $RUN "$@" 2> err.txt | mask | "$HERE/${PYPE:-test-run.pype}" > out.txt
+    echo "STATUS: ${PIPESTATUS[0]}"
+    echo "STDOUT {"
+    sed 's/^/    /' < out.txt
+    echo "}"
+    if [ -s err.txt ]; then
+        echo "STDERR {"
+        mask < err.txt | sed 's/^/    /'
+        echo "}"
+    fi
+}
+
+every_strategy() {      # <args...> -- the linear digest shown, every
+                        # other strategy's digest compared to it
+    digest --strategy=linear "$@" | tee digest-linear.txt
+    for strategy in successor parallel; do
+        digest --strategy=$strategy "$@" > digest-$strategy.txt
+        cmp -s digest-linear.txt digest-$strategy.txt \
+            && echo "$strategy: digest identical to linear: True" \
+            || { echo "$strategy: digest identical to linear: FALSE";
+                 diff digest-linear.txt digest-$strategy.txt; }
+    done
+}
+
+fixture_tree() {        # three directories, two passing tests each
+    local d t
+    for d in alpha beta gamma; do
+        mkdir -p tree/$d/TEST/GOOD
+        printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
+            > tree/$d/TEST/hwut.conf
+        for t in one two; do
+            printf '#!/bin/bash\n# hwut { title = "%s" }\necho "steady %s"\necho "<hwut-end>"\n' \
+                $t $t > tree/$d/TEST/test-$t.sh
+            chmod +x tree/$d/TEST/test-$t.sh
+            printf 'steady %s\n<hwut-end>\n' $t \
+                > tree/$d/TEST/GOOD/test-$t.stdout
+        done
+    done
+}
+
+fixture_tree_fail() {   # the tree; one test of beta differs, gamma's
+                        # entry fails and its tests never run
+    fixture_tree
+    put tree/beta/TEST/GOOD/test-two.stdout "what the GOOD expects"
+    printf 'hwut {\n    on_entry = "false"\n    on_exit  = "true"\n}\n' \
+        > tree/gamma/TEST/hwut.conf
 }
 
 fixture_green() {       # one directory, one passing test
@@ -157,6 +218,73 @@ colour)
     verdict "--colour                  " --colour
     NO_COLOR=1 verdict "--colour, NO_COLOR set    " --colour
     verdict "--no-colour               " --no-colour
+    ;;
+
+tree-green)
+    #  Three directories, all standing: the digest names every line of
+    #  every directory; the roll-call in walk order; status 0 -- under
+    #  every strategy alike.
+    fixture_tree
+    every_strategy --directory=tree
+    ;;
+
+tree-fail)
+    #  One differing test, one failing entry frame beside two running
+    #  directories: attribution per directory, the FAILURES block in
+    #  walk order, status 1 -- under every strategy alike.
+    fixture_tree_fail
+    every_strategy --directory=tree
+    ;;
+
+jobs-budget)
+    #  '--jobs' is HOST-GLOBAL: two slots across three directories
+    #  means at most two pieces of work ever stand at once; with one
+    #  slot, one. The digest counts [START]/[END] and names the peak --
+    #  the same peak under every strategy.
+    fixture_tree
+    echo "== --jobs=2 =="
+    PYPE=test-run--jobs-budget.pype every_strategy --directory=tree --jobs=2
+    echo "== --jobs=1 =="
+    PYPE=test-run--jobs-budget.pype every_strategy --directory=tree --jobs=1
+    ;;
+
+linear-raw)
+    #  The linear strategy with one slot is the serial run of old:
+    #  directories in walk order, one piece of work at a time -- the
+    #  flow blessed RAW; '--dbd' and its long spelling say the same.
+    fixture_tree_fail
+    echo "== --strategy=linear --jobs=1 =="
+    face --directory=tree --strategy=linear --jobs=1
+    echo "== --dbd --jobs=1 =="
+    face --directory=tree --dbd --jobs=1 --quiet
+    echo "== --directory-by-directory, the long spelling =="
+    face --directory=tree --directory-by-directory --jobs=1 --quiet
+    ;;
+
+strategy-refused)
+    #  A strategy nobody knows is refused at the door, the known ones
+    #  named; status REFUSED.
+    face --directory=tree --strategy=bogus
+    ;;
+
+busy)
+    #  A directory HELD BY A LIVE PROCESS is refused at its door, a
+    #  fault; its siblings run to a good end beside it; status 1.
+    fixture_tree
+    mkdir -p tree/beta/TEST/.hwut-lock
+    python3 - tree/beta/TEST/.hwut-lock/holder.json <<'PY' &
+import json, os, sys, time, psutil
+json.dump({"pid": os.getpid(),
+           "started": psutil.Process().create_time()},
+          open(sys.argv[1], "w"))
+time.sleep(60)
+PY
+    holder=$!
+    while [ ! -s tree/beta/TEST/.hwut-lock/holder.json ]; do sleep 0.05; done
+    every_strategy --directory=tree
+    echo "== --quiet: the fault in the closing FAULTS block =="
+    every_strategy --directory=tree --quiet
+    kill $holder 2> /dev/null; wait $holder 2> /dev/null
     ;;
 
 *)

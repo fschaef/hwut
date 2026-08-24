@@ -1,0 +1,8 @@
+STATUS: 2
+STDOUT {
+    REFUSED: '--strategy' takes one of linear, parallel, successor, not 'bogus'
+    usage: hwut.run [--fail] [--pass] [--since=<point>] [--until=<point>]
+                    [--glob <target>]... [--no-store] [--jobs=<n>]
+                    [--strategy=<name>] [-v|--verbose|--plain|--quiet|--silent]
+                    [--colour|--no-colour] [--directory=<path>]
+}

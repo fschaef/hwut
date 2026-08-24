@@ -8,7 +8,7 @@ ________________________________________________________________________________
 import vut.system.core          as     system
 import vut.system.terminal_size as     terminal_size
 from   vut.external.colorama    import init as colorama_init, Fore, Back, Style
-from   vut.external.quex.typed  import typed
+from   typeguard                import typechecked
 
 from   enum        import Enum, auto
 from   collections import namedtuple
@@ -25,24 +25,24 @@ class E_Alignment(Enum):
 # Format Expression: 'FE'
 CellFormat = namedtuple("CellFormat", ("alignment", "color_code", "width", "string", "text_offset"))
 
-@typed(width=int)
-def LEFT(width, color=None, text_offset=0):
+@typechecked
+def LEFT(width: int, color=None, text_offset=0):
     return CellFormat(E_Alignment.LEFT, _color_to_code(color), width, None, text_offset)
 
-@typed(width=int)
-def RIGHT(width, color=None, text_offset=0):
+@typechecked
+def RIGHT(width: int, color=None, text_offset=0):
     return CellFormat(E_Alignment.RIGHT, _color_to_code(color), width, None, text_offset)
 
-@typed(width=int)
-def CENTER(width, color=None, text_offset=0):
+@typechecked
+def CENTER(width: int, color=None, text_offset=0):
     return CellFormat(E_Alignment.CENTER, _color_to_code(color), width, None, text_offset)
 
-@typed(string=str)
-def FIXED(string, color=None, text_offset=0):
+@typechecked
+def FIXED(string: str, color=None, text_offset=0):
     return CellFormat(E_Alignment.FIXED, _color_to_code(color), len(string), string, text_offset)
 
-@typed(string=str)
-def GLUE(string, color=None, text_offset=0):
+@typechecked
+def GLUE(string: str, color=None, text_offset=0):
     return CellFormat(E_Alignment.GLUE, _color_to_code(color), 0, string, text_offset)
 
 class ConsoleCanvas:
@@ -55,8 +55,8 @@ class ConsoleCanvas:
    def display(self, line):
        print(line + _color_reset_all)
 
-   @typed(cell_content_list=list)
-   def prepare(self, f, cell_content_list=[]):
+   @typechecked
+   def prepare(self, f, cell_content_list: list = []):
        def _iterable(cell_content_list, format_list):
            cell_i = 0
            for fe in format_list:

@@ -13,23 +13,29 @@ closes it. The caller reads the queue; the summary is a fold over it
 (summary.py); nothing else is returned -- one truth, one carrier
 (O-4).
 
-CTreeScheduler runs the directories SERIALLY, in walk order, each
-under its own frame and its own dispatcher (P-17). Everything that
-leads to the executability of a test is the test: a [MISDEP] node and
-an UNSUPPORTED node each get their 'run-ended', verdict and cause
-named (O-3).
+CTreeScheduler runs the directories under ONE host-global budget (O-11,
+O-12); a STRATEGY (strategy.py, O-15) says when each one starts --
+linear by default. Each directory is a CDirectoryWork -- the unit of placeable
+work (O-13): its own frame, its own dispatcher, its own lock; it
+answers 'events + CDirDone' and nothing crosses its edge but the
+budget and the queue. Everything that leads to the executability of a
+test is the test: a [MISDEP] node and an UNSUPPORTED node each get
+their 'run-ended', verdict and cause named (O-3).
 ______________________________________________________________________________
 """
 import asyncio
 import os
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime    import datetime, timezone
 
 from ..bookkeeper.bookkeeper       import Bookkeeper
 from ..exploration.tree_explorer   import explore_tree
 from ..plan.form                   import E_NodeKind
 from ..plan.tree                   import determine_tree
+from ..scheduler.budget            import CBudget
 from ..scheduler.scheduler         import Scheduler
 from ..scheduler.state             import E_NodeState, FAILURE_SET
+from .strategy                     import CLinear
 from .vocabulary                   import event
 
 
@@ -56,74 +62,44 @@ def _utc_now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-class CTreeScheduler:
-    """Executes a CTreePlan, one directory after another, emitting the
-    report stream into a queue."""
+@dataclass(frozen=True, slots=True)
+class CDirDone:
+    """What one unit of directory work comes to."""
+    good_f: bool        # frame good, no fault, no failed node
+    fail_n: int         # how many of its nodes failed
 
-    def __init__(self, dispatcher_factory, worker_max_n=None,
-                 clock=None):
-        """
-        RETURN: CTreeScheduler, ready to run a tree plan.
 
-        'dispatcher_factory'  takes the ABSOLUTE directory path and
-                              the directory's CTreePlanEntry, and
-                              answers the I_Dispatcher for its work --
-                              made above, handed down. A double may
-                              ignore the entry.
-        'worker_max_n'        the per-directory bound on work standing
-                              at once; 'None' is no bound.
-        'clock'               answers the 'when' string of an event;
-                              the UTC instant where none is given. A
-                              parameter so that a test may state the
-                              clock.
+class CDirectoryWork:
+    """ONE test directory's run -- the unit of placeable work (O-13).
+
+    Constructed over the root and the directory's CTreePlanEntry; 'run'
+    makes the dispatcher (bookkeeper, store, lock) INSIDE, drives the
+    node-level Scheduler, and closes the dispatcher again. Events go to
+    'emit'; the outcome is a CDirDone. A placement backend (stage 2)
+    answers a different 'run' for the same unit."""
+
+    def __init__(self, root, entry, dispatcher_factory):
         """
+        RETURN: CDirectoryWork for 'entry' below the absolute 'root'.
+        """
+        self.root               = root
+        self.entry              = entry
         self.dispatcher_factory = dispatcher_factory
-        self.worker_max_n       = worker_max_n
-        self.clock              = clock or _utc_now
 
-    async def run(self, tree_plan, queue):
+    @property
+    def directory(self):
+        """RETURN: str, the root-relative directory the unit runs."""
+        return self.entry.directory
+
+    async def run(self, emit, budget):
         """
-        RETURN: None. Runs every entry of 'tree_plan' serially, in
-                order; the report stream goes into 'queue'; one 'None'
-                after 'tree-done' closes it.
+        RETURN: CDirDone, the directory's outcome; every event of the
+                run went through 'emit(kind, **field_db)' on the way.
+
+        Raises what the dispatcher's construction or run raises; the
+        caller (CTreeScheduler) turns that into 'fault' + 'dir-done'.
         """
-        def emit(kind, **field_db):
-            queue.put_nowait(event(kind, self.clock(), **field_db))
-
-        emit("tree-begun",
-             directory_list=[entry.directory for entry in tree_plan])
-        for fault in tree_plan.fault_tuple:
-            emit("fault", directory=".", text=str(fault))
-
-        good_f = not tree_plan.fault_tuple
-        fail_n = 0
-        for entry in tree_plan:
-            try:
-                entry_good_f, entry_fail_n = \
-                    await self._run_directory(tree_plan.root, entry,
-                                              emit)
-            except Exception as error:
-                #  A broken directory NEVER silences the stream: the
-                #  breakage is an event (a held lock, a raising
-                #  dispatcher), the directory is bad, the tree walks
-                #  on and 'tree-done' still closes the queue.
-                emit("fault", directory=entry.directory,
-                     text="%s: %s" % (type(error).__name__, error))
-                emit("dir-done", directory=entry.directory,
-                     good=False, fail_db={})
-                entry_good_f, entry_fail_n = False, 0
-            good_f  = good_f and entry_good_f
-            fail_n += entry_fail_n
-
-        emit("tree-done", good=good_f, fail_n=fail_n)
-        queue.put_nowait(None)
-
-    async def _run_directory(self, root, entry, emit):
-        """
-        RETURN: [0] bool, True where the directory stood: frame good,
-                    no fault, no failed node.
-                [1] int, how many of its nodes failed.
-        """
+        entry     = self.entry
         directory = entry.directory
         for fault in entry.fault_tuple:
             emit("fault", directory=directory, text=str(fault))
@@ -165,14 +141,15 @@ class CTreeScheduler:
                      good=good_f, verdict=verdict, **extra)
 
         dispatcher = self.dispatcher_factory(
-                         os.path.normpath(os.path.join(root, directory)),
+                         os.path.normpath(os.path.join(self.root,
+                                                       directory)),
                          entry)
         report_of  = getattr(dispatcher, "report_of",
                              lambda name: None)
         scheduler  = Scheduler(dispatcher,
                                on_entry     = entry.on_entry,
                                on_exit      = entry.on_exit,
-                               worker_max_n = self.worker_max_n,
+                               worker_max_n = budget,
                                notify       = notify)
         report = await scheduler.run(entry.plan)
         close  = getattr(dispatcher, "close", None)
@@ -182,7 +159,85 @@ class CTreeScheduler:
         good_f  = report.good_f() and not entry.fault_tuple
         emit("dir-done", directory=directory, good=good_f,
              fail_db=fail_db)
-        return good_f, len(fail_db)
+        return CDirDone(good_f, len(fail_db))
+
+
+class CTreeScheduler:
+    """Executes a CTreePlan -- its directories in parallel under one
+    budget, or one after another -- emitting the report stream into a
+    queue."""
+
+    def __init__(self, dispatcher_factory, worker_max_n=None,
+                 clock=None, strategy=None):
+        """
+        RETURN: CTreeScheduler, ready to run a tree plan.
+
+        'dispatcher_factory'  takes the ABSOLUTE directory path and
+                              the directory's CTreePlanEntry, and
+                              answers the I_Dispatcher for its work --
+                              made above, handed down. A double may
+                              ignore the entry.
+        'worker_max_n'        the HOST-GLOBAL bound on work standing
+                              at once, across every directory; 'None'
+                              is no bound.
+        'clock'               answers the 'when' string of an event;
+                              the UTC instant where none is given. A
+                              parameter so that a test may state the
+                              clock.
+        'strategy'            the CStrategy saying when a directory's
+                              unit starts; CLinear where none is given.
+        """
+        self.dispatcher_factory = dispatcher_factory
+        self.worker_max_n       = worker_max_n
+        self.clock              = clock or _utc_now
+        self.strategy           = strategy or CLinear()
+
+    async def run(self, tree_plan, queue):
+        """
+        RETURN: None. Runs every entry of 'tree_plan' under the budget,
+                each started when the strategy says; the report stream
+                goes into 'queue'; one 'None' after 'tree-done' closes
+                it.
+        """
+        def emit(kind, **field_db):
+            queue.put_nowait(event(kind, self.clock(), **field_db))
+
+        emit("tree-begun",
+             directory_list=[entry.directory for entry in tree_plan])
+        for fault in tree_plan.fault_tuple:
+            emit("fault", directory=".", text=str(fault))
+
+        budget    = CBudget(self.worker_max_n)
+        unit_list = [CDirectoryWork(tree_plan.root, entry,
+                                    self.dispatcher_factory)
+                     for entry in tree_plan]
+        done_list = await self.strategy.run(
+                        [(lambda unit=unit:
+                              self._guarded(unit, emit, budget))
+                         for unit in unit_list])
+
+        good_f = not tree_plan.fault_tuple \
+                 and all(done.good_f for done in done_list)
+        fail_n = sum(done.fail_n for done in done_list)
+        emit("tree-done", good=good_f, fail_n=fail_n)
+        queue.put_nowait(None)
+
+    async def _guarded(self, unit, emit, budget):
+        """
+        RETURN: CDirDone, the unit's outcome -- 'good_f=False, fail_n=0'
+                where the unit RAISED: the breakage is a 'fault' event,
+                the directory is bad, the tree runs on and 'tree-done'
+                still closes the queue (a held lock, a raising
+                dispatcher).
+        """
+        try:
+            return await unit.run(emit, budget)
+        except Exception as error:
+            emit("fault", directory=unit.directory,
+                 text="%s: %s" % (type(error).__name__, error))
+            emit("dir-done", directory=unit.directory,
+                 good=False, fail_db={})
+            return CDirDone(False, 0)
 
 
 def orchestrate(root, wish, build_interview=None):
@@ -205,7 +260,7 @@ def orchestrate(root, wish, build_interview=None):
 
 
 def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
-                 clock=None):
+                 clock=None, strategy=None):
     """
     RETURN: asyncio.Queue, the report stream of the run -- the events
             of 'vocabulary.py', then one 'None'. The run stands as an
@@ -219,5 +274,5 @@ def orchestrator(root, wish, dispatcher_factory, worker_max_n=None,
     queue     = asyncio.Queue()
     asyncio.ensure_future(
         CTreeScheduler(dispatcher_factory, worker_max_n,
-                       clock).run(tree_plan, queue))
+                       clock, strategy).run(tree_plan, queue))
     return queue

@@ -10,7 +10,7 @@ yields to the loop 'n' times. No clock, no process, no wall time -- the
 trace is the scheduler's decisions and nothing else.
 
 CHOICES: parallel, ordering, exclusion, build, session, frame, misdep,
-         workers;
+         workers, budget;
 
 DESCRIPTION:
 
@@ -41,6 +41,10 @@ misdep     a [MISDEP] node is never dispatched and stands as a
 
 workers    the same plan under one worker and under no bound: the same
            work, a different amount of it standing at once.
+budget     TWO schedulers over ONE CBudget: with one slot, nothing of
+           either ever stands beside anything of the other -- frame
+           scripts included (O-12); with two slots, they interleave
+           and two stand at once; the budget's own peak says so.
 ______________________________________________________________________________
 """
 import asyncio
@@ -50,6 +54,7 @@ from config import HwutRunner                                # noqa: F401
 from vut.engine.orchestrator.plan.form      import (CExclusionSet, CPlanLink,
                                                     CPlanNode, CTestPlan,
                                                     E_LinkKind)
+from vut.engine.orchestrator.scheduler.budget    import CBudget
 from vut.engine.orchestrator.scheduler.scheduler import I_Dispatcher, Scheduler
 
 
@@ -263,6 +268,41 @@ def test_workers():
         print("REFUSED: %s" % error)
 
 
+def test_budget():
+    """RETURN: None. Two plans run at once over one shared budget."""
+    def plan_of(prefix):
+        return CTestPlan([CPlanNode.test(prefix + "1.py", None),
+                          CPlanNode.test(prefix + "2.py", None)])
+
+    def drive_two(limit):
+        budget     = CBudget(limit)
+        dispatcher = TickDispatcher({"a1.py": 3, "a2.py": 1,
+                                     "b1.py": 2, "b2.py": 2,
+                                     "on_entry": 1, "on_exit": 1})
+        async def both():
+            await asyncio.gather(
+                Scheduler(dispatcher, on_entry="true", on_exit="true",
+                          worker_max_n=budget).run(plan_of("a")),
+                Scheduler(dispatcher, on_entry="true", on_exit="true",
+                          worker_max_n=budget).run(plan_of("b")))
+        asyncio.run(both())
+        print("TRACE")
+        for line in dispatcher.trace_list:
+            print("    %s" % line)
+        print("    most standing at once: %d   budget peak: %d"
+              % (dispatcher.standing_max_n, budget.peak))
+
+    banner("one slot shared by two schedulers")
+    drive_two(1)
+    banner("two slots shared by two schedulers")
+    drive_two(2)
+    banner("a budget below one: refused")
+    try:
+        CBudget(0)
+    except AssertionError as error:
+        print("REFUSED: %s" % error)
+
+
 if __name__ == "__main__":
     HwutRunner(sys.argv,
                "Scheduler: the plan executed, trace and report;", {
@@ -274,4 +314,5 @@ if __name__ == "__main__":
         "frame":     test_frame,
         "misdep":    test_misdep,
         "workers":   test_workers,
+        "budget":    test_budget,
     }).run()

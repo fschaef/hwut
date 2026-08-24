@@ -1,0 +1,11 @@
+--- successor over ticks [6, 1, 3, 1] ---
+    start A
+    start B
+    end   B
+    start C
+    end   A
+    end   C
+    start D
+    end   D
+    results in walk order: A, B, C, D
+<hwut-end>

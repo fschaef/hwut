@@ -1,0 +1,70 @@
+== --jobs=2 ==
+STATUS: 0
+STDOUT {
+    FLOW DIGEST (per directory, sorted) {
+        ALPH:
+            [DIR  ] ALPH = alpha/TEST
+            [END  ] ALPH:test-one.sh ............................... [OK]
+            [END  ] ALPH:test-two.sh ............................... [OK]
+            [START] ALPH:test-one.sh
+            [START] ALPH:test-two.sh
+        BETA:
+            [DIR  ] BETA = beta/TEST
+            [END  ] BETA:test-one.sh ............................... [OK]
+            [END  ] BETA:test-two.sh ............................... [OK]
+            [START] BETA:test-one.sh
+            [START] BETA:test-two.sh
+        GAMM:
+            [DIR  ] GAMM = gamma/TEST
+            [END  ] GAMM:test-one.sh ............................... [OK]
+            [END  ] GAMM:test-two.sh ............................... [OK]
+            [START] GAMM:test-one.sh
+            [START] GAMM:test-two.sh
+        peak standing at once: 2
+    }
+    
+    ==============================================================================
+    DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
+    ------------------------------------------------------------------------------
+    ALPH  alpha/TEST ........................................ [OK]     2 of   2 ok
+    BETA  beta/TEST ......................................... [OK]     2 of   2 ok
+    GAMM  gamma/TEST ........................................ [OK]     2 of   2 ok
+    ==============================================================================
+}
+successor: digest identical to linear: True
+parallel: digest identical to linear: True
+== --jobs=1 ==
+STATUS: 0
+STDOUT {
+    FLOW DIGEST (per directory, sorted) {
+        ALPH:
+            [DIR  ] ALPH = alpha/TEST
+            [END  ] ALPH:test-one.sh ............................... [OK]
+            [END  ] ALPH:test-two.sh ............................... [OK]
+            [START] ALPH:test-one.sh
+            [START] ALPH:test-two.sh
+        BETA:
+            [DIR  ] BETA = beta/TEST
+            [END  ] BETA:test-one.sh ............................... [OK]
+            [END  ] BETA:test-two.sh ............................... [OK]
+            [START] BETA:test-one.sh
+            [START] BETA:test-two.sh
+        GAMM:
+            [DIR  ] GAMM = gamma/TEST
+            [END  ] GAMM:test-one.sh ............................... [OK]
+            [END  ] GAMM:test-two.sh ............................... [OK]
+            [START] GAMM:test-one.sh
+            [START] GAMM:test-two.sh
+        peak standing at once: 1
+    }
+    
+    ==============================================================================
+    DIRECTORIES                                             6 ok, 0 fail, hh:mm:ss
+    ------------------------------------------------------------------------------
+    ALPH  alpha/TEST ........................................ [OK]     2 of   2 ok
+    BETA  beta/TEST ......................................... [OK]     2 of   2 ok
+    GAMM  gamma/TEST ........................................ [OK]     2 of   2 ok
+    ==============================================================================
+}
+successor: digest identical to linear: True
+parallel: digest identical to linear: True

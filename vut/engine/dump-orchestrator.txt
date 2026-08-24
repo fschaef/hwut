@@ -323,44 +323,6 @@ new file mode 100644
 +What a verdict means is the caller's: under 'run all tests' a
 +non-responsive choice is an error; under 'run this test with that
 +choice' it is not.
-diff --git a/orchestrator/bookkeeper/TEST/ADM/cache.fly b/orchestrator/bookkeeper/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/orchestrator/bookkeeper/TEST/ADM/cache.fly
-@@ -0,0 +1,33 @@
-+{
-+title: the naming, the base, the verdicts;
-+title_group: The Bookkeeper;
-+file_name: test-bookkeeper.py;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ python; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ damage; OK; 0.457687; 0; ]
-+  [ divergence; OK; 0.306897; 0; ]
-+  [ naming; OK; 0.392329; 0; ]
-+  [ overwrite; OK; 0.285768; 0; ]
-+  [ protection; OK; 0.428477; 0; ]
-+  [ record; OK; 0.294402; 0; ]
-+  [ reproduce; OK; 0.301105; 0; ]
-+  [ setup_delta; FAIL; 0.263572; 1167744321; ]
-+]
-+}
-+{
-+title: records and the directory lock;
-+title_group: The store;
-+file_name: test-stream_store.py;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ python; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ keys; OK; 0.145990; 0; ]
-+  [ lock_dead; OK; 0.160388; 0; ]
-+  [ lock_live; OK; 0.412441; 0; ]
-+  [ nominal_kinds; OK; 0.290723; 0; ]
-+  [ promotion; OK; 0.146731; 0; ]
-+]
-+}
 diff --git a/orchestrator/bookkeeper/TEST/GOOD/test-bookkeeper.py--damage.txt b/orchestrator/bookkeeper/TEST/GOOD/test-bookkeeper.py--damage.txt
 new file mode 100644
 --- /dev/null
@@ -1301,7 +1263,7 @@ diff --git a/orchestrator/bookkeeper/bookkeeper.py b/orchestrator/bookkeeper/boo
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/bookkeeper/bookkeeper.py
-@@ -0,0 +1,457 @@
+@@ -0,0 +1,462 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -1660,14 +1622,16 @@ new file mode 100644
 +        RETURN: E_StderrNote, what the book says about that choice's
 +                stderr:
 +
-+                    NOMINAL    a stderr stream was recorded and is
-+                               compared like any other subject
 +                    IGNORED    whatever happens there, do not worry
 +                    FORBIDDEN  a word there is an ERROR
 +
 +                An unnoted choice reads FORBIDDEN: a test that was
 +                never asked about stderr is one that has never spoken
-+                there, and the first word it says is news.
++                there, and the first word it says is news. A book
++                written before E-5 may still hold 'nominal' -- unknown
++                to this enum, so it reads FORBIDDEN too: the migration
++                is silent, and a speaking choice is caught at its next
++                run rather than trusted on old say-so.
 +        """
 +        key   = NO_CHOICE_KEY if choice is None else choice
 +        noted = self.book().get(test, {}).get("choices", {}) \
@@ -1683,9 +1647,10 @@ new file mode 100644
 +                choice -- written verbatim, replacing any earlier note.
 +
 +        THE NOTE IS THE DECISION, and acceptance is where it is taken.
-+        Noting NOMINAL does not write a nominal; noting IGNORED or
-+        FORBIDDEN removes any nominal stderr, since a stream cannot be
-+        both compared and disregarded.
++        STDERR IS NEVER SUBJECT TO TESTING (E-5): noting IGNORED or
++        FORBIDDEN removes any nominal stderr that lingers from before
++        this ruling, since a stream cannot be both compared and
++        disregarded.
 +        """
 +        note       = E_StderrNote(note)
 +        content    = self.book()
@@ -1694,9 +1659,11 @@ new file mode 100644
 +        key        = NO_CHOICE_KEY if choice is None else choice
 +        choice_db.setdefault(key, {})["stderr"] = note.value
 +        self._write_book(content)
-+        if note is not E_StderrNote.NOMINAL:
-+            path = self.nominal_path(test, choice, "stderr")
-+            if path.exists(): path.unlink()
++        #  STDERR IS NEVER SUBJECT TO TESTING (E-5): every remaining
++        #  note -- IGNORED or FORBIDDEN -- means no nominal stderr can
++        #  stand, so any that lingers is removed, unconditionally.
++        path = self.nominal_path(test, choice, "stderr")
++        if path.exists(): path.unlink()
 +        return note
 +
 +    def result(self, test, choice, operation):
@@ -1763,7 +1730,7 @@ diff --git a/orchestrator/bookkeeper/configuration.py b/orchestrator/bookkeeper/
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/bookkeeper/configuration.py
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,103 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -1783,11 +1750,31 @@ new file mode 100644
 +
 +
 +class E_StderrNote(Enum):
-+    """WHAT THE BOOK SAYS about a choice's stderr -- one note, three
-+    readings, and acceptance is where it is written.
++    """WHAT THE BOOK SAYS about a choice's stderr -- and acceptance is
++    where it is written.
 +
-+    NOMINAL    a stderr stream was RECORDED: it is compared like any
-+               other subject, and a difference is a difference.
++    ===================================================================
++    STDERR IS NEVER SUBJECT TO TESTING.
++    ===================================================================
++    stderr is for ERROR REPORTING. That is its whole job. A test
++    application's stderr is never a nominal, never compared, never
++    pype-d.
++
++    Where error reporting is itself the thing under test, the
++    application FLUSHES IT INTO A FILE and names that file in the
++    'output' parameter. A file is a subject; stderr is not.
++
++    WHY: a stream that both carries diagnostics and is held to a
++    blessed text cannot do either job. Every diagnostic an author adds
++    while debugging would fail the test, so the author learns to stay
++    silent -- and the framework has then taught them to remove the
++    reporting it wanted.
++
++    NOMINAL is RETIRED and REMOVED. It is never written by anything --
++    'orchestrator/services/accept.py' promotes every subject EXCEPT
++    stderr, and refuses by name where stderr spoke and no note
++    tolerates it (E-5, services/RATIONALE.txt).
++
 +    IGNORED    whatever happens on stderr, DO NOT WORRY: it is never
 +               read, never compared, never reported.
 +    FORBIDDEN  a word there is an ERROR ('unexpected-stderr'). An
@@ -1795,7 +1782,6 @@ new file mode 100644
 +               about has never spoken there, and its first word is
 +               news.
 +    """
-+    NOMINAL   = "nominal"
 +    IGNORED   = "ignored"
 +    FORBIDDEN = "forbidden"
 +
@@ -2159,6 +2145,130 @@ new file mode 100644
 + 3  'language_setup' inherits CHILD-WINS WHOLE, not per language.
 + 4  'ignore' inherits child-wins whole (a child stating 'ignore'
 +    replaces the parent's, it does not add to it).
+diff --git a/orchestrator/exploration/DISCUSSIONS/todo-1-output-subjects.txt b/orchestrator/exploration/DISCUSSIONS/todo-1-output-subjects.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/exploration/DISCUSSIONS/todo-1-output-subjects.txt
+@@ -0,0 +1,119 @@
++todo-1  THE 'output' PARAMETER -- SUBJECTS ARE THE TEST'S DESIGN
++        decided, unbuilt
++
++DECIDED
++    A test states what it produces. New header parameter 'output':
++
++        absent          the subject is '<stdout>', and only that
++        a list          the subjects, in order. '<stdout>' is a
++                        SPECIAL name marking the standard output
++                        channel; every other entry is a FILE NAME,
++                        read AFTER the run has ended.
++
++    Example:
++
++        hwut {
++            output = ["<stdout>", "result.csv", "diagnostics.log"]
++        }
++
++    '<stderr>' IS NOT A VALID ENTRY and is refused by name, with the
++    reason (see THE THREE LAWS below).
++
++    WHY CONFIGURATION AND NOT A COMMAND-LINE OPTION: what a test
++    produces is its DESIGN, authored once, not something restated at
++    every acceptance. The three worlds hold -- configuration says what
++    the subjects ARE; the store holds what they WERE; acceptance
++    decides which recording is the pole.
++
++    ===================================================================
++    THE THREE LAWS -- state these in every manual that touches subjects
++    ===================================================================
++
++    (1) STDERR IS NEVER SUBJECT TO TESTING.
++        stderr is for ERROR REPORTING, and that is its whole job. It
++        is never a nominal, never compared. Where error reporting is
++        itself under test, the application FLUSHES IT TO A FILE and
++        names that file in 'output'.
++
++        A stream that both carries diagnostics and is held to a
++        blessed text can do neither job: every diagnostic an author
++        adds while debugging would fail the test, so the author learns
++        to stay silent, and the framework has taught them to remove
++        the reporting it wanted.
++
++    (2) A FILE IS READ ONLY AFTER THE TEST HAS TERMINATED.
++        Therefore file content is NOT subject to race conditions --
++        there is no interleaving to observe, no flush to time, no
++        FIFO-sink question. This is why a file, and not a stream, is
++        the answer to (1).
++
++    (3) PYPE-ING IS ONLY EVER APPLIED TO STDOUT.
++        Not to stderr (never read), not to files (not a stream; read
++        whole, after the end). 'canonicalisers' is a dict keyed by
++        subject and the bookkeeper iterates it generically, but
++        'stdout' is the ONLY key that will ever stand in it. The
++        generality is harmless; the law is what governs.
++
++    WHAT ACCEPT STILL DECIDES -- one thing, and only for stderr:
++
++        (B) stderr silent          -> FORBIDDEN, silently, the default
++        (A) stderr speaks          -> REFUSE. No default: a default
++                                      here leaves a user clueless in
++                                      front of output that deviates.
++                                      Request '--stderr-tol[erated]',
++                                      which notes IGNORED.
++
++        There is no second remedy. 'stderr becomes nominal' is dropped.
++
++BUILT (this session) -- the parameter is LIVE end to end
++    exploration     'output' in KEY_TO_FIELD, TestParameters,
++                    validator ('<stderr>' refused by name with the
++                    E-5 reason; '<stdin>' and every other unknown
++                    channel refused; duplicates refused; faults
++                    position-accurate). ConfigRunner OWES it, default
++                    ('<stdout>',); RELATION carries the row -- the
++                    orphan contract (test-defaults) holds.
++    adapter         '<stdout>' -> 'stdout'; file names verbatim; onto
++                    'TestChoiceConfiguration.output'.
++    session         the declaration GOVERNS the judged subjects; an
++                    explicit request still speaks.
++    stage_execute   declared files read AFTER termination -- and then
++                    REMOVED. READ-AND-REMOVE was decided DURING the
++                    build, forced by two live findings: a lingering
++                    file is explored as a candidate test application
++                    by the next walk (seen: the explorer interviewing
++                    a CSV), and a STALE file from run N greens run
++                    N+1 even where the application stopped producing
++                    it -- a false green. The store's record is the
++                    product; the file was only the carrier (the sink
++                    law of multi_execute._read_sinks). The former
++                    'OUT/' DISCOVERY sweep is RETIRED: discovery can
++                    never tell 'produced' from 'forgot', so the
++                    verdict 'output-file-not-found' could never fire.
++    accept          a file subject is promoted like stdout; proven:
++                    declare -> run -> bless -> green -> forget the
++                    file -> 'output file missing', exit 1.
++    suite           exploration/TEST/test-output.sh: declare, refuse,
++                    cycle, forgotten -- blessed.
++
++STILL OPEN of the original list
++    (4) accept/merge  '--stderr-tol' is BUILT (accept); merge's
++                      stderr handling follows when merge is built
++    (5) the manual    the three laws into every manual that touches
++                      subjects -- exploration README pending
++
++RETIRED BY THIS RULING -- its own piece of work
++    'E_StderrNote.NOMINAL' is dead. It still stands in the enum
++    because these read or write it:
++
++        orchestrator/bookkeeper/bookkeeper.py:393   the removal branch
++        operations/consume/accept.py:152,156        a match arm, and a
++                                                    note_stderr write
++        operations/session.py:279                   judged_list gains
++                                                    'stderr'
++        operations/consume/TEST/test-accept.py      a BLESSED suite
++                                                    that iterates all
++                                                    four note states
++
++    Removing the member moves that GOOD, so it is a step of its own
++    and not a side effect of building 'output'.
 diff --git a/orchestrator/exploration/DISCUSSIONS/todo-1-owner-defaults-relocation.txt b/orchestrator/exploration/DISCUSSIONS/todo-1-owner-defaults-relocation.txt
 new file mode 100644
 --- /dev/null
@@ -2620,7 +2730,7 @@ diff --git a/orchestrator/exploration/RATIONALE.txt b/orchestrator/exploration/R
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/RATIONALE.txt
-@@ -0,0 +1,1214 @@
+@@ -0,0 +1,1273 @@
 +==============================================================================
 +exploration -- RATIONALE
 +==============================================================================
@@ -3835,11 +3945,70 @@ new file mode 100644
 +          defaults per directory). Everything inheriting (a parent's
 +          'collision' naming files a child does not hold would fault
 +          every child).
++
++----------------------------------------------------------------------------
++R-71  'output' -- SUBJECTS ARE DECLARED, NEVER DISCOVERED
++----------------------------------------------------------------------------
++PROBLEM   A test may produce more than its stdout: files written during
++          the run. The old convention DISCOVERED them -- anything left
++          under 'OUT/' became a subject, unnamed. Discovery cannot tell
++          'produced' from 'forgot' (no missing-file verdict can ever
++          fire), and it sweeps droppings up as subjects.
++
++DECISION  A test STATES what it produces. Header parameter 'output':
++          absent means '<stdout>' alone; a stated list names the
++          subjects in order. '<stdout>' is the ONE channel name; every
++          other entry is a FILE NAME. Owed to ConfigRunner, default
++          ('<stdout>',). '<stderr>', unknown channel names, empty
++          entries, duplicates, and names starting with '-' (the key
++          'test--choice--name' must stay parseable) are refused at
++          validation, by name. (source-file, choice, output-name) is
++          unique by construction -- no further naming law exists.
++
++          THREE LAWS, stated in every manual that touches subjects:
++
++          (1) STDERR IS NEVER SUBJECT TO TESTING. stderr is for error
++              reporting; that is its whole job -- never a nominal,
++              never compared, never pype-d. Error reporting under test
++              flushes to a FILE named here. (The why: a stream that
++              both carries diagnostics and is held to a blessed text
++              can do neither job -- every diagnostic added while
++              debugging would fail the test, so the author learns
++              silence, and the framework has taught them to remove
++              the reporting it wanted.)
++
++          (2) A FILE IS READ ONLY AFTER THE RUN HAS TERMINATED --
++              no interleaving to observe, no flush to time, hence no
++              race. READ AND REMOVED (the sink law): a lingering file
++              is explored as a candidate test application by the next
++              walk, and a STALE file from run N greens run N+1 even
++              where the application stopped producing it -- a false
++              green. The store's record is the product; the file was
++              only the carrier. A declared file the run did not leave
++              is 'output-file-not-found', not a silence.
++
++          (3) PYPE-ING IS ONLY EVER APPLIED TO STDOUT. Not to stderr
++              (never read as a subject), not to files (not a stream).
++              'canonicalisers' stays a subject-keyed map and the
++              bookkeeper iterates it generically; the law, not the
++              shape, is what governs.
++
++COST      An author with file outputs must name them -- one line of
++          header. The 'OUT/' discovery sweep is retired; a tree that
++          relied on it states its files instead.
++
++GRAVEYARD Discovery of 'OUT/' -- retired: no missing-file verdict, and
++          droppings become subjects.
++          '<stderr>' as an 'output' entry, and 'stderr becomes
++          nominal' at acceptance -- both rejected under law (1).
++          A per-acceptance command-line option for extra files --
++          rejected: what a test produces is its DESIGN, authored once,
++          not restated at every acceptance.
 diff --git a/orchestrator/exploration/README.txt b/orchestrator/exploration/README.txt
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/README.txt
-@@ -0,0 +1,633 @@
+@@ -0,0 +1,664 @@
 +==============================================================================
 +orchestrator/exploration -- SPECIFICATION, EXPLORATION, SELECTION
 +==============================================================================
@@ -3950,7 +4119,38 @@ new file mode 100644
 +                    'caps'       the caps of the BUILD process
 +
 +    CANONICALISATION -- the D of Equivalence(D(b_pole), D(b), T)
-+        pype        pype script that rewrites a stream into canonical form
++        pype        pype script that rewrites a stream into canonical
++                    form. PYPE-ING IS ONLY EVER APPLIED TO STDOUT --
++                    not to stderr (never read as a subject), not to
++                    files (not a stream; read whole, after the end).
++
++    WHAT THE TEST PRODUCES
++        output      the subjects, in order. Absent: '<stdout>' alone.
++
++                        output = ["<stdout>", "result.csv"]
++
++                    '<stdout>' is the ONE channel name; every other
++                    entry is a FILE NAME. Three laws govern here:
++
++                    (1) STDERR IS NEVER SUBJECT TO TESTING. stderr is
++                        for ERROR REPORTING; that is its whole job. It
++                        is never a nominal, never compared, never
++                        pype-d -- '<stderr>' in this list is refused
++                        by name. Where error reporting is itself the
++                        thing under test, the application FLUSHES IT
++                        TO A FILE and names that file here.
++
++                    (2) A FILE IS READ ONLY AFTER THE RUN HAS
++                        TERMINATED -- so its content is NOT subject to
++                        race conditions: no interleaving to observe,
++                        no flush to time. Read, recorded, and REMOVED:
++                        the store's record is the product, the file
++                        was only the carrier; a stale file can never
++                        green a run that stopped producing it.
++
++                    (3) A DECLARED FILE THE RUN DID NOT LEAVE is the
++                        verdict 'output-file-not-found', not a
++                        silence.
 +
 +    TOLERANCE -- the T
 +        numeric     relative numeric tolerance, ratio in [0..1]
@@ -4473,143 +4673,11 @@ new file mode 100644
 +
 +'CTestCaseSequence' is a flat, ordered sequence of such elements. Run, diff,
 +merge, and accept each act on one element and read nothing else.
-diff --git a/orchestrator/exploration/TEST/ADM/cache.fly b/orchestrator/exploration/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/orchestrator/exploration/TEST/ADM/cache.fly
-@@ -0,0 +1,127 @@
-+{
-+title: the call itself, stated verbatim;
-+title_group: 'execute';
-+file_name: test-execute.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ refused; OK; 0.443066; 0; ]
-+  [ stated; OK; 0.447089; 0; ]
-+]
-+}
-+{
-+title: declared by the owner, related by us;
-+title_group: Defaults;
-+file_name: test-defaults.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ declared; OK; 0.419146; 0; ]
-+  [ instantiate; OK; 0.273643; 0; ]
-+  [ merge; OK; 0.274336; 0; ]
-+  [ refused; OK; 0.274449; 0; ]
-+  [ table; OK; 0.409669; 0; ]
-+]
-+}
-+{
-+title: no comment syntax known;
-+title_group: Detector and unwrapper;
-+file_name: test-detector_unwrapper.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ blank; OK; 0.412373; 0; ]
-+  [ dash; OK; 0.418015; 0; ]
-+  [ detect; OK; 0.401867; 0; ]
-+  [ hash; OK; 0.269199; 0; ]
-+  [ offsets; OK; 0.272158; 0; ]
-+  [ single; OK; 0.273614; 0; ]
-+  [ star; OK; 0.270774; 0; ]
-+]
-+}
-+{
-+title: carriers, cross-check, resolution;
-+title_group: Explorer;
-+file_name: test-explorer.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ carriers; OK; 0.452699; 0; ]
-+  [ defaults; OK; 0.307985; 0; ]
-+  [ directory; OK; 0.310439; 0; ]
-+  [ faults; OK; 0.441513; 0; ]
-+  [ graph; OK; 0.310665; 0; ]
-+  [ resolve; OK; 0.442504; 0; ]
-+]
-+}
-+{
-+title: select, or refuse at the door;
-+title_group: Task list;
-+file_name: test-task_list.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ all; OK; 0.443745; 0; ]
-+  [ named; OK; 0.446179; 0; ]
-+  [ refused; OK; 0.465075; 0; ]
-+]
-+}
-+{
-+title: hwut 1.0 answers, and is read;
-+title_group: The interview;
-+file_name: test-interview.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ block; OK; 0.489433; 0; ]
-+  [ directory; OK; 0.444016; 0; ]
-+  [ precedence; OK; 0.449746; 0; ]
-+  [ silence; OK; 0.452651; 0; ]
-+]
-+}
-+{
-+title: markers found, configuration folded down;
-+title_group: Tree walk;
-+file_name: test-tree.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ inherit; OK; 0.304661; 0; ]
-+  [ locals; OK; 0.304255; 0; ]
-+  [ marker; OK; 0.303798; 0; ]
-+  [ walk; OK; 0.304154; 0; ]
-+]
-+}
-+{
-+title: plain tree, or refusal by name;
-+title_group: Validator;
-+file_name: test-validator.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ choiceless; OK; 0.282418; 0; ]
-+  [ conf; OK; 0.290455; 0; ]
-+  [ exclusivity; OK; 0.332058; 0; ]
-+  [ header; OK; 0.288643; 0; ]
-+  [ list_form; OK; 0.291354; 0; ]
-+  [ off; OK; 0.290544; 0; ]
-+  [ root_only; OK; 0.289892; 0; ]
-+  [ types; OK; 0.288087; 0; ]
-+  [ vocabulary; OK; 0.285793; 0; ]
-+]
-+}
-+{
-+title: what the framework read;
-+title_group: hwut.parse;
-+file_name: test-printer.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ directory; OK; 0.307586; 0; ]
-+  [ faults; OK; 0.299028; 0; ]
-+  [ file; OK; 0.300813; 0; ]
-+  [ no_default; OK; 0.305626; 0; ]
-+  [ origins; OK; 0.308162; 0; ]
-+  [ places; OK; 0.309886; 0; ]
-+]
-+}
 diff --git a/orchestrator/exploration/TEST/GOOD/test-defaults.py--declared.txt b/orchestrator/exploration/TEST/GOOD/test-defaults.py--declared.txt
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/TEST/GOOD/test-defaults.py--declared.txt
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,33 @@
 +
 +--- the table imported: every member exists and declares ---
 +import check passed
@@ -4633,6 +4701,7 @@ new file mode 100644
 +interactive        ConfigRunner        interactive_f                                  False
 +nothing            ConfigCompare       visible_nothing_pattern_list                   ()
 +numeric            ConfigCompare       numeric_tolerance_ratio                        0.0
++output             ConfigRunner        output                                         ('<stdout>',)
 +pype               ConfigCanonicalise  pype                                           None
 +same               ConfigStore         same_nominal_f                                 False
 +slash_eqv          ConfigCompare       backslash_f                                    True
@@ -4646,7 +4715,7 @@ diff --git a/orchestrator/exploration/TEST/GOOD/test-defaults.py--instantiate.tx
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/TEST/GOOD/test-defaults.py--instantiate.txt
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,40 @@
 +
 +--- a case stating two things, and what it yields ---
 +record: numeric 0.05  caps Caps(timeout_sec=None, cpu_sec=None, memory_mb=None, file_size_mb=None, child_process_max_n=None, file_handle_max_n=None, network=False, write_directory_list=None)  comment None
@@ -4684,6 +4753,7 @@ new file mode 100644
 +    same_nominal_f                 False
 +ConfigRunner:
 +    interactive_f                  False
++    output                         ('<stdout>',)
 +    execute                        None
 +<hwut-end>
 diff --git a/orchestrator/exploration/TEST/GOOD/test-defaults.py--merge.txt b/orchestrator/exploration/TEST/GOOD/test-defaults.py--merge.txt
@@ -5019,11 +5089,62 @@ new file mode 100644
 +--- keywords but no title ---
 +not a test application
 +<hwut-end>
+diff --git a/orchestrator/exploration/TEST/GOOD/test-output.sh--cycle.txt b/orchestrator/exploration/TEST/GOOD/test-output.sh--cycle.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/exploration/TEST/GOOD/test-output.sh--cycle.txt
+@@ -0,0 +1,11 @@
++first run (no nominal yet): status 1
++residue in the test directory: 0
++candidates:
++    test-file.result.csv
++    test-file.stderr
++    test-file.stdout
++accepted: status 0
++nominals:
++    test-file.result.csv
++    test-file.stdout
++STATUS: 0
+diff --git a/orchestrator/exploration/TEST/GOOD/test-output.sh--declare.txt b/orchestrator/exploration/TEST/GOOD/test-output.sh--declare.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/exploration/TEST/GOOD/test-output.sh--declare.txt
+@@ -0,0 +1,2 @@
++test-file.sh   output = ('<stdout>', 'result.csv')
++STATUS: 0
+diff --git a/orchestrator/exploration/TEST/GOOD/test-output.sh--forgotten.txt b/orchestrator/exploration/TEST/GOOD/test-output.sh--forgotten.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/exploration/TEST/GOOD/test-output.sh--forgotten.txt
+@@ -0,0 +1,13 @@
++STATUS: 1
++    
++    ==============================================================================
++    DIRECTORIES                                             0 ok, 1 fail, hh:mm:ss
++    ------------------------------------------------------------------------------
++    SUIT  suite/TEST ........................................ [FAIL]   0 of   1 ok
++    
++    ==============================================================================
++    FAILURES
++    ------------------------------------------------------------------------------
++    SUIT  suite/TEST
++        test-file.sh                 output file missing
++    ==============================================================================
+diff --git a/orchestrator/exploration/TEST/GOOD/test-output.sh--refuse.txt b/orchestrator/exploration/TEST/GOOD/test-output.sh--refuse.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/exploration/TEST/GOOD/test-output.sh--refuse.txt
+@@ -0,0 +1,5 @@
++FAULT: test-a.sh:3:19: TYPE: '<stderr>' is not a subject: stderr is for error reporting and is never subject to testing; flush the reporting to a file and name that file in 'output'
++FAULT: test-b.sh:3:19: TYPE: 'output' knows one channel name, '<stdout>'; not '<stdin>'
++FAULT: test-c.sh:3:19: TYPE: 'output' names every subject once
++FAULT: test-d.sh:3:19: TYPE: an 'output' name does not start with '-': the key 'test--choice--name' must stay parseable
++STATUS: 0
 diff --git a/orchestrator/exploration/TEST/GOOD/test-printer.py--directory.txt b/orchestrator/exploration/TEST/GOOD/test-printer.py--directory.txt
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/TEST/GOOD/test-printer.py--directory.txt
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,110 @@
 +
 +--- the whole directory ---
 +hwut.conf
@@ -5061,6 +5182,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +        two {
 +            build {
@@ -5089,6 +5211,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +    }
 +}
@@ -5123,6 +5246,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +    }
 +}
@@ -5146,7 +5270,7 @@ diff --git a/orchestrator/exploration/TEST/GOOD/test-printer.py--file.txt b/orch
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/TEST/GOOD/test-printer.py--file.txt
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,66 @@
 +
 +--- a file with two choices ---
 +test-a.py {
@@ -5179,6 +5303,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +        two {
 +            build {
@@ -5207,6 +5332,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +    }
 +}
@@ -5215,7 +5341,7 @@ diff --git a/orchestrator/exploration/TEST/GOOD/test-printer.py--no_default.txt 
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/TEST/GOOD/test-printer.py--no_default.txt
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,53 @@
 +
 +--- everything ---
 +test-a.py {
@@ -5248,6 +5374,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +    }
 +}
@@ -5272,7 +5399,7 @@ diff --git a/orchestrator/exploration/TEST/GOOD/test-printer.py--origins.txt b/o
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/TEST/GOOD/test-printer.py--origins.txt
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,108 @@
 +
 +--- every provenance in one directory ---
 +gen.c {
@@ -5305,6 +5432,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +    }
 +}
@@ -5339,6 +5467,7 @@ new file mode 100644
 +            same = true                       # --hwut-info
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +    }
 +}
@@ -5373,6 +5502,7 @@ new file mode 100644
 +            same = false                      # default
 +            interactive = false               # default
 +            execute = null                    # default
++            output = ["<stdout>"]             # default
 +        }
 +    }
 +}
@@ -6661,6 +6791,126 @@ new file mode 100644
 +        "directory":  test_directory,
 +        "precedence": test_precedence,
 +    }).run()
+diff --git a/orchestrator/exploration/TEST/test-output.sh b/orchestrator/exploration/TEST/test-output.sh
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/exploration/TEST/test-output.sh
+@@ -0,0 +1,115 @@
++#! /bin/bash
++# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++# ---------------------------------------------------------------------------
++#
++# THE 'output' PARAMETER (todo-1): a test STATES what it produces.
++# Absent, the subject is '<stdout>' alone; stated, the list names the
++# subjects -- '<stdout>' the one channel name, every other entry a
++# FILE read AFTER the run has ended.
++#
++# THE THREE LAWS on display here:
++#   (1) STDERR IS NEVER SUBJECT TO TESTING -- '<stderr>' is refused
++#       at validation, by name, with the reason.
++#   (2) A FILE IS READ ONLY AFTER TERMINATION -- and then REMOVED:
++#       the transport leaves no residue, so a stale file can never
++#       green a run that stopped producing it.
++#   (3) PYPE-ING IS ONLY EVER APPLIED TO STDOUT.
++# ---------------------------------------------------------------------------
++HERE=$(cd "$(dirname "$0")" && pwd)
++ROOT=$(cd "$HERE/../../../../.." && pwd)
++RUN="python3 -m vut.engine.orchestrator.services.run"
++ACCEPT="python3 -m vut.engine.orchestrator.services.accept"
++export PYTHONPATH="$ROOT"
++
++case "$1" in
++    --hwut-info)
++        echo "The 'output' parameter: declared subjects, files included."
++        echo "CHOICES: declare, refuse, cycle, forgotten;"
++        echo "HAPPY: STATUS: [0-9];"
++        exit 0 ;;
++esac
++
++WORK=$(mktemp -d)
++trap 'rm -rf "$WORK"' EXIT
++cd "$WORK"
++
++mask() { sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'; }
++
++fixture() {             # the app writes stdout AND result.csv
++    rm -rf tree
++    mkdir -p tree/suite/TEST
++    printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
++        > tree/suite/TEST/hwut.conf
++    printf '#!/bin/bash\n# hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\nprintf "a,b\\\\n1,2\\\\n" > result.csv\necho "<hwut-end>"\n' \
++        > tree/suite/TEST/test-file.sh
++    chmod +x tree/suite/TEST/test-file.sh
++}
++
++case "$1" in
++
++declare)
++    #  The parsed declaration, read back from exploration.
++    fixture
++    python3 - <<'PYEOF'
++from vut.engine.orchestrator.exploration.explorer import explore
++result = explore("tree/suite/TEST")
++for fault in result.fault_list: print("FAULT: %s" % fault)
++for app in sorted(result.app_set, key=lambda a: a.source_file):
++    print("%-14s output = %s"
++          % (app.source_file, app.choice_db[None].output))
++PYEOF
++    echo "STATUS: $?"
++    ;;
++
++refuse)
++    #  '<stderr>' and every other malformation, refused by name.
++    mkdir -p bad
++    printf '#!/bin/bash\n# hwut { title = "A"\n#        output = ["<stdout>", "<stderr>"] }\necho x\n' > bad/test-a.sh
++    printf '#!/bin/bash\n# hwut { title = "B"\n#        output = ["<stdin>"] }\necho x\n'  > bad/test-b.sh
++    printf '#!/bin/bash\n# hwut { title = "C"\n#        output = ["a.log", "a.log"] }\necho x\n' > bad/test-c.sh
++    printf '#!/bin/bash\n# hwut { title = "D"\n#        output = ["-dash.log"] }\necho x\n'      > bad/test-d.sh
++    chmod +x bad/*.sh
++    python3 - <<'PYEOF'
++from vut.engine.orchestrator.exploration.explorer import explore
++for fault in explore("bad").fault_list:
++    print("FAULT: %s" % fault)
++PYEOF
++    echo "STATUS: $?"
++    ;;
++
++cycle)
++    #  Declare -> run records the file as a CANDIDATE, no residue ->
++    #  accept blesses it beside stdout -> the re-run is green.
++    fixture
++    $RUN --directory=tree --silent 2> /dev/null
++    echo "first run (no nominal yet): status $?"
++    echo "residue in the test directory: $(ls tree/suite/TEST | grep -c result.csv)"
++    echo "candidates:"
++    ls tree/suite/TEST/.hwut-store/ | grep -v when | sed 's/^/    /'
++    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null 2>&1
++    echo "accepted: status $?"
++    echo "nominals:"
++    ls tree/suite/TEST/GOOD/ | grep -v result_db | sed 's/^/    /'
++    $RUN --directory=tree --silent 2> /dev/null
++    echo "STATUS: $?"
++    ;;
++
++forgotten)
++    #  The application stops producing the declared file: the verdict
++    #  'output-file-not-found', phrased, status 1 -- a stale file from
++    #  the earlier run CANNOT green this one (it was removed).
++    fixture
++    $RUN --directory=tree --silent 2> /dev/null
++    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null 2>&1
++    printf '#!/bin/bash\n# hwut { title = "File subject"\n#        output = ["<stdout>", "result.csv"] }\necho "on the channel"\necho "<hwut-end>"\n' \
++        > tree/suite/TEST/test-file.sh
++    chmod +x tree/suite/TEST/test-file.sh
++    $RUN --directory=tree --quiet > run.txt 2> /dev/null
++    echo "STATUS: $?"
++    mask < run.txt | sed 's/^/    /'
++    ;;
++
++*)
++    echo "unknown choice '$1'"
++    exit 1 ;;
++esac
 diff --git a/orchestrator/exploration/TEST/test-printer.py b/orchestrator/exploration/TEST/test-printer.py
 new file mode 100644
 --- /dev/null
@@ -8095,7 +8345,7 @@ diff --git a/orchestrator/exploration/owner_faces_provisional.py b/orchestrator/
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/owner_faces_provisional.py
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,112 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -8199,8 +8449,14 @@ new file mode 100644
 +    'execute' -- the call itself, stated verbatim (R-68). Unstated means
 +    the interpreter-derived call. The framework variables '$file',
 +    '$choice' and '$filestem' expand at the call; '$choice' expands
-+    empty for the choice-less call."""
++    empty for the choice-less call.
++
++    'output' -- WHAT THE TEST PRODUCES, declared (todo-1): the subjects
++    in order. '<stdout>' names the one channel; every other entry is a
++    FILE, read after the run has ended and then removed. The default is
++    the channel alone. stderr is NEVER here (E-5)."""
 +    interactive_f: bool = False
++    output:        tuple = ("<stdout>",)
 +    execute:       str | None = None
 diff --git a/orchestrator/exploration/printer.py b/orchestrator/exploration/printer.py
 new file mode 100644
@@ -8676,7 +8932,7 @@ diff --git a/orchestrator/exploration/relation.py b/orchestrator/exploration/rel
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/relation.py
-@@ -0,0 +1,279 @@
+@@ -0,0 +1,280 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -8824,6 +9080,7 @@ new file mode 100644
 +    "same":            (ConfigStore,  "same_nominal_f"),
 +    "interactive":     (ConfigRunner, "interactive_f"),
 +    "execute":         (ConfigRunner, "execute"),
++    "output":          (ConfigRunner, "output"),
 +}
 +
 +
@@ -9190,7 +9447,7 @@ diff --git a/orchestrator/exploration/specification.py b/orchestrator/exploratio
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/specification.py
-@@ -0,0 +1,283 @@
+@@ -0,0 +1,290 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -9234,6 +9491,7 @@ new file mode 100644
 +    "same":        "same",
 +    "interactive": "interactive",
 +    "execute":     "execute",
++    "output":      "output",
 +}
 +
 +#  Stated at the ROOT only. Neither is a statement a single choice can
@@ -9326,6 +9584,12 @@ new file mode 100644
 +    same:        bool  | None = None
 +    interactive: bool  | None = None
 +    execute:     str   | None = None
++    #  WHAT THE TEST PRODUCES (todo-1). None: '<stdout>' alone.
++    #  A stated tuple names the subjects in order; '<stdout>' is the
++    #  ONE special name marking the channel, every other entry a FILE
++    #  read AFTER the run has ended. '<stderr>' is refused at
++    #  validation: STDERR IS NEVER SUBJECT TO TESTING (E-5).
++    output:      tuple | None = None
 +
 +    def overwritten_by(self, other):
 +        """
@@ -10003,7 +10267,7 @@ diff --git a/orchestrator/exploration/validator.py b/orchestrator/exploration/va
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/exploration/validator.py
-@@ -0,0 +1,635 @@
+@@ -0,0 +1,684 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -10267,6 +10531,10 @@ new file mode 100644
 +    elif key in ("eq-pattern", "nothing"):
 +        value = _string_list(entry, file, fault_list)
 +        if value is not None: parameter_db[KEY_TO_FIELD[key]] = value
++    elif key == "output":
++        value = _string_list(entry, file, fault_list)
++        if value is not None:
++            _output(entry, value, parameter_db, file, fault_list)
 +    elif key == "constraints":
 +        if _off_f(entry.node):
 +            parameter_db["constraints"] = ()
@@ -10285,6 +10553,51 @@ new file mode 100644
 +        if value is not None: parameter_db["caps"] = value
 +    elif key in ("analogy", "comment"):
 +        _marker_pair(entry, parameter_db, file, fault_list)
++
++
++def _output(entry, value, parameter_db, file, fault_list):
++    """RETURN: None. The 'output' subject list into 'parameter_db', or a
++    fault by name.
++
++    '<stdout>' is the ONE special entry, marking the channel; every
++    other entry is a FILE NAME, read after the run has ended.
++    '<stderr>' is REFUSED: STDERR IS NEVER SUBJECT TO TESTING (E-5) --
++    it is for error reporting; where the reporting is itself under
++    test, the application flushes it to a file and names THAT file
++    here. A duplicate entry is refused too: one subject, one record.
++    """
++    position = _position_of(entry.node, entry)
++    if "<stderr>" in value:
++        fault_list.append(Fault(
++            E_FaultKind.TYPE, file, position,
++            "'<stderr>' is not a subject: stderr is for error "
++            "reporting and is never subject to testing; flush the "
++            "reporting to a file and name that file in 'output'"))
++        return
++    for name in value:
++        if name.startswith("<") and name != "<stdout>":
++            fault_list.append(Fault(
++                E_FaultKind.TYPE, file, position,
++                "'output' knows one channel name, '<stdout>'; "
++                "not '%s'" % name))
++            return
++        if not name:
++            fault_list.append(Fault(
++                E_FaultKind.TYPE, file, position,
++                "'output' holds no empty entry"))
++            return
++        if name.startswith("-"):
++            fault_list.append(Fault(
++                E_FaultKind.TYPE, file, position,
++                "an 'output' name does not start with '-': the key "
++                "'test--choice--name' must stay parseable"))
++            return
++    if len(set(value)) != len(value):
++        fault_list.append(Fault(
++            E_FaultKind.TYPE, file, position,
++            "'output' names every subject once"))
++        return
++    parameter_db["output"] = value
 +
 +
 +def _build(entry, file, fault_list):
@@ -11259,77 +11572,6 @@ new file mode 100644
 +BUILD nodes from the interview; 'provision_execute.py' raises SESSION
 +nodes for the shared facet of execution; 'determine.py' raises the
 +TEST nodes, walks, closes and assembles. The scheduler is stage-blind.
-diff --git a/orchestrator/plan/TEST/ADM/cache.fly b/orchestrator/plan/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/orchestrator/plan/TEST/ADM/cache.fly
-@@ -0,0 +1,66 @@
-+{
-+title: a wish and a directory become a plan;
-+title_group: Determination;
-+file_name: test-determine.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ closure; OK; 0.321380; 0; ]
-+  [ deterministic; OK; 0.334005; 0; ]
-+  [ empty; OK; 0.452418; 0; ]
-+  [ misdep; OK; 0.318557; 0; ]
-+  [ pruned; OK; 0.337408; 0; ]
-+  [ whole; OK; 0.373174; 0; ]
-+]
-+}
-+{
-+title: nodes, links, exclusions, laws at the door;
-+title_group: Plan form;
-+file_name: test-form.py;
-+hwut_info_time: 1786944657L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ closure; OK; 0.410751; 0; ]
-+  [ derived; OK; 0.416176; 0; ]
-+  [ nodes; OK; 0.264321; 0; ]
-+  [ refused; OK; 0.388331; 0; ]
-+  [ stage; OK; 0.396683; 0; ]
-+]
-+}
-+{
-+title: the canonical text, one-way;
-+title_group: Plan printer;
-+file_name: test-printer.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ bare; OK; 0.261988; 0; ]
-+  [ empty; OK; 0.399112; 0; ]
-+  [ full; OK; 0.260297; 0; ]
-+]
-+}
-+{
-+title: one plan per directory, walk order;
-+title_group: Tree plan;
-+file_name: test-tree_plan.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ refused; OK; 0.451120; 0; ]
-+  [ tree; OK; 0.457903; 0; ]
-+]
-+}
-+{
-+title: keywords read, cases selected;
-+title_group: Wish;
-+file_name: test-wish.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ anchors; OK; 0.448226; 0; ]
-+  [ base; OK; 0.486721; 0; ]
-+  [ globs; OK; 0.448330; 0; ]
-+  [ parsing; OK; 0.439534; 0; ]
-+  [ refused; OK; 0.437743; 0; ]
-+]
-+}
 diff --git a/orchestrator/plan/TEST/GOOD/test-determine.py--closure.txt b/orchestrator/plan/TEST/GOOD/test-determine.py--closure.txt
 new file mode 100644
 --- /dev/null
@@ -13705,7 +13947,7 @@ diff --git a/orchestrator/plan/wish.py b/orchestrator/plan/wish.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/plan/wish.py
-@@ -0,0 +1,238 @@
+@@ -0,0 +1,266 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -13762,6 +14004,34 @@ new file mode 100644
 +                 in enumerate(calendar.day_name)}      # monday -> 0
 +MONTH_INDEX   = {name.lower(): index for index, name
 +                 in enumerate(calendar.month_name) if index}
++
++
++#  ---------------------------------------------------------------------
++#  THE WISH'S OWN WORDS -- DATA, written ONCE: the argument list a face
++#  adds to its own, and the block that describes them. A face that
++#  re-describes these keywords in its own prose puts a second
++#  description beside this one with nothing keeping the two aligned.
++#
++#  HOW a usage line is laid out is NOT this module's business (D-8):
++#  the wrapping lives with the faces, in 'services/_core.py'.
++#  ---------------------------------------------------------------------
++USAGE_TOKEN_TUPLE = ("[--fail]", "[--pass]", "[--since=<point>]",
++                     "[--until=<point>]", "[--glob <target>]...")
++
++HELP = """SELECTION -- the wish; an absent keyword asks nothing
++    --fail              the last recorded run's verdict was negative
++    --pass              the last recorded run's verdict was positive
++    --since=<point>     the last recorded run lies AT or AFTER the
++                        point; a case never run is not wanted
++    --until=<point>     the last recorded run lies BEFORE the point,
++                        and a case NEVER RUN is wanted too -- the
++                        stale wish
++    --glob <target>     a target: a file name, or a file name and a
++                        choice name with one blank between, either
++                        carrying fnmatch's '*', '?' and '[ ]':
++                            --glob "test-*.py quick-[0-2]"
++                        may stand several times; the globs are OR'ed
++                        among themselves"""
 +
 +
 +class WishError(Exception):
@@ -14233,7 +14503,7 @@ diff --git a/orchestrator/run/README.txt b/orchestrator/run/README.txt
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/run/README.txt
-@@ -0,0 +1,129 @@
+@@ -0,0 +1,158 @@
 +==============================================================================
 +orchestrator/run -- THE OUTER FACE AND THE REPORT STREAM
 +==============================================================================
@@ -14363,63 +14633,35 @@ new file mode 100644
 +An unknown language and a marker pair that is not a pair are refused
 +by name. 'TEST/test-adapter.py' sweeps every declared parameter and
 +names any that reaches nothing.
-diff --git a/orchestrator/run/TEST/ADM/cache.fly b/orchestrator/run/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/orchestrator/run/TEST/ADM/cache.fly
-@@ -0,0 +1,52 @@
-+{
-+title: the wire over real processes;
-+title_group: End to end;
-+file_name: test-endtoend.py;
-+hwut_info_time: 1787125917L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ frame; OK; 0.736515; 0; ]
-+  [ nostore; OK; 1.332075; 0; ]
-+  [ stream; OK; 1.041555; 0; ]
-+]
-+}
-+{
-+title: the report stream of a run;
-+title_group: Orchestrator;
-+file_name: test-orchestrator.py;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ broken; OK; 0.469568; 0; ]
-+  [ empty; OK; 0.461434; 0; ]
-+  [ frame; OK; 0.330546; 0; ]
-+  [ stream; OK; 0.460565; 0; ]
-+]
-+}
-+{
-+title: stated parameters reach their owners;
-+title_group: The translation;
-+file_name: test-adapter.py;
-+hwut_info_time: 1787125917L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ caps; OK; 0.304297; 0; ]
-+  [ compare; OK; 0.312114; 0; ]
-+  [ naming; OK; 0.310007; 0; ]
-+  [ refused; OK; 0.449216; 0; ]
-+  [ sweep; OK; 0.449486; 0; ]
-+]
-+}
-+{
-+title: format, dispatch, misfit;
-+title_group: Vocabulary and receiver;
-+file_name: test-receiver.py;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ dispatch; OK; 0.256797; 0; ]
-+  [ emitter; OK; 0.255333; 0; ]
-+  [ format; OK; 0.392174; 0; ]
-+  [ misfit; OK; 0.259082; 0; ]
-+]
-+}
++
++==============================================================================
++THIS COMPONENT IS OPERATIONAL ONLY
++==============================================================================
++
++A LAW, not an observation: nothing here renders. No 'print', no
++'.write()', no format string aimed at a human, no '__pretty__', and no
++import of 'display'. This component RUNS things and EMITS events; what
++those events look like is decided elsewhere.
++
++The direction of the dependency, tree-wide:
++
++    orchestrator/run  --emits-->  the queue  --read by-->  display
++                                                              |
++    a service face composes both -----------------------------+
++
++'display' imports this component's 'vocabulary', 'receiver' and
++'summary'. Nothing here imports 'display' back. A service face
++importing both is the intended -- and only -- exception.
++
++The one accumulation that legitimately lives here is 'summary.fold()',
++because 'CRunSummary' answers an OPERATIONAL question: did anything
++fail, i.e. what is the exit status. It carries no text and names no
++English. The presentation model is display's, and is a different shape
++for a different question (display/DISCUSSIONS/todo-1).
++
++The law is cheap to keep and easy to lose: one 'print()' left behind
++after debugging breaks it silently. 'TEST/' does not police this;
++review does.
 diff --git a/orchestrator/run/TEST/GOOD/test-adapter.py--caps.txt b/orchestrator/run/TEST/GOOD/test-adapter.py--caps.txt
 new file mode 100644
 --- /dev/null
@@ -14481,7 +14723,7 @@ diff --git a/orchestrator/run/TEST/GOOD/test-adapter.py--sweep.txt b/orchestrato
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/run/TEST/GOOD/test-adapter.py--sweep.txt
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,20 @@
 +INSPECT: every member of 'TestParameters', stated alone
 +         stated           arrives at
 +         build            source_kind, interpreter, build
@@ -14498,6 +14740,7 @@ new file mode 100644
 +         same             naming
 +         interactive      interactive
 +         execute          execute
++         output           output
 +  OK  : every stated parameter reaches a component -- none is silently dropped
 +SUCCESS: what an author states, a component receives.
 +<hwut-end>
@@ -14859,7 +15102,7 @@ diff --git a/orchestrator/run/TEST/test-adapter.py b/orchestrator/run/TEST/test-
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/run/TEST/test-adapter.py
-@@ -0,0 +1,296 @@
+@@ -0,0 +1,299 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -14971,6 +15214,7 @@ new file mode 100644
 +        case "same":        return True
 +        case "interactive": return True
 +        case "execute":     return "./run-me --now"
++        case "output":      return ("<stdout>", "extra.log")
 +        case _:
 +            assert False, ("the sweep does not know how to state '%s'"
 +                           % member.name)
@@ -15001,6 +15245,8 @@ new file mode 100644
 +        arrival.append("canonicalisers")
 +    if carried_choice.compare is not None:
 +        arrival.append("compare")
++    if plain_choice.output != carried_choice.output:
++        arrival.append("output")
 +    if naming_of(_app(parameters)) != naming_of(_app(TestParameters())):
 +        arrival.append("naming")
 +    return arrival
@@ -15833,7 +16079,7 @@ diff --git a/orchestrator/run/adapter.py b/orchestrator/run/adapter.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/run/adapter.py
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,231 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -15975,8 +16221,16 @@ new file mode 100644
 +    canonicalisers = {}
 +    if parameters.pype is not None:
 +        canonicalisers["stdout"] = tuple(shlex.split(parameters.pype))
++    #  'output' (todo-1): the spec's '<stdout>' becomes the plain
++    #  subject name; file entries pass verbatim. None stays None --
++    #  the default, ('stdout',), is resolved at the point of use.
++    output = None
++    if parameters.output is not None:
++        output = tuple("stdout" if name == "<stdout>" else name
++                       for name in parameters.output)
 +    return TestChoiceConfiguration(canonicalisers = canonicalisers,
-+                                   compare        = _compare_of(parameters))
++                                   compare        = _compare_of(parameters),
++                                   output         = output)
 +
 +
 +def _compare_of(parameters):
@@ -16619,7 +16873,7 @@ diff --git a/orchestrator/run/summary.py b/orchestrator/run/summary.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/run/summary.py
-@@ -0,0 +1,101 @@
+@@ -0,0 +1,117 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -16666,7 +16920,10 @@ new file mode 100644
 +def fold(event_iterable):
 +    """
 +    RETURN: CRunSummary, the given events folded in order. Events of
-+            an unknown kind are ignored; a 'None' ends the fold.
++            an unknown kind are ignored, and so is a known kind whose
++            required fields are missing -- the vocabulary's promise,
++            honoured at the consumer; anything that is not a dict ends
++            the fold ('None' does).
 +    """
 +    directory_list = []
 +    verdict_db     = {}
@@ -16678,24 +16935,37 @@ new file mode 100644
 +    good_f         = None
 +    fail_n         = None
 +
++    def fits(*name_tuple):
++        """RETURN: bool, True where 'item' carries every named field
++        -- the promise extended: a malformed known kind is ignored
++        like an unknown one, never a crash at the consumer."""
++        return all(name in item for name in name_tuple)
++
 +    for item in event_iterable:
-+        if item is None: break
++        if not isinstance(item, dict): break
 +        kind = item.get("kind")
 +        if   kind == "tree-begun":
++            if not fits("directory_list"): continue
 +            directory_list = list(item["directory_list"])
 +        elif kind == "run-ended":
++            if not fits("directory", "node", "verdict"): continue
 +            key             = (item["directory"], item["node"])
 +            verdict_db[key] = item["verdict"]
 +            if "cause" in item: cause_db[key] = item["cause"]
 +        elif kind == "frame":
++            if not fits("directory", "role", "good"): continue
 +            frame_db[(item["directory"], item["role"])] = item["good"]
 +        elif kind == "fault":
++            if not fits("directory", "text"): continue
 +            fault_list.append((item["directory"], item["text"]))
 +        elif kind == "report":
++            if not fits("directory", "text"): continue
 +            report_list.append((item["directory"], item["text"]))
 +        elif kind == "dir-done":
++            if not fits("directory", "good"): continue
 +            dir_good_db[item["directory"]] = item["good"]
 +        elif kind == "tree-done":
++            if not fits("good", "fail_n"): continue
 +            good_f = item["good"]
 +            fail_n = item["fail_n"]
 +
@@ -17048,41 +17318,6 @@ new file mode 100644
 +states no script -- absence is data), the state of every node, and what
 +was dispatched in start order. 'good_f()' is True where the frame stood
 +and no node failed.
-diff --git a/orchestrator/scheduler/TEST/ADM/cache.fly b/orchestrator/scheduler/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/orchestrator/scheduler/TEST/ADM/cache.fly
-@@ -0,0 +1,30 @@
-+{
-+title: admission, supports, exclusion, ordering;
-+title_group: Plan state;
-+file_name: test-state.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ admission; OK; 0.396504; 0; ]
-+  [ exclusion; OK; 0.258948; 0; ]
-+  [ ordering; OK; 0.262507; 0; ]
-+  [ supports; OK; 0.262351; 0; ]
-+]
-+}
-+{
-+title: the plan executed, trace and report;
-+title_group: Scheduler;
-+file_name: test-scheduler.py;
-+hwut_info_time: 1786945554L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ build; OK; 0.402735; 0; ]
-+  [ exclusion; OK; 0.264388; 0; ]
-+  [ frame; OK; 0.266992; 0; ]
-+  [ misdep; OK; 0.265369; 0; ]
-+  [ ordering; OK; 0.399913; 0; ]
-+  [ parallel; OK; 0.400574; 0; ]
-+  [ session; OK; 0.268433; 0; ]
-+  [ workers; OK; 0.403809; 0; ]
-+]
-+}
 diff --git a/orchestrator/scheduler/TEST/GOOD/test-scheduler.py--build.txt b/orchestrator/scheduler/TEST/GOOD/test-scheduler.py--build.txt
 new file mode 100644
 --- /dev/null
@@ -18390,11 +18625,187 @@ new file mode 100644
 +         (or the renovated HwutRunner). RULED (7a): --apply rewrites
 +         GOODs only -- a tool must not edit an author's program;
 +         scripts are report-only.
+diff --git a/orchestrator/services/RATIONALE.txt b/orchestrator/services/RATIONALE.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/RATIONALE.txt
+@@ -0,0 +1,171 @@
++==============================================================================
++orchestrator/services -- RATIONALE
++==============================================================================
++
++Settled decisions, read-only. Append-only; no entry is removed once
++written.
++
++----------------------------------------------------------------------------
++E-1  THE EXIT STATUS LAW
++----------------------------------------------------------------------------
++PROBLEM   Five faces, five sets of magic integers, no shared source of
++          truth. A caller comparing '$?' against a literal had no
++          guarantee two faces agreed on what '1' meant.
++
++DECISION  One 'IntEnum', 'E_ExitCode', in '_exit.py'; every face
++          imports and returns its members:
++
++              OK      = 0   nothing refused, nothing failed
++              FAULT   = 1   a fault or failure; still printed what stands
++              REFUSED = 2   the command line cannot be READ
++              EMPTY   = 3   reads, asks for NOTHING
++              SIGPIPE = 141 reader hung up; face went quiet
++
++          'IntEnum': 'sys.exit()' takes a member unchanged, so a
++          standing suite's 'status == 2' check keeps holding without
++          change while the faces migrate.
++
++          For the three faces (compare, merge, report) that can be run
++          by path ('python3 .../report.py') in addition to '-m', the
++          'from ._exit import E_ExitCode' line is placed AFTER the
++          '_config' adoption guard so the relative import resolves in
++          both invocation modes.
++
++COST      Every face needed surgical edits; GOODs that print status
++          numbers changed for plan (E-2 below) and for the new run face.
++
++GRAVEYARD Bare integer returns -- every 'return 0/1/2' replaced.
++
++----------------------------------------------------------------------------
++E-2  PLAN EMPTY-SELECTION EXIT STATUS RETROACTIVE CHANGE
++----------------------------------------------------------------------------
++PROBLEM   'hwut.plan' with a wish that selects nothing previously
++          returned 0 -- indistinguishable from a plan that found tests.
++          An empty selection is a design signal, not a success.
++
++DECISION  'hwut.plan' with an empty plan now returns 3 (EMPTY), not 0.
++          The HELP text's status blurb extended with the EMPTY line.
++          The wish GOOD ('test-plan.py--wish') re-blessed: one line
++          changed from '[status 0]' to '[status 3]'. Named separately
++          here so the delivery header can state it explicitly.
++
++COST      Callers that checked 'hwut.plan ... && ...' for an empty
++          plan must adjust; the new status is more informative.
++
++----------------------------------------------------------------------------
++E-3  FOLD HARDENING (FORCED FIX, NOT A DESIGN CHOICE)
++----------------------------------------------------------------------------
++PROBLEM   'orchestrator/run/summary.py' fold() crashed with KeyError
++          when a KNOWN kind's required field was absent -- the
++          vocabulary's stability promise requires that a malformed
++          known kind be IGNORED, not crashed on, exactly as an unknown
++          kind is.
++
++DECISION  fold() now guards every branch with a 'fits(*fields)' check;
++          a known kind missing a required field is silently skipped.
++          The docstring updated to state the extended promise. The four
++          receiver GOODs are byte-exact unchanged -- fold() only changed
++          its error behaviour, not its happy path.
++
++COST      Marginally more code in fold(). The fix was forced by the
++          'test-plain.py unknown' choice, which crafted a 'run-ended'
++          lacking 'verdict' -- a legitimate test of the stability
++          promise at the consumer.
++
++----------------------------------------------------------------------------
++E-4  ACCEPTANCE, AND WHAT IT REFUSES
++----------------------------------------------------------------------------
++PROBLEM   'Store.accept()' existed -- "the only way a nominal comes to
++          exist" -- but nothing called it: no face promoted a
++          candidate, so the first pole could only be placed by hand.
++
++DECISION  'hwut.accept'. The table:
++
++              candidate  nominal  --force   accept
++              ---------  -------  -------   ------------------------
++                 yes       no        -      BLESS, the first pole
++                 yes       yes       no     MERGE REQUIRED: named,
++                                            nothing written, FAULT
++                 yes       yes      yes     BLESS, overwriting
++
++          '--yes' and '--force' are SEPARATE flags: '--yes' asserts
++          'I have already looked'; '--force' asserts 'overwrite the
++          thing I judge against' -- the one operation here that
++          destroys evidence, never implied by the other.
++
++          SELECTION IS THE WISH, once: the positional short form
++          ('hwut.accept "test-*.py" one two') is SUGAR that desugars
++          into '--glob' targets; 'task_list_query' does the selecting
++          for both spellings. Keys follow RECORDING: the stem
++          ('operations/session.py', configuration.stem), per subject
++          -- a choice can be part-blessed.
++
++          The interactive question shows the CANDIDATE -- the
++          canonicalised record, which is what the framework compares;
++          '.raw' is named, not printed. Anything but 'y' leaves the
++          pole alone.
++
++COST      Unattended '--yes --force' in a script can rewrite every
++          pole of a directory; the two-flag split is the guard, and
++          the words are deliberate.
++
++GRAVEYARD One combined '--force' meaning both -- rejected; unattended
++          first-blessing would silently acquire pole-clobbering.
++
++----------------------------------------------------------------------------
++E-5  STDERR IS NEVER SUBJECT TO TESTING
++----------------------------------------------------------------------------
++PROBLEM   A run records a stderr candidate; accept blessed it; the
++          verdict stayed 'unexpected-stderr' -- the NOTE governs, not
++          the file, so accept could produce a nominal that provably
++          does nothing. Worse: a stream that both carries diagnostics
++          and is held to a blessed text can do neither job.
++
++DECISION  stderr is for ERROR REPORTING; that is its whole job. Never
++          a nominal, never compared, never pype-d. Where error
++          reporting is itself under test, the application FLUSHES IT
++          TO A FILE and names that file in 'output' (exploration/
++          DISCUSSIONS/todo-1). 'E_StderrNote.NOMINAL' is retired;
++          its code removal is its own step (a blessed suite iterates
++          it).
++
++          Accept's one stderr decision is the NOTE, and only where it
++          SPOKE:
++
++              silent            FORBIDDEN, silently, the default
++              spoke, no flag    REFUSED by name, both remedies stated
++              spoke, --stderr-tol[erated]
++                                the note IGNORED is written; it
++                                GOVERNS -- the re-run is green
++
++          THERE IS NO DEFAULT where stderr speaks: a default leaves
++          the user clueless in front of output that deviates.
++
++COST      One more flag, and a refusal where HWUT 1.0 users may have
++          expected a question. The refusal names both ways out.
++
++----------------------------------------------------------------------------
++E-6  ACCEPT REFUSES THE STREAM THAT NEVER COMPLETED
++----------------------------------------------------------------------------
++PROBLEM   A candidate can sit in the store without its closing token:
++          a run cut short, an abort, a crash mid-write, or an
++          application that does not speak R-70. Promotion would bless
++          an INCOMPLETE stream as the pole every later run is judged
++          against.
++
++DECISION  'hwut.accept' refuses to operate where a selected stdout
++          candidate's last line is not '<hwut-end>'. Atomic, before
++          any pole is touched; every offending key named. NO FLAG
++          bypasses it: '--force' overrides a standing pole, never
++          stream integrity. Consistent by construction with the abort
++          ruling (the aborting entity provides FAIL; content
++          irrelevant) and with R-70 (the token is the stream's own
++          testimony of completeness). File subjects are exempt: their
++          completeness is the READING POINT (after the token), not a
++          token of their own.
++
++COST      Every fixture and every hand-run application must speak the
++          law -- print the token as its last line -- including the
++          suites' own bash fixtures, which were corrected rather than
++          exempted: a fixture that does not speak the law is a
++          fixture that lies.
 diff --git a/orchestrator/services/README.txt b/orchestrator/services/README.txt
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/README.txt
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,92 @@
 +==============================================================================
 +orchestrator/services -- THE COMMAND LINE FACES
 +==============================================================================
@@ -18405,13 +18816,19 @@ new file mode 100644
 +process. Every face answers '--help' with its full documentation and takes
 +'--directory=<path>', reading the current directory else.
 +
-+EXIT STATUS, common to every face:
++EXIT STATUS, common to every face -- ONE enum, 'E_ExitCode'
++('_exit.py'); every face returns its members and nothing else:
 +
-+    0    nothing refused, no fault met
-+    1    a fault was met; the face still printed what stands
-+    2    the command line cannot be read, or a wish names what the
-+         directory does not offer -- refused at the door, by name,
-+         with the usage line
++    0  OK       nothing refused, nothing failed
++    1  FAULT    a fault was met, or a test failed; the face still
++                printed what stands
++    2  REFUSED  the command line cannot be READ: an unknown option, a
++                malformed wish, a directory that does not exist --
++                refused at the door, by name, with the usage line
++    3  EMPTY    the command line reads, and asks for NOTHING: a wish
++                that selects no test, a tree holding no test directory
++  141  SIGPIPE  the unix convention 128+13: the reader hung up; the
++                face went quiet instead of crashing
 +
 +The faces:
 +
@@ -18437,6 +18854,32 @@ new file mode 100644
 +                 The Bookkeeper is made here and handed down, only
 +                 where the wish asks the base.
 +
++    hwut.run     (run.py)
++                 what the framework RUNS: the live tree run. Explores
++                 below the root, applies the same wish as 'hwut.plan',
++                 dispatches through the real test-run dispatcher, and
++                 renders the event stream live in the tier-1 console
++                 form (display/plain.py). Four tiers ('--verbose',
++                 '--plain', '--quiet', '--silent') and a colour
++                 decision ('--colour', '--no-colour') govern the
++                 rendering. '--no-store' suppresses recording; '--jobs'
++                 bounds parallel work per directory.
++
++    hwut.accept  (accept.py)
++                 PROMOTION: a recorded candidate becomes the NOMINAL,
++                 the pole every later run is judged against --
++                 'Store.accept()' is the only way a nominal comes to
++                 exist, and this face is the only thing that calls
++                 it. Selection is the wish; a positional short form
++                 desugars into '--glob'. A standing nominal is a
++                 CHANGE and 'hwut.merge's business: detected, named,
++                 left alone unless '--force' says otherwise.
++                 STDERR IS NEVER SUBJECT TO TESTING: never promoted;
++                 where it spoke, refused until '--stderr-tol' notes
++                 it IGNORED. A stdout candidate whose last line is
++                 not '<hwut-end>' is refused outright: an incomplete
++                 stream is never promotable, and no flag bypasses.
++
 +A fault does not withhold the output: a directory with one broken header
 +prints the fault, then the tree or the plan of what stands, and answers 1.
 +
@@ -18455,79 +18898,181 @@ new file mode 100644
 +the operations component. A healing face on a stored subject reads
 +the Bookkeeper; its run-fallback re-enters the orchestrator -- a face
 +importing both sides sits above both, which is here.
-diff --git a/orchestrator/services/TEST/ADM/cache.fly b/orchestrator/services/TEST/ADM/cache.fly
+diff --git a/orchestrator/services/TEST/GOOD/test-accept.sh--ask.txt b/orchestrator/services/TEST/GOOD/test-accept.sh--ask.txt
 new file mode 100644
 --- /dev/null
-+++ b/orchestrator/services/TEST/ADM/cache.fly
-@@ -0,0 +1,68 @@
-+{
-+title: the diff convention, on stdout.;
-+title_group: The compare service face;
-+file_name: test-compare.sh;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ bash; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ differing; OK; 0.368078; 0; ]
-+  [ tolerated; OK; 0.361251; 0; ]
-+  [ reading; OK; 0.362185; 0; ]
-+]
++++ b/orchestrator/services/TEST/GOOD/test-accept.sh--ask.txt
+@@ -0,0 +1,41 @@
++STATUS: 0
++    
++    ==============================================================================
++    ACCEPT  test-ok.sh .stdout
++    ------------------------------------------------------------------------------
++        steady line
++        <hwut-end>
++    ------------------------------------------------------------------------------
++        candidate: test-ok.stdout
++        nominal:   test-ok.stdout
++    accept this as the nominal? [y/N] 
++    
++    ==============================================================================
++    ACCEPT  test-two.sh a .stdout
++    ------------------------------------------------------------------------------
++        choice a
++        <hwut-end>
++    ------------------------------------------------------------------------------
++        candidate: test-two--a.stdout
++        nominal:   test-two--a.stdout
++    accept this as the nominal? [y/N] 
++    
++    ==============================================================================
++    ACCEPT  test-two.sh b .stdout
++    ------------------------------------------------------------------------------
++        choice b
++        <hwut-end>
++    ------------------------------------------------------------------------------
++        candidate: test-two--b.stdout
++        nominal:   test-two--b.stdout
++    accept this as the nominal? [y/N] 
++    
++    ==============================================================================
++    ACCEPTED  1 of 3
++    ------------------------------------------------------------------------------
++        blessed        test-ok.sh .stdout
++        left alone     test-two.sh a .stdout
++        left alone     test-two.sh b .stdout
++    ==============================================================================
++GOOD holds (first blessed, second left alone):
++    test-ok.stdout
+diff --git a/orchestrator/services/TEST/GOOD/test-accept.sh--bless.txt b/orchestrator/services/TEST/GOOD/test-accept.sh--bless.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/GOOD/test-accept.sh--bless.txt
+@@ -0,0 +1,15 @@
++STATUS: 0
++STDOUT {
++    
++    ==============================================================================
++    ACCEPTED  3 of 3
++    ------------------------------------------------------------------------------
++        blessed        test-ok.sh .stdout
++        blessed        test-two.sh a .stdout
++        blessed        test-two.sh b .stdout
++    ==============================================================================
 +}
-+{
-+title: channels, exit codes, the commit law.;
-+title_group: The merge service face;
-+file_name: test-merge.sh;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ bash; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ commit; OK; 0.367201; 0; ]
-+  [ cancel; OK; 0.362415; 0; ]
-+  [ stdout_artifact; OK; 0.368782; 0; ]
-+]
++GOOD holds:
++    test-ok.stdout
++    test-two--a.stdout
++    test-two--b.stdout
+diff --git a/orchestrator/services/TEST/GOOD/test-accept.sh--merge.txt b/orchestrator/services/TEST/GOOD/test-accept.sh--merge.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/GOOD/test-accept.sh--merge.txt
+@@ -0,0 +1,27 @@
++== a second accept: the nominals stand ==
++STATUS: 1
++STDOUT {
++    
++    ==============================================================================
++    ACCEPTED  0 of 3
++    ------------------------------------------------------------------------------
++        merge required test-ok.sh .stdout
++        merge required test-two.sh a .stdout
++        merge required test-two.sh b .stdout
++    
++    A nominal already stands for the keys above. That is a CHANGE, not a
++    first blessing: use 'hwut.merge', or '--force' to overwrite the pole.
++    ==============================================================================
 +}
-+{
-+title: one command packs one test whole.;
-+title_group: The report service face;
-+file_name: test-report.sh;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ bash; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ pack; OK; 0.129682; 0; ]
-+  [ raw; OK; 0.090873; 0; ]
-+  [ bare; OK; 0.051432; 0; ]
-+  [ flags; OK; 0.475274; 0; ]
-+]
++== --force ==
++STATUS: 0
++STDOUT {
++    
++    ==============================================================================
++    ACCEPTED  3 of 3
++    ------------------------------------------------------------------------------
++        blessed        test-ok.sh .stdout
++        blessed        test-two.sh a .stdout
++        blessed        test-two.sh b .stdout
++    ==============================================================================
 +}
-+{
-+title: the test plan the framework intends;
-+title_group: hwut.plan;
-+file_name: test-plan.py;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ faults; OK; 0.366516; 0; ]
-+  [ help; OK; 0.452472; 0; ]
-+  [ plan; OK; 0.476904; 0; ]
-+  [ refused; OK; 0.447587; 0; ]
-+  [ wish; OK; 0.456699; 0; ]
-+]
+diff --git a/orchestrator/services/TEST/GOOD/test-accept.sh--stderr.txt b/orchestrator/services/TEST/GOOD/test-accept.sh--stderr.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/GOOD/test-accept.sh--stderr.txt
+@@ -0,0 +1,29 @@
++== stderr spoke, no flag ==
++STATUS: 1
++STDOUT {
++    REFUSED: stderr SPOKE and no note tolerates it --
++        test-ok   (10 bytes)
++    stderr is for ERROR REPORTING and is never subject to
++    testing. Either state '--stderr-tol' to note it IGNORED,
++    or -- where the reporting is itself under test -- flush
++    it to a FILE and name that file in 'output'.
 +}
-+{
-+title: the configuration the framework read;
-+title_group: hwut.show;
-+file_name: test-show.py;
-+hwut_info_time: 1787027065L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ directory; OK; 0.306668; 0; ]
-+  [ faults; OK; 0.305148; 0; ]
-+  [ file; OK; 0.307943; 0; ]
-+  [ help; OK; 0.303981; 0; ]
-+  [ refused; OK; 0.299694; 0; ]
-+]
++== --stderr-tol ==
++STATUS: 0
++STDOUT {
++    NOTE: stderr of 'test-ok' is now IGNORED (10 bytes spoke)
++    
++    ==============================================================================
++    ACCEPTED  3 of 3
++    ------------------------------------------------------------------------------
++        blessed        test-ok.sh .stdout
++        blessed        test-two.sh a .stdout
++        blessed        test-two.sh b .stdout
++    ==============================================================================
 +}
++== the note governs: the suite re-runs green ==
++run status: 0
++GOOD holds (no stderr nominal):
++    test-ok.stdout
++    test-two--a.stdout
++    test-two--b.stdout
+diff --git a/orchestrator/services/TEST/GOOD/test-accept.sh--sugar.txt b/orchestrator/services/TEST/GOOD/test-accept.sh--sugar.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/GOOD/test-accept.sh--sugar.txt
+@@ -0,0 +1,24 @@
++== hwut.accept 'test-two.sh' a ==
++STATUS: 0
++STDOUT {
++    
++    ==============================================================================
++    ACCEPTED  1 of 1
++    ------------------------------------------------------------------------------
++        blessed        test-two.sh a .stdout
++    ==============================================================================
++}
++GOOD holds:
++    test-two--a.stdout
++== the same thing, spelled as the wish ==
++STATUS: 0
++STDOUT {
++    
++    ==============================================================================
++    ACCEPTED  1 of 1
++    ------------------------------------------------------------------------------
++        blessed        test-two.sh a .stdout
++    ==============================================================================
++}
++GOOD holds:
++    test-two--a.stdout
+diff --git a/orchestrator/services/TEST/GOOD/test-accept.sh--token.txt b/orchestrator/services/TEST/GOOD/test-accept.sh--token.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/GOOD/test-accept.sh--token.txt
+@@ -0,0 +1,9 @@
++STATUS: 1
++STDOUT {
++    REFUSED: the closing token '<hwut-end>' does not appear --
++        test-cut.sh .stdout
++    a stream without its terminal token never COMPLETED; nothing here is
++    promotable. Re-run the test. An application the framework does not run
++    prints the token itself, as its last line.
++}
++GOOD holds:
 diff --git a/orchestrator/services/TEST/GOOD/test-compare.sh--differing.txt b/orchestrator/services/TEST/GOOD/test-compare.sh--differing.txt
 new file mode 100644
 --- /dev/null
@@ -18594,6 +19139,23 @@ new file mode 100644
 +What was a difference is now a tolerance, and the marks say
 +so; the SETUP changed the verdict, never the machinery.
 +SUCCESS: under the widened setup the same streams answer 0.
+diff --git a/orchestrator/services/TEST/GOOD/test-exit.sh--law.txt b/orchestrator/services/TEST/GOOD/test-exit.sh--law.txt
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/GOOD/test-exit.sh--law.txt
+@@ -0,0 +1,12 @@
++THE ENUM (services/_exit.py):
++    OK       = 0
++    FAULT    = 1
++    REFUSED  = 2
++    EMPTY    = 3
++    SIGPIPE  = 141
++
++FACE         OK  FAULT  REFUSED  EMPTY
++hwut.show     0      1        2      -
++hwut.plan     0      1        2      3
++hwut.run      0      1        2      3
++hwut.compare  0      1        2      -
 diff --git a/orchestrator/services/TEST/GOOD/test-merge.sh--cancel.txt b/orchestrator/services/TEST/GOOD/test-merge.sh--cancel.txt
 new file mode 100644
 --- /dev/null
@@ -18672,7 +19234,7 @@ diff --git a/orchestrator/services/TEST/GOOD/test-plan.py--help.txt b/orchestrat
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/TEST/GOOD/test-plan.py--help.txt
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,58 @@
 +
 +--- --help ---
 +$ hwut.plan --help
@@ -18700,7 +19262,7 @@ new file mode 100644
 +
 +        Keywords of different kinds are AND'ed. '--fail' beside '--pass'
 +        is refused. A wish matching nothing yields an empty plan and a
-+        report, not a refusal.
++        report; the exit status is 3.
 +
 +    A <point> is a SPAN back from now -- a number and one of 's', 'm',
 +    'h', 'd', as in '90s', '2h', '7d' -- or an ANCHOR, reckoned in UTC:
@@ -18727,6 +19289,8 @@ new file mode 100644
 +        1    a fault was met
 +        2    the command line cannot be read, or the wish names what the
 +             directory does not offer
++        3    the command line reads, and asks for nothing: the wish
++             selects no test case
 +    [status 0]
 +<hwut-end>
 diff --git a/orchestrator/services/TEST/GOOD/test-plan.py--plan.txt b/orchestrator/services/TEST/GOOD/test-plan.py--plan.txt
@@ -18828,7 +19392,7 @@ new file mode 100644
 +        (none)
 +    EXCLUSIONS
 +        (none)
-+    [status 0]
++    [status 3]
 +<hwut-end>
 diff --git a/orchestrator/services/TEST/GOOD/test-report.sh--bare.txt b/orchestrator/services/TEST/GOOD/test-report.sh--bare.txt
 new file mode 100644
@@ -18843,9 +19407,9 @@ new file mode 100644
 +              choice:  basic
 +              hint:    OUT differs from GOOD
 +              files:
-+                demo.py                          29 bytes  (source)
-+                GOOD/demo.py--basic.stdout       11 bytes  (good stdout)
-+                OUT/demo.py--basic.stdout        11 bytes  (out stdout)
++                demo.py                                      29 bytes  (source)
++                GOOD/demo--basic.stdout                      11 bytes  (good stdout)
++                .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
 +              coverage: not requested
 +              cadence: none recorded
 +              
@@ -18853,11 +19417,11 @@ new file mode 100644
 +              print("alpha")
 +              print("beta")
 +              
-+              ==[ GOOD STDOUT: GOOD/demo.py--basic.stdout ]===================================
++              ==[ GOOD STDOUT: GOOD/demo--basic.stdout ]======================================
 +              alpha
 +              beta
 +              
-+              ==[ OUT STDOUT: OUT/demo.py--basic.stdout ]=====================================
++              ==[ OUT STDOUT: .hwut-store/demo--basic.stdout ]================================
 +              alpha
 +              BETA
 +          }
@@ -18901,11 +19465,11 @@ new file mode 100644
 +              choice:  basic
 +              hint:    OUT differs from GOOD
 +              files:
-+                demo.py                          29 bytes  (source)
-+                GOOD/demo.py--basic.stdout       11 bytes  (good stdout)
-+                OUT/demo.py--basic.stdout.raw     19 bytes  (out raw stdout)
-+                OUT/demo.py--basic.stdout        11 bytes  (out stdout)
-+                OUT/demo.py--basic.stdout.times     51 bytes  (out timing stdout)
++                demo.py                                      29 bytes  (source)
++                GOOD/demo--basic.stdout                      11 bytes  (good stdout)
++                .hwut-store/demo--basic.stdout.raw           19 bytes  (out raw stdout)
++                .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
++                .hwut-store/demo--basic.stdout.times         51 bytes  (out timing stdout)
 +              coverage: not requested
 +              cadence: as '<delta-t>:<line>' prefixes
 +              
@@ -18913,11 +19477,11 @@ new file mode 100644
 +              print("alpha")
 +              print("beta")
 +              
-+              ==[ GOOD STDOUT: GOOD/demo.py--basic.stdout ]===================================
++              ==[ GOOD STDOUT: GOOD/demo--basic.stdout ]======================================
 +              alpha
 +              beta
 +              
-+              ==[ OUT STDOUT: OUT/demo.py--basic.stdout ]=====================================
++              ==[ OUT STDOUT: .hwut-store/demo--basic.stdout ]================================
 +              0.012100:alpha
 +              1.503400:BETA
 +          }
@@ -18939,11 +19503,11 @@ new file mode 100644
 +              choice:  basic
 +              hint:    OUT differs from GOOD
 +              files:
-+                demo.py                          29 bytes  (source)
-+                GOOD/demo.py--basic.stdout       11 bytes  (good stdout)
-+                OUT/demo.py--basic.stdout.raw     19 bytes  (out raw stdout)
-+                OUT/demo.py--basic.stdout        11 bytes  (out stdout)
-+                OUT/demo.py--basic.stdout.times     51 bytes  (out timing stdout)
++                demo.py                                      29 bytes  (source)
++                GOOD/demo--basic.stdout                      11 bytes  (good stdout)
++                .hwut-store/demo--basic.stdout.raw           19 bytes  (out raw stdout)
++                .hwut-store/demo--basic.stdout               11 bytes  (out stdout)
++                .hwut-store/demo--basic.stdout.times         51 bytes  (out timing stdout)
 +              coverage: not requested
 +              cadence: sections verbatim
 +              
@@ -18951,19 +19515,19 @@ new file mode 100644
 +              print("alpha")
 +              print("beta")
 +              
-+              ==[ GOOD STDOUT: GOOD/demo.py--basic.stdout ]===================================
++              ==[ GOOD STDOUT: GOOD/demo--basic.stdout ]======================================
 +              alpha
 +              beta
 +              
-+              ==[ OUT RAW STDOUT: OUT/demo.py--basic.stdout.raw ]=============================
++              ==[ OUT RAW STDOUT: .hwut-store/demo--basic.stdout.raw ]========================
 +              raw alpha
 +              raw BETA
 +              
-+              ==[ OUT STDOUT: OUT/demo.py--basic.stdout ]=====================================
++              ==[ OUT STDOUT: .hwut-store/demo--basic.stdout ]================================
 +              alpha
 +              BETA
 +              
-+              ==[ TIMING (verbatim): OUT/demo.py--basic.stdout.times ]========================
++              ==[ TIMING (verbatim): .hwut-store/demo--basic.stdout.times ]===================
 +              {"unit": "second", "delta_list": [0.0121, 1.5034]}
 +          }
 +
@@ -19018,7 +19582,7 @@ diff --git a/orchestrator/services/TEST/GOOD/test-show.py--file.txt b/orchestrat
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/TEST/GOOD/test-show.py--file.txt
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,83 @@
 +
 +--- resolved ---
 +$ hwut.show test-a.py
@@ -19052,6 +19616,7 @@ new file mode 100644
 +                same = false                      # default
 +                interactive = false               # default
 +                execute = null                    # default
++                output = ["<stdout>"]             # default
 +            }
 +            two {
 +                build {
@@ -19080,6 +19645,7 @@ new file mode 100644
 +                same = false                      # default
 +                interactive = false               # default
 +                execute = null                    # default
++                output = ["<stdout>"]             # default
 +            }
 +        }
 +    }
@@ -19207,6 +19773,164 @@ new file mode 100644
 +VUT_DIRECTORY = _cur
 +
 +from vut.language_support.python.hwut_runner import HwutRunner # noqa E401
+diff --git a/orchestrator/services/TEST/test-accept.sh b/orchestrator/services/TEST/test-accept.sh
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/test-accept.sh
+@@ -0,0 +1,153 @@
++#! /bin/bash
++# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++# ---------------------------------------------------------------------------
++#
++# THE 'hwut.accept' FACE, IN ITS NATURAL HABITAT: real runs record real
++# candidates, then acceptance promotes them. What is under test:
++#
++#     bless      a candidate without a nominal becomes the FIRST pole
++#     merge      a standing nominal is DETECTED and left alone;
++#                '--force' overwrites it, said out loud
++#     stderr     STDERR IS NEVER SUBJECT TO TESTING: it is never
++#                promoted; where it SPOKE there is NO DEFAULT -- the
++#                choice is refused until '--stderr-tol' notes IGNORED
++#     sugar      the short form desugars into the wish's own '--glob'
++#     ask        the interactive question shows the CANDIDATE and
++#                anything but 'y' leaves the pole alone
++#
++# The wall clock is masked; fixture paths are relative.
++# ---------------------------------------------------------------------------
++HERE=$(cd "$(dirname "$0")" && pwd)
++ROOT=$(cd "$HERE/../../../../.." && pwd)
++RUN="python3 -m vut.engine.orchestrator.services.run"
++ACCEPT="python3 -m vut.engine.orchestrator.services.accept"
++export PYTHONPATH="$ROOT"
++
++case "$1" in
++    --hwut-info)
++        echo "The hwut.accept face: promotion, and what it refuses."
++        echo "CHOICES: bless, merge, stderr, sugar, ask, token;"
++        echo "HAPPY: STATUS: [0-9];"
++        exit 0 ;;
++esac
++
++WORK=$(mktemp -d)
++trap 'rm -rf "$WORK"' EXIT
++cd "$WORK"
++
++mask() { sed -E 's/[0-9]{2}:[0-9]{2}:[0-9]{2}/hh:mm:ss/g'; }
++
++face() {                # <args...>  -- status, stdout
++    $ACCEPT "$@" > out.txt 2> err.txt
++    echo "STATUS: $?"
++    echo "STDOUT {"
++    mask < out.txt | sed 's/^/    /'
++    echo "}"
++    if [ -s err.txt ]; then
++        echo "STDERR {"; mask < err.txt | sed 's/^/    /'; echo "}"
++    fi
++}
++
++fixture() {             # one directory, one plain test, one two-choice
++    rm -rf tree
++    mkdir -p tree/suite/TEST
++    printf 'hwut {\n    on_entry = "true"\n    on_exit  = "true"\n}\n' \
++        > tree/suite/TEST/hwut.conf
++    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\necho "<hwut-end>"\n' \
++        > tree/suite/TEST/test-ok.sh
++    printf '#!/bin/bash\n# hwut { title = "Two"\n#        choices = ["a", "b"] }\necho "choice $1"\necho "<hwut-end>"\n' \
++        > tree/suite/TEST/test-two.sh
++    chmod +x tree/suite/TEST/*.sh
++    $RUN --directory=tree --silent 2> /dev/null
++}
++
++good() { ls tree/suite/TEST/GOOD/ 2>/dev/null | grep -v result_db; }
++
++case "$1" in
++
++bless)
++    #  No nominal stands: every stdout candidate becomes the first
++    #  pole; stderr is NEVER among them.
++    fixture
++    face --directory=tree/suite/TEST --yes
++    echo "GOOD holds:"
++    good | sed 's/^/    /'
++    ;;
++
++merge)
++    #  A nominal stands: DETECTED, named, left alone -- status 1.
++    #  '--force' overwrites the pole, said out loud -- status 0.
++    fixture
++    $ACCEPT --directory=tree/suite/TEST --yes > /dev/null
++    echo "== a second accept: the nominals stand =="
++    face --directory=tree/suite/TEST --yes
++    echo "== --force =="
++    face --directory=tree/suite/TEST --yes --force
++    ;;
++
++stderr)
++    #  STDERR IS NEVER SUBJECT TO TESTING. Where it SPOKE there is no
++    #  default: refused by name with both remedies; '--stderr-tol'
++    #  notes IGNORED, and the note GOVERNS -- the re-run is green.
++    fixture
++    printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\necho "a warning" >&2\necho "<hwut-end>"\n' \
++        > tree/suite/TEST/test-ok.sh
++    chmod +x tree/suite/TEST/test-ok.sh
++    $RUN --directory=tree --silent 2> /dev/null
++    echo "== stderr spoke, no flag =="
++    face --directory=tree/suite/TEST --yes
++    echo "== --stderr-tol =="
++    face --directory=tree/suite/TEST --yes --stderr-tol
++    echo "== the note governs: the suite re-runs green =="
++    $RUN --directory=tree --silent 2> /dev/null
++    echo "run status: $?"
++    echo "GOOD holds (no stderr nominal):"
++    good | sed 's/^/    /'
++    ;;
++
++sugar)
++    #  The short form is SUGAR over '--glob': the first word names
++    #  files, every further word a choice. One selection language.
++    fixture
++    echo "== hwut.accept 'test-two.sh' a =="
++    face --directory=tree/suite/TEST --yes "test-two.sh" a
++    echo "GOOD holds:"
++    good | sed 's/^/    /'
++    echo "== the same thing, spelled as the wish =="
++    fixture
++    face --directory=tree/suite/TEST --yes --glob "test-two.sh a"
++    echo "GOOD holds:"
++    good | sed 's/^/    /'
++    ;;
++
++token)
++    #  THE CLOSING TOKEN (R-70): a candidate whose stdout does not end
++    #  in '<hwut-end>' never COMPLETED. REFUSED atomically -- nothing
++    #  is promotable while one incomplete stream stands in the
++    #  selection, and no flag bypasses.
++    fixture
++    printf '#!/bin/bash\n# hwut { title = "Cut" }\necho "half a line"\n' \
++        > tree/suite/TEST/test-cut.sh
++    chmod +x tree/suite/TEST/test-cut.sh
++    $RUN --directory=tree --silent 2> /dev/null
++    face --directory=tree/suite/TEST --yes --force
++    echo "GOOD holds:"
++    good | sed 's/^/    /'
++    ;;
++
++ask)
++    #  Interactive: the CANDIDATE is shown -- what the framework
++    #  compares -- and anything but 'y' leaves the pole alone.
++    fixture
++    printf 'y\nn\n' | $ACCEPT --directory=tree/suite/TEST \
++        > out.txt 2> /dev/null
++    echo "STATUS: $?"
++    mask < out.txt | sed 's/^/    /'
++    echo "GOOD holds (first blessed, second left alone):"
++    good | sed 's/^/    /'
++    ;;
++
++*)
++    echo "unknown choice '$1'"
++    exit 1 ;;
++esac
 diff --git a/orchestrator/services/TEST/test-compare.sh b/orchestrator/services/TEST/test-compare.sh
 new file mode 100644
 --- /dev/null
@@ -19310,6 +20034,99 @@ new file mode 100644
 +    echo "unknown choice: '$1'" >&2
 +    exit 1 ;;
 +esac
+diff --git a/orchestrator/services/TEST/test-exit.sh b/orchestrator/services/TEST/test-exit.sh
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/TEST/test-exit.sh
+@@ -0,0 +1,88 @@
++#! /bin/bash
++# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++# ---------------------------------------------------------------------------
++#
++# THE EXIT STATUS LAW (E-1), TESTED AS A TABLE: one enum,
++# 'E_ExitCode', and every face driven over the same four stimuli --
++# a good line, a fault, an unreadable line, an empty selection. A
++# face that disagrees with the law shows as a divergent cell, not as
++# a comment nobody read. '-' marks a stimulus a face cannot express.
++# ---------------------------------------------------------------------------
++HERE=$(cd "$(dirname "$0")" && pwd)
++ROOT=$(cd "$HERE/../../../../.." && pwd)
++export PYTHONPATH="$ROOT"
++
++case "$1" in
++    --hwut-info)
++        echo "The exit status law: one enum, every face relates."
++        echo "CHOICES: law;"
++        echo "HAPPY: [0-9]+;"
++        exit 0 ;;
++esac
++
++WORK=$(mktemp -d)
++trap 'rm -rf "$WORK"' EXIT
++cd "$WORK"
++
++echo "THE ENUM (services/_exit.py):"
++python3 - <<'PYEOF'
++from vut.engine.orchestrator.services._exit import E_ExitCode
++for member in E_ExitCode:
++    print("    %-8s = %d" % (member.name, member.value))
++PYEOF
++
++#  The stimuli, one directory each. ---------------------------------------
++mkdir -p ok_dir/GOOD
++printf '#!/bin/bash\n# hwut { title = "Ok" }\necho "steady line"\n' \
++    > ok_dir/test-ok.sh
++chmod +x ok_dir/test-ok.sh
++printf 'steady line\n' > ok_dir/GOOD/test-ok.stdout
++
++mkdir -p fault_dir
++printf '#!/bin/bash\n# hwut { title = %s\necho x\n' '"broken' \
++    > fault_dir/test-broken.sh
++chmod +x fault_dir/test-broken.sh
++
++mkdir -p run_ok/suite/TEST run_fault/suite/TEST
++cp -r ok_dir/.    run_ok/suite/TEST/
++cp -r fault_dir/. run_fault/suite/TEST/
++printf 'hwut {\n    on_entry = "true"\n    on_exit = "true"\n}\n' \
++    | tee run_ok/suite/TEST/hwut.conf > run_fault/suite/TEST/hwut.conf
++
++status() { "$@" > /dev/null 2>&1; echo -n "$?"; }
++
++echo
++echo "FACE         OK  FAULT  REFUSED  EMPTY"
++printf 'hwut.show     %s      %s        %s      -\n' \
++    "$(status python3 -m vut.engine.orchestrator.services.show \
++              --directory=ok_dir)" \
++    "$(status python3 -m vut.engine.orchestrator.services.show \
++              --directory=fault_dir)" \
++    "$(status python3 -m vut.engine.orchestrator.services.show \
++              --directory=ok_dir --bogus)"
++printf 'hwut.plan     %s      %s        %s      %s\n' \
++    "$(status python3 -m vut.engine.orchestrator.services.plan \
++              --directory=ok_dir)" \
++    "$(status python3 -m vut.engine.orchestrator.services.plan \
++              --directory=fault_dir)" \
++    "$(status python3 -m vut.engine.orchestrator.services.plan \
++              --directory=ok_dir --bogus)" \
++    "$(status python3 -m vut.engine.orchestrator.services.plan \
++              --directory=ok_dir --glob 'nothing-*')"
++printf 'hwut.run      %s      %s        %s      %s\n' \
++    "$(status python3 -m vut.engine.orchestrator.services.run \
++              --directory=run_ok)" \
++    "$(status python3 -m vut.engine.orchestrator.services.run \
++              --directory=run_fault)" \
++    "$(status python3 -m vut.engine.orchestrator.services.run \
++              --directory=run_ok --bogus)" \
++    "$(status python3 -m vut.engine.orchestrator.services.run \
++              --directory=run_ok --glob 'nothing-*')"
++printf 'steady\n'      > a.txt
++printf 'different\n'   > b.txt
++printf 'hwut.compare  %s      %s        %s      -\n' \
++    "$(status python3 -m vut.engine.orchestrator.services.compare \
++              a.txt a.txt)" \
++    "$(status python3 -m vut.engine.orchestrator.services.compare \
++              a.txt b.txt)" \
++    "$(status python3 -m vut.engine.orchestrator.services.compare)"
 diff --git a/orchestrator/services/TEST/test-merge.sh b/orchestrator/services/TEST/test-merge.sh
 new file mode 100644
 --- /dev/null
@@ -19598,7 +20415,7 @@ diff --git a/orchestrator/services/TEST/test-report.sh b/orchestrator/services/T
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/TEST/test-report.sh
-@@ -0,0 +1,126 @@
+@@ -0,0 +1,133 @@
 +#! /bin/bash
 +# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +# ---------------------------------------------------------------------------
@@ -19619,11 +20436,17 @@ new file mode 100644
 +#
 +# THE FIXTURE, built here: a packed corpus in miniature --
 +#
-+#     <work>/demo.py                        the source
-+#     <work>/GOOD/demo.py--basic.stdout     alpha, beta
-+#     <work>/OUT/demo.py--basic.stdout      alpha, BETA      (differs!)
-+#     <work>/OUT/...stdout.raw              raw sidecar
-+#     <work>/OUT/...stdout.times            cadence sidecar
++#     <work>/demo.py                              the source
++#     <work>/GOOD/demo--basic.stdout              alpha, beta
++#     <work>/.hwut-store/demo--basic.stdout       alpha, BETA  (differs!)
++#     <work>/.hwut-store/...stdout.raw            raw sidecar
++#     <work>/.hwut-store/...stdout.times          cadence sidecar
++#
++# THE KEY IS THE BOOKKEEPER'S: 'demo--basic', the source file's STEM --
++# what RECORDING uses. The old fixture spelled 'demo.py--basic', which
++# no real run ever writes; it named a corpus that could not exist, and
++# the face agreed with it because the face spelled the law twice.
++# Candidates live under '.hwut-store/', nominals under 'GOOD/'.
 +# ---------------------------------------------------------------------------
 +HERE=$(cd "$(dirname "$0")" && pwd)
 +ROOT=$(cd "$HERE/../../../../.." && pwd)
@@ -19642,14 +20465,15 @@ new file mode 100644
 +cd "$WORK"
 +
 +build_fixture() {       # [bare]  -- 'bare' omits the sidecars
-+    mkdir -p GOOD OUT
++    mkdir -p GOOD .hwut-store
 +    printf 'print("alpha")\nprint("beta")\n' > demo.py
-+    printf 'alpha\nbeta\n'                   > GOOD/demo.py--basic.stdout
-+    printf 'alpha\nBETA\n'                   > OUT/demo.py--basic.stdout
++    printf 'alpha\nbeta\n'                   > GOOD/demo--basic.stdout
++    printf 'alpha\nBETA\n'                   > .hwut-store/demo--basic.stdout
 +    if [ "$1" != "bare" ]; then
-+        printf 'raw alpha\nraw BETA\n'       > OUT/demo.py--basic.stdout.raw
++        printf 'raw alpha\nraw BETA\n' \
++                                > .hwut-store/demo--basic.stdout.raw
 +        printf '{"unit": "second", "delta_list": [0.0121, 1.5034]}\n' \
-+                                             > OUT/demo.py--basic.stdout.times
++                                > .hwut-store/demo--basic.stdout.times
 +    fi
 +}
 +
@@ -19931,7 +20755,7 @@ diff --git a/orchestrator/services/_core.py b/orchestrator/services/_core.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/_core.py
-@@ -0,0 +1,76 @@
+@@ -0,0 +1,102 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -19959,6 +20783,32 @@ new file mode 100644
 +"""
 +import io
 +import sys
++
++
++USAGE_WIDTH = 78
++
++
++def usage_line(prefix, token_tuple, width=USAGE_WIDTH):
++    """
++    RETURN: str, a wrapped usage block -- 'prefix' ('usage: hwut.run'),
++            then the tokens, every continuation line aligned under the
++            first token.
++
++    A face states its arguments as a tuple and never places its own
++    line breaks, so a keyword added to a shared list ('plan/wish.py':
++    USAGE_TOKEN_TUPLE) cannot leave another face's usage line stale.
++    """
++    indent    = " " * (len(prefix) + 1)
++    line_list = []
++    line      = prefix
++    for token in token_tuple:
++        if len(line) + 1 + len(token) > width:
++            line_list.append(line)
++            line = indent + token
++        else:
++            line = "%s %s" % (line, token)
++    line_list.append(line)
++    return "\n".join(line_list)
 +
 +
 +def read_source(path):
@@ -20008,11 +20858,611 @@ new file mode 100644
 +        configuration.pattern_finder.visible_nothing_pattern_list = \
 +                                                        list(arguments.nothing)
 +    return configuration
+diff --git a/orchestrator/services/_exit.py b/orchestrator/services/_exit.py
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/_exit.py
+@@ -0,0 +1,32 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: THE EXIT STATUS LAW (E-1) -- one enum, every service face
++         relates. What the shell, a Makefile and a CI step read as the
++         whole verdict where nothing else is captured.
++
++    OK        nothing refused, nothing failed
++    FAULT     a fault was met, or a test failed; the face still
++              printed what stands
++    REFUSED   the command line cannot be READ: an unknown option, a
++              malformed wish, a directory that does not exist --
++              refused at the door, by name, with the usage line
++    EMPTY     the command line reads, and asks for NOTHING: a wish
++              that selects no test, a directory holding no test
++              application
++    SIGPIPE   the unix convention 128+13: the reader hung up; the face
++              went quiet instead of crashing
++
++'IntEnum': 'sys.exit()' takes a member unchanged, and a standing
++suite's 'status == 2' keeps holding while the faces migrate.
++______________________________________________________________________________
++"""
++from enum import IntEnum
++
++
++class E_ExitCode(IntEnum):
++    OK      = 0
++    FAULT   = 1
++    REFUSED = 2
++    EMPTY   = 3
++    SIGPIPE = 141
+diff --git a/orchestrator/services/accept.py b/orchestrator/services/accept.py
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/accept.py
+@@ -0,0 +1,558 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: THE 'hwut.accept' COMMAND LINE -- PROMOTION. A candidate that
++         a run recorded becomes the NOMINAL: the pole of goodness the
++         framework judges every later run against.
++
++         'Store.accept()' is the only way a nominal comes to exist;
++         this face is the only thing that calls it.
++
++    hwut.accept                 every candidate the wish selects
++    <the wish>                  which cases are wanted; the keywords
++                                stand in 'plan/wish.py'
++    <file-glob> [choice-glob]...
++                                the SHORT FORM -- sugar over the
++                                wish's '--glob' target (R-34):
++
++                                    hwut.accept "[tT]est-*.cpp"
++                                    hwut.accept "test-*.py" one two
++
++                                the first word names files, every
++                                further word a choice; both carry
++                                fnmatch's '*', '?' and '[ ]'
++    --yes                       unattended: do not ask
++    --force                     overwrite a STANDING nominal, where a
++                                merge would otherwise be required
++    --directory=<path>          where to read; the current one else
++    --help                      this text
++
++WHAT ACCEPT DOES NOT DO: it never overwrites a standing nominal unless
++'--force' says so out loud. Where a nominal stands, the candidate is
++not a first blessing but a CHANGE, and a change is 'hwut.merge's
++business -- accept names the key and leaves the pole alone.
++
++EXIT STATUS (E-1, services/_exit.py):
++    0  everything the wish selected was accepted, or needed nothing
++    1  a fault was met, or a key needed a merge and was left alone
++    2  the command line cannot be read
++    3  the command line reads, and asks for nothing
++______________________________________________________________________________
++"""
++import os
++import sys
++from pathlib import Path
++
++from ..bookkeeper.bookkeeper        import Bookkeeper
++from ..bookkeeper.configuration      import E_StderrNote
++from ..bookkeeper.stream_store       import Store
++from ..exploration.explorer          import explore
++from ..exploration.task_list         import SelectionError
++from ..exploration.task_list_query   import CTestTaskListQuery
++from ..plan.wish                     import (HELP as WISH_HELP,
++                                             WishError,
++                                             parse_wish)
++from ..plan.wish                   import USAGE_TOKEN_TUPLE \
++                                           as WISH_TOKEN_TUPLE
++from ._core                        import usage_line
++from ._exit                          import E_ExitCode
++
++
++USAGE = usage_line("usage: hwut.accept",
++                    WISH_TOKEN_TUPLE
++                    + ("[<file-glob> [choice-glob]...]",
++                         "[--yes]", "[--force]",
++                         "[--stderr-tol[erated]]",
++                         "[--directory=<path>]"))
++
++HELP = """hwut.accept -- PROMOTION: a candidate becomes the nominal
++
++    hwut.accept         blesses every candidate the wish selects that
++                        has no nominal yet -- the FIRST pole. Where a
++                        nominal already stands, the key is named and
++                        left alone: that is 'hwut.merge's business.
++
++""" + WISH_HELP + """
++
++THE SHORT FORM -- sugar over '--glob', not a second selection language
++    <file-glob> [choice-glob]...
++                        the first word names files, every further word
++                        names a choice; both carry fnmatch's '*', '?'
++                        and '[ ]'. These say the same thing:
++
++                            hwut.accept "test-*.py" one two
++                            hwut.accept --glob "test-*.py one" \\
++                                        --glob "test-*.py two"
++
++                        a file word alone means EVERY choice of it
++
++PROMOTION
++    --yes               unattended: do not ask, bless what needs
++                        blessing. It asserts 'I have already looked'
++    --force             overwrite a STANDING nominal, skipping the
++                        merge. It asserts 'overwrite the thing I judge
++                        against' -- the one operation here that
++                        destroys evidence, so it is never implied
++    --stderr-tol[erated]
++                        note the choice's stderr IGNORED. Required
++                        where stderr SPOKE: there is no default there,
++                        because a default leaves the user clueless in
++                        front of output that deviates
++    --directory=<path>  where to read; the current one else
++
++STDERR IS NEVER SUBJECT TO TESTING
++    stderr is for ERROR REPORTING; that is its whole job. It is never
++    a nominal, never compared, never pype-d. Where error reporting is
++    itself the thing under test, the application flushes it to a FILE
++    and names that file in the 'output' parameter. Accordingly there
++    is no 'accept stderr as nominal' here, and never will be.
++
++THE CLOSING TOKEN
++    A candidate whose stdout does not end in the line '<hwut-end>' is
++    REFUSED: the stream never testified its completeness -- it was
++    cut short, aborted, or the application does not follow R-70. No
++    flag bypasses this; '--force' overrides a standing pole, never
++    stream integrity.
++
++WHAT IS SHOWN BEFORE A BLESSING
++    The CANDIDATE, which is the canonicalised record -- what the
++    framework actually compares. The pre-canonicalisation stream is
++    kept beside it as '.raw' evidence and is named, not printed.
++
++EXIT STATUS
++    0   everything selected was accepted, or needed nothing
++    1   a fault was met, or a key needed a merge and was left alone
++    2   the command line cannot be read
++    3   the command line reads, and asks for nothing
++
++OTHER
++    --help              this text"""
++
++
++#  Sidecars live beside a candidate under the same stem; they are not
++#  subjects and are never promoted.
++SIDECAR_SUFFIX_TUPLE = (".raw", ".times", ".when")
++
++#  STDERR IS NEVER SUBJECT TO TESTING: it is for error reporting, and
++#  that is its whole job. It is never a nominal, never compared, never
++#  pype-d. Where error reporting is itself under test, the application
++#  flushes it to a FILE and names that file in 'output'.
++#
++#  So stderr is never PROMOTED. The one thing acceptance decides about
++#  it is the NOTE, and only where it spoke -- see 'stderr_decision'.
++STDERR_SUBJECT = "stderr"
++
++
++def desugar_positional(word_list):
++    """
++    RETURN: tuple, the wish globs a short form asks for -- empty where
++            no word stands.
++
++    The first word names files, every further word a choice; each
++    choice becomes its own target, and the wish OR's them:
++
++        ("test-*.py", "one", "two")
++            -> ("test-*.py one", "test-*.py two")
++        ("test-*.py",)
++            -> ("test-*.py",)          every choice of the file
++    """
++    if not word_list: return ()
++    file_glob    = word_list[0]
++    choice_tuple = tuple(word_list[1:])
++    if not choice_tuple: return (file_glob,)
++    return tuple("%s %s" % (file_glob, choice) for choice in choice_tuple)
++
++
++def subject_tuple_of(store, test, choice):
++    """
++    RETURN: tuple, the subjects recorded for that key, sorted -- the
++            names under the candidate's stem with the sidecars
++            ('.raw', '.times', '.when') left out; empty where the run
++            recorded nothing.
++    """
++    probe     = store.bookkeeper.candidate_path(test, choice, "s")
++    directory = probe.parent
++    stem      = probe.name[:-len("s")]        # 'test--choice.'
++    if not directory.is_dir(): return ()
++    name_list = []
++    for path in directory.iterdir():
++        name = path.name
++        if not name.startswith(stem):                       continue
++        if name.endswith(SIDECAR_SUFFIX_TUPLE):             continue
++        name_list.append(name[len(stem):])
++    return tuple(sorted(name_list))
++
++
++def read_text(path):
++    """
++    RETURN: str, the file's content; None where it cannot be read.
++    """
++    try:
++        with open(path, encoding="utf-8", newline="") as file_handle:
++            return file_handle.read()
++    except OSError:
++        return None
++
++
++class CKey:
++    """One promotable thing: a test, a choice, a subject -- and what
++    stands for it in the store."""
++    __slots__ = ("test", "source_file", "choice", "subject",
++                 "candidate_path", "nominal_path", "shared_f")
++
++    def __init__(self, test, source_file, choice, subject,
++                 candidate_path, nominal_path, shared_f):
++        """RETURN: CKey, one (test, choice, subject) with its paths.
++
++        'test' is the STEM, which is what recording used as the test's
++        identity ('operations/session.py': configuration.stem);
++        'source_file' is what the eye reads."""
++        self.test           = source_file and test
++        self.source_file    = source_file
++        self.choice         = choice
++        self.subject        = subject
++        self.candidate_path = candidate_path
++        self.nominal_path   = nominal_path
++        self.shared_f       = shared_f
++
++    @property
++    def name(self):
++        """RETURN: str, the key as the eye reads it."""
++        if self.choice is None:
++            return "%s .%s" % (self.source_file, self.subject)
++        return "%s %s .%s" % (self.source_file, self.choice,
++                              self.subject)
++
++    @property
++    def nominal_stands_f(self):
++        """RETURN: bool, True where a nominal already stands."""
++        return self.nominal_path.exists()
++
++
++def key_list_of(store, case_sequence):
++    """
++    RETURN: list[CKey], every promotable key of the selected cases, in
++            walk order -- one per (test, choice, subject) that a run
++            actually recorded.
++
++    'shared_f' marks a key whose nominal is shared by every choice of
++    the test ('same_nominal_f'): blessing one choice there rewrites
++    the pole the others are judged by.
++    """
++    shared_f = bool(getattr(store.bookkeeper.naming, "same_nominal_f",
++                            False))
++    key_list = []
++    for case in case_sequence:
++        #  RECORDING keys by the STEM, so acceptance must too, or it
++        #  looks where nothing was ever written.
++        test   = Path(case.source_file).stem
++        choice = case.choice
++        for subject in subject_tuple_of(store, test, choice):
++            if subject == STDERR_SUBJECT: continue      # never promoted
++            key_list.append(CKey(
++                test, case.source_file, choice, subject,
++                store.bookkeeper.candidate_path(test, choice, subject),
++                store.bookkeeper.nominal_path(test, choice, subject),
++                shared_f))
++    return key_list
++
++
++def shared_conflict_db(key_list):
++    """
++    RETURN: dict, nominal path -> the keys sharing it, for every shared
++            nominal whose candidates DISAGREE.
++
++    Under 'same_nominal_f' the author declared that every choice
++    produces the same behaviour. Where the candidates differ, that
++    premise is broken: there is no principled way to pick a winner, so
++    accept names it instead of blessing one arbitrarily.
++    """
++    group_db = {}
++    for key in key_list:
++        if not key.shared_f: continue
++        group_db.setdefault(str(key.nominal_path), []).append(key)
++    conflict_db = {}
++    for path_text, group in group_db.items():
++        if len(group) < 2: continue
++        text_set = set(read_text(key.candidate_path) for key in group)
++        if len(text_set) > 1: conflict_db[path_text] = group
++    return conflict_db
++
++
++def stderr_spoke_db(store, case_sequence):
++    """
++    RETURN: dict, (test, choice) -> the recorded stderr's size, for
++            every selected case whose run left a NON-EMPTY stderr
++            candidate behind.
++
++    STDERR IS NEVER SUBJECT TO TESTING; the one thing acceptance
++    decides about it is the NOTE, and only where it spoke.
++    """
++    spoke_db = {}
++    for case in case_sequence:
++        test   = Path(case.source_file).stem
++        choice = case.choice
++        path   = store.bookkeeper.candidate_path(test, choice,
++                                                 STDERR_SUBJECT)
++        try:
++            size = os.path.getsize(path)
++        except OSError:
++            continue
++        if size > 0: spoke_db[(test, choice)] = size
++    return spoke_db
++
++
++def stderr_decision(store, spoke_db, tolerate_f, write):
++    """
++    RETURN: list, the (test, choice, size) triples REFUSED -- stderr
++            spoke, no note tolerates it, '--stderr-tol' not said.
++            Empty where nothing stands in the way.
++
++    THERE IS NO DEFAULT where stderr speaks: a default would leave the
++    user clueless in front of output that deviates. With
++    '--stderr-tol' the note IGNORED is written; without it the choice
++    is refused BY NAME, with both remedies.
++    """
++    refused_list = []
++    for (test, choice), size in sorted(
++            spoke_db.items(),
++            key=lambda item: (item[0][0], item[0][1] or "")):
++        note = store.stderr_note(test, choice)
++        if note is E_StderrNote.IGNORED: continue
++        if tolerate_f:
++            store.note_stderr(test, choice, E_StderrNote.IGNORED)
++            write("NOTE: stderr of '%s%s' is now IGNORED (%d bytes "
++                  "spoke)" % (test,
++                              "" if choice is None else " " + choice,
++                              size))
++            continue
++        refused_list.append((test, choice, size))
++    return refused_list
++
++
++def token_terminated_f(text):
++    """
++    RETURN: bool, True where the stream's LAST LINE is the closing
++            token '<hwut-end>' (R-70) -- the stream's own testimony
++            that it completed.
++    """
++    if text is None: return False
++    line_list = text.splitlines()
++    return bool(line_list) and line_list[-1] == "<hwut-end>"
++
++
++def classify(key, force_f):
++    """
++    RETURN: str, what accept is to do with the key -- one of:
++
++            'bless'   no nominal stands: the first pole
++            'merge'   a nominal stands and '--force' was not said:
++                      this is a CHANGE, and 'hwut.merge's business
++            'force'   a nominal stands and '--force' was said
++    """
++    if   not key.nominal_stands_f: return "bless"
++    elif force_f:                  return "force"
++    else:                          return "merge"
++
++
++def ask(key, text, write, read_line):
++    """
++    RETURN: bool, True where the user blessed this key.
++
++    The CANDIDATE is shown -- the canonicalised record, which is what
++    the framework compares. Anything but 'y' leaves the pole alone.
++    """
++    write("")
++    write("=" * 78)
++    write("ACCEPT  %s" % key.name)
++    write("-" * 78)
++    for line in text.splitlines():
++        write("    %s" % line)
++    write("-" * 78)
++    write("    candidate: %s" % key.candidate_path.name)
++    write("    nominal:   %s" % key.nominal_path.name)
++    write("accept this as the nominal? [y/N] ")
++    answer = read_line()
++    return answer.strip().lower() in ("y", "yes")
++
++
++def main(argv=None, write=None, read_line=None):
++    """
++    RETURN: E_ExitCode, the exit status (E-1): OK where everything the
++            wish selected was accepted or needed nothing, FAULT where
++            a fault was met or a key needed a merge and was left
++            alone, REFUSED where the command line cannot be read,
++            EMPTY where it reads and asks for nothing.
++
++    'write' takes one line at a time, 'print' where none is given.
++    'read_line' answers the per-key question; where none is given the
++    face reads stdin, so a suite drives it without a process.
++    """
++    if argv is None: argv = sys.argv[1:]
++    if write is None: write = print
++    if read_line is None: read_line = sys.stdin.readline
++    if "--help" in argv:
++        write(HELP)
++        return E_ExitCode.OK
++
++    try:
++        wish, rest_list = parse_wish(argv)
++    except WishError as error:
++        write("REFUSED: %s" % error)
++        write(USAGE)
++        return E_ExitCode.REFUSED
++
++    directory    = "."
++    yes_f        = False
++    force_f      = False
++    stderr_tol_f = False
++    word_list   = []
++    unknown     = []
++    for argument in rest_list:
++        if   argument.startswith("--directory="):
++            directory = argument[len("--directory="):]
++        elif argument == "--yes":         yes_f   = True
++        elif argument == "--force":       force_f = True
++        elif argument in ("--stderr-tol", "--stderr-tolerated"):
++            stderr_tol_f = True
++        elif argument.startswith("-"):    unknown.append(argument)
++        else:                             word_list.append(argument)
++    if unknown:
++        write("REFUSED: 'hwut.accept' does not take: %s"
++              % ", ".join(sorted(unknown)))
++        write(USAGE)
++        return E_ExitCode.REFUSED
++    if not os.path.isdir(directory):
++        write("REFUSED: the directory '%s' does not exist" % directory)
++        write(USAGE)
++        return E_ExitCode.REFUSED
++
++    #  The short form is SUGAR: it becomes wish globs, and the wish's
++    #  own engine does the selecting. One selection language.
++    glob_tuple = desugar_positional(word_list)
++    if glob_tuple:
++        wish = wish.__class__(fail_f=wish.fail_f, pass_f=wish.pass_f,
++                              since_spec=wish.since_spec,
++                              until_spec=wish.until_spec,
++                              glob_tuple=wish.glob_tuple + glob_tuple)
++
++    result = explore(directory)
++    for fault in result.fault_list:
++        write("FAULT: %s" % fault)
++
++    bookkeeper = Bookkeeper(directory)
++    store      = Store(bookkeeper)
++    try:
++        case_sequence = CTestTaskListQuery(
++            wish, bookkeeper).get_test_cases(result.app_set)
++    except SelectionError as error:
++        write("REFUSED: %s" % error)
++        return E_ExitCode.REFUSED
++
++    #  STDERR FIRST: where it spoke and nothing tolerates it, the
++    #  whole choice is refused before any pole is touched.
++    refused_list = stderr_decision(store,
++                                   stderr_spoke_db(store, case_sequence),
++                                   stderr_tol_f, write)
++    if refused_list:
++        write("REFUSED: stderr SPOKE and no note tolerates it --")
++        for test, choice, size in refused_list:
++            write("    %s%s   (%d bytes)"
++                  % (test, "" if choice is None else " " + choice,
++                     size))
++        write("stderr is for ERROR REPORTING and is never subject to")
++        write("testing. Either state '--stderr-tol' to note it IGNORED,")
++        write("or -- where the reporting is itself under test -- flush")
++        write("it to a FILE and name that file in 'output'.")
++        return E_ExitCode.FAULT
++
++    key_list = key_list_of(store, case_sequence)
++    if not key_list:
++        write("NOTE: nothing to accept -- the selection holds no "
++              "recorded candidate")
++        return E_ExitCode.EMPTY
++
++    #  A shared nominal whose choices DISAGREE cannot be blessed: the
++    #  author's premise is broken, and picking a winner would hide it.
++    conflict_db = shared_conflict_db(key_list)
++    conflict_set = set()
++    for path_text, group in sorted(conflict_db.items()):
++        write("REFUSED to pick: the choices below share ONE nominal "
++              "('same') and DISAGREE --")
++        write("    nominal: %s" % os.path.basename(path_text))
++        for key in group:
++            write("    %s" % key.name)
++            conflict_set.add(id(key))
++        write("    that is the test failing, not something to bless")
++
++    #  THE CLOSING TOKEN (R-70): a stdout stream that does not end in
++    #  '<hwut-end>' never COMPLETED -- cut short, aborted, or the
++    #  application does not speak the law. An incomplete stream is
++    #  never promotable, and NO FLAG bypasses this: '--force'
++    #  overrides a standing pole, not stream integrity; the abort
++    #  ruling already made such content irrelevant.
++    tokenless_list = [key for key in key_list
++                      if key.subject == "stdout"
++                      and not token_terminated_f(
++                              read_text(key.candidate_path))]
++    if tokenless_list:
++        write("REFUSED: the closing token '<hwut-end>' does not "
++              "appear --")
++        for key in tokenless_list:
++            write("    %s" % key.name)
++        write("a stream without its terminal token never COMPLETED; "
++              "nothing here is")
++        write("promotable. Re-run the test. An application the "
++              "framework does not run")
++        write("prints the token itself, as its last line.")
++        return E_ExitCode.FAULT
++
++    blessed_list, merge_list, skipped_list = [], [], []
++    for key in key_list:
++        if id(key) in conflict_set:
++            skipped_list.append(key)
++            continue
++        verdict = classify(key, force_f)
++        if verdict == "merge":
++            merge_list.append(key)
++            continue
++        text = read_text(key.candidate_path)
++        if text is None:
++            write("FAULT: the candidate of '%s' cannot be read"
++                  % key.name)
++            skipped_list.append(key)
++            continue
++        if key.shared_f and not yes_f:
++            write("NOTE: '%s' shares its nominal with every choice of "
++                  "the test" % key.name)
++        if not yes_f and not ask(key, text, write, read_line):
++            skipped_list.append(key)
++            continue
++        store.accept(key.test, key.choice, key.subject, text)
++        blessed_list.append(key)
++
++    write("")
++    write("=" * 78)
++    write("ACCEPTED  %d of %d" % (len(blessed_list), len(key_list)))
++    write("-" * 78)
++    for key in blessed_list:
++        write("    blessed        %s" % key.name)
++    for key in merge_list:
++        write("    merge required %s" % key.name)
++    for key in skipped_list:
++        write("    left alone     %s" % key.name)
++    if merge_list:
++        write("")
++        write("A nominal already stands for the keys above. That is a "
++              "CHANGE, not a")
++        write("first blessing: use 'hwut.merge', or '--force' to "
++              "overwrite the pole.")
++    write("=" * 78)
++
++    if result.fault_list or merge_list or conflict_db:
++        return E_ExitCode.FAULT
++    return E_ExitCode.OK
++
++
++if __name__ == "__main__":
++    sys.exit(main(sys.argv[1:]))
 diff --git a/orchestrator/services/compare.py b/orchestrator/services/compare.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/compare.py
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,169 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -20067,6 +21517,7 @@ new file mode 100644
 +if __package__ in (None, ""):
 +    import _config
 +    __package__ = _config.PACKAGE
++from ._exit import E_ExitCode  # delayed past _config adoption
 +
 +from   vut.engine.operations.interaction.feed import feed_down
 +from   vut.engine.operations.interaction.tui  import TuiDisplay
@@ -20125,7 +21576,7 @@ new file mode 100644
 +        return _main(argv)
 +    except BrokenPipeError:
 +        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-+        return 141
++        return E_ExitCode.SIGPIPE
 +
 +
 +def _main(argv):
@@ -20171,12 +21622,12 @@ new file mode 100644
 +        asyncio.run(reading_view(read_source(arguments.subject), adapter,
 +                                 subject_name=arguments.subject,
 +                                 compare_options=setup))
-+        return 0
++        return E_ExitCode.OK
 +
 +    bad_pair_n = asyncio.run(compare_view(
 +        read_source(arguments.subject), read_source(arguments.nominal),
 +        adapter, subject_name=arguments.subject, compare_options=setup))
-+    return 0 if bad_pair_n == 0 else 1
++    return E_ExitCode.OK if bad_pair_n == 0 else E_ExitCode.FAULT
 +
 +
 +if __name__ == "__main__":
@@ -20185,7 +21636,7 @@ diff --git a/orchestrator/services/merge.py b/orchestrator/services/merge.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/merge.py
-@@ -0,0 +1,169 @@
+@@ -0,0 +1,170 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -20235,6 +21686,7 @@ new file mode 100644
 +if __package__ in (None, ""):
 +    import _config
 +    __package__ = _config.PACKAGE
++from ._exit import E_ExitCode  # delayed past _config adoption
 +
 +from   vut.engine.operations.interaction.feed import (merge_session, driver_for,
 +                                  E_DisplayTarget, E_Intent,
@@ -20277,7 +21729,7 @@ new file mode 100644
 +        return _main(argv)
 +    except BrokenPipeError:
 +        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-+        return 141
++        return E_ExitCode.SIGPIPE
 +
 +
 +def _main(argv):
@@ -20342,15 +21794,15 @@ new file mode 100644
 +        max_round_n     = arguments.max_rounds))
 +
 +    if arguments.display_only:
-+        return 0
++        return E_ExitCode.OK
 +    if intent is not E_Intent.COMMIT or text is None:
-+        return 1
++        return E_ExitCode.FAULT
 +    if arguments.out is None:
 +        sys.stdout.write(text)
 +    else:
 +        with io.open(arguments.out, "w", encoding="utf-8") as file_handle:
 +            file_handle.write(text)
-+    return 0
++    return E_ExitCode.OK
 +
 +
 +if __name__ == "__main__":
@@ -20359,7 +21811,7 @@ diff --git a/orchestrator/services/plan.py b/orchestrator/services/plan.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/plan.py
-@@ -0,0 +1,155 @@
+@@ -0,0 +1,149 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -20370,13 +21822,9 @@ new file mode 100644
 +
 +    hwut.plan                   the plan of everything the directory
 +                                offers
-+    --fail                      the last recorded run failed
-+    --pass                      the last recorded run stood
-+    --since=<point>             the last run lies at or after the point
-+    --until=<point>             the last run lies before the point --
-+                                the never-run counted
-+    --glob <target>             'test-*.py quick-[0-2]'; several times,
-+                                OR'ed among themselves
++    <the wish>                  which cases are wanted; the keywords
++                                and their meaning stand in
++                                'plan/wish.py', spliced into --help
 +    --directory=<path>          where to read; the current one else
 +    --help                      this text
 +
@@ -20397,13 +21845,19 @@ new file mode 100644
 +from ..exploration.task_list_query import CTestTaskListQuery
 +from ..plan.determine              import determine
 +from ..plan.printer                import print_plan
-+from ..plan.wish                   import WishError, parse_wish
++from ..plan.wish                   import (HELP as WISH_HELP,
++                                           WishError,
++                                           parse_wish)
 +from ..bookkeeper.bookkeeper       import Bookkeeper
++from ..plan.wish                   import USAGE_TOKEN_TUPLE \
++                                           as WISH_TOKEN_TUPLE
++from ._core                        import usage_line
++from ._exit                        import E_ExitCode
 +
 +
-+USAGE = "usage: hwut.plan [--fail] [--pass] [--since=<point>] " \
-+        "[--until=<point>]\n" \
-+        "                 [--glob <target>]... [--directory=<path>]"
++USAGE = usage_line("usage: hwut.plan",
++                    WISH_TOKEN_TUPLE
++                    + ("[--directory=<path>]",))
 +
 +HELP = """hwut.plan -- the TEST PLAN the framework intends
 +
@@ -20412,24 +21866,11 @@ new file mode 100644
 +                        ('x -> y' ordering, 'w ==> t' supports), and
 +                        the exclusion sets
 +
-+SELECTION -- the wish; an absent keyword asks nothing
-+    --fail              the last recorded run's verdict was negative
-+    --pass              the last recorded run's verdict was positive
-+    --since=<point>     the last recorded run lies AT or AFTER the
-+                        point; a case never run is not wanted
-+    --until=<point>     the last recorded run lies BEFORE the point,
-+                        and a case NEVER RUN is wanted too -- the
-+                        stale wish
-+    --glob <target>     a target: a file name, or a file name and a
-+                        choice name with one blank between, either
-+                        carrying fnmatch's '*', '?' and '[ ]':
-+                            --glob "test-*.py quick-[0-2]"
-+                        may stand several times; the globs are OR'ed
-+                        among themselves
++""" + WISH_HELP + """
 +
 +    Keywords of different kinds are AND'ed. '--fail' beside '--pass'
 +    is refused. A wish matching nothing yields an empty plan and a
-+    report, not a refusal.
++    report; the exit status is 3.
 +
 +A <point> is a SPAN back from now -- a number and one of 's', 'm',
 +'h', 'd', as in '90s', '2h', '7d' -- or an ANCHOR, reckoned in UTC:
@@ -20455,14 +21896,17 @@ new file mode 100644
 +    0    nothing refused, no fault met
 +    1    a fault was met
 +    2    the command line cannot be read, or the wish names what the
-+         directory does not offer"""
++         directory does not offer
++    3    the command line reads, and asks for nothing: the wish
++         selects no test case"""
 +
 +
 +def main(argv=None, write=None):
 +    """
-+    RETURN: int, the exit status: 0 where nothing was refused and no
-+            fault was met, 1 where a fault was met, 2 where the
-+            command line cannot be read or the wish is refused.
++    RETURN: E_ExitCode, the exit status (E-1): OK where nothing was
++            refused and no fault was met, FAULT where one was met,
++            REFUSED where the command line cannot be read or the wish
++            is refused, EMPTY where the wish selects no test case.
 +
 +    'write' takes one line at a time; 'print' where none is given, so
 +    a test may capture the face without a process.
@@ -20472,14 +21916,14 @@ new file mode 100644
 +    if argv is None: argv = sys.argv[1:]
 +    if "--help" in argv:
 +        write(HELP)
-+        return 0
++        return E_ExitCode.OK
 +
 +    try:
 +        wish, rest_list = parse_wish(argv)
 +    except WishError as error:
 +        write("REFUSED: %s" % error)
 +        write(USAGE)
-+        return 2
++        return E_ExitCode.REFUSED
 +
 +    directory = "."
 +    unknown   = []
@@ -20492,7 +21936,7 @@ new file mode 100644
 +        write("REFUSED: 'hwut.plan' does not take: %s"
 +              % ", ".join(sorted(unknown)))
 +        write(USAGE)
-+        return 2
++        return E_ExitCode.REFUSED
 +
 +    result = explore(directory)
 +    for fault in result.fault_list:
@@ -20504,13 +21948,15 @@ new file mode 100644
 +        plan, report_list = determine(result.app_set, task_list)
 +    except SelectionError as error:
 +        write("REFUSED: %s" % error)
-+        return 2
++        return E_ExitCode.REFUSED
 +
 +    write("WISH: %s" % wish)
 +    for report in report_list:
 +        write("REPORT: %s" % report)
 +    print_plan(plan, write)
-+    return 1 if result.fault_list else 0
++    if result.fault_list:   return E_ExitCode.FAULT
++    if not plan.node_tuple: return E_ExitCode.EMPTY
++    return E_ExitCode.OK
 +
 +
 +if __name__ == "__main__":
@@ -20519,7 +21965,7 @@ diff --git a/orchestrator/services/report.py b/orchestrator/services/report.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/report.py
-@@ -0,0 +1,285 @@
+@@ -0,0 +1,317 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -20548,18 +21994,22 @@ new file mode 100644
 +                                                pack says the gathering
 +                                                is owed (todo-22)
 +
-+       TWO NAMING CONVENTIONS, both served (the store's key law,
-+       store.py '_key'): the classic corpus 'GOOD/app--choice.txt', and
-+       the store's 'GOOD/app--choice.<subject>' with '.raw'/'.times'
-+       sidecars. Whatever exists is packed; what does not is SAID in
-+       the metadata -- absence reported, never guessed (the house law).
++       THE BOOKKEEPER OWNS THE NAMING. This face resolves NOTHING by
++       hand: 'nominal_path', 'candidate_path', 'raw_path' and
++       'timing_path' answer where every record of a key lives, and the
++       key is (test, choice, subject) with 'test' the source file's
++       STEM -- what RECORDING uses ('operations/session.py':
++       configuration.stem). A second spelling of that law here would
++       be a second law; there is one.
++
++       Whatever exists is packed; what does not is SAID in the
++       metadata -- absence reported, never guessed (the house law).
 +
 +       MACHINE-FREE: relative names and byte counts only -- no absolute
 +       paths, no dates -- so a pack can be compared, stored, or pasted
 +       without freezing one machine into it.
 +
-+       Run from the test's directory (where GOOD/ and OUT/ live), like
-+       every hwut command. Rendering goes to STDOUT; exit 0 with a
++       Run from the test's directory, like every hwut command. Rendering goes to STDOUT; exit 0 with a
 +       pack, 2 on an unusable request.
 +______________________________________________________________________________
 +"""
@@ -20568,61 +22018,89 @@ new file mode 100644
 +import sys
 +import json
 +import argparse
++from pathlib import Path
++
 +
 +#  THE IMPORT CALL -- see merge.py: __config.py (this directory) does the
 +#  walk-up; the face adopts its package (PEP 366). Dead under '-m'.
 +if __package__ in (None, ""):
 +    import _config
 +    __package__ = _config.PACKAGE
++from ._exit import E_ExitCode  # delayed past _config adoption
 +
 +
-+def _key_stem(application, choice):
++def bookkeeper_of(directory):
 +    """
-+    RETURN: str, the record stem of one test/choice -- the store's key
-+            law (store.py '_key'): 'app--choice' with a choice, 'app'
-+            without.
++    RETURN: Bookkeeper, the one that owns naming in that directory.
++
++    Imported here, not at module scope: the face runs by path as well
++    as by module, and the import must follow the '_config' adoption.
 +    """
-+    return application if choice is None \
-+           else "%s--%s" % (application, choice)
++    from ..bookkeeper.bookkeeper import Bookkeeper
++    return Bookkeeper(directory)
++
++
++def subject_tuple_of(bookkeeper, test, choice):
++    """
++    RETURN: tuple, the subjects recorded for that key, sorted -- the
++            names under the candidate's stem with the sidecars
++            ('.raw', '.times', '.when') left out; empty where the run
++            recorded nothing.
++    """
++    probe     = bookkeeper.candidate_path(test, choice, "s")
++    base      = probe.parent
++    stem      = probe.name[:-1]
++    if not base.is_dir(): return ()
++    name_list = []
++    for path in base.iterdir():
++        name = path.name
++        if not name.startswith(stem):                          continue
++        if name.endswith((".raw", ".times", ".when")):          continue
++        name_list.append(name[len(stem):])
++    return tuple(sorted(name_list))
 +
 +
 +def find_records(directory, application, choice):
 +    """
-+    RETURN: dict, section name -> relative path, for every record of
-+            this test/choice that EXISTS under 'directory' -- both
-+            naming conventions searched, sidecars included.
++    RETURN: dict, section name -> path RELATIVE to 'directory', for
++            every record of this test/choice that EXISTS -- nominal,
++            candidate, and the '.raw'/'.times' sidecars beside it.
++
++    Every path comes from the BOOKKEEPER; this function spells no key
++    itself. 'application' is the source file as the user typed it
++    ('demo.py'); the key uses its STEM, which is what recording used.
 +    """
-+    stem  = _key_stem(application, choice)
-+    found = {}
++    bookkeeper = bookkeeper_of(directory)
++    test       = Path(application).stem
++    root       = Path(directory)
++    found      = {}
 +
-+    def take(section, relative_path):
-+        """RETURN: None. Keeps the first hit of a section -- ONE section
-+        per file: a path already packed under another name (the classic
-+        '.txt' re-found as store-subject 'txt') is not packed twice."""
-+        if   section in found:                 return
-+        elif relative_path in found.values():  return
-+        elif os.path.isfile(os.path.join(directory, relative_path)):
-+            found[section] = relative_path
++    def take(section, path):
++        """RETURN: None. Keeps the first hit of a section, and packs no
++        path twice under two names."""
++        if section in found:                    return
++        if not path.is_file():                  return
++        try:    relative = str(path.relative_to(root))
++        except ValueError:
++            relative = str(path)
++        if relative in found.values():          return
++        found[section] = relative
 +
-+    #  The classic corpus: one file, stdout implied.
-+    take("good stdout",       os.path.join("GOOD", stem + ".txt"))
-+    take("out stdout",        os.path.join("OUT",  stem + ".txt"))
-+    #  The store convention: one file per subject, sidecars beside.
-+    for prefix, section in (("GOOD", "good"), ("OUT", "out")):
-+        base = os.path.join(directory, prefix)
-+        if not os.path.isdir(base): continue
-+        for name in sorted(os.listdir(base)):
-+            if not name.startswith(stem + "."): continue
-+            subject = name[len(stem) + 1:]
-+            if   subject.endswith(".times"):
-+                take("%s timing %s" % (section, subject[:-6]),
-+                     os.path.join(prefix, name))
-+            elif subject.endswith(".raw"):
-+                take("%s raw %s" % (section, subject[:-4]),
-+                     os.path.join(prefix, name))
-+            else:
-+                take("%s %s" % (section, subject),
-+                     os.path.join(prefix, name))
++    for subject in subject_tuple_of(bookkeeper, test, choice):
++        take("good %s" % subject,
++             bookkeeper.nominal_path(test, choice, subject))
++        take("out %s" % subject,
++             bookkeeper.candidate_path(test, choice, subject))
++        take("out raw %s" % subject,
++             bookkeeper.raw_path(test, choice, subject))
++        take("out timing %s" % subject,
++             bookkeeper.timing_path(test, choice, subject))
++
++    #  A nominal may stand where no candidate does -- an accepted test
++    #  that has not been run here. Ask for the usual subjects too.
++    for subject in ("stdout",):
++        take("good %s" % subject,
++             bookkeeper.nominal_path(test, choice, subject))
 +    return found
 +
 +
@@ -20687,14 +22165,14 @@ new file mode 100644
 +    line_list.append("hint:    %s" % verdict_hint)
 +    line_list.append("files:")
 +    if os.path.isfile(source_path):
-+        line_list.append("  %-28s %6i bytes  (source)"
++        line_list.append("  %-40s %6i bytes  (source)"
 +                         % (application,
 +                            os.path.getsize(source_path)))
 +    else:
-+        line_list.append("  %-28s MISSING       (source)" % application)
++        line_list.append("  %-40s MISSING       (source)" % application)
 +    for section in sorted(record_db):
 +        relative_path = record_db[section]
-+        line_list.append("  %-28s %6i bytes  (%s)"
++        line_list.append("  %-40s %6i bytes  (%s)"
 +                         % (relative_path,
 +                            os.path.getsize(os.path.join(directory,
 +                                                         relative_path)),
@@ -20768,7 +22246,7 @@ new file mode 100644
 +        return _main(argv)
 +    except BrokenPipeError:
 +        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-+        return 141
++        return E_ExitCode.SIGPIPE
 +
 +
 +def _main(argv):
@@ -20800,7 +22278,224 @@ new file mode 100644
 +    sys.stdout.write(build_pack(directory, application,
 +                                arguments.choice, arguments.raw,
 +                                arguments.coverage))
-+    return 0
++    return E_ExitCode.OK
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+diff --git a/orchestrator/services/run.py b/orchestrator/services/run.py
+new file mode 100644
+--- /dev/null
++++ b/orchestrator/services/run.py
+@@ -0,0 +1,212 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
++         explores below the root, determines what the wish states,
++         runs it through the real dispatcher, and renders the report
++         stream live in the tier-1 plain console form (display/).
++
++    hwut.run                    everything the tree offers
++    --fail --pass --since=<point> --until=<point> --glob <target>
++                                the selection wish, as in 'hwut.plan'
++    --directory=<path>          the root to run below; the current
++                                directory else
++    --no-store                  the store knob: no subject recorded
++    --jobs=<n>                  the per-directory bound on work
++                                standing at once; unbounded else
++    -v --verbose                every event as it arrives
++    --plain                     the default rendering, statable
++    --quiet                     the closing blocks alone
++    --silent                    nothing on stdout; faults on stderr
++    --colour / --no-colour      enforcement over the colour gates
++    --help                      this text
++
++EXIT STATUS (E-1, services/_exit.py):
++    0  every test green, no fault met
++    1  a test failed, or a fault was met
++    2  the command line cannot be read
++    3  the command line reads, and asks for nothing
++______________________________________________________________________________
++"""
++import asyncio
++import os
++import sys
++
++from ...display.console            import (HELP as RENDERING_HELP,
++                                           RenderingError,
++                                           console_view,
++                                           parse_rendering)
++from ...display.console            import USAGE_TOKEN_TUPLE \
++                                           as RENDERING_TOKEN_TUPLE
++from ..exploration.task_list       import SelectionError
++from ..plan.wish                   import (HELP as WISH_HELP,
++                                           WishError,
++                                           parse_wish)
++from ..run.dispatcher              import test_run_dispatcher_factory
++from ..run.orchestrate             import orchestrator
++from ..run.summary                 import fold
++from ..plan.wish                   import USAGE_TOKEN_TUPLE \
++                                           as WISH_TOKEN_TUPLE
++from ._core                        import usage_line
++from ._exit                        import E_ExitCode
++
++
++USAGE = usage_line("usage: hwut.run",
++                    WISH_TOKEN_TUPLE
++                    + ("[--no-store]", "[--jobs=<n>]")
++                        + RENDERING_TOKEN_TUPLE
++                        + ("[--directory=<path>]",))
++
++HELP = """hwut.run -- the tree run, rendered live
++
++    hwut.run            runs everything the tree below the root
++                        offers: per directory its frame, its builds,
++                        its sessions, its tests
++
++""" + WISH_HELP + """
++
++EXECUTION
++    --directory=<path>  the root to run below; the current one else
++    --no-store          the store knob: no subject is recorded
++    --jobs=<n>          the per-directory bound on work standing at
++                        once; unbounded where absent
++
++""" + RENDERING_HELP + """
++
++EXIT STATUS
++    0   every test green, no fault met
++    1   a test failed, or a fault was met; the report still printed
++    2   the command line cannot be read: unknown option, malformed
++        wish, a directory that does not exist
++    3   the command line reads, and asks for nothing: a wish that
++        selects no test, a tree holding no test directory
++
++OTHER
++    --help              this text"""
++
++
++async def _drive(root, wish, record, worker_max_n, flow):
++    """
++    RETURN: list[dict], the whole report stream, rendered LIVE through
++            'flow' as each event arrived; the closing 'None' consumed,
++            not kept.
++
++    Raises what determination raises -- 'orchestrator()' refuses
++    BEFORE the first event.
++    """
++    queue = orchestrator(root, wish,
++                         test_run_dispatcher_factory(record=record),
++                         worker_max_n=worker_max_n)
++    event_list = []
++    while True:
++        item = await queue.get()
++        if item is None: return event_list
++        event_list.append(item)
++        flow.dispatch(item)
++
++
++def main(argv=None, write=None, write_error=None):
++    """
++    RETURN: E_ExitCode, the exit status of the run (E-1): OK where
++            every test stood and no fault was met, FAULT where one
++            failed or one was met, REFUSED where the command line
++            cannot be read, EMPTY where it reads and asks for nothing,
++            SIGPIPE where the reader hung up.
++
++    'write' takes one line at a time; 'print' where none is given, so
++    a suite captures the face without a process -- a captured face is
++    never a terminal, so its colour gate is shut unless '--colour'
++    enforces. 'write_error' likewise, for the SILENT tier's faults;
++    stderr where none is given.
++    """
++    captured_f = write is not None
++    if write is None:       write       = print
++    if write_error is None: write_error = \
++        lambda line: print(line, file=sys.stderr)
++    try:
++        return _main(argv, write, write_error, captured_f)
++    except BrokenPipeError:
++        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
++        return E_ExitCode.SIGPIPE
++
++
++def _main(argv, write, write_error, captured_f):
++    """
++    RETURN: E_ExitCode -- 'main' without the pipe guard.
++    """
++    if argv is None: argv = sys.argv[1:]
++    if "--help" in argv:
++        write(HELP)
++        return E_ExitCode.OK
++
++    try:
++        wish, rest_list = parse_wish(argv)
++    except WishError as error:
++        write("REFUSED: %s" % error)
++        write(USAGE)
++        return E_ExitCode.REFUSED
++
++    try:
++        rendering_wish, rest_list = parse_rendering(rest_list)
++    except RenderingError as error:
++        write("REFUSED: %s" % error)
++        write(USAGE)
++        return E_ExitCode.REFUSED
++
++    directory    = "."
++    record       = None
++    worker_max_n = None
++    unknown      = []
++    for argument in rest_list:
++        if   argument.startswith("--directory="):
++            directory = argument[len("--directory="):]
++        elif argument == "--no-store":  record  = False
++        elif argument.startswith("--jobs="):
++            text = argument[len("--jobs="):]
++            if not text.isdigit() or int(text) < 1:
++                write("REFUSED: '--jobs' takes a positive integer, "
++                      "not '%s'" % text)
++                write(USAGE)
++                return E_ExitCode.REFUSED
++            worker_max_n = int(text)
++        else:
++            unknown.append(argument)
++    if unknown:
++        write("REFUSED: 'hwut.run' does not take: %s"
++              % ", ".join(sorted(unknown)))
++        write(USAGE)
++        return E_ExitCode.REFUSED
++    if not os.path.isdir(directory):
++        write("REFUSED: the directory '%s' does not exist"
++              % directory)
++        write(USAGE)
++        return E_ExitCode.REFUSED
++    #  The machinery walks and launches below an ABSOLUTE root; the
++    #  wire's paths stay relative to it either way.
++    directory = os.path.abspath(directory)
++
++    #  The face knows its own sink; display knows what a terminal is
++    #  worth. Tier, ink and width are decided there, once.
++    tty_f = (not captured_f) and sys.stdout.isatty()
++    flow  = console_view(rendering_wish, write, write_error,
++                         os.environ, tty_f)
++    try:
++        event_list = asyncio.run(
++            _drive(directory, wish, record, worker_max_n, flow))
++    except SelectionError as error:
++        write("REFUSED: %s" % error)
++        return E_ExitCode.REFUSED
++    flow.tail()
++
++    summary = fold(event_list)
++    fail_n  = summary.fail_n if summary.fail_n is not None else 0
++    if summary.fault_tuple or summary.good_f is False or fail_n > 0 \
++       or (event_list and summary.good_f is None):
++        return E_ExitCode.FAULT
++    if not summary.verdict_db:
++        return E_ExitCode.EMPTY
++    return E_ExitCode.OK
 +
 +
 +if __name__ == "__main__":
@@ -20809,7 +22504,7 @@ diff --git a/orchestrator/services/show.py b/orchestrator/services/show.py
 new file mode 100644
 --- /dev/null
 +++ b/orchestrator/services/show.py
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,122 @@
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
 +
@@ -20836,6 +22531,7 @@ new file mode 100644
 +import sys
 +
 +from ..exploration.hwut_parse import text_of_directory, text_of_file
++from ._exit                   import E_ExitCode
 +
 +
 +USAGE = "usage: hwut.show [<source file>] [--no-default] " \
@@ -20873,9 +22569,9 @@ new file mode 100644
 +
 +def main(argv=None, write=None):
 +    """
-+    RETURN: int, the exit status: 0 where nothing was refused and no
-+            fault was met, 1 where a fault was met, 2 where the
-+            command line itself cannot be read.
++    RETURN: E_ExitCode, the exit status (E-1): OK where nothing was
++            refused and no fault was met, FAULT where one was met,
++            REFUSED where the command line itself cannot be read.
 +
 +    'write' takes one line at a time; 'print' where none is given, so
 +    a test may capture the face without a process.
@@ -20885,7 +22581,7 @@ new file mode 100644
 +    if argv is None: argv = sys.argv[1:]
 +    if "--help" in argv:
 +        write(HELP)
-+        return 0
++        return E_ExitCode.OK
 +
 +    directory  = "."
 +    option_set = set()
@@ -20903,12 +22599,12 @@ new file mode 100644
 +    if unknown:
 +        write("REFUSED: unknown option(s): %s" % ", ".join(unknown))
 +        write(USAGE)
-+        return 2
++        return E_ExitCode.REFUSED
 +    if len(name_list) > 1:
 +        write("REFUSED: %d source files named; 'hwut.show' reads one, "
 +              "or the directory" % len(name_list))
 +        write(USAGE)
-+        return 2
++        return E_ExitCode.REFUSED
 +
 +    no_default_f = "--no-default" in option_set
 +    provenance_f = "--provenance" in option_set
@@ -20926,7 +22622,7 @@ new file mode 100644
 +        write(str(fault))
 +    if text:
 +        write(text)
-+    return 1 if fault_list else 0
++    return E_ExitCode.FAULT if fault_list else E_ExitCode.OK
 +
 +
 +if __name__ == "__main__":

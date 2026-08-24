@@ -792,36 +792,6 @@ new file mode 100644
 +    prefix; the interpreter exits with status 1. Tracebacks from Python
 +    blocks point into the pype script file.
 +______________________________________________________________________________
-diff --git a/hwut_pype/TEST/ADM/cache.fly b/hwut_pype/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/hwut_pype/TEST/ADM/cache.fly
-@@ -0,0 +1,25 @@
-+{
-+title: pype line-matching language;
-+file_name: test-pype.py;
-+hwut_info_time: 1787114684L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+result_list: [
-+  [ anchors_repeat; OK; 0.436882; 0; ]
-+  [ boundaries_stack; OK; 0.587830; 0; ]
-+  [ compat; OK; 0.483646; 0; ]
-+  [ default_mode; OK; 0.441696; 0; ]
-+  [ else_flush; OK; 0.450886; 0; ]
-+  [ errors; OK; 0.294612; 0; ]
-+  [ examples; OK; 0.633581; 0; ]
-+  [ generate; OK; 1.113997; 0; ]
-+  [ if_cause; OK; 0.420778; 0; ]
-+  [ imports; OK; 0.645348; 0; ]
-+  [ inheritance; OK; 0.463928; 0; ]
-+  [ modes; OK; 0.294378; 0; ]
-+  [ multi_inheritance; OK; 0.331421; 0; ]
-+  [ namespace; OK; 0.295589; 0; ]
-+  [ patterns; OK; 0.474135; 0; ]
-+  [ pipe; OK; 0.558609; 0; ]
-+  [ terminal; OK; 0.448445; 0; ]
-+]
-+}
 diff --git a/hwut_pype/TEST/GOOD/test-pype.py--anchors_repeat.txt b/hwut_pype/TEST/GOOD/test-pype.py--anchors_repeat.txt
 new file mode 100644
 --- /dev/null
@@ -2227,7 +2197,7 @@ diff --git a/hwut_pype/TEST/test-pype.py b/hwut_pype/TEST/test-pype.py
 new file mode 100644
 --- /dev/null
 +++ b/hwut_pype/TEST/test-pype.py
-@@ -0,0 +1,1546 @@
+@@ -0,0 +1,1547 @@
 +#! /usr/bin/env python3
 +"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 +______________________________________________________________________________
@@ -2293,7 +2263,8 @@ new file mode 100644
 +import sys
 +import config                                                       # noqa: F401
 +
-+from   vut.language_support.python.hwut_runner import HwutRunner, ScriptApplication
++from   vut.language_support.python.hwut_runner  import HwutRunner
++from   vut.language_support.python.script_runner import CRunScript
 +from   vut.engine.hwut_pype.hwut_pype          import parse, Interpreter, PypeError, generate_example_input
 +
 +
@@ -3342,7 +3313,7 @@ new file mode 100644
 +    banner("--trace: gcc-style 'file:line:' diagnostics on stderr")
 +    interpreter_path = os.path.abspath(
 +        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
-+    with ScriptApplication(
++    with CRunScript(
 +            file_name       = "tmp-trace.pype",
 +            shebang         = "#!" + interpreter_path,
 +            script_txt_list = [
@@ -3374,7 +3345,7 @@ new file mode 100644
 +            print("}")
 +
 +    banner("--trace with mode-name filters traces only those modes")
-+    with ScriptApplication(
++    with CRunScript(
 +            file_name       = "tmp-trace-filter.pype",
 +            shebang         = "#!" + interpreter_path,
 +            script_txt_list = [
@@ -3399,7 +3370,7 @@ new file mode 100644
 +    banner("--dry-run checks the script and reads no input")
 +    interpreter = os.path.abspath(
 +        os.path.join(os.path.dirname(__file__), "..", "hwut.pype"))
-+    with ScriptApplication(
++    with CRunScript(
 +            file_name       = "tmp-dry.pype",
 +            shebang         = "#!" + interpreter,
 +            script_txt_list = [
@@ -3413,7 +3384,7 @@ new file mode 100644
 +            capture_output = True, text = True)
 +        print("EXIT:", result.returncode)
 +        print("STDOUT:", result.stdout.strip())
-+    with ScriptApplication(
++    with CRunScript(
 +            file_name       = "tmp-dry-bad.pype",
 +            shebang         = "#!" + interpreter,
 +            script_txt_list = [
@@ -3709,7 +3680,7 @@ new file mode 100644
 +    print("SCRIPT: 'tmp-filter.pype' (she-bang: hwut.pype) {")
 +    for line in script_txt_list: print("    " + line)
 +    print("}")
-+    with ScriptApplication(
++    with CRunScript(
 +            file_name       = "tmp-filter.pype",
 +            shebang         = "#!" + interpreter,
 +            script_txt_list = script_txt_list,
@@ -3862,35 +3833,6 @@ new file mode 100644
 +    echo "unknown choice: '$1'" >&2
 +    exit 1 ;;
 +esac
-diff --git a/hwut_pype/examples/01-test-report.pype b/hwut_pype/examples/01-test-report.pype
-new file mode 100644
---- /dev/null
-+++ b/hwut_pype/examples/01-test-report.pype
-@@ -0,0 +1,24 @@
-+#! /usr/bin/env hwut.pype
-+# Count PASS/FAIL lines of a test-suite log; grand summary at end of input.
-+
-+on: <entry> => {
-+    pass_n = 0
-+    fail_n = 0
-+    fail_list = []
-+}
-+on: "[PASS]" <t = number> "s" <name = "*"> => {
-+    pass_n += 1
-+    print("ok   %-16s (%.2f s)" % (name, t))
-+}
-+on: "[FAIL]" <t = number> "s" <name = "*"> => {
-+    fail_n += 1
-+    fail_list.append(name)
-+    print("FAIL %-16s (%.2f s)" % (name, t))
-+}
-+on: <else> => ignore;
-+on: <exit> => {
-+    print("-" * 34)
-+    print("total: %d passed, %d failed" % (pass_n, fail_n))
-+    for name in fail_list:
-+        print("  failed: %s" % name)
-+}
 diff --git a/hwut_pype/examples/01-test-report.txt b/hwut_pype/examples/01-test-report.txt
 new file mode 100644
 --- /dev/null
@@ -3904,67 +3846,6 @@ new file mode 100644
 +[PASS]  0.77 s  test-interpret
 +[FAIL]  2.10 s  test-compare
 +session done
-diff --git a/hwut_pype/examples/02-build-phases.pype b/hwut_pype/examples/02-build-phases.pype
-new file mode 100644
---- /dev/null
-+++ b/hwut_pype/examples/02-build-phases.pype
-@@ -0,0 +1,56 @@
-+#! /usr/bin/env hwut.pype
-+# A build log is divided into phases. Each phase is a mode inheriting the
-+# shared handlers of ANY (phase markers, warning counter). A phase's 'end'
-+# handler prints its summary the moment the phase is left -- strictly in
-+# input order.
-+
-+ANY/on: "=== CONFIGURE ===" => goto CONFIGURE;
-+ANY/on: "=== COMPILE ==="   => goto COMPILE;
-+ANY/on: "=== LINK ==="      => goto LINK;
-+ANY/on: <else> => ignore;
-+ANY/on: "warning:" => {
-+    warning_n += 1
-+    phase_warning_n += 1
-+}
-+
-+is: ANY
-+on: <entry> => {
-+    warning_n = 0
-+    phase_warning_n = 0
-+}
-+
-+CONFIGURE is: ANY
-+CONFIGURE/on: <entry> => {
-+    phase_warning_n = 0
-+}
-+CONFIGURE/on: "checking" <what = "*"> "... yes" => {
-+    print("configure: %s available" % what)
-+}
-+CONFIGURE/on: <exit> => {
-+    print("configure done, %d warning(s)" % phase_warning_n)
-+}
-+
-+COMPILE is: ANY
-+COMPILE/on: <entry> => {
-+    phase_warning_n = 0
-+    object_n = 0
-+}
-+COMPILE/on: "CC" <f = "*.c"> => {
-+    object_n += 1
-+}
-+COMPILE/on: <exit> => {
-+    print("compile done, %d object(s), %d warning(s)"
-+          % (object_n, phase_warning_n))
-+}
-+
-+LINK is: ANY
-+LINK/on: <entry> => {
-+    phase_warning_n = 0
-+}
-+LINK/on: "LD" <exe = "*"> => {
-+    print("link: produced %s" % exe)
-+}
-+LINK/on: <exit> => {
-+    print("link done, %d warning(s)" % phase_warning_n)
-+    print("build total: %d warning(s)" % warning_n)
-+}
 diff --git a/hwut_pype/examples/02-build-phases.txt b/hwut_pype/examples/02-build-phases.txt
 new file mode 100644
 --- /dev/null
@@ -3982,69 +3863,6 @@ new file mode 100644
 +warning: implicit conversion
 +=== LINK ===
 +LD vut-engine
-diff --git a/hwut_pype/examples/03-sensor-watch.pype b/hwut_pype/examples/03-sensor-watch.pype
-new file mode 100644
---- /dev/null
-+++ b/hwut_pype/examples/03-sensor-watch.pype
-@@ -0,0 +1,58 @@
-+#! /usr/bin/env hwut.pype
-+# Watch a temperature trace. Above 80.0 the script enters ALERT and
-+# reports the excursion when the value drops back to normal. The
-+# statistics print once, from an 'EOF' handler inherited by every mode.
-+
-+STATS/on: <else> => ignore;
-+STATS/on: <eof> => {
-+    print("-" * 44)
-+    print("readings: %d, mean %.2f C, peak %.1f C" % (n, total / n, peak))
-+}
-+
-+is: STATS
-+on: <entry> => {
-+    n = 0
-+    total = 0.0
-+    peak = -273.15
-+}
-+on: "T =" <t = number> "C" => {
-+    n += 1
-+    total += t
-+    if t > peak: peak = t
-+    if t > 80.0:
-+        alert_start_n = n
-+        alert_peak = t
-+        pype.goto("ALERT")
-+}
-+on: "T =" "sensor-fault" => {
-+    print("reading %d: sensor fault, ignored" % (n + 1))
-+}
-+
-+ALERT is: STATS
-+ALERT/on: <entry> => {
-+    print("ALERT entered at reading %d (%.1f C)" % (alert_start_n, alert_peak))
-+}
-+ALERT/on: "T =" <t = number> "C" => {
-+    n += 1
-+    total += t
-+    if t > peak: peak = t
-+    if t > alert_peak: alert_peak = t
-+    if t <= 80.0:
-+        print("ALERT cleared at reading %d, excursion peak %.1f C"
-+              % (n, alert_peak))
-+        pype.goto("NORMAL")
-+}
-+
-+NORMAL is: STATS
-+NORMAL/on: "T =" <t = number> "C" => {
-+    n += 1
-+    total += t
-+    if t > peak: peak = t
-+    if t > 80.0:
-+        alert_start_n = n
-+        alert_peak = t
-+        pype.goto("ALERT")
-+}
-+NORMAL/on: "T =" "sensor-fault" => {
-+    print("reading %d: sensor fault, ignored" % (n + 1))
-+}
 diff --git a/hwut_pype/examples/03-sensor-watch.txt b/hwut_pype/examples/03-sensor-watch.txt
 new file mode 100644
 --- /dev/null
@@ -4057,56 +3875,6 @@ new file mode 100644
 +T = 85.0 C
 +T = 79.0 C
 +T = 76.5 C
-diff --git a/hwut_pype/examples/04-log-router.pype b/hwut_pype/examples/04-log-router.pype
-new file mode 100644
---- /dev/null
-+++ b/hwut_pype/examples/04-log-router.pype
-@@ -0,0 +1,45 @@
-+#! /usr/bin/env hwut.pype
-+# Route a mixed application log. COMMON carries the shared handlers,
-+# including one '<exit>' section summary that every component inherits.
-+# ENGINE and NETWORK inherit COMMON and add their own DISJOINT
-+# vocabularies -- shadowing is forbidden, so the shared and the
-+# component-specific patterns never overlap.
-+
-+COMMON/on: "component:" "engine"  => goto ENGINE;
-+COMMON/on: "component:" "network" => goto NETWORK;
-+COMMON/on: "ERROR" => {
-+    error_n += 1
-+    print("!! %s error: %s" % (component, pype.line().split("ERROR", 1)[1].strip()))
-+}
-+COMMON/on: "heartbeat" <k = int> => {
-+    print("   %s heartbeat %d" % (component, k))
-+}
-+COMMON/on: <else> => ignore;
-+COMMON/on: <exit> => {
-+    print("-- section '%s' done: %d error(s) so far, %d packet drop(s)"
-+          % (component, error_n, drop_n))
-+}
-+
-+is: COMMON
-+on: <entry> => {
-+    component = "boot"
-+    error_n = 0
-+    drop_n = 0
-+}
-+
-+ENGINE is: COMMON
-+ENGINE/on: <entry> => {
-+    component = "engine"
-+}
-+ENGINE/on: "rpm" <r = int> => {
-+    print("   engine at %d rpm" % r)
-+}
-+
-+NETWORK is: COMMON
-+NETWORK/on: <entry> => {
-+    component = "network"
-+}
-+NETWORK/on: "drop" <n = int> "packets" => {
-+    drop_n += n
-+    print("   network dropped %d packet(s)" % n)
-+}
 diff --git a/hwut_pype/examples/04-log-router.txt b/hwut_pype/examples/04-log-router.txt
 new file mode 100644
 --- /dev/null
@@ -4122,44 +3890,6 @@ new file mode 100644
 +drop 4 packets
 +ERROR socket reset
 +rpm 9999
-diff --git a/hwut_pype/examples/05-service-discovery.pype b/hwut_pype/examples/05-service-discovery.pype
-new file mode 100644
---- /dev/null
-+++ b/hwut_pype/examples/05-service-discovery.pype
-@@ -0,0 +1,33 @@
-+#! /usr/bin/env hwut.pype
-+# THE motivating example: deterministicalise a timing-dependent test.
-+#
-+# A service-discovery test broadcasts 'all service-providers respond'.
-+# Providers answer in an order that depends on timing -- printing their
-+# names as they arrive would break byte-exact comparison. The script
-+# therefore records arrivals and reports only order-independent facts:
-+# a running COUNT per arrival, and the full list ALPHABETICALLY at the
-+# settlement point 'registration finished'.
-+
-+on: "request: all service-providers respond" => {
-+    registered = []
-+    print("discovery request observed")
-+}
-+and: goto DISCOVERY;
-+on: <else> => ignore;
-+
-+DISCOVERY/on: "response from" <name = "*"> => {
-+    registered.append(name)
-+    print("a provider responded (%d so far)" % len(registered))
-+}
-+DISCOVERY/on: "registration finished" => {
-+    print("registered services, alphabetical:")
-+    for name in sorted(registered):
-+        print("    " + name)
-+}
-+and: goto DONE;
-+DISCOVERY/on: if ( pype.time() > 30.0 ) => {
-+    print("wait guard: discovery exceeded 30 s at line %d" % pype.line_n())
-+}
-+DISCOVERY/on: <else> => ignore;
-+
-+DONE/on: <else> => flush;
 diff --git a/hwut_pype/examples/05-service-discovery.txt b/hwut_pype/examples/05-service-discovery.txt
 new file mode 100644
 --- /dev/null
@@ -4173,26 +3903,6 @@ new file mode 100644
 +response from  gateway-service
 +registration finished
 +all checks passed
-diff --git a/hwut_pype/hwut.pype b/hwut_pype/hwut.pype
-new file mode 100644
---- /dev/null
-+++ b/hwut_pype/hwut.pype
-@@ -0,0 +1,15 @@
-+#! /usr/bin/env python3
-+"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
-+
-+The shebang entry: 'hwut.pype SCRIPT < input' and
-+'#! /usr/bin/env hwut.pype' both land here.
-+"""
-+import os
-+import sys
-+
-+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-+
-+from hwut_pype import main   # noqa E402
-+
-+if __name__ == "__main__":
-+    sys.exit(main())
 diff --git a/hwut_pype/hwut_pype.py b/hwut_pype/hwut_pype.py
 new file mode 100644
 --- /dev/null

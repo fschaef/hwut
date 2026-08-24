@@ -1,15 +1,14 @@
 #! /usr/bin/env python3
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 
-The shebang entry: 'hwut.pype SCRIPT < input' and
-'#! /usr/bin/env hwut.pype' both land here.
+The she-bang entry point of the pype filter: 'hwut_pype.main()' run as a
+script from wherever 'hwut.pype' is called, by PATH or by path.
 """
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from hwut_pype import main   # noqa E402
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from hwut_pype import main   # noqa: E402
 
 if __name__ == "__main__":
     sys.exit(main())

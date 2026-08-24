@@ -47,10 +47,18 @@ coroutine answering a 'CRunReport'.
               ready name starts; the loop awaits the FIRST ending,
               not a wave
     workers   'worker_max_n' bounds how many pieces of work stand at
-              once; 'None' is no bound; a bound below one is refused
+              once: a number bounds this scheduler alone, a CBudget
+              (budget.py) is shared with every scheduler holding it;
+              'None' is no bound; a bound below one is refused. Frame
+              scripts take a slot like any work.
     sessions  a SESSION node is closed once it launched and every TEST
               node it supports stands terminal; one that did not
               launch is never closed
+
+'CBudget(limit)' (budget.py) is the count of work standing at once:
+'take_f() -> bool' now or nothing, 'await take()' when free, 'give()',
+'await changed()' resolves on the next give, '.peak' the most ever held.
+A bound below one is refused.
 
 'I_Dispatcher' is the seam to the world -- 'run_script(role, command)',
 'run_build(node)', 'open_session(node)', 'close_session(node)',

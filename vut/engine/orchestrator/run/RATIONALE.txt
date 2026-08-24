@@ -225,3 +225,120 @@ DECISION  Every component subject to configuration holds its
 COST      One import hop for readers of the old modules.
 GRAVEYARD One central 'configuration.py' for the tree (a component's
           contract belongs with the component).
+
+----------------------------------------------------------------------------
+O-11 DIRECTORIES RUN IN PARALLEL; A DIRECTORY IS A CLOSED ENVIRONMENT
+----------------------------------------------------------------------------
+PROBLEM   The tree scheduler ran the directories one after another and
+          parallelised within one; a tree of many small directories was
+          bounded by the slowest chain, not by the host.
+DECISION  Every test directory is a CLOSED ENVIRONMENT: no dependency
+          stands between two directories, 'on_entry'/'on_exit' stay
+          local to their directory (R-69), and the configuration tree
+          shapes WHAT a directory runs, never WHEN. The pool is FLAT:
+          all directories are started at once under the budget of
+          O-12; the ORDER of events across directories is not promised.
+          WHEN a directory starts is the STRATEGY's word (O-15). The
+          closing blocks keep walk order
+          ('tree-begun' carries it); the flow tier is a live surface.
+COST      A consumer of the stream may see 'dir-begun' of B before
+          'dir-done' of A. The receiver and 'fold()' already keyed by
+          (directory, node) and are order-independent.
+GRAVEYARD A DAG of directories ordered by frame keys lifted to the tree
+          level (lifts R-69; no need demonstrated; stage 2's placement
+          does not want it). Parallel as opt-in (the serial run stays
+          reachable by one flag; the default is the host's speed).
+
+----------------------------------------------------------------------------
+O-12 '--jobs' IS ONE HOST-GLOBAL BUDGET; EVERY DISPATCH TAKES A SLOT
+----------------------------------------------------------------------------
+PROBLEM   With directories in flight at once, a per-directory bound
+          multiplies: 'jobs' times directories standing; a second knob
+          for the directory count would have become unavoidable.
+DECISION  '--jobs=<n>' is ONE budget of work standing at once on this
+          host, across every directory; absent is no bound; '--jobs=1'
+          under '--dbd' is the serial run byte for byte. The budget is
+          'CBudget' (scheduler/budget.py), made in the tree scheduler
+          and handed to every directory's Scheduler in place of the
+          bare number -- one mechanism, one meaning; a Scheduler given
+          a number still makes a private budget. EVERY dispatched thing
+          takes a slot: frame scripts, builds, session launches, tests.
+          The word HOST is deliberate: when runs are hosted on several
+          machines (stage 2) the budget may re-emerge per host.
+COST      No directory is guaranteed a share: a scheduler returning a
+          slot may take it back before another's waiter runs, so a
+          large directory can run ahead of a small one. Fairness is
+          not promised; throughput is bounded, correctly.
+GRAVEYARD A per-directory bound (squares the load). Frames running
+          free of the budget (a budget of one would then overlap a
+          frame with a test somewhere on the host: dishonest).
+          Gating inside the work task with a semaphore (the 'started'
+          notification would then precede the 'ended' of the slot's
+          previous holder, moving every bounded-run GOOD).
+
+----------------------------------------------------------------------------
+O-13 THE UNIT OF PLACEABLE WORK IS THE DIRECTORY
+----------------------------------------------------------------------------
+PROBLEM   Stage 2 places directory runs on other hosts; the seam had
+          to exist before it is plugged, and it had to be narrow.
+DECISION  'CDirectoryWork(root, entry, dispatcher_factory).run(emit,
+          budget) -> CDirDone' is the unit. The dispatcher -- and with
+          it bookkeeper, store and the directory lock -- is constructed
+          INSIDE the unit, on its own lifetime; the lock is taken where
+          the directory is. Nothing crosses the edge but 'emit' and the
+          budget; no display, no bookkeeper. A placement backend
+          answers a different 'run' for the same unit and streams the
+          same events back (DISCUSSIONS/todo-2).
+COST      The tree scheduler no longer sees the dispatcher; what it
+          knows of a directory is its CDirDone and its events.
+GRAVEYARD A unit per node (the lock and the bookkeeper are the
+          directory's; a node cannot travel without them).
+
+----------------------------------------------------------------------------
+O-14 PARALLEL-RUN SUITES BLESS THE FLOW THROUGH A PYPE FILTER
+----------------------------------------------------------------------------
+PROBLEM   Interleaved flow lines are nondeterministic; a golden-master
+          framework cannot bless nondeterminism, and a flow tier that
+          is never blessed has no oracle for its per-scope attribution.
+DECISION  A parallel-run choice pipes 'hwut.run' through a '.pype'
+          script beside the test application (same file stem, '--
+          <choice>' appended where two choices need different
+          digests). The filter records the flow lines per directory
+          nickname and prints them SORTED, the parallel column dropped;
+          the closing blocks pass through verbatim; a machine path in a
+          fault's text is masked there. THAT digest is the GOOD. The
+          renderer buffers and sorts nothing. '--dbd --jobs=1' is
+          blessed RAW. The suite's exit status is PIPESTATUS[0].
+COST      A '.pype' file per parallel suite; the dump tool must carry
+          the '.pype' extension.
+GRAVEYARD Blessing the quiet tier alone (the flow's attribution would
+          have stood without an oracle). Sorting flow lines in the
+          renderer until 'dir-done' (a live surface turned batch).
+
+----------------------------------------------------------------------------
+O-15 THE STRATEGY SAYS WHEN A DIRECTORY STARTS; THE DIGEST IS STRATEGY-FREE
+----------------------------------------------------------------------------
+PROBLEM   Serial and parallel were two code paths behind a flag. The
+          question "what runs next -- and later, where" is a workflow
+          question and wants one seat with a contract, filled by
+          strategies, the first ones simple enough to test the contract.
+DECISION  'run/strategy.py': 'CStrategy.run(guarded_list) -> [CDirDone]'
+          is the TEMPLATE -- walk order, start a unit when the hook
+          'may_start(index, running)' says so, re-ask on every ending.
+          Three strategies, one line each: 'linear' (the run of old,
+          THE DEFAULT), 'successor' (the next directory starts while
+          the current runs), 'parallel' (all at once). 'hwut.run
+          --strategy=<name>'; '--dbd' is 'linear'. The strategy decides
+          WHEN only: the budget (O-12) bounds, the unit (O-13) owns.
+          HOMOGENEITY: a tree suite's GOOD is the pype digest (O-14)
+          recorded under LINEAR; it records WHAT ran, never when; every
+          other strategy must reproduce it byte for byte, and the suite
+          displays that it does. One GOOD serves all strategies, present
+          and to come.
+COST      The strategy sees directories, not nodes across directories;
+          a node-level strategy (dependencies, standing artifacts, the
+          host) is the contract's next step and a ruling of its own.
+GRAVEYARD Strategy at the budget (decides whom to wake, not when to
+          start -- the wrong seat). One global node scheduler now (too
+          much at once; the unit of O-13 would have moved before its
+          first two strategies taught anything).

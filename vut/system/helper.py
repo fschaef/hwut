@@ -2,7 +2,7 @@
 ______________________________________________________________________________
 PURPOSE:
 """
-from   vut.external.quex.typed   import typed
+from   typeguard                 import typechecked
 from   math                      import ceil, log10
 
 def number_of_decimal_digits(n):
@@ -50,8 +50,8 @@ class Interval:
    def empty(self):
        return self.end == self.begin
 
-   @typed(part_n=int)
-   def split(self, part_n):
+   @typechecked
+   def split(self, part_n: int):
        """YIELDS: 'Interval' objects manifesting the splitted ranges.
 
        Example: 'part_n == 2' -> split range in halves, 

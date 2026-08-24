@@ -1,9 +1,7 @@
 disc-1  PROVISIONAL CHOICES, TAKEN TO BUILD, NOT RULED       ** OPEN **
 ______________________________________________________________________________
 
- 1  DIRECTORIES RUN SERIALLY, walk order (P-17 states it for the plan;
-    the scheduler obeys). Parallel directories are a later fork; the
-    shape -- one Scheduler per entry -- admits it.
+ 1  (ruled: O-11 -- directories run in parallel; '--dbd' serial.)
 
  2  EVENT 'directory' FIELDS ARE ROOT-RELATIVE, '/'-separated; the
     walk's own faults carry '.'. No event carries a machine-chosen

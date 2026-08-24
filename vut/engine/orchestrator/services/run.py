@@ -12,8 +12,16 @@ PURPOSE: THE 'hwut.run' COMMAND LINE -- the tree run made visible. It
     --directory=<path>          the root to run below; the current
                                 directory else
     --no-store                  the store knob: no subject recorded
-    --jobs=<n>                  the per-directory bound on work
-                                standing at once; unbounded else
+    --jobs=<n>                  the host-global bound on work standing
+                                at once, across every directory;
+                                unbounded else
+    --strategy=<name>           when a directory starts: linear (one
+                                after another, in walk order; the
+                                default), successor (the next starts
+                                while the current runs), parallel (all
+                                at once)
+    --dbd --directory-by-directory
+                                '--strategy=linear'
     -v --verbose                every event as it arrives
     --plain                     the default rendering, statable
     --quiet                     the closing blocks alone
@@ -44,6 +52,8 @@ from ..plan.wish                   import (HELP as WISH_HELP,
                                            parse_wish)
 from ..run.dispatcher              import test_run_dispatcher_factory
 from ..run.orchestrate             import orchestrator
+from ..run.strategy                import (DEFAULT_STRATEGY_NAME,
+                                           STRATEGY_DB, strategy_of)
 from ..run.summary                 import fold
 from ..plan.wish                   import USAGE_TOKEN_TUPLE \
                                            as WISH_TOKEN_TUPLE
@@ -53,7 +63,8 @@ from ._exit                        import E_ExitCode
 
 USAGE = usage_line("usage: hwut.run",
                     WISH_TOKEN_TUPLE
-                    + ("[--no-store]", "[--jobs=<n>]")
+                    + ("[--no-store]", "[--jobs=<n>]",
+                       "[--strategy=<name>]")
                         + RENDERING_TOKEN_TUPLE
                         + ("[--directory=<path>]",))
 
@@ -68,8 +79,17 @@ HELP = """hwut.run -- the tree run, rendered live
 EXECUTION
     --directory=<path>  the root to run below; the current one else
     --no-store          the store knob: no subject is recorded
-    --jobs=<n>          the per-directory bound on work standing at
-                        once; unbounded where absent
+    --jobs=<n>          the host-global bound on work standing at
+                        once, across every directory; unbounded where
+                        absent
+    --strategy=<name>   when a directory's run starts:
+                            linear     one after another, in walk
+                                       order (the default)
+                            successor  the next directory starts while
+                                       the current one still runs
+                            parallel   all at once
+    --dbd               '--strategy=linear'
+    --directory-by-directory
 
 """ + RENDERING_HELP + """
 
@@ -85,7 +105,7 @@ OTHER
     --help              this text"""
 
 
-async def _drive(root, wish, record, worker_max_n, flow):
+async def _drive(root, wish, record, worker_max_n, strategy, flow):
     """
     RETURN: list[dict], the whole report stream, rendered LIVE through
             'flow' as each event arrived; the closing 'None' consumed,
@@ -96,7 +116,7 @@ async def _drive(root, wish, record, worker_max_n, flow):
     """
     queue = orchestrator(root, wish,
                          test_run_dispatcher_factory(record=record),
-                         worker_max_n=worker_max_n)
+                         worker_max_n=worker_max_n, strategy=strategy)
     event_list = []
     while True:
         item = await queue.get()
@@ -156,11 +176,22 @@ def _main(argv, write, write_error, captured_f):
     directory    = "."
     record       = None
     worker_max_n = None
+    strategy     = strategy_of(DEFAULT_STRATEGY_NAME)
     unknown      = []
     for argument in rest_list:
         if   argument.startswith("--directory="):
             directory = argument[len("--directory="):]
         elif argument == "--no-store":  record  = False
+        elif argument in ("--dbd", "--directory-by-directory"):
+            strategy = strategy_of("linear")
+        elif argument.startswith("--strategy="):
+            name = argument[len("--strategy="):]
+            if name not in STRATEGY_DB:
+                write("REFUSED: '--strategy' takes one of %s, not '%s'"
+                      % (", ".join(sorted(STRATEGY_DB)), name))
+                write(USAGE)
+                return E_ExitCode.REFUSED
+            strategy = strategy_of(name)
         elif argument.startswith("--jobs="):
             text = argument[len("--jobs="):]
             if not text.isdigit() or int(text) < 1:
@@ -192,7 +223,8 @@ def _main(argv, write, write_error, captured_f):
                          os.environ, tty_f)
     try:
         event_list = asyncio.run(
-            _drive(directory, wish, record, worker_max_n, flow))
+            _drive(directory, wish, record, worker_max_n, strategy,
+                   flow))
     except SelectionError as error:
         write("REFUSED: %s" % error)
         return E_ExitCode.REFUSED

@@ -1,0 +1,44 @@
+
+--- one slot shared by two schedulers ---
+TRACE
+    script on_entry               start   (standing: 1)
+    script on_entry               end     good
+    test   a1.py                  start   (standing: 1)
+    test   a1.py                  end     good
+    test   a2.py                  start   (standing: 1)
+    test   a2.py                  end     good
+    script on_exit                start   (standing: 1)
+    script on_exit                end     good
+    script on_entry               start   (standing: 1)
+    script on_entry               end     good
+    test   b1.py                  start   (standing: 1)
+    test   b1.py                  end     good
+    test   b2.py                  start   (standing: 1)
+    test   b2.py                  end     good
+    script on_exit                start   (standing: 1)
+    script on_exit                end     good
+    most standing at once: 1   budget peak: 1
+
+--- two slots shared by two schedulers ---
+TRACE
+    script on_entry               start   (standing: 1)
+    script on_entry               start   (standing: 2)
+    script on_entry               end     good
+    script on_entry               end     good
+    test   a1.py                  start   (standing: 1)
+    test   b1.py                  start   (standing: 2)
+    test   b1.py                  end     good
+    test   a1.py                  end     good
+    test   b2.py                  start   (standing: 1)
+    test   a2.py                  start   (standing: 2)
+    test   a2.py                  end     good
+    test   b2.py                  end     good
+    script on_exit                start   (standing: 1)
+    script on_exit                start   (standing: 2)
+    script on_exit                end     good
+    script on_exit                end     good
+    most standing at once: 2   budget peak: 2
+
+--- a budget below one: refused ---
+REFUSED: budget limit is 0; a bound below one schedules nothing
+<hwut-end>

@@ -1,0 +1,7 @@
+a bare CStrategy: NotImplementedError -- 'may_start' is owed
+an empty unit list: []
+strategy_of('linear').name = 'linear'
+strategy_of('successor').name = 'successor'
+strategy_of('parallel').name = 'parallel'
+strategy_of('bogus'): KeyError 'bogus'
+<hwut-end>

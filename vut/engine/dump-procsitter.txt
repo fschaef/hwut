@@ -660,50 +660,6 @@ new file mode 100644
 +the parent's environment at spawn; None inherits unchanged. The
 +framework speaks to the application here -- e.g. R-70's
 +'HWUT_NO_TERMINAL', set where a pype owns the stream's terminal token.
-diff --git a/procsitter/TEST/ADM/cache.fly b/procsitter/TEST/ADM/cache.fly
-new file mode 100644
---- /dev/null
-+++ b/procsitter/TEST/ADM/cache.fly
-@@ -0,0 +1,39 @@
-+{
-+title: Procsitter resource containment with attribution;
-+file_name: test-procsitter_limits.py;
-+hwut_info_time: 1787034781L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ cancelled_run; OK; 1.764172; 0; ]
-+  [ clean_under_caps; OK; 0.612636; 0; ]
-+  [ command_guard; OK; 0.416498; 0; ]
-+  [ cpu_time; OK; 2.592614; 0; ]
-+  [ disk_space_low; OK; 0.487640; 0; ]
-+  [ disk_usage; OK; 1.466631; 0; ]
-+  [ file_size; OK; 0.492665; 0; ]
-+  [ memory; OK; 0.949885; 0; ]
-+  [ no_psutil; OK; 1.547885; 0; ]
-+  [ output_gap; OK; 7.197962; 0; ]
-+  [ pids; OK; 1.490393; 0; ]
-+  [ self_exit_codes; OK; 1.899190; 0; ]
-+  [ stderr_tail_cap; OK; 0.516849; 0; ]
-+  [ wall_clock; OK; 1.438422; 0; ]
-+]
-+}
-+{
-+title: eavesdrop stdout, inject stdin -- pure pipe composition;
-+title_group: The two-way tee;
-+file_name: test-procsitter_interact.py;
-+hwut_info_time: 1786856836L;
-+interpreter_list: [ coverage; run; --omit; ./*.py; -a; ]
-+happy_pattern_list: [ SUCCESS.*; ]
-+result_list: [
-+  [ chain_stdin; OK; 0.540193; 0; ]
-+  [ chain_stop_early; OK; 0.616823; 0; ]
-+  [ control_signals; OK; 0.448630; 0; ]
-+  [ pype_interactor; OK; 0.352470; 0; ]
-+  [ tee_copy; OK; 0.478297; 0; ]
-+  [ tee_degenerate; OK; 0.326806; 0; ]
-+]
-+}
 diff --git a/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt b/procsitter/TEST/GOOD/test-procsitter_interact.py--chain_stdin.txt
 new file mode 100644
 --- /dev/null

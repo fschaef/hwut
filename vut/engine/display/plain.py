@@ -123,12 +123,14 @@ class CPlainFlow(CRunReportReceiver):
 
         self.nick_db     = {}        # directory -> nickname
         self.nick_index  = {}        # directory -> colour index
-        self.dir_order   = []        # walk order, first-seen
+        self.dir_order   = []        # walk order ('tree-begun'), else
+                                     # first-seen
         self.verdict_db  = {}        # (directory, node) -> verdict
         self.report_db   = {}        # (directory, node) -> report word
         self.cause_db    = {}        # (directory, node) -> cause node
         self.frame_bad_db = {}       # directory -> [role, ...]
-        self.fault_list  = []        # rendered fault lines, in order
+        self.fault_list  = []        # (directory, rendered fault line),
+                                     # in arrival order
         self.dir_good_db = {}        # directory -> dir-done's 'good'
         self.good_f      = None
         self.fail_n      = None
@@ -237,10 +239,12 @@ class CPlainFlow(CRunReportReceiver):
         self.when_last = when
 
     def on_tree_begun(self, when, directory_list):
-        """RETURN: None. Nicknames registered in walk order; a line in
-        the VERBOSE tier alone."""
+        """RETURN: None. Nicknames and the roll-call's order registered
+        in walk order; a line in the VERBOSE tier alone."""
         for directory in directory_list:
             self._nick(directory)
+            if directory not in self.dir_order:
+                self.dir_order.append(directory)
         if self.tier is not E_Tier.VERBOSE: return
         self._line(when, "[TREE ]", self.ink.bold("[TREE ]"),
                    "%d directory(ies)" % len(directory_list),
@@ -335,8 +339,8 @@ class CPlainFlow(CRunReportReceiver):
         prefix, prefix_ink = self._prefix(when)
         line = "%s[FAULT] %s: %s" % (prefix_ink,
                                      self._ink_nick(directory), text)
-        self.fault_list.append("%s[FAULT] %s: %s"
-                               % (prefix, self._nick(directory), text))
+        self.fault_list.append((directory, "%s[FAULT] %s: %s"
+                                % (prefix, self._nick(directory), text)))
         if   self.tier is E_Tier.SILENT: self.write_error(line)
         elif self.tier is E_Tier.QUIET:  pass
         else:                            self.write(line)
@@ -367,6 +371,18 @@ class CPlainFlow(CRunReportReceiver):
         self._line(when, "[DONE ]", "[DONE ]", nick,
                    self._ink_nick(directory), right, right_ink)
 
+    def _fault_lines(self):
+        """
+        RETURN: list[str], the held fault lines, GROUPED BY DIRECTORY
+                in the roll-call's order -- faults of no listed
+                directory (the walk's own, '.') first -- and in arrival
+                order within one directory.
+        """
+        rank = {d: i for i, d in enumerate(self.dir_order)}
+        return [line for _, (_, line)
+                in sorted(enumerate(self.fault_list),
+                          key=lambda p: (rank.get(p[1][0], -1), p[0]))]
+
     def on_tree_done(self, when, good, fail_n):
         """RETURN: None. The stream's own closing word, held for the
         tail; a line in the VERBOSE tier alone."""
@@ -386,8 +402,8 @@ class CPlainFlow(CRunReportReceiver):
         text = "event of kind '%s' does not fit the vocabulary" % kind
         line = "%s[FAULT] %s: %s" % (prefix_ink,
                                      self._ink_nick(directory), text)
-        self.fault_list.append("%s[FAULT] %s: %s"
-                               % (prefix, self._nick(directory), text))
+        self.fault_list.append((directory, "%s[FAULT] %s: %s"
+                                % (prefix, self._nick(directory), text)))
         if   self.tier is E_Tier.SILENT: self.write_error(line)
         elif self.tier is E_Tier.QUIET:  pass
         else:                            self.write(line)
@@ -459,7 +475,7 @@ class CPlainFlow(CRunReportReceiver):
             write("=" * w)
             write("FAULTS")
             write("-" * w)
-            for line in self.fault_list:
+            for line in self._fault_lines():
                 write(line)
 
         fail_dir_list = [d for d in self.dir_order

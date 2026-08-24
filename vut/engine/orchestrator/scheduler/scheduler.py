@@ -29,8 +29,11 @@ work to operations.
     close_session(node)     -> None
     run_script(role, text)  -> bool     'on_entry' / 'on_exit'
 
-THE WORKER COUNT bounds how many pieces of work stand at once. 'None'
-is no bound: the plan's own exclusion sets are then the only limit.
+THE BUDGET (budget.py) bounds how many pieces of work stand at once --
+in this scheduler alone where a number is given, across every scheduler
+holding the same CBudget where one is given. 'None' is no bound: the
+plan's own exclusion sets are then the only limit. Frame scripts take
+a slot like any work.
 ______________________________________________________________________________
 """
 import asyncio
@@ -38,6 +41,7 @@ from abc         import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 from ..plan.form  import E_NodeKind
+from .budget      import CBudget, budget_of
 from .state       import CPlanState, E_NodeState, FAILURE_SET
 
 
@@ -113,8 +117,11 @@ class Scheduler:
         'dispatcher'    the I_Dispatcher the work goes to.
         'on_entry'      the directory's entry command, or 'None'.
         'on_exit'       the directory's exit command, or 'None'.
-        'worker_max_n'  how many pieces of work may stand at once;
-                        'None' is no bound.
+        'worker_max_n'  how many pieces of work may stand at once:
+                        a number bounds THIS scheduler alone; a
+                        CBudget is shared with every scheduler holding
+                        it (the host-global budget); 'None' is no
+                        bound. Frame scripts take a slot like any work.
         'notify'        an observer, 'notify(kind, **fields)', told as
                         the run proceeds; 'None' is nobody listening.
                         The kinds and their fields:
@@ -135,13 +142,14 @@ class Scheduler:
         assert isinstance(dispatcher, I_Dispatcher), \
                "Scheduler requires an I_Dispatcher; received a %s" \
                % type(dispatcher).__name__
-        assert worker_max_n is None or worker_max_n >= 1, \
+        assert isinstance(worker_max_n, CBudget) or worker_max_n is None \
+               or worker_max_n >= 1, \
                "worker_max_n is %r; a bound below one schedules nothing" \
                % worker_max_n
         self.dispatcher   = dispatcher
         self.on_entry     = on_entry
         self.on_exit      = on_exit
-        self.worker_max_n = worker_max_n
+        self.budget       = budget_of(worker_max_n)
         self.notify       = notify or (lambda kind, **fields: None)
 
     async def run(self, plan):
@@ -159,22 +167,31 @@ class Scheduler:
 
         entry_f = None
         if self.on_entry is not None:
-            entry_f = bool(await self.dispatcher.run_script("on_entry",
-                                                            self.on_entry))
-            self.notify("frame", role="on_entry", good_f=entry_f)
+            entry_f = await self._frame("on_entry", self.on_entry)
         if entry_f is not False:
             await self._dispatch_all(plan, state, dispatched)
 
         exit_f = None
         if self.on_exit is not None:
-            exit_f = bool(await self.dispatcher.run_script("on_exit",
-                                                           self.on_exit))
-            self.notify("frame", role="on_exit", good_f=exit_f)
+            exit_f = await self._frame("on_exit", self.on_exit)
 
         return CRunReport(entry_f    = entry_f,
                           exit_f     = exit_f,
                           state_db   = dict(state.state_db),
                           dispatched = tuple(dispatched))
+
+    async def _frame(self, role, command):
+        """
+        RETURN: bool, the frame script's outcome, run under one slot of
+                the budget.
+        """
+        await self.budget.take()
+        try:
+            good_f = bool(await self.dispatcher.run_script(role, command))
+        finally:
+            self.budget.give()
+        self.notify("frame", role=role, good_f=good_f)
+        return good_f
 
     async def _dispatch_all(self, plan, state, dispatched):
         """
@@ -188,20 +205,21 @@ class Scheduler:
             #  member of an exclusion set withdraws admission from the
             #  others, and a snapshot taken before the start no longer
             #  states the truth.
-            while self.worker_max_n is None \
-                  or len(task_db) < self.worker_max_n:
+            while self.budget.free_f():
                 ready_tuple = state.ready()
                 if not ready_tuple: break
                 name = ready_tuple[0]
+                self.budget.take_f()
                 state.started(name)
                 dispatched.append(name)
                 self.notify("started", node=plan.node(name))
                 task_db[asyncio.ensure_future(
                             self._work(plan.node(name)))] = name
 
-            if not task_db:
-                #  Nothing runs and nothing may start: only a plan
-                #  violating its own construction laws reaches here.
+            if not task_db and not state.ready():
+                #  Nothing runs and nothing may start, budget or no
+                #  budget: only a plan violating its own construction
+                #  laws reaches here.
                 assert not state.stuck_f(), \
                        "the plan is stuck: %s remain(s) pending" \
                        % ", ".join(sorted(
@@ -210,10 +228,17 @@ class Scheduler:
                              if node_state is E_NodeState.PENDING))
                 break
 
+            #  The wait ends on an OWN ending, or on a slot another
+            #  scheduler gave back to the shared budget.
+            changed = self.budget.changed()
             done_set, _ = await asyncio.wait(
-                              task_db, return_when=asyncio.FIRST_COMPLETED)
+                              list(task_db) + [changed],
+                              return_when=asyncio.FIRST_COMPLETED)
+            changed.cancel()
+            done_set.discard(changed)
             for task in sorted(done_set, key=lambda t: task_db[t]):
                 name        = task_db.pop(task)
+                self.budget.give()
                 unsupported = state.ended(name, bool(task.result()))
                 self.notify("ended", node=plan.node(name),
                             state=state.state(name), cause=None)

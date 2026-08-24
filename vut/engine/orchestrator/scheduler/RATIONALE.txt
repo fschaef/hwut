@@ -55,3 +55,21 @@ COST      One readiness computation per start instead of one per
 GRAVEYARD Starting a whole snapshot (the defect). Filtering the
           snapshot inside the loop (re-states the readiness rules
           in a second place).
+
+----------------------------------------------------------------------------
+S-4  THE BOUND IS A BUDGET, AND IT MAY BE SHARED
+----------------------------------------------------------------------------
+PROBLEM   'worker_max_n' was a private integer of one Scheduler; the
+          tree scheduler's host-global bound (run/RATIONALE O-12)
+          needed the count to stand ACROSS schedulers.
+DECISION  'CBudget' (budget.py): 'take_f()' now or nothing, 'take()'
+          when free, 'give()', 'changed()' a future resolved on the
+          next give. The dispatch loop takes a slot before each start
+          and awaits its own tasks OR a 'changed()' of the budget, so a
+          slot given back elsewhere wakes it. Frame scripts take a
+          slot. 'Scheduler(worker_max_n=)' accepts a number (a private
+          budget) or a CBudget (shared); every existing GOOD stands.
+COST      One future created and cancelled per wait.
+GRAVEYARD asyncio.Semaphore around the work task (the 'started'
+          notification moves after the previous holder's 'ended';
+          bounded-run traces would change).

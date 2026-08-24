@@ -6,8 +6,9 @@ settled; each one line to change.
 
  1  THE WORKER BOUND. 'Scheduler(worker_max_n=None)' -- no bound, the
     plan's exclusion sets the only limit. A bound below one is refused.
-        owed           where the bound comes from: a directory key, a
-                       command line switch, the host's core count
+        (ruled: run/RATIONALE O-12 -- '--jobs' on 'hwut.run', one
+        host-global CBudget; a directory key and the core count are
+        not spoken.)
 
  2  A SESSION THAT DID NOT LAUNCH IS NEVER CLOSED. There is no process
     to let go of.
