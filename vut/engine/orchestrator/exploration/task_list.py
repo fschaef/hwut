@@ -12,7 +12,7 @@ A task that names an application or a choice the set does not carry is
 refused at the door, by name.
 ______________________________________________________________________________
 """
-from .specification import CTestCase, CTestCaseSequence
+from .configuration_tree import CTestCase, CTestCaseSequence
 
 
 class SelectionError(Exception):

@@ -23,7 +23,7 @@ from .fault         import Fault, E_FaultKind
 from vut.language_support.python.hwut_hocon import (ScalarNode,
                                                       ListNode,
                                                       ObjectNode)
-from .specification import (TestParameters, TestAppSpec, DirectorySpec,
+from .configuration_tree import (TestParameters, TestAppSpec, DirectorySpec,
                             LanguageSetup, Build, Caps, Target, E_Origin,
                             KEY_TO_FIELD, ROOT_ONLY_KEY_SET)
 
@@ -125,6 +125,9 @@ def validate_conf(hwut_node, file):
         elif entry.key == "dependency":
             value = _dependency(entry, file, fault_list)
             if value is not None: field_db["dependency"] = value
+        elif entry.key == "target":
+            value = _target_map(entry, file, fault_list)
+            if value is not None: field_db["target_db"] = value
         elif entry.key == "default_app":
             parameters, position_db = _default_app(entry, file, fault_list)
             field_db["default_app"]             = parameters
@@ -526,6 +529,33 @@ def _default_app(entry, file, fault_list):
                 E_FaultKind.VOCABULARY, file, inner.key_position,
                 "unknown key '%s' in 'default_app'" % inner.key))
     return TestParameters(**parameters), position_db
+
+
+#  The STANDARD targets: fixed semantics, their own top-level keys. The
+#  'target { }' dictionary exists so the open-ended namespace can never
+#  collide with them; a standard name inside it is refused by name (E-7).
+_STANDARD_TARGET_SET = ("on_entry", "on_exit")
+
+
+def _target_map(entry, file, fault_list):
+    """RETURN: dict, target name -> script -- the user-defined targets
+    of 'hwut.target' (E-7)."""
+    if not isinstance(entry.node, ObjectNode):
+        fault_list.append(Fault(
+            E_FaultKind.TYPE, file, entry.key_position,
+            "'target' is an object of target names"))
+        return {}
+    result = {}
+    for target in entry.node.entry_list:
+        if target.key in _STANDARD_TARGET_SET:
+            fault_list.append(Fault(
+                E_FaultKind.VOCABULARY, file, target.key_position,
+                "'%s' is a standard target with its own key; it cannot "
+                "stand inside 'target { }'" % target.key))
+            continue
+        value = _string(target, file, fault_list)
+        if value is not None: result[target.key] = value
+    return result
 
 
 def _language_setup(entry, file, fault_list):

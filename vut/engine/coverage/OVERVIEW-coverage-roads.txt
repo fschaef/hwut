@@ -1,0 +1,153 @@
+LANGUAGES, TOOLS, FORMATS -- the coverage roads, and what is witnessed
+==============================================================================
+
+THE THREE AXES, AND WHO OWNS WHICH. A LANGUAGE names a registry entry;
+the entry lists TOOLS in preference order; 'elect' takes the first the
+machine has; the tool's FORMAT names the reader. Fifteen tool names,
+seven formats, one record. The record is the unifier -- everything
+below dies at harvest.
+
+THE SEVEN FORMATS, and the languages that reach them:
+
+    coverage-json    coverage.py's json          python, cython
+    lcov-tracefile   the lingua franca; ONE      c/c++ (llvm-cov), rust,
+                     reader serves lcov, gcovr,  js/ts, julia, dart,
+                     grcov, llvm-cov, cargo-     nim, verilog
+                     llvm-cov, verilator_
+                     coverage  [kcov: see below]
+    gcov-annotated   gcc's annotated source      the gcc family: c, c++,
+                                                 fortran, ada, cobol,
+                                                 vala, VHDL via ghdl-gcc
+    cobertura-xml    the second lingua franca;   jvm fallback, .net
+                     serves cobertura, coverlet, (coverlet), ruby, php,
+                     scoverage                   bash via kcov
+    go-profile       go's cover profile          go
+    luacov-report    luacov's report             lua
+    jacoco-xml       the JVM's report            java, kotlin, scala,
+                                                 groovy
+
+THE WITNESS LEDGER OF THIS SESSION (2026-08-24, all artifacts kept):
+
+    java     jacoco 0.8.12       javac + agent + jacococli; the
+                                 constructed fixture's predictions all
+                                 held             -> 'witnessed' choice
+    verilog  verilator 5.020     lcov export read; its misfiling of
+                                 toggle/user onto 'DA' lines PINNED
+                                                  -> 'verilator' choice
+                                 native .dat: line, branch-ARM, toggle
+                                 PER BIT, user cover -- every point with
+                                 file+line+hierarchy    -> fixture in
+                                 pocket, reader owed
+    vhdl     ghdl-gcc 4.1.0      gcov over VHDL, existing reader, no
+                                 new code             -> 'ghdl' choice
+             ghdl -fpsl          psl-report json: assert/cover with
+                                 file, line, counts, status -> fixture
+                                 in pocket, reader owed
+    bash     kcov (source-built) cobertura, correct per line; helper-
+                                 script pollution noted  -> correction:
+                                 kcov speaks COBERTURA, NOT the
+                                 tracefile (no 'end_of_record' anywhere
+                                 in its output)
+    zsh      kcov                WITNESSED FALSE: reported 2/226 lines
+                                 over files that are not the script.
+                                 zsh must refuse by name.
+    ruby     simplecov +         cobertura via simplecov-cobertura,
+             simplecov-cobertura correct per line; native
+                                 .resultset.json beside it -> fixture
+                                 in pocket; registry road CONFIRMED
+
+THE SWEEP (2026-08-24, second pass -- 'so much more coverable by the
+formats we have', confirmed by artifact; all under WITNESS-more/):
+
+    javascript  NODE ITSELF: 'node --test --experimental-test-coverage
+                --test-reporter=lcov' writes a tracefile with NO package
+                installed -- registry road now leads with 'node';
+                'c8' witnessed writing lcov AND cobertura
+    typescript  c8 + source maps: the tracefile names 'calc.ts' ITSELF,
+                untaken arm and never-called function at zero
+    fortran     gfortran + gcov: untaken arm '#####'
+    ada         gnat + gcov: reads, with a WART -- the untaken arm's
+                line shows '-' (not executable), a false-not-executable
+                in gnat's line table, stated not hidden
+    objective-c gcc + gcov: partial-line '1*' on the one-line if
+    vala        valac --debug + gcov: attribution reaches the '.vala'
+                source itself
+    cobol       GnuCOBOL -C + gcov: the untaken DISPLAY arm shows in
+                the GENERATED C; '.cob' attribution survives only in
+                comments. gcc's own 'gcobol' (gcc 15+) is the clean
+                road, unwitnessed here
+    d           gdc + gcov: reads clean
+    c (llvm)    clang -fprofile-instr-generate, 'llvm-cov export
+                --format=lcov': never-called function at zero -- the
+                road rust/swift/zig share
+    binaries    kcov over a plain '-g' executable (DWARF): reads, and
+                pollutes with system headers at 0%% -- same omit-glob
+                story as its bash helpers
+
+CORRECTIONS THE WITNESSES DEMAND (pending, one diff):
+    -- kcov moves from the tracefile aliases to the cobertura ones;
+    -- 'zsh' gets the empty candidate list (the Pascal/Tcl doctrine);
+    -- the verilog road states '--coverage-line', never bare
+       '--coverage', for the lcov export (WITNESS finding 3);
+    -- kcov's injected helpers ('bash-helper*.sh') fall to omit globs.
+
+REFUSING BY NAME, correctly: tcl, pascal (empty lists); fish (no tool
+anyone can vouch for; not even in the extension map). The long tail --
+haskell/hpc, erlang/cover, r/covr, perl/Devel::Cover, powershell/
+pester -- stands as named candidates whose formats are not yet read:
+a machine with only those refuses naming them, which is the designed
+behaviour, and each waits for a real artifact per the doctrine.
+
+FORMATS READ SINCE (2026-08-24, same session -- all four written
+against the witnessed artifacts, all with test choices and GOOD files):
+    verilator native .dat        line + branch arms + toggle bits +
+                                 cover points, the named-point measures
+                                 'toggle'/TG and 'cover'/CP registered
+                                 and MERGEABLE (point identity carried)
+    ghdl psl-report json         cover directives as named points;
+                                 asserts deliberately not read
+    simplecov .resultset.json    ruby's own record, cross-checked
+                                 against its cobertura export
+    ucis xml                     read against ucis.xsd over a pyucis
+                                 conversion of our own .dat; FSM,
+                                 assertion and covergroup bins are
+                                 line-less BY THE XSD ITSELF --
+                                 disc-9(b) is structural, not an
+                                 availability gap
+
+ON A 'UNIFYING BINARY FORMAT'. The unifying FORMAT exists and is not
+binary: the VUT-COVERAGE record -- text, delta-coded, versioned,
+measure-tagged, one writer per key space. Its being TEXT is load-
+bearing: the GOOD files read as specifications, a record diff is a
+legible fact, and 'grep' is a query tool. At these sizes binary buys
+nothing and costs inspection. What 'hwutcov' SHOULD name, if anything,
+is the unifying EXECUTABLE: one entry point with verbs --
+
+    hwutcov elect <language>          name the tool this machine serves
+    hwutcov instrument <build-argv>   amend a build line (the build-
+                                      node provision)
+    hwutcov probe <executable>        can it REGISTER coverage? refuse
+                                      by name before the run spends
+    hwutcov run <argv>                wrap where the road wraps
+    hwutcov report <work-dir>         the named second call
+    hwutcov harvest <work-dir>        artifact -> record
+    hwutcov merge <record>...         where the measures admit it
+
+-- so the orchestration's build and run nodes consume the component
+without importing it, and records remain the only interchange.
+
+NEXT STEPS, ORDERED (steps of the first list now DONE: registry
+corrections, named-point measures, and readers for verilator .dat,
+ghdl psl.json, simplecov resultset and ucis xml all shipped in
+'coverage-complete.diff', 2026-08-24; the sweep's registry
+corrections -- node/c8 roads and aliases -- shipped in the same diff,
+second issue):
+    1. fold the amendment into DISCUSSIONS disc-9 and RATIONALE --
+       both still describe the world before the witnesses;
+    2. the run side: 'instrument' hook + the probe ('can this
+       executable REGISTER coverage?'); report_argv on the
+       'verilator_coverage' alias naming '--write-info';
+    3. the 'hwutcov' entry point over the finished lifecycle;
+    4. deferred by doctrine: covergroup BINS (line-less by the UCIS
+       XSD itself), the long-tail readers, and every refusal stands
+       until a real artifact arrives.

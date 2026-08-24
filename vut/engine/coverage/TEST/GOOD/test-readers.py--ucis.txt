@@ -1,0 +1,34 @@
+
+--- the document, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: verilog
+         | ##tool:     ucis
+         | ##format:   ucis-xml
+         | ##counts:   no
+         | SF:blinker.v
+         | EX:11,5+2,3+2
+         | CV:11,5+2,3
+         | BR:12*2/2,5*2/2,3*2/2
+         | TG:1*toggle_blinker_v.bit0*1/1
+         | SF:tb.v
+         | EX:3,3,1
+         | CV:3,3,1
+         | TG:1*toggle_tb_v.bit0*1/1
+         | SF:top2.v
+         | EX:
+         | CV:
+         | TG:1*toggle_top2_v.bit0*1/1
+
+--- what the standard's own schema will not let this reader see ---
+         fsmCoverage          -- no '<id>' anywhere in the XSD for its bins
+         assertionCoverage    -- no '<id>' anywhere in the XSD for its bins
+         covergroupCoverage   -- no '<id>' anywhere in the XSD for its bins
+  OK  : three sources, the interchange format, one language
+  OK  : line coverage from 'blockCoverage//statement' agrees with every other witnessed road: the case default, the one line that did not run
+  OK  : branch arms grouped by THEIR OWN line -- the artifact wraps every decision of a file under one '<statement>', and the reader groups by the '<branch>' elements' own '<id>' instead
+  OK  : ONE toggle point, name 'OBJECT.BIT' -- and its being one point for a whole file, not one per signal, is the CONVERSION'S collapse, read faithfully rather than hidden
+  OK  : so the toggle summary says 'this file toggled', which is all this particular import can honestly say
+SUCCESS: the standard's own schema decides what this reader can and cannot claim.
+<hwut-end>

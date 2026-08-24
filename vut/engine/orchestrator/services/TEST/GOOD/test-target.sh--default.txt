@@ -1,0 +1,8 @@
+
+--- '--default=' fills absence: 'polish' is bound nowhere ---
+:: alpha: ./spare.sh [exit 0]
+spare ran in alpha
+:: beta/TEST: ./spare.sh [exit 0]
+spare ran in beta
+directories: 2  executed: 2  skipped: 0
+[status 0]

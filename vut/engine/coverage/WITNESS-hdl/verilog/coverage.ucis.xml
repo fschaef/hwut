@@ -1,0 +1,305 @@
+<UCIS xmlns:ucis="http://www.w3.org/2001/XMLSchema-instance" writtenBy="root" writtenTime="2026-08-24T11:46:02" ucisVersion="1.0">
+  <sourceFiles fileName="__null__file__" id="1"/>
+  <sourceFiles fileName="tb.v" id="2"/>
+  <sourceFiles fileName="top2.v" id="3"/>
+  <sourceFiles fileName="blinker.v" id="4"/>
+  <historyNodes historyNodeId="0" logicalName="verilator_test" physicalName="coverage.dat" kind="1" testStatus="true" simtime="0.0" timeunit="ns" runCwd="." cpuTime="0.0" seed="0" cmd="" args="" compulsory="0" date="2026-08-24T11:46:02" userName="user" cost="0.0" toolCategory="verilator" ucisVersion="1.0" vendorId="unknown" vendorTool="unknown" vendorToolVersion="unknown"/>
+  <instanceCoverages name="TOP" key="0" instanceId="0" moduleName="verilator_design">
+    <id file="1" line="1" inlineCount="1"/>
+  </instanceCoverages>
+  <instanceCoverages name="tb" key="0" instanceId="1" moduleName="TOP">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_tb_v" key="0">
+        <id file="2" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_3_18">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_3_27">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_3_9">
+            <bin>
+              <contents coverageCount="24"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+    <blockCoverage>
+      <statement alias="line_3">
+        <id file="2" line="3" inlineCount="15"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+      <statement alias="line_3">
+        <id file="2" line="3" inlineCount="24"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+      <statement alias="line_3">
+        <id file="2" line="3" inlineCount="32"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+      <statement alias="line_7">
+        <id file="2" line="7" inlineCount="5"/>
+        <bin>
+          <contents coverageCount="24"/>
+        </bin>
+      </statement>
+      <statement alias="line_9">
+        <id file="2" line="9" inlineCount="5"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+    </blockCoverage>
+  </instanceCoverages>
+  <instanceCoverages name="dut" key="0" instanceId="2" moduleName="tb">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_top2_v" key="0">
+        <id file="3" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_2_17">
+            <bin>
+              <contents coverageCount="24"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_3_17">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_4_17">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_16">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_16">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="4"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+  </instanceCoverages>
+  <instanceCoverages name="*" key="0" instanceId="3" moduleName="dut">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_blinker_v" key="0">
+        <id file="4" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_3_23">
+            <bin>
+              <contents coverageCount="48"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_4_23">
+            <bin>
+              <contents coverageCount="4"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_5_23">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_23">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_23">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="4"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+    <blockCoverage>
+      <statement alias="line_11">
+        <id file="4" line="11" inlineCount="5"/>
+        <bin>
+          <contents coverageCount="24"/>
+        </bin>
+      </statement>
+      <statement alias="line_17">
+        <id file="4" line="17" inlineCount="21"/>
+        <bin>
+          <contents coverageCount="13"/>
+        </bin>
+      </statement>
+      <statement alias="line_18">
+        <id file="4" line="18" inlineCount="20"/>
+        <bin>
+          <contents coverageCount="4"/>
+        </bin>
+      </statement>
+      <statement alias="line_22">
+        <id file="4" line="22" inlineCount="21"/>
+        <bin>
+          <contents coverageCount="5"/>
+        </bin>
+      </statement>
+      <statement alias="line_23">
+        <id file="4" line="23" inlineCount="17"/>
+        <bin>
+          <contents coverageCount="0"/>
+        </bin>
+      </statement>
+    </blockCoverage>
+    <branchCoverage>
+      <statement statementType="if" branchExpr="branch_blinker_v">
+        <id file="4" line="1" inlineCount="1"/>
+        <branch>
+          <id file="4" line="12" inlineCount="10"/>
+          <branchBin alias="branch_12_10">
+            <contents coverageCount="22"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="12" inlineCount="9"/>
+          <branchBin alias="branch_12_9">
+            <contents coverageCount="2"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="17" inlineCount="23"/>
+          <branchBin alias="branch_17_23">
+            <contents coverageCount="1"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="17" inlineCount="24"/>
+          <branchBin alias="branch_17_24">
+            <contents coverageCount="12"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="20" inlineCount="21"/>
+          <branchBin alias="branch_20_21">
+            <contents coverageCount="1"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="20" inlineCount="22"/>
+          <branchBin alias="branch_20_22">
+            <contents coverageCount="3"/>
+          </branchBin>
+        </branch>
+      </statement>
+    </branchCoverage>
+  </instanceCoverages>
+  <instanceCoverages name="cov" key="0" instanceId="4" moduleName="dut">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_blinker_v" key="0">
+        <id file="4" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_30_31">
+            <bin>
+              <contents coverageCount="24"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_30_53">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_30_53">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+  </instanceCoverages>
+</UCIS>

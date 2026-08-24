@@ -20,7 +20,7 @@ case says only that the case cannot be reached.
 ______________________________________________________________________________
 """
 from .fault         import Fault, E_FaultKind
-from .specification import Target
+from .configuration_tree import Target
 
 
 def check(app_db, dependency_db, collision_list, conf_file, position):

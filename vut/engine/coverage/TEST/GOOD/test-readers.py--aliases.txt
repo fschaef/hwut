@@ -1,17 +1,22 @@
 
 --- what this build reads ---
-         ('cargo-llvm-cov', 'cobertura', 'coverage', 'coverlet', 'gcov', 'gcovr', 'go', 'grcov', 'jacoco', 'kcov', 'lcov', 'llvm-cov', 'luacov', 'scoverage', 'verilator_coverage')
+         ('c8', 'cargo-llvm-cov', 'cobertura', 'coverage', 'coverlet', 'gcov', 'gcovr', 'ghdl', 'go', 'grcov', 'jacoco', 'kcov', 'lcov', 'llvm-cov', 'luacov', 'node', 'scoverage', 'simplecov', 'ucis', 'verilator', 'verilator_coverage')
 
 --- the same tracefile, under every tool name that speaks it ---
+         c8                 tool=c8                 format=lcov-tracefile
          cargo-llvm-cov     tool=cargo-llvm-cov     format=lcov-tracefile
          gcovr              tool=gcovr              format=lcov-tracefile
          grcov              tool=grcov              format=lcov-tracefile
-         kcov               tool=kcov               format=lcov-tracefile
          lcov               tool=lcov               format=lcov-tracefile
          llvm-cov           tool=llvm-cov           format=lcov-tracefile
+         node               tool=node               format=lcov-tracefile
          verilator_coverage tool=verilator_coverage format=lcov-tracefile
-  OK  : fifteen tools, seven formats
-  OK  : SEVEN of them share ONE reader -- 'verilator_coverage' among them, which is how VERILOG line coverage is read with no code at all
+
+--- kcov, witnessed out of this list ---
+         kcov               tool=kcov               format=cobertura-xml
+  OK  : twenty-one tools, eleven formats
+  OK  : EIGHT of them share ONE reader -- 'verilator_coverage' among them (VERILOG with no code at all), and 'node', whose own test runner writes the tracefile with no package installed
+  OK  : and 'kcov' now reads through COBERTURA: witnessed writing no tracefile at all, its alias moved -- one line, nothing else
   OK  : and each record names the TOOL THAT RAN, not the reader that read it -- two different facts, both wanted
   OK  : the coverage itself is identical, as it must be
 SUCCESS: a format is what a reader knows; a tool is what the header names.

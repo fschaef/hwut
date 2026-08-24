@@ -10,8 +10,8 @@ DESCRIPTION
        that a caller who elects no tool pays for none of them.
 
        A FORMAT, NOT A TOOL, IS WHAT A READER KNOWS. The LCOV tracefile
-       is written by 'lcov', 'gcovr', 'grcov' and 'kcov' alike, so ONE
-       reader stands for all four: the alias table below is how a tool
+       is written by 'lcov', 'gcovr' and 'grcov' alike, so ONE
+       reader stands for them all: the alias table below is how a tool
        name reaches the reader of the format it speaks. Admitting a
        fifth tool that speaks LCOV is one line here and nothing else.
 
@@ -19,7 +19,6 @@ DESCRIPTION
            lcov                 lcov tracefile         lingua franca
            gcovr                -> lcov
            grcov                -> lcov
-           kcov                 -> lcov
            llvm-cov             -> lcov
            cargo-llvm-cov       -> lcov
            verilator_coverage   -> lcov                verilog
@@ -34,6 +33,21 @@ DESCRIPTION
            luacov               luacov report          lua
            jacoco               jacoco xml             java, kotlin,
                                                        scala, groovy
+           kcov                 -> cobertura           bash; witnessed
+           verilator            verilator native .dat  verilog: line,
+                                                       branch arms,
+                                                       toggle, cover
+           ghdl                 ghdl psl-report json   vhdl 'cover'
+                                                       directives
+           simplecov            simplecov resultset    ruby's own
+           ucis                 ucis xml (Accellera)   line, branch,
+                                                       toggle; fsm,
+                                                       assertion and
+                                                       covergroup bins
+                                                       are LINE-LESS BY
+                                                       THE STANDARD'S
+                                                       OWN DEFINITION
+                                                       (disc-9(b))
 
        WHAT IS OWED (DISCUSSIONS todo-2), in the order it is worth
        building:
@@ -42,8 +56,8 @@ DESCRIPTION
                            markers ('0' rather than '#####') -- possibly
                            one parameterised reader rather than two.
 
-       A TOOL WITH NO READER IS STILL A CANDIDATE. 'trace', 'simplecov',
-       'jacoco' and the rest stand in the default table so that a machine
+       A TOOL WITH NO READER IS STILL A CANDIDATE. 'trace', 'vcover'
+       and the rest stand in the default table so that a machine
        refuses BY NAME -- 'no reader for X; this build reads ...' --
        rather than reporting no coverage at all.
 ______________________________________________________________________________
@@ -57,6 +71,10 @@ from . import cobertura            # noqa: F401
 from . import go                   # noqa: F401
 from . import luacov               # noqa: F401
 from . import jacoco               # noqa: F401
+from . import verilator            # noqa: F401
+from . import ghdl_psl             # noqa: F401
+from . import simplecov            # noqa: F401
+from . import ucis                 # noqa: F401
 
 
 #  TOOLS THAT SPEAK A FORMAT SOMEBODY ELSE'S READER ALREADY READS.
@@ -70,12 +88,19 @@ from . import jacoco               # noqa: F401
 ALIAS_DB = {
     "gcovr":              "lcov",   # gcov -> tracefile
     "grcov":              "lcov",   # rust
-    "kcov":               "lcov",   # any binary, ptrace-based
     "llvm-cov":           "lcov",   # 'llvm-cov export --format=lcov'
     "cargo-llvm-cov":     "lcov",   # the same, wrapped for cargo
     "verilator_coverage": "lcov",   # '--write-info': VERILOG, read today
+    "node":               "lcov",   # node's own test runner, witnessed
+    "c8":                 "lcov",   # v8 coverage -> lcov, witnessed
     "coverlet":           "cobertura",  # .NET's usual CI output
     "scoverage":          "cobertura",  # scala, via its xml report
+    #  kcov stood among the tracefile speakers until it was WITNESSED
+    #  (2026-08-24): its output holds cobertura, codecov and sonarqube
+    #  documents and NO tracefile -- not one 'end_of_record' anywhere.
+    #  Its own helper scripts ('bash-helper*.sh') appear as 0% classes
+    #  and belong to the omit globs.
+    "kcov":               "cobertura",
 }
 
 

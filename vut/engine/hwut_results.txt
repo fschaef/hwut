@@ -1,0 +1,1025 @@
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+compare/TEST                                                         <no date>
+-------------------------------------------------------------------------------
+ * ChunkPair.description()
+        test-pretty.py line-sequence .................................[OK]
+                       potpourri .....................................[OK]
+ * Generative Judge/Lawyer consistency net
+        test-consistency-fuzz.py consistency .........................[OK]
+                                 constraints .........................[OK]
+                                 metamorphic .........................[OK]
+                                 reflexive ...........................[OK]
+ * Line Comparison
+        test-main.py associate .......................................[OK]
+                     associate-2 .....................................[OK]
+                     associate-3 .....................................[OK]
+                     compare .........................................[OK]
+                     compare-2 .......................................[OK]
+                     compare-3 .......................................[OK]
+ * Orthogonal Space Consistency Check
+        test-equivalence-vs-association.py analogy ...................[OK]
+                                           leakage ...................[OK]
+                                           numeric ...................[OK]
+                                           potpourri .................[OK]
+                                           sudoku ....................[OK]
+ * Registry Sandbox Regression
+        regression-3.py associate ....................................[OK]
+                        equivalence ..................................[OK]
+ * VUT Edit Operations Debugger
+        regression-1.py amnesia ......................................[OK]
+                        pruning_analogy ..............................[OK]
+                        pruning_trans ................................[OK]
+ * VUT Potpourri Regression Suite
+        regression-2.py bool .........................................[OK]
+                        csp ..........................................[OK]
+                        edit-merge ...................................[OK]
+                        visible-nothing ..............................[OK]
+
+ * Async Racing:
+
+    associate Stream Flow
+        test-associate-race.py jittery ...............................[OK]
+                               nominal-slow ..........................[OK]
+                               subject-slow ..........................[OK]
+    is_equivalent Early Abort
+        test-is_equivalent-race.py jittery ...........................[OK]
+                                   nominal-slow ......................[OK]
+                                   subject-slow ......................[OK]
+
+ * Configuration:
+
+    declarations, slots, constraint relation
+        test-configuration.py constraint_db ..........................[OK]
+                              declared ...............................[OK]
+                              edges ..................................[OK]
+                              namespace ..............................[OK]
+                              slots ..................................[OK]
+
+ * Point-Cloud Region:
+
+    coverage, pair, dist, constraint, errors
+        test-point-cloud.py constraint ...............................[OK]
+                            coverage .................................[OK]
+                            dist .....................................[OK]
+                            errors ...................................[OK]
+                            generative ...............................[OK]
+                            pair .....................................[OK]
+                            spatial ..................................[OK]
+
+ * Potpourri Variants:
+
+    subset, duplicates
+        test-potpourri-variants.py combined ..........................[OK]
+                                   duplicates ........................[OK]
+                                   subset ............................[OK]
+
+ * Region Handlers:
+
+    shebang framing, verbatim, ignore, params, errors
+        test-region-handlers.py errors ...............................[OK]
+                                ignore ...............................[OK]
+                                params ...............................[OK]
+                                verbatim .............................[OK]
+
+ * Stateful Constraints:
+
+    bindings, space, dependencies, errors
+        test-constraints.py basic ....................................[OK]
+                            deps .....................................[OK]
+                            errors ...................................[OK]
+                            lawyer ...................................[OK]
+                            strings ..................................[OK]
+
+ * Table Region:
+
+    ordered, unordered, key, columns, errors
+        test-table.py columns ........................................[OK]
+                      errors .........................................[OK]
+                      key ............................................[OK]
+                      modes ..........................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+Testing the coverage component: the homogeneous record, its interval           
+algebra, its delta coding, its merge, and the election of a tool.              
+                                                                               
+coverage/TEST                                                        <no date>
+-------------------------------------------------------------------------------
+
+ * Branch and MC/DC:
+
+    measures registered beside the line axis
+        test-measure.py branch .......................................[OK]
+                        faults .......................................[OK]
+                        in_record ....................................[OK]
+                        mcdc .........................................[OK]
+                        named ........................................[OK]
+                        registration .................................[OK]
+                        unmergeable ..................................[OK]
+
+ * Test ids and group ids:
+
+    never reused, rename keeps the id
+        test-identity.py allocation ..................................[OK]
+                         faults ......................................[OK]
+                         groups ......................................[OK]
+                         rename ......................................[OK]
+                         retire ......................................[OK]
+                         tables ......................................[OK]
+
+ * The coverage index:
+
+    who executed this line, and what to run when it changes
+        test-index.py change .........................................[OK]
+                      economy ........................................[OK]
+                      honest .........................................[OK]
+                      lossy ..........................................[OK]
+                      query ..........................................[OK]
+                      segments .......................................[OK]
+
+ * The homogeneous coverage record:
+
+    intervals, delta coding, merge, election
+        test-record.py election ......................................[OK]
+                       encoding ......................................[OK]
+                       faults ........................................[OK]
+                       intervals .....................................[OK]
+                       merge .........................................[OK]
+                       roundtrip .....................................[OK]
+
+ * The readers:
+
+    three artifact formats, one record
+        test-readers.py absent .......................................[OK]
+                        agreement ....................................[OK]
+                        aliases ......................................[OK]
+                        calls ........................................[OK]
+                        cobertura ....................................[OK]
+                        gather .......................................[OK]
+                        gcov .........................................[OK]
+                        ghdl .........................................[OK]
+                        go ...........................................[OK]
+                        jacoco .......................................[OK]
+                        lcov .........................................[OK]
+                        luacov .......................................[OK]
+                        native .......................................[OK]
+                        psl ..........................................[OK]
+                        python .......................................[OK]
+                        resultset ....................................[OK]
+                        ucis .........................................[OK]
+                        verilator ....................................[OK]
+                        witnessed ....................................[OK]
+
+ * hwut.affected:
+
+    the runs that executed a change
+        test-affected.py answer ......................................[OK]
+                         bare ........................................[OK]
+                         diff ........................................[OK]
+                         empty .......................................[OK]
+                         help ........................................[OK]
+                         refused .....................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+Testing the pype line-matching language: parser, pattern tokens, mode          
+transitions, single shared namespace, she-bang pipe operation.                 
+                                                                               
+hwut_pype/TEST                                                       <no date>
+-------------------------------------------------------------------------------
+ * pype line-matching language
+        test-pype.py anchors_repeat ..................................[OK]
+                     boundaries_stack ................................[OK]
+                     compat ..........................................[OK]
+                     default_mode ....................................[OK]
+                     else_flush ......................................[OK]
+                     errors ..........................................[OK]
+                     examples ........................................[OK]
+                     generate ........................................[OK]
+                     if_cause ........................................[OK]
+                     imports .........................................[OK]
+                     inheritance .....................................[OK]
+                     modes ...........................................[OK]
+                     multi_inheritance ...............................[OK]
+                     namespace .......................................[OK]
+                     patterns ........................................[OK]
+                     pipe ............................................[OK]
+                     terminal ........................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+  Testing test_run configuration, store, report, session, component hygiene.   
+                                                                               
+operations/TEST                                                      <no date>
+-------------------------------------------------------------------------------
+ * Products, the derived result, and the progress seam
+        test-report.py console .......................................[OK]
+                       empty_comparison ..............................[OK]
+                       failed_build ..................................[OK]
+                       observer ......................................[OK]
+                       precedence ....................................[OK]
+                       products ......................................[OK]
+ * The build step of provision
+        test-build_action.py argv ....................................[OK]
+                             contained ...............................[OK]
+                             reasons .................................[OK]
+                             silent_failure ..........................[OK]
+                             success .................................[OK]
+ * The component's hygiene, checked rather than remembered
+        test-hygiene.py good_files ...................................[OK]
+                        no_crash .....................................[OK]
+                        no_orphans ...................................[OK]
+                        return_first .................................[OK]
+                        token_ranks ..................................[OK]
+ * The configuration of one test application
+        test-configuration.py aggregation ............................[OK]
+                              choices ................................[OK]
+                              frozen .................................[OK]
+                              interpreted ............................[OK]
+                              places .................................[OK]
+                              refusal ................................[OK]
+ * The front door and its ceremony
+        test-session.py book .........................................[OK]
+                        busy .........................................[OK]
+                        goal .........................................[OK]
+                        lock .........................................[OK]
+                        recording ....................................[OK]
+                        refused ......................................[OK]
+                        request ......................................[OK]
+                        setup ........................................[OK]
+                        sidecars .....................................[OK]
+                        target .......................................[OK]
+                        the_arc ......................................[OK]
+                        where ........................................[OK]
+
+ * Diagnosis:
+
+    every silent failure names itself
+        test-diagnosis.py channel_hint ...............................[OK]
+                          empty_answer ...............................[OK]
+                          never_judges ...............................[OK]
+                          nothing ....................................[OK]
+                          one_source .................................[OK]
+                          record .....................................[OK]
+                          resolution .................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+Testing the platform-independent procsitter: resource caps, attribution,       
+process hygiene, honest degradation.                                           
+                                                                               
+procsitter/TEST                                                      <no date>
+-------------------------------------------------------------------------------
+ * Procsitter resource containment with attribution
+        test-procsitter_limits.py cancelled_run ......................[OK]
+                                  clean_under_caps ...................[OK]
+                                  command_guard ......................[OK]
+                                  cpu_time ...........................[OK]
+                                  disk_space_low .....................[OK]
+                                  disk_usage .........................[OK]
+                                  file_size ..........................[OK]
+                                  memory .............................[OK]
+                                  no_psutil ..........................[OK]
+                                  output_gap .........................[OK]
+                                  pids ...............................[OK]
+                                  self_exit_codes ....................[OK]
+                                  stderr_tail_cap ....................[OK]
+                                  wall_clock .........................[OK]
+
+ * The two-way tee:
+
+    eavesdrop stdout, inject stdin -- pure pipe composition
+        test-procsitter_interact.py chain_stdin ......................[OK]
+                                    chain_stop_early .................[OK]
+                                    control_signals ..................[OK]
+                                    pype_interactor ..................[OK]
+                                    tee_copy .........................[OK]
+                                    tee_degenerate ...................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+compare/engine/TEST                                                  <no date>
+-------------------------------------------------------------------------------
+ * FrozenAnalogyDb Validation Suite
+        test-frozen_analogy_db.py consistency ........................[OK]
+                                  flyweight ..........................[OK]
+                                  hybrid_masks .......................[OK]
+                                  immutability .......................[OK]
+                                  member_functions ...................[OK]
+ * Line Comparison
+        test-compare_lines.py info ...................................[OK]
+                              judge ..................................[OK]
+ * Line Sequence
+        test-compare_line_sequence.py info ...........................[OK]
+                                      judge ..........................[OK]
+ * Potpourri
+        test-compare_potpourris.py info ..............................[OK]
+                                   judge .............................[OK]
+
+ * LinePair:
+
+    subject_and_nominal_line_element_lists()
+        test-line-pair-report.py accordion ...........................[OK]
+                                 circular ............................[OK]
+                                 exhaustion ..........................[OK]
+                                 monkey ..............................[OK]
+                                 transpose ...........................[OK]
+                                 visible-nothing .....................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                          Feeders to UI and the like                           
+                                                                               
+compare/feeder/TEST                                                  <no date>
+-------------------------------------------------------------------------------
+ * Cross-checks Protocol signatures across ui.py execution, source files, and global protocol definitions.
+        verify_signature.sh ..........................................[OK]
+ * UI Feeder Protocol (Comprehensive)
+        test-ui.py potpourri .........................................[OK]
+                   structure .........................................[OK]
+                   types .............................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+compare/reading/TEST                                                 <no date>
+-------------------------------------------------------------------------------
+ * ChunkPipe
+        test-chunk_pipe.py comment ...................................[OK]
+                           normal ....................................[OK]
+                           special ...................................[OK]
+ * Tolerance PatternFinder
+        test-pattern_finder.py aggressive ............................[OK]
+                               do ....................................[OK]
+                               setup .................................[OK]
+                               tolerance_id ..........................[OK]
+
+ * Tolerance:
+
+    LineElement-s
+        test-line_element.py LineElementAnalogy ......................[OK]
+                             LineElementEquivalencePattern ...........[OK]
+                             LineElementNumber .......................[OK]
+                             LineElementString .......................[OK]
+                             NumberBand ..............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+compare/tool/TEST                                                    <no date>
+-------------------------------------------------------------------------------
+
+ * Tool hwut_compare.py:
+
+    colorized lexing preview
+        test-hwut-compare-tool.sh config .............................[OK]
+                                  errors .............................[OK]
+                                  lexing .............................[OK]
+                                  stdin-and-wrapper ................[FAIL]
+                                                           ___   _    _   _    
+                                                          |  _| / \  | | | |   
+                                                          | |_|/ - \ | | | |_  
+                                                          |_|  |_|_| |_| |___| 
+-------------------------------------------------------------------------------
+    [FAIL] test-hwut-compare-tool.sh _ stdin-and-wrapper
+===============================================================================
+                                                                               
+ Testing the three operations: equivalence check, difference display, accept.  
+                                                                               
+operations/consume/TEST                                              <no date>
+-------------------------------------------------------------------------------
+ * DifferenceDisplay and the feed session
+        test-difference-display.py down_stream .......................[OK]
+                                   every_subject .....................[OK]
+                                   no_provision ......................[OK]
+                                   only_differing ....................[OK]
+                                   sequence ..........................[OK]
+                                   signature .........................[OK]
+                                   verdict_safe ......................[OK]
+
+ * Accept:
+
+    write the nominal
+        test-accept.py all_or_nothing ................................[OK]
+                       initiate ......................................[OK]
+                       ledger ........................................[OK]
+                       pulls_run .....................................[OK]
+                       stderr ........................................[OK]
+                       take_dump .....................................[OK]
+                       the_loop ......................................[OK]
+
+ * EquivalenceCheck:
+
+    read -> verdict
+        test-equivalence-check.py blind ..............................[OK]
+                                  fast_fail ..........................[OK]
+                                  named_absent .......................[OK]
+                                  nominal_missing ....................[OK]
+                                  observer ...........................[OK]
+                                  provision_failed ...................[OK]
+                                  terminated .........................[OK]
+                                  unexpected_stderr ..................[OK]
+                                  unjudged ...........................[OK]
+                                  verdict ............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                                                   
+Testing the interaction seam: the feed session, the merge loop, the TUI tier and the service faces.
+                                                                                                   
+operations/interaction/TEST                                          <no date>
+-------------------------------------------------------------------------------
+ * The TUI tier
+        test-tui.py display_only .....................................[OK]
+                    editor_loop ......................................[OK]
+                    elements .........................................[OK]
+                    reading ..........................................[OK]
+                    regions ..........................................[OK]
+                    rendering ........................................[OK]
+                    target_wiring ....................................[OK]
+                    undecided_author .................................[OK]
+
+ * The merge session:
+
+    the UP half
+        test-merge.py cancel .........................................[OK]
+                      commit .........................................[OK]
+                      display_only ...................................[OK]
+                      empty_commit ...................................[OK]
+                      envelope .......................................[OK]
+                      loop ...........................................[OK]
+                      loop_pipe ......................................[OK]
+                      loop_realigns ..................................[OK]
+                      rich_client ....................................[OK]
+                      sequence .......................................[OK]
+                      unknown ........................................[OK]
+                      widened_down ...................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                                  
+Testing provision: the stages, the one answer shape, the planners, the build tool.
+                                                                                  
+operations/run/TEST                                                  <no date>
+-------------------------------------------------------------------------------
+
+ * Provision:
+
+    execute, canonicalise, and the loaded read
+        test-provision.py absent_application .........................[OK]
+                          argv .......................................[OK]
+                          canonicalisation ...........................[OK]
+                          canonicaliser_broken .......................[OK]
+                          containment ................................[OK]
+                          loaded .....................................[OK]
+                          same_shape .................................[OK]
+                          source_kinds ...............................[OK]
+                          stages .....................................[OK]
+                          subjects ...................................[OK]
+
+ * The multi-executor:
+
+    one application call, many choices
+        test-multi-execute.py files ..................................[OK]
+                              plugged ................................[OK]
+                              refused ................................[OK]
+                              session ................................[OK]
+                              status .................................[OK]
+                              unknown ................................[OK]
+
+ * The provider seam:
+
+    one interface per role, refused at the door
+        test-provider.py cadence .....................................[OK]
+                         door ........................................[OK]
+                         foreign .....................................[OK]
+                         roles .......................................[OK]
+                         scheme ......................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+           Bookkeeper -- Maintaining Results and Configuration Info            
+                                                                               
+orchestrator/bookkeeper/TEST                                         <no date>
+-------------------------------------------------------------------------------
+
+ * The Bookkeeper:
+
+    the naming, the base, the verdicts
+        test-bookkeeper.py damage ....................................[OK]
+                           divergence ................................[OK]
+                           naming ....................................[OK]
+                           overwrite .................................[OK]
+                           protection ................................[OK]
+                           record ....................................[OK]
+                           reproduce .................................[OK]
+                           setup_delta ...............................[OK]
+
+ * The store:
+
+    records and the directory lock
+        test-stream_store.py keys ....................................[OK]
+                             lock_dead ...............................[OK]
+                             lock_live ...............................[OK]
+                             nominal_kinds ...........................[OK]
+                             promotion ...............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+          Exploration -- Reading Specifications, Selecting Test Cases          
+                                                                               
+orchestrator/exploration/TEST                                        <no date>
+-------------------------------------------------------------------------------
+
+ * 'execute':
+
+    the call itself, stated verbatim
+        test-execute.py refused ......................................[OK]
+                        stated .......................................[OK]
+
+ * Defaults:
+
+    declared by the owner, related by us
+        test-defaults.py declared ....................................[OK]
+                         instantiate .................................[OK]
+                         merge .......................................[OK]
+                         refused .....................................[OK]
+                         table .......................................[OK]
+
+ * Detector and unwrapper:
+
+    no comment syntax known
+        test-detector_unwrapper.py blank .............................[OK]
+                                   dash ..............................[OK]
+                                   detect ............................[OK]
+                                   hash ..............................[OK]
+                                   offsets ...........................[OK]
+                                   single ............................[OK]
+                                   star ..............................[OK]
+
+ * Explorer:
+
+    carriers, cross-check, resolution
+        test-explorer.py carriers ....................................[OK]
+                         defaults ....................................[OK]
+                         directory ...................................[OK]
+                         faults ......................................[OK]
+                         graph .......................................[OK]
+                         resolve .....................................[OK]
+
+ * Task list:
+
+    select, or refuse at the door
+        test-task_list.py all ........................................[OK]
+                          named ......................................[OK]
+                          refused ....................................[OK]
+
+ * The interview:
+
+    hwut 1.0 answers, and is read
+        test-interview.py block ......................................[OK]
+                          directory ..................................[OK]
+                          precedence .................................[OK]
+                          silence ....................................[OK]
+
+ * Tree walk:
+
+    markers found, configuration folded down
+        test-tree.py inherit .........................................[OK]
+                     locals ..........................................[OK]
+                     marker ..........................................[OK]
+                     walk ............................................[OK]
+
+ * Validator:
+
+    plain tree, or refusal by name
+        test-validator.py choiceless .................................[OK]
+                          conf .......................................[OK]
+                          exclusivity ................................[OK]
+                          header .....................................[OK]
+                          list_form ..................................[OK]
+                          off ........................................[OK]
+                          root_only ..................................[OK]
+                          types ......................................[OK]
+                          vocabulary .................................[OK]
+
+ * hwut.parse:
+
+    what the framework read
+        test-printer.py directory ....................................[OK]
+                        faults .......................................[OK]
+                        file .........................................[OK]
+                        no_default ...................................[OK]
+                        origins ....................................[FAIL]
+                        places .......................................[OK]
+                                                           ___   _    _   _    
+                                                          |  _| / \  | | | |   
+                                                          | |_|/ - \ | | | |_  
+                                                          |_|  |_|_| |_| |___| 
+-------------------------------------------------------------------------------
+    [FAIL] test-printer.py _ origins
+===============================================================================
+                                                                               
+                     Plan -- Determined, Printed, Executed                     
+                                                                               
+orchestrator/plan/TEST                                               <no date>
+-------------------------------------------------------------------------------
+
+ * Determination:
+
+    a wish and a directory become a plan
+        test-determine.py closure ..................................[FAIL]
+                          deterministic ............................[FAIL]
+                          empty ......................................[OK]
+                          misdep ...................................[FAIL]
+                          pruned .....................................[OK]
+                          whole ....................................[FAIL]
+
+ * Plan form:
+
+    nodes, links, exclusions, laws at the door
+        test-form.py closure .........................................[OK]
+                     derived .........................................[OK]
+                     nodes ...........................................[OK]
+                     refused .........................................[OK]
+                     stage ...........................................[OK]
+
+ * Plan printer:
+
+    the canonical text, one-way
+        test-printer.py bare .........................................[OK]
+                        empty ........................................[OK]
+                        full .........................................[OK]
+
+ * Tree plan:
+
+    one plan per directory, walk order
+        test-tree_plan.py refused ....................................[OK]
+                          tree .....................................[FAIL]
+
+ * Wish:
+
+    keywords read, cases selected
+        test-wish.py anchors .........................................[OK]
+                     base ............................................[OK]
+                     globs ...........................................[OK]
+                     parsing .........................................[OK]
+                     refused .........................................[OK]
+                                                           ___   _    _   _    
+                                                          |  _| / \  | | | |   
+                                                          | |_|/ - \ | | | |_  
+                                                          |_|  |_|_| |_| |___| 
+-------------------------------------------------------------------------------
+    [FAIL] test-determine.py _ closure
+                           \__ deterministic
+                           \__ misdep
+                           \__ whole
+    [FAIL] test-tree_plan.py _ tree
+===============================================================================
+                                                                               
+                   Run -- The Outer Face, the Report Stream                    
+                                                                               
+orchestrator/run/TEST                                                <no date>
+-------------------------------------------------------------------------------
+
+ * End to end:
+
+    the wire over real processes
+        test-endtoend.py frame .......................................[OK]
+                         nostore .....................................[OK]
+                         stream ......................................[OK]
+
+ * Orchestrator:
+
+    the report stream of a run
+        test-orchestrator.py broken ..................................[OK]
+                             empty ...................................[OK]
+                             frame ...................................[OK]
+                             stream ..................................[OK]
+
+ * Strategy:
+
+    when a directory's unit starts
+        test-strategy.py contract ....................................[OK]
+                         linear ......................................[OK]
+                         parallel ....................................[OK]
+                         successor ...................................[OK]
+
+ * The translation:
+
+    stated parameters reach their owners
+        test-adapter.py caps .........................................[OK]
+                        compare ......................................[OK]
+                        naming .......................................[OK]
+                        refused ......................................[OK]
+                        sweep ........................................[OK]
+
+ * Vocabulary and receiver:
+
+    format, dispatch, misfit
+        test-receiver.py dispatch ....................................[OK]
+                         emitter .....................................[OK]
+                         format ......................................[OK]
+                         misfit ......................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                  Scheduler -- Admission, Dispatch, the Frame                  
+                                                                               
+orchestrator/scheduler/TEST                                          <no date>
+-------------------------------------------------------------------------------
+
+ * Plan state:
+
+    admission, supports, exclusion, ordering
+        test-state.py admission ......................................[OK]
+                      exclusion ......................................[OK]
+                      ordering .......................................[OK]
+                      supports .......................................[OK]
+
+ * Scheduler:
+
+    the plan executed, trace and report
+        test-scheduler.py budget .....................................[OK]
+                          build ......................................[OK]
+                          exclusion ..................................[OK]
+                          frame ......................................[OK]
+                          misdep .....................................[OK]
+                          ordering ...................................[OK]
+                          parallel ...................................[OK]
+                          session ....................................[OK]
+                          workers ....................................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                      Services -- The Command Line Faces                       
+                                                                               
+orchestrator/services/TEST                                           <no date>
+-------------------------------------------------------------------------------
+
+ * The compare service face:
+
+    the diff convention, on stdout.
+        test-compare.sh differing ....................................[OK]
+                        reading ......................................[OK]
+                        tolerated ....................................[OK]
+
+ * The exit status law:
+
+    one enum, every face relates.
+        test-exit.sh law .............................................[OK]
+
+ * The hwut.accept face:
+
+    promotion, and what it refuses.
+        test-accept.sh ask ...........................................[OK]
+                       bless .........................................[OK]
+                       merge .........................................[OK]
+                       stderr ........................................[OK]
+                       sugar .........................................[OK]
+                       token .........................................[OK]
+
+ * The merge service face:
+
+    channels, exit codes, the commit law.
+        test-merge.sh cancel .........................................[OK]
+                      commit .........................................[OK]
+                      stdout_artifact ................................[OK]
+
+ * The report service face:
+
+    one command packs one test whole.
+        test-report.sh bare ..........................................[OK]
+                       flags .........................................[OK]
+                       pack ..........................................[OK]
+                       raw ...........................................[OK]
+
+ * hwut.plan:
+
+    the test plan the framework intends
+        test-plan.py faults ........................................[FAIL]
+                     help ............................................[OK]
+                     plan ..........................................[FAIL]
+                     refused .........................................[OK]
+                     wish ..........................................[FAIL]
+
+ * hwut.show:
+
+    the configuration the framework read
+        test-show.py directory .......................................[OK]
+                     faults ..........................................[OK]
+                     file ............................................[OK]
+                     help ............................................[OK]
+                     refused .........................................[OK]
+                                                           ___   _    _   _    
+                                                          |  _| / \  | | | |   
+                                                          | |_|/ - \ | | | |_  
+                                                          |_|  |_|_| |_| |___| 
+-------------------------------------------------------------------------------
+    [FAIL] test-plan.py _ faults
+                      \__ plan
+                      \__ wish
+===============================================================================
+                                                                               
+                     Testing the comparison functionality                      
+                                                                               
+compare/core/edit_operations/TEST                                    <no date>
+-------------------------------------------------------------------------------
+ * Lines
+        test-line.py analogies .......................................[OK]
+                     basic ...........................................[OK]
+                     special .........................................[OK]
+                     visible-nothing .................................[OK]
+ * Strings
+        test-string.py basic .........................................[OK]
+                       long ..........................................[OK]
+
+ * Edit Distance:
+
+    Line list alignment
+        test-line_sequence.py nominal ................................[OK]
+                              special ................................[OK]
+                              subject ................................[OK]
+
+ * Lines:
+
+    Permutation LineElement-types
+        test-line-permutation.py different ...........................[OK]
+                                 different-2 .........................[OK]
+                                 different-good-2 ....................[OK]
+                                 different-void-2 ....................[OK]
+                                 same ................................[OK]
+    Transposition and Visible Nothing
+        test-line-2.py transpose .....................................[OK]
+                       visible-nothing ...............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+             Equivalence check and association of potpourri lines              
+                                                                               
+compare/region/potpourri/TEST                                        <no date>
+-------------------------------------------------------------------------------
+ * MatchDb
+        test-match_db.py analogy_interferences .......................[OK]
+                         extract_ultimates ...........................[OK]
+                         pairing .....................................[OK]
+
+ * FriendsPairing:
+
+    Search anyway
+        test-exact.py analogy ........................................[OK]
+                      basic ..........................................[OK]
+                      border .........................................[OK]
+                      special ........................................[OK]
+                      wild ...........................................[OK]
+                      wild-2 .........................................[OK]
+    fail quickly
+        test-exact-fail-quickly.py analogy ...........................[OK]
+                                   basic .............................[OK]
+                                   border ............................[OK]
+                                   wild ..............................[OK]
+
+ * FriendsPairingMax:
+
+    Search anyway
+        test-similar.py basic ........................................[OK]
+                        restricted_cmp ...............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                         Testing interactive protocols                         
+                                                                               
+operations/interaction/nvim/TEST                                     <no date>
+-------------------------------------------------------------------------------
+ * The editor half, driven by a real neovim
+        test-view.lua bound_and_closed ...............................[OK]
+                      commit_carries_text ............................[OK]
+                      panes ..........................................[OK]
+                      subject_protected ..............................[OK]
+ * The merge plugin's protocol layer (Lua)
+        test-protocol.lua envelope ...................................[OK]
+                          fold .......................................[OK]
+                          foreign ....................................[OK]
+                          truncated ..................................[OK]
+                          two_sides ..................................[OK]
+                          unknown_kind ...............................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+                                                                               
+                    Solving the constraint pairing problem                     
+                                                                               
+compare/region/potpourri/solver/TEST                                 <no date>
+-------------------------------------------------------------------------------
+
+ * Bipartite Matching:
+
+    Augmenting Path Algorithm
+        test-maximum_bipartite_matching.py basic .....................[OK]
+                                           chain .....................[OK]
+                                           stress ....................[OK]
+
+ * CSP Backtracking MRV:
+
+    Friends Pairing Stress Test
+        test-csp_backtracking_mrv.py backtracking ....................[OK]
+                                     lane-trap .......................[OK]
+                                     massive-pipe ....................[OK]
+                                     soduko ..........................[OK]
+                                                                    ___  _  _  
+                                                                   / _ \| |/ ) 
+                                                                  ( (_) | _ <  
+                                                                   \___/|_|\_) 
+===============================================================================
+
+SUMMARY:
+
+    Fails: N: Verdict: Directory:                           
+
+           60     [OK] compare/TEST                         
+           16     [OK] ......./core/edit_operations/TEST    
+           17     [OK] ......./engine/TEST                  
+           4      [OK] ......./feeder/TEST                  
+           12     [OK] ......./reading/TEST                 
+           15     [OK] ......./region/potpourri/TEST        
+           7      [OK] ......................../solver/TEST 
+        1  4    [FAIL] ......./tool/TEST                    
+           50     [OK] coverage/TEST                        
+           17     [OK] hwut_pype/TEST                       
+           41     [OK] operations/TEST                      
+           24     [OK] ........../consume/TEST              
+           20     [OK] ........../interaction/TEST          
+           10     [OK] ....................../nvim/TEST     
+           21     [OK] ........../run/TEST                  
+           13     [OK] orchestrator/bookkeeper/TEST         
+        1  46   [FAIL] ............/exploration/TEST        
+        5  21   [FAIL] ............/plan/TEST               
+           20     [OK] ............/run/TEST                
+           13     [OK] ............/scheduler/TEST          
+        3  27   [FAIL] ............/services/TEST           
+           20     [OK] procsitter/TEST                      
+
+-------------------------------------------------------------------------------
+     _____     _ _          _   ___            
+    |  ___|_ _(_) |___     / | / _ \     __  __
+    | |_ / _` | | / __|    | || | | |    \ \/ /
+    |  _| (_| | | \__ \    | || |_| |     >  < 
+    |_|  \__,_|_|_|___/    |_| \___/     /_/\_\
+                                                                    (478 tests)
+
+===============================================================================

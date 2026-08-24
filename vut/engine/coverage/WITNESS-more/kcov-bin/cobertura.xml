@@ -1,0 +1,101 @@
+<?xml version="1.0" ?>
+<!DOCTYPE coverage SYSTEM 'http://cobertura.sourceforge.net/xml/coverage-04.dtd'>
+<coverage line-rate="0.096" lines-covered="5" lines-valid="52" branch-rate="1.0" branches-covered="1.0" branches-rate="1.0" complexity="1.0" version="1.9" timestamp="1787573326">
+	<sources>
+		<source>/</source>
+	</sources>
+	<packages>
+		<package name="calc" line-rate="0.096" lines-covered="5" lines-valid="52" branch-rate="1.0" complexity="1.0">
+			<classes>
+				<class name="avx512fintrin_h__0" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/avx512fintrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="223" hits="0"/>
+						<line number="225" hits="0"/>
+						<line number="549" hits="0"/>
+						<line number="551" hits="0"/>
+						<line number="6499" hits="0"/>
+						<line number="6501" hits="0"/>
+					</lines>
+				</class>
+				<class name="bmi2intrin_h__1" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/bmi2intrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="62" hits="0"/>
+						<line number="64" hits="0"/>
+					</lines>
+				</class>
+				<class name="smmintrin_h__2" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/smmintrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="632" hits="0"/>
+						<line number="634" hits="0"/>
+						<line number="685" hits="0"/>
+						<line number="687" hits="0"/>
+						<line number="709" hits="0"/>
+						<line number="711" hits="0"/>
+					</lines>
+				</class>
+				<class name="avx512bwintrin_h__3" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/avx512bwintrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="419" hits="0"/>
+						<line number="421" hits="0"/>
+						<line number="1653" hits="0"/>
+						<line number="1655" hits="0"/>
+						<line number="1850" hits="0"/>
+						<line number="1852" hits="0"/>
+						<line number="1859" hits="0"/>
+						<line number="1861" hits="0"/>
+						<line number="2498" hits="0"/>
+						<line number="2500" hits="0"/>
+					</lines>
+				</class>
+				<class name="tmmintrin_h__4" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/tmmintrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="136" hits="0"/>
+						<line number="138" hits="0"/>
+					</lines>
+				</class>
+				<class name="rtmintrin_h__5" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/rtmintrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="50" hits="0"/>
+						<line number="52" hits="0"/>
+						<line number="61" hits="0"/>
+						<line number="63" hits="0"/>
+						<line number="71" hits="0"/>
+						<line number="73" hits="0"/>
+					</lines>
+				</class>
+				<class name="bmiintrin_h__6" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/bmiintrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="172" hits="0"/>
+						<line number="174" hits="0"/>
+						<line number="178" hits="0"/>
+						<line number="180" hits="0"/>
+						<line number="190" hits="0"/>
+						<line number="192" hits="0"/>
+					</lines>
+				</class>
+				<class name="emmintrin_h__7" filename="usr/lib/gcc/x86_64-linux-gnu/13/include/emmintrin.h" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="698" hits="0"/>
+						<line number="700" hits="0"/>
+						<line number="704" hits="0"/>
+						<line number="706" hits="0"/>
+						<line number="1339" hits="0"/>
+						<line number="1341" hits="0"/>
+						<line number="1437" hits="0"/>
+						<line number="1439" hits="0"/>
+					</lines>
+				</class>
+				<class name="calc_c__8" filename="home/claude/more-witness/kcov-bin/calc.c" branch-rate="1.0" complexity="1.0" line-rate="0.833">
+					<lines>
+						<line number="2" hits="1"/>
+						<line number="3" hits="1"/>
+						<line number="4" hits="1"/>
+						<line number="5" hits="1"/>
+						<line number="6" hits="0"/>
+						<line number="7" hits="4"/>
+					</lines>
+				</class>
+			</classes>
+		</package>
+	</packages>
+</coverage>

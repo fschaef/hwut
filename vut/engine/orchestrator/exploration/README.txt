@@ -331,6 +331,21 @@ relation and not a success relation: a dependant runs once its dependencies
 have run to completion, whatever their verdict. A cycle is a directory
 failure; every case whose dependencies cannot be met reports '[MISDEP]'.
 
+'target' binds the USER-DEFINED TARGETS of 'hwut.target' (services E-7)
+in a dictionary of its own -- an open-ended namespace of user-chosen
+names, local, never inherited:
+
+    hwut {
+        target {
+            clean = "./clean.sh"
+        }
+    }
+
+'on_entry' and 'on_exit' are STANDARD targets with fixed semantics and
+their own top-level keys; a standard name inside 'target { }' is refused
+by name. A directory binding any target is walked by 'hwut.target':
+definition is membership.
+
 
 5.1  'default_app'
 ______________________________________________________________________________
@@ -383,6 +398,7 @@ ______________________________________________________________________________
 
     on_entry, on_exit, ignore      -        x
     collision, dependency          -        x
+    target                         -        x
     language-setup                 -        x
     apps                           -        x
 

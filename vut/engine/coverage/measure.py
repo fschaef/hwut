@@ -57,12 +57,15 @@ DESCRIPTION
        and could then declare so; that is the shape to reach for if an
        aggregate over branch data is ever wanted (DISCUSSIONS todo-8).
 
-       A MEASURE WITHOUT LINES CANNOT LIVE HERE AT ALL. Toggle coverage
-       belongs to a signal, a functional bin to a covergroup: neither has
-       a file and a line, and this record is keyed by both. That is
-       DISCUSSIONS disc-9, and the registration below is deliberately no
-       help with it -- pretending otherwise is how a design gets reported
-       '92% covered' while the coverage somebody came for is discarded.
+       A MEASURE WITHOUT LINES CANNOT LIVE HERE -- AND FEWER LACK ONE
+       THAN disc-9 BELIEVED. The witnessed artifacts (WITNESS-hdl-
+       artifacts.txt) seat toggle points at the signal's DECLARATION
+       line and cover points at their statement, so both live here as
+       NAMED points. What truly has no line -- a covergroup BIN behind
+       UCIS -- still cannot, and the registration below is deliberately
+       no help with it: pretending otherwise is how a design gets
+       reported '92% covered' while the coverage somebody came for is
+       discarded.
 ______________________________________________________________________________
 """
 
@@ -181,6 +184,129 @@ class PointMeasure(I_Measure):
                 sum(total   for _, _, total   in entry))
 
 
+class NamedPointMeasure(I_Measure):
+    """A measure recorded PER NAMED POINT: (line, name, covered, total).
+
+    The point of the NAME (WITNESS-hdl-artifacts.txt, finding 4): the
+    artifact names every bit and every cover point, so two runs can be
+    UNIONED -- point identity is carried, which is exactly what the
+    anonymous (covered, total) digest of 'branch' threw away and why
+    that one refuses merge. 'covered' is bounded by 'total'; for the
+    one-bit points both built-ins produce, it is 0 or 1 and merge is OR.
+
+    The LINE is the point's DECLARED position -- a signal's declaration,
+    a 'cover property' statement -- so several points share one line as
+    a matter of course: a delta of zero is admitted from the second
+    point on. Points sort by line, then by name, so the bytes are
+    stable.
+    """
+
+    def __init__(self, name, tag):
+        """RETURN: NamedPointMeasure, ready to register. Mergeable by
+        construction -- see the class header."""
+        self.name      = name
+        self.tag       = tag
+        self.mergeable = True
+
+    def encode(self, entry):
+        """
+        RETURN: str, '<line delta>*<name>*<covered>/<total>' per point,
+                in (line, name) order. Empty string where there is none.
+
+        Raises MeasureFault on a name carrying '*' or ',' -- the
+        encoding's own separators; no witnessed identifier does, and an
+        escape scheme would trade a refusal for a corruption.
+        """
+        piece_list = []
+        previous   = 0
+        for line, name, covered, total in sorted(entry):
+            if "*" in name or "," in name:
+                raise MeasureFault(
+                    "point name '%s' carries a separator of the "
+                    "encoding itself" % name)
+            piece_list.append("%i*%s*%i/%i"
+                              % (line - previous, name, covered, total))
+            previous = line
+        return ",".join(piece_list)
+
+    def decode(self, text):
+        """
+        RETURN: tuple of (line, name, covered, total), in (line, name)
+                order.
+
+        Raises MeasureFault on a piece that spells no point, a first
+        delta that does not advance from zero, a negative delta, an
+        empty name, nothing to cover, or a covered count above the
+        total.
+        """
+        text = text.strip()
+        if not text: return ()
+
+        result   = []
+        previous = 0
+        for i, piece in enumerate(text.split(",")):
+            part_list = piece.split("*")
+            if len(part_list) != 3:
+                raise MeasureFault("'%s' spells no '<delta>*<name>*"
+                                   "<covered>/<total>' point" % piece)
+            head, name, ratio = part_list
+            covered_text, _, total_text = ratio.partition("/")
+            try:
+                delta   = int(head)
+                covered = int(covered_text)
+                total   = int(total_text)
+            except ValueError:
+                raise MeasureFault("'%s' spells no '<delta>*<name>*"
+                                   "<covered>/<total>' point" % piece)
+            if not name:
+                raise MeasureFault("'%s' names no point" % piece)
+            if delta < 0 or (delta == 0 and i == 0):
+                raise MeasureFault("delta %i in '%s' does not advance "
+                                   "(zero is admitted only for a second "
+                                   "point on one line)" % (delta, piece))
+            if total < 1:
+                raise MeasureFault("'%s' has nothing to cover" % piece)
+            if covered > total:
+                raise MeasureFault(
+                    "'%s' covers %i of %i -- an arithmetic mistake, not "
+                    "a measurement" % (piece, covered, total))
+            line = previous + delta
+            result.append((line, name, covered, total))
+            previous = line
+        return tuple(result)
+
+    def summary(self, entry):
+        """RETURN: [0] int, points covered. [1] int, points there were."""
+        return (sum(covered for _, _, covered, _ in entry),
+                sum(total   for _, _, _, total   in entry))
+
+    def merge(self, entry_a, entry_b):
+        """
+        RETURN: tuple of (line, name, covered, total), the UNION: a point
+                covered in either run is covered.
+
+        Raises MeasureFault where one (line, name) point carries two
+        different totals -- the two records do not describe one point,
+        and adjudicating them would be an invention.
+        """
+        point_db = {(line, name): (covered, total)
+                    for line, name, covered, total in entry_a}
+        for line, name, covered, total in entry_b:
+            standing = point_db.get((line, name))
+            if standing is None:
+                point_db[(line, name)] = (covered, total)
+                continue
+            if standing[1] != total:
+                raise MeasureFault(
+                    "point '%s' at line %i totals %i in one record and "
+                    "%i in the other: these are not one point"
+                    % (name, line, standing[1], total))
+            point_db[(line, name)] = (max(standing[0], covered), total)
+        return tuple(sorted((line, name, covered, total)
+                            for (line, name), (covered, total)
+                            in point_db.items()))
+
+
 #  ------------------------------------------------------------ registry
 
 _MEASURE_DB = {}
@@ -245,3 +371,14 @@ BRANCH = register(PointMeasure("branch", "BR", same_line_f=False))
 #  somebody else's is owed and must be written against a real artifact
 #  (DISCUSSIONS todo-8).
 MCDC = register(PointMeasure("mcdc", "MC", same_line_f=True))
+
+#  THE NAMED-POINT MEASURES, witnessed before they were written
+#  (WITNESS-hdl-artifacts.txt): verilator's native '.dat' names every
+#  toggle point PER BIT at the signal's declaration line, and every
+#  'cover property' at its statement; GHDL's psl-report names every
+#  'cover' directive at its line. Both are read ('readers/verilator.py',
+#  'readers/ghdl_psl.py'); both merge, because the artifact carries
+#  point identity -- which is what the paragraph above says to reach
+#  for.
+TOGGLE = register(NamedPointMeasure("toggle", "TG"))
+COVER  = register(NamedPointMeasure("cover",  "CP"))

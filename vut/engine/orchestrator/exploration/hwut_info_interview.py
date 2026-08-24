@@ -28,7 +28,7 @@ ______________________________________________________________________________
 """
 import os
 
-from .specification import (TestParameters, TestAppSpec, Caps, E_Origin)
+from .configuration_tree import (TestParameters, TestAppSpec, Caps, E_Origin)
 from .fault         import Position
 
 #  Caps of the interview itself. An interview is a question, not a test:

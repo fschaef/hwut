@@ -40,7 +40,7 @@ rung, not a redesign. The scheduler stays STAGE-BLIND: stage meaning
 enters only through node kind, read by the dispatcher alone.
 ______________________________________________________________________________
 """
-from ..exploration.specification import Target
+from ..exploration.configuration_tree import Target
 from .provision_build   import (I_BuildInterview,
                                 SpecificationBuildInterview,
                                 build_nodes)

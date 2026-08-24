@@ -41,7 +41,7 @@ import dataclasses
 import sys
 from config import HwutRunner                                # noqa: F401
 
-from vut.engine.orchestrator.exploration.specification import (
+from vut.engine.orchestrator.exploration.configuration_tree import (
                                                   Build, Caps,
                                                   CTestApp, E_Origin,
                                                   Position,

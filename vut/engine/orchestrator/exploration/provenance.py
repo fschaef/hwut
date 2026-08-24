@@ -20,7 +20,7 @@ ______________________________________________________________________________
 from dataclasses    import dataclass
 
 from .relation      import RELATION
-from .specification import KEY_TO_FIELD, E_Origin
+from .configuration_tree import KEY_TO_FIELD, E_Origin
 
 
 @dataclass(frozen=True, slots=True)

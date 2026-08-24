@@ -1,0 +1,3020 @@
+# This bundle is a unified diff against /dev/null. To undump:
+#   git apply <this-file>          # recreates files and directories
+#   patch -p1 < <this-file>        # alternative, if git is unavailable
+# Lines beginning with '#' are ignored by both tools.
+diff --git a/python/RATIONALE-hwut_runner.txt b/python/RATIONALE-hwut_runner.txt
+new file mode 100644
+--- /dev/null
++++ b/python/RATIONALE-hwut_runner.txt
+@@ -0,0 +1,88 @@
++==============================================================================
++RATIONALE -- hwut_runner (settled 2026-08-08)
++==============================================================================
++
++------------------------------------------------------------------------------
++PROBLEM   Reloading the application per choice dominates suite time.
++DECISION  Interactive mode: the framework starts the app once with
++          '--interactive' and triggers choices over stdin ("batch is a
++          pure ACCELERATOR": interactive output is byte-exact equal to
++          normal-mode output; one set of GOOD files).
++COST      Any state leak between choices is a defect to hunt, not a
++          documented quirk.
++MEASURED  (Python 3.12, one machine, medians) interpreter start + the
++          runner's import set: 145 ms; fork of the loaded app: 1.3 ms;
++          in-process dispatch: 0.005 ms. Saving vs reload: ~99 %. The
++          application's own import weight adds on top and is saved
++          identically -- the win scales with the heavy end.
++GRAVEYARD Batch as an own mode with own oracles: doubles the oracle
++          count; the two sets drift.
++
++------------------------------------------------------------------------------
++PROBLEM   Designating the per-choice output channel across the process
++          boundary.
++DECISION  The framework sends a FILE NAME ('run <choice> <out> <err>');
++          the app opens it and dup2's onto descriptors 1 and 2.
++COST      None observed; HWUT collects output files anyway.
++GRAVEYARD (a) fixed pass_fds at exec: set is fixed before any choice is
++          known. (b) SCM_RIGHTS fd passing: works, POSIX-only, a second
++          channel to build. (b) buried under (c)'s zero cost. Raw fd
++          numbers in the protocol: an fd number names an entry in the
++          sender's table; it cannot cross the boundary at all.
++
++------------------------------------------------------------------------------
++PROBLEM   stdout/stderr: one merged stream or two.
++DECISION  TWO SINKS per choice.
++COST      Tree-wide re-baseline: every GOOD was recorded through '2>&1';
++          run_all.sh changes shape (two files, two diffs per choice).
++          Registered in OPEN.txt.
++GRAVEYARD Merged sink: interleaving follows buffer-flush timing (stdout
++          block-buffered into a file, stderr unbuffered) -- a timing
++          artefact the GOODs happen to survive, and survive less once
++          choices run beside others or asyncio's reap-race lines appear.
++          Arity-decides compromise: superseded by the full-split ruling.
++
++------------------------------------------------------------------------------
++PROBLEM   A stray print(), or a child inheriting fd 1, injects a line
++          into the protocol and desynchronises the session -- silently,
++          corrupting SUBSEQUENT choices.
++DECISION  The UP channel is a private dup of the original stdout, taken
++          at session entry; fd 1 and fd 2 point at a stray sink between
++          choices. Forced anyway by the two-sink ruling: with both
++          descriptors redirected per choice, neither can carry UP.
++COST      One extra descriptor and temp file per session.
++
++------------------------------------------------------------------------------
++PROBLEM   Parallel execution: threads, async tasks, or processes.
++DECISION  The app declares the scheme (constructor 'parallel'): None =
++          sequential, "process" = fork per choice. No in-process
++          parallelism.
++COST      "process" is POSIX only; elsewhere the app runs sequentially
++          (declared, not pretended -- the procsitter platform-table
++          pattern).
++MEASURED  Fork fan-out with a 200 MB parent: ~4 ms/child (copy-on-write;
++          the feared "lot of copying" does not materialise). 64 I/O-bound
++          choices x 50 ms on ONE core: sequential ~3.3 s, fork-parallel
++          0.38 s.
++GRAVEYARD Threads/async tasks: fd 1 is process-global; a per-task
++          sys.stdout proxy catches print() and misses every spawned
++          process -- procsitter's whole subject. Buys 1.3 ms per choice
++          over fork. Mechanism keywords in the info block (THREAD;/
++          ASYNC;): a promise the framework must honour when it knows
++          better; wrong scope.
++
++------------------------------------------------------------------------------
++PROBLEM   What 'done' guarantees when a choice spawned processes that
++          outlive it (writer contaminating a later choice's sink -- a
++          bug class the per-choice process death used to prevent for
++          free).
++DECISION  'done' is a barrier for the APP'S OWN writes (flushed, sinks
++          closed, descriptors restored). Containment of spawned
++          processes is the choice's concern: choices that spawn use the
++          procsitter, which contains its groups. (D3 -- containment
++          stays in the one place it lives; HwutRunner grows none.)
++COST      Unenforced against a choice that spawns by other means and
++          leaks.
++GRAVEYARD Own-writes-only with no stated responsibility: leaves the bug
++          class unowned. Per-choice setsid + group containment in
++          HwutRunner: duplicates the procsitter inside the harness.
+diff --git a/python/README-hwut_hocon.txt b/python/README-hwut_hocon.txt
+new file mode 100644
+--- /dev/null
++++ b/python/README-hwut_hocon.txt
+@@ -0,0 +1,173 @@
++==============================================================================
++hwut_hocon -- THE SPECIFICATION LANGUAGE
++==============================================================================
++
++A HWUT specification is written in a subset of HOCON. This file states the
++subset: what it admits, what it refuses, and what each form means. It is
++support for WRITING TESTS, given to every language HWUT supports; the Python
++implementation stands here and its GOOD files are the description the other
++ports are measured against.
++
++The parser depends on nothing but the standard library and names no engine
++type. It hands back an ANNOTATED TREE -- every key, every value and every
++block carrying its position in the file -- and a list of faults. It never
++raises.
++
++
++1  THE GRAMMAR
++______________________________________________________________________________
++
++    document    = entry*
++    entry       = key ( "=" | ":" ) value
++                | key object
++    key         = bare-token | string
++    value       = object | list | string | number | boolean | nothing
++
++    object      = "{" entry* "}"
++    list        = "[" value* "]"
++
++Blanks, newlines and commas separate; none of them means anything more. A
++comma is admitted wherever a blank is, and is required nowhere:
++
++    choices = ["one", "two"]        choices = ["one" "two"]
++    a = 1  b = 2                    a = 1, b = 2
++
++A brace directly after a key binds without a sign:
++
++    caps { timeout_sec = 30 }       caps = { timeout_sec = 30 }
++
++A dot inside a key is a literal character, never a path: 'test-gen.c' is one
++key, and there is no key called 'test' with a member called 'gen'.
++
++
++2  STRINGS CARRY QUOTES
++______________________________________________________________________________
++
++    build   = "make"                choices = ["one", "two"]
++    pype    = "strip.pype"          app     = "sub/dir/test.py"
++
++Real HOCON admits the unquoted string and pays for it: an unquoted value
++runs to the end of the line, so a comment marker ends a value, two entries
++cannot share a line without ambiguity, and 'yes' is a boolean while 'yes
++please' is a string. Here a bare token is a boolean, a number, or a spelling
++of nothing -- and it ends at a blank. Anything else is a string and carries
++quotes.
++
++What quotes preserve, that nothing else can:
++
++    a = "not # a comment"           the marker is content
++    a = "x = y"                     the binder is content
++    a = "make %.exe"                the blanks are content
++
++Inside a string, '\\n', '\\t', '\\"' and '\\\\' are the escapes.
++
++A KEY may stand bare -- a key is not a value. A key carrying a blank
++carries quotes:
++
++    test-gen.c    = 1               bare
++    "test-a.py two" = 1             a target naming a choice
++
++
++3  NUMBERS
++______________________________________________________________________________
++
++    decimal     42      -0.12     +7e212     6.02e23     .5
++    hexadecimal 0xDEAD_BEEF        0XFF
++    binary      0b0111_11_01
++    octal       0o3124
++    roman       0rIV    0rMCMLXXXIV          -0rX
++
++'_' is a VISUAL HELPER: it may stand anywhere between digits, and it enters
++no value. It may not begin or end the digits, and two in a row are refused.
++
++A SIGN MAY STAND APART from its digits, in any radix:
++
++    timeout_sec = - 0.12            reads as -0.12
++
++The roman form is the strict one: 'IIII' and 'VX' are refused, 'IV' and
++'MCMLXXXIV' are read.
++
++There is NO ARITHMETIC. '5 - 1' is not four; it is the number five followed
++by something that is not a key.
++
++What spells no number in any radix is a string, and carries quotes: '1.2.3'
++is a version, '0x' is a fragment, '0b012' is not binary.
++
++
++4  BOOLEANS AND NOTHING
++______________________________________________________________________________
++
++    true    yes                     false   no
++    null    nil     none    nihil   and a value left empty
++
++The four spellings of nothing mean one thing, and an empty value means the
++same:
++
++    analogy =                       analogy = null
++    analogy = nihil                 analogy = none
++
++What NOTHING means is each key's own affair, and the parser decides none of
++it. In a HWUT specification, a key bound to nothing switches a feature off
++where the key has an off, and is refused where a value is required -- see
++the exploration component's README.
++
++
++5  COMMENTS
++______________________________________________________________________________
++
++    # to the end of the line        // to the end of the line
++
++A comment may follow a value on the same line. Inside a string, neither
++marker means anything.
++
++
++6  REFUSED, BY NAME
++______________________________________________________________________________
++
++    include "other.conf"        a specification refers to nothing
++    a = ${outside.value}        outside its own file
++    a += "appended"             no accumulation
++    a = """triple"""            no triple-quoted strings
++
++Each is refused with its own message, saying what does not exist rather
++than what was unexpected. The first two are refused for one reason: a
++specification is read from the file it stands in, and from nowhere else.
++
++Real HOCON's object merging, value concatenation, path expressions
++('a.b.c = 1'), duration and size units ('30s', '4MB') are not here either.
++A duplicate key is a fault: the first stands, the second is refused.
++
++
++7  FAULTS
++______________________________________________________________________________
++
++Faults are VALUES, not exceptions. The parser accumulates them, recovers at
++the next line, and completes: a file with four mistakes reports four, not
++the first.
++
++Every fault carries a position -- the line and column an editor shows. The
++positions are FILE-RELATIVE even when the specification lives inside a
++comment block of another language: the caller hands the parser lines that
++carry their own offsets ('SourceLine'), and the parser adds them to
++everything it reports.
++
++    ParseFault(kind, file, position, message)
++    E_ParseFault.SYNTAX     the text does not parse
++    E_ParseFault.REFUSED    a construct that does not exist here
++
++The engine converts these into its own fault record; this component knows
++nothing of that record.
++
++
++8  WHAT THE PARSER HANDS BACK
++______________________________________________________________________________
++
++    parse(line_list, file) -> (ObjectNode, [ParseFault])
++
++    ObjectNode      position, entry_list
++    Entry           key, key_position, node
++    ScalarNode      value, position          str | int | float | bool | None
++    ListNode        item_list, position
++
++'SourceLine(text, line, column_offset)' is the parser's input record: one
++line as the parser reads it, tied to where it stands on disk.
+diff --git a/python/README-hwut_runner.txt b/python/README-hwut_runner.txt
+new file mode 100644
+--- /dev/null
++++ b/python/README-hwut_runner.txt
+@@ -0,0 +1,140 @@
++==============================================================================
++hwut_runner -- FRONT END OF A HWUT TEST APPLICATION
++==============================================================================
++
++A test application constructs one HwutRunner and calls '.run()'.
++
++    from hwut_runner import HwutRunner
++
++    HwutRunner(sys.argv, "My Title;",
++               { "first": test_first, "second": test_second },
++               parallel=None).run()
++
++'choice_map' maps choice name -> test function; a function may be a plain
++function or a coroutine function. Key 'None' names the single choice-less
++test; then it is the only entry.
++
++'parallel' selects the execution scheme of interactive mode:
++
++    None        sequential, in-process           (default)
++    "process"   one forked child per choice; choices run concurrently;
++                POSIX only
++
++
++1  COMMAND LINE -- THE TWO FRAMEWORK MODES
++______________________________________________________________________________
++
++    app --hwut-info     print the info block; exit 0.
++    app <choice>        NORMAL MODE. Run one choice. Test output flows on
++                        the process's stdout and stderr. Exit status is the
++                        process's exit status.
++    app --interactive   INTERACTIVE MODE. Section 2.
++    app                 manual mode: list choices with indices, read one
++                        index from stdin, run it, exit.
++    app -h | --hi | --sos | --wtf     same as '--hwut-info'.
++
++Info block:
++
++    <title>;
++    CHOICES: <name>, <name>, ...;         (absent for a choice-less app)
++    HAPPY: <pattern>;                     (zero or more)
++    SAME;                                 (if 'same_f')
++    INTERACTIVE;                          (always)
++
++'INTERACTIVE;' announces: the app accepts '--interactive'. Every app with a
++HwutRunner front end announces it.
++
++
++2  INTERACTIVE MODE
++______________________________________________________________________________
++
++Channels of a session:
++
++    stdin               DOWN   commands from the framework
++    original stdout     UP     protocol replies
++    per-choice sinks           test output: two files named per 'run'
++
++On entry the original stdout is duplicated onto a private control
++descriptor. Descriptors 1 and 2 are then pointed at a session stray sink
++(a temp file). Output written outside a running choice lands in the stray
++sink. Output written before '.run()' precedes the session; the framework's
++UP reader skips lines that match no UP message.
++
++DOWN grammar, one command per line, fields separated by blanks:
++
++    run <choice> <sink-out> <sink-err>
++    info
++    quit | q | exit
++
++'<choice>' is a choice name, a decimal index into the sorted choice list,
++or '-' for the choice-less test. '<sink-out>' and '<sink-err>' are file
++paths; the app opens them (created, truncated) and points descriptor 1 at
++the first, descriptor 2 at the second, for the duration of the choice.
++Processes spawned by the choice inherit these descriptors.
++
++UP grammar, one message per line:
++
++    done <choice> <status>       the choice ran; see BARRIER
++    fail <choice> <reason>       the command did not execute
++                                 reasons: unknown-choice, bad-command
++    info: <line>                 reply lines to 'info', one per info-block
++                                 line, terminated by 'done - 0'
++    bye                          session end; every child is reaped
++
++End of session: 'quit' or end of stdin. Both drain outstanding children,
++then emit 'bye'.
++
++<status> of 'done':
++
++    0        the test function ran and returned
++    n != 0   the test function raised SystemExit(n), or raised an
++             exception (=> 1; traceback in the error sink), or -- in
++             "process" mode -- the child exited with n; a negative n is
++             a terminating signal number.
++
++
++3  EXECUTION SCHEMES
++______________________________________________________________________________
++
++SEQUENTIAL ('parallel=None'). One choice at a time, in the app's own
++process. Per choice: streams flushed, descriptors 1 and 2 saved, pointed
++at the sinks, restored afterwards. 'done' follows immediately.
++
++PROCESS ('parallel="process"'). One 'fork()' per 'run' command; the child
++performs the sequential procedure and exits with the status; the parent
++keeps reading DOWN commands. A reaper thread reports 'done' upon each
++child's end. 'done' messages therefore arrive in COMPLETION order, not in
++submission order; the framework matches by the choice token. POSIX only.
++
++
++4  BARRIER -- WHAT 'done' GUARANTEES
++______________________________________________________________________________
++
++At the instant 'done <choice> <status>' is readable:
++
++    - every write of the app's own process (in "process" mode: of the
++      child) to the sinks is flushed and the sinks are closed;
++    - descriptors 1 and 2 of the app are restored.
++
++Writes of processes SPAWNED BY THE CHOICE that outlive the choice are the
++choice's concern. A choice that spawns uses the procsitter, which contains
++its process groups; a choice that spawns by other means owns its own
++containment.
++
++
++5  RESET DISCIPLINE (SEQUENTIAL MODE)
++______________________________________________________________________________
++
++In sequential mode consecutive choices share the process. State a choice
++alters and a later choice reads -- working directory, environment,
++module-level caches, RNG state -- is the test author's concern. The
++byte-exactness check: run the suite once in normal mode, once
++interactively, diff the sinks. In "process" mode each choice starts from
++the state at session entry.
++
++
++6  FURTHER CONTENT OF THE MODULE
++______________________________________________________________________________
++
++make_script_application()   generate a temporary executable script
++ScriptApplication           context manager around it; deletes on exit
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--comments.txt b/python/TEST/GOOD/test-hwut_hocon.py--comments.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--comments.txt
+@@ -0,0 +1,11 @@
++
++--- comments ---
++{ at 1:1
++  key 'a' at 2:1 ->
++    1 (int) at 2:5
++  key 'b' at 4:1 ->
++    2 (int) at 4:5
++}
++FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "bare"
++FAULT f.hocon:6:1: SYNTAX: expected '=', ':' or '{' after key 'value'
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--faults.txt b/python/TEST/GOOD/test-hwut_hocon.py--faults.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--faults.txt
+@@ -0,0 +1,16 @@
++
++--- faults accumulate ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    1 (int) at 1:5
++  key 'c' at 5:1 ->
++    { at 5:4
++      key 'd' at 6:5 ->
++        3 (int) at 6:9
++    }
++}
++FAULT f.hocon:2:1: SYNTAX: duplicate key 'a'; the first stands, this one is refused
++FAULT f.hocon:3:5: SYNTAX: unterminated string
++FAULT f.hocon:4:1: SYNTAX: unmatched '}'
++FAULT f.hocon:7:1: SYNTAX: unterminated object: '}' missing
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--numbers.txt b/python/TEST/GOOD/test-hwut_hocon.py--numbers.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--numbers.txt
+@@ -0,0 +1,74 @@
++
++--- decimal, with sign and exponent ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    42 (int) at 1:5
++  key 'b' at 2:1 ->
++    -0.12 (float) at 2:5
++  key 'c' at 3:1 ->
++    7e+212 (float) at 3:5
++  key 'd' at 4:1 ->
++    6.02e+23 (float) at 4:5
++  key 'e' at 5:1 ->
++    0.5 (float) at 5:5
++}
++
++--- the visual helper enters no value ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    1000 (int) at 1:5
++  key 'b' at 2:1 ->
++    7000.55 (float) at 2:5
++}
++
++--- hexadecimal, binary, octal ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    3735928559 (int) at 1:5
++  key 'b' at 2:1 ->
++    125 (int) at 2:5
++  key 'c' at 3:1 ->
++    1620 (int) at 3:5
++  key 'd' at 4:1 ->
++    255 (int) at 4:5
++  key 'e' at 5:1 ->
++    -10 (int) at 5:5
++}
++
++--- roman ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    4 (int) at 1:5
++  key 'b' at 2:1 ->
++    1984 (int) at 2:5
++  key 'c' at 3:1 ->
++    -10 (int) at 3:5
++}
++
++--- a sign standing apart from its digits ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    -0.12 (float) at 1:5
++  key 'b' at 2:1 ->
++    7 (int) at 2:5
++  key 'c' at 3:1 ->
++    -255 (int) at 3:5
++}
++
++--- what spells no number is a string, and carries quotes ---
++{ at 1:1
++}
++FAULT f.hocon:1:5: SYNTAX: a string is written in double quotes: "1.2.3"
++FAULT f.hocon:2:5: SYNTAX: a string is written in double quotes: "0x"
++FAULT f.hocon:3:5: SYNTAX: a string is written in double quotes: "0b012"
++FAULT f.hocon:4:5: SYNTAX: a string is written in double quotes: "1__0"
++FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "0rIIII"
++FAULT f.hocon:6:5: SYNTAX: a string is written in double quotes: "0rVX"
++
++--- no arithmetic: this language computes nothing ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    5 (int) at 1:5
++}
++FAULT f.hocon:1:9: SYNTAX: expected '=', ':' or '{' after key '-'
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--oneline.txt b/python/TEST/GOOD/test-hwut_hocon.py--oneline.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--oneline.txt
+@@ -0,0 +1,39 @@
++
++--- two entries, one line, no comma ---
++{ at 1:1
++  key 'caps' at 1:1 ->
++    { at 1:7
++      key 'timeout_sec' at 1:8 ->
++        30 (int) at 1:22
++      key 'network' at 1:26 ->
++        False (bool) at 1:36
++    }
++}
++
++--- a quoted value with blanks, beside a following key ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    { at 1:4
++      key 'build' at 1:5 ->
++        'make %.exe' (str) at 1:13
++      key 'timeout_sec' at 1:27 ->
++        5 (int) at 1:41
++    }
++}
++
++--- three entries, one line ---
++{ at 1:1
++  key 'x' at 1:1 ->
++    { at 1:4
++      key 'a' at 1:5 ->
++        1 (int) at 1:9
++      key 'b' at 1:12 ->
++        'two' (str) at 1:16
++      key 'c' at 1:23 ->
++        { at 1:28
++          key 'd' at 1:29 ->
++            3 (int) at 1:33
++        }
++    }
++}
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--positions.txt b/python/TEST/GOOD/test-hwut_hocon.py--positions.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--positions.txt
+@@ -0,0 +1,19 @@
++
++--- plain: as its own file ---
++{ at 1:1
++  key 'hwut' at 1:1 ->
++    { at 1:7
++      key 'title' at 2:5 ->
++        'T' (str) at 2:13
++    }
++}
++
++--- offset: same text, region begins at line 40, 3 columns stripped ---
++{ at 40:4
++  key 'hwut' at 40:4 ->
++    { at 40:10
++      key 'title' at 41:8 ->
++        'T' (str) at 41:16
++    }
++}
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--quoting.txt b/python/TEST/GOOD/test-hwut_hocon.py--quoting.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--quoting.txt
+@@ -0,0 +1,26 @@
++
++--- quoted: blanks, comment markers and binders are content ---
++{ at 1:1
++  key 'a' at 1:1 ->
++    'make %.exe' (str) at 1:5
++  key 'b' at 2:1 ->
++    'not # a comment' (str) at 2:5
++  key 'c' at 3:1 ->
++    'x = y' (str) at 3:5
++  key 'd' at 4:1 ->
++    'yes' (str) at 4:5
++}
++
++--- unquoted: refused, and shown in the quotes it wants ---
++{ at 1:1
++  key 'c' at 3:1 ->
++    [ at 3:5
++    ]
++  key 'd' at 4:1 ->
++    1 (int) at 4:5
++}
++FAULT f.hocon:1:5: SYNTAX: a string is written in double quotes: "make"
++FAULT f.hocon:2:5: SYNTAX: a string is written in double quotes: "strip.pype"
++FAULT f.hocon:3:6: SYNTAX: a string is written in double quotes: "one"
++FAULT f.hocon:3:11: SYNTAX: a string is written in double quotes: "two"
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--refused.txt b/python/TEST/GOOD/test-hwut_hocon.py--refused.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--refused.txt
+@@ -0,0 +1,10 @@
++
++--- refused, each by name ---
++{ at 1:1
++}
++FAULT f.hocon:1:1: REFUSED: 'include' does not exist here: a specification refers to nothing outside its file
++FAULT f.hocon:2:5: REFUSED: substitutions '${...}' do not exist here: a specification refers to nothing outside its file
++FAULT f.hocon:3:3: REFUSED: '+=' does not exist here
++FAULT f.hocon:4:5: REFUSED: triple-quoted strings do not exist here
++FAULT f.hocon:5:5: SYNTAX: a string is written in double quotes: "survives"
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--scalars.txt b/python/TEST/GOOD/test-hwut_hocon.py--scalars.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--scalars.txt
+@@ -0,0 +1,28 @@
++
++--- scalars ---
++{ at 1:1
++  key 'b' at 2:1 ->
++    'quoted "x" and \n' (str) at 2:5
++  key 'c' at 3:1 ->
++    42 (int) at 3:5
++  key 'd' at 4:1 ->
++    -3.14 (float) at 4:5
++  key 'e' at 5:1 ->
++    1e-06 (float) at 5:5
++  key 'f' at 6:1 ->
++    True (bool) at 6:5
++  key 'g' at 7:1 ->
++    False (bool) at 7:5
++  key 'i' at 9:1 ->
++    'colon-bound' (str) at 9:4
++  key 'j' at 10:1 ->
++    None (NoneType) at 10:5
++  key 'k' at 11:1 ->
++    None (NoneType) at 11:5
++  key 'l' at 12:1 ->
++    None (NoneType) at 12:4
++}
++FAULT f.hocon:1:5: SYNTAX: a string is written in double quotes: "bare"
++FAULT f.hocon:8:5: SYNTAX: a string is written in double quotes: "make"
++FAULT f.hocon:8:15: SYNTAX: expected '=', ':' or '{' after key '%.exe'
++<hwut-end>
+diff --git a/python/TEST/GOOD/test-hwut_hocon.py--structure.txt b/python/TEST/GOOD/test-hwut_hocon.py--structure.txt
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/GOOD/test-hwut_hocon.py--structure.txt
+@@ -0,0 +1,47 @@
++
++--- nesting and key-brace ---
++{ at 1:1
++  key 'outer' at 1:1 ->
++    { at 1:8
++      key 'inner' at 2:5 ->
++        { at 2:14
++          key 'deep' at 2:15 ->
++            1 (int) at 2:22
++        }
++      key 'braced' at 3:5 ->
++        { at 3:13
++          key 'x' at 3:14 ->
++            2 (int) at 3:18
++        }
++    }
++}
++
++--- lists ---
++{ at 1:1
++  key 'commas' at 1:1 ->
++    [ at 1:12
++    ]
++  key 'newlines' at 2:1 ->
++    [ at 2:12
++        1 (int) at 3:5
++        2 (int) at 4:5
++    ]
++  key 'objects' at 6:1 ->
++    [ at 6:12
++        { at 6:15
++          key 'a' at 6:16 ->
++            1 (int) at 6:20
++        }
++        { at 6:26
++          key 'a' at 6:27 ->
++            2 (int) at 6:31
++        }
++    ]
++  key 'empty' at 7:1 ->
++    [ at 7:12
++    ]
++}
++FAULT f.hocon:1:13: SYNTAX: a string is written in double quotes: "one"
++FAULT f.hocon:1:18: SYNTAX: a string is written in double quotes: "two"
++FAULT f.hocon:1:23: SYNTAX: a string is written in double quotes: "three"
++<hwut-end>
+diff --git a/python/TEST/benchmark-hwut_hocon.py b/python/TEST/benchmark-hwut_hocon.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/benchmark-hwut_hocon.py
+@@ -0,0 +1,111 @@
++#! /usr/bin/env python3
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Measure the specification parser under whatever interpreter runs
++         it, so CPython and PyPy can be compared on the same input.
++
++    python3 benchmark-hwut_hocon.py
++    pypy3   benchmark-hwut_hocon.py
++
++Reports the interpreter, the cost of one parse of a full header, and the
++cost of a directory's worth of them. Runs a warm-up round first: PyPy's
++JIT needs one, and reporting a number it never got is how a comparison
++lies.
++
++NOT a HWUT test application: it is a measurement, and its output is a
++number that differs per machine. It answers '--hwut-info' with nothing.
++______________________________________________________________________________
++"""
++import sys
++import time
++import platform
++
++import config                                                   # noqa: F401
++
++from vut.language_support.python.hwut_hocon import parse, SourceLine
++
++
++HEADER = '''hwut {
++    title       = "Parser corner cases"
++    build       { framework = "make"  executable = "special.exe" }
++    caps        { timeout_sec = 30  network = false  memory_mb = 512 }
++    pype        = "strip.pype"
++    numeric     = 0.01
++    eq-pattern  = ["bonjour|hello", "v[0-9.]+-build[0-9]+"]
++    nothing     = ["_"]
++    analogy     = ["((", "))"]
++    constraints = ["x < y + 2", "abs(z) < epsilon"]
++    comment     = "##"
++    slash_eqv   = yes
++    mask        = 0xDEAD_BEEF
++    pattern     = 0b0111_11_01
++    choices {
++        one { }
++        two { numeric = 0.05  caps { timeout_sec = 5 } }
++        three { pype = "other.pype" }
++    }
++}
++'''
++
++SHORT = '''# hwut {
++#     title   = "A modest header"
++#     choices = ["one", "two"]
++# }
++'''
++
++
++def line_list_of(text):
++    """RETURN: list[SourceLine], the text as the parser reads it."""
++    return [SourceLine(line, i, 0)
++            for i, line in enumerate(text.split("\n"), start=1)]
++
++
++def measure(line_list, round_n):
++    """
++    RETURN: float, seconds per parse, the best of three rounds.
++
++    The BEST, not the mean: the machine's other business only ever adds
++    time, so the fastest round is the one least polluted by it.
++    """
++    best = None
++    for _ in range(3):
++        begin = time.perf_counter()
++        for _ in range(round_n):
++            parse(line_list, "benchmark")
++        span = (time.perf_counter() - begin) / round_n
++        best = span if best is None else min(best, span)
++    return best
++
++
++def main():
++    """RETURN: None. Prints the interpreter and the measurements."""
++    print("interpreter   %s %s (%s)"
++          % (platform.python_implementation(),
++             platform.python_version(), platform.machine()))
++
++    full  = line_list_of(HEADER)
++    short = line_list_of(SHORT)
++
++    document, fault_list = parse(full, "benchmark")
++    if fault_list:
++        for fault in fault_list: print("FAULT %s" % fault)
++        sys.exit(1)
++
++    #  WARM-UP. PyPy's JIT compiles what it has seen run often; a number
++    #  taken before it has is a number about the interpreter's cold start.
++    measure(full, 2000)
++
++    for label, line_list, round_n in (("full header  (%2d lines)"
++                                       % len(full),  full,  5000),
++                                      ("short header (%2d lines)"
++                                       % len(short), short, 20000)):
++        span = measure(line_list, round_n)
++        print("%s   %7.1f us per parse   %6.1f ms per 1000 files"
++              % (label, span * 1e6, span * 1000 * 1e3))
++
++
++if __name__ == "__main__":
++    if "--hwut-info" in sys.argv:
++        sys.exit(0)
++    main()
+diff --git a/python/TEST/config.py b/python/TEST/config.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/config.py
+@@ -0,0 +1,46 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Bootstrap module for tests in this directory.
++
++This file is the chicken-and-egg solution: HwutRunner.insert_project_path()
++cannot be used to locate HwutRunner itself, because importing it requires
++sys.path to be set up first. So this tiny stdlib-only module does the
++bootstrap by walking upward from its own location until it finds a directory
++named 'vut/', then inserts that directory's parent into sys.path.
++
++After 'import config' (as the first import in a test file), all of:
++
++    from vut.language_support.python.hwut_runner import HwutRunner
++    from vut.engine.orchestrator.exploration.explorer import explore
++
++work normally.
++
++NOTE: This file imports nothing from vut before the walk. It is excluded
++      from coverage and from test discovery via 'hwut-info.dat'.
++______________________________________________________________________________
++"""
++import os
++import sys
++
++_here = os.path.abspath(os.path.dirname(__file__))
++_cur  = _here
++while True:
++    if os.path.basename(_cur) == "vut":
++        sys.path.insert(0, os.path.dirname(_cur))
++        break
++    _parent = os.path.dirname(_cur)
++    if _parent == _cur:
++        raise RuntimeError(
++            "config.py: could not find directory 'vut' walking up from '%s'"
++            % _here
++        )
++    _cur = _parent
++
++#  THE WALK'S FINDING, EXPORTED. Tests that reach a SIBLING component take
++#  the vut directory from here instead of counting '..' -- a hop count is a
++#  silent hostage to the layout, and it is this file that knows where 'vut'
++#  is.
++VUT_DIRECTORY = _cur
++
++from vut.language_support.python.hwut_runner import HwutRunner # noqa E401
+diff --git a/python/TEST/test-deterministic-random.py b/python/TEST/test-deterministic-random.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/test-deterministic-random.py
+@@ -0,0 +1,195 @@
++#! /usr/bin/env python3
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Pin the DeterministicStream RNG and the SelectionMarker spread so any
++         drift in the number stream -- the substrate the monkey fuzzer and every
++         other reproducible walk stands on -- shows up as a binary diff.
++
++CHOICES: primitives, ranges, gauss, sample, select, unchosen, seed_sweep;
++
++DESCRIPTION:
++
++The stream is a Park-Miller MINSTD generator: 'state = 48271 * state mod
++(2^31 - 1)'. It is pure integer arithmetic with no platform-dependent floats in
++the core, so the recorded numbers MUST be identical on every machine. The Gauss
++path is the only one that touches libm (log/cos/sqrt); it is recorded too, so a
++libm-induced last-ULP difference would surface here rather than silently in a
++downstream walk.
++
++    primitives   raw next_int stream, next_float, coin -- the bare generator.
++    ranges       next_int over small and degenerate [v,v] ranges.
++    gauss        gauss, gauss clamped to a band, gauss_int -- the libm path.
++    sample       sample_indices (Fisher-Yates) and sample over a list.
++    select       stateless select: same state + same pool -> same element.
++    unchosen     select_unchosen with a caller-owned SelectionMarker: spread is
++                 reproducible across FRESH containers and coherent across
++                 differing sub-pools, because memory is keyed on candidate
++                 identity (NOT container address). This is the property the
++                 monkey fuzzer's per-ALT marker relies on.
++    seed_sweep   the first draw for a range of seeds -- pins seed handling.
++______________________________________________________________________________
++"""
++import sys
++import config                                                       # noqa: F401
++
++from vut.language_support.python.hwut_runner          import HwutRunner
++from vut.language_support.python.deterministic_random import (DeterministicStream,
++                                                              SelectionMarker)
++
++SEED = 0x42
++
++
++def banner(label):
++    """RETURN: None. Section heading."""
++    print()
++    print("--- %s ---" % label)
++
++
++def run_primitives():
++    """RETURN: None. The bare generator: next_int, next_float, coin."""
++    banner("next_int(0, 1000000) -- first 20")
++    s = DeterministicStream(SEED)
++    for i in range(20):
++        print("[%02d] %d" % (i, s.next_int(0, 1000000)))
++
++    banner("next_float -- first 10 (full precision)")
++    s = DeterministicStream(SEED)
++    for i in range(10):
++        print("[%02d] %r" % (i, s.next_float()))
++
++    banner("coin(0.5) -- 40 draws")
++    s = DeterministicStream(SEED)
++    print(" ".join("T" if s.coin(0.5) else "F" for _ in range(40)))
++
++
++def run_ranges():
++    """RETURN: None. next_int over small and degenerate ranges."""
++    banner("next_int(0, 9) -- 30 draws")
++    s = DeterministicStream(SEED)
++    print(" ".join(str(s.next_int(0, 9)) for _ in range(30)))
++
++    banner("next_int(5, 5) -- degenerate range returns the bound")
++    s = DeterministicStream(SEED)
++    print(" ".join(str(s.next_int(5, 5)) for _ in range(5)))
++
++    banner("next_int(-3, 3) -- spanning zero")
++    s = DeterministicStream(SEED)
++    print(" ".join("%+d" % s.next_int(-3, 3) for _ in range(20)))
++
++
++def run_gauss():
++    """RETURN: None. The libm path: gauss, clamped gauss, gauss_int."""
++    banner("gauss(0, 1) -- 10 draws (full precision)")
++    s = DeterministicStream(SEED)
++    for i in range(10):
++        print("[%02d] %r" % (i, s.gauss(0.0, 1.0)))
++
++    banner("gauss(0, 1) clamped to [-1, 1]")
++    s = DeterministicStream(SEED)
++    for i in range(10):
++        print("[%02d] %r" % (i, s.gauss(0.0, 1.0, -1.0, 1.0)))
++
++    banner("gauss_int(100, 15) -- 20 draws")
++    s = DeterministicStream(SEED)
++    print(" ".join(str(s.gauss_int(100.0, 15.0)) for _ in range(20)))
++
++
++def run_sample():
++    """RETURN: None. sample_indices (Fisher-Yates) and sample over a list."""
++    banner("sample_indices(10, 10) -- full permutation")
++    s = DeterministicStream(SEED)
++    print(s.sample_indices(10, 10))
++
++    banner("sample_indices(20, 5) -- partial draw")
++    s = DeterministicStream(SEED)
++    print(s.sample_indices(20, 5))
++
++    banner("choice from a list -- 20 draws")
++    s = DeterministicStream(SEED)
++    pool = ["alpha", "beta", "gamma", "delta", "epsilon"]
++    print(" ".join(s.choice(pool) for _ in range(20)))
++
++    banner("sample(list, 4) -- unique elements")
++    s = DeterministicStream(SEED)
++    print(s.sample(list("ABCDEFGH"), 4))
++
++
++def run_select():
++    """RETURN: None. Stateless select: same state + same pool -> same element."""
++    banner("select over a list -- 20 draws")
++    s = DeterministicStream(SEED)
++    pool = ["a", "b", "c", "d"]
++    print(" ".join(s.select(pool) for _ in range(20)))
++
++    banner("select over a tuple -- 12 draws")
++    s = DeterministicStream(SEED)
++    branches = ("p", "q", "r")
++    print(" ".join(s.select(branches) for _ in range(12)))
++
++
++def run_unchosen():
++    """RETURN: None. select_unchosen spread is identity-keyed, not address-keyed.
++
++    Records three properties the monkey fuzzer's per-ALT marker depends on:
++    a clean cycle over a stable pool, the SAME cycle when the container is
++    rebuilt fresh every call (proving memory is not keyed on container address),
++    and coherence when the pool composition changes between calls (a candidate
++    chosen via a sub-pool is remembered when the full pool is offered).
++    """
++    banner("stable pool -- three full cycles of 4 elements")
++    s = DeterministicStream(SEED)
++    pool = ["a", "b", "c", "d"]
++    m = SelectionMarker()
++    print(" ".join(s.select_unchosen(pool, m) for _ in range(12)))
++
++    banner("FRESH container each call -- identical to the stable pool above")
++    s = DeterministicStream(SEED)
++    m = SelectionMarker()
++    out = []
++    for _ in range(12):
++        fresh = ["a", "b", "c", "d"]      # new list object every call
++        out.append(s.select_unchosen(fresh, m))
++    print(" ".join(out))
++
++    banner("sub-pool coherence -- draw from [a,b] then the full [a,b,c,d]")
++    s = DeterministicStream(SEED)
++    m = SelectionMarker()
++    full = ["a", "b", "c", "d"]
++    sub  = ["a", "b"]
++    first = s.select_unchosen(sub, m)
++    rest  = [s.select_unchosen(full, m) for _ in range(3)]
++    print("first(from sub):", first, " then(from full):", " ".join(rest))
++
++    banner("reset() restarts the cycle")
++    s = DeterministicStream(SEED)
++    pool = ["a", "b", "c", "d"]
++    m = SelectionMarker()
++    before = [s.select_unchosen(pool, m) for _ in range(4)]
++    m.reset()
++    after  = [s.select_unchosen(pool, m) for _ in range(4)]
++    print("before reset:", " ".join(before))
++    print("after  reset:", " ".join(after))
++
++
++def run_seed_sweep():
++    """RETURN: None. First next_int per seed -- pins seed handling."""
++    banner("first next_int(0, 1000000) per seed 0..15")
++    for seed in range(16):
++        s = DeterministicStream(seed)
++        print("seed=%2d -> %d" % (seed, s.next_int(0, 1000000)))
++
++
++HwutRunner(
++    argv       = sys.argv,
++    title      = "DeterministicStream RNG and SelectionMarker spread",
++    choice_map = {
++        "primitives": run_primitives,
++        "ranges":     run_ranges,
++        "gauss":      run_gauss,
++        "sample":     run_sample,
++        "select":     run_select,
++        "unchosen":   run_unchosen,
++        "seed_sweep": run_seed_sweep,
++    },
++).run()
+diff --git a/python/TEST/test-hwut_hocon.py b/python/TEST/test-hwut_hocon.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/test-hwut_hocon.py
+@@ -0,0 +1,246 @@
++#! /usr/bin/env python3
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: The HOCON parser against HOCON alone -- no exploration vocabulary
++         appears anywhere in this file.
++
++CHOICES: scalars, numbers, quoting, structure, oneline, comments,
++         refused, faults, positions;
++
++DESCRIPTION:
++
++scalars    quoted strings with escapes, integers, floats, booleans,
++           the spellings of nothing; a value left empty is null.
++
++numbers    every radix, and '_' anywhere between digits as a visual
++           helper carried into no value: decimal with sign and
++           exponent, hexadecimal, binary, octal, and roman. A sign may
++           stand apart from its digits. What spells no number in any
++           radix is a string, and a string carries quotes.
++
++quoting    A STRING VALUE IS WRITTEN IN DOUBLE QUOTES. An unquoted
++           word that is no bare token is refused, and the message
++           shows the word in the quotes it wants. A bare token ends
++           at a blank, so no value ever runs into a comment marker or
++           into the next key.
++
++structure  nested objects, the brace directly after a key, lists with
++           comma and with newline separation, objects inside lists.
++
++oneline    several entries on one line without commas: a bare value
++           runs into the next key's binder and gives the key back.
++
++comments   '#' and '//', whole-line and trailing; a comment never
++           becomes content.
++
++refused    'include', '${...}', '+=', and triple-quoted strings -- each
++           refused BY NAME, never silently misread.
++
++faults     duplicate keys, unterminated strings, unmatched and missing
++           braces; the parse completes and reports them all at once.
++
++positions  every key and value knows its file-relative place, offsets
++           included -- the line and column an editor shows.
++______________________________________________________________________________
++"""
++import sys
++from config import HwutRunner                                # noqa: F401
++
++from vut.language_support.python.hwut_hocon import (parse, SourceLine,
++                                                      ScalarNode, ListNode,
++                                                      ObjectNode)
++
++
++def banner(label):
++    """RETURN: None. Section heading."""
++    print()
++    print("--- %s ---" % label)
++
++
++def lines(text, line_offset=0, column_offset=0):
++    """RETURN: list[SourceLine], 'text' split, offsets applied
++    uniformly."""
++    return [SourceLine(line, i + line_offset, column_offset)
++            for i, line in enumerate(text.split("\n"), start=1)]
++
++
++def show(node, indent=0):
++    """RETURN: None. Prints the annotated tree, positions included."""
++    pad = "    " * indent
++    if isinstance(node, ObjectNode):
++        print("%s{ at %s" % (pad, node.position))
++        for entry in node.entry_list:
++            print("%s  key '%s' at %s ->"
++                  % (pad, entry.key, entry.key_position))
++            show(entry.node, indent + 1)
++        print("%s}" % pad)
++    elif isinstance(node, ListNode):
++        print("%s[ at %s" % (pad, node.position))
++        for item in node.item_list:
++            show(item, indent + 1)
++        print("%s]" % pad)
++    else:
++        print("%s%r (%s) at %s"
++              % (pad, node.value, type(node.value).__name__,
++                 node.position))
++
++
++def run(label, text, line_offset=0, column_offset=0):
++    """RETURN: None. Parses 'text' and prints tree and faults."""
++    banner(label)
++    document, fault_list = parse(
++        lines(text, line_offset, column_offset), "f.hocon")
++    show(document)
++    for fault in fault_list:
++        print("FAULT %s" % fault)
++
++
++def test_scalars():
++    """RETURN: None. Every scalar shape."""
++    run("scalars",
++        'a = bare\n'
++        'b = "quoted \\"x\\" and \\n"\n'
++        'c = 42\n'
++        'd = -3.14\n'
++        'e = 1e-6\n'
++        'f = true\n'
++        'g = no\n'
++        'h = make %.exe\n'
++        'i: "colon-bound"\n'
++        'j = null\n'
++        'k = nihil\n'
++        'l =\n')
++
++
++def test_numbers():
++    """RETURN: None. Every radix, the helper, and the split sign."""
++    run("decimal, with sign and exponent",
++        'a = 42\n'
++        'b = -0.12\n'
++        'c = +7e212\n'
++        'd = 6.02e23\n'
++        'e = .5\n')
++    run("the visual helper enters no value",
++        'a = 1_000\n'
++        'b = 7_000.5_5\n')
++    run("hexadecimal, binary, octal",
++        'a = 0xDEAD_BEEF\n'
++        'b = 0b0111_11_01\n'
++        'c = 0o3124\n'
++        'd = 0XFF\n'
++        'e = -0b1010\n')
++    run("roman",
++        'a = 0rIV\n'
++        'b = 0rMCMLXXXIV\n'
++        'c = -0rX\n')
++    run("a sign standing apart from its digits",
++        'a = - 0.12\n'
++        'b = + 7\n'
++        'c = - 0xFF\n')
++    run("what spells no number is a string, and carries quotes",
++        'a = 1.2.3\n'
++        'b = 0x\n'
++        'c = 0b012\n'
++        'd = 1__0\n'
++        'e = 0rIIII\n'
++        'f = 0rVX\n')
++    run("no arithmetic: this language computes nothing",
++        'a = 5 - 1\n')
++
++
++def test_quoting():
++    """RETURN: None. The quoted string, and the unquoted word."""
++    run("quoted: blanks, comment markers and binders are content",
++        'a = "make %.exe"\n'
++        'b = "not # a comment"\n'
++        'c = "x = y"\n'
++        'd = "yes"\n')
++    run("unquoted: refused, and shown in the quotes it wants",
++        'a = make\n'
++        'b = strip.pype\n'
++        'c = [one, two]\n'
++        'd = 1\n')
++
++
++def test_structure():
++    """RETURN: None. Objects, lists, nesting."""
++    run("nesting and key-brace",
++        'outer {\n'
++        '    inner = { deep = 1 }\n'
++        '    braced { x = 2 }\n'
++        '}\n')
++    run("lists",
++        'commas   = [one, two, three]\n'
++        'newlines = [\n'
++        '    1\n'
++        '    2\n'
++        ']\n'
++        'objects  = [ { a = 1 }, { a = 2 } ]\n'
++        'empty    = []\n')
++
++
++def test_oneline():
++    """RETURN: None. Entries sharing a line, without commas."""
++    run("two entries, one line, no comma",
++        'caps { timeout_sec = 30  network = false }\n')
++    run("a quoted value with blanks, beside a following key",
++        'a { build = "make %.exe"  timeout_sec = 5 }\n')
++    run("three entries, one line",
++        'x { a = 1  b = "two"  c = { d = 3 } }\n')
++
++
++def test_comments():
++    """RETURN: None. Both comment forms, whole-line and trailing."""
++    run("comments",
++        '# whole line\n'
++        'a = 1   # trailing\n'
++        '// slashes too\n'
++        'b = 2   // trailing slashes\n'
++        'c = bare value # comment cut\n')
++
++
++def test_refused():
++    """RETURN: None. The four constructs that do not exist here."""
++    run("refused, each by name",
++        'include "other.conf"\n'
++        'a = ${outside.value}\n'
++        'b += appended\n'
++        'c = """triple"""\n'
++        'd = survives\n')
++
++
++def test_faults():
++    """RETURN: None. Faults accumulate; the parse completes."""
++    run("faults accumulate",
++        'a = 1\n'
++        'a = 2\n'
++        'b = "unterminated\n'
++        '}\n'
++        'c {\n'
++        '    d = 3\n')
++
++
++def test_positions():
++    """RETURN: None. Offsets carried: the same text reported at its
++    place in a larger file, as an unwrapped header would be."""
++    text = ('hwut {\n'
++            '    title = "T"\n'
++            '}')
++    run("plain: as its own file", text)
++    run("offset: same text, region begins at line 40, 3 columns "
++        "stripped", text, line_offset=39, column_offset=3)
++
++
++if __name__ == "__main__":
++    HwutRunner(sys.argv, "HOCON parser: subset (A), annotated tree;", {
++        "scalars":   test_scalars,
++        "numbers":   test_numbers,
++        "quoting":   test_quoting,
++        "structure": test_structure,
++        "oneline":   test_oneline,
++        "comments":  test_comments,
++        "refused":   test_refused,
++        "faults":    test_faults,
++        "positions": test_positions,
++    }).run()
+diff --git a/python/TEST/test-pseudo_time_trigger.py b/python/TEST/test-pseudo_time_trigger.py
+new file mode 100644
+--- /dev/null
++++ b/python/TEST/test-pseudo_time_trigger.py
+@@ -0,0 +1,93 @@
++#! /usr/bin/env python3
++"""
++PURPOSE: Testing the TriggerDispatcher for deterministic async flow.
++
++DESCRIPTION:
++    This test verifies that:
++    1. Triggers fire at the correct pseudo-time tick.
++    2. Within a tick, lower digits (higher priority) fire first.
++    3. If digits are identical, registration order determines the sequence.
++
++CHOICES: simple-sequence, priority-tie-break, stable-sort;
++"""
++
++import sys
++import asyncio
++
++sys.path.insert(0, "../../../../")
++
++from   vut.language_support.python.racing_condition_sim import TriggerDispatcher, Trigger #noqa E402
++
++# Assuming the implementation above is in a file named trigger_dispatcher.py
++# or included in the same directory.
++# from trigger_dispatcher import Trigger, TriggerDispatcher
++
++class PrintTrigger(Trigger):
++    """A concrete implementation of Trigger for HWUT verification."""
++    def __init__(self, name: str, timeline: str):
++        super().__init__(timeline)
++        self.name = name
++        print("SETUP: %7s |%s|" % (name, timeline))
++
++    async def fire(self, pseudo_time: int):
++        """ACTION: Print the firing event to stdout for HWUT comparison."""
++        print(f"[t:{pseudo_time}] Trigger '{self.name}' fired.")
++
++async def test_simple_sequence():
++    """Tests basic staggered triggers."""
++    print("=> Testing Simple Sequence")
++    t1 = PrintTrigger("A", "1    ") # Fires at 0
++    t2 = PrintTrigger("B", "  1  ") # Fires at 2
++    t3 = PrintTrigger("C", "    1") # Fires at 4
++    
++    dispatcher = TriggerDispatcher([t1, t2, t3])
++    await dispatcher.run()
++    print()
++
++async def test_priority_tie_break():
++    """Tests that lower digits fire before higher digits at the same tick."""
++    print("=> Testing Priority Tie-Break (Same Tick)")
++    print("A, B -- Both fire at tick 0, but B(1) should beat A(2) ... ")
++    t1 = PrintTrigger("A", "21   3") 
++    t2 = PrintTrigger("B", "12   2")
++    
++    print("C, D -- Both fire at tick 2, but C(0) should beat D(9)")
++    t3 = PrintTrigger("C", "  0  1")
++    t4 = PrintTrigger("D", "  9  0")
++    
++    dispatcher = TriggerDispatcher([t1, t2, t3, t4])
++    await dispatcher.run()
++    print()
++
++async def test_stable_sort():
++    """Tests that identical digits fire in registration order."""
++    print("=> Testing Stable Sort (Same Priority, Same Tick)")
++    print("All fire at tick 0 with priority 1. Order should be First -> Second -> Third.")
++    t1 = PrintTrigger("First",  "1")
++    t2 = PrintTrigger("Second", "1")
++    t3 = PrintTrigger("Third",  "1")
++    
++    dispatcher = TriggerDispatcher([t1, t2, t3])
++    await dispatcher.run()
++    print()
++
++# Main HWUT Entry Point
++if __name__ == "__main__":
++    if "--hwut-info" in sys.argv:
++        print("TriggerDispatcher Logic;")
++        print("CHOICES: simple, priority-tie, stable-sort;")
++        sys.exit()
++
++    choice = sys.argv[1] if len(sys.argv) > 1 else ""
++
++    if "simple" in choice:
++        asyncio.run(test_simple_sequence())
++    elif "priority-tie" in choice:
++        asyncio.run(test_priority_tie_break())
++    elif "stable-sort" in choice:
++        asyncio.run(test_stable_sort())
++    else:
++        # Default run if no specific choice is matched
++        asyncio.run(test_simple_sequence())
++        asyncio.run(test_priority_tie_break())
++        asyncio.run(test_stable_sort())
+diff --git a/python/__init__.py b/python/__init__.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/python/deterministic_random.py b/python/deterministic_random.py
+new file mode 100644
+--- /dev/null
++++ b/python/deterministic_random.py
+@@ -0,0 +1,124 @@
++import math
++# from   typeguard import typechecked -- too costly in most applications
++
++
++class SelectionMarker:
++    """Remembers which candidate OBJECTS have been chosen at one selection site.
++
++    Keyed by object identity (id), never equality: two structurally equal
++    candidates are still distinct alternatives. The marker is caller-owned, so
++    'prefer unchosen' is reproducible regardless of container address reuse --
++    the marker, not id(container), is the memory. One marker per logical site
++    (e.g. one per grammar ALT node) gives coverage-style spread across a walk.
++
++    Safe to key on id() because the caller holds the candidate objects alive
++    for the marker's lifetime (e.g. grammar branches are long-lived nodes).
++    """
++    def __init__(self):
++        """RETURN: None. Starts with an empty chosen-set."""
++        self.chosen = set()      # set of id(candidate)
++
++    def reset(self):
++        """RETURN: None. Forgets all chosen candidates; the next cycle restarts."""
++        self.chosen.clear()
++
++
++class DeterministicStream:
++    """
++    A platform-independent random number generator using a 
++    Linear Congruential Generator (LCG).
++    """
++    def __init__(self, seed: int = 0x42):
++        # Using parameters from glibc/POSIX
++        self.state = seed & 0x7FFFFFFF
++
++    def coin(self, probability_of_true) -> bool:
++        return bool(self.next_float() < probability_of_true)
++
++    # @typechecked -- too costly
++    def select(self, candidates: list|tuple|str):
++        """RETURN: object, a uniformly random candidate from 'candidates'.
++
++        Stateless: the same stream state and the same 'candidates' always yield
++        the same element. For spread that prefers not-yet-chosen candidates, use
++        'select_unchosen' with a caller-owned SelectionMarker.
++        """
++        return candidates[self.next_int(0, len(candidates) - 1)]
++
++    # @typechecked -- too costly
++    def select_unchosen(self, candidates: list|tuple|str, marker: "SelectionMarker"):
++        """RETURN: object, a random candidate whose identity 'marker' has not seen.
++
++        Draws uniformly among the candidates absent from 'marker' (by object
++        identity), records the choice, and returns it. When every candidate has
++        been seen, resets 'marker' and draws from the full pool.
++
++        Identity-keyed, so the result is independent of pool composition: a
++        candidate counts as 'the same' across differing sub-pools of one site
++        (e.g. a branch seen via a 'recursive' sub-list is remembered when the
++        full branch list is offered next). Determinism does not depend on the
++        container's address -- only on the stream state and the marker.
++        """
++        unchosen = [c for c in candidates if id(c) not in marker.chosen]
++        if not unchosen:
++            marker.reset()
++            unchosen = list(candidates)
++        choice = unchosen[self.next_int(0, len(unchosen) - 1)]
++        marker.chosen.add(id(choice))
++        return choice
++
++    # @typechecked -- too costly
++    def next_int(self, v_min: int, v_max: int) -> int:
++        """Returns a random integer in [v_min, v_max]."""
++        # Park-Miller "Minimal Standard" (MINSTD) generator.
++        # Uses Mersenne prime 2^31 - 1 to avoid low-bit correlations found in power-of-2 LCGs.
++        # Multiplier 48271 is the modern standard (improved over original 16807).
++        self.state = (48271 * self.state) % 2147483647
++        if v_min == v_max:
++            return v_min
++        return v_min + (self.state % (v_max - v_min + 1))
++
++    def next_float(self) -> float:
++        """Returns a random float in [0.0, 1.0)."""
++        return self.next_int(0, 1000000) / 1000001.0
++
++    def gauss(self, mu: float, sigma: float, lower: float=-math.inf, upper: float=math.inf) -> float:
++        """
++        Box-Muller transform to generate Gaussian distribution 
++        independently of platform libraries.
++        """
++        u1 = self.next_float() + 1e-9 # Avoid log(0)
++        u2 = self.next_float()
++        z0 = math.sqrt(-2.0 * math.log(u1)) * math.cos(2.0 * math.pi * u2)
++
++        result = z0 * sigma + mu
++        if   result < lower: return lower
++        elif result > upper: return upper
++        else:                return result
++
++    def gauss_int(self, mu: float, sigma: float, lower: int=-math.inf, upper: int=math.inf) -> float:
++        return int(round(self.gauss(mu, sigma, float(lower), float(upper))))
++
++    def choice(self, seq: list):
++        """Pick a random element from a list."""
++        return seq[self.next_int(0, len(seq) - 1)]
++
++    def sample_indices(self, population_size: int, k: int) -> list[int]:
++        """Returns k unique indices from range(population_size)."""
++        assert population_size >= k
++        indices = list(range(population_size))
++        result = []
++        for i in range(k):
++            # Swap current index with a random remaining one (Fisher-Yates)
++            idx = self.next_int(i, population_size - 1)
++            indices[i], indices[idx] = indices[idx], indices[i]
++            result.append(indices[i])
++        return result
++
++    # @typechecked -- to costly
++    def sample(self, population: list, n: int):
++        assert len(population) >= n
++        return [ 
++            population[i] for i in self.sample_indices(len(population), n)
++        ]
++
+diff --git a/python/hwut_hocon.py b/python/hwut_hocon.py
+new file mode 100644
+--- /dev/null
++++ b/python/hwut_hocon.py
+@@ -0,0 +1,621 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: Parse the HOCON subset of the specification language into the
++         ANNOTATED TREE: every key, every value and every block carries its
++         file-relative position.
++
++This module is SUPPORT FOR WRITING TESTS, not part of the engine: a test
++author in any language meets this grammar, and every supported language is
++given a parser that behaves the same way. It depends on nothing but the
++standard library, and names no engine type.
++
++THE SUBSET: nested objects, lists, numbers, booleans (true/false/yes/no),
++the spellings of nothing, '#' and '//' comments, '=' or ':' before a value,
++a brace directly after a key. A dot inside a key is a literal character,
++never a path -- 'test-gen.c' is one key.
++
++A STRING VALUE IS WRITTEN IN DOUBLE QUOTES. Real HOCON admits the unquoted
++string and pays for it: an unquoted value runs to the end of the line, so a
++comment marker ends a value, two entries cannot share a line without
++ambiguity, and 'yes' is a boolean while 'yes please' is a string. The quotes
++are no burden once one is used to them, and they say plainly where a value
++begins and ends.
++
++REFUSED BY NAME, each with a fault: 'include', substitutions '${...}',
++'+=', and triple-quoted strings. The first two would let a specification
++refer outside its file.
++
++The parser accumulates faults and recovers at the next line; it never
++raises. The annotated tree lives between this parser and the validator and
++nowhere else.
++______________________________________________________________________________
++"""
++import re
++
++from dataclasses import dataclass, field
++from enum        import Enum, auto
++
++
++class E_ParseFault(Enum):
++    SYNTAX  = auto()    # the text does not parse
++    REFUSED = auto()    # a construct that does not exist here, by name
++
++
++@dataclass(frozen=True, slots=True)
++class Position:
++    """One place in one file; 1-based, as an editor counts."""
++    line:   int
++    column: int
++
++    def __str__(self):
++        """RETURN: str, 'line:column'."""
++        return "%d:%d" % (self.line, self.column)
++
++
++@dataclass(frozen=True, slots=True)
++class ParseFault:
++    """One fault of the parse, where it stands and what it is. The engine
++    converts it into its own fault record; this module knows nothing of
++    that record."""
++    kind:     E_ParseFault
++    file:     str
++    position: Position
++    message:  str
++
++    def __str__(self):
++        """RETURN: str, 'file:line:column: KIND: message'."""
++        return "%s:%s: %s: %s" % (self.file, self.position,
++                                  self.kind.name, self.message)
++
++
++@dataclass(frozen=True, slots=True)
++class SourceLine:
++    """One line as the parser reads it, tied to where it stands on disk.
++    'column_offset' counts what was removed before 'text' begins."""
++    text:          str
++    line:          int
++    column_offset: int
++
++_BOOL_DB  = {"true": True, "yes": True, "false": False, "no": False}
++
++#  The spellings of NOTHING. A key bound to one of these carries the NULL
++#  value -- a ScalarNode whose value is 'None'. An empty value ('a =' and
++#  the line's end) is the same thing. What null MEANS is each key's own
++#  affair; the validator decides, not the parser.
++_NULL_SET = ("null", "nil", "none", "nihil")
++
++#  THE NUMBER, in every radix, with '_' admitted anywhere between digits
++#  as a visual helper and carried by none of them into the value.
++#
++#      decimal   +7e212   -0.12   1_000   .5   6.02e23
++#      hex       0xDEAD_BEEF
++#      binary    0b0111_11_01
++#      octal     0o3124
++#      roman     0rIV
++#
++#  A sign may stand apart from its digits ('- 0.12'); the two are joined
++#  where nothing but blanks lies between them.
++_SIGN_SET = ("+", "-")
++
++_DECIMAL_RE = re.compile(r"""[-+]?
++    (?: [0-9](?:_?[0-9])*             (?: \. (?:[0-9](?:_?[0-9])*)? )?
++      | \.[0-9](?:_?[0-9])* )
++    (?: [eE][-+]?[0-9](?:_?[0-9])* )? $""", re.X)
++
++_RADIX_DB = {"0x": 16, "0X": 16, "0b": 2, "0B": 2, "0o": 8, "0O": 8}
++_RADIX_DIGIT_DB = {16: "0123456789abcdefABCDEF",
++                    2: "01",
++                    8: "01234567"}
++
++_ROMAN_RE    = re.compile(r"M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})"
++                          r"(IX|IV|V?I{0,3})$")
++_ROMAN_VALUE_DB = {"I": 1, "V": 5, "X": 10, "L": 50,
++                   "C": 100, "D": 500, "M": 1000}
++
++
++#  Returned where a bare token is none of the above: an unquoted string.
++_NOT_A_TOKEN = object()
++
++#  A TOKEN -- a key, or a bare value -- runs to the first character that
++#  binds, opens, closes or separates. Blanks end it too: a bare value is a
++#  boolean, a number or a spelling of nothing, and a string carries quotes
++#  (R-49). Matching the whole run in one step is what makes the scan
++#  cheap.
++_TOKEN_RE = re.compile(r'[^\s{}\[\]=,:"#]*')
++
++#  A string with no backslash in it -- the common case -- is taken whole.
++_QUOTED_PLAIN_RE = re.compile(r'([^"\\\n]*)"')
++
++_ESCAPE_DB = {"n": "\n", "t": "\t", '"': '"', "\\": "\\"}
++
++
++
++
++@dataclass(frozen=True, slots=True)
++class ScalarNode:
++    """One scalar value: str, int, float or bool."""
++    value:    object
++    position: Position
++
++
++@dataclass(frozen=True, slots=True)
++class ListNode:
++    """One list of nodes."""
++    item_list: tuple
++    position:  Position
++
++
++@dataclass(frozen=True, slots=True)
++class Entry:
++    """One key with its value inside an object."""
++    key:          str
++    key_position: Position
++    node:         object
++
++
++@dataclass(slots=True)
++class ObjectNode:
++    """One object: ordered entries, duplicate keys refused at parse."""
++    position:   Position
++    entry_list: list = field(default_factory=list)
++
++    def get(self, key):
++        """
++        RETURN: Entry, the entry named 'key'.
++                None,  no such entry.
++        """
++        for entry in self.entry_list:
++            if entry.key == key: return entry
++        return None
++
++    def keys(self):
++        """RETURN: list[str], the keys in written order."""
++        return [entry.key for entry in self.entry_list]
++
++
++class _Cursor:
++    """Walks a list of SourceLines character by character; every position
++    it reports is file-relative through the lines' offsets.
++
++    The current line's text is held in a slot: every 'peek' would otherwise
++    index the line list and the dataclass to reach the same string.
++    """
++    __slots__ = ("line_list", "line_n", "i_line", "i_col", "text")
++
++    def __init__(self, line_list):
++        """RETURN: _Cursor at the first character."""
++        self.line_list = line_list
++        self.line_n    = len(line_list)
++        self.i_line    = 0
++        self.i_col     = 0
++        self.text      = line_list[0].text if line_list else ""
++
++    def at_end(self):
++        """RETURN: bool, no character remains."""
++        return self.i_line >= self.line_n
++
++    def peek(self, ahead=0):
++        """
++        RETURN: str,  the character 'ahead' places from here, on this line.
++                '\\n', at this line's end.
++                '',   beyond the last line.
++        """
++        if self.i_line >= self.line_n: return ""
++        i = self.i_col + ahead
++        text = self.text
++        return text[i] if i < len(text) else "\n"
++
++    def advance(self):
++        """RETURN: None. Steps one character; line ends step to the next
++        line."""
++        if self.i_line >= self.line_n:       return
++        if self.i_col < len(self.text):      self.i_col += 1
++        else:                                self.skip_line()
++
++    def skip(self, n):
++        """RETURN: None. Steps 'n' characters WITHIN the current line; the
++        caller has already seen that they are there."""
++        self.i_col += n
++
++    def skip_line(self):
++        """RETURN: None. Steps to the beginning of the next line."""
++        self.i_line += 1
++        self.i_col   = 0
++        self.text    = (self.line_list[self.i_line].text
++                        if self.i_line < self.line_n else "")
++
++    def position(self):
++        """RETURN: Position, file-relative, of the character at the
++        cursor."""
++        if self.i_line >= self.line_n:
++            if not self.line_list: return Position(1, 1)
++            last = self.line_list[-1]
++            return Position(last.line,
++                            last.column_offset + len(last.text) + 1)
++        line = self.line_list[self.i_line]
++        return Position(line.line, line.column_offset + self.i_col + 1)
++
++
++def parse(line_list, file):
++    """
++    RETURN: [0] ObjectNode, the document -- every entry of the outermost
++                            level; possibly empty.
++            [1] list[Fault], every fault found; empty on a clean parse.
++
++    'line_list' are SourceLines; 'file' names the file for faults.
++    """
++    fault_list = []
++    cursor     = _Cursor(line_list)
++    document   = _parse_body(cursor, None, file, fault_list)
++    return document, fault_list
++
++
++def _parse_body(cursor, terminator, file, fault_list):
++    """
++    RETURN: ObjectNode, the entries up to 'terminator' ('}' or None for
++            the end of the text).
++    """
++    result = ObjectNode(cursor.position())
++    while True:
++        _skip_blank(cursor)
++        if cursor.at_end():
++            if terminator is not None:
++                fault_list.append(ParseFault(
++                    E_ParseFault.SYNTAX, file, cursor.position(),
++                    "unterminated object: '%s' missing" % terminator))
++            return result
++
++        match cursor.peek():
++            case c if c == terminator:
++                cursor.skip(1)
++                return result
++            case "}":
++                fault_list.append(ParseFault(
++                    E_ParseFault.SYNTAX, file, cursor.position(),
++                    "unmatched '}'"))
++                cursor.skip(1)
++            case _:
++                _parse_entry(cursor, result, file, fault_list)
++
++
++def _parse_entry(cursor, object_node, file, fault_list):
++    """RETURN: None. Parses one 'key = value' pair into 'object_node';
++    faults recover at the next line."""
++    key_position = cursor.position()
++    key          = _parse_key(cursor, file, fault_list)
++    if key is None:
++        cursor.skip_line()
++        return
++
++    if key == "include":
++        fault_list.append(ParseFault(
++            E_ParseFault.REFUSED, file, key_position,
++            "'include' does not exist here: a specification refers to "
++            "nothing outside its file"))
++        cursor.skip_line()
++        return
++
++    _skip_space(cursor)
++
++    match cursor.peek():
++        case "=" | ":":
++            cursor.skip(1)
++            _skip_space(cursor)
++        case "{":
++            pass                          # a brace binds without a sign
++        case "+" if cursor.peek(1) == "=":
++            fault_list.append(ParseFault(
++                E_ParseFault.REFUSED, file, cursor.position(),
++                "'+=' does not exist here"))
++            cursor.skip_line()
++            return
++        case _:
++            fault_list.append(ParseFault(
++                E_ParseFault.SYNTAX, file, cursor.position(),
++                "expected '=', ':' or '{' after key '%s'" % key))
++            cursor.skip_line()
++            return
++
++    node = _parse_value(cursor, file, fault_list)
++    if node is None:
++        #  The value parser has recovered already (line skipped or cursor
++        #  at the fault); a second skip here would eat the NEXT line.
++        return
++
++    if object_node.get(key) is not None:
++        fault_list.append(ParseFault(
++            E_ParseFault.SYNTAX, file, key_position,
++            "duplicate key '%s'; the first stands, this one is refused"
++            % key))
++        return
++    object_node.entry_list.append(Entry(key, key_position, node))
++
++
++def _parse_key(cursor, file, fault_list):
++    """
++    RETURN: str,  the key.
++            None, no key stands here (fault recorded).
++
++    A key runs to the first character that binds, opens, closes or
++    separates -- matched in one step rather than one character at a time.
++    """
++    if cursor.peek() == '"':
++        return _parse_quoted(cursor, file, fault_list)
++
++    text = _TOKEN_RE.match(cursor.text, cursor.i_col).group()
++    if not text:
++        fault_list.append(ParseFault(
++            E_ParseFault.SYNTAX, file, cursor.position(),
++            "expected a key, found '%s'" % cursor.peek().strip()))
++        return None
++    cursor.skip(len(text))
++    return text
++
++
++def _parse_value(cursor, file, fault_list, in_list_f=False):
++    """
++    RETURN: ScalarNode | ListNode | ObjectNode, the value here.
++            None, nothing usable stands here (fault recorded).
++
++    'in_list_f' says an empty value is a fault rather than null: inside a
++    list there is no key it could belong to.
++    """
++    _skip_space(cursor)
++    position = cursor.position()
++
++    match cursor.peek():
++        case "{":
++            cursor.skip(1)
++            return _parse_body(cursor, "}", file, fault_list)
++        case "[":
++            cursor.skip(1)
++            return _parse_list(cursor, position, file, fault_list)
++        case '"' if cursor.peek(1) == '"' and cursor.peek(2) == '"':
++            fault_list.append(ParseFault(
++                E_ParseFault.REFUSED, file, position,
++                "triple-quoted strings do not exist here"))
++            cursor.skip_line()
++            return None
++        case '"':
++            value = _parse_quoted(cursor, file, fault_list)
++            return None if value is None else ScalarNode(value, position)
++        case "$" if cursor.peek(1) == "{":
++            fault_list.append(ParseFault(
++                E_ParseFault.REFUSED, file, position,
++                "substitutions '${...}' do not exist here: a "
++                "specification refers to nothing outside its file"))
++            cursor.skip_line()
++            return None
++        case _:
++            return _parse_bare(cursor, position, file, fault_list,
++                               in_list_f)
++
++
++def _parse_list(cursor, position, file, fault_list):
++    """RETURN: ListNode, the items up to ']'."""
++    item_list = []
++    while True:
++        _skip_blank(cursor)
++        if cursor.at_end():
++            fault_list.append(ParseFault(
++                E_ParseFault.SYNTAX, file, cursor.position(),
++                "unterminated list: ']' missing"))
++            break
++        match cursor.peek():
++            case "]":
++                cursor.skip(1)
++                break
++            case ",":
++                cursor.skip(1)
++            case _:
++                item = _parse_value(cursor, file, fault_list,
++                                    in_list_f=True)
++                if item is not None: item_list.append(item)
++    return ListNode(tuple(item_list), position)
++
++
++def _parse_quoted(cursor, file, fault_list):
++    """
++    RETURN: str,  the string's content, escapes resolved.
++            None, the string is unterminated at its line's end.
++
++    The common case -- a string with no backslash in it -- is taken in one
++    step: the closing quote is FOUND rather than walked to.
++    """
++    begin = cursor.position()
++    text  = cursor.text
++    i     = cursor.i_col + 1                       # past the opening quote
++
++    match = _QUOTED_PLAIN_RE.match(text, i)
++    if match is not None:
++        cursor.i_col = match.end()
++        return match.group(1)
++
++    piece_list = []
++    while True:
++        if i >= len(text):
++            fault_list.append(ParseFault(
++                E_ParseFault.SYNTAX, file, begin, "unterminated string"))
++            cursor.i_col = i
++            return None
++        c = text[i]
++        match c:
++            case '"':
++                cursor.i_col = i + 1
++                return "".join(piece_list)
++            case "\\":
++                i += 1
++                escaped = text[i] if i < len(text) else ""
++                piece_list.append(_ESCAPE_DB.get(escaped, escaped))
++                i += 1
++            case _:
++                piece_list.append(c)
++                i += 1
++
++
++def _parse_bare(cursor, position, file, fault_list, in_list_f):
++    """
++    RETURN: ScalarNode, the bare token here: a boolean, a number, or one
++            of the spellings of nothing.
++            None, the token is none of those (fault recorded) -- a string
++            value is written in double quotes.
++
++    A bare token ends at a blank: a value with blanks in it is a string
++    and carries quotes. The run is matched in one step.
++    """
++    raw = _TOKEN_RE.match(cursor.text, cursor.i_col).group()
++
++    #  A SIGN STANDING APART from its digits: '- 0.12'. A bare token ends
++    #  at a blank, so the sign arrives alone; where nothing but blanks
++    #  lies between it and a number, the two are one number.
++    if raw in _SIGN_SET:
++        text  = cursor.text
++        after = _TOKEN_RE.match(text, _blank_end(text,
++                                                 cursor.i_col + 1)).group()
++        if after and _number(after) is not _NOT_A_TOKEN:
++            cursor.i_col = _blank_end(text, cursor.i_col + 1) + len(after)
++            return ScalarNode(_number(raw + after), position)
++
++    if raw.startswith("${"):
++        fault_list.append(ParseFault(
++            E_ParseFault.REFUSED, file, cursor.position(),
++            "substitutions '${...}' do not exist here"))
++        cursor.skip_line()
++        return None
++    i_comment = raw.find("//")
++    if i_comment != -1: raw = raw[:i_comment]
++    cursor.skip(len(raw))
++
++    if not raw:
++        if in_list_f:
++            fault_list.append(ParseFault(
++                E_ParseFault.SYNTAX, file, position,
++                "expected a value, found '%s'" % cursor.peek().strip()))
++            return None
++        return ScalarNode(None, position)          # an empty value is null
++
++    value = _interpret(raw)
++    if value is _NOT_A_TOKEN:
++        fault_list.append(ParseFault(
++            E_ParseFault.SYNTAX, file, position,
++            'a string is written in double quotes: "%s"' % raw))
++        return None
++    return ScalarNode(value, position)
++
++
++def _interpret(raw):
++    """
++    RETURN: None, bool, int or float -- what the bare text says; 'None'
++            for the spellings of nothing.
++            '_NOT_A_TOKEN', the text is no bare token at all: it is an
++            unquoted string, and this language has none.
++    """
++    match raw:
++        case _ if raw in _NULL_SET:     return None
++        case _ if raw in _BOOL_DB:      return _BOOL_DB[raw]
++        case _:                         return _number(raw)
++
++
++def _number(raw):
++    """
++    RETURN: int | float, the number the text spells, in whatever radix it
++            spells it; '_' is a visual helper and enters no value.
++            '_NOT_A_TOKEN', the text spells no number.
++    """
++    body = raw[1:] if raw[:1] in _SIGN_SET else raw
++    sign = -1 if raw[:1] == "-" else 1
++
++    match body[:2]:
++        case "0r" | "0R":
++            value = _roman(body[2:])
++            #  A refusal is a refusal: it must not be signed.
++            return value if value is _NOT_A_TOKEN else sign * value
++        case prefix if prefix in _RADIX_DB:
++            radix = _RADIX_DB[prefix]
++            digit_set = _RADIX_DIGIT_DB[radix]
++            digit_text = _without_helper(body[2:], digit_set)
++            if digit_text is None: return _NOT_A_TOKEN
++            return sign * int(digit_text, radix)
++
++    if not _DECIMAL_RE.match(raw): return _NOT_A_TOKEN
++    text = raw.replace("_", "")
++    if "." in text or "e" in text or "E" in text: return float(text)
++    return int(text)
++
++
++def _without_helper(text, digit_set):
++    """
++    RETURN: str, the text with every '_' removed.
++            None, the text carries no digit, or a character that is no
++            digit of this radix, or an '_' that separates nothing.
++    """
++    if not text or text[0] == "_" or text[-1] == "_": return None
++    if "__" in text:                                  return None
++    stripped = text.replace("_", "")
++    if not stripped:                                  return None
++    if any(c not in digit_set for c in stripped):     return None
++    return stripped
++
++
++def _roman(text):
++    """
++    RETURN: int, the number the roman numeral spells.
++            '_NOT_A_TOKEN', the text is no roman numeral -- 'IIII' and
++            'VX' among them: the form is the strict one.
++    """
++    if not text or not _ROMAN_RE.match(text): return _NOT_A_TOKEN
++    total    = 0
++    previous = 0
++    for character in reversed(text):
++        value = _ROMAN_VALUE_DB[character]
++        total = total - value if value < previous else total + value
++        previous = max(previous, value)
++    return total
++
++
++def _blank_end(text, i):
++    """RETURN: int, the index of the first character at or after 'i' that
++    is no blank."""
++    n = len(text)
++    while i < n and (text[i] == " " or text[i] == "\t"): i += 1
++    return i
++
++
++def _skip_space(cursor):
++    """RETURN: None. Skips blanks and comments on the current line.
++
++    Written flat, against the line's own text: this is the most called
++    function of the parser, and a call into 'peek' per character was the
++    parse's largest single cost.
++    """
++    text = cursor.text
++    n    = len(text)
++    i    = cursor.i_col
++    while i < n and (text[i] == " " or text[i] == "\t"): i += 1
++    cursor.i_col = i
++    if i < n and (text[i] == "#" or text.startswith("//", i)):
++        cursor.skip_line()
++
++
++def _skip_blank(cursor):
++    """RETURN: None. Skips blanks, newlines, commas and comments.
++
++    A line whose remainder is blank, or which turns out to be a comment,
++    is left in one step rather than a character at a time.
++    """
++    while cursor.i_line < cursor.line_n:
++        text = cursor.text
++        n    = len(text)
++        i    = cursor.i_col
++        while i < n and (text[i] == " " or text[i] == "\t"
++                         or text[i] == ","): i += 1
++        if i >= n:
++            cursor.skip_line()
++            continue
++        cursor.i_col = i
++        c = text[i]
++        if c == "#" or (c == "/" and text.startswith("//", i)):
++            cursor.skip_line()
++            continue
++        return
+diff --git a/python/hwut_runner.py b/python/hwut_runner.py
+new file mode 100644
+--- /dev/null
++++ b/python/hwut_runner.py
+@@ -0,0 +1,462 @@
++# SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++#______________________________________________________________________________
++import os
++import sys
++import re
++import time
++import threading
++import tempfile
++from   typing    import Callable, Optional
++from   typeguard import typechecked
++
++
++class HwutRunner:
++    """Front end of a HWUT test application.
++
++    A test application constructs one HwutRunner with its choice map and
++    calls '.run()'. The command line selects the mode:
++
++        app --hwut-info      print the info block; exit.
++        app <choice>         normal mode: run one choice; test output on
++                             the process's stdout and stderr.
++        app --interactive    interactive mode: choices are started via
++                             stdin; per choice, test output goes to two
++                             named sink files; 'done' is reported on the
++                             process's original stdout.
++        app                  manual mode: list choices, read one selection
++                             from stdin, run it, exit.
++    """
++    @typechecked
++    def __init__(self,
++                 argv:        list[str],
++                 title:       str,
++                 choice_map:  dict[str|None, Callable],
++                 happy:       None | list[str] | list[re.Pattern] | str | re.Pattern = None,
++                 same_f:      bool = False,
++                 parallel:    str | None = None):
++        """RETURN: HwutRunner, ready for '.run()'.
++
++        'argv'        command line of the test application ('sys.argv').
++        'title'       title line of the info block.
++        'choice_map'  maps choice name -> test function. Key 'None' stands
++                      for the single choice-less test; then it is the only
++                      entry.
++        'happy'       pattern(s) for the info block's 'HAPPY:' lines.
++        'same_f'      True => info block carries 'SAME;'.
++        'parallel'    execution scheme of interactive mode:
++                          None       -- sequential, in-process
++                          "process"  -- one forked child per choice;
++                                        choices run concurrently.
++        """
++        assert choice_map
++        assert parallel in (None, "process")
++        # None indicates the test function for no choice. We only have apps
++        # with and without choices, not both.
++        if None in choice_map: assert len(choice_map) == 1
++
++        self.title      = title
++        self.argv       = argv
++        self.choice     = None if len(argv) < 2 else argv[1]
++        self.choice_map = choice_map
++        self.parallel   = parallel
++        # Provide a 'choice' by index -> also on the command line easy
++        # specification.
++        # NOTE: 'None' cannot be sorted against strings => safety separation
++        self.sorted_choice_list = [None] if None in choice_map else sorted(choice_map)
++
++        self.__same_result_for_all_choices = same_f
++
++        if   type(happy) is str:        self.happy = [happy]
++        elif type(happy) is list:       self.happy = [ h if type(h) is str else h.pattern for h in happy ]
++        elif type(happy) is re.Pattern: self.happy = [happy.pattern]
++        else:                           self.happy = []
++
++        # Interactive mode state (armed in MODE_interactive).
++        self._control       = None                # UP channel (original stdout)
++        self._control_lock  = threading.Lock()
++        self._stray_path    = None                # session sink for stray output
++        self._pending       = {}                  # pid -> choice token
++        self._pending_lock  = threading.Lock()
++        self._pending_event = threading.Event()
++        self._reaper_done   = threading.Event()
++
++    def run(self):
++        """RETURN: None.
++
++        Dispatches on the first command line argument (see class docstring).
++        """
++        def identify_mode():
++            if self.choice in ("-h", "--hi", "--hwut-info", "--sos", "--wtf"):
++                return "--hwut-info"
++            elif self.choice == "--interactive":
++                return "--interactive"
++            elif self.choice is None:
++                return None
++            else:
++                return "--run"
++
++        match identify_mode():
++            case "--hwut-info":
++                do = self.MODE_hwut_info
++            case "--interactive":
++                do = self.MODE_interactive
++            case None:
++                # If no choice is specified, but required, ask the user.
++                if None not in self.choice_map:        do = self.MODE_manual_interaction_with_user
++                else:                                  do = self.MODE_run_test
++            case "--run":
++                if self.choice not in self.choice_map: do = self.MODE_choice_does_not_exist
++                else:                                  do = self.MODE_run_test
++            case _:
++                def do(): pass
++
++        do()
++
++    def MODE_choice_does_not_exist(self):
++        """RETURN: never; exits with status 1.
++
++        Reports the unavailable choice, the available ones, and the closest
++        match by Levenshtein distance.
++        """
++        print(f"error: choice '{self.choice}' not available.")
++        print(f'error: available: {", ".join(self.__printable_choice_list())}.')
++        suggestion = _levenshtein_best_match(self.choice, self.sorted_choice_list)
++        if suggestion is not None:
++            print(f"error: did you mean '{suggestion}'?")
++        sys.exit(1)
++
++    def MODE_run_test(self):
++        """RETURN: None.
++
++        Normal mode. Runs the test of the given 'choice'; if there is no
++        second command line argument the choice is 'None' and the according
++        test is entered in the choice map as 'None'. Output flows on the
++        process's own stdout and stderr.
++        """
++        self.__run_choice(self.choice)
++        #  R-70: the terminal token -- the stream testifies its own
++        #  completeness; always, unconditional (4a).
++        print("<hwut-end>")
++
++    def MODE_hwut_info(self):
++        """RETURN: never; exits with status 0.
++
++        Prints the info block: title, CHOICES, HAPPY patterns, SAME flag,
++        INTERACTIVE capability.
++        """
++        for line in self.__info_block_lines(): print(line)
++        sys.exit()
++
++    def MODE_manual_interaction_with_user(self):
++        """RETURN: None.
++
++        Lists the choices with indices, reads one line from stdin, runs the
++        selected choice. One shot; for another shot, call the app again.
++        """
++        print("Select choice:")
++        for i, choice in enumerate(self.__printable_choice_list()):
++            print(f"({i}) {choice}")
++
++        cmd = self.__readline()
++        if cmd is None or not cmd.isnumeric():
++            print("error: bad choice or instruction")
++            return
++        try:
++            choice = self.sorted_choice_list[int(cmd)]
++        except IndexError:
++            print(f"error: choice number {cmd} does not exist")
++            sys.exit(-1)
++        self.__run_choice(choice)
++
++    def MODE_interactive(self):
++        """RETURN: None; returns when the session ends ('quit' or EOF).
++
++        Interactive mode. The session's channels:
++
++            stdin                DOWN: commands from the framework.
++            original stdout      UP:   protocol replies ('done', ...).
++            per-choice sinks     test output: two files named in the
++                                 'run' command.
++
++        On entry, the original stdout is duplicated onto a private control
++        descriptor; fd 1 and fd 2 are then pointed at a session stray sink.
++        Output outside a running choice lands in the stray sink, never in
++        the protocol.
++
++        DOWN grammar (one command per line):
++            run <choice> <sink-out> <sink-err>
++            info
++            quit | q | exit
++        '<choice>' is a choice name, a decimal index into the sorted choice
++        list, or '-' for the choice-less test.
++
++        UP grammar (one message per line):
++            done <choice> <status>      choice ran; sinks complete & closed
++            fail <choice> <reason-...>  command not executed
++            info: <line>                reply lines to 'info'
++            bye                         session end; all children reaped
++        """
++        sys.stdout.flush(); sys.stderr.flush()
++        self._control = os.fdopen(os.dup(1), "w", buffering=1)
++
++        stray_fd, self._stray_path = tempfile.mkstemp(prefix="hwut_stray_", suffix=".txt")
++        os.dup2(stray_fd, 1)
++        os.dup2(stray_fd, 2)
++        os.close(stray_fd)
++
++        if self.parallel == "process":
++            reaper = threading.Thread(target=self.__reap_loop,
++                                      name="hwut-reaper", daemon=True)
++            reaper.start()
++
++        while (line := self.__readline()) is not None:
++            if not self.__interprete(line): break
++
++        self.__drain_children()
++        self.__up("bye")
++
++    def __interprete(self, line: str) -> bool:
++        """RETURN: True,  session continues
++                   False, session ends
++
++        Interpretes one DOWN command line of interactive mode. Replies on
++        the UP channel; never raises.
++        """
++        fields = line.split()
++        match fields:
++            case ["quit" | "q" | "exit"]:
++                return False
++            case ["info"]:
++                for info_line in self.__info_block_lines():
++                    self.__up(f"info: {info_line}")
++                self.__up("done - 0")
++            case ["run", token, sink_out, sink_err]:
++                choice, found_f = self.__find_choice(token)
++                if not found_f:
++                    self.__up(f"fail {token} unknown-choice")
++                elif self.parallel == "process":
++                    self.__run_forked(token, choice, sink_out, sink_err)
++                else:
++                    status = self.__run_into_sinks(choice, sink_out, sink_err)
++                    self.__up(f"done {token} {status}")
++            case _:
++                self.__up(f"fail - bad-command")
++        return True
++
++    def __find_choice(self, token: str) -> tuple:
++        """RETURN: (choice, True),  token names an existing choice
++                   (None,   False), else
++
++        'token' is a choice name, a decimal index into the sorted choice
++        list, or '-' for the 'None' choice.
++        """
++        if token == "-":
++            return (None, None in self.choice_map)
++        elif token in self.choice_map:
++            return (token, True)
++        elif token.isnumeric():
++            try:    return (self.sorted_choice_list[int(token)], True)
++            except IndexError: return (None, False)
++        return (None, False)
++
++    def __run_into_sinks(self, choice, sink_out: str, sink_err: str) -> int:
++        """RETURN: 0,      test function ran and returned
++                   n != 0, test function raised SystemExit(n) or an
++                           exception (=> 1; traceback in the error sink)
++
++        Runs 'choice' with fd 1 and fd 2 pointed at the two sink files.
++        Before the return: Python's streams are flushed, both sinks are
++        closed, fd 1 and fd 2 are restored. The return is the 'done'
++        barrier for the app's own writes; writes of processes spawned by
++        the choice are the choice's concern (see README, BARRIER).
++        """
++        out_fd = os.open(sink_out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
++        err_fd = os.open(sink_err, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
++
++        sys.stdout.flush(); sys.stderr.flush()
++        saved_1 = os.dup(1)
++        saved_2 = os.dup(2)
++        os.dup2(out_fd, 1); os.close(out_fd)
++        os.dup2(err_fd, 2); os.close(err_fd)
++
++        status = 0
++        try:
++            self.__run_choice(choice)
++            #  <hwut-end> -- stream testifies its own completeness. 
++            #
++            # RULES:
++            #
++            # -- only stdout: 
++            #    stderr never carries '<hwut-end>', it reports test execution
++            #    problems, not nominal behavior. output files are closed before 
++            #    checked--no need to mark end.
++            #
++            # -- normal return only:
++            #    aborted, killed, execution failures make the test output 
++            #    irrelevant for comparison. no need for the marker. 
++            #
++            # -- not for 'pyped' output:
++            #
++            #    'HWUT_NO_TERMINAL' is set by the framework where a canonicaliser
++            #    owns stdout; the pype then writes the token. assumption is that,
++            #    tests using 'pype' are subject to racing conditions and might not
++            #    be able to provide safe terminating tokens. pype-scripts can.
++            #
++            if not os.environ.get("HWUT_NO_TERMINAL"):
++                print("<hwut-end>")
++        except SystemExit as x:
++            status = x.code if type(x.code) is int else (0 if x.code is None else 1)
++        except BaseException:
++            import traceback
++            traceback.print_exc()
++            status = 1
++        finally:
++            sys.stdout.flush(); sys.stderr.flush()
++            os.dup2(saved_1, 1); os.close(saved_1)
++            os.dup2(saved_2, 2); os.close(saved_2)
++        return status
++
++    def __run_forked(self, token: str, choice, sink_out: str, sink_err: str):
++        """RETURN: None; registers the child, returns immediately.
++
++        Forks one child per choice. The child runs '__run_into_sinks' and
++        exits with its status; the reaper thread reports 'done' upon the
++        child's end. The parent's streams are flushed before the fork.
++        """
++        sys.stdout.flush(); sys.stderr.flush()
++        pid = os.fork()
++        if pid == 0:
++            try:
++                status = self.__run_into_sinks(choice, sink_out, sink_err)
++            except BaseException:
++                status = 1
++            os._exit(status & 0xFF)
++
++        with self._pending_lock:
++            self._pending[pid] = token
++        self._pending_event.set()
++
++    def __reap_loop(self):
++        """RETURN: None; runs until '_reaper_done' with no pending children.
++
++        Reaper thread of parallel interactive mode. Waits for child ends
++        and reports 'done <token> <status>' on the UP channel.
++        """
++        while True:
++            self._pending_event.wait()
++            with self._pending_lock:
++                if not self._pending:
++                    if self._reaper_done.is_set(): return
++                    self._pending_event.clear()
++                    continue
++            try:
++                pid, wstatus = os.wait()
++            except ChildProcessError:
++                continue
++            with self._pending_lock:
++                token = self._pending.pop(pid, None)
++            if token is not None:
++                self.__up(f"done {token} {os.waitstatus_to_exitcode(wstatus)}")
++
++    def __drain_children(self):
++        """RETURN: None; upon return every child is reaped and reported.
++
++        Ends the reaper thread. No-op in sequential mode.
++        """
++        if self.parallel != "process": return
++        self._reaper_done.set()
++        self._pending_event.set()
++        while True:
++            with self._pending_lock:
++                if not self._pending: break
++            time.sleep(0.02)
++
++    def __up(self, message: str):
++        """RETURN: None; 'message' is written and flushed on the UP channel.
++        """
++        with self._control_lock:
++            self._control.write(message + "\n")
++
++    def __info_block_lines(self) -> list[str]:
++        """RETURN: list of str, the lines of the info block.
++        """
++        result = [ self.title if self.title.endswith(";") else self.title + ";" ]
++        if None not in self.choice_map:
++            result.append("CHOICES: " + ", ".join(self.sorted_choice_list) + ";")
++        for happy_pattern in self.happy:
++            result.append("HAPPY: " + happy_pattern + ";")
++        if self.__same_result_for_all_choices:
++            result.append("SAME;")
++        result.append("INTERACTIVE;")
++        return result
++
++    def __printable_choice_list(self) -> list[str]:
++        """RETURN: list of str, the sorted choices; the 'None' choice as '-'.
++        """
++        return [ "-" if c is None else c for c in self.sorted_choice_list ]
++
++    def __run_choice(self, choice):
++        """RETURN: None; upon return the test function of 'choice' has run.
++
++        Runs the function in sync or async manner, depending on the
++        function type entered in the choice map.
++        """
++        test_function = self.choice_map[choice]
++        import asyncio
++        if asyncio.iscoroutinefunction(test_function):
++            asyncio.run(test_function())
++        else:
++            test_function()
++
++    def __readline(self) -> str | None:
++        """RETURN: str,  next non-empty stripped line from stdin
++                   None, upon end of stream
++        """
++        try:
++            while True:
++                if not (line := sys.stdin.readline()): return None
++                elif line := line.strip():             return line
++        except EOFError:
++            return None
++
++
++def _levenshtein_best_match(needle: str | None, haystack: list) -> str | None:
++    """RETURN: str,  element of 'haystack' with least Levenshtein distance
++                     to 'needle'
++               None, if 'needle' is None or 'haystack' is empty
++    """
++    if   needle is None:      return None
++    elif not haystack:        return None
++    elif needle in haystack:  return needle
++    best_key  = None
++    best_dist = None
++    for key in haystack:
++        if key is None: continue
++        dist = _levenshtein_distance(needle, key)
++        if best_dist is None or dist < best_dist:
++            best_dist = dist
++            best_key  = key
++    return best_key
++
++def _levenshtein_distance(a: str, b: str) -> int:
++    """RETURN: int >= 0, the Levenshtein distance between 'a' and 'b'.
++    """
++    if   a == b: return 0
++    elif not a:  return len(b)
++    elif not b:  return len(a)
++    # Ensure 'b' is the shorter one to keep memory smaller
++    if len(a) < len(b):
++        a, b = b, a
++    prev = list(range(len(b) + 1))
++    for i, ca in enumerate(a, start=1):
++        cur      = [i]
++        prev_j_1 = i - 1
++        for j, cb in enumerate(b, start=1):
++            ins  = cur[j - 1] + 1
++            dele = prev[j] + 1
++            sub  = prev_j_1 + (0 if ca == cb else 1)
++            prev_j_1 = prev[j]
++            cur.append(min(ins, dele, sub))
++        prev = cur
++    return prev[-1]
++
+diff --git a/python/racing_condition_sim.py b/python/racing_condition_sim.py
+new file mode 100644
+--- /dev/null
++++ b/python/racing_condition_sim.py
+@@ -0,0 +1,140 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++
++PURPOSE: Deterministic asynchronous event dispatcher.
++
++    A utility to orchestrate multiple asynchronous tasks (Triggers) based on 
++    digit-encoded timeline strings.
++
++DESCRIPTION:
++
++    The core power of this manager lies in the simplicity of its timeline 
++    strings. The position of a trigger is given by the position in the 
++    string (from left to right). For triggers to appear at the same time
++    the priority is given by a digit from 0 to 9.
++    
++        Trigger A: "1  12 1"
++        Trigger B: " 1  1 2"
++
++    SHORT:
++
++        - Ticks:       Each character position in a timeline string is one 
++                       pseudo-time tick.
++        - Triggers:    Any digit '0'-'9' triggers an event.
++
++        - Priority:    Lower digits fire before higher digits within the 
++                       same tick.
++
++        - Determinism: Stable sorting ensures that even identical priorities 
++                       execute in the order triggers were registered.
++
++    This visual approach allows developers to "draw" complex race conditions 
++    directly in the code. By simply looking at the string, you can see exactly 
++    when events fire and, more importantly, who "wins" a tie-break (via the 
++    digit's priority). This eliminates the need for complex math, delta-t 
++    calculations, or unreliable sleep-based synchronization in unit tests.
++
++    The TriggerDispatcher provides a robust framework for testing race conditions 
++    and asynchronous flow in a 100% deterministic manner. It pre-calculates an 
++    execution array from these strings, ensuring that even if the system is 
++    under heavy load, the sequence of events remains stable and reproducible.
++
++NOTE: Use '.stop()' to abort the trigger process.
++
++USAGE EXAMPLE:
++    class MyTrigger(Trigger):
++        async def fire(self, pseudo_time):
++            print(f"[{pseudo_time}] {self.name} fired with prio {priority}")
++
++    async def run():
++        # Visualizing the race: 
++        # Tick 0: SUB(1) leads NOM(2). 
++        # Tick 2: NOM(0) leads SUB(1).
++        manager = TriggerDispatcher([
++            MyTrigger("1 1 3 1   1")
++            MyTrigger("2  121  1  ")
++            MyTrigger("2   1 2 2  ")
++        ])
++        
++        await manager.run()
++"""
++
++import asyncio
++from   typing import Iterable
++
++class Trigger:
++    """
++    Abstract base class for a dispatchable asynchronous event.
++
++    A Trigger is defined by a 'timeline' string where digits 0-9 represent 
++    activation points and their respective priorities. Derived classes 
++    must implement the 'fire' method to define the behavior.
++    """
++    def __init__(self, timeline: str, name = ""):
++        self.timeline = timeline
++        self.name     = str(id(self))
++
++    async def on_termination(self, pseudo_time: int):
++        """Executions action related to trigger.
++        """
++        raise NotImplementedError
++
++    async def fire(self, pseudo_time: int):
++        """Executions action related to trigger.
++        """
++        raise NotImplementedError
++
++
++class TriggerDispatcher:
++    """Dispatcher executes Triggers according to a pre-calculated timeline.
++
++    The manager translates string-based timelines into a static _trigger_time_db. 
++    Execution is performed by stepping through the array, ensuring absolute 
++    determinism regardless of system performance or I/O jitter.
++    """
++    def __init__(self, triggers: Iterable[Trigger]):
++        self._running_f       = True
++        self._triggers        = list(triggers)
++        self._trigger_time_db = self._build(self._triggers)
++
++    def _build(self, triggers: list[Trigger]):
++        """Translates string timelines into prioritized, sorted tick sequences.
++        """
++        end_tick = max(len(t.timeline) for t in triggers) if triggers else 0
++        result   = [[] for _ in range(end_tick)]
++        for trigger in triggers:
++            for t, char in enumerate(trigger.timeline):
++                if char.isdigit():
++                    priority = int(char)
++                    result[t].append((priority, trigger))
++        
++        for tick_sequence in result: # sort for each pseudo time tick by priority
++            tick_sequence.sort(key=lambda x: x[0])
++
++        return result
++
++    def stop(self):
++        self._running_f = False
++
++    async def run(self):
++        """Sequentially executes all scheduled triggers in the timeline.
++
++        Iterates through the _trigger_time_db tick by tick. After each fire(), 
++        it yields control (sleep 0) to allow other asynchronous tasks 
++        (e.g., consumers of data produced by the trigger) to progress.
++        """
++        for pseudo_time, tick_sequence in enumerate(self._trigger_time_db):
++            if not self._running_f: break
++            for priority, trigger in tick_sequence:
++                if not self._running_f: break
++                await trigger.fire(pseudo_time)
++                await asyncio.sleep(0)
++
++        for t in self._triggers: t.on_termination(pseudo_time) 
++
++    def __repr__(self):
++        result = ["TriggerDispatcher"]
++        for pseudo_time, trigger_list in enumerate(self._trigger_time_db):
++            for priority, t in trigger_list:
++                result.append(f"[pseudo_time] ({priority}){t.name}")
++        return "\n".join(result)
++
+diff --git a/python/script_runner.py b/python/script_runner.py
+new file mode 100644
+--- /dev/null
++++ b/python/script_runner.py
+@@ -0,0 +1,116 @@
++"""SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
++______________________________________________________________________________
++
++PURPOSE: A THROWAWAY EXECUTABLE SCRIPT, for tests that need a real
++         application to run rather than a simulated one.
++
++    do()        writes the script and makes it executable; returns its
++                path.
++    CRunScript  the same, as a context manager: the script is deleted
++                when the block ends, whatever ended it.
++
++A test that supervises processes, times them, or reads their streams
++needs something REAL on the other side. Writing that by hand in every
++suite produces a different half-correct fixture each time -- one
++forgets the chmod, one leaves the file behind, one prints the script
++in a form the GOOD cannot mask.
++
++Prefer 'CRunScript'. 'do()' stands for the caller who owns the path
++already and disposes of it themselves.
++______________________________________________________________________________
++"""
++import os
++import stat
++import tempfile
++from   pathlib import Path
++from   typing  import ContextManager, Optional
++
++
++def do(file_name:       Optional[str],
++       shebang:         str,
++       script_txt_list: list[str],
++       display_f:       bool = True) -> Optional[str]:
++    """RETURN: str,  the path of the generated, executable script
++              None, if it could not be written
++
++    'file_name'       where to write; None asks for a temporary file
++    'shebang'         the interpreter, with or without the leading '#!'
++    'script_txt_list' the lines of the script, without line ends
++    'display_f'       print the script under a 'SCRIPT:' banner, so a
++                      GOOD shows the stimulus that produced the
++                      reaction
++
++    A temporary file is created with 'delete=False': the handle closes
++    before a supervised process opens the path, so the file must
++    outlive it.
++    """
++    script_path = None
++
++    content = shebang if shebang.startswith("#!") else f"#!{shebang}"
++    content += "\n" + "\n".join(script_txt_list) + "\n"
++
++    try:
++        if file_name is None:
++            with tempfile.NamedTemporaryFile(prefix="test_app_",
++                                             delete=False) as tmp:
++                script_path = Path(tmp.name)
++        else:
++            script_path = Path(file_name)
++
++        script_path.write_text(content)
++        script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC)
++
++    except Exception:
++        if script_path and script_path.exists():
++            try:
++                script_path.unlink()
++            except Exception:
++                pass
++        return None
++
++    if display_f:
++        if not file_name: file_name = "<temporary file>"
++        print(f"SCRIPT: '{file_name}' " + "{")
++        for line in content.splitlines():
++            print(f"    {line}")
++        print("}")
++
++    return str(script_path)
++
++
++class CRunScript(ContextManager[str]):
++    """A throwaway executable script for the duration of a 'with' block.
++
++    The script is deleted when the block ends, whatever ended it -- so
++    a suite that fails mid-way leaves no executable behind to be
++    explored as a test application by a later walk.
++    """
++    def __init__(self, file_name, shebang, script_txt_list,
++                 display_f=True):
++        """RETURN: CRunScript, not yet written -- 'do()' runs at entry."""
++        self.params = {'file_name':       file_name,
++                       'shebang':         shebang,
++                       'script_txt_list': script_txt_list,
++                       'display_f':       display_f}
++        self.path = None
++
++    def __enter__(self) -> str:
++        """RETURN: str, path of the generated, executable script.
++
++        Raises RuntimeError where the script could not be written.
++        """
++        result = do(**self.params)
++        if result is None:
++            raise RuntimeError("script_runner.do() wrote no script.")
++
++        self.path = result
++        return self.path
++
++    def __exit__(self, exc_type, exc_val, exc_tb):
++        """RETURN: None; the generated script is deleted, if it exists.
++        """
++        if self.path and os.path.exists(self.path):
++            try:
++                os.unlink(self.path)
++            except Exception:
++                pass
+diff --git a/python/space_iterator.py b/python/space_iterator.py
+new file mode 100644
+--- /dev/null
++++ b/python/space_iterator.py
+@@ -0,0 +1,73 @@
++"""
++PURPOSE:
++       Iteration over all possible combinations of parameters of a 
++       parameter basis. Useful for function argument generation or 
++       scenario parameterization in general.
++
++SYNOPSIS:
++       import hwut.language_support.python.space_iterator as generator
++
++       basis [
++           list of values for 'a',
++           list of values for 'b',
++           list of values for 'c',
++       ]
++
++       for a, b, c in generator.do(basis):
++           ...
++
++       yields  a0, b0, c0
++               a0, b0, c1
++               a0, b0, c2
++               a0, b1, c0
++               a0, b1, c1
++               a0, b1, c2
++               ...
++
++DESCRIPTION:
++       
++       'do(basis)' yields the cartesian product of an orthogonal basis.
++
++       The basis is given as a list of iterables, where each iterable
++       represents one independent dimension of the search space. Each yielded
++       tuple contains exactly one element from each basis dimension, in the
++       same order as provided in basis.
++
++       Iteration order follows the standard cartesian-product convention: the
++       rightmost dimension changes fastest.
++
++EXAMPLE: function argument generation
++
++           basis = [
++               [0, 2, 4, 6, 8],
++               ["otto", "heinz", "frieda"],
++               [1, 2, 3],
++           ]
++
++           def run_test(x, name, number):
++               ...
++
++           for x, name, number in space_iterator.do(basis):
++               run_test(x, name, number)
++
++NOTES
++       - If basis is empty, generator yields exactly one tuple: ().
++       - If any basis dimension is empty, generator yields nothing.
++
++The implemention is almost trivial. The module is provided, anyways, because it is
++such a powerful approach to achieve high coverage in unit testing.
++"""
++
++import itertools
++from   collections.abc import Iterable, Iterator
++
++def do(basis: list[Iterable]) -> Iterator[tuple]:
++    if not basis:
++        yield tuple()
++        return
++
++    pool = [tuple(dim) for dim in basis]
++    if any(len(dim) == 0 for dim in pool):
++        return
++
++    yield from itertools.product(*pool)

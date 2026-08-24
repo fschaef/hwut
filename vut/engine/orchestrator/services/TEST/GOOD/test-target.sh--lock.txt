@@ -1,0 +1,9 @@
+
+--- a held directory lock: the script does not run; FAULT, named ---
+:: beta/TEST: ./tidy.sh [exit 0]
+beta tidied
+-- stderr --
+beta grumbles
+FAILED: alpha: another live run holds the directory
+directories: 2  executed: 1  skipped: 0
+[status 1]

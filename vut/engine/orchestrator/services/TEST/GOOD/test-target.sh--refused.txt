@@ -1,0 +1,14 @@
+
+--- no target named ---
+REFUSED: no target named
+usage: hwut.target [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+[status 2]
+
+--- an unknown option before the target name ---
+REFUSED: unknown option '--bogus'
+usage: hwut.target [-i] [--default=<script>] [-q] [+x] [--directory=<path>] <target> [<argument> ...]
+[status 2]
+
+--- no directory binds any target: EMPTY ---
+no directory below '.' binds any target.
+[status 3]

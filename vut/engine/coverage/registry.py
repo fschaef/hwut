@@ -64,6 +64,10 @@ DEFAULT_TOOL_DB = {
     "fortran*":       ("gcov", "kcov"),                      # gfortran
     "ada":            ("gcov", "gnatcoverage"),              # gnatcov: own
     "modula-2":       ("gcov",),                             # gm2
+    #  cobol: gcc's own 'gcobol' (gcc 15+) would gcov natively; the
+    #  GnuCOBOL road was WITNESSED (2026-08-24) measuring the GENERATED
+    #  C -- the untaken arm shows, but attribution to the '.cob' line
+    #  survives only in comments. Stated, not hidden.
     "cobol":          ("gcov",),                             # gcobol
     "vala":           ("gcov",),                             # compiles to C
     "nim":            ("gcov", "lcov"),                      # C backend
@@ -101,17 +105,26 @@ DEFAULT_TOOL_DB = {
     "groovy":         ("jacoco", "cobertura"),                     # [r][r]
 
     # -- the scripting side ---------------------------------------------
-    "javascript":     ("lcov", "cobertura", "c8", "nyc",
-                       "istanbul"),                                # [r][r]
-    "typescript":     ("lcov", "cobertura", "c8", "nyc",
-                       "istanbul"),                                # [r][r]
-    "ruby":           ("cobertura", "simplecov"),                  # [r]
+    #  node ITSELF is the strongest candidate (WITNESSED 2026-08-24):
+    #  'node --test --experimental-test-coverage --test-reporter=lcov'
+    #  writes a tracefile with no package installed at all. 'c8' was
+    #  witnessed writing lcov AND cobertura; for typescript, c8 with
+    #  source maps names the '.ts' source itself.
+    "javascript":     ("node", "c8", "lcov", "cobertura", "nyc",
+                       "istanbul"),                        # [r][r][r][r]
+    "typescript":     ("node", "c8", "lcov", "cobertura", "nyc",
+                       "istanbul"),                        # [r][r][r][r]
+    "ruby":           ("cobertura", "simplecov"),                  # [r][r]
     "php":            ("cobertura", "phpunit", "xdebug", "pcov",
                        "phpdbg"),                                  # [r]
     "perl":           ("cover", "Devel::Cover"),
     "shell":          ("kcov", "bashcov"),                   # [r]
     "bash":           ("kcov", "bashcov"),                   # [r]
-    "zsh":            ("kcov",),                             # [r]
+    #  zsh: kcov's shell engine is BASH-ONLY, and over a zsh script it
+    #  was WITNESSED (2026-08-24) reporting 2/226 lines across files
+    #  that were not the script. A report that measures nothing and
+    #  names everything; the empty list refuses by name instead.
+    "zsh":            (),
     "powershell":     ("pester",),
     "tcl":            (),      # no candidate this author can vouch for;
                                # an EMPTY list refuses by name, which is
@@ -127,16 +140,23 @@ DEFAULT_TOOL_DB = {
     "matlab":         ("matlab",),
     "octave":         ("octave",),
 
-    # -- hardware description: SEE DISCUSSIONS disc-9 --------------------
-    #  Line coverage of an HDL source is read today where the tool emits
-    #  a tracefile. The OTHER coverages a simulator produces -- toggle,
-    #  FSM, condition, and FUNCTIONAL (covergroups, bins, assertions) --
-    #  have NO LINE NUMBERS and this record cannot hold them. A reader
-    #  that dropped them silently would report a design '92% covered'
-    #  while discarding the coverage the verification engineer came for.
-    "verilog":        ("verilator_coverage", "vcover", "urg", "imc"),  # [r]
-    "systemverilog":  ("verilator_coverage", "vcover", "urg", "imc"),  # [r]
-    "vhdl":           ("gcov", "vcover", "urg", "imc"),      # [r] ghdl
+    # -- hardware description: disc-9 AND ITS AMENDMENT ------------------
+    #  (WITNESS-hdl-artifacts.txt). 'verilator' reads the native '.dat'
+    #  whole -- line, branch arms, toggle bits, cover properties, each
+    #  on its own axis -- and stands FIRST. The lcov export road
+    #  ('verilator_coverage') remains for builds that only leave the
+    #  tracefile; it must be produced with '--coverage-line', because
+    #  the export MISFILES toggle and user points as line coverage
+    #  (finding 3, pinned in the 'verilator' test choice). For VHDL,
+    #  'gcov' carries line coverage through ghdl-gcc, and 'ghdl' reads
+    #  the PSL report's cover directives. What remains unheld is what
+    #  remains unwitnessed: covergroup BINS behind UCIS (disc-9 b).
+    "verilog":        ("verilator", "verilator_coverage",
+                       "vcover", "urg", "imc"),              # [r][r]
+    "systemverilog":  ("verilator", "verilator_coverage",
+                       "vcover", "urg", "imc"),              # [r][r]
+    "vhdl":           ("gcov", "ghdl", "vcover", "urg", "imc"),
+                                                             # [r][r] ghdl
 
     # -- and the ones this author will not guess at ----------------------
     #  Pascal: Free Pascal has no first-class story to rely on, and the

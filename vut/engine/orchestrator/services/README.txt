@@ -72,6 +72,37 @@ The faces:
                  not '<hwut-end>' is refused outright: an incomplete
                  stream is never promotable, and no flag bypasses.
 
+    hwut.target  (target.py)
+                 one USER-DEFINED TARGET run over every directory that
+                 binds targets (E-7):
+
+                     hwut.target <option-list> <target> <passed-through>
+
+                 A directory takes part where its 'hwut.conf' carries a
+                 'target { }' binding; definition is membership.
+                 Everything after the target name goes to each
+                 directory's script, argv-style, untouched. TWO PHASES:
+                 phase one settles the plan and a refusal there costs
+                 zero executions; per directory, three reasons decide,
+                 in order:
+
+                     1  file present
+                     2  file executable
+                     3  shebang's interpreter executable
+                        (where a shebang decides)
+
+                 '-i, --ignore' turns any refusal of a directory into a
+                 skip; '--default=<script>' fills absence; '+x' sets
+                 a+x where the executable bit is missing, never done
+                 without it; '-q, --quiet' drops the per-directory
+                 output recording. Phase two executes, each directory
+                 under its DirectoryLock, cwd the directory itself,
+                 environment inherited unchanged. TARGETS ARE NOT
+                 TESTS: exit codes are reported, never deciding -- the
+                 face answers 0 iff phase one accepted and every
+                 planned script was found and executed; 3 where no
+                 directory binds any target.
+
 A fault does not withhold the output: a directory with one broken header
 prints the fault, then the tree or the plan of what stands, and answers 1.
 

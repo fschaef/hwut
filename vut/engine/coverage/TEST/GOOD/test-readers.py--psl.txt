@@ -1,0 +1,23 @@
+
+--- the report, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: vhdl
+         | ##tool:     ghdl
+         | ##format:   ghdl-psl-json
+         | ##counts:   no
+         | SF:blinker.vhdl
+         | EX:
+         | CV:
+         | CP:47*cover_reach_done*1/1,1*cover_abort*0/1
+
+--- a json that is not this report ---
+         coverage.py's json -> None
+  OK  : the directives' own file, and one language
+  OK  : EX and CV stay EMPTY: this report says nothing about lines executing, and inventing them would be the export's misfiling in the other direction
+  OK  : the two covers at their own lines: DONE_S was reached, the RUN-then-IDLE abort never happened
+  OK  : the ASSERT at line 49 is NOT among them: a verdict, not a coverage
+  OK  : and a json without the report's shape is left alone
+SUCCESS: what the verification meant to see, recorded as seen or not.
+<hwut-end>

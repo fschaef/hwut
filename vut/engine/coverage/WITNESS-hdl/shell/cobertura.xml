@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<!DOCTYPE coverage SYSTEM 'http://cobertura.sourceforge.net/xml/coverage-04.dtd'>
+<coverage line-rate="0.455" lines-covered="5" lines-valid="11" branch-rate="1.0" branches-covered="1.0" branches-rate="1.0" complexity="1.0" version="1.9" timestamp="1787564195">
+	<sources>
+		<source>/home/claude/hdl-demo/shell/</source>
+	</sources>
+	<packages>
+		<package name="greet_sh" line-rate="0.455" lines-covered="5" lines-valid="11" branch-rate="1.0" complexity="1.0">
+			<classes>
+				<class name="greet_sh__0" filename="greet.sh" branch-rate="1.0" complexity="1.0" line-rate="0.833">
+					<lines>
+						<line number="3" hits="1"/>
+						<line number="5" hits="1"/>
+						<line number="6" hits="0"/>
+						<line number="8" hits="1"/>
+						<line number="11" hits="3"/>
+						<line number="12" hits="3"/>
+					</lines>
+				</class>
+				<class name="bash_helper_debug_trap_sh__1" filename="out/bash-helper-debug-trap.sh" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="3" hits="0"/>
+						<line number="4" hits="0"/>
+						<line number="5" hits="0"/>
+					</lines>
+				</class>
+				<class name="bash_helper_sh__2" filename="out/bash-helper.sh" branch-rate="1.0" complexity="1.0" line-rate="0.000">
+					<lines>
+						<line number="4" hits="0"/>
+						<line number="7" hits="0"/>
+					</lines>
+				</class>
+			</classes>
+		</package>
+	</packages>
+</coverage>

@@ -28,7 +28,7 @@ import fnmatch
 from datetime import datetime, timezone
 
 from ..plan.wish    import cutoff_instant
-from .specification import CTestCaseSequence
+from .configuration_tree import CTestCaseSequence
 from .task_list     import CTestTaskList, CTestTaskListAll
 
 

@@ -35,7 +35,7 @@ from .          import finder
 from .          import reader
 from .explorer  import explore
 from .fault     import Fault, E_FaultKind
-from .specification import DirectorySpec
+from .configuration_tree import DirectorySpec
 
 
 FALLBACK_TEST_DIRECTORY = "TEST"

@@ -2,10 +2,12 @@
 """SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
 ______________________________________________________________________________
 
-PURPOSE: THE OTHER MEASUREMENTS -- branch and MC/DC -- and the
-         registration that admits one more without touching the record.
+PURPOSE: THE OTHER MEASUREMENTS -- branch, MC/DC, and the NAMED
+         points -- and the registration that admits one more without
+         touching the record.
 
-CHOICES: registration, branch, mcdc, in_record, unmergeable, faults;
+CHOICES: registration, branch, mcdc, named, in_record, unmergeable,
+         faults;
 
 DESCRIPTION:
 
@@ -16,6 +18,13 @@ registration  a measure owns its NAME and its record TAG, and a second
 branch        'of the arms leaving this decision, how many were taken' --
               delta coded per line, and a SECOND decision on one line
               refused, because branch data is reported per line.
+
+named         the NAMED points -- 'toggle' and 'cover' -- carry the
+              point's IDENTITY beside its line, which is what makes
+              them MERGEABLE where 'branch' is not: a bit toggled in
+              either run is toggled, by name. Totals that disagree on
+              one named point are refused -- two records that do not
+              describe one point.
 
 mcdc          'of the conditions in this decision, for how many was
               INDEPENDENCE demonstrated'. Here a delta of ZERO IS
@@ -43,10 +52,12 @@ import sys
 import config                                                   # noqa: F401
 
 from vut.language_support.python.hwut_runner import HwutRunner
-from vut.engine.coverage.measure import (I_Measure, PointMeasure, register,
+from vut.engine.coverage.measure import (I_Measure, PointMeasure,
+                                         NamedPointMeasure, register,
                                          measure_of, measure_of_tag,
                                          name_tuple, tag_tuple,
-                                         MeasureFault, BRANCH, MCDC)
+                                         MeasureFault, BRANCH, MCDC,
+                                         TOGGLE, COVER)
 from vut.engine.coverage.record  import (ranges_of, FileCoverage,
                                          CoverageRecord, format_record,
                                          parse_record, merge,
@@ -116,14 +127,16 @@ def test_registration():
           % raised(lambda: register(PointMeasure("arms", "BR"))))
 
     ok = check([
-        (name_tuple() == ("branch", "mcdc"),
-         "two measures are registered, and the record writes them in "
+        (name_tuple() == ("branch", "cover", "mcdc", "toggle"),
+         "four measures are registered, and the record writes them in "
          "this order so the bytes are stable"),
-        (tag_tuple() == ("BR", "MC"),
+        (tag_tuple() == ("BR", "CP", "MC", "TG"),
          "each owns a record tag"),
-        (measure_of("branch") is BRANCH and measure_of_tag("MC") is MCDC,
+        (measure_of("branch") is BRANCH and measure_of_tag("MC") is MCDC
+         and measure_of("toggle") is TOGGLE
+         and measure_of_tag("CP") is COVER,
          "and answers to both its name and its tag"),
-        (measure_of("toggle") is None and measure_of_tag("ZZ") is None,
+        (measure_of("fsm") is None and measure_of_tag("ZZ") is None,
          "what is not registered answers None -- the caller decides "
          "whether that is a fault"),
         (raised(lambda: register(PointMeasure("branch", "XX")))
@@ -196,6 +209,55 @@ def test_mcdc():
          "independence of DIFFERENT conditions"),
     ])
     verdict(ok, "MC/DC is per DECISION, and a line may carry several.")
+
+
+def test_named():
+    """The named points: identity carried, so merge is honest."""
+    entry = ((7, "count[0]", 1, 1), (7, "count[3]", 0, 1),
+             (31, "cover", 1, 1))
+    banner("encode, and read back")
+    encoded = TOGGLE.encode(entry)
+    print("         %s" % encoded)
+    print("         summary: %i of %i" % TOGGLE.summary(entry))
+
+    banner("the union of two runs")
+    run_a = ((7, "count[0]", 1, 1), (7, "count[3]", 0, 1))
+    run_b = ((7, "count[0]", 0, 1), (7, "count[3]", 1, 1))
+    merged = TOGGLE.merge(run_a, run_b)
+    print("         a: %s" % (TOGGLE.encode(run_a)))
+    print("         b: %s" % (TOGGLE.encode(run_b)))
+    print("         u: %s" % (TOGGLE.encode(merged)))
+
+    banner("what is refused")
+    print("         a name carrying '*'   -> %s"
+          % raised(lambda: TOGGLE.encode(((3, "a*b", 1, 1),))))
+    print("         totals that disagree  -> %s"
+          % raised(lambda: TOGGLE.merge(((3, "s", 1, 1),),
+                                        ((3, "s", 1, 2),))))
+    print("         covered above total   -> %s"
+          % raised(lambda: TOGGLE.decode("3*s*2/1")))
+
+    ok = check([
+        (TOGGLE.decode(encoded) == entry,
+         "the encoding round-trips: '<delta>*<name>*<covered>/<total>', "
+         "a zero delta admitting a second point on one line"),
+        (TOGGLE.mergeable and COVER.mergeable,
+         "both named measures declare mergeable -- the artifact names "
+         "every point, which is exactly what 'branch' lacks"),
+        (merged == ((7, "count[0]", 1, 1), (7, "count[3]", 1, 1)),
+         "a bit toggled in EITHER run is toggled: the union 'branch' "
+         "cannot compute, computed by name"),
+        (TOGGLE.summary(merged) == (2, 2),
+         "and the summary derives from the union, not from adding "
+         "summaries"),
+        (raised(lambda: TOGGLE.merge(((3, "s", 1, 1),),
+                                     ((3, "s", 1, 2),)))
+         == "MeasureFault",
+         "one name, two totals: not one point, refused rather than "
+         "adjudicated"),
+    ])
+    verdict(ok, "identity beside the count is what makes a union a "
+                "measurement.")
 
 
 def test_in_record():
@@ -312,6 +374,7 @@ if __name__ == "__main__":
             "registration": test_registration,
             "branch":       test_branch,
             "mcdc":         test_mcdc,
+            "named":        test_named,
             "in_record":    test_in_record,
             "unmergeable":  test_unmergeable,
             "faults":       test_faults,

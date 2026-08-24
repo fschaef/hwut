@@ -1,0 +1,21 @@
+
+--- encode, and read back ---
+         7*count[0]*1/1,0*count[3]*0/1,24*cover*1/1
+         summary: 2 of 3
+
+--- the union of two runs ---
+         a: 7*count[0]*1/1,0*count[3]*0/1
+         b: 7*count[0]*0/1,0*count[3]*1/1
+         u: 7*count[0]*1/1,0*count[3]*1/1
+
+--- what is refused ---
+         a name carrying '*'   -> MeasureFault
+         totals that disagree  -> MeasureFault
+         covered above total   -> MeasureFault
+  OK  : the encoding round-trips: '<delta>*<name>*<covered>/<total>', a zero delta admitting a second point on one line
+  OK  : both named measures declare mergeable -- the artifact names every point, which is exactly what 'branch' lacks
+  OK  : a bit toggled in EITHER run is toggled: the union 'branch' cannot compute, computed by name
+  OK  : and the summary derives from the union, not from adding summaries
+  OK  : one name, two totals: not one point, refused rather than adjudicated
+SUCCESS: identity beside the count is what makes a union a measurement.
+<hwut-end>

@@ -1,12 +1,14 @@
 
 --- what is registered ---
          branch   tag 'BR'   mergeable False
+         cover    tag 'CP'   mergeable True
          mcdc     tag 'MC'   mergeable False
+         toggle   tag 'TG'   mergeable True
 
 --- a second measure claiming a taken name, or a taken tag ---
          name 'branch' again -> MeasureFault
          tag 'BR' again      -> MeasureFault
-  OK  : two measures are registered, and the record writes them in this order so the bytes are stable
+  OK  : four measures are registered, and the record writes them in this order so the bytes are stable
   OK  : each owns a record tag
   OK  : and answers to both its name and its tag
   OK  : what is not registered answers None -- the caller decides whether that is a fault

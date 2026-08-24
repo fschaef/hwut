@@ -494,11 +494,23 @@ def merge(record_iterable):
             if standing is None:
                 file_db[path] = entry
             else:
+                #  Unmergeable measures were refused above, so what
+                #  meets here MERGES -- the measure owns how ('toggle'
+                #  and 'cover' union by point identity). A measure one
+                #  side lacks is carried: the point set IS what was
+                #  measured, and absence stays absent.
+                measure_db = dict(standing.measure_db)
+                for name, point_tuple in entry.measure_db.items():
+                    held    = measure_db.get(name)
+                    measure = measure_of(name)
+                    if   held is None:       measure_db[name] = point_tuple
+                    elif measure is not None:
+                        measure_db[name] = measure.merge(held, point_tuple)
                 file_db[path] = FileCoverage(
                     path,
                     union(standing.executable, entry.executable),
                     union(standing.covered,    entry.covered),
-                    None, {})
+                    None, measure_db)
 
     choice_list = sorted(set(r.choice for r in record_list),
                          key=lambda c: str(c))

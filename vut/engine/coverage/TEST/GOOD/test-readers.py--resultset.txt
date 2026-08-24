@@ -1,0 +1,21 @@
+
+--- the resultset, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: ruby
+         | ##tool:     simplecov
+         | ##format:   simplecov-resultset
+         | ##counts:   no
+         | SF:calc.rb
+         | EX:2+3,1,3+2,2+3
+         | CV:2+2,2,3,3+3
+
+--- one run, two artifacts ---
+INSPECT: resultset  EX=((2, 5), (6, 7), (10, 12), (14, 17)) CV=((2, 4), (6, 7), (10, 11), (14, 17))
+         cobertura  EX=((2, 5), (6, 7), (10, 12), (14, 17)) CV=((2, 4), (6, 7), (10, 11), (14, 17))
+  OK  : the ABSOLUTE path simplecov wrote, made relative: the record names no machine
+  OK  : the arm never taken and the method never called, and nothing else
+  OK  : the resultset and the cobertura export of ONE run agree on EX and CV -- 'agreement', replayed for ruby
+SUCCESS: ruby's own record, and its export answers to it.
+<hwut-end>

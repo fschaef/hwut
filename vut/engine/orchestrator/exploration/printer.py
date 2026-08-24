@@ -44,7 +44,7 @@ this choice's own word (see provenance.py).
 ______________________________________________________________________________
 """
 from .relation      import RELATION, default_of
-from .specification import KEY_TO_FIELD
+from .configuration_tree import KEY_TO_FIELD
 
 _INDENT      = "    "
 _VALUE_COLUMN = 46

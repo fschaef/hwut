@@ -5,7 +5,8 @@ ______________________________________________________________________________
 PURPOSE: THE READERS -- three artifact FORMATS, one homogeneous record.
 
 CHOICES: python, lcov, gcov, cobertura, go, luacov, jacoco, witnessed,
-         verilator, ghdl, agreement, aliases, calls, absent, gather;
+         verilator, native, ghdl, psl, resultset, ucis, agreement,
+         aliases, calls, absent, gather;
 
 DESCRIPTION:
 
@@ -108,17 +109,49 @@ ghdl       VHDL THROUGH GHDL'S GCC BACKEND: gcov over a VHDL source,
            which touches only counts (not recorded), never EX/CV,
            because elaboration executes every annotated line.
 
+native     THE ARTIFACT THE EXPORT FLATTENED, READ WHOLE: verilator's
+           own '.dat', same run as the 'verilator' choice's export.
+           Line points make EX/CV; branch ARMS fold into 'branch';
+           toggle bits and 'cover property' points ride the NAMED
+           measures at their declared positions. What the export
+           misfiled stands corrected from the other side: line 7 is
+           not a line here at all, 'count[3]' is an untoggled BIT, and
+           top2.v -- pure structure -- has NO executable line and says
+           so.
+
+psl        GHDL'S PSL REPORT: 'cover' directives as named points at
+           their own lines, covered where 'finished-count' is above
+           zero. The ASSERT in the same report is NOT read -- an
+           assertion is a verdict, not a coverage -- and a json that is
+           not this report is left alone.
+
+resultset  SIMPLECOV'S OWN RECORD, and the cross-check beside it: the
+           resultset and the cobertura export of ONE ruby run must
+           yield the same EX and the same CV, or a reader is wrong --
+           'agreement', replayed for ruby.
+
+ucis       UCIS XML, READ AGAINST ITS OWN XSD, over an artifact an
+           INDEPENDENT implementation wrote from this project's own
+           '.dat' -- not the reader's construction, not the artifact's.
+           Line, branch and toggle read; FSM, assertion and covergroup
+           coverage do NOT, and the schema itself says why each cannot
+           (readers/ucis.py) -- disc-9(b) is a STRUCTURAL fact of the
+           format, not an availability gap this session's tooling
+           happened not to close.
+
 agreement  THE CROSS-CHECK: coverage.py's json and coverage.py's OWN
            lcov describe one run of one file. The two readers must
            produce the same EX and the same CV, or one of them is
            wrong.
 
-aliases    seven tools speak the tracefile -- 'gcovr', 'grcov', 'kcov',
-           'llvm-cov', 'cargo-llvm-cov' and 'verilator_coverage' beside
-           'lcov' itself -- so ONE reader serves them all, and the header
+aliases    eight tools speak the tracefile -- 'gcovr', 'grcov',
+           'llvm-cov', 'cargo-llvm-cov', 'verilator_coverage', 'node'
+           and 'c8' beside 'lcov' itself -- ONE reader serves them, and
+           the header
            still names the TOOL that ran, because the format and the tool
-           are different facts. 'verilator_coverage' is how VERILOG line
-           coverage is read with no code at all.
+           are different facts. 'kcov' stood among them until it was
+           WITNESSED: its output holds cobertura and NO tracefile, so its
+           alias now points there -- one line moved, nothing else.
 
 calls      what a reader NAMES rather than makes: 'coverage run' wraps,
            'coverage json' is a second supervised call, gcov wraps
@@ -517,6 +550,452 @@ JACOCO_MUTE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 #  The single line is JaCoCo's own -- the tool writes no newlines,
 #  and verbatim means verbatim.
 JACOCO_WITNESSED_XML = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd"><report name="JaCoCo Coverage Report"><sessioninfo id="vm-380e3b57" start="1787552075395" dump="1787552075493"/><package name="com/example"><class name="com/example/Calculator" sourcefilename="Calculator.java"><method name="&lt;init&gt;" desc="()V" line="3"><counter type="INSTRUCTION" missed="0" covered="3"/><counter type="LINE" missed="0" covered="1"/><counter type="COMPLEXITY" missed="0" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><method name="absoluteValue" desc="(I)I" line="5"><counter type="INSTRUCTION" missed="2" covered="5"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="2"/><counter type="COMPLEXITY" missed="1" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><method name="main" desc="([Ljava/lang/String;)V" line="12"><counter type="INSTRUCTION" missed="0" covered="11"/><counter type="LINE" missed="0" covered="3"/><counter type="COMPLEXITY" missed="0" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></class><sourcefile name="Calculator.java"><line nr="3" mi="0" ci="3" mb="0" cb="0"/><line nr="5" mi="0" ci="2" mb="1" cb="1"/><line nr="6" mi="0" ci="3" mb="0" cb="0"/><line nr="8" mi="2" ci="0" mb="0" cb="0"/><line nr="12" mi="0" ci="4" mb="0" cb="0"/><line nr="14" mi="0" ci="6" mb="0" cb="0"/><line nr="15" mi="0" ci="1" mb="0" cb="0"/><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></sourcefile><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></package><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></report>"""
+
+#  VERILATOR'S NATIVE '.dat', VERBATIM up to spelling: the artifact
+#  separates key fields with the bytes 0x01/0x02, spelled '\\x01'/
+#  '\\x02' here so the fixture is printable; the decoded string is
+#  byte-identical to what the tool wrote (WITNESS-hdl/verilog/,
+#  same run as VERILATOR_INFO above).
+VERILATOR_DAT = """# SystemC::Coverage-3
+C '\x01f\x02blinker.v\x01l\x0211\x01n\x025\x01page\x02v_line/blinker\x01o\x02block\x01S\x0211\x01h\x02TOP.tb.dut.*' 24
+C '\x01f\x02blinker.v\x01l\x0212\x01n\x0210\x01page\x02v_branch/blinker\x01o\x02else\x01S\x0215-16\x01h\x02TOP.tb.dut.*' 22
+C '\x01f\x02blinker.v\x01l\x0212\x01n\x029\x01page\x02v_branch/blinker\x01o\x02if\x01S\x0212-14\x01h\x02TOP.tb.dut.*' 2
+C '\x01f\x02blinker.v\x01l\x0217\x01n\x0221\x01page\x02v_line/blinker\x01o\x02case\x01S\x0217\x01h\x02TOP.tb.dut.*' 13
+C '\x01f\x02blinker.v\x01l\x0217\x01n\x0223\x01page\x02v_branch/blinker\x01o\x02if\x01S\x0217\x01h\x02TOP.tb.dut.*' 1
+C '\x01f\x02blinker.v\x01l\x0217\x01n\x0224\x01page\x02v_branch/blinker\x01o\x02else\x01h\x02TOP.tb.dut.*' 12
+C '\x01f\x02blinker.v\x01l\x0218\x01n\x0220\x01page\x02v_line/blinker\x01o\x02case\x01S\x0218-19\x01h\x02TOP.tb.dut.*' 4
+C '\x01f\x02blinker.v\x01l\x0220\x01n\x0221\x01page\x02v_branch/blinker\x01o\x02if\x01S\x0220\x01h\x02TOP.tb.dut.*' 1
+C '\x01f\x02blinker.v\x01l\x0220\x01n\x0222\x01page\x02v_branch/blinker\x01o\x02else\x01h\x02TOP.tb.dut.*' 3
+C '\x01f\x02blinker.v\x01l\x0222\x01n\x0221\x01page\x02v_line/blinker\x01o\x02case\x01S\x0222\x01h\x02TOP.tb.dut.*' 5
+C '\x01f\x02blinker.v\x01l\x0223\x01n\x0217\x01page\x02v_line/blinker\x01o\x02case\x01S\x0223\x01h\x02TOP.tb.dut.*' 0
+C '\x01f\x02blinker.v\x01l\x023\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02clk\x01h\x02TOP.tb.dut.*' 48
+C '\x01f\x02blinker.v\x01l\x0230\x01n\x0231\x01page\x02v_toggle/blinker_cov\x01o\x02clk\x01h\x02TOP.tb.dut.cov' 24
+C '\x01f\x02blinker.v\x01l\x0230\x01n\x0253\x01page\x02v_toggle/blinker_cov\x01o\x02state[0]\x01h\x02TOP.tb.dut.cov' 2
+C '\x01f\x02blinker.v\x01l\x0230\x01n\x0253\x01page\x02v_toggle/blinker_cov\x01o\x02state[1]\x01h\x02TOP.tb.dut.cov' 1
+C '\x01f\x02blinker.v\x01l\x0231\x01n\x025\x01page\x02v_user/blinker_cov\x01o\x02cover\x01S\x0231\x01h\x02TOP.tb.dut.cov' 5
+C '\x01f\x02blinker.v\x01l\x0232\x01n\x025\x01page\x02v_user/blinker_cov\x01o\x02cover\x01S\x0232\x01h\x02TOP.tb.dut.cov' 0
+C '\x01f\x02blinker.v\x01l\x024\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02rst\x01h\x02TOP.tb.dut.*' 4
+C '\x01f\x02blinker.v\x01l\x025\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02enable\x01h\x02TOP.tb.dut.*' 1
+C '\x01f\x02blinker.v\x01l\x026\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02state[0]\x01h\x02TOP.tb.dut.*' 2
+C '\x01f\x02blinker.v\x01l\x026\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02state[1]\x01h\x02TOP.tb.dut.*' 1
+C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[0]\x01h\x02TOP.tb.dut.*' 4
+C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[1]\x01h\x02TOP.tb.dut.*' 2
+C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[2]\x01h\x02TOP.tb.dut.*' 1
+C '\x01f\x02blinker.v\x01l\x027\x01n\x0223\x01page\x02v_toggle/blinker\x01o\x02count[3]\x01h\x02TOP.tb.dut.*' 0
+C '\x01f\x02tb.v\x01l\x023\x01n\x0215\x01page\x02v_line/tb\x01o\x02block\x01S\x023\x01h\x02TOP.tb' 1
+C '\x01f\x02tb.v\x01l\x023\x01n\x0218\x01page\x02v_toggle/tb\x01o\x02rst\x01h\x02TOP.tb' 2
+C '\x01f\x02tb.v\x01l\x023\x01n\x0224\x01page\x02v_line/tb\x01o\x02block\x01S\x023\x01h\x02TOP.tb' 1
+C '\x01f\x02tb.v\x01l\x023\x01n\x0227\x01page\x02v_toggle/tb\x01o\x02go\x01h\x02TOP.tb' 1
+C '\x01f\x02tb.v\x01l\x023\x01n\x0232\x01page\x02v_line/tb\x01o\x02block\x01S\x023\x01h\x02TOP.tb' 1
+C '\x01f\x02tb.v\x01l\x023\x01n\x029\x01page\x02v_toggle/tb\x01o\x02clk\x01h\x02TOP.tb' 24
+C '\x01f\x02tb.v\x01l\x027\x01n\x025\x01page\x02v_line/tb\x01o\x02block\x01S\x027\x01h\x02TOP.tb' 24
+C '\x01f\x02tb.v\x01l\x029\x01n\x025\x01page\x02v_line/tb\x01o\x02block\x01S\x029-12\x01h\x02TOP.tb' 1
+C '\x01f\x02top2.v\x01l\x022\x01n\x0217\x01page\x02v_toggle/top\x01o\x02clk\x01h\x02TOP.tb.dut' 24
+C '\x01f\x02top2.v\x01l\x023\x01n\x0217\x01page\x02v_toggle/top\x01o\x02rst\x01h\x02TOP.tb.dut' 2
+C '\x01f\x02top2.v\x01l\x024\x01n\x0217\x01page\x02v_toggle/top\x01o\x02go\x01h\x02TOP.tb.dut' 1
+C '\x01f\x02top2.v\x01l\x026\x01n\x0216\x01page\x02v_toggle/top\x01o\x02state_a[0]\x01h\x02TOP.tb.dut' 2
+C '\x01f\x02top2.v\x01l\x026\x01n\x0216\x01page\x02v_toggle/top\x01o\x02state_a[1]\x01h\x02TOP.tb.dut' 1
+C '\x01f\x02top2.v\x01l\x026\x01n\x0225\x01page\x02v_toggle/top\x01o\x02state_b[0]\x01h\x02TOP.tb.dut' 0
+C '\x01f\x02top2.v\x01l\x026\x01n\x0225\x01page\x02v_toggle/top\x01o\x02state_b[1]\x01h\x02TOP.tb.dut' 0
+C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[0]\x01h\x02TOP.tb.dut' 4
+C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[1]\x01h\x02TOP.tb.dut' 2
+C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[2]\x01h\x02TOP.tb.dut' 1
+C '\x01f\x02top2.v\x01l\x027\x01n\x0216\x01page\x02v_toggle/top\x01o\x02count_a[3]\x01h\x02TOP.tb.dut' 0
+C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[0]\x01h\x02TOP.tb.dut' 0
+C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[1]\x01h\x02TOP.tb.dut' 0
+C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[2]\x01h\x02TOP.tb.dut' 0
+C '\x01f\x02top2.v\x01l\x027\x01n\x0225\x01page\x02v_toggle/top\x01o\x02count_b[3]\x01h\x02TOP.tb.dut' 0
+"""
+
+#  GHDL'S PSL REPORT, VERBATIM: 'ghdl -r tb --psl-report=psl.json'
+#  over blinker.vhdl -- two covers (one never finished) and one
+#  assert (WITNESS-hdl/vhdl/).
+PSL_JSON = """{ "details" : [
+ { "directive": "cover",
+   "name": ".tb(sim).dut@blinker(rtl).cover_reach_done",
+   "file": "blinker.vhdl",
+   "line": 47,
+   "finished-count": 5,
+   "started-count": 12,
+   "status": "covered"},
+ { "directive": "cover",
+   "name": ".tb(sim).dut@blinker(rtl).cover_abort",
+   "file": "blinker.vhdl",
+   "line": 48,
+   "finished-count": 0,
+   "started-count": 12,
+   "status": "not covered"},
+ { "directive": "assertion",
+   "name": ".tb(sim).dut@blinker(rtl).assert_count_run",
+   "file": "blinker.vhdl",
+   "line": 49,
+   "finished-count": 0,
+   "started-count": 12,
+   "status": "passed"}],
+ "summary" : {
+  "assert": 1,
+  "assert-failure": 0,
+  "assert-pass": 1,
+  "assume": 0,
+  "assume-failure": 0,
+  "assume-pass": 0,
+  "cover": 2,
+  "cover-failure": 1,
+  "cover-pass": 1}
+}
+"""
+
+#  SIMPLECOV'S RESULTSET AND ITS OWN COBERTURA EXPORT, VERBATIM --
+#  one ruby run, two artifacts, the 'agreement' cross-check's HDL-
+#  era sibling. calc.rb: an 'if' arm never taken (line 4), a method
+#  never called (line 11).
+SIMPLECOV_RESULTSET = """{"Unknown Test Framework":{"coverage":{"/home/claude/hdl-demo/ruby/calc.rb":{"lines":[null,1,3,0,null,3,null,null,null,1,0,null,null,1,4,1]}},"timestamp":1787567995.2356343,"run_id":"edd8a0ad-f963-49c3-a003-ed5ef63bd9ff","worker_id":"1440"}}
+"""
+
+SIMPLECOV_COBERTURA = """<?xml version='1.0'?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<!--Generated by simplecov-cobertura version 4.0.0 (https://github.com/jessebs/simplecov-cobertura)-->
+<coverage line-rate="0.7778" lines-covered="7" lines-valid="9" complexity="0" version="0" timestamp="1787567995">
+  <sources>
+    <source>/home/claude/hdl-demo/ruby</source>
+  </sources>
+  <packages>
+    <package name="ruby" line-rate="0.7778" complexity="0">
+      <classes>
+        <class name="calc.rb" filename="calc.rb" line-rate="0.7778" complexity="0">
+          <methods/>
+          <lines>
+            <line number="2" hits="1"/>
+            <line number="3" hits="3"/>
+            <line number="4" hits="0"/>
+            <line number="6" hits="3"/>
+            <line number="10" hits="1"/>
+            <line number="11" hits="0"/>
+            <line number="14" hits="1"/>
+            <line number="15" hits="4"/>
+            <line number="16" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>"""
+
+#  UCIS XML, VERBATIM, PRODUCED BY AN INDEPENDENT IMPLEMENTATION:
+#  'pyucis convert coverage.dat -if vltcov -of xml' (fvutils/pyucis)
+#  over THIS PROJECT'S OWN witnessed VERILATOR_DAT above -- not
+#  fetched, not hand-written; checked against 'ucis.xsd', the format's
+#  own schema, shipped with the tool that wrote this (WITNESS-hdl-
+#  artifacts.txt, ucis addendum). The conversion has its own real
+#  defect, read faithfully rather than hidden: every distinct SIGNAL
+#  of one file collapses into one 'toggleBit name="bit0"' (readers/
+#  ucis.py's toggle paragraph).
+UCIS_XML = """<UCIS xmlns:ucis="http://www.w3.org/2001/XMLSchema-instance" writtenBy="root" writtenTime="2026-08-24T11:46:02" ucisVersion="1.0">
+  <sourceFiles fileName="__null__file__" id="1"/>
+  <sourceFiles fileName="tb.v" id="2"/>
+  <sourceFiles fileName="top2.v" id="3"/>
+  <sourceFiles fileName="blinker.v" id="4"/>
+  <historyNodes historyNodeId="0" logicalName="verilator_test" physicalName="coverage.dat" kind="1" testStatus="true" simtime="0.0" timeunit="ns" runCwd="." cpuTime="0.0" seed="0" cmd="" args="" compulsory="0" date="2026-08-24T11:46:02" userName="user" cost="0.0" toolCategory="verilator" ucisVersion="1.0" vendorId="unknown" vendorTool="unknown" vendorToolVersion="unknown"/>
+  <instanceCoverages name="TOP" key="0" instanceId="0" moduleName="verilator_design">
+    <id file="1" line="1" inlineCount="1"/>
+  </instanceCoverages>
+  <instanceCoverages name="tb" key="0" instanceId="1" moduleName="TOP">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_tb_v" key="0">
+        <id file="2" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_3_18">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_3_27">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_3_9">
+            <bin>
+              <contents coverageCount="24"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+    <blockCoverage>
+      <statement alias="line_3">
+        <id file="2" line="3" inlineCount="15"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+      <statement alias="line_3">
+        <id file="2" line="3" inlineCount="24"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+      <statement alias="line_3">
+        <id file="2" line="3" inlineCount="32"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+      <statement alias="line_7">
+        <id file="2" line="7" inlineCount="5"/>
+        <bin>
+          <contents coverageCount="24"/>
+        </bin>
+      </statement>
+      <statement alias="line_9">
+        <id file="2" line="9" inlineCount="5"/>
+        <bin>
+          <contents coverageCount="1"/>
+        </bin>
+      </statement>
+    </blockCoverage>
+  </instanceCoverages>
+  <instanceCoverages name="dut" key="0" instanceId="2" moduleName="tb">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_top2_v" key="0">
+        <id file="3" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_2_17">
+            <bin>
+              <contents coverageCount="24"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_3_17">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_4_17">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_16">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_16">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="4"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_16">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_25">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+  </instanceCoverages>
+  <instanceCoverages name="*" key="0" instanceId="3" moduleName="dut">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_blinker_v" key="0">
+        <id file="4" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_3_23">
+            <bin>
+              <contents coverageCount="48"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_4_23">
+            <bin>
+              <contents coverageCount="4"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_5_23">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_23">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_6_23">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="4"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_7_23">
+            <bin>
+              <contents coverageCount="0"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+    <blockCoverage>
+      <statement alias="line_11">
+        <id file="4" line="11" inlineCount="5"/>
+        <bin>
+          <contents coverageCount="24"/>
+        </bin>
+      </statement>
+      <statement alias="line_17">
+        <id file="4" line="17" inlineCount="21"/>
+        <bin>
+          <contents coverageCount="13"/>
+        </bin>
+      </statement>
+      <statement alias="line_18">
+        <id file="4" line="18" inlineCount="20"/>
+        <bin>
+          <contents coverageCount="4"/>
+        </bin>
+      </statement>
+      <statement alias="line_22">
+        <id file="4" line="22" inlineCount="21"/>
+        <bin>
+          <contents coverageCount="5"/>
+        </bin>
+      </statement>
+      <statement alias="line_23">
+        <id file="4" line="23" inlineCount="17"/>
+        <bin>
+          <contents coverageCount="0"/>
+        </bin>
+      </statement>
+    </blockCoverage>
+    <branchCoverage>
+      <statement statementType="if" branchExpr="branch_blinker_v">
+        <id file="4" line="1" inlineCount="1"/>
+        <branch>
+          <id file="4" line="12" inlineCount="10"/>
+          <branchBin alias="branch_12_10">
+            <contents coverageCount="22"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="12" inlineCount="9"/>
+          <branchBin alias="branch_12_9">
+            <contents coverageCount="2"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="17" inlineCount="23"/>
+          <branchBin alias="branch_17_23">
+            <contents coverageCount="1"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="17" inlineCount="24"/>
+          <branchBin alias="branch_17_24">
+            <contents coverageCount="12"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="20" inlineCount="21"/>
+          <branchBin alias="branch_20_21">
+            <contents coverageCount="1"/>
+          </branchBin>
+        </branch>
+        <branch>
+          <id file="4" line="20" inlineCount="22"/>
+          <branchBin alias="branch_20_22">
+            <contents coverageCount="3"/>
+          </branchBin>
+        </branch>
+      </statement>
+    </branchCoverage>
+  </instanceCoverages>
+  <instanceCoverages name="cov" key="0" instanceId="4" moduleName="dut">
+    <id file="1" line="1" inlineCount="1"/>
+    <toggleCoverage>
+      <toggleObject name="toggle_blinker_v" key="0">
+        <id file="4" line="1" inlineCount="1"/>
+        <toggleBit name="bit0" key="0">
+          <toggle from="" to="ggle_30_31">
+            <bin>
+              <contents coverageCount="24"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_30_53">
+            <bin>
+              <contents coverageCount="2"/>
+            </bin>
+          </toggle>
+          <toggle from="" to="ggle_30_53">
+            <bin>
+              <contents coverageCount="1"/>
+            </bin>
+          </toggle>
+        </toggleBit>
+      </toggleObject>
+    </toggleCoverage>
+  </instanceCoverages>
+</UCIS>
+"""
 
 #  prog.c, built with '--coverage' and run once.
 PROG_GCOV = """        -:    0:Source:prog.c
@@ -1073,6 +1552,170 @@ def test_ghdl():
                 "of VHDL.")
 
 
+def test_native():
+    """The native '.dat': every kind on its own axis."""
+    from vut.engine.coverage.measure import BRANCH, TOGGLE, COVER
+    record = harvested("verilator", [("coverage.dat", VERILATOR_DAT)])
+    banner("the artifact, read whole")
+    show(record)
+
+    blk = record.file_db["blinker.v"]
+    top = record.file_db["top2.v"]
+    banner("the axes, separately")
+    print("INSPECT: blinker.v  line     uncovered = %s"
+          % (blk.uncovered,))
+    print("         blinker.v  branch   %i/%i taken"
+          % BRANCH.summary(blk.measure_db["branch"]))
+    print("         blinker.v  toggle   %i/%i bits"
+          % TOGGLE.summary(blk.measure_db["toggle"]))
+    print("         blinker.v  cover    %i/%i points"
+          % COVER.summary(blk.measure_db["cover"]))
+
+    in_lines = lambda entry, n: any(b <= n < e for b, e in entry.executable)
+    ok = check([
+        (sorted(record.file_db)
+         == ["blinker.v", "tb.v", "top2.v"]
+         and record.tool == "verilator"
+         and record.source == "verilator-dat"
+         and record.language == "verilog",
+         "three sources, the native format, one language"),
+        (blk.uncovered == ((23, 24),),
+         "ONE uncovered line -- the case default -- where the export "
+         "manufactured three"),
+        (not in_lines(blk, 7),
+         "line 7, the declaration the export called uncovered, is NOT "
+         "AN EXECUTABLE LINE here at all"),
+        ((7, "count[3]", 0, 1) in blk.measure_db["toggle"],
+         "what the export flattened into line 7's zero stands on its "
+         "own axis: 'count[3]', an untoggled BIT at its declaration"),
+        (blk.measure_db["cover"]
+         == ((31, "cover", 1, 1), (32, "cover", 0, 1)),
+         "the two 'cover property' points: DONE reached, the impossible "
+         "state not"),
+        (blk.measure_db["branch"]
+         == ((12, 2, 2), (17, 2, 2), (20, 2, 2)),
+         "every decision's arms both taken -- per ARM, not per line "
+         "count"),
+        (top.executable == () and top.covered == ()
+         and TOGGLE.summary(top.measure_db["toggle"]) == (8, 15),
+         "top2.v is pure structure: NO executable line, and says so -- "
+         "its coverage IS its toggles, 8 bits of 15: instance 'b' "
+         "never enabled, and 'count_a[3]' never reached"),
+    ])
+    verdict(ok, "the axes the export collapsed, kept apart.")
+
+
+def test_psl():
+    """GHDL's PSL report: covers are coverage, asserts are verdicts."""
+    from vut.engine.coverage.measure import COVER
+    record = harvested("ghdl", [("psl.json", PSL_JSON)])
+    banner("the report, read")
+    show(record)
+
+    entry = record.file_db["blinker.vhdl"]
+    banner("a json that is not this report")
+    print("         coverage.py's json -> %s"
+          % harvested("ghdl", [("coverage.json", COVERAGE_JSON)]))
+
+    ok = check([
+        (sorted(record.file_db) == ["blinker.vhdl"]
+         and record.tool == "ghdl"
+         and record.language == "vhdl",
+         "the directives' own file, and one language"),
+        (entry.executable == () and entry.covered == (),
+         "EX and CV stay EMPTY: this report says nothing about lines "
+         "executing, and inventing them would be the export's misfiling "
+         "in the other direction"),
+        (entry.measure_db["cover"]
+         == ((47, "cover_reach_done", 1, 1), (48, "cover_abort", 0, 1)),
+         "the two covers at their own lines: DONE_S was reached, the "
+         "RUN-then-IDLE abort never happened"),
+        (all(label != "assert_count_run"
+             for _, label, _, _ in entry.measure_db["cover"]),
+         "the ASSERT at line 49 is NOT among them: a verdict, not a "
+         "coverage"),
+        (harvested("ghdl", [("coverage.json", COVERAGE_JSON)]) is None,
+         "and a json without the report's shape is left alone"),
+    ])
+    verdict(ok, "what the verification meant to see, recorded as seen "
+                "or not.")
+
+
+def test_resultset():
+    """SimpleCov's own record, cross-checked against its own export."""
+    record = harvested("simplecov",
+                       [(".resultset.json", SIMPLECOV_RESULTSET)],
+                       source_root="/home/claude/hdl-demo/ruby")
+    banner("the resultset, read")
+    show(record)
+
+    entry = record.file_db["calc.rb"]
+    from_export = harvested("cobertura",
+                            [("coverage.xml", SIMPLECOV_COBERTURA)])
+    export_entry = from_export.file_db["calc.rb"]
+    banner("one run, two artifacts")
+    print("INSPECT: resultset  EX=%s CV=%s"
+          % (entry.executable, entry.covered))
+    print("         cobertura  EX=%s CV=%s"
+          % (export_entry.executable, export_entry.covered))
+
+    ok = check([
+        (sorted(record.file_db) == ["calc.rb"]
+         and record.language == "ruby"
+         and record.source == "simplecov-resultset",
+         "the ABSOLUTE path simplecov wrote, made relative: the record "
+         "names no machine"),
+        (entry.uncovered == ((4, 5), (11, 12)),
+         "the arm never taken and the method never called, and nothing "
+         "else"),
+        (entry.executable == export_entry.executable
+         and entry.covered == export_entry.covered,
+         "the resultset and the cobertura export of ONE run agree on EX "
+         "and CV -- 'agreement', replayed for ruby"),
+    ])
+    verdict(ok, "ruby's own record, and its export answers to it.")
+
+
+def test_ucis():
+    """UCIS XML, read against its own XSD, over a real conversion."""
+    from vut.engine.coverage.measure import BRANCH, TOGGLE
+    record = harvested("ucis", [("coverage.ucis.xml", UCIS_XML)])
+    banner("the document, read")
+    show(record)
+
+    blk = record.file_db["blinker.v"]
+    banner("what the standard's own schema will not let this reader see")
+    for kind in ("fsmCoverage", "assertionCoverage", "covergroupCoverage"):
+        print("         %-20s -- no '<id>' anywhere in the XSD for its "
+              "bins" % kind)
+
+    ok = check([
+        (sorted(record.file_db) == ["blinker.v", "tb.v", "top2.v"]
+         and record.tool == "ucis" and record.source == "ucis-xml"
+         and record.language == "verilog",
+         "three sources, the interchange format, one language"),
+        (blk.uncovered == ((23, 24),),
+         "line coverage from 'blockCoverage//statement' agrees with "
+         "every other witnessed road: the case default, the one line "
+         "that did not run"),
+        (blk.measure_db["branch"] == ((12, 2, 2), (17, 2, 2), (20, 2, 2))
+         and BRANCH.summary(blk.measure_db["branch"]) == (6, 6),
+         "branch arms grouped by THEIR OWN line -- the artifact wraps "
+         "every decision of a file under one '<statement>', and the "
+         "reader groups by the '<branch>' elements' own '<id>' instead"),
+        (blk.measure_db["toggle"]
+         == ((1, "toggle_blinker_v.bit0", 1, 1),),
+         "ONE toggle point, name 'OBJECT.BIT' -- and its being one "
+         "point for a whole file, not one per signal, is the "
+         "CONVERSION'S collapse, read faithfully rather than hidden"),
+        (TOGGLE.summary(blk.measure_db["toggle"]) == (1, 1),
+         "so the toggle summary says 'this file toggled', which is all "
+         "this particular import can honestly say"),
+    ])
+    verdict(ok, "the standard's own schema decides what this reader can "
+                "and cannot claim.")
+
+
 def test_agreement():
     """THE CROSS-CHECK: two readers, one run, one answer."""
     from_json = harvested("coverage", [("coverage.json", COVERAGE_JSON)])
@@ -1110,8 +1753,8 @@ def test_aliases():
     banner("what this build reads")
     print("         %s" % (registered_tuple(),))
 
-    alias_tuple = ("lcov", "gcovr", "grcov", "kcov", "llvm-cov",
-                   "cargo-llvm-cov", "verilator_coverage")
+    alias_tuple = ("lcov", "gcovr", "grcov", "llvm-cov",
+                   "cargo-llvm-cov", "verilator_coverage", "node", "c8")
     record_db = {tool: harvested(tool, [("run.info", COVERAGE_LCOV)])
                  for tool in alias_tuple}
     banner("the same tracefile, under every tool name that speaks it")
@@ -1120,17 +1763,27 @@ def test_aliases():
         print("         %-18s tool=%-18s format=%s"
               % (tool, record.tool, record.source))
 
+    banner("kcov, witnessed out of this list")
+    from_kcov = harvested("kcov", [("cov.xml", COBERTURA_XML)])
+    print("         kcov               tool=%-18s format=%s"
+          % (from_kcov.tool, from_kcov.source))
+
     ok = check([
-        (registered_tuple() == ("cargo-llvm-cov", "cobertura", "coverage",
-                                "coverlet", "gcov", "gcovr", "go",
-                                "grcov", "jacoco", "kcov", "lcov",
-                                "llvm-cov", "luacov", "scoverage",
-                                "verilator_coverage"),
-         "fifteen tools, seven formats"),
+        (registered_tuple() == ("c8", "cargo-llvm-cov", "cobertura",
+                                "coverage", "coverlet", "gcov", "gcovr",
+                                "ghdl", "go", "grcov", "jacoco", "kcov",
+                                "lcov", "llvm-cov", "luacov", "node",
+                                "scoverage", "simplecov", "ucis",
+                                "verilator", "verilator_coverage"),
+         "twenty-one tools, eleven formats"),
         (all(r.source == "lcov-tracefile" for r in record_db.values()),
-         "SEVEN of them share ONE reader -- 'verilator_coverage' among "
-         "them, which is how VERILOG line coverage is read with no code "
-         "at all"),
+         "EIGHT of them share ONE reader -- 'verilator_coverage' among "
+         "them (VERILOG with no code at all), and 'node', whose own "
+         "test runner writes the tracefile with no package installed"),
+        (from_kcov.tool == "kcov"
+         and from_kcov.source == "cobertura-xml",
+         "and 'kcov' now reads through COBERTURA: witnessed writing no "
+         "tracefile at all, its alias moved -- one line, nothing else"),
         (all(r.tool == tool for tool, r in record_db.items()),
          "and each record names the TOOL THAT RAN, not the reader that "
          "read it -- two different facts, both wanted"),
@@ -1269,7 +1922,11 @@ if __name__ == "__main__":
             "jacoco":    test_jacoco,
             "witnessed": test_witnessed,
             "verilator": test_verilator,
+            "native":    test_native,
             "ghdl":      test_ghdl,
+            "psl":       test_psl,
+            "resultset": test_resultset,
+            "ucis":      test_ucis,
             "lcov":      test_lcov,
             "gcov":      test_gcov,
             "agreement": test_agreement,

@@ -1,6 +1,6 @@
 ## The three invocation forms must agree byte-for-byte.
 stdin  == file argument: True
-wrapper == file argument: FALSE
+wrapper == file argument: True
 
 ## Suppression: --no-color and NO_COLOR both yield escape-free
 ## output (a piped stdout is already non-tty, so the flag is

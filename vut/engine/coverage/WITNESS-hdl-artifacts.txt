@@ -1,0 +1,93 @@
+disc-9 AMENDMENT -- THE ARTIFACTS EXIST NOW
+==============================================================================
+
+disc-9 was decided on the belief that no machine at hand could run the
+HDL tools, and that four of eight HDL measures carry NO LINE. Both
+tools ran on this machine (2026-08-24), and the artifacts say
+otherwise. Everything below is witnessed, nothing constructed; the
+artifacts stand beside this file.
+
+WITNESSED WITH
+    verilator 5.020        '--coverage' over a two-instance design
+                           with an FSM, a 4-bit counter, and two SVA
+                           'cover property' points  -> coverage.dat,
+                           coverage.info (lcov export)
+    ghdl 4.1.0 (mcode)     '-fpsl', two PSL covers and one assert
+                           -> psl.json ('--psl-report')
+    ghdl-gcc 4.1.0         '-Wc,-fprofile-arcs -Wc,-ftest-coverage'
+                           -> .gcda/.gcno, 'gcov -b' annotations
+
+FINDING 1. THE 'NO LINE' COLUMN EMPTIES -- for the open-source flow.
+Every point verilator emits carries a file and a line: line points at
+their statement, branch ARMS as separate named points ('if'/'else',
+each with its own count), toggle points PER BIT at the signal's
+DECLARATION line ('count[3]', blinker.v line 7), functional cover
+points at their 'cover property' statement. GHDL's PSL report names
+file, line, started-count, finished-count and status per directive.
+What has no line is exactly what has no open-source emitter: FSM
+coverage and covergroup bins exist only in the commercial simulators,
+behind UCIS. disc-9's table conflated 'the measure is not positional'
+with 'no open-source tool was run'; the artifact separates them.
+
+FINDING 2. THE INSTANCE QUESTION IS ANSWERED BY THE TOOL. The design
+instantiated 'blinker' twice, one enabled, one dead. Verilator merged
+the two instances per DECLARATION by default: hierarchy reads
+'TOP.tb.dut.*' -- a literal wildcard in the artifact -- and the counts
+are summed (clk toggled 24 per instance, the artifact says 48). The
+record would inherit a union the tool already made, not invent one.
+Where the parent module names per-instance wires ('state_a',
+'state_b'), per-instance visibility survives anyway: 'state_b[*]'
+counts 0 while 'state_a[*]' counts.
+
+FINDING 3. THE CURRENT LCOV ROAD IS POLLUTED, NOT MERELY LOSSY. The
+registry's road for verilog -- 'verilator --coverage' then
+'verilator_coverage --write-info' -- does not DROP the toggle axis; it
+MISFILES it. The export flattens every toggle point onto the signal's
+declaration line as a 'DA' entry, taking the MINIMUM across bits:
+
+    DA:7,0        blinker.v line 7 -- 'output reg [3:0] count'
+
+The line executed on every clock; the 0 is 'count[3]' never toggling.
+A line reader over this reports a FALSE RED manufactured from a
+different measurement -- and a false GREEN the moment the bit
+toggles while a statement on a shared line does not run. The registry
+entry must say '--coverage-line' for the lcov road; the full artifact
+('--coverage') needs its own reader or it needs to stay unread.
+
+FINDING 4. NAMED POINTS MERGE WHERE DIGESTS CANNOT. measure.py refuses
+merge on 'branch' because (covered, total) does not carry WHICH arms.
+The artifact carries which: every arm, bit and cover point is NAMED,
+and its count is a count -- 'verilator_coverage' itself merges .dat
+files by addition. Unmergeability was a property of the digest this
+record chose, not of the measurement. A named-point measure
+('<name>*<count>' per point, seated at its file and declaration line)
+declares 'mergeable = True' honestly.
+
+FINDING 5. WHAT REMAINS LINE-LESS REMAINS DEFERRED. UCIS databases,
+OSVVM and cocotb-coverage bins, FSM state/transition coverage: no
+open-source artifact was producible here, and per the doctrine no
+reader is written against an unwitnessed format. disc-9 option (b)
+stands unchanged for these -- awaiting a real artifact, exactly as
+JaCoCo's reader awaited one.
+
+CONSEQUENCE FOR THE FORK. Option (a) stands, but its mandatory
+statement changes from 'functional, toggle and FSM coverage are not
+measured here' to the honest, smaller: 'FSM and covergroup coverage
+are not measured here'. Toggle, branch-arm, functional cover and PSL
+assert/cover coverage ARE measurable today, as registered named-point
+measures seated at their declared positions -- one reader for
+verilator's native .dat, one for GHDL's psl-report JSON, both
+writable against artifacts in hand. The record header must declare
+its measured axes, so an absent axis renders 'not measured', never
+covered.
+
+REPRODUCTION
+    verilog/   verilator --cc --exe --build --timing --coverage \
+                   sim_main.cpp tb.v top2.v blinker.v
+               ./obj_dir/Vtb            -> coverage.dat
+               verilator_coverage --write-info coverage.info coverage.dat
+    vhdl/      ghdl -a -fpsl blinker.vhdl tb.vhdl && ghdl -e -fpsl tb
+               ghdl -r tb --psl-report=psl.json
+    vhdl/gcovwork/
+               ghdl-gcc -a -Wc,-fprofile-arcs -Wc,-ftest-coverage ...
+               ghdl-gcc -e -Wl,-lgcov tb && ./tb && gcov -b blinker

@@ -1,0 +1,42 @@
+hwut.target -- run one user-defined target over the tree
+
+    hwut.target <option-list> <target> <passed-through>
+
+Every directory below the root whose 'hwut.conf' binds targets --
+
+    hwut {
+        target {
+            clean = "./clean.sh"
+        }
+    }
+
+-- takes part; definition is membership. Everything after the target
+name goes to each directory's script, argv-style, untouched.
+
+PHASE ONE settles the plan; a refusal costs zero executions. Per
+directory, three reasons decide, in order:
+
+    1  file present
+    2  file executable
+    3  shebang's interpreter executable  (where a shebang decides)
+
+PHASE TWO executes, each directory under its lock, cwd the directory
+itself, environment inherited unchanged. Exit codes are informational:
+reported, never deciding.
+
+OPTIONS
+    -i, --ignore        skip a directory failing any of the three
+                        reasons, or lacking the target
+    --default=<script>  run <script> where the target is absent
+    -q, --quiet         no per-directory output recording
+    +x                  set a+x where the executable bit is missing;
+                        never done without it
+    --directory=<path>  the root to walk; the current one else
+    --help              this text
+
+EXIT STATUS
+    0    phase one accepted; every planned script executed
+    1    a refusal, a fault, or a script not executed
+    2    the command line cannot be read
+    3    no directory below the root binds any target
+[status 0]

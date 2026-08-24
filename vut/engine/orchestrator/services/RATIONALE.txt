@@ -169,3 +169,87 @@ COST      Every fixture and every hand-run application must speak the
           suites' own bash fixtures, which were corrected rather than
           exempted: a fixture that does not speak the law is a
           fixture that lies.
+
+----------------------------------------------------------------------------
+E-7  hwut.target -- USER-DEFINED DIRECTORY TARGETS
+----------------------------------------------------------------------------
+PROBLEM   A test tree accumulates directory chores -- clean, regenerate,
+          repack -- that belong to the directories and not to any test.
+          Without a home they end up as ad-hoc scripts run by hand, or
+          worse, as pseudo-tests that pollute the suite.
+
+DECISION  'hwut.conf' binds user-defined targets in a SEPARATE
+          dictionary -- a 'target { }' scope of the directory's own
+          keys:
+
+              hwut {
+                  target {
+                      clean = "./clean.sh"
+                  }
+              }
+
+          'on_entry'/'on_exit' are standard targets with fixed
+          semantics and their own top-level keys; the separate
+          dictionary exists so the open-ended namespace can never
+          collide with them. The validator refuses standard names
+          inside 'target { }' by name. The scope is LOCAL, never
+          inherited (R-69's locality law); a parent cannot bind a
+          target for a subtree.
+
+          A directory binding any target is WALKED, test applications
+          or none: definition is membership.
+
+          THE FACE:  hwut.target <option-list> <target> <passed-through>
+          Everything before the target name is the service's
+          vocabulary; everything after it goes to each directory's
+          script, argv-style, untouched. One target per invocation.
+
+              -i, --ignore     skip a directory failing a runnability
+                               reason (any of the three below)
+              --default <s>    run script <s> where the target is
+                               absent
+              -q, --quiet      no per-directory output recording
+              +x               set a+x where the executable bit is
+                               missing; never done without it
+
+          TWO PHASES. Phase one explores every directory below the
+          root and settles the plan; a refusal costs ZERO executions.
+          Per walked directory, three reasons decide, in order:
+
+              1  file present
+              2  file executable
+              3  shebang's interpreter executable (where one decides)
+
+          A failed reason refuses the COMPLETE target execution,
+          except under '-i'. The reason-2 refusal hints at '+x'.
+
+          TARGETS ARE NOT TESTS. Exit codes are informational:
+          reported per directory, never deciding. 'hwut.target'
+          succeeds iff phase one accepted and every planned script
+          was found and executed -- however it exited. Outputs and
+          exit codes are recorded into a per-directory report; '-q'
+          disables the recording.
+
+          A script's cwd is the walked directory; the environment is
+          inherited unchanged -- no injected variables, the operating
+          system provides what a script needs. The passed-through
+          arguments are the one channel the service adds.
+
+          THE DIRECTORY MUTEX IS LAW: the service takes DirectoryLock
+          per directory -- a target run never collides with a test
+          run, or another target run, on the same directory.
+
+          'target { }' stands in the configuration vocabulary; its
+          entry in the rendered SPECIFICATION.txt lands with the
+          configuration tree (R-72, exploration todo-9).
+
+COST      One more service face and one more 'hwut.conf' key. A
+          directory carrying only 'target { }' is now walked, which
+          widens the explorer's membership law.
+
+GRAVEYARD Inheritance of 'target { }' for a subtree -- rejected;
+          locality is the standing law, and a parent binding 'clean'
+          silently for children hides who runs what where.
+          Exit code deciding OK/FAULT -- rejected; targets are not
+          tests, and a non-zero 'clean' may be that script's normal
+          voice.

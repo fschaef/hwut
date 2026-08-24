@@ -241,7 +241,7 @@ def value_db_of(parameters):
     dotted names this table carries. The record itself is untouched: its
     'None's are what the store records.
     """
-    from .specification import KEY_TO_FIELD
+    from .configuration_tree import KEY_TO_FIELD
     result = {}
     for name in RELATION:
         if "." in name:

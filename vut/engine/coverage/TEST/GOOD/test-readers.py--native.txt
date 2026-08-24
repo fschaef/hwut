@@ -1,0 +1,38 @@
+
+--- the artifact, read whole ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: verilog
+         | ##tool:     verilator
+         | ##format:   verilator-dat
+         | ##counts:   no
+         | SF:blinker.v
+         | EX:11,5+3,2+2
+         | CV:11,5+3,2
+         | BR:12*2/2,5*2/2,3*2/2
+         | CP:31*cover*1/1,1*cover*0/1
+         | TG:3*clk*1/1,1*rst*1/1,1*enable*1/1,1*state[0]*1/1,0*state[1]*1/1,1*count[0]*1/1,0*count[1]*1/1,0*count[2]*1/1,0*count[3]*0/1,23*clk*1/1,0*state[0]*1/1,0*state[1]*1/1
+         | SF:tb.v
+         | EX:3,3,1+4
+         | CV:3,3,1+4
+         | TG:3*clk*1/1,0*go*1/1,0*rst*1/1
+         | SF:top2.v
+         | EX:
+         | CV:
+         | TG:2*clk*1/1,1*rst*1/1,1*go*1/1,2*state_a[0]*1/1,0*state_a[1]*1/1,0*state_b[0]*0/1,0*state_b[1]*0/1,1*count_a[0]*1/1,0*count_a[1]*1/1,0*count_a[2]*1/1,0*count_a[3]*0/1,0*count_b[0]*0/1,0*count_b[1]*0/1,0*count_b[2]*0/1,0*count_b[3]*0/1
+
+--- the axes, separately ---
+INSPECT: blinker.v  line     uncovered = ((23, 24),)
+         blinker.v  branch   6/6 taken
+         blinker.v  toggle   11/12 bits
+         blinker.v  cover    1/2 points
+  OK  : three sources, the native format, one language
+  OK  : ONE uncovered line -- the case default -- where the export manufactured three
+  OK  : line 7, the declaration the export called uncovered, is NOT AN EXECUTABLE LINE here at all
+  OK  : what the export flattened into line 7's zero stands on its own axis: 'count[3]', an untoggled BIT at its declaration
+  OK  : the two 'cover property' points: DONE reached, the impossible state not
+  OK  : every decision's arms both taken -- per ARM, not per line count
+  OK  : top2.v is pure structure: NO executable line, and says so -- its coverage IS its toggles, 8 bits of 15: instance 'b' never enabled, and 'count_a[3]' never reached
+SUCCESS: the axes the export collapsed, kept apart.
+<hwut-end>

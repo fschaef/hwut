@@ -23,7 +23,7 @@ from .              import satisfiability
 from .              import hwut_info_interview
 from .fault         import Fault, E_FaultKind
 from .              import provenance
-from .specification import (CTestApp, CTestAppSet, DirectorySpec,
+from .configuration_tree import (CTestApp, CTestAppSet, DirectorySpec,
                             TestParameters)
 
 
