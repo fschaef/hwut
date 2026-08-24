@@ -5,7 +5,7 @@ ______________________________________________________________________________
 PURPOSE: THE READERS -- three artifact FORMATS, one homogeneous record.
 
 CHOICES: python, lcov, gcov, cobertura, go, luacov, jacoco, witnessed,
-         agreement, aliases, calls, absent, gather;
+         verilator, ghdl, agreement, aliases, calls, absent, gather;
 
 DESCRIPTION:
 
@@ -85,6 +85,28 @@ witnessed  THE WITNESS THE JACOCO CHOICE LACKED: a report JaCoCo 0.8.12
            arm's line uncovered, the decision '1 of 2', the '<class>'
            and '<method>' counters stepped over, and ONE language named,
            because one language stands.
+
+verilator  THE EXPORT OF A REAL VERILATOR RUN -- '--coverage', then
+           'verilator_coverage --write-info' -- read through the lcov
+           reader, as the registry road prescribes. And WHAT THE EXPORT
+           DID stands in the record: it flattens every coverage page
+           onto 'DA' lines, so blinker.v line 7, the DECLARATION
+           'output reg [3:0] count', reads uncovered because 'count[3]'
+           never toggled, and line 32, a 'cover property' that never
+           hit, reads as an unexecuted line. Line 23, the case default,
+           is the one honest zero. The reader reads what the artifact
+           says; the misfiling is the EXPORT's, and is why the registry
+           road must say '--coverage-line'
+           (../WITNESS-hdl-artifacts.txt, finding 3).
+
+ghdl       VHDL THROUGH GHDL'S GCC BACKEND: gcov over a VHDL source,
+           read by the EXISTING gcov reader -- no new code, as disc-9
+           promised. The 'Source:' header names an ABSOLUTE path on the
+           machine that ran; given that build's source root, the record
+           names 'blinker.vhdl' and no machine. Elaboration functions
+           re-annotate lines in per-function sections, last one wins --
+           which touches only counts (not recorded), never EX/CV,
+           because elaboration executes every annotated line.
 
 agreement  THE CROSS-CHECK: coverage.py's json and coverage.py's OWN
            lcov describe one run of one file. The two readers must
@@ -273,6 +295,166 @@ LUACOV_WIDE = (
     "\n"
     + "=" * 78 + "\n")
 
+#  THE EXPORT OF A REAL VERILATOR RUN, VERBATIM: 'verilator
+#  --coverage' over blinker.v/top2.v/tb.v (WITNESS-hdl/verilog/),
+#  then 'verilator_coverage --write-info'. The export FLATTENS every
+#  coverage page onto 'DA' lines: blinker.v line 7 is the DECLARATION
+#  'output reg [3:0] count', and its 0 is 'count[3]' never toggling;
+#  line 32 is a 'cover property' that never hit. Line 23, the case
+#  default, is the one honest zero.
+VERILATOR_INFO = """TN:verilator_coverage
+SF:blinker.v
+DA:3,48
+DA:4,4
+DA:5,1
+DA:6,1
+DA:7,0
+DA:11,24
+DA:12,2
+DA:13,2
+DA:14,2
+DA:15,22
+DA:16,22
+DA:17,1
+DA:18,4
+DA:19,4
+DA:20,1
+DA:22,5
+DA:23,0
+DA:30,1
+DA:31,5
+DA:32,0
+end_of_record
+SF:tb.v
+DA:3,1
+DA:7,24
+DA:9,1
+DA:10,1
+DA:11,1
+DA:12,1
+end_of_record
+SF:top2.v
+DA:2,24
+DA:3,2
+DA:4,1
+DA:6,0
+DA:7,0
+end_of_record
+"""
+
+#  VHDL THROUGH GHDL'S GCC BACKEND, VERBATIM: 'ghdl-gcc -a
+#  -Wc,-fprofile-arcs -Wc,-ftest-coverage', the run, 'gcov -b'
+#  (WITNESS-hdl/vhdl/). The 'Source:' header names an ABSOLUTE path
+#  on the machine that ran. Elaboration functions re-annotate lines
+#  in per-function sections below the main one.
+GHDL_GCOV = """        -:    0:Source:/home/claude/hdl-demo/vhdl/gcovwork/blinker.vhdl
+        -:    0:Graph:blinker.gcno
+        -:    0:Data:blinker.gcda
+        -:    0:Runs:1
+        3:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
+        -:    2:library ieee;
+        -:    3:use ieee.std_logic_1164.all;
+        -:    4:use ieee.numeric_std.all;
+        -:    5:
+      30*:    6:entity blinker is
+------------------
+work__blinker__STMT_ELAB:
+function work__blinker__STMT_ELAB called 1 returned 100% blocks executed 100%
+        1:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
+        -:    2:library ieee;
+        -:    3:use ieee.std_logic_1164.all;
+        -:    4:use ieee.numeric_std.all;
+        -:    5:
+        1:    6:entity blinker is
+------------------
+work__blinker__DECL_ELAB:
+function work__blinker__DECL_ELAB called 1 returned 100% blocks executed 100%
+        1:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
+        -:    2:library ieee;
+        -:    3:use ieee.std_logic_1164.all;
+        -:    4:use ieee.numeric_std.all;
+        -:    5:
+        1:    6:entity blinker is
+call    0 returned 100%
+call    1 returned 100%
+call    2 returned 100%
+call    3 returned 100%
+------------------
+work__blinker__PKG_ELAB:
+function work__blinker__PKG_ELAB called 1 returned 100% blocks executed 80%
+        1:    1:-- A tiny FSM: IDLE -> RUN -> DONE, advanced by 'enable'.
+        -:    2:library ieee;
+        -:    3:use ieee.std_logic_1164.all;
+        -:    4:use ieee.numeric_std.all;
+        -:    5:
+       1*:    6:entity blinker is
+branch  0 taken 0% (fallthrough)
+branch  1 taken 100%
+call    2 never executed
+branch  3 taken 100% (fallthrough)
+branch  4 taken 0%
+call    5 returned 100%
+------------------
+        -:    7:  port (
+        -:    8:    clk    : in  std_logic;
+        -:    9:    rst    : in  std_logic;
+        -:   10:    enable : in  std_logic;
+        -:   11:    done   : out std_logic
+        -:   12:  );
+        -:   13:end entity;
+        -:   14:
+        -:   15:architecture rtl of blinker is
+        -:   16:  type state_t is (IDLE, RUN, DONE_S);
+        1:   17:  signal state : state_t := IDLE;
+       10:   18:  signal count : unsigned(3 downto 0) := (others => '0');
+        -:   19:begin
+        5:   20:  process (clk)
+        -:   21:  begin
+       25:   22:    if rising_edge(clk) then
+       12:   23:      if rst = '1' then
+       1*:   24:        state <= IDLE;
+       9*:   25:        count <= (others => '0');
+        -:   26:      else
+       11:   27:        case state is
+        -:   28:          when IDLE =>
+        2:   29:            if enable = '1' then
+       2*:   30:              state <= RUN;
+        -:   31:            end if;
+        -:   32:          when RUN =>
+      20*:   33:            count <= count + 1;
+        4:   34:            if count = 3 then
+       4*:   35:              state <= DONE_S;
+        -:   36:            end if;
+        -:   37:          when DONE_S =>
+function work__blinker__ARCH__rtl__P1__PROC called 3 returned 100% blocks executed 83%
+       8*:   38:            state <= DONE_S;
+        -:   39:        end case;
+        -:   40:      end if;
+        -:   41:    end if;
+        -:   42:  end process;
+        -:   43:
+       5*:   44:  done <= '1' when state = DONE_S else '0';
+call    0 returned 100%
+branch  1 taken 33% (fallthrough)
+branch  2 taken 67%
+branch  3 taken 0% (fallthrough)
+branch  4 taken 100%
+branch  5 taken 100% (fallthrough)
+branch  6 taken 0%
+call    7 returned 100%
+branch  8 taken 0% (fallthrough)
+branch  9 taken 100%
+branch 10 taken 50% (fallthrough)
+branch 11 taken 50%
+call   12 returned 100%
+        -:   45:
+        -:   46:  -- psl default clock is rising_edge(clk);
+        -:   47:  -- psl COVER_REACH_DONE : cover {state = DONE_S};
+        -:   48:  -- psl COVER_ABORT      : cover {state = RUN; state = IDLE};
+        -:   49:  -- psl ASSERT_COUNT_RUN : assert always (count > 0 -> state /= IDLE);
+        -:   50:end architecture;
+"""
+
 #  A JACOCO REPORT -- CONSTRUCTED from the DTD, not witnessed: no
 #  machine at hand could run JaCoCo. It is checked against the format's
 #  OWN INVARIANT below ('test_jacoco'): the '<counter>' elements JaCoCo
@@ -414,13 +596,18 @@ def work_dir_with(name_text_pair_list, root_pair_list=()):
     return root
 
 
-def harvested(tool, name_text_pair_list, config=None, root_pair_list=()):
+def harvested(tool, name_text_pair_list, config=None, root_pair_list=(),
+              source_root=None):
     """
     RETURN: CoverageRecord, of that tool over those artifacts.
             None, where the reader found none.
+
+    'source_root' names the root paths are made relative to, where it is
+    not the work directory itself -- for an artifact whose headers name
+    an absolute path on the machine that wrote it.
     """
     root = work_dir_with(name_text_pair_list, root_pair_list)
-    try:     return reader_of(tool).harvest(root, root,
+    try:     return reader_of(tool).harvest(root, source_root or root,
                                             config or CoverageConfig())
     finally: shutil.rmtree(root, ignore_errors=True)
 
@@ -813,6 +1000,79 @@ def test_witnessed():
     verdict(ok, "what the constructed fixture predicted, the tool wrote.")
 
 
+def test_verilator():
+    """The lcov export of a real verilator run, and what it misfiled."""
+    record = harvested("verilator_coverage",
+                       [("coverage.info", VERILATOR_INFO)])
+    banner("the export, read")
+    show(record)
+
+    blk = record.file_db["blinker.v"]
+    banner("the three zeros of blinker.v")
+    print("INSPECT: uncovered = %s" % (blk.uncovered,))
+
+    ok = check([
+        (sorted(record.file_db) == ["blinker.v", "tb.v", "top2.v"],
+         "three sources, named as the export names them"),
+        (record.tool == "verilator_coverage"
+         and record.source == "lcov-tracefile",
+         "the header names the tool that ran and the format the reader "
+         "knows -- VERILOG line coverage with no code at all"),
+        (blk.uncovered == ((7, 8), (23, 24), (32, 33)),
+         "three lines read uncovered -- and only ONE is a line that did "
+         "not run"),
+        ((23, 24) == blk.uncovered[1],
+         "line 23, the case default, is the honest zero: no state ever "
+         "reached it"),
+        ((7, 8) == blk.uncovered[0] and (32, 33) == blk.uncovered[2],
+         "line 7 is the DECLARATION of 'count' -- its 0 is 'count[3]' "
+         "never toggling -- and line 32 a never-hit 'cover property': "
+         "the EXPORT flattened toggle and functional coverage onto 'DA' "
+         "lines, and a reader cannot unflatten them"),
+    ])
+    verdict(ok, "the reader reads what the export says; the export "
+                "misfiles, which is why the registry road says "
+                "'--coverage-line'.")
+
+
+def test_ghdl():
+    """VHDL through GHDL's gcc backend: gcov, and no new reader."""
+    record = harvested("gcov", [("blinker.vhdl.gcov", GHDL_GCOV)],
+                       source_root="/home/claude/hdl-demo/vhdl/gcovwork")
+    banner("the annotation, read")
+    show(record)
+
+    entry = record.file_db["blinker.vhdl"]
+    banner("the FSM, per arm")
+    for line, label in ((29, "IDLE:   'if enable'"),
+                        (33, "RUN:    'count <= count + 1'"),
+                        (38, "DONE_S: 'state <= DONE_S'")):
+        print("INSPECT: line %2i  %-28s covered = %s"
+              % (line, label, any(b <= line < e for b, e in entry.covered)))
+
+    ok = check([
+        (sorted(record.file_db) == ["blinker.vhdl"],
+         "the ABSOLUTE 'Source:' header, made relative against the "
+         "build's source root: the record names no machine"),
+        (entry.executable == entry.covered,
+         "every line gcov admitted ran -- ELABORATION executes even the "
+         "arms simulation never took, so EX equals CV here"),
+        (all(any(b <= line < e for b, e in entry.covered)
+             for line in (29, 33, 38)),
+         "all three FSM arms stand covered, which simulation confirms: "
+         "the testbench drove IDLE through RUN to DONE_S"),
+        (record.tool == "gcov" and record.source == "gcov-annotated",
+         "the header names gcov -- GHDL is the compiler, not the "
+         "measurer, and the artifact carries no trace of it"),
+        (record.language == "c",
+         "and the header MISNAMES the language: the gcov reader says "
+         "'c' over a '.vhdl' file. Stated here, so the day the reader "
+         "consults the extension, this line is the diff"),
+    ])
+    verdict(ok, "VHDL line coverage through a reader that never heard "
+                "of VHDL.")
+
+
 def test_agreement():
     """THE CROSS-CHECK: two readers, one run, one answer."""
     from_json = harvested("coverage", [("coverage.json", COVERAGE_JSON)])
@@ -1008,6 +1268,8 @@ if __name__ == "__main__":
             "luacov":    test_luacov,
             "jacoco":    test_jacoco,
             "witnessed": test_witnessed,
+            "verilator": test_verilator,
+            "ghdl":      test_ghdl,
             "lcov":      test_lcov,
             "gcov":      test_gcov,
             "agreement": test_agreement,

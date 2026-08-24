@@ -1,0 +1,28 @@
+
+--- the export, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: unknown
+         | ##tool:     verilator_coverage
+         | ##format:   lcov-tracefile
+         | ##counts:   no
+         | SF:blinker.v
+         | EX:3+5,3+10,1+2,6+3
+         | CV:3+4,4+10,1,7+2
+         | SF:tb.v
+         | EX:3,3,1+4
+         | CV:3,3,1+4
+         | SF:top2.v
+         | EX:2+3,1+2
+         | CV:2+3
+
+--- the three zeros of blinker.v ---
+INSPECT: uncovered = ((7, 8), (23, 24), (32, 33))
+  OK  : three sources, named as the export names them
+  OK  : the header names the tool that ran and the format the reader knows -- VERILOG line coverage with no code at all
+  OK  : three lines read uncovered -- and only ONE is a line that did not run
+  OK  : line 23, the case default, is the honest zero: no state ever reached it
+  OK  : line 7 is the DECLARATION of 'count' -- its 0 is 'count[3]' never toggling -- and line 32 a never-hit 'cover property': the EXPORT flattened toggle and functional coverage onto 'DA' lines, and a reader cannot unflatten them
+SUCCESS: the reader reads what the export says; the export misfiles, which is why the registry road says '--coverage-line'.
+<hwut-end>

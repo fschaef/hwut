@@ -1,0 +1,24 @@
+
+--- the annotation, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: c
+         | ##tool:     gcov
+         | ##format:   gcov-annotated
+         | ##counts:   no
+         | SF:blinker.vhdl
+         | EX:1,4,10+2,1,1+4,1,1+2,2+3,2,5
+         | CV:1,4,10+2,1,1+4,1,1+2,2+3,2,5
+
+--- the FSM, per arm ---
+INSPECT: line 29  IDLE:   'if enable'          covered = True
+INSPECT: line 33  RUN:    'count <= count + 1' covered = True
+INSPECT: line 38  DONE_S: 'state <= DONE_S'    covered = True
+  OK  : the ABSOLUTE 'Source:' header, made relative against the build's source root: the record names no machine
+  OK  : every line gcov admitted ran -- ELABORATION executes even the arms simulation never took, so EX equals CV here
+  OK  : all three FSM arms stand covered, which simulation confirms: the testbench drove IDLE through RUN to DONE_S
+  OK  : the header names gcov -- GHDL is the compiler, not the measurer, and the artifact carries no trace of it
+  OK  : and the header MISNAMES the language: the gcov reader says 'c' over a '.vhdl' file. Stated here, so the day the reader consults the extension, this line is the diff
+SUCCESS: VHDL line coverage through a reader that never heard of VHDL.
+<hwut-end>
