@@ -1,0 +1,24 @@
+--- the report, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: java
+         | ##tool:     jacoco
+         | ##format:   jacoco-xml
+         | ##counts:   no
+         | SF:com/example/Calculator.java
+         | EX:3,1+2,1,3,1+2
+         | CV:3,1+2,5,1+2
+         | BR:5*1/2
+
+--- the report, checked against ITS OWN counters ---
+         com/example/Calculator.java LINE   read 6/7   says (1, 6)
+                                     BRANCH read 1/2   says (1, 1)
+  OK  : the path is BUILT from '<package>' + '<sourcefile>', on the real report as on the constructed one
+  OK  : LINE agrees with the counter the tool wrote beside its own lines -- 6 covered, 1 missed
+  OK  : and BRANCH agrees: 1 taken of 2
+  OK  : the arm that never ran is line 8, 'return number;' -- the one call was negative
+  OK  : the 'if' on line 5 is the report's ONE decision: one arm taken of two
+  OK  : one language stands in the report, so one language is named
+SUCCESS: what the constructed fixture predicted, the tool wrote.
+<hwut-end>

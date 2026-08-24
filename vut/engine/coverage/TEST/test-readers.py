@@ -4,7 +4,7 @@ ______________________________________________________________________________
 
 PURPOSE: THE READERS -- three artifact FORMATS, one homogeneous record.
 
-CHOICES: python, lcov, gcov, cobertura, go, luacov, jacoco,
+CHOICES: python, lcov, gcov, cobertura, go, luacov, jacoco, witnessed,
          agreement, aliases, calls, absent, gather;
 
 DESCRIPTION:
@@ -16,11 +16,15 @@ was emitted by the actual tool -- 'coverage json', 'coverage lcov' and
 pasted in verbatim. A hand-written fixture would only prove that the
 reader reads what its author imagined.
 
-THE EXCEPTION IS JACOCO, and it is marked at its fixture and in its
-choice: no machine at hand could run it. That fixture is CONSTRUCTED
-from the report DTD, and what stands in for witnessing is the format's
+THE EXCEPTION WAS JACOCO, and its fixture stays marked: when it was
+written, no machine at hand could run JaCoCo, so it was CONSTRUCTED
+from the report DTD, and what stood in for witnessing was the format's
 own invariant -- the '<counter>' elements JaCoCo derives from its own
 '<line>' elements, checked against what the reader made of those lines.
+The constructed fixture REMAINS -- it is what exercises two languages
+in one report, and the refusal of a mute one -- but the witness has
+since arrived: 'witnessed' holds a report JaCoCo 0.8.12 itself wrote,
+pasted verbatim, and answers to the same cross-check.
 
 python     coverage.py's json: 'executed_lines' and 'missing_lines'
            become EX and CV with no inference, and 'excluded_lines'
@@ -72,6 +76,15 @@ jacoco     the JVM's report. THE ONE FIXTURE HERE THAT WAS NOT WITNESSED
            web failed exactly that check, which is why neither is here.
            The path is BUILT from '<package>' + '<sourcefile>'; a line
            with neither 'ci' nor 'mi' is REFUSED by name.
+
+witnessed  THE WITNESS THE JACOCO CHOICE LACKED: a report JaCoCo 0.8.12
+           itself wrote -- javac, the agent, 'jacococli report' -- over
+           one java file whose 'if' took one arm and never the other.
+           Pasted verbatim, single line and all. The reader must treat
+           it exactly as it treated the constructed one: the missed
+           arm's line uncovered, the decision '1 of 2', the '<class>'
+           and '<method>' counters stepped over, and ONE language named,
+           because one language stands.
 
 agreement  THE CROSS-CHECK: coverage.py's json and coverage.py's OWN
            lcov describe one run of one file. The two readers must
@@ -309,6 +322,19 @@ JACOCO_MUTE = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   </package>
 </report>
 """
+
+#  THE WITNESS -- the report JaCoCo 0.8.12 itself wrote, VERBATIM:
+#  'javac -g', the agent ('-javaagent:jacocoagent.jar'), then
+#  'jacococli report' over the exec file. One source file:
+#
+#      Calculator.java   'absoluteValue(int)' called once, with -5:
+#                        the 'if (number < 0)' on line 5 took its
+#                        true arm and never its false one, so line 8
+#                        ('return number;') never ran.
+#
+#  The single line is JaCoCo's own -- the tool writes no newlines,
+#  and verbatim means verbatim.
+JACOCO_WITNESSED_XML = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd"><report name="JaCoCo Coverage Report"><sessioninfo id="vm-380e3b57" start="1787552075395" dump="1787552075493"/><package name="com/example"><class name="com/example/Calculator" sourcefilename="Calculator.java"><method name="&lt;init&gt;" desc="()V" line="3"><counter type="INSTRUCTION" missed="0" covered="3"/><counter type="LINE" missed="0" covered="1"/><counter type="COMPLEXITY" missed="0" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><method name="absoluteValue" desc="(I)I" line="5"><counter type="INSTRUCTION" missed="2" covered="5"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="2"/><counter type="COMPLEXITY" missed="1" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><method name="main" desc="([Ljava/lang/String;)V" line="12"><counter type="INSTRUCTION" missed="0" covered="11"/><counter type="LINE" missed="0" covered="3"/><counter type="COMPLEXITY" missed="0" covered="1"/><counter type="METHOD" missed="0" covered="1"/></method><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></class><sourcefile name="Calculator.java"><line nr="3" mi="0" ci="3" mb="0" cb="0"/><line nr="5" mi="0" ci="2" mb="1" cb="1"/><line nr="6" mi="0" ci="3" mb="0" cb="0"/><line nr="8" mi="2" ci="0" mb="0" cb="0"/><line nr="12" mi="0" ci="4" mb="0" cb="0"/><line nr="14" mi="0" ci="6" mb="0" cb="0"/><line nr="15" mi="0" ci="1" mb="0" cb="0"/><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></sourcefile><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></package><counter type="INSTRUCTION" missed="2" covered="19"/><counter type="BRANCH" missed="1" covered="1"/><counter type="LINE" missed="1" covered="6"/><counter type="COMPLEXITY" missed="1" covered="3"/><counter type="METHOD" missed="0" covered="3"/><counter type="CLASS" missed="0" covered="1"/></report>"""
 
 #  prog.c, built with '--coverage' and run once.
 PROG_GCOV = """        -:    0:Source:prog.c
@@ -739,6 +765,54 @@ def test_jacoco():
                 "where it cannot speak.")
 
 
+def test_witnessed():
+    """The report JaCoCo itself wrote, read like any other."""
+    from vut.engine.coverage.measure import BRANCH
+    record = harvested("jacoco", [("report.xml", JACOCO_WITNESSED_XML)])
+    banner("the report, read")
+    show(record)
+
+    banner("the report, checked against ITS OWN counters")
+    counter_db = counter_db_of(JACOCO_WITNESSED_XML)
+    for path in sorted(record.file_db):
+        entry = record.file_db[path]
+        name  = path.rsplit("/", 1)[-1]
+        line_missed  = line_n(entry.uncovered)
+        line_covered = line_n(entry.covered)
+        branch_point = entry.measure_db.get("branch", ())
+        taken, total = BRANCH.summary(branch_point)
+        print("         %-27s LINE   read %i/%i   says %s"
+              % (path, line_covered, line_covered + line_missed,
+                 counter_db.get((name, "LINE"))))
+        print("         %-27s BRANCH read %i/%i   says %s"
+              % ("", taken, total, counter_db.get((name, "BRANCH"))))
+
+    calc = record.file_db["com/example/Calculator.java"]
+    ok = check([
+        (sorted(record.file_db) == ["com/example/Calculator.java"],
+         "the path is BUILT from '<package>' + '<sourcefile>', on the "
+         "real report as on the constructed one"),
+        (line_n(calc.covered) == counter_db[("Calculator.java", "LINE")][1]
+         and line_n(calc.uncovered)
+             == counter_db[("Calculator.java", "LINE")][0],
+         "LINE agrees with the counter the tool wrote beside its own "
+         "lines -- 6 covered, 1 missed"),
+        (BRANCH.summary(calc.measure_db["branch"])
+         == (counter_db[("Calculator.java", "BRANCH")][1],
+             sum(counter_db[("Calculator.java", "BRANCH")])),
+         "and BRANCH agrees: 1 taken of 2"),
+        (calc.uncovered == ((8, 9),),
+         "the arm that never ran is line 8, 'return number;' -- the "
+         "one call was negative"),
+        (calc.measure_db["branch"] == ((5, 1, 2),),
+         "the 'if' on line 5 is the report's ONE decision: one arm "
+         "taken of two"),
+        (record.language == "java",
+         "one language stands in the report, so one language is named"),
+    ])
+    verdict(ok, "what the constructed fixture predicted, the tool wrote.")
+
+
 def test_agreement():
     """THE CROSS-CHECK: two readers, one run, one answer."""
     from_json = harvested("coverage", [("coverage.json", COVERAGE_JSON)])
@@ -933,6 +1007,7 @@ if __name__ == "__main__":
             "go":        test_go,
             "luacov":    test_luacov,
             "jacoco":    test_jacoco,
+            "witnessed": test_witnessed,
             "lcov":      test_lcov,
             "gcov":      test_gcov,
             "agreement": test_agreement,

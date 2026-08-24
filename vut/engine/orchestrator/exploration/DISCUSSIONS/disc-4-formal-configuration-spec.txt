@@ -1,0 +1,36 @@
+disc-4  A FORMAL CONFIGURATION SPECIFICATION, CHECKED AGAINST THE PARSERS
+                                                                  ** OPEN **
+______________________________________________________________________________
+
+RULED (chat, 2026-08-24): a normative, written specification of the
+configuration language -- 'hwut.conf' AND the header region, grammar and
+key semantics both -- is OWED, URGENTLY, as a document that stands apart
+from the implementation; and a CONSISTENCY CHECK is owed that holds the
+parsers and validators to it.
+
+WHAT EXISTS TODAY (so the work starts from it, not beside it):
+ -  README.txt here describes the grammar unit key by key (prose-formal)
+    and 'README-hwut_hocon.txt' the carrier language.
+ -  'relation.py' checks its table AT IMPORT against the classes it
+    names; TEST/test-defaults.py proves table and vocabulary cover each
+    other and prints every default.
+ -  todo-6: the Python parser's GOODs are the description any language
+    port is measured against.
+
+WHAT IS MISSING:
+ -  One document (working name: SPECIFICATION.txt) normative over BOTH
+    carriers, versioned, from which README prose and validator behaviour
+    are derived -- not the other way round.
+ -  A suite choice that walks the specification against the code:
+    every key of the document exists in KEY_TO_FIELD / _CONF_KEY_SET /
+    ROOT_ONLY_KEY_SET and nowhere else; every refusal the document
+    states is demonstrated; every default the document states matches
+    test-defaults.py's printing.
+ -  The 'target { }' dictionary (services/DISCUSSIONS/disc-2) enters
+    the specification and the vocabulary TOGETHER, never one without
+    the other.
+
+OPEN: the document's form (EBNF for the grammar + a key table, or the
+prose-formal style of README hardened); where multi-language parser
+ports hook their check (language_support/<lang>/TEST against the same
+specification file).
