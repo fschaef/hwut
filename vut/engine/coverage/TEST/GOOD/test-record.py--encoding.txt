@@ -1,0 +1,26 @@
+
+--- delta coding: 'd+L', and 'd' alone for one line ---
+INSPECT: ((3, 4), (7, 8), (40, 41)) -> '3,3,32'
+         ((3, 15), (20, 25)) -> '3+12,5+5'
+         () -> ''
+
+--- with hit counts ---
+INSPECT: '3+12*4,5+5*1'
+
+--- decode is the inverse ---
+         scattered '3,3,32' -> ((3, 4), (7, 8), (40, 41))
+         runs      '3+12,5+5' -> ((3, 15), (20, 25))
+         empty     '' -> ()
+         counted   '3+12*4,5+5*1' -> ((3, 15), (20, 25)) counts (4, 1)
+  OK  : a one-line range is written as its delta alone
+  OK  : a run carries its length, and the delta is the GAP
+  OK  : no range encodes to the empty string
+  OK  : decode inverts encode -- scattered
+  OK  : decode inverts encode -- runs
+  OK  : the empty string decodes to no range
+  OK  : and to no counts, since none were promised
+  OK  : a counted range carries its count after '*'
+  OK  : counts survive the round trip
+  OK  : 5000 contiguous lines encode to under ten characters
+SUCCESS: delta coding is compact, and exactly invertible.
+<hwut-end>

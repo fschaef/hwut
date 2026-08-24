@@ -1,0 +1,7 @@
+Testing the coverage component: the homogeneous record, its interval
+algebra, its delta coding, its merge, and the election of a tool.
+--------------------------------------------------------------------
+
+coverage run --omit ./*.py -a *.py
+
+--not config.py

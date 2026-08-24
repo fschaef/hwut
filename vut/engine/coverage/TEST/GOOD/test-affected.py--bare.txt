@@ -1,0 +1,16 @@
+
+--- --bare ---
+REACTION  status 0   stderr 325 byte(s)
+          | parser/TEST:test-parse.py--basic
+          | parser/TEST:test-parse.py--deep
+          ! NOTE: these are the runs that CERTAINLY executed the changed lines.
+          !       A run ABSENT here may still be affected -- by a branch that was
+          !       deleted, by a data file, by a dynamic dispatch, by an absence.
+          !       This is a SUGGESTION, never a clearance: running only these and
+          !       calling the suite green is a false green.
+  OK  : the status is the same
+  OK  : stdout carries names alone, one per line, sorted
+  OK  : no frame
+  OK  : the note went to stderr -- it did not vanish
+SUCCESS: a pipeline gets names; a reader still gets the caveat.
+<hwut-end>

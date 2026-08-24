@@ -1,0 +1,29 @@
+
+--- the profile, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: go
+         | ##tool:     go
+         | ##format:   go-coverprofile
+         | ##counts:   no
+         | SF:app.go
+         | EX:3+5,2+3
+         | CV:3+4
+INSPECT: uncovered = ((7, 8), (10, 13))
+
+--- without a 'go.mod', the IMPORT path stands as it is ---
+         ['demo/app.go']
+
+--- a text that declares no 'mode:' is no profile ---
+         None
+  OK  : the module name from 'go.mod' is STRIPPED: 'demo/app.go' is an import path, and 'demo' is a name, not a directory
+  OK  : a block IS a range and arrives as one -- nothing is folded
+  OK  : the two blocks that ran union across their shared boundary line, because the COLUMNS that told them apart are gone
+  OK  : and what never ran is the untested function and the untaken return
+  OK  : the header names the language and the format
+  OK  : with no 'go.mod' the path is LEFT as it stands -- honest, and useless to a diff; guessing a prefix would be worse
+  OK  : and a text declaring no 'mode:' is not a profile
+  OK  : under 'mode: set' a count of 1 means RAN, and recording it as a hit count would invent a measurement
+SUCCESS: go says it per block, and a block is already a range.
+<hwut-end>

@@ -1,0 +1,35 @@
+
+--- a record of line coverage alone ---
+         | ##VUT-COVERAGE 1
+         | ##test:     test-parse.py
+         | ##choice:   basic
+         | ##language: c
+         | ##tool:     gcov
+         | ##format:   gcov-annotated
+         | ##counts:   no
+         | SF:core.c
+         | EX:1+4
+         | CV:1+2,1
+
+--- the same record, measured further ---
+         | ##VUT-COVERAGE 1
+         | ##test:     test-parse.py
+         | ##choice:   basic
+         | ##language: c
+         | ##tool:     gcov
+         | ##format:   gcov-annotated
+         | ##counts:   no
+         | SF:core.c
+         | EX:1+4
+         | CV:1+2,1
+         | BR:2*1/2
+         | MC:4*2/3,0*3/3
+  OK  : a file with no such measurement writes NO such line: a record of lines alone is what it was before any measure existed
+  OK  : each measure rides under its own tag
+  OK  : in registered-name order, so two runs of one test produce the same bytes
+  OK  : format(parse(format(x))) == format(x)
+  OK  : and both survive the round trip
+  OK  : while the line coverage is untouched by either
+  OK  : a tag no measure claims is refused, naming what IS claimed
+SUCCESS: a measure is a line in the record and a lookup in the registry; the record knows what none of them mean.
+<hwut-end>

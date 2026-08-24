@@ -1,0 +1,15 @@
+
+--- the fixture diff, -p1 ---
+         parser/core.py ((7, 9), (42, 43))
+
+--- -p0 keeps the leading component ---
+         ['b/parser/core.py']
+
+--- a diff that touches nothing ---
+         {}
+  OK  : a file removed wholesale contributes nothing: there is no new-side line to ask about
+  OK  : added lines are themselves; the removal is recorded where it stood
+  OK  : '-p0' keeps what '-p1' strips
+  OK  : a text that is no diff yields no change, and does not raise
+SUCCESS: a diff becomes the lines a query can be put to.
+<hwut-end>

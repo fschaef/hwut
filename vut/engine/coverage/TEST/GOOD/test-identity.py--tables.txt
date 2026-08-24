@@ -1,0 +1,30 @@
+
+--- the id table, as it is stored ---
+         | ##VUT-TEST-IDS 1
+         | T:1 . -|test-parser.py|basic
+         | T:2 . -|test-parse.py|deep
+         | T:3 ! other/TEST|test-other.py|-
+
+--- read back ---
+         1 live    test-parser.py--basic
+         2 live    test-parse.py--deep
+         3 retired other/TEST:test-other.py
+
+--- the next allocation stands ABOVE the highest id read ---
+INSPECT: -> 4
+
+--- the group table, as it is stored ---
+         | ##VUT-TEST-GROUPS 1
+         | G:0
+         | G:1 1,2
+         | G:2 2
+  OK  : format(parse(format(x))) == format(x) -- the bytes are stable
+  OK  : a retired entry survives the round trip, retired
+  OK  : and does not resolve forward after it
+  OK  : a renamed entry survives under its id
+  OK  : reading a table allocates onward from ABOVE the highest id it saw -- a round trip can never reissue an id
+  OK  : the group table survives the round trip
+  OK  : the empty group with it
+  OK  : and allocates onward from above the highest group read
+SUCCESS: a table can be written, read, and written again without ever reissuing an id.
+<hwut-end>

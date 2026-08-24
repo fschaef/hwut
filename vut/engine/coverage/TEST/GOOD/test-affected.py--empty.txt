@@ -1,0 +1,20 @@
+
+--- a change in a region nobody reached ---
+REACTION  status 3   stderr 0 byte(s)
+          | ==[ HWUT AFFECTED ]==========================================================
+          | change:  1 file(s), 1 range(s)
+          | index:   3 run(s), 1 source file(s)
+          | groups:  5 distinct
+          |
+          | runs to perform: NONE executed the changed lines.
+          |
+          | NOTE: these are the runs that CERTAINLY executed the changed lines.
+          |       A run ABSENT here may still be affected -- by a branch that was
+          |       deleted, by a data file, by a dynamic dispatch, by an absence.
+          |       This is a SUGGESTION, never a clearance: running only these and
+          |       calling the suite green is a false green.
+  OK  : an empty selection has its OWN status: understood, answered, and answered with nothing
+  OK  : it is neither a success nor a refusal
+  OK  : and the answer SAYS the selection is empty, rather than printing an empty list
+SUCCESS: an empty selection is spoken, not left blank.
+<hwut-end>

@@ -1,0 +1,21 @@
+
+--- core.py -- A covers 1..10, B covers 6..20, C covers 40..42 ---
+         [  1,  6)  test-parse.py--basic
+         [  6, 11)  test-parse.py--basic,test-parse.py--deep
+         [ 11, 21)  test-parse.py--deep
+         [ 21, 40)  <nobody>
+         [ 40, 43)  engine/TEST:test-other.py
+
+--- two runs that merely TOUCH do not overlap ---
+         [  1,  6)  test-parse.py--basic
+         [  6, 11)  test-parse.py--deep
+  OK  : overlap in the middle cuts core.py into five segments: A, A+B, B, the GAP, C
+  OK  : 1..5 belongs to A alone
+  OK  : 6..10 belongs to both
+  OK  : 11..20 belongs to B alone
+  OK  : the gap is CARRIED, not skipped: 21..39 names nobody, and says so
+  OK  : 40..42 belongs to C, beyond the gap
+  OK  : ranges that touch at 6 share NO line
+  OK  : every file that anybody reached is in the index
+SUCCESS: the segmentation cuts exactly where authorship changes.
+<hwut-end>

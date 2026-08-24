@@ -1,0 +1,36 @@
+
+--- the report, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: lua
+         | ##tool:     luacov
+         | ##format:   luacov-report
+         | ##counts:   no
+         | SF:app.lua
+         | EX:1,1+3,1,2+2,2
+         | CV:1,1+3,4,3
+INSPECT: uncovered = ((7, 8), (11, 12))   ratio = 0.7500
+
+--- a file whose largest count is four digits ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: lua
+         | ##tool:     luacov
+         | ##format:   luacov-report
+         | ##counts:   no
+         | SF:big.lua
+         | EX:1+3,1
+         | CV:1+3
+  OK  : EX is every line the report gave a field to
+  OK  : 'end' is NOT executable -- the report says so, though the raw stats file counts it 1
+  OK  : and neither is a blank line
+  OK  : CV is what actually ran
+  OK  : so the uncovered set is exactly the two '*0' lines -- which the STATS file could not have told from the blanks
+  OK  : the header names the language and the format
+  OK  : the count field width is the FILE'S OWN and is derived per section: five wide here, two in the other
+  OK  : and '****0' is read as a missed line, not as a count
+  OK  : the trailing 'Summary' section names no source and is skipped
+SUCCESS: the report knows what the counters cannot say.
+<hwut-end>

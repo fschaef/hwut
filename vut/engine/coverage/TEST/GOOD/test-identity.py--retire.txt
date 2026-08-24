@@ -1,0 +1,20 @@
+
+--- retire the second run ---
+INSPECT: id 2 named 'test-parse.py--deep'
+         it still decodes:      test-parse.py--deep
+         it is marked retired:  True
+         it resolves forward:   None
+
+--- a new run gets a NEW id, never the freed one ---
+INSPECT: the new run -> id 4
+
+--- retiring twice is not a fault -- it is already true ---
+         raised nothing
+  OK  : a retired id STILL DECODES -- an old record must not become unreadable
+  OK  : and says that it is retired
+  OK  : while the forward lookup stops finding it
+  OK  : THE ID IS NEVER REUSED: reuse would make an old record point silently at a different test
+  OK  : retiring twice is idempotent
+  OK  : retiring an id that was never allocated is refused
+SUCCESS: a retired id decodes for ever and is issued never again.
+<hwut-end>

@@ -1,0 +1,34 @@
+
+--- the stored form ---
+    | ##VUT-COVERAGE 1
+    | ##test:     test-parse.py
+    | ##choice:   basic
+    | ##language: python
+    | ##tool:     coverage
+    | ##format:   coverage.py-json
+    | ##counts:   no
+    | SF:nothing.py
+    | EX:
+    | CV:
+    | SF:parser/core.py
+    | EX:3+12
+    | CV:3+7
+    | SF:parser/grammar.py
+    | EX:1+3
+    | CV:1+3
+
+--- read back ---
+INSPECT: test=test-parse.py choice=basic
+         language=python tool=coverage format=coverage.py-json counts=False
+         nothing.py           EX=() CV=() uncovered=() ratio=none
+         parser/core.py       EX=((3, 15),) CV=((3, 10),) uncovered=((10, 15),) ratio=0.583
+         parser/grammar.py    EX=((1, 4),) CV=((1, 4),) uncovered=() ratio=1.000
+  OK  : format(parse(format(x))) == format(x) -- the bytes are stable
+  OK  : the header names the RUN this record is of
+  OK  : the header's provenance survives: language, tool, format
+  OK  : and whether counts were recorded
+  OK  : every source file survives
+  OK  : a MEASURED file with no executable line keeps its block: absent and empty do not collapse
+  OK  : the uncovered ranges are derived, never stored
+SUCCESS: a record survives the round trip, provenance included.
+<hwut-end>

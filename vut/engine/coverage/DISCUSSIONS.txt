@@ -1,0 +1,460 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+==============================================================================
+coverage -- DISCUSSIONS
+==============================================================================
+
+What is OPEN. Nothing settled belongs here; the settled design is
+RATIONALE.txt and README.txt. An entry is deleted the moment it is
+settled, and what it settled goes to the RATIONALE as a D-entry and to
+the README as mechanics.
+
+    disc-N   a CHOICE is owed -- Frank-Rene rules, then it is built
+    todo-N   the LABOUR is owed -- the choice is made, the work is not
+
+==============================================================================
+
+
+------------------------------------------------------------------------------
+disc-1  TEXT OR BINARY -- and it is not to be ruled without numbers
+------------------------------------------------------------------------------
+THE FORK. The homogeneous record is delta-coded intervals (D-5). In what
+does a delta stand on disk?
+
+  (a) DECIMAL TEXT       'EX:3+12,2+5,1+40'
+      Read by one 'split(",")' and two 'int()' per range. In CPython
+      'int()' is C; a hand-rolled decode loop is not. Diffable, greppable,
+      pasteable into the pack without a step.
+
+  (b) PRINTABLE VARINT   base-85 digits with a continuation marker
+      Still text, still diffable, roughly 40 % denser than (a). Decoding
+      is a Python loop -- the thing (a) avoids.
+
+  (c) BINARY VARINT      UTF-8-style continuation bytes
+      Densest. Behind 'hwut.convert_to_lcov' (D-6) it costs nothing in
+      consumability. It costs a decoder, a version field, a width and
+      endianness decision, and a debugging blind spot.
+      IF (c): use 'struct' and whatever already handles variable-length
+      integers rather than writing the codec by hand -- a hand-rolled
+      varint loop in Python is the slowest of the three, and the one
+      most likely to be wrong at a boundary.
+
+RECOMMENDATION. Build (a). It is the fastest thing available in CPython
+for this shape, and D-6 makes the choice reversible: the converter sits
+between the store and every consumer, so moving to (b) or (c) later
+changes nothing above the reader. Then MEASURE (todo-6) and rule.
+
+WHAT WOULD OVERTURN IT. A measurement showing the text form dominating
+either the write of a run or the read of a cross-directory aggregate.
+Nothing else.
+
+
+------------------------------------------------------------------------------
+disc-2  THE SESSION ROAD -- what is a coverage measurement OF?
+------------------------------------------------------------------------------
+THE FORK. The store's key is (test, choice, subject). But
+'multi_execute' / 'HwutRunner --interactive' runs MANY CHOICES THROUGH
+ONE PROCESS, and a coverage tool measures a PROCESS. So the measurement
+accumulates across choices and cannot be split by the key that stores it.
+'record_timing' never met this: a delta is per line.
+
+  (a) PER TEST in the session road, per choice on the single-run road
+      Honest, and the record says which it is. But the same test measured
+      two ways yields two different granularities -- and a suite may not
+      know which road it took.
+
+  (b) PER CHOICE ALWAYS: the measurement is restarted at each choice
+      boundary (the 'run' command of the DOWN grammar is the seam).
+      Uniform, but it asks the tool for something not every tool offers,
+      and it costs at every choice.
+
+  (c) A COVERAGE RUN NEVER TAKES THE SESSION ROAD -- it always runs one
+      process per choice, accepting the reload cost that interactive mode
+      exists to avoid.
+      Coherent with D-4 (coverage is its own animal, caps already
+      disabled for it, cadence already refused). A coverage run is not a
+      run one optimises.
+
+RECOMMENDATION. (c). It keeps ONE granularity, asks nothing of any tool,
+and needs no new key. The cost -- interpreter reload per choice -- is
+paid by a run that is already the slow kind, and by nobody else.
+
+OPEN BESIDE IT. Whether (c) should be REFUSED at the door where a
+configuration asks for both 'interactive' and 'record_coverage', or
+silently take the single-run road. Refuse rather than guess argues for
+the first; the caller loses nothing but a surprise.
+
+
+------------------------------------------------------------------------------
+disc-3  IN-DIRECTORY PARALLELISM DURING A COVERAGE RUN
+------------------------------------------------------------------------------
+STATUS: ruled PROVISIONALLY -- blocked -- and parked until the
+parallelism work supplies the framework.
+
+THE PROBLEM. Two tests of one directory measuring at once write into one
+place. 'coverage run -a' appends to a single '.coverage'; parallel mode
+avoids the collision only by putting HOST and PID into the file name --
+which the machine-free discipline forbids in anything STORED.
+
+WHAT IS ALREADY TRUE. The tool's own artifact lives in 'OUT/COVERAGE/'
+and is an INTERMEDIATE the reader consumes (D-4). A host-and-pid name is
+admissible THERE and nowhere downstream -- but that only removes the
+collision, not the question of whether the measurements should have been
+taken concurrently at all.
+
+THE FORK, when the framework lands.
+
+  (a) BLOCK. A coverage run holds the directory alone; concurrency across
+      DIFFERENT directories is untouched.
+  (b) ADMIT, with per-process artifacts merged at harvest. Merge is
+      interval union (D-5) -- cheap and associative, so this is not hard.
+      But the caps are disabled for a coverage run, and several
+      unconstrained processes in one directory is the accident the caps
+      exist to contain.
+
+RECOMMENDATION. (a) until measured otherwise; (b) is a later
+optimisation of a run nobody times.
+
+PARKED. Nothing is built here until the parallelism development names
+its mechanism. This entry exists so the question is not rediscovered.
+
+
+------------------------------------------------------------------------------
+disc-4  CROSS-DIRECTORY AGGREGATION NEEDS AN IDENTITY THE RECORD LACKS
+------------------------------------------------------------------------------
+THE FORK. Source references are relative to the TEST directory (D-4) --
+which is what makes aggregation POSSIBLE and, by itself, ambiguous: two
+directories may each hold a 'core.py' relative to themselves. Who
+supplies the directory identity?
+
+  (a) THE AGGREGATOR, from where it found each record. Nothing is stored;
+      the record stays machine-free and portable.
+  (b) A MANIFEST written beside the aggregate, naming the directories
+      that went into it. One extra artifact, but the aggregate becomes
+      self-describing.
+  (c) THE RECORD ITSELF carries its directory. Rejected on sight: it is
+      the absolute path by another name, and it breaks D-4.
+
+RECOMMENDATION. (a) for the aggregation itself, (b) for the aggregate
+that leaves the machine -- so the record stays portable and the RESULT
+stays explicable. Not urgent: nothing aggregates yet.
+
+------------------------------------------------------------------------------
+disc-5  A MERGE MEETS HIT COUNTS
+------------------------------------------------------------------------------
+THE FORK. Merge is the UNION of ranges (D-5), and a union has no answer
+for two different counts over one line.
+
+  (a) REFUSE, by name ('CountsNotMergeable'). What is built.
+  (b) SUM the counts -- which forces per-line storage on the merged
+      record, i.e. exactly the grain this format exists to avoid.
+  (c) DROP the counts and say so in the merged header.
+
+RECOMMENDATION. (a) stands until somebody wants an aggregate of counted
+records; then (c), never (b). Counts are off by default, so this is a
+corner nobody is in yet.
+
+
+------------------------------------------------------------------------------
+disc-6  'system/helper.py' Interval -- UNIFY, OR LEAVE IT
+------------------------------------------------------------------------------
+FOUND WHILE BUILDING. 'vut/system/helper.py' already carries an
+'Interval' and an 'iterable_from_integer_list' that folds adjacent
+integers into ranges -- the same primitive 'record.py' needed. It is NOT
+used, because it is broken in three ways:
+
+  (1) 'Interval' documents 'end' as the first integer AFTER the range,
+      and 'iterable_from_integer_list' yields 'Interval(begin, prev_li)'
+      -- an INCLUSIVE end. The class contradicts its only producer.
+  (2) A single-line run at the END of the list is DROPPED: after the
+      loop the guard is 'if prev_li != begin', which is false for a run
+      of one. 'iterable_from_integer_list([1, 5])' yields only [1,1];
+      the 5 is lost.
+  (3) 'Interval.split' names 'ratio' and 'begin', neither of which
+      exists in its scope -- it raises NameError on any call.
+  (4) The empty case 'return Interval(0,0)' inside a generator returns
+      nothing at all; the caller gets an empty iterator, not the
+      interval it looks like it promises.
+
+THE FORK. (a) repair it and have 'record.py' import it; (b) leave the
+two apart, since 'record.py' needs half-open ranges as TUPLES and no
+class; (c) repair it and delete the duplicate later, if a third user
+appears.
+
+RECOMMENDATION. (b) now -- 'record.py' is green and self-contained, and
+one attributable change per pass says a repair of 'system/helper.py' is
+its OWN pass. But (2) is a live bug for whoever calls it today, and that
+pass should not wait long.
+
+
+------------------------------------------------------------------------------
+disc-7  WHAT CONSUMES THE INDEX
+------------------------------------------------------------------------------
+BUILT: the index itself (index.py) -- the segmentation, the queries, and
+'of_change(change_db) -> the runs that executed those lines'.
+
+THE FORK. What turns a DIFF into that 'change_db', and what receives the
+answer?
+
+  (a) A NEW FACE, 'hwut.affected', that reads a diff and prints the
+      runs -- the author pipes it into a wish themselves. Smallest, and
+      touches no existing component.
+  (b) A WISH SOURCE: 'hwut.run --affected <diff>' resolves through
+      'plan/wish.py' like any other selection. Most useful, and it edits
+      an existing face.
+  (c) BOTH, (a) first.
+
+RECOMMENDATION. (c). (a) is purely additive and can land while other
+work is in flight; (b) waits for a quiet tree.
+
+WHATEVER IS BUILT MUST SAY THE LIMIT (RATIONALE D-8): the answer is a
+SUGGESTION, never a clearance. A face that prints a test list without
+saying so invites exactly the false green the whole framework is built
+to prevent.
+
+OPEN BESIDE IT. Is the index STORED, or rebuilt from the per-run records
+each time? Rebuilding is O(records) and needs no invalidation; storing
+needs a staleness law it does not have. Recommendation: rebuild, until
+somebody measures a reason not to.
+
+
+------------------------------------------------------------------------------
+disc-8  WHOSE TABLE IS THE TEST ID -- and what the rename service owes
+------------------------------------------------------------------------------
+THIS ONE EDITS THE BOOKKEEPER. Nothing is built until the tree is quiet.
+
+WHAT IS ALREADY TRUE (D-9). The mechanism stands in 'identity.py': ids
+are monotone, never reused, retired entries still decode, a rename keeps
+the id, and both tables serialise. What is NOT decided is who OWNS them.
+
+THE FORK -- WHO ALLOCATES.
+  (a) THE BOOKKEEPER. It already owns the naming of a test directory
+      ('nominal_path', 'candidate_path', the result base), and the
+      RENAME SERVICE must pass through it or two truths exist about what
+      a test is called. The table joins its base.
+  (b) THE COVERAGE COMPONENT, in its own file beside the records.
+      Additive, and wrong: a rename would then have to know about
+      coverage, and a component that renames tests for one consumer will
+      be asked to do it for the next.
+  (c) NOBODY -- rebuild the ids per index run, as the code does TODAY
+      when no table is handed in. Correct and useless for anything
+      STORED: the ids differ between two builds.
+
+RECOMMENDATION. (a). (c) is what stands until (a) is built, and it costs
+nothing to switch: 'index_of' already TAKES the tables.
+
+THE SECOND FORK -- THE SCOPE OF AN ID.
+  (a) PER DIRECTORY. One bookkeeper owns one directory, so this is the
+      only scope it can allocate honestly. Cross-directory aggregation
+      then qualifies by directory, exactly as disc-4 (a) already says.
+  (b) GLOBAL, from one registry above all directories. Unique
+      everywhere -- and it breaks the one-directory-one-bookkeeper law,
+      and needs a lock nobody has.
+
+RECOMMENDATION. (a). 'IdTable(first_id=...)' exists so that a caller who
+later wants disjoint ranges per directory can have them without a change.
+
+WHAT THE RENAME SERVICE OWES, whichever way it goes.
+    -- rename through the table: the id survives, no record is touched
+    -- delete through RETIRE, never by removing the entry: an old record
+       must keep decoding, and the id must never be issued again
+    -- refuse a rename onto a live name, by name
+    -- never renumber. A table that renumbers has silently reattributed
+       every record ever written, and nothing reports it.
+
+OPEN BESIDE IT. Where the table LIVES in the base -- a section of the
+result db, or its own file. Its own file argues for itself: it is written
+by a different act (renaming) than the entries are, and one writer per
+key space is already the law.
+
+
+------------------------------------------------------------------------------
+disc-9  HARDWARE DESCRIPTION LANGUAGES -- the record cannot hold what a
+        simulator measures
+------------------------------------------------------------------------------
+WHAT WORKS TODAY, and it is more than expected. VHDL and Verilog line
+coverage needs NO new reader:
+
+    verilog / systemverilog   'verilator --coverage', then
+                              'verilator_coverage --write-info' -> an
+                              LCOV TRACEFILE, which is read
+    vhdl                      GHDL on the gcc backend -> gcov data,
+                              which is read
+
+So the open-source road is served by registry entries alone. That is
+also the whole of what is served.
+
+THE PROBLEM. Line coverage is a SMALL PART of what an HDL verification
+flow measures, and the rest does not fit this record at all:
+
+    statement / line     file + line          FITS -- this is what we hold
+    branch               file + line + arm    todo-8; a third list
+    condition / MCDC     file + line + term   todo-8's neighbour
+    toggle               a SIGNAL, and its bits          NO LINE
+    FSM state            a STATE of a machine            NO LINE
+    FSM transition       an EDGE between two states      NO LINE
+    functional           a COVERGROUP, a coverpoint,
+                         a BIN, a CROSS                  NO LINE
+    assertion            a named property, and how
+                         often it was attempted, hit,
+                         and vacuously passed            NO LINE
+
+The record is keyed 'file -> line ranges'. Four of those eight have no
+line at all: a toggle belongs to a SIGNAL, a bin to a COVERGROUP. There
+is no honest place to put them.
+
+WHY THIS IS NOT MERELY 'not built yet'. A reader that took a simulator's
+database, kept the line part and dropped the rest would report a design
+as '92% covered' while discarding the coverage the verification engineer
+came for. That is a FALSE GREEN of the loudest kind -- and it is worse
+than the ordinary sort, because the number LOOKS like the number the
+engineer asked for.
+
+    THE ASYMMETRY OF ERROR (PHILOSOPHY 7) applies exactly: the missing
+    functional coverage cannot report itself, and the line percentage is
+    a plausible-looking substitute for it.
+
+THE FORK.
+
+  (a) LINE COVERAGE ONLY, AND SAY SO. HDL is admitted for the line part
+      alone; every rendering over an HDL record carries a stated line
+      ('functional, toggle and FSM coverage are not measured here').
+      Small, honest, and useful to anyone who wants 'which test touched
+      this process'.
+
+  (b) A SECOND RECORD SHAPE, beside the line one -- keyed by BIN rather
+      than by line, with its own merge. The index (D-8) then answers
+      'which test hit this bin', which is the same question and the same
+      value. Considerable work, and it is a second format to version.
+
+  (c) NOT AT ALL. Refuse HDL languages by name, as Pascal is refused --
+      'this build does not measure hardware coverage'. Loses the line
+      coverage that already works, for nothing.
+
+RECOMMENDATION. (a) now -- it costs registry entries, which are already
+written -- with the STATEMENT mandatory, not optional. (b) when somebody
+actually verifies hardware with this framework; it is not speculative
+work to be done in advance.
+
+IF (b) IS EVER BUILT, the interchange standard is UCIS (Accellera's
+Unified Coverage Interoperability Standard): Questa's '.ucdb', VCS's
+'.vdb' and Cadence's databases all export toward it, and writing a
+reader per vendor database instead would be three readers for one
+format. Note that UCIS is an API with an XML interchange, not a text
+file somebody greps -- it is a larger undertaking than every reader in
+this component put together.
+
+THE VENDOR TOOLS in the default table -- 'vcover' (Questa), 'urg' (VCS),
+'imc' (Xcelium) -- are CANDIDATES WITH NO READER, deliberately. A shop
+that has one gets a refusal naming it, which is the truth, rather than
+silence.
+
+
+==============================================================================
+THE LABOUR
+==============================================================================
+
+todo-1  THE HOMOGENEOUS RECORD, ITS MERGE, AND THE INDEX      [BUILT]
+        The only part that is NOT language-specific, so it is built
+        FIRST: it gives every later reader a fixed target. Interval
+        lists, delta coding, the header (format version, 'counts:
+        no|yes'), and the union merge. 'system/helper.py' already has
+        'Interval' and 'iterable_from_integer_list()' -- the primitive
+        that folds adjacent integers into ranges exists.
+
+todo-2  THE PER-LANGUAGE READERS                            [7 built]
+        BUILT, each against a REAL artifact of the real tool:
+            coverage   coverage.py json        python
+            lcov       lcov tracefile          the lingua franca; also
+                       serves 'gcovr', 'grcov', 'kcov' by alias
+            gcov       gcov annotated source   c, c++, fortran, ada,
+                                               vhdl (ghdl)
+            cobertura  cobertura xml           the second lingua franca;
+                                               also serves 'coverlet' and
+                                               'scoverage' by alias
+            go         go cover profile        go
+            luacov     luacov REPORT           lua
+            jacoco     jacoco xml              java, kotlin, scala,
+                                               groovy
+        SETTLED WHILE BUILDING, and worth keeping: luacov's raw
+        'luacov.stats.out' CANNOT distinguish 'executable and never run'
+        from 'not executable' -- both count 0, verified against the real
+        tool. A reader over it would have to INVENT EX. Its REPORT, which
+        the 'luacov' command writes from those same counters WITH the
+        source beside them, does know the difference. So the report is
+        read and the stats file is not read at all.
+        THE JACOCO FIXTURE IS THE ONE THAT WAS NOT WITNESSED, and that
+        is stated at the fixture and in its test choice. Maven Central
+        answers 403 from here, so no artifact could be produced. What
+        was used instead: the report DTD (handed over first-hand), and
+        the format's OWN INVARIANT as a stand-in for witnessing -- every
+        '<sourcefile>' carries '<counter>' elements JaCoCo derives from
+        its own '<line>' elements, and the test checks the fixture
+        against them.
+        TWO SAMPLES FETCHED FROM THE WEB FAILED THAT CHECK, which is why
+        neither is in the tree: one had its 'mb'/'cb' pairs mirrored
+        against its own BRANCH counter, the other had lost 'ci'/'mi'
+        altogether. A fetched artifact is not a witnessed artifact.
+        STILL OWED: a real 'jacoco.xml' from a real build, to replace
+        the constructed one. The cross-check is already written, so the
+        replacement proves itself.
+        OWED:
+            julia      '.jl.*.cov' -- annotated source, the gcov family
+                       with other markers ('0' rather than '#####').
+                       Possibly one parameterised reader rather than two.
+                       Julia also exports LCOV through Coverage.jl, which
+                       is read TODAY, so this is a convenience.
+        'trace' (python stdlib) is a CANDIDATE in the default table with
+        no reader: a machine without coverage.py is then refused BY NAME
+        rather than silently uncovered.
+
+todo-8  THE MEASUREMENTS BESIDE THE LINE AXIS                 [part]
+        BUILT: the registration itself ('measure.py', RATIONALE D-11),
+        and two measures on it -- 'branch' and 'mcdc'. A measure owns a
+        tag, an encoding and the answer to whether it merges; admitting
+        a third is one 'register' call.
+        BUILT: 'cobertura' READS branch data ('condition-coverage'), so
+        the branch measure has a real source today.
+        OWED:
+          -- gcov's 'branch N taken' lines, and lcov's 'BRDA'. Both are
+             seen and skipped by their readers; both are straightforward
+             once somebody wants them.
+          -- MC/DC FROM A REAL TOOL. GCC 14 gained '-fcondition-coverage'
+             and 'gcov --conditions'; the machine this was written on
+             carries gcc 13, so the artifact was never SEEN. The encoding
+             is ours and is tested; the reading is not written, and must
+             be written against a real artifact like every other reader.
+          -- 'condition' as a third measure, if the distinction from
+             MC/DC is wanted: condition coverage asks whether each term
+             took both values, MC/DC whether each term alone can flip
+             the outcome. They are different questions and deserve
+             different tags.
+          -- A MERGEABLE ENCODING. Both built-ins refuse to merge,
+             because a COUNT does not carry WHICH. An encoding holding
+             the SET of arms taken would merge by union like everything
+             else here; it is bigger, and nobody has wanted an aggregate
+             over branch data yet.
+
+todo-3  'hwut.convert_to_lcov'
+        The export face (D-6). The reader registry run backwards.
+
+todo-4  THE PACK STOPS RESERVING AND STARTS SHOWING
+        'orchestrator/services/report.py' renders per source file the
+        percentage and the UNCOVERED line ranges -- which the stored form
+        already is, so there is no conversion at display time. Retires
+        'operations/DISCUSSIONS' todo-22 and moves two GOODs
+        ('test-report.sh--flags', '--bare'), both INTENDED structural
+        changes.
+
+todo-5  '--global-conf [<file>]' ON THE SERVICES
+        Plus the UPWARD search: nearest enclosing 'hwut.conf' wins,
+        layered over what stands further out (D-2).
+
+todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [BUILT]
+        Built as 'coverage/affected.py' with 'main(argv, write)'. The
+        thin service shim under 'orchestrator/services/' is OWED, and
+        with it the shared 'E_ExitCode' -- both edit an existing
+        directory, so both wait for a quiet tree.
+
+todo-7  THE MEASUREMENT THAT RULES disc-1
+        Write of one run, read of a cross-directory aggregate, forms (a)
+        and (c). Until it exists, disc-1 stays open and (a) stands.

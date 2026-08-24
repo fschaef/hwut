@@ -1,0 +1,17 @@
+
+--- the index knows only the runs it was built from ---
+INSPECT: built from A alone, core.py:15 -> <nobody>
+         built from all,     core.py:15 -> test-parse.py--deep
+
+--- an empty answer is not a clearance ---
+         core.py:30 -> <nobody>
+         A run may depend on code it never EXECUTED: a branch
+         that was deleted, a data file, a dynamic dispatch, an
+         absence. Selecting on this alone and calling the suite
+         green is a FALSE GREEN -- PHILOSOPHY section 7.
+  OK  : a run absent from the build is absent from every answer
+  OK  : and present once it is built in
+  OK  : an unexecuted line names nobody -- a fact, not a verdict
+  OK  : an index over no record knows no file
+SUCCESS: the index states what it saw, and claims nothing beyond.
+<hwut-end>

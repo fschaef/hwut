@@ -1,0 +1,36 @@
+
+--- the report, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: unknown
+         | ##tool:     jacoco
+         | ##format:   jacoco-xml
+         | ##counts:   no
+         | SF:App.kt
+         | EX:2
+         | CV:2
+         | SF:org/example/Calc.java
+         | EX:6+2,4,7+2
+         | CV:6+2,4,7
+         | BR:12*0/2,8*1/2
+
+--- the fixture, checked against ITS OWN counters ---
+         App.kt                 LINE   read 1/1   says (0, 1)
+                                BRANCH read 0/0   says (0, 0)
+         org/example/Calc.java  LINE   read 4/5   says (1, 4)
+                                BRANCH read 1/4   says (3, 1)
+
+--- a report that cannot say whether anything ran ---
+         raised CoverageRefused
+  OK  : the path is BUILT from '<package>' + '<sourcefile>': the format names a module position, not a file position
+  OK  : LINE agrees with the report's own counter -- 4 covered, 1 missed
+  OK  : and BRANCH agrees: 1 taken of 4
+  OK  : a PARTIALLY covered line ('ci'>0 and 'mi'>0, line 12) is COVERED here: partial is an INSTRUCTION fact, and this record holds no instruction axis
+  OK  : and the one line with no instruction executed is uncovered
+  OK  : a branch point exists only where 'mb + cb' is above zero -- '0/0' is no decision at all, not a decision with no arms
+  OK  : java and kotlin in ONE report is what the JVM does, so no single language is claimed
+  OK  : a '<line>' with neither 'ci' nor 'mi' is REFUSED: it is well-formed and cannot say whether the line ran
+  OK  : and a Cobertura document is left alone
+SUCCESS: the report agrees with its own counters, and says so where it cannot speak.
+<hwut-end>

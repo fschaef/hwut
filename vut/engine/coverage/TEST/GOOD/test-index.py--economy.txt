@@ -1,0 +1,13 @@
+
+--- 5000 lines, one run ---
+         [1,5001)  test-parse.py--basic
+
+--- 5000 lines, two runs splitting it in half ---
+         segments: 2
+  OK  : a file one run reaches whole costs ONE segment, not 5000
+  OK  : and that segment spans the file
+  OK  : two runs splitting a file cost two segments
+  OK  : the boundary array of one segment holds two numbers
+  OK  : and the segment carries ONE INTEGER, not a set of names
+SUCCESS: the fold keeps the economy the intervals bought.
+<hwut-end>

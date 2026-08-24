@@ -1,0 +1,22 @@
+
+--- branch ---
+         no ratio at all                  -> MeasureFault
+         a delta that is no number        -> MeasureFault
+         a covered that is no number      -> MeasureFault
+         a delta that does not advance    -> MeasureFault
+         a negative delta                 -> MeasureFault
+         a total of nothing               -> MeasureFault
+         covered above total              -> MeasureFault
+
+--- and the well-formed one still reads ---
+         '2*1/2' -> ((2, 1, 2),)
+  OK  : refused: no ratio at all
+  OK  : refused: a delta that is no number
+  OK  : refused: a covered that is no number
+  OK  : refused: a delta that does not advance
+  OK  : refused: a negative delta
+  OK  : refused: a total of nothing
+  OK  : refused: covered above total
+  OK  : a well-formed point is read
+SUCCESS: a point is read whole or refused by name; never half.
+<hwut-end>

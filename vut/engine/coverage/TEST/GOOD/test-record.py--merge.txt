@@ -1,0 +1,28 @@
+
+--- two runs of one file ---
+INSPECT: CV(a) = ((1, 6),)
+         CV(b) = ((15, 21),)
+         CV(merged) = ((1, 6), (15, 21))
+         uncovered  = ((6, 15),)
+
+--- order does not matter ---
+INSPECT: merge(a,b) == merge(b,a) -> True
+
+--- provenance that differs is JOINED, so it is visible ---
+INSPECT: tool = 'coverage,trace'
+
+--- counts refuse to merge ---
+INSPECT: raised CountsNotMergeable
+
+--- an aggregate over nothing is not an empty aggregate ---
+INSPECT: merge([]) -> None
+  OK  : the merged covered set is the union of both runs
+  OK  : and the uncovered set shrinks accordingly
+  OK  : merge is commutative -- byte for byte
+  OK  : merge is associative -- byte for byte
+  OK  : a non-uniform aggregate SHOWS that it is one
+  OK  : merge is idempotent: a record merged with itself is itself
+  OK  : hit counts are refused by name, not resolved by an unasked rule
+  OK  : no record aggregates to None, never to an empty record
+SUCCESS: the aggregate is order-free, and says when it is mixed.
+<hwut-end>

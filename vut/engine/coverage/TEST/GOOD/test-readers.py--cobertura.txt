@@ -1,0 +1,29 @@
+
+--- the xml, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: python
+         | ##tool:     cobertura
+         | ##format:   cobertura-xml
+         | ##counts:   no
+         | SF:app.py
+         | EX:1+3,1,1+2,1
+         | CV:1+3,3,2
+         | BR:2*1/2
+INSPECT: branch = ((2, 1, 2),)   summary = (1, 2)
+
+--- a JaCoCo report in the same directory ---
+         None
+
+--- and the two together: only the one this reader claims ---
+         ['app.py']
+  OK  : EX is every '<line>' -- the same fact LCOV's 'DA' carries
+  OK  : CV is every one whose 'hits' is not zero
+  OK  : and the BRANCH data is kept: line 2, one arm of two
+  OK  : which the record writes under the measure's own tag
+  OK  : the language is read from the extensions -- a Cobertura document carries none, that being the price of a format five ecosystems share
+  OK  : a JaCoCo '<report>' is LEFT ALONE, not half-understood
+  OK  : and standing beside one, only the claimed document is read
+SUCCESS: one xml five ecosystems share, and the first measurement beside the lines.
+<hwut-end>

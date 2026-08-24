@@ -1,0 +1,24 @@
+
+--- coverage.py wraps the application ---
+         coverage run --data-file=<work>/OUT/COVERAGE/.coverage --include=*.py --omit=TEST/* -- python3 -u test-parse.py basic
+
+--- and names a SECOND call: what the run left is a database ---
+         coverage json --data-file=<work>/OUT/COVERAGE/.coverage -o <work>/OUT/COVERAGE/coverage.json -q
+
+--- gcov wraps nothing -- it instruments at BUILD time ---
+         ['./prog']
+
+--- and names no call where the build left no '.gcda' ---
+         None
+
+--- the tracefile tools name none either: it is text already ---
+         None
+  OK  : the application runs UNDER the tool
+  OK  : '--' keeps an application flag the tool also knows from being eaten by the tool
+  OK  : the gather set goes to the GATHERER, which is the cheapest place to gather less
+  OK  : the second call is NAMED here and MADE by the execute stage: a reader spawns nothing
+  OK  : gcov leaves the command line alone
+  OK  : and names no call over a build that was not instrumented, rather than running gcov over nothing
+  OK  : a tracefile needs no second call
+SUCCESS: a reader names its calls; the execute stage makes them.
+<hwut-end>

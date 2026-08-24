@@ -1,0 +1,403 @@
+SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+==============================================================================
+RATIONALE -- coverage                                     (settled 2026-08-22)
+==============================================================================
+
+What is DECIDED and WHY. Open choices live in DISCUSSIONS.txt; the
+mechanics live in README.txt. An entry migrates here when it is settled,
+and its disc entry is deleted.
+
+
+D-1  COVERAGE IS A COMPONENT, NOT A SPREAD OF OPTIONS         (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   operations/DISCUSSIONS todo-22 places coverage as four small
+          additions: 'StoreConfig.record_coverage', an argv change in
+          the execute stage, a store sidecar, a rendering in the pack.
+          That is the shape 'record_timing' has -- and it fits timing,
+          because a delta is one float and no tool is involved.
+          Coverage involves a TOOL, and the tool is per LANGUAGE.
+DECISION  A peer component, 'coverage/', beside procsitter, compare and
+          hwut_pype. It owns three things and nothing else:
+              CONTRACT   CoverageConfig -- what is gathered
+              WRAPPING   the tool's own call form; THE one place a
+                         language's coverage tool is named
+              HARVEST    the tool's artifact -> the homogeneous record
+          Held VERBATIM in TestConfiguration (aggregation, not
+          restatement). The four seams above stay one line each.
+COST      One more component to carry: README, RATIONALE, DISCUSSIONS,
+          TEST/GOOD.
+GRAVEYARD Tool knowledge inside 'stage_execute.py': puts a tool
+          vocabulary ABOVE the TRANSLATION line (operations README 2.2),
+          which no component type may cross.
+
+
+D-2  THE COMPONENT CHOOSES THE TOOL; THE CONF NAMES IT        (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   'gcov', 'lcov' and 'gcovr' are one language and three output
+          shapes. Does a configuration entry name a tool, a reader, or
+          both?
+DECISION  'hwut.conf' carries a dict whose KEY is a GLOB over the
+          LANGUAGE parameter and whose VALUE is an ORDERED LIST OF
+          CANDIDATE TOOLS. The component takes the first candidate that
+          is actually available on this machine, and resolves tool ->
+          reader from its own registry. A configuration never names a
+          reader.
+
+              "python*"   : ["coverage", "slipcover", "trace"]
+              "c"         : ["gcov", "llvm-cov", "kcov"]
+              "verilog"   : ["verilator_coverage", "vcover", "urg"]
+              "pascal"    : []          <- an EMPTY list is an ANSWER
+
+          THE LANGUAGE IS THE KEY, not the interpreter: it is the one
+          thing all three source kinds have. An EXECUTABLE and a COMPILED
+          test have no interpreter to match on, and 'python3' vs 'pypy3'
+          is one language under two names.
+          WHERE THE LANGUAGE IS NOT STATED it is DERIVED from the source
+          file's extension. The derivation is stated, never silent: the
+          language that served appears in the record's header (D-7) and
+          in any refusal, so an author never wonders what was assumed.
+          A default dict ships with the component; 'hwut.conf' overrides
+          it, inherited global to specific by the existing rule.
+          The services gain '--global-conf [<file>]'. Given no file, the
+          search runs UPWARD: the nearest ENCLOSING 'hwut.conf' wins,
+          layered over whatever stands further out.
+          NO CANDIDATE AVAILABLE is a REFUSAL at the door, naming the
+          candidates it looked for -- never a silent skip (a skipped
+          measurement reads as an absent one, and absence and emptiness
+          do not collapse).
+          THE ORDER IS PART OF THE TABLE: the shipped list puts the tools
+          whose FORMAT this build reads in FRONT, because 'elect' takes
+          the first candidate the machine HAS. A candidate with no reader
+          is still worth listing -- it is how a machine refuses BY NAME.
+          AN EMPTY LIST IS AN ANSWER, not an omission: where nobody can
+          vouch for a tool (Pascal, Tcl), the language refuses by name.
+          Inventing a candidate would be worse -- a tool that is wrong
+          about what it measures reports a green nobody earned.
+COST      A new tool needs a registry entry, not merely a conf line.
+          Which candidate served is not knowable from the configuration
+          alone -- hence D-7.
+GRAVEYARD Conf entries naming tool AND reader: two truths, and the second
+          one is the component's own business.
+          Inferring a tool from the source kind: a default that fails
+          silently, in the green direction (operations README 2.6).
+          A single tool per language: a machine without it has no
+          coverage at all, where a second candidate would have served.
+          Keying on the INTERPRETER: two of the three source kinds have
+          none, and one language would answer to several spellings.
+
+
+D-3  THE GATHER SET IS TWO GLOB LISTS, FOR EFFICIENCY ONLY    (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   todo-22's open question: coverage of WHAT -- the test
+          application only, or the units it exercises?
+DECISION  'CoverageConfig' carries two glob lists: the sources SUBJECT to
+          coverage, and those that are NOT. They exist to keep the
+          GATHERING cheap and for nothing else. What is displayed,
+          recorded or further processed is a LATER STAGE'S filter.
+COST      Two filters in two places; each must say which it is.
+GRAVEYARD One filter serving both purposes: the gathering set and the
+          reporting set are different questions, and welding them makes
+          "why is this file missing from the report?" unanswerable.
+
+
+D-4  COVERAGE IS ITS OWN ANIMAL                               (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   A coverage run is a test run -- but slower, fatter on disk, and
+          measuring something the ordinary run does not.
+DECISION  It is a DIFFERENT kind of run, and says so:
+            -- individual caps, or ALL of them, may be DISABLED for it.
+               Declared, never inferred.
+            -- a coverage run produces NO timing measures.
+               'record_coverage' and 'record_timing' are mutually
+               exclusive.
+            -- the raw, language-specific artifact lands in
+               'OUT/COVERAGE/'; the reader converts it from there.
+            -- source references are RELATIVE TO THE TEST DIRECTORY, so
+               a later stage can aggregate across directories.
+COST      Two run kinds to keep honest; a suite measuring coverage cannot
+          also be measuring cadence.
+GRAVEYARD Silently relaxing caps under 'record_coverage': a cap that
+          disappears without being said is the green-direction failure.
+          Absolute source paths: they freeze one machine into the record
+          and make aggregation impossible.
+
+
+D-5  THE HOMOGENEOUS RECORD: LCOV'S SKELETON, NOT ITS GRAIN   (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   Every coverage format on the market records ONE LINE OF TEXT
+          PER SOURCE LINE ('DA:2100,1'). That is where LCOV, Cobertura
+          and coverage.py's JSON all become slow and fat, and it is the
+          disruption to avoid.
+DECISION  Take LCOV's SKELETON -- keyed by source file, merge is addition
+          -- and drop its granularity. Per source file, two sorted
+          INTERVAL lists:
+              EX   the ranges that could be hit
+              CV   the ranges that were
+          'uncovered = EX - CV'; percentage is derived. Neither stored.
+          The ranges are DELTA CODED: each is (start - previous_end,
+          length), so both numbers stay small.
+          HIT COUNTS are OPTIONAL and OFF by default; the header declares
+          whether they are recorded, so a reader never guesses.
+COST      A file whose coverage is genuinely scattered line-by-line
+          compresses less well than one with runs.
+MEASURED  (expected, to be confirmed -- DISCUSSIONS disc-1) a 5000-line
+          file collapses from 5000 records to a handful of ranges.
+GRAVEYARD Per-line records: the very cost this format exists to avoid.
+          Counts always on: they are what prevents the interval collapse,
+          and HWUT asks "did this test reach this code", not "how often".
+
+
+D-6  A CONVERTER MAKES THE STORAGE FORMAT PRIVATE             (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   LCOV is the lingua franca: 'genhtml', CI dashboards, codecov
+          and IDE gutters read it and will never learn ours.
+DECISION  'hwut.convert_to_lcov' -- a service that emits LCOV from the
+          homogeneous record. It is the reader registry run BACKWARDS:
+          readers map tool format -> ours, this maps ours -> LCOV.
+COST      One more service face.
+CONSEQUENCE, and the reason this is settled before the format is: with a
+          converter between the store and the outside world, the internal
+          format is PRIVATE and REVERSIBLE. Text first, measure, go
+          binary later -- and the service does not change. So the format
+          question need not be answered now, and answering it now would
+          be answering it without numbers.
+GRAVEYARD Exposing the internal record as the export format: it would
+          then be frozen by every consumer that ever read it.
+
+
+D-7  THE RECORD NAMES THE TOOL AND FORMAT THAT MADE IT         (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   With a CANDIDATE LIST (D-2), which tool served is decided at
+          RUN TIME, by what the machine happens to have. The
+          configuration cannot answer it, and the homogeneous record --
+          being homogeneous -- looks the same whichever tool produced it.
+          A later stage that must know is then guessing.
+DECISION  The record's HEADER carries the PROVENANCE: the LANGUAGE that
+          selected the candidates (derived or stated, D-2), the TOOL that
+          ran, and the FORMAT its artifact was in. Beside 'counts:
+          no|yes' and the format version, so one header answers
+          everything a reader needs before the first range.
+          SAME LAW AS THE BOOK ENTRY (operations README 6): a record is
+          HISTORY, and the configuration may have moved since. The book
+          records the canonicaliser and the compare setup for exactly
+          this reason; coverage records its tool for exactly this reason.
+COST      A record is no longer comparable byte-for-byte across machines
+          that resolved different candidates -- which is TRUE, and better
+          said than hidden.
+CONSEQUENCE An aggregate over records made by DIFFERENT tools is
+          admissible but no longer uniform, and the aggregator can now
+          SEE that. What it does about it -- merge, segregate, or refuse
+          -- is its own ruling, and it can only be taken because the
+          provenance is there.
+GRAVEYARD Provenance inferred from the configuration: with candidates it
+          is not derivable, and a derivation that is usually right is the
+          worst kind.
+          Provenance as a machine tag (host, version, path): the record
+          stays MACHINE-FREE (D-4). The tool's NAME is not a machine.
+
+
+D-8  WHO COVERED IT: A DIFFERENT FOLD, NOT A RICHER MERGE      (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   The aggregate must later answer WHICH RUN reached a line, so
+          that a change to code can conclude WHICH TESTS TO PERFORM.
+          'merge' cannot: a union of ranges is LOSSY BY CONSTRUCTION and
+          destroys who contributed which line. The obvious repair --
+          attribution inside the merged record -- forces every range to
+          split wherever authorship differs, which is the per-line grain
+          D-5 exists to avoid.
+DECISION  TWO QUESTIONS, TWO FOLDS, ONE SET OF RECORDS.
+              'record.merge'   what did the suite reach   (union)
+              'index.index_of' who reached this line      (segmentation)
+          The index cuts the line axis at every point where the SET OF
+          ORIGINS changes, and fuses segments carrying equal sets -- so a
+          file one run reaches whole costs ONE segment, not one entry per
+          line. A query is a bisect.
+          THE ATTRIBUTION WAS NEVER A FIELD TO ADD: it is the key the
+          record is already stored under, (test, choice). What was needed
+          is only that a record CARRY that key when it travels away from
+          the store -- so the header names 'test' and 'choice' beside the
+          provenance of D-7. 'choice' is '-' for the choice-less test, as
+          the runner's own DOWN grammar already spells it.
+CONSEQUENCE, and it is a RULE: THE PER-RUN RECORDS MUST BE KEPT. An
+          aggregate that replaces them answers the first question and
+          destroys the second, irreversibly.
+          The directory that disambiguates two 'core.py' is supplied by
+          the AGGREGATOR, not by the record (D-4) -- which makes disc-4's
+          recommendation load-bearing rather than tidy.
+COST      Storage is the sum of the runs, not the union of them.
+GRAVEYARD Per-range attribution inside the merged record: reinstates the
+          per-line grain by another road.
+          Deriving the run from the PATH a record was found at: the
+          fragility D-7 removed for the tool, reintroduced for the key.
+
+THE LIMIT, STATED ONCE AND REPEATED BY EVERY FACE OVER IT. The index
+          names what CERTAINLY executed a line. It never claims the rest
+          is unaffected: a test may depend on code it never executed -- a
+          branch that was deleted, a data file, a dynamic dispatch, a
+          configuration, an ABSENCE. Selecting only the named tests and
+          calling the suite green is a FALSE GREEN, the silent failure of
+          PHILOSOPHY section 7. A suggestion, never a clearance.
+
+
+D-9  A SEGMENT CARRIES A NUMBER: TEST IDS AND GROUP IDS        (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   A segmentation carrying Origins carries the same test NAME
+          thousands of times, and a RENAME would have to rewrite every
+          record that ever mentioned it.
+DECISION  TWO INTERNINGS, in 'identity.py':
+              IdTable      Origin          <-> TEST ID
+              GroupTable   set of TEST IDs <-> GROUP ID
+          A segment carries ONE INTEGER -- its group. A query reads the
+          group, the GroupTable decodes it to ids, the IdTable decodes
+          those to runs: AT THE EDGE, for the few segments a query
+          touched, never for the whole fold.
+          GROUPS, not sets, because whole regions of a code base are
+          reached by exactly the same handful of tests: pay for the
+          DISTINCT set, not for every occurrence -- the same trick the
+          intervals are.
+          GROUP 0 IS THE EMPTY SET, allocated by construction. A stretch
+          nobody executed carries a group like any other, so no query
+          needs a special case for 'nobody'.
+
+          THE TWO LAWS OF A TEST ID
+          (1) AN ID IS NEVER REUSED. Allocation is monotone; a retired id
+              KEEPS ITS ENTRY so an old record still decodes, while the
+              forward lookup stops finding it. Reuse would make an old
+              record point silently at a DIFFERENT test -- a false
+              attribution, and one that reports nothing.
+          (2) A RENAME KEEPS THE ID. The name is an attribute of the
+              entry, never the identity. THIS IS THE WHOLE POINT: a
+              rename touches ONE table, and no record anywhere.
+
+          A rename onto a name a LIVE id already holds is REFUSED: two
+          live ids for one run makes 'which id is this test' unanswerable.
+COST      A second table to carry, and a second thing that can be lost.
+          A record without its id table is names without numbers -- which
+          is why the record itself still carries 'test' and 'choice'
+          (D-8): the tables ACCELERATE the index, they are not the only
+          copy of the truth.
+GRAVEYARD Names in every segment: a rename becomes a rewrite of history.
+          Reusing a retired id: the false attribution above.
+          Answering an unknown group with the empty set: it would read as
+          'nobody ran this' -- absence and emptiness, collapsed, in the
+          green direction.
+
+THE BOOKKEEPER. The table is THE BOOKKEEPER'S, eventually: it already
+          owns the naming of a test directory, and a RENAME SERVICE must
+          go through the same door or there are two truths about what a
+          test is called. 'identity.py' holds the MECHANISM and a
+          serialisation and deliberately reaches into no base. Which side
+          allocates, at what scope, and what a rename service owes, is
+          DISCUSSIONS disc-8 -- and settling it EDITS THE BOOKKEEPER, so
+          it waits for a quiet tree.
+
+
+D-10  A READER NAMES A SECOND CALL; IT NEVER MAKES ONE          (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   Found while building the readers, and not foreseen: most
+          coverage tools do not leave a REPORT, they leave BINARY STATE.
+          coverage.py leaves a '.coverage' database; gcc leaves '.gcda'
+          counters. Turning either into something readable is itself a
+          PROCESS -- and every process HWUT runs goes through the
+          procsitter. A reader that spawned it would be a component
+          spawning subprocesses behind the execute stage's back.
+DECISION  The role grows a THIRD call, 'report_argv(config, work_dir)':
+          the reader NAMES the second supervised call, the execute stage
+          MAKES it, under the procsitter like every other process. None
+          says, honestly, that this tool needs no second call.
+
+              coverage    'coverage json'   -- a database to read
+              gcov        'gcov -b -p ...'  -- counters to annotate
+              lcov &c.    None              -- a tracefile is text
+
+          MADE LATE. gcov's call names the '.gcda' files the run just
+          wrote, which do not exist before it. 'report_argv' is called
+          after the application ended -- which is when the execute stage
+          would make it anyway -- and returns None where no '.gcda'
+          stands: that says 'the build was not instrumented' rather than
+          running gcov over nothing and reporting a failure with a
+          misleading name.
+COST      Three calls in the role rather than two, and one more thing
+          the execute stage does under 'record_coverage'.
+GRAVEYARD A reader that runs its own subprocess: unsupervised, uncapped,
+          unattributed -- the one thing the procsitter exists to
+          prevent (procsitter MANUAL, rule of thumb 1).
+          Harvesting the binary state directly by importing the tool's
+          library: it would make the component depend on every coverage
+          tool it supports, and 'gcov' has no library at all.
+
+ALSO SETTLED HERE, and small: '-p' is not decoration. Without it two
+          'core.c' in two directories both become 'core.c.gcov' and the
+          second silently REPLACES the first -- a whole file's coverage
+          lost, in the green direction.
+
+
+D-11  A MEASURE IS REGISTERED, NOT BUILT IN                     (2026-08-22)
+------------------------------------------------------------------------------
+PROBLEM   Line coverage is one measurement among several. Branch,
+          condition and MC/DC each answer a DIFFERENT question about the
+          same source, and none of them is a flag on a line: they belong
+          to a DECISION POINT. todo-8 said 'a third interval list'; that
+          was wrong -- a decision is not a range, and 'a && b' is one
+          line with several of them.
+DECISION  'measure.py': a MEASURE owns a NAME, a record TAG, its own
+          encoding, and the answer to whether it can be merged. The
+          record dispatches on the tag and asks the measure; it knows
+          what none of them MEAN. Admitting a fourth is one 'register'
+          call and NO change to 'record.py'.
+
+              EX:3+3,1        line, executable      record.py's own
+              CV:3+3          line, covered         record.py's own
+              BR:2*1/2        branch                registered
+              MC:4*2/3,0*3/3  mc/dc                 registered
+
+          THE POINT SHAPE, shared by both built-ins: (line, covered,
+          total), delta coded on the line as the ranges are. A delta of
+          ZERO means ANOTHER DECISION ON THE SAME LINE -- which MC/DC
+          admits and branch does not, because branch data is reported per
+          line and MC/DC per decision.
+          A FILE WITH NO SUCH MEASUREMENT WRITES NO SUCH LINE, so a
+          record of line coverage alone is BYTE-IDENTICAL to what it was
+          before any measure existed. No GOOD moved.
+COST      Two registries in one component (readers, measures). They are
+          different things -- a reader knows a FORMAT, a measure knows a
+          QUESTION -- and one table for both would serve neither.
+
+WHY NEITHER CAN BE MERGED, and why that is refused rather than fudged. A
+          COUNT of arms taken does not carry WHICH arms. Run A takes arm
+          0, run B takes arm 1: together the decision is fully covered,
+          and no function of 1 and 1 yields 2.
+              max(1, 1) = 1   a LOWER BOUND reported as a measurement --
+                              a false RED, and a false GREEN the moment
+                              somebody 'fixes' it by summing
+          So a measure DECLARES 'mergeable', both declare False, and
+          'record.merge' refuses by name ('MeasureNotMergeable'). An
+          encoding carrying the SET of arms taken rather than their
+          number WOULD be mergeable and could declare so; that is the
+          shape to reach for if an aggregate over branch data is ever
+          wanted.
+
+MC/DC IS REGISTERED; NO READER PRODUCES IT YET, and that is stated rather
+          than hidden. GCC 14 gained '-fcondition-coverage' and 'gcov
+          --conditions'; the machine this was written on carries gcc 13,
+          so the artifact could not be SEEN. The ENCODING here is this
+          component's own and is tested; READING somebody else's is owed,
+          and must be written against a real artifact like every other
+          reader (DISCUSSIONS todo-8).
+
+GRAVEYARD A third interval list for branches: a decision is not a range,
+          and several sit on one line.
+          A flag on the line record: it would say 'this line has a
+          branch' and not how much of it was taken -- the whole
+          measurement, discarded.
+          Measures hard-coded in 'record.py': every new question would
+          then edit the format, and disc-9's HDL measures would edit it
+          five more times.
+
+WHAT THIS DELIBERATELY DOES NOT SOLVE. A measure with NO LINE cannot
+          live here at all: toggle coverage belongs to a SIGNAL, a
+          functional bin to a COVERGROUP, and this record is keyed by
+          file and line. disc-9 stands unchanged, and this registration
+          is no help with it -- pretending otherwise is how a design gets
+          reported '92% covered' while the coverage somebody came for is
+          discarded.

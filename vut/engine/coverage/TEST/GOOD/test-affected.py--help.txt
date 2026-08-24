@@ -1,0 +1,14 @@
+
+--- --help ---
+REACTION  status 0   stderr 0 byte(s)
+          | SPDX-License: MIT; Project VUT; (C) Frank-Rene Schaefer
+          | ______________________________________________________________________________
+          |
+          | PURPOSE: 'hwut.affected' -- a change goes in, the runs that executed it
+          |          come out.
+          |
+          |     hwut.affected --records DIR [--diff FILE|-] [-p N] [-b|--bare]
+  OK  : asking for help is not a fault
+  OK  : and the usage names what is required
+SUCCESS: the face explains itself.
+<hwut-end>

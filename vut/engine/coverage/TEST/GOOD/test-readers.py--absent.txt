@@ -1,0 +1,12 @@
+
+--- an empty artifact directory ---
+         coverage  -> None
+         lcov      -> None
+         gcov      -> None
+
+--- an artifact of another format ---
+         lcov over a '.gcov' -> None
+  OK  : no artifact answers None -- ABSENT
+  OK  : and a file of the wrong format is not read by accident: the suffix is part of what a reader claims
+SUCCESS: absence is answered as absence, never as a measurement of nothing.
+<hwut-end>

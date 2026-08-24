@@ -1,0 +1,33 @@
+
+--- every fault, refused by name ---
+         no version                             -> RecordFault
+         a version this reader does not know    -> RecordFault
+         no 'tool' in the header                -> RecordFault
+         no 'test' in the header -- the run would be anonymous -> RecordFault
+         no 'choice' in the header              -> RecordFault
+         a block without 'CV'                   -> RecordFault
+         'EX' before any 'SF'                   -> RecordFault
+         a delta that does not advance          -> RecordFault
+         a range that spells no number          -> RecordFault
+         counts promised, none given            -> RecordFault
+         counts given, none promised            -> RecordFault
+         an unknown record line                 -> RecordFault
+
+--- and the good one is read ---
+INSPECT: a.py EX=((1, 4),) CV=((1, 2),)
+  OK  : refused: no version
+  OK  : refused: a version this reader does not know
+  OK  : refused: no 'tool' in the header
+  OK  : refused: no 'test' in the header -- the run would be anonymous
+  OK  : refused: no 'choice' in the header
+  OK  : refused: a block without 'CV'
+  OK  : refused: 'EX' before any 'SF'
+  OK  : refused: a delta that does not advance
+  OK  : refused: a range that spells no number
+  OK  : refused: counts promised, none given
+  OK  : refused: counts given, none promised
+  OK  : refused: an unknown record line
+  OK  : the well-formed record still reads
+  OK  : and it names the run it is of
+SUCCESS: a record is read whole or refused by name; never half.
+<hwut-end>

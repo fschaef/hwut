@@ -1,0 +1,46 @@
+
+--- the tracefile, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: python
+         | ##tool:     lcov
+         | ##format:   lcov-tracefile
+         | ##counts:   no
+         | SF:app.py
+         | EX:1+3,1,1+2,1
+         | CV:1+3,3,2
+
+--- an ABSOLUTE 'SF', and one file named twice ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: c
+         | ##tool:     lcov
+         | ##format:   lcov-tracefile
+         | ##counts:   no
+         | SF:deep/core.c
+         | EX:1+2,6
+         | CV:1+2,6
+
+--- with counts asked for ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: python
+         | ##tool:     lcov
+         | ##format:   lcov-tracefile
+         | ##counts:   yes
+         | SF:app.py
+         | EX:1+3,1,1+2,1
+         | CV:1+3*1,3*1,2*1
+  OK  : EX is every 'DA' line
+  OK  : CV is every 'DA' whose count is not zero
+  OK  : the language is read from the extensions the file names
+  OK  : an absolute 'SF' is made relative to the test directory -- the one point where the machine's path is still available, and is discarded for good
+  OK  : a file named in two blocks is UNIONED, and line 2 -- zero in one, three in the other -- is covered
+  OK  : and the language follows the extension
+  OK  : counts are read where they were ASKED for: one per RANGE
+  OK  : and dropped where they were not -- a tool that reports counts does not oblige a record to carry them
+SUCCESS: one tracefile format, whoever wrote it.
+<hwut-end>

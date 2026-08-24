@@ -1,0 +1,32 @@
+
+--- adjacent lines fold into ranges ---
+INSPECT: ((3, 7), (9, 10), (20, 22))
+         out of order, with duplicates -> ((3, 7), (9, 10), (20, 22))
+         nothing -> ()
+
+--- union is the merge ---
+INSPECT: ((1, 4), (10, 11)) U ((3, 6), (11, 12)) = ((1, 6), (10, 12))
+         order does not matter: True
+
+--- subtract: EX - CV is what the pack shows ---
+INSPECT: EX = ((1, 21),)
+         CV = ((1, 6), (15, 21))
+         uncovered = ((6, 15),)
+
+--- a file with no executable line has NO ratio ---
+INSPECT: empty.ratio = None
+         whole.ratio = 0.5500
+  OK  : adjacent lines fold; a lone line is a range of one
+  OK  : unsorted input with duplicates folds identically
+  OK  : no line folds to no range
+  OK  : union merges overlapping AND adjacent ranges
+  OK  : union is commutative
+  OK  : union is associative -- an aggregate ignores its walk order
+  OK  : EX - CV is the uncovered set
+  OK  : subtracting nothing changes nothing
+  OK  : subtracting everything leaves nothing
+  OK  : line_n counts lines, not ranges
+  OK  : no executable line -> ratio None, never 1.0
+  OK  : 11 of 20 lines covered -> 0.55
+SUCCESS: the interval algebra holds, and absence is not zero.
+<hwut-end>

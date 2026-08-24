@@ -1,0 +1,22 @@
+
+--- the json, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: python
+         | ##tool:     coverage
+         | ##format:   coverage.py-json
+         | ##counts:   no
+         | SF:app.py
+         | EX:1+3,1,1+2,1
+         | CV:1+3,3,2
+INSPECT: uncovered = ((5, 6), (8, 9))   ratio = 0.7143
+  OK  : the source file is named as the tool named it -- already relative to the test directory
+  OK  : CV is 'executed_lines', folded into ranges
+  OK  : EX is 'executed + missing' -- what COULD be hit
+  OK  : and the uncovered set is exactly 'missing_lines'
+  OK  : which agrees with the tool's own summary: 5 of 7
+  OK  : NO COUNTS: coverage.py records hits, not their number -- claiming 1 for each would be a fabricated measurement
+  OK  : the header names language, tool and format
+SUCCESS: coverage.py's json says EX and CV outright; nothing is inferred.
+<hwut-end>

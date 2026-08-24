@@ -1,0 +1,11 @@
+
+--- coverage.py's THREE output formats, over ONE run ---
+INSPECT: json EX=((1, 4), (5, 6), (7, 9), (10, 11)) CV=((1, 4), (7, 8), (10, 11))
+         lcov EX=((1, 4), (5, 6), (7, 9), (10, 11)) CV=((1, 4), (7, 8), (10, 11))
+         cobt EX=((1, 4), (5, 6), (7, 9), (10, 11)) CV=((1, 4), (7, 8), (10, 11))
+  OK  : the two readers agree on EX
+  OK  : and on CV -- one run described twice, read twice, one answer
+  OK  : and the Cobertura reader makes it three formats, one answer
+  OK  : while the headers still differ: the tool that ran is not the format it wrote
+SUCCESS: two formats of one run read to the same record.
+<hwut-end>

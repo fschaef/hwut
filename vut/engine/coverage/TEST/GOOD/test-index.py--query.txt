@@ -1,0 +1,26 @@
+
+--- one line at a time ---
+         core.py:1   -> test-parse.py--basic
+         core.py:6   -> test-parse.py--basic,test-parse.py--deep
+         core.py:15  -> test-parse.py--deep
+         core.py:30  -> <nobody>
+         core.py:41  -> engine/TEST:test-other.py
+
+--- a span ---
+         core.py 4..7    -> test-parse.py--basic,test-parse.py--deep
+         core.py 22..30  -> <nobody>
+         core.py 1..100  -> engine/TEST:test-other.py,test-parse.py--basic,test-parse.py--deep
+
+--- a file nobody measured ---
+         ghost.py:1 -> <nobody>
+  OK  : line 1 -> A
+  OK  : line 6 -> A and B
+  OK  : line 15 -> B
+  OK  : line 30, in the gap, -> nobody
+  OK  : line 41 -> C
+  OK  : a span crossing a cut collects both
+  OK  : a span wholly inside the gap collects nobody
+  OK  : a span over the whole file collects everybody
+  OK  : an unknown file answers the empty set, and never raises
+SUCCESS: a query is a bisect, and an empty answer is a value.
+<hwut-end>

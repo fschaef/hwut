@@ -1,0 +1,14 @@
+
+--- everything ---
+         ['src/core.c', 'src/gen/parser.c', 'vendor/zlib.c']
+
+--- omit the vendored tree ---
+         ['src/core.c', 'src/gen/parser.c']
+
+--- include only what was hand written ---
+         ['src/core.c']
+  OK  : an empty gather set takes whatever the tool took
+  OK  : 'omit' subtracts
+  OK  : 'include' bounds, and 'omit' still subtracts inside it
+SUCCESS: the gather set decides the same way wherever it is applied.
+<hwut-end>

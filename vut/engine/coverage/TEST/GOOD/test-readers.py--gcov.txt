@@ -1,0 +1,22 @@
+
+--- the annotated source, read ---
+         | ##VUT-COVERAGE 1
+         | ##test:     -
+         | ##choice:   -
+         | ##language: c
+         | ##tool:     gcov
+         | ##format:   gcov-annotated
+         | ##counts:   no
+         | SF:prog.c
+         | EX:3+3,1,2+2,2+3
+         | CV:3+3,8+3
+INSPECT: uncovered = ((7, 8), (10, 12))   ratio = 0.6667
+  OK  : the path comes from the 'Source:' header, never from the file name -- '-p' mangles that on purpose
+  OK  : '-' lines are NOT EXECUTABLE and enter neither set
+  OK  : '#####' is executable and never run: EX, not CV
+  OK  : so the uncovered set is exactly the '#####' lines
+  OK  : gcov is gcc's, and gcc's languages are c and c++
+  OK  : the header names the tool and the format
+  OK  : 'function'/'branch'/'call' lines are skipped -- branch coverage is a different measurement
+SUCCESS: gcov's three markers read as three different facts.
+<hwut-end>

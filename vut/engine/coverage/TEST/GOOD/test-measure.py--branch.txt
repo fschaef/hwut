@@ -1,0 +1,16 @@
+
+--- three decisions ---
+INSPECT: ((2, 1, 2), (10, 0, 2), (11, 3, 3))
+         -> '2*1/2,8*0/2,1*3/3'
+         summary (covered, total) = (4, 7)
+
+--- a second decision on ONE line is refused for branch ---
+         raised MeasureFault
+  OK  : delta coded on the line, as the ranges are
+  OK  : decode inverts encode
+  OK  : the summary sums both halves; the ratio is DERIVED by whoever renders, and stored by nobody
+  OK  : no decision encodes to the empty string, and back
+  OK  : branch data is reported PER LINE, so a zero delta means nothing and is refused
+  OK  : and it declares itself unmergeable
+SUCCESS: branch coverage is a point measure on the line axis.
+<hwut-end>

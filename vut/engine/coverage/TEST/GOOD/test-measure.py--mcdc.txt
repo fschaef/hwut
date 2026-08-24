@@ -1,0 +1,15 @@
+
+--- two decisions on line 4, one on line 9 ---
+INSPECT: ((4, 2, 3), (4, 3, 3), (9, 0, 2))
+         -> '4*2/3,0*3/3,5*0/2'
+         summary = (5, 8)
+
+--- the FIRST delta must still advance -- there is no line zero ---
+         raised MeasureFault
+  OK  : a delta of ZERO is a SECOND decision on the same line
+  OK  : decode inverts encode, the zero delta included
+  OK  : five conditions shown independent of eight
+  OK  : but the FIRST delta must advance: there is no line zero
+  OK  : MC/DC declares itself unmergeable: two runs may demonstrate independence of DIFFERENT conditions
+SUCCESS: MC/DC is per DECISION, and a line may carry several.
+<hwut-end>

@@ -1,0 +1,16 @@
+
+--- two runs, one decision, DIFFERENT arms ---
+         run A: line 2, 1 of 2 arms
+         run B: line 2, 1 of 2 arms  -- the OTHER one
+         together the decision is FULLY covered, and no
+         function of 1 and 1 yields 2.
+INSPECT: merge raised MeasureNotMergeable
+
+--- the same records without the measure merge as ever ---
+         ((1, 3), (4, 5))
+  OK  : refused BY NAME, rather than resolved by a rule nobody asked for
+  OK  : and a caller that does not distinguish still sees a RecordFault
+  OK  : a record carrying no measure merges exactly as before
+  OK  : an EMPTY measure is not a measurement: it blocks no merge
+SUCCESS: a lower bound is not a measurement, and is refused rather than reported.
+<hwut-end>
