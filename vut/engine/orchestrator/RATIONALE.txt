@@ -122,6 +122,11 @@ MOVED    The register described here left this component on 2026-08-25:
          the bookkeeper is a COMPONENT now (bookkeeper RATIONALE B-1).
          The decision below stands as ruled; only its address changed,
          from 'orchestrator/bookkeeper/' to 'bookkeeper/'.
+SUPERSEDED IN PART (2026-08-25, bookkeeper B-2): the ALLOCATION law
+         below -- lowest-unused, delete-frees, and the guard 'an id
+         never leaves the book' -- is replaced by issue-once from 0
+         with a persisted mark and a 2**32 ceiling. The relational
+         shape, the file's place and the healing services stand.
 SUPERSEDES coverage D-9 in whole and coverage D-14 in part: D-14's
           DIR-LOCALITY stands and is load-bearing here; its interned
           pair, monotone allocation, never-reuse law and retirement

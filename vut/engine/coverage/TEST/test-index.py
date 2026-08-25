@@ -5,9 +5,15 @@ ______________________________________________________________________________
 PURPOSE: WHO COVERED THIS LINE -- the fold that answers what to run when
          code changes, and the honesty about what it does NOT answer.
 
-CHOICES: segments, query, change, economy, lossy, honest;
+CHOICES: keys, segments, query, change, economy, lossy, honest;
 
 DESCRIPTION:
+
+keys       the two run keys a fold is over. 'TestRunId' is what the
+           REGISTER issued (bookkeeper): an app id, and a choice id
+           where the test has choices; this component numbers no test.
+           'Gathered' pairs a found-directory with a run id for a fold
+           that spans directories, and lives only that long.
 
 segments   the line axis cut where the SET OF ORIGINS changes, and one
            set per segment. Two runs overlapping in the middle produce
@@ -44,9 +50,9 @@ import config                                                   # noqa: F401
 from vut.language_support.python.hwut_runner import HwutRunner
 from vut.engine.coverage.record import (ranges_of, FileCoverage,
                                         CoverageRecord, merge)
-from vut.engine.coverage.index    import TestIndex, index_of
-from vut.engine.coverage.identity import (TestRunId, Gathered,
-                                          EMPTY_GROUP)
+from vut.engine.coverage.index    import (TestIndex, index_of, Gathered,
+                                          TestRunId, EMPTY_GROUP)
+from vut.engine.bookkeeper.test_run_id import run_id_of_text
 
 
 def banner(label):
@@ -92,9 +98,9 @@ def named(origin_set):
 
 
 #  TWO RUNS THAT OVERLAP IN THE MIDDLE OF ONE FILE.
-A_ORIGIN = TestRunId(1, 1)
-B_ORIGIN = TestRunId(1, 2)
-C_ORIGIN = Gathered("engine/TEST", TestRunId(2))
+A_ORIGIN = TestRunId(0, 0)
+B_ORIGIN = TestRunId(0, 1)
+C_ORIGIN = Gathered("engine/TEST", TestRunId(1))
 
 A_RECORD = record_of("test-parse.py", "basic",
                      {"core.py": range(1, 11), "only_a.py": range(1, 4)})
@@ -102,6 +108,56 @@ B_RECORD = record_of("test-parse.py", "deep",
                      {"core.py": range(6, 21)})
 C_RECORD = record_of("test-other.py", None,
                      {"core.py": range(40, 43)})
+
+
+def raised(action):
+    """
+    RETURN: str, the name of the exception 'action' raised.
+            'nothing', where it raised none.
+    """
+    try:               action()
+    except Exception as fault: return type(fault).__name__
+    return "nothing"
+
+
+def test_keys():
+    """The two run keys, and what each is for."""
+    banner("a run id is what the REGISTER issued")
+    for label, key in (("app 0, choice 0", A_ORIGIN),
+                       ("app 0, choice 1", B_ORIGIN),
+                       ("app 1, no choice", TestRunId(1))):
+        print("INSPECT: %-18s -> %s" % (label, key))
+    print("         this component numbers no test; it carries the")
+    print("         shape, and the register decodes it to names.")
+
+    banner("a GATHERED key qualifies one fold, and only that fold")
+    print("INSPECT: %s" % C_ORIGIN)
+    print("         'engine/TEST' is relative to the GATHER ROOT the")
+    print("         caller chose, so it is exactly that transient.")
+    print("         at the root: %s" % Gathered(None, TestRunId(3, 4)))
+
+    banner("read back from text")
+    for text in ("47", "47.66", "0.0"):
+        print("         %-6s -> %s" % (text, run_id_of_text(text)))
+
+    ok = check([
+        (str(A_ORIGIN) == "0.0" and str(TestRunId(1)) == "1",
+         "a run id spells app and choice, or app alone"),
+        (str(C_ORIGIN) == "engine/TEST:1",
+         "a gathered key spells its found-directory first"),
+        (str(Gathered(None, TestRunId(3, 4))) == "3.4",
+         "a record found AT the root needs no qualification"),
+        (run_id_of_text("47.66") == TestRunId(47, 66),
+         "the text form reads back"),
+        (raised(lambda: run_id_of_text("x")) == "RunIdFault",
+         "and what spells no run id is refused by the BOOKKEEPER's "
+         "own fault: the shape is its, and so is the refusal"),
+        (sorted([B_ORIGIN, A_ORIGIN, TestRunId(1)])
+         == [A_ORIGIN, B_ORIGIN, TestRunId(1)],
+         "run ids order by app then choice, so a printed answer is "
+         "stable"),
+    ])
+    verdict(ok, "the register numbers; this component carries.")
 
 
 def the_index():
@@ -221,7 +277,7 @@ def test_change():
 
     ok = check([
         ([str(k) for k in index.of_change({"core.py": ranges_of([7, 8])})]
-         == ["1.1", "1.2"],
+         == ["0.0", "0.1"],
          "an edit in the shared region names both runs -- as the "
          "REGISTER numbered them; the names are its to decode"),
         (len(both) == 2,
@@ -230,9 +286,9 @@ def test_change():
          "an edit nobody executed names nobody"),
         (index.of_change({}) == (),
          "an empty change names nobody"),
-        (str(C_ORIGIN) == "engine/TEST:2",
+        (str(C_ORIGIN) == "engine/TEST:1",
          "a gathered key spells its found-directory and run id"),
-        (str(A_ORIGIN) == "1.1",
+        (str(A_ORIGIN) == "0.0",
          "and a plain run id spells app and choice, nothing more"),
     ])
     verdict(ok, "a change names the runs that certainly touched it.")
@@ -339,6 +395,7 @@ if __name__ == "__main__":
         title      = "The coverage index: who executed this line, and what "
                      "to run when it changes",
         choice_map = {
+            "keys":     test_keys,
             "segments": test_segments,
             "query":    test_query,
             "change":   test_change,

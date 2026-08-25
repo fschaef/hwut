@@ -4,18 +4,22 @@ INSPECT: group of the empty set -> 0
          group 0 decodes to {}
 
 --- three distinct sets, three groups ---
-INSPECT: {1} -> 1   {1,2} -> 2   {2} -> 3
+INSPECT: {A} -> 1   {A,B} -> 2   {B} -> 3
 
---- the SAME set, whatever order or type it arrives in ---
-INSPECT: [2,1] -> 2   frozenset({2,1}) -> 2
+--- the SAME set, whatever order or container it arrives in ---
+INSPECT: [B,A] -> 2   frozenset({B,A}) -> 2
          the table holds 4 group(s)
+
+--- the ceiling ---
+INSPECT: a scope at ID_LIMIT asked to issue -> GroupFault
   OK  : the empty set is group 0 -- a value, not a hole
   OK  : and it decodes to nothing
-  OK  : distinct sets get distinct groups, monotonically
+  OK  : distinct sets get distinct groups, monotonically from 1
   OK  : one set is one group, whatever order or container it came in
   OK  : three sets plus the empty one -- nothing was allocated twice
   OK  : an unknown set can be asked without being allocated
-  OK  : a group decodes to its ids
+  OK  : a group decodes to its keys
   OK  : a group that was never allocated is refused, never answered with the empty set -- that would read as 'nobody ran this'
+  OK  : the 2**32nd group is refused by name
 SUCCESS: pay for the distinct set, not for every occurrence.
 <hwut-end>

@@ -1,6 +1,7 @@
          no version line                        -> TestIdFault
          version 1, pair-interned               -> TestIdFault
          version 2, pair-interned               -> TestIdFault
+         version 3, re-using, no mark           -> TestIdFault
          an app id that spells no number        -> TestIdFault
          an app id standing twice               -> TestIdFault
          an app name standing twice             -> TestIdFault
@@ -9,11 +10,20 @@
          a choice name standing twice           -> TestIdFault
          a line that names nothing              -> TestIdFault
          a line that is no entry                -> TestIdFault
+         no app mark at all                     -> TestIdFault
+         an app mark standing twice             -> TestIdFault
+         an app without its choice mark         -> TestIdFault
+         a choice mark under no registered app  -> TestIdFault
+         an app id at its mark (would re-issue) -> TestIdFault
+         a run id at its mark (would re-issue)  -> TestIdFault
+         a mark that spells no number           -> TestIdFault
+         a mark beyond the ceiling              -> TestIdFault
 --- and the two honest absences ---
          no file at all -> 0 apps (a fresh directory)
   OK  : refused: no version line
   OK  : refused: version 1, pair-interned
   OK  : refused: version 2, pair-interned
+  OK  : refused: version 3, re-using, no mark
   OK  : refused: an app id that spells no number
   OK  : refused: an app id standing twice
   OK  : refused: an app name standing twice
@@ -22,6 +32,14 @@
   OK  : refused: a choice name standing twice
   OK  : refused: a line that names nothing
   OK  : refused: a line that is no entry
+  OK  : refused: no app mark at all
+  OK  : refused: an app mark standing twice
+  OK  : refused: an app without its choice mark
+  OK  : refused: a choice mark under no registered app
+  OK  : refused: an app id at its mark (would re-issue)
+  OK  : refused: a run id at its mark (would re-issue)
+  OK  : refused: a mark that spells no number
+  OK  : refused: a mark beyond the ceiling
   OK  : a MISSING register reads empty; only a DAMAGED one refuses
 SUCCESS: damage refuses by name; absence is a fresh start.
 <hwut-end>

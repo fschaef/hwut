@@ -1,16 +1,16 @@
 --- what the fill allocated ---
-INSPECT: [1] test-parse.py
-         [1.1] basic
-         [1.2] deep
-INSPECT: [2] test-other.py
+INSPECT: [0] test-parse.py
+         [0.0] basic
+         [0.1] deep
+INSPECT: [1] test-other.py
 --- asking without allocating ---
          test-ghost.py -> None
-         test-parse.py deep -> 1.2
-  OK  : the first app's first choice is 1.1
-  OK  : its second choice is 1.2 -- choice ids are scoped per app
+         test-parse.py deep -> 0.1
+  OK  : the first app's first choice is 0.0 -- both scopes count from 0
+  OK  : its second choice is 0.1 -- choice ids are scoped per app
   OK  : the choice-less run spells the app id alone
   OK  : an unknown run answers None where allocation was not asked
   OK  : allocating a standing run returns the standing id
   OK  : the register is on disk the moment the first id is born
-SUCCESS: an id is born at first sight, lowest unused, in its own scope.
+SUCCESS: an id is born at first sight, one above its scope's mark, from 0.
 <hwut-end>

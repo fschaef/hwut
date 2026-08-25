@@ -1,7 +1,7 @@
 --- both files stand ---
 INSPECT: vanished: ()
 --- 'test-other.py' deleted around the framework ---
-INSPECT: [2] test-other.py VANISHED
+INSPECT: [1] test-other.py VANISHED
   OK  : the register names the id and the name that left
   OK  : the entry STANDS -- healing is a service, never a guess
 SUCCESS: an unofficial disappearance is detected, not healed.

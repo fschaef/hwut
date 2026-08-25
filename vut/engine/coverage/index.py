@@ -39,11 +39,21 @@ DESCRIPTION
            segments   [--g1--][--g3--][--g2--]      g3 = {A, B}
 
        A SEGMENT CARRIES AN INTEGER, NOT A SET OF NAMES (RATIONALE D-9).
-       'identity.GroupTable' decodes the group to test ids and
-       'identity.IdTable' decodes those to runs -- at the EDGE, for the
-       few segments a query touched, never for the whole fold. Group 0 is
+       The bookkeeper's 'GroupTable' decodes the group to run keys and
+       its register decodes those to names -- at the EDGE, for the few
+       segments a query touched, never for the whole fold. Group 0 is
        the empty set: a stretch nobody executed carries a group like any
        other.
+
+       TWO RUN KEYS, TWO LIFETIMES (RATIONALE D-14, D-17):
+           TestRunId   (app_id, choice_id|None)   PERSISTENT, per directory
+           Gathered    (found-dir, TestRunId)     EPHEMERAL, per gather
+       A run id is DIRECTORY-LOCAL. A fold over ONE directory takes run
+       ids straight, and its group table may be the directory's own
+       persisted one ('GroupDb'). A GATHER across directories qualifies
+       at gather time -- the found-directory, relative to the gather
+       root the caller chose -- into a 'Gathered', folds into a fresh
+       in-memory table, and stores neither (todo-10).
 
        WHAT IT IS FOR. Given the lines a change touched -- a diff --
        'of_change()' names the runs that executed them. That is the
@@ -58,11 +68,35 @@ DESCRIPTION
        Every face over this index says so, or it is lying by omission.
 ______________________________________________________________________________
 """
-from bisect import bisect_right
+from bisect      import bisect_right
+from dataclasses import dataclass
 
-from .record   import union
-from .identity import (TestRunId, Gathered,             # noqa: F401
-                       GroupTable, EMPTY_GROUP, IdentityFault)
+from .record import union
+from ..bookkeeper.test_run_id import TestRunId          # noqa: F401
+from ..bookkeeper.group_table import (GroupTable,       # noqa: F401
+                                      EMPTY_GROUP, GroupFault)
+
+
+@dataclass(frozen=True, order=True)
+class Gathered:
+    """WHO ran, AS ONE GATHER SAW IT: a directory beside a run id.
+
+    EPHEMERAL, NEVER STORED. 'directory' is relative to the GATHER
+    ROOT, chosen by the aggregator that FOUND the record, so it is
+    exactly as transient as that choice of root. Two gathers from two
+    roots may spell one run differently; the run id inside does not
+    move. The bookkeeper's group table refuses it for storage.
+
+    None as 'directory' spells a record found AT the root.
+    """
+    directory: str | None
+    run_id:    TestRunId
+
+    def __str__(self):
+        """RETURN: str, 'directory:run_id', or the run id's own
+        spelling where the record stood at the root."""
+        return str(self.run_id) if self.directory is None \
+               else "%s:%s" % (self.directory, self.run_id)
 
 
 class TestIndex:
@@ -219,9 +253,10 @@ def index_of(pair_iterable, group_table=None):
     (orchestrator D-7); this folds over what it was given and never
     numbers a test itself.
 
-    'group_table' is a parameter so that a caller folding several
-    directories keeps ONE table across them. Omitted, a fresh one is
-    made and the group ids live as long as this index.
+    'group_table' is a parameter so that a caller folding ONE directory
+    hands in its persisted 'GroupDb' and a caller folding several keeps
+    ONE table across them. Omitted, a fresh one is made and the group
+    ids live as long as this index.
 
     THE PAIRS ARRIVE SORTED BY KEY or the GROUP ids are not
     reproducible: two gathers over one tree must allocate identically,

@@ -1,14 +1,14 @@
 
 --- core.py -- A covers 1..10, B covers 6..20, C covers 40..42 ---
-         [  1,  6)  1.1
-         [  6, 11)  1.1,1.2
-         [ 11, 21)  1.2
+         [  1,  6)  0.0
+         [  6, 11)  0.0,0.1
+         [ 11, 21)  0.1
          [ 21, 40)  <nobody>
-         [ 40, 43)  engine/TEST:2
+         [ 40, 43)  engine/TEST:1
 
 --- two runs that merely TOUCH do not overlap ---
-         [  1,  6)  1.1
-         [  6, 11)  1.2
+         [  1,  6)  0.0
+         [  6, 11)  0.1
   OK  : overlap in the middle cuts core.py into five segments: A, A+B, B, the GAP, C
   OK  : 1..5 belongs to A alone
   OK  : 6..10 belongs to both

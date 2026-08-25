@@ -57,8 +57,8 @@ import sys
 
 from .record   import (ranges_of, parse_record, RecordFault,
                        CoverageRecord, FileCoverage)
-from .identity import TestRunId, Gathered
-from .index    import index_of
+from ..bookkeeper.test_run_id import TestRunId
+from .index    import index_of, Gathered
 
 
 RECORD_SUFFIX = ".cover"
@@ -193,36 +193,29 @@ def record_iterable(root, suffix=RECORD_SUFFIX, resolve=None):
 def _local_resolver():
     """
     RETURN: callable, 'resolve(directory, test, choice) -> TestRunId',
-            numbering lowest-unused per directory as names are first
-            met.
+            numbering from 0 upward per scope as names are first met.
 
     A STAND-IN, and it says which kind. The REGISTER's ids are the
     directory's own and stand across invocations; these stand only
     within THIS gather, in the register's own shape and by the
-    register's own rule (lowest unused, per scope), so that a face
-    which later hands in the real resolver changes the NUMBERS and
-    nothing else. Used where no register was handed in -- a walk over
-    a tree this process does not administer.
+    register's own rule (from 0, one above the last issued, per
+    scope), so that a face which later hands in the real resolver
+    changes the NUMBERS and nothing else. Used where no register was
+    handed in -- a walk over a tree this process does not administer.
     """
     app_db    = {}      # directory -> {app name: app_id}
     choice_db = {}      # (directory, app_id) -> {choice name: id}
-
-    def lowest_unused(used):
-        """RETURN: int, the smallest positive integer not in 'used'."""
-        candidate = 1
-        while candidate in used: candidate += 1
-        return candidate
 
     def resolve(directory, test, choice):
         """RETURN: TestRunId of that run, allocating on first sight."""
         name_db = app_db.setdefault(directory, {})
         if test not in name_db:
-            name_db[test] = lowest_unused(set(name_db.values()))
+            name_db[test] = len(name_db)
         app_id = name_db[test]
         if choice is None: return TestRunId(app_id)
         seen = choice_db.setdefault((directory, app_id), {})
         if choice not in seen:
-            seen[choice] = lowest_unused(set(seen.values()))
+            seen[choice] = len(seen)
         return TestRunId(app_id, seen[choice])
 
     return resolve

@@ -626,3 +626,34 @@ DECISION  'TestRunId' and 'run_id_of_text' stand in the BOOKKEEPER,
 COST      Two GOODs moved, both naming the refusing layer.
 GRAVEYARD The leaf-purity argument of D-15: it would have made every
           future consumer of a run id import COVERAGE to name one.
+
+
+D-17  IDENTITY.PY DISSOLVED; IDS COUNT FROM 0 AND ARE ISSUED ONCE   (2026-08-25)
+------------------------------------------------------------------------------
+CORRECTS  D-15 and D-16 in what they left here: 'the group interning'.
+PROBLEM   D-16 moved the run's shape to the bookkeeper because a run is
+          not a coverage concept. The same argument holds for a SET of
+          runs, and 'identity.py' -- a group table plus one value type
+          -- was the last file whose name promised an identity this
+          component does not own.
+          Separately, the register's id law changed (bookkeeper B-2):
+          issued once, from 0, never re-used. Every GOOD here that
+          spelled '1.1' spelled an id the register no longer issues
+          first.
+DECISION  'identity.py' is GONE. 'GroupTable' and its file format are
+          the bookkeeper's ('group_table.py', B-3), with 'GroupDb'
+          persisting per directory; 'Gathered' stands in 'index.py',
+          the one module that folds over it; 'IdentityFault' is the
+          bookkeeper's 'GroupFault'. 'index_of' takes the bookkeeper's
+          table, so a one-directory fold keeps its group ids across
+          builds and a gather makes an ephemeral one.
+          '_local_resolver' in 'affected.py' numbers from 0 in the
+          register's own rule, as before in the register's own shape.
+          The cross-directory group of groups a gather may need is
+          todo-10, ephemeral to hwut by ruling.
+COST      'test-identity.py' and four GOODs left; 'keys' joined
+          'test-index.py'. Twelve GOODs re-recorded for 0-based ids,
+          each movement audited to be an id and nothing else.
+GRAVEYARD Keeping 'identity.py' as a re-export of the bookkeeper's
+          names: a file that says 'coverage has an identity' and holds
+          none.

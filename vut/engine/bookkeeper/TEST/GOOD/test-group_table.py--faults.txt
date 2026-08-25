@@ -1,0 +1,38 @@
+
+--- the group table ---
+         no version line                        -> GroupFault
+         version 2: no mark, re-issuing         -> GroupFault
+         version 1: self-interned ids           -> GroupFault
+         no mark at all                         -> GroupFault
+         a mark standing twice                  -> GroupFault
+         a mark that spells no number           -> GroupFault
+         a mark beyond the ceiling              -> GroupFault
+         a group id that spells no number       -> GroupFault
+         a member that spells no run id         -> RunIdFault
+         a member with too many parts           -> RunIdFault
+         a line that is no group                -> GroupFault
+         group 0 holding a run                  -> GroupFault
+         a group standing twice                 -> GroupFault
+         a set standing twice                   -> GroupFault
+         a group at its mark (would re-issue)   -> GroupFault
+
+--- and the group that was never allocated ---
+         asking for group 99                    -> GroupFault
+  OK  : refused: no version line
+  OK  : refused: version 2: no mark, re-issuing
+  OK  : refused: version 1: self-interned ids
+  OK  : refused: no mark at all
+  OK  : refused: a mark standing twice
+  OK  : refused: a mark that spells no number
+  OK  : refused: a mark beyond the ceiling
+  OK  : refused: a group id that spells no number
+  OK  : refused: a member that spells no run id
+  OK  : refused: a member with too many parts
+  OK  : refused: a line that is no group
+  OK  : refused: group 0 holding a run
+  OK  : refused: a group standing twice
+  OK  : refused: a set standing twice
+  OK  : refused: a group at its mark (would re-issue)
+  OK  : never answered with the empty set -- that would read as 'nobody ran this'
+SUCCESS: an unreadable table is refused, never half-read.
+<hwut-end>

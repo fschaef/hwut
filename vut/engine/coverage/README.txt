@@ -38,8 +38,9 @@ about whether coverage was wanted.
                       format/parse, merge
     measure.py        the measurements BESIDE the line axis: branch,
                       mc/dc, and the registration for one more
-    index.py          the other fold: who executed this line
-    identity.py       test ids and group ids -- the two internings
+    index.py          the other fold: who executed this line; and
+                      'Gathered', a run id qualified by the directory
+                      a gather found it in
     affected.py       'hwut.affected': a change in, the runs out
     registry.py       language -> candidate tools -> the elected one
     reader.py         the reader ROLE, and the tool -> reader registry
@@ -131,32 +132,37 @@ with an empty 'EX'. A file with no executable line has NO ratio -- not
 answers "what did the suite reach", the index answers "which runs reached
 this line" -- and therefore, what to run when that line changes.
 
-    index_of([(Origin, CoverageRecord), ...])  ->  TestIndex
+    index_of([(run key, CoverageRecord), ...], group_table=None)
+                                              ->  TestIndex
 
-        .of_line(path, line)        -> frozenset of Origin
+        .of_line(path, line)        -> frozenset of run keys
         .of_ranges(path, ranges)    -> frozenset of run keys
         .of_change({path: ranges})  -> tuple of run keys, sorted
         .segment_iterable(path)     -> ((begin, end), origin_set) ...
 
-An Origin is (test, choice) -- DIRECTORY-LOCAL, stable under any
-invocation root, untouched when its directory moves (RATIONALE D-14).
-A GATHER across directories qualifies at gather time: 'Gathered' pairs
-the found-directory with the Origin, is what a cross-directory index
-decodes to, and is never stored -- 'IdTable.format' refuses it.
+A run key is a 'TestRunId' -- (app_id, choice_id|None), issued by the
+bookkeeper's register, DIRECTORY-LOCAL, stable under any invocation
+root, untouched when its directory moves (RATIONALE D-14). A GATHER
+across directories qualifies at gather time: 'Gathered' pairs the
+found-directory with the run id, is what a cross-directory index
+decodes to, and is never stored -- the group table's 'format' refuses
+it.
 
-A SEGMENT CARRIES ONE INTEGER, not a set of names. 'identity.py' interns
-twice: an Origin becomes a TEST ID, and a set of test ids becomes a GROUP
-ID. Decoding happens at the EDGE, on the few segments a query touched.
+A SEGMENT CARRIES ONE INTEGER, not a set of names: the bookkeeper's
+'GroupTable' interns a set of run keys as a GROUP ID (bookkeeper B-3).
+Decoding happens at the EDGE, on the few segments a query touched.
 Group 0 is the empty set, by construction, so no query needs a special
 case for 'nobody'.
 
-    an id is NEVER REUSED -- a retired entry still decodes, so an old
-        record cannot be silently reattributed
-    a RENAME KEEPS THE ID -- it touches one table and no record anywhere
+    an id is ISSUED ONCE -- app, choice and group ids each count from
+        0 and are never re-issued (bookkeeper B-2), so an old record
+        cannot be silently reattributed
+    a RENAME KEEPS THE ID -- it touches one register entry and no
+        record anywhere
 
-'index_of' TAKES the two tables, so a caller that owns them (the
-bookkeeper, one day -- disc-8) keeps its ids stable across builds. Given
-none, fresh ones are made and the ids live as long as the index.
+'index_of' TAKES the group table, so a fold over one directory hands
+in its persisted 'GroupDb' and keeps its group ids across builds. Given
+none, a fresh table is made and the ids live as long as the index.
 
 The line axis is cut where the origin SET changes and fused where it does
 not, so a file one run reaches whole costs ONE segment. A stretch nobody
@@ -234,9 +240,9 @@ before a single process runs.
     a jacoco line with neither 'ci' nor 'mi'      (CoverageRefused)
     a point that spells no point                  (MeasureFault)
     a second measure of one name, or one tag      (MeasureFault)
-    an id or a group that names nothing           (IdentityFault)
-    a rename onto a name a LIVE id holds          (IdentityFault)
-    a table that cannot be read whole             (IdentityFault)
+    a run id or a group that names nothing        (RunIdFault,
+                                                   GroupFault -- the
+                                                   bookkeeper's)
 
 Each names what it looked for. None of them is a silent absence of
 coverage: a skipped measurement reads as an absent one, and absence and
@@ -415,11 +421,12 @@ test-readers:  python, cobertura, lcov, gcov, go, luacov, jacoco,
                ucis, agreement, aliases, calls, absent, gather.
 test-measure:  registration, branch, mcdc, in_record, unmergeable,
                faults.
-test-index:    segments, query, change, economy, lossy, honest.
-test-identity: allocation, rename, retire, groups, tables, faults.
+test-index:    keys, segments, query, change, economy, lossy, honest.
+               (the group table's own test stands with the bookkeeper:
+               'bookkeeper/TEST/test-group_table.py')
 test-affected: diff, answer, bare, empty, refused, help.
-Correctness is 'diff' of that stdout against
-'GOOD/test-record.py--<choice>.txt'.
+Correctness is the compare engine's judgement of that stdout against
+'GOOD/test-record.py--<choice>.txt' ('adm/census.py').
 
 
 ------------------------------------------------------------------------------

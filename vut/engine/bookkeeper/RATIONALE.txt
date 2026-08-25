@@ -48,3 +48,85 @@ GRAVEYARD 'TestRunId' in coverage: it says a test run is a coverage
           a file at engine level with one type in it invites a second.
           Leaving the bookkeeper where it was: two components already
           paid for that placement before coverage ever asked.
+
+
+B-2  AN ID IS ISSUED ONCE; EACH SCOPE COUNTS FROM 0 TO 2**32   (2026-08-25)
+------------------------------------------------------------------------------
+SUPERSEDES orchestrator D-7's allocation law (lowest-unused,
+          delete-frees) and the guard that law rested on: 'an id
+          never leaves the directory's book'.
+PROBLEM   Re-use was safe only as long as nothing persisted carried an
+          id -- which is exactly what the coverage record was about to
+          do (orchestrator todo-4 t-9). A record naming run 47, kept
+          across a removal and a later accept, would attribute its
+          lines to a test that never ran them, and 'hwut.affected'
+          would answer with confidence and be wrong. Purging every
+          record at removal defends the store but not a record that
+          travelled: exported, copied, in a gathered tree. Records
+          carrying NAMES instead makes every rename rewrite them.
+          Many of the discussions that led to lowest-unused are lost;
+          under that uncertainty the safe law is the simplest one.
+DECISION  AN ID IS ISSUED ONCE AND NEVER AGAIN. Every scope counts
+          from 0; its next id is one above the highest it ever issued;
+          the register file carries that mark ('N:' lines, format 4)
+          so a removal cannot lower it. Removal deletes the NAME; the
+          number is retired without tombstone or flag -- only the mark
+          remembers. An id may therefore leave the book: it decodes
+          later to the same test or to 'no longer registered', never
+          to another test.
+          THE SCOPES ARE ORTHOGONAL and count on their own: the
+          applications of a directory, the choices of one application,
+          the groups of a directory (B-3).
+          THE CEILING IS 2**32 ('ID_LIMIT', one home, 'test_run_id.py'):
+          a scope that would issue it refuses by name. More than 2**32
+          tests, choices or groups in one directory is not a thing that
+          happens; the ceiling states it rather than relying on it.
+          Version 3 registers, which kept no mark, are refused by name.
+COST      The register's 'reuse' choice became 'retire'; six GOODs
+          moved from 1-based to 0-based ids, audited line by line.
+          Coverage's index and affected tests followed (eleven GOODs,
+          every movement an id). A register file grows by one 'N:' line
+          per application.
+GRAVEYARD Lowest-unused with records purged at removal: silent
+          misattribution for any record outside the store.
+          Tombstones ('A:47 -' kept after removal): a second way to say
+          what the mark says, and a file that grows with every removal.
+          A 64-bit ceiling: unreachable by construction, which is not
+          a limit but the absence of one; 2**32 is a stated bound.
+
+
+B-3  A SET OF RUNS IS A NUMBER, AND THE NUMBER IS THE BOOKKEEPER'S
+                                                              (2026-08-25)
+------------------------------------------------------------------------------
+CORRECTS  B-1, which left 'the group interning' with coverage.
+PROBLEM   B-1 argued that a SET of runs is a question only an
+          aggregator asks. That is false in the same way D-16's
+          leaf-purity argument was false about the run itself: a
+          coverage index attributes a stretch to a set of runs, but so
+          may a report, a flaky-test hunt, the compare engine's
+          tolerance grouping. The next consumer would have imported
+          coverage to name a set of runs.
+DECISION  'group_table.py' stands here: 'GroupTable' in memory over any
+          hashable run key, 'GroupDb' bound to 'GOOD/group_ids.dat'
+          beside the register and written like it. Group ids are a
+          THIRD id scope under B-2's law: 0 is the empty set by
+          construction, the rest issued once, mark persisted, ceiling
+          2**32. Nothing removes a group; a set of runs that once
+          existed is a fact a record may name.
+          ONLY 'TestRunId' KEYS ARE STORED. A key an aggregator
+          qualified across directories belongs to that one aggregation
+          (coverage D-14) and 'format' refuses it by name.
+          WHAT STAYS WITH COVERAGE: 'Gathered', the qualification of a
+          run id by its found-directory, and the fold over it. The
+          cross-directory 'group of groups' a gather may need is noted
+          in coverage todo-10 and is ephemeral to hwut.
+COST      'coverage/identity.py' dissolved: the table moved here, the
+          value type moved to 'coverage/index.py', 'IdentityFault'
+          became 'GroupFault' (still a kind of 'RunIdFault'). Four
+          choices moved from 'coverage/TEST/test-identity.py' to
+          'TEST/test-group_table.py', re-recorded; one ('keys') to
+          'coverage/TEST/test-index.py'.
+GRAVEYARD The group table as a third table INSIDE 'test_id_db.py': one
+          file for two lifetimes -- a register entry is removed, a
+          group never is -- and a name/number table beside a
+          set/number table.

@@ -1,12 +1,15 @@
 --- the file, as stored ---
-         | ##VUT-TEST-IDS 3
-         | A:1 test-parser.py
-         | C:1.1 basic
-         | C:1.2 deep
-         | A:2 test-other.py
+         | ##VUT-TEST-IDS 4
+         | N:2
+         | A:0 test-parser.py
+         | N:0.2
+         | C:0.0 basic
+         | C:0.1 deep
+         | A:1 test-other.py
+         | N:1.0
 --- read back ---
 INSPECT: byte-identical after a round trip: True
-         [1.2] decodes to ('test-parser.py', 'deep')
+         [0.1] decodes to ('test-parser.py', 'deep')
   OK  : format(parse(format())) is the identity
   OK  : the rename survived the disk
   OK  : a number this directory never issued answers None

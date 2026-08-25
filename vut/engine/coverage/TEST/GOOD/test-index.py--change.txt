@@ -1,9 +1,9 @@
 
 --- an edit inside the shared region ---
-INSPECT: {'core.py': ((7, 9),)} -> ['1.1', '1.2']
+INSPECT: {'core.py': ((7, 9),)} -> ['0.0', '0.1']
 
 --- an edit in two files at once ---
-INSPECT: ['1.1', '1.2']
+INSPECT: ['0.0', '0.1']
 
 --- an edit nobody ever executed ---
 INSPECT: [] -- and this is NOT a clearance

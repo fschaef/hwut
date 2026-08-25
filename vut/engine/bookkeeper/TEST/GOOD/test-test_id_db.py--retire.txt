@@ -1,0 +1,20 @@
+--- remove the first application ---
+INSPECT: removed 'test-parse.py'; register now:
+         [1] test-other.py
+         asking for the retired id: None
+--- the next registration, before and after a reload ---
+INSPECT: test-fresh.py -> [2]
+INSPECT: after reload, test-later.py -> [3]
+--- remove one choice; its sibling keeps its id ---
+INSPECT: removed 0.0; 'y' still [0.1]; 'z' got [0.2]
+--- the ceiling ---
+INSPECT: a scope at ID_LIMIT asked to issue -> TestIdFault
+  OK  : a removed entry is GONE -- no flag, no tombstone; only the mark remembers
+  OK  : the retired id is not handed out again
+  OK  : the mark is persisted: a reload does not lower it
+  OK  : a sibling's id never moves when a choice is removed
+  OK  : the retired choice id is not re-issued in its scope
+  OK  : the 2**32nd id of a scope is refused by name
+  OK  : removing what was never registered is refused
+SUCCESS: removal deletes the name; the number is retired.
+<hwut-end>

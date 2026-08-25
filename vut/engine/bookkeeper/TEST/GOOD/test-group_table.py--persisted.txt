@@ -1,0 +1,22 @@
+
+--- a fresh directory ---
+INSPECT: 1 group(s); file on disk: False
+
+--- after three allocations ---
+INSPECT: file on disk: True
+         | ##VUT-TEST-GROUPS 3
+         | N:4
+         | G:0
+         | G:1 0.0
+         | G:2 0.0,0.1
+         | G:3 0.1
+
+--- reloaded, then one more ---
+INSPECT: group of {1} -> 4; {A,B} still -> 2
+  OK  : the file is on disk the moment the first group is born
+  OK  : and left write-protected
+  OK  : a reload decodes what was stored
+  OK  : the mark is persisted: a reload does not lower it
+  OK  : and the allocation after the reload was persisted too
+SUCCESS: one file, atomically replaced, write-protected.
+<hwut-end>

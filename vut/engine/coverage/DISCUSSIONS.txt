@@ -223,8 +223,10 @@ disc-8  WHOSE TABLE IS THE TEST ID -- and what the rename service owes
 CLOSED (2026-08-25, RATIONALE D-15; orchestrator D-7, D-8). THE FIRST
 FORK IS SETTLED: (a) THE BOOKKEEPER OWNS IT, as
 'bookkeeper/test_id_db.py' over 'GOOD/test_ids.dat'. Ids are born at
-first accept, allocated lowest-unused, freed on removal; a rename keeps
-them. This component interns SETS only. What the rename service owes is
+first accept and issued once, from 0, never re-used (bookkeeper B-2 --
+the lowest-unused law of the first closure lasted one day); a rename
+keeps them. The SET interning is the bookkeeper's as well since B-3
+and D-17; this component keeps only 'Gathered'. What the rename service owes is
 recorded in the orchestrator's todo-4, not here. The text below is kept
 as it was ruled.
 
@@ -529,3 +531,38 @@ todo-6  'hwut.affected' -- THE FACE OVER THE INDEX (disc-7 (a))  [BUILT]
 todo-7  THE MEASUREMENT THAT RULES disc-1
         Write of one run, read of a cross-directory aggregate, forms (a)
         and (c). Until it exists, disc-1 stays open and (a) stands.
+
+todo-10 THE GATHER'S GROUP OF GROUPS, AND WHAT A DELIVERY CARRIES
+        Ids are directory-local (D-14). A gather across directories has
+        one honest key, '(directory relative to the gather root, local
+        id)', and a stretch of one source file seen by the gather is
+        reached by a SET OF (directory, group) PAIRS -- one group per
+        directory involved. 'hwut.cov --gather' interns that set as a
+        GATHERED GROUP, in memory, in the gather process, and writes it
+        into no directory's GOOD/: it is ephemeral to hwut itself.
+
+            D1:  test_ids.dat   group_ids.dat   records
+            D2:  test_ids.dat   group_ids.dat   records
+                       |
+              hwut.cov --gather (one root)
+                       v
+            g' <-> { (D1, g3), (D2, g7) }     the gather's own table
+            segment -> g'                      the gather's own index
+
+        DECODING IS A CHAIN, each link a table: gathered group -> pairs
+        -> that directory's group table -> run ids -> that directory's
+        register -> names. So a DELIVERY of coverage is a BUNDLE: the
+        gather's group-of-groups table and index, plus a snapshot of
+        every directory's register and group table, keyed by directory
+        relative to the gather root, valid only as one bundle. Three
+        small files per directory; nothing else travels.
+
+        Because ids are issued once (bookkeeper B-2), a snapshot
+        decoded against a NEWER register still resolves: new ids only
+        appear, and a removed test's id decodes to 'no longer
+        registered' -- true, not misattributed. And a gather never
+        writes back: nothing it makes is identity.
+
+        OPEN, for task 3 ('hwut.cov'): the bundle's file layout, and
+        whether the gathered group table is written into the bundle at
+        all or recomputed from the per-directory tables on read.

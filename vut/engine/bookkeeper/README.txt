@@ -14,6 +14,8 @@ Status:  A COMPONENT of its own since 2026-08-25 (RATIONALE B-1). It
                       name.
     test_id_db.py     THE REGISTER of one directory: which names those
                       numbers stand for, in 'GOOD/test_ids.dat'.
+    group_table.py    THE GROUP TABLE of one directory: a SET of runs
+                      as one number, in 'GOOD/group_ids.dat'.
     bookkeeper.py     THE BOOK of one directory: the naming of every
                       file that carries a record, the entries, the
                       reproducible configurations, the divergence
@@ -34,21 +36,25 @@ component refers DOWNWARD to it.
     orchestrator      makes a Bookkeeper per directory and hands it
                       down; the services heal through it
     operations        the naming, the stream store, the stderr note
-    coverage          the run id ONLY -- it owns 'Gathered' and its
-                      group interning, and numbers no test itself
+    coverage          the run id and the group table -- it owns
+                      'Gathered', the qualification of a run id across
+                      directories, and numbers no test itself
 
 The component refers to none of them.
 
 4  THE IDS
 ------------------------------------------------------------------------------
 
-An id is born at the first 'hwut.accept'. Allocation is LOWEST-UNUSED
-in each scope: app ids among the apps, choice ids within their app.
-Removal DELETES the entry and the id returns to the pool.
+An id is born at the first 'hwut.accept'. THREE SCOPES, orthogonal,
+each counting from 0: app ids among the apps, choice ids within their
+app, group ids among the groups. A scope issues one above the highest
+id it ever issued; the file carries that mark. Removal DELETES the
+name and RETIRES the number. The ceiling of every scope is 2**32
+('ID_LIMIT'); the id at the ceiling is refused by name.
 
 A rename keeps the id -- that is what the register is for. An id may
-be persisted ONLY in files the naming names, so that removal deletes
-every reference in the same holding in which it frees the number.
+be persisted anywhere: it decodes later to the same test, or to 'no
+longer registered', never to another test.
 
 The register knows two things the book cannot: which application files
 are REGISTERED ('roster()'), and which registered application has no
@@ -61,5 +67,6 @@ file any more ('vanished()').
                           damage, reproduce, divergence, setup_delta
     test-stream_store.py  keys, lock_live, lock_dead, nominal_kinds,
                           promotion
-    test-test_id_db.py    allocation, healing, reuse, tables, faults,
+    test-test_id_db.py    allocation, healing, retire, tables, faults,
                           vanished, face
+    test-group_table.py   groups, tables, persisted, faults

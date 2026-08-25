@@ -42,8 +42,10 @@ Bookkeeper instead of globbing (find_records retires).
 todo-4  THE TEST REGISTER, END TO END  (D-7; t-1..t-3 built 2026-08-25)
 ----------------------------------------------------------------------------
 BUILT: t-1/t-2 'bookkeeper/test_id_db.py' -- relational register,
-lowest-unused, delete-frees, one write-protected file, seven printing
-choices in 'TEST/test-test_id_db.py'. t-3: 'hwut.accept' allocates on
+one write-protected file, seven printing choices in
+'TEST/test-test_id_db.py'. Its allocation law changed the same day
+(bookkeeper B-2): ids are issued once, from 0, mark persisted,
+ceiling 2**32; the group table is the bookkeeper's too (B-3). t-3: 'hwut.accept' allocates on
 bless. t-4 MECHANISM: 'vanished()'. t-5 SEAM: 'roster()'. t-6:
 'hwut.show --show-ids' prints the register, VANISHED marks included.
 
@@ -85,8 +87,10 @@ OWED, in order:
        register rename -- one holding; record contents untouched (R3).
   t-9  THE RECORD FORMAT REVISION: the VUT-COVERAGE header names a
        RUN ID where it named test/choice; the register decodes;
-       version bump; coverage's identity.py reduces to the gather
-       shapes; index folds over TestRunIds.
+       version bump; index folds over TestRunIds. UNBLOCKED by
+       bookkeeper B-2 (an id may now be persisted); design pending.
+       Its precondition 'identity.py reduces to the gather shapes' is
+       done: 'identity.py' is dissolved (coverage D-17).
   t-11 'hwut.sanitize', the housekeeping face -- options, each a
        report first and a repair only on request:
            --unregistered   source files in the directory that hold

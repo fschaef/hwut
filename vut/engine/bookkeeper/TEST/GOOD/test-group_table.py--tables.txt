@@ -1,0 +1,27 @@
+
+--- the group table, as it is stored ---
+         | ##VUT-TEST-GROUPS 3
+         | N:4
+         | G:0
+         | G:1 0.0
+         | G:2 0.0,0.1
+         | G:3 0.1
+
+--- read back ---
+         0 -> {}
+         1 -> 0.0
+         2 -> 0.0, 0.1
+         3 -> 0.1
+
+--- the next allocation is the MARK that was read ---
+INSPECT: -> 4
+
+--- a QUALIFIED key has no place in a stored table ---
+         raised GroupFault
+  OK  : format(parse(format(x))) == format(x) -- the bytes are stable
+  OK  : a group decodes to the run ids it was made of
+  OK  : the empty group survives the round trip
+  OK  : reading a table allocates onward from its mark
+  OK  : storing a qualified key is refused: it belongs to ONE aggregation and would freeze that view as identity
+SUCCESS: one table, stable bytes, and nothing ephemeral in it.
+<hwut-end>

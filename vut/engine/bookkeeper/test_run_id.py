@@ -35,6 +35,14 @@ ______________________________________________________________________________
 from dataclasses import dataclass
 
 
+#  THE CEILING OF EVERY ID SCOPE (bookkeeper RATIONALE B-2): app ids,
+#  choice ids, group ids each count from 0 and never reach this. A scope
+#  that would issue it refuses by name. Ids are never re-issued, so a
+#  scope's count only grows; 2**32 is more tests, choices or groups than
+#  one directory will ever hold.
+ID_LIMIT = 2 ** 32
+
+
 class RunIdFault(ValueError):
     """A text that spells no run id. Named where it is met: a run id
     nobody can resolve is an attribution nobody can check."""

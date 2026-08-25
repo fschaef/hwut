@@ -1,8 +1,8 @@
 ==[ TEST REGISTER ]===========================================================
-[1] test-parse.py
-    [1.1] basic
-    [1.2] deep
-[2] test-other.py   VANISHED: no such file
+[0] test-parse.py
+    [0.0] basic
+    [0.1] deep
+[1] test-other.py   VANISHED: no such file
 (exit: OK)
 --- a fresh directory ---
 ==[ TEST REGISTER ]===========================================================

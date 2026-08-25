@@ -226,13 +226,13 @@ def test_answer():
         ok = check([
             (status == E_ExitCode.OK,
              "a selection was made"),
-            ("parser/TEST:1.1" in out
-             and "parser/TEST:1.2" in out,
+            ("parser/TEST:0.0" in out
+             and "parser/TEST:0.1" in out,
              "both runs that executed lines 7..8 are named"),
             ("other/TEST:" not in out,
              "the run that reached only 50..52 is NOT named -- the "
              "change touched 7..8 and 42"),
-            ("other/TEST:1" in elsewhere_out
+            ("other/TEST:0" in elsewhere_out
              and "test-parse.py" not in elsewhere_out,
              "and a change at line 51 names IT alone: the selection "
              "follows the lines, not the file"),
@@ -258,8 +258,8 @@ def test_bare():
             ["hwut.affected", "--records", root, "-b"], DIFF)
         ok = check([
             (status == E_ExitCode.OK, "the status is the same"),
-            (out.splitlines() == ["parser/TEST:1.1",
-                                  "parser/TEST:1.2"],
+            (out.splitlines() == ["parser/TEST:0.0",
+                                  "parser/TEST:0.1"],
              "stdout carries names alone, one per line, sorted"),
             ("==[" not in out, "no frame"),
             ("SUGGESTION, never a clearance" in err,

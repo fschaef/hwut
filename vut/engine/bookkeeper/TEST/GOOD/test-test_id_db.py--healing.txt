@@ -1,9 +1,9 @@
 --- rename the application ---
-INSPECT: [1] 'test-parse.py' -> 'test-parser.py'
+INSPECT: [0] 'test-parse.py' -> 'test-parser.py'
          one entry moved; the choices still answer:
-         [1.2] -> ('test-parser.py', 'deep')
+         [0.1] -> ('test-parser.py', 'deep')
 --- rename the choice ---
-INSPECT: [1.1] -> ('test-parser.py', 'quick')
+INSPECT: [0.0] -> ('test-parser.py', 'quick')
 --- refusals, by name ---
          app rename onto a live name            -> TestIdFault
          choice rename onto a live sibling      -> TestIdFault
